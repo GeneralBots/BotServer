@@ -18,11 +18,11 @@ editor).
 
 Bot Server accelerates the process of developing a bot. It provisions all code
 base, resources and deployment to the cloud, and gives you templates you can
-choose from when you create a bot. Uses a database and tables as backend and
-allow you to further modify your bot package directly downloading it in a ZIP
-file and editing it and uploading it back to the server (deploying process). 
-Besides providing a framework to develop bot packages in a more advanced 
-editor like Visual Studio Code, Atom or Brackets.
+choose from whenever you need a new bot. The server has a database and service 
+backend allowing you to further modify your bot package directly by downloading 
+a zip file, editing and uploading it back to the server (deploying process) with 
+no code. The Bot Server also provides a framework to develop bot packages in a more
+advanced fashion writing custom code in editors like Visual Studio Code, Atom or Brackets.
 
 ### The same build process for everyone
 
@@ -32,12 +32,9 @@ Office tools like Word or Excel to edit your Bot - using code (JavaScript or Typ
 How To
 ------
 
-
 ### Updating the Bot Knoledge Base (.gbkb folder)
 
-
 The subjects.json file contains all information related to the subject tree and can be used to build the menu carrousel as well give a set of words to be used as subject catcher in the conversation. A hierarchy can be specified.
-
 
 ### Creating a new Theme folder (.gbtheme folder)
 
@@ -138,24 +135,23 @@ General Bots Code Name is [Guaribas](https://en.wikipedia.org/wiki/Guaribas), th
 
 ## License & Warranty
 
- General Bots Copyright (c) Pragmatismo.io. All rights reserved.       
- Licensed under the AGPL-3.0.                                          
+General Bots Copyright (c) Pragmatismo.io. All rights reserved.
+Licensed under the AGPL-3.0.       
                                                             
- According to our dual licensing model, this program can be used either
- under the terms of the GNU Affero General Public License, version 3,  
- or under a proprietary license.                                       
+According to our dual licensing model, this program can be used either
+under the terms of the GNU Affero General Public License, version 3,
+or under a proprietary license.   
                                                         
- The texts of the GNU Affero General Public License with an additional 
- permission and of our proprietary license can be found at and         
- in the LICENSE file you have received along with this program.        
+The texts of the GNU Affero General Public License with an additional
+permission and of our proprietary license can be found at and 
+in the LICENSE file you have received along with this program.
+                                                       
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
                                                         
- This program is distributed in the hope that it will be useful,       
- but WITHOUT ANY WARRANTY; without even the implied warranty of        
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          
- GNU Affero General Public License for more details.                   
-                                                        
- "General Bots" is a registered trademark of Pragmatismo.io.           
- The licensing of the program under the AGPLv3 does not imply a        
- trademark license. Therefore any rights, title and interest in        
- our trademarks remain entirely with us.                               
-                                                        
+"General Bots" is a registered trademark of Pragmatismo.io.
+The licensing of the program under the AGPLv3 does not imply a
+trademark license. Therefore any rights, title and interest in
+our trademarks remain entirely with us.
