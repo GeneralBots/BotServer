@@ -4,8 +4,8 @@ General Bots Community Edition Preview
 Welcome to General Bots!
 -------
 
-General Bots is a packaged based chat bot server focused in convention
-over configuration and codeless aproaches, which brings software packages  
+General Bots is a package based chat bot server focused in convention
+over configuration and code-less approaches, which brings software packages  
 and application server concepts to help parallel bot development.
 
 Also, everyone can create bots copying and pasting some files and using their
