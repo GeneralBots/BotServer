@@ -1,0 +1,16 @@
+{
+  "mode": "modules",
+  "out": "docs",
+  "name": "General Bots Open Core",
+  "theme": "default",
+  "ignoreCompilerErrors": "true",
+  "experimentalDecorators": "true",
+  "emitDecoratorMetadata": "true",
+  "target": "ES6",
+  "moduleResolution": "node",
+  "preserveConstEnums": "true",
+  "stripInternal": "true",
+  "suppressExcessPropertyErrors": "true",
+  "suppressImplicitAnyIndexErrors": "true",
+  "module": "commonjs"
+}

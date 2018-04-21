@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Program",
+      "program": "${workspaceRoot}/dist/src/app.js",
+      "cwd": "${workspaceRoot}",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "args":["--no-deprecation"],
+      "skipFiles": ["node_modules/**/*.js"],
+      "outFiles": ["${workspaceRoot}/dist/*.js"],
+      "stopOnEntry": false,
+      "console": "integratedTerminal"
+    }
+  ]
+}

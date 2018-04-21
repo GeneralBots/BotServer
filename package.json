@@ -1,0 +1,51 @@
+{
+  "name": "botserver",
+  "version": "0.0.9",
+  "description": "General Bots Community Edtion",
+  "author": "me@rodrigorodriguez.com",
+  "license": "AGPL-3.0",
+  "main": "./src/app.ts",
+  "homepage": "http://pragmatismo.io",
+  "scripts": {
+    "clean": "rimraf dist",
+    "start": "node ./dist/src/app.js",
+    "startIde": "npm-run-all clean --parallel watch:build watch:server --print-label",
+    "watch:build": "tsc --watch",
+    "watch:server": "nodemon './dist/index.js' --watch './dist'",
+    "test": "mocha  -r ts-node/register src/**/*.test.ts",
+    "build-docs": "typedoc --options typedoc.json src/"
+  },
+  "engines": {
+    "node": ">=8.9.4"
+  },
+  "dependencies": {
+    "async": "^1.5.2",
+    "botbuilder": "^3.14.0",
+    "chokidar": "^2.0.2",
+    "csv-parse": "^2.2.0",
+    "dotenv-extended": "^1.0.4",
+    "express": "^4.16.2",
+    "fs-walk": "0.0.1",
+    "marked": "^0.3.12",
+    "reflect-metadata": "^0.1.12",
+    "request-promise-native": "^1.0.5",
+    "sequelize": "^4.37.6",
+    "sequelize-typescript": "^0.6.3",
+    "sqlite3": "^3.1.13",
+    "tedious": "^2.1.1",
+    "url-join": "^4.0.0",
+    "wait-until": "0.0.2",
+    "winston": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/azure": "^0.9.19",
+    "@types/chai": "4.0.4",
+    "@types/mocha": "2.2.43",
+    "chai": "^4.1.2",
+    "mocha": "^3.5.3",
+    "mocha-typescript": "^1.1.12",
+    "ts-node": "3.3.0",
+    "typedoc": "^0.10.0",
+    "typescript": "2.7.2"
+  }
+}
