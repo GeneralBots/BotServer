@@ -1,6 +1,8 @@
 General Bots Community Edition Preview
 ====================================
 
+![General Bots Logo](https://github.com/pragmatismo-io/BotServer/blob/master/logo.png)
+
 Welcome to General Bots!
 -------
 
