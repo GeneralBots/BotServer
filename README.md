@@ -1,17 +1,14 @@
-General Bots Community Edition Preview
-====================================
-
 ![General Bots Logo](https://github.com/pragmatismo-io/BotServer/blob/master/logo.png)
 
-Welcome to General Bots!
+Welcome to General Bots Community Edition!
 -------
 
 General Bots is a package based chat bot server focused in convention
 over configuration and code-less approaches, which brings software packages  
 and application server concepts to help parallel bot development.
 
-Also, everyone can create bots copying and pasting some files and using their
-favorite tools like Excel (or any .tsv editor) or Photoshop (or any .png
+Everyone can create bots by just copying and pasting some files and using their
+favorite tools like Excel (or any text editor) or Photoshop (or any image
 editor).
 
 ### What is Bot Server?
