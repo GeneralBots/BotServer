@@ -45,7 +45,7 @@ import {
 import UrlJoin from "url-join";
 import { IGBDialog } from  "botlib";
 import { GBMinInstance } from "botlib";
-import { AzureText } from "pragmatismo-io-framework1";
+import { AzureText } from "pragmatismo-io-framework";
 import { GuaribasSubject } from '../models';
 import { KBService } from "../services/KBService";
 

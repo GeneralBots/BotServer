@@ -35,7 +35,7 @@
 import { UniversalBot, Session, Prompts, ListStyle } from "botbuilder";
 import UrlJoin from "url-join";
 import { CSService } from '../services/CSService';
-import { AzureText } from "pragmatismo-io-framework1";
+import { AzureText } from "pragmatismo-io-framework";
 import { GBMinInstance } from "botlib";
 import { IGBDialog } from  "botlib";
 

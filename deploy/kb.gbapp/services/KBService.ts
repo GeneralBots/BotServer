@@ -42,7 +42,7 @@ const marked = require("marked");
 
 import { GuaribasQuestion, GuaribasAnswer, GuaribasSubject }from "../models";
 import { GBServiceCallback, IGBCoreService, IGBConversationalService, IGBInstance } from "botlib";
-import { AzureSearch } from "pragmatismo-io-framework1";
+import { AzureSearch } from "pragmatismo-io-framework";
 import { GBCoreService } from 'deploy/core.gbapp/services/GBCoreService';
 import { GBDeployer } from "../../core.gbapp/services/GBDeployer";
 import { GBConversationalService } from "../../core.gbapp/services/GBConversationalService";

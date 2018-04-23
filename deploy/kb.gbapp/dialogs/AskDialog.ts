@@ -34,7 +34,7 @@
 
 import { Prompts, UniversalBot, Session, ListStyle } from "botbuilder";
 import { IGBDialog } from  "botlib";
-import { AzureText } from "pragmatismo-io-framework1";
+import { AzureText } from "pragmatismo-io-framework";
 import { GBMinInstance } from "botlib";
 import { KBService } from './../services/KBService';
 
