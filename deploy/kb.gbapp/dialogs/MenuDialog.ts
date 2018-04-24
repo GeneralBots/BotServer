@@ -62,7 +62,7 @@ export class MenuDialog extends IGBDialog {
       .dialog("/menu", [
         (session, args) => {
           var rootSubjectId = null;
-          var botId = min.instance.botId;
+          var botId = min.botId;
 
           var msg = session.message;
           if (msg.attachments && msg.attachments.length > 0) {
@@ -146,7 +146,7 @@ export class MenuDialog extends IGBDialog {
                         "/kb",
                         min.instance.kb,
                         "subjects",
-                        "subject.png"   // TODO:  subject.internalId + ".png" or fallback to subject.png
+                        subject.internalId + ".png" // TODO: or fallback to subject.png
                       )
                     )
                   ]) // Using public dir of ui.

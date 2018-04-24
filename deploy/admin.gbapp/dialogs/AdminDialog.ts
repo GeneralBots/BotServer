@@ -150,8 +150,12 @@ export class AdminDialog extends IGBDialog {
   ) {
     let packageName = text.split(" ")[1];
     session.send(`Deploying package ${packageName}... (It may take a few seconds)`);
+
+    // TODO: Find packages in all posible locations.
+    let additionalPath = GBConfigService.get("ADDITIONAL_DEPLOY_PATH");
+
     deployer.deployPackageFromLocalPath(
-      UrlJoin("deploy", packageName),
+      UrlJoin(additionalPath, packageName),
       (data, err) => {
         session.send(`Package ${packageName} deployed... Please run rebuildIndex command.`);
         

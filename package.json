@@ -1,6 +1,6 @@
 {
   "name": "botserver",
-  "version": "0.0.11",
+  "version": "0.0.14",
   "description": "General Bots Community Edition open-core server.",
   "author": "me@rodrigorodriguez.com",
   "license": "AGPL-3.0",
@@ -28,7 +28,7 @@
     "express": "^4.16.2",
     "fs-walk": "0.0.1",
     "marked": "^0.3.12",
-    "pragmatismo-io-framework": "^1.0.3",
+    "pragmatismo-io-framework": "^1.0.4",
     "reflect-metadata": "^0.1.12",
     "request-promise-native": "^1.0.5",
     "sequelize": "^4.37.6",

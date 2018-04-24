@@ -30,6 +30,12 @@
 |                                                                             |
 \*****************************************************************************/
 
-// TODO: runWithAdal(authContext, () => {
-  require('./indexApp');
-// DISABLED: });
+import React from "react";
+import ReactDOM from "react-dom";
+import GBUIApp from "./GBUIApp";
+
+
+ReactDOM.render(
+  <GBUIApp head={document.getElementsByTagName("head")[0]} />,
+  document.getElementById("root")
+);

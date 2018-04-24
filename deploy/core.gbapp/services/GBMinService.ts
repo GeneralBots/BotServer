@@ -154,6 +154,9 @@ export class GBMinService {
         min.botId = instance.botId;
         min.core = _this.core;
         min.conversationalService = _this.conversationalService;
+        _this.core.loadInstance(min.botId, (data, err) => {
+          min.instance = data;
+        });
 
         let connector = new gBuilder.ChatConnector({
           appId: instance.marketplaceId,
@@ -196,20 +199,20 @@ export class GBMinService {
           botbuilder: (session, next) => {
             if (!session.privateConversationData.loaded) {
               setTimeout(
-                () =>
-                  `Sending loading instance to client ${min.instance.ui}.`,
-                min.conversationalService.sendEvent(
-                  session,
-                  "loadInstance",
-                  min.instance // TODO: Send a new thiner object.
-                ),
-                500
+                () => {
+                    min.conversationalService.sendEvent(
+                      session,
+                      "loadInstance",
+                      min.instance // TODO: Send a new thiner object.
+                    )
+                  },
+                1500
               );
               session.privateConversationData.loaded = true;
               appPackages.forEach(e => {
                 e.onNewSession(min, session)
               });
-              // PACKAGE: min.subjects = [];
+              session.userData.subjects = [];
             }
             next();
           },

@@ -40,7 +40,7 @@ const Walk = require("fs-walk");
 const WaitUntil = require("wait-until");
 const marked = require("marked");
 
-import { GuaribasQuestion, GuaribasAnswer, GuaribasSubject }from "../models";
+import { GuaribasQuestion, GuaribasAnswer, GuaribasSubject } from "../models";
 import { GBServiceCallback, IGBCoreService, IGBConversationalService, IGBInstance } from "botlib";
 import { AzureSearch } from "pragmatismo-io-framework";
 import { GBCoreService } from 'deploy/core.gbapp/services/GBCoreService';
@@ -74,16 +74,16 @@ export class KBService {
     GuaribasQuestion.findOne({
       where: {
         instanceId: instanceId,
-        content: text
+        content: `${text.trim()}?`
       }
     }).then((question: GuaribasQuestion) => {
-      GuaribasAnswer.findOne({
+      GuaribasAnswer.findAll({
         where: {
           instanceId: instanceId,
           answerId: question.answerId
         }
-      }).then((answer: GuaribasAnswer) => {
-        cb({ question: question, answer: answer }, null);
+      }).then((answer: GuaribasAnswer[]) => {
+        cb({ question: question, answer: answer[0] }, null);
       });
     });
   }
@@ -104,10 +104,6 @@ export class KBService {
     subjects: GuaribasSubject[],
     cb: GBServiceCallback<any>
   ) {
-    if (instance.searchKey === "") {
-      cb(null, null);
-      return;
-    }
 
     // Builds search query.
 
@@ -463,7 +459,7 @@ export class KBService {
         playerType: "video",
         data: answer.content
       });
-    }else if (answer.content.length > 140) {
+    } else if (answer.content.length > 140) {
       let msgs = [
         "Vou te responder na tela para melhor visualização...",
         "A resposta está na tela...",
@@ -592,17 +588,7 @@ export class KBService {
           GuaribasPackage.destroy({
             where: { instanceId: instance.instanceId, packageId: packageId }
           }).then(value => {
-            var search = new AzureSearch(
-              instance.searchKey,
-              instance.searchHost,
-              instance.searchIndex,
-              instance.searchIndexer
-            );
-            logger.trace("rebuildIndex called.");
-            search.rebuildIndex(() => {
-              logger.trace("rebuildIndex done.");
-              cb(null, null);
-            });
+            cb(null, null);
           });
         });
       });

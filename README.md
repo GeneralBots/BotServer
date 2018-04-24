@@ -1,4 +1,4 @@
-![General Bots Logo](https://github.com/pragmatismo-io/BotServer/blob/master/logo.png)
+![General Bots Logo](//raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
 Welcome to General Bots Community Edition!
 -------
@@ -28,6 +28,13 @@ Office tools like Word or Excel to edit your Bot - using code (JavaScript or Typ
 
 How To
 ------
+
+### Run the server
+
+1. `git clone https://github.com/pragmatismo-io/BotServer.git` or just download the files to a folder;
+2. Run `npm install` on that folder;
+3. Enter './deploy/default.gbui' folder and run `npm install` folled by `npm run build` (To build default Bot UI);
+4. On the downloaded folder (../..), run the bot server by `npm start`.
 
 ### Updating the Bot Knoledge Base (.gbkb folder)
 
