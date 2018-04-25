@@ -41,9 +41,7 @@
     "winston": "^2.4.0",
     "typescript": "2.7.2",
     "chai": "^4.1.2",
-    "mocha": "^3.5.3"
-  },
-  "devDependencies": {
+    "mocha": "^3.5.3",
     "@types/azure": "^0.9.19",
     "@types/chai": "4.0.4",
     "@types/mocha": "2.2.43",
