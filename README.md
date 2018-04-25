@@ -1,4 +1,4 @@
-![General Bots Logo](//raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
+![General Bots Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
 Welcome to General Bots Community Edition!
 -------
