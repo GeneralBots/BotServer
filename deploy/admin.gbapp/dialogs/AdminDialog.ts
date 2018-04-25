@@ -1,3 +1,4 @@
+import { KBService } from './../../kb.gbapp/services/KBService';
 /*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
@@ -45,7 +46,7 @@ const UrlJoin = require("url-join");
 export class AdminDialog extends IGBDialog {
 
   static setup(bot: UniversalBot, min: GBMinInstance) {
-  
+
     let importer = new GBImporter(min.core);
     let deployer = new GBDeployer(min.core, importer);
 
@@ -66,18 +67,18 @@ export class AdminDialog extends IGBDialog {
             session.send(
               "Welcome to Pragmatismo.io GeneralBots Administration."
             );
-          Prompts.text(session, "Which task do you wanna run now?");
+            Prompts.text(session, "Which task do you wanna run now?");
           } else {
             session.endDialog();
           }
         },
-        function(session: Session, results) {
+        function (session: Session, results) {
           var text = results.response;
           if (text === "quit") {
             session.privateConversationData.authenticated = false;
             session.replaceDialog("/");
           } else if (text === "sync") {
-            min.core.syncDatabaseStructure(() => {});
+            min.core.syncDatabaseStructure(() => { });
             session.send("Sync started...");
             session.replaceDialog("/admin", {
               firstRun: false
@@ -95,7 +96,7 @@ export class AdminDialog extends IGBDialog {
               })
             );
           } else if (text.split(" ")[0] === "redeployPackage") {
-            AdminDialog.undeployPackageCommand(text, min,session, () => {
+            AdminDialog.undeployPackageCommand(text, min, session, () => {
               AdminDialog.deployPackageCommand(text, session, deployer, min, () => {
                 session.send("Redeploy done.");
                 session.replaceDialog("/admin", {
@@ -158,7 +159,7 @@ export class AdminDialog extends IGBDialog {
       UrlJoin(additionalPath, packageName),
       (data, err) => {
         session.send(`Package ${packageName} deployed... Please run rebuildIndex command.`);
-        
+
       }
     );
   }
@@ -171,8 +172,11 @@ export class AdminDialog extends IGBDialog {
       min.instance.searchIndexer
     );
     session.send("Rebuilding index...");
-    search.rebuildIndex((data, err) => {
-      session.send("Index rebuilt.");
+    search.deleteIndex((data, err) => {
+      let kbService = new KBService();
+      search.createIndex(kbService.getSearchSchema(min.instance.searchIndex), "gb", (data, err) => {
+        session.send("Index rebuilt.");
+      });
     });
   }
 }

@@ -99,22 +99,18 @@ export class GBServer {
           sysPackages.push(p);
         });
 
-        core.syncDatabaseStructure((err) => {
+        (async () => {
+          try {
+            let appPackages = new Array<IGBPackage>();
+            await minService.deployPackages(core, server, appPackages, sysPackages);
+            minService.buildMin(instance => {
+              logger.info(`Instance loaded: ${instance.botId}...`);
+            }, server, appPackages);
 
-          (async () => {
-            try {
-              let appPackages = new Array<IGBPackage>();
-              await minService.deployPackages(core, server, appPackages, sysPackages);
-              minService.buildMin(instance => {
-                logger.info(`Instance loaded: ${instance.botId}...`);
-              }, server, appPackages);
-
-            } catch (err) {
-              logger.log(err)
-            }
-          })()
-
-        });
+          } catch (err) {
+            logger.log(err)
+          }
+        })()
 
       });
 

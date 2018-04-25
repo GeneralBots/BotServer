@@ -184,6 +184,7 @@ export class GBMinService {
         // Prepares bot service.
 
         let inMemoryStorage = new MemoryBotStorage();
+        
         min.bot = new gBuilder.UniversalBot(connector, {
           storage: inMemoryStorage
         });
@@ -197,6 +198,8 @@ export class GBMinService {
         min.bot.use({
 
           botbuilder: (session, next) => {
+
+            
             if (!session.privateConversationData.loaded) {
               setTimeout(
                 () => {
@@ -206,14 +209,16 @@ export class GBMinService {
                       min.instance // TODO: Send a new thiner object.
                     )
                   },
-                1500
+                500
               );
               session.privateConversationData.loaded = true;
-              appPackages.forEach(e => {
-                e.onNewSession(min, session)
-              });
               session.userData.subjects = [];
             }
+    
+            appPackages.forEach(e => {
+              e.onNewSession(min, session)
+            });
+
             next();
           },
           receive: function (event: any, next) {

@@ -159,10 +159,9 @@ export class KBService {
     }
   }
 
-  createGuaribasKbIndex(cb, name) {
-    let _this = this;
-    let schema = {
-      name: name,
+  getSearchSchema(indexName) {
+    return {
+      name: indexName,
       fields: [
         {
           name: "questionId",
@@ -259,28 +258,6 @@ export class KBService {
       defaultScoringProfile: null,
       corsOptions: null
     };
-
-    // TODO: Migrate to Azure Search.
-    // this.client.createIndex(schema, function(err, schemaReturned) {
-
-    //   let schemaIndexer = {
-    //     name: _this.searchIndexer,
-    //     description: 'gb',
-    //     dataSourceName: 'gb', // TODO: Create it too dynamically from .env.
-    //     targetIndexName: _this.searchIndex,
-    //     parameters: {
-    //       'maxFailedItems' : 10,
-    //       'maxFailedItemsPerBatch' : 5,
-    //       'base64EncodeKeys': false,
-    //       'batchSize': 500
-    //     }};
-
-    //   // create/update an indexer
-    //   _this.client.createIndexer(schemaIndexer, function(err, schemaIndexerReturned){
-    //     cb(schemaIndexerReturned, err);
-    //   });
-
-    // });
   }
 
   static getFormattedSubjectItems(subjects: GuaribasSubject[]) {
