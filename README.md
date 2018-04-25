@@ -1,7 +1,7 @@
 ![General Bots Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
 Welcome to General Bots Community Edition
--------
+----------------
 
 General Bots is a package based chat bot server focused in convention
 over configuration and code-less approaches, which brings software packages  
