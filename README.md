@@ -58,10 +58,7 @@ Notes:
 
 Note:
 
-* Whenever you is ready to your open-source ideas in form of .gbapp (source-code) and artifacts 
-like .gbkb, .gbtheme, .gbot or the .gbai full package read [CONTRIBUTING.md](https://github.com/pragmatismo-io/BotServer/blob/master/CONTRIBUTING.md) about performing Pull Requests (PR) 
-and creating other public  custom packages repositories of your own personal
-or organization General Bots Community Edition powered packages.
+* Whenever you are ready to turn your open-source bot ideas in form of  .gbapp (source-code) and artifacts like .gbkb, .gbtheme, .gbot or the .gbai full package read [CONTRIBUTING.md](https://github.com/pragmatismo-io/BotServer/blob/master/CONTRIBUTING.md) about performing Pull Requests (PR) and creating other public  custom packages repositories of your own personal or organization General Bots Community Edition powered packages.
 
 ### Just copy the source code to your machine
 
