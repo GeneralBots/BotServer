@@ -1,10 +1,14 @@
 {
   "name": "botserver",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "General Bots Community Edition open-core server.",
   "author": "me@rodrigorodriguez.com",
   "license": "AGPL-3.0",
   "main": "./src/app.ts",
+  "preferGlobal": "true",
+  "bin": {
+    "gbot" : "./dist/src/app.js"
+  },
   "homepage": "http://pragmatismo.io",
   "scripts": {
     "clean": "rimraf dist",

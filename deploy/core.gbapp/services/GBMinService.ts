@@ -294,7 +294,7 @@ export class GBMinService {
     return new Promise((resolve, reject) => {
       try {
         var _this = this;
-        let botsToProcess = 0, botsProcessed = 0;
+        let totalPackages = 0;
         let additionalPath = GBConfigService.get("ADDITIONAL_DEPLOY_PATH");
         let paths = [this.deployFolder];
         if (additionalPath) {
@@ -323,7 +323,7 @@ export class GBMinService {
         logger.trace(`Starting looking for generalPackages...`);
         paths.forEach(e => {
           logger.trace(`Looking in: ${e}...`);
-          doIt(e)
+          doIt(e);
         });
 
         /** Deploys all .gbot files first. */
@@ -331,7 +331,8 @@ export class GBMinService {
         botPackages.forEach(e => {
           logger.trace(`Deploying bot: ${e}...`);
           this.deployer.deployBot(e, (data, err) => {
-            botsProcessed++;
+            botPackages.length++;
+            logger.trace(`Bot: ${e} deployed...`);
           });
         });
 
@@ -384,18 +385,23 @@ export class GBMinService {
             let err = new Error(`Package type not handled: ${filename}.`);
             reject(err);
           }
-          botsProcessed++;
+          totalPackages++;
         });
 
         WaitUntil()
-          .interval(100)
-          .times(50)
+          .interval(1000)
+          .times(5)
           .condition(function (cb) {
             logger.trace(`Waiting for package deployment...`);
-            cb(botsProcessed == (generalPackages.length + botPackages.length));
+            cb(totalPackages == (generalPackages.length + botPackages.length));
           })
           .done(function (result) {
-            logger.trace(`Package deployment done.`);
+            if (botPackages.length === 0){
+              logger.info(`The bot server is running empty: No bot instances have been found, at least one .gbot file must be deployed.`);
+            }
+            else{
+              logger.trace(`Package deployment done.`);
+            }
             resolve();
           });
 

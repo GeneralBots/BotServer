@@ -29,12 +29,43 @@ Office tools like Word or Excel to edit your Bot - using code (JavaScript or Typ
 How To
 ------
 
-### Run the server
+### Run the server locally
 
-1. `git clone https://github.com/pragmatismo-io/BotServer.git` or just download the files to a folder;
-2. Run `npm install` on that folder;
-3. Enter './deploy/default.gbui' folder and run `npm install` folled by `npm run build` (To build default Bot UI);
-4. On the downloaded folder (../..), run the bot server by `npm start`.
+1. Install [Node.js](https://www.npmjs.com/get-npm) the current generation General Bots code execution platform;
+2. Open a **Terminal** on Linux and Mac or a **Command Prompt** window on Windows;npm
+3. Type `npm install -g botserver` and press *ENTER*;
+4. Type `gbot` to run the server core.
+
+Notes:
+
+* [*nodejs.install* Chocolatey Package](https://chocolatey.org/packages/nodejs.install) is also available.
+* The zip source code of general bots is also available for [Download](https://codeload.github.com/pragmatismo-io/BotServer/zip/master);
+
+### Setup development environment (Windows)
+
+1. [Optional] Install [Chocolatey](https://chocolatey.org/install), a Windows Package Manager;
+2. Install [git](`https://git-scm.com/`), a Software Configuration Management (SCM).;
+3. Install [Node.js](npmjs.com/get-npm), a [Runtime system](https://en.wikipedia.org/wiki/Runtime_system).
+(https://www.npmjs.com/get-npm);
+4. Install [Visual Studio Code](https://chocolatey.org/packages/nodejs.install), Brackets or Atom as an editor of your choice;
+5. [Fork](https://en.wikipedia.org/wiki/Fork_(software_development)) by visiting https://github.com/pragmatismo-io/BotServer/fork
+6. Clone the just forked repository by running `git clone <your-forked-repository-url>/BotServer.git` ;
+7. Run `npm install` on Command Prompt or PowerShell on the General Bots source-code folder;
+8. Enter './deploy/default.gbui' folder;
+9. Run `npm install` folled by `npm run build` (To build default Bot UI);
+10. Enter the On the downloaded folder (../..);
+11. Run the bot server by `npm start`.
+
+Note:
+
+* Whenever you is ready to your open-source ideas in form of .gbapp (source-code) and artifacts 
+like .gbkb, .gbtheme, .gbot or the .gbai full package read [CONTRIBUTING.md](https://github.com/pragmatismo-io/BotServer/blob/master/CONTRIBUTING.md) about performing Pull Requests (PR) 
+and creating other public  custom packages repositories of your own personal
+or organization General Bots Community Edition powered packages.
+
+### Just copy the source code to your machine
+
+1. [Download] the Zip file of (https://codeload.github.com/pragmatismo-io/BotServer/zip/master)
 
 ### Updating the Bot Knoledge Base (.gbkb folder)
 
