@@ -1,0 +1,5 @@
+node_modules
+/deploy/default.gbui/build
+/guaribas.sqlite
+/guaribas.log
+/work
