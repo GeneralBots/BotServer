@@ -67,14 +67,13 @@ export class GBServer {
     // the Marketplace until GB get serverless.
 
     let port = process.env.port || process.env.PORT || 4242;
-    logger.info(`Starting GeneralBots HTTP server...`);
+    logger.info(`Starting HTTP BotServer...`);
     let server = express();
 
     server.listen(port, () => {
 
-      logger.info(`General Bots Server - RUNNING on ${port}...`);
+      logger.info(`General Bot - RUNNING on ${port}...`);
       logger.info(`Starting instances...`);
-
 
       // Reads basic configuration, initialize minimal services.
 
@@ -93,7 +92,8 @@ export class GBServer {
 
         let sysPackages = new Array<IGBPackage>();
 
-        [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage, GBKBPackage, GBCustomerSatisfactionPackage].forEach(e => {
+        [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage, 
+          GBKBPackage, GBCustomerSatisfactionPackage].forEach(e => {
           logger.trace(`Loading sys package: ${e.name}...`);
           let p = Object.create(e.prototype) as IGBPackage;
           p.loadPackage(core, core.sequelize);
@@ -104,9 +104,11 @@ export class GBServer {
           try {
             let appPackages = new Array<IGBPackage>();
             await minService.deployPackages(core, server, appPackages, sysPackages);
-            minService.buildMin(instance => {
-              logger.info(`Instance loaded: ${instance.botId}...`);
-            }, server, appPackages);
+            
+              minService.buildMin(instance => {
+                logger.info(`Instance loaded: ${instance.botId}...`);
+              }, server, appPackages);
+            
 
           } catch (err) {
             logger.log(err)

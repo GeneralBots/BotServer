@@ -103,18 +103,9 @@ export class GBCoreService implements IGBCoreService {
         acquire: 40000
       }
     });
-    
-
-    // TODO: Packages add model.
-
-    if (GBConfigService.get("DATABASE_SYNC") === "true") {
-      this.syncDatabaseStructure(cb);
-    } else {
-      cb();
-    }
+    cb();
   }
-
-  /** Calls ORM to sync storage. */
+  
   syncDatabaseStructure(cb) {
     logger.trace("Syncing database...");
     this.sequelize.sync().then(value => {

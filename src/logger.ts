@@ -60,7 +60,7 @@ var logger = new (winston.Logger)({
 });
 
 logger.add(winston.transports.Console, {
-  label: 'General Bots Server',
+  label: 'General Bot Server',
   level: 'info',
   prettyPrint: true,
   colorize: true,
@@ -69,7 +69,7 @@ logger.add(winston.transports.Console, {
 });
 
 logger.add(winston.transports.File, {
-  label: 'General Bots Server',
+  label: 'General Bot Server',
   prettyPrint: true,
   level: 'info',
   silent: false,

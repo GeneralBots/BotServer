@@ -70,10 +70,6 @@ export class GBConfigService {
           value = undefined;
           break;
 
-        case "BOOT_PACKAGE":
-          value = "none";
-          break;
-
         case "DEFAULT_AI":
           value = undefined;
           break;
@@ -81,6 +77,7 @@ export class GBConfigService {
         case "DATABASE_SYNC":
           value = "false";
           break;
+          
         default:
           logger.trace(
             `Guaribas General Error: Invalid key on .env file: '${key}'`
