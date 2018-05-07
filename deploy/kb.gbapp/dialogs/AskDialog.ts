@@ -69,14 +69,13 @@ export class AskDialog extends IGBDialog {
           session.replaceDialog("/menu");
         } else {
           AzureText.getSpelledText(
-            "1f1653cd23e941ce869af73bdf9ef272",
+            min.instance.spellCheckerKey,
             text,
             (data, err) => {
               if (data != text) {
                 logger.trace("Spelled Text: " + data);
                 text = data;
               }
-
               session.userData.lastQuestion = data;
 
               service.ask(

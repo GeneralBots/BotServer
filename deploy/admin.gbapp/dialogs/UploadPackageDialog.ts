@@ -34,7 +34,6 @@
 
 import { IGBDialog } from  "botlib";
 import { Prompts, UniversalBot, Session, ListStyle } from "botbuilder";
-import UrlJoin from "url-join";
 import { GBMinInstance } from "botlib";
 var fs = require("fs");
 var request = require("request");

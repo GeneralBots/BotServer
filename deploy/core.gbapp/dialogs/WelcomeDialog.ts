@@ -33,7 +33,6 @@
 "use strict";
 
 const WaitUntil = require("wait-until");
-import UrlJoin from "url-join";
 import { GBCoreService } from "../services/GBCoreService";
 import { IGBDialog } from "botlib";
 import { GBConversationalService } from "../services/GBConversationalService";
@@ -42,6 +41,7 @@ import { GBMinInstance } from "botlib";
 
 export class WelcomeDialog extends IGBDialog {
   static setup(bot: UniversalBot, min: GBMinInstance) {
+
     bot.dialog("/", [
       function (session, args, next) {
         if (!session.userData.once) {

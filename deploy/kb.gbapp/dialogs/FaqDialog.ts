@@ -35,7 +35,7 @@
 import { KBService } from './../services/KBService';
 import { IGBDialog } from  "botlib";
 import { Prompts, UniversalBot, Session, ListStyle } from "botbuilder";
-import UrlJoin from "url-join";
+import UrlJoin from "urljoin";
 import { GBMinInstance } from "botlib";
 
 export class FaqDialog extends IGBDialog {

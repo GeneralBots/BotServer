@@ -33,7 +33,6 @@
 "use strict";
 
 import { UniversalBot, Session, Prompts, ListStyle } from "botbuilder";
-import UrlJoin from "url-join";
 import { CSService } from '../services/CSService';
 import { AzureText } from "pragmatismo-io-framework";
 import { GBMinInstance } from "botlib";

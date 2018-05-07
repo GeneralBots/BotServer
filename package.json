@@ -1,8 +1,10 @@
 {
   "name": "botserver",
-  "version": "0.0.18",
-  "description": "General Bots Community Edition open-core server.",
-  "author": "me@rodrigorodriguez.com",
+  "version": "0.0.19",
+  "description": "General Bot Community Edition open-core server.",
+  "contributors": [
+    "Rodrigo Rodriguez <me@rodrigorodriguez.com>"
+  ],
   "license": "AGPL-3.0",
   "main": "./src/app.ts",
   "preferGlobal": "true",
@@ -26,12 +28,13 @@
     "@types/azure": "^0.9.19",
     "@types/chai": "4.0.4",
     "@types/mocha": "2.2.43",
+    "@types/url-join": "^0.8.2",
     "async": "^1.5.2",
     "botbuilder": "^3.14.0",
     "botlib": "0.0.12",
     "chai": "^4.1.2",
     "chokidar": "^2.0.2",
-    "csv-parse": "^2.2.0",
+    "csv-parse": "^2.4.0",
     "dotenv-extended": "^1.0.4",
     "express": "^4.16.2",
     "fs-extra": "^5.0.0",

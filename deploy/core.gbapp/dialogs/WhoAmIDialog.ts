@@ -36,7 +36,6 @@ import { GBConversationalService } from "./../services/GBConversationalService";
 import { GBCoreService } from "../services/GBCoreService";
 import { IGBDialog } from  "botlib";
 import { UniversalBot, Session, Prompts } from "botbuilder";
-import UrlJoin from "url-join";
 import { GBMinInstance } from "botlib";
 
 

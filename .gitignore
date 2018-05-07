@@ -5,3 +5,4 @@ node_modules
 /guaribas.log
 /work
 /docs
+/.env

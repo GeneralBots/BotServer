@@ -42,7 +42,6 @@ import {
   HeroCard,
   CardImage
 } from "botbuilder";
-import UrlJoin from "url-join";
 import { IGBDialog } from  "botlib";
 import { GBMinInstance } from "botlib";
 import { AzureText } from "pragmatismo-io-framework";

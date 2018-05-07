@@ -42,7 +42,6 @@ const Walk = require("fs-walk");
 const WaitUntil = require("wait-until");
 
 import { GBServiceCallback } from "botlib";
-import { UrlJoin } from 'url-join';
 import { GBDeployer } from "../../core.gbapp/services/GBDeployer";
 import { GuaribasQuestionAlternate } from '../models';
 import { GuaribasConversation } from '../../analytics.gblib/models';

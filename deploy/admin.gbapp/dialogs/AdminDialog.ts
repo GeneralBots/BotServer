@@ -1,4 +1,3 @@
-import { KBService } from './../../kb.gbapp/services/KBService';
 /*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
@@ -34,6 +33,7 @@ import { KBService } from './../../kb.gbapp/services/KBService';
 "use strict";
 
 
+import { UrlJoin } from "urljoin";
 import { AzureSearch } from "pragmatismo-io-framework";
 import { Prompts, Session, UniversalBot } from 'botbuilder';
 import { GBMinInstance } from "botlib";
@@ -41,8 +41,8 @@ import { IGBDialog } from "botlib";
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GBImporter } from '../../core.gbapp/services/GBImporter';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
+import { KBService } from './../../kb.gbapp/services/KBService';
 
-const UrlJoin = require("url-join");
 export class AdminDialog extends IGBDialog {
 
   static setup(bot: UniversalBot, min: GBMinInstance) {

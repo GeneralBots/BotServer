@@ -91,6 +91,10 @@ export class GuaribasInstance extends Model<GuaribasInstance> implements IGBInst
 
   @Column webchatKey: string;
 
+  @Column whatsappKey: string;
+
+  @Column spellCheckerKey: string;
+
   @Column theme: string;
 
   @Column ui: string;

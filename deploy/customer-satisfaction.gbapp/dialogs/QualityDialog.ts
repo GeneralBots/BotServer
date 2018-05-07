@@ -34,7 +34,6 @@
 
 import { IGBDialog } from  "botlib";
 import { UniversalBot, Session, Prompts, ListStyle } from "botbuilder";
-import UrlJoin from "url-join";
 import { GBMinInstance } from "botlib";
 import { CSService } from "../services/CSService";
 const logger = require("../../../src/logger");
