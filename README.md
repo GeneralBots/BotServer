@@ -47,6 +47,10 @@ Notes:
 2. Specify DATABASE_SYNC to TRUE so database sync is run when the server is run.
 3. In case of Microsoft SQL Server add the following keys: DATABASE_HOST, DATABASE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD, DATABASE_DIALECT to `mssql`.
 
+Note:
+
+* You can specify several bots separated by semicolon, the BotServer will serve all of them at once.
+
 ## Setup development environment (Windows)
 
 1. [Optional] Install [Chocolatey](https://chocolatey.org/install), a Windows Package Manager;
