@@ -42,6 +42,8 @@ import { Sequelize } from "sequelize-typescript";
 
 export class GBAnalyticsPackage implements IGBPackage {
   
+  sysPackages: IGBPackage[] = null;
+    
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     
   }

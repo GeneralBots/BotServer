@@ -41,7 +41,7 @@ import { Session } from 'botbuilder';
 import { Sequelize } from 'sequelize-typescript';
 
 export class GBCustomerSatisfactionPackage implements IGBPackage {
-
+  sysPackages: IGBPackage[] = null;
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasQuestionAlternate

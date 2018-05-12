@@ -44,6 +44,9 @@ import { Sequelize } from 'sequelize-typescript';
 import { IGBCoreService } from 'botlib';
 
 export class GBKBPackage implements IGBPackage {
+
+  sysPackages: IGBPackage[] = null;
+  
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasAnswer,

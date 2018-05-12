@@ -1,4 +1,4 @@
-#! /usr/bin/env node
+#! /usr/bin / env node
 /*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
@@ -42,6 +42,7 @@ import { GBConfigService } from "../deploy/core.gbapp/services/GBConfigService";
 import { GBConversationalService } from "../deploy/core.gbapp/services/GBConversationalService";
 import { GBMinService } from "../deploy/core.gbapp/services/GBMinService";
 import { GBDeployer } from "../deploy/core.gbapp/services/GBDeployer";
+import { GBWhatsappPackage } from './../deploy/whatsapp.gblib/index';
 import { GBCoreService } from "../deploy/core.gbapp/services/GBCoreService";
 import { GBImporter } from "../deploy/core.gbapp/services/GBImporter";
 import { GBAnalyticsPackage } from "../deploy/analytics.gblib";
@@ -52,6 +53,9 @@ import { GBAdminPackage } from '../deploy/admin.gbapp/index';
 import { GBCustomerSatisfactionPackage } from "../deploy/customer-satisfaction.gbapp";
 import { IGBPackage } from 'botlib';
 
+let appPackages = new Array<IGBPackage>();
+          
+
 /**
  * General Bots open-core entry point.
  */
@@ -60,19 +64,17 @@ export class GBServer {
   /** Program entry-point. */
   static run() {
 
-    logger.info("Starting General Bots Open Core (Guaribas)...");
-
     // Creates a basic HTTP server that will serve several URL, one for each
     // bot instance. This allows the same server to attend multiple Bot on
     // the Marketplace until GB get serverless.
 
     let port = process.env.port || process.env.PORT || 4242;
-    logger.info(`Starting HTTP BotServer...`);
+    logger.info(`The Bot Server is in STARTING mode...`);
     let server = express();
 
     server.listen(port, () => {
 
-      logger.info(`General Bot - RUNNING on ${port}...`);
+      logger.info(`Accepting connections on ${port}...`);
       logger.info(`Starting instances...`);
 
       // Reads basic configuration, initialize minimal services.
@@ -90,25 +92,23 @@ export class GBServer {
         let conversationalService = new GBConversationalService(core);
         let minService = new GBMinService(core, conversationalService, deployer);
 
-        let sysPackages = new Array<IGBPackage>();
-
-        [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage, 
-          GBKBPackage, GBCustomerSatisfactionPackage].forEach(e => {
-          logger.trace(`Loading sys package: ${e.name}...`);
-          let p = Object.create(e.prototype) as IGBPackage;
-          p.loadPackage(core, core.sequelize);
-          sysPackages.push(p);
-        });
+        [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage,
+          GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(e => {
+            logger.trace(`Loading sys package: ${e.name}...`);
+            let p = Object.create(e.prototype) as IGBPackage;
+            p.loadPackage(core, core.sequelize);
+            
+          });
 
         (async () => {
           try {
-            let appPackages = new Array<IGBPackage>();
-            await minService.deployPackages(core, server, appPackages, sysPackages);
-            
-              minService.buildMin(instance => {
-                logger.info(`Instance loaded: ${instance.botId}...`);
-              }, server, appPackages);
-            
+            await minService.deployPackages(core, server, appPackages);
+            logger.info(`The Bot Server is in RUNNING mode...`);
+
+            minService.buildMin(instance => {
+              logger.info(`Instance loaded: ${instance.botId}...`);
+            }, server, appPackages);
+
 
           } catch (err) {
             logger.log(err)

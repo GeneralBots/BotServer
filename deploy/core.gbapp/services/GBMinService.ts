@@ -57,6 +57,7 @@ import { GBDeployer } from './GBDeployer';
 import { GBSecurityPackage } from '../../security.gblib';
 import { GBAdminPackage } from './../../admin.gbapp/index';
 import { GBCustomerSatisfactionPackage } from "../../customer-satisfaction.gbapp";
+import { GBWhatsappPackage } from "../../whatsapp.gblib";
 
 /** Minimal service layer for a bot. */
 
@@ -155,7 +156,24 @@ export class GBMinService {
         min.core = _this.core;
         min.conversationalService = _this.conversationalService;
         _this.core.loadInstance(min.botId, (data, err) => {
+
           min.instance = data;
+
+          // Call the loadBot event for all packages.
+
+          appPackages.forEach(e => {
+            e.sysPackages = new Array<IGBPackage>();
+            [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage,
+              GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(sysPackage => {
+                logger.trace(`Loading sys package: ${sysPackage.name}...`);
+                let p = Object.create(sysPackage.prototype) as IGBPackage;
+                p.loadBot(min);                
+                e.sysPackages.push(p);
+              });   
+                
+            e.loadBot(min);
+          });
+
         });
 
         let connector = new gBuilder.ChatConnector({
@@ -189,9 +207,6 @@ export class GBMinService {
           storage: inMemoryStorage
         });
 
-        // Call the loadBot event.
-
-        appPackages.forEach(e => e.loadBot(min));
 
         // Setups handlers.
 
@@ -215,7 +230,7 @@ export class GBMinService {
             }
 
             appPackages.forEach(e => {
-              e.onNewSession(min, session)
+              e.onNewSession(min, session);
             });
 
             next();
@@ -272,13 +287,6 @@ export class GBMinService {
           }
         });
 
-        let generalPackages = [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage, GBKBPackage, GBCustomerSatisfactionPackage];
-
-        generalPackages.forEach(e => {
-          logger.trace(`Loading package: ${e.name}...`);
-          let p = Object.create(e.prototype) as IGBPackage;
-          p.loadBot(min);
-        });
 
         // Specialized load for each min instance.
 
@@ -288,7 +296,7 @@ export class GBMinService {
   }
 
   /** Performs package deployment in all .gbai or default. */
-  public deployPackages(core: IGBCoreService, server: any, appPackages: Array<IGBPackage>, sysPackages: Array<IGBPackage>) {
+  public deployPackages(core: IGBCoreService, server: any, appPackages: Array<IGBPackage>) {
 
     return new Promise((resolve, reject) => {
       try {
@@ -356,7 +364,7 @@ export class GBMinService {
 
         WaitUntil()
           .interval(1000)
-          .times(5)
+          .times(10)
           .condition(function (cb) {
             logger.trace(`Waiting for app package deployment...`);
             cb(appPackagesProcessed == gbappPackages.length);

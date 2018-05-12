@@ -40,6 +40,8 @@ import { Sequelize } from 'sequelize-typescript';
 import { IGBCoreService } from 'botlib';
 
 export class GBAdminPackage implements IGBPackage {
+
+  sysPackages: IGBPackage[] = null;
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
   }
   unloadPackage(core: IGBCoreService): void {

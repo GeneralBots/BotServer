@@ -43,7 +43,8 @@ import { Sequelize } from "sequelize-typescript";
 import { GuaribasInstance, GuaribasException, GuaribasPackage, GuaribasChannel } from "./models/GBModel";
 
 export class GBCorePackage implements IGBPackage {
-
+  sysPackages: IGBPackage[] = null;
+  
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasInstance,

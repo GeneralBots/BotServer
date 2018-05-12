@@ -39,8 +39,9 @@ const UrlJoin = require("url-join");
 const Walk = require("fs-walk");
 const logger = require("../../../src/logger");
 const Swagger = require('swagger-client');
-const open = require('open');
 const rp = require('request-promise');
+import * as request from "request-promise-native";
+
 import { GBServiceCallback, GBService, IGBInstance } from "botlib";
 
 export class WhatsappDirectLine extends GBService {
@@ -55,6 +56,8 @@ export class WhatsappDirectLine extends GBService {
 
         this.directLineSecret = directLineSecret;
 
+
+        // TODO: Migrate to Swagger 3.
         let directLineClient = rp(this.directLineSpecUrl)
             .then(function (spec) {
                 return new Swagger({
@@ -64,21 +67,23 @@ export class WhatsappDirectLine extends GBService {
             })
             .then(function (client) {
                 client.clientAuthorizations.add('AuthorizationBotConnector',
-                    new Swagger.ApiKeyAuthorization('Authorization', 'Bearer ' + this.directLineSecret, 'header'));
+                    new Swagger.ApiKeyAuthorization('Authorization', 'Bearer ' + directLineSecret, 'header'));
                 return client;
             })
             .catch(function (err) {
                 console.error('Error initializing DirectLine client', err);
             });
 
+        // TODO: Remove *this* issue.
+        let _this = this;
         directLineClient.then(function (client) {
-            client.Conversations.Conversations_StartConversation()                          // create conversation
+            client.Conversations.Conversations_StartConversation()
                 .then(function (response) {
                     return response.obj.conversationId;
-                })                            // obtain id
+                })                           
                 .then(function (conversationId) {
-                    this.sendMessagesFromConsole(client, conversationId);                        // start watching console input for sending new messages to bot
-                    this.pollMessages(client, conversationId);                                   // start polling messages from bot
+                    _this.sendMessagesFromConsole(client, conversationId);
+                    _this.pollMessages(client, conversationId);           
                 })
                 .catch(function (err) {
                     console.error('Error starting conversation', err);
@@ -87,6 +92,7 @@ export class WhatsappDirectLine extends GBService {
     }
 
     sendMessagesFromConsole(client, conversationId) {
+        let _this = this;
         var stdin = process.openStdin();
         process.stdout.write('Command> ');
         stdin.addListener('data', function (e) {
@@ -97,7 +103,6 @@ export class WhatsappDirectLine extends GBService {
                     return process.exit();
                 }
 
-                // send message
                 client.Conversations.Conversations_PostActivity(
                     {
                         conversationId: conversationId,
@@ -106,8 +111,8 @@ export class WhatsappDirectLine extends GBService {
                             text: input,
                             type: 'message',
                             from: {
-                                id: this.directLineClientName,
-                                name: this.directLineClientName
+                                id: _this.directLineClientName,
+                                name: _this.directLineClientName
                             }
                         }
                     }).catch(function (err) {
@@ -119,8 +124,9 @@ export class WhatsappDirectLine extends GBService {
         });
     }
 
-    /** Poll Messages from conversation using DirectLine client */
+    /** TBD: Poll Messages from conversation using DirectLine client */
     pollMessages(client, conversationId) {
+        let _this = this;
         console.log('Starting polling message for conversationId: ' + conversationId);
         var watermark = null;
         setInterval(function () {
@@ -129,19 +135,22 @@ export class WhatsappDirectLine extends GBService {
                     watermark = response.obj.watermark;                                 // use watermark so subsequent requests skip old messages
                     return response.obj.activities;
                 })
-                .then(this.printMessages);
+                .then(_this.printMessages, _this.directLineClientName);
         }, this.pollInterval);
     }
 
-    printMessages(activities) {
+    printMessages(activities, directLineClientName) {
+
         if (activities && activities.length) {
             // ignore own messages
-            activities = activities.filter(function (m) { return m.from.id !== this.directLineClientName });
+            activities = activities.filter(function (m) { return m.from.id !== directLineClientName });
 
             if (activities.length) {
 
                 // print other messages
-                activities.forEach(this.printMessage);
+                activities.forEach(activity => {
+                    console.log(activity.text);
+                });
 
                 process.stdout.write('Command> ');
             }
@@ -183,4 +192,29 @@ export class WhatsappDirectLine extends GBService {
         console.log('*' + contentLine(attachment.content.text) + '*');
         console.log('*'.repeat(width + 1) + '/');
     }
+
+    
+    async sendToDevice(senderID, msg) {
+        var options = {
+            method: 'POST',
+            url: 'https://www.waboxapp.com/api/send/chat',
+            qs:
+                {
+                    token: '',
+                    uid: '55****388**',
+                    to: senderID,
+                    custom_uid: 'GBZAP' + (new Date()).toISOString,
+                    text: msg
+                },
+            headers:
+                {
+                    'cache-control': 'no-cache'
+                }
+        };
+
+        const result = await request.get(options);
+
+    }
+
+
 }

@@ -31,7 +31,8 @@
     "@types/url-join": "^0.8.2",
     "async": "^1.5.2",
     "botbuilder": "^3.14.0",
-    "botlib": "0.0.12",
+    
+    "botlib": "0.0.16",
     "chai": "^4.1.2",
     "chokidar": "^2.0.2",
     "csv-parse": "^2.4.0",
@@ -48,12 +49,15 @@
     "sequelize": "^4.37.6",
     "sequelize-typescript": "^0.6.3",
     "sqlite3": "^4.0.0",
+    
     "tedious": "^2.1.1",
     "ts-node": "3.3.0",
     "typedoc": "^0.10.0",
     "typescript": "2.7.2",
     "url-join": "^4.0.0",
     "wait-until": "0.0.2",
-    "winston": "^2.4.0"
+    "winston": "^2.4.0",
+    
+    "swagger-client": "^2.1.18"
   }
 }

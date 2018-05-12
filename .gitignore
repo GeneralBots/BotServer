@@ -4,5 +4,10 @@ node_modules
 /guaribas.sqlite
 /guaribas.log
 /work
+/tmp
 /docs
 /.env
+/chart.html
+/chart.png
+/chart.svg
+/gbtrace.log

@@ -41,7 +41,7 @@ import { Sequelize } from "sequelize-typescript";
 import { GuaribasUser, GuaribasGroup, GuaribasUserGroup } from "./models";
 
 export class GBSecurityPackage implements IGBPackage {
-
+  sysPackages: IGBPackage[] = null;
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasGroup,

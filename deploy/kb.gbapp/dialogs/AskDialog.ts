@@ -69,7 +69,7 @@ export class AskDialog extends IGBDialog {
           session.replaceDialog("/menu");
         } else {
           AzureText.getSpelledText(
-            min.instance.spellCheckerKey,
+            min.instance.spellcheckerKey,
             text,
             (data, err) => {
               if (data != text) {
