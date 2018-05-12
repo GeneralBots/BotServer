@@ -42,6 +42,7 @@ import { WhatsappDirectLine } from "./services/WhatsappDirectLine";
 
 
 export class GBWhatsappPackage implements IGBPackage {
+  
   sysPackages: IGBPackage[] = null;
   channel: WhatsappDirectLine;
 
@@ -53,7 +54,8 @@ export class GBWhatsappPackage implements IGBPackage {
   }
 
   loadBot(min: GBMinInstance): void {
-    this.channel = new WhatsappDirectLine(min.instance.whatsappBotKey);
+    this.channel = new WhatsappDirectLine(min.botId, min.instance.whatsappBotKey, min.instance.whatsappServiceKey,
+       min.instance.whatsappServiceNumber);
   }
 
   unloadBot(min: GBMinInstance): void {

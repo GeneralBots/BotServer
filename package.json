@@ -32,7 +32,7 @@
     "async": "^1.5.2",
     "body-parser": "^1.18.2",
     "botbuilder": "^3.14.0",
-    "botlib": "0.0.16",
+    "botlib": "0.0.18",
     "chai": "^4.1.2",
     "chokidar": "^2.0.2",
     "csv-parse": "^2.4.0",

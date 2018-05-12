@@ -47,18 +47,23 @@ import { GBServiceCallback, GBService, IGBInstance } from "botlib";
 export class WhatsappDirectLine extends GBService {
 
     pollInterval = 1000;
-    directLineSecret = '';
     directLineClientName = 'DirectLineClient';
     directLineSpecUrl = 'https://docs.botframework.com/en-us/restapi/directline3/swagger.json';
+    directLineClient: any;
+    whatsappServiceKey: string;
+    whatsappServiceNumber: string;
+    botId: string;
 
-    constructor(directLineSecret) {
+    constructor(botId, directLineSecret, whatsappServiceKey, whatsappServiceNumber) {
+
         super();
 
-        this.directLineSecret = directLineSecret;
+        this.botId = botId;
+        this.whatsappServiceKey = whatsappServiceKey;
+        this.whatsappServiceNumber = whatsappServiceNumber;
 
-        
         // TODO: Migrate to Swagger 3.
-        let directLineClient = rp(this.directLineSpecUrl)
+        this.directLineClient = rp(this.directLineSpecUrl)
             .then(function (spec) {
                 return new Swagger({
                     spec: JSON.parse(spec.trim()),
@@ -67,147 +72,173 @@ export class WhatsappDirectLine extends GBService {
             })
             .then(function (client) {
                 client.clientAuthorizations.add('AuthorizationBotConnector',
-                    new Swagger.ApiKeyAuthorization('Authorization', 'Bearer ' + directLineSecret, 'header'));
+                    new Swagger.ApiKeyAuthorization('Authorization', 'Bearer ' +
+                        directLineSecret, 'header'));
                 return client;
             })
             .catch(function (err) {
-                console.error('Error initializing DirectLine client', err);
+                logger.error('Error initializing DirectLine client', err);
             });
 
-        // TODO: Remove *this* issue.
-        let _this = this;
-        directLineClient.then(function (client) {
-            client.Conversations.Conversations_StartConversation()
-                .then(function (response) {
-                    return response.obj.conversationId;
-                })                           
-                .then(function (conversationId) {
-                    _this.sendMessagesFromConsole(client, conversationId);
-                    _this.pollMessages(client, conversationId);           
-                })
-                .catch(function (err) {
-                    console.error('Error starting conversation', err);
-                });
-        });
     }
 
-    received (req,res){
-        logger.info(`Whatsapp called. Event: ${req.body.event}, muid: ${req.body.muid}, cuid: ${req.body.cuid}`);
-        res.end();
-    }
+    received(req, res) {
 
-    sendMessagesFromConsole(client, conversationId) {
-        let _this = this;
-        var stdin = process.openStdin();
-        process.stdout.write('Command> ');
-        stdin.addListener('data', function (e) {
-            var input = e.toString().trim();
-            if (input) {
-                // exit
-                if (input.toLowerCase() === 'exit') {
-                    return process.exit();
-                }
+        logger.info(`GBWhatsapp: Hook called. Event: ${req.body.event}, 
+            muid: ${req.body.muid}, contact: ${req.body.contact.name},
+            (${req.body.contact.uid}, ${req.body.contact.type})`);
 
-                client.Conversations.Conversations_PostActivity(
-                    {
-                        conversationId: conversationId,
-                        activity: {
-                            textFormat: 'plain',
-                            text: input,
-                            type: 'message',
-                            from: {
-                                id: _this.directLineClientName,
-                                name: _this.directLineClientName
-                            }
-                        }
-                    }).catch(function (err) {
-                        console.error('Error sending message:', err);
+        let conversationId = null; // req.body.cuid;
+        let text = req.body.message.body.text;
+        let from = req.body.contact.uid;
+        let fromName = req.body.contact.name;
+
+        this.directLineClient.then((client) => {
+
+            if (conversationId == null) {
+
+                logger.info(`GBWhatsapp: Starting new conversation on Bot.`);
+                client.Conversations.Conversations_StartConversation()
+                    .then((response) => {
+                        return response.obj.conversationId;
+                    })
+                    .then((conversationId) => {
+
+                        this.inputMessage(client, conversationId, text,
+                            from, fromName);
+
+                        this.pollMessages(client, conversationId,from, fromName);
+                    })
+                    .catch((err) => {
+                        console.error('Error starting conversation', err);
                     });
 
-                process.stdout.write('Command> ');
+            } else {
+                this.inputMessage(client, conversationId, text,
+                    from, fromName);
+
+                this.pollMessages(client, conversationId, from, fromName);
             }
+            res.end();
         });
     }
 
-    /** TBD: Poll Messages from conversation using DirectLine client */
-    pollMessages(client, conversationId) {
-        let _this = this;
-        console.log('Starting polling message for conversationId: ' + conversationId);
+
+    inputMessage(client, conversationId, text, from, fromName) {
+
+        client.Conversations.Conversations_PostActivity(
+            {
+                conversationId: conversationId,
+                activity: {
+                    textFormat: 'plain',
+                    text: text,
+                    type: 'message',
+                    from: {
+                        id: from,
+                        name: fromName
+                    },
+                    replyToId: from
+                }
+            }).catch(function (err) {
+                logger.error(`GBWhatsapp: Error receiving message: ${err}.`);
+            });
+
+    }
+
+
+    pollMessages(client, conversationId,from, fromName){
+
+        logger.info(`GBWhatsapp: Starting polling message for conversationId: 
+        ${conversationId}.`);
+
         var watermark = null;
-        setInterval(function () {
-            client.Conversations.Conversations_GetActivities({ conversationId: conversationId, watermark: watermark })
-                .then(function (response) {
-                    watermark = response.obj.watermark;                                 // use watermark so subsequent requests skip old messages
+        setInterval(() => {
+            client.Conversations.Conversations_GetActivities({
+                conversationId:
+                    conversationId, watermark: watermark
+            })
+                .then((response) => {
+                    watermark = response.obj.watermark;
                     return response.obj.activities;
                 })
-                .then(_this.printMessages, _this.directLineClientName);
+                .then((activities) => {
+                    this.printMessages(activities, from, fromName);
+                });
         }, this.pollInterval);
     }
 
-    printMessages(activities, directLineClientName) {
+    printMessages(activities,from, fromName) {
 
         if (activities && activities.length) {
-            // ignore own messages
-            activities = activities.filter(function (m) { return m.from.id !== directLineClientName });
+
+            // Ignore own messages.
+
+            activities = activities.filter((m) => { return m.from.id === this.botId });
 
             if (activities.length) {
 
-                // print other messages
-                activities.forEach(activity => {
-                    console.log(activity.text);
-                });
+                // Print other messages.
 
-                process.stdout.write('Command> ');
+                activities.forEach(activity => {
+                    this.printMessage(activity, from, fromName);
+                });
             }
         }
     }
 
-    printMessage(activity) {
+    printMessage(activity, from, fromName) {
+
+        let output: string;
+
         if (activity.text) {
-            console.log(activity.text);
+            logger.info(`GBWhatsapp: MSG: ${activity.text}`);
+            output = activity.text;
         }
 
         if (activity.attachments) {
             activity.attachments.forEach(function (attachment) {
                 switch (attachment.contentType) {
                     case "application/vnd.microsoft.card.hero":
-                        this.renderHeroCard(attachment);
+                        output += this.renderHeroCard(attachment);
                         break;
 
                     case "image/png":
-                        console.log('Opening the requested image ' + attachment.contentUrl);
-                        open(attachment.contentUrl);
+                        logger.info('Opening the requested image ' + attachment.contentUrl);
+                        output += `\n${attachment.contentUrl}`;
                         break;
                 }
             });
         }
+
+        this.sendToDevice(from, fromName, output);
     }
 
     renderHeroCard(attachment) {
-        var width = 70;
-        var contentLine = function (content) {
+        let output: string;
+        let width = 70;
+
+        let contentLine = function (content) {
             return ' '.repeat((width - content.length) / 2) +
                 content +
                 ' '.repeat((width - content.length) / 2);
         }
 
-        console.log('/' + '*'.repeat(width + 1));
-        console.log('*' + contentLine(attachment.content.title) + '*');
-        console.log('*' + ' '.repeat(width) + '*');
-        console.log('*' + contentLine(attachment.content.text) + '*');
-        console.log('*'.repeat(width + 1) + '/');
+        output += '/' + '*'.repeat(width + 1);
+        output += '*' + contentLine(attachment.content.title) + '*';
+        output += '*' + ' '.repeat(width) + '*';
+        output += '*' + contentLine(attachment.content.text) + '*';
+        output += '*'.repeat(width + 1) + '/';
     }
 
-    
-    async sendToDevice(senderID, msg) {
+    async sendToDevice(to, toName, msg) {
         var options = {
             method: 'POST',
             url: 'https://www.waboxapp.com/api/send/chat',
             qs:
                 {
-                    token: '',
-                    uid: '55****388**',
-                    to: senderID,
+                    token: this.whatsappServiceKey,
+                    uid: this.whatsappServiceNumber,
+                    to: to,
                     custom_uid: 'GBZAP' + (new Date()).toISOString,
                     text: msg
                 },
@@ -218,8 +249,5 @@ export class WhatsappDirectLine extends GBService {
         };
 
         const result = await request.get(options);
-
     }
-
-
 }

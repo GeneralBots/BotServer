@@ -1,9 +1,9 @@
-![General Bots Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
+![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
-Welcome to General Bots Community Edition
+Welcome to General Bot Community Edition
 ----------------
 
-General Bots is a package based chat bot server focused in convention
+General Bot is a package based chat bot server focused in convention
 over configuration and code-less approaches, which brings software packages  
 and application server concepts to help parallel bot development.
 
@@ -31,7 +31,7 @@ How To
 
 ### Run the server locally
 
-1. Install [Node.js](https://www.npmjs.com/get-npm) the current generation General Bots code execution platform;
+1. Install [Node.js](https://www.npmjs.com/get-npm) the current generation General Bot code execution platform;
 2. Open a **Terminal** on Linux and Mac or a **Command Prompt** window on Windows;npm
 3. Type `npm install -g botserver` and press *ENTER*;
 4. Type `gbot` to run the server core.
@@ -39,7 +39,7 @@ How To
 Notes:
 
 * [*nodejs.install* Chocolatey Package](https://chocolatey.org/packages/nodejs.install) is also available.
-* The zip source code of general bots is also available for [Download](https://codeload.github.com/pragmatismo-io/BotServer/zip/master);
+* The zip source code of General Bot is also available for [Download](https://codeload.github.com/pragmatismo-io/BotServer/zip/master);
 
 ### Configure the server to deploy specific directory
 
@@ -56,19 +56,21 @@ Note:
 1. [Optional] Install [Chocolatey](https://chocolatey.org/install), a Windows Package Manager;
 2. Install [git](`https://git-scm.com/`), a Software Configuration Management (SCM).;
 3. Install [Node.js](npmjs.com/get-npm), a [Runtime system](https://en.wikipedia.org/wiki/Runtime_system).
-(https://www.npmjs.com/get-npm);
+(https://www.npmjs.com/get-npm) (suggested: LTS 8.x.x);
 4. Install [Visual Studio Code](https://chocolatey.org/packages/nodejs.install), Brackets or Atom as an editor of your choice;
 5. [Fork](https://en.wikipedia.org/wiki/Fork_(software_development)) by visiting https://github.com/pragmatismo-io/BotServer/fork
 6. Clone the just forked repository by running `git clone <your-forked-repository-url>/BotServer.git` ;
-7. Run `npm install` on Command Prompt or PowerShell on the General Bots source-code folder;
-8. Enter './deploy/default.gbui' folder;
-9. Run `npm install` folled by `npm run build` (To build default Bot UI);
-10. Enter the On the downloaded folder (../..);
-11. Run the bot server by `npm start`.
+7. Run `npm install -g typescript`;
+8. Run `npm install` on Command Prompt or PowerShell on the General Bot source-code folder;
+9. Enter './deploy/default.gbui' folder;
+10. Run `npm install` folled by `npm run build` (To build default Bot UI);
+11. Enter the On the downloaded folder (../..);
+12. Compile the bot server by `tsc`.
+13. Run the bot server by `npm start`.
 
 Note:
 
-* Whenever you are ready to turn your open-source bot ideas in form of  .gbapp (source-code) and artifacts like .gbkb, .gbtheme, .gbot or the .gbai full package read [CONTRIBUTING.md](https://github.com/pragmatismo-io/BotServer/blob/master/CONTRIBUTING.md) about performing Pull Requests (PR) and creating other public  custom packages repositories of your own personal or organization General Bots Community Edition powered packages.
+* Whenever you are ready to turn your open-source bot ideas in form of  .gbapp (source-code) and artifacts like .gbkb, .gbtheme, .gbot or the .gbai full package read [CONTRIBUTING.md](https://github.com/pragmatismo-io/BotServer/blob/master/CONTRIBUTING.md) about performing Pull Requests (PR) and creating other public  custom packages repositories of your own personal or organization General Bot Community Edition powered packages.
 
 ### Just copy the source code to your machine
 
@@ -81,7 +83,7 @@ The subjects.json file contains all information related to the subject tree and 
 ### Creating a new Theme folder (.gbtheme folder)
 
 A theme is composed of some CSS files and images. That set of files can change
-everything in the General Bots UI. Use them extensively before going to change
+everything in the General Bot UI. Use them extensively before going to change
 the UI application itself (HTML & JS).
 
 Package Types
@@ -97,10 +99,10 @@ directory.
 The artificial intelligence extensions in form of pluggable apps. Dialogs,
 Services and all model related to data. A set of interactions, use cases, 
 integrations in form of conversationals dialogs.
-The .gbapp adds the General Bots base library (botlib) for building Node.js TypeScript Apps packages.
+The .gbapp adds the General Bot base library (botlib) for building Node.js TypeScript Apps packages.
 
 
-Four components builds up a General Bots App:
+Four components builds up a General Bot App:
 
 * dialogs
 * models
@@ -121,7 +123,6 @@ Models builds the foundation of data relationships in form of entities.
 #### Services
 
 Services are a façade for bot back-end logic and other custom processing.
-
 
 #### Tests
 
@@ -152,7 +153,7 @@ Reference
 
 ### GeneralBots admin commands
 
-General Bots can be controlled by the same chat window people talk to, so 
+General Bot can be controlled by the same chat window people talk to, so 
 here is a list of admin commands related to deploying .gb* files.
 
 | Command         | Description                                                                                                     |
@@ -167,17 +168,17 @@ here is a list of admin commands related to deploying .gb* files.
 * Rodrigo Rodriguez (me@rodrigorodriguez.com) - Coding, Docs & Architecture.
 * David Lerner (david.lerner@hotmail.com) - UI, UX & Theming
 * Eduardo Romeiro (eromeirosp@outlook.com) - Content & UX
-
+* Jorge Ramos (jramos@pobox.com) - Coding, Docs & Architecture.
 
 Powered by  Microsoft [BOT Framework](https://dev.botframework.com/) and [Azure](http://www.azure.com).
 
-General Bots Code Name is [Guaribas](https://en.wikipedia.org/wiki/Guaribas), the name of a city in Brasil, state of Piaui.
+General Bot Code Name is [Guaribas](https://en.wikipedia.org/wiki/Guaribas), the name of a city in Brasil, state of Piaui.
 [Roberto Mangabeira Unger](http://www.robertounger.com/en/): "No one should have to do work that can be done by a machine".
 
 
 ## License & Warranty
 
-General Bots Copyright (c) Pragmatismo.io. All rights reserved.
+General Bot Copyright (c) Pragmatismo.io. All rights reserved.
 Licensed under the AGPL-3.0.       
                                                             
 According to our dual licensing model, this program can be used either
@@ -193,7 +194,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
                                                         
-"General Bots" is a registered trademark of Pragmatismo.io.
+"General Bot" is a registered trademark of Pragmatismo.io.
 The licensing of the program under the AGPLv3 does not imply a
 trademark license. Therefore any rights, title and interest in
 our trademarks remain entirely with us.
