@@ -1,6 +1,6 @@
 {
   "name": "botserver",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "General Bot Community Edition open-core server.",
   "contributors": [
     "Rodrigo Rodriguez <me@rodrigorodriguez.com>"
@@ -11,7 +11,11 @@
   "bin": {
     "gbot": "./dist/src/app.js"
   },
-  "homepage": "http://pragmatismo.io",
+  "homepage": "http://www.generalbot.com",
+  "repository" :
+  { "type" : "git"
+  , "url" : "https://github.com/pragmatismo-io/BotServer"
+  },
   "scripts": {
     "clean": "rimraf dist",
     "start": "node ./dist/src/app.js",
