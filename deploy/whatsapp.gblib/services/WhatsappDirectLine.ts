@@ -49,53 +49,83 @@ export class WhatsappDirectLine extends GBService {
     pollInterval = 1000;
     directLineClientName = 'DirectLineClient';
     directLineSpecUrl = 'https://docs.botframework.com/en-us/restapi/directline3/swagger.json';
+
     directLineClient: any;
     whatsappServiceKey: string;
     whatsappServiceNumber: string;
+    whatsappServiceUrl: string;
     botId: string;
 
-    constructor(botId, directLineSecret, whatsappServiceKey, whatsappServiceNumber) {
+    conversationIds = {};
+
+    constructor(botId, directLineSecret, whatsappServiceKey, whatsappServiceNumber, whatsappServiceUrl) {
 
         super();
 
         this.botId = botId;
         this.whatsappServiceKey = whatsappServiceKey;
         this.whatsappServiceNumber = whatsappServiceNumber;
+        this.whatsappServiceUrl = whatsappServiceUrl;
 
         // TODO: Migrate to Swagger 3.
         this.directLineClient = rp(this.directLineSpecUrl)
-            .then(function (spec) {
+            .then((spec) => {
                 return new Swagger({
                     spec: JSON.parse(spec.trim()),
                     usePromise: true
                 });
             })
-            .then(function (client) {
+            .then(async (client) => {
                 client.clientAuthorizations.add('AuthorizationBotConnector',
                     new Swagger.ApiKeyAuthorization('Authorization', 'Bearer ' +
                         directLineSecret, 'header'));
+
+
+
+                var options = {
+                    method: 'POST',
+                    url: UrlJoin(this.whatsappServiceUrl, "webhook"),
+                    qs:
+                        {
+                            token: this.whatsappServiceKey,
+                            webhookUrl: `https://cec02d94.ngrok.io/instances/${this.botId}/whatsapp`
+                        },
+                    headers:
+                        {
+                            'cache-control': 'no-cache'
+                        }
+                };
+
+                try {
+                    const result = await request.post(options);
+                } catch (error) {
+                    logger.error('Error initializing DirectLine client', error);
+                }
+
                 return client;
             })
-            .catch(function (err) {
+            .catch((err) => {
                 logger.error('Error initializing DirectLine client', err);
             });
 
     }
 
     received(req, res) {
+        let text = req.body.messages[0].body;
+        let from = req.body.messages[0].author.split('@')[0];
+        let fromName = req.body.messages[0].senderName;
 
-        logger.info(`GBWhatsapp: Hook called. Event: ${req.body.event}, 
-            muid: ${req.body.muid}, contact: ${req.body.contact.name},
-            (${req.body.contact.uid}, ${req.body.contact.type})`);
+        if (req.body.messages[0].fromMe){
+            return; // Exit here.
+        }
+        
+        logger.info(`GBWhatsapp: Hook called. from: ${from}(${fromName}), text: ${text})`);
 
-        let conversationId = null; // req.body.cuid;
-        let text = req.body.message.body.text;
-        let from = req.body.contact.uid;
-        let fromName = req.body.contact.name;
+        let conversationId = this.conversationIds[from];
 
         this.directLineClient.then((client) => {
 
-            if (conversationId == null) {
+            if (this.conversationIds[from] == null) {
 
                 logger.info(`GBWhatsapp: Starting new conversation on Bot.`);
                 client.Conversations.Conversations_StartConversation()
@@ -104,10 +134,12 @@ export class WhatsappDirectLine extends GBService {
                     })
                     .then((conversationId) => {
 
+                        this.conversationIds[from] = conversationId;
+
                         this.inputMessage(client, conversationId, text,
                             from, fromName);
 
-                        this.pollMessages(client, conversationId,from, fromName);
+                        this.pollMessages(client, conversationId, from, fromName);
                     })
                     .catch((err) => {
                         console.error('Error starting conversation', err);
@@ -139,14 +171,14 @@ export class WhatsappDirectLine extends GBService {
                     },
                     replyToId: from
                 }
-            }).catch(function (err) {
+            }).catch((err) => {
                 logger.error(`GBWhatsapp: Error receiving message: ${err}.`);
             });
 
     }
 
 
-    pollMessages(client, conversationId,from, fromName){
+    pollMessages(client, conversationId, from, fromName) {
 
         logger.info(`GBWhatsapp: Starting polling message for conversationId: 
         ${conversationId}.`);
@@ -162,31 +194,32 @@ export class WhatsappDirectLine extends GBService {
                     return response.obj.activities;
                 })
                 .then((activities) => {
-                    this.printMessages(activities, from, fromName);
+                    this.printMessages(activities, conversationId, from, fromName);
                 });
         }, this.pollInterval);
     }
 
-    printMessages(activities,from, fromName) {
+    printMessages(activities, conversationId, from, fromName) {
 
         if (activities && activities.length) {
 
             // Ignore own messages.
 
-            activities = activities.filter((m) => { return m.from.id === this.botId });
+            activities = activities.filter((m) => { return m.from.id === this.botId && m.type === "message"});
 
             if (activities.length) {
 
                 // Print other messages.
 
-                activities.forEach(activity => {
-                    this.printMessage(activity, from, fromName);
-                });
+                this.printMessage(activities[0], conversationId, from, fromName);
+                // activities.forEach(activity => {
+                //     this.printMessage(activity, conversationId, from, fromName);
+                // });
             }
         }
     }
 
-    printMessage(activity, from, fromName) {
+    printMessage(activity, conversationId, from, fromName) {
 
         let output: string;
 
@@ -196,7 +229,7 @@ export class WhatsappDirectLine extends GBService {
         }
 
         if (activity.attachments) {
-            activity.attachments.forEach(function (attachment) {
+            activity.attachments.forEach((attachment) => {
                 switch (attachment.contentType) {
                     case "application/vnd.microsoft.card.hero":
                         output += this.renderHeroCard(attachment);
@@ -210,7 +243,7 @@ export class WhatsappDirectLine extends GBService {
             });
         }
 
-        this.sendToDevice(from, fromName, output);
+        this.sendToDevice(conversationId, from, fromName, output);
     }
 
     renderHeroCard(attachment) {
@@ -230,17 +263,15 @@ export class WhatsappDirectLine extends GBService {
         output += '*'.repeat(width + 1) + '/';
     }
 
-    async sendToDevice(to, toName, msg) {
+    async sendToDevice(conversationId, to, toName, msg) {
         var options = {
             method: 'POST',
-            url: 'https://www.waboxapp.com/api/send/chat',
+            url: UrlJoin(this.whatsappServiceUrl, 'message'),
             qs:
                 {
                     token: this.whatsappServiceKey,
-                    uid: this.whatsappServiceNumber,
-                    to: to,
-                    custom_uid: 'GBZAP' + (new Date()).toISOString,
-                    text: msg
+                    phone: to,
+                    body: msg
                 },
             headers:
                 {

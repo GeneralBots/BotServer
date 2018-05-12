@@ -109,14 +109,16 @@ export class AskDialog extends IGBDialog {
                           session.userData.isAsking = false;
 
                           if (session.userData.subjects.length > 0) {
-                            let subjectText = `${KBService.getSubjectItemsSeparatedBySpaces(
+                            let subjectText = 
+                            `${KBService.getSubjectItemsSeparatedBySpaces(
                               session.userData.subjects
                             )}`;
 
                             let msgs = [
                               `Respondendo nao apenas sobre ${subjectText}... `,
                               `Respondendo de modo mais abrangente...`,
-                              `Vou te responder de modo mais abrangente... Não apenas sobre ${subjectText}`
+                              `Vou te responder de modo mais abrangente... 
+                                Não apenas sobre ${subjectText}`
                             ];
                             session.send(msgs);
                           }
@@ -195,7 +197,7 @@ export class AskDialog extends IGBDialog {
         }
       ])
       .triggerAction({
-        matches: /^(procurar|bing|google|perguntar)/i
+        matches: /^(bing|google)/i
       });
     bot.beginDialogAction("ask", "/ask");
   }

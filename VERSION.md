@@ -1,3 +1,7 @@
+## Version 0.0.20
+
+- NEW: Whatsapp directline client is now working in preview.
+
 ## Version 0.0.19
 
 - NEW: Whatsapp directline client started.

@@ -172,7 +172,8 @@ export class GBMinService {
                 e.sysPackages.push(p);
 
                 if (sysPackage.name === "GBWhatsappPackage") {
-                  server.post("/instances/:botId/whatsapp", (req, res) => {
+                  let url = "/instances/:botId/whatsapp";
+                  server.post(url, (req, res) => {
                     p["channel"].received(req, res);
                   });
                 }

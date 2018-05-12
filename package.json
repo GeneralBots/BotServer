@@ -1,6 +1,6 @@
 {
   "name": "botserver",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "General Bot Community Edition open-core server.",
   "contributors": [
     "Rodrigo Rodriguez <me@rodrigorodriguez.com>"
@@ -32,7 +32,7 @@
     "async": "^1.5.2",
     "body-parser": "^1.18.2",
     "botbuilder": "^3.14.0",
-    "botlib": "0.0.18",
+    "botlib": "0.0.19",
     "chai": "^4.1.2",
     "chokidar": "^2.0.2",
     "csv-parse": "^2.4.0",

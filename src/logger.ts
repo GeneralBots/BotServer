@@ -61,7 +61,7 @@ var logger = new (winston.Logger)({
 
 logger.add(winston.transports.Console, {
   label: 'General Bot Server',
-  level: 'info',
+  level: 'error',
   prettyPrint: true,
   colorize: true,
   silent: false,
@@ -71,7 +71,7 @@ logger.add(winston.transports.Console, {
 logger.add(winston.transports.File, {
   label: 'General Bot Server',
   prettyPrint: true,
-  level: 'info',
+  level: 'error',
   silent: false,
   colorize: false,
   timestamp: true,

@@ -55,7 +55,7 @@ export class GBWhatsappPackage implements IGBPackage {
 
   loadBot(min: GBMinInstance): void {
     this.channel = new WhatsappDirectLine(min.botId, min.instance.whatsappBotKey, min.instance.whatsappServiceKey,
-       min.instance.whatsappServiceNumber);
+       min.instance.whatsappServiceNumber, min.instance.whatsappServiceUrl);
   }
 
   unloadBot(min: GBMinInstance): void {
