@@ -41,7 +41,17 @@ Notes:
 * [*nodejs.install* Chocolatey Package](https://chocolatey.org/packages/nodejs.install) is also available.
 * The zip source code of general bots is also available for [Download](https://codeload.github.com/pragmatismo-io/BotServer/zip/master);
 
-### Setup development environment (Windows)
+### Configure the server to deploy specific directory
+
+1. Create/Edit the .env file and add the ADDITIONAL_DEPLOY_PATH key pointing to the local folder of .gbapp, .gbot, .gbtheme, .gbkb, etc. files.
+2. Specify DATABASE_SYNC to TRUE so database sync is run when the server is run.
+3. In case of Microsoft SQL Server add the following keys: DATABASE_HOST, DATABASE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD, DATABASE_DIALECT to `mssql`.
+
+Note:
+
+* You can specify several bots separated by semicolon, the BotServer will serve all of them at once.
+
+## Setup development environment (Windows)
 
 1. [Optional] Install [Chocolatey](https://chocolatey.org/install), a Windows Package Manager;
 2. Install [git](`https://git-scm.com/`), a Software Configuration Management (SCM).;
