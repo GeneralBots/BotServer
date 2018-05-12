@@ -70,10 +70,6 @@ export class GBConfigService {
           value = undefined;
           break;
 
-        case "DEFAULT_AI":
-          value = undefined;
-          break;
-          
         case "DATABASE_SYNC":
           value = "false";
           break;

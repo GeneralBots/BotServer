@@ -56,7 +56,7 @@ export class WhatsappDirectLine extends GBService {
 
         this.directLineSecret = directLineSecret;
 
-
+        
         // TODO: Migrate to Swagger 3.
         let directLineClient = rp(this.directLineSpecUrl)
             .then(function (spec) {
@@ -89,6 +89,11 @@ export class WhatsappDirectLine extends GBService {
                     console.error('Error starting conversation', err);
                 });
         });
+    }
+
+    received (req,res){
+        logger.info(`Whatsapp called. Event: ${req.body.event}, muid: ${req.body.muid}, cuid: ${req.body.cuid}`);
+        res.end();
     }
 
     sendMessagesFromConsole(client, conversationId) {

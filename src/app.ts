@@ -36,6 +36,7 @@
 const UrlJoin = require("url-join");
 const logger = require("./logger");
 const express = require("express");
+const bodyParser = require("body-parser");
 import { UniversalBot } from "botbuilder";
 import { Sequelize } from "sequelize-typescript";
 import { GBConfigService } from "../deploy/core.gbapp/services/GBConfigService";
@@ -54,7 +55,7 @@ import { GBCustomerSatisfactionPackage } from "../deploy/customer-satisfaction.g
 import { IGBPackage } from 'botlib';
 
 let appPackages = new Array<IGBPackage>();
-          
+
 
 /**
  * General Bots open-core entry point.
@@ -71,6 +72,11 @@ export class GBServer {
     let port = process.env.port || process.env.PORT || 4242;
     logger.info(`The Bot Server is in STARTING mode...`);
     let server = express();
+
+    server.use(bodyParser.json());       // to support JSON-encoded bodies
+    server.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+      extended: true
+    }));
 
     server.listen(port, () => {
 
@@ -97,7 +103,7 @@ export class GBServer {
             logger.trace(`Loading sys package: ${e.name}...`);
             let p = Object.create(e.prototype) as IGBPackage;
             p.loadPackage(core, core.sequelize);
-            
+
           });
 
         (async () => {

@@ -115,7 +115,8 @@ export class GBMinService {
             Authorization: `Bearer ${instance.webchatKey}`
           }
         };
-        request(options).then((response: string) => {
+        request(options).then((response: 
+          string) => {
 
           // Serves the bot information object via http so clients can get
           // instance information stored on server.
@@ -167,10 +168,17 @@ export class GBMinService {
               GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(sysPackage => {
                 logger.trace(`Loading sys package: ${sysPackage.name}...`);
                 let p = Object.create(sysPackage.prototype) as IGBPackage;
-                p.loadBot(min);                
+                p.loadBot(min);
                 e.sysPackages.push(p);
-              });   
-                
+
+                if (sysPackage.name === "GBWhatsappPackage") {
+                  server.post("/instances/:botId/whatsapp", (req, res) => {
+                    p["channel"].received(req, res);
+                  });
+                }
+
+              });
+
             e.loadBot(min);
           });
 

@@ -38,12 +38,12 @@ const UrlJoin = require("url-join");
 import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib";
 import { Session } from 'botbuilder';
 import { Sequelize } from "sequelize-typescript";
-import { WhatsappDirectLine } from "./services/WhatsappDirectLine";
+import { ConsoleDirectLine } from "./services/ConsoleDirectLine";
 
 
-export class GBWhatsappPackage implements IGBPackage {
+export class GBConsolePackage implements IGBPackage {
   sysPackages: IGBPackage[] = null;
-  channel: WhatsappDirectLine;
+  channel: ConsoleDirectLine;
 
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
   }
@@ -53,7 +53,7 @@ export class GBWhatsappPackage implements IGBPackage {
   }
 
   loadBot(min: GBMinInstance): void {
-    this.channel = new WhatsappDirectLine(min.instance.whatsappBotKey);
+    this.channel = new ConsoleDirectLine(min.instance.webchatKey);
   }
 
   unloadBot(min: GBMinInstance): void {
