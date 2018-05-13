@@ -75,15 +75,15 @@ export class ConsoleDirectLine extends GBService {
             });
 
         // TODO: Remove *this* issue.
-        let _this = this;
+        let _this_ = this;
         directLineClient.then(function (client) {
             client.Conversations.Conversations_StartConversation()
                 .then(function (response) {
                     return response.obj.conversationId;
-                })                           
+                })
                 .then(function (conversationId) {
-                    _this.sendMessagesFromConsole(client, conversationId);
-                    _this.pollMessages(client, conversationId);           
+                    _this_.sendMessagesFromConsole(client, conversationId);
+                    _this_.pollMessages(client, conversationId);
                 })
                 .catch(function (err) {
                     console.error('Error starting conversation', err);
@@ -92,8 +92,9 @@ export class ConsoleDirectLine extends GBService {
     }
 
     sendMessagesFromConsole(client, conversationId) {
-        let _this = this;
-        var stdin = process.openStdin();
+        let _this_ = this;
+        process.stdin.resume();
+        var stdin = process.stdin;
         process.stdout.write('Command> ');
         stdin.addListener('data', function (e) {
             var input = e.toString().trim();
@@ -111,8 +112,8 @@ export class ConsoleDirectLine extends GBService {
                             text: input,
                             type: 'message',
                             from: {
-                                id: _this.directLineClientName,
-                                name: _this.directLineClientName
+                                id: _this_.directLineClientName,
+                                name: _this_.directLineClientName
                             }
                         }
                     }).catch(function (err) {
@@ -126,7 +127,7 @@ export class ConsoleDirectLine extends GBService {
 
     /** TBD: Poll Messages from conversation using DirectLine client */
     pollMessages(client, conversationId) {
-        let _this = this;
+        let _this_ = this;
         console.log('Starting polling message for conversationId: ' + conversationId);
         var watermark = null;
         setInterval(function () {
@@ -135,7 +136,7 @@ export class ConsoleDirectLine extends GBService {
                     watermark = response.obj.watermark;                                 // use watermark so subsequent requests skip old messages
                     return response.obj.activities;
                 })
-                .then(_this.printMessages, _this.directLineClientName);
+                .then(_this_.printMessages, _this_.directLineClientName);
         }, this.pollInterval);
     }
 
@@ -193,6 +194,6 @@ export class ConsoleDirectLine extends GBService {
         console.log('*'.repeat(width + 1) + '/');
     }
 
- 
+
 
 }

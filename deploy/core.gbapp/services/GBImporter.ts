@@ -63,7 +63,7 @@ export class GBImporter {
     localPath: string,
     cb: GBServiceCallback<IGBInstance>
   ) {
-    let _this = this;
+    let _this_ = this;
 
     let packageJson = JSON.parse(
       Fs.readFileSync(UrlJoin(localPath, "package.json"), "utf8")

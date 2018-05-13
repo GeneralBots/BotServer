@@ -109,7 +109,7 @@ class GBUIApp extends React.Component {
   }
 
   setupBotConnection(secret) {
-    let _this = this;
+    let _this_ = this;
     window["botchatDebug"] = true;
 
     const botConnection = new DirectLine({
@@ -125,7 +125,7 @@ class GBUIApp extends React.Component {
           name: "startGB"
         });
 
-        _this.setState({ botConnection: botConnection });
+        _this_.setState({ botConnection: botConnection });
       }
     });
 
@@ -138,22 +138,22 @@ class GBUIApp extends React.Component {
           activity.type === "event" && activity.name === "loadInstance"
       )
       .subscribe(activity => {
-        _this.setState({ instance: activity.value });
+        _this_.setState({ instance: activity.value });
       });
 
     botConnection.activity$
       .filter(activity => activity.type === "event" && activity.name === "stop")
       .subscribe(activity => {
-        if (_this.player) {
-          _this.player.stop();
+        if (_this_.player) {
+          _this_.player.stop();
         }
       });
 
     botConnection.activity$
       .filter(activity => activity.type === "event" && activity.name === "play")
       .subscribe(activity => {
-        _this.setState({ playerType: activity.value.playerType });
-        _this.player.play(activity.value.data);
+        _this_.setState({ playerType: activity.value.playerType });
+        _this_.player.play(activity.value.data);
       });
   }
 

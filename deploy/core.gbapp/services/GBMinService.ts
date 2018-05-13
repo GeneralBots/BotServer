@@ -90,7 +90,7 @@ export class GBMinService {
 
   buildMin(cb: GBServiceCallback<GBMinInstance>, server: any, appPackages: Array<IGBPackage>) {
 
-    var _this = this;
+    var _this_ = this;
 
     // Serves default UI on root address '/'.
 
@@ -102,7 +102,7 @@ export class GBMinService {
 
     // Loads all bot instances from storage. 
 
-    _this.core.loadInstances((instances: IGBInstance[], err) => {
+    _this_.core.loadInstances((instances: IGBInstance[], err) => {
 
       // Gets the authorization key for each instance from Bot Service.
 
@@ -127,7 +127,7 @@ export class GBMinService {
             // Returns the instance object to clients requesting bot info.
 
             let botId = req.params.botId;
-            _this.core.loadInstance(
+            _this_.core.loadInstance(
               botId,
               (instance: IGBInstance, err) => {
                 if (instance) {
@@ -154,9 +154,9 @@ export class GBMinService {
 
         let min = new GBMinInstance();
         min.botId = instance.botId;
-        min.core = _this.core;
-        min.conversationalService = _this.conversationalService;
-        _this.core.loadInstance(min.botId, (data, err) => {
+        min.core = _this_.core;
+        min.conversationalService = _this_.conversationalService;
+        _this_.core.loadInstance(min.botId, (data, err) => {
 
           min.instance = data;
 
@@ -309,7 +309,7 @@ export class GBMinService {
 
     return new Promise((resolve, reject) => {
       try {
-        var _this = this;
+        var _this_ = this;
         let totalPackages = 0;
         let additionalPath = GBConfigService.get("ADDITIONAL_DEPLOY_PATH");
         let paths = [this.deployFolder];
@@ -387,7 +387,7 @@ export class GBMinService {
 
               botPackages.forEach(e => {
                 logger.trace(`Deploying bot: ${e}...`);
-                _this.deployer.deployBot(e, (data, err) => {
+                _this_.deployer.deployBot(e, (data, err) => {
                   logger.trace(`Bot: ${e} deployed...`);
                 });
               });

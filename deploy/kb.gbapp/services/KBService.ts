@@ -123,7 +123,7 @@ export class KBService {
 
     // Performs search.
 
-    var _this = this;
+    var _this_ = this;
 
     if (instance.searchKey) {
       let service = new AzureSearch(
@@ -138,7 +138,7 @@ export class KBService {
           // Ponders over configuration.
 
           if (results[0]["@search.score"] >= searchScore) {
-            _this.getAnswerById(
+            _this_.getAnswerById(
               instance.instanceId,
               results[0].answerId,
               (answer, err) => {
@@ -476,9 +476,9 @@ export class KBService {
       UrlJoin(localPath, "subjects.json"),
       instance
     );
-    let _this = this;
+    let _this_ = this;
     setTimeout(() => {
-      _this.importKbTabularDirectory(
+      _this_.importKbTabularDirectory(
         localPath,
         instance,
         packageStorage.packageId
@@ -491,12 +491,12 @@ export class KBService {
     instance: IGBInstance,
     packageId: number
   ) {
-    let _this = this;
+    let _this_ = this;
     Walk.files(
       UrlJoin(localPath, "tabular"),
       (basedir, filename, stat, next) => {
         if (filename.endsWith(".tsv")) {
-          _this.importKbTabularFile(
+          _this_.importKbTabularFile(
             basedir,
             filename,
             instance.instanceId,
