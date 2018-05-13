@@ -40,6 +40,12 @@ const Walk = require("fs-walk");
 const WaitUntil = require("wait-until");
 const marked = require("marked");
 
+
+
+
+
+import { Sequelize } from "sequelize-typescript";
+import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 import { GuaribasQuestion, GuaribasAnswer, GuaribasSubject } from "../models";
 import { GBServiceCallback, IGBCoreService, IGBConversationalService, IGBInstance } from "botlib";
 import { AzureSearch } from "pragmatismo-io-framework";
@@ -74,17 +80,22 @@ export class KBService {
     GuaribasQuestion.findOne({
       where: {
         instanceId: instanceId,
-        content: `${text.trim()}?`
+        content: { $like: `%${text.trim()}%` }
       }
     }).then((question: GuaribasQuestion) => {
-      GuaribasAnswer.findAll({
-        where: {
-          instanceId: instanceId,
-          answerId: question.answerId
-        }
-      }).then((answer: GuaribasAnswer[]) => {
-        cb({ question: question, answer: answer[0] }, null);
-      });
+      if (question) {
+        GuaribasAnswer.findAll({
+          where: {
+            instanceId: instanceId,
+            answerId: question.answerId
+          }
+        }).then((answer: GuaribasAnswer[]) => {
+          cb({ question: question, answer: answer[0] }, null);
+        });
+      }
+      else {
+        cb(null, null);
+      }
     });
   }
 
@@ -125,7 +136,7 @@ export class KBService {
 
     var _this = this;
 
-    if (instance.searchKey) {
+    if (instance.searchKey && GBConfigService.get("DATABASE_DIALECT") == "mssql") {
       let service = new AzureSearch(
         instance.searchKey,
         instance.searchHost,
@@ -154,7 +165,12 @@ export class KBService {
       });
     } else {
       this.getAnswerByText(instance.instanceId, what, (data, err) => {
-        cb({ answer: data.answer, questionId: data.question.questionId }, null);
+        if (data) {
+          cb({ answer: data.answer, questionId: data.question.questionId }, null);
+        }
+        else {
+          cb(null, err);
+        }
       });
     }
   }

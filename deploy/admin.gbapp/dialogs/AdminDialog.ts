@@ -33,7 +33,7 @@
 "use strict";
 
 
-import { UrlJoin } from "urljoin";
+const UrlJoin = require("url-join");
 import { AzureSearch } from "pragmatismo-io-framework";
 import { Prompts, Session, UniversalBot } from 'botbuilder';
 import { GBMinInstance } from "botlib";

@@ -52,7 +52,7 @@ export class WelcomeDialog extends IGBDialog {
             date < 12 ? "bom dia" : date < 18 ? "boa tarde" : "boa noite";
 
           session.sendTyping();
-          let msgs = [`Oi, ${msg}..`, `Oi!`, `Olá, ${msg}`, `Olá!`];
+          let msgs = [`Oi, ${msg}.`, `Oi!`, `Olá, ${msg}`, `Olá!`];
           session.endDialog(msgs);
         }
 
