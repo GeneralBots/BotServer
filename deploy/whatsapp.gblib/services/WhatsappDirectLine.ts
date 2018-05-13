@@ -55,6 +55,7 @@ export class WhatsappDirectLine extends GBService {
     whatsappServiceNumber: string;
     whatsappServiceUrl: string;
     botId: string;
+    watermark: string = null;
 
     conversationIds = {};
 
@@ -88,7 +89,7 @@ export class WhatsappDirectLine extends GBService {
                     qs:
                         {
                             token: this.whatsappServiceKey,
-                            webhookUrl: `https://cec02d94.ngrok.io/instances/${this.botId}/whatsapp`
+                            webhookUrl: `https://a2fc0900.ngrok.io/instances/${this.botId}/whatsapp`
                         },
                     headers:
                         {
@@ -98,6 +99,7 @@ export class WhatsappDirectLine extends GBService {
 
                 try {
                     const result = await request.post(options);
+                    logger.info(result);
                 } catch (error) {
                     logger.error('Error initializing DirectLine client', error);
                 }
@@ -115,10 +117,10 @@ export class WhatsappDirectLine extends GBService {
         let from = req.body.messages[0].author.split('@')[0];
         let fromName = req.body.messages[0].senderName;
 
-        if (req.body.messages[0].fromMe){
+        if (req.body.messages[0].fromMe) {
             return; // Exit here.
         }
-        
+
         logger.info(`GBWhatsapp: Hook called. from: ${from}(${fromName}), text: ${text})`);
 
         let conversationId = this.conversationIds[from];
@@ -148,8 +150,6 @@ export class WhatsappDirectLine extends GBService {
             } else {
                 this.inputMessage(client, conversationId, text,
                     from, fromName);
-
-                this.pollMessages(client, conversationId, from, fromName);
             }
             res.end();
         });
@@ -183,14 +183,13 @@ export class WhatsappDirectLine extends GBService {
         logger.info(`GBWhatsapp: Starting polling message for conversationId: 
         ${conversationId}.`);
 
-        var watermark = null;
         setInterval(() => {
             client.Conversations.Conversations_GetActivities({
                 conversationId:
-                    conversationId, watermark: watermark
+                    conversationId, watermark: this.watermark
             })
                 .then((response) => {
-                    watermark = response.obj.watermark;
+                    this.watermark = response.obj.watermark;
                     return response.obj.activities;
                 })
                 .then((activities) => {
@@ -205,23 +204,22 @@ export class WhatsappDirectLine extends GBService {
 
             // Ignore own messages.
 
-            activities = activities.filter((m) => { return m.from.id === this.botId && m.type === "message"});
+            activities = activities.filter((m) => { return m.from.id === this.botId && m.type === "message" });
 
             if (activities.length) {
 
                 // Print other messages.
 
-                this.printMessage(activities[0], conversationId, from, fromName);
-                // activities.forEach(activity => {
-                //     this.printMessage(activity, conversationId, from, fromName);
-                // });
+                activities.forEach(activity => {
+                    this.printMessage(activity, conversationId, from, fromName);
+                });
             }
         }
     }
 
     printMessage(activity, conversationId, from, fromName) {
 
-        let output: string;
+        let output = "";
 
         if (activity.text) {
             logger.info(`GBWhatsapp: MSG: ${activity.text}`);
@@ -232,7 +230,7 @@ export class WhatsappDirectLine extends GBService {
             activity.attachments.forEach((attachment) => {
                 switch (attachment.contentType) {
                     case "application/vnd.microsoft.card.hero":
-                        output += this.renderHeroCard(attachment);
+                        output += `\n${this.renderHeroCard(attachment)}`;
                         break;
 
                     case "image/png":
@@ -247,20 +245,7 @@ export class WhatsappDirectLine extends GBService {
     }
 
     renderHeroCard(attachment) {
-        let output: string;
-        let width = 70;
-
-        let contentLine = function (content) {
-            return ' '.repeat((width - content.length) / 2) +
-                content +
-                ' '.repeat((width - content.length) / 2);
-        }
-
-        output += '/' + '*'.repeat(width + 1);
-        output += '*' + contentLine(attachment.content.title) + '*';
-        output += '*' + ' '.repeat(width) + '*';
-        output += '*' + contentLine(attachment.content.text) + '*';
-        output += '*'.repeat(width + 1) + '/';
+        return `${attachment.content.title} - ${attachment.content.text}`;
     }
 
     async sendToDevice(conversationId, to, toName, msg) {

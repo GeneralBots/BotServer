@@ -80,7 +80,7 @@ export class KBService {
     GuaribasQuestion.findOne({
       where: {
         instanceId: instanceId,
-        content: { $like: `%${text.trim()}%` }
+        content: `%${text.trim()}%`
       }
     }).then((question: GuaribasQuestion) => {
       if (question) {
