@@ -104,10 +104,13 @@ export class GBConversationalService implements IGBConversationalService {
                     } else if (intent === "ShowSubjectMenu") {
                         session.replaceDialog("/menu");
                     } else {
-                        // TODO testar diálogos v2
-                        // inclui diálogo
-                        session.sendTyping();
-                        session.send("Desculpe-me, não encontrei nada a respeito...");
+                        try {
+                            session.replaceDialog("/" + intent);
+                        } catch (error) {
+                            logger.trace("error: intent: [" + intent + "] error: [" + error + "]");
+                            session.sendTyping();
+                            session.send("Desculpe-me, não encontrei nada a respeito...");
+                        }
                     }
 
                     cb({ intent, entities }, null);

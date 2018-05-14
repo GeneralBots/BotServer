@@ -1,6 +1,7 @@
 ## Version 0.0.20
 
 - NEW: Whatsapp directline client is now working in preview.
+- NEW: Auto-dispatch to dialog based on intent name.
 
 ## Version 0.0.19
 
