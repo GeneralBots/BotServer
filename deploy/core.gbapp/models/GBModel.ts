@@ -33,27 +33,27 @@
 "use strict";
 
 import {
-  Sequelize,
-  DataTypes,
-  DataTypeUUIDv4,
-  DataTypeDate,
-  DataTypeDecimal
+    Sequelize,
+    DataTypes,
+    DataTypeUUIDv4,
+    DataTypeDate,
+    DataTypeDecimal
 } from "sequelize";
 import {
-  Table,
-  Column,
-  Model,
-  HasMany,
-  BelongsTo,
-  BelongsToMany,
-  Length,
-  ForeignKey,
-  CreatedAt,
-  UpdatedAt,
-  DataType,
-  IsUUID,
-  PrimaryKey,
-  AutoIncrement
+    Table,
+    Column,
+    Model,
+    HasMany,
+    BelongsTo,
+    BelongsToMany,
+    Length,
+    ForeignKey,
+    CreatedAt,
+    UpdatedAt,
+    DataType,
+    IsUUID,
+    PrimaryKey,
+    AutoIncrement
 } from "sequelize-typescript";
 import { IGBInstance } from "botlib";
 
@@ -61,132 +61,134 @@ import { IGBInstance } from "botlib";
 @Table
 export class GuaribasInstance extends Model<GuaribasInstance> implements IGBInstance {
 
-  @Column
-  whoAmIVideo: string;
+    @Column
+    whoAmIVideo: string;
 
-  @PrimaryKey
-  @AutoIncrement
-  @Column
-  instanceId: number;
+    @PrimaryKey
+    @AutoIncrement
+    @Column
+    instanceId: number;
 
-  @Column botId: string;
+    @Column botId: string;
 
-  @Column title: string;
+    @Column title: string;
 
-  @Column description: string;
+    @Column description: string;
 
-  @Column version: string;
+    @Column version: string;
 
-  @Column enabledAdmin: boolean;
+    @Column enabledAdmin: boolean;
 
-  /* Services section on bot.json */
+    /* Services section on bot.json */
 
-  @Column engineName: string;
+    @Column engineName: string;
 
-  @Column marketplaceId: string;
+    @Column marketplaceId: string;
 
-  @Column textAnalyticsKey: string;
+    @Column textAnalyticsKey: string;
 
-  @Column marketplacePassword: string;
+    @Column marketplacePassword: string;
 
-  @Column webchatKey: string;
+    @Column webchatKey: string;
 
-  @Column whatsappBotKey: string;
-  
-  @Column whatsappServiceKey: string;
+    @Column whatsappBotKey: string;
 
-  @Column whatsappServiceNumber: string;
+    @Column whatsappServiceKey: string;
 
-  @Column whatsappServiceUrl: string;
+    @Column whatsappServiceNumber: string;
 
-  @Column spellcheckerKey: string;
+    @Column whatsappServiceUrl: string;
 
-  @Column theme: string;
+    @Column whatsappServiceWebhookUrl: string;
 
-  @Column ui: string;
+    @Column spellcheckerKey: string;
 
-  @Column kb: string;
+    @Column theme: string;
 
-  @Column
-  @Column({ type: DataType.STRING(512) })
-  nlpServerUrl: string;
+    @Column ui: string;
 
-  @Column searchHost: string;
+    @Column kb: string;
 
-  @Column searchKey: string;
+    @Column
+    @Column({ type: DataType.STRING(512) })
+    nlpServerUrl: string;
 
-  @Column searchIndex: string;
+    @Column searchHost: string;
 
-  @Column searchIndexer: string;
+    @Column searchKey: string;
 
-  /* Settings section of bot.json */
+    @Column searchIndex: string;
 
-  @Column({
-    type: DataType.FLOAT
-  })
-  nlpVsSearch: number;
+    @Column searchIndexer: string;
 
-  @Column({
-    type: DataType.FLOAT
-  })
-  searchScore: number;
+    /* Settings section of bot.json */
 
-  @Column({
-    type: DataType.FLOAT
-  })
-  nlpScore: number;
+    @Column({
+        type: DataType.FLOAT
+    })
+    nlpVsSearch: number;
 
-  @Column
-  @CreatedAt
-  creationDate: Date;
+    @Column({
+        type: DataType.FLOAT
+    })
+    searchScore: number;
 
-  @Column
-  @UpdatedAt
-  updatedOn: Date;
+    @Column({
+        type: DataType.FLOAT
+    })
+    nlpScore: number;
+
+    @Column
+    @CreatedAt
+    creationDate: Date;
+
+    @Column
+    @UpdatedAt
+    updatedOn: Date;
 }
 
 @Table
 export class GuaribasPackage extends Model<GuaribasPackage> {
 
-  @PrimaryKey
-  @AutoIncrement
-  @Column
-  packageId: number;
+    @PrimaryKey
+    @AutoIncrement
+    @Column
+    packageId: number;
 
-  @Column
-  packageName: string;
+    @Column
+    packageName: string;
 
-  @ForeignKey(() => GuaribasInstance)
-  @Column
-  instanceId: number;
+    @ForeignKey(() => GuaribasInstance)
+    @Column
+    instanceId: number;
 }
 
 @Table
 export class GuaribasChannel extends Model<GuaribasChannel> {
-  @PrimaryKey
-  @AutoIncrement
-  @Column
-  channelId: number;
+    @PrimaryKey
+    @AutoIncrement
+    @Column
+    channelId: number;
 
-  @Column title: string;
+    @Column title: string;
 }
 
 @Table
 export class GuaribasException extends Model<GuaribasException> {
 
-  @PrimaryKey
-  @AutoIncrement
-  @Column
-  exceptionId: number;
+    @PrimaryKey
+    @AutoIncrement
+    @Column
+    exceptionId: number;
 
-  @Column message: string;
+    @Column message: string;
 
-  @ForeignKey(() => GuaribasInstance)
-  @Column
-  instanceId: number;
+    @ForeignKey(() => GuaribasInstance)
+    @Column
+    instanceId: number;
 
-  @Column
-  @CreatedAt
-  creationDate: Date;
+    @Column
+    @CreatedAt
+    creationDate: Date;
 }
 

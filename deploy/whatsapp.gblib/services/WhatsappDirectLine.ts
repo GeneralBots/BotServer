@@ -54,12 +54,13 @@ export class WhatsappDirectLine extends GBService {
     whatsappServiceKey: string;
     whatsappServiceNumber: string;
     whatsappServiceUrl: string;
+    whatsappServiceWebhookUrl: string;
     botId: string;
     watermark: string = null;
 
     conversationIds = {};
 
-    constructor(botId, directLineSecret, whatsappServiceKey, whatsappServiceNumber, whatsappServiceUrl) {
+    constructor(botId, directLineSecret, whatsappServiceKey, whatsappServiceNumber, whatsappServiceUrl, whatsappServiceWebhookUrl) {
 
         super();
 
@@ -67,6 +68,7 @@ export class WhatsappDirectLine extends GBService {
         this.whatsappServiceKey = whatsappServiceKey;
         this.whatsappServiceNumber = whatsappServiceNumber;
         this.whatsappServiceUrl = whatsappServiceUrl;
+        this.whatsappServiceWebhookUrl = whatsappServiceWebhookUrl;
 
         // TODO: Migrate to Swagger 3.
         this.directLineClient = rp(this.directLineSpecUrl)
@@ -81,15 +83,13 @@ export class WhatsappDirectLine extends GBService {
                     new Swagger.ApiKeyAuthorization('Authorization', 'Bearer ' +
                         directLineSecret, 'header'));
 
-
-
                 var options = {
                     method: 'POST',
                     url: UrlJoin(this.whatsappServiceUrl, "webhook"),
                     qs:
                         {
                             token: this.whatsappServiceKey,
-                            webhookUrl: `https://a2fc0900.ngrok.io/instances/${this.botId}/whatsapp`
+                            webhookUrl: `${this.whatsappServiceWebhookUrl}/instances/${this.botId}/whatsapp`
                         },
                     headers:
                         {

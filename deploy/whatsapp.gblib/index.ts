@@ -42,26 +42,26 @@ import { WhatsappDirectLine } from "./services/WhatsappDirectLine";
 
 
 export class GBWhatsappPackage implements IGBPackage {
-  
-  sysPackages: IGBPackage[] = null;
-  channel: WhatsappDirectLine;
 
-  loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-  }
+    sysPackages: IGBPackage[] = null;
+    channel: WhatsappDirectLine;
 
-  unloadPackage(core: IGBCoreService): void {
+    loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+    }
 
-  }
+    unloadPackage(core: IGBCoreService): void {
 
-  loadBot(min: GBMinInstance): void {
-    this.channel = new WhatsappDirectLine(min.botId, min.instance.whatsappBotKey, min.instance.whatsappServiceKey,
-       min.instance.whatsappServiceNumber, min.instance.whatsappServiceUrl);
-  }
+    }
 
-  unloadBot(min: GBMinInstance): void {
+    loadBot(min: GBMinInstance): void {
+        this.channel = new WhatsappDirectLine(min.botId, min.instance.whatsappBotKey, min.instance.whatsappServiceKey,
+            min.instance.whatsappServiceNumber, min.instance.whatsappServiceUrl, min.instance.whatsappServiceWebhookUrl);
+    }
 
-  }
-  onNewSession(min: GBMinInstance, session: Session): void {
+    unloadBot(min: GBMinInstance): void {
 
-  }
+    }
+    onNewSession(min: GBMinInstance, session: Session): void {
+
+    }
 }

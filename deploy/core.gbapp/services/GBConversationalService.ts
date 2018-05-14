@@ -41,80 +41,82 @@ import { GBCoreService } from "./GBCoreService";
 
 import { Session, Message, LuisRecognizer } from "botbuilder";
 
-import { GBService, GBServiceCallback, IGBConversationalService} from "botlib";
+import { GBService, GBServiceCallback, IGBConversationalService } from "botlib";
 import { GBError } from "botlib";
 import { GBERROR_TYPE } from "botlib";
 import { GBMinInstance } from "botlib";
 
 
-export class GBConversationalService implements IGBConversationalService{
-  
-  coreService: GBCoreService;
+export class GBConversationalService implements IGBConversationalService {
 
-  constructor(coreService: GBCoreService) {
-    this.coreService = coreService;
-  }
+    coreService: GBCoreService;
 
-  sendEvent(session: Session, name: string, value: any) {
-    var msg = new gBuilder.Message();
-    msg.data.type = "event";
-    msg.data.name = name;
-    msg.data.value = value;
-    session.send(msg);
-  }
+    constructor(coreService: GBCoreService) {
+        this.coreService = coreService;
+    }
 
-  runNLP(
-    session: Session,
-    min: GBMinInstance,
-    text: string,
-    cb: GBServiceCallback<any>
-  ) {
-    LuisRecognizer.recognize(
-      text,
-      min.instance.nlpServerUrl,
-      (err, intents, entities) => {
-        if (err) {
-          cb(null, new GBError(err, GBERROR_TYPE.nlpGeneralError));
-          return;
-        }
+    sendEvent(session: Session, name: string, value: any) {
+        var msg = new gBuilder.Message();
+        msg.data.type = "event";
+        msg.data.name = name;
+        msg.data.value = value;
+        session.send(msg);
+    }
 
-        if (intents && intents.length > 0) {
-          var intent = intents[0].intent;
-          var entity =
-            entities && entities.length > 0
-              ? entities[0].entity.toUpperCase()
-              : null;
-          logger.trace(
-            "luis: intent: [" + intent + "] entity: [" + entity + "]"
-          );
+    runNLP(
+        session: Session,
+        min: GBMinInstance,
+        text: string,
+        cb: GBServiceCallback<any>
+    ) {
+        LuisRecognizer.recognize(
+            text,
+            min.instance.nlpServerUrl,
+            (err, intents, entities) => {
+                if (err) {
+                    cb(null, new GBError(err, GBERROR_TYPE.nlpGeneralError));
+                    return;
+                }
 
-          // PACKAGE: Send to packages.
+                if (intents && intents.length > 0) {
+                    var intent = intents[0].intent;
+                    var entity =
+                        entities && entities.length > 0
+                            ? entities[0].entity.toUpperCase()
+                            : null;
+                    logger.trace(
+                        "luis: intent: [" + intent + "] entity: [" + entity + "]"
+                    );
 
-          if (intent === "Student.CheckAttendance") {
-            session.replaceDialog("/belagua-check-attendance", {entities: entities});
-          }
-          else if(intent === 'User.Authenticate'){
-            session.replaceDialog("/belagua-user-login", {entities: entities});
-          }
-          else if (intent === "PerguntarSobreTermo") {
-            session.send(
-              "Vou mostrar um menu para ajudar você a formular sua pergunta..."
-            );
-            session.replaceDialog("/menu");
-          } else if (intent === "ShowSubjectMenu") {
-            session.replaceDialog("/menu");
-          } else {
-            session.sendTyping();
-            session.send("Desculpe-me, não encontrei nada a respeito...");
-          }
+                    // PACKAGE: Send to packages.
 
-          cb({ intent, entities }, null);
-        } else {
-          session.sendTyping();
-          session.send("Lamento, não achei nada a respeito...");
-          cb(null, null);
-        }
-      }
-    );
-  }
+                    if (intent === "Student.CheckAttendance") {
+                        session.replaceDialog("/belagua-check-attendance", { entities: entities });
+                    }
+                    else if (intent === 'User.Authenticate') {
+                        session.replaceDialog("/belagua-user-login", { entities: entities });
+                    }
+                    else if (intent === "PerguntarSobreTermo") {
+                        session.send(
+                            "Vou mostrar um menu para ajudar você a formular sua pergunta..."
+                        );
+                        session.replaceDialog("/menu");
+                    } else if (intent === "ShowSubjectMenu") {
+                        session.replaceDialog("/menu");
+                    } else {
+                        // TODO testar diálogos v2
+                        // inclui diálogo
+                        session.sendTyping();
+                        session.send("Desculpe-me, não encontrei nada a respeito...");
+                    }
+
+                    cb({ intent, entities }, null);
+                } else {
+                    session.sendTyping();
+                    session.send("Lamento, não achei nada a respeito...");
+                    cb(null, null);
+                }
+            }
+        );
+    }
 }
