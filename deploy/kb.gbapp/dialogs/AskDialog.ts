@@ -33,7 +33,7 @@
 "use strict";
 
 import { Prompts, UniversalBot, Session, ListStyle } from "botbuilder";
-import { IGBDialog } from  "botlib";
+import { IGBDialog } from "botlib";
 import { AzureText } from "pragmatismo-io-framework";
 import { GBMinInstance } from "botlib";
 import { KBService } from './../services/KBService';
@@ -63,10 +63,6 @@ export class AskDialog extends IGBDialog {
 
         if (text === "") {
           session.replaceDialog("/ask");
-        } else if (AzureText.isIntentNo(text)) {
-          session.replaceDialog("/feedback");
-        } else if (AzureText.isIntentYes(text)) {
-          session.replaceDialog("/menu");
         } else {
           AzureText.getSpelledText(
             min.instance.spellcheckerKey,
@@ -109,10 +105,10 @@ export class AskDialog extends IGBDialog {
                           session.userData.isAsking = false;
 
                           if (session.userData.subjects.length > 0) {
-                            let subjectText = 
-                            `${KBService.getSubjectItemsSeparatedBySpaces(
-                              session.userData.subjects
-                            )}`;
+                            let subjectText =
+                              `${KBService.getSubjectItemsSeparatedBySpaces(
+                                session.userData.subjects
+                              )}`;
 
                             let msgs = [
                               `Respondendo nao apenas sobre ${subjectText}... `,
@@ -138,14 +134,13 @@ export class AskDialog extends IGBDialog {
                             text,
                             (data, error) => {
 
-                              if (!data)
-                              {
+                              if (!data) {
                                 let msgs = [
                                   "Desculpe-me, não encontrei nada a respeito.",
                                   "Lamento... Não encontrei nada sobre isso. Vamos tentar novamente?",
                                   "Desculpe-me, não achei nada parecido. Poderia tentar escrever de outra forma?"
                                 ];
-      
+
                                 session.send(msgs);
                                 session.replaceDialog("/ask", { isReturning: true });
                               }
@@ -167,13 +162,6 @@ export class AskDialog extends IGBDialog {
       .dialog("/ask", [
         (session, args) => {
           session.userData.isAsking = true;
-
-          let text = [
-            `Pergunte-me sobre qualquer assunto ou digite **menu** para conhecer uma lista de opções.`,
-            `Pode perguntar sobre qualquer assunto... Ou digita **menu** para conhecer uma lista de opções.`,
-            `Faça qualquer pergunta ou também posso te mostrar o **menu** de assuntos sempre que precisar...`
-          ];
-
           if (session.userData.subjects.length > 0) {
             text = [
               `Faça sua pergunta...`,
@@ -189,8 +177,9 @@ export class AskDialog extends IGBDialog {
               "Deseja fazer outra pergunta?"
             ];
           }
-
-          Prompts.text(session, text);
+          if (text.length > 0) {
+            Prompts.text(session, text);
+          }
         },
         (session, results) => {
           session.replaceDialog("/answer", { query: results.response });

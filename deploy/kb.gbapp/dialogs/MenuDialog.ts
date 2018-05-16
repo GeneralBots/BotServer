@@ -180,10 +180,7 @@ export class MenuDialog extends IGBDialog {
             session.replaceDialog("/ask");
           }
         }
-      ])
-      .triggerAction({
-        matches: /^(menu)/i
-      });
+      ]);
 
     bot.beginDialogAction("menuAction", "/menu");
   }

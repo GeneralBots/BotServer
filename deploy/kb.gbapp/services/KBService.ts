@@ -452,7 +452,7 @@ export class KBService {
         playerType: "video",
         data: answer.content
       });
-    } else if (answer.content.length > 140) {
+    } else if (answer.content.length > 140 && session.message.source != "directline") {
       let msgs = [
         "Vou te responder na tela para melhor visualização...",
         "A resposta está na tela...",

@@ -1,7 +1,20 @@
+## Version 0.0.23
+
+- FIX: Duplicated asking on main loop removed.
+- FIX: Whatsapp log phrase correction.
+- FIX: Directline can now receive messages sent in not-in-conversation, projector-only fashion.
+
+## Version 0.0.22
+
+- NEW: Auto-dispatch to dialog based on intent name.
+
+## Version 0.0.21
+
+- FIX: Whatsapp directline client improved.
+
 ## Version 0.0.20
 
 - NEW: Whatsapp directline client is now working in preview.
-- NEW: Auto-dispatch to dialog based on intent name.
 
 ## Version 0.0.19
 

@@ -89,7 +89,8 @@ export class WhatsappDirectLine extends GBService {
                     qs:
                         {
                             token: this.whatsappServiceKey,
-                            webhookUrl: `${this.whatsappServiceWebhookUrl}/instances/${this.botId}/whatsapp`
+                            webhookUrl: `${this.whatsappServiceWebhookUrl}/instances/${this.botId}/whatsapp`,
+                            set: true
                         },
                     headers:
                         {
@@ -101,7 +102,7 @@ export class WhatsappDirectLine extends GBService {
                     const result = await request.post(options);
                     logger.info(result);
                 } catch (error) {
-                    logger.error('Error initializing DirectLine client', error);
+                    logger.error('Error initializing 3rd party Whatsapp provider.', error);
                 }
 
                 return client;
@@ -177,7 +178,6 @@ export class WhatsappDirectLine extends GBService {
 
     }
 
-
     pollMessages(client, conversationId, from, fromName) {
 
         logger.info(`GBWhatsapp: Starting polling message for conversationId: 
@@ -203,8 +203,8 @@ export class WhatsappDirectLine extends GBService {
         if (activities && activities.length) {
 
             // Ignore own messages.
-
-            activities = activities.filter((m) => { return m.from.id === this.botId && m.type === "message" });
+// TODO: this.botId instead of "general-bot-9672a8d3"
+            activities = activities.filter((m) => { return m.from.id === "general-bot-9672a8d3" && m.type === "message" });
 
             if (activities.length) {
 
