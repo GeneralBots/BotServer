@@ -162,6 +162,7 @@ export class AskDialog extends IGBDialog {
       .dialog("/ask", [
         (session, args) => {
           session.userData.isAsking = true;
+          let text = [];
           if (session.userData.subjects.length > 0) {
             text = [
               `Faça sua pergunta...`,
