@@ -118,6 +118,7 @@ export class KBService {
 
     // Builds search query.
 
+    what = what.toLowerCase();
     what = what.replace("?", " ");
     what = what.replace("!", " ");
     what = what.replace(".", " ");
@@ -125,9 +126,12 @@ export class KBService {
     what = what.replace("\\", " ");
 
     if (subjects) {
-      what = `${what} ${KBService.getSubjectItemsSeparatedBySpaces(
+      let text = KBService.getSubjectItemsSeparatedBySpaces(
         subjects
-      )}`;
+      );
+      if (text){
+        what = `${what} ${text}`;
+      }
     }
 
     // TODO: Filter by instance. what = `${what}&$filter=instanceId eq ${instanceId}`;

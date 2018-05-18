@@ -1,3 +1,10 @@
+# Release History
+
+## Version 0.0.24
+
+- FIX: AskDialog compilation error.
+- FIX: More Whatsapp line adjustments: Duplicated 'Hi!' & log enrichment.
+
 ## Version 0.0.23
 
 - FIX: Duplicated asking on main loop removed.

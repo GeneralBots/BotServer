@@ -115,7 +115,7 @@ export class GBMinService {
             Authorization: `Bearer ${instance.webchatKey}`
           }
         };
-        request(options).then((response: 
+        request(options).then((response:
           string) => {
 
           // Serves the bot information object via http so clients can get
@@ -246,20 +246,24 @@ export class GBMinService {
           },
           receive: function (event: any, next) {
             logger.trace(
-              `Event RCV: (Type: ${event.type}, Name: ${event.name}, Value: ${
-              event.value
-              }).`
+              `[RCV]: ChannelID: ${event.address.channelId}, ConversationID: ${event.address.conversation.id}
+               Type: ${event.type}, Name: ${event.name}, Text: ${event.text}.`
             );
 
             // PACKAGE: Provide loop here.
 
             if (
               event.type === "conversationUpdate" &&
-              event.membersAdded.length > 0 &&
-              event.membersAdded[0].name != "You"
+              event.membersAdded.length > 0 
+              // TODO: Is it really Necessary? !event.membersAdded[0].id.startsWith('general-bot-9672a8d3') //DEMO: min.botId) //TODO: Check entire collection.
             ) {
 
-              min.bot.beginDialog(event.address, "/");
+              if (event.address.channelId != "directline") {
+                min.bot.beginDialog(event.address, "/");
+              }
+              else {
+                next();
+              }
             } else if (event.name === "whoAmI") {
               min.bot.beginDialog(event.address, "/whoAmI");
             } else if (event.name === "showSubjects") {
@@ -284,6 +288,9 @@ export class GBMinService {
             }
           },
           send: function (event, next) {
+            logger.trace(
+              `[SND]: ChannelID: ${event.address.channelId}, ConversationID: ${event.address.conversation},
+               Type: ${event.type}              `);
             this.core.createMessage(
               this.min.conversation,
               this.min.conversation.startedBy,

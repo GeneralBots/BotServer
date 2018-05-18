@@ -56,7 +56,8 @@ export class WelcomeDialog extends IGBDialog {
           session.endDialog(msgs);
         }
 
-        if (session.message) {
+        
+        if (session.message && session.message.text != "") {
           session.replaceDialog("/answer", { query: session.message.text });
           return;
         }

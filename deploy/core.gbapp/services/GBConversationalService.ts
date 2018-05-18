@@ -110,6 +110,7 @@ export class GBConversationalService implements IGBConversationalService {
                             logger.trace("error: intent: [" + intent + "] error: [" + error + "]");
                             session.sendTyping();
                             session.send("Desculpe-me, não encontrei nada a respeito...");
+                            session.replaceDialog("/ask", {isReturning: true});
                         }
                     }
 
@@ -117,6 +118,7 @@ export class GBConversationalService implements IGBConversationalService {
                 } else {
                     session.sendTyping();
                     session.send("Lamento, não achei nada a respeito...");
+                    session.replaceDialog("/ask", {isReturning: true});
                     cb(null, null);
                 }
             }

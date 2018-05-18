@@ -47,6 +47,7 @@ export class AskDialog extends IGBDialog {
 
     bot.dialog("/answer", [
       (session, args) => {
+        
         let text = "";
 
         if (args && args.query) {

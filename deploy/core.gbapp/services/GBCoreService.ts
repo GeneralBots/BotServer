@@ -44,7 +44,7 @@ const logger = require("../../../src/logger");
 import { Sequelize } from "sequelize-typescript";
 import { Promise } from "bluebird";
 import { GBConfigService } from "./GBConfigService";
-import { DataTypeUUIDv1 } from "sequelize"; 
+import { DataTypeUUIDv1 } from "sequelize";
 import { UniversalBot } from "botbuilder";
 import { GBServiceCallback, IGBInstance, IGBCoreService } from 'botlib';
 import { GuaribasInstance } from "../models/GBModel";
@@ -105,13 +105,18 @@ export class GBCoreService implements IGBCoreService {
     });
     cb();
   }
-  
+
   syncDatabaseStructure(cb) {
-    logger.trace("Syncing database...");
-    this.sequelize.sync().then(value => {
-      logger.trace("Database synced.");
-      cb();
-    });
+    if (GBConfigService.get("DATABASE_SYNC")) {
+      logger.trace("Syncing database...");
+      this.sequelize.sync().then(value => {
+        logger.trace("Database synced.");
+        cb();
+      });
+    }
+    else{
+      logger.trace("Database synchronization is disabled.");
+    }
   }
 
 
