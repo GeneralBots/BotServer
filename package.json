@@ -12,9 +12,9 @@
     "gbot": "./dist/src/app.js"
   },
   "homepage": "http://www.generalbot.com",
-  "repository" :
-  { "type" : "git"
-  , "url" : "https://github.com/pragmatismo-io/BotServer"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pragmatismo-io/BotServer"
   },
   "scripts": {
     "clean": "rimraf dist",
@@ -53,7 +53,7 @@
     "sequelize": "^4.37.6",
     "sequelize-typescript": "^0.6.3",
     "sqlite3": "^4.0.0",
-    "swagger-client": "^3.8.3",
+    "swagger-client": "^2.1.18",
     "tedious": "^2.1.1",
     "ts-node": "6.0.3",
     "typedoc": "^0.11.1",
