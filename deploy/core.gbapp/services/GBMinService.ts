@@ -462,6 +462,7 @@ export class GBMinService {
             });
           });
       } catch (err) {
+        logger.error(err);
         reject(err)
       }
     });

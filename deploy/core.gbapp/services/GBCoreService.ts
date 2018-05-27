@@ -107,15 +107,16 @@ export class GBCoreService implements IGBCoreService {
   }
 
   syncDatabaseStructure(cb) {
-    if (GBConfigService.get("DATABASE_SYNC")) {
+    if (GBConfigService.get("DATABASE_SYNC") === "true") {
       logger.trace("Syncing database...");
       this.sequelize.sync().then(value => {
         logger.trace("Database synced.");
         cb();
       });
     }
-    else{
+    else {
       logger.trace("Database synchronization is disabled.");
+      cb();
     }
   }
 

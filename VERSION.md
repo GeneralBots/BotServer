@@ -1,5 +1,11 @@
 # Release History
 
+## Version 0.0.25
+
+- FIX: Whastapp line now can be turned off;
+- FIX: More error logging on BuildMin.
+
+
 ## Version 0.0.24
 
 - FIX: AskDialog compilation error.

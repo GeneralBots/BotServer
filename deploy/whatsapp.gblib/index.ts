@@ -54,8 +54,13 @@ export class GBWhatsappPackage implements IGBPackage {
     }
 
     loadBot(min: GBMinInstance): void {
-        this.channel = new WhatsappDirectLine(min.botId, min.instance.whatsappBotKey, min.instance.whatsappServiceKey,
-            min.instance.whatsappServiceNumber, min.instance.whatsappServiceUrl, min.instance.whatsappServiceWebhookUrl);
+        
+        // Only loads engine if it is defined on services.json.
+
+        if (min.instance.whatsappBotKey != "") {
+            this.channel = new WhatsappDirectLine(min.botId, min.instance.whatsappBotKey, min.instance.whatsappServiceKey,
+                min.instance.whatsappServiceNumber, min.instance.whatsappServiceUrl, min.instance.whatsappServiceWebhookUrl);
+        }
     }
 
     unloadBot(min: GBMinInstance): void {
