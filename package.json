@@ -1,13 +1,14 @@
 {
   "name": "botserver",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "General Bot Community Edition open-core server.",
   "contributors": [
-    "Rodrigo Rodriguez <me@rodrigorodriguez.com>"
+    "Rodrigo Rodriguez <me@rodrigorodriguez.com>",
+    "Jorge Ramos <jramos@pobox.com>"
   ],
   "license": "AGPL-3.0",
   "main": "./src/app.ts",
-  "preferGlobal": "true",
+  "preferGlobal": true,
   "bin": {
     "gbot": "./dist/src/app.js"
   },
@@ -36,7 +37,7 @@
     "async": "^2.6.0",
     "body-parser": "^1.18.2",
     "botbuilder": "^3.15.0",
-    "botlib": "0.0.23",
+    "botlib": "^0.0.23",
     "chai": "^4.1.2",
     "chokidar": "^2.0.2",
     "csv-parse": "^2.4.0",
@@ -50,8 +51,8 @@
     "pragmatismo-io-framework": "^1.0.12",
     "reflect-metadata": "^0.1.12",
     "request-promise-native": "^1.0.5",
-    "sequelize": "^4.37.6",
-    "sequelize-typescript": "^0.6.3",
+    "sequelize": "^4.37.10",
+    "sequelize-typescript": "^0.6.5",
     "sqlite3": "^4.0.0",
     "swagger-client": "^2.1.18",
     "tedious": "^2.1.1",

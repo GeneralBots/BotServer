@@ -254,7 +254,7 @@ export class GBMinService {
 
             if (
               event.type === "conversationUpdate" &&
-              event.membersAdded.length > 0 
+              event.membersAdded.length > 0
               // TODO: Is it really Necessary? !event.membersAdded[0].id.startsWith('general-bot-9672a8d3') //DEMO: min.botId) //TODO: Check entire collection.
             ) {
 
@@ -334,14 +334,19 @@ export class GBMinService {
 
           let dirs = getDirectories(path);
           dirs.forEach(element => {
-            if (element.endsWith('.gbot')) {
-              botPackages.push(element);
-            }
-            else if (element.endsWith('.gbapp')) {
-              gbappPackages.push(element);
+            if (element.startsWith('.')) {
+              logger.trace(`Ignoring ${element}...`);
             }
             else {
-              generalPackages.push(element);
+              if (element.endsWith('.gbot')) {
+                botPackages.push(element);
+              }
+              else if (element.endsWith('.gbapp')) {
+                gbappPackages.push(element);
+              }
+              else {
+                generalPackages.push(element);
+              }
             }
           });
 

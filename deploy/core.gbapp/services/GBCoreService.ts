@@ -82,12 +82,21 @@ export class GBCoreService implements IGBCoreService {
       storage = GBConfigService.get("DATABASE_STORAGE");
     }
 
+    let value = GBConfigService.get("DATABASE_LOGGING");
+    let logging: boolean | Function = false;
+
+    if (value && value == "1") {
+      logging = (str) => {
+        logger.trace(str);
+      };
+    }
+
     this.sequelize = new Sequelize({
       host: host,
       database: database,
       username: username,
       password: password,
-      logging: false,
+      logging: logging,
       operatorsAliases: false,
       dialect: this.dialect,
       storage: storage,
