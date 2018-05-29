@@ -33,9 +33,8 @@
 "use strict";
 
 import { KBService } from './../services/KBService';
-import { IGBDialog } from  "botlib";
+import { IGBDialog } from "botlib";
 import { Prompts, UniversalBot, Session, ListStyle } from "botbuilder";
-import UrlJoin from "urljoin";
 import { GBMinInstance } from "botlib";
 
 export class FaqDialog extends IGBDialog {

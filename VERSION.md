@@ -1,9 +1,14 @@
 # Release History
 
+## Version 0.0.27
+
+- FIX: Packages updated.
+
 ## Version 0.0.26
-- Update of dependencies versions (package.json).
-- If a bot package's name begins with '.', then it is ignored.
-- Created DATABASE_LOGGING environment parameter.
+
+- FIX: Packages updated.
+- NEW: If a bot package's name begins with '.', then it is ignored.
+- NEW: Created DATABASE_LOGGING environment parameter.
 
 ## Version 0.0.25
 
@@ -41,5 +46,6 @@
 - NEW: Added support for Whatsapp external service key on bot instance model.
 
 ## Version 0.0.18
+
 - FIX: .gbapp files now correctly loaded before other package types so custom models can be used to sync DB.
 - NEW: Removed Boot Package feature. Now every .gbot found on deploy folders are deployed on startup.
