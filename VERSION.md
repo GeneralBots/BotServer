@@ -1,5 +1,9 @@
 # Release History
 
+## Version 0.0.28
+
+- FIX: gbui packages updated.
+
 ## Version 0.0.27
 
 - FIX: Packages updated.

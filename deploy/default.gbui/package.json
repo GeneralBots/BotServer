@@ -2,7 +2,7 @@
   "name": "default.gbui",
   "version": "0.0.10",
   "private": true,
-  "homepage": "http://www.generalbot.com",
+  "homepage": ".",
   "dependencies": {
     "@fortawesome/fontawesome": "^1.1.8",
     "@fortawesome/fontawesome-free-solid": "^5.0.13",
