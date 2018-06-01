@@ -131,15 +131,29 @@ export class GBMinService {
               botId,
               (instance: IGBInstance, err) => {
                 if (instance) {
-                  res.send(
-                    JSON.stringify({
-                      instanceId: instance.instanceId,
-                      botId: botId,
-                      theme: instance.theme,
-                      secret: instance.webchatKey, // TODO: Use token.
-                      conversationId: responseObject.conversationId
-                    })
-                  );
+
+                  let options = {
+                    url:
+                      "https://api.cognitive.microsoft.com/sts/v1.0/issueToken",
+                    method: "POST",
+                    headers: {
+                      "Ocp-Apim-Subscription-Key": instance.speechKey
+                    }
+                  };
+                  request(options).then((response:
+                    string) => {
+
+                    res.send(
+                      JSON.stringify({
+                        instanceId: instance.instanceId,
+                        botId: botId,
+                        theme: instance.theme,
+                        secret: instance.webchatKey, // TODO: Use token.
+                        speechToken: response,
+                        conversationId: responseObject.conversationId
+                      })
+                    );
+                  });
                 } else {
                   let error = `Instance not found: ${botId}.`;
                   res.send(error);

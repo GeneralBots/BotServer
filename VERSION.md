@@ -1,5 +1,9 @@
 # Release History
 
+## Version 0.0.29
+
+- NEW: Added STT and TTS capabilities to default.gbui.
+
 ## Version 0.0.28
 
 - FIX: gbui packages updated.

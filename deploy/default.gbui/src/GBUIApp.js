@@ -39,7 +39,12 @@ import SidebarMenu from "./components/SidebarMenu.js";
 import GBCss from "./components/GBCss.js";
 import { DirectLine } from "botframework-directlinejs";
 import { ConnectionStatus } from "botframework-directlinejs";
+import { SpeechRecognizer } from "botframework-webchat/CognitiveServices";
+import { SpeechSynthesizer } from "botframework-webchat/CognitiveServices";
+import { SynthesisGender } from "botframework-webchat/CognitiveServices";
 import { Chat } from "botframework-webchat";
+import { BotChat } from "botframework-webchat";
+import { Speech } from "botframework-webchat/botchat";
 import GBPowerBIPlayer from "./players/GBPowerBIPlayer.js";
 
 class GBUIApp extends React.Component {
@@ -49,7 +54,8 @@ class GBUIApp extends React.Component {
     this.state = {
       botConnection: null,
       instance: null,
-      token: null
+      token: null,
+      instanceClient: null
     };
   }
 
@@ -97,7 +103,8 @@ class GBUIApp extends React.Component {
       .then(res => res.json())
       .then(
         result => {
-          this.setupBotConnection(result.secret);
+          this.setState({instanceClient:result});
+          this.setupBotConnection();
         },
         error => {
           this.setState({
@@ -108,12 +115,12 @@ class GBUIApp extends React.Component {
       );
   }
 
-  setupBotConnection(secret) {
+  setupBotConnection() {
     let _this_ = this;
     window["botchatDebug"] = true;
 
     const botConnection = new DirectLine({
-      secret: secret
+      secret: this.state.instanceClient.secret
     });
 
     botConnection.connectionStatus$.subscribe(connectionStatus => {
@@ -224,7 +231,11 @@ class GBUIApp extends React.Component {
           );
           break;
       }
+
+
     }
+
+    let speechOptions;
 
     let sideBar = (
       <div className="sidebar">
@@ -232,17 +243,45 @@ class GBUIApp extends React.Component {
       </div>
     );
 
-    if (this.state.botConnection) {
+
+    if (this.state.botConnection && this.state.instance) {
+      let token = this.state.instanceClient.speechToken;
+
+      function getToken() {
+        return new Promise((resolve, reject) => {
+          resolve(token);
+        });
+      }
+  
+
+      speechOptions = {
+        speechRecognizer: new SpeechRecognizer({
+          locale: "pt-br",
+          fetchCallback: (authFetchEventId) => getToken(),
+          fetchOnExpiryCallback: (authFetchEventId) => getToken()
+        }),
+        speechSynthesizer: new SpeechSynthesizer({
+          fetchCallback: (authFetchEventId) => getToken(),
+          fetchOnExpiryCallback: (authFetchEventId) => getToken(),
+          gender: SynthesisGender.Male,
+          voiceName: 'Microsoft Server Speech Text to Speech Voice (pt-BR, Daniel, Apollo)'
+        })
+      };
+
       chat = (
         <Chat
           ref={chat => {
             this.chat = chat;
           }}
+          locale={'pt-br'}
           botConnection={this.state.botConnection}
           user={this.getUser()}
           bot={{ id: "bot@gb", name: "Bot" }}
+          speechOptions={speechOptions}
         />
       );
+
+
     }
 
     if (!this.state.instance) {
