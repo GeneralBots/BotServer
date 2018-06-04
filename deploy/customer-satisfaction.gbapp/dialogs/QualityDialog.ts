@@ -33,23 +33,25 @@
 "use strict";
 
 import { IGBDialog } from  "botlib";
-import { UniversalBot, Session, Prompts, ListStyle } from "botbuilder";
+
 import { GBMinInstance } from "botlib";
 import { CSService } from "../services/CSService";
+import { BotAdapter } from "botbuilder";
 const logger = require("../../../src/logger");
 
 export class QualityDialog extends IGBDialog {
 
-  static setup(bot: UniversalBot, min: GBMinInstance) {
+  static setup(bot: BotAdapter, min: GBMinInstance) {
 
     const service = new CSService();
 
-    bot.dialog("/quality", [
-      (session, args) => {
+    min.dialogs.add("/quality", [
+      async (dc, args) => {
+        const user = min.userState.get(dc.context);
         var score = args.score;
 
         setTimeout(
-          () => min.conversationalService.sendEvent(session, "stop", null),
+          () => min.conversationalService.sendEvent(dc, "stop", null),
           400
         );
 
@@ -59,25 +61,25 @@ export class QualityDialog extends IGBDialog {
             "Lamento... Vamos tentar novamente!",
             "Desculpe-me. Por favor, tente escrever de outra forma?"
           ];
-          session.send(msg);
+          dc.context.sendActivity(msg[0]);
         } else {
           let msg = [
             "Ótimo, obrigado por contribuir com sua resposta.",
             "Certo, obrigado pela informação.",
             "Obrigado pela contribuição."
           ];
-          session.send(msg);
+          dc.context.sendActivity(msg[0]);
 
           service.insertQuestionAlternate(
             min.instance.instanceId,
-            session.userData.lastQuestion,
-            session.userData.lastQuestionId,
+            user.lastQuestion,
+            user.lastQuestionId,
             (data, err) => {
               logger.trace("QuestionAlternate inserted.");
             }
           );
 
-          session.replaceDialog('/ask', {isReturning: true});
+          dc.replace('/ask', {isReturning: true});
         }
       }
     ]);

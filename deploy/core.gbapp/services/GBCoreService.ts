@@ -45,7 +45,7 @@ import { Sequelize } from "sequelize-typescript";
 import { Promise } from "bluebird";
 import { GBConfigService } from "./GBConfigService";
 import { DataTypeUUIDv1 } from "sequelize";
-import { UniversalBot } from "botbuilder";
+
 import { GBServiceCallback, IGBInstance, IGBCoreService } from 'botlib';
 import { GuaribasInstance } from "../models/GBModel";
 

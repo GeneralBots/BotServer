@@ -37,7 +37,7 @@ const UrlJoin = require("url-join");
 const logger = require("./logger");
 const express = require("express");
 const bodyParser = require("body-parser");
-import { UniversalBot } from "botbuilder";
+
 import { Sequelize } from "sequelize-typescript";
 import { GBConfigService } from "../deploy/core.gbapp/services/GBConfigService";
 import { GBConversationalService } from "../deploy/core.gbapp/services/GBConversationalService";

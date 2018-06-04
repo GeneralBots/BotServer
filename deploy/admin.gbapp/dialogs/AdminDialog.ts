@@ -32,111 +32,111 @@
 
 "use strict";
 
-
 const UrlJoin = require("url-join");
 import { AzureSearch } from "pragmatismo-io-framework";
-import { Prompts, Session, UniversalBot } from 'botbuilder';
+const { DialogSet, TextPrompt, NumberPrompt } = require('botbuilder-dialogs');
+const { createTextPrompt, createNumberPrompt } = require('botbuilder-prompts');
 import { GBMinInstance } from "botlib";
 import { IGBDialog } from "botlib";
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GBImporter } from '../../core.gbapp/services/GBImporter';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { KBService } from './../../kb.gbapp/services/KBService';
+import { BotAdapter } from "botbuilder";
 
 export class AdminDialog extends IGBDialog {
 
-  static setup(bot: UniversalBot, min: GBMinInstance) {
+  static setup(bot: BotAdapter, min: GBMinInstance) {
 
     let importer = new GBImporter(min.core);
     let deployer = new GBDeployer(min.core, importer);
 
-    bot
-      .dialog("/admin", [
-        (session: Session, args) => {
-          Prompts.text(session, "Please, authenticate:");
-          if (args == undefined || args.firstRun) {
-          }
+    min.dialogs.add("/admin", [
+        async (dc, args) => {
+          const prompt = "Please, authenticate:";
+          await dc.prompt('textPrompt', prompt);
         },
-        (session: Session, results) => {
-          var text = results.response;
+        async (dc, value) => {
+          var text = value.response;
+          const user = min.userState.get(dc.context);
+
           if (
-            !session.privateConversationData.authenticated ||
+            !user.authenticated ||
             text === GBConfigService.get("ADMIN_PASS")
           ) {
-            session.privateConversationData.authenticated = true;
-            session.send(
+            user.authenticated = true;
+            dc.context.sendActivity(
               "Welcome to Pragmatismo.io GeneralBots Administration."
             );
-            Prompts.text(session, "Which task do you wanna run now?");
+            await dc.prompt('textPrompt', "Which task do you wanna run now?");
           } else {
-            session.endDialog();
+            dc.endAll();
           }
         },
-        function (session: Session, results) {
-          var text = results.response;
+        async (dc, value) => {
+          var text = value;
+          const user = min.userState.get(dc.context);
+
           if (text === "quit") {
-            session.privateConversationData.authenticated = false;
-            session.replaceDialog("/");
+            user.authenticated = false;
+            dc.replace("/");
           } else if (text === "sync") {
             min.core.syncDatabaseStructure(() => { });
-            session.send("Sync started...");
-            session.replaceDialog("/admin", {
+            dc.context.sendActivity("Sync started...");
+            dc.replace("/admin", {
               firstRun: false
             });
           } else if (text.split(" ")[0] === "rebuildIndex") {
-            AdminDialog.rebuildIndexCommand(min, session, () =>
-              session.replaceDialog("/admin", {
+            AdminDialog.rebuildIndexCommand(min, dc, () =>
+              dc.replace("/admin", {
                 firstRun: false
               })
             );
           } else if (text.split(" ")[0] === "deployPackage") {
-            AdminDialog.deployPackageCommand(text, session, deployer, min, () =>
-              session.replaceDialog("/admin", {
+            AdminDialog.deployPackageCommand(text, dc, deployer, min, () =>
+              dc.replace("/admin", {
                 firstRun: false
               })
             );
           } else if (text.split(" ")[0] === "redeployPackage") {
-            AdminDialog.undeployPackageCommand(text, min, session, () => {
-              AdminDialog.deployPackageCommand(text, session, deployer, min, () => {
-                session.send("Redeploy done.");
-                session.replaceDialog("/admin", {
+            AdminDialog.undeployPackageCommand(text, min, dc, () => {
+              AdminDialog.deployPackageCommand(text, dc, deployer, min, () => {
+                dc.context.sendActivity("Redeploy done.");
+                dc.replace("/admin", {
                   firstRun: false
                 });
               });
             });
           } else if (text.split(" ")[0] === "undeployPackage") {
-            AdminDialog.undeployPackageCommand(text, min, session, () =>
-              session.replaceDialog("/admin", {
+            AdminDialog.undeployPackageCommand(text, min, dc, () =>
+              dc.replace("/admin", {
                 firstRun: false
               })
             );
           } else if (text.split(" ")[0] === "applyPackage") {
-            session.send("Applying in progress...");
+            dc.context.sendActivity("Applying in progress...");
             min.core.loadInstance(text.split(" ")[1], (item, err) => {
-              session.send("Applying done...");
-              session.replaceDialog("/");
+              dc.context.sendActivity("Applying done...");
+              dc.replace("/");
             });
-            session.replaceDialog("/admin", {
+            dc.replace("/admin", {
               firstRun: false
             });
           }
         }
       ])
-      .triggerAction({
-        matches: /^(admin)/i
-      });
   }
 
-  static undeployPackageCommand(text: any, min: GBMinInstance, session: Session, cb) {
+  static undeployPackageCommand(text: any, min: GBMinInstance, dc, cb) {
     let packageName = text.split(" ")[1];
     let importer = new GBImporter(min.core);
     let deployer = new GBDeployer(min.core, importer);
-    session.send(`Undeploying package ${packageName}...`);
+    dc.context.sendActivity(`Undeploying package ${packageName}...`);
     deployer.undeployPackageFromLocalPath(
       min.instance,
       UrlJoin("deploy", packageName),
       (data, err) => {
-        session.send(`Package ${packageName} undeployed...`);
+        dc.context.sendActivity(`Package ${packageName} undeployed...`);
         cb();
       }
     );
@@ -144,38 +144,38 @@ export class AdminDialog extends IGBDialog {
 
   static deployPackageCommand(
     text: string,
-    session: Session,
+    dc,
     deployer: GBDeployer,
     min: GBMinInstance,
     cb
   ) {
     let packageName = text.split(" ")[1];
-    session.send(`Deploying package ${packageName}... (It may take a few seconds)`);
+    dc.context.sendActivity(`Deploying package ${packageName}... (It may take a few seconds)`);
 
-    // TODO: Find packages in all posible locations.
+    // TODO: Find packages in all possible locations.
     let additionalPath = GBConfigService.get("ADDITIONAL_DEPLOY_PATH");
 
     deployer.deployPackageFromLocalPath(
       UrlJoin(additionalPath, packageName),
       (data, err) => {
-        session.send(`Package ${packageName} deployed... Please run rebuildIndex command.`);
+        dc.context.sendActivity(`Package ${packageName} deployed... Please run rebuildIndex command.`);
 
       }
     );
   }
 
-  static rebuildIndexCommand(min: GBMinInstance, session: Session, cb) {
+  static rebuildIndexCommand(min: GBMinInstance, dc, cb) {
     let search = new AzureSearch(
       min.instance.searchKey,
       min.instance.searchHost,
       min.instance.searchIndex,
       min.instance.searchIndexer
     );
-    session.send("Rebuilding index...");
+    dc.context.sendActivity("Rebuilding index...");
     search.deleteIndex((data, err) => {
       let kbService = new KBService();
       search.createIndex(kbService.getSearchSchema(min.instance.searchIndex), "gb", (data, err) => {
-        session.send("Index rebuilt.");
+        dc.context.sendActivity("Index rebuilt.");
       });
     });
   }

@@ -42,8 +42,9 @@ const WaitUntil = require("wait-until");
 const Walk = require("fs-walk");
 const express = require("express");
 
-import { UniversalBot } from "botbuilder";
-import { Session, MemoryBotStorage, Message } from "botbuilder";
+import { BotFrameworkAdapter, BotStateSet, ConversationState, MemoryStorage, UserState } from "botbuilder";
+import { LanguageTranslator, LocaleConverter } from "botbuilder-ai";
+
 import { GBCoreService } from "./GBCoreService";
 import { GBConversationalService } from "./GBConversationalService";
 import { GBConfigService } from "./GBConfigService";
@@ -70,8 +71,9 @@ export class GBMinService {
   deployFolder = "deploy";
   corePackage = "core.gbai";
 
+
   /**
-   * Static iniatialization of minimal instance.
+   * Static initialization of minimal instance.
    *
    * @param core Basic database services to identify instance, for example.
    * @param cb Returns the loaded instance.
@@ -164,17 +166,32 @@ export class GBMinService {
           });
         });
 
+        // Build bot adapter.
+
+        let adapter = new BotFrameworkAdapter({
+          appId: instance.marketplaceId,
+          appPassword: instance.marketplacePassword
+        });
+        const storage = new MemoryStorage();
+        const conversationState = new ConversationState(storage);
+        const userState = new UserState(storage);
+        adapter.use(new BotStateSet(conversationState, userState));
+
         // The minimal bot is built here.
 
         let min = new GBMinInstance();
         min.botId = instance.botId;
+        min.bot = adapter;
+        min.userState = userState;
         min.core = _this_.core;
         min.conversationalService = _this_.conversationalService;
+
+
         _this_.core.loadInstance(min.botId, (data, err) => {
 
           min.instance = data;
 
-          // Call the loadBot event for all packages.
+          // Call the loadBot context.activity for all packages.
 
           appPackages.forEach(e => {
             e.sysPackages = new Array<IGBPackage>();
@@ -199,10 +216,6 @@ export class GBMinService {
 
         });
 
-        let connector = new gBuilder.ChatConnector({
-          appId: instance.marketplaceId,
-          appPassword: instance.marketplacePassword
-        });
 
         // Serves individual URL for each bot conversational interface...
 
@@ -210,7 +223,81 @@ export class GBMinService {
         logger.trace(
           `GeneralBots(${instance.engineName}) listening on: ${url}.`
         );
-        server.post(url, connector.listen());
+        server.post('/api/messages/', (req, res) => {
+          
+          adapter.processActivity(req, res, async (context) => {
+
+            if (context.activity.type === 'message') {
+              // Create dialog context and continue executing the "current" dialog, if any.
+              const state = conversationState.get(context);
+              const dc = min.dialogs.createContext(context, state);
+              await dc.continue();
+
+              // Check to see if anyone replied. If not then start echo dialog
+              if (!context.responded) {
+                await dc.begin('echo');
+              }
+
+              //   context.activity.type === "conversationUpdate" &&
+              //   context.activity.membersAdded.length > 0
+
+              //   // if (context.activity.address.channelId != "directline") {
+              //   //   dc.begin("/");
+              //   // }
+              //   // else {
+              //   //   next();
+              //   // }
+
+              if (context.activity.name === "whoAmI") {
+                dc.begin("/whoAmI");
+              } else if (context.activity.name === "showSubjects") {
+                dc.begin("/menu");
+              } else if (context.activity.name === "giveFeedback") {
+                dc.begin("/feedback", {
+                  fromMenu: true
+                });
+              } else if (context.activity.name === "showFAQ") {
+                dc.begin("/faq");
+              } else if (context.activity.name === "ask") {
+                dc.begin("/answer", {
+                  // TODO: query: context.activity.data,
+                  fromFaq: true
+                });
+              } else if (context.activity.name === "quality") {
+                dc.begin("/quality", {
+                  // TODO: score: context.activity.data
+                });
+              } else {
+                await dc.continue();
+              }
+
+              const user = min.userState.get(dc.context);
+              if (!user.loaded) {
+                setTimeout(
+                  () => {
+                    min.conversationalService.sendEvent(
+                      dc,
+                      "loadInstance",
+                      min.instance // TODO: Send a new thiner object.
+                    )
+                  },
+                  500
+                );
+                user.loaded = true;
+                user.subjects = [];
+              }
+
+              appPackages.forEach(e => {
+                e.onNewSession(min, dc);
+              });
+
+              logger.trace(
+                `[RCV]: ChannelID: ${context.activity.channelId}, ConversationID: ${context.activity.conversation.id}
+               Type: ${context.activity.type}, Name: ${context.activity.name}, Text: ${context.activity.text}.`
+              );
+            }
+          });
+        });
 
         // Serves individual URL for each bot user interface.
 
@@ -221,102 +308,20 @@ export class GBMinService {
         );
         logger.trace(`Bot UI ${uiPackage} acessible at: ${uiUrl}.`);
 
-
-        // Prepares bot service.
-
-        let inMemoryStorage = new MemoryBotStorage();
-
-        min.bot = new gBuilder.UniversalBot(connector, {
-          storage: inMemoryStorage
-        });
-
-
         // Setups handlers.
-
-        min.bot.use({
-
-          botbuilder: (session, next) => {
-
-            if (!session.privateConversationData.loaded) {
-              setTimeout(
-                () => {
-                  min.conversationalService.sendEvent(
-                    session,
-                    "loadInstance",
-                    min.instance // TODO: Send a new thiner object.
-                  )
-                },
-                500
-              );
-              session.privateConversationData.loaded = true;
-              session.userData.subjects = [];
-            }
-
-            appPackages.forEach(e => {
-              e.onNewSession(min, session);
-            });
-
-            next();
-          },
-          receive: function (event: any, next) {
-            logger.trace(
-              `[RCV]: ChannelID: ${event.address.channelId}, ConversationID: ${event.address.conversation.id}
-               Type: ${event.type}, Name: ${event.name}, Text: ${event.text}.`
-            );
-
-            // PACKAGE: Provide loop here.
-
-            if (
-              event.type === "conversationUpdate" &&
-              event.membersAdded.length > 0
-              // TODO: Is it really Necessary? !event.membersAdded[0].id.startsWith('general-bot-9672a8d3') //DEMO: min.botId) //TODO: Check entire collection.
-            ) {
-
-              if (event.address.channelId != "directline") {
-                min.bot.beginDialog(event.address, "/");
-              }
-              else {
-                next();
-              }
-            } else if (event.name === "whoAmI") {
-              min.bot.beginDialog(event.address, "/whoAmI");
-            } else if (event.name === "showSubjects") {
-              min.bot.beginDialog(event.address, "/menu");
-            } else if (event.name === "giveFeedback") {
-              min.bot.beginDialog(event.address, "/feedback", {
-                fromMenu: true
-              });
-            } else if (event.name === "showFAQ") {
-              min.bot.beginDialog(event.address, "/faq");
-            } else if (event.name === "ask") {
-              min.bot.beginDialog(event.address, "/answer", {
-                query: event.data,
-                fromFaq: true
-              });
-            } else if (event.name === "quality") {
-              min.bot.beginDialog(event.address, "/quality", {
-                score: event.data
-              });
-            } else {
-              next();
-            }
-          },
-          send: function (event, next) {
-            logger.trace(
-              `[SND]: ChannelID: ${event.address.channelId}, ConversationID: ${event.address.conversation},
-               Type: ${event.type}              `);
-            this.core.createMessage(
-              this.min.conversation,
-              this.min.conversation.startedBy,
-              event.source,
-              (data, err) => {
-                logger.trace(event.source);
-              }
-            );
-            next();
-          }
-        });
-
+        // send: function (context.activity, next) {
+        //   logger.trace(
+        //     `[SND]: ChannelID: ${context.activity.address.channelId}, ConversationID: ${context.activity.address.conversation},
+        //      Type: ${context.activity.type}              `);
+        //   this.core.createMessage(
+        //     this.min.conversation,
+        //     this.min.conversation.startedBy,
+        //     context.activity.source,
+        //     (data, err) => {
+        //       logger.trace(context.activity.source);
+        //     }
+        //   );
+        //   next();
 
         // Specialized load for each min instance.
 

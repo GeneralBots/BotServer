@@ -36,7 +36,7 @@ const UrlJoin = require("url-join");
 
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index';
 import { GBMinInstance, IGBPackage } from "botlib";
-import { Session } from 'botbuilder';
+
 import { AskDialog } from "./dialogs/AskDialog";
 import { FaqDialog } from "./dialogs/FaqDialog";
 import { MenuDialog } from "./dialogs/MenuDialog";
@@ -68,7 +68,7 @@ export class GBKBPackage implements IGBPackage {
   unloadBot(min: GBMinInstance): void {
     
   }
-  onNewSession(min: GBMinInstance, session: Session): void {
+  onNewSession(min: GBMinInstance, dc: any): void {
     
   }
 }

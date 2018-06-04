@@ -29,20 +29,19 @@
 | our trademarks remain entirely with us.                                     |
 |                                                                             |
 \*****************************************************************************/
- 
- "use strict";
- 
+
+"use strict";
+
 import { Length } from "sequelize-typescript";
 import {
-  UniversalBot,
-  Session,
-  Message,
-  AttachmentLayout,
   CardAction,
   HeroCard,
-  CardImage
+  CardImage,
+  BotAdapter,
+  CardFactory,
+  MessageFactory
 } from "botbuilder";
-import { IGBDialog } from  "botlib";
+import { IGBDialog } from "botlib";
 import { GBMinInstance } from "botlib";
 import { AzureText } from "pragmatismo-io-framework";
 import { GuaribasSubject } from '../models';
@@ -53,135 +52,136 @@ const WaitUntil = require("wait-until");
 
 export class MenuDialog extends IGBDialog {
 
-  static setup(bot: UniversalBot, min: GBMinInstance) {
+  static setup(bot: BotAdapter, min: GBMinInstance) {
 
     var service = new KBService();
 
     bot
-      .dialog("/menu", [
-        (session, args) => {
-          var rootSubjectId = null;
-          var botId = min.botId;
+    min.dialogs.add("/menu", [
+      async (dc, args) => {
+        var rootSubjectId = null;
+        var botId = min.botId;
 
-          var msg = session.message;
-          if (msg.attachments && msg.attachments.length > 0) {
-            var attachment = msg.attachments[0];         
+        // var msg = dc.message; TODO: message from Where in V4?
+        // if (msg.attachments && msg.attachments.length > 0) {
+        //   var attachment = msg.attachments[0];         
+        // }
+
+
+        if (args && args.data) {
+          var subject = JSON.parse(args.data); // ?
+
+          if (subject.to) {
+            let dialog = subject.to.split(":")[1];
+            dc.replace("/" + dialog);
+            dc.end();
+            return;
           }
+          const user = min.userState.get(dc.context);
+          user.subjects.push(subject);
+          rootSubjectId = subject.subjectId;
 
-          if (args && args.data) {
-            var subject = JSON.parse(args.data); // ?
+          if (user.subjects.length > 0) {
 
-            if (subject.to) {
-              let dialog = subject.to.split(":")[1];
-              session.replaceDialog("/" + dialog);
-              session.endDialog();
-              return;
-            }
-
-            session.userData.subjects.push(subject);
-            rootSubjectId = subject.subjectId;
-
-            if (session.userData.subjects.length > 0) {
-              
-              service.getFaqBySubjectArray(
-                "menu",
-                session.userData.subjects,
-                (data, err) => {
-                  min.conversationalService.sendEvent(session, "play", {
-                    playerType: "bullet",
-                    data: data.slice(0, 6)
-                  });
-                }
-              );
-            }
-          } else {
-            session.userData.subjects = [];
-            session.sendTyping();
-            WaitUntil()
-              .interval(2000)
-              .times(1)
-              .condition(function(cb) {
-                return false;
-              })
-              .done(function(result) {
-                let msgs = [
-                  "Aqui estão algumas categorias de assuntos...",
-                  "Selecionando o assunto você pode me ajudar a encontrar a resposta certa...",
-                  "Você pode selecionar algum dos assuntos abaixo e perguntar algo..."
-                ];
-                session.send(msgs);
-              });
-
-              session.userData.isAsking = false;
-          }
-
-          service.getSubjectItems(
-            min.instance.instanceId,
-            rootSubjectId,
-            data => {
-              var msg = new Message(session);
-              msg.attachmentLayout(AttachmentLayout.carousel);
-              var attachments = [];
-
-              data.forEach(function(item: GuaribasSubject) {
-                var subject = item;
-                var button = CardAction.dialogAction(
-                  session,
-                  "menuAction",
-                  JSON.stringify({
-                    title: subject.title,
-                    subjectId: subject.subjectId,
-                    to: subject.to
-                  }),
-                  "Selecionar"
-                );
-                var card = new HeroCard(session)
-                  .title(subject.title)
-                  .text(subject.description)
-                  .images([
-                    CardImage.create(
-                      session,
-                      UrlJoin(
-                        "/kb",
-                        min.instance.kb,
-                        "subjects",
-                        subject.internalId + ".png" // TODO: or fallback to subject.png
-                      )
-                    )
-                  ]) // Using public dir of ui.
-                  .buttons([button]);
-                attachments.push(card);
-              });
-
-              if (attachments.length == 0) {
-                if (session.userData.subjects && session.userData.subjects.length > 0) {
-                  session.send(
-                    `Vamos pesquisar sobre ${KBService.getFormattedSubjectItems(
-                      session.userData.subjects
-                    )}?`
-                  );
-                }
-
-                session.replaceDialog("/ask", {});
-              } else {
-                msg.attachments(attachments);
-                session.send(msg);
+            service.getFaqBySubjectArray(
+              "menu",
+              user.subjects,
+              (data, err) => {
+                min.conversationalService.sendEvent(dc, "play", {
+                  playerType: "bullet",
+                  data: data.slice(0, 6)
+                });
               }
-            }
-          );
-
-          session.userData.isAsking = true;
-        },
-        function(session, results) {
-          var text = results.response;
-          if (AzureText.isIntentNo(text)) {
-            session.replaceDialog("/feedback");
-          } else {
-            session.replaceDialog("/ask");
+            );
           }
-        }
-      ]);
+        } else {
+          const user = min.userState.get(dc.context);
+          user.subjects = [];
 
-    bot.beginDialogAction("menuAction", "/menu");
+          WaitUntil()
+            .interval(2000)
+            .times(1)
+            .condition(function (cb) {
+              return false;
+            })
+            .done(function (result) {
+              let messages = [
+                "Aqui estão algumas categorias de assuntos...",
+                "Selecionando o assunto você pode me ajudar a encontrar a resposta certa...",
+                "Você pode selecionar algum dos assuntos abaixo e perguntar algo..."
+              ];
+              dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+            });
+
+          user.isAsking = false;
+        }
+
+        const msg = MessageFactory.text('Greetings from example message');
+        var attachments = [];
+
+        service.getSubjectItems(
+          min.instance.instanceId,
+          rootSubjectId,
+          data => {
+            
+            msg.attachmentLayout='carousel';
+            
+
+            data.forEach(function (item: GuaribasSubject) {
+
+              var subject = item;
+
+              var card = CardFactory.heroCard(
+                subject.title,
+                CardFactory.images([UrlJoin(
+                  "/kb",
+                  min.instance.kb,
+                  "subjects",
+                  subject.internalId + ".png" // TODO: or fallback to subject.png
+                )]),
+                CardFactory.actions([
+                  {
+                    type: 'postBack',
+                    title: 'Selecionar',
+                    value: JSON.stringify({
+                      title: subject.title,
+                      subjectId: subject.subjectId,
+                      to: subject.to
+                    })
+                  }]));
+
+              attachments.push(card);
+
+            });
+
+            if (attachments.length == 0) {
+              const user = min.userState.get(dc.context);
+              if (user.subjects && user.subjects.length > 0) {
+                dc.context.sendActivity(
+                  `Vamos pesquisar sobre ${KBService.getFormattedSubjectItems(
+                    user.subjects
+                  )}?`
+                );
+              }
+
+              dc.replace("/ask", {});
+            } else {
+              msg.attachments = attachments;
+              dc.context.sendActivity(msg);
+            }
+          }
+        );
+        const user = min.userState.get(dc.context);
+        user.isAsking = true;
+      },
+      async (dc, value) => {
+        var text = value;
+        if (AzureText.isIntentNo(text)) {
+          dc.replace("/feedback");
+        } else {
+          dc.replace("/ask");
+        }
+      }
+    ]);
   }
 }

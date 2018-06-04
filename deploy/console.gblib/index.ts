@@ -36,7 +36,7 @@ const UrlJoin = require("url-join");
 
 
 import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib";
-import { Session } from 'botbuilder';
+
 import { Sequelize } from "sequelize-typescript";
 import { ConsoleDirectLine } from "./services/ConsoleDirectLine";
 
@@ -59,7 +59,7 @@ export class GBConsolePackage implements IGBPackage {
   unloadBot(min: GBMinInstance): void {
 
   }
-  onNewSession(min: GBMinInstance, session: Session): void {
+  onNewSession(min: GBMinInstance, dc: any): void {
 
   }
 }

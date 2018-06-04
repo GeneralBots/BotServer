@@ -112,6 +112,12 @@ export class GuaribasInstance extends Model<GuaribasInstance> implements IGBInst
     @Column kb: string;
 
     @Column
+    nlpAppId: string;
+
+    @Column
+    nlpSubscriptionKey: string;
+
+    @Column
     @Column({ type: DataType.STRING(512) })
     nlpServerUrl: string;
 

@@ -39,11 +39,6 @@ const UrlJoin = require("url-join");
 const Walk = require("fs-walk");
 const WaitUntil = require("wait-until");
 const marked = require("marked");
-
-
-
-
-
 import { Sequelize } from "sequelize-typescript";
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 import { GuaribasQuestion, GuaribasAnswer, GuaribasSubject } from "../models";
@@ -52,7 +47,7 @@ import { AzureSearch } from "pragmatismo-io-framework";
 import { GBCoreService } from 'deploy/core.gbapp/services/GBCoreService';
 import { GBDeployer } from "../../core.gbapp/services/GBDeployer";
 import { GBConversationalService } from "../../core.gbapp/services/GBConversationalService";
-import { Session } from "botbuilder";
+
 import { GuaribasPackage } from "../../core.gbapp/models/GBModel";
 
 export class KBService {
@@ -449,20 +444,20 @@ export class KBService {
     }).pipe(parser);
   }
 
-  sendAnswer(conversationalService: IGBConversationalService, session: Session, answer: GuaribasAnswer) {
+  sendAnswer(conversationalService: IGBConversationalService, dc: any, answer: GuaribasAnswer) {
 
     if (answer.content.endsWith('.mp4')) {
-      conversationalService.sendEvent(session, "play", {
+      conversationalService.sendEvent(dc, "play", {
         playerType: "video",
         data: answer.content
       });
-    } else if (answer.content.length > 140 && session.message.source != "directline") {
-      let msgs = [
+    } else if (answer.content.length > 140 && dc.message.source != "directline") {
+      let messages = [
         "Vou te responder na tela para melhor visualização...",
         "A resposta está na tela...",
         "Veja a resposta na tela..."
       ];
-      session.send(msgs);
+      dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
       var html = answer.content;
       if (answer.format === ".md") {
         marked.setOptions({
@@ -478,10 +473,10 @@ export class KBService {
         });
         html = marked(answer.content);
       }
-      conversationalService.sendEvent(session, "play", { playerType: "markdown", data: html });
+      conversationalService.sendEvent(dc, "play", { playerType: "markdown", data: html });
     } else {
-      session.send(answer.content);
-      conversationalService.sendEvent(session, "stop", null);
+      dc.context.sendActivity(answer.content);
+      conversationalService.sendEvent(dc, "stop", null);
     }
   }
 

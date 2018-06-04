@@ -35,7 +35,7 @@
 const UrlJoin = require("url-join");
 
 import { GBMinInstance, IGBPackage } from "botlib";
-import { Session } from 'botbuilder';
+
 import { WelcomeDialog } from "./dialogs/WelcomeDialog";
 import { WhoAmIDialog } from "./dialogs/WhoAmIDialog";
 import { IGBCoreService} from "botlib";
@@ -66,7 +66,7 @@ export class GBCorePackage implements IGBPackage {
   unloadBot(min: GBMinInstance): void {
     
   }
-  onNewSession(min: GBMinInstance, session: Session): void {
+  onNewSession(min: GBMinInstance, dc: any): void {
     
   }
 }

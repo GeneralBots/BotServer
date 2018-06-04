@@ -36,39 +36,40 @@ const WaitUntil = require("wait-until");
 import { GBCoreService } from "../services/GBCoreService";
 import { IGBDialog } from "botlib";
 import { GBConversationalService } from "../services/GBConversationalService";
-import { UniversalBot, Session, Prompts } from "botbuilder";
 import { GBMinInstance } from "botlib";
+import { BotAdapter } from "botbuilder";
 
 export class WelcomeDialog extends IGBDialog {
-  static setup(bot: UniversalBot, min: GBMinInstance) {
+  static setup(bot: BotAdapter, min: GBMinInstance) {
 
-    bot.dialog("/", [
-      function (session, args, next) {
-        if (!session.userData.once) {
-          session.userData.once = true;
+    min.dialogs.add("/", [
+
+      async (dc, args) => {
+
+        const user = min.userState.get(dc.context);
+
+        if (!user.once) {
+          user.once = true;
           var a = new Date();
           const date = a.getHours();
           var msg =
             date < 12 ? "bom dia" : date < 18 ? "boa tarde" : "boa noite";
-
-          session.sendTyping();
-          let msgs = [`Oi, ${msg}.`, `Oi!`, `Olá, ${msg}`, `Olá!`];
-          session.endDialog(msgs);
+          
+          let messages = [`Oi, ${msg}.`, `Oi!`, `Olá, ${msg}`, `Olá!`];
+          dc.end(messages);
         }
 
-        
-        if (session.message && session.message.text != "") {
-          session.replaceDialog("/answer", { query: session.message.text });
-          return;
-        }
+        // V4: if (dc.context.message && dc.message.text != "") {
+        //   dc.replace("/answer", { query: dc.message.text });
+        //   return;
+        // }
+        // let userName = dc.message.user.name;
+        // let displayName = dc.message.user.name;
 
-        let userName = session.message.user.name;
-        let displayName = session.message.user.name;
-
-        if (args) {
-          userName = args.userName;
-          displayName = args.displayName;
-        }
+        // if (args) {
+        //   userName = args.userName;
+        //   displayName = args.displayName;
+        // }
 
       }
     ]);

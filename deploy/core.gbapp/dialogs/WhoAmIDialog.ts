@@ -35,26 +35,25 @@
 import { GBConversationalService } from "./../services/GBConversationalService";
 import { GBCoreService } from "../services/GBCoreService";
 import { IGBDialog } from  "botlib";
-import { UniversalBot, Session, Prompts } from "botbuilder";
 import { GBMinInstance } from "botlib";
+import { BotAdapter } from "botbuilder";
 
 
 export class WhoAmIDialog extends IGBDialog {
-  static setup(bot: UniversalBot, min: GBMinInstance) {
-    bot.dialog("/whoAmI", [
-      function(session, args) {
-        session.sendTyping();
-        session.send(`${min.instance.description}`);
+  static setup(bot: BotAdapter, min: GBMinInstance) {
+    min.dialogs.add("/whoAmI", [
+      async (dc, args) => {
+        dc.context.sendActivity(`${min.instance.description}`);
 
         if (min.instance.whoAmIVideo){
-          session.send(`Vou te mostrar um vídeo. Por favor, aguarde...`);
-        min.conversationalService.sendEvent(session, "play", {
+          dc.context.sendActivity(`Vou te mostrar um vídeo. Por favor, aguarde...`);
+        min.conversationalService.sendEvent(dc, "play", {
           playerType: "video",
           data: min.instance.whoAmIVideo.trim()
         });
       }
 
-        session.replaceDialog('/ask', {isReturning: true});
+        dc.replace('/ask', {isReturning: true});
       }
     ]);
   }

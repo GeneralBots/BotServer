@@ -51,7 +51,7 @@ import { Promise } from "bluebird";
 import { GBConfigService } from "./GBConfigService";
 import { DataTypeUUIDv1 } from "sequelize";
 import { GBError, GBERROR_TYPE } from "botlib";
-import { UniversalBot } from "botbuilder";
+
 import { GBConversationalService } from "./GBConversationalService";
 import { GuaribasPackage } from '../models/GBModel';
 

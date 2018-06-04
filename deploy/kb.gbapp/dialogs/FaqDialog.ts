@@ -34,38 +34,35 @@
 
 import { KBService } from './../services/KBService';
 import { IGBDialog } from "botlib";
-import { Prompts, UniversalBot, Session, ListStyle } from "botbuilder";
+import { BotAdapter } from "botbuilder";
 import { GBMinInstance } from "botlib";
 
 export class FaqDialog extends IGBDialog {
-  static setup(bot: UniversalBot, min: GBMinInstance) {
+  static setup(bot: BotAdapter, min: GBMinInstance) {
 
     const service = new KBService();
 
-    bot
-      .dialog("/faq", [
-        (session, args) => {
-          service.getFaqBySubjectArray("faq", null, (data, err) => {
-            if (data) {
-              min.conversationalService.sendEvent(session, "play", {
-                playerType: "bullet",
-                data: data.slice(0, 10)
-              });
+    min.dialogs.add("/faq", [
+      async (dc, args) => {
+        service.getFaqBySubjectArray("faq", null, (data, err) => {
+          if (data) {
+            min.conversationalService.sendEvent(dc, "play", {
+              playerType: "bullet",
+              data: data.slice(0, 10)
+            });
 
-              let msgs = [
-                "Veja algumas perguntas mais frequentes logo na tela. Clique numa delas para eu responder.",
-                "Você pode clicar em alguma destas perguntas da tela que eu te respondo de imediato.",
-                "Veja a lista que eu preparei logo aí na tela..."
-              ];
+            let messages = [
+              "Veja algumas perguntas mais frequentes logo na tela. Clique numa delas para eu responder.",
+              "Você pode clicar em alguma destas perguntas da tela que eu te respondo de imediato.",
+              "Veja a lista que eu preparei logo aí na tela..."
+            ];
 
-              session.endDialog(msgs);
-            }
-          });
-        }
-      ])
-      .triggerAction({
-        matches: /^(faq|perguntas frequentes)/i
-      });
-    bot.beginDialogAction("faq", "/faq");
+            dc.context.sendActivity(messages[0]); // TODO: RND messages.
+            dc.endAll();
+          }
+        });
+      }
+    ]);
+
   }
 }

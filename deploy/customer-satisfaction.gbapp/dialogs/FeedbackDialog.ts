@@ -32,69 +32,69 @@
 
 "use strict";
 
-import { UniversalBot, Session, Prompts, ListStyle } from "botbuilder";
+
 import { CSService } from '../services/CSService';
 import { AzureText } from "pragmatismo-io-framework";
 import { GBMinInstance } from "botlib";
-import { IGBDialog } from  "botlib";
+import { IGBDialog } from "botlib";
+import { BotAdapter } from 'botbuilder';
 
 export class FeedbackDialog extends IGBDialog {
 
-  static setup(bot: UniversalBot, min: GBMinInstance) {
-    
+  static setup(bot: BotAdapter, min: GBMinInstance) {
+
     const service = new CSService();
 
-    bot.dialog("/feedbackNumber", [
-      function(session, args) {
-        session.sendTyping();
-        let msgs = [
+    min.dialogs.add("/feedbackNumber", [
+      async (dc, args) => {
+
+        let messages = [
           "O que achou do meu atendimento, de 1 a 5?",
           "Qual a nota do meu atendimento?",
           "Como define meu atendimento numa escala de 1 a 5?"
         ];
-        Prompts.choice(session, msgs, "1|2|3|4|5", {
-          listStyle: ListStyle.button
-        });
+        await dc.prompt('choicePrompt', messages[0], ['1', '2', '3', '4', ' 5']);
       },
-      function(session, results) {
-        let rate = results.response.entity;
-        service.updateConversationRate(session.userData.conversation, rate, item => {
-          let msgs = ["Obrigado!", "Obrigado por responder."];
-          session.send(msgs);
+      async (dc, value) => {
+        let rate = value.entity;
+        const user = min.userState.get(dc.context);
+        service.updateConversationRate(user.conversation, rate, item => {
+          let messages = ["Obrigado!", "Obrigado por responder."];
+          dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
         });
       }
     ]);
 
-    bot.dialog("/feedback", [
-      function(session, args) {
+    min.dialogs.add("/feedback", [
+      async (dc, args) => {
         if (args && args.fromMenu) {
-          let msgs = [
+          let messages = [
             "Sugestões melhoram muito minha qualidade...",
             "Obrigado pela sua iniciativa de sugestão."
           ];
-          session.send(msgs);
+          dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
         }
-        session.sendTyping();
-        let msgs = [
+
+        let messages = [
           "O que achou do meu atendimento?",
           "Como foi meu atendimento?",
           "Gostaria de dizer algo sobre meu atendimento?"
         ];
-        Prompts.text(session, msgs);
+        await dc.prompt('textPrompt', messages[0]);
       },
-      function(session, results) {
+      async (dc, value) => {
         AzureText.getSentiment(
           min.instance.textAnalyticsKey,
-          results.response,
+          value,
           (err, rate) => {
             if (!err && rate > 0) {
-              session.send("Bom saber que você gostou. Conte comigo.");
+              dc.context.sendActivity("Bom saber que você gostou. Conte comigo.");
             } else {
-              session.send(
+              dc.context.sendActivity(
                 "Vamos registrar sua questão, obrigado pela sinceridade."
               );
             }
-            session.replaceDialog('/ask', {isReturning: true});
+            dc.replace('/ask', { isReturning: true });
           }
         );
       }

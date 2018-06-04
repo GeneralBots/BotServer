@@ -35,7 +35,7 @@
 const UrlJoin = require("url-join");
 import { AdminDialog } from './dialogs/AdminDialog';
 import { GBMinInstance, IGBPackage } from "botlib";
-import { Session } from 'botbuilder';
+
 import { Sequelize } from 'sequelize-typescript';
 import { IGBCoreService } from 'botlib';
 
@@ -53,7 +53,7 @@ export class GBAdminPackage implements IGBPackage {
   unloadBot(min: GBMinInstance): void {
 
   }
-  onNewSession(min: GBMinInstance, session: Session): void {
+  onNewSession(min: GBMinInstance, dc: any): void {
 
   }
 }

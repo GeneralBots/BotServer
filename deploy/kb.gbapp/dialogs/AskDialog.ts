@@ -32,38 +32,39 @@
 
 "use strict";
 
-import { Prompts, UniversalBot, Session, ListStyle } from "botbuilder";
 import { IGBDialog } from "botlib";
 import { AzureText } from "pragmatismo-io-framework";
 import { GBMinInstance } from "botlib";
 import { KBService } from './../services/KBService';
+import { BotAdapter } from "botbuilder";
 
 const logger = require("../../../src/logger");
 
 export class AskDialog extends IGBDialog {
-  static setup(bot: UniversalBot, min: GBMinInstance) {
+  static setup(bot: BotAdapter, min: GBMinInstance) {
 
     const service = new KBService();
 
-    bot.dialog("/answer", [
-      (session, args) => {
-        
+    min.dialogs.add("/answer", [
+      async (dc, args) => {
+        const user = min.userState.get(dc.context);
+
         let text = "";
 
         if (args && args.query) {
           text = args.query;
         } else if (args && args.fromFaq) {
-          let msgs = [
+          let messages = [
             `Ótima escolha, procurando resposta para sua questão...`,
             `Pesquisando sobre o termo...`,
             `Aguarde, por favor, enquanto acho sua resposta...`
           ];
-          session.sendTyping();
-          session.send(msgs);
+
+          dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
         }
 
         if (text === "") {
-          session.replaceDialog("/ask");
+          dc.replace("/ask");
         } else {
           AzureText.getSpelledText(
             min.instance.spellcheckerKey,
@@ -73,25 +74,25 @@ export class AskDialog extends IGBDialog {
                 logger.trace("Spelled Text: " + data);
                 text = data;
               }
-              session.userData.lastQuestion = data;
+              user.lastQuestion = data;
 
               service.ask(
                 min.instance,
                 text,
                 min.instance.searchScore,
-                session.userData.subjects,
+                user.subjects,
                 resultsA => {
-                  min.conversationalService.sendEvent(session, "stop", null);
+                  min.conversationalService.sendEvent(dc, "stop", null);
 
                   if (resultsA && resultsA.answer) {
-                    session.userData.isAsking = false;
+                    user.isAsking = false;
                     service.sendAnswer(min.conversationalService,
-                      session,
+                      dc,
                       resultsA.answer
                     );
-                    session.userData.lastQuestionId = resultsA.questionId;
+                    user.lastQuestionId = resultsA.questionId;
 
-                    session.replaceDialog("/ask", { isReturning: true });
+                    dc.replace("/ask", { isReturning: true });
                   } else {
                     //if (min.isAsking) {
                     // Second time with no filter.
@@ -103,47 +104,49 @@ export class AskDialog extends IGBDialog {
                       null,
                       resultsB => {
                         if (resultsB && resultsB.answer) {
-                          session.userData.isAsking = false;
+                          const user = min.userState.get(dc.context);
 
-                          if (session.userData.subjects.length > 0) {
+                          user.isAsking = false;
+
+                          if (user.subjects.length > 0) {
                             let subjectText =
                               `${KBService.getSubjectItemsSeparatedBySpaces(
-                                session.userData.subjects
+                                user.subjects
                               )}`;
 
-                            let msgs = [
+                            let messages = [
                               `Respondendo nao apenas sobre ${subjectText}... `,
                               `Respondendo de modo mais abrangente...`,
                               `Vou te responder de modo mais abrangente... 
                                 Não apenas sobre ${subjectText}`
                             ];
-                            session.send(msgs);
+                            dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
                           }
-                          session.userData.isAsking = false;
+                          user.isAsking = false;
                           service.sendAnswer(min.conversationalService,
-                            session,
+                            dc,
                             resultsB.answer
                           );
-                          session.replaceDialog("/ask", { isReturning: true });
+                          dc.replace("/ask", { isReturning: true });
 
-                          session.userData.lastQuestionId = resultsB.questionId;
+                          user.lastQuestionId = resultsB.questionId;
                         } else {
 
                           min.conversationalService.runNLP(
-                            session,
+                            dc,
                             min,
                             text,
                             (data, error) => {
 
                               if (!data) {
-                                let msgs = [
+                                let messages = [
                                   "Desculpe-me, não encontrei nada a respeito.",
                                   "Lamento... Não encontrei nada sobre isso. Vamos tentar novamente?",
                                   "Desculpe-me, não achei nada parecido. Poderia tentar escrever de outra forma?"
                                 ];
 
-                                session.send(msgs);
-                                session.replaceDialog("/ask", { isReturning: true });
+                                dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+                                dc.replace("/ask", { isReturning: true });
                               }
                             }
                           );
@@ -160,36 +163,34 @@ export class AskDialog extends IGBDialog {
     ]);
 
     bot
-      .dialog("/ask", [
-        (session, args) => {
-          session.userData.isAsking = true;
-          let text = [];
-          if (session.userData.subjects.length > 0) {
-            text = [
-              `Faça sua pergunta...`,
-              `Pode perguntar sobre o assunto em questão... `,
-              `Qual a pergunta?`
-            ];
-          }
-
-          if (args && args.isReturning) {
-            text = [
-              "Sobre o que mais posso ajudar?",
-              "Então, posso ajudar em algo a mais?",
-              "Deseja fazer outra pergunta?"
-            ];
-          }
-          if (text.length > 0) {
-            Prompts.text(session, text);
-          }
-        },
-        (session, results) => {
-          session.replaceDialog("/answer", { query: results.response });
+    min.dialogs.add("/ask", [
+      async (dc, args) => {
+        const user = min.userState.get(dc.context);
+        user.isAsking = true;
+        let text = [];
+        if (user.subjects.length > 0) {
+          text = [
+            `Faça sua pergunta...`,
+            `Pode perguntar sobre o assunto em questão... `,
+            `Qual a pergunta?`
+          ];
         }
-      ])
-      .triggerAction({
-        matches: /^(bing|google)/i
-      });
-    bot.beginDialogAction("ask", "/ask");
+
+        if (args && args.isReturning) {
+          text = [
+            "Sobre o que mais posso ajudar?",
+            "Então, posso ajudar em algo a mais?",
+            "Deseja fazer outra pergunta?"
+          ];
+        }
+        if (text.length > 0) {
+          await dc.prompt('textPrompt', text[0]);
+        }
+      },
+      async (dc, value) => {
+        dc.endAll();
+        dc.begin("/answer", { query: value });
+      }
+    ]);
   }
 }

@@ -43,8 +43,6 @@ import { SpeechRecognizer } from "botframework-webchat/CognitiveServices";
 import { SpeechSynthesizer } from "botframework-webchat/CognitiveServices";
 import { SynthesisGender } from "botframework-webchat/CognitiveServices";
 import { Chat } from "botframework-webchat";
-import { BotChat } from "botframework-webchat";
-import { Speech } from "botframework-webchat/botchat";
 import GBPowerBIPlayer from "./players/GBPowerBIPlayer.js";
 
 class GBUIApp extends React.Component {

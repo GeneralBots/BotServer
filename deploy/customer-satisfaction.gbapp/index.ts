@@ -37,7 +37,7 @@ import { GuaribasQuestionAlternate } from './models/index';
 import { QualityDialog } from './dialogs/QualityDialog';
 import { FeedbackDialog } from './dialogs/FeedbackDialog';
 import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib";
-import { Session } from 'botbuilder';
+
 import { Sequelize } from 'sequelize-typescript';
 
 export class GBCustomerSatisfactionPackage implements IGBPackage {
@@ -57,7 +57,7 @@ export class GBCustomerSatisfactionPackage implements IGBPackage {
   unloadBot(min: GBMinInstance): void {
     
   }
-  onNewSession(min: GBMinInstance, session: Session): void {
+  onNewSession(min: GBMinInstance, dc: any): void {
     
   }
 }
