@@ -30,17 +30,17 @@
 |                                                                             |
 \*****************************************************************************/
 
-
 "use strict";
 
 import {
-  Sequelize,
   DataTypes,
   DataTypeUUIDv4,
   DataTypeDate,
   DataTypeDecimal
 } from "sequelize";
+
 import {
+  Sequelize,
   Table,
   Column,
   Model,
@@ -56,13 +56,14 @@ import {
   PrimaryKey,
   AutoIncrement
 } from "sequelize-typescript";
+
 import { GuaribasSubject } from "../../kb.gbapp/models";
 import { GuaribasUser } from "../../security.gblib/models";
 import { GuaribasChannel, GuaribasInstance } from "../../core.gbapp/models/GBModel";
 
-
 @Table
 export class GuaribasConversation extends Model<GuaribasConversation> {
+
   @PrimaryKey
   @AutoIncrement
   @Column
@@ -81,15 +82,13 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
 
   @Column rateDate: Date;
 
-  @Column({
-    type: DataType.FLOAT
-  })
+  @Column(DataType.FLOAT)
   @Column
   rate: number;
 
   @Column
   @CreatedAt
-  creationDate: Date;
+  createdAt: Date;
 
   @Column text: string;
 
@@ -106,6 +105,7 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
 
 @Table
 export class GuaribasConversationMessage extends Model<GuaribasConversationMessage> {
+
   @PrimaryKey
   @AutoIncrement
   @Column
@@ -115,16 +115,16 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
   @Column
   subjectId: number;
 
-  @Column({ type: DataType.TEXT })
+  @Column(DataType.TEXT)
   content: string;
 
   @Column
   @CreatedAt
-  creationDate: Date;
+  createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedOn: Date;
+  updatedAt: Date;
 
   @ForeignKey(() => GuaribasConversation)
   @Column

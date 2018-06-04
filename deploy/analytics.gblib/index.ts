@@ -34,29 +34,25 @@
 
 const UrlJoin = require("url-join");
 
-
-
 import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib";
 import { Session } from 'botbuilder';
-import { Sequelize } from "sequelize-typescript";
+import { Sequelize } from 'sequelize-typescript';
 
 export class GBAnalyticsPackage implements IGBPackage {
-  
   sysPackages: IGBPackage[] = null;
-    
+
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-    
   }
+
   unloadPackage(core: IGBCoreService): void {
-    
   }
+
   loadBot(min: GBMinInstance): void {
-    
   }
+
   unloadBot(min: GBMinInstance): void {
-    
   }
+
   onNewSession(min: GBMinInstance, session: Session): void {
-    
   }
 }

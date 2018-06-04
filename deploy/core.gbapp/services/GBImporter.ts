@@ -41,7 +41,7 @@ const Walk = require("fs-walk");
 const logger = require("../../../src/logger");
 
 import { KBService } from './../../kb.gbapp/services/KBService';
-import { Sequelize } from "sequelize-typescript";
+import { Sequelize } from 'sequelize-typescript';
 import { Promise } from "bluebird";
 import Fs = require("fs");
 import Path = require("path");
@@ -96,7 +96,7 @@ export class GBImporter {
     packageJson = Object.assign(packageJson, settings, servicesJson);
 
     GuaribasInstance.create(packageJson).then((instance: IGBInstance) => {
-      
+
       // PACKAGE: security.json loading
       let service = new SecService();
       service.importSecurityFile(localPath, instance);

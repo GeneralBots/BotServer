@@ -1,5 +1,12 @@
 # Release History
 
+## Version 0.0.30
+
+- FIX: Packages updated.
+- NEW: DATABASE_SYNC_ALTER environment parameter.
+- NEW: DATABASE_SYNC_FORCE environment parameter.
+- NEW: Define constraint names in MSSQL.
+
 ## Version 0.0.29
 
 - NEW: Added STT and TTS capabilities to default.gbui.

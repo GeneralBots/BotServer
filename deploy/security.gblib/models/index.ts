@@ -30,17 +30,17 @@
 |                                                                             |
 \*****************************************************************************/
 
-
 "use strict";
 
 import {
-  Sequelize,
   DataTypes,
   DataTypeUUIDv4,
   DataTypeDate,
   DataTypeDecimal
 } from "sequelize";
+
 import {
+  Sequelize,
   Table,
   Column,
   Model,
@@ -56,8 +56,8 @@ import {
   PrimaryKey,
   AutoIncrement
 } from "sequelize-typescript";
-import { GuaribasInstance } from "../../core.gbapp/models/GBModel";
 
+import { GuaribasInstance } from "../../core.gbapp/models/GBModel";
 
 @Table
 export class GuaribasUser extends Model<GuaribasUser> {
@@ -75,18 +75,15 @@ export class GuaribasUser extends Model<GuaribasUser> {
 
   @Column email: string;
 
-  @Column({ type: DataType.STRING(512) })
-  @Column
+  @Column(DataType.STRING(512))
   internalAddress: string;
 
-  @ForeignKey(() => 
-  GuaribasInstance)
+  @ForeignKey(() => GuaribasInstance)
   @Column
   instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
   instance: GuaribasInstance;
-
 }
 
 @Table
@@ -100,12 +97,11 @@ export class GuaribasGroup extends Model<GuaribasGroup> {
   @Column
   displayName: string;
 
-  
   @ForeignKey(() => GuaribasInstance)
   @Column
   instanceId: number;
 
-  @BelongsTo(() => GuaribasInstance )
+  @BelongsTo(() => GuaribasInstance)
   instance: GuaribasInstance;
 }
 

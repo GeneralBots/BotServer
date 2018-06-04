@@ -104,6 +104,13 @@ export class GBMinService {
 
     _this_.core.loadInstances((instances: IGBInstance[], err) => {
 
+      // We are running empty !
+
+      if (!instances) {
+        logger.error('The bot server is running empty.');
+        return;
+      }
+
       // Gets the authorization key for each instance from Bot Service.
 
       instances.forEach(instance => {
@@ -350,20 +357,16 @@ export class GBMinService {
           dirs.forEach(element => {
             if (element.startsWith('.')) {
               logger.trace(`Ignoring ${element}...`);
-            }
-            else {
+            } else {
               if (element.endsWith('.gbot')) {
                 botPackages.push(element);
-              }
-              else if (element.endsWith('.gbapp')) {
+              } else if (element.endsWith('.gbapp')) {
                 gbappPackages.push(element);
-              }
-              else {
+              } else {
                 generalPackages.push(element);
               }
             }
           });
-
         }
 
         logger.trace(`Starting looking for generalPackages...`);
@@ -371,7 +374,6 @@ export class GBMinService {
           logger.trace(`Looking in: ${e}...`);
           doIt(e);
         });
-
 
         /** Deploys all .gbapp files first. */
 
@@ -382,10 +384,13 @@ export class GBMinService {
           // Skips .gbapp inside deploy folder.
           if (!e.startsWith('deploy')) {
             import(e).then(m => {
-              let p = new m.Package();
+              let p = new m.Package() as IGBPackage;
               p.loadPackage(core, core.sequelize);
               appPackages.push(p);
               logger.trace(`App (.gbapp) deployed: ${e}.`);
+              appPackagesProcessed++;
+            }, err => {
+              logger.trace(`Error deploying App (.gbapp): ${e}: ${err}`);
               appPackagesProcessed++;
             }).catch(err => {
               logger.trace(`Error deploying App (.gbapp): ${e}: ${err}`);
@@ -395,7 +400,6 @@ export class GBMinService {
             appPackagesProcessed++;
           }
         });
-
 
         WaitUntil()
           .interval(1000)

@@ -46,7 +46,7 @@ import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBImporter } from "./GBImporter";
 import { GBCoreService } from "./GBCoreService";
 import { GBServiceCallback, IGBCoreService, IGBInstance } from "botlib";
-import { Sequelize } from "sequelize-typescript";
+import { Sequelize } from 'sequelize-typescript';
 import { Promise } from "bluebird";
 import { GBConfigService } from "./GBConfigService";
 import { DataTypeUUIDv1 } from "sequelize";

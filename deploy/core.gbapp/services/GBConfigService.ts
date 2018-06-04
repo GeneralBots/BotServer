@@ -49,7 +49,7 @@ export class GBConfigService {
     }
   }
 
-  static get(key: string): any {
+  static get(key: string): string | undefined {
     let value = process.env["container:" + key];
 
     if (!value) {
@@ -71,9 +71,19 @@ export class GBConfigService {
           break;
 
         case "DATABASE_SYNC":
+        case "DATABASE_SYNC_ALTER":
+        case "DATABASE_SYNC_FORCE":
           value = "false";
           break;
-          
+
+        case "DATABASE_LOGGING":
+          value = "false";
+          break;
+
+        case "DATABASE_ENCRYPT":
+          value = "true";
+          break;
+
         default:
           logger.trace(
             `Guaribas General Error: Invalid key on .env file: '${key}'`

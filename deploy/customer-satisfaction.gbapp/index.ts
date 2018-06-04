@@ -33,6 +33,7 @@
 "use strict";
 
 const UrlJoin = require("url-join");
+
 import { GuaribasQuestionAlternate } from './models/index';
 import { QualityDialog } from './dialogs/QualityDialog';
 import { FeedbackDialog } from './dialogs/FeedbackDialog';
@@ -42,22 +43,24 @@ import { Sequelize } from 'sequelize-typescript';
 
 export class GBCustomerSatisfactionPackage implements IGBPackage {
   sysPackages: IGBPackage[] = null;
+
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasQuestionAlternate
-    ]);   
+    ]);
   }
+
   unloadPackage(core: IGBCoreService): void {
-    
   }
+
   loadBot(min: GBMinInstance): void {
     FeedbackDialog.setup(min.bot, min);
     QualityDialog.setup(min.bot, min);
   }
+
   unloadBot(min: GBMinInstance): void {
-    
   }
+
   onNewSession(min: GBMinInstance, session: Session): void {
-    
   }
 }

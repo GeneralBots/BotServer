@@ -44,31 +44,28 @@ import { Sequelize } from 'sequelize-typescript';
 import { IGBCoreService } from 'botlib';
 
 export class GBKBPackage implements IGBPackage {
-
   sysPackages: IGBPackage[] = null;
-  
+
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasAnswer,
       GuaribasQuestion,
       GuaribasSubject
     ]);
-    
   }
-  unloadPackage(core: IGBCoreService): void {
-    
-  }
-  loadBot(min: GBMinInstance): void {
 
+  unloadPackage(core: IGBCoreService): void {
+  }
+
+  loadBot(min: GBMinInstance): void {
     AskDialog.setup(min.bot, min);
     FaqDialog.setup(min.bot, min);
     MenuDialog.setup(min.bot, min);
-    
   }
+
   unloadBot(min: GBMinInstance): void {
-    
   }
+
   onNewSession(min: GBMinInstance, session: Session): void {
-    
   }
 }

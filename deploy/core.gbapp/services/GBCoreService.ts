@@ -41,7 +41,7 @@ const UrlJoin = require("url-join");
 const Walk = require("fs-walk");
 const logger = require("../../../src/logger");
 
-import { Sequelize } from "sequelize-typescript";
+import { Sequelize } from 'sequelize-typescript';
 import { Promise } from "bluebird";
 import { GBConfigService } from "./GBConfigService";
 import { DataTypeUUIDv1 } from "sequelize";
@@ -56,9 +56,13 @@ export class GBCoreService implements IGBCoreService {
 
   public sequelize: Sequelize;
 
+  private queryGenerator: any;
+  private createTableQuery: (tableName, attributes, options) => string;
+  private changeColumnQuery: (tableName, attributes) => string;
+
   /** Dialect used. Tested: mssql and sqlite.  */
 
-  dialect: string;
+  private dialect: string;
 
   constructor() {
     this.dialect = GBConfigService.get("DATABASE_DIALECT");
@@ -67,11 +71,11 @@ export class GBCoreService implements IGBCoreService {
   /** Get config and connect to storage. */
   initDatabase(cb) {
 
-    let host = "";
-    let database = "";
-    let username = "";
-    let password = "";
-    let storage = "";
+    let host: string | undefined;
+    let database: string | undefined;
+    let username: string | undefined;
+    let password: string | undefined;
+    let storage: string | undefined;
 
     if (this.dialect === "mssql") {
       host = GBConfigService.get("DATABASE_HOST");
@@ -82,14 +86,11 @@ export class GBCoreService implements IGBCoreService {
       storage = GBConfigService.get("DATABASE_STORAGE");
     }
 
-    let value = GBConfigService.get("DATABASE_LOGGING");
-    let logging: boolean | Function = false;
+    let logging = (GBConfigService.get("DATABASE_LOGGING") === "true")
+      ? (str: string) => { logger.trace(str); }
+      : false;
 
-    if (value && value == "1") {
-      logging = (str) => {
-        logger.trace(str);
-      };
-    }
+    let encrypt = (GBConfigService.get("DATABASE_ENCRYPT") === "true");
 
     this.sequelize = new Sequelize({
       host: host,
@@ -100,9 +101,8 @@ export class GBCoreService implements IGBCoreService {
       operatorsAliases: false,
       dialect: this.dialect,
       storage: storage,
-
       dialectOptions: {
-        encrypt: true
+        encrypt: encrypt
       },
       pool: {
         max: 32,
@@ -110,25 +110,105 @@ export class GBCoreService implements IGBCoreService {
         idle: 40000,
         evict: 40000,
         acquire: 40000
-      }
+      },
     });
-    cb();
+
+    if (this.dialect === "mssql") {
+      this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
+      this.createTableQuery = this.queryGenerator.createTableQuery;
+      this.queryGenerator.createTableQuery = (tableName, attributes, options) =>
+        this.createTableQueryOverride(tableName, attributes, options);
+      this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
+      this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
+        this.changeColumnQueryOverride(tableName, attributes);
+    }
+
+    setImmediate(cb);
+  }
+
+  private createTableQueryOverride(tableName, attributes, options): string {
+    let sql: string = this.createTableQuery.apply(this.queryGenerator,
+      [tableName, attributes, options]);
+    // let sql: string = '' +
+    //   'IF OBJECT_ID(\'[UserGroup]\', \'U\') IS NULL\n' +
+    //   'CREATE TABLE [UserGroup] (\n' +
+    //   '  [id] INTEGER NOT NULL IDENTITY(1,1),\n' +
+    //   '  [userId] INTEGER NULL,\n' +
+    //   '  [groupId] INTEGER NULL,\n' +
+    //   '  [instanceId] INTEGER NULL,\n' +
+    //   '  PRIMARY KEY ([id1], [id2]),\n' +
+    //   '  FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,\n' +
+    //   '  FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId1]) ON DELETE NO ACTION,\n' +
+    //   '  FOREIGN KEY ([instanceId]) REFERENCES [Instance] ([instanceId]) ON DELETE NO ACTION);';
+    const re1 = /CREATE\s+TABLE\s+\[([^\]]*)\]/;
+    const matches = re1.exec(sql);
+    if (matches) {
+      const table = matches[1];
+      const re2 = /PRIMARY\s+KEY\s+\(\[[^\]]*\](?:,\s*\[[^\]]*\])*\)/;
+      sql = sql.replace(re2, (match: string, ...args: any[]): string => {
+        return 'CONSTRAINT [' + table + '_pk] ' + match;
+      });
+      const re3 = /FOREIGN\s+KEY\s+\((\[[^\]]*\](?:,\s*\[[^\]]*\])*)\)/g;
+      const re4 = /\[([^\]]*)\]/g;
+      sql = sql.replace(re3, (match: string, ...args: any[]): string => {
+        const fkcols = args[0];
+        let fkname = table;
+        let matches = re4.exec(fkcols);
+        while (matches != null) {
+          fkname += '_' + matches[1];
+          matches = re4.exec(fkcols);
+        }
+        return 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
+      });
+    }
+    return sql;
+  }
+
+  private changeColumnQueryOverride(tableName, attributes): string {
+    let sql: string = this.changeColumnQuery.apply(this.queryGenerator,
+      [tableName, attributes]);
+    // let sql = '' +
+    //   'ALTER TABLE [UserGroup]\n' +
+    //   '  ADD CONSTRAINT [invalid1] FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,\n' +
+    //   '      CONSTRAINT [invalid2] FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId2]) ON DELETE NO ACTION, \n' +
+    //   '      CONSTRAINT [invalid3] FOREIGN KEY ([instanceId1]) REFERENCES [Instance] ([instanceId1]) ON DELETE NO ACTION;\n';
+    const re1 = /ALTER\s+TABLE\s+\[([^\]]*)\]/;
+    const matches = re1.exec(sql);
+    if (matches) {
+      const table = matches[1];
+      const re2 = /(ADD\s+)?CONSTRAINT\s+\[([^\]]*)\]\s+FOREIGN\s+KEY\s+\((\[[^\]]*\](?:,\s*\[[^\]]*\])*)\)/g;
+      const re3 = /\[([^\]]*)\]/g;
+      sql = sql.replace(re2, (match: string, ...args: any[]): string => {
+        const fkcols = args[2];
+        let fkname = table;
+        let matches = re3.exec(fkcols);
+        while (matches != null) {
+          fkname += '_' + matches[1];
+          matches = re3.exec(fkcols);
+        }
+        return (args[0] ? args[0] : '') + 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
+      });
+    }
+    return sql;
   }
 
   syncDatabaseStructure(cb) {
     if (GBConfigService.get("DATABASE_SYNC") === "true") {
+      const alter = (GBConfigService.get("DATABASE_SYNC_ALTER") === "true");
+      const force = (GBConfigService.get("DATABASE_SYNC_FORCE") === "true");
       logger.trace("Syncing database...");
-      this.sequelize.sync().then(value => {
+      this.sequelize.sync({
+        alter: alter,
+        force: force
+      }).then(value => {
         logger.trace("Database synced.");
         cb();
-      });
-    }
-    else {
+      }, err => logger.error(err));
+    } else {
       logger.trace("Database synchronization is disabled.");
       cb();
     }
   }
-
 
   /**
    * Loads all items to start several listeners.
@@ -149,8 +229,8 @@ export class GBCoreService implements IGBCoreService {
         if (reason.message.indexOf("no such table: GuaribasInstance") != -1) {
           cb([], null);
         } else {
-          cb(null, reason);
           logger.trace(`GuaribasServiceError: ${reason}`);
+          cb(null, reason);
         }
       });
   }

@@ -38,13 +38,13 @@ import { GBMinInstance, IGBPackage } from "botlib";
 import { Session } from 'botbuilder';
 import { WelcomeDialog } from "./dialogs/WelcomeDialog";
 import { WhoAmIDialog } from "./dialogs/WhoAmIDialog";
-import { IGBCoreService} from "botlib";
-import { Sequelize } from "sequelize-typescript";
+import { IGBCoreService } from "botlib";
+import { Sequelize } from 'sequelize-typescript';
 import { GuaribasInstance, GuaribasException, GuaribasPackage, GuaribasChannel } from "./models/GBModel";
 
 export class GBCorePackage implements IGBPackage {
   sysPackages: IGBPackage[] = null;
-  
+
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasInstance,
@@ -55,7 +55,6 @@ export class GBCorePackage implements IGBPackage {
   }
 
   unloadPackage(core: IGBCoreService): void {
-    
   }
 
   loadBot(min: GBMinInstance): void {
@@ -64,9 +63,8 @@ export class GBCorePackage implements IGBPackage {
   }
 
   unloadBot(min: GBMinInstance): void {
-    
   }
+
   onNewSession(min: GBMinInstance, session: Session): void {
-    
   }
 }

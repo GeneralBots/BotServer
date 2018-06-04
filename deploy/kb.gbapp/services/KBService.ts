@@ -44,7 +44,7 @@ const marked = require("marked");
 
 
 
-import { Sequelize } from "sequelize-typescript";
+import { Sequelize } from 'sequelize-typescript';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 import { GuaribasQuestion, GuaribasAnswer, GuaribasSubject } from "../models";
 import { GBServiceCallback, IGBCoreService, IGBConversationalService, IGBInstance } from "botlib";
@@ -129,7 +129,7 @@ export class KBService {
       let text = KBService.getSubjectItemsSeparatedBySpaces(
         subjects
       );
-      if (text){
+      if (text) {
         what = `${what} ${text}`;
       }
     }

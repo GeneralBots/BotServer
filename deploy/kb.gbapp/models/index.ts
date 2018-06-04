@@ -33,13 +33,14 @@
 "use strict";
 
 import {
-  Sequelize,
   DataTypes,
   DataTypeUUIDv4,
   DataTypeDate,
   DataTypeDecimal
 } from "sequelize";
+
 import {
+  Sequelize,
   Table,
   Column,
   Model,
@@ -58,7 +59,6 @@ import {
 
 import { GuaribasUser } from "../../security.gblib/models";
 import { GuaribasInstance, GuaribasPackage } from "../../core.gbapp/models/GBModel";
-
 
 @Table
 export class GuaribasSubject extends Model<GuaribasSubject> {
@@ -84,7 +84,7 @@ export class GuaribasSubject extends Model<GuaribasSubject> {
   @BelongsTo(() => GuaribasSubject, "parentSubjectId")
   parentSubject: GuaribasSubject;
 
-  @HasMany(() => GuaribasSubject, {foreignKey: "parentSubjectId"})
+  @HasMany(() => GuaribasSubject, { foreignKey: "parentSubjectId" })
   childrenSubjects: GuaribasSubject[];
 
   @ForeignKey(() => GuaribasInstance)
@@ -107,9 +107,7 @@ export class GuaribasSubject extends Model<GuaribasSubject> {
 
   @BelongsTo(() => GuaribasPackage)
   package: GuaribasPackage;
- 
 }
-
 
 @Table
 export class GuaribasQuestion extends Model<GuaribasQuestion> {
@@ -118,42 +116,42 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
   @Column
   questionId: number;
 
-  @Column({ type: DataType.STRING(64) })
+  @Column(DataType.STRING(64))
   @Column
   subject1: string;
 
-  @Column({ type: DataType.STRING(64) })
+  @Column(DataType.STRING(64))
   @Column
   subject2: string;
 
-  @Column({ type: DataType.STRING(64) })
+  @Column(DataType.STRING(64))
   @Column
   subject3: string;
 
-  @Column({ type: DataType.STRING(64) })
+  @Column(DataType.STRING(64))
   @Column
   subject4: string;
 
-  @Column({ type: DataType.STRING(1024) })
+  @Column(DataType.STRING(1024))
   @Column
   keywords: string;
 
-  @Column({ type: DataType.STRING(512) })
+  @Column(DataType.STRING(512))
   from: string;
 
-  @Column({ type: DataType.STRING(512) })
+  @Column(DataType.STRING(512))
   to: string;
 
-  @Column({ type: DataType.TEXT })
+  @Column(DataType.TEXT)
   content: string;
 
   @Column
   @CreatedAt
-  creationDate: Date;
+  createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedOn: Date;
+  updatedAt: Date;
 
   @ForeignKey(() => GuaribasAnswer)
   @Column
@@ -189,16 +187,16 @@ export class GuaribasAnswer extends Model<GuaribasAnswer> {
   @Column
   format: string;
 
-  @Column({ type: DataType.TEXT })
+  @Column(DataType.TEXT)
   content: string;
 
   @Column
   @CreatedAt
-  creationDate: Date;
+  createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedOn: Date;
+  updatedAt: Date;
 
   @HasMany(() => GuaribasQuestion)
   questions: GuaribasQuestion[];

@@ -1,6 +1,6 @@
 {
   "name": "botserver",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "description": "General Bot Community Edition open-core server.",
   "main": "./src/app.ts",
   "homepage": "http://www.generalbot.com",
@@ -33,7 +33,7 @@
     "async": "^2.6.1",
     "body-parser": "^1.18.3",
     "botbuilder": "^3.15.0",
-    "botlib": "^0.0.28",
+    "botlib": "^0.0.31",
     "chokidar": "^2.0.3",
     "csv-parse": "^2.4.0",
     "dotenv-extended": "^2.0.2",

@@ -37,8 +37,9 @@ const UrlJoin = require("url-join");
 const logger = require("./logger");
 const express = require("express");
 const bodyParser = require("body-parser");
+
 import { UniversalBot } from "botbuilder";
-import { Sequelize } from "sequelize-typescript";
+import { Sequelize } from 'sequelize-typescript';
 import { GBConfigService } from "../deploy/core.gbapp/services/GBConfigService";
 import { GBConversationalService } from "../deploy/core.gbapp/services/GBConversationalService";
 import { GBMinService } from "../deploy/core.gbapp/services/GBMinService";
@@ -55,7 +56,6 @@ import { GBCustomerSatisfactionPackage } from "../deploy/customer-satisfaction.g
 import { IGBPackage } from 'botlib';
 
 let appPackages = new Array<IGBPackage>();
-
 
 /**
  * General Bots open-core entry point.
