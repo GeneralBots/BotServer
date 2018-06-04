@@ -43,6 +43,7 @@ import { GBError } from "botlib";
 import { GBERROR_TYPE } from "botlib";
 import { GBMinInstance } from "botlib";
 import { LuisRecognizer } from "botbuilder-ai";
+import {MessageFactory} from "botbuilder";
 
 export class GBConversationalService implements IGBConversationalService {
 
@@ -53,11 +54,11 @@ export class GBConversationalService implements IGBConversationalService {
     }
 
     sendEvent(dc: any, name: string, value: any) {
-        var msg = new gBuilder.Message();
-        msg.data.type = "event";
-        msg.data.name = name;
-        msg.data.value = value;
-        dc.context.sendActivity(msg);
+        const msg = MessageFactory.text('');
+        msg.value = value;
+        msg.type = "event";
+        msg.name = name;
+        // TODO: dc.context.sendActivity(msg);
     }
 
     async runNLP(
@@ -73,7 +74,7 @@ export class GBConversationalService implements IGBConversationalService {
             serviceEndpoint: min.instance.nlpServerUrl
         });
 
-        await model.recognize(dc).then(res => {
+        await model.recognize(dc.context).then(res => {
 
             // Resolve intents returned from LUIS
             let topIntent = LuisRecognizer.topIntent(res);

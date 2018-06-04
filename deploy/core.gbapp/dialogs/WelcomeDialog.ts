@@ -56,21 +56,11 @@ export class WelcomeDialog extends IGBDialog {
             date < 12 ? "bom dia" : date < 18 ? "boa tarde" : "boa noite";
           
           let messages = [`Oi, ${msg}.`, `Oi!`, `Olá, ${msg}`, `Olá!`];
-          dc.end(messages);
+          
+          if (dc.context.activity && dc.context.activity.text != "") {
+            await dc.replace("/answer", { query: dc.context.activity.text });
+          }
         }
-
-        // V4: if (dc.context.message && dc.message.text != "") {
-        //   dc.replace("/answer", { query: dc.message.text });
-        //   return;
-        // }
-        // let userName = dc.message.user.name;
-        // let displayName = dc.message.user.name;
-
-        // if (args) {
-        //   userName = args.userName;
-        //   displayName = args.displayName;
-        // }
-
       }
     ]);
   }

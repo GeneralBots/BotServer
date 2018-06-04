@@ -37,6 +37,7 @@ import { AzureText } from "pragmatismo-io-framework";
 import { GBMinInstance } from "botlib";
 import { KBService } from './../services/KBService';
 import { BotAdapter } from "botbuilder";
+import { LuisRecognizer } from "botbuilder-ai";
 
 const logger = require("../../../src/logger");
 
@@ -44,6 +45,13 @@ export class AskDialog extends IGBDialog {
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
     const service = new KBService();
+
+    const model = new LuisRecognizer({
+      appId: min.instance.nlpAppId,
+      subscriptionKey: min.instance.nlpSubscriptionKey,
+      serviceEndpoint: min.instance.nlpServerUrl
+  });
+
 
     min.dialogs.add("/answer", [
       async (dc, args) => {
@@ -63,102 +71,128 @@ export class AskDialog extends IGBDialog {
           dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
         }
 
-        if (text === "") {
-          dc.replace("/ask");
-        } else {
-          AzureText.getSpelledText(
-            min.instance.spellcheckerKey,
-            text,
-            (data, err) => {
-              if (data != text) {
-                logger.trace("Spelled Text: " + data);
-                text = data;
-              }
-              user.lastQuestion = data;
+      await model.recognize(dc.context).then(res => {
+        console.log(res);
+      }).catch(err => {
+        console.log(err);
+      });
 
-              service.ask(
-                min.instance,
-                text,
-                min.instance.searchScore,
-                user.subjects,
-                resultsA => {
-                  min.conversationalService.sendEvent(dc, "stop", null);
+        // await min.conversationalService.runNLP(
+        //   dc,
+        //   min,
+        //   text,
+        //   (data, error) => {
 
-                  if (resultsA && resultsA.answer) {
-                    user.isAsking = false;
-                    service.sendAnswer(min.conversationalService,
-                      dc,
-                      resultsA.answer
-                    );
-                    user.lastQuestionId = resultsA.questionId;
+        //     if (!data) {
+        //       let messages = [
+        //         "Desculpe-me, não encontrei nada a respeito.",
+        //         "Lamento... Não encontrei nada sobre isso. Vamos tentar novamente?",
+        //         "Desculpe-me, não achei nada parecido. Poderia tentar escrever de outra forma?"
+        //       ];
 
-                    dc.replace("/ask", { isReturning: true });
-                  } else {
-                    //if (min.isAsking) {
-                    // Second time with no filter.
+        //       dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+        //       dc.replace("/ask", { isReturning: true });
+        //     }
+        //   }
+        // );
 
-                    service.ask(
-                      min.instance,
-                      text,
-                      min.instance.searchScore,
-                      null,
-                      resultsB => {
-                        if (resultsB && resultsB.answer) {
-                          const user = min.userState.get(dc.context);
 
-                          user.isAsking = false;
+        // if (text === "") {
+        //   dc.replace("/ask");
+        // } else {
+        //   // AzureText.getSpelledText(
+        //   //   min.instance.spellcheckerKey,
+        //   //   text,
+        //   //   async (data, err) => {
+        //   var data = text;
+        //   if (data != text) {
+        //     logger.trace("Spelled Text: " + data);
+        //     text = data;
+        //   }
+        //   user.lastQuestion = data;
 
-                          if (user.subjects.length > 0) {
-                            let subjectText =
-                              `${KBService.getSubjectItemsSeparatedBySpaces(
-                                user.subjects
-                              )}`;
+        //   service.ask(
+        //     min.instance,
+        //     text,
+        //     min.instance.searchScore,
+        //     user.subjects,
+        //     async resultsA => {
+        //       min.conversationalService.sendEvent(dc, "stop", null);
 
-                            let messages = [
-                              `Respondendo nao apenas sobre ${subjectText}... `,
-                              `Respondendo de modo mais abrangente...`,
-                              `Vou te responder de modo mais abrangente... 
-                                Não apenas sobre ${subjectText}`
-                            ];
-                            dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
-                          }
-                          user.isAsking = false;
-                          service.sendAnswer(min.conversationalService,
-                            dc,
-                            resultsB.answer
-                          );
-                          dc.replace("/ask", { isReturning: true });
+        //       if (resultsA && resultsA.answer) {
+        //         user.isAsking = false;
+        //         service.sendAnswer(min.conversationalService,
+        //           dc,
+        //           resultsA.answer
+        //         );
+        //         user.lastQuestionId = resultsA.questionId;
 
-                          user.lastQuestionId = resultsB.questionId;
-                        } else {
+        //         dc.replace("/ask", { isReturning: true });
+        //       } else {
+        //         //if (min.isAsking) {
+        //         // Second time with no filter.
 
-                          min.conversationalService.runNLP(
-                            dc,
-                            min,
-                            text,
-                            (data, error) => {
+        //         service.ask(
+        //           min.instance,
+        //           text,
+        //           min.instance.searchScore,
+        //           null,
+        //           async resultsB => {
+        //             if (resultsB && resultsB.answer) {
+        //               const user = min.userState.get(dc.context);
 
-                              if (!data) {
-                                let messages = [
-                                  "Desculpe-me, não encontrei nada a respeito.",
-                                  "Lamento... Não encontrei nada sobre isso. Vamos tentar novamente?",
-                                  "Desculpe-me, não achei nada parecido. Poderia tentar escrever de outra forma?"
-                                ];
+        //               user.isAsking = false;
 
-                                dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
-                                dc.replace("/ask", { isReturning: true });
-                              }
-                            }
-                          );
-                        }
-                      }
-                    );
-                  }
-                }
-              );
-            }
-          );
-        }
+        //               if (user.subjects.length > 0) {
+        //                 let subjectText =
+        //                   `${KBService.getSubjectItemsSeparatedBySpaces(
+        //                     user.subjects
+        //                   )}`;
+
+        //                 let messages = [
+        //                   `Respondendo nao apenas sobre ${subjectText}... `,
+        //                   `Respondendo de modo mais abrangente...`,
+        //                   `Vou te responder de modo mais abrangente... 
+        //                         Não apenas sobre ${subjectText}`
+        //                 ];
+        //                 dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+        //               }
+        //               user.isAsking = false;
+        //               service.sendAnswer(min.conversationalService,
+        //                 dc,
+        //                 resultsB.answer
+        //               );
+        //               dc.replace("/ask", { isReturning: true });
+
+        //               user.lastQuestionId = resultsB.questionId;
+        //             } else {
+
+        //               await min.conversationalService.runNLP(
+        //                 dc,
+        //                 min,
+        //                 text,
+        //                 (data, error) => {
+
+        //                   if (!data) {
+        //                     let messages = [
+        //                       "Desculpe-me, não encontrei nada a respeito.",
+        //                       "Lamento... Não encontrei nada sobre isso. Vamos tentar novamente?",
+        //                       "Desculpe-me, não achei nada parecido. Poderia tentar escrever de outra forma?"
+        //                     ];
+
+        //                     dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+        //                     dc.replace("/ask", { isReturning: true });
+        //                   }
+        //                 }
+        //               );
+        //             }
+        //           }
+        //         );
+        //       }
+        //     }
+        //   );
+        // }
+        //);        }
       }
     ]);
 
@@ -167,6 +201,9 @@ export class AskDialog extends IGBDialog {
       async (dc, args) => {
         const user = min.userState.get(dc.context);
         user.isAsking = true;
+        if (!user.subjects) {
+          user.subjects = [];
+        }
         let text = [];
         if (user.subjects.length > 0) {
           text = [

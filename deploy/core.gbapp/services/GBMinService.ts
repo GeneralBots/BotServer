@@ -223,32 +223,26 @@ export class GBMinService {
         logger.trace(
           `GeneralBots(${instance.engineName}) listening on: ${url}.`
         );
-        server.post('/api/messages/', (req, res) => {
-          
+        server.post(`/api/messages/${instance.botId}`, (req, res) => {
+
           adapter.processActivity(req, res, async (context) => {
 
-            if (context.activity.type === 'message') {
-              // Create dialog context and continue executing the "current" dialog, if any.
-              const state = conversationState.get(context);
-              const dc = min.dialogs.createContext(context, state);
+            const state = conversationState.get(context);
+            const dc = min.dialogs.createContext(context, state);
+
+            if (context.activity.type === "conversationUpdate" &&
+              context.activity.membersAdded.length > 0) {
+
+              // TODO: Something when starting conversation here.
+
               await dc.continue();
+            } else if (context.activity.type === 'message') {
 
               // Check to see if anyone replied. If not then start echo dialog
+
               if (!context.responded) {
-                await dc.begin('echo');
-              }
-
-              //   context.activity.type === "conversationUpdate" &&
-              //   context.activity.membersAdded.length > 0
-
-              //   // if (context.activity.address.channelId != "directline") {
-              //   //   dc.begin("/");
-              //   // }
-              //   // else {
-              //   //   next();
-              //   // }
-
-              if (context.activity.name === "whoAmI") {
+                await dc.begin('/');
+              }else if (context.activity.name === "whoAmI") {
                 dc.begin("/whoAmI");
               } else if (context.activity.name === "showSubjects") {
                 dc.begin("/menu");
@@ -273,16 +267,12 @@ export class GBMinService {
 
               const user = min.userState.get(dc.context);
               if (!user.loaded) {
-                setTimeout(
-                  () => {
-                    min.conversationalService.sendEvent(
-                      dc,
-                      "loadInstance",
-                      min.instance // TODO: Send a new thiner object.
-                    )
-                  },
-                  500
-                );
+                // min.conversationalService.sendEvent(
+                //   dc,
+                //   "loadInstance",
+                //   min.instance // TODO: Send a new thiner object.
+                // );
+
                 user.loaded = true;
                 user.subjects = [];
               }
