@@ -88,7 +88,7 @@ export class GBMinService {
 
   /** Constructs a new minimal instance for each bot. */
 
-  buildMin(cb: GBServiceCallback<GBMinInstance>, server: any, appPackages: Array<IGBPackage>) {
+  buildMin(cb: GBServiceCallback<GBMinInstance>, server: any, appPackages: Array<IGBPackage>, botPackages: Array<string>) {
 
     var _this_ = this;
 
@@ -189,21 +189,25 @@ export class GBMinService {
               GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(sysPackage => {
                 logger.trace(`Loading sys package: ${sysPackage.name}...`);
                 let p = Object.create(sysPackage.prototype) as IGBPackage;
-                p.loadBot(min);
+                p.loadBot(min);    
                 e.sysPackages.push(p);
-
                 if (sysPackage.name === "GBWhatsappPackage") {
                   let url = "/instances/:botId/whatsapp";
                   server.post(url, (req, res) => {
                     p["channel"].received(req, res);
                   });
                 }
-
               });
-
-            e.loadBot(min);
           });
 
+          botPackages.forEach(e => {
+            [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage,
+              GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(sysPackage => {
+                logger.trace(`Loading sys package: ${sysPackage.name}...`);
+                let p = Object.create(sysPackage.prototype) as IGBPackage;
+                p.loadBot(min);    
+              });
+          });
         });
 
         let connector = new gBuilder.ChatConnector({
@@ -333,7 +337,7 @@ export class GBMinService {
   }
 
   /** Performs package deployment in all .gbai or default. */
-  public deployPackages(core: IGBCoreService, server: any, appPackages: Array<IGBPackage>) {
+  public deployPackages(core: IGBCoreService, server: any, appPackages: Array<IGBPackage>, botPackages: Array<string>) {
 
     return new Promise((resolve, reject) => {
       try {
@@ -344,7 +348,6 @@ export class GBMinService {
         if (additionalPath) {
           paths = paths.concat(additionalPath.toLowerCase().split(";"));
         }
-        let botPackages = new Array<string>();
         let gbappPackages = new Array<string>();
         let generalPackages = new Array<string>();
 

@@ -56,6 +56,7 @@ import { GBCustomerSatisfactionPackage } from "../deploy/customer-satisfaction.g
 import { IGBPackage } from 'botlib';
 
 let appPackages = new Array<IGBPackage>();
+let botPackages = new Array<string>();
 
 /**
  * General Bots open-core entry point.
@@ -107,12 +108,12 @@ export class GBServer {
 
         (async () => {
           try {
-            await minService.deployPackages(core, server, appPackages);
+            await minService.deployPackages(core, server, appPackages, botPackages);
             logger.info(`The Bot Server is in RUNNING mode...`);
 
             minService.buildMin(instance => {
               logger.info(`Instance loaded: ${instance.botId}...`);
-            }, server, appPackages);
+            }, server, appPackages, botPackages);
 
           } catch (err) {
             logger.info(err);
