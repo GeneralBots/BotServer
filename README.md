@@ -72,6 +72,11 @@ Note:
 
 * Whenever you are ready to turn your open-source bot ideas in form of  .gbapp (source-code) and artifacts like .gbkb, .gbtheme, .gbot or the .gbai full package read [CONTRIBUTING.md](https://github.com/pragmatismo-io/BotServer/blob/master/CONTRIBUTING.md) about performing Pull Requests (PR) and creating other public  custom packages repositories of your own personal or organization General Bot Community Edition powered packages.
 
+### Running unit tests
+
+1. Enter the BotServer root folder.
+2. Run tests by `npm test`.
+
 ### Just copy the source code to your machine
 
 1. [Download] the Zip file of (https://codeload.github.com/pragmatismo-io/BotServer/zip/master)
