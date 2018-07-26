@@ -23,7 +23,7 @@
     "startIde": "npm-run-all clean --parallel watch:build watch:server --print-label",
     "watch:build": "tsc --watch",
     "watch:server": "nodemon './dist/index.js' --watch './dist'",
-    "test": "mocha  -r ts-node/register src/**/*.test.ts",
+    "test": "mocha  -r ts-node/register deploy/**/*.test.ts",
     "build-docs": "typedoc --options typedoc.json src/"
   },
   "engines": {
