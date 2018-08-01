@@ -141,7 +141,7 @@ export class GBMinService {
 
                   let options = {
                     url:
-                      "https://api.cognitive.microsoft.com/sts/v1.0/issueToken",
+                      "https://westus.api.cognitive.microsoft.com/sts/v1.0/issueToken",
                     method: "POST",
                     headers: {
                       "Ocp-Apim-Subscription-Key": instance.speechKey
@@ -160,6 +160,8 @@ export class GBMinService {
                         conversationId: responseObject.conversationId
                       })
                     );
+                  }).catch(err => {
+                    logger.trace(`Error loading sts service: ${err}.`);
                   });
                 } else {
                   let error = `Instance not found: ${botId}.`;
@@ -189,7 +191,7 @@ export class GBMinService {
               GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(sysPackage => {
                 logger.trace(`Loading sys package: ${sysPackage.name}...`);
                 let p = Object.create(sysPackage.prototype) as IGBPackage;
-                p.loadBot(min);    
+                p.loadBot(min);
                 e.sysPackages.push(p);
                 if (sysPackage.name === "GBWhatsappPackage") {
                   let url = "/instances/:botId/whatsapp";
@@ -205,7 +207,7 @@ export class GBMinService {
               GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(sysPackage => {
                 logger.trace(`Loading sys package: ${sysPackage.name}...`);
                 let p = Object.create(sysPackage.prototype) as IGBPackage;
-                p.loadBot(min);    
+                p.loadBot(min);
               });
           });
         });
