@@ -444,6 +444,7 @@ export class KBService {
         });
       }
     );
+    // TODO Use envoding based on BOM
     Fs.createReadStream(filePath, {
       encoding: "UCS-2"
     }).pipe(parser);
