@@ -130,8 +130,8 @@ export class MenuDialog extends IGBDialog {
                   "menuAction",
                   JSON.stringify({
                     title: subject.title,
-                    subjectId: subject.subjectId,
-                    to: subject.to
+                    subjectId: subject.subjectId
+                    //to: subject.to
                   }),
                   "Selecionar"
                 );
@@ -145,7 +145,8 @@ export class MenuDialog extends IGBDialog {
                         "/kb",
                         min.instance.kb,
                         "subjects",
-                        subject.internalId + ".png" // TODO: or fallback to subject.png
+                        "subject.png"
+                        //subject.internalId + ".png"
                       )
                     )
                   ]) // Using public dir of ui.

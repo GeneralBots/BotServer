@@ -87,7 +87,7 @@ export class GBMinService {
   }
 
   /** Constructs a new minimal instance for each bot. */
-
+  oneBotfix = false;
   buildMin(cb: GBServiceCallback<GBMinInstance>, server: any, appPackages: Array<IGBPackage>, botPackages: Array<string>) {
 
     var _this_ = this;
@@ -185,8 +185,6 @@ export class GBMinService {
 
           // Call the loadBot event for all packages.
 
-          appPackages.forEach(e => {
-            e.sysPackages = new Array<IGBPackage>();
             [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage,
               GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(sysPackage => {
                 logger.trace(`Loading sys package: ${sysPackage.name}...`);
@@ -200,16 +198,16 @@ export class GBMinService {
                   });
                 }
               });
-          });
-
-          botPackages.forEach(e => {
+          
+          if (!this.oneBotfix) {
             [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage,
               GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(sysPackage => {
                 logger.trace(`Loading sys package: ${sysPackage.name}...`);
                 let p = Object.create(sysPackage.prototype) as IGBPackage;
                 p.loadBot(min);
               });
-          });
+            this.oneBotfix = true;
+          }
         });
 
         let connector = new gBuilder.ChatConnector({

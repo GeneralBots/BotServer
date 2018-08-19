@@ -67,5 +67,25 @@ export class FaqDialog extends IGBDialog {
         matches: /^(faq|perguntas frequentes)/i
       });
     bot.beginDialogAction("faq", "/faq");
+
+    bot.dialog('/BuyProduct', [
+      (session, args, next) => {
+        let text = [
+          'Poderia me informar seu login?',
+          'Qual seu login?'
+        ];
+        Prompts.text(session, text);
+      },
+      (session, results) => {
+        let code = results.response;
+
+
+      }
+    ]).triggerAction({
+      matches: /^(comprar|comprar produto)/i
+    });
+    bot.beginDialogAction("BuyProduct", "/BuyProduct");
   }
+
+
 }

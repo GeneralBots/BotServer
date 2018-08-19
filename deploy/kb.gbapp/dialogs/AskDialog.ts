@@ -90,7 +90,6 @@ export class AskDialog extends IGBDialog {
                       resultsA.answer
                     );
                     session.userData.lastQuestionId = resultsA.questionId;
-
                     session.replaceDialog("/ask", { isReturning: true });
                   } else {
                     //if (min.isAsking) {
