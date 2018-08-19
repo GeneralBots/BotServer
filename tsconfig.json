@@ -5,7 +5,7 @@
     "declaration": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    // "keyofStringsOnly": true, // Habilitar apenas para Typescript 2.9
+    "keyofStringsOnly": true, // Habilitar apenas para Typescript 2.9
     "mapRoot": "./dist/",
     "module": "commonjs",
     "moduleResolution": "node",
