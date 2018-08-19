@@ -34,27 +34,25 @@
 <html lang="pt-br" style="width:100%;height:100%">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
-    <link rel="stylesheet" type="text/css" href="./css/botchat.css" />
-    <link rel="stylesheet" type="text/css" href="./css/pragmatismo.css" />
-    <script src="./js/botchat.js"></script>
-    <title>General Bots Community Edition | pragmatismo.io</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
+  <link rel="stylesheet" type="text/css" href="./css/botchat.css" />
+  <link rel="stylesheet" type="text/css" href="./css/pragmatismo.css" />
+  <script src="./js/botchat.js"></script>
+  <title>General Bots Community Edition | pragmatismo.io</title>
 
-    <style>
-        .loader {
-            opacity: 0 !important;
-            filter: opacity(0);
-
-        }
-    </style>
+  <style>
+    .loader {
+      opacity: 0 !important;
+      /* filter: opacity(0); Problem in recent Chrome 68+ */
+    }
+  </style>
 </head>
 
 <body style="background-color: lightgrey;">
-    <div id="root" class="loader"></div>
+  <div id="root" class="loader"></div>
 </body>
-
 
 </html>
