@@ -5,6 +5,7 @@
     "declaration": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "keyofStringsOnly": true,
     "mapRoot": "./dist/",
     "module": "commonjs",
     "moduleResolution": "node",

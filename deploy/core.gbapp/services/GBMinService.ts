@@ -141,7 +141,7 @@ export class GBMinService {
 
                   let options = {
                     url:
-                      "https://westus.api.cognitive.microsoft.com/sts/v1.0/issueToken",
+                      "https://api.cognitive.microsoft.com/sts/v1.0/issueToken",
                     method: "POST",
                     headers: {
                       "Ocp-Apim-Subscription-Key": instance.speechKey
@@ -191,9 +191,9 @@ export class GBMinService {
               GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(sysPackage => {
                 logger.trace(`Loading sys package: ${sysPackage.name}...`);
                 let p = Object.create(sysPackage.prototype) as IGBPackage;
-                p.loadBot(min);
-                e.sysPackages.push(p);
+                //e.sysPackages.push(p);
                 if (sysPackage.name === "GBWhatsappPackage") {
+                  p.loadBot(min);
                   let url = "/instances/:botId/whatsapp";
                   server.post(url, (req, res) => {
                     p["channel"].received(req, res);
