@@ -9,7 +9,7 @@
     "@fortawesome/fontawesome-svg-core": "^1.2.0-14",
     "@fortawesome/react-fontawesome": "0.1.0-11",
     "ajv": "^6.5.0",
-    "botframework-webchat": "^0.13.1",
+    "botframework-webchat": "^0.14.3-0",
     "deep-extend": "^0.6.0",
     "fetch": "^1.1.0",
     "react": "^16.4.0",
