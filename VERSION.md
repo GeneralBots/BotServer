@@ -1,5 +1,9 @@
 # Release History
 
+## Version 0.0.31
+
+- FIX: Updated dependencies versions.
+
 ## Version 0.0.30
 
 - FIX: Packages updated.
