@@ -21,6 +21,8 @@ a zip file, editing and uploading it back to the server (deploying process) with
 no code. The Bot Server also provides a framework to develop bot packages in a more
 advanced fashion writing custom code in editors like Visual Studio Code, Atom or Brackets.
 
+![General Bots Block Architecture](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-block-architecture.png)
+
 ### The same build process for everyone
 
 GeneralBots aims to delivery bots in azure in a very easy and fast fashion. Use
@@ -93,6 +95,8 @@ the UI application itself (HTML & JS).
 
 Package Types
 -------------
+
+![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
 
 ### .gbai
 
