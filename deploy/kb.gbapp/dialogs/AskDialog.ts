@@ -92,109 +92,103 @@ export class AskDialog extends IGBDialog {
 
         // Searches KB for the first time.
 
-        service.ask(
+        let resultsA = await service.ask(
           min.instance,
           text,
           min.instance.searchScore,
-          user.subjects,
-          async resultsA => {
+          user.subjects);
 
-            // Stops any content on projector.
+        // Stops any content on projector.
+        
+        min.conversationalService.sendEvent(dc, "stop", null);
 
-            min.conversationalService.sendEvent(dc, "stop", null);
+        // If there is some result, answer immediately.
 
-            // If there is some result, answer immediately.
+        if (resultsA && resultsA.answer) {
 
-            if (resultsA && resultsA.answer) {
+          // Saves some context info.
 
-              // Saves some context info.
+          user.isAsking = false;
+          user.lastQuestionId = resultsA.questionId;
 
-              user.isAsking = false;
-              user.lastQuestionId = resultsA.questionId;
+          // Sends the answer to all outputs, including projector.
 
-              // Sends the answer to all outputs, including projector.
+          service.sendAnswer(min.conversationalService,
+            dc,
+            resultsA.answer
+          );
 
-              service.sendAnswer(min.conversationalService,
-                dc,
-                resultsA.answer
-              );
+          // Goes to ask loop, again.
 
-              // Goes to ask loop, again.
+          dc.replace("/ask", { isReturning: true });
 
-              dc.replace("/ask", { isReturning: true });
+        } else {
 
-            } else {
+          // Second time running Search, now with no filter.
 
-              // Second time running Search, now with no filter.
+          let resultsB = await service.ask(
+            min.instance,
+            text,
+            min.instance.searchScore,
+            null);
 
-              service.ask(
-                min.instance,
-                text,
-                min.instance.searchScore,
-                null,
-                async resultsB => {
+          // If there is some result, answer immediately.
 
-                  // If there is some result, answer immediately.
+          if (resultsB && resultsB.answer) {
 
-                  if (resultsB && resultsB.answer) {
+            // Saves some context info.
 
-                    // Saves some context info.
+            const user = min.userState.get(dc.context);
+            user.isAsking = false;
+            user.lastQuestionId = resultsB.questionId;
 
-                    const user = min.userState.get(dc.context);
-                    user.isAsking = false;
-                    user.lastQuestionId = resultsB.questionId;
+            // Inform user that a broader search will be used.
 
-                    // Inform user that a broader search will be used.
-
-                    if (user.subjects.length > 0) {
-                      let subjectText =
-                        `${KBService.getSubjectItemsSeparatedBySpaces(
-                          user.subjects
-                        )}`;
-                      let messages = [
-                        `Respondendo nao apenas sobre ${subjectText}... `,
-                        `Respondendo de modo mais abrangente...`,
-                        `Vou te responder de modo mais abrangente... 
+            if (user.subjects.length > 0) {
+              let subjectText =
+                `${KBService.getSubjectItemsSeparatedBySpaces(
+                  user.subjects
+                )}`;
+              let messages = [
+                `Respondendo nao apenas sobre ${subjectText}... `,
+                `Respondendo de modo mais abrangente...`,
+                `Vou te responder de modo mais abrangente... 
                                 Não apenas sobre ${subjectText}`
-                      ];
-                      dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
-                    }
-
-                    // Sends the answer to all outputs, including projector.
-
-                    service.sendAnswer(min.conversationalService,
-                      dc,
-                      resultsB.answer
-                    );
-                    dc.replace("/ask", { isReturning: true });
-
-
-                  } else {
-                    await min.conversationalService.runNLP(
-                      dc,
-                      min,
-                      text,
-                      (data, error) => {
-
-                        if (!data) {
-                          let messages = [
-                            "Desculpe-me, não encontrei nada a respeito.",
-                            "Lamento... Não encontrei nada sobre isso. Vamos tentar novamente?",
-                            "Desculpe-me, não achei nada parecido. Poderia tentar escrever de outra forma?"
-                          ];
-
-                          dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
-                          dc.replace("/ask", { isReturning: true });
-                        }
-                      }).catch(err => {
-                        console.log(err);
-                      });
-                  }
-
-                });
+              ];
+              dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
             }
+
+            // Sends the answer to all outputs, including projector.
+
+            service.sendAnswer(min.conversationalService,
+              dc,
+              resultsB.answer
+            );
+            dc.replace("/ask", { isReturning: true });
+
+
+          } else {
+            await min.conversationalService.runNLP(
+              dc,
+              min,
+              text,
+              (data, error) => {
+
+                if (!data) {
+                  let messages = [
+                    "Desculpe-me, não encontrei nada a respeito.",
+                    "Lamento... Não encontrei nada sobre isso. Vamos tentar novamente?",
+                    "Desculpe-me, não achei nada parecido. Poderia tentar escrever de outra forma?"
+                  ];
+
+                  dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+                  dc.replace("/ask", { isReturning: true });
+                }
+              }).catch(err => {
+                console.log(err);
+              });
           }
-        );
+        }
       }
     ]);
 

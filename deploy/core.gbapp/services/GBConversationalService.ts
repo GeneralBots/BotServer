@@ -79,7 +79,7 @@ export class GBConversationalService implements IGBConversationalService {
             // Resolve intents returned from LUIS
             let topIntent = LuisRecognizer.topIntent(res);
 
-            if (topIntent) {
+                if (topIntent) {
                 var intent = topIntent;
                 var entity =
                     res.entities && res.entities.length > 0

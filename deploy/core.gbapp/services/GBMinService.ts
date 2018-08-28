@@ -33,6 +33,7 @@
 "use strict";
 
 const gBuilder = require("botbuilder");
+const {TextPrompt} = require("botbuilder-dialogs");
 const UrlJoin = require("url-join");
 const Path = require("path");
 const Fs = require("fs");
@@ -192,7 +193,6 @@ export class GBMinService {
         min.core = _this_.core;
         min.conversationalService = _this_.conversationalService;
 
-
         _this_.core.loadInstance(min.botId, (data, err) => {
 
           min.instance = data;
@@ -229,6 +229,10 @@ export class GBMinService {
         logger.trace(
           `GeneralBots(${instance.engineName}) listening on: ${url}.`
         );
+        
+        
+
+        min.dialogs.add('textPrompt', new TextPrompt());
 
         server.post(`/api/messages/${instance.botId}`, (req, res) => {
 
@@ -248,7 +252,7 @@ export class GBMinService {
               user.loaded = true;
               user.subjects = [];
             }
-         
+
             if (context.activity.type === "conversationUpdate" &&
               context.activity.membersAdded.length > 0) {
 
@@ -439,7 +443,7 @@ export class GBMinService {
 
                 } else if (Path.extname(filename) === ".gbtheme") {
                   server.use("/themes/" + filenameOnly, express.static(filename));
-                  logger.trace(`Theme (.gbtheme) assets acessible at: ${"/themes/" + filenameOnly}.`);
+                  logger.trace(`Theme (.gbtheme) assets accessible at: ${"/themes/" + filenameOnly}.`);
 
 
                   /** Knowledge base for bots. */

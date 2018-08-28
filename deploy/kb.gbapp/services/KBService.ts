@@ -37,18 +37,18 @@ const Parse = require("csv-parse");
 const Async = require("async");
 const UrlJoin = require("url-join");
 const Walk = require("fs-walk");
-const WaitUntil = require("wait-until");
 const marked = require("marked");
-import { Sequelize } from "sequelize-typescript";
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 import { GuaribasQuestion, GuaribasAnswer, GuaribasSubject } from "../models";
 import { GBServiceCallback, IGBCoreService, IGBConversationalService, IGBInstance } from "botlib";
 import { AzureSearch } from "pragmatismo-io-framework";
-import { GBCoreService } from 'deploy/core.gbapp/services/GBCoreService';
 import { GBDeployer } from "../../core.gbapp/services/GBDeployer";
-import { GBConversationalService } from "../../core.gbapp/services/GBConversationalService";
-
 import { GuaribasPackage } from "../../core.gbapp/models/GBModel";
+
+export class KBServiceSearchResults {
+  answer: GuaribasAnswer;
+  questionId: number;
+}
 
 export class KBService {
 
@@ -103,75 +103,81 @@ export class KBService {
     });
   }
 
-  ask(
+  async ask(
     instance: IGBInstance,
     what: string,
     searchScore: number,
-    subjects: GuaribasSubject[],
-    cb: GBServiceCallback<any>
-  ) {
+    subjects: GuaribasSubject[]
+  ): Promise<KBServiceSearchResults> {
 
-    // Builds search query.
+    return new Promise<KBServiceSearchResults>((resolve, reject) => {
 
-    what = what.toLowerCase();
-    what = what.replace("?", " ");
-    what = what.replace("!", " ");
-    what = what.replace(".", " ");
-    what = what.replace("/", " ");
-    what = what.replace("\\", " ");
+      // Builds search query.
 
-    if (subjects) {
-      let text = KBService.getSubjectItemsSeparatedBySpaces(
-        subjects
-      );
-      if (text){
-        what = `${what} ${text}`;
+      what = what.toLowerCase();
+      what = what.replace("?", " ");
+      what = what.replace("!", " ");
+      what = what.replace(".", " ");
+      what = what.replace("/", " ");
+      what = what.replace("\\", " ");
+
+      if (subjects) {
+        let text = KBService.getSubjectItemsSeparatedBySpaces(
+          subjects
+        );
+        if (text) {
+          what = `${what} ${text}`;
+        }
       }
-    }
 
-    // TODO: Filter by instance. what = `${what}&$filter=instanceId eq ${instanceId}`;
+      // TODO: Filter by instance. what = `${what}&$filter=instanceId eq ${instanceId}`;
 
-    // Performs search.
+      // Performs search.
 
-    var _this_ = this;
+      var _this_ = this;
 
-    if (instance.searchKey && GBConfigService.get("DATABASE_DIALECT") == "mssql") {
-      let service = new AzureSearch(
-        instance.searchKey,
-        instance.searchHost,
-        instance.searchIndex,
-        instance.searchIndexer
-      );
+      if (instance.searchKey && GBConfigService.get("DATABASE_DIALECT") == "mssql") {
+        let service = new AzureSearch(
+          instance.searchKey,
+          instance.searchHost,
+          instance.searchIndex,
+          instance.searchIndexer
+        );
 
-      service.search(what, (err: any, results: any) => {
-        if (results && results.length > 0) {
-          // Ponders over configuration.
+        service.search(what, (err: any, results: any) => {
+          if (results && results.length > 0) {
+            // Ponders over configuration.
 
-          if (results[0]["@search.score"] >= searchScore) {
-            _this_.getAnswerById(
-              instance.instanceId,
-              results[0].answerId,
-              (answer, err) => {
-                cb({ answer: answer, questionId: results[0].questionId }, null);
-              }
-            );
+            if (results[0]["@search.score"] >= searchScore) {
+              _this_.getAnswerById(
+                instance.instanceId,
+                results[0].answerId,
+                (answer, err) => {
+                  if (err) { reject(err); } else {
+                    resolve({ answer: answer, questionId: results[0].questionId });
+                  }
+                }
+              );
+            } else {
+              resolve(null);
+            }
           } else {
-            cb(null, null);
+            resolve(null);
           }
-        } else {
-          cb(null, null);
-        }
-      });
-    } else {
-      this.getAnswerByText(instance.instanceId, what, (data, err) => {
-        if (data) {
-          cb({ answer: data.answer, questionId: data.question.questionId }, null);
-        }
-        else {
-          cb(null, err);
-        }
-      });
-    }
+        });
+      } else {
+        this.getAnswerByText(instance.instanceId, what, (data, err) => {
+          if (data) {
+            resolve({ answer: data.answer, questionId: data.question.questionId });
+          }
+          else {
+            if (err) { reject(err); } else {
+              resolve(null);
+            }
+          }
+        });
+      }
+    });
   }
 
   getSearchSchema(indexName) {
