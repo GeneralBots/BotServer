@@ -145,7 +145,7 @@ class GBUIApp extends React.Component {
       .subscribe(activity => {
         _this_.setState({ instance: activity.value });
       });
-
+      
     botConnection.activity$
       .filter(activity => activity.type === "event" && activity.name === "stop")
       .subscribe(activity => {
@@ -167,7 +167,7 @@ class GBUIApp extends React.Component {
   }
 
   render() {
-    let chat = <div />;
+    
 
     let playerComponent = "";
 
@@ -234,16 +234,19 @@ class GBUIApp extends React.Component {
     }
 
     let speechOptions;
+    let chat = <div />;
+    let gbCss =<div />;
+
 
     let sideBar = (
       <div className="sidebar">
         <SidebarMenu chat={this.chat} instance={this.state.instance} />
       </div>
     );
-
-
+    
     if (this.state.botConnection && this.state.instance) {
       let token = this.state.instanceClient.speechToken;
+      gbCss = <GBCss instance={this.state.instance} />;
 
       function getToken() {
         return new Promise((resolve, reject) => {
@@ -251,7 +254,6 @@ class GBUIApp extends React.Component {
         });
       }
   
-
       speechOptions = {
         speechRecognizer: new SpeechRecognizer({
           locale: "pt-br",
@@ -288,7 +290,7 @@ class GBUIApp extends React.Component {
 
     return (
       <div>
-        <GBCss instance={this.state.instance} />
+        {gbCss}    
         {sideBar}
         <div className="player">{playerComponent}</div>
         {chat}

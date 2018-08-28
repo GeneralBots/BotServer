@@ -58,7 +58,7 @@ export class GBConversationalService implements IGBConversationalService {
         msg.value = value;
         msg.type = "event";
         msg.name = name;
-        // TODO: dc.context.sendActivity(msg);
+        dc.context.sendActivity(msg);
     }
 
     async runNLP(

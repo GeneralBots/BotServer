@@ -134,9 +134,11 @@ export class GBMinService {
               (instance: IGBInstance, err) => {
                 if (instance) {
 
+                  // TODO: Make dynamic: https://CHANGE.api.cognitive.microsoft.com/sts/v1.0
+
                   let options = {
                     url:
-                      "https://api.cognitive.microsoft.com/sts/v1.0/issueToken",
+                      "https://westus.api.cognitive.microsoft.com/sts/v1.0/issueToken",
                     method: "POST",
                     headers: {
                       "Ocp-Apim-Subscription-Key": instance.speechKey
@@ -155,6 +157,10 @@ export class GBMinService {
                         conversationId: responseObject.conversationId
                       })
                     );
+                  }).catch((reason) => {
+                    let error = `Error loading Speech Service: ${reason}.`;
+                    res.send(error);
+                    logger.error(error);
                   });
                 } else {
                   let error = `Instance not found: ${botId}.`;
@@ -223,6 +229,7 @@ export class GBMinService {
         logger.trace(
           `GeneralBots(${instance.engineName}) listening on: ${url}.`
         );
+
         server.post(`/api/messages/${instance.botId}`, (req, res) => {
 
           adapter.processActivity(req, res, async (context) => {
@@ -230,6 +237,18 @@ export class GBMinService {
             const state = conversationState.get(context);
             const dc = min.dialogs.createContext(context, state);
 
+            const user = min.userState.get(dc.context);
+            if (!user.loaded) {
+              min.conversationalService.sendEvent(
+                dc,
+                "loadInstance",
+                min.instance // TODO: Send just necessary values.
+              );
+
+              user.loaded = true;
+              user.subjects = [];
+            }
+         
             if (context.activity.type === "conversationUpdate" &&
               context.activity.membersAdded.length > 0) {
 
@@ -242,7 +261,7 @@ export class GBMinService {
 
               if (!context.responded) {
                 await dc.begin('/');
-              }else if (context.activity.name === "whoAmI") {
+              } else if (context.activity.name === "whoAmI") {
                 dc.begin("/whoAmI");
               } else if (context.activity.name === "showSubjects") {
                 dc.begin("/menu");
@@ -265,17 +284,6 @@ export class GBMinService {
                 await dc.continue();
               }
 
-              const user = min.userState.get(dc.context);
-              if (!user.loaded) {
-                // min.conversationalService.sendEvent(
-                //   dc,
-                //   "loadInstance",
-                //   min.instance // TODO: Send a new thiner object.
-                // );
-
-                user.loaded = true;
-                user.subjects = [];
-              }
 
               appPackages.forEach(e => {
                 e.onNewSession(min, dc);
