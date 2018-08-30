@@ -191,8 +191,8 @@ here is a list of admin commands related to deploying .gb* files.
 ### Credits & Inspiration
 
 * Rodrigo Rodriguez (me@rodrigorodriguez.com) - Coding, Docs & Architecture.
-* David Lerner (david.lerner@hotmail.com) - UI, UX & Theming
-* Eduardo Romeiro (eromeirosp@outlook.com) - Content & UX
+* David Lerner (david.lerner@hotmail.com) - UI, UX & Theming.
+* Eduardo Romeiro (eromeirosp@outlook.com) - Content & UX.
 * Jorge Ramos (jramos@pobox.com) - Coding, Docs & Architecture.
 
 Powered by  Microsoft [BOT Framework](https://dev.botframework.com/) and [Azure](http://www.azure.com).
