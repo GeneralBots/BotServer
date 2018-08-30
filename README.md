@@ -34,6 +34,17 @@ advanced fashion writing custom code in editors like Visual Studio Code, Atom or
 GeneralBots aims to delivery bots in azure in a very easy and fast fashion. Use
 Office tools like Word or Excel to edit your Bot - using code (JavaScript or TypeScript) just to empower custom requirements.
 
+#### Use Excel for Quick edits
+
+![General Bots Inside Excel can enable bot production the masses](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-inside-excel-can-enable-bot-production-to-the-masses.png.png)
+
+#### Use Visual Studio for a complete .gbai package building system
+
+![General Bots Inside Visual Studio Code provides a complete artificial intelligence based conversational platform](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-inside-visual-studio-code-provides-a-complete-artificial-intelligence-based-conversational-platform.png)
+
+
+
+
 How To
 ------
 
