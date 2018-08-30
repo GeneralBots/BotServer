@@ -4,7 +4,7 @@ Key Packages
 ------------
 |Whatsapp|Web|Core|KB|
 |----|-----|----|----|
-|[whatsapp.gbkb](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/whatsapp.gblib)|[default.gbui](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/default.gbui)|[core.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/core.gbapp)|[kb.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/kb.gbapp)|
+|[whatsapp.gblib](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/whatsapp.gblib)|[default.gbui](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/default.gbui)|[core.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/core.gbapp)|[kb.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/kb.gbapp)|
 
 Welcome to General Bot Community Edition
 ----------------
