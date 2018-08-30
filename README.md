@@ -1,10 +1,5 @@
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
-Key Packages
-------------
-|Whatsapp|Web|Core|KB|
-|----|-----|----|----|
-|[whatsapp.gblib](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/whatsapp.gblib)|[default.gbui](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/default.gbui)|[core.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/core.gbapp)|[kb.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/kb.gbapp)|
 
 Welcome to General Bot Community Edition
 ----------------
@@ -16,6 +11,17 @@ and application server concepts to help parallel bot development.
 Everyone can create bots by just copying and pasting some files and using their
 favorite tools like Excel (or any text editor) or Photoshop (or any image
 editor).
+
+Package Quick Reference
+------------
+|Whatsapp|Web|Core|KB|
+|----|-----|----|----|
+|[whatsapp.gblib](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/whatsapp.gblib)|[default.gbui](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/default.gbui)|[core.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/core.gbapp)|[kb.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/kb.gbapp)|
+
+Package Architecture 
+--------------------
+
+![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
 
 ### What is Bot Server?
 
@@ -112,7 +118,6 @@ the UI application itself (HTML & JS).
 Package Types
 -------------
 
-![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
 
 ### .gbai
 
