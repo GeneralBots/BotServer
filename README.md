@@ -43,7 +43,7 @@ Office tools like Word or Excel to edit your Bot - using code (JavaScript or Typ
 
 #### Use Excel for Knowledge Base Editing
 
-![General Bots Inside Excel can enable bot production the masses](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/generalbots-composing-subjects-json-and-excel.gif)
+![General Bots Inside Excel can enable bot production the masses](https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/general-bots-composing-subjects-json-and-excel.gif)
 
 #### Use Visual Studio for a complete .gbai package building system
 
