@@ -25,6 +25,8 @@ Package Architecture
 
 ### What is Bot Server?
 
+![General Bots Starting From Scrach](https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-open-core-starting-from-scratch.gif)
+
 Bot Server accelerates the process of developing a bot. It provisions all code
 base, resources and deployment to the cloud, and gives you templates you can
 choose from whenever you need a new bot. The server has a database and service 
