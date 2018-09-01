@@ -1,5 +1,6 @@
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
+
 Welcome to General Bot Community Edition
 ----------------
 
@@ -11,6 +12,17 @@ Everyone can create bots by just copying and pasting some files and using their
 favorite tools like Excel (or any text editor) or Photoshop (or any image
 editor).
 
+Package Quick Reference
+------------
+|Whatsapp|Web|Core|KB|
+|----|-----|----|----|
+|[whatsapp.gblib](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/whatsapp.gblib)|[default.gbui](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/default.gbui)|[core.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/core.gbapp)|[kb.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/kb.gbapp)|
+
+Package Architecture 
+--------------------
+
+![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
+
 ### What is Bot Server?
 
 Bot Server accelerates the process of developing a bot. It provisions all code
@@ -21,10 +33,22 @@ a zip file, editing and uploading it back to the server (deploying process) with
 no code. The Bot Server also provides a framework to develop bot packages in a more
 advanced fashion writing custom code in editors like Visual Studio Code, Atom or Brackets.
 
+![General Bots Block Architecture](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-block-architecture.png)
+
 ### The same build process for everyone
 
 GeneralBots aims to delivery bots in azure in a very easy and fast fashion. Use
 Office tools like Word or Excel to edit your Bot - using code (JavaScript or TypeScript) just to empower custom requirements.
+
+
+#### Use Excel for Quick edits
+
+![General Bots Inside Excel can enable bot production the masses](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-inside-excel-can-enable-bot-production-to-the-masses.png)
+
+#### Use Visual Studio for a complete .gbai package building system
+
+![General Bots Inside Visual Studio Code provides a complete artificial intelligence based conversational platform](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-inside-visual-studio-code-provides-a-complete-artificial-intelligence-based-conversational-platform.png)
+
 
 How To
 ------
@@ -72,6 +96,11 @@ Note:
 
 * Whenever you are ready to turn your open-source bot ideas in form of  .gbapp (source-code) and artifacts like .gbkb, .gbtheme, .gbot or the .gbai full package read [CONTRIBUTING.md](https://github.com/pragmatismo-io/BotServer/blob/master/CONTRIBUTING.md) about performing Pull Requests (PR) and creating other public  custom packages repositories of your own personal or organization General Bot Community Edition powered packages.
 
+### Running unit tests
+
+1. Enter the BotServer root folder.
+2. Run tests by `npm test`.
+
 ### Just copy the source code to your machine
 
 1. [Download] the Zip file of (https://codeload.github.com/pragmatismo-io/BotServer/zip/master)
@@ -88,6 +117,7 @@ the UI application itself (HTML & JS).
 
 Package Types
 -------------
+
 
 ### .gbai
 
@@ -166,8 +196,8 @@ here is a list of admin commands related to deploying .gb* files.
 ### Credits & Inspiration
 
 * Rodrigo Rodriguez (me@rodrigorodriguez.com) - Coding, Docs & Architecture.
-* David Lerner (david.lerner@hotmail.com) - UI, UX & Theming
-* Eduardo Romeiro (eromeirosp@outlook.com) - Content & UX
+* David Lerner (david.lerner@hotmail.com) - UI, UX & Theming.
+* Eduardo Romeiro (eromeirosp@outlook.com) - Content & UX.
 * Jorge Ramos (jramos@pobox.com) - Coding, Docs & Architecture.
 
 Powered by  Microsoft [BOT Framework](https://dev.botframework.com/) and [Azure](http://www.azure.com).

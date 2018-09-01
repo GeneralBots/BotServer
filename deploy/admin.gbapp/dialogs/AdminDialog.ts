@@ -33,6 +33,7 @@
 "use strict";
 
 const UrlJoin = require("url-join");
+
 import { AzureSearch } from "pragmatismo-io-framework";
 const { DialogSet, TextPrompt, NumberPrompt } = require('botbuilder-dialogs');
 const { createTextPrompt, createNumberPrompt } = require('botbuilder-prompts');

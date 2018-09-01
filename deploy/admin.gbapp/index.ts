@@ -30,30 +30,31 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+'use strict';
 
-const UrlJoin = require("url-join");
+const UrlJoin = require('url-join');
+
 import { AdminDialog } from './dialogs/AdminDialog';
-import { GBMinInstance, IGBPackage } from "botlib";
+import { GBMinInstance, IGBPackage, IGBCoreService } from 'botlib';
 
 import { Sequelize } from 'sequelize-typescript';
-import { IGBCoreService } from 'botlib';
 
 export class GBAdminPackage implements IGBPackage {
-
   sysPackages: IGBPackage[] = null;
+
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
   }
-  unloadPackage(core: IGBCoreService): void {
 
+  unloadPackage(core: IGBCoreService): void {
   }
+
   loadBot(min: GBMinInstance): void {
     AdminDialog.setup(min.bot, min);
   }
+
   unloadBot(min: GBMinInstance): void {
-
   }
-  onNewSession(min: GBMinInstance, dc: any): void {
 
+  onNewSession(min: GBMinInstance, dc: any): void {
   }
 }
