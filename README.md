@@ -56,7 +56,7 @@ How To
 ### Run the server locally
 
 1. Install [Node.js](https://www.npmjs.com/get-npm) the current generation General Bot code execution platform;
-2. Open a **Terminal** on Linux and Mac or a **Command Prompt** window on Windows;npm
+2. Open a **Terminal** on Linux and Mac or a **Command Prompt** window on Windows;
 3. Type `npm install -g botserver` and press *ENTER*;
 4. Type `gbot` to run the server core.
 
@@ -67,7 +67,7 @@ Notes:
 
 ### Configure the server to deploy specific directory
 
-1. Create/Edit the .env file and add the ADDITIONAL_DEPLOY_PATH key pointing to the local folder of .gbapp, .gbot, .gbtheme, .gbkb, etc. files.
+1. Create/Edit the .env file and add the ADDITIONAL_DEPLOY_PATH key pointing to the .gbai local parent folder of .gbapp, .gbot, .gbtheme, .gbkb package directories.
 2. Specify DATABASE_SYNC to TRUE so database sync is run when the server is run.
 3. In case of Microsoft SQL Server add the following keys: DATABASE_HOST, DATABASE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD, DATABASE_DIALECT to `mssql`.
 
