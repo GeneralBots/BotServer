@@ -56,7 +56,6 @@ import { IGBPackage } from 'botlib';
 
 let appPackages = new Array<IGBPackage>();
 
-
 /**
  * General Bots open-core entry point.
  */

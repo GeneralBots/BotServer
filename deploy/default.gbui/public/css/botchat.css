@@ -1,4 +1,3 @@
-
 /* reset */
 body .wc-app, .wc-app button, .wc-app input, .wc-app textarea {
   font-family: "Segoe UI", sans-serif;
@@ -56,6 +55,8 @@ body .wc-app, .wc-app button, .wc-app input, .wc-app textarea {
   transition: transform 0.2s cubic-bezier(0, 0, 0.5, 1); }
   .wc-message-groups.no-header {
     top: 0; }
+  .wc-message-groups.disabled {
+    bottom: 0; }
 
 .wc-message-group-content {
   overflow: hidden; }
@@ -69,6 +70,8 @@ body .wc-app, .wc-app button, .wc-app input, .wc-app textarea {
   position: absolute;
   right: 0;
   transition: height 0.2s cubic-bezier(0, 0, 0.5, 1); }
+  .wc-suggested-actions.disabled {
+    bottom: 0; }
   .wc-suggested-actions .wc-hscroll > ul {
     height: 40px;
     padding: 2px 3px; }
@@ -117,6 +120,7 @@ body .wc-app, .wc-app button, .wc-app input, .wc-app textarea {
     right: 0; }
 
 .wc-message-pane.show-actions .wc-message-groups {
+  top: 78px;
   transform: translateY(-40px); }
 
 .wc-message-pane.show-actions .wc-suggested-actions {
@@ -438,25 +442,27 @@ body .wc-app, .wc-app button, .wc-app input, .wc-app textarea {
   .wc-console .wc-upload {
     cursor: pointer;
     position: relative; }
-    .wc-console .wc-upload input[type="file"] {
-      font-size: 0;
-      height: 0;
-      left: 0;
-      opacity: 0;
-      outline: 0;
-      position: absolute;
-      top: 0;
-      width: 0; }
     .wc-console .wc-upload svg {
       height: 18px;
       width: 26px; }
+  .wc-console #wc-upload-input {
+    font-size: 0;
+    height: 0;
+    left: 0;
+    opacity: 0;
+    outline: 0;
+    position: absolute;
+    top: 0;
+    width: 0; }
   .wc-console .wc-send {
     right: 0; }
   .wc-console .wc-send.hidden {
     visibility: hidden; }
+  .wc-console.has-upload-button .wc-textbox {
+    left: 48px; }
   .wc-console .wc-textbox {
     bottom: 0;
-    left: 48px;
+    left: 11px;
     right: 49px; }
     .wc-console .wc-textbox input {
       background-color: transparent; }
