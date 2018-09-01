@@ -41,9 +41,9 @@ GeneralBots aims to delivery bots in azure in a very easy and fast fashion. Use
 Office tools like Word or Excel to edit your Bot - using code (JavaScript or TypeScript) just to empower custom requirements.
 
 
-#### Use Excel for Quick edits
+#### Use Excel for Knowledge Base Editing
 
-![General Bots Inside Excel can enable bot production the masses](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-inside-excel-can-enable-bot-production-to-the-masses.png)
+![General Bots Inside Excel can enable bot production the masses](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/generalbots-composing-subjects-json-and-excel.gif)
 
 #### Use Visual Studio for a complete .gbai package building system
 
