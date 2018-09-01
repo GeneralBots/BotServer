@@ -85,14 +85,14 @@ export class GBConversationalService implements IGBConversationalService {
                     res.entities && res.entities.length > 0
                         ? res.entities[0].entity.toUpperCase()
                         : null;
-                logger.trace(
+                logger.info(
                     "luis: intent: [" + intent + "] entity: [" + entity + "]"
                 );
 
                 try {
                     dc.replace("/" + intent);
                 } catch (error) {
-                    logger.trace("error: intent: [" + intent + "] error: [" + error + "]");
+                    logger.info("error: intent: [" + intent + "] error: [" + error + "]");
                     
                     dc.context.sendActivity("Desculpe-me, não encontrei nada a respeito...");
                     dc.replace("/ask", { isReturning: true });

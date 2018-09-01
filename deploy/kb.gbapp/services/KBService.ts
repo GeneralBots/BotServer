@@ -353,7 +353,7 @@ export class KBService {
           cb([], null);
         } else {
           cb(null, reason);
-          logger.trace(`GuaribasServiceError: ${reason}`);
+          logger.info(`GuaribasServiceError: ${reason}`);
         }
       });
   }
@@ -394,7 +394,7 @@ export class KBService {
                 answer = Fs.readFileSync(mediaFilename, "utf8");
                 format = ".md";
               } else {
-                logger.trace("[GBImporter] File not found: ", mediaFilename);
+                logger.info("[GBImporter] File not found: ", mediaFilename);
                 answer =
                   "Por favor, contate a administração para rever esta pergunta.";
               }
@@ -524,16 +524,16 @@ export class KBService {
             packageId,
             (data, err) => {
               if (err) {
-                logger.trace(err);
+                logger.info(err);
               } else {
-                logger.trace("Import KB done.");
+                logger.info("Import KB done.");
               }
             }
           );
         }
       },
       function (err) {
-        if (err) logger.trace(err);
+        if (err) logger.info(err);
       }
     );
   }
@@ -602,7 +602,7 @@ export class KBService {
   deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, cb: GBServiceCallback<any>) {
     let packageType = Path.extname(localPath);
     let packageName = Path.basename(localPath);
-    logger.trace("[GBDeployer] Opening package: ", packageName);
+    logger.info("[GBDeployer] Opening package: ", packageName);
     let packageObject = JSON.parse(
       Fs.readFileSync(UrlJoin(localPath, "package.json"), "utf8")
     );

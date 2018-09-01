@@ -30,55 +30,43 @@
 |                                                                             |
 \*****************************************************************************/
 
-var winston = require('winston');
+const { createLogger, format, transports } = require('winston');
 
-var logger = new (winston.Logger)({
+const config = {
   levels: {
-    trace: 0,
-    input: 1,
-    verbose: 2,
-    prompt: 3,
-    debug: 4,
-    info: 5,
-    data: 6,
-    help: 7,
-    warn: 8,
-    error: 9
+    error: 0,
+    debug: 1,
+    warn: 2,
+    data: 3,
+    info: 4,
+    verbose: 5,
+    silly: 6,
+    custom: 7
   },
   colors: {
-    trace: 'magenta',
-    input: 'grey',
-    verbose: 'cyan',
-    prompt: 'grey',
+    error: 'red',
     debug: 'blue',
-    info: 'green',
-    data: 'grey',
-    help: 'cyan',
     warn: 'yellow',
-    error: 'red'
+    data: 'grey',
+    info: 'green',
+    verbose: 'cyan',
+    silly: 'magenta',
+    custom: 'yellow'
   }
-});
+};
 
-logger.add(winston.transports.Console, {
-  label: 'General Bot Server',
-  level: 'error',
-  prettyPrint: true,
-  colorize: true,
-  silent: false,
-  timestamp: false
-});
-
-logger.add(winston.transports.File, {
-  label: 'General Bot Server',
-  prettyPrint: true,
-  level: 'error',
-  silent: false,
-  colorize: false,
-  timestamp: true,
-  filename: './gbtrace.log',
-  maxsize: 999999999,
-  maxFiles: 1,
-  json: false
+const logger = createLogger({
+  format: format.combine(
+    format.colorize(),
+    format.simple(),
+    format.label({ label: 'GeneralBots' }),
+    format.timestamp(),
+    format.printf(nfo => {
+      return `${nfo.timestamp} [${nfo.label}] ${nfo.level}: ${nfo.message}`;
+    })
+  ),
+  levels: config.levels,
+  transports: [new transports.Console()]  
 });
 
 module.exports=logger;

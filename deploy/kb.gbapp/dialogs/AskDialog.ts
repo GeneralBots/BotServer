@@ -84,7 +84,7 @@ export class AskDialog extends IGBDialog {
         //   async (data, err) => {
         // var data = res.text;
         // if (data != text) {
-        //   logger.trace("Spelled Text: " + data);
+        //   logger.info("Spelled Text: " + data);
         //   text = data;
         // }
 

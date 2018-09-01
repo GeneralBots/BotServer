@@ -79,7 +79,7 @@ export class GBDeployer {
       localPath,
       (data, err) => {
         if (err) {
-          logger.trace(err);
+          logger.info(err);
         } else {
           cb(data, null);
         }
@@ -216,8 +216,8 @@ export class GBDeployer {
       this.deployPackageFromLocalPath(
         UrlJoin(deployFolder, bootPackage),
         (data, err) => {
-          logger.trace(`Boot package deployed: ${bootPackage}`);
-          if (err) logger.trace(err);
+          logger.info(`Boot package deployed: ${bootPackage}`);
+          if (err) logger.info(err);
         }
       );
     }

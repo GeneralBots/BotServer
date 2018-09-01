@@ -99,7 +99,7 @@ export class GBImporter {
 
       // PACKAGE: security.json loading
       let service = new SecService();
-      service.importSecurityFile(localPath, instance);
+      // TODO: service.importSecurityFile(localPath, instance);
 
       cb(instance, null);
     });

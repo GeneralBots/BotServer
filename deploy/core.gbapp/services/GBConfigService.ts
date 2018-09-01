@@ -85,7 +85,7 @@ export class GBConfigService {
           break;
 
         default:
-          logger.trace(
+          logger.info(
             `Guaribas General Error: Invalid key on .env file: '${key}'`
           );
           break;

@@ -99,7 +99,7 @@ export class GBServer {
 
         [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage,
           GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(e => {
-            logger.trace(`Loading sys package: ${e.name}...`);
+            logger.info(`Loading sys package: ${e.name}...`);
             let p = Object.create(e.prototype) as IGBPackage;
             p.loadPackage(core, core.sequelize);
           });

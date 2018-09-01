@@ -87,7 +87,7 @@ export class GBCoreService implements IGBCoreService {
     }
 
     let logging = (GBConfigService.get("DATABASE_LOGGING") === "true")
-      ? (str: string) => { logger.trace(str); }
+      ? (str: string) => { logger.info(str); }
       : false;
 
     let encrypt = (GBConfigService.get("DATABASE_ENCRYPT") === "true");
@@ -196,16 +196,16 @@ export class GBCoreService implements IGBCoreService {
     if (GBConfigService.get("DATABASE_SYNC") === "true") {
       const alter = (GBConfigService.get("DATABASE_SYNC_ALTER") === "true");
       const force = (GBConfigService.get("DATABASE_SYNC_FORCE") === "true");
-      logger.trace("Syncing database...");
+      logger.info("Syncing database...");
       this.sequelize.sync({
         alter: alter,
         force: force
       }).then(value => {
-        logger.trace("Database synced.");
+        logger.info("Database synced.");
         cb();
       }, err => logger.error(err));
     } else {
-      logger.trace("Database synchronization is disabled.");
+      logger.info("Database synchronization is disabled.");
       cb();
     }
   }
@@ -229,7 +229,7 @@ export class GBCoreService implements IGBCoreService {
         if (reason.message.indexOf("no such table: GuaribasInstance") != -1) {
           cb([], null);
         } else {
-          logger.trace(`GuaribasServiceError: ${reason}`);
+          logger.info(`GuaribasServiceError: ${reason}`);
           cb(null, reason);
         }
       });
@@ -255,7 +255,7 @@ export class GBCoreService implements IGBCoreService {
       })
       .catch(err => {
         cb(null, err);
-        logger.trace(`GuaribasServiceError: ${err}`);
+        logger.info(`GuaribasServiceError: ${err}`);
       });
   }
 }

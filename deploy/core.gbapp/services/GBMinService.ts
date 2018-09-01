@@ -203,7 +203,7 @@ export class GBMinService {
             e.sysPackages = new Array<IGBPackage>();
             [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage,
               GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(sysPackage => {
-                logger.trace(`Loading sys package: ${sysPackage.name}...`);
+                logger.info(`Loading sys package: ${sysPackage.name}...`);
                 let p = Object.create(sysPackage.prototype) as IGBPackage;
                 p.loadBot(min);
                 e.sysPackages.push(p);
@@ -226,7 +226,7 @@ export class GBMinService {
         // Serves individual URL for each bot conversational interface...
 
         let url = `/api/messages/${instance.botId}`;
-        logger.trace(
+        logger.info(
           `GeneralBots(${instance.engineName}) listening on: ${url}.`
         );
         
@@ -293,7 +293,7 @@ export class GBMinService {
                 e.onNewSession(min, dc);
               });
 
-              logger.trace(
+              logger.info(
                 `[RCV]: ChannelID: ${context.activity.channelId}, ConversationID: ${context.activity.conversation.id}
                Type: ${context.activity.type}, Name: ${context.activity.name}, Text: ${context.activity.text}.`
               );
@@ -308,11 +308,11 @@ export class GBMinService {
           uiUrl,
           express.static(UrlJoin(this.deployFolder, uiPackage, "build"))
         );
-        logger.trace(`Bot UI ${uiPackage} acessible at: ${uiUrl}.`);
+        logger.info(`Bot UI ${uiPackage} acessible at: ${uiUrl}.`);
 
         // Setups handlers.
         // send: function (context.activity, next) {
-        //   logger.trace(
+        //   logger.info(
         //     `[SND]: ChannelID: ${context.activity.address.channelId}, ConversationID: ${context.activity.address.conversation},
         //      Type: ${context.activity.type}              `);
         //   this.core.createMessage(
@@ -320,7 +320,7 @@ export class GBMinService {
         //     this.min.conversation.startedBy,
         //     context.activity.source,
         //     (data, err) => {
-        //       logger.trace(context.activity.source);
+        //       logger.info(context.activity.source);
         //     }
         //   );
         //   next();
@@ -356,7 +356,7 @@ export class GBMinService {
           let dirs = getDirectories(path);
           dirs.forEach(element => {
             if (element.startsWith('.')) {
-              logger.trace(`Ignoring ${element}...`);
+              logger.info(`Ignoring ${element}...`);
             }
             else {
               if (element.endsWith('.gbot')) {
@@ -373,9 +373,9 @@ export class GBMinService {
 
         }
 
-        logger.trace(`Starting looking for generalPackages...`);
+        logger.info(`Starting looking for generalPackages...`);
         paths.forEach(e => {
-          logger.trace(`Looking in: ${e}...`);
+          logger.info(`Looking in: ${e}...`);
           doIt(e);
         });
 
@@ -385,17 +385,17 @@ export class GBMinService {
         let appPackagesProcessed = 0;
 
         gbappPackages.forEach(e => {
-          logger.trace(`Deploying app: ${e}...`);
+          logger.info(`Deploying app: ${e}...`);
           // Skips .gbapp inside deploy folder.
           if (!e.startsWith('deploy')) {
             import(e).then(m => {
               let p = new m.Package();
               p.loadPackage(core, core.sequelize);
               appPackages.push(p);
-              logger.trace(`App (.gbapp) deployed: ${e}.`);
+              logger.info(`App (.gbapp) deployed: ${e}.`);
               appPackagesProcessed++;
             }).catch(err => {
-              logger.trace(`Error deploying App (.gbapp): ${e}: ${err}`);
+              logger.info(`Error deploying App (.gbapp): ${e}: ${err}`);
               appPackagesProcessed++;
             });
           } else {
@@ -408,20 +408,20 @@ export class GBMinService {
           .interval(1000)
           .times(10)
           .condition(function (cb) {
-            logger.trace(`Waiting for app package deployment...`);
+            logger.info(`Waiting for app package deployment...`);
             cb(appPackagesProcessed == gbappPackages.length);
           })
           .done(function (result) {
-            logger.trace(`App Package deployment done.`);
+            logger.info(`App Package deployment done.`);
 
             core.syncDatabaseStructure(cb => {
 
               /** Deploys all .gbot files first. */
 
               botPackages.forEach(e => {
-                logger.trace(`Deploying bot: ${e}...`);
+                logger.info(`Deploying bot: ${e}...`);
                 _this_.deployer.deployBot(e, (data, err) => {
-                  logger.trace(`Bot: ${e} deployed...`);
+                  logger.info(`Bot: ${e} deployed...`);
                 });
               });
 
@@ -432,7 +432,7 @@ export class GBMinService {
               generalPackages.forEach(filename => {
 
                 let filenameOnly = Path.basename(filename);
-                logger.trace(`Deploying package: ${filename}...`);
+                logger.info(`Deploying package: ${filename}...`);
 
                 /** Handles apps for general bots - .gbapp must stay out of deploy folder. */
 
@@ -443,7 +443,7 @@ export class GBMinService {
 
                 } else if (Path.extname(filename) === ".gbtheme") {
                   server.use("/themes/" + filenameOnly, express.static(filename));
-                  logger.trace(`Theme (.gbtheme) assets accessible at: ${"/themes/" + filenameOnly}.`);
+                  logger.info(`Theme (.gbtheme) assets accessible at: ${"/themes/" + filenameOnly}.`);
 
 
                   /** Knowledge base for bots. */
@@ -453,7 +453,7 @@ export class GBMinService {
                     "/kb/" + filenameOnly + "/subjects",
                     express.static(UrlJoin(filename, "subjects"))
                   );
-                  logger.trace(`KB (.gbkb) assets acessible at: ${"/kb/" + filenameOnly}.`);
+                  logger.info(`KB (.gbkb) assets acessible at: ${"/kb/" + filenameOnly}.`);
                 }
 
                 else if (Path.extname(filename) === ".gbui" || filename.endsWith(".git")) {
@@ -473,7 +473,7 @@ export class GBMinService {
                 .interval(1000)
                 .times(5)
                 .condition(function (cb) {
-                  logger.trace(`Waiting for package deployment...`);
+                  logger.info(`Waiting for package deployment...`);
                   cb(totalPackages == (generalPackages.length));
                 })
                 .done(function (result) {
@@ -481,7 +481,7 @@ export class GBMinService {
                     logger.info(`The bot server is running empty: No bot instances have been found, at least one .gbot file must be deployed.`);
                   }
                   else {
-                    logger.trace(`Package deployment done.`);
+                    logger.info(`Package deployment done.`);
                   }
                   resolve();
                 });

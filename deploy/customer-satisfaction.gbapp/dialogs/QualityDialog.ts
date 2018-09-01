@@ -75,7 +75,7 @@ export class QualityDialog extends IGBDialog {
             user.lastQuestion,
             user.lastQuestionId,
             (data, err) => {
-              logger.trace("QuestionAlternate inserted.");
+              logger.info("QuestionAlternate inserted.");
             }
           );
 
