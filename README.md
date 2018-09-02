@@ -1,3 +1,13 @@
+Welcome to General Bot Community Edition
+----------------
+
+![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
+
+General Bot is a package based chat bot server focused in convention
+over configuration and code-less approaches, which brings software packages  
+and application server concepts to help parallel bot development.
+
+
 ### What is a Bot Server?
 
 ![General Bots Starting From Scrach](https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-open-core-starting-from-scratch.gif)
@@ -9,15 +19,6 @@ backend allowing you to further modify your bot package directly by downloading
 a zip file, editing and uploading it back to the server (deploying process) with 
 no code. The Bot Server also provides a framework to develop bot packages in a more
 advanced fashion writing custom code in editors like Visual Studio Code, Atom or Brackets.
-
-Welcome to General Bot Community Edition
-----------------
-
-![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
-
-General Bot is a package based chat bot server focused in convention
-over configuration and code-less approaches, which brings software packages  
-and application server concepts to help parallel bot development.
 
 Everyone can create bots by just copying and pasting some files and using their
 favorite tools like Excel (or any text editor) or Photoshop (or any image
