@@ -28,17 +28,17 @@ Package Quick Reference
 |Whatsapp|Web|Core|KB|
 |----|-----|----|----|
 |[whatsapp.gblib](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/whatsapp.gblib)|[default.gbui](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/default.gbui)|[core.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/core.gbapp)|[kb.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/kb.gbapp)|
-
-![General Bots Block Architecture](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-block-architecture.png)
+![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
 
 ### The same build process for everyone
 
-![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
+![General Bots Block Architecture](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-block-architecture.png)
+
 GeneralBots aims to delivery bots in azure in a very easy and fast fashion. Use
 Office tools like Word or Excel to edit your Bot - using code (JavaScript or TypeScript) just to empower custom requirements.
 
 
-#### Use Excel for Knowledge Base Editing
+#### Use Excel for (Hierarchical) Knowledge Base Editing
 
 ![General Bots Inside Excel can enable bot production the masses](https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/general-bots-composing-subjects-json-and-excel.gif)
 
