@@ -53,81 +53,84 @@ export class AdminDialog extends IGBDialog {
     let deployer = new GBDeployer(min.core, importer);
 
     min.dialogs.add("/admin", [
-        async (dc, args) => {
-          const prompt = "Please, authenticate:";
-          await dc.prompt('textPrompt', prompt);
-        },
-        async (dc, value) => {
-          var text = value.response;
-          const user = min.userState.get(dc.context);
+      async (dc, args) => {
+        const prompt = "Please, authenticate:";
+        await dc.prompt('textPrompt', prompt);
+      },
+      async (dc, value) => {
+        let text = value;
+        const user = min.userState.get(dc.context);
 
-          if (
-            !user.authenticated ||
-            text === GBConfigService.get("ADMIN_PASS")
-          ) {
-            user.authenticated = true;
-            dc.context.sendActivity(
-              "Welcome to Pragmatismo.io GeneralBots Administration."
-            );
-            await dc.prompt('textPrompt', "Which task do you wanna run now?");
-          } else {
-            dc.endAll();
-          }
-        },
-        async (dc, value) => {
-          var text = value;
-          const user = min.userState.get(dc.context);
+        if (
+          !user.authenticated ||
+          text === GBConfigService.get("ADMIN_PASS")
+        ) {
+          user.authenticated = true;
+          dc.context.sendActivity(
+            "Welcome to Pragmatismo.io GeneralBots Administration."
+          );
+          await dc.prompt('textPrompt', "Which task do you wanna run now?");
+        } else {
+          dc.endAll();
+        }
+      },
+      async (dc, value) => {
+        var text = value;
+        const user = min.userState.get(dc.context);
 
-          if (text === "quit") {
-            user.authenticated = false;
-            dc.replace("/");
-          } else if (text === "sync") {
-            min.core.syncDatabaseStructure(() => { });
-            dc.context.sendActivity("Sync started...");
+        if (text === "quit") {
+          user.authenticated = false;
+          dc.replace("/");
+        } else if (text === "sync") {
+          min.core.syncDatabaseStructure(() => { });
+          dc.context.sendActivity("Sync started...");
+          dc.replace("/admin", {
+            firstRun: false
+          });
+        } else if (text.split(" ")[0] === "rebuildIndex") {
+          AdminDialog.rebuildIndexCommand(min, dc, () =>
             dc.replace("/admin", {
               firstRun: false
-            });
-          } else if (text.split(" ")[0] === "rebuildIndex") {
-            AdminDialog.rebuildIndexCommand(min, dc, () =>
+            })
+          );
+        } else if (text.split(" ")[0] === "deployPackage") {
+          AdminDialog.deployPackageCommand(text, dc, deployer, min, () =>
+            dc.replace("/admin", {
+              firstRun: false
+            })
+          );
+        } else if (text.split(" ")[0] === "redeployPackage") {
+          AdminDialog.undeployPackageCommand(text, min, dc, () => {
+            AdminDialog.deployPackageCommand(text, dc, deployer, min, () => {
+              dc.context.sendActivity("Redeploy done.");
               dc.replace("/admin", {
                 firstRun: false
-              })
-            );
-          } else if (text.split(" ")[0] === "deployPackage") {
-            AdminDialog.deployPackageCommand(text, dc, deployer, min, () =>
-              dc.replace("/admin", {
-                firstRun: false
-              })
-            );
-          } else if (text.split(" ")[0] === "redeployPackage") {
-            AdminDialog.undeployPackageCommand(text, min, dc, () => {
-              AdminDialog.deployPackageCommand(text, dc, deployer, min, () => {
-                dc.context.sendActivity("Redeploy done.");
-                dc.replace("/admin", {
-                  firstRun: false
-                });
               });
             });
-          } else if (text.split(" ")[0] === "undeployPackage") {
-            AdminDialog.undeployPackageCommand(text, min, dc, () =>
-              dc.replace("/admin", {
-                firstRun: false
-              })
-            );
-          } else if (text.split(" ")[0] === "applyPackage") {
-            dc.context.sendActivity("Applying in progress...");
-            min.core.loadInstance(text.split(" ")[1], (item, err) => {
-              dc.context.sendActivity("Applying done...");
-              dc.replace("/");
-            });
+          });
+        } else if (text.split(" ")[0] === "undeployPackage") {
+          AdminDialog.undeployPackageCommand(text, min, dc, () =>
             dc.replace("/admin", {
               firstRun: false
-            });
-          }
+            })
+          );
+        } else if (text.split(" ")[0] === "applyPackage") {
+          dc.context.sendActivity("Applying in progress...");
+          min.core.loadInstance(text.split(" ")[1], (item, err) => {
+            dc.context.sendActivity("Applying done...");
+            dc.replace("/");
+          });
+          dc.replace("/admin", {
+            firstRun: false
+          });
+        } else if (text.split(" ")[0] === "rat") {
+          min.conversationalService.sendEvent(dc, "play", { playerType: "login", data: null });
+          dc.context.sendActivity("Realize login clicando no botão de login, por favor...");
         }
-      ])
+      }
+    ])
   }
-
+  
   static undeployPackageCommand(text: any, min: GBMinInstance, dc, cb) {
     let packageName = text.split(" ")[1];
     let importer = new GBImporter(min.core);

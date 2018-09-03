@@ -1,6 +1,6 @@
 {
   "name": "default.gbui",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "private": true,
   "homepage": ".",
   "dependencies": {
@@ -8,6 +8,7 @@
     "botframework-webchat": "^0.14.2",
     "deep-extend": "^0.6.0",
     "fetch": "^1.1.0",
+    "msal": "^0.2.2",
     "react": "^16.4.2",
     "react-dom": "^16.4.2",
     "react-helmet": "^5.2.0",

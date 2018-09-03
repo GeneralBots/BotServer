@@ -240,13 +240,18 @@ export class GBMinService {
 
             const state = conversationState.get(context);
             const dc = min.dialogs.createContext(context, state);
-
+            
             const user = min.userState.get(dc.context);
             if (!user.loaded) {
               min.conversationalService.sendEvent(
                 dc,
                 "loadInstance",
-                min.instance // TODO: Send just necessary values.
+                {
+                  instanceId: instance.instanceId,
+                  botId: instance.botId,
+                  theme: instance.theme,
+                  secret: instance.webchatKey, // TODO: Use token.
+                }
               );
 
               user.loaded = true;
@@ -263,10 +268,12 @@ export class GBMinService {
 
               // Check to see if anyone replied. If not then start echo dialog
 
-              if (!context.responded) {
+              if (!user.once) {
                 await dc.begin('/');
               } else if (context.activity.name === "whoAmI") {
                 dc.begin("/whoAmI");
+              } else if (context.activity.text === "admin") {
+                dc.begin("/admin");
               } else if (context.activity.name === "showSubjects") {
                 dc.begin("/menu");
               } else if (context.activity.name === "giveFeedback") {

@@ -30,39 +30,70 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+import React from "react";
+import { UserAgentApplication } from "msal";
 
-const WaitUntil = require("wait-until");
-import { GBCoreService } from "../services/GBCoreService";
-import { IGBDialog } from "botlib";
-import { GBConversationalService } from "../services/GBConversationalService";
-import { GBMinInstance } from "botlib";
-import { BotAdapter } from "botbuilder";
+class GBLoginPlayer extends React.Component {
 
-export class WelcomeDialog extends IGBDialog {
-  static setup(bot: BotAdapter, min: GBMinInstance) {
+  constructor() {
+    super();
+    this.state = {
+      token: "",
+    };
+  }
 
-    min.dialogs.add("/", [
-
-      async (dc, args) => {
-
-        const user = min.userState.get(dc.context);
-
-        if (!user.once) {
-          user.once = true;
-          var a = new Date();
-          const date = a.getHours();
-          var msg =
-            date < 12 ? "bom dia" : date < 18 ? "boa tarde" : "boa noite";
-          
-          let messages = [`Oi, ${msg}.`, `Oi!`, `Olá, ${msg}`, `Olá!`];
-          dc.context.sendActivity(messages[0]);
   
-          if (dc.context.activity && dc.context.activity.text != "") {
-            await dc.replace("/answer", { query: dc.context.activity.text });
-          }
-        }
+
+  login() {
+
+    let config = {
+    tenant: "pragmatismo.onmicrosoft.com", //"6ecb2a67-15af-4582-ab85-cc65096ce471",
+    signUpSignInPolicy: "b2c_1_susi",
+    clientID: '47cbaa05-dbb4-46f8-8608-da386c5131f1'}
+
+
+    let authority = "https://login.microsoftonline.com/tfp/" +
+      config.tenant + "/" +
+      config.signUpSignInPolicy;
+
+    let userAgentApplication = new UserAgentApplication(
+      config.clientID, authority,
+      function (errorDesc, token, error, tokenType) {
+        console.log(token);
       }
-    ]);
+    );
+
+    let graphScopes = ["Directory.AccessAsUser.All"];
+
+    userAgentApplication.loginPopup(graphScopes).then(function (idToken) {
+      userAgentApplication.acquireTokenSilent(graphScopes).then(function (accessToken) {
+        console.log(accessToken);
+
+      }, function (error) {
+        userAgentApplication.acquireTokenPopup(graphScopes).then(function (accessToken) {
+          console.log(accessToken);
+
+        }, function (error) {
+          console.log(error);
+        });
+      })
+    }, function (error) {
+      console.log(error);
+    });
+  }
+
+  play() {
+
+  }
+
+  render() {
+    return (
+      <button
+        value="Login"
+        onClick={this.login}
+      />
+    );
   }
 }
+
+export default GBLoginPlayer;

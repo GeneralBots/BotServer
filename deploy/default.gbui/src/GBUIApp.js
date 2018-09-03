@@ -34,6 +34,7 @@ import React from "react";
 import GBMarkdownPlayer from "./players/GBMarkdownPlayer.js";
 import GBImagePlayer from "./players/GBImagePlayer.js";
 import GBVideoPlayer from "./players/GBVideoPlayer.js";
+import GBLoginPlayer from "./players/GBLoginPlayer.js";
 import GBBulletPlayer from "./players/GBBulletPlayer.js";
 import SidebarMenu from "./components/SidebarMenu.js";
 import GBCss from "./components/GBCss.js";
@@ -216,6 +217,16 @@ class GBUIApp extends React.Component {
         case "pbi":
           playerComponent = (
             <GBPowerBIPlayer
+              app={this}
+              ref={player => {
+                this.player = player;
+              }}
+            />
+          );
+          break;
+         case "login":
+          playerComponent = (
+            <GBLoginPlayer
               app={this}
               ref={player => {
                 this.player = player;
