@@ -67,6 +67,8 @@ export class GuaribasInstance extends Model<GuaribasInstance> implements IGBInst
   @Column
   instanceId: number;
 
+  @Column applicationPrincipal: string;
+
   @Column
   whoAmIVideo: string;
 

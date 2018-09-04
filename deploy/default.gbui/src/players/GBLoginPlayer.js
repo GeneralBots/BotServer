@@ -35,7 +35,7 @@ import { UserAgentApplication } from "msal";
 
 class GBLoginPlayer extends React.Component {
 
-  constructor() {
+  constructor(tenant) {
     super();
     this.state = {
       token: "",

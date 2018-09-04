@@ -33,7 +33,7 @@
 "use strict";
 
 const gBuilder = require("botbuilder");
-const {TextPrompt} = require("botbuilder-dialogs");
+const { TextPrompt } = require("botbuilder-dialogs");
 const UrlJoin = require("url-join");
 const Path = require("path");
 const Fs = require("fs");
@@ -229,8 +229,7 @@ export class GBMinService {
         logger.info(
           `GeneralBots(${instance.engineName}) listening on: ${url}.`
         );
-        
-        
+
 
         min.dialogs.add('textPrompt', new TextPrompt());
 
@@ -240,7 +239,7 @@ export class GBMinService {
 
             const state = conversationState.get(context);
             const dc = min.dialogs.createContext(context, state);
-            
+
             const user = min.userState.get(dc.context);
             if (!user.loaded) {
               min.conversationalService.sendEvent(
@@ -258,22 +257,40 @@ export class GBMinService {
               user.subjects = [];
             }
 
+            logger.info(
+              `[RCV]: ${context.activity.type}, ChannelID: ${context.activity.channelId},
+               ConversationID: ${context.activity.conversation.id},
+               Name: ${context.activity.name}, Text: ${context.activity.text}.`
+            );
+
             if (context.activity.type === "conversationUpdate" &&
               context.activity.membersAdded.length > 0) {
 
-              // TODO: Something when starting conversation here.
+              let member = context.activity.membersAdded[0];
+              if (member.name === "GeneralBots") {
+                logger.info(`Bot added to conversation, starting chat...`);
+                appPackages.forEach(e => {
+                  e.onNewSession(min, dc);
+                });
+                await dc.begin('/');
+              }
+              else {
+                logger.info(`Member added to conversation: ${member.name}`);
+              }
 
-              await dc.continue();
             } else if (context.activity.type === 'message') {
 
               // Check to see if anyone replied. If not then start echo dialog
 
-              if (!user.once) {
-                await dc.begin('/');
-              } else if (context.activity.name === "whoAmI") {
-                dc.begin("/whoAmI");
-              } else if (context.activity.text === "admin") {
+              if (context.activity.text === "admin") {
                 dc.begin("/admin");
+              } else {
+                await dc.continue();
+              }
+
+            } else if (context.activity.type === 'event') {
+              if (context.activity.name === "whoAmI") {
+                dc.begin("/whoAmI");
               } else if (context.activity.name === "showSubjects") {
                 dc.begin("/menu");
               } else if (context.activity.name === "giveFeedback") {
@@ -295,15 +312,6 @@ export class GBMinService {
                 await dc.continue();
               }
 
-
-              appPackages.forEach(e => {
-                e.onNewSession(min, dc);
-              });
-
-              logger.info(
-                `[RCV]: ChannelID: ${context.activity.channelId}, ConversationID: ${context.activity.conversation.id}
-               Type: ${context.activity.type}, Name: ${context.activity.name}, Text: ${context.activity.text}.`
-              );
             }
           });
         });
