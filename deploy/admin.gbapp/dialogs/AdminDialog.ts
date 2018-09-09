@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY without even the implied warranty of               |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -54,7 +54,7 @@ export class AdminDialog extends IGBDialog {
     let importer = new GBImporter(min.core)
     let deployer = new GBDeployer(min.core, importer)
     dc.context.sendActivity(`Undeploying package ${packageName}...`)
-    let data = await deployer.undeployPackageFromLocalPath(
+    await deployer.undeployPackageFromLocalPath(
       min.instance,
       UrlJoin("deploy", packageName))
     dc.context.sendActivity(`Package ${packageName} undeployed...`)
@@ -64,17 +64,13 @@ export class AdminDialog extends IGBDialog {
     text: string,
     dc,
     deployer: GBDeployer,
-    min: GBMinInstance,
+    min: GBMinInstance
   ) {
     let packageName = text.split(" ")[1]
-    dc.context.sendActivity(`Deploying package ${packageName}... (It may take a few seconds)`)
-
-    // TODO: Find packages in all possible locations.
+    await dc.context.sendActivity(`Deploying package ${packageName}... (It may take a few seconds)`)
     let additionalPath = GBConfigService.get("ADDITIONAL_DEPLOY_PATH")
-
-    let data = deployer.deployPackageFromLocalPath(
-      UrlJoin(additionalPath, packageName))
-    dc.context.sendActivity(`Package ${packageName} deployed... Please run rebuildIndex command.`)
+    await deployer.deployPackageFromLocalPath(UrlJoin(additionalPath, packageName))
+    await dc.context.sendActivity(`Package ${packageName} deployed... Please run rebuildIndex command.`)
   }
 
   static async rebuildIndexCommand(min: GBMinInstance, dc) {
@@ -91,8 +87,6 @@ export class AdminDialog extends IGBDialog {
     await dc.context.sendActivity("Index rebuilt.")
   }
 
-
-
   /**
    * Setup dialogs flows and define services call.
    * 
@@ -107,6 +101,16 @@ export class AdminDialog extends IGBDialog {
     let deployer = new GBDeployer(min.core, importer)
 
     min.dialogs.add("/admin", [
+
+      async (dc) => {
+
+        await dc.context.sendActivity(`Deploying package ... (It may take a few seconds)`)
+        await AdminDialog.deployPackageCommand("deployPackage ProjectOnline.gbkb", dc, deployer, min)
+        await dc.endAll();
+
+      }]);
+
+    min.dialogs.add("/admin1", [
 
       async (dc, args) => {
         const prompt = "Please, authenticate:"

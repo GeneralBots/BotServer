@@ -51,12 +51,12 @@ export class GBConversationalService implements IGBConversationalService {
         this.coreService = coreService;
     }
 
-    sendEvent(dc: any, name: string, value: any) {
+    async sendEvent(dc: any, name: string, value: any) {
         const msg = MessageFactory.text('');
         msg.value = value;
         msg.type = "event";
         msg.name = name;
-        dc.context.sendActivity(msg);
+        return dc.context.sendActivity(msg);
     }
 
     async runNLP(

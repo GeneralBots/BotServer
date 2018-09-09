@@ -171,7 +171,7 @@ export class GBMinService {
             );
           } else {
             let error = `Instance not found: ${botId}.`;
-            res.send(error);
+            res.sendStatus(error);
             logger.error(error);
           }
         })()
@@ -231,16 +231,16 @@ export class GBMinService {
 
       min.dialogs.add('textPrompt', new TextPrompt());
 
-      server.post(`/api/messages/${instance.botId}`, (req, res) => {
+      server.post(`/api/messages/${instance.botId}`, async (req, res) => {
 
-        adapter.processActivity(req, res, async (context) => {
+        return adapter.processActivity(req, res, async (context) => {
 
           const state = conversationState.get(context);
           const dc = min.dialogs.createContext(context, state);
 
           const user = min.userState.get(dc.context);
           if (!user.loaded) {
-            min.conversationalService.sendEvent(
+            await min.conversationalService.sendEvent(
               dc,
               "loadInstance",
               {
@@ -281,29 +281,29 @@ export class GBMinService {
             // Check to see if anyone replied. If not then start echo dialog
 
             if (context.activity.text === "admin") {
-              dc.begin("/admin");
+              await dc.begin("/admin");
             } else {
               await dc.continue();
             }
 
           } else if (context.activity.type === 'event') {
             if (context.activity.name === "whoAmI") {
-              dc.begin("/whoAmI");
+              await dc.begin("/whoAmI");
             } else if (context.activity.name === "showSubjects") {
-              dc.begin("/menu");
+              await dc.begin("/menu");
             } else if (context.activity.name === "giveFeedback") {
-              dc.begin("/feedback", {
+              await dc.begin("/feedback", {
                 fromMenu: true
               });
             } else if (context.activity.name === "showFAQ") {
-              dc.begin("/faq");
+              await dc.begin("/faq");
             } else if (context.activity.name === "ask") {
               dc.begin("/answer", {
                 // TODO: query: context.activity.data,
                 fromFaq: true
               });
             } else if (context.activity.name === "quality") {
-              dc.begin("/quality", {
+              await dc.begin("/quality", {
                 // TODO: score: context.activity.data
               });
             } else {
@@ -460,7 +460,7 @@ export class GBMinService {
                   "/kb/" + filenameOnly + "/subjects",
                   express.static(UrlJoin(filename, "subjects"))
                 );
-                logger.info(`KB (.gbkb) assets acessible at: ${"/kb/" + filenameOnly}.`);
+                logger.info(`KB (.gbkb) assets accessible at: ${"/kb/" + filenameOnly}.`);
               }
 
               else if (Path.extname(filename) === ".gbui" || filename.endsWith(".git")) {
