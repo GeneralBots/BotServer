@@ -77,45 +77,47 @@ export class GBServer {
       extended: true
     }));
 
-    server.listen(port, async () => {
+    server.listen(port, () => {
 
-      try {
+      (async () => {
+        try {
 
-        logger.info(`Accepting connections on ${port}...`);
-        logger.info(`Starting instances...`);
+          logger.info(`Accepting connections on ${port}...`);
+          logger.info(`Starting instances...`);
 
-        // Reads basic configuration, initialize minimal services.
+          // Reads basic configuration, initialize minimal services.
 
-        GBConfigService.init();
-        let core = new GBCoreService();
-        await core.initDatabase();
+          GBConfigService.init();
+          let core = new GBCoreService();
+          await core.initDatabase();
 
-        // Boot a bot package if any.
+          // Boot a bot package if any.
 
-        let deployer = new GBDeployer(core, new GBImporter(core));
+          let deployer = new GBDeployer(core, new GBImporter(core));
 
-        // Build a minimal bot instance for each .gbot deployment.
+          // Build a minimal bot instance for each .gbot deployment.
 
-        let conversationalService = new GBConversationalService(core);
-        let minService = new GBMinService(core, conversationalService, deployer);
+          let conversationalService = new GBConversationalService(core);
+          let minService = new GBMinService(core, conversationalService, deployer);
 
-        [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage,
-          GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(e => {
-            logger.info(`Loading sys package: ${e.name}...`);
-            let p = Object.create(e.prototype) as IGBPackage;
-            p.loadPackage(core, core.sequelize);
-          });
+          [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage,
+            GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(e => {
+              logger.info(`Loading sys package: ${e.name}...`);
+              let p = Object.create(e.prototype) as IGBPackage;
+              p.loadPackage(core, core.sequelize);
+            });
 
-        await minService.deployPackages(core, server, appPackages);
-        logger.info(`The Bot Server is in RUNNING mode...`);
+          await minService.deployPackages(core, server, appPackages);
+          logger.info(`The Bot Server is in RUNNING mode...`);
 
-        let instance = await minService.buildMin(server, appPackages);
-        logger.info(`Instance loaded: ${instance.botId}...`);
-        return core;
-      } catch (err) {
-        logger.info(err);
-      }
+          let instance = await minService.buildMin(server, appPackages);
+          logger.info(`Instance loaded: ${instance.botId}...`);
+          return core;
+        } catch (err) {
+          logger.info(err);
+        }
 
+      })()
     });
   }
 }

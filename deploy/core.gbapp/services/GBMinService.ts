@@ -131,8 +131,7 @@ export class GBMinService {
       // instance information stored on server.
 
       server.get("/instances/:botId", (req, res) => {
-
-        logger.info('test');
+        
         (async () => {
 
           // Returns the instance object to clients requesting bot info.
@@ -155,7 +154,6 @@ export class GBMinService {
             let response: any;
             try {
               response = await request(options);
-              responseObject = JSON.parse(response);
             } catch (error) {
               logger.error(`Error calling Speech to Text client. Error is: ${error}.`);
               return;
@@ -176,7 +174,7 @@ export class GBMinService {
             res.send(error);
             logger.error(error);
           }
-        });
+        })()
       });
 
       // Build bot adapter.
