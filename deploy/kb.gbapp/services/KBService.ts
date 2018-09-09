@@ -359,100 +359,93 @@ export class KBService {
     instanceId: number,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
-    return new Promise<GuaribasQuestion[]>(
-      (resolve, reject) => {
 
-        let file = Fs.readFileSync(filePath, "UCS-2")
-        let opts = {
-          delimiter: "\t"
+    let file = Fs.readFileSync(filePath, "UCS-2")
+    let opts = {
+      delimiter: "\t"
+    }
+
+    let data = await parse(file, opts);
+    return asyncPromise.eachSeries(data, async line => {
+
+      // Extracts values from columns in the current line.
+
+      let subjectsText = line[0]
+      var from = line[1]
+      var to = line[2]
+      var question = line[3]
+      var answer = line[4]
+
+      // Skips the first line.
+
+      if (!(subjectsText === "subjects" && from == "from")) {
+        let format = ".txt"
+
+        // Extracts answer from external media if any.
+
+        if (answer.indexOf(".md") > -1) {
+          let mediaFilename = UrlJoin(path.dirname(filePath), "..", "articles", answer)
+          if (Fs.existsSync(mediaFilename)) {
+            answer = Fs.readFileSync(mediaFilename, "utf8")
+            format = ".md"
+          } else {
+            logger.info(`[GBImporter] File not found: ${mediaFilename}.`)
+            answer =
+              "Por favor, contate a administração para rever esta pergunta."
+          }
         }
 
-        parse(file, opts).then((data) => {
-          return asyncPromise.eachSeries(data, line => {
-            return new Promise((resolve, reject) => {
+        // Processes subjects hierarchy splitting by dots.
 
-              // Extracts values from columns in the current line.
+        let subjectArray = subjectsText.split(".")
+        let subject1: string, subject2: string, subject3: string,
+          subject4: string
+        var indexer = 0
 
-              let subjectsText = line[0]
-              var from = line[1]
-              var to = line[2]
-              var question = line[3]
-              var answer = line[4]
+        subjectArray.forEach(element => {
+          if (indexer == 0) {
+            subject1 = subjectArray[indexer].substring(0, 63)
+          } else if (indexer == 1) {
+            subject2 = subjectArray[indexer].substring(0, 63)
+          } else if (indexer == 2) {
+            subject3 = subjectArray[indexer].substring(0, 63)
+          } else if (indexer == 3) {
+            subject4 = subjectArray[indexer].substring(0, 63)
+          }
+          indexer++
+        })
 
-              // Skips the first line.
+        // Now with all the data ready, creates entities in the store.
 
-              if (!(subjectsText === "subjects" && from == "from")) {
-                let format = ".txt"
+        let answer1 = await GuaribasAnswer.create({
+          instanceId: instanceId,
+          content: answer,
+          format: format,
+          packageId: packageId
+        });
+        await GuaribasQuestion.create({
+          from: from,
+          to: to,
+          subject1: subject1,
+          subject2: subject2,
+          subject3: subject3,
+          subject4: subject4,
+          content: question,
+          instanceId: instanceId,
+          answerId: answer1.answerId,
+          packageId: packageId
+        });
+        logger.info(`Question created: ${question.questionId}`)
+        return Promise.resolve(question)
 
-                // Extracts answer from external media if any.
+      } else {
 
-                if (answer.indexOf(".md") > -1) {
-                  let mediaFilename = UrlJoin(path.dirname(filePath), "..", "articles", answer)
-                  if (Fs.existsSync(mediaFilename)) {
-                    answer = Fs.readFileSync(mediaFilename, "utf8")
-                    format = ".md"
-                  } else {
-                    logger.info(`[GBImporter] File not found: ${mediaFilename}.`)
-                    answer =
-                      "Por favor, contate a administração para rever esta pergunta."
-                  }
-                }
+        // Skips the header.
 
-                // Processes subjects hierarchy splitting by dots.
+        return Promise.resolve(null)
+      }
 
-                let subjectArray = subjectsText.split(".")
-                let subject1: string, subject2: string, subject3: string,
-                  subject4: string
-                var indexer = 0
-
-                subjectArray.forEach(element => {
-                  if (indexer == 0) {
-                    subject1 = subjectArray[indexer].substring(0, 63)
-                  } else if (indexer == 1) {
-                    subject2 = subjectArray[indexer].substring(0, 63)
-                  } else if (indexer == 2) {
-                    subject3 = subjectArray[indexer].substring(0, 63)
-                  } else if (indexer == 3) {
-                    subject4 = subjectArray[indexer].substring(0, 63)
-                  }
-                  indexer++
-                })
-
-                // Now with all the data ready, creates entities in the store.
-
-                GuaribasAnswer.create({
-                  instanceId: instanceId,
-                  content: answer,
-                  format: format,
-                  packageId: packageId
-                }).then((answer: GuaribasAnswer) => {
-                  return GuaribasQuestion.create({
-                    from: from,
-                    to: to,
-                    subject1: subject1,
-                    subject2: subject2,
-                    subject3: subject3,
-                    subject4: subject4,
-                    content: question,
-                    instanceId: instanceId,
-                    answerId: answer.answerId,
-                    packageId: packageId
-                  }).then((question: GuaribasQuestion) => {
-                    resolve(question)
-                  }).error(reason => reject(reason))
-                }).error(reason => reject(reason))
-
-              } else {
-                let msg = `[GBImporter] Missing header in file: ${filePath}`;
-                logger.info(msg)
-                resolve(null)
-              }
-            })
-          })
-        }).error(reason => reject(reason))
-
-        resolve(null)
-      })
+    })
   }
 
   sendAnswer(conversationalService: IGBConversationalService,
@@ -540,36 +533,35 @@ export class KBService {
     packageId: number,
     filename: string,
     instance: IGBInstance
-  ): Promise<GuaribasQuestion[]> {
-    return new Promise<GuaribasQuestion[]>(
-      (resolve, reject) => {
+  ): Promise<any> {
+    var subjects = JSON.parse(Fs.readFileSync(filename, "utf8"))
 
-        var subjects = JSON.parse(Fs.readFileSync(filename, "utf8"))
+    const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
+      return asyncPromise.eachSeries(subjects, async item => {
+        let mediaFilename = item.id + ".png"
 
-        const doIt = (subjects: GuaribasSubject[], parentSubjectId: number) =>
-          new Promise((resolve, reject) => {
-            asyncPromise.eachSeries(subjects, item => {
-              let mediaFilename = item.id + ".png"
-              GuaribasSubject.create({
-                internalId: item.id,
-                parentSubjectId: parentSubjectId,
-                instanceId: instance.instanceId,
-                from: item.from,
-                to: item.to,
-                title: item.title,
-                description: item.description,
-                packageId: packageId
-              }).then((value: any) => {
-                if (item.children) {
-                  doIt(item.children, value.subjectId)
-                }
-              })
-            })
-          })
+        let value = await GuaribasSubject.create({
+          internalId: item.id,
+          parentSubjectId: parentSubjectId,
+          instanceId: instance.instanceId,
+          from: item.from,
+          to: item.to,
+          title: item.title,
+          description: item.description,
+          packageId: packageId
+        });
 
-        doIt(subjects.children, null)
-        resolve()
+        if (item.children) {
+          return Promise.resolve(doIt(item.children, value.subjectId))
+        }
+        else {
+          return Promise.resolve(item);
+        }
+
       })
+    }
+
+    return doIt(subjects.children, null)
   }
 
   undeployKbFromStorage(
@@ -607,7 +599,7 @@ export class KBService {
   async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string) {
     let packageType = Path.extname(localPath)
     let packageName = Path.basename(localPath)
-    logger.info("[GBDeployer] Opening package: ", packageName)
+    logger.info("[GBDeployer] Opening package: ", localPath)
     let packageObject = JSON.parse(
       Fs.readFileSync(UrlJoin(localPath, "package.json"), "utf8")
     )
