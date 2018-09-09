@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "async": "^2.6.1",
+    "async-promises": "^0.2.1",
     "body-parser": "^1.18.3",
     "botbuilder": "^4.0.0-preview1.2",
     "botbuilder-ai": "^4.0.0-preview1.2",
@@ -52,12 +53,12 @@
     "sequelize": "^4.38.0",
     "sequelize-typescript": "^0.6.6",
     "sqlite3": "^4.0.2",
-    "swagger-client": "^3.8.15",
+    "swagger-client": "^3.8.19",
     "tedious": "^2.6.4",
     "url-join": "^4.0.0",
     "wait-until": "^0.0.2",
     "walk-promise": "^0.2.0",
-    "winston": "^3.0.0"
+    "winston": "^3.1.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.4",

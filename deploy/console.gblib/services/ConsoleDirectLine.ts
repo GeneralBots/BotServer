@@ -74,7 +74,7 @@ export class ConsoleDirectLine extends GBService {
 
         // TODO: Remove *this* issue.
         let _this_ = this;
-        directLineClient.then(function (client) {
+        directLineClient.then((client)=> {
             client.Conversations.Conversations_StartConversation()
                 .then(function (response) {
                     return response.obj.conversationId;
@@ -149,7 +149,7 @@ export class ConsoleDirectLine extends GBService {
                 // print other messages
                 activities.forEach(activity => {
                     console.log(activity.text);
-                });
+                }, this);
 
                 process.stdout.write('Command> ');
             }
