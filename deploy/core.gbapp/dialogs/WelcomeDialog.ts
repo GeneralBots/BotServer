@@ -40,6 +40,12 @@ import { GBMinInstance } from "botlib";
 import { BotAdapter } from "botbuilder";
 
 export class WelcomeDialog extends IGBDialog {
+  /**
+   * Setup dialogs flows and define services call.
+   * 
+   * @param bot The bot adapter.
+   * @param min The minimal bot instance data.
+   */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
     min.dialogs.add("/", [

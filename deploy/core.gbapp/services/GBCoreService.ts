@@ -32,21 +32,10 @@
 
 "use strict";
 
-const Path = require("path");
-const Fs = require("fs");
-const _ = require("lodash");
-const Parse = require("csv-parse");
-const Async = require("async");
-const UrlJoin = require("url-join");
-const Walk = require("fs-walk");
 const logger = require("../../../src/logger");
-
 import { Sequelize } from 'sequelize-typescript';
-import { Promise } from "bluebird";
 import { GBConfigService } from "./GBConfigService";
-import { DataTypeUUIDv1 } from "sequelize";
-
-import { GBServiceCallback, IGBInstance, IGBCoreService } from 'botlib';
+import { IGBInstance, IGBCoreService } from 'botlib';
 import { GuaribasInstance } from "../models/GBModel";
 
 /**
@@ -54,76 +43,103 @@ import { GuaribasInstance } from "../models/GBModel";
  */
 export class GBCoreService implements IGBCoreService {
 
+  /**
+   * Data access layer instance.
+   */
   public sequelize: Sequelize;
 
+  /**
+   * Allows filtering on SQL generated before send to the database.
+   */
   private queryGenerator: any;
+
+  /**
+   * Custom create table query.
+   */
   private createTableQuery: (tableName, attributes, options) => string;
+
+  /**
+   * Custom change column query.
+   */
   private changeColumnQuery: (tableName, attributes) => string;
 
-  /** Dialect used. Tested: mssql and sqlite.  */
-
+  /** 
+   * Dialect used. Tested: mssql and sqlite.  
+   */
   private dialect: string;
 
+  /**
+   * Constructor retrieves default values.
+   */
   constructor() {
     this.dialect = GBConfigService.get("DATABASE_DIALECT");
   }
 
-  /** Get config and connect to storage. */
-  initDatabase(cb) {
+  /** 
+   * Gets database config and connect to storage. 
+   */
+  async initDatabase() {
+    return new Promise(
+      (resolve, reject) => {
 
-    let host: string | undefined;
-    let database: string | undefined;
-    let username: string | undefined;
-    let password: string | undefined;
-    let storage: string | undefined;
+        try {
 
-    if (this.dialect === "mssql") {
-      host = GBConfigService.get("DATABASE_HOST");
-      database = GBConfigService.get("DATABASE_NAME");
-      username = GBConfigService.get("DATABASE_USERNAME");
-      password = GBConfigService.get("DATABASE_PASSWORD");
-    } else if (this.dialect === "sqlite") {
-      storage = GBConfigService.get("DATABASE_STORAGE");
-    }
+          let host: string | undefined;
+          let database: string | undefined;
+          let username: string | undefined;
+          let password: string | undefined;
+          let storage: string | undefined;
 
-    let logging = (GBConfigService.get("DATABASE_LOGGING") === "true")
-      ? (str: string) => { logger.info(str); }
-      : false;
+          if (this.dialect === "mssql") {
+            host = GBConfigService.get("DATABASE_HOST");
+            database = GBConfigService.get("DATABASE_NAME");
+            username = GBConfigService.get("DATABASE_USERNAME");
+            password = GBConfigService.get("DATABASE_PASSWORD");
+          } else if (this.dialect === "sqlite") {
+            storage = GBConfigService.get("DATABASE_STORAGE");
+          }
 
-    let encrypt = (GBConfigService.get("DATABASE_ENCRYPT") === "true");
+          let logging = (GBConfigService.get("DATABASE_LOGGING") === "true")
+            ? (str: string) => { logger.info(str); }
+            : false;
 
-    this.sequelize = new Sequelize({
-      host: host,
-      database: database,
-      username: username,
-      password: password,
-      logging: logging,
-      operatorsAliases: false,
-      dialect: this.dialect,
-      storage: storage,
-      dialectOptions: {
-        encrypt: encrypt
-      },
-      pool: {
-        max: 32,
-        min: 8,
-        idle: 40000,
-        evict: 40000,
-        acquire: 40000
-      },
-    });
+          let encrypt = (GBConfigService.get("DATABASE_ENCRYPT") === "true");
 
-    if (this.dialect === "mssql") {
-      this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
-      this.createTableQuery = this.queryGenerator.createTableQuery;
-      this.queryGenerator.createTableQuery = (tableName, attributes, options) =>
-        this.createTableQueryOverride(tableName, attributes, options);
-      this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
-      this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
-        this.changeColumnQueryOverride(tableName, attributes);
-    }
+          this.sequelize = new Sequelize({
+            host: host,
+            database: database,
+            username: username,
+            password: password,
+            logging: logging,
+            operatorsAliases: false,
+            dialect: this.dialect,
+            storage: storage,
+            dialectOptions: {
+              encrypt: encrypt
+            },
+            pool: {
+              max: 32,
+              min: 8,
+              idle: 40000,
+              evict: 40000,
+              acquire: 40000
+            },
+          });
 
-    setImmediate(cb);
+          if (this.dialect === "mssql") {
+            this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
+            this.createTableQuery = this.queryGenerator.createTableQuery;
+            this.queryGenerator.createTableQuery = (tableName, attributes, options) =>
+              this.createTableQueryOverride(tableName, attributes, options);
+            this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
+            this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
+              this.changeColumnQueryOverride(tableName, attributes);
+          }
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
   }
 
   private createTableQueryOverride(tableName, attributes, options): string {
@@ -192,70 +208,79 @@ export class GBCoreService implements IGBCoreService {
     return sql;
   }
 
-  syncDatabaseStructure(cb) {
-    if (GBConfigService.get("DATABASE_SYNC") === "true") {
-      const alter = (GBConfigService.get("DATABASE_SYNC_ALTER") === "true");
-      const force = (GBConfigService.get("DATABASE_SYNC_FORCE") === "true");
-      logger.info("Syncing database...");
-      this.sequelize.sync({
-        alter: alter,
-        force: force
-      }).then(value => {
-        logger.info("Database synced.");
-        cb();
-      }, err => logger.error(err));
-    } else {
-      logger.info("Database synchronization is disabled.");
-      cb();
-    }
+  async syncDatabaseStructure() {
+    return new Promise(
+      (resolve, reject) => {
+        if (GBConfigService.get("DATABASE_SYNC") === "true") {
+          const alter = (GBConfigService.get("DATABASE_SYNC_ALTER") === "true");
+          const force = (GBConfigService.get("DATABASE_SYNC_FORCE") === "true");
+          logger.info("Syncing database...");
+          this.sequelize.sync({
+            alter: alter,
+            force: force
+          }).then(value => {
+            logger.info("Database synced.");
+            resolve(value);
+          }, err => reject(err));
+        } else {
+          logger.info("Database synchronization is disabled.");
+          resolve();
+        }
+      });
   }
 
   /**
    * Loads all items to start several listeners.
-   * @param cb Instances loaded or error info.
    */
-  loadInstances(cb: GBServiceCallback<IGBInstance[]>) {
-    GuaribasInstance.findAll({})
-      .then((items: IGBInstance[]) => {
-        if (!items) items = [];
+  async loadInstances(): Promise<IGBInstance> {
+    return new Promise(
+      (resolve, reject) => {
+        GuaribasInstance.findAll({})
+          .then((items: IGBInstance[]) => {
+            if (!items) items = [];
 
-        if (items.length == 0) {
-          cb([], null);
-        } else {
-          cb(items, null);
-        }
-      })
-      .catch(reason => {
-        if (reason.message.indexOf("no such table: GuaribasInstance") != -1) {
-          cb([], null);
-        } else {
-          logger.info(`GuaribasServiceError: ${reason}`);
-          cb(null, reason);
-        }
+            if (items.length == 0) {
+              resolve([]);
+            } else {
+              resolve(items);
+            }
+          })
+          .catch(reason => {
+            if (reason.message.indexOf("no such table: GuaribasInstance") != -1) {
+              resolve([]);
+            } else {
+              logger.info(`GuaribasServiceError: ${reason}`);
+              reject(reason);
+            }
+          });
       });
   }
 
   /**
    * Loads just one Bot instance.
    */
-  loadInstance(botId: string, cb: GBServiceCallback<IGBInstance>) {
-    let options = { where: {} };
+  async loadInstance(botId: string): Promise<IGBInstance> {
+    return new Promise<IGBInstance>(
+      (resolve, reject) => {
 
-    if (botId != "[default]") {
-      options.where = { botId: botId };
-    }
+        let options = { where: {} };
 
-    GuaribasInstance.findOne(options)
-      .then((instance: IGBInstance) => {
-        if (instance) {
-          cb(instance, null);
-        } else {
-          cb(null, null);
+        if (botId != "[default]") {
+          options.where = { botId: botId };
         }
-      })
-      .catch(err => {
-        cb(null, err);
-        logger.info(`GuaribasServiceError: ${err}`);
+
+        GuaribasInstance.findOne(options)
+          .then((instance: IGBInstance) => {
+            if (instance) {
+              resolve(instance);
+            } else {
+              resolve(null);
+            }
+          })
+          .catch(err => {
+            logger.info(`GuaribasServiceError: ${err}`);
+            reject(err);
+          });
       });
   }
 }

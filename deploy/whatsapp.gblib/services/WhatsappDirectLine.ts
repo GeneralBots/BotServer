@@ -138,7 +138,6 @@ export class WhatsappDirectLine extends GBService {
                     .then((conversationId) => {
 
                         this.conversationIds[from] = conversationId;
-
                         this.inputMessage(client, conversationId, text,
                             from, fromName);
 

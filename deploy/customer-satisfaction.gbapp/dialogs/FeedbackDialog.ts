@@ -41,6 +41,12 @@ import { BotAdapter } from 'botbuilder';
 
 export class FeedbackDialog extends IGBDialog {
 
+  /**
+   * Setup dialogs flows and define services call.
+   * 
+   * @param bot The bot adapter.
+   * @param min The minimal bot instance data.
+   */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
     const service = new CSService();
@@ -58,10 +64,9 @@ export class FeedbackDialog extends IGBDialog {
       async (dc, value) => {
         let rate = value.entity;
         const user = min.userState.get(dc.context);
-        service.updateConversationRate(user.conversation, rate, item => {
-          let messages = ["Obrigado!", "Obrigado por responder."];
-          dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
-        });
+        await service.updateConversationRate(user.conversation, rate);
+        let messages = ["Obrigado!", "Obrigado por responder."];
+        await dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
       }
     ]);
 

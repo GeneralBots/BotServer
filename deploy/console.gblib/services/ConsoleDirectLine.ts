@@ -40,9 +40,7 @@ const Walk = require("fs-walk");
 const logger = require("../../../src/logger");
 const Swagger = require('swagger-client');
 const rp = require('request-promise');
-import * as request from "request-promise-native";
-
-import { GBServiceCallback, GBService, IGBInstance } from "botlib";
+import { GBService } from "botlib";
 
 export class ConsoleDirectLine extends GBService {
 
@@ -193,7 +191,4 @@ export class ConsoleDirectLine extends GBService {
         console.log('*' + contentLine(attachment.content.text) + '*');
         console.log('*'.repeat(width + 1) + '/');
     }
-
-
-
 }

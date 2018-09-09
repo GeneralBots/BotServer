@@ -40,7 +40,15 @@ import { BotAdapter } from "botbuilder";
 
 
 export class WhoAmIDialog extends IGBDialog {
+	
+  /**
+   * Setup dialogs flows and define services call.
+   * 
+   * @param bot The bot adapter.
+   * @param min The minimal bot instance data.
+   */
   static setup(bot: BotAdapter, min: GBMinInstance) {
+	  
     min.dialogs.add("/whoAmI", [
       async (dc, args) => {
         dc.context.sendActivity(`${min.instance.description}`);

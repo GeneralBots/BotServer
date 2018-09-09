@@ -30,19 +30,6 @@
 |                                                                             |
 \*****************************************************************************/
 
-const logger = require("../../../src/logger");
-const Path = require("path");
-const Fs = require("fs");
-const FsExtra = require("fs-extra");
-const _ = require("lodash");
-const Parse = require("csv-parse");
-const Async = require("async");
-const UrlJoin = require("url-join");
-const Walk = require("fs-walk");
-const WaitUntil = require("wait-until");
-
-import { GBServiceCallback } from "botlib";
-import { GBDeployer } from "../../core.gbapp/services/GBDeployer";
 import { GuaribasQuestionAlternate } from '../models';
 import { GuaribasConversation } from '../../analytics.gblib/models';
 
@@ -50,44 +37,45 @@ export class CSService {
 
   resolveQuestionAlternate(
     instanceId: number,
-    questionTyped: string,
-    cb: GBServiceCallback<GuaribasQuestionAlternate>
-  ) {
-    GuaribasQuestionAlternate.findOne({
-      where: {
-        instanceId: instanceId,
-        questionTyped: questionTyped
-      }
-    }).then((value: GuaribasQuestionAlternate) => {
-      cb(value, null);
-    });
+    questionTyped: string): Promise<GuaribasQuestionAlternate> {
+    return new Promise<GuaribasQuestionAlternate>(
+      (resolve, reject) => {
+        GuaribasQuestionAlternate.findOne({
+          where: {
+            instanceId: instanceId,
+            questionTyped: questionTyped
+          }
+        }).then((value: GuaribasQuestionAlternate) => {
+          resolve(value);
+        }).error(reason => reject(reason));
+      });
   }
 
   insertQuestionAlternate(
     instanceId: number,
     questionTyped: string,
-    questionText: string,
-    cb: GBServiceCallback<GuaribasQuestionAlternate>
-  ) {
-    GuaribasQuestionAlternate.create({
-      questionTyped: questionTyped,
-      questionText: questionText
-    }).then(item => {
-      if (cb) {
-        cb(item, null);
-      }
-    });
+    questionText: string): Promise<GuaribasQuestionAlternate> {
+    return new Promise<GuaribasQuestionAlternate>(
+      (resolve, reject) => {
+        GuaribasQuestionAlternate.create({
+          questionTyped: questionTyped,
+          questionText: questionText
+        }).then(item => {
+          resolve(item);
+        }).error(reason => reject(reason));
+      });
   }
 
   updateConversationRate(
     conversation: GuaribasConversation,
-    rate: number,
-    cb: GBServiceCallback<GuaribasConversation>
-  ) {
-    conversation.rate = rate;
-    conversation.save().then((value: GuaribasConversation) => {
-      cb(conversation, null);
-    });
+    rate: number
+  ): Promise<GuaribasConversation> {
+    return new Promise<GuaribasConversation>(
+      (resolve, reject) => {
+        conversation.rate = rate;
+        conversation.save().then((value: GuaribasConversation) => {
+          resolve(conversation);
+        }).error(reason => reject(reason));
+      });
   }
-
 }

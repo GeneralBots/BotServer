@@ -56,6 +56,7 @@
     "tedious": "^2.6.4",
     "url-join": "^4.0.0",
     "wait-until": "^0.0.2",
+    "walk-promise": "^0.2.0",
     "winston": "^3.0.0"
   },
   "devDependencies": {

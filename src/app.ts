@@ -77,16 +77,18 @@ export class GBServer {
       extended: true
     }));
 
-    server.listen(port, () => {
+    server.listen(port, async () => {
 
-      logger.info(`Accepting connections on ${port}...`);
-      logger.info(`Starting instances...`);
+      try {
 
-      // Reads basic configuration, initialize minimal services.
+        logger.info(`Accepting connections on ${port}...`);
+        logger.info(`Starting instances...`);
 
-      GBConfigService.init();
-      let core = new GBCoreService();
-      core.initDatabase(() => {
+        // Reads basic configuration, initialize minimal services.
+
+        GBConfigService.init();
+        let core = new GBCoreService();
+        await core.initDatabase();
 
         // Boot a bot package if any.
 
@@ -104,23 +106,16 @@ export class GBServer {
             p.loadPackage(core, core.sequelize);
           });
 
-        (async () => {
-          try {
-            await minService.deployPackages(core, server, appPackages);
-            logger.info(`The Bot Server is in RUNNING mode...`);
+        await minService.deployPackages(core, server, appPackages);
+        logger.info(`The Bot Server is in RUNNING mode...`);
 
-            minService.buildMin(instance => {
-              logger.info(`Instance loaded: ${instance.botId}...`);
-            }, server, appPackages);
+        let instance = await minService.buildMin(server, appPackages);
+        logger.info(`Instance loaded: ${instance.botId}...`);
+        return core;
+      } catch (err) {
+        logger.info(err);
+      }
 
-          } catch (err) {
-            logger.info(err);
-          }
-        })()
-
-      });
-
-      return core;
     });
   }
 }

@@ -42,6 +42,12 @@ import { LuisRecognizer } from "botbuilder-ai";
 const logger = require("../../../src/logger");
 
 export class AskDialog extends IGBDialog {
+  /**
+   * Setup dialogs flows and define services call.
+   * 
+   * @param bot The bot adapter.
+   * @param min The minimal bot instance data.
+   */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
     const service = new KBService();

@@ -34,25 +34,14 @@
 
 const logger = require("../../../src/logger");
 const Path = require("path");
-const Fs = require("fs");
-const FsExtra = require("fs-extra");
 const _ = require("lodash");
-const Async = require("async");
 const UrlJoin = require("url-join");
-const Walk = require("fs-walk");
-const WaitUntil = require("wait-until");
 
 import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBImporter } from "./GBImporter";
-import { GBCoreService } from "./GBCoreService";
 import { GBServiceCallback, IGBCoreService, IGBInstance } from "botlib";
-import { Sequelize } from 'sequelize-typescript';
-import { Promise } from "bluebird";
 import { GBConfigService } from "./GBConfigService";
-import { DataTypeUUIDv1 } from "sequelize";
-import { GBError, GBERROR_TYPE } from "botlib";
-
-import { GBConversationalService } from "./GBConversationalService";
+import { GBError } from "botlib";
 import { GuaribasPackage } from '../models/GBModel';
 
 /** Deployer service for bots, themes, ai and more. */
@@ -69,156 +58,131 @@ export class GBDeployer {
     this.importer = importer;
   }
 
-  /** Deploys a bot to the storage. */
-  deployBot(localPath: string, cb: GBServiceCallback<any>) {
+  /** 
+   * Deploys a bot to the storage. 
+   */
+
+  async deployBot(localPath: string): Promise<IGBInstance> {
     let packageType = Path.extname(localPath);
     let packageName = Path.basename(localPath);
-
-    this.importer.importIfNotExistsBotPackage(
+    let instance = await this.importer.importIfNotExistsBotPackage(
       packageName,
-      localPath,
-      (data, err) => {
-        if (err) {
-          logger.info(err);
-        } else {
-          cb(data, null);
-        }
-      }
+      localPath
     );
+    return instance;
   }
 
-  deployPackageToStorage(
+  async deployPackageToStorage(
     instanceId: number,
-    packageName: string,
-    cb: GBServiceCallback<GuaribasPackage>
-  ) {
-    GuaribasPackage.create({
+    packageName: string): Promise<GuaribasPackage> {
+    return GuaribasPackage.create({
       packageName: packageName,
       instanceId: instanceId
-    }).then((item: GuaribasPackage) => {
-      cb(item, null);
     });
+
   }
 
-  deployTheme(localPath: string, cb: GBServiceCallback<any>) {
+  deployTheme(localPath: string) {
     // DISABLED: Until completed, "/ui/public".
     // FsExtra.copy(localPath, this.workDir + packageName)
     //   .then(() => {
-    //     cb(null, null);
+
     //   })
     //   .catch(err => {
     //     var gberr = GBError.create(
     //       `GuaribasBusinessError: Error copying package: ${localPath}.`
     //     );
-    //     cb(null, gberr);
     //   });
   }
 
-  deployPackageFromLocalPath(localPath: string, cb: GBServiceCallback<any>) {
+  async deployPackageFromLocalPath(localPath: string) {
+
     let packageType = Path.extname(localPath);
 
     switch (packageType) {
       case ".gbot":
-        this.deployBot(localPath, cb);
-        break;
+        return this.deployBot(localPath);
 
       case ".gbtheme":
-        this.deployTheme(localPath, cb);
-        break;
+        return this.deployTheme(localPath);
 
       // PACKAGE: Put in package logic.
       case ".gbkb":
         let service = new KBService();
-        service.deployKb(this.core, this, localPath, cb);
-        break;
+        return service.deployKb(this.core, this, localPath);
 
       case ".gbui":
+
         break;
 
       default:
         var err = GBError.create(
           `GuaribasBusinessError: Unknow package type: ${packageType}.`
         );
-        cb(null, err);
+        Promise.reject(err);
         break;
     }
   }
 
-  undeployPackageFromLocalPath(
+  async undeployPackageFromLocalPath(
     instance: IGBInstance,
-    localPath: string,
-    cb: GBServiceCallback<any>
+    localPath: string
+
   ) {
     let packageType = Path.extname(localPath);
     let packageName = Path.basename(localPath);
 
-    this.getPackageByName(instance.instanceId, packageName, (p, err) => {
-      switch (packageType) {
-        case ".gbot":
-          // TODO: this.undeployBot(packageName, localPath, cb);
-          break;
+    let p = await this.getPackageByName(instance.instanceId, packageName);
 
-        case ".gbtheme":
-          // TODO: this.undeployTheme(packageName, localPath, cb);
-          break;
+    switch (packageType) {
+      case ".gbot":
+        // TODO: this.undeployBot(packageName, localPath);
+        break;
 
-        case ".gbkb":
-          let service = new KBService();
-          service.undeployKbFromStorage(instance, p.packageId, cb);
-          break;
+      case ".gbtheme":
+        // TODO: this.undeployTheme(packageName, localPath);
+        break;
 
-        case ".gbui":
-          break;
+      case ".gbkb":
+        let service = new KBService();
+        return service.undeployKbFromStorage(instance, p.packageId);
 
-        default:
-          var err = GBError.create(
-            `GuaribasBusinessError: Unknow package type: ${packageType}.`
-          );
-          cb(null, err);
-          break;
-      }
+      case ".gbui":
+
+        break;
+
+      default:
+        var err = GBError.create(
+          `GuaribasBusinessError: Unknown package type: ${packageType}.`
+        );
+        Promise.reject(err);
+        break;
+    }
+  }
+
+  async getPackageByName(instanceId: number, packageName: string):
+    Promise<GuaribasPackage> {
+    var where = { packageName: packageName, instanceId: instanceId };
+    return GuaribasPackage.findOne({
+      where: where
     });
   }
-
-  getPackageByName(
-    instanceId: number,
-    packageName: string,
-    cb: GBServiceCallback<GuaribasPackage>
-  ) {
-
-    var where = { packageName: packageName, instanceId: instanceId };
-
-    GuaribasPackage.findOne({
-      where: where
-    })
-      .then((value: GuaribasPackage) => {
-        cb(value, null);
-      })
-      .error(reason => {
-        cb(null, reason);
-      });
-  }
-
 
   /**
    *
    * Hot deploy processing.
    *
    */
-  scanBootPackage(cb: GBServiceCallback<boolean>) {
+  async scanBootPackage() {
 
     const deployFolder = "deploy";
     let bootPackage = GBConfigService.get("BOOT_PACKAGE");
 
     if (bootPackage === "none") {
-      cb(true, null);
+      return Promise.resolve(true);
     } else {
-      this.deployPackageFromLocalPath(
-        UrlJoin(deployFolder, bootPackage),
-        (data, err) => {
-          logger.info(`Boot package deployed: ${bootPackage}`);
-          if (err) logger.info(err);
-        }
+      return this.deployPackageFromLocalPath(
+        UrlJoin(deployFolder, bootPackage)
       );
     }
   }

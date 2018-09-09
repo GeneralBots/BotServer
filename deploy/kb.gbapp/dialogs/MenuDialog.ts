@@ -52,6 +52,12 @@ const WaitUntil = require("wait-until");
 
 export class MenuDialog extends IGBDialog {
 
+  /**
+   * Setup dialogs flows and define services call.
+   * 
+   * @param bot The bot adapter.
+   * @param min The minimal bot instance data.
+   */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
     var service = new KBService();
@@ -83,16 +89,12 @@ export class MenuDialog extends IGBDialog {
 
           if (user.subjects.length > 0) {
 
-            service.getFaqBySubjectArray(
-              "menu",
-              user.subjects,
-              (data, err) => {
-                min.conversationalService.sendEvent(dc, "play", {
-                  playerType: "bullet",
-                  data: data.slice(0, 6)
-                });
-              }
-            );
+            let data = await service.getFaqBySubjectArray("menu", user.subjects);
+            await min.conversationalService.sendEvent(dc, "play", {
+              playerType: "bullet",
+              data: data.slice(0, 6)
+            });
+
           }
         } else {
           const user = min.userState.get(dc.context);
@@ -119,64 +121,63 @@ export class MenuDialog extends IGBDialog {
         const msg = MessageFactory.text('Greetings from example message');
         var attachments = [];
 
-        service.getSubjectItems(
+        let data = await service.getSubjectItems(
           min.instance.instanceId,
-          rootSubjectId,
-          data => {
-            
-            msg.attachmentLayout='carousel';
-            
+          rootSubjectId);
 
-            data.forEach(function (item: GuaribasSubject) {
 
-              var subject = item;
+        msg.attachmentLayout = 'carousel';
 
-              var card = CardFactory.heroCard(
-                subject.title,
-                CardFactory.images([UrlJoin(
-                  "/kb",
-                  min.instance.kb,
-                  "subjects",
-                  subject.internalId + ".png" // TODO: or fallback to subject.png
-                )]),
-                CardFactory.actions([
-                  {
-                    type: 'postBack',
-                    title: 'Selecionar',
-                    value: JSON.stringify({
-                      title: subject.title,
-                      subjectId: subject.subjectId,
-                      to: subject.to
-                    })
-                  }]));
 
-              attachments.push(card);
+        data.forEach(function (item: GuaribasSubject) {
 
-            });
+          var subject = item;
 
-            if (attachments.length == 0) {
-              const user = min.userState.get(dc.context);
-              if (user.subjects && user.subjects.length > 0) {
-                dc.context.sendActivity(
-                  `Vamos pesquisar sobre ${KBService.getFormattedSubjectItems(
-                    user.subjects
-                  )}?`
-                );
-              }
+          var card = CardFactory.heroCard(
+            subject.title,
+            CardFactory.images([UrlJoin(
+              "/kb",
+              min.instance.kb,
+              "subjects",
+              subject.internalId + ".png" // TODO: or fallback to subject.png
+            )]),
+            CardFactory.actions([
+              {
+                type: 'postBack',
+                title: 'Selecionar',
+                value: JSON.stringify({
+                  title: subject.title,
+                  subjectId: subject.subjectId,
+                  to: subject.to
+                })
+              }]));
 
-              dc.replace("/ask", {});
-            } else {
-              msg.attachments = attachments;
-              dc.context.sendActivity(msg);
-            }
+          attachments.push(card);
+
+        });
+
+        if (attachments.length == 0) {
+          const user = min.userState.get(dc.context);
+          if (user.subjects && user.subjects.length > 0) {
+            await dc.context.sendActivity(
+              `Vamos pesquisar sobre ${KBService.getFormattedSubjectItems(
+                user.subjects
+              )}?`
+            );
           }
-        );
+
+          await dc.replace("/ask", {});
+        } else {
+          msg.attachments = attachments;
+          await dc.context.sendActivity(msg);
+        }
+
         const user = min.userState.get(dc.context);
         user.isAsking = true;
       },
       async (dc, value) => {
         var text = value;
-        if (AzureText.isIntentNo(text)) {
+        if (text==="no"||text==="n") { // TODO: Migrate to a common.
           dc.replace("/feedback");
         } else {
           dc.replace("/ask");

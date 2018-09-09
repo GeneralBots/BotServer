@@ -33,22 +33,10 @@
 
 "use strict";
 
-const _ = require("lodash");
-const Parse = require("csv-parse");
-const Async = require("async");
 const UrlJoin = require("url-join");
-const Walk = require("fs-walk");
-const logger = require("../../../src/logger");
-
-import { KBService } from './../../kb.gbapp/services/KBService';
-import { Sequelize } from 'sequelize-typescript';
-import { Promise } from "bluebird";
 import Fs = require("fs");
 import Path = require("path");
-import { DataTypeUUIDv1 } from "sequelize";
-import { GBConfigService } from "./GBConfigService";
-import { GBCoreService } from "./GBCoreService";
-import { GBServiceCallback, IGBCoreService, IGBInstance } from "botlib";
+import { IGBCoreService, IGBInstance } from "botlib";
 import { SecService } from "../../security.gblib/services/SecService";
 import { GuaribasInstance } from "../models/GBModel";
 
@@ -58,12 +46,10 @@ export class GBImporter {
   constructor(core: IGBCoreService) {
     this.core = core;
   }
-  importIfNotExistsBotPackage(
+
+  async importIfNotExistsBotPackage(
     packageName: string,
-    localPath: string,
-    cb: GBServiceCallback<IGBInstance>
-  ) {
-    let _this_ = this;
+    localPath: string) {
 
     let packageJson = JSON.parse(
       Fs.readFileSync(UrlJoin(localPath, "package.json"), "utf8")
@@ -71,20 +57,18 @@ export class GBImporter {
 
     let botId = packageJson.botId;
 
-    this.core.loadInstance(botId, (instance, err) => {
-      if (instance) {
-        cb(instance, null);
-      } else {
-        this.createInstanceInternal(packageName, localPath, packageJson, cb);
-      }
-    });
+    let instance = await this.core.loadInstance(botId);
+    if (instance) {
+      return Promise.resolve(instance);
+    } else {
+      return this.createInstanceInternal(packageName, localPath, packageJson);
+    }
   }
 
-  private createInstanceInternal(
+  private async createInstanceInternal(
     packageName: string,
     localPath: string,
-    packageJson: any,
-    cb: GBServiceCallback<IGBInstance>
+    packageJson: any
   ) {
     const settings = JSON.parse(
       Fs.readFileSync(UrlJoin(localPath, "settings.json"), "utf8")
@@ -97,11 +81,10 @@ export class GBImporter {
 
     GuaribasInstance.create(packageJson).then((instance: IGBInstance) => {
 
-      // PACKAGE: security.json loading
       let service = new SecService();
       // TODO: service.importSecurityFile(localPath, instance);
 
-      cb(instance, null);
+      Promise.resolve(instance);
     });
   }
 }

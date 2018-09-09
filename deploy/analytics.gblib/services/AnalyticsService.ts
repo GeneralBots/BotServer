@@ -30,38 +30,38 @@
 |                                                                             |
 \*****************************************************************************/
 
-import { GBServiceCallback } from "botlib";
 import { GuaribasUser } from "../../security.gblib/models";
 import { GuaribasConversation, GuaribasConversationMessage } from "../models";
 
 export class AnalyticsService {
-
-
-  createConversation(
-    user: GuaribasUser,
-    cb: GBServiceCallback<GuaribasConversation>
-  ) {
-    let conversation = new GuaribasConversation();
-    conversation.startedBy = user;
-    conversation.startedByUserId = user.userId;
-    conversation.save().then((value: GuaribasConversation) => {
-      cb(conversation, null);
-    });
+  async createConversation(
+    user: GuaribasUser
+  ): Promise<GuaribasConversation> {
+    return new Promise<GuaribasConversation>(
+      (resolve, reject) => {
+        let conversation = new GuaribasConversation();
+        conversation.startedBy = user;
+        conversation.startedByUserId = user.userId;
+        conversation.save().then((value: GuaribasConversation) => {
+          resolve(value);
+        });
+      });
   }
 
   createMessage(
     conversation: GuaribasConversation,
     user: GuaribasUser,
-    content: string,
-    cb: GBServiceCallback<GuaribasConversationMessage>
-  ) {
-    let message = GuaribasConversationMessage.build();
-    message.conversation = conversation;
-    message.user = user;
-    message.content = content;
-    message.save().then((value: GuaribasConversationMessage) => {
-      cb(value, null);
-    });
+    content: string
+  ): Promise<GuaribasConversationMessage> {
+    return new Promise<GuaribasConversationMessage>(
+      (resolve, reject) => {
+        let message = GuaribasConversationMessage.build();
+        message.conversation = conversation;
+        message.user = user;
+        message.content = content;
+        message.save().then((value: GuaribasConversationMessage) => {
+          resolve(value);
+        });
+      });
   }
-
 }

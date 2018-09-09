@@ -38,31 +38,35 @@ import { BotAdapter } from "botbuilder";
 import { GBMinInstance } from "botlib";
 
 export class FaqDialog extends IGBDialog {
+  /**
+   * Setup dialogs flows and define services call.
+   * 
+   * @param bot The bot adapter.
+   * @param min The minimal bot instance data.
+   */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
     const service = new KBService();
 
     min.dialogs.add("/faq", [
       async (dc, args) => {
-        service.getFaqBySubjectArray("faq", null, (data, err) => {
-          if (data) {
-            min.conversationalService.sendEvent(dc, "play", {
-              playerType: "bullet",
-              data: data.slice(0, 10)
-            });
+        let data = await service.getFaqBySubjectArray("faq", null);
+        if (data) {
+          await min.conversationalService.sendEvent(dc, "play", {
+            playerType: "bullet",
+            data: data.slice(0, 10)
+          });
 
-            let messages = [
-              "Veja algumas perguntas mais frequentes logo na tela. Clique numa delas para eu responder.",
-              "Você pode clicar em alguma destas perguntas da tela que eu te respondo de imediato.",
-              "Veja a lista que eu preparei logo aí na tela..."
-            ];
+          let messages = [
+            "Veja algumas perguntas mais frequentes logo na tela. Clique numa delas para eu responder.",
+            "Você pode clicar em alguma destas perguntas da tela que eu te respondo de imediato.",
+            "Veja a lista que eu preparei logo aí na tela..."
+          ];
 
-            dc.context.sendActivity(messages[0]); // TODO: RND messages.
-            dc.endAll();
-          }
-        });
+          await dc.context.sendActivity(messages[0]); // TODO: RND messages.
+          await dc.endAll();
+        }
       }
     ]);
-
   }
 }

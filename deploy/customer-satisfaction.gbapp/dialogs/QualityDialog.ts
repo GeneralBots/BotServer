@@ -41,6 +41,12 @@ const logger = require("../../../src/logger");
 
 export class QualityDialog extends IGBDialog {
 
+  /**
+   * Setup dialogs flows and define services call.
+   * 
+   * @param bot The bot adapter.
+   * @param min The minimal bot instance data.
+   */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
     const service = new CSService();
@@ -61,25 +67,22 @@ export class QualityDialog extends IGBDialog {
             "Lamento... Vamos tentar novamente!",
             "Desculpe-me. Por favor, tente escrever de outra forma?"
           ];
-          dc.context.sendActivity(msg[0]);
+          await dc.context.sendActivity(msg[0]);
         } else {
           let msg = [
             "Ótimo, obrigado por contribuir com sua resposta.",
             "Certo, obrigado pela informação.",
             "Obrigado pela contribuição."
           ];
-          dc.context.sendActivity(msg[0]);
+          await dc.context.sendActivity(msg[0]);
 
-          service.insertQuestionAlternate(
+          await service.insertQuestionAlternate(
             min.instance.instanceId,
             user.lastQuestion,
-            user.lastQuestionId,
-            (data, err) => {
-              logger.info("QuestionAlternate inserted.");
-            }
+            user.lastQuestionId
           );
 
-          dc.replace('/ask', {isReturning: true});
+          await dc.replace('/ask', {isReturning: true});
         }
       }
     ]);
