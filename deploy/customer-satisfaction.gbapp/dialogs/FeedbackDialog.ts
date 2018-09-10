@@ -52,8 +52,7 @@ export class FeedbackDialog extends IGBDialog {
     const service = new CSService();
 
     min.dialogs.add("/feedbackNumber", [
-      async (dc, args) => {
-
+      async (dc) => {
         let messages = [
           "O que achou do meu atendimento, de 1 a 5?",
           "Qual a nota do meu atendimento?",
@@ -88,21 +87,15 @@ export class FeedbackDialog extends IGBDialog {
         await dc.prompt('textPrompt', messages[0]);
       },
       async (dc, value) => {
-        AzureText.getSentiment(
-          min.instance.textAnalyticsKey,
-          value,
-          (err, rate) => {
-            if (!err && rate > 0) {
-              dc.context.sendActivity("Bom saber que você gostou. Conte comigo.");
-            } else {
-              dc.context.sendActivity(
-                "Vamos registrar sua questão, obrigado pela sinceridade."
-              );
-            }
-            dc.replace('/ask', { isReturning: true });
-          }
-        );
-      }
-    ]);
+        let rate = await AzureText.getSentiment(min.instance.textAnalyticsKey, "pt-br", value);
+        if (rate > 0) {
+          dc.context.sendActivity("Bom saber que você gostou. Conte comigo.");
+        } else {
+          dc.context.sendActivity(
+            "Vamos registrar sua questão, obrigado pela sinceridade."
+          );
+        }
+        dc.replace('/ask', { isReturning: true });
+      }]);
   }
 }

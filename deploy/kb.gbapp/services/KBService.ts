@@ -41,6 +41,7 @@ const path = require("path")
 const asyncPromise = require('async-promises')
 const walkPromise = require('walk-promise')
 
+import { Sequelize } from 'sequelize-typescript'
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService'
 import { GuaribasQuestion, GuaribasAnswer, GuaribasSubject } from "../models"
 import { IGBCoreService, IGBConversationalService, IGBInstance } from "botlib"
@@ -54,6 +55,12 @@ export class KBServiceSearchResults {
 }
 
 export class KBService {
+
+  sequelize: Sequelize
+
+  constructor(sequelize: Sequelize) {
+    this.sequelize = sequelize
+  }
 
   async getAnswerById(
     instanceId: number,
@@ -78,32 +85,26 @@ export class KBService {
     instanceId: number,
     text: string
   ): Promise<any> {
-    return new Promise(
-      (resolve, reject) => {
 
-        GuaribasQuestion.findOne({
-          where: {
-            instanceId: instanceId,
-            content: `%${text.trim()}%`
-          }
-        }).then((question: GuaribasQuestion) => {
-          if (question) {
-            GuaribasAnswer.findAll({
-              where: {
-                instanceId: instanceId,
-                answerId: question.answerId
-              }
-            }).then((answer: GuaribasAnswer[]) => {
-              resolve({ question: question, answer: answer[0] })
-            })
-          }
-          else {
-            resolve(null)
-          }
-        }).error((reason) => {
-          reject(reason)
-        })
+    const Op = Sequelize.Op
+
+    let question = await GuaribasQuestion.findOne({
+      where: {
+        instanceId: instanceId,
+        content: { [Op.like]: `%${text.trim()}%` }
+      }
+    })
+
+    if (question) {
+      let answer = await GuaribasAnswer.findOne({
+        where: {
+          instanceId: instanceId,
+          answerId: question.answerId
+        }
       })
+      return Promise.resolve({ question: question, answer: answer })
+    }
+    return Promise.resolve(null)
   }
 
   async addAnswer(obj: GuaribasAnswer): Promise<GuaribasAnswer> {
@@ -119,26 +120,24 @@ export class KBService {
 
   async ask(
     instance: IGBInstance,
-    what: string,
+    query: string,
     searchScore: number,
     subjects: GuaribasSubject[]
   ): Promise<KBServiceSearchResults> {
 
     // Builds search query.
 
-    what = what.toLowerCase()
-    what = what.replace("?", " ")
-    what = what.replace("!", " ")
-    what = what.replace(".", " ")
-    what = what.replace("/", " ")
-    what = what.replace("\\", " ")
+    query = query.toLowerCase()
+    query = query.replace("?", " ")
+    query = query.replace("!", " ")
+    query = query.replace(".", " ")
+    query = query.replace("/", " ")
+    query = query.replace("\\", " ")
 
     if (subjects) {
-      let text = KBService.getSubjectItemsSeparatedBySpaces(
-        subjects
-      )
+      let text = KBService.getSubjectItemsSeparatedBySpaces(subjects)
       if (text) {
-        what = `${what} ${text}`
+        query = `${query} ${text}`
       }
     }
     // TODO: Filter by instance. what = `${what}&$filter=instanceId eq ${instanceId}`
@@ -150,7 +149,7 @@ export class KBService {
           instance.searchIndex,
           instance.searchIndexer
         )
-        let results = await service.search(what)
+        let results = await service.search(query)
         if (results && results.length > 0 &&
           results[0]["@search.score"] >= searchScore) {
           let value = await this.getAnswerById(
@@ -159,7 +158,7 @@ export class KBService {
           return Promise.resolve({ answer: value, questionId: results[0].questionId })
         }
       } else {
-        let data = await this.getAnswerByText(instance.instanceId, what)
+        let data = await this.getAnswerByText(instance.instanceId, query)
         return Promise.resolve(
           { answer: data.answer, questionId: data.question.questionId }
         )
@@ -365,7 +364,7 @@ export class KBService {
       delimiter: "\t"
     }
 
-    let data = await parse(file, opts);
+    let data = await parse(file, opts)
     return asyncPromise.eachSeries(data, async line => {
 
       // Extracts values from columns in the current line.
@@ -422,7 +421,7 @@ export class KBService {
           content: answer,
           format: format,
           packageId: packageId
-        });
+        })
         await GuaribasQuestion.create({
           from: from,
           to: to,
@@ -434,7 +433,7 @@ export class KBService {
           instanceId: instanceId,
           answerId: answer1.answerId,
           packageId: packageId
-        });
+        })
 
         return Promise.resolve(question)
 
@@ -448,23 +447,25 @@ export class KBService {
     })
   }
 
-  sendAnswer(conversationalService: IGBConversationalService,
-    dc: any, answer: GuaribasAnswer) {
+  async sendAnswer(conversationalService: IGBConversationalService,
+    dc: any, answer: GuaribasAnswer): Promise<any> {
 
     if (answer.content.endsWith('.mp4')) {
-      conversationalService.sendEvent(dc, "play", {
+      await conversationalService.sendEvent(dc, "play", {
         playerType: "video",
         data: answer.content
       })
     } else if (answer.content.length > 140 &&
-      dc.message.source != "directline") {
+      dc.context._activity.channelId === "webchat") {
       let messages = [
         "Vou te responder na tela para melhor visualização...",
         "A resposta está na tela...",
         "Veja a resposta na tela..."
       ]
-      dc.context.sendActivity(messages[0]) // TODO: Handle rnd.
+
+      await dc.context.sendActivity(messages[0]) // TODO: Handle rnd.
       var html = answer.content
+
       if (answer.format === ".md") {
         marked.setOptions({
           renderer: new marked.Renderer(),
@@ -479,10 +480,10 @@ export class KBService {
         })
         html = marked(answer.content)
       }
-      conversationalService.sendEvent(dc, "play", { playerType: "markdown", data: html })
+      await conversationalService.sendEvent(dc, "play", { playerType: "markdown", data: html })
     } else {
-      dc.context.sendActivity(answer.content)
-      conversationalService.sendEvent(dc, "stop", null)
+      await dc.context.sendActivity(answer.content)
+      await conversationalService.sendEvent(dc, "stop", null)
     }
   }
 
@@ -490,25 +491,24 @@ export class KBService {
     localPath: string,
     packageStorage: GuaribasPackage,
     instance: IGBInstance
-  ): Promise<GuaribasQuestion[]> {
+  ): Promise<any> {
 
     // Imports subjects tree into database and return it.
 
-    return this.importSubjectFile(
+    await this.importSubjectFile(
       packageStorage.packageId,
       UrlJoin(localPath, "subjects.json"),
-      instance
-    ).then((value: GuaribasQuestion[]) => {
+      instance);
 
-      // Import all .tsv files in the tabular directory.
+    // Import all .tsv files in the tabular directory.
 
-      return this.importKbTabularDirectory(
-        localPath,
-        instance,
-        packageStorage.packageId
-      )
-    })
+    return this.importKbTabularDirectory(
+      localPath,
+      instance,
+      packageStorage.packageId
+    )
   }
+
 
   async importKbTabularDirectory(
     localPath: string,
@@ -523,9 +523,9 @@ export class KBService {
         return this.importKbTabularFile(
           UrlJoin(file.root, file.name),
           instance.instanceId,
-          packageId);
+          packageId)
       }
-    }));
+    }))
 
   }
 
@@ -549,13 +549,13 @@ export class KBService {
           title: item.title,
           description: item.description,
           packageId: packageId
-        });
+        })
 
         if (item.children) {
           return Promise.resolve(doIt(item.children, value.subjectId))
         }
         else {
-          return Promise.resolve(item);
+          return Promise.resolve(item)
         }
 
       })
@@ -564,31 +564,26 @@ export class KBService {
     return doIt(subjects.children, null)
   }
 
-  undeployKbFromStorage(
+  async undeployKbFromStorage(
     instance: IGBInstance,
     packageId: number
   ) {
-    // TODO: call reject.
-    return new Promise(
-      (resolve, reject) => {
-        GuaribasQuestion.destroy({
-          where: { instanceId: instance.instanceId, packageId: packageId }
-        }).then(value => {
-          GuaribasAnswer.destroy({
-            where: { instanceId: instance.instanceId, packageId: packageId }
-          }).then(value => {
-            GuaribasSubject.destroy({
-              where: { instanceId: instance.instanceId, packageId: packageId }
-            }).then(value => {
-              GuaribasPackage.destroy({
-                where: { instanceId: instance.instanceId, packageId: packageId }
-              }).then(value => {
-                resolve(null)
-              })
-            })
-          })
-        })
-      })
+
+    await GuaribasQuestion.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
+    })
+    await GuaribasAnswer.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
+    })
+    await GuaribasSubject.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
+    })
+    await GuaribasPackage.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
+    })
+
+    return Promise.resolve()
+
   }
 
   /**

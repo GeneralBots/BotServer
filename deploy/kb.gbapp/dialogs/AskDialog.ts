@@ -50,7 +50,7 @@ export class AskDialog extends IGBDialog {
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
-    const service = new KBService();
+    const service = new KBService(min.core.sequelize);
 
     const model = new LuisRecognizer({
       appId: min.instance.nlpAppId,
@@ -65,11 +65,18 @@ export class AskDialog extends IGBDialog {
         // Initialize values.
 
         const user = min.userState.get(dc.context);
-        let text = "";
+        let text = args.query;
+        if (!text) {
+          throw new Error(`/answer being called with no args.query text.`)
+        }
+
+        // Stops any content on projector.
+
+        await min.conversationalService.sendEvent(dc, "stop", null);
 
         // Handle extra text from FAQ.
 
-        if (args && args.query) {
+         if (args && args.query) {
           text = args.query;
         } else if (args && args.fromFaq) {
           let messages = [
@@ -78,35 +85,31 @@ export class AskDialog extends IGBDialog {
             `Aguarde, por favor, enquanto acho sua resposta...`
           ];
 
-          dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+          await dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
         }
 
         // Spells check the input text before sending Search or NLP.
 
-        // DISABLED:
-        // AzureText.getSpelledText(
-        //   min.instance.spellcheckerKey,
-        //   text,
-        //   async (data, err) => {
-        // var data = res.text;
-        // if (data != text) {
-        //   logger.info("Spelled Text: " + data);
-        //   text = data;
-        // }
+        if (min.instance.spellcheckerKey) {
+          let data = await AzureText.getSpelledText(
+            min.instance.spellcheckerKey,
+            text);
 
-        user.lastQuestion = text;
+          if (data != text) {
+            logger.info(`Spelling corrected: ${data}`);
+            text = data;
+          }
+        }
 
         // Searches KB for the first time.
 
+        user.lastQuestion = text;
         let resultsA = await service.ask(
           min.instance,
           text,
           min.instance.searchScore,
           user.subjects);
 
-        // Stops any content on projector.
-        
-        min.conversationalService.sendEvent(dc, "stop", null);
 
         // If there is some result, answer immediately.
 
@@ -119,10 +122,7 @@ export class AskDialog extends IGBDialog {
 
           // Sends the answer to all outputs, including projector.
 
-          service.sendAnswer(min.conversationalService,
-            dc,
-            resultsA.answer
-          );
+          await service.sendAnswer(min.conversationalService, dc, resultsA.answer);
 
           // Goes to ask loop, again.
 
@@ -132,11 +132,8 @@ export class AskDialog extends IGBDialog {
 
           // Second time running Search, now with no filter.
 
-          let resultsB = await service.ask(
-            min.instance,
-            text,
-            min.instance.searchScore,
-            null);
+          let resultsB = await service.ask(min.instance, text,
+            min.instance.searchScore, null);
 
           // If there is some result, answer immediately.
 
@@ -148,7 +145,7 @@ export class AskDialog extends IGBDialog {
             user.isAsking = false;
             user.lastQuestionId = resultsB.questionId;
 
-            // Inform user that a broader search will be used.
+            // Informs user that a broader search will be used.
 
             if (user.subjects.length > 0) {
               let subjectText =
@@ -161,43 +158,31 @@ export class AskDialog extends IGBDialog {
                 `Vou te responder de modo mais abrangente... 
                                 Não apenas sobre ${subjectText}`
               ];
-              dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+              await dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
             }
 
             // Sends the answer to all outputs, including projector.
 
-            service.sendAnswer(min.conversationalService,
-              dc,
-              resultsB.answer
-            );
-            dc.replace("/ask", { isReturning: true });
-
+            await service.sendAnswer(min.conversationalService, dc, resultsB.answer);
+            await dc.replace("/ask", { isReturning: true });
 
           } else {
-            await min.conversationalService.runNLP(
-              dc,
-              min,
-              text,
-              (data, error) => {
 
-                if (!data) {
-                  let messages = [
-                    "Desculpe-me, não encontrei nada a respeito.",
-                    "Lamento... Não encontrei nada sobre isso. Vamos tentar novamente?",
-                    "Desculpe-me, não achei nada parecido. Poderia tentar escrever de outra forma?"
-                  ];
+            let data = await min.conversationalService.runNLP(dc, min, text);
+            if (!data) {
+              let messages = [
+                "Desculpe-me, não encontrei nada a respeito.",
+                "Lamento... Não encontrei nada sobre isso. Vamos tentar novamente?",
+                "Desculpe-me, não achei nada parecido. Poderia tentar escrever de outra forma?"
+              ];
 
-                  dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
-                  dc.replace("/ask", { isReturning: true });
-                }
-              }).catch(err => {
-                console.log(err);
-              });
+              dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+              dc.replace("/ask", { isReturning: true });
+            }
           }
         }
       }
     ]);
-
 
     min.dialogs.add("/ask", [
       async (dc, args) => {

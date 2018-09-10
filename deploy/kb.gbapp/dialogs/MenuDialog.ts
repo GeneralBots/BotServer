@@ -60,7 +60,7 @@ export class MenuDialog extends IGBDialog {
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
-    var service = new KBService();
+    var service = new KBService(min.core.sequelize);
 
     bot
     min.dialogs.add("/menu", [

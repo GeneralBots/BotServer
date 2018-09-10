@@ -46,7 +46,7 @@ export class FaqDialog extends IGBDialog {
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
-    const service = new KBService();
+    const service = new KBService(min.core.sequelize);
 
     min.dialogs.add("/faq", [
       async (dc, args) => {

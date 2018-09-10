@@ -269,15 +269,19 @@ export class GBMinService {
         }
       }
       else if (context.activity.type === 'message') {
+
         // Check to see if anyone replied. If not then start echo dialog
+        
         if (context.activity.text === "admin") {
           await dc.begin("/admin");
         }
         else {
           await dc.continue();
         }
+
       }
       else if (context.activity.type === 'event') {
+        
         if (context.activity.name === "whoAmI") {
           await dc.begin("/whoAmI");
         }
@@ -293,8 +297,8 @@ export class GBMinService {
           await dc.begin("/faq");
         }
         else if (context.activity.name === "ask") {
-          dc.begin("/answer", {
-            // TODO: query: context.activity.data,
+          await dc.begin("/answer", {
+            query: (context.activity as any).data,
             fromFaq: true
           });
         }
