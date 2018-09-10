@@ -1,3 +1,4 @@
+import { IGBPackage } from 'botlib';
 /*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
@@ -34,28 +35,194 @@
 
 const logger = require("../../../src/logger");
 const Path = require("path");
-const _ = require("lodash");
 const UrlJoin = require("url-join");
+const Fs = require("fs");
+const WaitUntil = require("wait-until");
+const express = require("express");
 
 import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBImporter } from "./GBImporter";
-import { GBServiceCallback, IGBCoreService, IGBInstance } from "botlib";
+import { IGBCoreService, IGBInstance } from "botlib";
 import { GBConfigService } from "./GBConfigService";
 import { GBError } from "botlib";
 import { GuaribasPackage } from '../models/GBModel';
 
 /** Deployer service for bots, themes, ai and more. */
 export class GBDeployer {
-
   core: IGBCoreService;
 
   importer: GBImporter;
 
   workDir: string = "./work";
 
+  static deployFolder = "deploy";
+
   constructor(core: IGBCoreService, importer: GBImporter) {
     this.core = core;
     this.importer = importer;
+  }
+
+
+  /** 
+   * 
+   * Performs package deployment in all .gbai or default. 
+   * 
+   * */
+  public deployPackages(core: IGBCoreService, server: any, appPackages: Array<IGBPackage>) {
+    let _this = this;
+    return new Promise((resolve, reject) => {
+      try {
+        let totalPackages = 0;
+        let additionalPath = GBConfigService.get("ADDITIONAL_DEPLOY_PATH");
+        let paths = [GBDeployer.deployFolder];
+        if (additionalPath) {
+          paths = paths.concat(additionalPath.toLowerCase().split(";"));
+        }
+        let botPackages = new Array<string>();
+        let gbappPackages = new Array<string>();
+        let generalPackages = new Array<string>();
+
+        function doIt(path) {
+          const isDirectory = source => Fs.lstatSync(source).isDirectory()
+          const getDirectories = source =>
+            Fs.readdirSync(source).map(name => Path.join(source, name)).filter(isDirectory)
+
+          let dirs = getDirectories(path);
+          dirs.forEach(element => {
+            if (element.startsWith('.')) {
+              logger.info(`Ignoring ${element}...`);
+            }
+            else {
+              if (element.endsWith('.gbot')) {
+                botPackages.push(element);
+              }
+              else if (element.endsWith('.gbapp')) {
+                gbappPackages.push(element);
+              }
+              else {
+                generalPackages.push(element);
+              }
+            }
+          });
+
+        }
+
+        logger.info(`Starting looking for packages (.gbot, .gbtheme, .gbkb, .gbapp)...`);
+        paths.forEach(e => {
+          logger.info(`Looking in: ${e}...`);
+          doIt(e);
+        });
+
+        /** Deploys all .gbapp files first. */
+
+        let appPackagesProcessed = 0;
+
+        gbappPackages.forEach(e => {
+          logger.info(`Deploying app: ${e}...`);
+
+          // Skips .gbapp inside deploy folder.
+          if (!e.startsWith('deploy')) {
+            import(e).then(m => {
+              let p = new m.Package();
+              p.loadPackage(core, core.sequelize);
+              appPackages.push(p);
+              logger.info(`App (.gbapp) deployed: ${e}.`);
+              appPackagesProcessed++;
+            }).catch(err => {
+              logger.info(`Error deploying App (.gbapp): ${e}: ${err}`);
+              appPackagesProcessed++;
+            });
+          } else {
+            appPackagesProcessed++;
+          }
+        });
+
+
+        WaitUntil()
+          .interval(1000)
+          .times(10)
+          .condition(function (cb) {
+            logger.info(`Waiting for app package deployment...`);
+            cb(appPackagesProcessed == gbappPackages.length);
+          })
+          .done(function (result) {
+            logger.info(`App Package deployment done.`);
+
+            core.syncDatabaseStructure();
+
+            /** Deploys all .gbot files first. */
+
+            botPackages.forEach(e => {
+              logger.info(`Deploying bot: ${e}...`);
+              _this.deployBot(e);
+              logger.info(`Bot: ${e} deployed...`);
+            });
+
+            /** Then all remaining generalPackages are loaded. */
+
+            generalPackages.forEach(filename => {
+
+              let filenameOnly = Path.basename(filename);
+              logger.info(`Deploying package: ${filename}...`);
+
+              /** Handles apps for general bots - .gbapp must stay out of deploy folder. */
+
+              if (Path.extname(filename) === ".gbapp" || Path.extname(filename) === ".gblib") {
+
+
+                /** Themes for bots. */
+
+              } else if (Path.extname(filename) === ".gbtheme") {
+                server.use("/themes/" + filenameOnly, express.static(filename));
+                logger.info(`Theme (.gbtheme) assets accessible at: ${"/themes/" + filenameOnly}.`);
+
+
+                /** Knowledge base for bots. */
+
+              } else if (Path.extname(filename) === ".gbkb") {
+                server.use(
+                  "/kb/" + filenameOnly + "/subjects",
+                  express.static(UrlJoin(filename, "subjects"))
+                );
+                logger.info(`KB (.gbkb) assets accessible at: ${"/kb/" + filenameOnly}.`);
+              }
+
+              else if (Path.extname(filename) === ".gbui" || filename.endsWith(".git")) {
+                // Already Handled
+              }
+
+              /** Unknown package format. */
+
+              else {
+                let err = new Error(`Package type not handled: ${filename}.`);
+                reject(err);
+              }
+              totalPackages++;
+            });
+
+            WaitUntil()
+              .interval(1000)
+              .times(5)
+              .condition(function (cb) {
+                logger.info(`Waiting for package deployment...`);
+                cb(totalPackages == (generalPackages.length));
+              })
+              .done(function (result) {
+                if (botPackages.length === 0) {
+                  logger.info(`The bot server is running empty: No bot instances have been found, at least one .gbot file must be deployed.`);
+                }
+                else {
+                  logger.info(`Package deployment done.`);
+                }
+                resolve();
+              });
+          });
+
+      } catch (err) {
+        logger.error(err);
+        reject(err)
+      }
+    });
   }
 
   /** 

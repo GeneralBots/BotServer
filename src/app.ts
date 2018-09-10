@@ -107,7 +107,7 @@ export class GBServer {
               p.loadPackage(core, core.sequelize);
             });
 
-          await minService.deployPackages(core, server, appPackages);
+          await deployer.deployPackages(core, server, appPackages);
           logger.info(`The Bot Server is in RUNNING mode...`);
 
           let instance = await minService.buildMin(server, appPackages);

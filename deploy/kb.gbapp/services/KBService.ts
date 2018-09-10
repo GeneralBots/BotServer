@@ -435,7 +435,7 @@ export class KBService {
           answerId: answer1.answerId,
           packageId: packageId
         });
-        logger.info(`Question created: ${question.questionId}`)
+
         return Promise.resolve(question)
 
       } else {
