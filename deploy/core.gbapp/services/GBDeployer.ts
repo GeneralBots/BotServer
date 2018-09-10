@@ -275,7 +275,7 @@ export class GBDeployer {
 
       // PACKAGE: Put in package logic.
       case ".gbkb":
-        let service = new KBService();
+        let service = new KBService(this.core.sequelize);
         return service.deployKb(this.core, this, localPath);
 
       case ".gbui":
@@ -311,7 +311,7 @@ export class GBDeployer {
         break;
 
       case ".gbkb":
-        let service = new KBService();
+        let service = new KBService(this.core.sequelize);
         return service.undeployKbFromStorage(instance, p.packageId);
 
       case ".gbui":

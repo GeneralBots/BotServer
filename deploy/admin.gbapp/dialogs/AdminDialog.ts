@@ -82,7 +82,7 @@ export class AdminDialog extends IGBDialog {
     )
     dc.context.sendActivity("Rebuilding index...")
     await search.deleteIndex()
-    let kbService = new KBService()
+    let kbService = new KBService(min.core.sequelize)
     await search.createIndex(kbService.getSearchSchema(min.instance.searchIndex), "gb")
     await dc.context.sendActivity("Index rebuilt.")
   }

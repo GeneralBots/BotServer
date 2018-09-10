@@ -443,7 +443,6 @@ export class KBService {
 
         return Promise.resolve(null)
       }
-
     })
   }
 
@@ -462,7 +461,7 @@ export class KBService {
         "A resposta está na tela...",
         "Veja a resposta na tela..."
       ]
-
+      
       await dc.context.sendActivity(messages[0]) // TODO: Handle rnd.
       var html = answer.content
 
