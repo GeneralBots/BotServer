@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,21 +30,21 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-const UrlJoin = require("url-join");
+const UrlJoin = require("url-join")
 
 
-import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib";
+import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib"
 
-import { Sequelize } from "sequelize-typescript";
-import { WhatsappDirectLine } from "./services/WhatsappDirectLine";
+import { Sequelize } from "sequelize-typescript"
+import { WhatsappDirectLine } from "./services/WhatsappDirectLine"
 
 
 export class GBWhatsappPackage implements IGBPackage {
 
-    sysPackages: IGBPackage[] = null;
-    channel: WhatsappDirectLine;
+    sysPackages: IGBPackage[] = null
+    channel: WhatsappDirectLine
 
     loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     }
@@ -59,7 +59,7 @@ export class GBWhatsappPackage implements IGBPackage {
 
         if (min.instance.whatsappBotKey != "") {
             this.channel = new WhatsappDirectLine(min.botId, min.instance.whatsappBotKey, min.instance.whatsappServiceKey,
-                min.instance.whatsappServiceNumber, min.instance.whatsappServiceUrl, min.instance.whatsappServiceWebhookUrl);
+                min.instance.whatsappServiceNumber, min.instance.whatsappServiceUrl, min.instance.whatsappServiceWebhookUrl)
         }
     }
 

@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -505,7 +505,7 @@ export class KBService {
     await this.importSubjectFile(
       packageStorage.packageId,
       UrlJoin(localPath, "subjects.json"),
-      instance);
+      instance)
 
     // Import all .tsv files in the tabular directory.
 

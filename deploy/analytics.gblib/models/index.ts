@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,14 +30,14 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
 import {
   DataTypes,
   DataTypeUUIDv4,
   DataTypeDate,
   DataTypeDecimal
-} from "sequelize";
+} from "sequelize"
 
 import {
   Sequelize,
@@ -55,11 +55,11 @@ import {
   IsUUID,
   PrimaryKey,
   AutoIncrement
-} from "sequelize-typescript";
+} from "sequelize-typescript"
 
-import { GuaribasSubject } from "../../kb.gbapp/models";
-import { GuaribasUser } from "../../security.gblib/models";
-import { GuaribasChannel, GuaribasInstance } from "../../core.gbapp/models/GBModel";
+import { GuaribasSubject } from "../../kb.gbapp/models"
+import { GuaribasUser } from "../../security.gblib/models"
+import { GuaribasChannel, GuaribasInstance } from "../../core.gbapp/models/GBModel"
 
 @Table
 export class GuaribasConversation extends Model<GuaribasConversation> {
@@ -67,40 +67,40 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  conversationId: number;
+  conversationId: number
 
   @ForeignKey(() => GuaribasSubject)
   @Column
-  startSubjectId: number;
+  startSubjectId: number
 
   @BelongsTo(() => GuaribasSubject)
-  startSubject: GuaribasSubject;
+  startSubject: GuaribasSubject
 
   @ForeignKey(() => GuaribasChannel)
   @Column
-  channelId: string;
+  channelId: string
 
-  @Column rateDate: Date;
+  @Column rateDate: Date
 
   @Column(DataType.FLOAT)
   @Column
-  rate: number;
+  rate: number
 
   @Column
   @CreatedAt
-  createdAt: Date;
+  createdAt: Date
 
-  @Column text: string;
+  @Column text: string
 
   @HasMany(() => GuaribasConversationMessage)
-  conversationMessage: GuaribasConversationMessage[];
+  conversationMessage: GuaribasConversationMessage[]
 
   @ForeignKey(() => GuaribasUser)
   @Column
-  startedByUserId: number;
+  startedByUserId: number
 
   @BelongsTo(() => GuaribasUser)
-  startedBy: GuaribasUser;
+  startedBy: GuaribasUser
 }
 
 @Table
@@ -109,38 +109,38 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
   @PrimaryKey
   @AutoIncrement
   @Column
-  conversationMessageId: number;
+  conversationMessageId: number
 
   @ForeignKey(() => GuaribasSubject)
   @Column
-  subjectId: number;
+  subjectId: number
 
   @Column(DataType.TEXT)
-  content: string;
+  content: string
 
   @Column
   @CreatedAt
-  createdAt: Date;
+  createdAt: Date
 
   @Column
   @UpdatedAt
-  updatedAt: Date;
+  updatedAt: Date
 
   @ForeignKey(() => GuaribasConversation)
   @Column
-  conversationId: number;
+  conversationId: number
 
   @BelongsTo(() => GuaribasConversation)
-  conversation: GuaribasConversation;
+  conversation: GuaribasConversation
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number;
+  instanceId: number
 
   @ForeignKey(() => GuaribasUser)
   @Column
-  userId: number;
+  userId: number
 
   @BelongsTo(() => GuaribasUser)
-  user: GuaribasUser;
+  user: GuaribasUser
 }

@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,29 +30,29 @@
 |                                                                             |
 \*****************************************************************************/
 
-const Path = require("path");
-const Fs = require("fs");
-const _ = require("lodash");
-const Parse = require("csv-parse");
-const Async = require("async");
-const UrlJoin = require("url-join");
-const Walk = require("fs-walk");
-const logger = require("../../../src/logger");
-const Swagger = require('swagger-client');
-const rp = require('request-promise');
-import { GBService } from "botlib";
+const Path = require("path")
+const Fs = require("fs")
+const _ = require("lodash")
+const Parse = require("csv-parse")
+const Async = require("async")
+const UrlJoin = require("url-join")
+const Walk = require("fs-walk")
+const logger = require("../../../src/logger")
+const Swagger = require('swagger-client')
+const rp = require('request-promise')
+import { GBService } from "botlib"
 
 export class ConsoleDirectLine extends GBService {
 
-    pollInterval = 1000;
-    directLineSecret = '';
-    directLineClientName = 'DirectLineClient';
-    directLineSpecUrl = 'https://docs.botframework.com/en-us/restapi/directline3/swagger.json';
+    pollInterval = 1000
+    directLineSecret = ''
+    directLineClientName = 'DirectLineClient'
+    directLineSpecUrl = 'https://docs.botframework.com/en-us/restapi/directline3/swagger.json'
 
     constructor(directLineSecret) {
-        super();
+        super()
 
-        this.directLineSecret = directLineSecret;
+        this.directLineSecret = directLineSecret
 
 
         // TODO: Migrate to Swagger 3.
@@ -61,45 +61,45 @@ export class ConsoleDirectLine extends GBService {
                 return new Swagger({
                     spec: JSON.parse(spec.trim()),
                     usePromise: true
-                });
+                })
             })
             .then(function (client) {
                 client.clientAuthorizations.add('AuthorizationBotConnector',
-                    new Swagger.ApiKeyAuthorization('Authorization', 'Bearer ' + directLineSecret, 'header'));
-                return client;
+                    new Swagger.ApiKeyAuthorization('Authorization', 'Bearer ' + directLineSecret, 'header'))
+                return client
             })
             .catch(function (err) {
-                console.error('Error initializing DirectLine client', err);
-            });
+                console.error('Error initializing DirectLine client', err)
+            })
 
         // TODO: Remove *this* issue.
-        let _this_ = this;
+        let _this_ = this
         directLineClient.then((client)=> {
             client.Conversations.Conversations_StartConversation()
                 .then(function (response) {
-                    return response.obj.conversationId;
+                    return response.obj.conversationId
                 })
                 .then(function (conversationId) {
-                    _this_.sendMessagesFromConsole(client, conversationId);
-                    _this_.pollMessages(client, conversationId);
+                    _this_.sendMessagesFromConsole(client, conversationId)
+                    _this_.pollMessages(client, conversationId)
                 })
                 .catch(function (err) {
-                    console.error('Error starting conversation', err);
-                });
-        });
+                    console.error('Error starting conversation', err)
+                })
+        })
     }
 
     sendMessagesFromConsole(client, conversationId) {
-        let _this_ = this;
-        process.stdin.resume();
-        var stdin = process.stdin;
-        process.stdout.write('Command> ');
+        let _this_ = this
+        process.stdin.resume()
+        var stdin = process.stdin
+        process.stdout.write('Command> ')
         stdin.addListener('data', function (e) {
-            var input = e.toString().trim();
+            var input = e.toString().trim()
             if (input) {
                 // exit
                 if (input.toLowerCase() === 'exit') {
-                    return process.exit();
+                    return process.exit()
                 }
 
                 client.Conversations.Conversations_PostActivity(
@@ -115,80 +115,80 @@ export class ConsoleDirectLine extends GBService {
                             }
                         }
                     }).catch(function (err) {
-                        console.error('Error sending message:', err);
-                    });
+                        console.error('Error sending message:', err)
+                    })
 
-                process.stdout.write('Command> ');
+                process.stdout.write('Command> ')
             }
-        });
+        })
     }
 
     /** TBD: Poll Messages from conversation using DirectLine client */
     pollMessages(client, conversationId) {
-        let _this_ = this;
-        console.log('Starting polling message for conversationId: ' + conversationId);
-        var watermark = null;
+        let _this_ = this
+        console.log('Starting polling message for conversationId: ' + conversationId)
+        var watermark = null
         setInterval(function () {
             client.Conversations.Conversations_GetActivities({ conversationId: conversationId, watermark: watermark })
                 .then(function (response) {
-                    watermark = response.obj.watermark;                                 // use watermark so subsequent requests skip old messages
-                    return response.obj.activities;
+                    watermark = response.obj.watermark                                 // use watermark so subsequent requests skip old messages
+                    return response.obj.activities
                 })
-                .then(_this_.printMessages, _this_.directLineClientName);
-        }, this.pollInterval);
+                .then(_this_.printMessages, _this_.directLineClientName)
+        }, this.pollInterval)
     }
 
     printMessages(activities, directLineClientName) {
 
         if (activities && activities.length) {
             // ignore own messages
-            activities = activities.filter(function (m) { return m.from.id !== directLineClientName });
+            activities = activities.filter(function (m) { return m.from.id !== directLineClientName })
 
             if (activities.length) {
 
                 // print other messages
                 activities.forEach(activity => {
-                    console.log(activity.text);
-                }, this);
+                    console.log(activity.text)
+                }, this)
 
-                process.stdout.write('Command> ');
+                process.stdout.write('Command> ')
             }
         }
     }
 
     printMessage(activity) {
         if (activity.text) {
-            console.log(activity.text);
+            console.log(activity.text)
         }
 
         if (activity.attachments) {
             activity.attachments.forEach(function (attachment) {
                 switch (attachment.contentType) {
                     case "application/vnd.microsoft.card.hero":
-                        this.renderHeroCard(attachment);
-                        break;
+                        this.renderHeroCard(attachment)
+                        break
 
                     case "image/png":
-                        console.log('Opening the requested image ' + attachment.contentUrl);
-                        open(attachment.contentUrl);
-                        break;
+                        console.log('Opening the requested image ' + attachment.contentUrl)
+                        open(attachment.contentUrl)
+                        break
                 }
-            });
+            })
         }
     }
 
     renderHeroCard(attachment) {
-        var width = 70;
+        var width = 70
         var contentLine = function (content) {
             return ' '.repeat((width - content.length) / 2) +
                 content +
-                ' '.repeat((width - content.length) / 2);
+                ' '.repeat((width - content.length) / 2)
         }
 
-        console.log('/' + '*'.repeat(width + 1));
-        console.log('*' + contentLine(attachment.content.title) + '*');
-        console.log('*' + ' '.repeat(width) + '*');
-        console.log('*' + contentLine(attachment.content.text) + '*');
-        console.log('*'.repeat(width + 1) + '/');
+        console.log('/' + '*'.repeat(width + 1))
+        console.log('*' + contentLine(attachment.content.title) + '*')
+        console.log('*' + ' '.repeat(width) + '*')
+        console.log('*' + contentLine(attachment.content.text) + '*')
+        console.log('*'.repeat(width + 1) + '/')
     }
 }

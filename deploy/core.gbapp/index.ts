@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,20 +30,20 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-const UrlJoin = require("url-join");
+const UrlJoin = require("url-join")
 
-import { GBMinInstance, IGBPackage } from "botlib";
+import { GBMinInstance, IGBPackage } from "botlib"
 
-import { WelcomeDialog } from "./dialogs/WelcomeDialog";
-import { WhoAmIDialog } from "./dialogs/WhoAmIDialog";
-import { IGBCoreService} from "botlib";
-import { Sequelize } from "sequelize-typescript";
-import { GuaribasInstance, GuaribasException, GuaribasPackage, GuaribasChannel } from "./models/GBModel";
+import { WelcomeDialog } from "./dialogs/WelcomeDialog"
+import { WhoAmIDialog } from "./dialogs/WhoAmIDialog"
+import { IGBCoreService} from "botlib"
+import { Sequelize } from "sequelize-typescript"
+import { GuaribasInstance, GuaribasException, GuaribasPackage, GuaribasChannel } from "./models/GBModel"
 
 export class GBCorePackage implements IGBPackage {
-  sysPackages: IGBPackage[] = null;
+  sysPackages: IGBPackage[] = null
   
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
@@ -51,7 +51,7 @@ export class GBCorePackage implements IGBPackage {
       GuaribasPackage,
       GuaribasChannel,
       GuaribasException,
-    ]);
+    ])
   }
 
   unloadPackage(core: IGBCoreService): void {
@@ -59,8 +59,8 @@ export class GBCorePackage implements IGBPackage {
   }
 
   loadBot(min: GBMinInstance): void {
-    WelcomeDialog.setup(min.bot, min);
-    WhoAmIDialog.setup(min.bot, min);
+    WelcomeDialog.setup(min.bot, min)
+    WhoAmIDialog.setup(min.bot, min)
   }
 
   unloadBot(min: GBMinInstance): void {

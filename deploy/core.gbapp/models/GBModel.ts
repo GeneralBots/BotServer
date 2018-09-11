@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,14 +30,14 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
 import {
   DataTypes,
   DataTypeUUIDv4,
   DataTypeDate,
   DataTypeDecimal
-} from "sequelize";
+} from "sequelize"
 
 import {
   Sequelize,
@@ -54,9 +54,9 @@ import {
   DataType,
   PrimaryKey,
   AutoIncrement
-} from "sequelize-typescript";
+} from "sequelize-typescript"
 
-import { IGBInstance } from "botlib";
+import { IGBInstance } from "botlib"
 
 @Table
 export class GuaribasInstance extends Model<GuaribasInstance> implements IGBInstance {
@@ -64,90 +64,90 @@ export class GuaribasInstance extends Model<GuaribasInstance> implements IGBInst
   @PrimaryKey
   @AutoIncrement
   @Column
-  instanceId: number;
+  instanceId: number
 
-  @Column applicationPrincipal: string;
+  @Column applicationPrincipal: string
 
   @Column
-  whoAmIVideo: string;
+  whoAmIVideo: string
 
-  @Column botId: string;
+  @Column botId: string
 
-  @Column title: string;
+  @Column title: string
 
-  @Column description: string;
+  @Column description: string
 
-  @Column version: string;
+  @Column version: string
 
-  @Column enabledAdmin: boolean;
+  @Column enabledAdmin: boolean
 
   /* Services section on bot.json */
 
-  @Column engineName: string;
+  @Column engineName: string
 
-  @Column marketplaceId: string;
+  @Column marketplaceId: string
 
-  @Column textAnalyticsKey: string;
+  @Column textAnalyticsKey: string
 
-  @Column textAnalyticsServerUrl: string;
+  @Column textAnalyticsServerUrl: string
 
-  @Column marketplacePassword: string;
+  @Column marketplacePassword: string
 
-  @Column webchatKey: string;
+  @Column webchatKey: string
 
-  @Column whatsappBotKey: string;
+  @Column whatsappBotKey: string
 
-  @Column whatsappServiceKey: string;
+  @Column whatsappServiceKey: string
 
-  @Column whatsappServiceNumber: string;
+  @Column whatsappServiceNumber: string
 
-  @Column whatsappServiceUrl: string;
+  @Column whatsappServiceUrl: string
 
-  @Column whatsappServiceWebhookUrl: string;
+  @Column whatsappServiceWebhookUrl: string
 
-  @Column speechKey: string;
+  @Column speechKey: string
 
-  @Column spellcheckerKey: string;
+  @Column spellcheckerKey: string
 
-  @Column theme: string;
+  @Column theme: string
 
-  @Column ui: string;
+  @Column ui: string
 
-  @Column kb: string;
+  @Column kb: string
   
   @Column
-  nlpAppId: string;
+  nlpAppId: string
   
   @Column
-  nlpSubscriptionKey: string;
+  nlpSubscriptionKey: string
   
   @Column
   @Column({ type: DataType.STRING(512) })
-  nlpServerUrl: string;
+  nlpServerUrl: string
 
-  @Column searchHost: string;
+  @Column searchHost: string
 
-  @Column searchKey: string;
+  @Column searchKey: string
 
-  @Column searchIndex: string;
+  @Column searchIndex: string
 
-  @Column searchIndexer: string;
+  @Column searchIndexer: string
 
   /* Settings section of bot.json */
 
-  @Column(DataType.FLOAT) nlpVsSearch: number;
+  @Column(DataType.FLOAT) nlpVsSearch: number
 
-  @Column(DataType.FLOAT) searchScore: number;
+  @Column(DataType.FLOAT) searchScore: number
 
-  @Column(DataType.FLOAT) nlpScore: number;
+  @Column(DataType.FLOAT) nlpScore: number
 
   @Column
   @CreatedAt
-  createdAt: Date;
+  createdAt: Date
 
   @Column
   @UpdatedAt
-  updatedAt: Date;
+  updatedAt: Date
 }
 
 @Table
@@ -156,25 +156,25 @@ export class GuaribasPackage extends Model<GuaribasPackage> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  packageId: number;
+  packageId: number
 
   @Column
-  packageName: string;
+  packageName: string
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number;
+  instanceId: number
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance;
+  instance: GuaribasInstance
 
   @Column
   @CreatedAt
-  createdAt: Date;
+  createdAt: Date
 
   @Column
   @UpdatedAt
-  updatedAt: Date;
+  updatedAt: Date
 }
 
 @Table
@@ -183,17 +183,17 @@ export class GuaribasChannel extends Model<GuaribasChannel> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  channelId: number;
+  channelId: number
 
-  @Column title: string;
+  @Column title: string
 
   @Column
   @CreatedAt
-  createdAt: Date;
+  createdAt: Date
 
   @Column
   @UpdatedAt
-  updatedAt: Date;
+  updatedAt: Date
 }
 
 @Table
@@ -202,22 +202,22 @@ export class GuaribasException extends Model<GuaribasException> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  exceptionId: number;
+  exceptionId: number
 
-  @Column message: string;
+  @Column message: string
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number;
+  instanceId: number
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance;
+  instance: GuaribasInstance
 
   @Column
   @CreatedAt
-  createdAt: Date;
+  createdAt: Date
 
   @Column
   @UpdatedAt
-  updatedAt: Date;
+  updatedAt: Date
 }

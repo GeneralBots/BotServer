@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,14 +30,14 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-const WaitUntil = require("wait-until");
-import { GBCoreService } from "../services/GBCoreService";
-import { IGBDialog } from "botlib";
-import { GBConversationalService } from "../services/GBConversationalService";
-import { GBMinInstance } from "botlib";
-import { BotAdapter } from "botbuilder";
+const WaitUntil = require("wait-until")
+import { GBCoreService } from "../services/GBCoreService"
+import { IGBDialog } from "botlib"
+import { GBConversationalService } from "../services/GBConversationalService"
+import { GBMinInstance } from "botlib"
+import { BotAdapter } from "botbuilder"
 
 export class WelcomeDialog extends IGBDialog {
   /**
@@ -52,24 +52,24 @@ export class WelcomeDialog extends IGBDialog {
 
       async (dc, args) => {
 
-        const user = min.userState.get(dc.context);
+        const user = min.userState.get(dc.context)
 
         if (!user.once) {
-          user.once = true;
-          var a = new Date();
-          const date = a.getHours();
+          user.once = true
+          var a = new Date()
+          const date = a.getHours()
           var msg =
-            date < 12 ? "bom dia" : date < 18 ? "boa tarde" : "boa noite";
+            date < 12 ? "bom dia" : date < 18 ? "boa tarde" : "boa noite"
 
-          let messages = [`Oi, ${msg}.`, `Oi!`, `Olá, ${msg}`, `Olá!`];
-          await dc.context.sendActivity(messages[0]);
+          let messages = [`Oi, ${msg}.`, `Oi!`, `Olá, ${msg}`, `Olá!`]
+          await dc.context.sendActivity(messages[0])
 
           if (dc.context.activity && dc.context.activity.type == "message" &&
             dc.context.activity.text != "") {
-            await dc.replace("/answer", { query: dc.context.activity.text });
+            await dc.replace("/answer", { query: dc.context.activity.text })
           }
         }
       }
-    ]);
+    ])
   }
 }

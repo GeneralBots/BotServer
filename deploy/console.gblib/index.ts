@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,18 +30,18 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-const UrlJoin = require("url-join");
+const UrlJoin = require("url-join")
 
-import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib";
+import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib"
 
-import { Sequelize } from 'sequelize-typescript';
-import { ConsoleDirectLine } from "./services/ConsoleDirectLine";
+import { Sequelize } from 'sequelize-typescript'
+import { ConsoleDirectLine } from "./services/ConsoleDirectLine"
 
 export class GBConsolePackage implements IGBPackage {
-  sysPackages: IGBPackage[] = null;
-  channel: ConsoleDirectLine;
+  sysPackages: IGBPackage[] = null
+  channel: ConsoleDirectLine
 
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
   }
@@ -50,7 +50,7 @@ export class GBConsolePackage implements IGBPackage {
   }
 
   loadBot(min: GBMinInstance): void {
-    this.channel = new ConsoleDirectLine(min.instance.webchatKey);
+    this.channel = new ConsoleDirectLine(min.instance.webchatKey)
   }
 
   unloadBot(min: GBMinInstance): void {

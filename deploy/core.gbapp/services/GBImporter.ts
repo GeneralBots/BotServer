@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -31,20 +31,20 @@
 \*****************************************************************************/
 
 
-"use strict";
+"use strict"
 
-const UrlJoin = require("url-join");
-import Fs = require("fs");
-import Path = require("path");
-import { IGBCoreService, IGBInstance } from "botlib";
-import { SecService } from "../../security.gblib/services/SecService";
-import { GuaribasInstance } from "../models/GBModel";
+const UrlJoin = require("url-join")
+import Fs = require("fs")
+import Path = require("path")
+import { IGBCoreService, IGBInstance } from "botlib"
+import { SecService } from "../../security.gblib/services/SecService"
+import { GuaribasInstance } from "../models/GBModel"
 
 export class GBImporter {
-  core: IGBCoreService;
+  core: IGBCoreService
 
   constructor(core: IGBCoreService) {
-    this.core = core;
+    this.core = core
   }
 
   async importIfNotExistsBotPackage(
@@ -53,15 +53,15 @@ export class GBImporter {
 
     let packageJson = JSON.parse(
       Fs.readFileSync(UrlJoin(localPath, "package.json"), "utf8")
-    );
+    )
 
-    let botId = packageJson.botId;
+    let botId = packageJson.botId
 
-    let instance = await this.core.loadInstance(botId);
+    let instance = await this.core.loadInstance(botId)
     if (instance) {
-      return Promise.resolve(instance);
+      return Promise.resolve(instance)
     } else {
-      return this.createInstanceInternal(packageName, localPath, packageJson);
+      return this.createInstanceInternal(packageName, localPath, packageJson)
     }
   }
 
@@ -72,19 +72,19 @@ export class GBImporter {
   ) {
     const settings = JSON.parse(
       Fs.readFileSync(UrlJoin(localPath, "settings.json"), "utf8")
-    );
+    )
     const servicesJson = JSON.parse(
       Fs.readFileSync(UrlJoin(localPath, "services.json"), "utf8")
-    );
+    )
 
-    packageJson = Object.assign(packageJson, settings, servicesJson);
+    packageJson = Object.assign(packageJson, settings, servicesJson)
 
     GuaribasInstance.create(packageJson).then((instance: IGBInstance) => {
 
-      let service = new SecService();
-      // TODO: service.importSecurityFile(localPath, instance);
+      let service = new SecService()
+      // TODO: service.importSecurityFile(localPath, instance)
 
-      Promise.resolve(instance);
-    });
+      Promise.resolve(instance)
+    })
   }
 }

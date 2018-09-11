@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,17 +30,17 @@
 |                                                                             |
 \*****************************************************************************/
 
-'use strict';
+'use strict'
 
-const UrlJoin = require('url-join');
+const UrlJoin = require('url-join')
 
-import { AdminDialog } from './dialogs/AdminDialog';
-import { GBMinInstance, IGBPackage, IGBCoreService } from 'botlib';
+import { AdminDialog } from './dialogs/AdminDialog'
+import { GBMinInstance, IGBPackage, IGBCoreService } from 'botlib'
 
-import { Sequelize } from 'sequelize-typescript';
+import { Sequelize } from 'sequelize-typescript'
 
 export class GBAdminPackage implements IGBPackage {
-  sysPackages: IGBPackage[] = null;
+  sysPackages: IGBPackage[] = null
 
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
   }
@@ -49,7 +49,7 @@ export class GBAdminPackage implements IGBPackage {
   }
 
   loadBot(min: GBMinInstance): void {
-    AdminDialog.setup(min.bot, min);
+    AdminDialog.setup(min.bot, min)
   }
 
   unloadBot(min: GBMinInstance): void {

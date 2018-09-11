@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,8 +30,8 @@
 |                                                                             |
 \*****************************************************************************/
 
-import { GuaribasUser } from "../../security.gblib/models";
-import { GuaribasConversation, GuaribasConversationMessage } from "../models";
+import { GuaribasUser } from "../../security.gblib/models"
+import { GuaribasConversation, GuaribasConversationMessage } from "../models"
 
 export class AnalyticsService {
   async createConversation(
@@ -39,13 +39,13 @@ export class AnalyticsService {
   ): Promise<GuaribasConversation> {
     return new Promise<GuaribasConversation>(
       (resolve, reject) => {
-        let conversation = new GuaribasConversation();
-        conversation.startedBy = user;
-        conversation.startedByUserId = user.userId;
+        let conversation = new GuaribasConversation()
+        conversation.startedBy = user
+        conversation.startedByUserId = user.userId
         conversation.save().then((value: GuaribasConversation) => {
-          resolve(value);
-        });
-      });
+          resolve(value)
+        })
+      })
   }
 
   createMessage(
@@ -55,13 +55,13 @@ export class AnalyticsService {
   ): Promise<GuaribasConversationMessage> {
     return new Promise<GuaribasConversationMessage>(
       (resolve, reject) => {
-        let message = GuaribasConversationMessage.build();
-        message.conversation = conversation;
-        message.user = user;
-        message.content = content;
+        let message = GuaribasConversationMessage.build()
+        message.conversation = conversation
+        message.user = user
+        message.content = content
         message.save().then((value: GuaribasConversationMessage) => {
-          resolve(value);
-        });
-      });
+          resolve(value)
+        })
+      })
   }
 }

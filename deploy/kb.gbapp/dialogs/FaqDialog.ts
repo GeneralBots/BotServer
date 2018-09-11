@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,12 +30,12 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-import { KBService } from './../services/KBService';
-import { IGBDialog } from "botlib";
-import { BotAdapter } from "botbuilder";
-import { GBMinInstance } from "botlib";
+import { KBService } from './../services/KBService'
+import { IGBDialog } from "botlib"
+import { BotAdapter } from "botbuilder"
+import { GBMinInstance } from "botlib"
 
 export class FaqDialog extends IGBDialog {
   /**
@@ -46,11 +46,11 @@ export class FaqDialog extends IGBDialog {
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
-    const service = new KBService(min.core.sequelize);
+    const service = new KBService(min.core.sequelize)
 
     min.dialogs.add("/faq", [
       async (dc, args) => {
-        let data = await service.getFaqBySubjectArray("faq", null);
+        let data = await service.getFaqBySubjectArray("faq", null)
         if (data) {
           await min.conversationalService.sendEvent(dc, "play", {
             playerType: "bullet",
@@ -63,10 +63,10 @@ export class FaqDialog extends IGBDialog {
             "Veja a lista que eu preparei logo aí na tela..."
           ]
 
-          await dc.context.sendActivity(messages[0]); // TODO: RND messages.
-          await dc.endAll();
+          await dc.context.sendActivity(messages[0]) // TODO: RND messages.
+          await dc.endAll()
         }
       }
-    ]);
+    ])
   }
 }

@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -80,16 +80,16 @@ export class AskDialog extends IGBDialog {
           switch(locale)
           {
             case "pt":
-              await dc.context.sendActivity("OK, mundando de idioma para o Português...");
-              dc.context.activity.locale = "pt-BR";
-            break;
+              await dc.context.sendActivity("OK, mundando de idioma para o Português...")
+              dc.context.activity.locale = "pt-BR"
+            break
             case "en":
-              await dc.context.sendActivity("OK, changing language to English...");
-              dc.context.activity.locale = "en-US";
-            break;
+              await dc.context.sendActivity("OK, changing language to English...")
+              dc.context.activity.locale = "en-US"
+            break
             default:
-              await dc.context.sendActivity(`Unknown language: ${locale}`);
-            break;
+              await dc.context.sendActivity(`Unknown language: ${locale}`)
+            break
 
           }
           

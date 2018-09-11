@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,8 +30,8 @@
 |                                                                             |
 \*****************************************************************************/
 
-import { GuaribasQuestionAlternate } from '../models';
-import { GuaribasConversation } from '../../analytics.gblib/models';
+import { GuaribasQuestionAlternate } from '../models'
+import { GuaribasConversation } from '../../analytics.gblib/models'
 
 export class CSService {
 
@@ -61,7 +61,7 @@ export class CSService {
     conversation: GuaribasConversation,
     rate: number
   ): Promise<GuaribasConversation> {
-    conversation.rate = rate;
+    conversation.rate = rate
     return conversation.save()
   }
 }

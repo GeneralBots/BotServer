@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,14 +30,14 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
 import {
   DataTypes,
   DataTypeUUIDv4,
   DataTypeDate,
   DataTypeDecimal
-} from "sequelize";
+} from "sequelize"
 
 import {
   Sequelize,
@@ -55,9 +55,9 @@ import {
   IsUUID,
   PrimaryKey,
   AutoIncrement
-} from "sequelize-typescript";
+} from "sequelize-typescript"
 
-import { GuaribasInstance } from "../../core.gbapp/models/GBModel";
+import { GuaribasInstance } from "../../core.gbapp/models/GBModel"
 
 @Table
 export class GuaribasQuestionAlternate extends Model<GuaribasQuestionAlternate> {
@@ -65,16 +65,16 @@ export class GuaribasQuestionAlternate extends Model<GuaribasQuestionAlternate> 
   @PrimaryKey
   @AutoIncrement
   @Column
-  quickAnswerId: number;
+  quickAnswerId: number
 
-  @Column questionTyped: string;
+  @Column questionTyped: string
 
-  @Column questionText: string;
+  @Column questionText: string
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number;
+  instanceId: number
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance;
+  instance: GuaribasInstance
 }

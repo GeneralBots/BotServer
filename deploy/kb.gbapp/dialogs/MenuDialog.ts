@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,15 +30,15 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-const UrlJoin = require("url-join");
+const UrlJoin = require("url-join")
 
-import { BotAdapter, CardFactory, MessageFactory } from "botbuilder";
-import { IGBDialog } from "botlib";
-import { GBMinInstance } from "botlib";
-import { GuaribasSubject } from '../models';
-import { KBService } from "../services/KBService";
+import { BotAdapter, CardFactory, MessageFactory } from "botbuilder"
+import { IGBDialog } from "botlib"
+import { GBMinInstance } from "botlib"
+import { GuaribasSubject } from '../models'
+import { KBService } from "../services/KBService"
 
 export class MenuDialog extends IGBDialog {
 
@@ -50,66 +50,66 @@ export class MenuDialog extends IGBDialog {
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
-    var service = new KBService(min.core.sequelize);
+    var service = new KBService(min.core.sequelize)
 
     bot
     min.dialogs.add("/menu", [
       async (dc, args) => {
-        var rootSubjectId = null;
+        var rootSubjectId = null
 
-        // var msg = dc.message; TODO: message from Where in V4?
+        // var msg = dc.message TODO: message from Where in V4?
         // if (msg.attachments && msg.attachments.length > 0) {
-        //   var attachment = msg.attachments[0];         
+        //   var attachment = msg.attachments[0]         
         // }
 
         if (args && args.data) {
-          var subject = JSON.parse(args.data); // ?
+          var subject = JSON.parse(args.data) // ?
 
           // If there is a shortcut specified as subject destination, go there.
 
           if (subject.to) {
-            let dialog = subject.to.split(":")[1];
-            await dc.replace("/" + dialog);
-            await dc.end();
-            return;
+            let dialog = subject.to.split(":")[1]
+            await dc.replace("/" + dialog)
+            await dc.end()
+            return
           }
-          const user = min.userState.get(dc.context);
-          user.subjects.push(subject);
-          rootSubjectId = subject.subjectId;
+          const user = min.userState.get(dc.context)
+          user.subjects.push(subject)
+          rootSubjectId = subject.subjectId
 
           if (user.subjects.length > 0) {
-            let data = await service.getFaqBySubjectArray("menu", user.subjects);
+            let data = await service.getFaqBySubjectArray("menu", user.subjects)
             await min.conversationalService.sendEvent(dc, "play", {
               playerType: "bullet",
               data: data.slice(0, 6)
-            });
+            })
 
           }
         } else {
-          const user = min.userState.get(dc.context);
-          user.subjects = [];
+          const user = min.userState.get(dc.context)
+          user.subjects = []
 
           let messages = [
             "Aqui estão algumas categorias de assuntos...",
             "Selecionando o assunto você pode me ajudar a encontrar a resposta certa...",
             "Você pode selecionar algum dos assuntos abaixo e perguntar algo..."
-          ];
-          await dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
-          user.isAsking = false;
+          ]
+          await dc.context.sendActivity(messages[0]) // TODO: Handle rnd.
+          user.isAsking = false
         }
 
-        const msg = MessageFactory.text('');
-        var attachments = [];
+        const msg = MessageFactory.text('')
+        var attachments = []
 
         let data = await service.getSubjectItems(
           min.instance.instanceId,
-          rootSubjectId);
+          rootSubjectId)
 
-        msg.attachmentLayout = 'carousel';
+        msg.attachmentLayout = 'carousel'
 
         data.forEach(function (item: GuaribasSubject) {
 
-          var subject = item;
+          var subject = item
           var card = CardFactory.heroCard(
             subject.title,
             CardFactory.images([UrlJoin(
@@ -127,39 +127,39 @@ export class MenuDialog extends IGBDialog {
                   subjectId: subject.subjectId,
                   to: subject.to
                 })
-              }]));
+              }]))
 
-          attachments.push(card);
+          attachments.push(card)
 
-        });
+        })
 
         if (attachments.length == 0) {
-          const user = min.userState.get(dc.context);
+          const user = min.userState.get(dc.context)
           if (user.subjects && user.subjects.length > 0) {
             await dc.context.sendActivity(
               `Vamos pesquisar sobre ${KBService.getFormattedSubjectItems(
                 user.subjects
               )}?`
-            );
+            )
           }
 
-          await dc.replace("/ask", {});
+          await dc.replace("/ask", {})
         } else {
-          msg.attachments = attachments;
-          await dc.context.sendActivity(msg);
+          msg.attachments = attachments
+          await dc.context.sendActivity(msg)
         }
 
-        const user = min.userState.get(dc.context);
-        user.isAsking = true;
+        const user = min.userState.get(dc.context)
+        user.isAsking = true
       },
       async (dc, value) => {
-        var text = value;
+        var text = value
         if (text === "no" || text === "n") { // TODO: Migrate to a common.
-          await dc.replace("/feedback");
+          await dc.replace("/feedback")
         } else {
-          await dc.replace("/ask");
+          await dc.replace("/ask")
         }
       }
-    ]);
+    ])
   }
 }

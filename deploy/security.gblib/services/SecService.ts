@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,45 +30,45 @@
 |                                                                             |
 \*****************************************************************************/
 
-const Path = require("path");
-const Fs = require("fs");
-const _ = require("lodash");
-const Parse = require("csv-parse");
-const Async = require("async");
-const UrlJoin = require("url-join");
-const Walk = require("fs-walk");
-const logger = require("../../../src/logger");
+const Path = require("path")
+const Fs = require("fs")
+const _ = require("lodash")
+const Parse = require("csv-parse")
+const Async = require("async")
+const UrlJoin = require("url-join")
+const Walk = require("fs-walk")
+const logger = require("../../../src/logger")
 
-import { GBServiceCallback, GBService, IGBInstance } from "botlib";
-import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from "../models";
+import { GBServiceCallback, GBService, IGBInstance } from "botlib"
+import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from "../models"
 
 export class SecService extends GBService {
 
   async importSecurityFile(localPath: string, instance: IGBInstance) {
     let security = JSON.parse(
       Fs.readFileSync(UrlJoin(localPath, "security.json"), "utf8")
-    );
+    )
     security.groups.forEach(group => {
       let groupDb = GuaribasGroup.build({
         instanceId: instance.instanceId,
         displayName: group.displayName
-      });
+      })
       groupDb.save().then(groupDb => {
         group.users.forEach(user => {
           let userDb = GuaribasUser.build({
             instanceId: instance.instanceId,
             groupId: groupDb.groupId,
             userName: user.userName
-          });
+          })
           userDb.save().then(userDb => {
-            let userGroup = GuaribasUserGroup.build();
-            userGroup.groupId = groupDb.groupId;
-            userGroup.userId = userDb.userId;
-            userGroup.save();
-          });
-        });
-      });
-    });
+            let userGroup = GuaribasUserGroup.build()
+            userGroup.groupId = groupDb.groupId
+            userGroup.userId = userDb.userId
+            userGroup.save()
+          })
+        })
+      })
+    })
   }
 
   async ensureUser(
@@ -90,17 +90,17 @@ export class SecService extends GBService {
           }
         }).then(user => {
           if (!user) {
-            user = GuaribasUser.build();
+            user = GuaribasUser.build()
           }
-          user.userSystemId = userSystemId;
-          user.userName = userName;
-          user.displayName = displayName;
-          user.internalAddress = address;
-          user.email = userName;
-          user.defaultChannel = channelName;
-          user.save();
-          resolve(user);
-        }).error(reason => reject(reason));
-      });
+          user.userSystemId = userSystemId
+          user.userName = userName
+          user.displayName = displayName
+          user.internalAddress = address
+          user.email = userName
+          user.defaultChannel = channelName
+          user.save()
+          resolve(user)
+        }).error(reason => reject(reason))
+      })
   }
 }

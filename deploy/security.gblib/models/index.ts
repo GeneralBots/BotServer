@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,14 +30,14 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
 import {
   DataTypes,
   DataTypeUUIDv4,
   DataTypeDate,
   DataTypeDecimal
-} from "sequelize";
+} from "sequelize"
 
 import {
   Sequelize,
@@ -55,35 +55,35 @@ import {
   IsUUID,
   PrimaryKey,
   AutoIncrement
-} from "sequelize-typescript";
+} from "sequelize-typescript"
 
-import { GuaribasInstance } from "../../core.gbapp/models/GBModel";
+import { GuaribasInstance } from "../../core.gbapp/models/GBModel"
 
 @Table
 export class GuaribasUser extends Model<GuaribasUser> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  userId: number;
+  userId: number
 
-  @Column displayName: string;
+  @Column displayName: string
 
-  @Column userSystemId: string;
-  @Column userName: string;
+  @Column userSystemId: string
+  @Column userName: string
 
-  @Column defaultChannel: string;
+  @Column defaultChannel: string
 
-  @Column email: string;
+  @Column email: string
 
   @Column(DataType.STRING(512))
-  internalAddress: string;
+  internalAddress: string
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number;
+  instanceId: number
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance;
+  instance: GuaribasInstance
 }
 
 @Table
@@ -91,40 +91,40 @@ export class GuaribasGroup extends Model<GuaribasGroup> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  groupId: number;
+  groupId: number
 
   @Length({ min: 0, max: 512 })
   @Column
-  displayName: string;
+  displayName: string
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number;
+  instanceId: number
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance;
+  instance: GuaribasInstance
 }
 
 @Table
 export class GuaribasUserGroup extends Model<GuaribasUserGroup> {
   @ForeignKey(() => GuaribasUser)
   @Column
-  userId: number;
+  userId: number
 
   @ForeignKey(() => GuaribasGroup)
   @Column
-  groupId: number;
+  groupId: number
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number;
+  instanceId: number
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance;
+  instance: GuaribasInstance
 
   @BelongsTo(() => GuaribasGroup)
-  group: GuaribasGroup;
+  group: GuaribasGroup
 
   @BelongsTo(() => GuaribasUser)
-  user: GuaribasUser;
+  user: GuaribasUser
 }

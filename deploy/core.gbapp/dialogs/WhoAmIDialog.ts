@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,13 +30,13 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-import { GBConversationalService } from "./../services/GBConversationalService";
-import { GBCoreService } from "../services/GBCoreService";
-import { IGBDialog } from "botlib";
-import { GBMinInstance } from "botlib";
-import { BotAdapter } from "botbuilder";
+import { GBConversationalService } from "./../services/GBConversationalService"
+import { GBCoreService } from "../services/GBCoreService"
+import { IGBDialog } from "botlib"
+import { GBMinInstance } from "botlib"
+import { BotAdapter } from "botbuilder"
 
 
 export class WhoAmIDialog extends IGBDialog {
@@ -51,18 +51,18 @@ export class WhoAmIDialog extends IGBDialog {
 
     min.dialogs.add("/whoAmI", [
       async (dc, args) => {
-        await dc.context.sendActivity(`${min.instance.description}`);
+        await dc.context.sendActivity(`${min.instance.description}`)
 
         if (min.instance.whoAmIVideo) {
-          await dc.context.sendActivity(`Vou te mostrar um vídeo. Por favor, aguarde...`);
+          await dc.context.sendActivity(`Vou te mostrar um vídeo. Por favor, aguarde...`)
           await min.conversationalService.sendEvent(dc, "play", {
             playerType: "video",
             data: min.instance.whoAmIVideo.trim()
-          });
+          })
         }
 
-        await dc.replace('/ask', { isReturning: true });
+        await dc.replace('/ask', { isReturning: true })
       }
-    ]);
+    ])
   }
 }

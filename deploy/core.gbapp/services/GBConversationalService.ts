@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,38 +30,38 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-const logger = require("../../../src/logger");
+const logger = require("../../../src/logger")
 
-import { GBCoreService } from "./GBCoreService";
-import { IGBConversationalService } from "botlib";
-import { GBMinInstance } from "botlib";
-import { LuisRecognizer } from "botbuilder-ai";
-import { MessageFactory } from "botbuilder";
+import { GBCoreService } from "./GBCoreService"
+import { IGBConversationalService } from "botlib"
+import { GBMinInstance } from "botlib"
+import { LuisRecognizer } from "botbuilder-ai"
+import { MessageFactory } from "botbuilder"
 
 export interface LanguagePickerSettings {
-  defaultLocale?: string;
-  supportedLocales?: string[];
+  defaultLocale?: string
+  supportedLocales?: string[]
 }
 
 export class GBConversationalService implements IGBConversationalService {
-  coreService: GBCoreService;
+  coreService: GBCoreService
 
   constructor(coreService: GBCoreService) {
-    this.coreService = coreService;
+    this.coreService = coreService
   }
 
   getCurrentLanguage(dc: any) {
-    return dc.context.activity.locale;
+    return dc.context.activity.locale
   }
 
   async sendEvent(dc: any, name: string, value: any): Promise<any> {
-    const msg = MessageFactory.text("");
-    msg.value = value;
-    msg.type = "event";
-    msg.name = name;
-    return dc.context.sendActivity(msg);
+    const msg = MessageFactory.text("")
+    msg.value = value
+    msg.type = "event"
+    msg.name = name
+    return dc.context.sendActivity(msg)
   }
 
   async runNLP(dc: any, min: GBMinInstance, text: string): Promise<any> {
@@ -71,36 +71,36 @@ export class GBConversationalService implements IGBConversationalService {
       appId: min.instance.nlpAppId,
       subscriptionKey: min.instance.nlpSubscriptionKey,
       serviceEndpoint: min.instance.nlpServerUrl
-    });
-    let res = await model.recognize(dc.context);
+    })
+    let res = await model.recognize(dc.context)
 
     // Resolves intents returned from LUIS.
 
-    let topIntent = LuisRecognizer.topIntent(res);
+    let topIntent = LuisRecognizer.topIntent(res)
     if (topIntent) {
-      var intent = topIntent;
+      var intent = topIntent
       var entity =
         res.entities && res.entities.length > 0
           ? res.entities[0].entity.toUpperCase()
-          : null;
-      logger.info("luis: intent: [" + intent + "] entity: [" + entity + "]");
+          : null
+      logger.info("luis: intent: [" + intent + "] entity: [" + entity + "]")
 
       try {
-        await dc.replace("/" + intent);
+        await dc.replace("/" + intent)
       } catch (error) {
-        logger.info("error: intent: [" + intent + "] error: [" + error + "]");
+        logger.info("error: intent: [" + intent + "] error: [" + error + "]")
         await dc.context.sendActivity(
           "Desculpe-me, não encontrei nada a respeito..."
-        );
-        await dc.replace("/ask", { isReturning: true });
+        )
+        await dc.replace("/ask", { isReturning: true })
       }
 
-      return Promise.resolve({ intent, entities: res.entities });
+      return Promise.resolve({ intent, entities: res.entities })
     } else {
-      await dc.context.sendActivity("Lamento, não achei nada a respeito...");
-      await dc.replace("/ask", { isReturning: true });
+      await dc.context.sendActivity("Lamento, não achei nada a respeito...")
+      await dc.replace("/ask", { isReturning: true })
 
-      return Promise.resolve(null);
+      return Promise.resolve(null)
     }
   }
 }

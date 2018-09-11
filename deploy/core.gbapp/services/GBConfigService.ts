@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,9 +30,9 @@
 |                                                                             |
 \*****************************************************************************/
 
-const logger = require("../../../src/logger");
+const logger = require("../../../src/logger")
 
-"use strict";
+"use strict"
 
 export class GBConfigService {
   static init(): any {
@@ -42,55 +42,55 @@ export class GBConfigService {
         errorOnMissing: true,
         errorOnExtra: false,
         overrideProcessEnv: true
-      });
+      })
     } catch (e) {
-      console.error(e.message);
-      process.exit(3);
+      console.error(e.message)
+      process.exit(3)
     }
   }
 
   static get(key: string): string | undefined {
-    let value = process.env["container:" + key];
+    let value = process.env["container:" + key]
 
     if (!value) {
-      value = process.env[key];
+      value = process.env[key]
     }
 
     if (!value) {
       switch (key) {
         case "DATABASE_DIALECT":
-          value = "sqlite";
-          break;
+          value = "sqlite"
+          break
 
         case "DATABASE_STORAGE":
-          value = "./guaribas.sqlite";
-          break;
+          value = "./guaribas.sqlite"
+          break
 
         case "ADDITIONAL_DEPLOY_PATH":
-          value = undefined;
-          break;
+          value = undefined
+          break
 
         case "DATABASE_SYNC":
         case "DATABASE_SYNC_ALTER":
         case "DATABASE_SYNC_FORCE":
-          value = "false";
-          break;
+          value = "false"
+          break
 
         case "DATABASE_LOGGING":
-          value = "false";
-          break;
+          value = "false"
+          break
 
         case "DATABASE_ENCRYPT":
-          value = "true";
-          break;
+          value = "true"
+          break
 
         default:
           logger.info(
             `Guaribas General Error: Invalid key on .env file: '${key}'`
-          );
-          break;
+          )
+          break
       }
     }
-    return value;
+    return value
   }
 }

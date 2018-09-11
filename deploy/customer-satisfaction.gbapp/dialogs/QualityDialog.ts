@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,14 +30,14 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-import { IGBDialog } from  "botlib";
+import { IGBDialog } from  "botlib"
 
-import { GBMinInstance } from "botlib";
-import { CSService } from "../services/CSService";
-import { BotAdapter } from "botbuilder";
-const logger = require("../../../src/logger");
+import { GBMinInstance } from "botlib"
+import { CSService } from "../services/CSService"
+import { BotAdapter } from "botbuilder"
+const logger = require("../../../src/logger")
 
 export class QualityDialog extends IGBDialog {
 
@@ -49,42 +49,42 @@ export class QualityDialog extends IGBDialog {
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
-    const service = new CSService();
+    const service = new CSService()
 
     min.dialogs.add("/quality", [
       async (dc, args) => {
-        const user = min.userState.get(dc.context);
-        var score = args.score;
+        const user = min.userState.get(dc.context)
+        var score = args.score
 
         setTimeout(
           () => min.conversationalService.sendEvent(dc, "stop", null),
           400
-        );
+        )
 
         if (score == 0) {
           let msg = [
             "Desculpe-me, vamos tentar novamente.",
             "Lamento... Vamos tentar novamente!",
             "Desculpe-me. Por favor, tente escrever de outra forma?"
-          ];
-          await dc.context.sendActivity(msg[0]);
+          ]
+          await dc.context.sendActivity(msg[0])
         } else {
           let msg = [
             "Ótimo, obrigado por contribuir com sua resposta.",
             "Certo, obrigado pela informação.",
             "Obrigado pela contribuição."
-          ];
-          await dc.context.sendActivity(msg[0]);
+          ]
+          await dc.context.sendActivity(msg[0])
 
           await service.insertQuestionAlternate(
             min.instance.instanceId,
             user.lastQuestion,
             user.lastQuestionId
-          );
+          )
 
-          await dc.replace('/ask', {isReturning: true});
+          await dc.replace('/ask', {isReturning: true})
         }
       }
-    ]);
+    ])
   }
 }

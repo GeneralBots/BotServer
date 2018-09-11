@@ -106,9 +106,9 @@ export class AdminDialog extends IGBDialog {
 
         await dc.context.sendActivity(`Deploying package ... (It may take a few seconds)`)
         await AdminDialog.deployPackageCommand("deployPackage ProjectOnline.gbkb", dc, deployer, min)
-        await dc.endAll();
+        await dc.endAll()
 
-      }]);
+      }])
 
     min.dialogs.add("/admin1", [
 
@@ -141,7 +141,7 @@ export class AdminDialog extends IGBDialog {
           user.authenticated = false
           await dc.replace("/")
         } else if (text === "sync") {
-          await min.core.syncDatabaseStructure();
+          await min.core.syncDatabaseStructure()
           await dc.context.sendActivity("Sync started...")
           await dc.replace("/admin", { firstRun: false })
         } else if (text.split(" ")[0] === "rebuildIndex") {
@@ -160,7 +160,7 @@ export class AdminDialog extends IGBDialog {
           await dc.replace("/admin", { firstRun: false })
         } else if (text.split(" ")[0] === "applyPackage") {
           await dc.context.sendActivity("Applying in progress...")
-          await min.core.loadInstance(text.split(" ")[1]);
+          await min.core.loadInstance(text.split(" ")[1])
           await dc.context.sendActivity("Applying done...")
           await dc.replace("/admin", { firstRun: false })
         } else if (text.split(" ")[0] === "rat") {

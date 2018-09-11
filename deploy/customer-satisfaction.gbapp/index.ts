@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,29 +30,29 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-const UrlJoin = require("url-join");
-import { GuaribasQuestionAlternate } from './models/index';
-import { QualityDialog } from './dialogs/QualityDialog';
-import { FeedbackDialog } from './dialogs/FeedbackDialog';
-import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib";
+const UrlJoin = require("url-join")
+import { GuaribasQuestionAlternate } from './models/index'
+import { QualityDialog } from './dialogs/QualityDialog'
+import { FeedbackDialog } from './dialogs/FeedbackDialog'
+import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib"
 
-import { Sequelize } from 'sequelize-typescript';
+import { Sequelize } from 'sequelize-typescript'
 
 export class GBCustomerSatisfactionPackage implements IGBPackage {
-  sysPackages: IGBPackage[] = null;
+  sysPackages: IGBPackage[] = null
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasQuestionAlternate
-    ]);   
+    ])   
   }
   unloadPackage(core: IGBCoreService): void {
     
   }
   loadBot(min: GBMinInstance): void {
-    FeedbackDialog.setup(min.bot, min);
-    QualityDialog.setup(min.bot, min);
+    FeedbackDialog.setup(min.bot, min)
+    QualityDialog.setup(min.bot, min)
   }
   unloadBot(min: GBMinInstance): void {
     

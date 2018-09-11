@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,29 +30,29 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-const UrlJoin = require("url-join");
+const UrlJoin = require("url-join")
 
-import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index';
-import { GBMinInstance, IGBPackage } from "botlib";
+import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index'
+import { GBMinInstance, IGBPackage } from "botlib"
 
-import { AskDialog } from "./dialogs/AskDialog";
-import { FaqDialog } from "./dialogs/FaqDialog";
-import { MenuDialog } from "./dialogs/MenuDialog";
-import { Sequelize } from 'sequelize-typescript';
-import { IGBCoreService } from 'botlib';
+import { AskDialog } from "./dialogs/AskDialog"
+import { FaqDialog } from "./dialogs/FaqDialog"
+import { MenuDialog } from "./dialogs/MenuDialog"
+import { Sequelize } from 'sequelize-typescript'
+import { IGBCoreService } from 'botlib'
 
 export class GBKBPackage implements IGBPackage {
 
-  sysPackages: IGBPackage[] = null;
+  sysPackages: IGBPackage[] = null
   
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasAnswer,
       GuaribasQuestion,
       GuaribasSubject
-    ]);
+    ])
     
   }
   unloadPackage(core: IGBCoreService): void {
@@ -60,9 +60,9 @@ export class GBKBPackage implements IGBPackage {
   }
   loadBot(min: GBMinInstance): void {
 
-    AskDialog.setup(min.bot, min);
-    FaqDialog.setup(min.bot, min);
-    MenuDialog.setup(min.bot, min);
+    AskDialog.setup(min.bot, min)
+    FaqDialog.setup(min.bot, min)
+    MenuDialog.setup(min.bot, min)
     
   }
   unloadBot(min: GBMinInstance): void {
