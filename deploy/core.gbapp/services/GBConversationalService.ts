@@ -30,78 +30,77 @@
 |                                                                             |
 \*****************************************************************************/
 
-
 "use strict";
 
 const logger = require("../../../src/logger");
 
 import { GBCoreService } from "./GBCoreService";
 import { IGBConversationalService } from "botlib";
-import { GBError } from "botlib";
-import { GBERROR_TYPE } from "botlib";
 import { GBMinInstance } from "botlib";
 import { LuisRecognizer } from "botbuilder-ai";
 import { MessageFactory } from "botbuilder";
-import { resolve } from "bluebird";
+
+export interface LanguagePickerSettings {
+  defaultLocale?: string;
+  supportedLocales?: string[];
+}
 
 export class GBConversationalService implements IGBConversationalService {
+  coreService: GBCoreService;
 
-    coreService: GBCoreService;
+  constructor(coreService: GBCoreService) {
+    this.coreService = coreService;
+  }
 
-    constructor(coreService: GBCoreService) {
-        this.coreService = coreService;
+  getCurrentLanguage(dc: any) {
+    return dc.context.activity.locale;
+  }
+
+  async sendEvent(dc: any, name: string, value: any): Promise<any> {
+    const msg = MessageFactory.text("");
+    msg.value = value;
+    msg.type = "event";
+    msg.name = name;
+    return dc.context.sendActivity(msg);
+  }
+
+  async runNLP(dc: any, min: GBMinInstance, text: string): Promise<any> {
+    // Invokes LUIS.
+
+    const model = new LuisRecognizer({
+      appId: min.instance.nlpAppId,
+      subscriptionKey: min.instance.nlpSubscriptionKey,
+      serviceEndpoint: min.instance.nlpServerUrl
+    });
+    let res = await model.recognize(dc.context);
+
+    // Resolves intents returned from LUIS.
+
+    let topIntent = LuisRecognizer.topIntent(res);
+    if (topIntent) {
+      var intent = topIntent;
+      var entity =
+        res.entities && res.entities.length > 0
+          ? res.entities[0].entity.toUpperCase()
+          : null;
+      logger.info("luis: intent: [" + intent + "] entity: [" + entity + "]");
+
+      try {
+        await dc.replace("/" + intent);
+      } catch (error) {
+        logger.info("error: intent: [" + intent + "] error: [" + error + "]");
+        await dc.context.sendActivity(
+          "Desculpe-me, não encontrei nada a respeito..."
+        );
+        await dc.replace("/ask", { isReturning: true });
+      }
+
+      return Promise.resolve({ intent, entities: res.entities });
+    } else {
+      await dc.context.sendActivity("Lamento, não achei nada a respeito...");
+      await dc.replace("/ask", { isReturning: true });
+
+      return Promise.resolve(null);
     }
-
-    async sendEvent(dc: any, name: string, value: any): Promise<any> {
-        const msg = MessageFactory.text('');
-        msg.value = value;
-        msg.type = "event";
-        msg.name = name;
-        return dc.context.sendActivity(msg);
-    }
-
-    async runNLP(
-        dc: any,
-        min: GBMinInstance,
-        text: string
-    ): Promise<any> {
-
-        const model = new LuisRecognizer({
-            appId: min.instance.nlpAppId,
-            subscriptionKey: min.instance.nlpSubscriptionKey,
-            serviceEndpoint: min.instance.nlpServerUrl
-        });
-
-        let res = await model.recognize(dc.context);
-
-        // Resolve intents returned from LUIS
-        let topIntent = LuisRecognizer.topIntent(res);
-
-        if (topIntent) {
-            var intent = topIntent;
-            var entity =
-                res.entities && res.entities.length > 0
-                    ? res.entities[0].entity.toUpperCase()
-                    : null;
-            logger.info(
-                "luis: intent: [" + intent + "] entity: [" + entity + "]"
-            );
-
-            try {
-                await dc.replace("/" + intent);
-            } catch (error) {
-                logger.info("error: intent: [" + intent + "] error: [" + error + "]");
-                await dc.context.sendActivity("Desculpe-me, não encontrei nada a respeito...");
-                await dc.replace("/ask", { isReturning: true });
-            }
-
-            return Promise.resolve({ intent, entities: res.entities });
-
-        } else {
-            await dc.context.sendActivity("Lamento, não achei nada a respeito...");
-            await dc.replace("/ask", { isReturning: true });
-
-            return Promise.resolve(null);
-        }
-    }
+  }
 }

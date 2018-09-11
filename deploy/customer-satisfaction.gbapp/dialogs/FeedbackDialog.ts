@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
+| but WITHOUT ANY WARRANTY without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -30,14 +30,13 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-
-import { CSService } from '../services/CSService';
-import { AzureText } from "pragmatismo-io-framework";
-import { GBMinInstance } from "botlib";
-import { IGBDialog } from "botlib";
-import { BotAdapter } from 'botbuilder';
+import { CSService } from '../services/CSService'
+import { AzureText } from "pragmatismo-io-framework"
+import { GBMinInstance } from "botlib"
+import { IGBDialog } from "botlib"
+import { BotAdapter } from 'botbuilder'
 
 export class FeedbackDialog extends IGBDialog {
 
@@ -49,7 +48,7 @@ export class FeedbackDialog extends IGBDialog {
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
 
-    const service = new CSService();
+    const service = new CSService()
 
     min.dialogs.add("/feedbackNumber", [
       async (dc) => {
@@ -57,17 +56,17 @@ export class FeedbackDialog extends IGBDialog {
           "O que achou do meu atendimento, de 1 a 5?",
           "Qual a nota do meu atendimento?",
           "Como define meu atendimento numa escala de 1 a 5?"
-        ];
-        await dc.prompt('choicePrompt', messages[0], ['1', '2', '3', '4', ' 5']);
+        ]
+        await dc.prompt('choicePrompt', messages[0], ['1', '2', '3', '4', ' 5'])
       },
       async (dc, value) => {
-        let rate = value.entity;
-        const user = min.userState.get(dc.context);
-        await service.updateConversationRate(user.conversation, rate);
-        let messages = ["Obrigado!", "Obrigado por responder."];
-        await dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+        let rate = value.entity
+        const user = min.userState.get(dc.context)
+        await service.updateConversationRate(user.conversation, rate)
+        let messages = ["Obrigado!", "Obrigado por responder."]
+        await dc.context.sendActivity(messages[0]) // TODO: Handle rnd.
       }
-    ]);
+    ])
 
     min.dialogs.add("/feedback", [
       async (dc, args) => {
@@ -75,27 +74,30 @@ export class FeedbackDialog extends IGBDialog {
           let messages = [
             "Sugestões melhoram muito minha qualidade...",
             "Obrigado pela sua iniciativa de sugestão."
-          ];
-          await dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+          ]
+          await dc.context.sendActivity(messages[0]) // TODO: Handle rnd.
         }
 
         let messages = [
           "O que achou do meu atendimento?",
           "Como foi meu atendimento?",
           "Gostaria de dizer algo sobre meu atendimento?"
-        ];
-        await dc.prompt('textPrompt', messages[0]);
+        ]
+        await dc.prompt('textPrompt', messages[0])
       },
       async (dc, value) => {
-        let rate = await AzureText.getSentiment(min.instance.textAnalyticsKey, "pt-br", value);
+        let rate = await AzureText.getSentiment(min.instance.textAnalyticsKey,
+          min.instance.textAnalyticsServerUrl,
+          min.conversationalService.getCurrentLanguage(dc), value)
+
         if (rate > 0) {
-          await dc.context.sendActivity("Bom saber que você gostou. Conte comigo.");
+          await dc.context.sendActivity("Bom saber que você gostou. Conte comigo.")
         } else {
           await dc.context.sendActivity(
             "Vamos registrar sua questão, obrigado pela sinceridade."
-          );
+          )
         }
-        await dc.replace('/ask', { isReturning: true });
-      }]);
+        await dc.replace('/ask', { isReturning: true })
+      }])
   }
 }

@@ -52,7 +52,6 @@ import {
   CreatedAt,
   UpdatedAt,
   DataType,
-  IsUUID,
   PrimaryKey,
   AutoIncrement
 } from "sequelize-typescript";
@@ -89,6 +88,8 @@ export class GuaribasInstance extends Model<GuaribasInstance> implements IGBInst
   @Column marketplaceId: string;
 
   @Column textAnalyticsKey: string;
+
+  @Column textAnalyticsServerUrl: string;
 
   @Column marketplacePassword: string;
 

@@ -33,16 +33,15 @@
 "use strict";
 
 const logger = require("../../../src/logger");
-import { Sequelize } from 'sequelize-typescript';
+import { Sequelize } from "sequelize-typescript";
 import { GBConfigService } from "./GBConfigService";
-import { IGBInstance, IGBCoreService } from 'botlib';
+import { IGBInstance, IGBCoreService } from "botlib";
 import { GuaribasInstance } from "../models/GBModel";
 
 /**
  *  Core service layer.
  */
 export class GBCoreService implements IGBCoreService {
-
   /**
    * Data access layer instance.
    */
@@ -63,8 +62,8 @@ export class GBCoreService implements IGBCoreService {
    */
   private changeColumnQuery: (tableName, attributes) => string;
 
-  /** 
-   * Dialect used. Tested: mssql and sqlite.  
+  /**
+   * Dialect used. Tested: mssql and sqlite.
    */
   private dialect: string;
 
@@ -75,212 +74,245 @@ export class GBCoreService implements IGBCoreService {
     this.dialect = GBConfigService.get("DATABASE_DIALECT");
   }
 
-  /** 
-   * Gets database config and connect to storage. 
+  /**
+   * Gets database config and connect to storage.
    */
   async initDatabase() {
-    return new Promise(
-      (resolve, reject) => {
+    return new Promise((resolve, reject) => {
+      try {
+        let host: string | undefined;
+        let database: string | undefined;
+        let username: string | undefined;
+        let password: string | undefined;
+        let storage: string | undefined;
 
-        try {
+        if (this.dialect === "mssql") {
+          host = GBConfigService.get("DATABASE_HOST");
+          database = GBConfigService.get("DATABASE_NAME");
+          username = GBConfigService.get("DATABASE_USERNAME");
+          password = GBConfigService.get("DATABASE_PASSWORD");
+        } else if (this.dialect === "sqlite") {
+          storage = GBConfigService.get("DATABASE_STORAGE");
+        }
 
-          let host: string | undefined;
-          let database: string | undefined;
-          let username: string | undefined;
-          let password: string | undefined;
-          let storage: string | undefined;
-
-          if (this.dialect === "mssql") {
-            host = GBConfigService.get("DATABASE_HOST");
-            database = GBConfigService.get("DATABASE_NAME");
-            username = GBConfigService.get("DATABASE_USERNAME");
-            password = GBConfigService.get("DATABASE_PASSWORD");
-          } else if (this.dialect === "sqlite") {
-            storage = GBConfigService.get("DATABASE_STORAGE");
-          }
-
-          let logging = (GBConfigService.get("DATABASE_LOGGING") === "true")
-            ? (str: string) => { logger.info(str); }
+        let logging =
+          GBConfigService.get("DATABASE_LOGGING") === "true"
+            ? (str: string) => {
+                logger.info(str);
+              }
             : false;
 
-          let encrypt = (GBConfigService.get("DATABASE_ENCRYPT") === "true");
+        let encrypt = GBConfigService.get("DATABASE_ENCRYPT") === "true";
 
-          this.sequelize = new Sequelize({
-            host: host,
-            database: database,
-            username: username,
-            password: password,
-            logging: logging,
-            operatorsAliases: false,
-            dialect: this.dialect,
-            storage: storage,
-            dialectOptions: {
-              encrypt: encrypt
-            },
-            pool: {
-              max: 32,
-              min: 8,
-              idle: 40000,
-              evict: 40000,
-              acquire: 40000
-            },
-          });
-
-          if (this.dialect === "mssql") {
-            this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
-            this.createTableQuery = this.queryGenerator.createTableQuery;
-            this.queryGenerator.createTableQuery = (tableName, attributes, options) =>
-              this.createTableQueryOverride(tableName, attributes, options);
-            this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
-            this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
-              this.changeColumnQueryOverride(tableName, attributes);
+        this.sequelize = new Sequelize({
+          host: host,
+          database: database,
+          username: username,
+          password: password,
+          logging: logging,
+          operatorsAliases: false,
+          dialect: this.dialect,
+          storage: storage,
+          dialectOptions: {
+            encrypt: encrypt
+          },
+          pool: {
+            max: 32,
+            min: 8,
+            idle: 40000,
+            evict: 40000,
+            acquire: 40000
           }
-          resolve();
-        } catch (error) {
-          reject(error);
+        });
+
+        if (this.dialect === "mssql") {
+          this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
+          this.createTableQuery = this.queryGenerator.createTableQuery;
+          this.queryGenerator.createTableQuery = (
+            tableName,
+            attributes,
+            options
+          ) => this.createTableQueryOverride(tableName, attributes, options);
+          this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
+          this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
+            this.changeColumnQueryOverride(tableName, attributes);
         }
-      });
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
+  /**
+   * SQL:
+   * 
+   * // let sql: string = '' +
+   * //   'IF OBJECT_ID(\'[UserGroup]\', \'U\') IS NULL\n' +
+   * //   'CREATE TABLE [UserGroup] (\n' +
+   * //   '  [id] INTEGER NOT NULL IDENTITY(1,1),\n' +
+   * //   '  [userId] INTEGER NULL,\n' +
+   * //   '  [groupId] INTEGER NULL,\n' +
+   * //   '  [instanceId] INTEGER NULL,\n' +
+   * //   '  PRIMARY KEY ([id1], [id2]),\n' +
+   * //   '  FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,\n' +
+   * //   '  FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId1]) ON DELETE NO ACTION,\n' +
+   * //   '  FOREIGN KEY ([instanceId]) REFERENCES [Instance] ([instanceId]) ON DELETE NO ACTION);';
+   */
   private createTableQueryOverride(tableName, attributes, options): string {
-    let sql: string = this.createTableQuery.apply(this.queryGenerator,
-      [tableName, attributes, options]);
-    // let sql: string = '' +
-    //   'IF OBJECT_ID(\'[UserGroup]\', \'U\') IS NULL\n' +
-    //   'CREATE TABLE [UserGroup] (\n' +
-    //   '  [id] INTEGER NOT NULL IDENTITY(1,1),\n' +
-    //   '  [userId] INTEGER NULL,\n' +
-    //   '  [groupId] INTEGER NULL,\n' +
-    //   '  [instanceId] INTEGER NULL,\n' +
-    //   '  PRIMARY KEY ([id1], [id2]),\n' +
-    //   '  FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,\n' +
-    //   '  FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId1]) ON DELETE NO ACTION,\n' +
-    //   '  FOREIGN KEY ([instanceId]) REFERENCES [Instance] ([instanceId]) ON DELETE NO ACTION);';
+    let sql: string = this.createTableQuery.apply(this.queryGenerator, [
+      tableName,
+      attributes,
+      options
+    ]);
     const re1 = /CREATE\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
     if (matches) {
       const table = matches[1];
       const re2 = /PRIMARY\s+KEY\s+\(\[[^\]]*\](?:,\s*\[[^\]]*\])*\)/;
-      sql = sql.replace(re2, (match: string, ...args: any[]): string => {
-        return 'CONSTRAINT [' + table + '_pk] ' + match;
-      });
+      sql = sql.replace(
+        re2,
+        (match: string, ...args: any[]): string => {
+          return "CONSTRAINT [" + table + "_pk] " + match;
+        }
+      );
       const re3 = /FOREIGN\s+KEY\s+\((\[[^\]]*\](?:,\s*\[[^\]]*\])*)\)/g;
       const re4 = /\[([^\]]*)\]/g;
-      sql = sql.replace(re3, (match: string, ...args: any[]): string => {
-        const fkcols = args[0];
-        let fkname = table;
-        let matches = re4.exec(fkcols);
-        while (matches != null) {
-          fkname += '_' + matches[1];
-          matches = re4.exec(fkcols);
+      sql = sql.replace(
+        re3,
+        (match: string, ...args: any[]): string => {
+          const fkcols = args[0];
+          let fkname = table;
+          let matches = re4.exec(fkcols);
+          while (matches != null) {
+            fkname += "_" + matches[1];
+            matches = re4.exec(fkcols);
+          }
+          return "CONSTRAINT [" + fkname + "_fk] FOREIGN KEY (" + fkcols + ")";
         }
-        return 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
-      });
+      );
     }
     return sql;
   }
 
+
+  /**
+   * SQL:
+   * let sql = '' +
+   * 'ALTER TABLE [UserGroup]\n' +
+   * '  ADD CONSTRAINT [invalid1] FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,\n' +
+   * '      CONSTRAINT [invalid2] FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId2]) ON DELETE NO ACTION, \n' +
+   * '      CONSTRAINT [invalid3] FOREIGN KEY ([instanceId1]) REFERENCES [Instance] ([instanceId1]) ON DELETE NO ACTION;\n';
+   */
   private changeColumnQueryOverride(tableName, attributes): string {
-    let sql: string = this.changeColumnQuery.apply(this.queryGenerator,
-      [tableName, attributes]);
-    // let sql = '' +
-    //   'ALTER TABLE [UserGroup]\n' +
-    //   '  ADD CONSTRAINT [invalid1] FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,\n' +
-    //   '      CONSTRAINT [invalid2] FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId2]) ON DELETE NO ACTION, \n' +
-    //   '      CONSTRAINT [invalid3] FOREIGN KEY ([instanceId1]) REFERENCES [Instance] ([instanceId1]) ON DELETE NO ACTION;\n';
+    let sql: string = this.changeColumnQuery.apply(this.queryGenerator, [
+      tableName,
+      attributes
+    ]);
     const re1 = /ALTER\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
     if (matches) {
       const table = matches[1];
       const re2 = /(ADD\s+)?CONSTRAINT\s+\[([^\]]*)\]\s+FOREIGN\s+KEY\s+\((\[[^\]]*\](?:,\s*\[[^\]]*\])*)\)/g;
       const re3 = /\[([^\]]*)\]/g;
-      sql = sql.replace(re2, (match: string, ...args: any[]): string => {
-        const fkcols = args[2];
-        let fkname = table;
-        let matches = re3.exec(fkcols);
-        while (matches != null) {
-          fkname += '_' + matches[1];
-          matches = re3.exec(fkcols);
+      sql = sql.replace(
+        re2,
+        (match: string, ...args: any[]): string => {
+          const fkcols = args[2];
+          let fkname = table;
+          let matches = re3.exec(fkcols);
+          while (matches != null) {
+            fkname += "_" + matches[1];
+            matches = re3.exec(fkcols);
+          }
+          return (
+            (args[0] ? args[0] : "") +
+            "CONSTRAINT [" +
+            fkname +
+            "_fk] FOREIGN KEY (" +
+            fkcols +
+            ")"
+          );
         }
-        return (args[0] ? args[0] : '') + 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
-      });
+      );
     }
     return sql;
   }
 
   async syncDatabaseStructure() {
-    return new Promise(
-      (resolve, reject) => {
-        if (GBConfigService.get("DATABASE_SYNC") === "true") {
-          const alter = (GBConfigService.get("DATABASE_SYNC_ALTER") === "true");
-          const force = (GBConfigService.get("DATABASE_SYNC_FORCE") === "true");
-          logger.info("Syncing database...");
-          this.sequelize.sync({
+    return new Promise((resolve, reject) => {
+      if (GBConfigService.get("DATABASE_SYNC") === "true") {
+        const alter = GBConfigService.get("DATABASE_SYNC_ALTER") === "true";
+        const force = GBConfigService.get("DATABASE_SYNC_FORCE") === "true";
+        logger.info("Syncing database...");
+        this.sequelize
+          .sync({
             alter: alter,
             force: force
-          }).then(value => {
-            logger.info("Database synced.");
-            resolve(value);
-          }, err => reject(err));
-        } else {
-          logger.info("Database synchronization is disabled.");
-          resolve();
-        }
-      });
+          })
+          .then(
+            value => {
+              logger.info("Database synced.");
+              resolve(value);
+            },
+            err => reject(err)
+          );
+      } else {
+        logger.info("Database synchronization is disabled.");
+        resolve();
+      }
+    });
   }
 
   /**
    * Loads all items to start several listeners.
    */
   async loadInstances(): Promise<IGBInstance> {
-    return new Promise(
-      (resolve, reject) => {
-        GuaribasInstance.findAll({})
-          .then((items: IGBInstance[]) => {
-            if (!items) items = [];
+    return new Promise((resolve, reject) => {
+      GuaribasInstance.findAll({})
+        .then((items: IGBInstance[]) => {
+          if (!items) items = [];
 
-            if (items.length == 0) {
-              resolve([]);
-            } else {
-              resolve(items);
-            }
-          })
-          .catch(reason => {
-            if (reason.message.indexOf("no such table: GuaribasInstance") != -1) {
-              resolve([]);
-            } else {
-              logger.info(`GuaribasServiceError: ${reason}`);
-              reject(reason);
-            }
-          });
-      });
+          if (items.length == 0) {
+            resolve([]);
+          } else {
+            resolve(items);
+          }
+        })
+        .catch(reason => {
+          if (reason.message.indexOf("no such table: GuaribasInstance") != -1) {
+            resolve([]);
+          } else {
+            logger.info(`GuaribasServiceError: ${reason}`);
+            reject(reason);
+          }
+        });
+    });
   }
 
   /**
    * Loads just one Bot instance.
    */
   async loadInstance(botId: string): Promise<IGBInstance> {
-    return new Promise<IGBInstance>(
-      (resolve, reject) => {
+    return new Promise<IGBInstance>((resolve, reject) => {
+      let options = { where: {} };
 
-        let options = { where: {} };
+      if (botId != "[default]") {
+        options.where = { botId: botId };
+      }
 
-        if (botId != "[default]") {
-          options.where = { botId: botId };
-        }
-
-        GuaribasInstance.findOne(options)
-          .then((instance: IGBInstance) => {
-            if (instance) {
-              resolve(instance);
-            } else {
-              resolve(null);
-            }
-          })
-          .catch(err => {
-            logger.info(`GuaribasServiceError: ${err}`);
-            reject(err);
-          });
-      });
+      GuaribasInstance.findOne(options)
+        .then((instance: IGBInstance) => {
+          if (instance) {
+            resolve(instance);
+          } else {
+            resolve(null);
+          }
+        })
+        .catch(err => {
+          logger.info(`GuaribasServiceError: ${err}`);
+          reject(err);
+        });
+    });
   }
 }

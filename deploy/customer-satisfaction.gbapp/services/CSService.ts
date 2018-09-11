@@ -35,47 +35,33 @@ import { GuaribasConversation } from '../../analytics.gblib/models';
 
 export class CSService {
 
-  resolveQuestionAlternate(
+  async resolveQuestionAlternate(
     instanceId: number,
     questionTyped: string): Promise<GuaribasQuestionAlternate> {
-    return new Promise<GuaribasQuestionAlternate>(
-      (resolve, reject) => {
-        GuaribasQuestionAlternate.findOne({
-          where: {
-            instanceId: instanceId,
-            questionTyped: questionTyped
-          }
-        }).then((value: GuaribasQuestionAlternate) => {
-          resolve(value);
-        }).error(reason => reject(reason));
-      });
+
+    return GuaribasQuestionAlternate.findOne({
+      where: {
+        instanceId: instanceId,
+        questionTyped: questionTyped
+      }
+    })
   }
 
-  insertQuestionAlternate(
+  async insertQuestionAlternate(
     instanceId: number,
     questionTyped: string,
     questionText: string): Promise<GuaribasQuestionAlternate> {
-    return new Promise<GuaribasQuestionAlternate>(
-      (resolve, reject) => {
-        GuaribasQuestionAlternate.create({
-          questionTyped: questionTyped,
-          questionText: questionText
-        }).then(item => {
-          resolve(item);
-        }).error(reason => reject(reason));
-      });
+    return GuaribasQuestionAlternate.create({
+      questionTyped: questionTyped,
+      questionText: questionText
+    })
   }
 
-  updateConversationRate(
+  async updateConversationRate(
     conversation: GuaribasConversation,
     rate: number
   ): Promise<GuaribasConversation> {
-    return new Promise<GuaribasConversation>(
-      (resolve, reject) => {
-        conversation.rate = rate;
-        conversation.save().then((value: GuaribasConversation) => {
-          resolve(conversation);
-        }).error(reason => reject(reason));
-      });
+    conversation.rate = rate;
+    return conversation.save()
   }
 }

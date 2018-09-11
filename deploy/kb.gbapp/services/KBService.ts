@@ -155,13 +155,21 @@ export class KBService {
           let value = await this.getAnswerById(
             instance.instanceId,
             results[0].answerId)
-          return Promise.resolve({ answer: value, questionId: results[0].questionId })
+          if (value) {
+            return Promise.resolve({ answer: value, questionId: results[0].questionId })
+          }
+          else {
+            return Promise.resolve({ answer: null, questionId: 0 })
+          }
         }
       } else {
         let data = await this.getAnswerByText(instance.instanceId, query)
-        return Promise.resolve(
-          { answer: data.answer, questionId: data.question.questionId }
-        )
+        if (data) {
+          return Promise.resolve(
+            { answer: data.answer, questionId: data.question.questionId })
+        } else {
+          return Promise.resolve({ answer: null, questionId: 0 })
+        }
       }
     }
     catch (reason) {
@@ -461,7 +469,7 @@ export class KBService {
         "A resposta está na tela...",
         "Veja a resposta na tela..."
       ]
-      
+
       await dc.context.sendActivity(messages[0]) // TODO: Handle rnd.
       var html = answer.content
 
