@@ -229,7 +229,8 @@ export class GBMinService {
 
   private invokeLoadBot(appPackages: any[], min: any, server: any) {
     appPackages.forEach(e => {
-      e.sysPackages = new Array<IGBPackage>()
+      e.sysPackages = new Array<IGBPackage>();
+      
       [
         GBAdminPackage,
         GBAnalyticsPackage,

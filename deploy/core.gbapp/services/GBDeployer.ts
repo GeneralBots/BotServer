@@ -79,7 +79,7 @@ export class GBDeployer {
         let additionalPath = GBConfigService.get("ADDITIONAL_DEPLOY_PATH")
         let paths = [GBDeployer.deployFolder]
         if (additionalPath) {
-          paths = paths.concat(additionalPath.toLowerCase().split(""))
+          paths = paths.concat(additionalPath.toLowerCase().split(";"))
         }
         let botPackages = new Array<string>()
         let gbappPackages = new Array<string>()
