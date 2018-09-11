@@ -126,7 +126,7 @@ export class AskDialog extends IGBDialog {
 
           // Goes to ask loop, again.
 
-          dc.replace("/ask", { isReturning: true });
+          await dc.replace("/ask", { isReturning: true });
 
         } else {
 
@@ -176,8 +176,8 @@ export class AskDialog extends IGBDialog {
                 "Desculpe-me, não achei nada parecido. Poderia tentar escrever de outra forma?"
               ];
 
-              dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
-              dc.replace("/ask", { isReturning: true });
+              await dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+              await dc.replace("/ask", { isReturning: true });
             }
           }
         }
@@ -212,8 +212,8 @@ export class AskDialog extends IGBDialog {
         }
       },
       async (dc, value) => {
-        dc.endAll();
-        dc.begin("/answer", { query: value });
+        await dc.endAll();
+        await dc.begin("/answer", { query: value });
       }
     ]);
   }

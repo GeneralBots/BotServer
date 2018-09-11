@@ -236,8 +236,14 @@ export class GBMinService {
     }, this);
   }
 
-  private receiver(adapter: BotFrameworkAdapter, req: any, res: any, conversationState: ConversationState, min: any, instance: any, appPackages: any[]) {
+  /**
+   * Bot Service hook method.
+   */
+  private receiver(adapter: BotFrameworkAdapter, req: any, res: any, conversationState
+    : ConversationState, min: any, instance: any, appPackages: any[]) {
+
     return adapter.processActivity(req, res, async (context) => {
+      
       const state = conversationState.get(context);
       const dc = min.dialogs.createContext(context, state);
       const user = min.userState.get(dc.context);

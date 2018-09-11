@@ -76,7 +76,7 @@ export class FeedbackDialog extends IGBDialog {
             "Sugestões melhoram muito minha qualidade...",
             "Obrigado pela sua iniciativa de sugestão."
           ];
-          dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
+          await dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
         }
 
         let messages = [
@@ -89,13 +89,13 @@ export class FeedbackDialog extends IGBDialog {
       async (dc, value) => {
         let rate = await AzureText.getSentiment(min.instance.textAnalyticsKey, "pt-br", value);
         if (rate > 0) {
-          dc.context.sendActivity("Bom saber que você gostou. Conte comigo.");
+          await dc.context.sendActivity("Bom saber que você gostou. Conte comigo.");
         } else {
-          dc.context.sendActivity(
+          await dc.context.sendActivity(
             "Vamos registrar sua questão, obrigado pela sinceridade."
           );
         }
-        dc.replace('/ask', { isReturning: true });
+        await dc.replace('/ask', { isReturning: true });
       }]);
   }
 }

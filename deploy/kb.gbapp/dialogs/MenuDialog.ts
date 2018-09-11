@@ -32,23 +32,13 @@
 
 "use strict";
 
-import { Length } from "sequelize-typescript";
-import {
-  CardAction,
-  HeroCard,
-  CardImage,
-  BotAdapter,
-  CardFactory,
-  MessageFactory
-} from "botbuilder";
+const UrlJoin = require("url-join");
+
+import { BotAdapter, CardFactory, MessageFactory } from "botbuilder";
 import { IGBDialog } from "botlib";
 import { GBMinInstance } from "botlib";
-import { AzureText } from "pragmatismo-io-framework";
 import { GuaribasSubject } from '../models';
 import { KBService } from "../services/KBService";
-
-const UrlJoin = require("url-join");
-const WaitUntil = require("wait-until");
 
 export class MenuDialog extends IGBDialog {
 
@@ -66,21 +56,21 @@ export class MenuDialog extends IGBDialog {
     min.dialogs.add("/menu", [
       async (dc, args) => {
         var rootSubjectId = null;
-        var botId = min.botId;
 
         // var msg = dc.message; TODO: message from Where in V4?
         // if (msg.attachments && msg.attachments.length > 0) {
         //   var attachment = msg.attachments[0];         
         // }
 
-
         if (args && args.data) {
           var subject = JSON.parse(args.data); // ?
 
+          // If there is a shortcut specified as subject destination, go there.
+
           if (subject.to) {
             let dialog = subject.to.split(":")[1];
-            dc.replace("/" + dialog);
-            dc.end();
+            await dc.replace("/" + dialog);
+            await dc.end();
             return;
           }
           const user = min.userState.get(dc.context);
@@ -88,7 +78,6 @@ export class MenuDialog extends IGBDialog {
           rootSubjectId = subject.subjectId;
 
           if (user.subjects.length > 0) {
-
             let data = await service.getFaqBySubjectArray("menu", user.subjects);
             await min.conversationalService.sendEvent(dc, "play", {
               playerType: "bullet",
@@ -100,39 +89,27 @@ export class MenuDialog extends IGBDialog {
           const user = min.userState.get(dc.context);
           user.subjects = [];
 
-          WaitUntil()
-            .interval(2000)
-            .times(1)
-            .condition(function (cb) {
-              return false;
-            })
-            .done(function (result) {
-              let messages = [
-                "Aqui estão algumas categorias de assuntos...",
-                "Selecionando o assunto você pode me ajudar a encontrar a resposta certa...",
-                "Você pode selecionar algum dos assuntos abaixo e perguntar algo..."
-              ];
-              dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
-            });
-
+          let messages = [
+            "Aqui estão algumas categorias de assuntos...",
+            "Selecionando o assunto você pode me ajudar a encontrar a resposta certa...",
+            "Você pode selecionar algum dos assuntos abaixo e perguntar algo..."
+          ];
+          await dc.context.sendActivity(messages[0]); // TODO: Handle rnd.
           user.isAsking = false;
         }
 
-        const msg = MessageFactory.text('Greetings from example message');
+        const msg = MessageFactory.text('');
         var attachments = [];
 
         let data = await service.getSubjectItems(
           min.instance.instanceId,
           rootSubjectId);
 
-
         msg.attachmentLayout = 'carousel';
-
 
         data.forEach(function (item: GuaribasSubject) {
 
           var subject = item;
-
           var card = CardFactory.heroCard(
             subject.title,
             CardFactory.images([UrlJoin(
@@ -177,10 +154,10 @@ export class MenuDialog extends IGBDialog {
       },
       async (dc, value) => {
         var text = value;
-        if (text==="no"||text==="n") { // TODO: Migrate to a common.
-          dc.replace("/feedback");
+        if (text === "no" || text === "n") { // TODO: Migrate to a common.
+          await dc.replace("/feedback");
         } else {
-          dc.replace("/ask");
+          await dc.replace("/ask");
         }
       }
     ]);

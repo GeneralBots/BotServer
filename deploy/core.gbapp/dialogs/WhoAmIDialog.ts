@@ -34,13 +34,13 @@
 
 import { GBConversationalService } from "./../services/GBConversationalService";
 import { GBCoreService } from "../services/GBCoreService";
-import { IGBDialog } from  "botlib";
+import { IGBDialog } from "botlib";
 import { GBMinInstance } from "botlib";
 import { BotAdapter } from "botbuilder";
 
 
 export class WhoAmIDialog extends IGBDialog {
-	
+
   /**
    * Setup dialogs flows and define services call.
    * 
@@ -48,20 +48,20 @@ export class WhoAmIDialog extends IGBDialog {
    * @param min The minimal bot instance data.
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
-	  
+
     min.dialogs.add("/whoAmI", [
       async (dc, args) => {
-        dc.context.sendActivity(`${min.instance.description}`);
+        await dc.context.sendActivity(`${min.instance.description}`);
 
-        if (min.instance.whoAmIVideo){
-          dc.context.sendActivity(`Vou te mostrar um vídeo. Por favor, aguarde...`);
-        min.conversationalService.sendEvent(dc, "play", {
-          playerType: "video",
-          data: min.instance.whoAmIVideo.trim()
-        });
-      }
+        if (min.instance.whoAmIVideo) {
+          await dc.context.sendActivity(`Vou te mostrar um vídeo. Por favor, aguarde...`);
+          await min.conversationalService.sendEvent(dc, "play", {
+            playerType: "video",
+            data: min.instance.whoAmIVideo.trim()
+          });
+        }
 
-        dc.replace('/ask', {isReturning: true});
+        await dc.replace('/ask', { isReturning: true });
       }
     ]);
   }
