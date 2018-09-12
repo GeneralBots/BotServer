@@ -32,32 +32,36 @@
 
 "use strict"
 
-import { CSService } from '../services/CSService'
+import { CSService } from "../services/CSService"
 import { AzureText } from "pragmatismo-io-framework"
 import { GBMinInstance } from "botlib"
 import { IGBDialog } from "botlib"
-import { BotAdapter } from 'botbuilder'
+import { BotAdapter } from "botbuilder"
 
 export class FeedbackDialog extends IGBDialog {
-
   /**
    * Setup dialogs flows and define services call.
-   * 
+   *
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
-
     const service = new CSService()
 
     min.dialogs.add("/feedbackNumber", [
-      async (dc) => {
+      async dc => {
         let messages = [
           "O que achou do meu atendimento, de 1 a 5?",
           "Qual a nota do meu atendimento?",
           "Como define meu atendimento numa escala de 1 a 5?"
         ]
-        await dc.prompt('choicePrompt', messages[0], ['1', '2', '3', '4', ' 5'])
+        await dc.prompt("choicePrompt", messages[0], [
+          "1",
+          "2",
+          "3",
+          "4",
+          " 5"
+        ])
       },
       async (dc, value) => {
         let rate = value.entity
@@ -83,21 +87,29 @@ export class FeedbackDialog extends IGBDialog {
           "Como foi meu atendimento?",
           "Gostaria de dizer algo sobre meu atendimento?"
         ]
-        await dc.prompt('textPrompt', messages[0])
+        await dc.prompt("textPrompt", messages[0])
       },
       async (dc, value) => {
-        let rate = await AzureText.getSentiment(min.instance.textAnalyticsKey,
+        let rate = await AzureText.getSentiment(
+          min.instance.textAnalyticsKey,
           min.instance.textAnalyticsServerUrl,
-          min.conversationalService.getCurrentLanguage(dc), value)
+          min.conversationalService.getCurrentLanguage(dc),
+          value
+        )
 
-        if (rate > 0) {
-          await dc.context.sendActivity("Bom saber que você gostou. Conte comigo.")
+        if (rate > 0.50) {
+          await dc.context.sendActivity(
+            "Bom saber que você gostou. Conte comigo."
+          )
         } else {
           await dc.context.sendActivity(
             "Vamos registrar sua questão, obrigado pela sinceridade."
           )
+
+          // TODO: Record.
         }
-        await dc.replace('/ask', { isReturning: true })
-      }])
+        await dc.replace("/ask", { isReturning: true })
+      }
+    ])
   }
 }

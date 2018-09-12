@@ -63,7 +63,7 @@ export class MenuDialog extends IGBDialog {
         // }
 
         if (args && args.data) {
-          var subject = JSON.parse(args.data) // ?
+          var subject = args.data
 
           // If there is a shortcut specified as subject destination, go there.
 

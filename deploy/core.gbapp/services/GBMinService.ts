@@ -30,12 +30,12 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict"
+"use strict";
 
-const { TextPrompt } = require("botbuilder-dialogs")
-const UrlJoin = require("url-join")
-const express = require("express")
-const logger = require("../../../src/logger")
+const { TextPrompt } = require("botbuilder-dialogs");
+const UrlJoin = require("url-join");
+const express = require("express");
+const logger = require("../../../src/logger");
 
 import {
   BotFrameworkAdapter,
@@ -43,32 +43,29 @@ import {
   ConversationState,
   MemoryStorage,
   UserState
-} from "botbuilder"
+} from "botbuilder";
 
-import { GBCoreService } from "./GBCoreService"
-import { GBConversationalService } from "./GBConversationalService"
-import * as request from "request-promise-native"
-import {
-  GBMinInstance,
-  IGBPackage,
-} from "botlib"
-import { GBAnalyticsPackage } from "../../analytics.gblib"
-import { GBCorePackage } from "../../core.gbapp"
-import { GBKBPackage } from "../../kb.gbapp"
-import { GBDeployer } from "./GBDeployer"
-import { GBSecurityPackage } from "../../security.gblib"
-import { GBAdminPackage } from "./../../admin.gbapp/index"
-import { GBCustomerSatisfactionPackage } from "../../customer-satisfaction.gbapp"
-import { GBWhatsappPackage } from "../../whatsapp.gblib"
+import { GBCoreService } from "./GBCoreService";
+import { GBConversationalService } from "./GBConversationalService";
+import * as request from "request-promise-native";
+import { GBMinInstance, IGBPackage } from "botlib";
+import { GBAnalyticsPackage } from "../../analytics.gblib";
+import { GBCorePackage } from "../../core.gbapp";
+import { GBKBPackage } from "../../kb.gbapp";
+import { GBDeployer } from "./GBDeployer";
+import { GBSecurityPackage } from "../../security.gblib";
+import { GBAdminPackage } from "./../../admin.gbapp/index";
+import { GBCustomerSatisfactionPackage } from "../../customer-satisfaction.gbapp";
+import { GBWhatsappPackage } from "../../whatsapp.gblib";
 
 /** Minimal service layer for a bot. */
 
 export class GBMinService {
-  core: GBCoreService
-  conversationalService: GBConversationalService
-  deployer: GBDeployer
+  core: GBCoreService;
+  conversationalService: GBConversationalService;
+  deployer: GBDeployer;
 
-  corePackage = "core.gbai"
+  corePackage = "core.gbai";
 
   /**
    * Static initialization of minimal instance.
@@ -80,9 +77,9 @@ export class GBMinService {
     conversationalService: GBConversationalService,
     deployer: GBDeployer
   ) {
-    this.core = core
-    this.conversationalService = conversationalService
-    this.deployer = deployer
+    this.core = core;
+    this.conversationalService = conversationalService;
+    this.deployer = deployer;
   }
 
   /**
@@ -102,20 +99,20 @@ export class GBMinService {
   ): Promise<GBMinInstance> {
     // Serves default UI on root address '/'.
 
-    let uiPackage = "default.gbui"
+    let uiPackage = "default.gbui";
     server.use(
       "/",
       express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, "build"))
-    )
+    );
 
     // Loads all bot instances from storage and starting loading them.
 
-    let instances = await this.core.loadInstances()
+    let instances = await this.core.loadInstances();
     Promise.all(
       instances.map(async instance => {
         // Gets the authorization key for each instance from Bot Service.
 
-        let webchatToken = await this.getWebchatToken(instance)
+        let webchatToken = await this.getWebchatToken(instance);
 
         // Serves the bot information object via HTTP so clients can get
         // instance information stored on server.
@@ -124,10 +121,10 @@ export class GBMinService {
           (async () => {
             // Returns the instance object to clients requesting bot info.
 
-            let botId = req.params.botId
-            let instance = await this.core.loadInstance(botId)
+            let botId = req.params.botId;
+            let instance = await this.core.loadInstance(botId);
             if (instance) {
-              let speechToken = await this.getSTSToken(instance)
+              let speechToken = await this.getSTSToken(instance);
 
               res.send(
                 JSON.stringify({
@@ -138,28 +135,28 @@ export class GBMinService {
                   speechToken: speechToken,
                   conversationId: webchatToken.conversationId
                 })
-              )
+              );
             } else {
-              let error = `Instance not found: ${botId}.`
-              res.sendStatus(error)
-              logger.error(error)
+              let error = `Instance not found: ${botId}.`;
+              res.sendStatus(error);
+              logger.error(error);
             }
-          })()
-        })
+          })();
+        });
 
         // Build bot adapter.
 
         var { min, adapter, conversationState } = await this.buildBotAdapter(
           instance
-        )
+        );
 
         // Call the loadBot context.activity for all packages.
 
-        this.invokeLoadBot(appPackages, min, server)
+        this.invokeLoadBot(appPackages, min, server);
 
         // Serves individual URL for each bot conversational interface...
 
-        let url = `/api/messages/${instance.botId}`
+        let url = `/api/messages/${instance.botId}`;
         server.post(url, async (req, res) => {
           return this.receiver(
             adapter,
@@ -169,20 +166,20 @@ export class GBMinService {
             min,
             instance,
             appPackages
-          )
-        })
+          );
+        });
         logger.info(
           `GeneralBots(${instance.engineName}) listening on: ${url}.`
-        )
+        );
 
         // Serves individual URL for each bot user interface.
 
-        let uiUrl = `/${instance.botId}`
+        let uiUrl = `/${instance.botId}`;
         server.use(
           uiUrl,
           express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, "build"))
-        )
-        logger.info(`Bot UI ${uiPackage} acessible at: ${uiUrl}.`)
+        );
+        logger.info(`Bot UI ${uiPackage} acessible at: ${uiUrl}.`);
 
         // Setups handlers.
         // send: function (context.activity, next) {
@@ -199,38 +196,38 @@ export class GBMinService {
         //   )
         //   next()
       })
-    )
+    );
   }
 
   private async buildBotAdapter(instance: any) {
     let adapter = new BotFrameworkAdapter({
       appId: instance.marketplaceId,
       appPassword: instance.marketplacePassword
-    })
+    });
 
-    const storage = new MemoryStorage()
-    const conversationState = new ConversationState(storage)
-    const userState = new UserState(storage)
-    adapter.use(new BotStateSet(conversationState, userState))
+    const storage = new MemoryStorage();
+    const conversationState = new ConversationState(storage);
+    const userState = new UserState(storage);
+    adapter.use(new BotStateSet(conversationState, userState));
 
     // The minimal bot is built here.
 
-    let min = new GBMinInstance()
-    min.botId = instance.botId
-    min.bot = adapter
-    min.userState = userState
-    min.core = this.core
-    min.conversationalService = this.conversationalService
-    min.instance = await this.core.loadInstance(min.botId)
-    min.dialogs.add("textPrompt", new TextPrompt())
+    let min = new GBMinInstance();
+    min.botId = instance.botId;
+    min.bot = adapter;
+    min.userState = userState;
+    min.core = this.core;
+    min.conversationalService = this.conversationalService;
+    min.instance = await this.core.loadInstance(min.botId);
+    min.dialogs.add("textPrompt", new TextPrompt());
 
-    return { min, adapter, conversationState }
+    return { min, adapter, conversationState };
   }
 
   private invokeLoadBot(appPackages: any[], min: any, server: any) {
     appPackages.forEach(e => {
       e.sysPackages = new Array<IGBPackage>();
-      
+
       [
         GBAdminPackage,
         GBAnalyticsPackage,
@@ -240,19 +237,19 @@ export class GBMinService {
         GBCustomerSatisfactionPackage,
         GBWhatsappPackage
       ].forEach(sysPackage => {
-        logger.info(`Loading sys package: ${sysPackage.name}...`)
-        let p = Object.create(sysPackage.prototype) as IGBPackage
-        p.loadBot(min)
-        e.sysPackages.push(p)
+        logger.info(`Loading sys package: ${sysPackage.name}...`);
+        let p = Object.create(sysPackage.prototype) as IGBPackage;
+        p.loadBot(min);
+        e.sysPackages.push(p);
         if (sysPackage.name === "GBWhatsappPackage") {
-          let url = "/instances/:botId/whatsapp"
+          let url = "/instances/:botId/whatsapp";
           server.post(url, (req, res) => {
-            p["channel"].received(req, res)
-          })
+            p["channel"].received(req, res);
+          });
         }
-      }, this)
-      e.loadBot(min)
-    }, this)
+      }, this);
+      e.loadBot(min);
+    }, this);
   }
 
   /**
@@ -268,73 +265,75 @@ export class GBMinService {
     appPackages: any[]
   ) {
     return adapter.processActivity(req, res, async context => {
-      const state = conversationState.get(context)
-      const dc = min.dialogs.createContext(context, state)
-      const user = min.userState.get(dc.context)
+      const state = conversationState.get(context);
+      const dc = min.dialogs.createContext(context, state);
+      const user = min.userState.get(dc.context);
+
       if (!user.loaded) {
         await min.conversationalService.sendEvent(dc, "loadInstance", {
           instanceId: instance.instanceId,
           botId: instance.botId,
           theme: instance.theme,
           secret: instance.webchatKey
-        })
-        user.loaded = true
-        user.subjects = []
+        });
+        user.loaded = true;
+        user.subjects = [];
       }
-      logger.info(`[RCV]: ${context.activity.type}, ChannelID: ${
-        context.activity.channelId
-      },
-               ConversationID: ${context.activity.conversation.id},
-               Name: ${context.activity.name}, Text: ${
-        context.activity.text
-      }.`)
+
+      logger.info(
+        `[RCV]: ${context.activity.type}, ChannelID: ${
+          context.activity.channelId
+        }, Name: ${context.activity.name}, Text: ${context.activity.text}.`
+      );
       if (
         context.activity.type === "conversationUpdate" &&
         context.activity.membersAdded.length > 0
       ) {
-        let member = context.activity.membersAdded[0]
+        let member = context.activity.membersAdded[0];
         if (member.name === "GeneralBots") {
-          logger.info(`Bot added to conversation, starting chat...`)
+          logger.info(`Bot added to conversation, starting chat...`);
           appPackages.forEach(e => {
-            e.onNewSession(min, dc)
-          })
-          await dc.begin("/")
+            e.onNewSession(min, dc);
+          });
+          await dc.begin("/");
         } else {
-          logger.info(`Member added to conversation: ${member.name}`)
+          logger.info(`Member added to conversation: ${member.name}`);
         }
       } else if (context.activity.type === "message") {
         // Check to see if anyone replied. If not then start echo dialog
 
         if (context.activity.text === "admin") {
-          await dc.begin("/admin")
+          await dc.begin("/admin");
+        } else if (context.activity.text.startsWith("{\"title\"")) {
+          await dc.begin("/menu", {data:JSON.parse(context.activity.text)});
         } else {
-          await dc.continue()
+          await dc.continue();
         }
       } else if (context.activity.type === "event") {
         if (context.activity.name === "whoAmI") {
-          await dc.begin("/whoAmI")
+          await dc.begin("/whoAmI");
         } else if (context.activity.name === "showSubjects") {
-          await dc.begin("/menu")
+          await dc.begin("/menu");
         } else if (context.activity.name === "giveFeedback") {
           await dc.begin("/feedback", {
             fromMenu: true
-          })
+          });
         } else if (context.activity.name === "showFAQ") {
-          await dc.begin("/faq")
+          await dc.begin("/faq");
         } else if (context.activity.name === "ask") {
           await dc.begin("/answer", {
             query: (context.activity as any).data,
             fromFaq: true
-          })
+          });
         } else if (context.activity.name === "quality") {
           await dc.begin("/quality", {
             // TODO: score: context.activity.data
-          })
+          });
         } else {
-          await dc.continue()
+          await dc.continue();
         }
       }
-    })
+    });
   }
 
   /**
@@ -350,15 +349,15 @@ export class GBMinService {
       headers: {
         Authorization: `Bearer ${instance.webchatKey}`
       }
-    }
+    };
 
     try {
-      let json = await request(options)
-      return Promise.resolve(JSON.parse(json))
+      let json = await request(options);
+      return Promise.resolve(JSON.parse(json));
     } catch (error) {
-      let msg = `Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`
-      logger.error(msg)
-      return Promise.reject(msg)
+      let msg = `Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
+      logger.error(msg);
+      return Promise.reject(msg);
     }
   }
 
@@ -377,14 +376,14 @@ export class GBMinService {
       headers: {
         "Ocp-Apim-Subscription-Key": instance.speechKey
       }
-    }
+    };
 
     try {
-      return await request(options)
+      return await request(options);
     } catch (error) {
-      let msg = `Error calling Speech to Text client. Error is: ${error}.`
-      logger.error(msg)
-      return Promise.reject(msg)
+      let msg = `Error calling Speech to Text client. Error is: ${error}.`;
+      logger.error(msg);
+      return Promise.reject(msg);
     }
   }
 }
