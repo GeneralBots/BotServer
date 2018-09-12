@@ -98,7 +98,7 @@ export class GBServer {
           // Build a minimal bot instance for each .gbot deployment.
 
           let conversationalService = new GBConversationalService(core)
-          let minService = new GBMinService(core, conversationalService, deployer);
+          let minService = new GBMinService(core, conversationalService, deployer)
 
           [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage,
             GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(e => {
