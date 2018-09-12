@@ -601,15 +601,17 @@ export class KBService {
   async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string) {
     let packageType = Path.extname(localPath)
     let packageName = Path.basename(localPath)
-    logger.info("[GBDeployer] Opening package: ", localPath)
+    logger.info(`[GBDeployer] Opening package: ${localPath}`)
     let packageObject = JSON.parse(
       Fs.readFileSync(UrlJoin(localPath, "package.json"), "utf8")
     )
 
     let instance = await core.loadInstance(packageObject.botId)
+    logger.info(`[GBDeployer] Beginning importing: ${localPath}`)
     let p = await deployer.deployPackageToStorage(
       instance.instanceId,
       packageName)
     await this.importKbPackage(localPath, p, instance)
+    logger.info(`[GBDeployer] Finished importing ${localPath}`)
   }
 }

@@ -57,11 +57,6 @@ export class MenuDialog extends IGBDialog {
       async (dc, args) => {
         var rootSubjectId = null
 
-        // var msg = dc.message TODO: message from Where in V4?
-        // if (msg.attachments && msg.attachments.length > 0) {
-        //   var attachment = msg.attachments[0]         
-        // }
-
         if (args && args.data) {
           var subject = args.data
 
@@ -73,10 +68,15 @@ export class MenuDialog extends IGBDialog {
             await dc.end()
             return
           }
+
+          // Adds to bot a perception of a new subject.
+
           const user = min.userState.get(dc.context)
           user.subjects.push(subject)
           rootSubjectId = subject.subjectId
 
+          // Whenever a subject is selected, shows a faq about it.
+          
           if (user.subjects.length > 0) {
             let data = await service.getFaqBySubjectArray("menu", user.subjects)
             await min.conversationalService.sendEvent(dc, "play", {
@@ -135,6 +135,7 @@ export class MenuDialog extends IGBDialog {
 
         if (attachments.length == 0) {
           const user = min.userState.get(dc.context)
+
           if (user.subjects && user.subjects.length > 0) {
             await dc.context.sendActivity(
               `Vamos pesquisar sobre ${KBService.getFormattedSubjectItems(

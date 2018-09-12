@@ -96,9 +96,12 @@ export class GBServer {
           let deployer = new GBDeployer(core, new GBImporter(core))
 
           // Build a minimal bot instance for each .gbot deployment.
-
+          
           let conversationalService = new GBConversationalService(core)
-          let minService = new GBMinService(core, conversationalService, deployer)
+          let minService = new GBMinService(core, conversationalService, deployer);
+
+          // NOTE: the semicolon is necessary before this line.
+          // Loads all system packages.
 
           [GBAdminPackage, GBAnalyticsPackage, GBCorePackage, GBSecurityPackage,
             GBKBPackage, GBCustomerSatisfactionPackage, GBWhatsappPackage].forEach(e => {

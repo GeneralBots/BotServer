@@ -226,7 +226,9 @@ export class GBMinService {
 
   private invokeLoadBot(appPackages: any[], min: any, server: any) {
     appPackages.forEach(e => {
-      e.sysPackages = new Array<IGBPackage>()
+      e.sysPackages = new Array<IGBPackage>();
+
+      // NOTE: A semicolon is necessary before this line.
 
       [
         GBAdminPackage,
@@ -310,6 +312,11 @@ export class GBMinService {
           await dc.continue()
         }
       } else if (context.activity.type === "event") {
+        
+        // Empties dialog stack before going to the target.
+
+        await dc.endAll()
+
         if (context.activity.name === "whoAmI") {
           await dc.begin("/whoAmI")
         } else if (context.activity.name === "showSubjects") {
