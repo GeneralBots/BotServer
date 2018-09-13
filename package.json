@@ -47,6 +47,7 @@
     "express-promise-router": "^3.0.3",
     "fs-extra": "^7.0.0",
     "fs-walk": "^0.0.2",
+    "localize": "^0.4.7",
     "marked": "^0.5.0",
     "pragmatismo-io-framework": "^1.0.15",
     "reflect-metadata": "^0.1.12",

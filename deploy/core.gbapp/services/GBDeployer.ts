@@ -1,4 +1,3 @@
-import { IGBPackage } from "botlib"
 /*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
@@ -46,6 +45,7 @@ import { IGBCoreService, IGBInstance } from "botlib"
 import { GBConfigService } from "./GBConfigService"
 import { GBError } from "botlib"
 import { GuaribasPackage } from "../models/GBModel"
+import { IGBPackage } from "botlib"
 
 /** Deployer service for bots, themes, ai and more. */
 export class GBDeployer {

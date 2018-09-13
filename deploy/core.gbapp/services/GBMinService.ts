@@ -97,6 +97,7 @@ export class GBMinService {
     server: any,
     appPackages: Array<IGBPackage>
   ): Promise<GBMinInstance> {
+
     // Serves default UI on root address '/'.
 
     let uiPackage = "default.gbui"
@@ -110,6 +111,7 @@ export class GBMinService {
     let instances = await this.core.loadInstances()
     Promise.all(
       instances.map(async instance => {
+
         // Gets the authorization key for each instance from Bot Service.
 
         let webchatToken = await this.getWebchatToken(instance)
@@ -119,6 +121,7 @@ export class GBMinService {
 
         server.get("/instances/:botId", (req, res) => {
           (async () => {
+            
             // Returns the instance object to clients requesting bot info.
 
             let botId = req.params.botId
@@ -269,6 +272,7 @@ export class GBMinService {
     return adapter.processActivity(req, res, async context => {
       const state = conversationState.get(context)
       const dc = min.dialogs.createContext(context, state)
+      dc.context.activity.locale = "pt-BR"
       const user = min.userState.get(dc.context)
 
       if (!user.loaded) {
@@ -291,26 +295,44 @@ export class GBMinService {
         context.activity.type === "conversationUpdate" &&
         context.activity.membersAdded.length > 0
       ) {
+        
         let member = context.activity.membersAdded[0]
         if (member.name === "GeneralBots") {
           logger.info(`Bot added to conversation, starting chat...`)
           appPackages.forEach(e => {
             e.onNewSession(min, dc)
           })
+
+          // Starts root dialog.
+
           await dc.begin("/")
+
         } else {
           logger.info(`Member added to conversation: ${member.name}`)
         }
+
+      // Processes messages.
+
       } else if (context.activity.type === "message") {
-        // Check to see if anyone replied. If not then start echo dialog
+
+        // Checks for /admin request.
 
         if (context.activity.text === "admin") {
           await dc.begin("/admin")
+
+        // Checks for /menu JSON signature.
+        
         } else if (context.activity.text.startsWith("{\"title\"")) {
           await dc.begin("/menu", {data:JSON.parse(context.activity.text)})
+
+        // Otherwise, continue to the active dialog in the stack.
+
         } else {
           await dc.continue()
         }
+
+      // Processes events.
+
       } else if (context.activity.type === "event") {
         
         // Empties dialog stack before going to the target.

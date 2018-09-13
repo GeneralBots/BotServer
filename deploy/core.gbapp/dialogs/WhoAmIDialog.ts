@@ -32,8 +32,6 @@
 
 "use strict"
 
-import { GBConversationalService } from "./../services/GBConversationalService"
-import { GBCoreService } from "../services/GBCoreService"
 import { IGBDialog } from "botlib"
 import { GBMinInstance } from "botlib"
 import { BotAdapter } from "botbuilder"
@@ -54,7 +52,7 @@ export class WhoAmIDialog extends IGBDialog {
         await dc.context.sendActivity(`${min.instance.description}`)
 
         if (min.instance.whoAmIVideo) {
-          await dc.context.sendActivity(`Vou te mostrar um vídeo. Por favor, aguarde...`)
+          await dc.context.sendActivity("show_video")
           await min.conversationalService.sendEvent(dc, "play", {
             playerType: "video",
             data: min.instance.whoAmIVideo.trim()

@@ -32,12 +32,11 @@
 
 "use strict"
 
-const WaitUntil = require("wait-until")
-import { GBCoreService } from "../services/GBCoreService"
 import { IGBDialog } from "botlib"
-import { GBConversationalService } from "../services/GBConversationalService"
 import { GBMinInstance } from "botlib"
 import { BotAdapter } from "botbuilder"
+const localize = require("localize")(__dirname)
+const _T = localize.translate
 
 export class WelcomeDialog extends IGBDialog {
   /**
@@ -53,13 +52,14 @@ export class WelcomeDialog extends IGBDialog {
       async (dc, args) => {
 
         const user = min.userState.get(dc.context)
-
+        localize.setLocale(dc.context.activity.locale.split("-")[0])
+        
         if (!user.once) {
           user.once = true
           var a = new Date()
           const date = a.getHours()
           var msg =
-            date < 12 ? "bom dia" : date < 18 ? "boa tarde" : "boa noite"
+            date < 12 ? _T("good morning") : date < 18 ? localize.translate("good evening") : _T("good night")
 
           let messages = [`Oi, ${msg}.`, `Oi!`, `Olá, ${msg}`, `Olá!`]
           await dc.context.sendActivity(messages[0])
