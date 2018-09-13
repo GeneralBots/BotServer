@@ -35,8 +35,7 @@
 import { IGBDialog } from "botlib"
 import { GBMinInstance } from "botlib"
 import { BotAdapter } from "botbuilder"
-const localize = require("localize")(__dirname)
-const _T = localize.translate
+const messages = require("./strings.json").messages
 
 export class WelcomeDialog extends IGBDialog {
   /**
@@ -52,17 +51,18 @@ export class WelcomeDialog extends IGBDialog {
       async (dc, args) => {
 
         const user = min.userState.get(dc.context)
-        localize.setLocale(dc.context.activity.locale.split("-")[0])
+        let loc = dc.context.activity.locale;
         
         if (!user.once) {
           user.once = true
           var a = new Date()
           const date = a.getHours()
           var msg =
-            date < 12 ? _T("good morning") : date < 18 ? localize.translate("good evening") : _T("good night")
+            date < 12 ? messages[loc].good_morning : date < 18 ? 
+            messages[loc].good_evening : messages[loc].good_night
 
-          let messages = [`Oi, ${msg}.`, `Oi!`, `Olá, ${msg}`, `Olá!`]
-          await dc.context.sendActivity(messages[0])
+          let messages1 = [`Oi, ${msg}.`, `Oi!`, `Olá, ${msg}`, `Olá!`]
+          await dc.context.sendActivity(messages1[0])
 
           if (dc.context.activity && dc.context.activity.type == "message" &&
             dc.context.activity.text != "") {

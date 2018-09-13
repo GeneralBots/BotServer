@@ -36,6 +36,7 @@ const { TextPrompt } = require("botbuilder-dialogs")
 const UrlJoin = require("url-join")
 const express = require("express")
 const logger = require("../../../src/logger")
+const request = require('request-promise-native')
 
 import {
   BotFrameworkAdapter,
@@ -47,7 +48,6 @@ import {
 
 import { GBCoreService } from "./GBCoreService"
 import { GBConversationalService } from "./GBConversationalService"
-import * as request from "request-promise-native"
 import { GBMinInstance, IGBPackage } from "botlib"
 import { GBAnalyticsPackage } from "../../analytics.gblib"
 import { GBCorePackage } from "../../core.gbapp"
