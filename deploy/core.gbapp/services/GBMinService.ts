@@ -272,7 +272,7 @@ export class GBMinService {
     return adapter.processActivity(req, res, async context => {
       const state = conversationState.get(context)
       const dc = min.dialogs.createContext(context, state)
-      dc.context.activity.locale = "pt-BR"
+      dc.context.activity.locale = "en-US"
       const user = min.userState.get(dc.context)
 
       if (!user.loaded) {

@@ -30,17 +30,17 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-const UrlJoin = require("url-join");
+const UrlJoin = require("url-join")
 
-import { BotAdapter, CardFactory, MessageFactory } from "botbuilder";
-import { IGBDialog } from "botlib";
-import { GBMinInstance } from "botlib";
-import { GuaribasSubject } from "../models";
-import { KBService } from "../services/KBService";
-import { Messages } from "../strings";
-import { AzureText } from "pragmatismo-io-framework";
+import { BotAdapter, CardFactory, MessageFactory } from "botbuilder"
+import { IGBDialog } from "botlib"
+import { GBMinInstance } from "botlib"
+import { GuaribasSubject } from "../models"
+import { KBService } from "../services/KBService"
+import { Messages } from "../strings"
+import { AzureText } from "pragmatismo-io-framework"
 
 export class MenuDialog extends IGBDialog {
   /**
@@ -50,30 +50,30 @@ export class MenuDialog extends IGBDialog {
    * @param min The minimal bot instance data.
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
-    var service = new KBService(min.core.sequelize);
+    var service = new KBService(min.core.sequelize)
 
     min.dialogs.add("/menu", [
       async (dc, args) => {
-        const locale = dc.context.activity.locale;
-        var rootSubjectId = null;
+        const locale = dc.context.activity.locale
+        var rootSubjectId = null
 
         if (args && args.data) {
-          var subject = args.data;
+          var subject = args.data
 
           // If there is a shortcut specified as subject destination, go there.
 
           if (subject.to) {
-            let dialog = subject.to.split(":")[1];
-            await dc.replace("/" + dialog);
-            await dc.end();
-            return;
+            let dialog = subject.to.split(":")[1]
+            await dc.replace("/" + dialog)
+            await dc.end()
+            return
           }
 
           // Adds to bot a perception of a new subject.
 
-          const user = min.userState.get(dc.context);
-          user.subjects.push(subject);
-          rootSubjectId = subject.subjectId;
+          const user = min.userState.get(dc.context)
+          user.subjects.push(subject)
+          rootSubjectId = subject.subjectId
 
           // Whenever a subject is selected, shows a faq about it.
 
@@ -81,32 +81,32 @@ export class MenuDialog extends IGBDialog {
             let data = await service.getFaqBySubjectArray(
               "menu",
               user.subjects
-            );
+            )
             await min.conversationalService.sendEvent(dc, "play", {
               playerType: "bullet",
               data: data.slice(0, 6)
-            });
+            })
           }
         } else {
-          const user = min.userState.get(dc.context);
-          user.subjects = [];
+          const user = min.userState.get(dc.context)
+          user.subjects = []
 
-          await dc.context.sendActivity(Messages[locale].here_is_subjects); // TODO: Handle rnd.
-          user.isAsking = false;
+          await dc.context.sendActivity(Messages[locale].here_is_subjects) // TODO: Handle rnd.
+          user.isAsking = false
         }
 
-        const msg = MessageFactory.text("");
-        var attachments = [];
+        const msg = MessageFactory.text("")
+        var attachments = []
 
         let data = await service.getSubjectItems(
           min.instance.instanceId,
           rootSubjectId
-        );
+        )
 
-        msg.attachmentLayout = "carousel";
+        msg.attachmentLayout = "carousel"
 
         data.forEach(function(item: GuaribasSubject) {
-          var subject = item;
+          var subject = item
           var card = CardFactory.heroCard(
             subject.title,
             CardFactory.images([
@@ -128,40 +128,40 @@ export class MenuDialog extends IGBDialog {
                 })
               }
             ])
-          );
+          )
 
-          attachments.push(card);
-        });
+          attachments.push(card)
+        })
 
         if (attachments.length == 0) {
-          const user = min.userState.get(dc.context);
+          const user = min.userState.get(dc.context)
 
           if (user.subjects && user.subjects.length > 0) {
             await dc.context.sendActivity(
               Messages[locale].lets_search(
                 KBService.getFormattedSubjectItems(user.subjects)
               )
-            );
+            )
           }
 
-          await dc.replace("/ask", {});
+          await dc.replace("/ask", {})
         } else {
-          msg.attachments = attachments;
-          await dc.context.sendActivity(msg);
+          msg.attachments = attachments
+          await dc.context.sendActivity(msg)
         }
 
-        const user = min.userState.get(dc.context);
-        user.isAsking = true;
+        const user = min.userState.get(dc.context)
+        user.isAsking = true
       },
       async (dc, value) => {
-        var text = value;
-        const locale = dc.context.activity.locale;
+        var text = value
+        const locale = dc.context.activity.locale
         if (AzureText.isIntentNo(locale, text)) {
-          await dc.replace("/feedback");
+          await dc.replace("/feedback")
         } else {
-          await dc.replace("/ask");
+          await dc.replace("/ask")
         }
       }
-    ]);
+    ])
   }
 }

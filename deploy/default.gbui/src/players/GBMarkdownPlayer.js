@@ -80,14 +80,14 @@ class GBMarkdownPlayer extends Component {
 
     var quality = 
       <div className="gb-markdown-player-quality">
-        <span ref={i => (this.quality = i)}>A resposta atende?</span>
+        <span ref={i => (this.quality = i)}>Is the answer OK?</span>
         &nbsp;&nbsp;
         <button className="gb-quality-button-yes" onClick={() => this.clickYes()} ref={i => (this.Yes = i)}>
-          Sim
+          Yes
         </button>
         &nbsp;|&nbsp;
         <button className="gb-quality-button-no" onClick={() => this.clickNo()} ref={i => (this.No = i)}>
-          Não
+          No
         </button>
       </div>;
 

@@ -69,26 +69,7 @@ export class AskDialog extends IGBDialog {
           throw new Error(`/answer being called with no args.query text.`);
         }
 
-        let locale = await AzureText.getLocale(
-          min.instance.textAnalyticsKey,
-          min.instance.textAnalyticsServerUrl,
-          text
-        );
-        if (locale != dc.context.activity.locale.split("-")[0]) {
-          switch (locale) {
-            case "pt":
-              dc.context.activity.locale = "pt-BR";
-              await dc.context.sendActivity(Messages[locale].changing_language);
-              break;
-            case "en":
-              dc.context.activity.locale = "en-US";
-              await dc.context.sendActivity(Messages[locale].changing_language);
-              break;
-            default:
-              await dc.context.sendActivity(`Unknown language: ${locale}`);
-              break;
-          }
-        }
+        let locale = dc.context.activity.locale
 
         // Stops any content on projector.
 

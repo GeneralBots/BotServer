@@ -41,8 +41,6 @@ import { GBImporter } from '../../core.gbapp/services/GBImporter'
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService'
 import { KBService } from './../../kb.gbapp/services/KBService'
 import { BotAdapter } from "botbuilder"
-import {messages} from "./Strings"
-import { reject } from "async"
 
 /**
  * Dialogs for administration tasks.

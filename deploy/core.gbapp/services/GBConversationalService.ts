@@ -39,6 +39,8 @@ import { IGBConversationalService } from "botlib";
 import { GBMinInstance } from "botlib";
 import { LuisRecognizer } from "botbuilder-ai";
 import { MessageFactory } from "botbuilder";
+import { Messages } from "../strings";
+import { AzureText } from "pragmatismo-io-framework";
 
 export interface LanguagePickerSettings {
   defaultLocale?: string;
@@ -65,7 +67,6 @@ export class GBConversationalService implements IGBConversationalService {
   }
 
   async routeNLP(dc: any, min: GBMinInstance, text: string): Promise<boolean> {
-
     // Invokes LUIS.
 
     const model = new LuisRecognizer({
@@ -97,6 +98,29 @@ export class GBConversationalService implements IGBConversationalService {
       return Promise.resolve(true);
     } else {
       return Promise.resolve(false);
+    }
+  }
+
+  async checkLanguage(dc, min, text) {
+    let locale = await AzureText.getLocale(
+      min.instance.textAnalyticsKey,
+      min.instance.textAnalyticsServerUrl,
+      text
+    );
+    if (locale != dc.context.activity.locale.split("-")[0]) {
+      switch (locale) {
+        case "pt":
+          dc.context.activity.locale = "pt-BR";
+          await dc.context.sendActivity(Messages[locale].changing_language);
+          break;
+        case "en":
+          dc.context.activity.locale = "en-US";
+          await dc.context.sendActivity(Messages[locale].changing_language);
+          break;
+        default:
+          await dc.context.sendActivity(`Unknown language: ${locale}`);
+          break;
+      }
     }
   }
 }
