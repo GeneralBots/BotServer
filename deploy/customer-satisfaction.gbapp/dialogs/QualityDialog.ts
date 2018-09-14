@@ -30,61 +30,50 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict"
+"use strict";
 
-import { IGBDialog } from  "botlib"
+import { IGBDialog } from "botlib";
 
-import { GBMinInstance } from "botlib"
-import { CSService } from "../services/CSService"
-import { BotAdapter } from "botbuilder"
-const logger = require("../../../src/logger")
+import { GBMinInstance } from "botlib";
+import { CSService } from "../services/CSService";
+import { BotAdapter } from "botbuilder";
+import { Messages } from "../strings";
+const logger = require("../../../src/logger");
 
 export class QualityDialog extends IGBDialog {
-
   /**
    * Setup dialogs flows and define services call.
-   * 
+   *
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
-
-    const service = new CSService()
+    const service = new CSService();
 
     min.dialogs.add("/quality", [
       async (dc, args) => {
-        const user = min.userState.get(dc.context)
-        var score = args.score
+        const locale = dc.context.activity.locale;
+        const user = min.userState.get(dc.context);
+        var score = args.score;
 
         setTimeout(
           () => min.conversationalService.sendEvent(dc, "stop", null),
           400
-        )
+        );
 
         if (score == 0) {
-          let msg = [
-            "Desculpe-me, vamos tentar novamente.",
-            "Lamento... Vamos tentar novamente!",
-            "Desculpe-me. Por favor, tente escrever de outra forma?"
-          ]
-          await dc.context.sendActivity(msg[0])
+          await dc.context.sendActivity(Messages[locale].im_sorry_lets_try);
         } else {
-          let msg = [
-            "Ótimo, obrigado por contribuir com sua resposta.",
-            "Certo, obrigado pela informação.",
-            "Obrigado pela contribuição."
-          ]
-          await dc.context.sendActivity(msg[0])
+          await dc.context.sendActivity(Messages[locale].great_thanks);
 
           await service.insertQuestionAlternate(
             min.instance.instanceId,
             user.lastQuestion,
             user.lastQuestionId
-          )
-
-          await dc.replace('/ask', {isReturning: true})
+          );
+          await dc.replace("/ask", { isReturning: true });
         }
       }
-    ])
+    ]);
   }
 }

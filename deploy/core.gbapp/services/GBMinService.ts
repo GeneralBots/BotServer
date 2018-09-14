@@ -182,7 +182,7 @@ export class GBMinService {
           uiUrl,
           express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, "build"))
         )
-        logger.info(`Bot UI ${uiPackage} acessible at: ${uiUrl}.`)
+        logger.info(`Bot UI ${uiPackage} accessible at: ${uiUrl}.`)
 
         // Setups handlers.
         // send: function (context.activity, next) {

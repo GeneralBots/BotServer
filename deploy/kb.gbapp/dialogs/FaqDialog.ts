@@ -35,6 +35,7 @@
 import { KBService } from './../services/KBService'
 import { IGBDialog } from "botlib"
 import { BotAdapter } from "botbuilder"
+import { Messages } from "../strings";
 import { GBMinInstance } from "botlib"
 
 export class FaqDialog extends IGBDialog {
@@ -51,19 +52,14 @@ export class FaqDialog extends IGBDialog {
     min.dialogs.add("/faq", [
       async (dc, args) => {
         let data = await service.getFaqBySubjectArray("faq", null)
+        const locale = dc.context.activity.locale;
         if (data) {
           await min.conversationalService.sendEvent(dc, "play", {
             playerType: "bullet",
             data: data.slice(0, 10)
           })
-
-          let messages = [
-            "Veja algumas perguntas mais frequentes logo na tela. Clique numa delas para eu responder.",
-            "Você pode clicar em alguma destas perguntas da tela que eu te respondo de imediato.",
-            "Veja a lista que eu preparei logo aí na tela..."
-          ]
-
-          await dc.context.sendActivity(messages[0]) // TODO: RND messages.
+          
+          await dc.context.sendActivity(Messages[locale].see_faq) // TODO: RND messages.
           await dc.endAll()
         }
       }

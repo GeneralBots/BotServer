@@ -61,12 +61,12 @@ class SideBarMenu extends React.Component {
           <div className="IconsMenu">
             <div className="iconMenu">
               <span className="iconText" onClick={() => this.send("showFAQ")}>
-                Perguntas frequentes
+                FAQ
               </span>
             </div>
             <div className="iconMenu">
               <span className="iconText" onClick={() => this.send("whoAmI")}>
-                Quem é você?
+                Who are You?
               </span>
             </div>
             <div className="iconMenu">
@@ -74,7 +74,7 @@ class SideBarMenu extends React.Component {
                 className="iconText"
                 onClick={() => this.send("showSubjects")}
               >
-                Assuntos
+                Subjects
               </span>
             </div>
             <div className="iconMenu">
@@ -82,7 +82,7 @@ class SideBarMenu extends React.Component {
                 className="iconText"
                 onClick={() => this.send("giveFeedback")}
               >
-                Sugestão
+                Suggestions
               </span>
             </div>
           </div>

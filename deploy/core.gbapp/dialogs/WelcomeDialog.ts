@@ -30,46 +30,48 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict"
+"use strict";
 
-import { IGBDialog } from "botlib"
-import { GBMinInstance } from "botlib"
-import { BotAdapter } from "botbuilder"
-const messages = require("./strings.json").messages
+import { IGBDialog } from "botlib";
+import { GBMinInstance } from "botlib";
+import { BotAdapter } from "botbuilder";
+import { Messages } from "../strings";
 
 export class WelcomeDialog extends IGBDialog {
   /**
    * Setup dialogs flows and define services call.
-   * 
+   *
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
-
     min.dialogs.add("/", [
-
       async (dc, args) => {
+        const user = min.userState.get(dc.context);
+        const locale = dc.context.activity.locale;
 
-        const user = min.userState.get(dc.context)
-        let loc = dc.context.activity.locale;
-        
         if (!user.once) {
-          user.once = true
-          var a = new Date()
-          const date = a.getHours()
-          var msg =
-            date < 12 ? messages[loc].good_morning : date < 18 ? 
-            messages[loc].good_evening : messages[loc].good_night
+          user.once = true;
+          var a = new Date();
+          const date = a.getHours();
+          var msg = 4;
+          date < 12
+            ? Messages[locale].good_morning
+            : date < 18
+              ? Messages[locale].good_evening
+              : Messages[locale].good_night;
 
-          let messages1 = [`Oi, ${msg}.`, `Oi!`, `Olá, ${msg}`, `Olá!`]
-          await dc.context.sendActivity(messages1[0])
+          await dc.context.sendActivity(Messages[locale].hi(msg));
 
-          if (dc.context.activity && dc.context.activity.type == "message" &&
-            dc.context.activity.text != "") {
-            await dc.replace("/answer", { query: dc.context.activity.text })
+          if (
+            dc.context.activity &&
+            dc.context.activity.type == "message" &&
+            dc.context.activity.text != ""
+          ) {
+            await dc.replace("/answer", { query: dc.context.activity.text });
           }
         }
       }
-    ])
+    ]);
   }
 }

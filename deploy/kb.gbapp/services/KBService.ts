@@ -40,6 +40,7 @@ const marked = require("marked")
 const path = require("path")
 const asyncPromise = require('async-promises')
 const walkPromise = require('walk-promise')
+import { Messages } from "../strings";
 
 import { Sequelize } from 'sequelize-typescript'
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService'
@@ -397,8 +398,7 @@ export class KBService {
             format = ".md"
           } else {
             logger.info(`[GBImporter] File not found: ${mediaFilename}.`)
-            answer =
-              "Por favor, contate a administração para rever esta pergunta."
+            answer = ""
           }
         }
 
@@ -464,13 +464,9 @@ export class KBService {
       })
     } else if (answer.content.length > 140 &&
       dc.context._activity.channelId === "webchat") {
-      let messages = [
-        "Vou te responder na tela para melhor visualização...",
-        "A resposta está na tela...",
-        "Veja a resposta na tela..."
-      ]
-
-      await dc.context.sendActivity(messages[0]) // TODO: Handle rnd.
+      const locale = dc.context.activity.locale;
+      
+      await dc.context.sendActivity(Messages[locale].will_answer_projector) // TODO: Handle rnd.
       var html = answer.content
 
       if (answer.format === ".md") {
