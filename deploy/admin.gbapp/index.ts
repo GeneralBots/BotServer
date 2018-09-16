@@ -38,11 +38,15 @@ import { AdminDialog } from './dialogs/AdminDialog'
 import { GBMinInstance, IGBPackage, IGBCoreService } from 'botlib'
 
 import { Sequelize } from 'sequelize-typescript'
+import { GuaribasAdmin } from './models/AdminModel';
 
 export class GBAdminPackage implements IGBPackage {
   sysPackages: IGBPackage[] = null
 
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+    core.sequelize.addModels([
+      GuaribasAdmin
+    ])
   }
 
   unloadPackage(core: IGBCoreService): void {

@@ -32,47 +32,30 @@
 
 "use strict";
 
-import { IGBDialog } from "botlib";
-import { GBMinInstance } from "botlib";
-import { BotAdapter } from "botbuilder";
-import { Messages } from "../strings";
+import {
+  Table,
+  Column,
+  Model,
+  CreatedAt,
+  UpdatedAt,
+} from "sequelize-typescript";
 
-export class WelcomeDialog extends IGBDialog {
-  /**
-   * Setup dialogs flows and define services call.
-   *
-   * @param bot The bot adapter.
-   * @param min The minimal bot instance data.
-   */
-  static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add("/", [
-      async (dc, args) => {
-        const user = min.userState.get(dc.context);
-        const locale = dc.context.activity.locale;
 
-        if (!user.once) {
-          user.once = true;
-          var a = new Date();
-          const date = a.getHours();
-          var msg =
-            date < 12
-              ? Messages[locale].good_morning
-              : date < 18
-                ? Messages[locale].good_evening
-                : Messages[locale].good_night;
+@Table
+export class GuaribasAdmin extends Model<GuaribasAdmin>
+ {
 
-          await dc.context.sendActivity(Messages[locale].hi(msg));
-          await dc.replace("/ask", { firstTime: true });
+  @Column
+  key: string;
 
-          if (
-            dc.context.activity &&
-            dc.context.activity.type == "message" &&
-            dc.context.activity.text != ""
-          ) {
-            await dc.replace("/answer", { query: dc.context.activity.text });
-          }
-        }
-      }
-    ]);
-  }
+  @Column
+  value: string;
+
+  @Column
+  @CreatedAt
+  createdAt: Date;
+
+  @Column
+  @UpdatedAt
+  updatedAt: Date;
 }

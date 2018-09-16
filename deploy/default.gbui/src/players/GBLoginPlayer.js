@@ -31,68 +31,54 @@
 \*****************************************************************************/
 
 import React from "react";
+import { Logger, LogLevel } from "msal";
 import { UserAgentApplication } from "msal";
 
 class GBLoginPlayer extends React.Component {
-
-  constructor(tenant) {
+  constructor() {
     super();
     this.state = {
-      token: "",
+      login: {}
     };
   }
 
-  
-
-  login() {
-
-    let config = {
-    tenant: "pragmatismo.onmicrosoft.com", //"6ecb2a67-15af-4582-ab85-cc65096ce471",
-    signUpSignInPolicy: "b2c_1_susi",
-    clientID: '47cbaa05-dbb4-46f8-8608-da386c5131f1'}
-
-
-    let authority = "https://login.microsoftonline.com/tfp/" +
-      config.tenant + "/" +
-      config.signUpSignInPolicy;
-
-    let userAgentApplication = new UserAgentApplication(
-      config.clientID, authority,
-      function (errorDesc, token, error, tokenType) {
-        console.log(token);
-      }
+  doLogin(info) {
+    let logger = new Logger(
+      (logLevel, message, piiEnabled) => {
+        console.log(message);
+      },
+      { level: LogLevel.Verbose }
     );
+
+    
+    let authority =
+      "https://login.microsoftonline.com/" +
+      this.state.login.authenticatorTenant;
 
     let graphScopes = ["Directory.AccessAsUser.All"];
 
-    userAgentApplication.loginPopup(graphScopes).then(function (idToken) {
-      userAgentApplication.acquireTokenSilent(graphScopes).then(function (accessToken) {
-        console.log(accessToken);
-
-      }, function (error) {
-        userAgentApplication.acquireTokenPopup(graphScopes).then(function (accessToken) {
-          console.log(accessToken);
-
-        }, function (error) {
+    let userAgentApplication = new UserAgentApplication(
+      this.state.login.authenticatorClientID,
+      authority,
+      function (errorDesc, token, error, tokenType) {
+        if (error) {
           console.log(error);
-        });
+        }
       })
-    }, function (error) {
-      console.log(error);
-    });
+
+    userAgentApplication.loginRedirect(graphScopes);
   }
 
-  play() {
+  play(data) {
+    this.setState({ login: data });
+  }
 
+  stop() {
+    this.setState({ login: [] });
   }
 
   render() {
-    return (
-      <button
-        value="Login"
-        onClick={this.login}
-      />
-    );
+    return <button onClick={() => this.doLogin(this.state.login)}>Login</button>;
   }
 }
 

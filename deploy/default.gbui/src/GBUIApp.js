@@ -45,6 +45,7 @@ import { SpeechSynthesizer } from "botframework-webchat/CognitiveServices";
 import { SynthesisGender } from "botframework-webchat/CognitiveServices";
 import { Chat } from "botframework-webchat";
 import GBPowerBIPlayer from "./players/GBPowerBIPlayer.js";
+import { UserAgentApplication } from "msal";
 
 class GBUIApp extends React.Component {
   constructor() {
@@ -56,6 +57,22 @@ class GBUIApp extends React.Component {
       token: null,
       instanceClient: null
     };
+  }
+
+  sendToken(token) {
+    setTimeout(() => {
+      window.botConnection
+        .postActivity({
+          type: "event",
+          name: "updateToken",
+          data: token,
+          locale: "en-us",
+          textFormat: "plain",
+          timestamp: new Date().toISOString(),
+          from: { id: "webUser", name: "You" }
+        })
+        .subscribe(this.send("success"));
+    }, 400);
   }
 
   send(command) {
@@ -93,8 +110,11 @@ class GBUIApp extends React.Component {
 
   configureChat() {
     var botId = window.location.href.split("/")[3];
+    if (botId.indexOf('#') != -1) {
+      botId = botId.split("#")[0];
+    }
 
-    if (!botId) {
+    if (!botId || botId == "") {
       botId = "[default]";
     }
 
@@ -102,7 +122,7 @@ class GBUIApp extends React.Component {
       .then(res => res.json())
       .then(
         result => {
-          this.setState({instanceClient:result});
+          this.setState({ instanceClient: result });
           this.setupBotConnection();
         },
         error => {
@@ -112,6 +132,38 @@ class GBUIApp extends React.Component {
           });
         }
       );
+  }
+
+  authenticate() {
+    let _this_ = this;
+    let authority =
+      "https://login.microsoftonline.com/" +
+      this.state.instanceClient.authenticatorTenant;
+
+    let graphScopes = ["Directory.AccessAsUser.All"];
+
+    let userAgentApplication = new UserAgentApplication(
+      this.state.instanceClient.authenticatorClientID,
+      authority,
+      function (errorDesc, token, error, tokenType) {
+        userAgentApplication.acquireTokenSilent(graphScopes).then(function (accessToken) {
+          _this_.sendToken(accessToken);
+        }, function (error) {
+          console.log(error);
+        })
+      }
+    );
+
+    if (!userAgentApplication.isCallback(window.location.hash) && window.parent === window && !window.opener) {
+      var user = userAgentApplication.getUser();
+      if (user) {
+        userAgentApplication.acquireTokenSilent(graphScopes).then(function (accessToken) {
+          _this_.sendToken(accessToken);
+        }, function (error) {
+          console.log(error);
+        })
+      }
+    }
   }
 
   setupBotConnection() {
@@ -124,14 +176,13 @@ class GBUIApp extends React.Component {
 
     botConnection.connectionStatus$.subscribe(connectionStatus => {
       if (connectionStatus === ConnectionStatus.Online) {
+        _this_.setState({ botConnection: botConnection });
         botConnection.postActivity({
           type: "event",
           value: "startGB",
           from: this.getUser(),
           name: "startGB"
-        });
-
-        _this_.setState({ botConnection: botConnection });
+        });        
       }
     });
 
@@ -145,8 +196,9 @@ class GBUIApp extends React.Component {
       )
       .subscribe(activity => {
         _this_.setState({ instance: activity.value });
+        _this_.authenticate()        
       });
-      
+
     botConnection.activity$
       .filter(activity => activity.type === "event" && activity.name === "stop")
       .subscribe(activity => {
@@ -168,7 +220,7 @@ class GBUIApp extends React.Component {
   }
 
   render() {
-    
+
 
     let playerComponent = "";
 
@@ -224,7 +276,7 @@ class GBUIApp extends React.Component {
             />
           );
           break;
-         case "login":
+        case "login":
           playerComponent = (
             <GBLoginPlayer
               app={this}
@@ -246,7 +298,7 @@ class GBUIApp extends React.Component {
 
     let speechOptions;
     let chat = <div />;
-    let gbCss =<div />;
+    let gbCss = <div />;
 
 
     let sideBar = (
@@ -254,7 +306,7 @@ class GBUIApp extends React.Component {
         <SidebarMenu chat={this.chat} instance={this.state.instance} />
       </div>
     );
-    
+
     if (this.state.botConnection && this.state.instance) {
       let token = this.state.instanceClient.speechToken;
       gbCss = <GBCss instance={this.state.instance} />;
@@ -264,7 +316,7 @@ class GBUIApp extends React.Component {
           resolve(token);
         });
       }
-  
+
       speechOptions = {
         speechRecognizer: new SpeechRecognizer({
           locale: "pt-br",
@@ -301,7 +353,7 @@ class GBUIApp extends React.Component {
 
     return (
       <div>
-        {gbCss}    
+        {gbCss}
         {sideBar}
         <div className="player">{playerComponent}</div>
         {chat}

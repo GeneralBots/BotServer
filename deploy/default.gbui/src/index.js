@@ -39,3 +39,4 @@ ReactDOM.render(
   <GBUIApp head={document.getElementsByTagName("head")[0]} />,
   document.getElementById("root")
 );
+

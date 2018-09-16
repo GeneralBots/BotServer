@@ -40,7 +40,6 @@ import { BotAdapter } from "botbuilder";
 import { Messages } from "../strings";
 import { LuisRecognizer } from "botbuilder-ai";
 
-
 const logger = require("../../../src/logger");
 
 export class AskDialog extends IGBDialog {
@@ -69,7 +68,7 @@ export class AskDialog extends IGBDialog {
           throw new Error(`/answer being called with no args.query text.`);
         }
 
-        let locale = dc.context.activity.locale
+        let locale = dc.context.activity.locale;
 
         // Stops any content on projector.
 
@@ -163,7 +162,7 @@ export class AskDialog extends IGBDialog {
             );
             await dc.replace("/ask", { isReturning: true });
           } else {
-            if (!(await min.conversationalService.runNLP(dc, min, text))) {
+            if (!(await min.conversationalService.routeNLP(dc, min, text))) {
               await dc.context.sendActivity(Messages[locale].did_not_find);
               await dc.replace("/ask", { isReturning: true });
             }
@@ -181,16 +180,21 @@ export class AskDialog extends IGBDialog {
           user.subjects = [];
         }
         let text = [];
-        if (user.subjects.length > 0) {
-          text = Messages[locale].which_question;
-        }
 
-        if (args && args.isReturning) {
+        // Three forms of asking.
+
+        if (args.firstTime) {
+          text = Messages[locale].ask_first_time;
+        } else if (args && args.isReturning) {
           text = Messages[locale].anything_else;
+        } else if (user.subjects.length > 0) {
+          text = Messages[locale].which_question;
+        } else {
+          throw new Error("Invalid use of /ask");
         }
 
         if (text.length > 0) {
-          await dc.prompt("textPrompt", text[0]);
+          await dc.prompt("textPrompt", text);
         }
       },
       async (dc, value) => {

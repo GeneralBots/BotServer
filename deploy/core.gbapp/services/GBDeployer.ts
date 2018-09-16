@@ -134,7 +134,7 @@ export class GBDeployer {
                 appPackagesProcessed++
               })
               .catch(err => {
-                logger.info(`Error deploying App (.gbapp): ${e}: ${err}`)
+                logger.error(`Error deploying App (.gbapp): ${e}: ${err}`)
                 appPackagesProcessed++
               })
           } else {
@@ -145,14 +145,16 @@ export class GBDeployer {
         WaitUntil()
           .interval(1000)
           .times(10)
-          .condition(function(cb) {
+          .condition(function (cb) {
             logger.info(`Waiting for app package deployment...`)
             cb(appPackagesProcessed == gbappPackages.length)
           })
-          .done(function(result) {
-            logger.info(`App Package deployment done.`)
+          .done(function (result) {
+            logger.info(`App Package deployment done.`);
 
-            core.syncDatabaseStructure()
+            (async () => {
+              await core.syncDatabaseStructure()
+            })()
 
             /** Deploys all .gbot files first. */
 
@@ -179,7 +181,7 @@ export class GBDeployer {
                 server.use("/themes/" + filenameOnly, express.static(filename))
                 logger.info(
                   `Theme (.gbtheme) assets accessible at: ${"/themes/" +
-                    filenameOnly}.`
+                  filenameOnly}.`
                 )
 
                 /** Knowledge base for bots. */
@@ -205,13 +207,13 @@ export class GBDeployer {
             })
 
             WaitUntil()
-              .interval(1000)
+              .interval(100)
               .times(5)
-              .condition(function(cb) {
+              .condition(function (cb) {
                 logger.info(`Waiting for package deployment...`)
                 cb(totalPackages == generalPackages.length)
               })
-              .done(function(result) {
+              .done(function (result) {
                 if (botPackages.length === 0) {
                   logger.info(
                     "The server is running with no bot instances, at least one .gbot file must be deployed."

@@ -30,14 +30,14 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict"
+"use strict";
 
 import {
   DataTypes,
   DataTypeUUIDv4,
   DataTypeDate,
   DataTypeDecimal
-} from "sequelize"
+} from "sequelize";
 
 import {
   Sequelize,
@@ -54,170 +54,214 @@ import {
   DataType,
   PrimaryKey,
   AutoIncrement
-} from "sequelize-typescript"
+} from "sequelize-typescript";
 
-import { IGBInstance } from "botlib"
+import { IGBInstance } from "botlib";
 
 @Table
-export class GuaribasInstance extends Model<GuaribasInstance> implements IGBInstance {
-
+export class GuaribasInstance extends Model<GuaribasInstance>
+  implements IGBInstance {
   @PrimaryKey
   @AutoIncrement
   @Column
-  instanceId: number
-
-  @Column applicationPrincipal: string
+  instanceId: number;
 
   @Column
-  whoAmIVideo: string
+  applicationPrincipal: string;
 
-  @Column botId: string
+  @Column
+  whoAmIVideo: string;
 
-  @Column title: string
+  @Column
+  botId: string;
 
-  @Column description: string
+  @Column
+  title: string;
 
-  @Column version: string
+  @Column
+  description: string;
 
-  @Column enabledAdmin: boolean
+  @Column
+  version: string;
+
+  @Column
+  enabledAdmin: boolean;
 
   /* Services section on bot.json */
 
-  @Column engineName: string
+  @Column
+  engineName: string;
 
-  @Column marketplaceId: string
+  @Column
+  marketplaceId: string;
 
-  @Column textAnalyticsKey: string
+  @Column
+  textAnalyticsKey: string;
 
-  @Column textAnalyticsServerUrl: string
+  @Column
+  textAnalyticsServerUrl: string;
 
-  @Column marketplacePassword: string
+  @Column
+  marketplacePassword: string;
 
-  @Column webchatKey: string
+  @Column
+  webchatKey: string;
 
-  @Column whatsappBotKey: string
+  @Column
+  authenticatorTenant: string;
+  @Column
+  authenticatorSignUpSignInPolicy: string;
+  @Column
+  authenticatorClientID: string;
 
-  @Column whatsappServiceKey: string
+  @Column
+  whatsappBotKey: string;
 
-  @Column whatsappServiceNumber: string
+  @Column
+  whatsappServiceKey: string;
 
-  @Column whatsappServiceUrl: string
+  @Column
+  whatsappServiceNumber: string;
 
-  @Column whatsappServiceWebhookUrl: string
+  @Column
+  whatsappServiceUrl: string;
 
-  @Column speechKey: string
+  @Column
+  whatsappServiceWebhookUrl: string;
 
-  @Column spellcheckerKey: string
+  @Column
+  smsKey: string;
 
-  @Column theme: string
+  @Column
+  smsSecret: string;
 
-  @Column ui: string
-
-  @Column kb: string
+  @Column
+  smsServiceNumber: string;
   
   @Column
-  nlpAppId: string
-  
+  speechKey: string;
+
   @Column
-  nlpSubscriptionKey: string
-  
+  spellcheckerKey: string;
+
+  @Column
+  theme: string;
+
+  @Column
+  ui: string;
+
+  @Column
+  kb: string;
+
+  @Column
+  nlpAppId: string;
+
+  @Column
+  nlpSubscriptionKey: string;
+
   @Column
   @Column({ type: DataType.STRING(512) })
-  nlpServerUrl: string
+  nlpServerUrl: string;
 
-  @Column searchHost: string
+  @Column
+  searchHost: string;
 
-  @Column searchKey: string
+  @Column
+  searchKey: string;
 
-  @Column searchIndex: string
+  @Column
+  searchIndex: string;
 
-  @Column searchIndexer: string
+  @Column
+  searchIndexer: string;
 
   /* Settings section of bot.json */
 
-  @Column(DataType.FLOAT) nlpVsSearch: number
+  @Column(DataType.FLOAT)
+  nlpVsSearch: number;
 
-  @Column(DataType.FLOAT) searchScore: number
+  @Column(DataType.FLOAT)
+  searchScore: number;
 
-  @Column(DataType.FLOAT) nlpScore: number
+  @Column(DataType.FLOAT)
+  nlpScore: number;
 
   @Column
   @CreatedAt
-  createdAt: Date
+  createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date
+  updatedAt: Date;
 }
 
 @Table
 export class GuaribasPackage extends Model<GuaribasPackage> {
-
   @PrimaryKey
   @AutoIncrement
   @Column
-  packageId: number
+  packageId: number;
 
   @Column
-  packageName: string
+  packageName: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number
+  instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance
+  instance: GuaribasInstance;
 
   @Column
   @CreatedAt
-  createdAt: Date
+  createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date
+  updatedAt: Date;
 }
 
 @Table
 export class GuaribasChannel extends Model<GuaribasChannel> {
-
   @PrimaryKey
   @AutoIncrement
   @Column
-  channelId: number
+  channelId: number;
 
-  @Column title: string
+  @Column
+  title: string;
 
   @Column
   @CreatedAt
-  createdAt: Date
+  createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date
+  updatedAt: Date;
 }
 
 @Table
 export class GuaribasException extends Model<GuaribasException> {
-
   @PrimaryKey
   @AutoIncrement
   @Column
-  exceptionId: number
+  exceptionId: number;
 
-  @Column message: string
+  @Column
+  message: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number
+  instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance
+  instance: GuaribasInstance;
 
   @Column
   @CreatedAt
-  createdAt: Date
+  createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date
+  updatedAt: Date;
 }

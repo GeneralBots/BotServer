@@ -83,7 +83,6 @@ export class GBServer {
         try {
 
           logger.info(`Accepting connections on ${port}...`)
-          logger.info(`Starting instances...`)
 
           // Reads basic configuration, initialize minimal services.
 
@@ -93,10 +92,11 @@ export class GBServer {
 
           // Boot a bot package if any.
 
+          logger.info(`Starting instances...`)
           let deployer = new GBDeployer(core, new GBImporter(core))
 
           // Build a minimal bot instance for each .gbot deployment.
-          
+
           let conversationalService = new GBConversationalService(core)
           let minService = new GBMinService(core, conversationalService, deployer);
 

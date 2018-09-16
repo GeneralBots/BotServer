@@ -37,6 +37,7 @@ import { Sequelize } from "sequelize-typescript"
 import { GBConfigService } from "./GBConfigService"
 import { IGBInstance, IGBCoreService } from "botlib"
 import { GuaribasInstance } from "../models/GBModel"
+import { GBAdminService } from "../../admin.gbapp/services/GBAdminService";
 
 /**
  *  Core service layer.
@@ -46,6 +47,11 @@ export class GBCoreService implements IGBCoreService {
    * Data access layer instance.
    */
   public sequelize: Sequelize
+
+  /**
+   * Administrative services.
+   */
+  public adminService: GBAdminService
 
   /**
    * Allows filtering on SQL generated before send to the database.
@@ -72,6 +78,7 @@ export class GBCoreService implements IGBCoreService {
    */
   constructor() {
     this.dialect = GBConfigService.get("DATABASE_DIALECT")
+    this.adminService = new GBAdminService();
   }
 
   /**
@@ -98,8 +105,8 @@ export class GBCoreService implements IGBCoreService {
         let logging =
           GBConfigService.get("DATABASE_LOGGING") === "true"
             ? (str: string) => {
-                logger.info(str)
-              }
+              logger.info(str)
+            }
             : false
 
         let encrypt = GBConfigService.get("DATABASE_ENCRYPT") === "true"
@@ -240,79 +247,38 @@ export class GBCoreService implements IGBCoreService {
   }
 
   async syncDatabaseStructure() {
-    return new Promise((resolve, reject) => {
-      if (GBConfigService.get("DATABASE_SYNC") === "true") {
-        const alter = GBConfigService.get("DATABASE_SYNC_ALTER") === "true"
-        const force = GBConfigService.get("DATABASE_SYNC_FORCE") === "true"
-        logger.info("Syncing database...")
-        this.sequelize
-          .sync({
-            alter: alter,
-            force: force
-          })
-          .then(
-            value => {
-              logger.info("Database synced.")
-              resolve(value)
-            },
-            err => reject(err)
-          )
-      } else {
-        logger.info("Database synchronization is disabled.")
-        resolve()
-      }
-    })
+    if (GBConfigService.get("DATABASE_SYNC") === "true") {
+      const alter = GBConfigService.get("DATABASE_SYNC_ALTER") === "true"
+      const force = GBConfigService.get("DATABASE_SYNC_FORCE") === "true"
+      logger.info("Syncing database...")
+      return this.sequelize.sync({
+        alter: alter,
+        force: force
+      });
+    } else {
+      let msg = "Database synchronization is disabled.";
+      logger.info(msg)
+      return Promise.reject(msg)
+    }
   }
 
   /**
    * Loads all items to start several listeners.
    */
   async loadInstances(): Promise<IGBInstance> {
-    return new Promise((resolve, reject) => {
-      GuaribasInstance.findAll({})
-        .then((items: IGBInstance[]) => {
-          if (!items) items = []
-
-          if (items.length == 0) {
-            resolve([])
-          } else {
-            resolve(items)
-          }
-        })
-        .catch(reason => {
-          if (reason.message.indexOf("no such table: GuaribasInstance") != -1) {
-            resolve([])
-          } else {
-            logger.info(`GuaribasServiceError: ${reason}`)
-            reject(reason)
-          }
-        })
-    })
+    return GuaribasInstance.findAll({});
   }
 
   /**
    * Loads just one Bot instance.
    */
   async loadInstance(botId: string): Promise<IGBInstance> {
-    return new Promise<IGBInstance>((resolve, reject) => {
-      let options = { where: {} }
+    let options = { where: {} }
 
-      if (botId != "[default]") {
-        options.where = { botId: botId }
-      }
+    if (botId != "[default]") {
+      options.where = { botId: botId }
+    }
 
-      GuaribasInstance.findOne(options)
-        .then((instance: IGBInstance) => {
-          if (instance) {
-            resolve(instance)
-          } else {
-            resolve(null)
-          }
-        })
-        .catch(err => {
-          logger.info(`GuaribasServiceError: ${err}`)
-          reject(err)
-        })
-    })
+    return GuaribasInstance.findOne(options);
   }
 }

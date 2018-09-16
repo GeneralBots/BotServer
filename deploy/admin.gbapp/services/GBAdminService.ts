@@ -30,49 +30,28 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+"use strict"
 
-import { IGBDialog } from "botlib";
-import { GBMinInstance } from "botlib";
-import { BotAdapter } from "botbuilder";
-import { Messages } from "../strings";
+import { GuaribasAdmin } from "../models/AdminModel";
 
-export class WelcomeDialog extends IGBDialog {
-  /**
-   * Setup dialogs flows and define services call.
-   *
-   * @param bot The bot adapter.
-   * @param min The minimal bot instance data.
-   */
-  static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add("/", [
-      async (dc, args) => {
-        const user = min.userState.get(dc.context);
-        const locale = dc.context.activity.locale;
+export class GBAdminService {
 
-        if (!user.once) {
-          user.once = true;
-          var a = new Date();
-          const date = a.getHours();
-          var msg =
-            date < 12
-              ? Messages[locale].good_morning
-              : date < 18
-                ? Messages[locale].good_evening
-                : Messages[locale].good_night;
+  async saveValue(key: string, value: string): Promise<GuaribasAdmin> {
+    let options = { where: {} }
+    options.where = { key: key }
+    let admin = await GuaribasAdmin.findOne(options);
+    if (admin == null) {
+      admin = new GuaribasAdmin();
+      admin.key = key;
+    }
+    admin.value = value;
+    return admin.save()
+  }
 
-          await dc.context.sendActivity(Messages[locale].hi(msg));
-          await dc.replace("/ask", { firstTime: true });
-
-          if (
-            dc.context.activity &&
-            dc.context.activity.type == "message" &&
-            dc.context.activity.text != ""
-          ) {
-            await dc.replace("/answer", { query: dc.context.activity.text });
-          }
-        }
-      }
-    ]);
+  async getValue(key: string) {
+    let options = { where: {} }
+    options.where = { key: key }
+    let obj = await GuaribasAdmin.findOne(options);
+    return Promise.resolve(obj.value);
   }
 }

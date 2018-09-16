@@ -121,7 +121,7 @@ export class GBMinService {
 
         server.get("/instances/:botId", (req, res) => {
           (async () => {
-            
+
             // Returns the instance object to clients requesting bot info.
 
             let botId = req.params.botId
@@ -136,7 +136,9 @@ export class GBMinService {
                   theme: instance.theme,
                   secret: instance.webchatKey, // TODO: Use token.
                   speechToken: speechToken,
-                  conversationId: webchatToken.conversationId
+                  conversationId: webchatToken.conversationId,
+                  authenticatorTenant: instance.authenticatorTenant,
+                  authenticatorClientID: instance.authenticatorClientID
                 })
               )
             } else {
@@ -270,97 +272,105 @@ export class GBMinService {
     appPackages: any[]
   ) {
     return adapter.processActivity(req, res, async context => {
-      const state = conversationState.get(context)
-      const dc = min.dialogs.createContext(context, state)
-      dc.context.activity.locale = "en-US"
-      const user = min.userState.get(dc.context)
 
-      if (!user.loaded) {
-        await min.conversationalService.sendEvent(dc, "loadInstance", {
-          instanceId: instance.instanceId,
-          botId: instance.botId,
-          theme: instance.theme,
-          secret: instance.webchatKey
-        })
-        user.loaded = true
-        user.subjects = []
-      }
+      try {
+        const state = conversationState.get(context)
+        const dc = min.dialogs.createContext(context, state)
+        dc.context.activity.locale = "en-US"
+        const user = min.userState.get(dc.context)
 
-      logger.info(
-        `[RCV]: ${context.activity.type}, ChannelID: ${
+        if (!user.loaded) {
+          await min.conversationalService.sendEvent(dc, "loadInstance", {
+            instanceId: instance.instanceId,
+            botId: instance.botId,
+            theme: instance.theme,
+            secret: instance.webchatKey
+          })
+          user.loaded = true
+          user.subjects = []
+        }
+
+        logger.info(
+          `[RCV]: ${context.activity.type}, ChannelID: ${
           context.activity.channelId
-        }, Name: ${context.activity.name}, Text: ${context.activity.text}.`
-      )
-      if (
-        context.activity.type === "conversationUpdate" &&
-        context.activity.membersAdded.length > 0
-      ) {
-        
-        let member = context.activity.membersAdded[0]
-        if (member.name === "GeneralBots") {
-          logger.info(`Bot added to conversation, starting chat...`)
-          appPackages.forEach(e => {
-            e.onNewSession(min, dc)
-          })
+          }, Name: ${context.activity.name}, Text: ${context.activity.text}.`
+        )
+        if (
+          context.activity.type === "conversationUpdate" &&
+          context.activity.membersAdded.length > 0
+        ) {
 
-          // Starts root dialog.
+          let member = context.activity.membersAdded[0]
+          if (member.name === "GeneralBots") {
+            logger.info(`Bot added to conversation, starting chat...`)
+            appPackages.forEach(e => {
+              e.onNewSession(min, dc)
+            })
 
-          await dc.begin("/")
+            // Processes the root dialog.
 
-        } else {
-          logger.info(`Member added to conversation: ${member.name}`)
+            await dc.begin("/")
+
+          } else {
+            logger.info(`Member added to conversation: ${member.name}`)
+          }
+
+          // Processes messages.
+
+        } else if (context.activity.type === "message") {
+
+          // Checks for /admin request.
+
+          if (context.activity.text === "admin") {
+            await dc.begin("/admin")
+
+            // Checks for /menu JSON signature.
+
+          } else if (context.activity.text.startsWith("{\"title\"")) {
+            await dc.begin("/menu", { data: JSON.parse(context.activity.text) })
+
+            // Otherwise, continue to the active dialog in the stack.
+
+          } else {
+            await dc.continue()
+          }
+
+          // Processes events.
+
+        } else if (context.activity.type === "event") {
+
+          // Empties dialog stack before going to the target.
+
+          await dc.endAll()
+
+          if (context.activity.name === "whoAmI") {
+            await dc.begin("/whoAmI")
+          } else if (context.activity.name === "showSubjects") {
+            await dc.begin("/menu")
+          } else if (context.activity.name === "giveFeedback") {
+            await dc.begin("/feedback", {
+              fromMenu: true
+            })
+          } else if (context.activity.name === "showFAQ") {
+            await dc.begin("/faq")
+          } else if (context.activity.name === "ask") {
+            await dc.begin("/answer", {
+              query: (context.activity as any).data,
+              fromFaq: true
+            })
+
+          } else if (context.activity.name === "quality") {
+            await dc.begin("/quality", { score: (context.activity as any).data })
+          } else if (context.activity.name === "updateToken") {
+            let token  = (context.activity as any).data
+            await dc.begin("/adminUpdateToken", { token: token })
+          } else {
+            await dc.continue()
+          }
         }
-
-      // Processes messages.
-
-      } else if (context.activity.type === "message") {
-
-        // Checks for /admin request.
-
-        if (context.activity.text === "admin") {
-          await dc.begin("/admin")
-
-        // Checks for /menu JSON signature.
-        
-        } else if (context.activity.text.startsWith("{\"title\"")) {
-          await dc.begin("/menu", {data:JSON.parse(context.activity.text)})
-
-        // Otherwise, continue to the active dialog in the stack.
-
-        } else {
-          await dc.continue()
-        }
-
-      // Processes events.
-
-      } else if (context.activity.type === "event") {
-        
-        // Empties dialog stack before going to the target.
-
-        await dc.endAll()
-
-        if (context.activity.name === "whoAmI") {
-          await dc.begin("/whoAmI")
-        } else if (context.activity.name === "showSubjects") {
-          await dc.begin("/menu")
-        } else if (context.activity.name === "giveFeedback") {
-          await dc.begin("/feedback", {
-            fromMenu: true
-          })
-        } else if (context.activity.name === "showFAQ") {
-          await dc.begin("/faq")
-        } else if (context.activity.name === "ask") {
-          await dc.begin("/answer", {
-            query: (context.activity as any).data,
-            fromFaq: true
-          })
-        } else if (context.activity.name === "quality") {
-          await dc.begin("/quality", {
-            // TODO: score: context.activity.data
-          })
-        } else {
-          await dc.continue()
-        }
+      } catch (error) {
+        let msg = `Error in main activity: ${error}.`
+        logger.error(msg)
       }
     })
   }

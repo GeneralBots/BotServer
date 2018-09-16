@@ -1,3 +1,4 @@
+import { IGBInstance } from 'botlib';
 /*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
@@ -41,6 +42,8 @@ import { LuisRecognizer } from "botbuilder-ai";
 import { MessageFactory } from "botbuilder";
 import { Messages } from "../strings";
 import { AzureText } from "pragmatismo-io-framework";
+const Nexmo = require("nexmo");
+
 
 export interface LanguagePickerSettings {
   defaultLocale?: string;
@@ -65,6 +68,19 @@ export class GBConversationalService implements IGBConversationalService {
     msg.name = name;
     return dc.context.sendActivity(msg);
   }
+
+  async sendSms(min: GBMinInstance, mobile: string, text: string) : Promise<any> {
+    const nexmo = new Nexmo({
+      apiKey: min.instance.smsKey,
+      apiSecret: min.instance.smsSecret,
+    });
+    nexmo.message.sendSms(
+      min.instance.smsServiceNumber,
+      mobile,
+      text,
+    );
+  }
+
 
   async routeNLP(dc: any, min: GBMinInstance, text: string): Promise<boolean> {
     // Invokes LUIS.

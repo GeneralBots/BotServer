@@ -13,7 +13,9 @@ export const Messages = {
       `Vamos pesquisar sobre ${query}... O que deseja saber?`,
     see_faq:
       "Please take a look at the FAQ I've prepared for you. You can click on them to get the answer.",
-    will_answer_projector:"I'll answer on the projector to a better experience..."
+    will_answer_projector:
+      "I'll answer on the projector to a better experience...",
+    ask_first_time: "What are you looking for?"
   },
   "pt-BR": {
     did_not_find: "Desculpe-me, não encontrei nada a respeito.",
@@ -29,6 +31,8 @@ export const Messages = {
       `Let's search about ${query}... What do you want to know?`,
     see_faq:
       "Veja algumas perguntas mais frequentes logo na tela. Clique numa delas para eu responder.",
-    will_answer_projector:"Vou te responder na tela para melhor visualização..."
+    will_answer_projector:
+      "Vou te responder na tela para melhor visualização...",
+    ask_first_time: "Sobre como eu poderia ajudar?"
   }
 };
