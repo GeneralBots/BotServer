@@ -100,15 +100,18 @@
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#conversationalservice" class="tsd-kind-icon">conversational<wbr>Service</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#core" class="tsd-kind-icon">core</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#corepackage" class="tsd-kind-icon">core<wbr>Package</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#deployfolder" class="tsd-kind-icon">deploy<wbr>Folder</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#deployer" class="tsd-kind-icon">deployer</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#buildbotadapter" class="tsd-kind-icon">build<wbr>Bot<wbr>Adapter</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#buildmin" class="tsd-kind-icon">build<wbr>Min</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#deploypackages" class="tsd-kind-icon">deploy<wbr>Packages</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#getststoken" class="tsd-kind-icon">getSTSToken</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#getwebchattoken" class="tsd-kind-icon">get<wbr>Webchat<wbr>Token</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#invokeloadbot" class="tsd-kind-icon">invoke<wbr>Load<wbr>Bot</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#receiver" class="tsd-kind-icon">receiver</a></li>
 							</ul>
 						</section>
 					</div>
@@ -126,12 +129,12 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBMinService.ts#L70">deploy/core.gbapp/services/GBMinService.ts:70</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBMinService.ts#L68">deploy/core.gbapp/services/GBMinService.ts:68</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Static iniatialization of minimal instance.</p>
+									<p>Static initialization of minimal instance.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -164,7 +167,7 @@
 					<div class="tsd-signature tsd-kind-icon">conversational<wbr>Service<span class="tsd-signature-symbol">:</span> <a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html" class="tsd-signature-type">GBConversationalService</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBMinService.ts#L66">deploy/core.gbapp/services/GBMinService.ts:66</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBMinService.ts#L65">deploy/core.gbapp/services/GBMinService.ts:65</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -174,7 +177,7 @@
 					<div class="tsd-signature tsd-kind-icon">core<span class="tsd-signature-symbol">:</span> <a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html" class="tsd-signature-type">GBCoreService</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBMinService.ts#L65">deploy/core.gbapp/services/GBMinService.ts:65</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBMinService.ts#L64">deploy/core.gbapp/services/GBMinService.ts:64</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -184,17 +187,7 @@
 					<div class="tsd-signature tsd-kind-icon">core<wbr>Package<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;core.gbai&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBMinService.ts#L70">deploy/core.gbapp/services/GBMinService.ts:70</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="deployfolder" class="tsd-anchor"></a>
-					<h3>deploy<wbr>Folder</h3>
-					<div class="tsd-signature tsd-kind-icon">deploy<wbr>Folder<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;deploy&quot;</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBMinService.ts#L69">deploy/core.gbapp/services/GBMinService.ts:69</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBMinService.ts#L68">deploy/core.gbapp/services/GBMinService.ts:68</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -204,24 +197,47 @@
 					<div class="tsd-signature tsd-kind-icon">deployer<span class="tsd-signature-symbol">:</span> <a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html" class="tsd-signature-type">GBDeployer</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBMinService.ts#L67">deploy/core.gbapp/services/GBMinService.ts:67</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBMinService.ts#L66">deploy/core.gbapp/services/GBMinService.ts:66</a></li>
 						</ul>
 					</aside>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="buildmin" class="tsd-anchor"></a>
-					<h3>build<wbr>Min</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">build<wbr>Min<span class="tsd-signature-symbol">(</span>cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">GBMinInstance</span><span class="tsd-signature-symbol">&gt;</span>, server<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, appPackages<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBPackage</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="buildbotadapter" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> build<wbr>Bot<wbr>Adapter</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">build<wbr>Bot<wbr>Adapter<span class="tsd-signature-symbol">(</span>instance<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBMinService.ts#L90">deploy/core.gbapp/services/GBMinService.ts:90</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBMinService.ts#L207">deploy/core.gbapp/services/GBMinService.ts:207</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>instance: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="buildmin" class="tsd-anchor"></a>
+					<h3>build<wbr>Min</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">build<wbr>Min<span class="tsd-signature-symbol">(</span>server<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, appPackages<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBPackage</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">GBMinInstance</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBMinService.ts#L96">deploy/core.gbapp/services/GBMinService.ts:96</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -232,53 +248,157 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">GBMinInstance</span><span class="tsd-signature-symbol">&gt;</span></h5>
-								</li>
-								<li>
 									<h5>server: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>An HTTP server.</p>
+									</div>
 								</li>
 								<li>
 									<h5>appPackages: <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBPackage</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>List of loaded .gbapp associated with this instance.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">GBMinInstance</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>Loaded minimal bot instance.</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getststoken" class="tsd-anchor"></a>
+					<h3>getSTSToken</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">getSTSToken<span class="tsd-signature-symbol">(</span>instance<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBMinService.ts#L414">deploy/core.gbapp/services/GBMinService.ts:414</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Gets a Speech to Text / Text to Speech token from the provider.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>instance: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The general bot instance.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getwebchattoken" class="tsd-anchor"></a>
+					<h3>get<wbr>Webchat<wbr>Token</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Webchat<wbr>Token<span class="tsd-signature-symbol">(</span>instance<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBMinService.ts#L389">deploy/core.gbapp/services/GBMinService.ts:389</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get Webchat key from Bot Service.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>instance: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The Bot instance.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="invokeloadbot" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> invoke<wbr>Load<wbr>Bot</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">invoke<wbr>Load<wbr>Bot<span class="tsd-signature-symbol">(</span>appPackages<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span>, min<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, server<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBMinService.ts#L232">deploy/core.gbapp/services/GBMinService.ts:232</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>appPackages: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+								<li>
+									<h5>min: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>server: <span class="tsd-signature-type">any</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="deploypackages" class="tsd-anchor"></a>
-					<h3>deploy<wbr>Packages</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Packages<span class="tsd-signature-symbol">(</span>core<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">IGBCoreService</span>, server<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, appPackages<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBPackage</span><span class="tsd-signature-symbol">&gt;</span>, sysPackages<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBPackage</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Object</span><span class="tsd-signature-symbol">&gt;</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="receiver" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> receiver</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">receiver<span class="tsd-signature-symbol">(</span>adapter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">BotFrameworkAdapter</span>, req<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, res<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, conversationState<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ConversationState</span>, min<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, instance<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, appPackages<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBMinService.ts#L284">deploy/core.gbapp/services/GBMinService.ts:284</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBMinService.ts#L265">deploy/core.gbapp/services/GBMinService.ts:265</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Performs package deployment in all .gbai or default.</p>
+									<p>Bot Service hook method.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>core: <span class="tsd-signature-type">IGBCoreService</span></h5>
+									<h5>adapter: <span class="tsd-signature-type">BotFrameworkAdapter</span></h5>
 								</li>
 								<li>
-									<h5>server: <span class="tsd-signature-type">any</span></h5>
+									<h5>req: <span class="tsd-signature-type">any</span></h5>
 								</li>
 								<li>
-									<h5>appPackages: <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBPackage</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>res: <span class="tsd-signature-type">any</span></h5>
 								</li>
 								<li>
-									<h5>sysPackages: <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBPackage</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>conversationState: <span class="tsd-signature-type">ConversationState</span></h5>
+								</li>
+								<li>
+									<h5>min: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>instance: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>appPackages: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Object</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -315,47 +435,44 @@
 								<a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#corepackage" class="tsd-kind-icon">core<wbr>Package</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#deployfolder" class="tsd-kind-icon">deploy<wbr>Folder</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#deployer" class="tsd-kind-icon">deployer</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#buildbotadapter" class="tsd-kind-icon">build<wbr>Bot<wbr>Adapter</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#buildmin" class="tsd-kind-icon">build<wbr>Min</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#deploypackages" class="tsd-kind-icon">deploy<wbr>Packages</a>
+								<a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#getststoken" class="tsd-kind-icon">getSTSToken</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#getwebchattoken" class="tsd-kind-icon">get<wbr>Webchat<wbr>Token</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#invokeloadbot" class="tsd-kind-icon">invoke<wbr>Load<wbr>Bot</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_deploy_core_gbapp_services_gbminservice_.gbminservice.html#receiver" class="tsd-kind-icon">receiver</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#fs" class="tsd-kind-icon">Fs</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#path" class="tsd-kind-icon">Path</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#url" class="tsd-kind-icon">Url</a>
+						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#textprompt" class="tsd-kind-icon">Text<wbr>Prompt</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#urljoin" class="tsd-kind-icon">Url<wbr>Join</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#waituntil" class="tsd-kind-icon">Wait<wbr>Until</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#walk" class="tsd-kind-icon">Walk</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#express" class="tsd-kind-icon">express</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#gbuilder" class="tsd-kind-icon">g<wbr>Builder</a>
+						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#logger" class="tsd-kind-icon">logger</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#logger" class="tsd-kind-icon">logger</a>
+						<a href="../modules/_deploy_core_gbapp_services_gbminservice_.html#request" class="tsd-kind-icon">request</a>
 					</li>
 				</ul>
 			</nav>

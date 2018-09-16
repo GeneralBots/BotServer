@@ -80,7 +80,7 @@
 			<section class="tsd-panel">
 				<h3>Implements</h3>
 				<ul class="tsd-hierarchy">
-					<li><span class="tsd-signature-type">IGBConversationalService</span></li>
+					<li><span class="tsd-signature-type">any</span></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -102,8 +102,11 @@
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#runnlp" class="tsd-kind-icon">runNLP</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#checklanguage" class="tsd-kind-icon">check<wbr>Language</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#getcurrentlanguage" class="tsd-kind-icon">get<wbr>Current<wbr>Language</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#routenlp" class="tsd-kind-icon">routeNLP</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#sendevent" class="tsd-kind-icon">send<wbr>Event</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#sendsms" class="tsd-kind-icon">send<wbr>Sms</a></li>
 							</ul>
 						</section>
 					</div>
@@ -121,7 +124,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBConversationalService.ts#L52">deploy/core.gbapp/services/GBConversationalService.ts:52</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBConversationalService.ts#L54">deploy/core.gbapp/services/GBConversationalService.ts:54</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -143,7 +146,7 @@
 					<div class="tsd-signature tsd-kind-icon">core<wbr>Service<span class="tsd-signature-symbol">:</span> <a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html" class="tsd-signature-type">GBCoreService</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBConversationalService.ts#L52">deploy/core.gbapp/services/GBConversationalService.ts:52</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBConversationalService.ts#L54">deploy/core.gbapp/services/GBConversationalService.ts:54</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -151,22 +154,74 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="runnlp" class="tsd-anchor"></a>
-					<h3>runNLP</h3>
+					<a name="checklanguage" class="tsd-anchor"></a>
+					<h3>check<wbr>Language</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">runNLP<span class="tsd-signature-symbol">(</span>session<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Session</span>, min<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBMinInstance</span>, text<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">check<wbr>Language<span class="tsd-signature-symbol">(</span>dc<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, min<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, text<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBConversationalService.ts#L66">deploy/core.gbapp/services/GBConversationalService.ts:66</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBConversationalService.ts#L124">deploy/core.gbapp/services/GBConversationalService.ts:124</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>session: <span class="tsd-signature-type">Session</span></h5>
+									<h5>dc: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>min: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>text: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getcurrentlanguage" class="tsd-anchor"></a>
+					<h3>get<wbr>Current<wbr>Language</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Current<wbr>Language<span class="tsd-signature-symbol">(</span>dc<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBConversationalService.ts#L60">deploy/core.gbapp/services/GBConversationalService.ts:60</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>dc: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="routenlp" class="tsd-anchor"></a>
+					<h3>routeNLP</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">routeNLP<span class="tsd-signature-symbol">(</span>dc<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, min<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBMinInstance</span>, text<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBConversationalService.ts#L89">deploy/core.gbapp/services/GBConversationalService.ts:89</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>dc: <span class="tsd-signature-type">any</span></h5>
 								</li>
 								<li>
 									<h5>min: <span class="tsd-signature-type">GBMinInstance</span></h5>
@@ -174,11 +229,8 @@
 								<li>
 									<h5>text: <span class="tsd-signature-type">string</span></h5>
 								</li>
-								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
-								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -186,19 +238,19 @@
 					<a name="sendevent" class="tsd-anchor"></a>
 					<h3>send<wbr>Event</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">send<wbr>Event<span class="tsd-signature-symbol">(</span>session<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Session</span>, name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">send<wbr>Event<span class="tsd-signature-symbol">(</span>dc<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBConversationalService.ts#L58">deploy/core.gbapp/services/GBConversationalService.ts:58</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBConversationalService.ts#L64">deploy/core.gbapp/services/GBConversationalService.ts:64</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>session: <span class="tsd-signature-type">Session</span></h5>
+									<h5>dc: <span class="tsd-signature-type">any</span></h5>
 								</li>
 								<li>
 									<h5>name: <span class="tsd-signature-type">string</span></h5>
@@ -207,7 +259,36 @@
 									<h5>value: <span class="tsd-signature-type">any</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="sendsms" class="tsd-anchor"></a>
+					<h3>send<wbr>Sms</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">send<wbr>Sms<span class="tsd-signature-symbol">(</span>min<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBMinInstance</span>, mobile<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, text<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBConversationalService.ts#L72">deploy/core.gbapp/services/GBConversationalService.ts:72</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>min: <span class="tsd-signature-type">GBMinInstance</span></h5>
+								</li>
+								<li>
+									<h5>mobile: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>text: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -238,20 +319,29 @@
 								<a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#coreservice" class="tsd-kind-icon">core<wbr>Service</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#runnlp" class="tsd-kind-icon">runNLP</a>
+								<a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#checklanguage" class="tsd-kind-icon">check<wbr>Language</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#getcurrentlanguage" class="tsd-kind-icon">get<wbr>Current<wbr>Language</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#routenlp" class="tsd-kind-icon">routeNLP</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#sendevent" class="tsd-kind-icon">send<wbr>Event</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_deploy_core_gbapp_services_gbconversationalservice_.gbconversationalservice.html#sendsms" class="tsd-kind-icon">send<wbr>Sms</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbconversationalservice_.html#urljoin" class="tsd-kind-icon">Url<wbr>Join</a>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
+						<a href="../interfaces/_deploy_core_gbapp_services_gbconversationalservice_.languagepickersettings.html" class="tsd-kind-icon">Language<wbr>Picker<wbr>Settings</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbconversationalservice_.html#gbuilder" class="tsd-kind-icon">g<wbr>Builder</a>
+						<a href="../modules/_deploy_core_gbapp_services_gbconversationalservice_.html#nexmo" class="tsd-kind-icon">Nexmo</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/_deploy_core_gbapp_services_gbconversationalservice_.html#logger" class="tsd-kind-icon">logger</a>

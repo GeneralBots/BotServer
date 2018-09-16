@@ -97,14 +97,14 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#model" class="tsd-kind-icon">Model</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#channelid" class="tsd-kind-icon">channel<wbr>Id</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#createdat" class="tsd-kind-icon">created<wbr>At</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-overwrite"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#createdat" class="tsd-kind-icon">created<wbr>At</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#datavalues" class="tsd-kind-icon">data<wbr>Values</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#deletedat" class="tsd-kind-icon">deleted<wbr>At</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#id" class="tsd-kind-icon">id</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#isnewrecord" class="tsd-kind-icon">is<wbr>New<wbr>Record</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#sequelize" class="tsd-kind-icon">sequelize</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#title" class="tsd-kind-icon">title</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#updatedat" class="tsd-kind-icon">updated<wbr>At</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-overwrite"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#updatedat" class="tsd-kind-icon">updated<wbr>At</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#version" class="tsd-kind-icon">version</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#associations" class="tsd-kind-icon">associations</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#attributes" class="tsd-kind-icon">attributes</a></li>
@@ -261,7 +261,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from Model.Model</p>
 						<ul>
-							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:531</li>
+							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:533</li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -281,25 +281,20 @@
 					<div class="tsd-signature tsd-kind-icon">channel<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/models/GBModel.ts#L159">deploy/core.gbapp/models/GBModel.ts:159</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/models/GBModel.ts#L229">deploy/core.gbapp/models/GBModel.ts:229</a></li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-overwrite">
 					<a name="createdat" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> created<wbr>At</h3>
-					<div class="tsd-signature tsd-kind-icon">created<wbr>At<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Date</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">any</span></div>
+					<h3>created<wbr>At</h3>
+					<div class="tsd-signature tsd-kind-icon">created<wbr>At<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Date</span></div>
 					<aside class="tsd-sources">
-						<p>Inherited from Model.createdAt</p>
+						<p>Overrides Model.createdAt</p>
 						<ul>
-							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:504</li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/models/GBModel.ts#L236">deploy/core.gbapp/models/GBModel.ts:236</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>createdAt timestamps automatically created by sequelize if timestamps is true</p>
-						</div>
-					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
 					<a name="datavalues" class="tsd-anchor"></a>
@@ -308,7 +303,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from Model.dataValues</p>
 						<ul>
-							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:458</li>
+							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:460</li>
 						</ul>
 					</aside>
 				</section>
@@ -319,7 +314,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from Model.deletedAt</p>
 						<ul>
-							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:514</li>
+							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:516</li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -335,7 +330,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from Model.id</p>
 						<ul>
-							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:499</li>
+							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:501</li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -351,7 +346,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from Model.isNewRecord</p>
 						<ul>
-							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:524</li>
+							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:526</li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -367,7 +362,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from Model.sequelize</p>
 						<ul>
-							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:536</li>
+							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:538</li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -382,25 +377,20 @@
 					<div class="tsd-signature tsd-kind-icon">title<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/models/GBModel.ts#L161">deploy/core.gbapp/models/GBModel.ts:161</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/models/GBModel.ts#L232">deploy/core.gbapp/models/GBModel.ts:232</a></li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-overwrite">
 					<a name="updatedat" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> updated<wbr>At</h3>
-					<div class="tsd-signature tsd-kind-icon">updated<wbr>At<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Date</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">any</span></div>
+					<h3>updated<wbr>At</h3>
+					<div class="tsd-signature tsd-kind-icon">updated<wbr>At<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Date</span></div>
 					<aside class="tsd-sources">
-						<p>Inherited from Model.updatedAt</p>
+						<p>Overrides Model.updatedAt</p>
 						<ul>
-							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:509</li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/models/GBModel.ts#L240">deploy/core.gbapp/models/GBModel.ts:240</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>updatedAt timestamps automatically created by sequelize if timestamps is true</p>
-						</div>
-					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
 					<a name="version" class="tsd-anchor"></a>
@@ -409,7 +399,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from Model.version</p>
 						<ul>
-							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:519</li>
+							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:521</li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -515,7 +505,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from Model.sequelize</p>
 						<ul>
-							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:455</li>
+							<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:457</li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -538,7 +528,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from Model.$add</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:463</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:465</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -579,7 +569,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from Model.$count</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:479</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:481</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -611,7 +601,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from Model.$create</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:484</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:486</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -652,7 +642,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from Model.$get</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:474</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:476</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -690,7 +680,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from Model.$has</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:489</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:491</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -731,7 +721,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from Model.$remove</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:494</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:496</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -772,7 +762,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from Model.$set</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:469</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:471</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -815,7 +805,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from Model.changed</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:603</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:605</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -841,7 +831,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from Model.changed</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:604</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:606</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span>
@@ -862,7 +852,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from Model.decrement</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:701</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:703</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -909,7 +899,7 @@ instance.decrement({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.destroy</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:651</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:653</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -939,7 +929,7 @@ instance.decrement({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.equals</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:707</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:709</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -968,7 +958,7 @@ instance.decrement({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.equalsOneOf</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:712</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:714</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -998,7 +988,7 @@ instance.decrement({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.get</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:561</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:563</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1034,7 +1024,7 @@ instance.decrement({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.get</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:562</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:564</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1066,7 +1056,7 @@ instance.decrement({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.getDataValue</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:546</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:548</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1095,7 +1085,7 @@ instance.decrement({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.increment</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:678</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:680</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1142,7 +1132,7 @@ instance.increment({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.previous</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:609</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:611</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1171,7 +1161,7 @@ instance.increment({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.reload</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:626</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:628</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1203,7 +1193,7 @@ instance.increment({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.restore</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:656</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:658</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1232,7 +1222,7 @@ instance.increment({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.save</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:618</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:620</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1265,7 +1255,7 @@ instance.increment({ <span class="hljs-attr">answer</span>: <span class="hljs-nu
 							<aside class="tsd-sources">
 								<p>Inherited from Model.set</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:589</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:591</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1305,7 +1295,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.set</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:590</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:592</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1333,7 +1323,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.setAttributes</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:592</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:594</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1354,7 +1344,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.setAttributes</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:593</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:595</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1381,7 +1371,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.setDataValue</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:551</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:553</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1413,7 +1403,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.toJSON</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:718</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:720</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1438,7 +1428,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.update</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:641</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:643</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1464,7 +1454,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.update</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:642</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:644</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1492,7 +1482,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.updateAttributes</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:644</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:646</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1513,7 +1503,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.updateAttributes</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:645</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:647</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1540,7 +1530,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.validate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:636</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:638</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1579,7 +1569,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.where</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:541</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:543</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1605,7 +1595,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.addHook</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:733</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:735</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1643,7 +1633,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.addHook</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:734</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:736</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -1670,7 +1660,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.addHook</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:735</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:737</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1688,7 +1678,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.addHook</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:736</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:738</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -1767,7 +1757,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterBulkCreate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:870</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:872</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1828,7 +1818,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterBulkCreate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:872</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:874</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -1883,7 +1873,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterBulkDelete</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:899</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:901</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1922,7 +1912,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterBulkDelete</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:900</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:902</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1968,7 +1958,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterBulkDestroy</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:896</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:898</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2020,7 +2010,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterBulkDestroy</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:897</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:899</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2066,7 +2056,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterBulkSync</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1029</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1031</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2110,7 +2100,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterBulkSync</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1030</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1032</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2153,7 +2143,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterBulkUpdate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:917</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:919</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2200,7 +2190,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterBulkUpdate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:918</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:920</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2246,7 +2236,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterCreate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:798</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:800</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2302,7 +2292,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterCreate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:800</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:802</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -2357,7 +2347,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterDefine</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:975</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:977</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2407,7 +2397,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterDefine</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:976</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:978</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -2456,7 +2446,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterDelete</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:828</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:830</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -2504,7 +2494,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterDelete</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:829</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:831</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -2559,7 +2549,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterDestroy</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:824</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:826</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2620,7 +2610,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterDestroy</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:826</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:828</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -2675,7 +2665,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterFind</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:954</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:956</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2731,7 +2721,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterFind</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:957</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:959</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -2786,7 +2776,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterInit</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:993</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:995</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2830,7 +2820,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterInit</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:994</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:996</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2873,7 +2863,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterSync</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1011</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1013</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2917,7 +2907,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterSync</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1012</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1014</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2960,7 +2950,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterUpdate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:850</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:852</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -3016,7 +3006,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterUpdate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:851</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:853</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -3071,7 +3061,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterValidate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:778</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:780</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -3127,7 +3117,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.afterValidate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:780</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:782</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -3263,7 +3253,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeBulkCreate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:859</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:861</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -3319,7 +3309,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeBulkCreate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:861</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:863</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -3374,7 +3364,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeBulkDelete</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:885</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:887</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3413,7 +3403,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeBulkDelete</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:886</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:888</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3459,7 +3449,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeBulkDestroy</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:882</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:884</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -3511,7 +3501,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeBulkDestroy</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:883</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:885</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3557,7 +3547,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeBulkSync</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1020</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1022</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -3601,7 +3591,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeBulkSync</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1021</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1023</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3644,7 +3634,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeBulkUpdate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:908</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:910</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -3691,7 +3681,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeBulkUpdate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:909</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:911</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3737,7 +3727,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeCreate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:788</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:790</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -3793,7 +3783,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeCreate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:790</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:792</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -3848,7 +3838,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeDefine</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:966</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:968</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -3895,7 +3885,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeDefine</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:967</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:969</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -3941,7 +3931,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeDelete</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:813</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:815</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -3989,7 +3979,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeDelete</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:815</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:817</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -4044,7 +4034,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeDestroy</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:809</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:811</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -4105,7 +4095,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeDestroy</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:811</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:813</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -4160,7 +4150,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeFind</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:926</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:928</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -4207,7 +4197,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeFind</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:927</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:929</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -4253,7 +4243,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeFindAfterExpandIncludeAll</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:935</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:937</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -4300,7 +4290,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeFindAfterExpandIncludeAll</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:937</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:939</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -4346,7 +4336,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeFindAfterOptions</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:945</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:947</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -4393,7 +4383,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeFindAfterOptions</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:946</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:948</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -4439,7 +4429,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeInit</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:984</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:986</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -4486,7 +4476,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeInit</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:985</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:987</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -4532,7 +4522,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeSync</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1002</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1004</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -4576,7 +4566,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeSync</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1003</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:1005</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -4621,7 +4611,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeUpdate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:837</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:839</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -4671,7 +4661,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeUpdate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:839</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:841</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -4710,7 +4700,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeUpdate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:840</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:842</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -4758,7 +4748,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeUpdate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:842</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:844</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -4813,7 +4803,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeValidate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:768</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:770</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -4869,7 +4859,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.beforeValidate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:770</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:772</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -5076,7 +5066,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.bulkCreate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:392</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:394</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -5118,7 +5108,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.bulkCreate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:393</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:395</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -5276,7 +5266,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.describe</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:445</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:447</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -5300,7 +5290,7 @@ true</code> in the options object.</p>
 							<aside class="tsd-sources">
 								<p>Inherited from Model.destroy</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:405</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:407</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -6036,7 +6026,7 @@ $notILike, &#39;..&#39;/$between, &#39;!..&#39;/$notBetween, &#39;&amp;&amp;&#39
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.hasHook</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:758</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:760</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -6072,7 +6062,7 @@ $notILike, &#39;..&#39;/$between, &#39;!..&#39;/$notBetween, &#39;&amp;&amp;&#39
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.hasHooks</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:760</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:762</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -6099,7 +6089,7 @@ $notILike, &#39;..&#39;/$between, &#39;!..&#39;/$notBetween, &#39;&amp;&amp;&#39
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.hook</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:738</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:740</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -6120,7 +6110,7 @@ $notILike, &#39;..&#39;/$between, &#39;!..&#39;/$notBetween, &#39;&amp;&amp;&#39
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.hook</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:739</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:741</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -6147,7 +6137,7 @@ $notILike, &#39;..&#39;/$between, &#39;!..&#39;/$notBetween, &#39;&amp;&amp;&#39
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.hook</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:740</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:742</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -6165,7 +6155,7 @@ $notILike, &#39;..&#39;/$between, &#39;!..&#39;/$notBetween, &#39;&amp;&amp;&#39
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.hook</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:741</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:743</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -6198,7 +6188,7 @@ $notILike, &#39;..&#39;/$between, &#39;!..&#39;/$notBetween, &#39;&amp;&amp;&#39
 							<aside class="tsd-sources">
 								<p>Inherited from Model.increment</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:430</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:432</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -6245,14 +6235,15 @@ Model.increment({ <span class="hljs-attr">answer</span>: <span class="hljs-numbe
 					<a name="insertorupdate" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagStatic">Static</span> insert<wbr>OrUpdate</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">insert<wbr>OrUpdate&lt;A&gt;<span class="tsd-signature-symbol">(</span>values<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">A</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">UpsertOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">insert<wbr>OrUpdate&lt;A&gt;<span class="tsd-signature-symbol">(</span>values<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">&gt;</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">UpsertOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">insert<wbr>OrUpdate&lt;A&gt;<span class="tsd-signature-symbol">(</span>values<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">&gt;</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">UpsertOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Inherited from Model.insertOrUpdate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:379</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:380</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -6264,13 +6255,37 @@ Model.increment({ <span class="hljs-attr">answer</span>: <span class="hljs-numbe
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>values: <span class="tsd-signature-type">A</span></h5>
+									<h5>values: <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">UpsertOptions</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">UpsertOptions</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Inherited from Model.insertOrUpdate</p>
+								<ul>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:381</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>A</h4>
+								</li>
+							</ul>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>values: <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">&gt;</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">UpsertOptions</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -6380,7 +6395,7 @@ Model.increment({ <span class="hljs-attr">answer</span>: <span class="hljs-numbe
 							<aside class="tsd-sources">
 								<p>Inherited from Hooks.removeHook</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:749</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:751</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -6420,7 +6435,7 @@ Model.increment({ <span class="hljs-attr">answer</span>: <span class="hljs-numbe
 							<aside class="tsd-sources">
 								<p>Inherited from Model.restore</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:410</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:412</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -6496,7 +6511,7 @@ Model.increment({ <span class="hljs-attr">answer</span>: <span class="hljs-numbe
 					<h3><span class="tsd-flag ts-flagStatic">Static</span> scope</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited tsd-is-static">
 						<li class="tsd-signature tsd-kind-icon">scope&lt;T&gt;<span class="tsd-signature-symbol">(</span>this<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">NonAbstractTypeOfModel</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">ScopeOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">WhereOptions</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">NonAbstractTypeOfModel</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
-						<li class="tsd-signature tsd-kind-icon">scope&lt;T&gt;<span class="tsd-signature-symbol">(</span>this<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">NonAbstractTypeOfModel</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span>, <span class="tsd-signature-symbol">...</span>scopes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">NonAbstractTypeOfModel</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">scope&lt;T&gt;<span class="tsd-signature-symbol">(</span>this<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">NonAbstractTypeOfModel</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span>, <span class="tsd-signature-symbol">...</span>scopes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">ScopeOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">NonAbstractTypeOfModel</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
@@ -6586,7 +6601,7 @@ Model.findAll({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">
 									<h5>this: <span class="tsd-signature-type">NonAbstractTypeOfModel</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>scopes: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
+									<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>scopes: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">ScopeOptions</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">[]</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">NonAbstractTypeOfModel</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -6666,7 +6681,7 @@ Model.findAll({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">
 							<aside class="tsd-sources">
 								<p>Inherited from Model.truncate</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:398</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:400</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -6695,7 +6710,7 @@ Model.findAll({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">
 							<aside class="tsd-sources">
 								<p>Inherited from Model.unscoped</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:450</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:452</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -6731,7 +6746,7 @@ Model.findAll({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">
 							<aside class="tsd-sources">
 								<p>Inherited from Model.update</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:438</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:440</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -6767,7 +6782,7 @@ Model.findAll({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">
 							<aside class="tsd-sources">
 								<p>Inherited from Model.update</p>
 								<ul>
-									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:439</li>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:441</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -6801,7 +6816,8 @@ Model.findAll({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">
 					<a name="upsert" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagStatic">Static</span> upsert</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">upsert&lt;A&gt;<span class="tsd-signature-symbol">(</span>values<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">A</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">UpsertOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">upsert&lt;A&gt;<span class="tsd-signature-symbol">(</span>values<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">&gt;</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">UpsertOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">upsert&lt;A&gt;<span class="tsd-signature-symbol">(</span>values<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">&gt;</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">UpsertOptions</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
@@ -6840,13 +6856,37 @@ Model.findAll({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>values: <span class="tsd-signature-type">A</span></h5>
+									<h5>values: <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">UpsertOptions</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">UpsertOptions</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Inherited from Model.upsert</p>
+								<ul>
+									<li>Defined in node_modules/sequelize-typescript/lib/models/Model.d.ts:378</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>A</h4>
+								</li>
+							</ul>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>values: <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">&gt;</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">UpsertOptions</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -6879,7 +6919,7 @@ Model.findAll({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#channelid" class="tsd-kind-icon">channel<wbr>Id</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-overwrite">
 								<a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#createdat" class="tsd-kind-icon">created<wbr>At</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
@@ -6900,7 +6940,7 @@ Model.findAll({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#title" class="tsd-kind-icon">title</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-overwrite">
 								<a href="_deploy_core_gbapp_models_gbmodel_.guaribaschannel.html#updatedat" class="tsd-kind-icon">updated<wbr>At</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">

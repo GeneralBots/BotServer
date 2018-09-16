@@ -100,6 +100,7 @@
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#core" class="tsd-kind-icon">core</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#importer" class="tsd-kind-icon">importer</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#workdir" class="tsd-kind-icon">work<wbr>Dir</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#deployfolder" class="tsd-kind-icon">deploy<wbr>Folder</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
@@ -108,6 +109,7 @@
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#deploybot" class="tsd-kind-icon">deploy<wbr>Bot</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#deploypackagefromlocalpath" class="tsd-kind-icon">deploy<wbr>Package<wbr>From<wbr>Local<wbr>Path</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#deploypackagetostorage" class="tsd-kind-icon">deploy<wbr>Package<wbr>ToStorage</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#deploypackages" class="tsd-kind-icon">deploy<wbr>Packages</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#deploytheme" class="tsd-kind-icon">deploy<wbr>Theme</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#getpackagebyname" class="tsd-kind-icon">get<wbr>Package<wbr>ByName</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#scanbootpackage" class="tsd-kind-icon">scan<wbr>Boot<wbr>Package</a></li>
@@ -129,7 +131,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBDeployer.ts#L65">deploy/core.gbapp/services/GBDeployer.ts:65</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L58">deploy/core.gbapp/services/GBDeployer.ts:58</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -154,7 +156,7 @@
 					<div class="tsd-signature tsd-kind-icon">core<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">IGBCoreService</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBDeployer.ts#L61">deploy/core.gbapp/services/GBDeployer.ts:61</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L52">deploy/core.gbapp/services/GBDeployer.ts:52</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -164,7 +166,7 @@
 					<div class="tsd-signature tsd-kind-icon">importer<span class="tsd-signature-symbol">:</span> <a href="_deploy_core_gbapp_services_gbimporter_.gbimporter.html" class="tsd-signature-type">GBImporter</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBDeployer.ts#L63">deploy/core.gbapp/services/GBDeployer.ts:63</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L54">deploy/core.gbapp/services/GBDeployer.ts:54</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -174,7 +176,17 @@
 					<div class="tsd-signature tsd-kind-icon">work<wbr>Dir<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;./work&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBDeployer.ts#L65">deploy/core.gbapp/services/GBDeployer.ts:65</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L56">deploy/core.gbapp/services/GBDeployer.ts:56</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-static">
+					<a name="deployfolder" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> deploy<wbr>Folder</h3>
+					<div class="tsd-signature tsd-kind-icon">deploy<wbr>Folder<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;deploy&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L58">deploy/core.gbapp/services/GBDeployer.ts:58</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -185,13 +197,13 @@
 					<a name="deploybot" class="tsd-anchor"></a>
 					<h3>deploy<wbr>Bot</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Bot<span class="tsd-signature-symbol">(</span>localPath<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Bot<span class="tsd-signature-symbol">(</span>localPath<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBDeployer.ts#L73">deploy/core.gbapp/services/GBDeployer.ts:73</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L238">deploy/core.gbapp/services/GBDeployer.ts:238</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -204,11 +216,8 @@
 								<li>
 									<h5>localPath: <span class="tsd-signature-type">string</span></h5>
 								</li>
-								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
-								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -216,13 +225,13 @@
 					<a name="deploypackagefromlocalpath" class="tsd-anchor"></a>
 					<h3>deploy<wbr>Package<wbr>From<wbr>Local<wbr>Path</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Package<wbr>From<wbr>Local<wbr>Path<span class="tsd-signature-symbol">(</span>localPath<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Package<wbr>From<wbr>Local<wbr>Path<span class="tsd-signature-symbol">(</span>localPath<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBDeployer.ts#L117">deploy/core.gbapp/services/GBDeployer.ts:117</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L270">deploy/core.gbapp/services/GBDeployer.ts:270</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -230,11 +239,8 @@
 								<li>
 									<h5>localPath: <span class="tsd-signature-type">string</span></h5>
 								</li>
-								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
-								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -242,13 +248,13 @@
 					<a name="deploypackagetostorage" class="tsd-anchor"></a>
 					<h3>deploy<wbr>Package<wbr>ToStorage</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Package<wbr>ToStorage<span class="tsd-signature-symbol">(</span>instanceId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, packageName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_core_gbapp_models_gbmodel_.guaribaspackage.html" class="tsd-signature-type">GuaribasPackage</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Package<wbr>ToStorage<span class="tsd-signature-symbol">(</span>instanceId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, packageName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_core_gbapp_models_gbmodel_.guaribaspackage.html" class="tsd-signature-type">GuaribasPackage</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBDeployer.ts#L90">deploy/core.gbapp/services/GBDeployer.ts:90</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L248">deploy/core.gbapp/services/GBDeployer.ts:248</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -259,11 +265,42 @@
 								<li>
 									<h5>packageName: <span class="tsd-signature-type">string</span></h5>
 								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_core_gbapp_models_gbmodel_.guaribaspackage.html" class="tsd-signature-type">GuaribasPackage</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="deploypackages" class="tsd-anchor"></a>
+					<h3>deploy<wbr>Packages</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Packages<span class="tsd-signature-symbol">(</span>core<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">IGBCoreService</span>, server<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, appPackages<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBPackage</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Object</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L70">deploy/core.gbapp/services/GBDeployer.ts:70</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Performs package deployment in all .gbai or default.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
 								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_core_gbapp_models_gbmodel_.guaribaspackage.html" class="tsd-signature-type">GuaribasPackage</a><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>core: <span class="tsd-signature-type">IGBCoreService</span></h5>
+								</li>
+								<li>
+									<h5>server: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>appPackages: <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBPackage</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Object</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -271,22 +308,19 @@
 					<a name="deploytheme" class="tsd-anchor"></a>
 					<h3>deploy<wbr>Theme</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Theme<span class="tsd-signature-symbol">(</span>localPath<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Theme<span class="tsd-signature-symbol">(</span>localPath<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBDeployer.ts#L103">deploy/core.gbapp/services/GBDeployer.ts:103</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L258">deploy/core.gbapp/services/GBDeployer.ts:258</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>localPath: <span class="tsd-signature-type">string</span></h5>
-								</li>
-								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -297,13 +331,13 @@
 					<a name="getpackagebyname" class="tsd-anchor"></a>
 					<h3>get<wbr>Package<wbr>ByName</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Package<wbr>ByName<span class="tsd-signature-symbol">(</span>instanceId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, packageName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_core_gbapp_models_gbmodel_.guaribaspackage.html" class="tsd-signature-type">GuaribasPackage</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Package<wbr>ByName<span class="tsd-signature-symbol">(</span>instanceId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, packageName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_core_gbapp_models_gbmodel_.guaribaspackage.html" class="tsd-signature-type">GuaribasPackage</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBDeployer.ts#L183">deploy/core.gbapp/services/GBDeployer.ts:183</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L328">deploy/core.gbapp/services/GBDeployer.ts:328</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -314,11 +348,8 @@
 								<li>
 									<h5>packageName: <span class="tsd-signature-type">string</span></h5>
 								</li>
-								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_core_gbapp_models_gbmodel_.guaribaspackage.html" class="tsd-signature-type">GuaribasPackage</a><span class="tsd-signature-symbol">&gt;</span></h5>
-								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_core_gbapp_models_gbmodel_.guaribaspackage.html" class="tsd-signature-type">GuaribasPackage</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -326,13 +357,13 @@
 					<a name="scanbootpackage" class="tsd-anchor"></a>
 					<h3>scan<wbr>Boot<wbr>Package</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">scan<wbr>Boot<wbr>Package<span class="tsd-signature-symbol">(</span>cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">scan<wbr>Boot<wbr>Package<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBDeployer.ts#L208">deploy/core.gbapp/services/GBDeployer.ts:208</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L343">deploy/core.gbapp/services/GBDeployer.ts:343</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -340,13 +371,7 @@
 									<p>Hot deploy processing.</p>
 								</div>
 							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -354,13 +379,13 @@
 					<a name="undeploypackagefromlocalpath" class="tsd-anchor"></a>
 					<h3>undeploy<wbr>Package<wbr>From<wbr>Local<wbr>Path</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">undeploy<wbr>Package<wbr>From<wbr>Local<wbr>Path<span class="tsd-signature-symbol">(</span>instance<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">IGBInstance</span>, localPath<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">undeploy<wbr>Package<wbr>From<wbr>Local<wbr>Path<span class="tsd-signature-symbol">(</span>instance<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">IGBInstance</span>, localPath<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBDeployer.ts#L147">deploy/core.gbapp/services/GBDeployer.ts:147</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBDeployer.ts#L297">deploy/core.gbapp/services/GBDeployer.ts:297</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -371,11 +396,8 @@
 								<li>
 									<h5>localPath: <span class="tsd-signature-type">string</span></h5>
 								</li>
-								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
-								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -411,6 +433,9 @@
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#workdir" class="tsd-kind-icon">work<wbr>Dir</a>
 							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-static">
+								<a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#deployfolder" class="tsd-kind-icon">deploy<wbr>Folder</a>
+							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#deploybot" class="tsd-kind-icon">deploy<wbr>Bot</a>
 							</li>
@@ -419,6 +444,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#deploypackagetostorage" class="tsd-kind-icon">deploy<wbr>Package<wbr>ToStorage</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#deploypackages" class="tsd-kind-icon">deploy<wbr>Packages</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_deploy_core_gbapp_services_gbdeployer_.gbdeployer.html#deploytheme" class="tsd-kind-icon">deploy<wbr>Theme</a>
@@ -437,13 +465,7 @@
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbdeployer_.html#async" class="tsd-kind-icon">Async</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/_deploy_core_gbapp_services_gbdeployer_.html#fs" class="tsd-kind-icon">Fs</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbdeployer_.html#fsextra" class="tsd-kind-icon">Fs<wbr>Extra</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/_deploy_core_gbapp_services_gbdeployer_.html#path" class="tsd-kind-icon">Path</a>
@@ -455,10 +477,7 @@
 						<a href="../modules/_deploy_core_gbapp_services_gbdeployer_.html#waituntil" class="tsd-kind-icon">Wait<wbr>Until</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbdeployer_.html#walk" class="tsd-kind-icon">Walk</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbdeployer_.html#_" class="tsd-kind-icon">_</a>
+						<a href="../modules/_deploy_core_gbapp_services_gbdeployer_.html#express" class="tsd-kind-icon">express</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/_deploy_core_gbapp_services_gbdeployer_.html#logger" class="tsd-kind-icon">logger</a>

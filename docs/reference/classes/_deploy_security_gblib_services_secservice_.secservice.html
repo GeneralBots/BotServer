@@ -73,10 +73,15 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="tsd-signature-type">GBService</span>
+						<a href="_deploy_security_gblib_services_secservice_.secservice.html" class="tsd-signature-type">SecService</a>
 						<ul class="tsd-hierarchy">
 							<li>
 								<span class="target">SecService</span>
+								<ul class="tsd-hierarchy">
+									<li>
+										<a href="_deploy_security_gblib_services_secservice_.secservice.html" class="tsd-signature-type">SecService</a>
+									</li>
+								</ul>
 							</li>
 						</ul>
 					</li>
@@ -102,13 +107,13 @@
 					<a name="ensureuser" class="tsd-anchor"></a>
 					<h3>ensure<wbr>User</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">ensure<wbr>User<span class="tsd-signature-symbol">(</span>instanceId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, userSystemId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, userName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, address<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, channelName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, displayName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_security_gblib_models_index_.guaribasuser.html" class="tsd-signature-type">GuaribasUser</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">ensure<wbr>User<span class="tsd-signature-symbol">(</span>instanceId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, userSystemId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, userName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, address<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, channelName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, displayName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_security_gblib_models_index_.guaribasuser.html" class="tsd-signature-type">GuaribasUser</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/security.gblib/services/SecService.ts#L74">deploy/security.gblib/services/SecService.ts:74</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/security.gblib/services/SecService.ts#L74">deploy/security.gblib/services/SecService.ts:74</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -131,11 +136,8 @@
 								<li>
 									<h5>displayName: <span class="tsd-signature-type">string</span></h5>
 								</li>
-								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_security_gblib_models_index_.guaribasuser.html" class="tsd-signature-type">GuaribasUser</a><span class="tsd-signature-symbol">&gt;</span></h5>
-								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="_deploy_security_gblib_models_index_.guaribasuser.html" class="tsd-signature-type">GuaribasUser</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -143,13 +145,13 @@
 					<a name="importsecurityfile" class="tsd-anchor"></a>
 					<h3>import<wbr>Security<wbr>File</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">import<wbr>Security<wbr>File<span class="tsd-signature-symbol">(</span>localPath<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, instance<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">import<wbr>Security<wbr>File<span class="tsd-signature-symbol">(</span>localPath<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, instance<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/security.gblib/services/SecService.ts#L47">deploy/security.gblib/services/SecService.ts:47</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/security.gblib/services/SecService.ts#L47">deploy/security.gblib/services/SecService.ts:47</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -161,7 +163,7 @@
 									<h5>instance: <span class="tsd-signature-type">IGBInstance</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>

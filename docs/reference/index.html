@@ -64,31 +64,108 @@
 	<div class="row">
 		<div class="col-8 col-content">
 			<div class="tsd-panel tsd-typography">
-				<h1 id="general-bots-community-edition-preview">General Bots Community Edition Preview</h1>
-				<p><img src="https://github.com/pragmatismo-io/BotServer/blob/master/logo.png" alt="General Bots Logo"></p>
-				<h2 id="welcome-to-general-bots-">Welcome to General Bots!</h2>
-				<p>General Bots is a package based chat bot server focused in convention
+				<p><img src="https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png" alt="General Bot Logo"></p>
+				<h2 id="welcome-to-general-bot-community-edition">Welcome to General Bot Community Edition</h2>
+				<p>General Bot is a package based chat bot server focused in convention
 				over configuration and code-less approaches, which brings software packages<br>and application server concepts to help parallel bot development.</p>
-				<p>Also, everyone can create bots copying and pasting some files and using their
-					favorite tools like Excel (or any .tsv editor) or Photoshop (or any .png
+				<p>Everyone can create bots by just copying and pasting some files and using their
+					favorite tools like Excel (or any text editor) or Photoshop (or any image
 				editor).</p>
+				<h2 id="package-quick-reference">Package Quick Reference</h2>
+				<table>
+					<thead>
+						<tr>
+							<th>Whatsapp</th>
+							<th>Web</th>
+							<th>Core</th>
+							<th>KB</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><a href="https://github.com/pragmatismo-io/BotServer/tree/master/deploy/whatsapp.gblib">whatsapp.gblib</a></td>
+							<td><a href="https://github.com/pragmatismo-io/BotServer/tree/master/deploy/default.gbui">default.gbui</a></td>
+							<td><a href="https://github.com/pragmatismo-io/BotServer/tree/master/deploy/core.gbapp">core.gbapp</a></td>
+							<td><a href="https://github.com/pragmatismo-io/BotServer/tree/master/deploy/kb.gbapp">kb.gbapp</a></td>
+						</tr>
+					</tbody>
+				</table>
+				<h2 id="package-architecture-">Package Architecture </h2>
+				<p><img src="https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png" alt="General Bot Logo"></p>
 				<h3 id="what-is-bot-server-">What is Bot Server?</h3>
 				<p>Bot Server accelerates the process of developing a bot. It provisions all code
 					base, resources and deployment to the cloud, and gives you templates you can
-					choose from when you create a bot. Uses a database and tables as backend and
-					allow you to further modify your bot package directly downloading it in a ZIP
-					file and editing it and uploading it back to the server (deploying process).
-					Besides providing a framework to develop bot packages in a more advanced
-				editor like Visual Studio Code, Atom or Brackets.</p>
+					choose from whenever you need a new bot. The server has a database and service
+					backend allowing you to further modify your bot package directly by downloading
+					a zip file, editing and uploading it back to the server (deploying process) with
+					no code. The Bot Server also provides a framework to develop bot packages in a more
+				advanced fashion writing custom code in editors like Visual Studio Code, Atom or Brackets.</p>
+				<p><img src="https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-block-architecture.png" alt="General Bots Block Architecture"></p>
 				<h3 id="the-same-build-process-for-everyone">The same build process for everyone</h3>
 				<p>GeneralBots aims to delivery bots in azure in a very easy and fast fashion. Use
 				Office tools like Word or Excel to edit your Bot - using code (JavaScript or TypeScript) just to empower custom requirements.</p>
+				<h4 id="use-excel-for-quick-edits">Use Excel for Quick edits</h4>
+				<p><img src="https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-inside-excel-can-enable-bot-production-to-the-masses.png" alt="General Bots Inside Excel can enable bot production the masses"></p>
+				<h4 id="use-visual-studio-for-a-complete-gbai-package-building-system">Use Visual Studio for a complete .gbai package building system</h4>
+				<p><img src="https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-inside-visual-studio-code-provides-a-complete-artificial-intelligence-based-conversational-platform.png" alt="General Bots Inside Visual Studio Code provides a complete artificial intelligence based conversational platform"></p>
 				<h2 id="how-to">How To</h2>
+				<h3 id="run-the-server-locally">Run the server locally</h3>
+				<ol>
+					<li>Install <a href="https://www.npmjs.com/get-npm">Node.js</a> the current generation General Bot code execution platform;</li>
+					<li>Open a <strong>Terminal</strong> on Linux and Mac or a <strong>Command Prompt</strong> window on Windows;npm</li>
+					<li>Type <code>npm install -g botserver</code> and press <em>ENTER</em>;</li>
+					<li>Type <code>gbot</code> to run the server core.</li>
+				</ol>
+				<p>Notes:</p>
+				<ul>
+					<li><a href="https://chocolatey.org/packages/nodejs.install"><em>nodejs.install</em> Chocolatey Package</a> is also available.</li>
+					<li>The zip source code of General Bot is also available for <a href="https://codeload.github.com/pragmatismo-io/BotServer/zip/master">Download</a>;</li>
+				</ul>
+				<h3 id="configure-the-server-to-deploy-specific-directory">Configure the server to deploy specific directory</h3>
+				<ol>
+					<li>Create/Edit the .env file and add the ADDITIONAL_DEPLOY_PATH key pointing to the local folder of .gbapp, .gbot, .gbtheme, .gbkb, etc. files.</li>
+					<li>Specify DATABASE_SYNC to TRUE so database sync is run when the server is run.</li>
+					<li>In case of Microsoft SQL Server add the following keys: DATABASE_HOST, DATABASE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD, DATABASE_DIALECT to <code>mssql</code>.</li>
+				</ol>
+				<p>Note:</p>
+				<ul>
+					<li>You can specify several bots separated by semicolon, the BotServer will serve all of them at once.</li>
+				</ul>
+				<h2 id="setup-development-environment-windows-">Setup development environment (Windows)</h2>
+				<ol>
+					<li>[Optional] Install <a href="https://chocolatey.org/install">Chocolatey</a>, a Windows Package Manager;</li>
+					<li>Install <a href="`https://git-scm.com/`">git</a>, a Software Configuration Management (SCM).;</li>
+					<li>Install <a href="npmjs.com/get-npm">Node.js</a>, a <a href="https://en.wikipedia.org/wiki/Runtime_system">Runtime system</a>.
+					(<a href="https://www.npmjs.com/get-npm">https://www.npmjs.com/get-npm</a>) (suggested: LTS 8.x.x);</li>
+					<li>Install <a href="https://chocolatey.org/packages/nodejs.install">Visual Studio Code</a>, Brackets or Atom as an editor of your choice;</li>
+					<li><a href="https://en.wikipedia.org/wiki/Fork_(software_development">Fork</a>) by visiting <a href="https://github.com/pragmatismo-io/BotServer/fork">https://github.com/pragmatismo-io/BotServer/fork</a></li>
+					<li>Clone the just forked repository by running <code>git clone &lt;your-forked-repository-url&gt;/BotServer.git</code> ;</li>
+					<li>Run <code>npm install -g typescript</code>;</li>
+					<li>Run <code>npm install</code> on Command Prompt or PowerShell on the General Bot source-code folder;</li>
+					<li>Enter &#39;./deploy/default.gbui&#39; folder;</li>
+					<li>Run <code>npm install</code> folled by <code>npm run build</code> (To build default Bot UI);</li>
+					<li>Enter the On the downloaded folder (../..);</li>
+					<li>Compile the bot server by <code>tsc</code>.</li>
+					<li>Run the bot server by <code>npm start</code>.</li>
+				</ol>
+				<p>Note:</p>
+				<ul>
+					<li>Whenever you are ready to turn your open-source bot ideas in form of  .gbapp (source-code) and artifacts like .gbkb, .gbtheme, .gbot or the .gbai full package read <a href="https://github.com/pragmatismo-io/BotServer/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a> about performing Pull Requests (PR) and creating other public  custom packages repositories of your own personal or organization General Bot Community Edition powered packages.</li>
+				</ul>
+				<h3 id="running-unit-tests">Running unit tests</h3>
+				<ol>
+					<li>Enter the BotServer root folder.</li>
+					<li>Run tests by <code>npm test</code>.</li>
+				</ol>
+				<h3 id="just-copy-the-source-code-to-your-machine">Just copy the source code to your machine</h3>
+				<ol>
+					<li>[Download] the Zip file of (<a href="https://codeload.github.com/pragmatismo-io/BotServer/zip/master">https://codeload.github.com/pragmatismo-io/BotServer/zip/master</a>)</li>
+				</ol>
 				<h3 id="updating-the-bot-knoledge-base-gbkb-folder-">Updating the Bot Knoledge Base (.gbkb folder)</h3>
 				<p>The subjects.json file contains all information related to the subject tree and can be used to build the menu carrousel as well give a set of words to be used as subject catcher in the conversation. A hierarchy can be specified.</p>
 				<h3 id="creating-a-new-theme-folder-gbtheme-folder-">Creating a new Theme folder (.gbtheme folder)</h3>
 				<p>A theme is composed of some CSS files and images. That set of files can change
-					everything in the General Bots UI. Use them extensively before going to change
+					everything in the General Bot UI. Use them extensively before going to change
 				the UI application itself (HTML &amp; JS).</p>
 				<h2 id="package-types">Package Types</h2>
 				<h3 id="-gbai">.gbai</h3>
@@ -98,8 +175,8 @@
 				<p>The artificial intelligence extensions in form of pluggable apps. Dialogs,
 					Services and all model related to data. A set of interactions, use cases,
 					integrations in form of conversationals dialogs.
-				The .gbapp adds the General Bots base library (botlib) for building Node.js TypeScript Apps packages.</p>
-				<p>Four components builds up a General Bots App:</p>
+				The .gbapp adds the General Bot base library (botlib) for building Node.js TypeScript Apps packages.</p>
+				<p>Four components builds up a General Bot App:</p>
 				<ul>
 					<li>dialogs</li>
 					<li>models</li>
@@ -127,7 +204,7 @@
 				<p>Shared code that can be used across bot apps.</p>
 				<h2 id="reference">Reference</h2>
 				<h3 id="generalbots-admin-commands">GeneralBots admin commands</h3>
-				<p>General Bots can be controlled by the same chat window people talk to, so
+				<p>General Bot can be controlled by the same chat window people talk to, so
 				here is a list of admin commands related to deploying .gb* files.</p>
 				<table>
 					<thead>
@@ -158,20 +235,30 @@
 				<h3 id="credits-inspiration">Credits &amp; Inspiration</h3>
 				<ul>
 					<li>Rodrigo Rodriguez (<a href="mailto:me@rodrigorodriguez.com">me@rodrigorodriguez.com</a>) - Coding, Docs &amp; Architecture.</li>
-					<li>David Lerner (<a href="mailto:david.lerner@hotmail.com">david.lerner@hotmail.com</a>) - UI, UX &amp; Theming</li>
-					<li>Eduardo Romeiro (<a href="mailto:eromeirosp@outlook.com">eromeirosp@outlook.com</a>) - Content &amp; UX</li>
+					<li>David Lerner (<a href="mailto:david.lerner@hotmail.com">david.lerner@hotmail.com</a>) - UI, UX &amp; Theming.</li>
+					<li>Eduardo Romeiro (<a href="mailto:eromeirosp@outlook.com">eromeirosp@outlook.com</a>) - Content &amp; UX.</li>
+					<li>Jorge Ramos (<a href="mailto:jramos@pobox.com">jramos@pobox.com</a>) - Coding, Docs &amp; Architecture.</li>
 				</ul>
 				<p>Powered by  Microsoft <a href="https://dev.botframework.com/">BOT Framework</a> and <a href="http://www.azure.com">Azure</a>.</p>
-				<p>General Bots Code Name is <a href="https://en.wikipedia.org/wiki/Guaribas">Guaribas</a>, the name of a city in Brasil, state of Piaui.
+				<p>General Bot Code Name is <a href="https://en.wikipedia.org/wiki/Guaribas">Guaribas</a>, the name of a city in Brasil, state of Piaui.
 				<a href="http://www.robertounger.com/en/">Roberto Mangabeira Unger</a>: &quot;No one should have to do work that can be done by a machine&quot;.</p>
 				<h2 id="license-warranty">License &amp; Warranty</h2>
-				<p> General Bots Copyright (c) Pragmatismo.io. All rights reserved.<br> Licensed under the AGPL-3.0.                                          </p>
-				<p> According to our dual licensing model, this program can be used either
-				under the terms of the GNU Affero General Public License, version 3,<br> or under a proprietary license.                                       </p>
-				<p> The texts of the GNU Affero General Public License with an additional
-				permission and of our proprietary license can be found at and<br> in the LICENSE file you have received along with this program.        </p>
-				<p> This program is distributed in the hope that it will be useful,<br> but WITHOUT ANY WARRANTY; without even the implied warranty of<br> MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the<br> GNU Affero General Public License for more details.                   </p>
-				<p> &quot;General Bots&quot; is a registered trademark of Pragmatismo.io.<br> The licensing of the program under the AGPLv3 does not imply a<br> trademark license. Therefore any rights, title and interest in<br> our trademarks remain entirely with us.                               </p>
+				<p>General Bot Copyright (c) Pragmatismo.io. All rights reserved.
+				Licensed under the AGPL-3.0.       </p>
+				<p>According to our dual licensing model, this program can be used either
+					under the terms of the GNU Affero General Public License, version 3,
+				or under a proprietary license.   </p>
+				<p>The texts of the GNU Affero General Public License with an additional
+					permission and of our proprietary license can be found at and
+				in the LICENSE file you have received along with this program.</p>
+				<p>This program is distributed in the hope that it will be useful,
+					but WITHOUT ANY WARRANTY; without even the implied warranty of
+					MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+				GNU Affero General Public License for more details.</p>
+				<p>&quot;General Bot&quot; is a registered trademark of Pragmatismo.io.
+					The licensing of the program under the AGPLv3 does not imply a
+					trademark license. Therefore any rights, title and interest in
+				our trademarks remain entirely with us.</p>
 			</div>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
@@ -184,10 +271,13 @@
 						<a href="modules/_deploy_admin_gbapp_dialogs_admindialog_.html">"deploy/admin.gbapp/dialogs/<wbr>Admin<wbr>Dialog"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_deploy_admin_gbapp_dialogs_uploadpackagedialog_.html">"deploy/admin.gbapp/dialogs/<wbr>Upload<wbr>Package<wbr>Dialog"</a>
+						<a href="modules/_deploy_admin_gbapp_index_.html">"deploy/admin.gbapp/index"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_deploy_admin_gbapp_index_.html">"deploy/admin.gbapp/index"</a>
+						<a href="modules/_deploy_admin_gbapp_models_adminmodel_.html">"deploy/admin.gbapp/models/<wbr>Admin<wbr>Model"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_deploy_admin_gbapp_services_gbadminservice_.html">"deploy/admin.gbapp/services/GBAdmin<wbr>Service"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_deploy_analytics_gblib_index_.html">"deploy/analytics.gblib/index"</a>
@@ -197,6 +287,12 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_deploy_analytics_gblib_services_analyticsservice_.html">"deploy/analytics.gblib/services/<wbr>Analytics<wbr>Service"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_deploy_console_gblib_index_.html">"deploy/console.gblib/index"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_deploy_console_gblib_services_consoledirectline_.html">"deploy/console.gblib/services/<wbr>Console<wbr>Direct<wbr>Line"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_deploy_core_gbapp_dialogs_welcomedialog_.html">"deploy/core.gbapp/dialogs/<wbr>Welcome<wbr>Dialog"</a>
@@ -229,7 +325,7 @@
 						<a href="modules/_deploy_core_gbapp_services_gbminservice_.html">"deploy/core.gbapp/services/GBMin<wbr>Service"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_deploy_core_gbapp_test_example_test_.html">"deploy/core.gbapp/test/example.test"</a>
+						<a href="modules/_deploy_core_gbapp_strings_.html">"deploy/core.gbapp/strings"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_deploy_customer_satisfaction_gbapp_dialogs_feedbackdialog_.html">"deploy/customer-<wbr>satisfaction.gbapp/dialogs/<wbr>Feedback<wbr>Dialog"</a>
@@ -245,6 +341,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_deploy_customer_satisfaction_gbapp_services_csservice_.html">"deploy/customer-<wbr>satisfaction.gbapp/services/CSService"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_deploy_customer_satisfaction_gbapp_strings_.html">"deploy/customer-<wbr>satisfaction.gbapp/strings"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_deploy_kb_gbapp_dialogs_askdialog_.html">"deploy/kb.gbapp/dialogs/<wbr>Ask<wbr>Dialog"</a>
@@ -265,6 +364,9 @@
 						<a href="modules/_deploy_kb_gbapp_services_kbservice_.html">"deploy/kb.gbapp/services/KBService"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="modules/_deploy_kb_gbapp_strings_.html">"deploy/kb.gbapp/strings"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="modules/_deploy_security_gblib_index_.html">"deploy/security.gblib/index"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -272,6 +374,12 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_deploy_security_gblib_services_secservice_.html">"deploy/security.gblib/services/<wbr>Sec<wbr>Service"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_deploy_whatsapp_gblib_index_.html">"deploy/whatsapp.gblib/index"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_deploy_whatsapp_gblib_services_whatsappdirectline_.html">"deploy/whatsapp.gblib/services/<wbr>Whatsapp<wbr>Direct<wbr>Line"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_src_app_.html">"src/app"</a>

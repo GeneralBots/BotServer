@@ -73,8 +73,16 @@
 						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Variables</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="_src_logger_.html#createlogger" class="tsd-kind-icon">create<wbr>Logger</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="_src_logger_.html#format" class="tsd-kind-icon">format</a></li>
 								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="_src_logger_.html#logger" class="tsd-kind-icon">logger</a></li>
-								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="_src_logger_.html#winston" class="tsd-kind-icon">winston</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="_src_logger_.html#transports" class="tsd-kind-icon">transports</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Object literals</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-object-literal tsd-parent-kind-external-module tsd-is-not-exported"><a href="_src_logger_.html#config" class="tsd-kind-icon">config</a></li>
 							</ul>
 						</section>
 					</div>
@@ -83,59 +91,237 @@
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Variables</h2>
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-					<a name="logger" class="tsd-anchor"></a>
-					<h3>logger</h3>
-					<div class="tsd-signature tsd-kind-icon">logger<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;new (winston.Logger)({levels: {trace: 0,input: 1,verbose: 2,prompt: 3,debug: 4,info: 5,data: 6,help: 7,warn: 8,error: 9},colors: {trace: &#x27;magenta&#x27;,input: &#x27;grey&#x27;,verbose: &#x27;cyan&#x27;,prompt: &#x27;grey&#x27;,debug: &#x27;blue&#x27;,info: &#x27;green&#x27;,data: &#x27;grey&#x27;,help: &#x27;cyan&#x27;,warn: &#x27;yellow&#x27;,error: &#x27;red&#x27;}})</span></div>
+					<a name="createlogger" class="tsd-anchor"></a>
+					<h3>create<wbr>Logger</h3>
+					<div class="tsd-signature tsd-kind-icon">create<wbr>Logger<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/src/logger.ts#L35">src/logger.ts:35</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L33">src/logger.ts:33</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-					<a name="winston" class="tsd-anchor"></a>
-					<h3>winston</h3>
-					<div class="tsd-signature tsd-kind-icon">winston<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;require(&#x27;winston&#x27;)</span></div>
+					<a name="format" class="tsd-anchor"></a>
+					<h3>format</h3>
+					<div class="tsd-signature tsd-kind-icon">format<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/src/logger.ts#L33">src/logger.ts:33</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L33">src/logger.ts:33</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>\
-								|                                               ( )_  _                       |
-								|    _ _    _ <strong>   _ _    </strong>    <strong>_ _</strong>     _ _ | ,_)(_)  <strong>_   _</strong>     _     |
-								|   ( &#39;<em>`\ ( &#39;__)/&#39;</em><code>) /&#39;_</code>\/&#39; _ <code>_</code>\ /&#39;_<code>)| |  | |/&#39;,__)/&#39; _</code>\ /&#39;<em>`\   |
-								|   | (</em>) )| |  ( (<em>| |( (</em>) || ( ) ( ) |( (<em>| || |</em> | |_<em>, | ( ) |( (</em>) )  |
-								|   | ,<strong>/&#39;(_)  `\</strong>,<em>)`__  |(</em>) (<em>) (</em>)<code>\__,_)</code>__)(<em>)(____/(</em>) (_)`_<strong>/&#39;  |
-									|   | |                ( )<em>) |                                                |
-								|   (</em>)                 _</strong>/&#39;                                                |
-								|                                                                             |
-								| General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
-								| Licensed under the AGPL-3.0.                                                |
-								|                                                                             |
-								| According to our dual licensing model, this program can be used either      |
-								| under the terms of the GNU Affero General Public License, version 3,        |
-								| or under a proprietary license.                                             |
-								|                                                                             |
-								| The texts of the GNU Affero General Public License with an additional       |
-								| permission and of our proprietary license can be found at and               |
-								| in the LICENSE file you have received along with this program.              |
-								|                                                                             |
-								| This program is distributed in the hope that it will be useful,             |
-								| but WITHOUT ANY WARRANTY; without even the implied warranty of              |
-								| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
-								| GNU Affero General Public License for more details.                         |
-								|                                                                             |
-								| &quot;General Bots&quot; is a registered trademark of Pragmatismo.io.                 |
-								| The licensing of the program under the AGPLv3 does not imply a              |
-								| trademark license. Therefore any rights, title and interest in              |
-								| our trademarks remain entirely with us.                                     |
-								|                                                                             |
-							\</p>
-						</div>
-					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="logger" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> logger</h3>
+					<div class="tsd-signature tsd-kind-icon">logger<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;createLogger({format: format.combine(format.colorize(),format.simple(),format.label({ label: &#x27;GeneralBots&#x27; }),format.timestamp(),format.printf(nfo &#x3D;&gt; {return &#x60;${nfo.timestamp} [${nfo.label}] ${nfo.level}: ${nfo.message}&#x60;})),levels: config.levels,transports: [new transports.Console()]})</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L58">src/logger.ts:58</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="transports" class="tsd-anchor"></a>
+					<h3>transports</h3>
+					<div class="tsd-signature tsd-kind-icon">transports<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L33">src/logger.ts:33</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Object literals</h2>
+				<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="config" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> config</h3>
+					<div class="tsd-signature tsd-kind-icon">config<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L35">src/logger.ts:35</a></li>
+						</ul>
+					</aside>
+					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="config.colors" class="tsd-anchor"></a>
+						<h3>colors</h3>
+						<div class="tsd-signature tsd-kind-icon">colors<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L46">src/logger.ts:46</a></li>
+							</ul>
+						</aside>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.colors.custom" class="tsd-anchor"></a>
+							<h3>custom</h3>
+							<div class="tsd-signature tsd-kind-icon">custom<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;yellow&quot;</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L54">src/logger.ts:54</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.colors.data" class="tsd-anchor"></a>
+							<h3>data</h3>
+							<div class="tsd-signature tsd-kind-icon">data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;grey&quot;</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L50">src/logger.ts:50</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.colors.debug" class="tsd-anchor"></a>
+							<h3>debug</h3>
+							<div class="tsd-signature tsd-kind-icon">debug<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;blue&quot;</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L48">src/logger.ts:48</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.colors.error" class="tsd-anchor"></a>
+							<h3>error</h3>
+							<div class="tsd-signature tsd-kind-icon">error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;red&quot;</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L47">src/logger.ts:47</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.colors.info" class="tsd-anchor"></a>
+							<h3>info</h3>
+							<div class="tsd-signature tsd-kind-icon">info<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;green&quot;</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L51">src/logger.ts:51</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.colors.silly" class="tsd-anchor"></a>
+							<h3>silly</h3>
+							<div class="tsd-signature tsd-kind-icon">silly<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;magenta&quot;</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L53">src/logger.ts:53</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.colors.verbose" class="tsd-anchor"></a>
+							<h3>verbose</h3>
+							<div class="tsd-signature tsd-kind-icon">verbose<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;cyan&quot;</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L52">src/logger.ts:52</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.colors.warn" class="tsd-anchor"></a>
+							<h3>warn</h3>
+							<div class="tsd-signature tsd-kind-icon">warn<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;yellow&quot;</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L49">src/logger.ts:49</a></li>
+								</ul>
+							</aside>
+						</section>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="config.levels" class="tsd-anchor"></a>
+						<h3>levels</h3>
+						<div class="tsd-signature tsd-kind-icon">levels<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L36">src/logger.ts:36</a></li>
+							</ul>
+						</aside>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.levels.custom-1" class="tsd-anchor"></a>
+							<h3>custom</h3>
+							<div class="tsd-signature tsd-kind-icon">custom<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;7</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L44">src/logger.ts:44</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.levels.data-1" class="tsd-anchor"></a>
+							<h3>data</h3>
+							<div class="tsd-signature tsd-kind-icon">data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;3</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L40">src/logger.ts:40</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.levels.debug-1" class="tsd-anchor"></a>
+							<h3>debug</h3>
+							<div class="tsd-signature tsd-kind-icon">debug<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;1</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L38">src/logger.ts:38</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.levels.error-1" class="tsd-anchor"></a>
+							<h3>error</h3>
+							<div class="tsd-signature tsd-kind-icon">error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L37">src/logger.ts:37</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.levels.info-1" class="tsd-anchor"></a>
+							<h3>info</h3>
+							<div class="tsd-signature tsd-kind-icon">info<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;4</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L41">src/logger.ts:41</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.levels.silly-1" class="tsd-anchor"></a>
+							<h3>silly</h3>
+							<div class="tsd-signature tsd-kind-icon">silly<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;6</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L43">src/logger.ts:43</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.levels.verbose-1" class="tsd-anchor"></a>
+							<h3>verbose</h3>
+							<div class="tsd-signature tsd-kind-icon">verbose<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;5</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L42">src/logger.ts:42</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="config.levels.warn-1" class="tsd-anchor"></a>
+							<h3>warn</h3>
+							<div class="tsd-signature tsd-kind-icon">warn<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;2</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/src/logger.ts#L39">src/logger.ts:39</a></li>
+								</ul>
+							</aside>
+						</section>
+					</section>
 				</section>
 			</section>
 		</div>
@@ -153,10 +339,19 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_src_logger_.html#createlogger" class="tsd-kind-icon">create<wbr>Logger</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_src_logger_.html#format" class="tsd-kind-icon">format</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="_src_logger_.html#logger" class="tsd-kind-icon">logger</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_src_logger_.html#winston" class="tsd-kind-icon">winston</a>
+						<a href="_src_logger_.html#transports" class="tsd-kind-icon">transports</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_src_logger_.html#config" class="tsd-kind-icon">config</a>
 					</li>
 				</ul>
 			</nav>

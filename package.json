@@ -1,6 +1,6 @@
 {
   "name": "botserver",
-  "version": "0.0.29",
+  "version": "0.1.0",
   "description": "General Bot Community Edition open-core server.",
   "main": "./src/app.ts",
   "homepage": "http://www.generalbot.com",

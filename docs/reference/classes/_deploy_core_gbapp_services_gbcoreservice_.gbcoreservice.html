@@ -87,7 +87,7 @@
 			<section class="tsd-panel">
 				<h3>Implements</h3>
 				<ul class="tsd-hierarchy">
-					<li><span class="tsd-signature-type">IGBCoreService</span></li>
+					<li><span class="tsd-signature-type">any</span></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -103,13 +103,19 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#dialect" class="tsd-kind-icon">dialect</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#adminservice" class="tsd-kind-icon">admin<wbr>Service</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#changecolumnquery" class="tsd-kind-icon">change<wbr>Column<wbr>Query</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#createtablequery" class="tsd-kind-icon">create<wbr>Table<wbr>Query</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#dialect" class="tsd-kind-icon">dialect</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#querygenerator" class="tsd-kind-icon">query<wbr>Generator</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#sequelize" class="tsd-kind-icon">sequelize</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#changecolumnqueryoverride" class="tsd-kind-icon">change<wbr>Column<wbr>Query<wbr>Override</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#createtablequeryoverride" class="tsd-kind-icon">create<wbr>Table<wbr>Query<wbr>Override</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#initdatabase" class="tsd-kind-icon">init<wbr>Database</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#loadinstance" class="tsd-kind-icon">load<wbr>Instance</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#loadinstances" class="tsd-kind-icon">load<wbr>Instances</a></li>
@@ -131,9 +137,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBCoreService.ts#L61">deploy/core.gbapp/services/GBCoreService.ts:61</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L74">deploy/core.gbapp/services/GBCoreService.ts:74</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Constructor retrieves default values.</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html" class="tsd-signature-type">GBCoreService</a></h4>
 						</li>
 					</ul>
@@ -142,17 +153,128 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="adminservice" class="tsd-anchor"></a>
+					<h3>admin<wbr>Service</h3>
+					<div class="tsd-signature tsd-kind-icon">admin<wbr>Service<span class="tsd-signature-symbol">:</span> <a href="_deploy_admin_gbapp_services_gbadminservice_.gbadminservice.html" class="tsd-signature-type">GBAdminService</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L54">deploy/core.gbapp/services/GBCoreService.ts:54</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Administrative services.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="changecolumnquery" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> change<wbr>Column<wbr>Query</h3>
+					<div class="tsd-signature tsd-kind-icon">change<wbr>Column<wbr>Query<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L69">deploy/core.gbapp/services/GBCoreService.ts:69</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Custom change column query.</p>
+						</div>
+					</div>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-siganture">
+								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-property tsd-is-not-exported">
+									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>tableName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, attributes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+								</ul>
+								<ul class="tsd-descriptions">
+									<li class="tsd-description">
+										<h4 class="tsd-parameters-title">Parameters</h4>
+										<ul class="tsd-parameters">
+											<li>
+												<h5>tableName: <span class="tsd-signature-type">any</span></h5>
+											</li>
+											<li>
+												<h5>attributes: <span class="tsd-signature-type">any</span></h5>
+											</li>
+										</ul>
+										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="createtablequery" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> create<wbr>Table<wbr>Query</h3>
+					<div class="tsd-signature tsd-kind-icon">create<wbr>Table<wbr>Query<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L64">deploy/core.gbapp/services/GBCoreService.ts:64</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Custom create table query.</p>
+						</div>
+					</div>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-siganture">
+								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-property tsd-is-not-exported">
+									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>tableName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, attributes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, options<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+								</ul>
+								<ul class="tsd-descriptions">
+									<li class="tsd-description">
+										<h4 class="tsd-parameters-title">Parameters</h4>
+										<ul class="tsd-parameters">
+											<li>
+												<h5>tableName: <span class="tsd-signature-type">any</span></h5>
+											</li>
+											<li>
+												<h5>attributes: <span class="tsd-signature-type">any</span></h5>
+											</li>
+											<li>
+												<h5>options: <span class="tsd-signature-type">any</span></h5>
+											</li>
+										</ul>
+										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="dialect" class="tsd-anchor"></a>
-					<h3>dialect</h3>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> dialect</h3>
 					<div class="tsd-signature tsd-kind-icon">dialect<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBCoreService.ts#L61">deploy/core.gbapp/services/GBCoreService.ts:61</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L74">deploy/core.gbapp/services/GBCoreService.ts:74</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>Dialect used. Tested: mssql and sqlite.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="querygenerator" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> query<wbr>Generator</h3>
+					<div class="tsd-signature tsd-kind-icon">query<wbr>Generator<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L59">deploy/core.gbapp/services/GBCoreService.ts:59</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Allows filtering on SQL generated before send to the database.</p>
 						</div>
 					</div>
 				</section>
@@ -162,38 +284,118 @@
 					<div class="tsd-signature tsd-kind-icon">sequelize<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Sequelize</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBCoreService.ts#L57">deploy/core.gbapp/services/GBCoreService.ts:57</a></li>
+							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L49">deploy/core.gbapp/services/GBCoreService.ts:49</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Data access layer instance.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="initdatabase" class="tsd-anchor"></a>
-					<h3>init<wbr>Database</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">init<wbr>Database<span class="tsd-signature-symbol">(</span>cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="changecolumnqueryoverride" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> change<wbr>Column<wbr>Query<wbr>Override</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">change<wbr>Column<wbr>Query<wbr>Override<span class="tsd-signature-symbol">(</span>tableName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, attributes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBCoreService.ts#L68">deploy/core.gbapp/services/GBCoreService.ts:68</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L214">deploy/core.gbapp/services/GBCoreService.ts:214</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Get config and connect to storage.</p>
+									<p>SQL:
+										let sql = &#39;&#39; +
+										&#39;ALTER TABLE [UserGroup]\n&#39; +
+										&#39;  ADD CONSTRAINT [invalid1] FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,\n&#39; +
+										&#39;      CONSTRAINT [invalid2] FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId2]) ON DELETE NO ACTION, \n&#39; +
+									&#39;      CONSTRAINT [invalid3] FOREIGN KEY ([instanceId1]) REFERENCES [Instance] ([instanceId1]) ON DELETE NO ACTION\n&#39;</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>cb: <span class="tsd-signature-type">any</span></h5>
+									<h5>tableName: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>attributes: <span class="tsd-signature-type">any</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
+					<a name="createtablequeryoverride" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> create<wbr>Table<wbr>Query<wbr>Override</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Table<wbr>Query<wbr>Override<span class="tsd-signature-symbol">(</span>tableName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, attributes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, options<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L169">deploy/core.gbapp/services/GBCoreService.ts:169</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>SQL:</p>
+								</div>
+								<p>// let sql: string = &#39;&#39; +
+									//   &#39;IF OBJECT_ID(\&#39;[UserGroup]\&#39;, \&#39;U\&#39;) IS NULL\n&#39; +
+									//   &#39;CREATE TABLE [UserGroup] (\n&#39; +
+									//   &#39;  [id] INTEGER NOT NULL IDENTITY(1,1),\n&#39; +
+									//   &#39;  [userId] INTEGER NULL,\n&#39; +
+									//   &#39;  [groupId] INTEGER NULL,\n&#39; +
+									//   &#39;  [instanceId] INTEGER NULL,\n&#39; +
+									//   &#39;  PRIMARY KEY ([id1], [id2]),\n&#39; +
+									//   &#39;  FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,\n&#39; +
+									//   &#39;  FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId1]) ON DELETE NO ACTION,\n&#39; +
+								//   &#39;  FOREIGN KEY ([instanceId]) REFERENCES [Instance] ([instanceId]) ON DELETE NO ACTION)&#39;</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>tableName: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>attributes: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>options: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="initdatabase" class="tsd-anchor"></a>
+					<h3>init<wbr>Database</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">init<wbr>Database<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Object</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L87">deploy/core.gbapp/services/GBCoreService.ts:87</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Gets database config and connect to storage.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Object</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -201,13 +403,13 @@
 					<a name="loadinstance" class="tsd-anchor"></a>
 					<h3>load<wbr>Instance</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">load<wbr>Instance<span class="tsd-signature-symbol">(</span>botId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">load<wbr>Instance<span class="tsd-signature-symbol">(</span>botId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBCoreService.ts#L155">deploy/core.gbapp/services/GBCoreService.ts:155</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L275">deploy/core.gbapp/services/GBCoreService.ts:275</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -220,11 +422,8 @@
 								<li>
 									<h5>botId: <span class="tsd-signature-type">string</span></h5>
 								</li>
-								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">&gt;</span></h5>
-								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -232,13 +431,13 @@
 					<a name="loadinstances" class="tsd-anchor"></a>
 					<h3>load<wbr>Instances</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">load<wbr>Instances<span class="tsd-signature-symbol">(</span>cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">load<wbr>Instances<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBCoreService.ts#L131">deploy/core.gbapp/services/GBCoreService.ts:131</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L268">deploy/core.gbapp/services/GBCoreService.ts:268</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -246,16 +445,7 @@
 									<p>Loads all items to start several listeners.</p>
 								</div>
 							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>cb: <span class="tsd-signature-type">GBServiceCallback</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Instances loaded or error info.</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">IGBInstance</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -263,27 +453,16 @@
 					<a name="syncdatabasestructure" class="tsd-anchor"></a>
 					<h3>sync<wbr>Database<wbr>Structure</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">sync<wbr>Database<wbr>Structure<span class="tsd-signature-symbol">(</span>cb<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">sync<wbr>Database<wbr>Structure<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/8a8df3b/deploy/core.gbapp/services/GBCoreService.ts#L118">deploy/core.gbapp/services/GBCoreService.ts:118</a></li>
+									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/2f26873/deploy/core.gbapp/services/GBCoreService.ts#L249">deploy/core.gbapp/services/GBCoreService.ts:249</a></li>
 								</ul>
 							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Calls ORM to sync storage.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>cb: <span class="tsd-signature-type">any</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -311,10 +490,28 @@
 								<a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#adminservice" class="tsd-kind-icon">admin<wbr>Service</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#changecolumnquery" class="tsd-kind-icon">change<wbr>Column<wbr>Query</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#createtablequery" class="tsd-kind-icon">create<wbr>Table<wbr>Query</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
 								<a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#dialect" class="tsd-kind-icon">dialect</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#querygenerator" class="tsd-kind-icon">query<wbr>Generator</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#sequelize" class="tsd-kind-icon">sequelize</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#changecolumnqueryoverride" class="tsd-kind-icon">change<wbr>Column<wbr>Query<wbr>Override</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
+								<a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#createtablequeryoverride" class="tsd-kind-icon">create<wbr>Table<wbr>Query<wbr>Override</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_deploy_core_gbapp_services_gbcoreservice_.gbcoreservice.html#initdatabase" class="tsd-kind-icon">init<wbr>Database</a>
@@ -332,27 +529,6 @@
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbcoreservice_.html#async" class="tsd-kind-icon">Async</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbcoreservice_.html#fs" class="tsd-kind-icon">Fs</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbcoreservice_.html#parse" class="tsd-kind-icon">Parse</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbcoreservice_.html#path" class="tsd-kind-icon">Path</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbcoreservice_.html#urljoin" class="tsd-kind-icon">Url<wbr>Join</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbcoreservice_.html#walk" class="tsd-kind-icon">Walk</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_deploy_core_gbapp_services_gbcoreservice_.html#_" class="tsd-kind-icon">_</a>
-					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/_deploy_core_gbapp_services_gbcoreservice_.html#logger" class="tsd-kind-icon">logger</a>
 					</li>
