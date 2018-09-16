@@ -374,7 +374,7 @@ export class GBMinService {
           }
         }
       } catch (error) {
-        let msg = `Error in main activity: ${error.message}.\n${error.stack}`
+        let msg = `Error in main activity: ${error.message}`
         logger.error(msg)
       }
     })

@@ -69,16 +69,20 @@ export class GBConversationalService implements IGBConversationalService {
     return dc.context.sendActivity(msg);
   }
 
-  async sendSms(min: GBMinInstance, mobile: string, text: string) : Promise<any> {
-    const nexmo = new Nexmo({
-      apiKey: min.instance.smsKey,
-      apiSecret: min.instance.smsSecret,
+  async sendSms(min: GBMinInstance, mobile: string, text: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const nexmo = new Nexmo({
+        apiKey: min.instance.smsKey,
+        apiSecret: min.instance.smsSecret,
+      });
+      nexmo.message.sendSms(
+        min.instance.smsServiceNumber,
+        mobile,
+        text, (err, data) => {
+          if (err) { reject(err) } else { resolve(data) }
+        }
+      );
     });
-    nexmo.message.sendSms(
-      min.instance.smsServiceNumber,
-      mobile,
-      text,
-    );
   }
 
 
