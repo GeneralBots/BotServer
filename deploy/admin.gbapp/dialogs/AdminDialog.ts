@@ -128,8 +128,12 @@ export class AdminDialog extends IGBDialog {
         await dc.endAll();
         let service = new GBAdminService();
         await service.saveValue("authenticatorToken", args.token)
-        await dc.context.sendActivity("Token has been updated.");
-        await dc.replace("/ask")
+        await dc.context.sendActivities([
+          { type: 'typing' },
+          { type: 'message', text: "Token has been updated." },
+          { type: 'message', text: "Please, log out now from the administration work account on next screen." },
+          { type: 'delay', value: 4000 },
+        ])
       }
     ]);
 

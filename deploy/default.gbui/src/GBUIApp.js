@@ -48,318 +48,320 @@ import GBPowerBIPlayer from "./players/GBPowerBIPlayer.js";
 import { UserAgentApplication } from "msal";
 
 class GBUIApp extends React.Component {
-  constructor() {
-    super();
+    constructor() {
+        super();
 
-    this.state = {
-      botConnection: null,
-      instance: null,
-      token: null,
-      instanceClient: null
-    };
-  }
-
-  sendToken(token) {
-    setTimeout(() => {
-      window.botConnection
-        .postActivity({
-          type: "event",
-          name: "updateToken",
-          data: token,
-          locale: "en-us",
-          textFormat: "plain",
-          timestamp: new Date().toISOString(),
-          from: { id: "webUser", name: "You" }
-        })
-        .subscribe(this.send("success"));
-    }, 400);
-  }
-
-  send(command) {
-    window.botConnection
-      .postActivity({
-        type: "event",
-        name: command,
-        locale: "en-us",
-        textFormat: "plain",
-        timestamp: new Date().toISOString(),
-        from: { id: "webUser", name: "You" }
-      })
-      .subscribe(console.log("EVENT SENT TO Guaribas."));
-  }
-  getUser() {
-    return { id: "webUser@gb", name: "You" };
-  }
-
-  postEvent(name, value) {
-    window.botConnection.postActivity({
-      type: "event",
-      value: value,
-      from: this.getUser(),
-      name: name
-    });
-  }
-
-  postMessage(value) {
-    window.botConnection.postActivity({
-      type: "message",
-      text: value,
-      from: this.getUser()
-    });
-  }
-
-  configureChat() {
-    var botId = window.location.href.split("/")[3];
-    if (botId.indexOf('#') != -1) {
-      botId = botId.split("#")[0];
+        this.state = {
+            botConnection: null,
+            instance: null,
+            token: null,
+            instanceClient: null
+        };
     }
 
-    if (!botId || botId == "") {
-      botId = "[default]";
+    sendToken(token) {
+        setTimeout(() => {
+            window.botConnection
+                .postActivity({
+                    type: "event",
+                    name: "updateToken",
+                    data: token,
+                    locale: "en-us",
+                    textFormat: "plain",
+                    timestamp: new Date().toISOString(),
+                    from: { id: "webUser", name: "You" }
+                })
+                .subscribe(() => {
+                    window.userAgentApplication.logout();
+                    console.log("updateToken done")
+                });
+        }, 400);
     }
 
-    fetch("/instances/" + botId)
-      .then(res => res.json())
-      .then(
-        result => {
-          this.setState({ instanceClient: result });
-          this.setupBotConnection();
-        },
-        error => {
-          this.setState({
-            isLoaded: false,
-            err: error
-          });
-        }
-      );
-  }
-
-  authenticate() {
-    let _this_ = this;
-    let authority =
-      "https://login.microsoftonline.com/" +
-      this.state.instanceClient.authenticatorTenant;
-
-    let graphScopes = ["Directory.AccessAsUser.All"];
-
-    let userAgentApplication = new UserAgentApplication(
-      this.state.instanceClient.authenticatorClientID,
-      authority,
-      function (errorDesc, token, error, tokenType) {
-        userAgentApplication.acquireTokenSilent(graphScopes).then(function (accessToken) {
-          _this_.sendToken(accessToken);
-        }, function (error) {
-          console.log(error);
-        })
-      }
-    );
-
-    if (!userAgentApplication.isCallback(window.location.hash) && window.parent === window && !window.opener) {
-      var user = userAgentApplication.getUser();
-      if (user) {
-        userAgentApplication.acquireTokenSilent(graphScopes).then(function (accessToken) {
-          _this_.sendToken(accessToken);
-        }, function (error) {
-          console.log(error);
-        })
-      }
+    send(command) {
+        window.botConnection
+            .postActivity({
+                type: "event",
+                name: command,
+                locale: "en-us",
+                textFormat: "plain",
+                timestamp: new Date().toISOString(),
+                from: { id: "webUser", name: "You" }
+            })
+            .subscribe(console.log("EVENT SENT TO Guaribas."));
     }
-  }
-
-  setupBotConnection() {
-    let _this_ = this;
-    window["botchatDebug"] = true;
-
-    const botConnection = new DirectLine({
-      secret: this.state.instanceClient.secret
-    });
-
-    botConnection.connectionStatus$.subscribe(connectionStatus => {
-      if (connectionStatus === ConnectionStatus.Online) {
-        _this_.setState({ botConnection: botConnection });
-        botConnection.postActivity({
-          type: "event",
-          value: "startGB",
-          from: this.getUser(),
-          name: "startGB"
-        });        
-      }
-    });
-
-    window.botConnection = botConnection;
-    this.postEvent("startGB", true);
-
-    botConnection.activity$
-      .filter(
-        activity =>
-          activity.type === "event" && activity.name === "loadInstance"
-      )
-      .subscribe(activity => {
-        _this_.setState({ instance: activity.value });
-        _this_.authenticate()        
-      });
-
-    botConnection.activity$
-      .filter(activity => activity.type === "event" && activity.name === "stop")
-      .subscribe(activity => {
-        if (_this_.player) {
-          _this_.player.stop();
-        }
-      });
-
-    botConnection.activity$
-      .filter(activity => activity.type === "event" && activity.name === "play")
-      .subscribe(activity => {
-        _this_.setState({ playerType: activity.value.playerType });
-        _this_.player.play(activity.value.data);
-      });
-  }
-
-  componentDidMount() {
-    this.configureChat();
-  }
-
-  render() {
-
-
-    let playerComponent = "";
-
-    if (this.state.playerType) {
-      switch (this.state.playerType) {
-        case "markdown":
-          playerComponent = (
-            <GBMarkdownPlayer
-              app={this}
-              ref={player => {
-                this.player = player;
-              }}
-            />
-          );
-          break;
-        case "bullet":
-          playerComponent = (
-            <GBBulletPlayer
-              app={this}
-              ref={player => {
-                this.player = player;
-              }}
-            />
-          );
-          break;
-        case "video":
-          playerComponent = (
-            <GBVideoPlayer
-              app={this}
-              ref={player => {
-                this.player = player;
-              }}
-            />
-          );
-          break;
-        case "image":
-          playerComponent = (
-            <GBImagePlayer
-              app={this}
-              ref={player => {
-                this.player = player;
-              }}
-            />
-          );
-          break;
-        case "pbi":
-          playerComponent = (
-            <GBPowerBIPlayer
-              app={this}
-              ref={player => {
-                this.player = player;
-              }}
-            />
-          );
-          break;
-        case "login":
-          playerComponent = (
-            <GBLoginPlayer
-              app={this}
-              ref={player => {
-                this.player = player;
-              }}
-            />
-          );
-          break;
-        default:
-          console.log(
-            "GBERROR: Unknow player type specified on message from server."
-          );
-          break;
-      }
-
-
+    getUser() {
+        return { id: "webUser@gb", name: "You" };
     }
 
-    let speechOptions;
-    let chat = <div />;
-    let gbCss = <div />;
-
-
-    let sideBar = (
-      <div className="sidebar">
-        <SidebarMenu chat={this.chat} instance={this.state.instance} />
-      </div>
-    );
-
-    if (this.state.botConnection && this.state.instance) {
-      let token = this.state.instanceClient.speechToken;
-      gbCss = <GBCss instance={this.state.instance} />;
-
-      function getToken() {
-        return new Promise((resolve, reject) => {
-          resolve(token);
+    postEvent(name, value) {
+        window.botConnection.postActivity({
+            type: "event",
+            value: value,
+            from: this.getUser(),
+            name: name
         });
-      }
-
-      speechOptions = {
-        speechRecognizer: new SpeechRecognizer({
-          locale: "pt-br",
-          fetchCallback: (authFetchEventId) => getToken(),
-          fetchOnExpiryCallback: (authFetchEventId) => getToken()
-        }),
-        speechSynthesizer: new SpeechSynthesizer({
-          fetchCallback: (authFetchEventId) => getToken(),
-          fetchOnExpiryCallback: (authFetchEventId) => getToken(),
-          gender: SynthesisGender.Male,
-          voiceName: 'Microsoft Server Speech Text to Speech Voice (pt-BR, Daniel, Apollo)'
-        })
-      };
-
-      chat = (
-        <Chat
-          ref={chat => {
-            this.chat = chat;
-          }}
-          locale={'pt-br'}
-          botConnection={this.state.botConnection}
-          user={this.getUser()}
-          bot={{ id: "bot@gb", name: "Bot" }}
-          speechOptions={speechOptions}
-        />
-      );
-
-
     }
 
-    if (!this.state.instance) {
-      sideBar = "";
+    postMessage(value) {
+        window.botConnection.postActivity({
+            type: "message",
+            text: value,
+            from: this.getUser()
+        });
     }
 
-    return (
-      <div>
-        {gbCss}
-        {sideBar}
-        <div className="player">{playerComponent}</div>
-        {chat}
-      </div>
-    );
-  }
+    configureChat() {
+        var botId = window.location.href.split("/")[3];
+        if (botId.indexOf('#') != -1) {
+            botId = botId.split("#")[0];
+        }
+
+        if (!botId || botId == "") {
+            botId = "[default]";
+        }
+
+        fetch("/instances/" + botId)
+            .then(res => res.json())
+            .then(
+                result => {
+                    this.setState({ instanceClient: result });
+                    this.setupBotConnection();
+                },
+                error => {
+                    this.setState({
+                        isLoaded: false,
+                        err: error
+                    });
+                }
+            );
+    }
+
+    authenticate() {
+        let _this_ = this;
+        let authority =
+            "https://login.microsoftonline.com/" +
+            this.state.instanceClient.authenticatorTenant;
+
+        let graphScopes = ["Directory.AccessAsUser.All"];
+
+        let userAgentApplication = new UserAgentApplication(
+            this.state.instanceClient.authenticatorClientID,
+            authority,
+            function(errorDesc, token, error, tokenType) {
+                if (error) {
+                    console.log(error);
+                }
+            }
+        );
+        window.userAgentApplication = userAgentApplication;
+
+        if (!userAgentApplication.isCallback(window.location.hash) && window.parent === window && !window.opener) {
+            var user = userAgentApplication.getUser();
+            if (user) {
+                userAgentApplication.acquireTokenSilent(graphScopes).then(function(accessToken) {
+                    _this_.sendToken(accessToken);
+                }, function(error) {
+                    console.log(error);
+                })
+            }
+        }
+    }
+
+    setupBotConnection() {
+        let _this_ = this;
+        window["botchatDebug"] = true;
+
+        const botConnection = new DirectLine({
+            secret: this.state.instanceClient.secret
+        });
+
+        botConnection.connectionStatus$.subscribe(connectionStatus => {
+            if (connectionStatus === ConnectionStatus.Online) {
+                _this_.setState({ botConnection: botConnection });
+                botConnection.postActivity({
+                    type: "event",
+                    value: "startGB",
+                    from: this.getUser(),
+                    name: "startGB"
+                });
+            }
+        });
+
+        window.botConnection = botConnection;
+        this.postEvent("startGB", true);
+
+        botConnection.activity$
+            .filter(
+                activity =>
+                    activity.type === "event" && activity.name === "loadInstance"
+            )
+            .subscribe(activity => {
+                _this_.setState({ instance: activity.value });
+                _this_.authenticate()
+            });
+
+        botConnection.activity$
+            .filter(activity => activity.type === "event" && activity.name === "stop")
+            .subscribe(activity => {
+                if (_this_.player) {
+                    _this_.player.stop();
+                }
+            });
+
+        botConnection.activity$
+            .filter(activity => activity.type === "event" && activity.name === "play")
+            .subscribe(activity => {
+                _this_.setState({ playerType: activity.value.playerType });
+                _this_.player.play(activity.value.data);
+            });
+    }
+
+    componentDidMount() {
+        this.configureChat();
+    }
+
+    render() {
+
+
+        let playerComponent = "";
+
+        if (this.state.playerType) {
+            switch (this.state.playerType) {
+                case "markdown":
+                    playerComponent = (
+                        <GBMarkdownPlayer
+                            app={this}
+                            ref={player => {
+                                this.player = player;
+                            }}
+                        />
+                    );
+                    break;
+                case "bullet":
+                    playerComponent = (
+                        <GBBulletPlayer
+                            app={this}
+                            ref={player => {
+                                this.player = player;
+                            }}
+                        />
+                    );
+                    break;
+                case "video":
+                    playerComponent = (
+                        <GBVideoPlayer
+                            app={this}
+                            ref={player => {
+                                this.player = player;
+                            }}
+                        />
+                    );
+                    break;
+                case "image":
+                    playerComponent = (
+                        <GBImagePlayer
+                            app={this}
+                            ref={player => {
+                                this.player = player;
+                            }}
+                        />
+                    );
+                    break;
+                case "pbi":
+                    playerComponent = (
+                        <GBPowerBIPlayer
+                            app={this}
+                            ref={player => {
+                                this.player = player;
+                            }}
+                        />
+                    );
+                    break;
+                case "login":
+                    playerComponent = (
+                        <GBLoginPlayer
+                            app={this}
+                            ref={player => {
+                                this.player = player;
+                            }}
+                        />
+                    );
+                    break;
+                default:
+                    console.log(
+                        "GBERROR: Unknow player type specified on message from server."
+                    );
+                    break;
+            }
+
+
+        }
+
+        let speechOptions;
+        let chat = <div />;
+        let gbCss = <div />;
+
+
+        let sideBar = (
+            <div className="sidebar">
+                <SidebarMenu chat={this.chat} instance={this.state.instance} />
+            </div>
+        );
+
+        if (this.state.botConnection && this.state.instance) {
+            let token = this.state.instanceClient.speechToken;
+            gbCss = <GBCss instance={this.state.instance} />;
+
+            function getToken() {
+                return new Promise((resolve, reject) => {
+                    resolve(token);
+                });
+            }
+
+            speechOptions = {
+                speechRecognizer: new SpeechRecognizer({
+                    locale: "pt-br",
+                    fetchCallback: (authFetchEventId) => getToken(),
+                    fetchOnExpiryCallback: (authFetchEventId) => getToken()
+                }),
+                speechSynthesizer: new SpeechSynthesizer({
+                    fetchCallback: (authFetchEventId) => getToken(),
+                    fetchOnExpiryCallback: (authFetchEventId) => getToken(),
+                    gender: SynthesisGender.Male,
+                    voiceName: 'Microsoft Server Speech Text to Speech Voice (pt-BR, Daniel, Apollo)'
+                })
+            };
+
+            chat = (
+                <Chat
+                    ref={chat => {
+                        this.chat = chat;
+                    }}
+                    locale={'pt-br'}
+                    botConnection={this.state.botConnection}
+                    user={this.getUser()}
+                    bot={{ id: "bot@gb", name: "Bot" }}
+                    speechOptions={speechOptions}
+                />
+            );
+
+
+        }
+
+        if (!this.state.instance) {
+            sideBar = "";
+        }
+
+        return (
+            <div>
+                {gbCss}
+                {sideBar}
+                <div className="player">{playerComponent}</div>
+                {chat}
+            </div>
+        );
+    }
 }
 
 export default GBUIApp;

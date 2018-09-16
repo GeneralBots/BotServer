@@ -332,7 +332,12 @@ export class GBMinService {
             // Otherwise, continue to the active dialog in the stack.
 
           } else {
-            await dc.continue()
+
+            if (dc.activeDialog) {
+              await dc.continue()
+            } else {
+              await dc.begin("/answer", {query: context.activity.text})
+            }
           }
 
           // Processes events.
@@ -362,14 +367,14 @@ export class GBMinService {
           } else if (context.activity.name === "quality") {
             await dc.begin("/quality", { score: (context.activity as any).data })
           } else if (context.activity.name === "updateToken") {
-            let token  = (context.activity as any).data
+            let token = (context.activity as any).data
             await dc.begin("/adminUpdateToken", { token: token })
           } else {
             await dc.continue()
           }
         }
       } catch (error) {
-        let msg = `Error in main activity: ${error}.`
+        let msg = `Error in main activity: ${error.message}.\n${error.stack}`
         logger.error(msg)
       }
     })

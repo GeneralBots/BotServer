@@ -183,7 +183,7 @@ export class AskDialog extends IGBDialog {
 
         // Three forms of asking.
 
-        if (args.firstTime) {
+        if (args && args.firstTime) {
           text = Messages[locale].ask_first_time;
         } else if (args && args.isReturning) {
           text = Messages[locale].anything_else;
