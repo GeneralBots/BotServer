@@ -3,9 +3,7 @@ Welcome to General Bot Community Edition
 
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
-General Bot is a package based chat bot server focused in convention
-over configuration and code-less approaches, which brings software packages  
-and application server concepts to help parallel bot development.
+General Bot is a package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
 
 
 ### What is a Bot Server?
