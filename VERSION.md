@@ -1,5 +1,11 @@
 # Release History
 
+## Version 0.1.2
+
+* NEW: kb.gbapp now has a complete browser of excel articles.
+* FIX: Some security improved.
+* NEW: Protocol changes for exchanging questions between UI and Bot Server.
+
 ## Version 0.1.0
 
 - NEW: Migration to Bot Framework v4.
