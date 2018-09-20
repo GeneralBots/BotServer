@@ -107,7 +107,7 @@ export class AdminDialog extends IGBDialog {
     let importer = new GBImporter(min.core);
     let deployer = new GBDeployer(min.core, importer);
 
-    min.dialogs.add("/admin", [
+    min.dialogs.add("/adminRat", [
       async dc => {
         await AdminDialog.refreshAdminToken(min, dc);
         // await dc.context.sendActivity(
@@ -137,7 +137,7 @@ export class AdminDialog extends IGBDialog {
       }
     ]);
 
-    min.dialogs.add("/admin1", [
+    min.dialogs.add("/admin", [
       async (dc, args) => {
         const prompt = "Please, authenticate:";
         await dc.prompt("textPrompt", prompt);

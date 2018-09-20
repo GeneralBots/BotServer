@@ -39,6 +39,7 @@ import { KBService } from "./../services/KBService";
 import { BotAdapter } from "botbuilder";
 import { Messages } from "../strings";
 import { LuisRecognizer } from "botbuilder-ai";
+import { GuaribasQuestion } from "../models";
 
 const logger = require("../../../src/logger");
 
@@ -57,6 +58,24 @@ export class AskDialog extends IGBDialog {
       subscriptionKey: min.instance.nlpSubscriptionKey,
       serviceEndpoint: min.instance.nlpServerUrl
     });
+
+    min.dialogs.add("/answerEvent", [
+      async (dc, args) => {
+
+        if (args && args.questionId) {
+
+          let question = await service.getQuestionById(min.instance.instanceId, args.questionId);
+          let answer = await service.getAnswerById(min.instance.instanceId, question.answerId)
+          
+          // Sends the answer to all outputs, including projector.
+
+          await service.sendAnswer(
+            min.conversationalService,
+            dc,
+            answer
+          );
+        }
+      }])
 
     min.dialogs.add("/answer", [
       async (dc, args) => {

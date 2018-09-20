@@ -84,7 +84,7 @@ export class MenuDialog extends IGBDialog {
             )
             await min.conversationalService.sendEvent(dc, "play", {
               playerType: "bullet",
-              data: data.slice(0, 6)
+              data: data.slice(0, 10)
             })
           }
         } else {
@@ -109,12 +109,13 @@ export class MenuDialog extends IGBDialog {
           var subject = item
           var card = CardFactory.heroCard(
             subject.title,
+            subject.description,
             CardFactory.images([
               UrlJoin(
                 "/kb",
                 min.instance.kb,
                 "subjects",
-                subject.internalId + ".png" // TODO: or fallback to subject.png
+                "subject.png"
               )
             ]),
             CardFactory.actions([
@@ -123,7 +124,9 @@ export class MenuDialog extends IGBDialog {
                 title: Messages[locale].menu_select,
                 value: JSON.stringify({
                   title: subject.title,
+                  description: subject.description,
                   subjectId: subject.subjectId,
+                  internalId: subject.internalId,
                   to: subject.to
                 })
               }

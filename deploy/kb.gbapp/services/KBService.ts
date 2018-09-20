@@ -63,23 +63,28 @@ export class KBService {
     this.sequelize = sequelize
   }
 
+  async getQuestionById(
+    instanceId: number,
+    questionId: number
+  ): Promise<GuaribasQuestion> {
+    return GuaribasQuestion.findOne({
+      where: {
+        instanceId: instanceId,
+        questionId: questionId
+      }
+    })
+  }
+
   async getAnswerById(
     instanceId: number,
     answerId: number
   ): Promise<GuaribasAnswer> {
-    return new Promise<GuaribasAnswer>(
-      (resolve, reject) => {
-        GuaribasAnswer.findAll({
-          where: {
-            instanceId: instanceId,
-            answerId: answerId
-          }
-        }).then((item: GuaribasAnswer[]) => {
-          resolve(item[0])
-        }).error((reason) => {
-          reject(reason)
-        })
-      })
+    return GuaribasAnswer.findOne({
+      where: {
+        instanceId: instanceId,
+        answerId: answerId
+      }
+    })
   }
 
   async getAnswerByText(
@@ -291,7 +296,7 @@ export class KBService {
   static getSubjectItemsSeparatedBySpaces(subjects: GuaribasSubject[]) {
     let out = []
     subjects.forEach(subject => {
-      out.push(subject.title)
+      out.push(subject.internalId)
     })
     return out.join(" ")
   }
@@ -300,66 +305,37 @@ export class KBService {
     instanceId: number,
     parentId: number
   ): Promise<GuaribasSubject[]> {
-    return new Promise<GuaribasSubject[]>(
-      (resolve, reject) => {
-        var where = { parentSubjectId: parentId, instanceId: instanceId }
-        GuaribasSubject.findAll({
-          where: where
-        })
-          .then((values: GuaribasSubject[]) => {
-            resolve(values)
-          })
-          .error(reason => {
-            reject(reason)
-          })
-      })
+    var where = { parentSubjectId: parentId, instanceId: instanceId }
+    return GuaribasSubject.findAll({
+      where: where
+    })
   }
 
   async getFaqBySubjectArray(from: string, subjects: any): Promise<GuaribasQuestion[]> {
-    return new Promise<GuaribasQuestion[]>(
-      (resolve, reject) => {
+    let where = {
+      from: from
+    }
 
-        let where = {
-          from: from
-        }
+    if (subjects) {
+      if (subjects[0]) {
+        where["subject1"] = subjects[0].internalId
+      }
 
-        if (subjects) {
-          if (subjects[0]) {
-            where["subject1"] = subjects[0].title
-          }
+      if (subjects[1]) {
+        where["subject2"] = subjects[1].internalId
+      }
 
-          if (subjects[1]) {
-            where["subject2"] = subjects[1].title
-          }
+      if (subjects[2]) {
+        where["subject3"] = subjects[2].internalId
+      }
 
-          if (subjects[2]) {
-            where["subject3"] = subjects[2].title
-          }
-
-          if (subjects[3]) {
-            where["subject4"] = subjects[3].title
-          }
-        }
-        GuaribasQuestion.findAll({
-          where: where
-        })
-          .then((items: GuaribasQuestion[]) => {
-            if (!items) items = []
-            if (items.length == 0) {
-              resolve([])
-            } else {
-              resolve(items)
-            }
-          })
-          .catch(reason => {
-            if (reason.message.indexOf("no such table: IGBInstance") != -1) {
-              resolve([])
-            } else {
-              reject(reason)
-              logger.info(`GuaribasServiceError: ${reason}`)
-            }
-          })
-      })
+      if (subjects[3]) {
+        where["subject4"] = subjects[3].internalId
+      }
+    }
+    return await GuaribasQuestion.findAll({
+      where: where
+    })
   }
 
   async importKbTabularFile(
@@ -372,6 +348,9 @@ export class KBService {
     let opts = {
       delimiter: "\t"
     }
+
+    let lastQuestion: GuaribasQuestion;
+    let lastAnswer: GuaribasAnswer;
 
     let data = await parse(file, opts)
     return asyncPromise.eachSeries(data, async line => {
@@ -428,9 +407,11 @@ export class KBService {
           instanceId: instanceId,
           content: answer,
           format: format,
-          packageId: packageId
+          packageId: packageId,
+          prevId: lastQuestion ? lastQuestion.questionId : 0,
         })
-        await GuaribasQuestion.create({
+
+        let question1 = await GuaribasQuestion.create({
           from: from,
           to: to,
           subject1: subject1,
@@ -443,7 +424,13 @@ export class KBService {
           packageId: packageId
         })
 
-        return Promise.resolve(question)
+        if (lastAnswer && lastQuestion) {
+          await lastAnswer.updateAttributes({ nextId: lastQuestion.questionId })
+        }
+        lastAnswer = answer1
+        lastQuestion = question1
+
+        return Promise.resolve(lastQuestion)
 
       } else {
 
@@ -465,7 +452,7 @@ export class KBService {
     } else if (answer.content.length > 140 &&
       dc.context._activity.channelId === "webchat") {
       const locale = dc.context.activity.locale;
-      
+
       await dc.context.sendActivity(Messages[locale].will_answer_projector) // TODO: Handle rnd.
       var html = answer.content
 
@@ -483,7 +470,13 @@ export class KBService {
         })
         html = marked(answer.content)
       }
-      await conversationalService.sendEvent(dc, "play", { playerType: "markdown", data: html })
+      await conversationalService.sendEvent(dc, "play",
+        {
+          playerType: "markdown", data: {
+            content: html, answer: answer,
+            prevId: answer.prevId, nextId: answer.nextId
+          }
+        })
     } else {
       await dc.context.sendActivity(answer.content)
       await conversationalService.sendEvent(dc, "stop", null)
@@ -560,10 +553,8 @@ export class KBService {
         else {
           return Promise.resolve(item)
         }
-
       })
     }
-
     return doIt(subjects.children, null)
   }
 
@@ -603,11 +594,11 @@ export class KBService {
     )
 
     let instance = await core.loadInstance(packageObject.botId)
-    logger.info(`[GBDeployer] Beginning importing: ${localPath}`)
+    logger.info(`[GBDeployer] Importing: ${localPath}`)
     let p = await deployer.deployPackageToStorage(
       instance.instanceId,
       packageName)
     await this.importKbPackage(localPath, p, instance)
-    logger.info(`[GBDeployer] Finished importing ${localPath}`)
+    logger.info(`[GBDeployer] Finished import of ${localPath}`)
   }
 }

@@ -291,9 +291,9 @@ export class GBMinService {
         }
 
         logger.info(
-          `[RCV]: ${context.activity.type}, ChannelID: ${
+          `[User]: ${context.activity.type}, ChannelID: ${
           context.activity.channelId
-          }, Name: ${context.activity.name}, Text: ${context.activity.text}.`
+          } Text: ${context.activity.text}.`
         )
         if (
           context.activity.type === "conversationUpdate" &&
@@ -358,9 +358,9 @@ export class GBMinService {
             })
           } else if (context.activity.name === "showFAQ") {
             await dc.begin("/faq")
-          } else if (context.activity.name === "ask") {
-            await dc.begin("/answer", {
-              query: (context.activity as any).data,
+          } else if (context.activity.name === "answerEvent") {
+            await dc.begin("/answerEvent", {
+              questionId: (context.activity as any).data,
               fromFaq: true
             })
 
@@ -374,7 +374,7 @@ export class GBMinService {
           }
         }
       } catch (error) {
-        let msg = `Error in main activity: ${error.message}`
+        let msg = `Error in main activity: ${error.message} ${error.stack? error.stack:""}`
         logger.error(msg)
       }
     })

@@ -33,6 +33,7 @@
 import React, { Component } from "react";
 
 class GBMarkdownPlayer extends Component {
+
   send(value) {
     setTimeout(() => {
       window.botConnection
@@ -49,15 +50,35 @@ class GBMarkdownPlayer extends Component {
     }, 400);
   }
 
+  sendAnswer(text) {
+    setTimeout(() => {
+      window.botConnection
+        .postActivity({
+          type: "event",
+          name: "answerEvent",
+          data: text,
+          locale: "en-us",
+          textFormat: "plain",
+          timestamp: new Date().toISOString(),
+          from: window.user
+        })
+        .subscribe(console.log("success"));
+    }, 400);
+
+  }
+
+
   constructor() {
     super();
     this.state = {
-      content: ""
+      content: "",
+      prevId: 0,
+      nextId: 0
     };
   }
 
   play(data) {
-    this.setState({ content: data });
+    this.setState({ content: data.content, prevId: data.prevId, nextId: data.nextId });
   }
 
   stop() {
@@ -78,7 +99,7 @@ class GBMarkdownPlayer extends Component {
 
   render() {
 
-    var quality = 
+    var quality =
       <div className="gb-markdown-player-quality">
         <span ref={i => (this.quality = i)}>Is the answer OK?</span>
         &nbsp;&nbsp;
@@ -91,18 +112,34 @@ class GBMarkdownPlayer extends Component {
         </button>
       </div>;
 
-     if (this.state.content === "") {
-       quality = "";
-     }
+    var next = "", prev = "";
+
+    if (this.state.content === "") {
+      quality = "";
+    }
+
+    if (this.state.prevId) {
+      prev = <a style={{ color: 'blue' }}
+        onPress={() => this.sendAnswer(this.state.prevId)}>
+        Back
+      </a>
+    }
+    if (this.state.nextId) {
+      next = <a style={{ color: 'blue' }}
+        onPress={() => this.sendAnswer(this.state.nextId)}>
+        Next
+      </a>
+    }
 
     return (
       <div ref={i => (this.playerText = i)} className="media-player">
         <div className="media-player-container">
           <div className="media-player-scroll">
+            <div><span>{prev}</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>{next}</span></div>
             <span dangerouslySetInnerHTML={this.createMarkup()} />
           </div>
-          </div>
-          {quality}
+        </div>
+        {quality}
       </div>
     );
   }

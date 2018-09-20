@@ -39,12 +39,12 @@ class RenderItem extends Component {
     window.botConnection
       .postActivity({
         type: "event",
-        name: "ask",
-        data: item.content,
+        name: "answerEvent",
+        data: item.questionId,
         locale: "en-us",
         textFormat: "plain",
         timestamp: new Date().toISOString(),
-        from: { id: "webUser", name: "You" }
+        from: window.user
       })
       .subscribe(console.log("success"));
     },400);

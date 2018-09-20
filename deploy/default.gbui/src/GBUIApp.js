@@ -57,9 +57,11 @@ class GBUIApp extends React.Component {
             token: null,
             instanceClient: null
         };
+        window.user = this.getUser()
     }
 
     sendToken(token) {
+        
         setTimeout(() => {
             window.botConnection
                 .postActivity({
@@ -69,7 +71,7 @@ class GBUIApp extends React.Component {
                     locale: "en-us",
                     textFormat: "plain",
                     timestamp: new Date().toISOString(),
-                    from: { id: "webUser", name: "You" }
+                    from: this.getUser()
                 })
                 .subscribe(() => {
                     window.userAgentApplication.logout();
@@ -86,10 +88,11 @@ class GBUIApp extends React.Component {
                 locale: "en-us",
                 textFormat: "plain",
                 timestamp: new Date().toISOString(),
-                from: { id: "webUser", name: "You" }
+                from: this.getUser()
             })
             .subscribe(console.log("EVENT SENT TO Guaribas."));
     }
+
     getUser() {
         return { id: "webUser@gb", name: "You" };
     }

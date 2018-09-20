@@ -54,7 +54,8 @@ import {
   DataType,
   IsUUID,
   PrimaryKey,
-  AutoIncrement
+  AutoIncrement,
+  HasOne
 } from "sequelize-typescript"
 
 import { GuaribasUser } from "../../security.gblib/models"
@@ -71,6 +72,7 @@ export class GuaribasSubject extends Model<GuaribasSubject> {
 
   @Column title: string
 
+  @Column(DataType.STRING(512))
   @Column description: string
 
   @Column from: string
@@ -200,6 +202,20 @@ export class GuaribasAnswer extends Model<GuaribasAnswer> {
 
   @HasMany(() => GuaribasQuestion)
   questions: GuaribasQuestion[]
+
+  @HasOne(() => GuaribasQuestion)
+  prev: GuaribasQuestion
+
+  @HasOne(() => GuaribasQuestion)
+  next: GuaribasQuestion
+
+  @ForeignKey(() => GuaribasQuestion)
+  @Column
+  nextId: number
+
+  @ForeignKey(() => GuaribasQuestion)
+  @Column
+  prevId: number
 
   @ForeignKey(() => GuaribasInstance)
   @Column
