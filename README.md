@@ -3,9 +3,7 @@ Welcome to General Bot Community Edition
 
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
-General Bot is a package based chat bot server focused in convention
-over configuration and code-less approaches, which brings software packages  
-and application server concepts to help parallel bot development.
+General Bot is a package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
 
 
 ### What is a Bot Server?
@@ -121,7 +119,7 @@ Package Types
 ### .gbai
 
 Embraces all packages types (content, logic & conversation) into a pluggable bot
-directory.
+directory. [A sample .gbai is available](https://github.com/pragmatismo-io/IntranetBotQuickStart.gbai).
 
 ### .gbapp
 
@@ -166,12 +164,11 @@ all bots dependencies related to services and other resources.
 ### .gbtheme
 
 A theme of a bot at a given time. CSS files & images that can compose all UI
-presentation and using it a branding can be done.
+presentation and using it a branding can be done. [A sample .gbtheme is available](https://github.com/pragmatismo-io/Office365.gbtheme)
 
 ### .gbkb
 
-A set of subjects that bot knows.
-
+A set of subjects that bot knows in a form of hierarchical menu-based QnA. [A sample .gbkb is available](https://github.com/pragmatismo-io/ProjectOnline.gbkb).
 
 ### .gblib
 
