@@ -46,6 +46,9 @@ export class GuaribasAdmin extends Model<GuaribasAdmin>
  {
 
   @Column
+  instanceId: number;
+
+  @Column
   key: string;
 
   @Column

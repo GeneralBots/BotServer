@@ -149,7 +149,7 @@ class GBUIApp extends React.Component {
         let graphScopes = ["Directory.AccessAsUser.All"];
 
         let userAgentApplication = new UserAgentApplication(
-            this.state.instanceClient.authenticatorClientID,
+            this.state.instanceClient.authenticatorClientId,
             authority,
             function(errorDesc, token, error, tokenType) {
                 if (error) {

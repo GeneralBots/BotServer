@@ -48,20 +48,22 @@ export class GBSecurityPackage implements IGBPackage {
       GuaribasUser,
       GuaribasUserGroup
     ])
+
+    core
   }
-  
+
   unloadPackage(core: IGBCoreService): void {
-    
+
   }
 
   loadBot(min: GBMinInstance): void {
-    
+
   }
 
   unloadBot(min: GBMinInstance): void {
-    
+
   }
   onNewSession(min: GBMinInstance, dc: any): void {
-    
+
   }
 }

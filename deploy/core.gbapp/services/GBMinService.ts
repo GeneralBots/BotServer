@@ -30,13 +30,15 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict"
+"use strict";
 
-const { TextPrompt } = require("botbuilder-dialogs")
-const UrlJoin = require("url-join")
-const express = require("express")
-const logger = require("../../../src/logger")
-const request = require('request-promise-native')
+const { TextPrompt } = require("botbuilder-dialogs");
+const UrlJoin = require("url-join");
+const express = require("express");
+const logger = require("../../../src/logger");
+const request = require("request-promise-native");
+var crypto = require("crypto");
+var AuthenticationContext = require("adal-node").AuthenticationContext;
 
 import {
   BotFrameworkAdapter,
@@ -44,28 +46,32 @@ import {
   ConversationState,
   MemoryStorage,
   UserState
-} from "botbuilder"
+} from "botbuilder";
 
-import { GBCoreService } from "./GBCoreService"
-import { GBConversationalService } from "./GBConversationalService"
-import { GBMinInstance, IGBPackage } from "botlib"
-import { GBAnalyticsPackage } from "../../analytics.gblib"
-import { GBCorePackage } from "../../core.gbapp"
-import { GBKBPackage } from "../../kb.gbapp"
-import { GBDeployer } from "./GBDeployer"
-import { GBSecurityPackage } from "../../security.gblib"
-import { GBAdminPackage } from "./../../admin.gbapp/index"
-import { GBCustomerSatisfactionPackage } from "../../customer-satisfaction.gbapp"
-import { GBWhatsappPackage } from "../../whatsapp.gblib"
+import { GBMinInstance, IGBPackage } from "botlib";
+import { GBAnalyticsPackage } from "../../analytics.gblib";
+import { GBCorePackage } from "../../core.gbapp";
+import { GBKBPackage } from "../../kb.gbapp";
+import { GBDeployer } from "./GBDeployer";
+import { GBSecurityPackage } from "../../security.gblib";
+import { GBAdminPackage } from "./../../admin.gbapp/index";
+import { GBCustomerSatisfactionPackage } from "../../customer-satisfaction.gbapp";
+import { GBWhatsappPackage } from "../../whatsapp.gblib";
+import {
+  IGBAdminService,
+  IGBCoreService,
+  IGBConversationalService
+} from "botlib";
 
 /** Minimal service layer for a bot. */
 
 export class GBMinService {
-  core: GBCoreService
-  conversationalService: GBConversationalService
-  deployer: GBDeployer
+  core: IGBCoreService;
+  conversationalService: IGBConversationalService;
+  adminService: IGBAdminService;
+  deployer: GBDeployer;
 
-  corePackage = "core.gbai"
+  corePackage = "core.gbai";
 
   /**
    * Static initialization of minimal instance.
@@ -73,13 +79,15 @@ export class GBMinService {
    * @param core Basic database services to identify instance, for example.
    */
   constructor(
-    core: GBCoreService,
-    conversationalService: GBConversationalService,
+    core: IGBCoreService,
+    conversationalService: IGBConversationalService,
+    adminService: IGBAdminService,
     deployer: GBDeployer
   ) {
-    this.core = core
-    this.conversationalService = conversationalService
-    this.deployer = deployer
+    this.core = core;
+    this.conversationalService = conversationalService;
+    this.adminService = adminService;
+    this.deployer = deployer;
   }
 
   /**
@@ -97,37 +105,34 @@ export class GBMinService {
     server: any,
     appPackages: Array<IGBPackage>
   ): Promise<GBMinInstance> {
-
     // Serves default UI on root address '/'.
 
-    let uiPackage = "default.gbui"
+    let uiPackage = "default.gbui";
     server.use(
       "/",
       express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, "build"))
-    )
+    );
 
     // Loads all bot instances from storage and starting loading them.
 
-    let instances = await this.core.loadInstances()
+    let instances = await this.core.loadInstances();
     Promise.all(
       instances.map(async instance => {
-
         // Gets the authorization key for each instance from Bot Service.
 
-        let webchatToken = await this.getWebchatToken(instance)
+        let webchatToken = await this.getWebchatToken(instance);
 
         // Serves the bot information object via HTTP so clients can get
         // instance information stored on server.
 
         server.get("/instances/:botId", (req, res) => {
           (async () => {
-
             // Returns the instance object to clients requesting bot info.
 
-            let botId = req.params.botId
-            let instance = await this.core.loadInstance(botId)
+            let botId = req.params.botId;
+            let instance = await this.core.loadInstance(botId);
             if (instance) {
-              let speechToken = await this.getSTSToken(instance)
+              let speechToken = await this.getSTSToken(instance);
 
               res.send(
                 JSON.stringify({
@@ -138,30 +143,30 @@ export class GBMinService {
                   speechToken: speechToken,
                   conversationId: webchatToken.conversationId,
                   authenticatorTenant: instance.authenticatorTenant,
-                  authenticatorClientID: instance.authenticatorClientID
+                  authenticatorClientId: instance.authenticatorClientId
                 })
-              )
+              );
             } else {
-              let error = `Instance not found: ${botId}.`
-              res.sendStatus(error)
-              logger.error(error)
+              let error = `Instance not found: ${botId}.`;
+              res.sendStatus(error);
+              logger.error(error);
             }
-          })()
-        })
+          })();
+        });
 
         // Build bot adapter.
 
         var { min, adapter, conversationState } = await this.buildBotAdapter(
           instance
-        )
+        );
 
         // Call the loadBot context.activity for all packages.
 
-        this.invokeLoadBot(appPackages, min, server)
+        this.invokeLoadBot(appPackages, min, server);
 
         // Serves individual URL for each bot conversational interface...
 
-        let url = `/api/messages/${instance.botId}`
+        let url = `/api/messages/${instance.botId}`;
         server.post(url, async (req, res) => {
           return this.receiver(
             adapter,
@@ -171,20 +176,107 @@ export class GBMinService {
             min,
             instance,
             appPackages
-          )
-        })
+          );
+        });
         logger.info(
           `GeneralBots(${instance.engineName}) listening on: ${url}.`
-        )
+        );
 
         // Serves individual URL for each bot user interface.
 
-        let uiUrl = `/${instance.botId}`
+        let uiUrl = `/${instance.botId}`;
         server.use(
           uiUrl,
           express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, "build"))
-        )
-        logger.info(`Bot UI ${uiPackage} accessible at: ${uiUrl}.`)
+        );
+
+        logger.info(`Bot UI ${uiPackage} accessible at: ${uiUrl}.`);
+        let state = `${instance.instanceId}${Math.floor(
+          Math.random() * 1000000000
+        )}`;
+
+        // Clients get redirected here in order to create an OAuth authorize url and redirect them to AAD.
+        // There they will authenticate and give their consent to allow this app access to
+        // some resource they own.
+        server.get(`/${min.instance.botId}/auth`, function(req, res) {
+          let authorizationUrl = UrlJoin(
+            min.instance.authenticatorAuthorityHostUrl,
+            min.instance.authenticatorTenant,
+            "/oauth2/authorize"
+          );
+          authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
+            min.instance.authenticatorClientId
+          }&redirect_uri=${min.instance.botServerUrl}/${
+            min.instance.botId
+          }/token`;
+
+          res.redirect(authorizationUrl);
+        });
+
+        // After consent is granted AAD redirects here.  The ADAL library
+        // is invoked via the AuthenticationContext and retrieves an
+        // access token that can be used to access the user owned resource.
+
+        server.get(`/${min.instance.botId}/token`, async (req, res) => {
+          let state = await min.adminService.getValue(
+            min.instance.instanceId,
+            "AntiCSRFAttackState"
+          );
+
+          if (req.query.state != state) {
+            let msg =
+              "WARNING: state field was not provided as anti-CSRF token";
+            logger.error(msg);
+            throw new Error(msg);
+          }
+
+          var authenticationContext = new AuthenticationContext(
+            UrlJoin(
+              min.instance.authenticatorAuthorityHostUrl,
+              min.instance.authenticatorTenant
+            )
+          );
+
+          let resource = "https://graph.microsoft.com";
+
+          authenticationContext.acquireTokenWithAuthorizationCode(
+            req.query.code,
+            UrlJoin(instance.botServerUrl, min.instance.botId, "/token"),
+            resource,
+            instance.authenticatorClientId,
+            instance.authenticatorClientSecret,
+            async (err, token) => {
+              if (err) {
+                let msg = `Error acquiring token: ${err}`;
+                logger.error(msg);
+                res.send(msg);
+              } else {
+                await this.adminService.setValue(
+                  instance.instanceId,
+                  "refreshToken",
+                  token.refreshToken
+                );
+                await this.adminService.setValue(
+                  instance.instanceId,
+                  "accessToken",
+                  token.accessToken
+                );
+                await this.adminService.setValue(
+                  instance.instanceId,
+                  "expiresOn",
+                  token.expiresOn.toString()
+                );
+                await this.adminService.setValue(
+                  instance.instanceId,
+                  "AntiCSRFAttackState",
+                  null
+                );
+
+                res.redirect(min.instance.botServerUrl);
+              }
+            }
+          );
+        });
 
         // Setups handlers.
         // send: function (context.activity, next) {
@@ -201,32 +293,33 @@ export class GBMinService {
         //   )
         //   next()
       })
-    )
+    );
   }
 
   private async buildBotAdapter(instance: any) {
     let adapter = new BotFrameworkAdapter({
       appId: instance.marketplaceId,
       appPassword: instance.marketplacePassword
-    })
+    });
 
-    const storage = new MemoryStorage()
-    const conversationState = new ConversationState(storage)
-    const userState = new UserState(storage)
-    adapter.use(new BotStateSet(conversationState, userState))
+    const storage = new MemoryStorage();
+    const conversationState = new ConversationState(storage);
+    const userState = new UserState(storage);
+    adapter.use(new BotStateSet(conversationState, userState));
 
     // The minimal bot is built here.
 
-    let min = new GBMinInstance()
-    min.botId = instance.botId
-    min.bot = adapter
-    min.userState = userState
-    min.core = this.core
-    min.conversationalService = this.conversationalService
-    min.instance = await this.core.loadInstance(min.botId)
-    min.dialogs.add("textPrompt", new TextPrompt())
+    let min = new GBMinInstance();
+    min.botId = instance.botId;
+    min.bot = adapter;
+    min.userState = userState;
+    min.core = this.core;
+    min.conversationalService = this.conversationalService;
+    min.adminService = this.adminService;
+    min.instance = await this.core.loadInstance(min.botId);
+    min.dialogs.add("textPrompt", new TextPrompt());
 
-    return { min, adapter, conversationState }
+    return { min, adapter, conversationState };
   }
 
   private invokeLoadBot(appPackages: any[], min: any, server: any) {
@@ -244,19 +337,18 @@ export class GBMinService {
         GBCustomerSatisfactionPackage,
         GBWhatsappPackage
       ].forEach(sysPackage => {
-        logger.info(`Loading sys package: ${sysPackage.name}...`)
-        let p = Object.create(sysPackage.prototype) as IGBPackage
-        p.loadBot(min)
-        e.sysPackages.push(p)
+        let p = Object.create(sysPackage.prototype) as IGBPackage;
+        p.loadBot(min);
+        e.sysPackages.push(p);
         if (sysPackage.name === "GBWhatsappPackage") {
-          let url = "/instances/:botId/whatsapp"
+          let url = "/instances/:botId/whatsapp";
           server.post(url, (req, res) => {
-            p["channel"].received(req, res)
-          })
+            p["channel"].received(req, res);
+          });
         }
-      }, this)
-      e.loadBot(min)
-    }, this)
+      }, this);
+      e.loadBot(min);
+    }, this);
   }
 
   /**
@@ -272,12 +364,11 @@ export class GBMinService {
     appPackages: any[]
   ) {
     return adapter.processActivity(req, res, async context => {
-
       try {
-        const state = conversationState.get(context)
-        const dc = min.dialogs.createContext(context, state)
-        dc.context.activity.locale = "en-US"
-        const user = min.userState.get(dc.context)
+        const state = conversationState.get(context);
+        const dc = min.dialogs.createContext(context, state);
+        dc.context.activity.locale = "en-US";
+        const user = min.userState.get(dc.context);
 
         if (!user.loaded) {
           await min.conversationalService.sendEvent(dc, "loadInstance", {
@@ -285,99 +376,95 @@ export class GBMinService {
             botId: instance.botId,
             theme: instance.theme,
             secret: instance.webchatKey
-          })
-          user.loaded = true
-          user.subjects = []
+          });
+          user.loaded = true;
+          user.subjects = [];
         }
 
         logger.info(
-          `[User]: ${context.activity.type}, ChannelID: ${
-          context.activity.channelId
-          } Text: ${context.activity.text}.`
-        )
+          `User>: ${context.activity.text} (${context.activity.type}, ${
+            context.activity.name
+          }, ${context.activity.channelId}, {context.activity.value})`
+        );
         if (
           context.activity.type === "conversationUpdate" &&
           context.activity.membersAdded.length > 0
         ) {
-
-          let member = context.activity.membersAdded[0]
+          let member = context.activity.membersAdded[0];
           if (member.name === "GeneralBots") {
-            logger.info(`Bot added to conversation, starting chat...`)
+            logger.info(`Bot added to conversation, starting chat...`);
             appPackages.forEach(e => {
-              e.onNewSession(min, dc)
-            })
+              e.onNewSession(min, dc);
+            });
 
             // Processes the root dialog.
 
-            await dc.begin("/")
-
+            await dc.begin("/");
           } else {
-            logger.info(`Member added to conversation: ${member.name}`)
+            logger.info(`Member added to conversation: ${member.name}`);
           }
 
           // Processes messages.
-
         } else if (context.activity.type === "message") {
-
           // Checks for /admin request.
 
           if (context.activity.text === "admin") {
-            await dc.begin("/admin")
+            await dc.begin("/admin");
 
             // Checks for /menu JSON signature.
-
-          } else if (context.activity.text.startsWith("{\"title\"")) {
-            await dc.begin("/menu", { data: JSON.parse(context.activity.text) })
+          } else if (context.activity.text.startsWith('{"title"')) {
+            await dc.begin("/menu", {
+              data: JSON.parse(context.activity.text)
+            });
 
             // Otherwise, continue to the active dialog in the stack.
-
           } else {
-
             if (dc.activeDialog) {
-              await dc.continue()
+              await dc.continue();
             } else {
-              await dc.begin("/answer", {query: context.activity.text})
+              await dc.begin("/answer", { query: context.activity.text });
             }
           }
 
           // Processes events.
-
         } else if (context.activity.type === "event") {
-
           // Empties dialog stack before going to the target.
 
-          await dc.endAll()
+          await dc.endAll();
 
           if (context.activity.name === "whoAmI") {
-            await dc.begin("/whoAmI")
+            await dc.begin("/whoAmI");
           } else if (context.activity.name === "showSubjects") {
-            await dc.begin("/menu")
+            await dc.begin("/menu");
           } else if (context.activity.name === "giveFeedback") {
             await dc.begin("/feedback", {
               fromMenu: true
-            })
+            });
           } else if (context.activity.name === "showFAQ") {
-            await dc.begin("/faq")
+            await dc.begin("/faq");
           } else if (context.activity.name === "answerEvent") {
             await dc.begin("/answerEvent", {
               questionId: (context.activity as any).data,
               fromFaq: true
-            })
-
+            });
           } else if (context.activity.name === "quality") {
-            await dc.begin("/quality", { score: (context.activity as any).data })
+            await dc.begin("/quality", {
+              score: (context.activity as any).data
+            });
           } else if (context.activity.name === "updateToken") {
-            let token = (context.activity as any).data
-            await dc.begin("/adminUpdateToken", { token: token })
+            let token = (context.activity as any).data;
+            await dc.begin("/adminUpdateToken", { token: token });
           } else {
-            await dc.continue()
+            await dc.continue();
           }
         }
       } catch (error) {
-        let msg = `Error in main activity: ${error.message} ${error.stack? error.stack:""}`
-        logger.error(msg)
+          let msg = `Error in main activity: ${error.message} ${
+            error.stack ? error.stack : ""
+          }`;
+          logger.error(msg);
       }
-    })
+    });
   }
 
   /**
@@ -393,15 +480,15 @@ export class GBMinService {
       headers: {
         Authorization: `Bearer ${instance.webchatKey}`
       }
-    }
+    };
 
     try {
-      let json = await request(options)
-      return Promise.resolve(JSON.parse(json))
+      let json = await request(options);
+      return Promise.resolve(JSON.parse(json));
     } catch (error) {
-      let msg = `Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`
-      logger.error(msg)
-      return Promise.reject(msg)
+      let msg = `Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
+      logger.error(msg);
+      return Promise.reject(msg);
     }
   }
 
@@ -420,14 +507,14 @@ export class GBMinService {
       headers: {
         "Ocp-Apim-Subscription-Key": instance.speechKey
       }
-    }
+    };
 
     try {
-      return await request(options)
+      return await request(options);
     } catch (error) {
-      let msg = `Error calling Speech to Text client. Error is: ${error}.`
-      logger.error(msg)
-      return Promise.reject(msg)
+      let msg = `Error calling Speech to Text client. Error is: ${error}.`;
+      logger.error(msg);
+      return Promise.reject(msg);
     }
   }
 }

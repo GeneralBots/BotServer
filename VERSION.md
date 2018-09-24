@@ -1,5 +1,12 @@
 # Release History
 
+## Version 0.1.3
+
+* FIX: Admin now is internationalized.
+* FIX: Webchat now receives a private token.
+* FIX: OAuth2 now has got revised and included state to avoid CSRF attacks.
+* FIX: Now server will only start with a secure administration password.
+
 ## Version 0.1.2
 
 * NEW: kb.gbapp now has a complete browser of excel articles.

@@ -30,28 +30,97 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict"
+"use strict";
 
 import { GuaribasAdmin } from "../models/AdminModel";
+import { IGBCoreService } from "botlib";
+import { AuthenticationContext, TokenResponse } from "adal-node";
+const UrlJoin = require("url-join");
 
 export class GBAdminService {
+  public static StrongRegex = new RegExp(
+    "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})"
+  );
 
-  async saveValue(key: string, value: string): Promise<GuaribasAdmin> {
-    let options = { where: {} }
-    options.where = { key: key }
+  core: IGBCoreService;
+
+  constructor(core: IGBCoreService) {
+    this.core = core;
+  }
+
+  public async setValue(
+    instanceId: number,
+    key: string,
+    value: string
+  ): Promise<GuaribasAdmin> {
+    let options = { where: {} };
+    options.where = { key: key };
     let admin = await GuaribasAdmin.findOne(options);
     if (admin == null) {
       admin = new GuaribasAdmin();
       admin.key = key;
     }
     admin.value = value;
-    return admin.save()
+    admin.instanceId = instanceId;
+    return admin.save();
   }
 
-  async getValue(key: string) {
-    let options = { where: {} }
-    options.where = { key: key }
+  public async getValue(instanceId: number, key: string) {
+    let options = { where: {} };
+    options.where = { key: key, instanceId: instanceId };
     let obj = await GuaribasAdmin.findOne(options);
     return Promise.resolve(obj.value);
+  }
+
+  public async acquireElevatedToken(instanceId): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+      let instance = await this.core.loadInstanceById(instanceId);
+
+      let expiresOn = new Date(await this.getValue(instanceId, "expiresOn"));
+      if (expiresOn.getTime() > new Date().getTime()) {
+        let accessToken = await this.getValue(instanceId, "accessToken");
+        resolve(accessToken);
+      } else {
+        let authorizationUrl = UrlJoin(
+          instance.authenticatorAuthorityHostUrl,
+          instance.authenticatorTenant,
+          "/oauth2/authorize"
+        );
+
+        var authenticationContext = new AuthenticationContext(authorizationUrl);
+        let refreshToken = await this.getValue(instanceId, "refreshToken");
+        let resource = "https://graph.microsoft.com";
+
+        authenticationContext.acquireTokenWithRefreshToken(
+          refreshToken,
+          instance.authenticatorClientId,
+          instance.authenticatorClientSecret,
+          resource,
+          async (err, res) => {
+            if (err) {
+              reject(err);
+            } else {
+              let tokens = res as TokenResponse;
+              await this.setValue(
+                instanceId,
+                "accessToken",
+                tokens.accessToken
+              );
+              await this.setValue(
+                instanceId,
+                "refreshToken",
+                tokens.refreshToken
+              );
+              await this.setValue(
+                instanceId,
+                "expiresOn",
+                tokens.expiresOn.toString()
+              );
+              resolve(tokens.accessToken);
+            }
+          }
+        );
+      }
+    });
   }
 }

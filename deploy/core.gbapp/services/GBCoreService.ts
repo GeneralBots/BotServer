@@ -78,7 +78,7 @@ export class GBCoreService implements IGBCoreService {
    */
   constructor() {
     this.dialect = GBConfigService.get("DATABASE_DIALECT")
-    this.adminService = new GBAdminService();
+    this.adminService = new GBAdminService(this)
   }
 
   /**
@@ -267,6 +267,15 @@ export class GBCoreService implements IGBCoreService {
    */
   async loadInstances(): Promise<IGBInstance> {
     return GuaribasInstance.findAll({});
+  }
+
+
+  /**
+   * Loads just one Bot instance by its internal Id.
+   */
+  async loadInstanceById(instanceId: string): Promise<IGBInstance> {
+    let options = { where: {instanceId: instanceId} }
+    return GuaribasInstance.findOne(options);
   }
 
   /**

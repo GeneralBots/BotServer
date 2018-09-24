@@ -65,9 +65,9 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   @AutoIncrement
   @Column
   instanceId: number;
-
+ 
   @Column
-  applicationPrincipal: string;
+  botServerUrl:string;
 
   @Column
   whoAmIVideo: string;
@@ -109,10 +109,21 @@ export class GuaribasInstance extends Model<GuaribasInstance>
 
   @Column
   authenticatorTenant: string;
+  
   @Column
-  authenticatorSignUpSignInPolicy: string;
+  authenticatorAuthorityHostUrl: string;
+  
   @Column
-  authenticatorClientID: string;
+  authenticatorClientId: string;
+
+  @Column
+  authenticatorClientSecret: string;
+
+  @Column
+  cloudSubscriptionId: string;
+
+  @Column
+  cloudRegion: string;
 
   @Column
   whatsappBotKey: string;

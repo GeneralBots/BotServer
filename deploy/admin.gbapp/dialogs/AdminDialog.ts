@@ -42,59 +42,32 @@ import { GBConfigService } from "../../core.gbapp/services/GBConfigService";
 import { KBService } from "./../../kb.gbapp/services/KBService";
 import { BotAdapter } from "botbuilder";
 import { GBAdminService } from "../services/GBAdminService";
+import { Messages } from "../strings";
 
 /**
  * Dialogs for administration tasks.
  */
 export class AdminDialog extends IGBDialog {
-  static async undeployPackageCommand(text: any, min: GBMinInstance, dc) {
+
+  static async undeployPackageCommand(text: any, min: GBMinInstance) {
     let packageName = text.split(" ")[1];
     let importer = new GBImporter(min.core);
     let deployer = new GBDeployer(min.core, importer);
-    dc.context.sendActivity(`Undeploying package ${packageName}...`);
     await deployer.undeployPackageFromLocalPath(
       min.instance,
       UrlJoin("deploy", packageName)
     );
-    dc.context.sendActivity(`Package ${packageName} undeployed...`);
   }
 
-  static async deployPackageCommand(
-    text: string,
-    dc,
-    deployer: GBDeployer,
-    min: GBMinInstance
+  static async deployPackageCommand(text: string,
+    deployer: GBDeployer
   ) {
     let packageName = text.split(" ")[1];
-    await dc.context.sendActivity(
-      `Deploying package ${packageName}... (It may take a few seconds)`
-    );
     let additionalPath = GBConfigService.get("ADDITIONAL_DEPLOY_PATH");
     await deployer.deployPackageFromLocalPath(
       UrlJoin(additionalPath, packageName)
     );
-    await dc.context.sendActivity(
-      `Package ${packageName} deployed... Please run rebuildIndex command.`
-    );
   }
-
-  static async rebuildIndexCommand(min: GBMinInstance, dc) {
-    let search = new AzureSearch(
-      min.instance.searchKey,
-      min.instance.searchHost,
-      min.instance.searchIndex,
-      min.instance.searchIndexer
-    );
-    dc.context.sendActivity("Rebuilding index...");
-    await search.deleteIndex();
-    let kbService = new KBService(min.core.sequelize);
-    await search.createIndex(
-      kbService.getSearchSchema(min.instance.searchIndex),
-      "gb"
-    );
-    await dc.context.sendActivity("Index rebuilt.");
-  }
-
   /**
    * Setup dialogs flows and define services call.
    *
@@ -107,101 +80,80 @@ export class AdminDialog extends IGBDialog {
     let importer = new GBImporter(min.core);
     let deployer = new GBDeployer(min.core, importer);
 
-    min.dialogs.add("/adminRat", [
-      async dc => {
-        await AdminDialog.refreshAdminToken(min, dc);
-        // await dc.context.sendActivity(
-        //   `Deploying package ... (It may take a few seconds)`
-        // );
-        // await AdminDialog.deployPackageCommand(
-        //   "deployPackage ProjectOnline.gbkb",
-        //   dc,
-        //   deployer,
-        //   min
-        // );
-        await dc.endAll();
-      }
-    ]);
-
-    min.dialogs.add("/adminUpdateToken", [
-      async (dc, args, next) => {
-        await dc.endAll();
-        let service = new GBAdminService();
-        await service.saveValue("authenticatorToken", args.token)
-        await dc.context.sendActivities([
-          { type: 'typing' },
-          { type: 'message', text: "Token has been updated." },
-          { type: 'message', text: "Please, log out now from the administration work account on next screen." },
-          { type: 'delay', value: 4000 },
-        ])
-      }
-    ]);
-
     min.dialogs.add("/admin", [
-      async (dc, args) => {
-        const prompt = "Please, authenticate:";
+      async dc => {
+        const locale = dc.context.activity.locale;
+        const prompt = Messages[locale].authenticate;
         await dc.prompt("textPrompt", prompt);
       },
-      async (dc, value) => {
-        let text = value;
-        const user = min.userState.get(dc.context);
-
-        if (!user.authenticated || text === GBConfigService.get("ADMIN_PASS")) {
-          user.authenticated = true;
+      async (dc, password) => {
+        const locale = dc.context.activity.locale;
+        if (
+          password === GBConfigService.get("ADMIN_PASS") &&
+          GBAdminService.StrongRegex.test(password)
+        ) {
+          
           await dc.context.sendActivity(
-            "Welcome to Pragmatismo.io GeneralBots Administration."
+            Messages[locale].welcome
           );
-          await dc.prompt("textPrompt", "Which task do you wanna run now?");
+          await dc.prompt("textPrompt", Messages[locale].which_task);
         } else {
+          await dc.prompt("textPrompt", Messages[locale].wrong_password);
           await dc.endAll();
         }
       },
       async (dc, value) => {
+        const locale = dc.context.activity.locale;
         var text = value;
         const user = min.userState.get(dc.context);
-
+        let cmdName = text.split(" ")[0];
+        dc.context.sendActivity(Messages[locale].working(cmdName))
         if (text === "quit") {
           user.authenticated = false;
           await dc.replace("/");
-        } else if (text === "sync") {
-          await min.core.syncDatabaseStructure();
-          await dc.context.sendActivity("Sync started...");
+        } else if (cmdName === "deployPackage") {
+          await AdminDialog.deployPackageCommand(text, deployer);
           await dc.replace("/admin", { firstRun: false });
-        } else if (text.split(" ")[0] === "rebuildIndex") {
-          await AdminDialog.rebuildIndexCommand(min, dc);
+        } else if (cmdName === "redeployPackage") {
+          await AdminDialog.undeployPackageCommand(text, min);
+          await AdminDialog.deployPackageCommand(text, deployer);
+          await dc.context.sendActivity();
           await dc.replace("/admin", { firstRun: false });
-        } else if (text.split(" ")[0] === "deployPackage") {
-          await AdminDialog.deployPackageCommand(text, dc, deployer, min);
+        } else if (cmdName === "undeployPackage") {
+          await AdminDialog.undeployPackageCommand(text, min);
           await dc.replace("/admin", { firstRun: false });
-        } else if (text.split(" ")[0] === "redeployPackage") {
-          await AdminDialog.undeployPackageCommand(text, min, dc);
-          await AdminDialog.deployPackageCommand(text, dc, deployer, min);
-          await dc.context.sendActivity("Redeploy done.");
-          await dc.replace("/admin", { firstRun: false });
-        } else if (text.split(" ")[0] === "undeployPackage") {
-          await AdminDialog.undeployPackageCommand(text, min, dc);
-          await dc.replace("/admin", { firstRun: false });
-        } else if (text.split(" ")[0] === "applyPackage") {
-          await dc.context.sendActivity("Applying in progress...");
-          await min.core.loadInstance(text.split(" ")[1]);
-          await dc.context.sendActivity("Applying done...");
-          await dc.replace("/admin", { firstRun: false });
-        } else if (text.split(" ")[0] === "rat") {
-          await AdminDialog.refreshAdminToken(min, dc);
+        } else if (cmdName === "setupSecurity") {
+          await AdminDialog.setupSecurity(min, dc);
+        }
+        else{
+          await dc.context.sendActivity(Messages[locale].unknown_command);
+          dc.endAll()
+          await dc.replace("/answer", { query: text });
         }
       }
     ]);
   }
 
-  private static async refreshAdminToken(min: any, dc: any) {
-    let config = {
-      authenticatorTenant: min.instance.authenticatorTenant,
-      authenticatorClientID: min.instance.authenticatorClientID
-    };
-    await min.conversationalService.sendEvent(dc, "play", {
-      playerType: "login",
-      data: config
-    });
-    await dc.context.sendActivity("Update your Administrative token by Login...");
+  private static async setupSecurity(min: any, dc: any) {
+    const locale = dc.context.activity.locale;
+    let state = `${min.instance.instanceId}${Math.floor(
+      Math.random() * 1000000000
+    )}`;
+    await min.adminService.setValue(
+      min.instance.instanceId,
+      "AntiCSRFAttackState",
+      state
+    );
+    let url = `https://login.microsoftonline.com/${
+      min.instance.authenticatorTenant
+    }/oauth2/authorize?client_id=${
+      min.instance.authenticatorClientId
+    }&response_type=code&redirect_uri=${min.instance.botServerUrl}/${
+      min.instance.botId
+    }/token&state=${state}&response_mode=query`;
+
+    await dc.context.sendActivity(
+      Messages[locale].consent(url)
+    );
   }
 }

@@ -442,7 +442,7 @@ export class KBService {
   }
 
   async sendAnswer(conversationalService: IGBConversationalService,
-    dc: any, answer: GuaribasAnswer): Promise<any> {
+    dc: any, answer: GuaribasAnswer) {
 
     if (answer.content.endsWith('.mp4')) {
       await conversationalService.sendEvent(dc, "play", {
@@ -560,6 +560,7 @@ export class KBService {
 
   async undeployKbFromStorage(
     instance: IGBInstance,
+    deployer: GBDeployer,
     packageId: number
   ) {
 
@@ -576,8 +577,7 @@ export class KBService {
       where: { instanceId: instance.instanceId, packageId: packageId }
     })
 
-    return Promise.resolve()
-
+    await deployer.rebuildIndex(instance)
   }
 
   /**
@@ -599,6 +599,8 @@ export class KBService {
       instance.instanceId,
       packageName)
     await this.importKbPackage(localPath, p, instance)
+
+    deployer.rebuildIndex(instance)
     logger.info(`[GBDeployer] Finished import of ${localPath}`)
   }
 }

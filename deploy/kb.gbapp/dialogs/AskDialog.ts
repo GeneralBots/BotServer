@@ -74,6 +74,8 @@ export class AskDialog extends IGBDialog {
             dc,
             answer
           );
+
+          await dc.replace("/ask", { isReturning: true });
         }
       }])
 

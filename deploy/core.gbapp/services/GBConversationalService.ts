@@ -1,4 +1,4 @@
-import { IGBInstance } from 'botlib';
+import { IGBInstance } from "botlib";
 /*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
@@ -44,7 +44,6 @@ import { Messages } from "../strings";
 import { AzureText } from "pragmatismo-io-framework";
 const Nexmo = require("nexmo");
 
-
 export interface LanguagePickerSettings {
   defaultLocale?: string;
   supportedLocales?: string[];
@@ -62,29 +61,39 @@ export class GBConversationalService implements IGBConversationalService {
   }
 
   async sendEvent(dc: any, name: string, value: any): Promise<any> {
-    const msg = MessageFactory.text("");
-    msg.value = value;
-    msg.type = "event";
-    msg.name = name;
-    return dc.context.sendActivity(msg);
+    if (dc.context.activity.channelId === "webchat") {
+      const msg = MessageFactory.text("");
+      msg.value = value;
+      msg.type = "event";
+      msg.name = name;
+      return dc.context.sendActivity(msg);
+    }
   }
 
-  async sendSms(min: GBMinInstance, mobile: string, text: string): Promise<any> {
+  async sendSms(
+    min: GBMinInstance,
+    mobile: string,
+    text: string
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       const nexmo = new Nexmo({
         apiKey: min.instance.smsKey,
-        apiSecret: min.instance.smsSecret,
+        apiSecret: min.instance.smsSecret
       });
       nexmo.message.sendSms(
         min.instance.smsServiceNumber,
         mobile,
-        text, (err, data) => {
-          if (err) { reject(err) } else { resolve(data) }
+        text,
+        (err, data) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(data);
+          }
         }
       );
     });
   }
-
 
   async routeNLP(dc: any, min: GBMinInstance, text: string): Promise<boolean> {
     // Invokes LUIS.
