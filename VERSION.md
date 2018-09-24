@@ -1,6 +1,8 @@
 # Release History
 
 ## Version 0.1.4
+* Error handling improved and logging enriched as well.
+* Setting DATABASE_ is now STORAGE_.
 
 
 ## Version 0.1.3
@@ -27,8 +29,8 @@
 ## Version 0.0.30
 
 - FIX: Packages updated.
-- NEW: STORAGE_SYNC_ALTER environment parameter.
-- NEW: STORAGE_SYNC_FORCE environment parameter.
+- NEW: DATABASE_SYNC_ALTER environment parameter.
+- NEW: DATABASE_SYNC_FORCE environment parameter.
 - NEW: Define constraint names in MSSQL.
 
 ## Version 0.0.29
@@ -47,7 +49,7 @@
 
 - FIX: Packages updated.
 - NEW: If a bot package's name begins with '.', then it is ignored.
-- NEW: Created STORAGE_LOGGING environment parameter.
+- NEW: Created DATABASE_LOGGING environment parameter.
 
 ## Version 0.0.25
 
