@@ -156,6 +156,8 @@ export class GBServer {
               throw `Operating storage is out of sync or there is a storage connection error. Try setting STORAGE_SYNC to true in .env file. Error: ${
                 error.message
               }.`;
+            } else {
+              throw `Cannot connect to operating storage: ${error.message}.`;
             }
           }
 
@@ -178,7 +180,7 @@ export class GBServer {
 
           return core;
         } catch (err) {
-          logger.info(`STOP: ${err} ${err.stack ? err.stack : ""}`);
+          logger.error(`STOP: ${err} ${err.stack ? err.stack : ""}`);
           process.exit(1);
         }
       })();
