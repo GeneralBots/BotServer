@@ -3,7 +3,8 @@ export const Messages = {
     authenticate: "Please, authenticate:",
     welcome: "Welcome to Pragmatismo.io GeneralBots Administration.",
     which_task: "Which task do you wanna run now?",
-    working:(command)=> `I'm working on ${command}`,
+    working:(command)=> `I'm working on ${command}...`,
+    finshed_working:"Done.",
     unknown_command: text =>
       `Well, but ${text} is not a administrative General Bots command, I will try to search for it.`,
     hi: text => `Hello, ${text}.`,

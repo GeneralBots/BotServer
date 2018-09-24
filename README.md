@@ -65,8 +65,8 @@ Notes:
 ### Configure the server to deploy specific directory
 
 1. Create/Edit the .env file and add the ADDITIONAL_DEPLOY_PATH key pointing to the .gbai local parent folder of .gbapp, .gbot, .gbtheme, .gbkb package directories.
-2. Specify DATABASE_SYNC to TRUE so database sync is run when the server is run.
-3. In case of Microsoft SQL Server add the following keys: DATABASE_HOST, DATABASE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD, DATABASE_DIALECT to `mssql`.
+2. Specify STORAGE_SYNC to TRUE so database sync is run when the server is run.
+3. In case of Microsoft SQL Server add the following keys: STORAGE_HOST, STORAGE_NAME, STORAGE_USERNAME, STORAGE_PASSWORD, STORAGE_DIALECT to `mssql`.
 
 Note:
 

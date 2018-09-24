@@ -148,7 +148,7 @@ export class KBService {
     }
     // TODO: Filter by instance. what = `${what}&$filter=instanceId eq ${instanceId}`
     try {
-      if (instance.searchKey && GBConfigService.get("DATABASE_DIALECT") == "mssql") {
+      if (instance.searchKey && GBConfigService.get("STORAGE_DIALECT") == "mssql") {
         let service = new AzureSearch(
           instance.searchKey,
           instance.searchHost,
@@ -179,7 +179,7 @@ export class KBService {
       }
     }
     catch (reason) {
-      return Promise.reject(reason)
+      return Promise.reject(new Error(reason));
     }
   }
 

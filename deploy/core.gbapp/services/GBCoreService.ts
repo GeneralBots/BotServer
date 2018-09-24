@@ -77,7 +77,7 @@ export class GBCoreService implements IGBCoreService {
    * Constructor retrieves default values.
    */
   constructor() {
-    this.dialect = GBConfigService.get("DATABASE_DIALECT")
+    this.dialect = GBConfigService.get("STORAGE_DIALECT")
     this.adminService = new GBAdminService(this)
   }
 
@@ -94,22 +94,22 @@ export class GBCoreService implements IGBCoreService {
         let storage: string | undefined
 
         if (this.dialect === "mssql") {
-          host = GBConfigService.get("DATABASE_HOST")
-          database = GBConfigService.get("DATABASE_NAME")
-          username = GBConfigService.get("DATABASE_USERNAME")
-          password = GBConfigService.get("DATABASE_PASSWORD")
+          host = GBConfigService.get("STORAGE_HOST")
+          database = GBConfigService.get("STORAGE_NAME")
+          username = GBConfigService.get("STORAGE_USERNAME")
+          password = GBConfigService.get("STORAGE_PASSWORD")
         } else if (this.dialect === "sqlite") {
-          storage = GBConfigService.get("DATABASE_STORAGE")
+          storage = GBConfigService.get("STORAGE_STORAGE")
         }
 
         let logging =
-          GBConfigService.get("DATABASE_LOGGING") === "true"
+          GBConfigService.get("STORAGE_LOGGING") === "true"
             ? (str: string) => {
               logger.info(str)
             }
             : false
 
-        let encrypt = GBConfigService.get("DATABASE_ENCRYPT") === "true"
+        let encrypt = GBConfigService.get("STORAGE_ENCRYPT") === "true"
 
         this.sequelize = new Sequelize({
           host: host,
@@ -247,9 +247,9 @@ export class GBCoreService implements IGBCoreService {
   }
 
   async syncDatabaseStructure() {
-    if (GBConfigService.get("DATABASE_SYNC") === "true") {
-      const alter = GBConfigService.get("DATABASE_SYNC_ALTER") === "true"
-      const force = GBConfigService.get("DATABASE_SYNC_FORCE") === "true"
+    if (GBConfigService.get("STORAGE_SYNC") === "true") {
+      const alter = GBConfigService.get("STORAGE_SYNC_ALTER") === "true"
+      const force = GBConfigService.get("STORAGE_SYNC_FORCE") === "true"
       logger.info("Syncing database...")
       return this.sequelize.sync({
         alter: alter,
@@ -258,7 +258,6 @@ export class GBCoreService implements IGBCoreService {
     } else {
       let msg = "Database synchronization is disabled.";
       logger.info(msg)
-      return Promise.reject(msg)
     }
   }
 

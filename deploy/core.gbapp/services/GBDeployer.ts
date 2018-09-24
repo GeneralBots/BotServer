@@ -152,7 +152,11 @@ export class GBDeployer {
           .done(async result => {
             logger.info(`App Package deployment done.`);
 
-            await core.syncDatabaseStructure();
+            try{
+              await core.syncDatabaseStructure();
+            }catch(e){
+              throw e;
+            }
 
             /** Deploys all .gbot files first. */
 
@@ -212,7 +216,7 @@ export class GBDeployer {
               })
               .done(function(result) {
                 if (botPackages.length === 0) {
-                  logger.info(
+                  logger.warn(
                     "The server is running with no bot instances, at least one .gbot file must be deployed."
                   );
                 } else {

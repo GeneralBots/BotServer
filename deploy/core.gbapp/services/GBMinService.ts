@@ -62,6 +62,8 @@ import {
   IGBCoreService,
   IGBConversationalService
 } from "botlib";
+import { GuaribasInstance } from "../models/GBModel";
+import { Messages } from "../strings";
 
 /** Minimal service layer for a bot. */
 
@@ -103,7 +105,8 @@ export class GBMinService {
 
   async buildMin(
     server: any,
-    appPackages: Array<IGBPackage>
+    appPackages: Array<IGBPackage>,
+    instances:GuaribasInstance[]
   ): Promise<GBMinInstance> {
     // Serves default UI on root address '/'.
 
@@ -112,10 +115,7 @@ export class GBMinService {
       "/",
       express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, "build"))
     );
-
-    // Loads all bot instances from storage and starting loading them.
-
-    let instances = await this.core.loadInstances();
+    
     Promise.all(
       instances.map(async instance => {
         // Gets the authorization key for each instance from Bot Service.
@@ -363,11 +363,15 @@ export class GBMinService {
     instance: any,
     appPackages: any[]
   ) {
+
     return adapter.processActivity(req, res, async context => {
+      
+      const state = conversationState.get(context);
+      const dc = min.dialogs.createContext(context, state);
+      dc.context.activity.locale = "en-US"; // TODO: Make dynamic.
+      
       try {
-        const state = conversationState.get(context);
-        const dc = min.dialogs.createContext(context, state);
-        dc.context.activity.locale = "en-US";
+        
         const user = min.userState.get(dc.context);
 
         if (!user.loaded) {
@@ -459,10 +463,14 @@ export class GBMinService {
           }
         }
       } catch (error) {
-          let msg = `Error in main activity: ${error.message} ${
+          let msg = `ERROR: ${error.message} ${
             error.stack ? error.stack : ""
           }`;
           logger.error(msg);
+          
+          await dc.context.sendActivity(Messages[dc.context.activity.locale].very_sorry_about_error)
+          await dc.begin("/ask", { isReturning: true });
+          
       }
     });
   }
@@ -487,10 +495,9 @@ export class GBMinService {
       return Promise.resolve(JSON.parse(json));
     } catch (error) {
       let msg = `Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
-      logger.error(msg);
-      return Promise.reject(msg);
+      return Promise.reject(new Error(msg));
     }
-  }
+  } 
 
   /**
    * Gets a Speech to Text / Text to Speech token from the provider.
@@ -513,8 +520,7 @@ export class GBMinService {
       return await request(options);
     } catch (error) {
       let msg = `Error calling Speech to Text client. Error is: ${error}.`;
-      logger.error(msg);
-      return Promise.reject(msg);
+      return Promise.reject(new Error(msg));
     }
   }
 }

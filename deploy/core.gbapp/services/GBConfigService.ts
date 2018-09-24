@@ -58,11 +58,11 @@ export class GBConfigService {
 
     if (!value) {
       switch (key) {
-        case "DATABASE_DIALECT":
+        case "STORAGE_DIALECT":
           value = "sqlite"
           break
 
-        case "DATABASE_STORAGE":
+        case "STORAGE_STORAGE":
           value = "./guaribas.sqlite"
           break
 
@@ -70,17 +70,17 @@ export class GBConfigService {
           value = undefined
           break
 
-        case "DATABASE_SYNC":
-        case "DATABASE_SYNC_ALTER":
-        case "DATABASE_SYNC_FORCE":
+        case "STORAGE_SYNC":
+        case "STORAGE_SYNC_ALTER":
+        case "STORAGE_SYNC_FORCE":
           value = "false"
           break
 
-        case "DATABASE_LOGGING":
+        case "STORAGE_LOGGING":
           value = "false"
           break
 
-        case "DATABASE_ENCRYPT":
+        case "STORAGE_ENCRYPT":
           value = "true"
           break
 

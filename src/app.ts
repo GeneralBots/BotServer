@@ -55,6 +55,7 @@ import { GBAdminPackage } from "../deploy/admin.gbapp/index";
 import { GBCustomerSatisfactionPackage } from "../deploy/customer-satisfaction.gbapp";
 import { IGBPackage } from "botlib";
 import { GBAdminService } from "../deploy/admin.gbapp/services/GBAdminService";
+import { GuaribasInstance } from "deploy/core.gbapp/models/GBModel";
 
 let appPackages = new Array<IGBPackage>();
 
@@ -62,7 +63,10 @@ let appPackages = new Array<IGBPackage>();
  * General Bots open-core entry point.
  */
 export class GBServer {
-  /** Program entry-point. */
+  /**
+   *  Program entry-point.
+   */
+
   static run() {
     // Creates a basic HTTP server that will serve several URL, one for each
     // bot instance. This allows the same server to attend multiple Bot on
@@ -108,6 +112,8 @@ export class GBServer {
             );
           }
 
+          // Creates the minimal service shared across all .gbapps.
+
           let minService = new GBMinService(
             core,
             conversationalService,
@@ -132,16 +138,48 @@ export class GBServer {
             p.loadPackage(core, core.sequelize);
           });
 
+          // Loads all bot instances from object storage, if it's formatted.
+
+          logger.info(`All instances are being now loaded...`);
+          let instances: GuaribasInstance[];
+          try {
+            instances = await core.loadInstances();
+          } catch (error) {
+            // Check if storage is empty and needs formatting.
+
+            let isInvalidObject =
+              error.parent.number == 208 || error.parent.errno == 1; // MSSQL or SQLITE.
+            if (
+              isInvalidObject &&
+              GBConfigService.get("STORAGE_SYNC") !== "true"
+            ) {
+              throw `Operating storage is out of sync or there is a storage connection error. Try setting STORAGE_SYNC to true in .env file. Error: ${
+                error.message
+              }.`;
+            }
+          }
+
+          // Deploy packages and format object store according to .gbapp storage models.
+
           logger.info(`Deploying packages.`);
           await deployer.deployPackages(core, server, appPackages);
+
+          // If instances is undefined here it's because storage has been formatted.
+          // Load all instances from .gbot found on deploy package directory.
+          if (!instances) {
+            instances = await core.loadInstances();
+          }
+
+          // Setup server dynamic (per bot instance) resources and listeners.
+
           logger.info(`Building minimal instances.`);
-          await minService.buildMin(server, appPackages);
-          
-          logger.info(`All instances are now loaded and available.`);
+          await minService.buildMin(server, appPackages, instances);
           logger.info(`The Bot Server is in RUNNING mode...`);
+
           return core;
         } catch (err) {
           logger.info(`STOP: ${err} ${err.stack ? err.stack : ""}`);
+          process.exit(1);
         }
       })();
     });

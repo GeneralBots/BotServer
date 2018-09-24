@@ -48,7 +48,6 @@ import { Messages } from "../strings";
  * Dialogs for administration tasks.
  */
 export class AdminDialog extends IGBDialog {
-
   static async undeployPackageCommand(text: any, min: GBMinInstance) {
     let packageName = text.split(" ")[1];
     let importer = new GBImporter(min.core);
@@ -59,9 +58,7 @@ export class AdminDialog extends IGBDialog {
     );
   }
 
-  static async deployPackageCommand(text: string,
-    deployer: GBDeployer
-  ) {
+  static async deployPackageCommand(text: string, deployer: GBDeployer) {
     let packageName = text.split(" ")[1];
     let additionalPath = GBConfigService.get("ADDITIONAL_DEPLOY_PATH");
     await deployer.deployPackageFromLocalPath(
@@ -92,10 +89,7 @@ export class AdminDialog extends IGBDialog {
           password === GBConfigService.get("ADMIN_PASS") &&
           GBAdminService.StrongRegex.test(password)
         ) {
-          
-          await dc.context.sendActivity(
-            Messages[locale].welcome
-          );
+          await dc.context.sendActivity(Messages[locale].welcome);
           await dc.prompt("textPrompt", Messages[locale].which_task);
         } else {
           await dc.prompt("textPrompt", Messages[locale].wrong_password);
@@ -105,11 +99,12 @@ export class AdminDialog extends IGBDialog {
       async (dc, value) => {
         const locale = dc.context.activity.locale;
         var text = value;
-        const user = min.userState.get(dc.context);
         let cmdName = text.split(" ")[0];
-        dc.context.sendActivity(Messages[locale].working(cmdName))
+
+        dc.context.sendActivity(Messages[locale].working(cmdName));
+        let unknownCommand = false;
+
         if (text === "quit") {
-          user.authenticated = false;
           await dc.replace("/");
         } else if (cmdName === "deployPackage") {
           await AdminDialog.deployPackageCommand(text, deployer);
@@ -124,12 +119,19 @@ export class AdminDialog extends IGBDialog {
           await dc.replace("/admin", { firstRun: false });
         } else if (cmdName === "setupSecurity") {
           await AdminDialog.setupSecurity(min, dc);
+        } else {
+          unknownCommand = true;
         }
-        else{
+
+        if (unknownCommand) {
           await dc.context.sendActivity(Messages[locale].unknown_command);
-          dc.endAll()
-          await dc.replace("/answer", { query: text });
+        } else {
+          await dc.context.sendActivity(
+            Messages[locale].finshed_working(cmdName)
+          );
         }
+        await dc.endAll();
+        await dc.replace("/answer", { query: text });
       }
     ]);
   }
@@ -152,8 +154,6 @@ export class AdminDialog extends IGBDialog {
       min.instance.botId
     }/token&state=${state}&response_mode=query`;
 
-    await dc.context.sendActivity(
-      Messages[locale].consent(url)
-    );
+    await dc.context.sendActivity(Messages[locale].consent(url));
   }
 }

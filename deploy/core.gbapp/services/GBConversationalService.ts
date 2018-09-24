@@ -42,6 +42,7 @@ import { LuisRecognizer } from "botbuilder-ai";
 import { MessageFactory } from "botbuilder";
 import { Messages } from "../strings";
 import { AzureText } from "pragmatismo-io-framework";
+import { any } from "bluebird";
 const Nexmo = require("nexmo");
 
 export interface LanguagePickerSettings {
@@ -103,31 +104,44 @@ export class GBConversationalService implements IGBConversationalService {
       subscriptionKey: min.instance.nlpSubscriptionKey,
       serviceEndpoint: min.instance.nlpServerUrl
     });
-    let res = await model.recognize(dc.context);
+
+    let nlp: any;
+    try {
+      nlp = await model.recognize(dc.context);
+    } catch (error) {
+      let msg = `Error calling NLP server, check if you have a published model and assigned keys on the service. Error: ${
+        error.statusCode ? error.statusCode : ""
+      } ${error.message}`;
+      return Promise.reject(new Error(msg));
+    }
 
     // Resolves intents returned from LUIS.
 
-    let topIntent = LuisRecognizer.topIntent(res);
+    let topIntent = LuisRecognizer.topIntent(nlp);
     if (topIntent) {
       var intent = topIntent;
       var entity =
-        res.entities && res.entities.length > 0
-          ? res.entities[0].entity.toUpperCase()
+        nlp.entities && nlp.entities.length > 0
+          ? nlp.entities[0].entity.toUpperCase()
           : null;
+
+      if (intent === "None") {
+        return Promise.resolve(false);
+      }
 
       logger.info("NLP called:" + intent + ", " + entity);
 
       try {
-        await dc.replace("/" + intent, res.entities);
+        await dc.replace("/" + intent, nlp.entities);
+        return Promise.resolve(true);
       } catch (error) {
-        let msg = `Error running NLP (${intent}): ${error}`;
-        logger.info(msg);
-        return Promise.reject(msg);
+        let msg = `Error finding dialog associated to NLP event: ${intent}: ${
+          error.message
+        }`;
+        return Promise.reject(new Error(msg));
       }
-      return Promise.resolve(true);
-    } else {
-      return Promise.resolve(false);
     }
+    return Promise.resolve(false);
   }
 
   async checkLanguage(dc, min, text) {
