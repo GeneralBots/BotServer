@@ -104,6 +104,7 @@ IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
 
 :: 3.1 Install npm packages on UI
 IF EXIST "%DEPLOYMENT_TARGET%\deploy\default.gbui\package.json" (
+  call :ExecuteCmd !NPM_CMD! config set scripts-prepend-node-path true
   pushd "%DEPLOYMENT_TARGET%\deploy\default.gbui"
   echo GUARIBASDEPLOYER ------------------ Installing packages for default.gbui.
   call :ExecuteCmd !NPM_CMD! install
@@ -111,8 +112,7 @@ IF EXIST "%DEPLOYMENT_TARGET%\deploy\default.gbui\package.json" (
   call :ExecuteCmd !NPM_CMD! run build
   IF !ERRORLEVEL! NEQ 0 goto error
   popd
-)
- 
+)  
 
 ::  4. Install typescript 
 echo GUARIBASDEPLOYER ------------------ Transpiling...
