@@ -6,11 +6,12 @@
   "homepage": "http://github.com/pragmatismo-io/BotServer",
   "dependencies": {
     "ajv": "^6.5.3",
-    "botframework-directlinejs":"^0.9.13",
+    "botframework-directlinejs": "^0.9.13",
     "botframework-webchat": "^0.12.0",
     "deep-extend": "^0.6.0",
     "fetch": "^1.1.0",
     "msal": "^0.2.2",
+    "powerbi-client": "^2.6.4",
     "react": "^15.5.0",
     "react-dom": "^15.5.0",
     "react-helmet": "^5.2.0",
