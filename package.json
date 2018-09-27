@@ -37,7 +37,7 @@
     "body-parser": "^1.18.3",
     "botbuilder": "4.0.0-preview1.2",
     "botbuilder-ai": "4.0.0-preview1.2",
-    "botbuilder-azure": "^.0.0-preview1.2",
+    "botbuilder-azure": "4.0.0-preview1.2",
     "botbuilder-choices": "4.0.0-preview1.2",
     "botbuilder-dialogs": "4.0.0-preview1.2",
     "botbuilder-prompts": "4.0.0-preview1.2",
