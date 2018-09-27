@@ -1,6 +1,12 @@
 # Release History
 
+
+## Version 0.1.5
+
+* Updated packages references.
+
 ## Version 0.1.4
+
 * Error handling improved and logging enriched as well.
 * Setting DATABASE_ is now STORAGE_.
 
