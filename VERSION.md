@@ -1,5 +1,8 @@
 # Release History
 
+## Version 0.1.6
+
+* Updated packages references.
 
 ## Version 0.1.5
 
