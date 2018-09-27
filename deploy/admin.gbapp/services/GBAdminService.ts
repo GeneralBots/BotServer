@@ -39,7 +39,7 @@ const UrlJoin = require("url-join");
 
 export class GBAdminService {
   public static StrongRegex = new RegExp(
-    "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})"
+    "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})"
   );
 
   core: IGBCoreService;
