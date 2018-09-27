@@ -2,7 +2,7 @@
   "name": "default.gbui",
   "version": "0.0.12",
   "private": false,
-  "license": "AGPL",
+  "license": "AGPL-3.0",
   "homepage": "http://github.com/pragmatismo-io/BotServer",
   "dependencies": {
     "ajv": "^6.5.3",
