@@ -1,9 +1,12 @@
+** **Checkout our FREE [Intranet Quickstart Bot](https://github.com/pragmatismo-io/IntranetBotQuickStart.gbai)** ** 
+
 Welcome to General Bot Community Edition
 ----------------
 
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
 General Bot is a package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
+In this [MSDN](https://blogs.msdn.microsoft.com/buckwoody/2018/09/25/applied-ai-using-a-bot-for-password-reset/) article you can have an overview of a General Bots application.
 
 
 ### What is a Bot Server?
