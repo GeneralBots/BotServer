@@ -3,7 +3,7 @@
   "version": "0.0.12",
   "private": false,
   "license": "AGPL-3.0",
-  "homepage": "http://github.com/pragmatismo-io/BotServer",
+  "homepage": ".",
   "dependencies": {
     "ajv": "^6.5.3",
     "botframework-directlinejs": "^0.9.13",
