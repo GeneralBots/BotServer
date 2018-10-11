@@ -145,17 +145,21 @@ export class GBServer {
           try {
             instances = await core.loadInstances();
           } catch (error) {
+
             // Check if storage is empty and needs formatting.
 
             let isInvalidObject =
               error.parent.number == 208 || error.parent.errno == 1; // MSSQL or SQLITE.
-            if (
-              isInvalidObject &&
-              GBConfigService.get("STORAGE_SYNC") !== "true"
-            ) {
-              throw `Operating storage is out of sync or there is a storage connection error. Try setting STORAGE_SYNC to true in .env file. Error: ${
+
+            if (isInvalidObject) {
+              if (GBConfigService.get("STORAGE_SYNC") != "true") {
+                throw `Operating storage is out of sync or there is a storage connection error. Try setting STORAGE_SYNC to true in .env file. Error: ${
                 error.message
-              }.`;
+                }.`;
+              }
+              else{
+                logger.info(`Storage is empty. After collecting storage structure from all .gbapps it will get synced.`);
+              }
             } else {
               throw `Cannot connect to operating storage: ${error.message}.`;
             }

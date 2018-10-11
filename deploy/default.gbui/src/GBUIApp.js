@@ -52,7 +52,7 @@ class GBUIApp extends React.Component {
         super();
 
         this.state = {
-            botConnection: null,
+            line: null,
             instance: null,
             token: null,
             instanceClient: null
@@ -63,7 +63,7 @@ class GBUIApp extends React.Component {
     sendToken(token) {
         
         setTimeout(() => {
-            window.botConnection
+            window.line
                 .postActivity({
                     type: "event",
                     name: "updateToken",
@@ -81,7 +81,7 @@ class GBUIApp extends React.Component {
     }
 
     send(command) {
-        window.botConnection
+        window.line
             .postActivity({
                 type: "event",
                 name: command,
@@ -98,7 +98,7 @@ class GBUIApp extends React.Component {
     }
 
     postEvent(name, value) {
-        window.botConnection.postActivity({
+        window.line.postActivity({
             type: "event",
             value: value,
             from: this.getUser(),
@@ -107,7 +107,7 @@ class GBUIApp extends React.Component {
     }
 
     postMessage(value) {
-        window.botConnection.postActivity({
+        window.line.postActivity({
             type: "message",
             text: value,
             from: this.getUser()
@@ -175,14 +175,14 @@ class GBUIApp extends React.Component {
         let _this_ = this;
         window["botchatDebug"] = true;
 
-        const botConnection = new DirectLine({
+        const line = new DirectLine({
             secret: this.state.instanceClient.secret
         });
 
-        botConnection.connectionStatus$.subscribe(connectionStatus => {
+        line.connectionStatus$.subscribe(connectionStatus => {
             if (connectionStatus === ConnectionStatus.Online) {
-                _this_.setState({ botConnection: botConnection });
-                botConnection.postActivity({
+                _this_.setState({ line: line });
+                line.postActivity({
                     type: "event",
                     value: "startGB",
                     from: this.getUser(),
@@ -191,10 +191,10 @@ class GBUIApp extends React.Component {
             }
         });
 
-        window.botConnection = botConnection;
+        window.line = line;
         this.postEvent("startGB", true);
 
-        botConnection.activity$
+        line.activity$
             .filter(
                 activity =>
                     activity.type === "event" && activity.name === "loadInstance"
@@ -204,7 +204,7 @@ class GBUIApp extends React.Component {
                 _this_.authenticate()
             });
 
-        botConnection.activity$
+        line.activity$
             .filter(activity => activity.type === "event" && activity.name === "stop")
             .subscribe(activity => {
                 if (_this_.player) {
@@ -212,7 +212,7 @@ class GBUIApp extends React.Component {
                 }
             });
 
-        botConnection.activity$
+        line.activity$
             .filter(activity => activity.type === "event" && activity.name === "play")
             .subscribe(activity => {
                 _this_.setState({ playerType: activity.value.playerType });
@@ -312,7 +312,7 @@ class GBUIApp extends React.Component {
             </div>
         );
 
-        if (this.state.botConnection && this.state.instance) {
+        if (this.state.line && this.state.instance) {
             let token = this.state.instanceClient.speechToken;
             gbCss = <GBCss instance={this.state.instance} />;
 
@@ -342,7 +342,7 @@ class GBUIApp extends React.Component {
                         this.chat = chat;
                     }}
                     locale={'pt-br'}
-                    botConnection={this.state.botConnection}
+                    line={this.state.line}
                     user={this.getUser()}
                     bot={{ id: "bot@gb", name: "Bot" }}
                     speechOptions={speechOptions}
