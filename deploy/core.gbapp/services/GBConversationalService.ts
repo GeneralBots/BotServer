@@ -1,4 +1,3 @@
-import { IGBInstance } from "botlib";
 /*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
@@ -100,9 +99,9 @@ export class GBConversationalService implements IGBConversationalService {
     // Invokes LUIS.
 
     const model = new LuisRecognizer({
-      appId: min.instance.nlpAppId,
-      subscriptionKey: min.instance.nlpSubscriptionKey,
-      serviceEndpoint: min.instance.nlpServerUrl
+      applicationId: min.instance.nlpAppId,
+      endpointKey: min.instance.nlpSubscriptionKey,
+      endpoint: min.instance.nlpServerUrl
     });
 
     let nlp: any;

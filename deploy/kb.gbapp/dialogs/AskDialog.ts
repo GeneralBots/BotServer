@@ -53,12 +53,6 @@ export class AskDialog extends IGBDialog {
   static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new KBService(min.core.sequelize);
 
-    const model = new LuisRecognizer({
-      appId: min.instance.nlpAppId,
-      subscriptionKey: min.instance.nlpSubscriptionKey,
-      serviceEndpoint: min.instance.nlpServerUrl
-    });
-
     min.dialogs.add("/answerEvent", [
       async (dc, args) => {
 

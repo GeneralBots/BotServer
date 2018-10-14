@@ -55,7 +55,8 @@ import { GBAdminPackage } from "../deploy/admin.gbapp/index";
 import { GBCustomerSatisfactionPackage } from "../deploy/customer-satisfaction.gbapp";
 import { IGBPackage } from "botlib";
 import { GBAdminService } from "../deploy/admin.gbapp/services/GBAdminService";
-import { GuaribasInstance } from "deploy/core.gbapp/models/GBModel";
+import { GuaribasInstance } from "../deploy/core.gbapp/models/GBModel";
+import { AzureDeployerService } from "../deploy/azuredeployer.gblib/services/AzureDeployerService";
 
 let appPackages = new Array<IGBPackage>();
 
@@ -157,7 +158,7 @@ export class GBServer {
                 error.message
                 }.`;
               }
-              else{
+              else {
                 logger.info(`Storage is empty. After collecting storage structure from all .gbapps it will get synced.`);
               }
             } else {
@@ -195,3 +196,4 @@ export class GBServer {
 // First line to run.
 
 GBServer.run();
+

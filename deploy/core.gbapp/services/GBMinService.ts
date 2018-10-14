@@ -37,6 +37,7 @@ const UrlJoin = require("url-join");
 const express = require("express");
 const logger = require("../../../src/logger");
 const request = require("request-promise-native");
+const ngrok = require('ngrok');
 var crypto = require("crypto");
 var AuthenticationContext = require("adal-node").AuthenticationContext;
 
@@ -45,7 +46,8 @@ import {
   BotStateSet,
   ConversationState,
   MemoryStorage,
-  UserState
+  UserState,
+  BotState
 } from "botbuilder";
 
 import { GBMinInstance, IGBPackage } from "botlib";
@@ -296,6 +298,12 @@ export class GBMinService {
     );
   }
 
+private async ngrokRefresh(){
+  const url = await ngrok.connect(9090); // https://757c1652.ngrok.io -> http://localhost:9090
+  // TODO: Persist to storage and refresh each 8h.
+  // TODO: Update all bots definition in azure.
+}
+
   private async buildBotAdapter(instance: any) {
     let adapter = new BotFrameworkAdapter({
       appId: instance.marketplaceId,
@@ -305,7 +313,8 @@ export class GBMinService {
     const storage = new MemoryStorage();
     const conversationState = new ConversationState(storage);
     const userState = new UserState(storage);
-    adapter.use(new BotStateSet(conversationState, userState));
+    //const botState = new BotState(storage);
+    // TODO: adapter.use();
 
     // The minimal bot is built here.
 
