@@ -37,7 +37,7 @@ const UrlJoin = require("url-join");
 const express = require("express");
 const logger = require("../../../src/logger");
 const request = require("request-promise-native");
-const ngrok = require('ngrok');
+const ngrok = require("ngrok");
 var crypto = require("crypto");
 var AuthenticationContext = require("adal-node").AuthenticationContext;
 
@@ -67,16 +67,18 @@ import {
 import { GuaribasInstance } from "../models/GBModel";
 import { Messages } from "../strings";
 
+
 /** Minimal service layer for a bot. */
 
 export class GBMinService {
+  
   core: IGBCoreService;
   conversationalService: IGBConversationalService;
   adminService: IGBAdminService;
   deployer: GBDeployer;
 
   corePackage = "core.gbai";
-
+  
   /**
    * Static initialization of minimal instance.
    *
@@ -108,7 +110,7 @@ export class GBMinService {
   async buildMin(
     server: any,
     appPackages: Array<IGBPackage>,
-    instances:GuaribasInstance[]
+    instances: GuaribasInstance[]
   ): Promise<GBMinInstance> {
     // Serves default UI on root address '/'.
 
@@ -117,7 +119,7 @@ export class GBMinService {
       "/",
       express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, "build"))
     );
-    
+
     Promise.all(
       instances.map(async instance => {
         // Gets the authorization key for each instance from Bot Service.
@@ -298,11 +300,11 @@ export class GBMinService {
     );
   }
 
-private async ngrokRefresh(){
-  const url = await ngrok.connect(9090); // https://757c1652.ngrok.io -> http://localhost:9090
-  // TODO: Persist to storage and refresh each 8h.
-  // TODO: Update all bots definition in azure.
-}
+  private async ngrokRefresh() {
+    const url = await ngrok.connect(9090); // https://757c1652.ngrok.io -> http://localhost:9090
+    // TODO: Persist to storage and refresh each 8h.
+    // TODO: Update all bots definition in azure.
+  }
 
   private async buildBotAdapter(instance: any) {
     let adapter = new BotFrameworkAdapter({
@@ -372,15 +374,12 @@ private async ngrokRefresh(){
     instance: any,
     appPackages: any[]
   ) {
-
     return adapter.processActivity(req, res, async context => {
-      
       const state = conversationState.get(context);
       const dc = min.dialogs.createContext(context, state);
       dc.context.activity.locale = "en-US"; // TODO: Make dynamic.
-      
+
       try {
-        
         const user = min.userState.get(dc.context);
 
         if (!user.loaded) {
@@ -472,14 +471,13 @@ private async ngrokRefresh(){
           }
         }
       } catch (error) {
-          let msg = `ERROR: ${error.message} ${
-            error.stack ? error.stack : ""
-          }`;
-          logger.error(msg);
-          
-          await dc.context.sendActivity(Messages[dc.context.activity.locale].very_sorry_about_error)
-          await dc.begin("/ask", { isReturning: true });
-          
+        let msg = `ERROR: ${error.message} ${error.stack ? error.stack : ""}`;
+        logger.error(msg);
+
+        await dc.context.sendActivity(
+          Messages[dc.context.activity.locale].very_sorry_about_error
+        );
+        await dc.begin("/ask", { isReturning: true });
       }
     });
   }
@@ -506,7 +504,7 @@ private async ngrokRefresh(){
       let msg = `Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
       return Promise.reject(new Error(msg));
     }
-  } 
+  }
 
   /**
    * Gets a Speech to Text / Text to Speech token from the provider.

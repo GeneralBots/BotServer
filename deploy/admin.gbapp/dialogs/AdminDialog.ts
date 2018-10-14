@@ -33,21 +33,24 @@
 "use strict";
 
 const UrlJoin = require("url-join");
-import { AzureSearch } from "pragmatismo-io-framework";
 import { GBMinInstance } from "botlib";
 import { IGBDialog } from "botlib";
 import { GBDeployer } from "../../core.gbapp/services/GBDeployer";
 import { GBImporter } from "../../core.gbapp/services/GBImporter";
 import { GBConfigService } from "../../core.gbapp/services/GBConfigService";
-import { KBService } from "./../../kb.gbapp/services/KBService";
 import { BotAdapter } from "botbuilder";
 import { GBAdminService } from "../services/GBAdminService";
 import { Messages } from "../strings";
+
 
 /**
  * Dialogs for administration tasks.
  */
 export class AdminDialog extends IGBDialog {
+
+  static async createFarmCommand(text: any, min: GBMinInstance) {
+  }
+
   static async undeployPackageCommand(text: any, min: GBMinInstance) {
     let packageName = text.split(" ")[1];
     let importer = new GBImporter(min.core);
@@ -106,6 +109,9 @@ export class AdminDialog extends IGBDialog {
 
         if (text === "quit") {
           await dc.replace("/");
+        } else if (cmdName === "createFarm") {
+          await AdminDialog.createFarmCommand(text, deployer);
+          await dc.replace("/admin", { firstRun: false });
         } else if (cmdName === "deployPackage") {
           await AdminDialog.deployPackageCommand(text, deployer);
           await dc.replace("/admin", { firstRun: false });

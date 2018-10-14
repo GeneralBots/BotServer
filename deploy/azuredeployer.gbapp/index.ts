@@ -33,12 +33,8 @@
 "use strict"
 
 const UrlJoin = require("url-join")
-
-
 import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib"
-
 import { Sequelize } from "sequelize-typescript"
-import { AzureDeployerService } from "./services/AzureDeployerService"
 
 
 export class GBWhatsappPackage implements IGBPackage {

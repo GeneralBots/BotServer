@@ -65,9 +65,9 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   @AutoIncrement
   @Column
   instanceId: number;
- 
+
   @Column
-  botServerUrl:string;
+  botServerUrl: string;
 
   @Column
   whoAmIVideo: string;
@@ -109,10 +109,10 @@ export class GuaribasInstance extends Model<GuaribasInstance>
 
   @Column
   authenticatorTenant: string;
-  
+
   @Column
   authenticatorAuthorityHostUrl: string;
-  
+
   @Column
   authenticatorClientId: string;
 
@@ -148,12 +148,18 @@ export class GuaribasInstance extends Model<GuaribasInstance>
 
   @Column
   smsServiceNumber: string;
-  
+
   @Column
   speechKey: string;
 
   @Column
+  speechKeyEndpoint: string;
+
+  @Column
   spellcheckerKey: string;
+
+  @Column
+  spellcheckerEndpoint: string;
 
   @Column
   theme: string;
@@ -168,11 +174,11 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   nlpAppId: string;
 
   @Column
-  nlpSubscriptionKey: string;
+  nlpKey: string;
 
   @Column
   @Column({ type: DataType.STRING(512) })
-  nlpServerUrl: string;
+  nlpEndpoint: string;
 
   @Column
   searchHost: string;
@@ -185,6 +191,24 @@ export class GuaribasInstance extends Model<GuaribasInstance>
 
   @Column
   searchIndexer: string;
+
+  @Column
+  storageUsername: string;
+
+  @Column
+  storagePassword: string;
+
+  @Column
+  storageName: string;
+
+  @Column
+  storageServer: string;
+
+  @Column
+  storageDialect: string;
+
+  @Column
+  storagePath: string;
 
   /* Settings section of bot.json */
 

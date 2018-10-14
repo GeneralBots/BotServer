@@ -33,13 +33,11 @@
 
 "use strict";
 
-const UrlJoin = require("url-join");
 const logger = require("./logger");
 const express = require("express");
 const bodyParser = require("body-parser");
-const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
+const scanf = require('scanf');
 
-import { Sequelize } from "sequelize-typescript";
 import { GBConfigService } from "../deploy/core.gbapp/services/GBConfigService";
 import { GBConversationalService } from "../deploy/core.gbapp/services/GBConversationalService";
 import { GBMinService } from "../deploy/core.gbapp/services/GBMinService";
@@ -56,7 +54,8 @@ import { GBCustomerSatisfactionPackage } from "../deploy/customer-satisfaction.g
 import { IGBPackage } from "botlib";
 import { GBAdminService } from "../deploy/admin.gbapp/services/GBAdminService";
 import { GuaribasInstance } from "../deploy/core.gbapp/models/GBModel";
-import { AzureDeployerService } from "../deploy/azuredeployer.gblib/services/AzureDeployerService";
+import { AzureDeployerService } from "deploy/azuredeployer.gbapp/services/AzureDeployerService";
+
 
 let appPackages = new Array<IGBPackage>();
 
@@ -94,7 +93,10 @@ export class GBServer {
 
           GBConfigService.init();
           let core = new GBCoreService();
+          let instance = await core.ensureCloud();
+
           await core.initDatabase();
+                   
 
           // Boot a bot package if any.
 

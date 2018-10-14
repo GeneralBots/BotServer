@@ -100,8 +100,8 @@ export class GBConversationalService implements IGBConversationalService {
 
     const model = new LuisRecognizer({
       applicationId: min.instance.nlpAppId,
-      endpointKey: min.instance.nlpSubscriptionKey,
-      endpoint: min.instance.nlpServerUrl
+      endpointKey: min.instance.nlpKey,
+      endpoint: min.instance.nlpEndpoint
     });
 
     let nlp: any;
