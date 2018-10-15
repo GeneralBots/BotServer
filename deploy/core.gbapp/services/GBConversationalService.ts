@@ -146,7 +146,7 @@ export class GBConversationalService implements IGBConversationalService {
   async checkLanguage(dc, min, text) {
     let locale = await AzureText.getLocale(
       min.instance.textAnalyticsKey,
-      min.instance.textAnalyticsServerUrl,
+      min.instance.textAnalyticsEndpoint,
       text
     );
     if (locale != dc.context.activity.locale.split("-")[0]) {

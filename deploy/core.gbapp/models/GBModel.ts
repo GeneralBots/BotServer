@@ -67,7 +67,7 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   instanceId: number;
 
   @Column
-  botServerUrl: string;
+  botEndpoint: string;
 
   @Column
   whoAmIVideo: string;
@@ -99,7 +99,7 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   textAnalyticsKey: string;
 
   @Column
-  textAnalyticsServerUrl: string;
+  textAnalyticsEndpoint: string;
 
   @Column
   marketplacePassword: string;

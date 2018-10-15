@@ -38,6 +38,8 @@ import { BotAdapter } from "botbuilder";
 import { Messages } from "../strings";
 
 export class BotFarmDialog extends IGBDialog {
+
+  
   /**
    * Setup dialogs flows and define services call.
    *

@@ -156,7 +156,7 @@ export class AdminDialog extends IGBDialog {
       min.instance.authenticatorTenant
     }/oauth2/authorize?client_id=${
       min.instance.authenticatorClientId
-    }&response_type=code&redirect_uri=${min.instance.botServerUrl}/${
+    }&response_type=code&redirect_uri=${min.instance.botEndpoint}/${
       min.instance.botId
     }/token&state=${state}&response_mode=query`;
 

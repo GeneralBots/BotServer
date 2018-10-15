@@ -38,38 +38,24 @@ import { GBConfigService } from "./GBConfigService";
 import { IGBInstance, IGBCoreService } from "botlib";
 import { GuaribasInstance } from "../models/GBModel";
 import { GBAdminService } from "../../admin.gbapp/services/GBAdminService";
-import * as fs from "fs";
-import { AzureDeployerService } from "../../azuredeployer.gbapp/services/AzureDeployerService";
-const msRestAzure = require("ms-rest-azure");
+const processExists = require("process-exists");
+
 
 /**
  *  Core service layer.
  */
 export class GBCoreService implements IGBCoreService {
-  async ensureCloud() {
-    if (!fs.existsSync(".env")) {
-      return;
-    }
+  isCloudSetup() {
+    return GBConfigService.tryGet("STORAGE_DIALECT");
+  }
 
-    logger.warn(
-      "This mechanism will only work for organizational ids and ids that are not 2FA enabled."
-    );
-
-    let credentials = await msRestAzure.loginWithUsernamePassword(
-      "",
-      ""
-    );
-    let subscriptionId = "";
-
-    let s = new AzureDeployerService(credentials, subscriptionId);
+  async ensureCloud(cloudDeployer) {
     let instance = new GuaribasInstance();
-    await s.deploy(instance, "westus");
+    await cloudDeployer.deploy(instance, "westus");
     instance.save();
 
     let content = `STORAGE_HOST = ${instance.storageServer}\n
     STORAGE_NAME, STORAGE_USERNAME, STORAGE_PASSWORD, STORAGE_DIALECT`;
-
-    fs.writeFileSync(".env", content);
   }
   /**
    * Data access layer instance.
@@ -314,5 +300,43 @@ export class GBCoreService implements IGBCoreService {
     }
 
     return GuaribasInstance.findOne(options);
+  }
+
+  public async ensureProxy(): Promise<string> {
+    let expiresOn = new Date(
+      await this.adminService.getValue(0, "proxyExpiresOn")
+    );
+    let proxyAddress;
+    if (expiresOn.getTime() > new Date().getTime()) {
+      proxyAddress = await this.adminService.getValue(
+        GBAdminService.masterBotInstanceId,
+        "proxyAddress"
+      );
+      return Promise.resolve(proxyAddress);
+    } else {
+      if (await processExists("ngrok")) {
+        logger.warn("ngrok is already running.");
+      } else {
+        const { spawn } = require("child_process");
+        const child = spawn("node_modules\ngrok\bin\ngrok");
+        child.stdout.on("data", data => {
+          console.log(`child stdout:\n${data}`);
+        });
+      }
+
+      await this.adminService.setValue(
+        GBAdminService.masterBotInstanceId,
+        "proxyAddress",
+        proxyAddress
+      );
+      let now = new Date();
+      let expiresOn = now.setHours(now.getHours());
+      await this.adminService.setValue(
+        GBAdminService.masterBotInstanceId,
+        "proxyExpiresOn",
+        expiresOn.toString()
+      );
+      return Promise.resolve(proxyAddress);
+    }
   }
 }

@@ -82,7 +82,7 @@ export class FeedbackDialog extends IGBDialog {
         let locale = dc.context.activity.locale;
         let rate = await AzureText.getSentiment(
           min.instance.textAnalyticsKey,
-          min.instance.textAnalyticsServerUrl,
+          min.instance.textAnalyticsEndpoint,
           min.conversationalService.getCurrentLanguage(dc),
           value
         );

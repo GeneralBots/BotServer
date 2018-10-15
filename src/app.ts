@@ -36,7 +36,6 @@
 const logger = require("./logger");
 const express = require("express");
 const bodyParser = require("body-parser");
-const scanf = require('scanf');
 
 import { GBConfigService } from "../deploy/core.gbapp/services/GBConfigService";
 import { GBConversationalService } from "../deploy/core.gbapp/services/GBConversationalService";
@@ -54,8 +53,7 @@ import { GBCustomerSatisfactionPackage } from "../deploy/customer-satisfaction.g
 import { IGBPackage } from "botlib";
 import { GBAdminService } from "../deploy/admin.gbapp/services/GBAdminService";
 import { GuaribasInstance } from "../deploy/core.gbapp/models/GBModel";
-import { AzureDeployerService } from "deploy/azuredeployer.gbapp/services/AzureDeployerService";
-
+import { AzureDeployerService } from "../deploy/azuredeployer.gbapp/services/AzureDeployerService";
 
 let appPackages = new Array<IGBPackage>();
 
@@ -63,9 +61,12 @@ let appPackages = new Array<IGBPackage>();
  * General Bots open-core entry point.
  */
 export class GBServer {
+
   /**
    *  Program entry-point.
    */
+
+  static MASTERBOT_PREFIX = "generalbots-masterbot"
 
   static run() {
     // Creates a basic HTTP server that will serve several URL, one for each
@@ -93,10 +94,18 @@ export class GBServer {
 
           GBConfigService.init();
           let core = new GBCoreService();
-          let instance = await core.ensureCloud();
+
+          // Ensures cloud / on-premises infrastructure is setup.
+
+          let cloudDeployer = await AzureDeployerService.ensureDeployer();
+          let masterBotName = `${GBServer.MASTERBOT_PREFIX}-${Math.floor(
+            Math.random() * 1000000000
+          )}`;
+          cloudDeployer.deployFarm(masterBotName, 'westus');
+          
+          // TODO: Get .gb* templates from GitHub and download do additional deploy folder.
 
           await core.initDatabase();
-                   
 
           // Boot a bot package if any.
 
@@ -148,7 +157,6 @@ export class GBServer {
           try {
             instances = await core.loadInstances();
           } catch (error) {
-
             // Check if storage is empty and needs formatting.
 
             let isInvalidObject =
@@ -157,11 +165,12 @@ export class GBServer {
             if (isInvalidObject) {
               if (GBConfigService.get("STORAGE_SYNC") != "true") {
                 throw `Operating storage is out of sync or there is a storage connection error. Try setting STORAGE_SYNC to true in .env file. Error: ${
-                error.message
+                  error.message
                 }.`;
-              }
-              else {
-                logger.info(`Storage is empty. After collecting storage structure from all .gbapps it will get synced.`);
+              } else {
+                logger.info(
+                  `Storage is empty. After collecting storage structure from all .gbapps it will get synced.`
+                );
               }
             } else {
               throw `Cannot connect to operating storage: ${error.message}.`;
@@ -178,6 +187,8 @@ export class GBServer {
           if (!instances) {
             instances = await core.loadInstances();
           }
+
+          await core.ensureCloud(cloudDeployer);
 
           // Setup server dynamic (per bot instance) resources and listeners.
 
@@ -198,4 +209,3 @@ export class GBServer {
 // First line to run.
 
 GBServer.run();
-

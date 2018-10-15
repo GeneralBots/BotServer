@@ -37,7 +37,11 @@ import { IGBCoreService } from "botlib";
 import { AuthenticationContext, TokenResponse } from "adal-node";
 const UrlJoin = require("url-join");
 
+const ngrok = require("ngrok");
+
 export class GBAdminService {
+  static masterBotInstanceId = 0;
+
   public static StrongRegex = new RegExp(
     "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})"
   );

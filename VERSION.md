@@ -1,5 +1,11 @@
 # Release History
 
+## Version 0.1.7
+
+* Azure Deployer
+* Strategy to replicate itself in several subscriptions.
+* Nkrok experiments to allow 100% automated development environement setup.
+
 ## Version 0.1.6
 
 * Updated packages references.

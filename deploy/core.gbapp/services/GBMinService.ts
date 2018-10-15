@@ -37,8 +37,6 @@ const UrlJoin = require("url-join");
 const express = require("express");
 const logger = require("../../../src/logger");
 const request = require("request-promise-native");
-const ngrok = require("ngrok");
-var crypto = require("crypto");
 var AuthenticationContext = require("adal-node").AuthenticationContext;
 
 import {
@@ -210,7 +208,7 @@ export class GBMinService {
           );
           authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
             min.instance.authenticatorClientId
-          }&redirect_uri=${min.instance.botServerUrl}/${
+          }&redirect_uri=${min.instance.botEndpoint}/${
             min.instance.botId
           }/token`;
 
@@ -245,7 +243,7 @@ export class GBMinService {
 
           authenticationContext.acquireTokenWithAuthorizationCode(
             req.query.code,
-            UrlJoin(instance.botServerUrl, min.instance.botId, "/token"),
+            UrlJoin(instance.botEndpoint, min.instance.botId, "/token"),
             resource,
             instance.authenticatorClientId,
             instance.authenticatorClientSecret,
@@ -276,7 +274,7 @@ export class GBMinService {
                   null
                 );
 
-                res.redirect(min.instance.botServerUrl);
+                res.redirect(min.instance.botEndpoint);
               }
             }
           );
@@ -298,12 +296,6 @@ export class GBMinService {
         //   next()
       })
     );
-  }
-
-  private async ngrokRefresh() {
-    const url = await ngrok.connect(9090); // https://757c1652.ngrok.io -> http://localhost:9090
-    // TODO: Persist to storage and refresh each 8h.
-    // TODO: Update all bots definition in azure.
   }
 
   private async buildBotAdapter(instance: any) {
