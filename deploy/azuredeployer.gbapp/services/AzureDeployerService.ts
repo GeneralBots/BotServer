@@ -33,7 +33,6 @@
 "use strict";
 
 import { GBService, IGBInstance } from "botlib";
-const msRestAzure = require("ms-rest-azure");
 import {
   ResourceManagementClient,
   SubscriptionClient
@@ -46,16 +45,23 @@ import { SearchManagementClient } from "azure-arm-search";
 import { WebResource, ServiceClient } from "ms-rest-js";
 import * as simplegit from "simple-git/promise";
 import { AppServicePlan } from "azure-arm-website/lib/models";
-import { GBConfigService } from "deploy/core.gbapp/services/GBConfigService";
+import { GBConfigService } from "../../../deploy/core.gbapp/services/GBConfigService";
+
 const scanf = require("scanf");
+const msRestAzure = require("ms-rest-azure");
 const git = simplegit();
 const logger = require("../../../src/logger");
 const UrlJoin = require("url-join");
 const PasswordGenerator = require("strict-password-generator").default;
 const iconUrl =
   "https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png";
+
+  class x implements IGBInstance {
+
+  };
   
-  
+
+
 export class AzureDeployerService extends GBService {
   instance: IGBInstance;
   resourceClient: ResourceManagementClient.ResourceManagementClient;
@@ -85,7 +91,7 @@ export class AzureDeployerService extends GBService {
     );
     this.searchClient = new SearchManagementClient(credentials, subscriptionId);
     this.accessToken = credentials.tokenCache._entries[0].accessToken;
-    this.location= location;
+    this.location = location;
   }
 
   public static async getSubscriptions(credentials) {
@@ -97,12 +103,19 @@ export class AzureDeployerService extends GBService {
     name: string,
     location: string
   ): Promise<IGBInstance> {
-    let instance = new IGBInstance();
 
-    logger.info(`Creating Deploy...`);
-    await this.createDeploy(name, location);
+    let instance:any = {};
+    
+    logger.info(`Starting infrastructure deployment...`);
 
-    logger.info(`Creating Server...`);
+    // TODO: REMOVE THIS*********
+    
+    //await this.dangerouslyDeleteDeploy(name);
+
+    logger.info(`Deploying Deploy Group...`);
+    await this.createDeployGroup(name, location);
+
+    logger.info(`Deploying Bot Server...`);
     let serverFarm = await this.createHostingPlan(
       name,
       `${name}-server-plan`,
@@ -113,11 +126,11 @@ export class AzureDeployerService extends GBService {
     let administratorLogin = AzureDeployerService.getRndAdminAccount();
     let administratorPassword = AzureDeployerService.getRndPassword();
 
-    logger.info(`Creating Storage...`);
-    let storageServerName = `${name}-storage`;
+    logger.info(`Deploying Bot Storage ...`);
+    let storageServerName = `${name}-storage-server`;
     await this.createStorageServer(
       name,
-      `${storageServerName}-server`,
+      storageServerName,
       administratorLogin,
       administratorPassword,
       storageServerName,
@@ -136,27 +149,29 @@ export class AzureDeployerService extends GBService {
     instance.storageDialect = "mssql";
     instance.storageServerName = storageServerName;
 
-    logger.info(`Creating Search...`);
-    let search = await this.createSearch(name, `${name}-search`, location);
-    instance.searchHost = "generalbots.search.windows.net";
+    logger.info(`Deploying Search...`);
+    let searchName = `${name}-search`;
+    let search = await this.createSearch(name,searchName , location);
+    let searchKeys = await this.searchClient.queryKeys.listBySearchService(name, searchName)
+    instance.searchHost = `${searchName}.search.windows.net`;
     instance.searchIndex = "azuresql-index";
     instance.searchIndexer = "azuresql-indexer";
-    instance.searchKey = "0FF1CE27564C208555A22B6E278289813";
+    instance.searchKey = searchKeys[0];
 
-    logger.info(`Creating NLP...`);
+    logger.info(`Deploying NLP...`);
     let nlp = await this.createNLP(name, `${name}-nlp`, location);
     let keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
     instance.nlpEndpoint = nlp.endpoint;
     instance.nlpKey = keys.key1;
     instance.nlpAppId = "0ff1ceb4f-96a4-4bdb-b2d5-3ea462ddb773";
 
-    logger.info(`Creating Speech...`);
+    logger.info(`Deploying Speech...`);
     let speech = await this.createSpeech(name, `${name}-speech`, location);
     keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
     instance.speechKeyEndpoint = speech.endpoint;
     instance.speechKey = keys.key1;
 
-    logger.info(`Creating SpellChecker...`);
+    logger.info(`Deploying SpellChecker...`);
     let spellChecker = await this.createSpellChecker(
       name,
       `${name}-spellchecker`,
@@ -169,7 +184,7 @@ export class AzureDeployerService extends GBService {
     instance.spellCheckerKey = keys.key1;
     instance.spellCheckerEndpoint = spellChecker.endpoint;
 
-    logger.info(`Creating Text Analytics...`);
+    logger.info(`Deploying Text Analytics...`);
     let textAnalytics = await this.createTextAnalytics(
       name,
       `${name}-textanalytics`,
@@ -185,9 +200,15 @@ export class AzureDeployerService extends GBService {
     return instance;
   }
 
-  public async deployBot(instance, name, endpoint, nlpAppId, nlpKey, subscriptionId) {
-
-    logger.info(`Creating Bot...`);
+  public async deployBot(
+    instance,
+    name,
+    endpoint,
+    nlpAppId,
+    nlpKey,
+    subscriptionId
+  ) {
+    logger.info(`Deploying Bot...`);
     await this.internalDeployBot(
       this.accessToken,
       name,
@@ -402,7 +423,7 @@ export class AzureDeployerService extends GBService {
     );
   }
 
-  private async createDeploy(name, location) {
+  private async createDeployGroup(name, location) {
     var params = { location: location };
     return this.resourceClient.resourceGroups.createOrUpdate(name, params);
   }
@@ -486,19 +507,18 @@ export class AzureDeployerService extends GBService {
     let password = passwordGenerator.generatePassword(options);
     return password;
   }
-  
+
   static async ensureDeployer() {
-    
     // Tries do get information from .env file otherwise asks in command-line.
 
     let username = GBConfigService.get("CLOUD_USERNAME");
     let password = GBConfigService.get("CLOUD_PASSWORD");
     let subscriptionId = GBConfigService.get("CLOUD_SUBSCRIPTIONID");
-    let cloudLocation = GBConfigService.get("CLOUD_LOCATION");
+    let location = GBConfigService.get("CLOUD_LOCATION");
 
     // No .env so asks for cloud credentials to start a new farm.
 
-    if (!username || !password || !subscriptionId || !cloudLocation) {
+    if (!username || !password || !subscriptionId || !location) {
       process.stdout.write(
         "FIRST RUN: A empty enviroment is detected. Please, enter credentials to create a new General Bots Farm."
       );
@@ -532,31 +552,31 @@ export class AzureDeployerService extends GBService {
       username,
       password
     );
-    let list = await AzureDeployerService.getSubscriptions(credentials);
 
-    let map = {};
-    let index = 1;
-    list.forEach(element => {
-      console.log(
-        `${index}: ${element.displayName} (${element.subscriptionId})`
-      );
-      map[index++] = element;
-    });
-
-    let subscriptionIndex;
-    let retrieveSubscription = () => {
-      if (!subscriptionIndex) {
-        process.stdout.write("CLOUD_SUBSCRIPTIONID (type a number):");
-        subscriptionIndex = scanf("%d");
-      }
-    };
     if (!subscriptionId) {
+      let map = {};
+      let index = 1;
+      let list = await AzureDeployerService.getSubscriptions(credentials);
+      list.forEach(element => {
+        console.log(
+          `${index}: ${element.displayName} (${element.subscriptionId})`
+        );
+        map[index++] = element;
+      });
+
+      let subscriptionIndex;
+      let retrieveSubscription = () => {
+        if (!subscriptionIndex) {
+          process.stdout.write("CLOUD_SUBSCRIPTIONID (type a number):");
+          subscriptionIndex = scanf("%d");
+        }
+      };
+
       while (!subscriptionIndex) {
         retrieveSubscription();
       }
       subscriptionId = map[subscriptionIndex].subscriptionId;
     }
-
 
     let retriveLocation = () => {
       if (!location) {
@@ -571,5 +591,4 @@ export class AzureDeployerService extends GBService {
 
     return new AzureDeployerService(credentials, subscriptionId, location);
   }
-  
 }

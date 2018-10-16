@@ -50,10 +50,10 @@ import { GBKBPackage } from "../deploy/kb.gbapp";
 import { GBSecurityPackage } from "../deploy/security.gblib";
 import { GBAdminPackage } from "../deploy/admin.gbapp/index";
 import { GBCustomerSatisfactionPackage } from "../deploy/customer-satisfaction.gbapp";
-import { IGBPackage } from "botlib";
 import { GBAdminService } from "../deploy/admin.gbapp/services/GBAdminService";
 import { GuaribasInstance } from "../deploy/core.gbapp/models/GBModel";
 import { AzureDeployerService } from "../deploy/azuredeployer.gbapp/services/AzureDeployerService";
+import { IGBPackage } from "botlib";
 
 let appPackages = new Array<IGBPackage>();
 
@@ -97,11 +97,9 @@ export class GBServer {
 
           // Ensures cloud / on-premises infrastructure is setup.
 
+          logger.info(`Connecting to the infrastructure...`);
           let cloudDeployer = await AzureDeployerService.ensureDeployer();
-          let masterBotName = `${GBServer.MASTERBOT_PREFIX}-${Math.floor(
-            Math.random() * 1000000000
-          )}`;
-          cloudDeployer.deployFarm(masterBotName, 'westus');
+          let instance = await cloudDeployer.deployFarm('gbot', 'westus');
           
           // TODO: Get .gb* templates from GitHub and download do additional deploy folder.
 
