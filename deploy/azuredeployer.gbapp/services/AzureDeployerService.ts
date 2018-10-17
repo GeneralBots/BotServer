@@ -126,7 +126,7 @@ export class AzureDeployerService extends GBService {
     let administratorLogin = AzureDeployerService.getRndAdminAccount();
     let administratorPassword = AzureDeployerService.getRndPassword();
 
-    logger.info(`Deploying Bot Storage ...`);
+    logger.info(`Deploying Bot Storage...`);
     let storageServerName = `${name}-storage-server`;
     await this.createStorageServer(
       name,
@@ -483,10 +483,10 @@ export class AzureDeployerService extends GBService {
   private static getRndAdminAccount() {
     const passwordGenerator = new PasswordGenerator();
     const options = {
-      upperCaseAlpha: true,
+      upperCaseAlpha: false,
       lowerCaseAlpha: true,
       number: true,
-      specialCharacter: true,
+      specialCharacter: false,
       minimumLength: 8,
       maximumLength: 8
     };
