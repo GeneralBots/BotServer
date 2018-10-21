@@ -1,3 +1,5 @@
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+
 ** **Checkout our FREE [Intranet Quickstart Bot](https://github.com/pragmatismo-io/IntranetBotQuickStart.gbai)** ** 
 
 Welcome to General Bot Community Edition
