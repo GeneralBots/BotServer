@@ -94,24 +94,20 @@ export class GBServer {
 
           GBConfigService.init();
           let core = new GBCoreService();
-
+          
           // Ensures cloud / on-premises infrastructure is setup.
 
           logger.info(`Connecting to the infrastructure...`);
+          let proxyAddress = await core.ensureProxy();
           let cloudDeployer = await AzureDeployerService.ensureDeployer();
-          let instance = await cloudDeployer.deployFarm('gbot', 'westus');
+          let instance = await cloudDeployer.deployFarm('gbot', 'westus', proxyAddress);
           
           // TODO: Get .gb* templates from GitHub and download do additional deploy folder.
 
           await core.initDatabase();
 
-          // Boot a bot package if any.
-
-          logger.info(`Starting instances...`);
-          let deployer = new GBDeployer(core, new GBImporter(core));
-
-          // Build a minimal bot instance for each .gbot deployment.
-
+          // Check admin password.
+          
           let conversationalService = new GBConversationalService(core);
           let adminService = new GBAdminService(core);
           let password = GBConfigService.get("ADMIN_PASS");
@@ -121,15 +117,6 @@ export class GBServer {
               "STOP: Please, define a really strong password in ADMIN_PASS environment variable before running the server."
             );
           }
-
-          // Creates the minimal service shared across all .gbapps.
-
-          let minService = new GBMinService(
-            core,
-            conversationalService,
-            adminService,
-            deployer
-          );
 
           // NOTE: the semicolon is necessary before this line.
           // Loads all system packages.
@@ -177,7 +164,8 @@ export class GBServer {
 
           // Deploy packages and format object store according to .gbapp storage models.
 
-          logger.info(`Deploying packages.`);
+          logger.info(`Deploying packages...`);
+          let deployer = new GBDeployer(core, new GBImporter(core));
           await deployer.deployPackages(core, server, appPackages);
 
           // If instances is undefined here it's because storage has been formatted.
@@ -190,7 +178,13 @@ export class GBServer {
 
           // Setup server dynamic (per bot instance) resources and listeners.
 
-          logger.info(`Building minimal instances.`);
+          logger.info(`Building instances.`);
+          let minService = new GBMinService(
+            core,
+            conversationalService,
+            adminService,
+            deployer
+          );
           await minService.buildMin(server, appPackages, instances);
           logger.info(`The Bot Server is in RUNNING mode...`);
 

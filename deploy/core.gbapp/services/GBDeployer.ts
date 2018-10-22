@@ -47,6 +47,7 @@ import { GBError } from "botlib";
 import { GuaribasPackage, GuaribasInstance } from "../models/GBModel";
 import { IGBPackage } from "botlib";
 import { AzureSearch } from "pragmatismo-io-framework";
+import { AzureDeployerService } from "../../azuredeployer.gbapp/services/AzureDeployerService";
 
 /** Deployer service for bots, themes, ai and more. */
 export class GBDeployer {
@@ -251,7 +252,6 @@ export class GBDeployer {
     });
   }
 
- 
   deployTheme(localPath: string) {
     // DISABLED: Until completed, "/ui/public".
     // FsExtra.copy(localPath, this.workDir + packageName)
@@ -322,6 +322,16 @@ export class GBDeployer {
     }
   }
 
+  public static getConnectionStringFromInstance(instance: GuaribasInstance) {
+    return `Server=tcp:${
+      instance.storageServer
+    }.database.windows.net,1433;Database=${instance.storageName};User ID=${
+      instance.storageUsername
+    };Password=${
+      instance.storagePassword
+    };Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
+  }
+
   public async rebuildIndex(instance: GuaribasInstance) {
     let search = new AzureSearch(
       instance.searchKey,
@@ -329,11 +339,22 @@ export class GBDeployer {
       instance.searchIndex,
       instance.searchIndexer
     );
+
+    let connectionString = GBDeployer.getConnectionStringFromInstance(instance);
+
+    const dsName = "gb";
+    await search.deleteDatasource(dsName);
+    await search.createDatasource(
+      dsName,
+      dsName,
+      "GuaribasQuestion",
+      "azuresql",
+      connectionString
+    );
     await search.deleteIndex();
-    let kbService = new KBService(this.core.sequelize);
     await search.createIndex(
-      kbService.getSearchSchema(instance.searchIndex),
-      "gb"
+      AzureDeployerService.getKBSearchSchema(instance.searchIndex),
+      dsName
     );
   }
 

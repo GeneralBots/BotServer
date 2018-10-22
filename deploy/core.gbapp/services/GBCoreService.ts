@@ -39,7 +39,7 @@ import { IGBInstance, IGBCoreService } from "botlib";
 import { GuaribasInstance } from "../models/GBModel";
 import { GBAdminService } from "../../admin.gbapp/services/GBAdminService";
 const processExists = require("process-exists");
-
+const TextDecoder = require("util").TextDecoder;
 
 /**
  *  Core service layer.
@@ -303,40 +303,47 @@ export class GBCoreService implements IGBCoreService {
   }
 
   public async ensureProxy(): Promise<string> {
-    let expiresOn = new Date(
-      await this.adminService.getValue(0, "proxyExpiresOn")
-    );
-    let proxyAddress;
-    if (expiresOn.getTime() > new Date().getTime()) {
-      proxyAddress = await this.adminService.getValue(
-        GBAdminService.masterBotInstanceId,
-        "proxyAddress"
-      );
-      return Promise.resolve(proxyAddress);
-    } else {
-      if (await processExists("ngrok")) {
-        logger.warn("ngrok is already running.");
-      } else {
-        const { spawn } = require("child_process");
-        const child = spawn("node_modules\ngrok\bin\ngrok");
-        child.stdout.on("data", data => {
-          console.log(`child stdout:\n${data}`);
-        });
-      }
+    let proxyAddress: string;
+    const ngrok = require('ngrok');
+    return await ngrok.connect();
+    
 
-      await this.adminService.setValue(
-        GBAdminService.masterBotInstanceId,
-        "proxyAddress",
-        proxyAddress
-      );
-      let now = new Date();
-      let expiresOn = now.setHours(now.getHours());
-      await this.adminService.setValue(
-        GBAdminService.masterBotInstanceId,
-        "proxyExpiresOn",
-        expiresOn.toString()
-      );
-      return Promise.resolve(proxyAddress);
-    }
+    // let expiresOn = new Date(
+    //   await this.adminService.getValue(0, "proxyExpiresOn")
+    // );
+    // let proxyAddress;
+    // if (expiresOn.getTime() > new Date().getTime()) {
+    //   proxyAddress = await this.adminService.getValue(
+    //     GBAdminService.masterBotInstanceId,
+    //     "proxyAddress"
+    //   );
+    //   return Promise.resolve(proxyAddress);
+    // } else {
+    // if (await processExists("ngrok.exe")) {
+    //   logger.warn("ngrok is already running.");
+    // } else {
+    //   const { exec } = require("child_process");
+    //   const child = exec(
+    //     "node_modules\\ngrok\\bin\\ngrok http 4242",
+    //     (error, stdout, stderr) => {
+    //       console.log(`child stdout:\n${stdout}`);
+    //     }
+    //   );
+    // }
+
+    // await this.adminService.setValue(
+    //   GBAdminService.masterBotInstanceId,
+    //   "proxyAddress",
+    //   proxyAddress
+    // );
+    // let now = new Date();
+    // let expiresOn = now.setHours(now.getHours());
+    // await this.adminService.setValue(
+    //   GBAdminService.masterBotInstanceId,
+    //   "proxyExpiresOn",
+    //   expiresOn.toString()
+    // );
+    return Promise.resolve(proxyAddress);
+    // }
   }
 }

@@ -56,12 +56,6 @@ const PasswordGenerator = require("strict-password-generator").default;
 const iconUrl =
   "https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png";
 
-  class x implements IGBInstance {
-
-  };
-  
-
-
 export class AzureDeployerService extends GBService {
   instance: IGBInstance;
   resourceClient: ResourceManagementClient.ResourceManagementClient;
@@ -73,6 +67,7 @@ export class AzureDeployerService extends GBService {
   subscriptionClient: SubscriptionClient.SubscriptionClient;
   accessToken: string;
   location: string;
+  public subscriptionId: string;
 
   constructor(credentials, subscriptionId, location) {
     super();
@@ -92,6 +87,7 @@ export class AzureDeployerService extends GBService {
     this.searchClient = new SearchManagementClient(credentials, subscriptionId);
     this.accessToken = credentials.tokenCache._entries[0].accessToken;
     this.location = location;
+    this.subscriptionId = subscriptionId;
   }
 
   public static async getSubscriptions(credentials) {
@@ -101,16 +97,32 @@ export class AzureDeployerService extends GBService {
 
   public async deployFarm(
     name: string,
-    location: string
+    location: string,
+    proxyAddress: string
   ): Promise<IGBInstance> {
+    let instance: any = {};
+    let culture = "en-us";
 
-    let instance:any = {};
-    
     logger.info(`Starting infrastructure deployment...`);
 
-    // TODO: REMOVE THIS*********
-    
-    //await this.dangerouslyDeleteDeploy(name);
+    let keys: any;
+    logger.info(`Deploying NLP...`);
+    let nlp = await this.createNLP(name, `${name}-nlp`, location);
+    keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
+    let nlpAppId = await this.createLUISApp(name, name, location, culture);
+
+
+    await this.deployBootBot(
+      instance,
+      name,
+      proxyAddress,
+      nlpAppId,
+      keys.key1,
+      this.subscriptionId
+    );
+    instance.nlpEndpoint = nlp.endpoint;
+    instance.nlpKey = keys.key1;
+    instance.nlpAppId = nlpAppId;
 
     logger.info(`Deploying Deploy Group...`);
     await this.createDeployGroup(name, location);
@@ -151,19 +163,18 @@ export class AzureDeployerService extends GBService {
 
     logger.info(`Deploying Search...`);
     let searchName = `${name}-search`;
-    let search = await this.createSearch(name,searchName , location);
-    let searchKeys = await this.searchClient.queryKeys.listBySearchService(name, searchName)
+
+    await this.createSearch(name, searchName, location);
+    let searchKeys = await this.searchClient.queryKeys.listBySearchService(
+      name,
+      searchName
+    );
     instance.searchHost = `${searchName}.search.windows.net`;
     instance.searchIndex = "azuresql-index";
     instance.searchIndexer = "azuresql-indexer";
-    instance.searchKey = searchKeys[0];
+    instance.searchKey = searchKeys[0].key;
 
-    logger.info(`Deploying NLP...`);
-    let nlp = await this.createNLP(name, `${name}-nlp`, location);
-    let keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
-    instance.nlpEndpoint = nlp.endpoint;
-    instance.nlpKey = keys.key1;
-    instance.nlpAppId = "0ff1ceb4f-96a4-4bdb-b2d5-3ea462ddb773";
+    ////////////// LUS
 
     logger.info(`Deploying Speech...`);
     let speech = await this.createSpeech(name, `${name}-speech`, location);
@@ -200,7 +211,7 @@ export class AzureDeployerService extends GBService {
     return instance;
   }
 
-  public async deployBot(
+  public async deployBootBot(
     instance,
     name,
     endpoint,
@@ -229,7 +240,7 @@ export class AzureDeployerService extends GBService {
   }
 
   private async dangerouslyDeleteDeploy(name) {
-    return this.resourceClient.resourceGroups.deleteMethod(name);
+    return await this.resourceClient.resourceGroups.deleteMethod(name);
   }
 
   private async createStorageServer(
@@ -282,27 +293,25 @@ export class AzureDeployerService extends GBService {
     subscriptionId
   ) {
     let baseUrl = `https://management.azure.com/`;
-
+    this.registerProviders(subscriptionId, baseUrl, accessToken);
     let appId = msRestAzure.generateUuid();
 
     let parameters = {
-      parameters: {
-        location: location,
-        sku: {
-          name: "F0"
-        },
-        name: name,
-        id: botId,
-        kind: "sdk",
-        properties: {
-          description: description,
-          displayName: name,
-          endpoint: endpoint,
-          iconUrl: iconUrl,
-          luisAppIds: [nlpAppId],
-          luisKey: nlpKey,
-          msaAppId: appId
-        }
+      location: location,
+      sku: {
+        name: "F0"
+      },
+      name: name,
+      id: botId,
+      kind: "sdk",
+      properties: {
+        description: description,
+        displayName: name,
+        endpoint: endpoint,
+        iconUrl: iconUrl,
+        luisAppIds: [nlpAppId],
+        luisKey: nlpKey,
+        msaAppId: appId
       }
     };
 
@@ -326,6 +335,50 @@ export class AzureDeployerService extends GBService {
     let res = await httpClient.sendRequest(req);
 
     return JSON.parse(res.bodyAsJson as string);
+  }
+
+  private async createLUISApp(
+    name: string,
+    description: string,
+    location: string,
+    culture: string
+  ) {
+    let parameters = {
+      name: name,
+      description: description,
+      culture: culture
+    };
+    let requestUrl = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/apps/`;
+    let req = new WebResource();
+    
+    req.method = "POST";
+    req.url = requestUrl;
+    req.headers = {};
+    req.headers["Content-Type"] = "application/json";
+    req.headers["accept-language"] = "*";
+
+    let authoringKey;
+    let retriveAuthoringKey = () => {
+      if (!authoringKey) {
+        process.stdout.write(
+          "Due to this opened issue: https://github.com/Microsoft/botbuilder-tools/issues/550\n"
+        );
+        process.stdout.write("Please enter your LUIS Authoring Key:");
+        authoringKey = scanf("%s");
+      }
+    };
+
+    while (!authoringKey) {
+      retriveAuthoringKey();
+    }
+
+    req.headers["Ocp-Apim-Subscription-Key"] = authoringKey;
+    req.body = JSON.stringify(parameters);
+
+    let httpClient = new ServiceClient();
+    let res = await httpClient.sendRequest(req);
+
+    return res.bodyAsText;
   }
 
   private async createSearch(group, name, location) {
@@ -358,13 +411,6 @@ export class AzureDeployerService extends GBService {
     location,
     kind
   ): Promise<CognitiveServicesAccount> {
-    // * 'Bing.Autosuggest.v7', 'Bing.CustomSearch',
-    // * 'Bing.Search.v7', 'Bing.Speech', 'Bing.SpellCheck.v7', 'ComputerVision',
-    // * 'ContentModerator', 'CustomSpeech', 'CustomVision.Prediction',
-    // * 'CustomVision.Training', 'Emotion', 'Face', 'LUIS', 'QnAMaker',
-    // * 'SpeakerRecognition', 'SpeechTranslation', 'TextAnalytics',
-    // * 'TextTranslation', 'WebLM'
-
     let params = {
       sku: { name: "F0" },
       createMode: "Default",
@@ -490,8 +536,8 @@ export class AzureDeployerService extends GBService {
       minimumLength: 8,
       maximumLength: 8
     };
-    let password = passwordGenerator.generatePassword(options);
-    return `sa${password}`;
+    let generated = passwordGenerator.generatePassword(options);
+    return `sa${generated}`;
   }
 
   private static getRndPassword() {
@@ -590,5 +636,106 @@ export class AzureDeployerService extends GBService {
     }
 
     return new AzureDeployerService(credentials, subscriptionId, location);
+  }
+
+  static getKBSearchSchema(indexName) {
+    return {
+      name: indexName,
+      fields: [
+        {
+          name: "questionId",
+          type: "Edm.String",
+          searchable: false,
+          filterable: false,
+          retrievable: true,
+          sortable: false,
+          facetable: false,
+          key: true
+        },
+        {
+          name: "subject1",
+          type: "Edm.String",
+          searchable: true,
+          filterable: false,
+          retrievable: false,
+          sortable: false,
+          facetable: false,
+          key: false
+        },
+        {
+          name: "subject2",
+          type: "Edm.String",
+          searchable: true,
+          filterable: false,
+          retrievable: false,
+          sortable: false,
+          facetable: false,
+          key: false
+        },
+        {
+          name: "subject3",
+          type: "Edm.String",
+          searchable: true,
+          filterable: false,
+          retrievable: false,
+          sortable: false,
+          facetable: false,
+          key: false
+        },
+        {
+          name: "subject4",
+          type: "Edm.String",
+          searchable: true,
+          filterable: false,
+          retrievable: false,
+          sortable: false,
+          facetable: false,
+          key: false
+        },
+        {
+          name: "content",
+          type: "Edm.String",
+          searchable: true,
+          filterable: false,
+          retrievable: false,
+          sortable: false,
+          facetable: false,
+          key: false
+        },
+        {
+          name: "answerId",
+          type: "Edm.Int32",
+          searchable: false,
+          filterable: false,
+          retrievable: true,
+          sortable: false,
+          facetable: false,
+          key: false
+        },
+        {
+          name: "instanceId",
+          type: "Edm.Int32",
+          searchable: false,
+          filterable: true,
+          retrievable: true,
+          sortable: false,
+          facetable: false,
+          key: false
+        },
+        {
+          name: "packageId",
+          type: "Edm.Int32",
+          searchable: false,
+          filterable: true,
+          retrievable: true,
+          sortable: false,
+          facetable: false,
+          key: false
+        }
+      ],
+      scoringProfiles: [],
+      defaultScoringProfile: null,
+      corsOptions: null
+    };
   }
 }
