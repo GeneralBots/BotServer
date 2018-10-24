@@ -47,6 +47,7 @@ import * as simplegit from "simple-git/promise";
 import { AppServicePlan } from "azure-arm-website/lib/models";
 import { GBConfigService } from "../../../deploy/core.gbapp/services/GBConfigService";
 
+const Spinner = require('cli-spinner').Spinner;
 const scanf = require("scanf");
 const msRestAzure = require("ms-rest-azure");
 const git = simplegit();
@@ -68,6 +69,7 @@ export class AzureDeployerService extends GBService {
   accessToken: string;
   location: string;
   public subscriptionId: string;
+  static apiVersion = "2017-12-01";
 
   constructor(credentials, subscriptionId, location) {
     super();
@@ -103,26 +105,11 @@ export class AzureDeployerService extends GBService {
     let instance: any = {};
     let culture = "en-us";
 
-    logger.info(`Starting infrastructure deployment...`);
+    let spinner = new Spinner('%s');
+    spinner.start();
+    spinner.setSpinnerString("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈");
 
     let keys: any;
-    logger.info(`Deploying NLP...`);
-    let nlp = await this.createNLP(name, `${name}-nlp`, location);
-    keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
-    let nlpAppId = await this.createLUISApp(name, name, location, culture);
-
-
-    await this.deployBootBot(
-      instance,
-      name,
-      proxyAddress,
-      nlpAppId,
-      keys.key1,
-      this.subscriptionId
-    );
-    instance.nlpEndpoint = nlp.endpoint;
-    instance.nlpKey = keys.key1;
-    instance.nlpAppId = nlpAppId;
 
     logger.info(`Deploying Deploy Group...`);
     await this.createDeployGroup(name, location);
@@ -174,7 +161,13 @@ export class AzureDeployerService extends GBService {
     instance.searchIndexer = "azuresql-indexer";
     instance.searchKey = searchKeys[0].key;
 
-    ////////////// LUS
+    logger.info(`Deploying NLP...`);
+    let nlp = await this.createNLP(name, `${name}-nlp`, location);
+    keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
+    let nlpAppId = await this.createLUISApp(name, name, location, culture);
+    instance.nlpEndpoint = nlp.endpoint;
+    instance.nlpKey = keys.key1;
+    instance.nlpAppId = nlpAppId;
 
     logger.info(`Deploying Speech...`);
     let speech = await this.createSpeech(name, `${name}-speech`, location);
@@ -208,6 +201,20 @@ export class AzureDeployerService extends GBService {
     instance.textAnalyticsEndpoint = textAnalytics.endpoint;
     instance.textAnalyticsKey = keys.key1;
 
+    let appId = msRestAzure.generateUuid();
+    logger.info(`Deploying Bot...`);
+    instance = await this.deployBootBot(
+      instance,
+      name,
+      `${proxyAddress}/api/messages/${name}`,
+      nlpAppId,
+      keys.key1,
+      this.subscriptionId,
+      appId
+    );
+
+    spinner.stop();
+
     return instance;
   }
 
@@ -217,12 +224,19 @@ export class AzureDeployerService extends GBService {
     endpoint,
     nlpAppId,
     nlpKey,
-    subscriptionId
+    subscriptionId,
+    appId
   ) {
     logger.info(`Deploying Bot...`);
-    await this.internalDeployBot(
+
+    let botId = name + AzureDeployerService.getRndBotId();
+
+    [
+      instance.marketplacePassword,
+      instance.webchatKey
+    ] = await this.internalDeployBot(
       this.accessToken,
-      name,
+      botId,
       name,
       name,
       "General BootBot",
@@ -230,11 +244,11 @@ export class AzureDeployerService extends GBService {
       "global",
       nlpAppId,
       nlpKey,
-      subscriptionId
+      subscriptionId,
+      appId
     );
-    instance.webchatKey = "********";
-    instance.marketplaceId = "0ff1ce73-0aea-442a-a222-dcc340eca294";
-    instance.marketplacePassword = "************";
+    instance.marketplaceId = appId;
+    instance.botId = botId;
 
     return instance;
   }
@@ -280,29 +294,33 @@ export class AzureDeployerService extends GBService {
     let res = await httpClient.sendRequest(req);
   }
 
+  /**
+   * @see https://github.com/Azure/azure-rest-api-specs/blob/master/specification/botservice/resource-manager/Microsoft.BotService/preview/2017-12-01/botservice.json
+   */
   private async internalDeployBot(
     accessToken,
     botId,
-    group,
     name,
+    group,
     description,
     endpoint,
     location,
     nlpAppId,
     nlpKey,
-    subscriptionId
+    subscriptionId,
+    appId
   ) {
     let baseUrl = `https://management.azure.com/`;
-    this.registerProviders(subscriptionId, baseUrl, accessToken);
-    let appId = msRestAzure.generateUuid();
+    await this.registerProviders(subscriptionId, baseUrl, accessToken);
+
+    let appPassword = AzureDeployerService.getRndPassword();
 
     let parameters = {
       location: location,
       sku: {
         name: "F0"
       },
-      name: name,
-      id: botId,
+      name: botId,
       kind: "sdk",
       properties: {
         description: description,
@@ -311,30 +329,49 @@ export class AzureDeployerService extends GBService {
         iconUrl: iconUrl,
         luisAppIds: [nlpAppId],
         luisKey: nlpKey,
-        msaAppId: appId
+        msaAppId: appId,
+        msaAppPassword: appPassword
       }
     };
 
+    let httpClient = new ServiceClient();
+
     let query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
       this.provider
-    }/botServices/${botId}?api-version=2017-12-01`;
-    let requestUrl = UrlJoin(baseUrl, query);
+    }/botServices/${botId}?api-version=${AzureDeployerService.apiVersion}`;
+    let url = UrlJoin(baseUrl, query);
+    let req = this.createRequestObject(
+      url,
+      accessToken,
+      JSON.stringify(parameters)
+    );
+    let res = await httpClient.sendRequest(req);
 
+    query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${
+      AzureDeployerService.apiVersion
+    }`;
+    url = UrlJoin(baseUrl, query);
+    req = this.createRequestObject(
+      url,
+      accessToken,
+      JSON.stringify(parameters)
+    );
+    let resChannel = await httpClient.sendRequest(req);
+
+    let key = (resChannel.bodyAsJson as any).properties.properties.sites[0].key;
+    return [appPassword, key];
+  }
+
+  private createRequestObject(url: string, accessToken: string, body) {
     let req = new WebResource();
     req.method = "PUT";
-    req.url = requestUrl;
+    req.url = url;
     req.headers = {};
     req.headers["Content-Type"] = "application/json";
     req.headers["accept-language"] = "*";
     req.headers["Authorization"] = "Bearer " + accessToken;
-
-    let requestContent = JSON.stringify(parameters);
-    req.body = requestContent;
-
-    let httpClient = new ServiceClient();
-    let res = await httpClient.sendRequest(req);
-
-    return JSON.parse(res.bodyAsJson as string);
+    req.body = body;
+    return req;
   }
 
   private async createLUISApp(
@@ -350,14 +387,14 @@ export class AzureDeployerService extends GBService {
     };
     let requestUrl = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/apps/`;
     let req = new WebResource();
-    
+
     req.method = "POST";
     req.url = requestUrl;
     req.headers = {};
     req.headers["Content-Type"] = "application/json";
     req.headers["accept-language"] = "*";
 
-    let authoringKey;
+    let authoringKey = GBConfigService.get("NLP_AUTHORING_KEY");
     let retriveAuthoringKey = () => {
       if (!authoringKey) {
         process.stdout.write(
@@ -378,7 +415,7 @@ export class AzureDeployerService extends GBService {
     let httpClient = new ServiceClient();
     let res = await httpClient.sendRequest(req);
 
-    return res.bodyAsText;
+    return res.bodyAsJson;
   }
 
   private async createSearch(group, name, location) {
@@ -540,6 +577,20 @@ export class AzureDeployerService extends GBService {
     return `sa${generated}`;
   }
 
+  private static getRndBotId() {
+    const passwordGenerator = new PasswordGenerator();
+    const options = {
+      upperCaseAlpha: false,
+      lowerCaseAlpha: true,
+      number: true,
+      specialCharacter: false,
+      minimumLength: 8,
+      maximumLength: 8
+    };
+    let generated = passwordGenerator.generatePassword(options);
+    return `${generated}`;
+  }
+
   private static getRndPassword() {
     const passwordGenerator = new PasswordGenerator();
     const options = {
@@ -548,7 +599,7 @@ export class AzureDeployerService extends GBService {
       number: true,
       specialCharacter: true,
       minimumLength: 8,
-      maximumLength: 8
+      maximumLength: 14
     };
     let password = passwordGenerator.generatePassword(options);
     return password;

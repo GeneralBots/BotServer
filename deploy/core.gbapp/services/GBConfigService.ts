@@ -36,7 +36,6 @@ import * as fs from "fs";
 "use strict";
 
 export class GBConfigService {
-
   static init(): any {
     try {
       require("dotenv-extended").load({
@@ -52,9 +51,8 @@ export class GBConfigService {
   }
 
   public writeEntry(name, value) {
-
     if (fs.exists) {
-      fs.appendFileSync('.env',`${name}=${value}`);
+      fs.appendFileSync(".env", `${name}=${value}`);
     }
   }
 
@@ -63,35 +61,48 @@ export class GBConfigService {
 
     if (!value) {
       switch (key) {
+        case "CLOUD_USERNAME":
+          value = undefined;
+          break;
+        case "CLOUD_PASSWORD":
+          value = undefined;
+          break;
+        case "CLOUD_SUBSCRIPTIONID":
+          value = undefined;
+          break;
+        case "CLOUD_LOCATION":
+          value = undefined;
+          break;
+        case "NLP_AUTHORING_KEY":
+          value = undefined;
+          break;
         case "STORAGE_DIALECT":
           value = "sqlite";
           break;
-
         case "STORAGE_STORAGE":
           value = "./guaribas.sqlite";
           break;
-
         case "ADDITIONAL_DEPLOY_PATH":
           value = undefined;
           break;
-
         case "STORAGE_SYNC":
+          value = "false";
+          break;
         case "STORAGE_SYNC_ALTER":
+          value = "false";
+          break;
         case "STORAGE_SYNC_FORCE":
           value = "false";
           break;
-
         case "STORAGE_LOGGING":
           value = "false";
           break;
-
         case "STORAGE_ENCRYPT":
           value = "true";
           break;
-
         default:
-          logger.info(
-            `Guaribas General Error: Invalid key on .env file: '${key}'`
+          logger.warn(
+            `Invalid key on .env file: '${key}'`
           );
           break;
       }

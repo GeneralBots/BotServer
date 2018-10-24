@@ -97,8 +97,9 @@ export class GBServer {
           
           // Ensures cloud / on-premises infrastructure is setup.
 
-          logger.info(`Connecting to the infrastructure...`);
+          logger.info(`Establishing a development local proxy...`);
           let proxyAddress = await core.ensureProxy();
+          logger.info(`Ensuring services availability...`);
           let cloudDeployer = await AzureDeployerService.ensureDeployer();
           let instance = await cloudDeployer.deployFarm('gbot', 'westus', proxyAddress);
           
