@@ -34,6 +34,7 @@
 
 const logger = require("../../../src/logger");
 import { Sequelize } from "sequelize-typescript";
+import * as fs from "fs";
 import { GBConfigService } from "./GBConfigService";
 import { IGBInstance, IGBCoreService } from "botlib";
 import { GuaribasInstance } from "../models/GBModel";
@@ -49,14 +50,6 @@ export class GBCoreService implements IGBCoreService {
     return GBConfigService.tryGet("STORAGE_DIALECT");
   }
 
-  async ensureCloud(cloudDeployer) {
-    let instance = new GuaribasInstance();
-    await cloudDeployer.deploy(instance, "westus");
-    instance.save();
-
-    let content = `STORAGE_HOST = ${instance.storageServer}\n
-    STORAGE_NAME, STORAGE_USERNAME, STORAGE_PASSWORD, STORAGE_DIALECT`;
-  }
   /**
    * Data access layer instance.
    */
@@ -91,7 +84,6 @@ export class GBCoreService implements IGBCoreService {
    * Constructor retrieves default values.
    */
   constructor() {
-    this.dialect = GBConfigService.get("STORAGE_DIALECT");
     this.adminService = new GBAdminService(this);
   }
 
@@ -101,6 +93,8 @@ export class GBCoreService implements IGBCoreService {
   async initDatabase() {
     return new Promise((resolve, reject) => {
       try {
+        this.dialect = GBConfigService.get("STORAGE_DIALECT");
+
         let host: string | undefined;
         let database: string | undefined;
         let username: string | undefined;
@@ -108,12 +102,14 @@ export class GBCoreService implements IGBCoreService {
         let storage: string | undefined;
 
         if (this.dialect === "mssql") {
-          host = GBConfigService.get("STORAGE_HOST");
+          host = GBConfigService.get("STORAGE_SERVER");
           database = GBConfigService.get("STORAGE_NAME");
           username = GBConfigService.get("STORAGE_USERNAME");
           password = GBConfigService.get("STORAGE_PASSWORD");
         } else if (this.dialect === "sqlite") {
           storage = GBConfigService.get("STORAGE_STORAGE");
+        } else {
+          reject(`Unknown dialect: ${this.dialect}.`);
         }
 
         let logging =
@@ -302,11 +298,29 @@ export class GBCoreService implements IGBCoreService {
     return GuaribasInstance.findOne(options);
   }
 
+  public async writeEnv(instance: IGBInstance) {
+    let env =
+      `ADMIN_PASS=${instance.adminPass}\n` +
+      `ADDITIONAL_DEPLOY_PATH=\n` +
+      `STORAGE_DIALECT=${instance.storageDialect}\n` +
+      `STORAGE_SERVER=${instance.storageServer}.database.windows.net\n` +
+      `STORAGE_NAME=${instance.storageName}\n` +
+      `STORAGE_USERNAME=${instance.storageUsername}\n` +
+      `STORAGE_PASSWORD=${instance.storagePassword}\n`+
+      `CLOUD_USERNAME=${instance.cloudUsername}\n` +
+      `CLOUD_PASSWORD=${instance.cloudPassword}\n` +
+      `CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}\n` +
+      `CLOUD_LOCATION=${instance.cloudLocation}\n` + 
+      `CLOUD_GROUP=${instance.botId}\n` + 
+      `NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}`;
+
+    fs.writeFileSync(".env", env);
+  }
+
   public async ensureProxy(): Promise<string> {
     let proxyAddress: string;
-    const ngrok = require('ngrok');
+    const ngrok = require("ngrok");
     return await ngrok.connect();
-    
 
     // let expiresOn = new Date(
     //   await this.adminService.getValue(0, "proxyExpiresOn")

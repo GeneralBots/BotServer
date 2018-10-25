@@ -53,7 +53,7 @@ import { GBCustomerSatisfactionPackage } from "../deploy/customer-satisfaction.g
 import { GBAdminService } from "../deploy/admin.gbapp/services/GBAdminService";
 import { GuaribasInstance } from "../deploy/core.gbapp/models/GBModel";
 import { AzureDeployerService } from "../deploy/azuredeployer.gbapp/services/AzureDeployerService";
-import { IGBPackage } from "botlib";
+import { IGBPackage, IGBInstance } from "botlib";
 
 let appPackages = new Array<IGBPackage>();
 
@@ -61,12 +61,9 @@ let appPackages = new Array<IGBPackage>();
  * General Bots open-core entry point.
  */
 export class GBServer {
-
   /**
    *  Program entry-point.
    */
-
-  static MASTERBOT_PREFIX = "generalbots-masterbot"
 
   static run() {
     // Creates a basic HTTP server that will serve several URL, one for each
@@ -85,6 +82,7 @@ export class GBServer {
       })
     );
 
+    let bootInstance: IGBInstance;
     server.listen(port, () => {
       (async () => {
         try {
@@ -94,21 +92,29 @@ export class GBServer {
 
           GBConfigService.init();
           let core = new GBCoreService();
-          
+
           // Ensures cloud / on-premises infrastructure is setup.
 
           logger.info(`Establishing a development local proxy...`);
           let proxyAddress = await core.ensureProxy();
-          logger.info(`Ensuring services availability...`);
-          let cloudDeployer = await AzureDeployerService.ensureDeployer();
-          let instance = await cloudDeployer.deployFarm('gbot', 'westus', proxyAddress);
-          
+
+          try {
+            await core.initDatabase();
+          } catch (error) {
+            logger.info(`Deploying cognitive infrastructure...`);
+            let azureDeployer = new AzureDeployerService();
+            bootInstance = await azureDeployer.deployFarm(proxyAddress);
+            core.writeEnv(bootInstance);
+            logger.info(`File .env written, starting...`);
+            GBConfigService.init();
+
+            await core.initDatabase();
+          }
+
           // TODO: Get .gb* templates from GitHub and download do additional deploy folder.
 
-          await core.initDatabase();
-
           // Check admin password.
-          
+
           let conversationalService = new GBConversationalService(core);
           let adminService = new GBAdminService(core);
           let password = GBConfigService.get("ADMIN_PASS");
@@ -138,28 +144,37 @@ export class GBServer {
 
           // Loads all bot instances from object storage, if it's formatted.
 
-          logger.info(`All instances are being now loaded...`);
+          logger.info(`Loading instances from storage...`);
           let instances: GuaribasInstance[];
           try {
             instances = await core.loadInstances();
           } catch (error) {
-            // Check if storage is empty and needs formatting.
+            if (error.parent.code === "ELOGIN") {
 
-            let isInvalidObject =
-              error.parent.number == 208 || error.parent.errno == 1; // MSSQL or SQLITE.
+              let azureDeployer = new AzureDeployerService();
+              let group = GBConfigService.get("CLOUD_GROUP")
+              let serverName = GBConfigService.get("STORAGE_SERVER").split(".database.windows.net")[0]
+              await azureDeployer.openStorageFirewall(group,serverName )
 
-            if (isInvalidObject) {
-              if (GBConfigService.get("STORAGE_SYNC") != "true") {
-                throw `Operating storage is out of sync or there is a storage connection error. Try setting STORAGE_SYNC to true in .env file. Error: ${
-                  error.message
-                }.`;
-              } else {
-                logger.info(
-                  `Storage is empty. After collecting storage structure from all .gbapps it will get synced.`
-                );
-              }
             } else {
-              throw `Cannot connect to operating storage: ${error.message}.`;
+              // Check if storage is empty and needs formatting.
+
+              let isInvalidObject =
+                error.parent.number == 208 || error.parent.errno == 1; // MSSQL or SQLITE.
+
+              if (isInvalidObject) {
+                if (GBConfigService.get("STORAGE_SYNC") != "true") {
+                  throw `Operating storage is out of sync or there is a storage connection error. Try setting STORAGE_SYNC to true in .env file. Error: ${
+                    error.message
+                  }.`;
+                } else {
+                  logger.info(
+                    `Storage is empty. After collecting storage structure from all .gbapps it will get synced.`
+                  );
+                }
+              } else {
+                throw `Cannot connect to operating storage: ${error.message}.`;
+              }
             }
           }
 
@@ -172,10 +187,10 @@ export class GBServer {
           // If instances is undefined here it's because storage has been formatted.
           // Load all instances from .gbot found on deploy package directory.
           if (!instances) {
+            let saveInstance = new GuaribasInstance(bootInstance);
+            saveInstance.save();
             instances = await core.loadInstances();
           }
-
-          await core.ensureCloud(cloudDeployer);
 
           // Setup server dynamic (per bot instance) resources and listeners.
 

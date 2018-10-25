@@ -50,12 +50,6 @@ export class GBConfigService {
     }
   }
 
-  public writeEntry(name, value) {
-    if (fs.exists) {
-      fs.appendFileSync(".env", `${name}=${value}`);
-    }
-  }
-
   static get(key: string): string | undefined {
     let value = GBConfigService.tryGet(key);
 
@@ -77,7 +71,7 @@ export class GBConfigService {
           value = undefined;
           break;
         case "STORAGE_DIALECT":
-          value = "sqlite";
+          value = undefined;
           break;
         case "STORAGE_STORAGE":
           value = "./guaribas.sqlite";

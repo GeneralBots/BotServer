@@ -42,12 +42,12 @@ import { SqlManagementClient } from "azure-arm-sql";
 import { CognitiveServicesManagementClient } from "azure-arm-cognitiveservices";
 import { CognitiveServicesAccount } from "azure-arm-cognitiveservices/lib/models";
 import { SearchManagementClient } from "azure-arm-search";
-import { WebResource, ServiceClient } from "ms-rest-js";
+import { WebResource, ServiceClient, HttpMethods } from "ms-rest-js";
 import * as simplegit from "simple-git/promise";
 import { AppServicePlan } from "azure-arm-website/lib/models";
 import { GBConfigService } from "../../../deploy/core.gbapp/services/GBConfigService";
 
-const Spinner = require('cli-spinner').Spinner;
+const Spinner = require("cli-spinner").Spinner;
 const scanf = require("scanf");
 const msRestAzure = require("ms-rest-azure");
 const git = simplegit();
@@ -56,6 +56,7 @@ const UrlJoin = require("url-join");
 const PasswordGenerator = require("strict-password-generator").default;
 const iconUrl =
   "https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png";
+const publicIp = require("public-ip");
 
 export class AzureDeployerService extends GBService {
   instance: IGBInstance;
@@ -70,9 +71,279 @@ export class AzureDeployerService extends GBService {
   location: string;
   public subscriptionId: string;
   static apiVersion = "2017-12-01";
+  farmName: any;
 
-  constructor(credentials, subscriptionId, location) {
-    super();
+  public static async getSubscriptions(credentials) {
+    let subscriptionClient = new SubscriptionClient.default(credentials);
+    return subscriptionClient.subscriptions.list();
+  }
+
+  public async deployFarm(proxyAddress: string): Promise<IGBInstance> {
+    let culture = "en-us";
+
+    // Tries do get information from .env file otherwise asks in command-line.
+    let instance: IGBInstance = {};
+    instance = await this.ensureConfiguration(instance);
+
+    let spinner = new Spinner("%s");
+    spinner.start();
+    spinner.setSpinnerString("|/-\\");
+
+    let keys: any;
+    let name = instance.botId;
+
+    logger.info(`Deploying Deploy Group (It may take a few minutes)...`);
+    await this.createDeployGroup(name, instance.cloudLocation);
+
+    logger.info(`Deploying Bot Server...`);
+    let serverFarm = await this.createHostingPlan(
+      name,
+      `${name}-server-plan`,
+      instance.cloudLocation
+    );
+    await this.createServer(
+      serverFarm.id,
+      name,
+      `${name}-server`,
+      instance.cloudLocation
+    );
+
+    let administratorLogin = AzureDeployerService.getRndAdminAccount();
+    let administratorPassword = AzureDeployerService.getRndPassword();
+
+    logger.info(`Deploying Bot Storage...`);
+    let storageServer = `${name}-storage-server`;
+    let storageName = `${name}-storage`;
+    await this.createStorageServer(
+      name,
+      storageServer,
+      administratorLogin,
+      administratorPassword,
+      storageServer,
+      instance.cloudLocation
+    );
+
+    await this.createStorage(
+      name,
+      storageServer,
+      storageName,
+      instance.cloudLocation
+    );
+    instance.storageUsername = administratorLogin;
+    instance.storagePassword = administratorPassword;
+    instance.storageName = storageName;
+    instance.storageDialect = "mssql";
+    instance.storageServer = storageServer;
+
+    logger.info(`Deploying Search...`);
+    let searchName = `${name}-search`;
+    await this.createSearch(name, searchName, instance.cloudLocation);
+    let searchKeys = await this.searchClient.queryKeys.listBySearchService(
+      name,
+      searchName
+    );
+    instance.searchHost = `${searchName}.search.windows.net`;
+    instance.searchIndex = "azuresql-index";
+    instance.searchIndexer = "azuresql-indexer";
+    instance.searchKey = searchKeys[0].key;
+
+    logger.info(`Deploying Speech...`);
+    let speech = await this.createSpeech(
+      name,
+      `${name}-speech`,
+      instance.cloudLocation
+    );
+    keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
+    instance.speechKeyEndpoint = speech.endpoint;
+    instance.speechKey = keys.key1;
+
+    logger.info(`Deploying SpellChecker...`);
+    let spellChecker = await this.createSpellChecker(
+      name,
+      `${name}-spellchecker`,
+      instance.cloudLocation
+    );
+    keys = await this.cognitiveClient.accounts.listKeys(
+      name,
+      spellChecker.name
+    );
+    instance.spellCheckerKey = keys.key1;
+    instance.spellCheckerEndpoint = spellChecker.endpoint;
+
+    logger.info(`Deploying Text Analytics...`);
+    let textAnalytics = await this.createTextAnalytics(
+      name,
+      `${name}-textanalytics`,
+      instance.cloudLocation
+    );
+    keys = await this.cognitiveClient.accounts.listKeys(
+      name,
+      textAnalytics.name
+    );
+    instance.textAnalyticsEndpoint = textAnalytics.endpoint;
+    instance.textAnalyticsKey = keys.key1;
+
+    logger.info(`Deploying NLP...`);
+    let nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
+    keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
+    let nlpAppId = await this.createLUISApp(
+      name,
+      name,
+      instance.cloudLocation,
+      culture,
+      instance.nlpAuthoringKey
+    );
+    let appId = msRestAzure.generateUuid();
+    instance.nlpEndpoint = nlp.endpoint;
+    instance.nlpKey = keys.key1;
+    instance.nlpAppId = nlpAppId;
+
+    logger.info(`Deploying Bot...`);
+    instance = await this.deployBootBot(
+      instance,
+      name,
+      `${proxyAddress}/api/messages/${name}`,
+      null,
+      null,
+      instance.cloudSubscriptionId,
+      appId
+    );
+
+    spinner.stop();
+    return instance;
+  }
+
+  public async openStorageFirewall(groupName, serverName) {
+    let username = GBConfigService.get("CLOUD_USERNAME");
+    let password = GBConfigService.get("CLOUD_PASSWORD");
+    let subscriptionId = GBConfigService.get("CLOUD_SUBSCRIPTIONID");
+
+    let credentials = await msRestAzure.loginWithUsernamePassword(
+      username,
+      password
+    );
+
+    let ip = await publicIp.v4();
+
+    let params = {
+      startIpAddress: ip,
+      endIpAddress: ip
+    };
+
+    let storageClient = new SqlManagementClient(credentials, subscriptionId);
+    await storageClient.firewallRules.createOrUpdate(
+      groupName,
+      serverName,
+      "gb",
+      params
+    );
+  }
+
+  private async ensureConfiguration(instance: IGBInstance) {
+    let username = GBConfigService.get("CLOUD_USERNAME");
+    let password = GBConfigService.get("CLOUD_PASSWORD");
+    let subscriptionId = GBConfigService.get("CLOUD_SUBSCRIPTIONID");
+    let location = GBConfigService.get("CLOUD_LOCATION");
+    let botId = GBConfigService.get("BOT_ID");
+
+    // No .env so asks for cloud credentials to start a new farm.
+    if (!username || !password || !subscriptionId || !location || !botId) {
+      process.stdout.write(
+        "A empty enviroment is detected. Please, enter details:"
+      );
+    }
+    let retriveUsername = () => {
+      if (!username) {
+        process.stdout.write("CLOUD_USERNAME:");
+        username = scanf("%s");
+      }
+    };
+    let retrivePassword = () => {
+      if (!password) {
+        process.stdout.write("CLOUD_PASSWORD:");
+        password = scanf("%s");
+      }
+    };
+    let retrieveBotId = () => {
+      if (!botId) {
+        process.stdout.write(
+          "Bot Id must only contain lowercase letters, digits or dashes, cannot start or end with or contain consecutive dashes and is limited to 60 characters.\n"
+        );
+        process.stdout.write("BOT_ID:");
+        botId = scanf("%s");
+      }
+    };
+    let authoringKey = GBConfigService.get("NLP_AUTHORING_KEY");
+    let retriveAuthoringKey = () => {
+      if (!authoringKey) {
+        process.stdout.write(
+          "Due to this opened issue: https://github.com/Microsoft/botbuilder-tools/issues/550\n"
+        );
+        process.stdout.write("Please enter your LUIS Authoring Key:");
+        authoringKey = scanf("%s");
+      }
+    };
+    while (!authoringKey) {
+      retriveAuthoringKey();
+    }
+    while (!botId) {
+      retrieveBotId();
+    }
+    while (!username) {
+      retriveUsername();
+    }
+    while (!password) {
+      retrivePassword();
+    }
+
+    // Connects to the cloud and retrives subscriptions.
+
+    let credentials = await msRestAzure.loginWithUsernamePassword(
+      username,
+      password
+    );
+    if (!subscriptionId) {
+      let map = {};
+      let index = 1;
+      let list = await AzureDeployerService.getSubscriptions(credentials);
+      list.forEach(element => {
+        console.log(
+          `${index}: ${element.displayName} (${element.subscriptionId})`
+        );
+        map[index++] = element;
+      });
+      let subscriptionIndex;
+      let retrieveSubscription = () => {
+        if (!subscriptionIndex) {
+          process.stdout.write("CLOUD_SUBSCRIPTIONID (type a number):");
+          subscriptionIndex = scanf("%d");
+        }
+      };
+      while (!subscriptionIndex) {
+        retrieveSubscription();
+      }
+      subscriptionId = map[subscriptionIndex].subscriptionId;
+    }
+    let retriveLocation = () => {
+      if (!location) {
+        process.stdout.write("CLOUD_LOCATION:");
+        location = scanf("%s");
+      }
+    };
+    while (!location) {
+      retriveLocation();
+    }
+
+    // Prepares the first instance on bot farm.
+
+    instance.botId = botId;
+    instance.cloudUsername = username;
+    instance.cloudPassword = password;
+    instance.cloudSubscriptionId = subscriptionId;
+    instance.cloudLocation = location;
+    instance.nlpAuthoringKey = authoringKey;
+    instance.adminPass = AzureDeployerService.getRndPassword();
+
     this.resourceClient = new ResourceManagementClient.default(
       credentials,
       subscriptionId
@@ -86,134 +357,9 @@ export class AzureDeployerService extends GBService {
       credentials,
       subscriptionId
     );
+
     this.searchClient = new SearchManagementClient(credentials, subscriptionId);
     this.accessToken = credentials.tokenCache._entries[0].accessToken;
-    this.location = location;
-    this.subscriptionId = subscriptionId;
-  }
-
-  public static async getSubscriptions(credentials) {
-    let subscriptionClient = new SubscriptionClient.default(credentials);
-    return subscriptionClient.subscriptions.list();
-  }
-
-  public async deployFarm(
-    name: string,
-    location: string,
-    proxyAddress: string
-  ): Promise<IGBInstance> {
-    let instance: any = {};
-    let culture = "en-us";
-
-    let spinner = new Spinner('%s');
-    spinner.start();
-    spinner.setSpinnerString("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈");
-
-    let keys: any;
-
-    logger.info(`Deploying Deploy Group...`);
-    await this.createDeployGroup(name, location);
-
-    logger.info(`Deploying Bot Server...`);
-    let serverFarm = await this.createHostingPlan(
-      name,
-      `${name}-server-plan`,
-      location
-    );
-    await this.createServer(serverFarm.id, name, `${name}-server`, location);
-
-    let administratorLogin = AzureDeployerService.getRndAdminAccount();
-    let administratorPassword = AzureDeployerService.getRndPassword();
-
-    logger.info(`Deploying Bot Storage...`);
-    let storageServerName = `${name}-storage-server`;
-    await this.createStorageServer(
-      name,
-      storageServerName,
-      administratorLogin,
-      administratorPassword,
-      storageServerName,
-      location
-    );
-
-    await this.createStorage(
-      name,
-      storageServerName,
-      `${name}-storage`,
-      location
-    );
-    instance.storageUsername = administratorLogin;
-    instance.storagePassword = administratorPassword;
-    instance.storageName = storageServerName;
-    instance.storageDialect = "mssql";
-    instance.storageServerName = storageServerName;
-
-    logger.info(`Deploying Search...`);
-    let searchName = `${name}-search`;
-
-    await this.createSearch(name, searchName, location);
-    let searchKeys = await this.searchClient.queryKeys.listBySearchService(
-      name,
-      searchName
-    );
-    instance.searchHost = `${searchName}.search.windows.net`;
-    instance.searchIndex = "azuresql-index";
-    instance.searchIndexer = "azuresql-indexer";
-    instance.searchKey = searchKeys[0].key;
-
-    logger.info(`Deploying NLP...`);
-    let nlp = await this.createNLP(name, `${name}-nlp`, location);
-    keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
-    let nlpAppId = await this.createLUISApp(name, name, location, culture);
-    instance.nlpEndpoint = nlp.endpoint;
-    instance.nlpKey = keys.key1;
-    instance.nlpAppId = nlpAppId;
-
-    logger.info(`Deploying Speech...`);
-    let speech = await this.createSpeech(name, `${name}-speech`, location);
-    keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
-    instance.speechKeyEndpoint = speech.endpoint;
-    instance.speechKey = keys.key1;
-
-    logger.info(`Deploying SpellChecker...`);
-    let spellChecker = await this.createSpellChecker(
-      name,
-      `${name}-spellchecker`,
-      location
-    );
-    keys = await this.cognitiveClient.accounts.listKeys(
-      name,
-      spellChecker.name
-    );
-    instance.spellCheckerKey = keys.key1;
-    instance.spellCheckerEndpoint = spellChecker.endpoint;
-
-    logger.info(`Deploying Text Analytics...`);
-    let textAnalytics = await this.createTextAnalytics(
-      name,
-      `${name}-textanalytics`,
-      location
-    );
-    keys = await this.cognitiveClient.accounts.listKeys(
-      name,
-      textAnalytics.name
-    );
-    instance.textAnalyticsEndpoint = textAnalytics.endpoint;
-    instance.textAnalyticsKey = keys.key1;
-
-    let appId = msRestAzure.generateUuid();
-    logger.info(`Deploying Bot...`);
-    instance = await this.deployBootBot(
-      instance,
-      name,
-      `${proxyAddress}/api/messages/${name}`,
-      nlpAppId,
-      keys.key1,
-      this.subscriptionId,
-      appId
-    );
-
-    spinner.stop();
 
     return instance;
   }
@@ -227,10 +373,7 @@ export class AzureDeployerService extends GBService {
     subscriptionId,
     appId
   ) {
-    logger.info(`Deploying Bot...`);
-
     let botId = name + AzureDeployerService.getRndBotId();
-
     [
       instance.marketplacePassword,
       instance.webchatKey
@@ -378,44 +521,59 @@ export class AzureDeployerService extends GBService {
     name: string,
     description: string,
     location: string,
-    culture: string
+    culture: string,
+    authoringKey: string
   ) {
     let parameters = {
       name: name,
       description: description,
       culture: culture
     };
-    let requestUrl = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/apps/`;
-    let req = new WebResource();
 
-    req.method = "POST";
-    req.url = requestUrl;
+    let body = JSON.stringify(parameters);
+    let apps = await this.makeNlpRequest(
+      location,
+      authoringKey,
+      null,
+      "GET",
+      "apps"
+    );
+    let app = (apps.bodyAsJson as any).filter(x => x.name == name)[0];
+    let id: string;
+    if (!app) {
+      let res = await this.makeNlpRequest(
+        location,
+        authoringKey,
+        body,
+        "POST",
+        "apps"
+      );
+      id = res.bodyAsText;
+    } else {
+      id = app.id;
+    }
+
+    return id;
+  }
+
+  private async makeNlpRequest(
+    location: string,
+    authoringKey: string,
+    body: string,
+    method: HttpMethods,
+    resource: string
+  ) {
+    let req = new WebResource();
+    req.method = method;
+    req.url = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/${resource}`;
     req.headers = {};
     req.headers["Content-Type"] = "application/json";
     req.headers["accept-language"] = "*";
-
-    let authoringKey = GBConfigService.get("NLP_AUTHORING_KEY");
-    let retriveAuthoringKey = () => {
-      if (!authoringKey) {
-        process.stdout.write(
-          "Due to this opened issue: https://github.com/Microsoft/botbuilder-tools/issues/550\n"
-        );
-        process.stdout.write("Please enter your LUIS Authoring Key:");
-        authoringKey = scanf("%s");
-      }
-    };
-
-    while (!authoringKey) {
-      retriveAuthoringKey();
-    }
-
     req.headers["Ocp-Apim-Subscription-Key"] = authoringKey;
-    req.body = JSON.stringify(parameters);
-
+    req.body = body;
     let httpClient = new ServiceClient();
     let res = await httpClient.sendRequest(req);
-
-    return res.bodyAsJson;
+    return res;
   }
 
   private async createSearch(group, name, location) {
@@ -598,95 +756,11 @@ export class AzureDeployerService extends GBService {
       lowerCaseAlpha: true,
       number: true,
       specialCharacter: true,
-      minimumLength: 8,
+      minimumLength: 12,
       maximumLength: 14
     };
     let password = passwordGenerator.generatePassword(options);
     return password;
-  }
-
-  static async ensureDeployer() {
-    // Tries do get information from .env file otherwise asks in command-line.
-
-    let username = GBConfigService.get("CLOUD_USERNAME");
-    let password = GBConfigService.get("CLOUD_PASSWORD");
-    let subscriptionId = GBConfigService.get("CLOUD_SUBSCRIPTIONID");
-    let location = GBConfigService.get("CLOUD_LOCATION");
-
-    // No .env so asks for cloud credentials to start a new farm.
-
-    if (!username || !password || !subscriptionId || !location) {
-      process.stdout.write(
-        "FIRST RUN: A empty enviroment is detected. Please, enter credentials to create a new General Bots Farm."
-      );
-    }
-
-    let retriveUsername = () => {
-      if (!username) {
-        process.stdout.write("CLOUD_USERNAME:");
-        username = scanf("%s");
-      }
-    };
-
-    let retrivePassword = () => {
-      if (!password) {
-        process.stdout.write("CLOUD_PASSWORD:");
-        password = scanf("%s");
-      }
-    };
-
-    while (!username) {
-      retriveUsername();
-    }
-
-    while (!password) {
-      retrivePassword();
-    }
-
-    // Connects to the cloud and retrives subscriptions.
-
-    let credentials = await msRestAzure.loginWithUsernamePassword(
-      username,
-      password
-    );
-
-    if (!subscriptionId) {
-      let map = {};
-      let index = 1;
-      let list = await AzureDeployerService.getSubscriptions(credentials);
-      list.forEach(element => {
-        console.log(
-          `${index}: ${element.displayName} (${element.subscriptionId})`
-        );
-        map[index++] = element;
-      });
-
-      let subscriptionIndex;
-      let retrieveSubscription = () => {
-        if (!subscriptionIndex) {
-          process.stdout.write("CLOUD_SUBSCRIPTIONID (type a number):");
-          subscriptionIndex = scanf("%d");
-        }
-      };
-
-      while (!subscriptionIndex) {
-        retrieveSubscription();
-      }
-      subscriptionId = map[subscriptionIndex].subscriptionId;
-    }
-
-    let retriveLocation = () => {
-      if (!location) {
-        process.stdout.write("CLOUD_LOCATION:");
-        location = scanf("%s");
-      }
-    };
-
-    while (!location) {
-      retriveLocation();
-    }
-
-    return new AzureDeployerService(credentials, subscriptionId, location);
   }
 
   static getKBSearchSchema(indexName) {

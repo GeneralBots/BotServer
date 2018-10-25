@@ -121,9 +121,15 @@ export class GuaribasInstance extends Model<GuaribasInstance>
 
   @Column
   cloudSubscriptionId: string;
+  
+  @Column
+  cloudUsername: string;
 
   @Column
-  cloudRegion: string;
+  cloudPassword: string;
+
+  @Column
+  cloudLocation: string;
 
   @Column
   whatsappBotKey: string;
@@ -181,6 +187,12 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   nlpEndpoint: string;
 
   @Column
+  nlpAuthoringKey: string;
+  
+  @Column
+  deploymentPaths: string;
+
+  @Column
   searchHost: string;
 
   @Column
@@ -209,6 +221,9 @@ export class GuaribasInstance extends Model<GuaribasInstance>
 
   @Column
   storagePath: string;
+
+  @Column
+  adminPass: string;
 
   /* Settings section of bot.json */
 
