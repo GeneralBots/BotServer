@@ -58,6 +58,9 @@ export class GBConfigService {
         case "CLOUD_USERNAME":
           value = undefined;
           break;
+        case "BOT_ID":
+          value = undefined;
+          break;
         case "CLOUD_PASSWORD":
           value = undefined;
           break;

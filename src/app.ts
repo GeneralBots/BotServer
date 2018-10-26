@@ -102,8 +102,13 @@ export class GBServer {
             await core.initDatabase();
           } catch (error) {
             logger.info(`Deploying cognitive infrastructure...`);
-            let azureDeployer = new AzureDeployerService();
-            bootInstance = await azureDeployer.deployFarm(proxyAddress);
+            try {
+              let azureDeployer = new AzureDeployerService();
+              bootInstance = await azureDeployer.deployFarm(proxyAddress);
+            } catch (error) {
+              logger.warn("Error while deploying to the cloud, please, cleanup any objects created before running again.")
+              throw error;
+            }
             core.writeEnv(bootInstance);
             logger.info(`File .env written, starting...`);
             GBConfigService.init();

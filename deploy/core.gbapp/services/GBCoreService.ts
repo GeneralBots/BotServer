@@ -307,6 +307,7 @@ export class GBCoreService implements IGBCoreService {
       `STORAGE_NAME=${instance.storageName}\n` +
       `STORAGE_USERNAME=${instance.storageUsername}\n` +
       `STORAGE_PASSWORD=${instance.storagePassword}\n`+
+      `STORAGE_SYNC=true\n`+
       `CLOUD_USERNAME=${instance.cloudUsername}\n` +
       `CLOUD_PASSWORD=${instance.cloudPassword}\n` +
       `CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}\n` +

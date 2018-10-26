@@ -249,7 +249,7 @@ export class AzureDeployerService extends GBService {
     // No .env so asks for cloud credentials to start a new farm.
     if (!username || !password || !subscriptionId || !location || !botId) {
       process.stdout.write(
-        "A empty enviroment is detected. Please, enter details:"
+        "A empty enviroment is detected. To start automatic deploy, please enter some information:\n"
       );
     }
     let retriveUsername = () => {
@@ -366,22 +366,19 @@ export class AzureDeployerService extends GBService {
 
   public async deployBootBot(
     instance,
-    name,
+    botId,
     endpoint,
     nlpAppId,
     nlpKey,
     subscriptionId,
     appId
   ) {
-    let botId = name + AzureDeployerService.getRndBotId();
-    [
-      instance.marketplacePassword,
-      instance.webchatKey
-    ] = await this.internalDeployBot(
+     await this.internalDeployBot(
+       instance,
       this.accessToken,
       botId,
-      name,
-      name,
+      botId,
+      botId,
       "General BootBot",
       endpoint,
       "global",
@@ -394,10 +391,6 @@ export class AzureDeployerService extends GBService {
     instance.botId = botId;
 
     return instance;
-  }
-
-  private async dangerouslyDeleteDeploy(name) {
-    return await this.resourceClient.resourceGroups.deleteMethod(name);
   }
 
   private async createStorageServer(
@@ -440,7 +433,7 @@ export class AzureDeployerService extends GBService {
   /**
    * @see https://github.com/Azure/azure-rest-api-specs/blob/master/specification/botservice/resource-manager/Microsoft.BotService/preview/2017-12-01/botservice.json
    */
-  private async internalDeployBot(
+  private async internalDeployBot(instance,
     accessToken,
     botId,
     name,
@@ -453,56 +446,67 @@ export class AzureDeployerService extends GBService {
     subscriptionId,
     appId
   ) {
-    let baseUrl = `https://management.azure.com/`;
-    await this.registerProviders(subscriptionId, baseUrl, accessToken);
+    return new Promise(async (resolve, reject) => {
+      let baseUrl = `https://management.azure.com/`;
+      await this.registerProviders(subscriptionId, baseUrl, accessToken);
 
-    let appPassword = AzureDeployerService.getRndPassword();
+      let appPassword = AzureDeployerService.getRndPassword();
 
-    let parameters = {
-      location: location,
-      sku: {
-        name: "F0"
-      },
-      name: botId,
-      kind: "sdk",
-      properties: {
-        description: description,
-        displayName: name,
-        endpoint: endpoint,
-        iconUrl: iconUrl,
-        luisAppIds: [nlpAppId],
-        luisKey: nlpKey,
-        msaAppId: appId,
-        msaAppPassword: appPassword
-      }
-    };
+      let parameters = {
+        location: location,
+        sku: {
+          name: "F0"
+        },
+        name: botId,
+        kind: "sdk",
+        properties: {
+          description: description,
+          displayName: name,
+          endpoint: endpoint,
+          iconUrl: iconUrl,
+          luisAppIds: [nlpAppId],
+          luisKey: nlpKey,
+          msaAppId: appId,
+          msaAppPassword: appPassword
+        }
+      };
 
-    let httpClient = new ServiceClient();
+      let httpClient = new ServiceClient();
 
-    let query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
-      this.provider
-    }/botServices/${botId}?api-version=${AzureDeployerService.apiVersion}`;
-    let url = UrlJoin(baseUrl, query);
-    let req = this.createRequestObject(
-      url,
-      accessToken,
-      JSON.stringify(parameters)
-    );
-    let res = await httpClient.sendRequest(req);
+      let query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
+        this.provider
+      }/botServices/${botId}?api-version=${AzureDeployerService.apiVersion}`;
+      let url = UrlJoin(baseUrl, query);
+      let req = this.createRequestObject(
+        url,
+        accessToken,
+        JSON.stringify(parameters)
+      );
+      let res = await httpClient.sendRequest(req);
 
-    query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${
-      AzureDeployerService.apiVersion
-    }`;
-    url = UrlJoin(baseUrl, query);
-    req = this.createRequestObject(
-      url,
-      accessToken,
-      JSON.stringify(parameters)
-    );
-    let resChannel = await httpClient.sendRequest(req);
+      setTimeout(async () => {
+        query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${
+          AzureDeployerService.apiVersion
+        }`;
+        url = UrlJoin(baseUrl, query);
+        req = this.createRequestObject(
+          url,
+          accessToken,
+          JSON.stringify(parameters)
+        );
+        let resChannel = await httpClient.sendRequest(req);
 
-    let key = (resChannel.bodyAsJson as any).properties.properties.sites[0].key;
-    return [appPassword, key];
+        console.log(resChannel.bodyAsText);
+        let key = (resChannel.bodyAsJson as any).properties.properties.sites[0]
+          .key;
+
+          instance.marketplacePassword = appPassword
+          instance.webchatKey = key
+
+          resolve(instance)
+    
+      }, 10000);
+    });
   }
 
   private createRequestObject(url: string, accessToken: string, body) {
@@ -735,20 +739,6 @@ export class AzureDeployerService extends GBService {
     return `sa${generated}`;
   }
 
-  private static getRndBotId() {
-    const passwordGenerator = new PasswordGenerator();
-    const options = {
-      upperCaseAlpha: false,
-      lowerCaseAlpha: true,
-      number: true,
-      specialCharacter: false,
-      minimumLength: 8,
-      maximumLength: 8
-    };
-    let generated = passwordGenerator.generatePassword(options);
-    return `${generated}`;
-  }
-
   private static getRndPassword() {
     const passwordGenerator = new PasswordGenerator();
     const options = {
@@ -760,6 +750,7 @@ export class AzureDeployerService extends GBService {
       maximumLength: 14
     };
     let password = passwordGenerator.generatePassword(options);
+    password = password.replace("=", "");
     return password;
   }
 
