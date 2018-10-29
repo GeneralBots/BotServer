@@ -307,9 +307,7 @@ export class GBMinService {
     const storage = new MemoryStorage();
     const conversationState = new ConversationState(storage);
     const userState = new UserState(storage);
-    //const botState = new BotState(storage);
-    // TODO: adapter.use();
-
+    
     // The minimal bot is built here.
 
     let min = new GBMinInstance();

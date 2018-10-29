@@ -306,59 +306,21 @@ export class GBCoreService implements IGBCoreService {
       `STORAGE_SERVER=${instance.storageServer}.database.windows.net\n` +
       `STORAGE_NAME=${instance.storageName}\n` +
       `STORAGE_USERNAME=${instance.storageUsername}\n` +
-      `STORAGE_PASSWORD=${instance.storagePassword}\n`+
-      `STORAGE_SYNC=true\n`+
+      `STORAGE_PASSWORD=${instance.storagePassword}\n` +
+      `STORAGE_SYNC=true\n` +
       `CLOUD_USERNAME=${instance.cloudUsername}\n` +
       `CLOUD_PASSWORD=${instance.cloudPassword}\n` +
       `CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}\n` +
-      `CLOUD_LOCATION=${instance.cloudLocation}\n` + 
-      `CLOUD_GROUP=${instance.botId}\n` + 
+      `CLOUD_LOCATION=${instance.cloudLocation}\n` +
+      `CLOUD_GROUP=${instance.botId}\n` +
       `NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}`;
 
     fs.writeFileSync(".env", env);
   }
 
-  public async ensureProxy(): Promise<string> {
+  public async ensureProxy(port): Promise<string> {
     let proxyAddress: string;
     const ngrok = require("ngrok");
-    return await ngrok.connect();
-
-    // let expiresOn = new Date(
-    //   await this.adminService.getValue(0, "proxyExpiresOn")
-    // );
-    // let proxyAddress;
-    // if (expiresOn.getTime() > new Date().getTime()) {
-    //   proxyAddress = await this.adminService.getValue(
-    //     GBAdminService.masterBotInstanceId,
-    //     "proxyAddress"
-    //   );
-    //   return Promise.resolve(proxyAddress);
-    // } else {
-    // if (await processExists("ngrok.exe")) {
-    //   logger.warn("ngrok is already running.");
-    // } else {
-    //   const { exec } = require("child_process");
-    //   const child = exec(
-    //     "node_modules\\ngrok\\bin\\ngrok http 4242",
-    //     (error, stdout, stderr) => {
-    //       console.log(`child stdout:\n${stdout}`);
-    //     }
-    //   );
-    // }
-
-    // await this.adminService.setValue(
-    //   GBAdminService.masterBotInstanceId,
-    //   "proxyAddress",
-    //   proxyAddress
-    // );
-    // let now = new Date();
-    // let expiresOn = now.setHours(now.getHours());
-    // await this.adminService.setValue(
-    //   GBAdminService.masterBotInstanceId,
-    //   "proxyExpiresOn",
-    //   expiresOn.toString()
-    // );
-    return Promise.resolve(proxyAddress);
-    // }
+    return await ngrok.connect({port:port});
   }
 }

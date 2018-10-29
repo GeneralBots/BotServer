@@ -96,17 +96,20 @@ export class GBServer {
           // Ensures cloud / on-premises infrastructure is setup.
 
           logger.info(`Establishing a development local proxy...`);
-          let proxyAddress = await core.ensureProxy();
+          let proxyAddress = await core.ensureProxy(port);
+
+          let azureDeployer = new AzureDeployerService();
 
           try {
             await core.initDatabase();
           } catch (error) {
             logger.info(`Deploying cognitive infrastructure...`);
             try {
-              let azureDeployer = new AzureDeployerService();
               bootInstance = await azureDeployer.deployFarm(proxyAddress);
             } catch (error) {
-              logger.warn("Error while deploying to the cloud, please, cleanup any objects created before running again.")
+              logger.warn(
+                "Error while deploying to the cloud, please, cleanup any objects created before running again."
+              );
               throw error;
             }
             core.writeEnv(bootInstance);
@@ -153,14 +156,23 @@ export class GBServer {
           let instances: GuaribasInstance[];
           try {
             instances = await core.loadInstances();
+            let instance = instances[0];
+            if (process.env.NODE_ENV === "development") {
+              logger.info(`Updating bots proxies...`);
+
+              await azureDeployer.updateBotProxy(
+                instance.botId,
+                instance.botId,
+                `${proxyAddress}/api/messages/${instance.botId}`
+              );
+            }
           } catch (error) {
             if (error.parent.code === "ELOGIN") {
-
-              let azureDeployer = new AzureDeployerService();
-              let group = GBConfigService.get("CLOUD_GROUP")
-              let serverName = GBConfigService.get("STORAGE_SERVER").split(".database.windows.net")[0]
-              await azureDeployer.openStorageFirewall(group,serverName )
-
+              let group = GBConfigService.get("CLOUD_GROUP");
+              let serverName = GBConfigService.get("STORAGE_SERVER").split(
+                ".database.windows.net"
+              )[0];
+              await azureDeployer.openStorageFirewall(group, serverName);
             } else {
               // Check if storage is empty and needs formatting.
 

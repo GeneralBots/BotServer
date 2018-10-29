@@ -43,7 +43,7 @@ export class GBAdminService {
   static masterBotInstanceId = 0;
 
   public static StrongRegex = new RegExp(
-    "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})"
+    "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*\+_\-])(?=.{8,})"
   );
 
   core: IGBCoreService;

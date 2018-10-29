@@ -255,22 +255,22 @@ export class AzureDeployerService extends GBService {
     let retriveUsername = () => {
       if (!username) {
         process.stdout.write("CLOUD_USERNAME:");
-        username = scanf("%s");
+        username = scanf("%s").replace(/(\n|\r)+$/, "");
       }
     };
     let retrivePassword = () => {
       if (!password) {
         process.stdout.write("CLOUD_PASSWORD:");
-        password = scanf("%s");
+        password = scanf("%s").replace(/(\n|\r)+$/, "");
       }
     };
     let retrieveBotId = () => {
       if (!botId) {
         process.stdout.write(
-          "Bot Id must only contain lowercase letters, digits or dashes, cannot start or end with or contain consecutive dashes and is limited to 60 characters.\n"
+          "Bot Id must only contain lowercase letters, digits or dashes, cannot start or end with or contain consecutive dashes and is limited from 4 to 42 characters long.\n"
         );
         process.stdout.write("BOT_ID:");
-        botId = scanf("%s");
+        botId = scanf("%s").replace(/(\n|\r)+$/, "");
       }
     };
     let authoringKey = GBConfigService.get("NLP_AUTHORING_KEY");
@@ -280,7 +280,7 @@ export class AzureDeployerService extends GBService {
           "Due to this opened issue: https://github.com/Microsoft/botbuilder-tools/issues/550\n"
         );
         process.stdout.write("Please enter your LUIS Authoring Key:");
-        authoringKey = scanf("%s");
+        authoringKey = scanf("%s").replace(/(\n|\r)+$/, "");
       }
     };
     while (!authoringKey) {
@@ -326,7 +326,7 @@ export class AzureDeployerService extends GBService {
     }
     let retriveLocation = () => {
       if (!location) {
-        process.stdout.write("CLOUD_LOCATION:");
+        process.stdout.write("CLOUD_LOCATION (eg. 'westus'):");
         location = scanf("%s");
       }
     };
@@ -373,8 +373,8 @@ export class AzureDeployerService extends GBService {
     subscriptionId,
     appId
   ) {
-     await this.internalDeployBot(
-       instance,
+    await this.internalDeployBot(
+      instance,
       this.accessToken,
       botId,
       botId,
@@ -433,7 +433,8 @@ export class AzureDeployerService extends GBService {
   /**
    * @see https://github.com/Azure/azure-rest-api-specs/blob/master/specification/botservice/resource-manager/Microsoft.BotService/preview/2017-12-01/botservice.json
    */
-  private async internalDeployBot(instance,
+  private async internalDeployBot(
+    instance,
     accessToken,
     botId,
     name,
@@ -480,38 +481,90 @@ export class AzureDeployerService extends GBService {
       let req = this.createRequestObject(
         url,
         accessToken,
+        "PUT",
         JSON.stringify(parameters)
       );
       let res = await httpClient.sendRequest(req);
+      if (!(res.bodyAsJson as any).id) {
+        reject(res.bodyAsText);
+        return;
+      }
+      logger.info(`Bot creation request done waiting for key generation...`);
 
       setTimeout(async () => {
-        query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${
-          AzureDeployerService.apiVersion
-        }`;
-        url = UrlJoin(baseUrl, query);
-        req = this.createRequestObject(
-          url,
-          accessToken,
-          JSON.stringify(parameters)
-        );
-        let resChannel = await httpClient.sendRequest(req);
+        try {
+          query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${
+            AzureDeployerService.apiVersion
+          }`;
+          url = UrlJoin(baseUrl, query);
+          req = this.createRequestObject(
+            url,
+            accessToken,
+            "PUT",
+            JSON.stringify(parameters)
+          );
+          let resChannel = await httpClient.sendRequest(req);
 
-        console.log(resChannel.bodyAsText);
-        let key = (resChannel.bodyAsJson as any).properties.properties.sites[0]
-          .key;
+          console.log(resChannel.bodyAsText);
+          let key = (resChannel.bodyAsJson as any).properties.properties
+            .sites[0].key;
 
-          instance.marketplacePassword = appPassword
-          instance.webchatKey = key
+          instance.marketplacePassword = appPassword;
+          instance.webchatKey = key;
 
-          resolve(instance)
-    
-      }, 10000);
+          resolve(instance);
+        } catch (error) {
+          reject(error);
+        }
+      }, 20000);
     });
   }
 
-  private createRequestObject(url: string, accessToken: string, body) {
+  public async updateBotProxy(botId, group,  endpoint) {
+    let baseUrl = `https://management.azure.com/`;
+    let username = GBConfigService.get("CLOUD_USERNAME");
+    let password = GBConfigService.get("CLOUD_PASSWORD");
+    let subscriptionId = GBConfigService.get("CLOUD_SUBSCRIPTIONID");
+
+    let credentials = await msRestAzure.loginWithUsernamePassword(
+      username,
+      password
+    );
+
+    let parameters = {
+      properties: {
+        endpoint: endpoint
+      }
+    };
+
+    let accessToken = credentials.tokenCache._entries[0].accessToken;
+    let httpClient = new ServiceClient();
+
+    let query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
+      this.provider
+    }/botServices/${botId}?api-version=${AzureDeployerService.apiVersion}`;
+    let url = UrlJoin(baseUrl, query);
+    let req = this.createRequestObject(
+      url,
+      accessToken,
+      "PATCH",
+      JSON.stringify(parameters)
+    );
+    let res = await httpClient.sendRequest(req);
+    if (!(res.bodyAsJson as any).id) {
+      throw res.bodyAsText;
+    }
+    logger.info(`Bot proxy updated at: ${endpoint}.`);
+  }
+
+  private createRequestObject(
+    url: string,
+    accessToken: string,
+    verb: HttpMethods,
+    body: string
+  ) {
     let req = new WebResource();
-    req.method = "PUT";
+    req.method = verb;
     req.url = url;
     req.headers = {};
     req.headers["Content-Type"] = "application/json";
@@ -750,7 +803,7 @@ export class AzureDeployerService extends GBService {
       maximumLength: 14
     };
     let password = passwordGenerator.generatePassword(options);
-    password = password.replace("=", "");
+    password = password.replace(/[=:;\?]/g, "");
     return password;
   }
 

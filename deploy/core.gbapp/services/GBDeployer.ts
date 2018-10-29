@@ -217,7 +217,7 @@ export class GBDeployer {
             .done(function(result) {
               if (botPackages.length === 0) {
                 logger.warn(
-                  "The server is running with no bot instances, at least one .gbot file must be deployed."
+                  "No external packages to load, please use ADDITIONAL_DEPLOY_PATH to point to a .gbai package folder."
                 );
               } else {
                 logger.info(`Package deployment done.`);
