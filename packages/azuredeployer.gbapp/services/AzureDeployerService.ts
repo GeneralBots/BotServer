@@ -45,15 +45,14 @@ import { SearchManagementClient } from "azure-arm-search";
 import { WebResource, ServiceClient, HttpMethods } from "ms-rest-js";
 import * as simplegit from "simple-git/promise";
 import { AppServicePlan } from "azure-arm-website/lib/models";
-import { GBConfigService } from "../../../deploy/core.gbapp/services/GBConfigService";
+import { GBConfigService } from "../../../packages/core.gbapp/services/GBConfigService";
+import { GBAdminService } from "../../../packages/admin.gbapp/services/GBAdminService";
 
 const Spinner = require("cli-spinner").Spinner;
 const scanf = require("scanf");
-const msRestAzure = require("ms-rest-azure");
 const git = simplegit();
 const logger = require("../../../src/logger");
 const UrlJoin = require("url-join");
-const PasswordGenerator = require("strict-password-generator").default;
 const iconUrl =
   "https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png";
 const publicIp = require("public-ip");
@@ -92,6 +91,9 @@ export class AzureDeployerService extends GBService {
     let keys: any;
     let name = instance.botId;
 
+    instance.marketplacePassword = GBAdminService.getRndPassword();
+    await this.internalDeployApp(name, instance.marketplacePassword)
+
     logger.info(`Deploying Deploy Group (It may take a few minutes)...`);
     await this.createDeployGroup(name, instance.cloudLocation);
 
@@ -108,8 +110,8 @@ export class AzureDeployerService extends GBService {
       instance.cloudLocation
     );
 
-    let administratorLogin = AzureDeployerService.getRndAdminAccount();
-    let administratorPassword = AzureDeployerService.getRndPassword();
+    let administratorLogin = `sa${GBAdminService.getRndPassword()}`;
+    let administratorPassword = GBAdminService.getRndPassword();
 
     logger.info(`Deploying Bot Storage...`);
     let storageServer = `${name}-storage-server`;
@@ -193,7 +195,7 @@ export class AzureDeployerService extends GBService {
       culture,
       instance.nlpAuthoringKey
     );
-    let appId = msRestAzure.generateUuid();
+    let appId = GBAdminService.generateUuid();
     instance.nlpEndpoint = nlp.endpoint;
     instance.nlpKey = keys.key1;
     instance.nlpAppId = nlpAppId;
@@ -218,19 +220,18 @@ export class AzureDeployerService extends GBService {
     let password = GBConfigService.get("CLOUD_PASSWORD");
     let subscriptionId = GBConfigService.get("CLOUD_SUBSCRIPTIONID");
 
-    let credentials = await msRestAzure.loginWithUsernamePassword(
+    let credentials = await GBAdminService.getADALCredentialsFromUsername(
       username,
       password
     );
+    let storageClient = new SqlManagementClient(credentials, subscriptionId);
 
     let ip = await publicIp.v4();
-
     let params = {
       startIpAddress: ip,
       endIpAddress: ip
     };
 
-    let storageClient = new SqlManagementClient(credentials, subscriptionId);
     await storageClient.firewallRules.createOrUpdate(
       groupName,
       serverName,
@@ -298,7 +299,7 @@ export class AzureDeployerService extends GBService {
 
     // Connects to the cloud and retrives subscriptions.
 
-    let credentials = await msRestAzure.loginWithUsernamePassword(
+    let credentials = await GBAdminService.getADALCredentialsFromUsername(
       username,
       password
     );
@@ -342,7 +343,7 @@ export class AzureDeployerService extends GBService {
     instance.cloudSubscriptionId = subscriptionId;
     instance.cloudLocation = location;
     instance.nlpAuthoringKey = authoringKey;
-    instance.adminPass = AzureDeployerService.getRndPassword();
+    instance.adminPass = GBAdminService.getRndPassword();
 
     this.resourceClient = new ResourceManagementClient.default(
       credentials,
@@ -423,11 +424,44 @@ export class AzureDeployerService extends GBService {
     req.headers = {};
     req.headers["Content-Type"] = "application/json; charset=utf-8";
     req.headers["accept-language"] = "*";
-    req.headers["x-ms-client-request-id"] = msRestAzure.generateUuid();
+    req.headers["x-ms-client-request-id"] = GBAdminService.generateUuid();
     req.headers["Authorization"] = "Bearer " + accessToken;
 
     let httpClient = new ServiceClient();
     let res = await httpClient.sendRequest(req);
+  }
+
+  private async internalDeployApp(name, pass) {
+
+    let username = GBConfigService.get("CLOUD_USERNAME");
+    let password = GBConfigService.get("CLOUD_PASSWORD");
+    let accessToken = await GBAdminService.acquireMsGraphTokenFromUsername(username, password);
+
+    let graphUrl = "https://graph.microsoft.com";
+    let expiresOn = new Date().toISOString();
+
+    let parameters = {
+      displayName: name,
+      passwordCredentials: [
+        {
+          secretText: pass,
+          endDateTime: expiresOn
+        }
+      ]
+    };
+
+    let req = new WebResource();
+    req.method = "POST";
+    req.url = `${graphUrl}/beta/applications`;
+    req.headers = {};
+    req.headers["Content-Type"] = "application/json; charset=utf-8";
+    req.headers["accept-language"] = "*";
+    req.headers["x-ms-client-request-id"] = GBAdminService.generateUuid();
+    req.headers["Authorization"] = "Bearer " + accessToken;
+    req.body = parameters;
+
+    let httpClient = new ServiceClient();
+    return await httpClient.sendRequest(req);
   }
 
   /**
@@ -451,7 +485,7 @@ export class AzureDeployerService extends GBService {
       let baseUrl = `https://management.azure.com/`;
       await this.registerProviders(subscriptionId, baseUrl, accessToken);
 
-      let appPassword = AzureDeployerService.getRndPassword();
+      let appPassword = GBAdminService.getRndPassword();
 
       let parameters = {
         location: location,
@@ -459,7 +493,7 @@ export class AzureDeployerService extends GBService {
           name: "F0"
         },
         name: botId,
-        kind: "sdk",
+        kind: "bot",
         properties: {
           description: description,
           displayName: name,
@@ -468,12 +502,13 @@ export class AzureDeployerService extends GBService {
           luisAppIds: [nlpAppId],
           luisKey: nlpKey,
           msaAppId: appId,
-          msaAppPassword: appPassword
+          msaAppPassword: appPassword,
+          enabledChannels: ["webchat", "skype", "facebook"],
+          configuredChannels: ["webchat", "skype", "facebook"]
         }
       };
 
       let httpClient = new ServiceClient();
-
       let query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
         this.provider
       }/botServices/${botId}?api-version=${AzureDeployerService.apiVersion}`;
@@ -520,25 +555,20 @@ export class AzureDeployerService extends GBService {
     });
   }
 
-  public async updateBotProxy(botId, group,  endpoint) {
+  public async updateBotProxy(botId, group, endpoint) {
     let baseUrl = `https://management.azure.com/`;
     let username = GBConfigService.get("CLOUD_USERNAME");
     let password = GBConfigService.get("CLOUD_PASSWORD");
     let subscriptionId = GBConfigService.get("CLOUD_SUBSCRIPTIONID");
 
-    let credentials = await msRestAzure.loginWithUsernamePassword(
-      username,
-      password
-    );
+    let accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
+    let httpClient = new ServiceClient();
 
     let parameters = {
       properties: {
         endpoint: endpoint
       }
     };
-
-    let accessToken = credentials.tokenCache._entries[0].accessToken;
-    let httpClient = new ServiceClient();
 
     let query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
       this.provider
@@ -763,6 +793,9 @@ export class AzureDeployerService extends GBService {
       numberOfWorkers: 1,
       phpVersion: "5.5"
     };
+
+    // TODO: Copy .env to app settings.
+
     return this.webSiteClient.webApps.createOrUpdateConfiguration(
       group,
       name,
@@ -770,41 +803,9 @@ export class AzureDeployerService extends GBService {
     );
   }
 
-  private deleteDeploy(name) {
-    return this.resourceClient.resourceGroups.deleteMethod(name);
-  }
-
   async deployGeneralBotsToAzure() {
     let status = await git.status();
-  }
-
-  private static getRndAdminAccount() {
-    const passwordGenerator = new PasswordGenerator();
-    const options = {
-      upperCaseAlpha: false,
-      lowerCaseAlpha: true,
-      number: true,
-      specialCharacter: false,
-      minimumLength: 8,
-      maximumLength: 8
-    };
-    let generated = passwordGenerator.generatePassword(options);
-    return `sa${generated}`;
-  }
-
-  private static getRndPassword() {
-    const passwordGenerator = new PasswordGenerator();
-    const options = {
-      upperCaseAlpha: true,
-      lowerCaseAlpha: true,
-      number: true,
-      specialCharacter: true,
-      minimumLength: 12,
-      maximumLength: 14
-    };
-    let password = passwordGenerator.generatePassword(options);
-    password = password.replace(/[=:;\?]/g, "");
-    return password;
+    // TODO: Copy github to webapp.
   }
 
   static getKBSearchSchema(indexName) {

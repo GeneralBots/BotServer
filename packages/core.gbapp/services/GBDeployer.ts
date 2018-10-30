@@ -52,12 +52,9 @@ import { AzureDeployerService } from "../../azuredeployer.gbapp/services/AzureDe
 /** Deployer service for bots, themes, ai and more. */
 export class GBDeployer {
   core: IGBCoreService;
-
   importer: GBImporter;
-
   workDir: string = "./work";
-
-  static deployFolder = "deploy";
+  static deployFolder = "packages";
 
   constructor(core: IGBCoreService, importer: GBImporter) {
     this.core = core;
@@ -123,7 +120,7 @@ export class GBDeployer {
 
       gbappPackages.forEach(e => {
         // Skips .gbapp inside deploy folder.
-        if (!e.startsWith("deploy")) {
+        if (!e.startsWith("packages")) {
           logger.info(`Deploying app: ${e}...`);
           import(e)
             .then(m => {
@@ -374,7 +371,7 @@ export class GBDeployer {
    *
    */
   async scanBootPackage() {
-    const deployFolder = "deploy";
+    const deployFolder = "packages";
     let bootPackage = GBConfigService.get("BOOT_PACKAGE");
 
     if (bootPackage === "none") {

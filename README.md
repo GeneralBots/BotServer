@@ -29,7 +29,7 @@ Package Quick Reference
 ------------
 |Whatsapp|Web|Core|KB|
 |----|-----|----|----|
-|[whatsapp.gblib](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/whatsapp.gblib)|[default.gbui](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/default.gbui)|[core.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/core.gbapp)|[kb.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/deploy/kb.gbapp)|
+|[whatsapp.gblib](https://github.com/pragmatismo-io/BotServer/tree/master/packages/whatsapp.gblib)|[default.gbui](https://github.com/pragmatismo-io/BotServer/tree/master/packages/default.gbui)|[core.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/packages/core.gbapp)|[kb.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/packages/kb.gbapp)|
 
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
 
@@ -86,7 +86,7 @@ Note:
 6. Clone the just forked repository by running `git clone <your-forked-repository-url>/BotServer.git` ;
 7. Run `npm install -g typescript`;
 8. Run `npm install` on Command Prompt or PowerShell on the General Bot source-code folder;
-9. Enter './deploy/default.gbui' folder;
+9. Enter './packages/default.gbui' folder;
 10. Run `npm install` folled by `npm run build` (To build default Bot UI);
 11. Enter the On the downloaded folder (../..);
 12. Compile the bot server by `tsc`.

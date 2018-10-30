@@ -57,7 +57,7 @@ export class AdminDialog extends IGBDialog {
     let deployer = new GBDeployer(min.core, importer);
     await deployer.undeployPackageFromLocalPath(
       min.instance,
-      UrlJoin("deploy", packageName)
+      UrlJoin("packages", packageName)
     );
   }
 

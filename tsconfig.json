@@ -22,8 +22,8 @@
   "include": [
     "test/**/*",
     "src/**/*",
-    "deploy/*.gbapp/**/*",
-    "deploy/*.gblib/**/*"
+    "packages/*.gbapp/**/*",
+    "packages/*.gblib/**/*"
   ],
   "exclude": ["dist", "node_modules"]
 }

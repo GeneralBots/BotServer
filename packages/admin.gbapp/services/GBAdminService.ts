@@ -36,14 +36,17 @@ import { GuaribasAdmin } from "../models/AdminModel";
 import { IGBCoreService } from "botlib";
 import { AuthenticationContext, TokenResponse } from "adal-node";
 const UrlJoin = require("url-join");
-
-const ngrok = require("ngrok");
+const msRestAzure = require("ms-rest-azure");
+const PasswordGenerator = require("strict-password-generator").default;
 
 export class GBAdminService {
+  static generateUuid(): string {
+    return msRestAzure.generateUuid();
+  }
   static masterBotInstanceId = 0;
 
   public static StrongRegex = new RegExp(
-    "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*\+_\-])(?=.{8,})"
+    "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*+_-])(?=.{8,})"
   );
 
   core: IGBCoreService;
@@ -76,6 +79,37 @@ export class GBAdminService {
     return Promise.resolve(obj.value);
   }
 
+  public static async acquireMsGraphTokenFromUsername(username, password) {
+    return new Promise<string>(async (resolve, reject) => {
+      let resource = "https://graph.microsoft.com";
+      let authenticatorAuthorityHostUrl = "https://login.microsoftonline.com";
+      let authenticatorTenant = "pragmatismo.onmicrosoft.com";
+      let authenticatorClientId = "0ffice19-91d5-41ea-98a4-ceea1655cc0b";
+
+      let authorizationUrl = UrlJoin(
+        authenticatorAuthorityHostUrl,
+        authenticatorTenant,
+        "/oauth2/authorize"
+      );
+      var authenticationContext = new AuthenticationContext(authorizationUrl);
+
+      authenticationContext.acquireTokenWithUsernamePassword(
+        resource,
+        username,
+        password,
+        authenticatorClientId,
+        async (err, res) => {
+          if (err) {
+            reject(err);
+          } else {
+            let token = res as TokenResponse;
+            resolve(token.accessToken);
+          }
+        }
+      );
+    });
+  }
+
   public async acquireElevatedToken(instanceId): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       let instance = await this.core.loadInstanceById(instanceId);
@@ -91,10 +125,9 @@ export class GBAdminService {
           "/oauth2/authorize"
         );
 
-        var authenticationContext = new AuthenticationContext(authorizationUrl);
         let refreshToken = await this.getValue(instanceId, "refreshToken");
         let resource = "https://graph.microsoft.com";
-
+        var authenticationContext = new AuthenticationContext(authorizationUrl);
         authenticationContext.acquireTokenWithRefreshToken(
           refreshToken,
           instance.authenticatorClientId,
@@ -104,27 +137,65 @@ export class GBAdminService {
             if (err) {
               reject(err);
             } else {
-              let tokens = res as TokenResponse;
+              let token = res as TokenResponse;
               await this.setValue(
                 instanceId,
                 "accessToken",
-                tokens.accessToken
+                token.accessToken
               );
               await this.setValue(
                 instanceId,
                 "refreshToken",
-                tokens.refreshToken
+                token.refreshToken
               );
               await this.setValue(
                 instanceId,
                 "expiresOn",
-                tokens.expiresOn.toString()
+                token.expiresOn.toString()
               );
-              resolve(tokens.accessToken);
+              resolve(token.accessToken);
             }
           }
         );
       }
     });
+  }
+
+  public static async getADALTokenFromUsername(
+    username: string,
+    password: string
+  ) {
+    let credentials = await GBAdminService.getADALCredentialsFromUsername(
+      username,
+      password
+    );
+    let accessToken = credentials.tokenCache._entries[0].accessToken;
+    return accessToken;
+  }
+
+  public static async getADALCredentialsFromUsername(
+    username: string,
+    password: string
+  ) {
+    let credentials = await msRestAzure.loginWithUsernamePassword(
+      username,
+      password
+    );
+    return credentials;
+  }
+
+  public static getRndPassword() {
+    const passwordGenerator = new PasswordGenerator();
+    const options = {
+      upperCaseAlpha: true,
+      lowerCaseAlpha: true,
+      number: true,
+      specialCharacter: true,
+      minimumLength: 12,
+      maximumLength: 14
+    };
+    let password = passwordGenerator.generatePassword(options);
+    password = password.replace(/[=:;\?]/g, "");
+    return password;
   }
 }
