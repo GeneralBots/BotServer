@@ -1,8 +1,8 @@
 /*****************************************************************************\
 |                                               ( )_  _                       |
-|    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
-|   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___  _   _    _     |
+|   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/ \ /`\ /'_`\   |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| |*| |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -300,20 +300,22 @@ export class GBCoreService implements IGBCoreService {
 
   public async writeEnv(instance: IGBInstance) {
     let env =
-      `ADMIN_PASS=${instance.adminPass}\n` +
       `ADDITIONAL_DEPLOY_PATH=\n` +
+      `ADMIN_PASS=${instance.adminPass}\n` +
+      `CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}\n` +
+      `CLOUD_LOCATION=${instance.cloudLocation}\n` +
+      `CLOUD_GROUP=${instance.botId}\n` +
+      `CLOUD_USERNAME=${instance.cloudUsername}\n` +
+      `CLOUD_PASSWORD=${instance.cloudPassword}\n` +
+      `MSAPP_ID=${instance.marketplaceId}\n`+
+      `MSAPP_PASSWORD=${instance.marketplacePassword}\n`+
+      `NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}\n`+
       `STORAGE_DIALECT=${instance.storageDialect}\n` +
       `STORAGE_SERVER=${instance.storageServer}.database.windows.net\n` +
       `STORAGE_NAME=${instance.storageName}\n` +
       `STORAGE_USERNAME=${instance.storageUsername}\n` +
       `STORAGE_PASSWORD=${instance.storagePassword}\n` +
-      `STORAGE_SYNC=true\n` +
-      `CLOUD_USERNAME=${instance.cloudUsername}\n` +
-      `CLOUD_PASSWORD=${instance.cloudPassword}\n` +
-      `CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}\n` +
-      `CLOUD_LOCATION=${instance.cloudLocation}\n` +
-      `CLOUD_GROUP=${instance.botId}\n` +
-      `NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}`;
+      `STORAGE_SYNC=true\n`;
 
     fs.writeFileSync(".env", env);
   }

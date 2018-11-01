@@ -81,8 +81,10 @@ export class AzureDeployerService extends GBService {
     let culture = "en-us";
 
     // Tries do get information from .env file otherwise asks in command-line.
+
     let instance: IGBInstance = {};
     instance = await this.ensureConfiguration(instance);
+    instance.marketplacePassword = GBAdminService.getRndPassword();
 
     let spinner = new Spinner("%s");
     spinner.start();
@@ -91,11 +93,18 @@ export class AzureDeployerService extends GBService {
     let keys: any;
     let name = instance.botId;
 
-    instance.marketplacePassword = GBAdminService.getRndPassword();
-    await this.internalDeployApp(name, instance.marketplacePassword)
-
     logger.info(`Deploying Deploy Group (It may take a few minutes)...`);
     await this.createDeployGroup(name, instance.cloudLocation);
+
+    instance = await this.deployBootBot(
+      instance,
+      name,
+      `${proxyAddress}/api/messages/${name}`,
+      instance.nlpAppId,
+      instance.nlpKey,
+      instance.cloudSubscriptionId
+    );
+
 
     logger.info(`Deploying Bot Server...`);
     let serverFarm = await this.createHostingPlan(
@@ -110,10 +119,9 @@ export class AzureDeployerService extends GBService {
       instance.cloudLocation
     );
 
-    let administratorLogin = `sa${GBAdminService.getRndPassword()}`;
-    let administratorPassword = GBAdminService.getRndPassword();
-
     logger.info(`Deploying Bot Storage...`);
+    let administratorLogin = `sa${GBAdminService.getRndReadableIdentifier()}`;
+    let administratorPassword = GBAdminService.getRndPassword();
     let storageServer = `${name}-storage-server`;
     let storageName = `${name}-storage`;
     await this.createStorageServer(
@@ -124,7 +132,6 @@ export class AzureDeployerService extends GBService {
       storageServer,
       instance.cloudLocation
     );
-
     await this.createStorage(
       name,
       storageServer,
@@ -195,7 +202,7 @@ export class AzureDeployerService extends GBService {
       culture,
       instance.nlpAuthoringKey
     );
-    let appId = GBAdminService.generateUuid();
+
     instance.nlpEndpoint = nlp.endpoint;
     instance.nlpKey = keys.key1;
     instance.nlpAppId = nlpAppId;
@@ -205,10 +212,9 @@ export class AzureDeployerService extends GBService {
       instance,
       name,
       `${proxyAddress}/api/messages/${name}`,
-      null,
-      null,
-      instance.cloudSubscriptionId,
-      appId
+      instance.nlpAppId,
+      instance.nlpKey,
+      instance.cloudSubscriptionId
     );
 
     spinner.stop();
@@ -371,9 +377,34 @@ export class AzureDeployerService extends GBService {
     endpoint,
     nlpAppId,
     nlpKey,
-    subscriptionId,
-    appId
+    subscriptionId
   ) {
+    let appId = GBConfigService.get("MSAPP_ID");
+    let appPassword = GBConfigService.get("MSAPP_PASSWORD");
+
+    if (!appId || !appPassword) {
+      process.stdout.write(
+        "Sorry, this part cannot be automated yet due to Microsoft schedule, please go to https://apps.dev.microsoft.com/portal/register-app to generate manually an App ID and App Secret.\n"
+      );
+    }
+
+    let retriveAppId = () => {
+      if (!appId) {
+        process.stdout.write("Generated Application Id (MSAPP_ID):");
+        appId = scanf("%s").replace(/(\n|\r)+$/, "");
+      }
+    };
+
+    let retriveAppPassword = () => {
+      if (!appPassword) {
+        process.stdout.write("Generated Password (MSAPP_PASSWORD):");
+        appPassword = scanf("%s").replace(/(\n|\r)+$/, "");
+      }
+    };
+
+    retriveAppId();
+    retriveAppPassword();
+
     await this.internalDeployBot(
       instance,
       this.accessToken,
@@ -385,10 +416,12 @@ export class AzureDeployerService extends GBService {
       "global",
       nlpAppId,
       nlpKey,
-      subscriptionId,
-      appId
+      appId,
+      appPassword,
+      subscriptionId
     );
     instance.marketplaceId = appId;
+    instance.marketplacePassword = appPassword;
     instance.botId = botId;
 
     return instance;
@@ -424,46 +457,12 @@ export class AzureDeployerService extends GBService {
     req.headers = {};
     req.headers["Content-Type"] = "application/json; charset=utf-8";
     req.headers["accept-language"] = "*";
-    req.headers["x-ms-client-request-id"] = GBAdminService.generateUuid();
     req.headers["Authorization"] = "Bearer " + accessToken;
 
     let httpClient = new ServiceClient();
     let res = await httpClient.sendRequest(req);
+    // TODO: Check res for error.
   }
-
-  private async internalDeployApp(name, pass) {
-
-    let username = GBConfigService.get("CLOUD_USERNAME");
-    let password = GBConfigService.get("CLOUD_PASSWORD");
-    let accessToken = await GBAdminService.acquireMsGraphTokenFromUsername(username, password);
-
-    let graphUrl = "https://graph.microsoft.com";
-    let expiresOn = new Date().toISOString();
-
-    let parameters = {
-      displayName: name,
-      passwordCredentials: [
-        {
-          secretText: pass,
-          endDateTime: expiresOn
-        }
-      ]
-    };
-
-    let req = new WebResource();
-    req.method = "POST";
-    req.url = `${graphUrl}/beta/applications`;
-    req.headers = {};
-    req.headers["Content-Type"] = "application/json; charset=utf-8";
-    req.headers["accept-language"] = "*";
-    req.headers["x-ms-client-request-id"] = GBAdminService.generateUuid();
-    req.headers["Authorization"] = "Bearer " + accessToken;
-    req.body = parameters;
-
-    let httpClient = new ServiceClient();
-    return await httpClient.sendRequest(req);
-  }
-
   /**
    * @see https://github.com/Azure/azure-rest-api-specs/blob/master/specification/botservice/resource-manager/Microsoft.BotService/preview/2017-12-01/botservice.json
    */
@@ -478,14 +477,16 @@ export class AzureDeployerService extends GBService {
     location,
     nlpAppId,
     nlpKey,
-    subscriptionId,
-    appId
+    appId,
+    appPassword,
+    subscriptionId
   ) {
     return new Promise(async (resolve, reject) => {
       let baseUrl = `https://management.azure.com/`;
       await this.registerProviders(subscriptionId, baseUrl, accessToken);
 
-      let appPassword = GBAdminService.getRndPassword();
+      instance.marketplaceId = appId;
+      instance.marketplacePassword = appPassword;
 
       let parameters = {
         location: location,
@@ -499,12 +500,12 @@ export class AzureDeployerService extends GBService {
           displayName: name,
           endpoint: endpoint,
           iconUrl: iconUrl,
-          luisAppIds: [nlpAppId],
-          luisKey: nlpKey,
+          //luisAppIds: [nlpAppId],
+          //luisKey: nlpKey,
           msaAppId: appId,
           msaAppPassword: appPassword,
-          enabledChannels: ["webchat", "skype", "facebook"],
-          configuredChannels: ["webchat", "skype", "facebook"]
+          //enabledChannels: ["webchat"], // , "skype", "facebook"],
+          configuredChannels: ["webchat"] // , "skype", "facebook"]
         }
       };
 
@@ -524,7 +525,9 @@ export class AzureDeployerService extends GBService {
         reject(res.bodyAsText);
         return;
       }
+
       logger.info(`Bot creation request done waiting for key generation...`);
+      resolve(instance);
 
       setTimeout(async () => {
         try {
@@ -535,18 +538,13 @@ export class AzureDeployerService extends GBService {
           req = this.createRequestObject(
             url,
             accessToken,
-            "PUT",
+            "GET",
             JSON.stringify(parameters)
           );
           let resChannel = await httpClient.sendRequest(req);
-
-          console.log(resChannel.bodyAsText);
           let key = (resChannel.bodyAsJson as any).properties.properties
             .sites[0].key;
-
-          instance.marketplacePassword = appPassword;
           instance.webchatKey = key;
-
           resolve(instance);
         } catch (error) {
           reject(error);
@@ -561,7 +559,10 @@ export class AzureDeployerService extends GBService {
     let password = GBConfigService.get("CLOUD_PASSWORD");
     let subscriptionId = GBConfigService.get("CLOUD_SUBSCRIPTIONID");
 
-    let accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
+    let accessToken = await GBAdminService.getADALTokenFromUsername(
+      username,
+      password
+    );
     let httpClient = new ServiceClient();
 
     let parameters = {

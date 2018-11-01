@@ -108,7 +108,7 @@ export class GBServer {
               bootInstance = await azureDeployer.deployFarm(proxyAddress);
             } catch (error) {
               logger.warn(
-                "Error while deploying to the cloud, please, cleanup any objects created before running again."
+                "In case of error, please cleanup any infrastructure (cloud or on-premises) objects created before running again."
               );
               throw error;
             }
@@ -205,7 +205,7 @@ export class GBServer {
           // Load all instances from .gbot found on deploy package directory.
           if (!instances) {
             let saveInstance = new GuaribasInstance(bootInstance);
-            saveInstance.save();
+            await saveInstance.save();
             instances = await core.loadInstances();
           }
 

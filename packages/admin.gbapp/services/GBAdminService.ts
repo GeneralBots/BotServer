@@ -79,37 +79,6 @@ export class GBAdminService {
     return Promise.resolve(obj.value);
   }
 
-  public static async acquireMsGraphTokenFromUsername(username, password) {
-    return new Promise<string>(async (resolve, reject) => {
-      let resource = "https://graph.microsoft.com";
-      let authenticatorAuthorityHostUrl = "https://login.microsoftonline.com";
-      let authenticatorTenant = "pragmatismo.onmicrosoft.com";
-      let authenticatorClientId = "0ffice19-91d5-41ea-98a4-ceea1655cc0b";
-
-      let authorizationUrl = UrlJoin(
-        authenticatorAuthorityHostUrl,
-        authenticatorTenant,
-        "/oauth2/authorize"
-      );
-      var authenticationContext = new AuthenticationContext(authorizationUrl);
-
-      authenticationContext.acquireTokenWithUsernamePassword(
-        resource,
-        username,
-        password,
-        authenticatorClientId,
-        async (err, res) => {
-          if (err) {
-            reject(err);
-          } else {
-            let token = res as TokenResponse;
-            resolve(token.accessToken);
-          }
-        }
-      );
-    });
-  }
-
   public async acquireElevatedToken(instanceId): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       let instance = await this.core.loadInstanceById(instanceId);
@@ -195,7 +164,22 @@ export class GBAdminService {
       maximumLength: 14
     };
     let password = passwordGenerator.generatePassword(options);
-    password = password.replace(/[=:;\?]/g, "");
+    password = password.replace(/@[=:;\?]/g, "#");
     return password;
   }
+
+  public static getRndReadableIdentifier() {
+    const passwordGenerator = new PasswordGenerator();
+    const options = {
+      upperCaseAlpha: false,
+      lowerCaseAlpha: true,
+      number: false,
+      specialCharacter: false,
+      minimumLength: 12,
+      maximumLength: 14
+    };
+    let name = passwordGenerator.generatePassword(options);
+    return name;
+  }
+
 }
