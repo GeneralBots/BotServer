@@ -53,7 +53,8 @@ export class QualityDialog extends IGBDialog {
     min.dialogs.add("/quality", [
       async (dc, args) => {
         const locale = dc.context.activity.locale;
-        const user = min.userState.get(dc.context);
+        const user = await min.userProfile.get(context, {});
+        
         var score = args.score;
 
         setTimeout(

@@ -55,29 +55,29 @@ export class AskDialog extends IGBDialog {
 
     min.dialogs.add("/answerEvent", [
       async (dc, args) => {
-
         if (args && args.questionId) {
+          let question = await service.getQuestionById(
+            min.instance.instanceId,
+            args.questionId
+          );
+          let answer = await service.getAnswerById(
+            min.instance.instanceId,
+            question.answerId
+          );
 
-          let question = await service.getQuestionById(min.instance.instanceId, args.questionId);
-          let answer = await service.getAnswerById(min.instance.instanceId, question.answerId)
-          
           // Sends the answer to all outputs, including projector.
 
-          await service.sendAnswer(
-            min.conversationalService,
-            dc,
-            answer
-          );
+          await service.sendAnswer(min.conversationalService, dc, answer);
 
           await dc.replace("/ask", { isReturning: true });
         }
-      }])
+      }
+    ]);
 
     min.dialogs.add("/answer", [
       async (dc, args) => {
-        // Initialize values.
+        const user = await min.userProfile.get(context, {});
 
-        const user = min.userState.get(dc.context);
         let text = args.query;
         if (!text) {
           throw new Error(`/answer being called with no args.query text.`);
@@ -114,6 +114,7 @@ export class AskDialog extends IGBDialog {
         // Searches KB for the first time.
 
         user.lastQuestion = text;
+        await min.userProfile.set(context, user);
         let resultsA = await service.ask(
           min.instance,
           text,
@@ -128,6 +129,7 @@ export class AskDialog extends IGBDialog {
 
           user.isAsking = false;
           user.lastQuestionId = resultsA.questionId;
+          await min.userProfile.set(context, user);
 
           // Sends the answer to all outputs, including projector.
 
@@ -155,9 +157,11 @@ export class AskDialog extends IGBDialog {
           if (resultsB && resultsB.answer) {
             // Saves some context info.
 
-            const user = min.userState.get(dc.context);
+            const user = await min.userProfile.get(context, {});
+
             user.isAsking = false;
             user.lastQuestionId = resultsB.questionId;
+            await min.userProfile.set(context, user);
 
             // Informs user that a broader search will be used.
 
@@ -189,7 +193,7 @@ export class AskDialog extends IGBDialog {
     min.dialogs.add("/ask", [
       async (dc, args) => {
         const locale = dc.context.activity.locale;
-        const user = min.userState.get(dc.context);
+        const user = await min.userProfile.get(context, {});
         user.isAsking = true;
         if (!user.subjects) {
           user.subjects = [];
@@ -214,7 +218,7 @@ export class AskDialog extends IGBDialog {
       },
       async (dc, value) => {
         await dc.endAll();
-        await dc.begin("/answer", { query: value });
+        await dc.beginDialog("/answer", { query: value });
       }
     ]);
   }

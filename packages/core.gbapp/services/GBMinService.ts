@@ -32,7 +32,7 @@
 
 "use strict";
 
-const { TextPrompt } = require("botbuilder-dialogs");
+const {DialogSet, TextPrompt } = require("botbuilder-dialogs");
 const UrlJoin = require("url-join");
 const express = require("express");
 const logger = require("../../../src/logger");
@@ -45,7 +45,8 @@ import {
   ConversationState,
   MemoryStorage,
   UserState,
-  BotState
+  AutoSaveStateMiddleware
+  
 } from "botbuilder";
 
 import { GBMinInstance, IGBPackage } from "botlib";
@@ -303,11 +304,12 @@ export class GBMinService {
       appId: instance.marketplaceId,
       appPassword: instance.marketplacePassword
     });
-
+    
     const storage = new MemoryStorage();
     const conversationState = new ConversationState(storage);
     const userState = new UserState(storage);
-    
+    adapter.use(new AutoSaveStateMiddleware(conversationState, userState));
+
     // The minimal bot is built here.
 
     let min = new GBMinInstance();
@@ -318,7 +320,10 @@ export class GBMinService {
     min.conversationalService = this.conversationalService;
     min.adminService = this.adminService;
     min.instance = await this.core.loadInstance(min.botId);
-    min.dialogs.add("textPrompt", new TextPrompt());
+    min.userProfile = conversationState.createProperty('userProfile');
+    const dialogState = conversationState.createProperty('dialogState');
+    min.dialogs = new DialogSet(dialogState);
+    //min.dialogs.add("textPrompt", new TextPrompt());
 
     return { min, adapter, conversationState };
   }
@@ -366,12 +371,12 @@ export class GBMinService {
   ) {
     return adapter.processActivity(req, res, async context => {
       const state = conversationState.get(context);
-      const dc = min.dialogs.createContext(context, state);
+      const dc = await min.dialogs.createContext(context, state);
       dc.context.activity.locale = "en-US"; // TODO: Make dynamic.
 
       try {
-        const user = min.userState.get(dc.context);
-
+        const user = await min.userProfile.get(context, {});
+        
         if (!user.loaded) {
           await min.conversationalService.sendEvent(dc, "loadInstance", {
             instanceId: instance.instanceId,
@@ -381,6 +386,7 @@ export class GBMinService {
           });
           user.loaded = true;
           user.subjects = [];
+          await min.userProfile.set(context, user);
         }
 
         logger.info(
@@ -398,10 +404,9 @@ export class GBMinService {
             appPackages.forEach(e => {
               e.onNewSession(min, dc);
             });
-
             // Processes the root dialog.
 
-            await dc.begin("/");
+            await dc.beginDialog("/");
           } else {
             logger.info(`Member added to conversation: ${member.name}`);
           }
@@ -411,11 +416,11 @@ export class GBMinService {
           // Checks for /admin request.
 
           if (context.activity.text === "admin") {
-            await dc.begin("/admin");
+            await dc.beginDialog("/admin");
 
             // Checks for /menu JSON signature.
           } else if (context.activity.text.startsWith('{"title"')) {
-            await dc.begin("/menu", {
+            await dc.beginDialog("/menu", {
               data: JSON.parse(context.activity.text)
             });
 
@@ -424,7 +429,7 @@ export class GBMinService {
             if (dc.activeDialog) {
               await dc.continue();
             } else {
-              await dc.begin("/answer", { query: context.activity.text });
+              await dc.beginDialog("/answer", { query: context.activity.text });
             }
           }
 
@@ -435,27 +440,27 @@ export class GBMinService {
           await dc.endAll();
 
           if (context.activity.name === "whoAmI") {
-            await dc.begin("/whoAmI");
+            await dc.beginDialog("/whoAmI");
           } else if (context.activity.name === "showSubjects") {
-            await dc.begin("/menu");
+            await dc.beginDialog("/menu");
           } else if (context.activity.name === "giveFeedback") {
-            await dc.begin("/feedback", {
+            await dc.beginDialog("/feedback", {
               fromMenu: true
             });
           } else if (context.activity.name === "showFAQ") {
-            await dc.begin("/faq");
+            await dc.beginDialog("/faq");
           } else if (context.activity.name === "answerEvent") {
-            await dc.begin("/answerEvent", {
+            await dc.beginDialog("/answerEvent", {
               questionId: (context.activity as any).data,
               fromFaq: true
             });
           } else if (context.activity.name === "quality") {
-            await dc.begin("/quality", {
+            await dc.beginDialog("/quality", {
               score: (context.activity as any).data
             });
           } else if (context.activity.name === "updateToken") {
             let token = (context.activity as any).data;
-            await dc.begin("/adminUpdateToken", { token: token });
+            await dc.beginDialog("/adminUpdateToken", { token: token });
           } else {
             await dc.continue();
           }
@@ -467,7 +472,7 @@ export class GBMinService {
         await dc.context.sendActivity(
           Messages[dc.context.activity.locale].very_sorry_about_error
         );
-        await dc.begin("/ask", { isReturning: true });
+        await dc.beginDialog("/ask", { isReturning: true });
       }
     });
   }

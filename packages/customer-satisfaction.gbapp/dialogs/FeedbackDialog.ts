@@ -63,7 +63,7 @@ export class FeedbackDialog extends IGBDialog {
       async (dc, value) => {
         let locale = dc.context.activity.locale;
         let rate = value.entity;
-        const user = min.userState.get(dc.context);
+        const user = await min.userProfile.get(context, {});
         await service.updateConversationRate(user.conversation, rate);
         await dc.context.sendActivity(Messages[locale].thanks);
       }

@@ -46,12 +46,14 @@ export class WelcomeDialog extends IGBDialog {
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
     min.dialogs.add("/", [
-      async (dc, args) => {
-        const user = min.userState.get(dc.context);
+      async (dc) => {
+        const user = await min.userProfile.get(context, {});
+        
         const locale = dc.context.activity.locale;
 
         if (!user.once) {
           user.once = true;
+          await min.userProfile.set(context, user);
           var a = new Date();
           const date = a.getHours();
           var msg =
