@@ -1,0 +1,329 @@
+input[type="file"] {
+    display: none !important;
+}
+
+input#wc-upload-input {
+    display: none;
+}
+
+.wc-carousel button.scroll {
+    border: none;
+    background-color: #3f3f3f !important
+}
+
+.wc-carousel button.scroll:hover {
+    border: none;
+    background-color: #27baf1 !important
+}
+
+.wc-carousel {
+    width: 100% !important;
+    max-width: 850px;
+
+}
+
+.wc-carousel button.scroll.previous {
+    left: 0%;
+    padding: 6px;
+    width: 40px;
+    height: 40px;
+    top: -39px;
+    cursor: pointer;
+}
+
+.wc-carousel button.scroll.next {
+    left: 6%;
+    padding: 6px;
+    width: 40px;
+    height: 40px;
+    top: -39px;
+    cursor: pointer;
+}
+
+.wc-hscroll-outer {
+    margin-top: 50px;
+}
+
+.wc-message-from-me a.wc-link-download:active .wc-icon-download {
+    background-repeat: no-repeat;
+}
+
+.wc-message-from-me.wc-message-from {
+    text-align: right;
+    margin-right: 15px !important;
+}
+
+.wc-carousel .wc-hscroll > ul {
+    padding-left: 0;
+}
+
+.wc-message-from-me .wc-message-content {
+    background-color: transparent !important;
+    color: inherit !important;
+    margin-right: 15px !important;
+}
+
+.wc-message-from-bot .wc-message-content {
+    background-color: transparent !important;
+    color: inherit !important;
+}
+
+.wc-message-content {
+    border-radius: inherit !important;
+    box-shadow: inherit !important;
+    padding: inherit !important;
+    word-break: inherit !important;
+}
+
+.wc-chatview-panel ul {
+    margin: 5px;
+    list-style-type: none;
+}
+
+.wc-carousel .wc-hscroll > ul {
+    padding-left: 0;
+    height: 400px;
+    ;
+}
+
+.wc-carousel li .wc-adaptive-card p {
+    margin-top: 10px !important;
+}
+
+.wc-upload {
+    display: none !important;
+}
+
+.wc-header span {
+    display: none !important;
+}
+
+.wc-header {
+    position: relative !important;
+    background-color: #272727 !important;
+    background-image: url("../images/logo-Pragmatismo.png");
+    background-position-x: 15px;
+    background-position-y: 15px;
+    background-size: 268px;
+    background-repeat: no-repeat;
+    padding-bottom: 15px;
+}
+
+@media screen and (max-height:480px) {
+    .wc-message-pane {
+        position: relative !important;
+        background-image: url("../../chat/chat-background.png");
+        background: white;
+        background-repeat: no-repeat;
+        height: 64%;
+    }
+}
+
+@media screen and (min-height:480px) and (max-height:700px) {
+    .wc-message-pane {
+        position: relative !important;
+        background-image: url("../../chat/chat-background.png");
+        background: white;
+        background-repeat: no-repeat;
+        height: 76%;
+    }
+}
+
+@media screen and (min-height:700px) {
+    .wc-message-pane {
+        position: relative !important;
+        background-image: url("../../chat/chat-background.png");
+        background: white;
+        background-repeat: no-repeat;
+        height: 85%;
+    }
+}
+
+.wc-console .wc-textbox {
+    bottom: 0;
+    left: 9px;
+    right: 49px;
+}
+
+.wc-adaptive-card {
+    width: 150px;
+}
+
+.wc-card button {
+    text-decoration: none;
+    text-transform: uppercase;
+    background-color: #3f3f3f !important;
+    color: white;
+    padding: 10px;
+    display: block;
+    transition: 0.9s;
+    transition-delay: 0.3s;
+    border: none;
+    transition: 1s !important;
+}
+
+.wc-card button:hover {
+    background: #272727 !important;
+    color: white !important;
+    transition: 1s !important;
+}
+
+.wc-carousel li .wc-adaptive-card p {
+    text-align: center;
+}
+
+.wc-card h1 {
+    font-size: 8pt;
+    text-overflow: ellipsis;
+}
+
+.wc-card hero {
+    margin: 10px !important;
+}
+
+.wc-card li button {
+    font-size: 9pt !important;
+    margin: 2px !important;
+    padding: 5px !important;
+    text-transform: unset !important;
+    white-space: nowrap;
+    width: auto !important;
+}
+
+h2 {
+    font-size: 8pt !important;
+}
+
+.wc-card {
+    width: 150px !important;
+    height: 200px !important;
+    border: none;
+}
+
+.wc-card p {
+    height: 56px;
+}
+
+.ac-pushButton {
+    cursor: pointer;
+}
+
+.ac-container {
+    background-color: #e9e9e9 !important;
+}
+
+.wc-chatview-panel {
+    background-color: white !important;
+    left: 57%;
+    right: 0%;
+    top: 0;
+    bottom: 0;
+}
+
+.wc-console.has-text .wc-send svg {
+    fill: #cca064
+}
+
+.wc-message-from-me svg.wc-message-callout path {
+    fill: #cca064
+}
+
+.wc-console .wc-textbox input {
+    color: white;
+}
+
+@media screen and (max-width: 1000px) {
+    .wc-chatview-panel {
+        display: inline-block !important;
+        width: 96% !important;
+        height: 57% !important;
+        font-family: "Open Sans", sans-serif;
+        font-size: 14px;
+        left: 50%;
+        top: 41%;
+        overflow: hidden;
+        position: absolute;
+        margin-left: -48%;
+    }
+    .wc-message-groups {
+        top: 53px;
+        bottom: 0;
+        position: absolute !important;
+        max-height: 70%;
+        overflow: auto;
+    }
+
+    .wc-message-pane {
+        position: static !important;
+    }
+
+    .wc-console {
+        position: absolute !important;
+        border: none !important;
+        background-color: #4f4f4f !important;
+        height: 40px !important;
+    }
+    .wc-message-group-content {
+        margin-top: 0px !important
+    }
+}
+
+@media screen and (min-width: 1000px) {
+    .wc-chatview-panel {
+        display: inline-block !important;
+        width: 50% !important;
+        font-family: "Open Sans", sans-serif;
+        font-size: 14px;
+        top: 1% !important;
+        overflow: hidden;
+        height: 96%;
+        position: absolute;
+        right: 0;
+        margin-left: -8%;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        border-bottom: 4px solid #4f4f4f;
+    }
+    .wc-message-groups {
+        top: 0;
+        bottom: 0;
+        height: 100%;
+        position: static !important;
+    }
+    .wc-console {
+        position: absolute !important;
+        border: none !important;
+        background-color: #4f4f4f !important;
+        height: 40px !important;
+    }
+}
+
+
+
+
+@media screen and (max-width: 520px) {
+    .wc-header {
+        position: relative !important;
+        background-color: #272727 !important;
+        background-image: url("../images/logo-Pragmatismo.png"), url(../images/logo_General_BotS.png);
+        background-position-x: 15px, right;
+        background-position-y: 15px, 2px;
+        background-size: 238px, 75px;
+        background-repeat: no-repeat;
+        padding-bottom: 15px;
+    }
+}
+
+@media screen and (max-height: 684px) {
+    .wc-header {
+        position: relative !important;
+        background-color: #272727 !important;
+        background-image: url("../images/logo-Pragmatismo.png"), url(../images/logo_General_BotS.png);
+        background-position-x: 15px, right;
+        background-position-y: 15px, 2px;
+        background-size: 238px, 75px;
+        background-repeat: no-repeat;
+        padding-bottom: 15px;
+    }
+}

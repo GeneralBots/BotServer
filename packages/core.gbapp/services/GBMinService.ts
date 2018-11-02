@@ -32,7 +32,7 @@
 
 "use strict";
 
-const {DialogSet, TextPrompt } = require("botbuilder-dialogs");
+const { DialogSet, TextPrompt } = require("botbuilder-dialogs");
 const UrlJoin = require("url-join");
 const express = require("express");
 const logger = require("../../../src/logger");
@@ -46,7 +46,6 @@ import {
   MemoryStorage,
   UserState,
   AutoSaveStateMiddleware
-  
 } from "botbuilder";
 
 import { GBMinInstance, IGBPackage } from "botlib";
@@ -66,18 +65,16 @@ import {
 import { GuaribasInstance } from "../models/GBModel";
 import { Messages } from "../strings";
 
-
 /** Minimal service layer for a bot. */
 
 export class GBMinService {
-  
   core: IGBCoreService;
   conversationalService: IGBConversationalService;
   adminService: IGBAdminService;
   deployer: GBDeployer;
 
   corePackage = "core.gbai";
-  
+
   /**
    * Static initialization of minimal instance.
    *
@@ -134,14 +131,19 @@ export class GBMinService {
 
             let botId = req.params.botId;
             let instance = await this.core.loadInstance(botId);
+
             if (instance) {
               let speechToken = await this.getSTSToken(instance);
+              let theme = instance.theme;
+              if (!theme) {
+                theme = "default.gbtheme";
+              }
 
               res.send(
                 JSON.stringify({
                   instanceId: instance.instanceId,
                   botId: botId,
-                  theme: instance.theme,
+                  theme: theme,
                   secret: instance.webchatKey, // TODO: Use token.
                   speechToken: speechToken,
                   conversationId: webchatToken.conversationId,
@@ -304,7 +306,7 @@ export class GBMinService {
       appId: instance.marketplaceId,
       appPassword: instance.marketplacePassword
     });
-    
+
     const storage = new MemoryStorage();
     const conversationState = new ConversationState(storage);
     const userState = new UserState(storage);
@@ -320,16 +322,15 @@ export class GBMinService {
     min.conversationalService = this.conversationalService;
     min.adminService = this.adminService;
     min.instance = await this.core.loadInstance(min.botId);
-    min.userProfile = conversationState.createProperty('userProfile');
-    const dialogState = conversationState.createProperty('dialogState');
+    min.userProfile = conversationState.createProperty("userProfile");
+    const dialogState = conversationState.createProperty("dialogState");
     min.dialogs = new DialogSet(dialogState);
-    min.dialogs.add("textPrompt", new TextPrompt());
+    min.dialogs.add(new TextPrompt("textPrompt"));
 
     return { min, adapter, conversationState };
   }
 
   private invokeLoadBot(appPackages: any[], min: any, server: any) {
-
     let sysPackages = new Array<IGBPackage>();
     // NOTE: A semicolon is necessary before this line.
     [
@@ -377,12 +378,12 @@ export class GBMinService {
 
       try {
         const user = await min.userProfile.get(context, {});
-        
+
         if (!user.loaded) {
           await min.conversationalService.sendEvent(step, "loadInstance", {
             instanceId: instance.instanceId,
             botId: instance.botId,
-            theme: instance.theme,
+            theme: instance.theme?instance.theme:"default.gbtheme" ,
             secret: instance.webchatKey
           });
           user.loaded = true;
@@ -430,7 +431,9 @@ export class GBMinService {
             if (step.activeDialog) {
               await step.continue();
             } else {
-              await step.beginDialog("/answer", { query: context.activity.text });
+              await step.beginDialog("/answer", {
+                query: context.activity.text
+              });
             }
           }
 

@@ -5,20 +5,20 @@
   "license": "AGPL-3.0",
   "homepage": ".",
   "dependencies": {
-    "ajv": "^6.5.3",
-    "botframework-directlinejs": "^0.9.13",
-    "botframework-webchat": "^0.12.0",
+    "ajv": "^6.5.4",
+    "botframework-directlinejs": "^0.10.0",
+    "botframework-webchat": "4.1.0",
     "deep-extend": "^0.6.0",
     "fetch": "^1.1.0",
-    "msal": "^0.2.2",
-    "powerbi-client": "^2.6.4",
-    "react": "^15.5.0",
-    "react-dom": "^15.5.0",
+    "msal": "^0.2.3",
+    "powerbi-client": "^2.6.5",
+    "react": "^16.6.0",
+    "react-dom": "^16.6.0",
     "react-helmet": "^5.2.0",
-    "react-player": "^1.6.4",
-    "react-powerbi": "^0.2.1",
-    "react-scripts": "^1.1.5",
-    "react-transition-group": "^2.4.0",
+    "react-player": "^1.6.6",
+    "react-powerbi": "^0.3.1",
+    "react-scripts": "^2.1.1",
+    "react-transition-group": "^2.5.0",
     "url-join": "^4.0.0"
   },
   "scripts": {
@@ -26,5 +26,11 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
-  }
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }

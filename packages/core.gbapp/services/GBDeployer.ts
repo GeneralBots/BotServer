@@ -177,6 +177,7 @@ export class GBDeployer {
               Path.extname(filename) === ".gbapp" ||
               Path.extname(filename) === ".gblib"
             ) {
+              
               /** Themes for bots. */
             } else if (Path.extname(filename) === ".gbtheme") {
               server.use("/themes/" + filenameOnly, express.static(filename));
