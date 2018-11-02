@@ -35,6 +35,7 @@
 import { IGBDialog } from "botlib";
 import { GBMinInstance } from "botlib";
 import { BotAdapter } from "botbuilder";
+import {WaterfallDialog } from "botbuilder-dialogs";
 import { Messages } from "../strings";
 
 export class WelcomeDialog extends IGBDialog {
@@ -45,11 +46,12 @@ export class WelcomeDialog extends IGBDialog {
    * @param min The minimal bot instance data.
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add("/", [
-      async (dc) => {
-        const user = await min.userProfile.get(context, {});
+
+    min.dialogs.add(new WaterfallDialog("/", [
+      async step => { 
         
-        const locale = dc.context.activity.locale;
+        const user = await min.userProfile.get(context, {});
+        const locale = step.context.activity.locale;
 
         if (!user.once) {
           user.once = true;
@@ -63,18 +65,19 @@ export class WelcomeDialog extends IGBDialog {
                 ? Messages[locale].good_evening
                 : Messages[locale].good_night;
 
-          await dc.context.sendActivity(Messages[locale].hi(msg));
-          await dc.replace("/ask", { firstTime: true });
+          await step.context.sendActivity(Messages[locale].hi(msg));
+          await step.replaceDialog("/ask", { firstTime: true });
 
           if (
-            dc.context.activity &&
-            dc.context.activity.type == "message" &&
-            dc.context.activity.text != ""
+            step.context.activity &&
+            step.context.activity.type == "message" &&
+            step.context.activity.text != ""
           ) {
-            await dc.replace("/answer", { query: dc.context.activity.text });
+            await step.replaceDialog("/answer", { query: step.context.activity.text });
           }
         }
+        return await step.next();
       }
-    ]);
+    ]))
   }
 }

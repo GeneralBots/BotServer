@@ -38,6 +38,7 @@ import { GBMinInstance } from "botlib";
 import { IGBDialog } from "botlib";
 import { BotAdapter } from "botbuilder";
 import { Messages } from "../strings";
+import { WaterfallDialog } from "botbuilder-dialogs";
 
 export class FeedbackDialog extends IGBDialog {
   /**
@@ -49,53 +50,59 @@ export class FeedbackDialog extends IGBDialog {
   static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new CSService();
 
-    min.dialogs.add("/feedbackNumber", [
-      async dc => {
-        let locale = dc.context.activity.locale;
-        await dc.prompt("choicePrompt", Messages[locale].what_about_me, [
-          "1",
-          "2",
-          "3",
-          "4",
-          "5"
-        ]);
-      },
-      async (dc, value) => {
-        let locale = dc.context.activity.locale;
-        let rate = value.entity;
-        const user = await min.userProfile.get(context, {});
-        await service.updateConversationRate(user.conversation, rate);
-        await dc.context.sendActivity(Messages[locale].thanks);
-      }
-    ]);
-    
-    min.dialogs.add("/feedback", [
-      async (dc, args) => {
-        let locale = dc.context.activity.locale;
-        if (args && args.fromMenu) {
-          await dc.context.sendActivity(Messages[locale].about_suggestions);
+    min.dialogs.add(
+      new WaterfallDialog("/feedbackNumber", [
+        async step => {
+          let locale = step.context.activity.locale;
+          // TODO: Migrate to 4.*+ await step.prompt("choicePrompt", Messages[locale].what_about_me, [
+          //   "1",
+          //   "2",
+          //   "3",
+          //   "4",
+          //   "5"
+          // ]);
+          return await step.next();
+        },
+        async step => {
+          let locale = step.context.activity.locale;
+          let rate = step.result.entity;
+          const user = await min.userProfile.get(context, {});
+          await service.updateConversationRate(user.conversation, rate);
+          await step.context.sendActivity(Messages[locale].thanks);
+          return await step.next();
+        }
+      ])
+    );
+
+    min.dialogs.add(new WaterfallDialog("/feedback", [
+      async step => {
+        let locale = step.context.activity.locale;
+        if (step.result.fromMenu) {
+          await step.context.sendActivity(Messages[locale].about_suggestions);
         }
 
-        await dc.prompt("textPrompt", Messages[locale].what_about_service);
+        await step.prompt("textPrompt", Messages[locale].what_about_service);
+        return await step.next();
       },
-      async (dc, value) => {
-        let locale = dc.context.activity.locale;
+      async step => {
+        let locale = step.context.activity.locale;
         let rate = await AzureText.getSentiment(
           min.instance.textAnalyticsKey,
           min.instance.textAnalyticsEndpoint,
-          min.conversationalService.getCurrentLanguage(dc),
-          value
+          min.conversationalService.getCurrentLanguage(step),
+          step.result
         );
 
         if (rate > 0.5) {
-          await dc.context.sendActivity(Messages[locale].glad_you_liked);
+          await step.context.sendActivity(Messages[locale].glad_you_liked);
         } else {
-          await dc.context.sendActivity(Messages[locale].we_will_improve);
+          await step.context.sendActivity(Messages[locale].we_will_improve);
 
           // TODO: Record.
         }
-        await dc.replace("/ask", { isReturning: true });
+        await step.replaceDialog("/ask", { isReturning: true });
+        return await step.next();
       }
-    ]);
+    ]));
   }
 }

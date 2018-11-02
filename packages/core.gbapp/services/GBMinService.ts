@@ -329,30 +329,31 @@ export class GBMinService {
   }
 
   private invokeLoadBot(appPackages: any[], min: any, server: any) {
+
+    let sysPackages = new Array<IGBPackage>();
+    // NOTE: A semicolon is necessary before this line.
+    [
+      GBCorePackage,
+      GBSecurityPackage,
+      GBAdminPackage,
+      GBKBPackage,
+      GBAnalyticsPackage,
+      GBCustomerSatisfactionPackage,
+      GBWhatsappPackage
+    ].forEach(sysPackage => {
+      let p = Object.create(sysPackage.prototype) as IGBPackage;
+      p.loadBot(min);
+      sysPackages.push(p);
+      if (sysPackage.name === "GBWhatsappPackage") {
+        let url = "/instances/:botId/whatsapp";
+        server.post(url, (req, res) => {
+          p["channel"].received(req, res);
+        });
+      }
+    }, this);
+
     appPackages.forEach(e => {
-      e.sysPackages = new Array<IGBPackage>();
-
-      // NOTE: A semicolon is necessary before this line.
-
-      [
-        GBAdminPackage,
-        GBAnalyticsPackage,
-        GBCorePackage,
-        GBSecurityPackage,
-        GBKBPackage,
-        GBCustomerSatisfactionPackage,
-        GBWhatsappPackage
-      ].forEach(sysPackage => {
-        let p = Object.create(sysPackage.prototype) as IGBPackage;
-        p.loadBot(min);
-        e.sysPackages.push(p);
-        if (sysPackage.name === "GBWhatsappPackage") {
-          let url = "/instances/:botId/whatsapp";
-          server.post(url, (req, res) => {
-            p["channel"].received(req, res);
-          });
-        }
-      }, this);
+      e.sysPackages = sysPackages;
       e.loadBot(min);
     }, this);
   }
@@ -371,14 +372,14 @@ export class GBMinService {
   ) {
     return adapter.processActivity(req, res, async context => {
       const state = conversationState.get(context);
-      const dc = await min.dialogs.createContext(context, state);
-      dc.context.activity.locale = "en-US"; // TODO: Make dynamic.
+      const step = await min.dialogs.createContext(context, state);
+      step.context.activity.locale = "en-US"; // TODO: Make dynamic.
 
       try {
         const user = await min.userProfile.get(context, {});
         
         if (!user.loaded) {
-          await min.conversationalService.sendEvent(dc, "loadInstance", {
+          await min.conversationalService.sendEvent(step, "loadInstance", {
             instanceId: instance.instanceId,
             botId: instance.botId,
             theme: instance.theme,
@@ -402,11 +403,11 @@ export class GBMinService {
           if (member.name === "GeneralBots") {
             logger.info(`Bot added to conversation, starting chat...`);
             appPackages.forEach(e => {
-              e.onNewSession(min, dc);
+              e.onNewSession(min, step);
             });
             // Processes the root dialog.
 
-            await dc.beginDialog("/");
+            await step.beginDialog("/");
           } else {
             logger.info(`Member added to conversation: ${member.name}`);
           }
@@ -416,20 +417,20 @@ export class GBMinService {
           // Checks for /admin request.
 
           if (context.activity.text === "admin") {
-            await dc.beginDialog("/admin");
+            await step.beginDialog("/admin");
 
             // Checks for /menu JSON signature.
           } else if (context.activity.text.startsWith('{"title"')) {
-            await dc.beginDialog("/menu", {
+            await step.beginDialog("/menu", {
               data: JSON.parse(context.activity.text)
             });
 
             // Otherwise, continue to the active dialog in the stack.
           } else {
-            if (dc.activeDialog) {
-              await dc.continue();
+            if (step.activeDialog) {
+              await step.continue();
             } else {
-              await dc.beginDialog("/answer", { query: context.activity.text });
+              await step.beginDialog("/answer", { query: context.activity.text });
             }
           }
 
@@ -437,42 +438,42 @@ export class GBMinService {
         } else if (context.activity.type === "event") {
           // Empties dialog stack before going to the target.
 
-          await dc.endAll();
+          await step.endAll();
 
           if (context.activity.name === "whoAmI") {
-            await dc.beginDialog("/whoAmI");
+            await step.beginDialog("/whoAmI");
           } else if (context.activity.name === "showSubjects") {
-            await dc.beginDialog("/menu");
+            await step.beginDialog("/menu");
           } else if (context.activity.name === "giveFeedback") {
-            await dc.beginDialog("/feedback", {
+            await step.beginDialog("/feedback", {
               fromMenu: true
             });
           } else if (context.activity.name === "showFAQ") {
-            await dc.beginDialog("/faq");
+            await step.beginDialog("/faq");
           } else if (context.activity.name === "answerEvent") {
-            await dc.beginDialog("/answerEvent", {
+            await step.beginDialog("/answerEvent", {
               questionId: (context.activity as any).data,
               fromFaq: true
             });
           } else if (context.activity.name === "quality") {
-            await dc.beginDialog("/quality", {
+            await step.beginDialog("/quality", {
               score: (context.activity as any).data
             });
           } else if (context.activity.name === "updateToken") {
             let token = (context.activity as any).data;
-            await dc.beginDialog("/adminUpdateToken", { token: token });
+            await step.beginDialog("/adminUpdateToken", { token: token });
           } else {
-            await dc.continue();
+            await step.continue();
           }
         }
       } catch (error) {
         let msg = `ERROR: ${error.message} ${error.stack ? error.stack : ""}`;
         logger.error(msg);
 
-        await dc.context.sendActivity(
-          Messages[dc.context.activity.locale].very_sorry_about_error
+        await step.context.sendActivity(
+          Messages[step.context.activity.locale].very_sorry_about_error
         );
-        await dc.beginDialog("/ask", { isReturning: true });
+        await step.beginDialog("/ask", { isReturning: true });
       }
     });
   }

@@ -37,6 +37,7 @@ import { IGBDialog } from "botlib"
 import { BotAdapter } from "botbuilder"
 import { Messages } from "../strings";
 import { GBMinInstance } from "botlib"
+import { WaterfallDialog } from 'botbuilder-dialogs';
 
 export class FaqDialog extends IGBDialog {
   /**
@@ -49,20 +50,21 @@ export class FaqDialog extends IGBDialog {
 
     const service = new KBService(min.core.sequelize)
 
-    min.dialogs.add("/faq", [
-      async (dc, args) => {
+    min.dialogs.add(new WaterfallDialog("/faq", [
+      async step => {
         let data = await service.getFaqBySubjectArray("faq", null)
-        const locale = dc.context.activity.locale;
+        const locale = step.context.activity.locale;
         if (data) {
-          await min.conversationalService.sendEvent(dc, "play", {
+          await min.conversationalService.sendEvent(step, "play", {
             playerType: "bullet",
             data: data.slice(0, 10)
           })
           
-          await dc.context.sendActivity(Messages[locale].see_faq) // TODO: RND messages.
-          await dc.endAll()
+          await step.context.sendActivity(Messages[locale].see_faq) // TODO: RND messages.
+          await step.endDialog()
+          return await step.next();
         }
       }
-    ])
+    ]))
   }
 }

@@ -41,15 +41,13 @@ import { GBConfigService } from "../../core.gbapp/services/GBConfigService";
 import { BotAdapter } from "botbuilder";
 import { GBAdminService } from "../services/GBAdminService";
 import { Messages } from "../strings";
-
+import { WaterfallDialog } from "botbuilder-dialogs";
 
 /**
  * Dialogs for administration tasks.
  */
 export class AdminDialog extends IGBDialog {
-
-  static async createFarmCommand(text: any, min: GBMinInstance) {
-  }
+  static async createFarmCommand(text: any, min: GBMinInstance) {}
 
   static async undeployPackageCommand(text: any, min: GBMinInstance) {
     let packageName = text.split(" ")[1];
@@ -80,70 +78,75 @@ export class AdminDialog extends IGBDialog {
     let importer = new GBImporter(min.core);
     let deployer = new GBDeployer(min.core, importer);
 
-    min.dialogs.add("/admin", [
-      async dc => {
-        const locale = dc.context.activity.locale;
-        const prompt = Messages[locale].authenticate;
-        await dc.prompt("textPrompt", prompt);
-      },
-      async (dc, password) => {
-        const locale = dc.context.activity.locale;
-        if (
-          password === GBConfigService.get("ADMIN_PASS") &&
-          GBAdminService.StrongRegex.test(password)
-        ) {
-          await dc.context.sendActivity(Messages[locale].welcome);
-          await dc.prompt("textPrompt", Messages[locale].which_task);
-        } else {
-          await dc.prompt("textPrompt", Messages[locale].wrong_password);
-          await dc.endAll();
-        }
-      },
-      async (dc, value) => {
-        const locale = dc.context.activity.locale;
-        var text = value;
-        let cmdName = text.split(" ")[0];
+    min.dialogs.add(
+      new WaterfallDialog("/admin", [
+        async step => {
+          const locale = step.context.activity.locale;
+          const prompt = Messages[locale].authenticate;
+          await step.prompt("textPrompt", prompt);
+          return await step.next();
+        },
+        async step => {
+          const locale = step.context.activity.locale;
+          let password = step.result;
+          if (
+            password === GBConfigService.get("ADMIN_PASS") &&
+            GBAdminService.StrongRegex.test(password)
+          ) {
+            await step.context.sendActivity(Messages[locale].welcome);
+            await step.prompt("textPrompt", Messages[locale].which_task);
+          } else {
+            await step.prompt("textPrompt", Messages[locale].wrong_password);
+            await step.endDialog();
+          }
+          return await step.next();
+        },
+        async step => {
+          const locale = step.context.activity.locale;
+          var text = step.result;
+          let cmdName = text.split(" ")[0];
 
-        dc.context.sendActivity(Messages[locale].working(cmdName));
-        let unknownCommand = false;
+          step.context.sendActivity(Messages[locale].working(cmdName));
+          let unknownCommand = false;
 
-        if (text === "quit") {
-          await dc.replace("/");
-        } else if (cmdName === "createFarm") {
-          await AdminDialog.createFarmCommand(text, deployer);
-          await dc.replace("/admin", { firstRun: false });
-        } else if (cmdName === "deployPackage") {
-          await AdminDialog.deployPackageCommand(text, deployer);
-          await dc.replace("/admin", { firstRun: false });
-        } else if (cmdName === "redeployPackage") {
-          await AdminDialog.undeployPackageCommand(text, min);
-          await AdminDialog.deployPackageCommand(text, deployer);
-          await dc.context.sendActivity();
-          await dc.replace("/admin", { firstRun: false });
-        } else if (cmdName === "undeployPackage") {
-          await AdminDialog.undeployPackageCommand(text, min);
-          await dc.replace("/admin", { firstRun: false });
-        } else if (cmdName === "setupSecurity") {
-          await AdminDialog.setupSecurity(min, dc);
-        } else {
-          unknownCommand = true;
-        }
+          if (text === "quit") {
+            await step.replaceDialog("/");
+          } else if (cmdName === "createFarm") {
+            await AdminDialog.createFarmCommand(text, deployer);
+            await step.replaceDialog("/admin", { firstRun: false });
+          } else if (cmdName === "deployPackage") {
+            await AdminDialog.deployPackageCommand(text, deployer);
+            await step.replaceDialog("/admin", { firstRun: false });
+          } else if (cmdName === "redeployPackage") {
+            await AdminDialog.undeployPackageCommand(text, min);
+            await AdminDialog.deployPackageCommand(text, deployer);
+            await step.replaceDialog("/admin", { firstRun: false });
+          } else if (cmdName === "undeployPackage") {
+            await AdminDialog.undeployPackageCommand(text, min);
+            await step.replaceDialog("/admin", { firstRun: false });
+          } else if (cmdName === "setupSecurity") {
+            await AdminDialog.setupSecurity(min, step);
+          } else {
+            unknownCommand = true;
+          }
 
-        if (unknownCommand) {
-          await dc.context.sendActivity(Messages[locale].unknown_command);
-        } else {
-          await dc.context.sendActivity(
-            Messages[locale].finshed_working(cmdName)
-          );
+          if (unknownCommand) {
+            await step.context.sendActivity(Messages[locale].unknown_command);
+          } else {
+            await step.context.sendActivity(
+              Messages[locale].finshed_working(cmdName)
+            );
+          }
+          await step.endDialog();
+          await step.replaceDialog("/answer", { query: text });
+          return await step.next();
         }
-        await dc.endAll();
-        await dc.replace("/answer", { query: text });
-      }
-    ]);
+      ])
+    );
   }
 
-  private static async setupSecurity(min: any, dc: any) {
-    const locale = dc.context.activity.locale;
+  private static async setupSecurity(min: any, step: any) {
+    const locale = step.activity.locale;
     let state = `${min.instance.instanceId}${Math.floor(
       Math.random() * 1000000000
     )}`;
@@ -160,6 +163,6 @@ export class AdminDialog extends IGBDialog {
       min.instance.botId
     }/token&state=${state}&response_mode=query`;
 
-    await dc.context.sendActivity(Messages[locale].consent(url));
+    await step.sendActivity(Messages[locale].consent(url));
   }
 }

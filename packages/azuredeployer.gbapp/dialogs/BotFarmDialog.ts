@@ -48,9 +48,9 @@ export class BotFarmDialog extends IGBDialog {
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
     min.dialogs.add("/createBotFarm", [
-      async dc => {
-        let locale = dc.context.activity.locale;
-        await dc.prompt("choicePrompt", Messages[locale].what_about_me, [
+      async step => {
+        let locale = step.context.activity.locale;
+        await step.prompt("choicePrompt", Messages[locale].what_about_me, [
           "1",
           "2",
           "3",
@@ -58,9 +58,9 @@ export class BotFarmDialog extends IGBDialog {
           "5"
         ]);
       },
-      async (dc, value) => {
-        let locale = dc.context.activity.locale;
-        await dc.context.sendActivity(Messages[locale].thanks);
+      async step => {
+        let locale = step.context.activity.locale;
+        await step.context.sendActivity(Messages[locale].thanks);
       }
     ]);
   }

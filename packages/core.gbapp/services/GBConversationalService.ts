@@ -56,17 +56,17 @@ export class GBConversationalService implements IGBConversationalService {
     this.coreService = coreService;
   }
 
-  getCurrentLanguage(dc: any) {
-    return dc.context.activity.locale;
+  getCurrentLanguage(step: any) {
+    return step.context.activity.locale;
   }
 
-  async sendEvent(dc: any, name: string, value: any): Promise<any> {
-    if (dc.context.activity.channelId === "webchat") {
+  async sendEvent(step: any, name: string, value: any): Promise<any> {
+    if (step.context.activity.channelId === "webchat") {
       const msg = MessageFactory.text("");
       msg.value = value;
       msg.type = "event";
       msg.name = name;
-      return dc.context.sendActivity(msg);
+      return step.context.sendActivity(msg);
     }
   }
 
@@ -95,7 +95,7 @@ export class GBConversationalService implements IGBConversationalService {
     });
   }
 
-  async routeNLP(dc: any, min: GBMinInstance, text: string): Promise<boolean> {
+  async routeNLP(step: any, min: GBMinInstance, text: string): Promise<boolean> {
     // Invokes LUIS.
 
     const model = new LuisRecognizer({
@@ -106,7 +106,7 @@ export class GBConversationalService implements IGBConversationalService {
 
     let nlp: any;
     try {
-      nlp = await model.recognize(dc.context);
+      nlp = await model.recognize(step.context);
     } catch (error) {
       let msg = `Error calling NLP server, check if you have a published model and assigned keys on the service. Error: ${
         error.statusCode ? error.statusCode : ""
@@ -131,7 +131,7 @@ export class GBConversationalService implements IGBConversationalService {
       logger.info("NLP called:" + intent + ", " + entity);
 
       try {
-        await dc.replace("/" + intent, nlp.entities);
+        await step.replace("/" + intent, nlp.entities);
         return Promise.resolve(true);
       } catch (error) {
         let msg = `Error finding dialog associated to NLP event: ${intent}: ${
@@ -143,24 +143,24 @@ export class GBConversationalService implements IGBConversationalService {
     return Promise.resolve(false);
   }
 
-  async checkLanguage(dc, min, text) {
+  async checkLanguage(step, min, text) {
     let locale = await AzureText.getLocale(
       min.instance.textAnalyticsKey,
       min.instance.textAnalyticsEndpoint,
       text
     );
-    if (locale != dc.context.activity.locale.split("-")[0]) {
+    if (locale != step.context.activity.locale.split("-")[0]) {
       switch (locale) {
         case "pt":
-          dc.context.activity.locale = "pt-BR";
-          await dc.context.sendActivity(Messages[locale].changing_language);
+          step.context.activity.locale = "pt-BR";
+          await step.context.sendActivity(Messages[locale].changing_language);
           break;
         case "en":
-          dc.context.activity.locale = "en-US";
-          await dc.context.sendActivity(Messages[locale].changing_language);
+          step.context.activity.locale = "en-US";
+          await step.context.sendActivity(Messages[locale].changing_language);
           break;
         default:
-          await dc.context.sendActivity(`Unknown language: ${locale}`);
+          await step.context.sendActivity(`Unknown language: ${locale}`);
           break;
       }
     }

@@ -38,8 +38,7 @@ import { GBMinInstance } from "botlib";
 import { KBService } from "./../services/KBService";
 import { BotAdapter } from "botbuilder";
 import { Messages } from "../strings";
-import { LuisRecognizer } from "botbuilder-ai";
-import { GuaribasQuestion } from "../models";
+import { WaterfallDialog } from "botbuilder-dialogs";
 
 const logger = require("../../../src/logger");
 
@@ -53,12 +52,12 @@ export class AskDialog extends IGBDialog {
   static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new KBService(min.core.sequelize);
 
-    min.dialogs.add("/answerEvent", [
-      async (dc, args) => {
-        if (args && args.questionId) {
+    min.dialogs.add(new WaterfallDialog("/answerEvent", [
+      async step =>  {
+        if (step.result && step.result.questionId) {
           let question = await service.getQuestionById(
             min.instance.instanceId,
-            args.questionId
+            step.result.questionId
           );
           let answer = await service.getAnswerById(
             min.instance.instanceId,
@@ -67,34 +66,34 @@ export class AskDialog extends IGBDialog {
 
           // Sends the answer to all outputs, including projector.
 
-          await service.sendAnswer(min.conversationalService, dc, answer);
+          await service.sendAnswer(min.conversationalService, step, answer);
 
-          await dc.replace("/ask", { isReturning: true });
+          await step.replaceDialog("/ask", { isReturning: true });
         }
+        return await step.next();
       }
-    ]);
+    ]));
 
-    min.dialogs.add("/answer", [
-      async (dc, args) => {
+    min.dialogs.add(new WaterfallDialog("/answer", [
+      async step =>  {
         const user = await min.userProfile.get(context, {});
-
-        let text = args.query;
+        let text = step.result.query;
         if (!text) {
           throw new Error(`/answer being called with no args.query text.`);
         }
 
-        let locale = dc.context.activity.locale;
+        let locale = step.context.activity.locale;
 
         // Stops any content on projector.
 
-        await min.conversationalService.sendEvent(dc, "stop", null);
+        await min.conversationalService.sendEvent(step, "stop", null);
 
         // Handle extra text from FAQ.
 
-        if (args && args.query) {
-          text = args.query;
-        } else if (args && args.fromFaq) {
-          await dc.context.sendActivity(Messages[locale].going_answer);
+        if (step.result && step.result.query) {
+          text = step.result.query;
+        } else if (step.result && step.result.fromFaq) {
+          await step.context.sendActivity(Messages[locale].going_answer);
         }
 
         // Spells check the input text before sending Search or NLP.
@@ -135,13 +134,13 @@ export class AskDialog extends IGBDialog {
 
           await service.sendAnswer(
             min.conversationalService,
-            dc,
+            step,
             resultsA.answer
           );
 
           // Goes to ask loop, again.
 
-          await dc.replace("/ask", { isReturning: true });
+          await step.replaceDialog("/ask", { isReturning: true });
         } else {
           // Second time running Search, now with no filter.
 
@@ -169,30 +168,31 @@ export class AskDialog extends IGBDialog {
               let subjectText = `${KBService.getSubjectItemsSeparatedBySpaces(
                 user.subjects
               )}`;
-              await dc.context.sendActivity(Messages[locale].wider_answer);
+              await step.context.sendActivity(Messages[locale].wider_answer);
             }
 
             // Sends the answer to all outputs, including projector.
 
             await service.sendAnswer(
               min.conversationalService,
-              dc,
+              step,
               resultsB.answer
             );
-            await dc.replace("/ask", { isReturning: true });
+            await step.replaceDialog("/ask", { isReturning: true });
           } else {
-            if (!(await min.conversationalService.routeNLP(dc, min, text))) {
-              await dc.context.sendActivity(Messages[locale].did_not_find);
-              await dc.replace("/ask", { isReturning: true });
+            if (!(await min.conversationalService.routeNLP(step, min, text))) {
+              await step.context.sendActivity(Messages[locale].did_not_find);
+              await step.replaceDialog("/ask", { isReturning: true });
             }
           }
         }
+        return await step.next();
       }
-    ]);
+    ]));
 
-    min.dialogs.add("/ask", [
-      async (dc, args) => {
-        const locale = dc.context.activity.locale;
+    min.dialogs.add(new WaterfallDialog("/ask", [
+      async step =>  {
+        const locale = step.context.activity.locale;
         const user = await min.userProfile.get(context, {});
         user.isAsking = true;
         if (!user.subjects) {
@@ -202,9 +202,9 @@ export class AskDialog extends IGBDialog {
 
         // Three forms of asking.
 
-        if (args && args.firstTime) {
+        if (step.result && step.result.firstTime) {
           text = Messages[locale].ask_first_time;
-        } else if (args && args.isReturning) {
+        } else if (step.result && step.result.isReturning) {
           text = Messages[locale].anything_else;
         } else if (user.subjects.length > 0) {
           text = Messages[locale].which_question;
@@ -213,13 +213,14 @@ export class AskDialog extends IGBDialog {
         }
 
         if (text.length > 0) {
-          await dc.prompt("textPrompt", text);
+          // TODO: await step.prompt("textPrompt", text:text);
         }
+        return await step.next();
       },
-      async (dc, value) => {
-        await dc.endAll();
-        await dc.beginDialog("/answer", { query: value });
+      async step => {
+        await step.replaceDialog("/answer", { query: step.result });
+        return await step.next();
       }
-    ]);
+    ]));
   }
 }

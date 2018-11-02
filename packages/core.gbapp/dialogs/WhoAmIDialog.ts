@@ -36,6 +36,7 @@ import { IGBDialog } from "botlib";
 import { GBMinInstance } from "botlib";
 import { BotAdapter } from "botbuilder";
 import { Messages } from "../strings";
+import { WaterfallDialog } from "botbuilder-dialogs";
 
 export class WhoAmIDialog extends IGBDialog {
   /**
@@ -45,21 +46,22 @@ export class WhoAmIDialog extends IGBDialog {
    * @param min The minimal bot instance data.
    */
   static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add("/whoAmI", [
-      async dc => {
-        let locale = dc.context.activity.locale;
-        await dc.context.sendActivity(`${min.instance.description}`);
+    min.dialogs.add(new WaterfallDialog("/whoAmI", [
+      async step => {
+        let locale = step.context.activity.locale;
+        await step.context.sendActivity(`${min.instance.description}`);
 
         if (min.instance.whoAmIVideo) {
-          await dc.context.sendActivity(Messages[locale].show_video);
-          await min.conversationalService.sendEvent(dc, "play", {
+          await step.context.sendActivity(Messages[locale].show_video);
+          await min.conversationalService.sendEvent(step, "play", {
             playerType: "video",
             data: min.instance.whoAmIVideo.trim()
           });
         }
 
-        await dc.replace("/ask", { isReturning: true });
+        await step.replaceDialog("/ask", { isReturning: true });
+        return await step.next();
       }
-    ]);
+    ]));
   }
 }

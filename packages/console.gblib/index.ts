@@ -56,6 +56,6 @@ export class GBConsolePackage implements IGBPackage {
   unloadBot(min: GBMinInstance): void {
   }
 
-  onNewSession(min: GBMinInstance, dc: any): void {
+  onNewSession(min: GBMinInstance, step: any): void {
   }
 }

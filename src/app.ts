@@ -158,7 +158,7 @@ export class GBServer {
             instances = await core.loadInstances();
             let instance = instances[0];
             if (process.env.NODE_ENV === "development") {
-              logger.info(`Updating bots proxies...`);
+              logger.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
 
               await azureDeployer.updateBotProxy(
                 instance.botId,

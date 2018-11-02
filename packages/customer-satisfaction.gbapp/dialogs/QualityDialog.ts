@@ -38,6 +38,7 @@ import { GBMinInstance } from "botlib";
 import { CSService } from "../services/CSService";
 import { BotAdapter } from "botbuilder";
 import { Messages } from "../strings";
+import { WaterfallDialog } from "botbuilder-dialogs";
 const logger = require("../../../src/logger");
 
 export class QualityDialog extends IGBDialog {
@@ -50,31 +51,32 @@ export class QualityDialog extends IGBDialog {
   static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new CSService();
 
-    min.dialogs.add("/quality", [
-      async (dc, args) => {
-        const locale = dc.context.activity.locale;
+    min.dialogs.add(   new WaterfallDialog("/quality", [
+      async step =>  {
+        const locale = step.context.activity.locale;
         const user = await min.userProfile.get(context, {});
         
-        var score = args.score;
+        var score = step.result;
 
         setTimeout(
-          () => min.conversationalService.sendEvent(dc, "stop", null),
+          () => min.conversationalService.sendEvent(step, "stop", null),
           400
         );
 
         if (score == 0) {
-          await dc.context.sendActivity(Messages[locale].im_sorry_lets_try);
+          await step.context.sendActivity(Messages[locale].im_sorry_lets_try);
         } else {
-          await dc.context.sendActivity(Messages[locale].great_thanks);
+          await step.context.sendActivity(Messages[locale].great_thanks);
 
           await service.insertQuestionAlternate(
             min.instance.instanceId,
             user.lastQuestion,
             user.lastQuestionId
           );
-          await dc.replace("/ask", { isReturning: true });
+          await step.replaceDialog("/ask", { isReturning: true });
         }
+        return await step.next();
       }
-    ]);
+    ]));
   }
 }

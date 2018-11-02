@@ -342,18 +342,18 @@ export class KBService {
   }
 
   async sendAnswer(conversationalService: IGBConversationalService,
-    dc: any, answer: GuaribasAnswer) {
+    step: any, answer: GuaribasAnswer) {
 
     if (answer.content.endsWith('.mp4')) {
-      await conversationalService.sendEvent(dc, "play", {
+      await conversationalService.sendEvent(step, "play", {
         playerType: "video",
         data: answer.content
       })
     } else if (answer.content.length > 140 &&
-      dc.context._activity.channelId === "webchat") {
-      const locale = dc.context.activity.locale;
+      step.context._activity.channelId === "webchat") {
+      const locale = step.context.activity.locale;
 
-      await dc.context.sendActivity(Messages[locale].will_answer_projector) // TODO: Handle rnd.
+      await step.context.sendActivity(Messages[locale].will_answer_projector) // TODO: Handle rnd.
       var html = answer.content
 
       if (answer.format === ".md") {
@@ -370,7 +370,7 @@ export class KBService {
         })
         html = marked(answer.content)
       }
-      await conversationalService.sendEvent(dc, "play",
+      await conversationalService.sendEvent(step, "play",
         {
           playerType: "markdown", data: {
             content: html, answer: answer,
@@ -378,8 +378,8 @@ export class KBService {
           }
         })
     } else {
-      await dc.context.sendActivity(answer.content)
-      await conversationalService.sendEvent(dc, "stop", null)
+      await step.context.sendActivity(answer.content)
+      await conversationalService.sendEvent(step, "stop", null)
     }
   }
 
