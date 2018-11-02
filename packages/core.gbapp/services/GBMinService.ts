@@ -323,7 +323,7 @@ export class GBMinService {
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
     min.dialogs = new DialogSet(dialogState);
-    //min.dialogs.add("textPrompt", new TextPrompt());
+    min.dialogs.add("textPrompt", new TextPrompt());
 
     return { min, adapter, conversationState };
   }
@@ -387,7 +387,7 @@ export class GBMinService {
           });
           user.loaded = true;
           user.subjects = [];
-          await min.userProfile.set(context, user);
+          await min.userProfile.set(step.context, user);
         }
 
         logger.info(

@@ -55,7 +55,7 @@ export class WelcomeDialog extends IGBDialog {
 
         if (!user.once) {
           user.once = true;
-          await min.userProfile.set(context, user);
+          await min.userProfile.set(step.context, user);
           var a = new Date();
           const date = a.getHours();
           var msg =

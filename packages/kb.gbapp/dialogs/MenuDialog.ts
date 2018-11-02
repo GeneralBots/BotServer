@@ -58,7 +58,7 @@ export class MenuDialog extends IGBDialog {
         const locale = step.context.activity.locale;
         var rootSubjectId = null;
 
-        if (step.result && step.result.data) {
+        if (step.options && step.options["data"]) {
           var subject = step.result.data;
 
           // If there is a shortcut specified as subject destination, go there.

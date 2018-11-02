@@ -54,10 +54,10 @@ export class AskDialog extends IGBDialog {
 
     min.dialogs.add(new WaterfallDialog("/answerEvent", [
       async step =>  {
-        if (step.result && step.result.questionId) {
+        if (step.options && step.options["questionId"]) {
           let question = await service.getQuestionById(
             min.instance.instanceId,
-            step.result.questionId
+            step.options["questionId"]
           );
           let answer = await service.getAnswerById(
             min.instance.instanceId,
@@ -76,8 +76,8 @@ export class AskDialog extends IGBDialog {
 
     min.dialogs.add(new WaterfallDialog("/answer", [
       async step =>  {
-        const user = await min.userProfile.get(context, {});
-        let text = step.result.query;
+        const user = await min.userProfile.get(step.context, {});
+        let text = step.options["query"];
         if (!text) {
           throw new Error(`/answer being called with no args.query text.`);
         }
@@ -90,9 +90,9 @@ export class AskDialog extends IGBDialog {
 
         // Handle extra text from FAQ.
 
-        if (step.result && step.result.query) {
-          text = step.result.query;
-        } else if (step.result && step.result.fromFaq) {
+        if (step.options && step.options["query"]) {
+          text = step.options["query"];
+        } else if (step.options && step.options["fromFaq"]) {
           await step.context.sendActivity(Messages[locale].going_answer);
         }
 
@@ -113,7 +113,7 @@ export class AskDialog extends IGBDialog {
         // Searches KB for the first time.
 
         user.lastQuestion = text;
-        await min.userProfile.set(context, user);
+        await min.userProfile.set(step.context, user);
         let resultsA = await service.ask(
           min.instance,
           text,
@@ -128,7 +128,7 @@ export class AskDialog extends IGBDialog {
 
           user.isAsking = false;
           user.lastQuestionId = resultsA.questionId;
-          await min.userProfile.set(context, user);
+          await min.userProfile.set(step.context, user);
 
           // Sends the answer to all outputs, including projector.
 
@@ -156,11 +156,11 @@ export class AskDialog extends IGBDialog {
           if (resultsB && resultsB.answer) {
             // Saves some context info.
 
-            const user = await min.userProfile.get(context, {});
+            const user = await min.userProfile.get(step.context, {});
 
             user.isAsking = false;
             user.lastQuestionId = resultsB.questionId;
-            await min.userProfile.set(context, user);
+            await min.userProfile.set(step.context, user);
 
             // Informs user that a broader search will be used.
 
@@ -193,18 +193,18 @@ export class AskDialog extends IGBDialog {
     min.dialogs.add(new WaterfallDialog("/ask", [
       async step =>  {
         const locale = step.context.activity.locale;
-        const user = await min.userProfile.get(context, {});
+        const user = await min.userProfile.get(step.context, {});
         user.isAsking = true;
         if (!user.subjects) {
           user.subjects = [];
         }
-        let text = [];
+        let text;
 
         // Three forms of asking.
 
-        if (step.result && step.result.firstTime) {
+        if (step.options && step.options["firstTime"]) {
           text = Messages[locale].ask_first_time;
-        } else if (step.result && step.result.isReturning) {
+        } else if (step.options && step.options["isReturning"]) {
           text = Messages[locale].anything_else;
         } else if (user.subjects.length > 0) {
           text = Messages[locale].which_question;
@@ -213,7 +213,7 @@ export class AskDialog extends IGBDialog {
         }
 
         if (text.length > 0) {
-          // TODO: await step.prompt("textPrompt", text:text);
+          await step.prompt("textPrompt", text);
         }
         return await step.next();
       },

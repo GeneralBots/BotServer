@@ -155,7 +155,7 @@ export class KBService {
           instance.searchIndex,
           instance.searchIndexer
         )
-        let results = await service.search(query)
+        let results = await service.search(query) 
         if (results && results.length > 0 &&
           results[0]["@search.score"] >= searchScore) {
           let value = await this.getAnswerById(
