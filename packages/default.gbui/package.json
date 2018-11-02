@@ -19,6 +19,7 @@
     "react-powerbi": "^0.3.1",
     "react-scripts": "^2.1.1",
     "react-transition-group": "^2.5.0",
+    "rxjs": "^5.5.12",
     "url-join": "^4.0.0"
   },
   "scripts": {

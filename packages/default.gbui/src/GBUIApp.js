@@ -40,12 +40,13 @@ import SidebarMenu from "./components/SidebarMenu.js";
 import GBCss from "./components/GBCss.js";
 import { DirectLine } from "botframework-directlinejs";
 import { ConnectionStatus } from "botframework-directlinejs";
-import { SpeechRecognizer } from "botframework-webchat/CognitiveServices";
-import { SpeechSynthesizer } from "botframework-webchat/CognitiveServices";
-import { SynthesisGender } from "botframework-webchat/CognitiveServices";
+import { SpeechRecognizer } from "botframework-webchat";
+import { SpeechSynthesizer } from "botframework-webchat";
+import { SynthesisGender } from "botframework-webchat";
 import { Chat } from "botframework-webchat";
 import GBPowerBIPlayer from "./players/GBPowerBIPlayer.js";
 import { UserAgentApplication } from "msal";
+import { Observable } from 'rxjs'
 
 class GBUIApp extends React.Component {
     constructor() {
@@ -322,19 +323,19 @@ class GBUIApp extends React.Component {
                 });
             }
 
-            speechOptions = {
-                speechRecognizer: new SpeechRecognizer({
-                    locale: "pt-br",
-                    fetchCallback: (authFetchEventId) => getToken(),
-                    fetchOnExpiryCallback: (authFetchEventId) => getToken()
-                }),
-                speechSynthesizer: new SpeechSynthesizer({
-                    fetchCallback: (authFetchEventId) => getToken(),
-                    fetchOnExpiryCallback: (authFetchEventId) => getToken(),
-                    gender: SynthesisGender.Male,
-                    voiceName: 'Microsoft Server Speech Text to Speech Voice (pt-BR, Daniel, Apollo)'
-                })
-            };
+            // speechOptions = {
+            //     speechRecognizer: new SpeechRecognizer({
+            //         locale: "pt-br",
+            //         fetchCallback: (authFetchEventId) => getToken(),
+            //         fetchOnExpiryCallback: (authFetchEventId) => getToken()
+            //     }),
+            //     speechSynthesizer: new SpeechSynthesizer({
+            //         fetchCallback: (authFetchEventId) => getToken(),
+            //         fetchOnExpiryCallback: (authFetchEventId) => getToken(),
+            //         gender: SynthesisGender.Male,
+            //         voiceName: 'Microsoft Server Speech Text to Speech Voice (pt-BR, Daniel, Apollo)'
+            //     })
+            // };
 
             chat = (
                 <Chat
@@ -345,7 +346,7 @@ class GBUIApp extends React.Component {
                     line={this.state.line}
                     user={this.getUser()}
                     bot={{ id: "bot@gb", name: "Bot" }}
-                    speechOptions={speechOptions}
+                    // speechOptions={speechOptions}
                 />
             );
 
