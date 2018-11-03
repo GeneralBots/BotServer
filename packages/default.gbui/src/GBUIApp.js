@@ -343,7 +343,7 @@ class GBUIApp extends React.Component {
                          this.chat = chat;
                      }}
                      locale={'pt-br'}
-                     line={this.state.line}
+                     botConnection={this.state.line}
                      user={this.getUser()}
                      bot={{ id: "bot@gb", name: "Bot" }}
                      // speechOptions={speechOptions}
