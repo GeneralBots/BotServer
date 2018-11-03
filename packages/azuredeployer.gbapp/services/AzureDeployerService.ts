@@ -47,6 +47,7 @@ import * as simplegit from "simple-git/promise";
 import { AppServicePlan } from "azure-arm-website/lib/models";
 import { GBConfigService } from "../../../packages/core.gbapp/services/GBConfigService";
 import { GBAdminService } from "../../../packages/admin.gbapp/services/GBAdminService";
+import { GBCorePackage } from "packages/core.gbapp";
 
 const Spinner = require("cli-spinner").Spinner;
 const scanf = require("scanf");
@@ -487,6 +488,7 @@ export class AzureDeployerService extends GBService {
 
       instance.marketplaceId = appId;
       instance.marketplacePassword = appPassword;
+      instance.engineName = GBCorePackage.CurrentEngineName;
 
       let parameters = {
         location: location,

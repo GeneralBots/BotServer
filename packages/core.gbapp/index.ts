@@ -44,6 +44,7 @@ import { GuaribasInstance, GuaribasException, GuaribasPackage, GuaribasChannel }
 
 export class GBCorePackage implements IGBPackage {
   sysPackages: IGBPackage[] = null
+  public static CurrentEngineName = "guaribas-1.0.0";
   
   loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([

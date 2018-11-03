@@ -338,25 +338,24 @@ class GBUIApp extends React.Component {
             // };
 
             chat = (
-                <Chat
-                    ref={chat => {
-                        this.chat = chat;
-                    }}
-                    locale={'pt-br'}
-                    line={this.state.line}
-                    user={this.getUser()}
-                    bot={{ id: "bot@gb", name: "Bot" }}
-                    // speechOptions={speechOptions}
-                />
+                 <Chat
+                     ref={chat => {
+                         this.chat = chat;
+                     }}
+                     locale={'pt-br'}
+                     line={this.state.line}
+                     user={this.getUser()}
+                     bot={{ id: "bot@gb", name: "Bot" }}
+                     // speechOptions={speechOptions}
+                 />
             );
-
 
         }
 
         if (!this.state.instance) {
             sideBar = "";
         }
-
+        
         return (
             <div>
                 {gbCss}
