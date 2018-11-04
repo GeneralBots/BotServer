@@ -500,7 +500,7 @@ export class GBMinService {
       let json = await request(options);
       return Promise.resolve(JSON.parse(json));
     } catch (error) {
-      let msg = `Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
+      let msg = `[botId:${instance.botId}] Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
       return Promise.reject(new Error(msg));
     }
   }

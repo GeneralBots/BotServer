@@ -307,8 +307,8 @@ export class GBCoreService implements IGBCoreService {
       `CLOUD_GROUP=${instance.botId}\n` +
       `CLOUD_USERNAME=${instance.cloudUsername}\n` +
       `CLOUD_PASSWORD=${instance.cloudPassword}\n` +
-      `MSAPP_ID=${instance.marketplaceId}\n`+
-      `MSAPP_PASSWORD=${instance.marketplacePassword}\n`+
+      `MARKETPLACE_ID=${instance.marketplaceId}\n`+
+      `MARKETPLACE_SECRET=${instance.marketplacePassword}\n`+
       `NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}\n`+
       `STORAGE_DIALECT=${instance.storageDialect}\n` +
       `STORAGE_SERVER=${instance.storageServer}.database.windows.net\n` +

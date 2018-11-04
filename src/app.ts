@@ -36,6 +36,7 @@
 const logger = require("./logger");
 const express = require("express");
 const bodyParser = require("body-parser");
+const opn = require('opn');
 
 import { GBConfigService } from "../packages/core.gbapp/services/GBConfigService";
 import { GBConversationalService } from "../packages/core.gbapp/services/GBConversationalService";
@@ -101,7 +102,8 @@ export class GBServer {
           logger.info(`Establishing a development local proxy (ngrok)...`);
           let proxyAddress = await core.ensureProxy(port);
 
-          let azureDeployer = new AzureDeployerService();
+          let deployer = new GBDeployer(core, new GBImporter(core));
+          let azureDeployer = new AzureDeployerService(deployer);
 
           try {
             await core.initDatabase();
@@ -111,7 +113,7 @@ export class GBServer {
               bootInstance = await azureDeployer.deployFarm(proxyAddress);
             } catch (error) {
               logger.warn(
-                "In case of error, please cleanup any infrastructure objects created during this procedure before running again."
+                "In case of error, please cleanup any infrastructure objects created during this procedure and .env before running again."
               );
               throw error;
             }
@@ -132,7 +134,7 @@ export class GBServer {
 
           if (!GBAdminService.StrongRegex.test(password)) {
             throw new Error(
-              "STOP: Please, define a really strong password in ADMIN_PASS environment variable before running the server."
+              "Please, define a really strong password in ADMIN_PASS environment variable before running the server."
             );
           }
 
@@ -202,8 +204,6 @@ export class GBServer {
           // Deploy packages and format object store according to .gbapp storage models.
 
           logger.info(`Deploying packages...`);
-          let deployer = new GBDeployer(core, new GBImporter(core));
-          await deployer.rebuildIndex(instances[0]);
           await deployer.deployPackages(core, server, appPackages);
 
           // If instances is undefined here it's because storage has been formatted.
@@ -216,7 +216,7 @@ export class GBServer {
 
           // Setup server dynamic (per bot instance) resources and listeners.
 
-          logger.info(`Building instances.`);
+          logger.info(`Mouting instances...`);
           let minService = new GBMinService(
             core,
             conversationalService,
@@ -225,6 +225,10 @@ export class GBServer {
           );
           await minService.buildMin(server, appPackages, instances);
           logger.info(`The Bot Server is in RUNNING mode...`);
+
+          if (process.env.NODE_ENV === "development") {
+            opn('http://localhost:4242');
+          }
 
           return core;
         } catch (err) {

@@ -48,6 +48,7 @@ import { AppServicePlan } from "azure-arm-website/lib/models";
 import { GBConfigService } from "../../../packages/core.gbapp/services/GBConfigService";
 import { GBAdminService } from "../../../packages/admin.gbapp/services/GBAdminService";
 import { GBCorePackage } from "../../../packages/core.gbapp";
+import { GBDeployer } from "packages/core.gbapp/services/GBDeployer";
 
 const Spinner = require("cli-spinner").Spinner;
 const scanf = require("scanf");
@@ -72,7 +73,12 @@ export class AzureDeployerService extends GBService {
   public subscriptionId: string;
   static apiVersion = "2017-12-01";
   farmName: any;
+  deployer: GBDeployer;
 
+  constructor(deployer: GBDeployer){
+    super();
+    this.deployer = deployer;
+  }
   public static async getSubscriptions(credentials) {
     let subscriptionClient = new SubscriptionClient.default(credentials);
     return subscriptionClient.subscriptions.list();
@@ -96,16 +102,6 @@ export class AzureDeployerService extends GBService {
 
     logger.info(`Deploying Deploy Group (It may take a few minutes)...`);
     await this.createDeployGroup(name, instance.cloudLocation);
-
-    instance = await this.deployBootBot(
-      instance,
-      name,
-      `${proxyAddress}/api/messages/${name}`,
-      instance.nlpAppId,
-      instance.nlpKey,
-      instance.cloudSubscriptionId
-    );
-
 
     logger.info(`Deploying Bot Server...`);
     let serverFarm = await this.createHostingPlan(
@@ -155,7 +151,8 @@ export class AzureDeployerService extends GBService {
     instance.searchHost = `${searchName}.search.windows.net`;
     instance.searchIndex = "azuresql-index";
     instance.searchIndexer = "azuresql-indexer";
-    instance.searchKey = searchKeys[0].key;
+    instance.searchKey = searchKeys.primaryKey;
+    this.deployer.rebuildIndex(instance);
 
     logger.info(`Deploying Speech...`);
     let speech = await this.createSpeech(
@@ -218,6 +215,7 @@ export class AzureDeployerService extends GBService {
       instance.cloudSubscriptionId
     );
 
+
     spinner.stop();
     return instance;
   }
@@ -262,32 +260,32 @@ export class AzureDeployerService extends GBService {
     }
     let retriveUsername = () => {
       if (!username) {
-        process.stdout.write("CLOUD_USERNAME:");
+        process.stdout.write(`${GBAdminService.GB_PROMPT}CLOUD_USERNAME:`);
         username = scanf("%s").replace(/(\n|\r)+$/, "");
       }
     };
     let retrivePassword = () => {
       if (!password) {
-        process.stdout.write("CLOUD_PASSWORD:");
+        process.stdout.write(`${GBAdminService.GB_PROMPT}CLOUD_PASSWORD:`);
         password = scanf("%s").replace(/(\n|\r)+$/, "");
       }
     };
     let retrieveBotId = () => {
       if (!botId) {
         process.stdout.write(
-          "Bot Id must only contain lowercase letters, digits or dashes, cannot start or end with or contain consecutive dashes and is limited from 4 to 42 characters long.\n"
+          `${GBAdminService.GB_PROMPT}Bot Id must only contain lowercase letters, digits or dashes, cannot start or end with or contain consecutive dashes and is limited from 4 to 42 characters long.\n`
         );
-        process.stdout.write("BOT_ID:");
-        botId = scanf("%s").replace(/(\n|\r)+$/, "");
+        process.stdout.write(`${GBAdminService.GB_PROMPT}BOT_ID:`);
+        botId = scanf("%s").replace(/(\n|\r)+$/, ""); // TODO: Update this regexp to match description of it.
       }
     };
     let authoringKey = GBConfigService.get("NLP_AUTHORING_KEY");
     let retriveAuthoringKey = () => {
       if (!authoringKey) {
         process.stdout.write(
-          "Due to this opened issue: https://github.com/Microsoft/botbuilder-tools/issues/550\n"
+          `${GBAdminService.GB_PROMPT}Due to this opened issue: https://github.com/Microsoft/botbuilder-tools/issues/550\n`
         );
-        process.stdout.write("Please enter your LUIS Authoring Key:");
+        process.stdout.write(`${GBAdminService.GB_PROMPT}Please enter your LUIS Authoring Key:`);
         authoringKey = scanf("%s").replace(/(\n|\r)+$/, "");
       }
     };
@@ -380,8 +378,8 @@ export class AzureDeployerService extends GBService {
     nlpKey,
     subscriptionId
   ) {
-    let appId = GBConfigService.get("MSAPP_ID");
-    let appPassword = GBConfigService.get("MSAPP_PASSWORD");
+    let appId = GBConfigService.get("MARKETPLACE_ID");
+    let appPassword = GBConfigService.get("MARKETPLACE_SECRET");
 
     if (!appId || !appPassword) {
       process.stdout.write(
@@ -391,14 +389,14 @@ export class AzureDeployerService extends GBService {
 
     let retriveAppId = () => {
       if (!appId) {
-        process.stdout.write("Generated Application Id (MSAPP_ID):");
+        process.stdout.write("Generated Application Id (MARKETPLACE_ID):");
         appId = scanf("%s").replace(/(\n|\r)+$/, "");
       }
     };
 
     let retriveAppPassword = () => {
       if (!appPassword) {
-        process.stdout.write("Generated Password (MSAPP_PASSWORD):");
+        process.stdout.write("Generated Password (MARKETPLACE_SECRET):");
         appPassword = scanf("%s").replace(/(\n|\r)+$/, "");
       }
     };

@@ -40,6 +40,9 @@ const msRestAzure = require("ms-rest-azure");
 const PasswordGenerator = require("strict-password-generator").default;
 
 export class GBAdminService {
+
+  static GB_PROMPT: string = "GeneralBots: "
+
   static generateUuid(): string {
     return msRestAzure.generateUuid();
   }

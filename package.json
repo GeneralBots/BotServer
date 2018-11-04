@@ -71,6 +71,7 @@
     "ms-rest-azure": "2.5.9",
     "nexmo": "2.4.0",
     "ngrok": "^3.1.0",
+    "opn": "^5.4.0",
     "pragmatismo-io-framework": "1.0.17",
     "process-exists": "^3.1.0",
     "public-ip": "^2.4.0",
