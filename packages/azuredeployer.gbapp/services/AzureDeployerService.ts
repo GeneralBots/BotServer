@@ -47,7 +47,7 @@ import * as simplegit from "simple-git/promise";
 import { AppServicePlan } from "azure-arm-website/lib/models";
 import { GBConfigService } from "../../../packages/core.gbapp/services/GBConfigService";
 import { GBAdminService } from "../../../packages/admin.gbapp/services/GBAdminService";
-import { GBCorePackage } from "packages/core.gbapp";
+import { GBCorePackage } from "../../../packages/core.gbapp";
 
 const Spinner = require("cli-spinner").Spinner;
 const scanf = require("scanf");
@@ -148,7 +148,7 @@ export class AzureDeployerService extends GBService {
     logger.info(`Deploying Search...`);
     let searchName = `${name}-search`;
     await this.createSearch(name, searchName, instance.cloudLocation);
-    let searchKeys = await this.searchClient.queryKeys.listBySearchService(
+    let searchKeys = await this.searchClient.adminKeys.get(
       name,
       searchName
     );
@@ -502,11 +502,11 @@ export class AzureDeployerService extends GBService {
           displayName: name,
           endpoint: endpoint,
           iconUrl: iconUrl,
-          //luisAppIds: [nlpAppId],
-          //luisKey: nlpKey,
+          luisAppIds: [nlpAppId],
+          luisKey: nlpKey,
           msaAppId: appId,
           msaAppPassword: appPassword,
-          //enabledChannels: ["webchat"], // , "skype", "facebook"],
+          enabledChannels: ["webchat"], // , "skype", "facebook"],
           configuredChannels: ["webchat"] // , "skype", "facebook"]
         }
       };
@@ -527,9 +527,6 @@ export class AzureDeployerService extends GBService {
         reject(res.bodyAsText);
         return;
       }
-
-      logger.info(`Bot creation request done waiting for key generation...`);
-      resolve(instance);
 
       setTimeout(async () => {
         try {

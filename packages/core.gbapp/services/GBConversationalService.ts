@@ -108,10 +108,16 @@ export class GBConversationalService implements IGBConversationalService {
     try {
       nlp = await model.recognize(step.context);
     } catch (error) {
+      if (error.statusCode == 404){
+        logger.warn ('NLP application still not publish and there are no other options for answering.')
+        return Promise.resolve(false);
+      }
+      else{
       let msg = `Error calling NLP server, check if you have a published model and assigned keys on the service. Error: ${
         error.statusCode ? error.statusCode : ""
       } ${error.message}`;
-      return Promise.reject(new Error(msg));
+      return Promise.reject(new Error(msg));}
+
     }
 
     // Resolves intents returned from LUIS.

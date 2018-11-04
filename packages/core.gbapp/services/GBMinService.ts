@@ -429,7 +429,7 @@ export class GBMinService {
             // Otherwise, continue to the active dialog in the stack.
           } else {
             if (step.activeDialog) {
-              await step.continue();
+              await step.continueDialog();
             } else {
               await step.beginDialog("/answer", {
                 query: context.activity.text
@@ -466,7 +466,7 @@ export class GBMinService {
             let token = (context.activity as any).data;
             await step.beginDialog("/adminUpdateToken", { token: token });
           } else {
-            await step.continue();
+            await step.continueDialog();
           }
         }
       } catch (error) {

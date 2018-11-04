@@ -177,7 +177,6 @@ export class GBDeployer {
               Path.extname(filename) === ".gbapp" ||
               Path.extname(filename) === ".gblib"
             ) {
-              
               /** Themes for bots. */
             } else if (Path.extname(filename) === ".gbtheme") {
               server.use("/themes/" + filenameOnly, express.static(filename));
@@ -341,15 +340,31 @@ export class GBDeployer {
     let connectionString = GBDeployer.getConnectionStringFromInstance(instance);
 
     const dsName = "gb";
-    await search.deleteDatasource(dsName);
-    await search.createDatasource(
+    try {
+      await search.deleteDataSource(dsName);
+    } catch (err) {
+      if (err.code != 404) {
+        // First time, nothing to delete.
+        throw err;
+      }
+    }
+
+    await search.createDataSource(
       dsName,
       dsName,
       "GuaribasQuestion",
       "azuresql",
       connectionString
     );
-    await search.deleteIndex();
+
+    try {
+      await search.deleteIndex();
+    } catch (err) {
+      if (err.code != 404) {
+        // First time, nothing to delete.
+        throw err;
+      }
+    }
     await search.createIndex(
       AzureDeployerService.getKBSearchSchema(instance.searchIndex),
       dsName

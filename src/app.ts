@@ -61,17 +61,20 @@ let appPackages = new Array<IGBPackage>();
  * General Bots open-core entry point.
  */
 export class GBServer {
+
   /**
    *  Program entry-point.
    */
 
   static run() {
+
+    logger.info(`The Bot Server is in STARTING mode...`);
+
     // Creates a basic HTTP server that will serve several URL, one for each
     // bot instance. This allows the same server to attend multiple Bot on
     // the Marketplace until GB get serverless.
 
     let port = process.env.port || process.env.PORT || 4242;
-    logger.info(`The Bot Server is in STARTING mode...`);
     let server = express();
 
     server.use(bodyParser.json()); // to support JSON-encoded bodies
@@ -86,7 +89,7 @@ export class GBServer {
     server.listen(port, () => {
       (async () => {
         try {
-          logger.info(`Accepting connections on ${port}...`);
+          logger.info(`Now accepting connections on ${port}...`);
 
           // Reads basic configuration, initialize minimal services.
 
@@ -95,7 +98,7 @@ export class GBServer {
 
           // Ensures cloud / on-premises infrastructure is setup.
 
-          logger.info(`Establishing a development local proxy...`);
+          logger.info(`Establishing a development local proxy (ngrok)...`);
           let proxyAddress = await core.ensureProxy(port);
 
           let azureDeployer = new AzureDeployerService();
@@ -103,17 +106,17 @@ export class GBServer {
           try {
             await core.initDatabase();
           } catch (error) {
-            logger.info(`Deploying cognitive infrastructure...`);
+            logger.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
             try {
               bootInstance = await azureDeployer.deployFarm(proxyAddress);
             } catch (error) {
               logger.warn(
-                "In case of error, please cleanup any infrastructure (cloud or on-premises) objects created before running again."
+                "In case of error, please cleanup any infrastructure objects created during this procedure before running again."
               );
               throw error;
             }
             core.writeEnv(bootInstance);
-            logger.info(`File .env written, starting...`);
+            logger.info(`File .env written, starting General Bots...`);
             GBConfigService.init();
 
             await core.initDatabase();
@@ -157,6 +160,7 @@ export class GBServer {
           try {
             instances = await core.loadInstances();
             let instance = instances[0];
+            
             if (process.env.NODE_ENV === "development") {
               logger.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
 
@@ -199,6 +203,7 @@ export class GBServer {
 
           logger.info(`Deploying packages...`);
           let deployer = new GBDeployer(core, new GBImporter(core));
+          await deployer.rebuildIndex(instances[0]);
           await deployer.deployPackages(core, server, appPackages);
 
           // If instances is undefined here it's because storage has been formatted.

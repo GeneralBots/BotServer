@@ -52,175 +52,181 @@ export class AskDialog extends IGBDialog {
   static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new KBService(min.core.sequelize);
 
-    min.dialogs.add(new WaterfallDialog("/answerEvent", [
-      async step =>  {
-        if (step.options && step.options["questionId"]) {
-          let question = await service.getQuestionById(
-            min.instance.instanceId,
-            step.options["questionId"]
-          );
-          let answer = await service.getAnswerById(
-            min.instance.instanceId,
-            question.answerId
-          );
+    min.dialogs.add(
+      new WaterfallDialog("/answerEvent", [
+        async step => {
+          if (step.options && step.options["questionId"]) {
+            let question = await service.getQuestionById(
+              min.instance.instanceId,
+              step.options["questionId"]
+            );
+            let answer = await service.getAnswerById(
+              min.instance.instanceId,
+              question.answerId
+            );
 
-          // Sends the answer to all outputs, including projector.
+            // Sends the answer to all outputs, including projector.
 
-          await service.sendAnswer(min.conversationalService, step, answer);
+            await service.sendAnswer(min.conversationalService, step, answer);
 
-          await step.replaceDialog("/ask", { isReturning: true });
-        }
-        return await step.next();
-      }
-    ]));
-
-    min.dialogs.add(new WaterfallDialog("/answer", [
-      async step =>  {
-        const user = await min.userProfile.get(step.context, {});
-        let text = step.options["query"];
-        if (!text) {
-          throw new Error(`/answer being called with no args.query text.`);
-        }
-
-        let locale = step.context.activity.locale;
-
-        // Stops any content on projector.
-
-        await min.conversationalService.sendEvent(step, "stop", null);
-
-        // Handle extra text from FAQ.
-
-        if (step.options && step.options["query"]) {
-          text = step.options["query"];
-        } else if (step.options && step.options["fromFaq"]) {
-          await step.context.sendActivity(Messages[locale].going_answer);
-        }
-
-        // Spells check the input text before sending Search or NLP.
-
-        if (min.instance.spellcheckerKey) {
-          let data = await AzureText.getSpelledText(
-            min.instance.spellcheckerKey,
-            text
-          );
-
-          if (data != text) {
-            logger.info(`Spelling corrected: ${data}`);
-            text = data;
+            await step.replaceDialog("/ask", { isReturning: true });
           }
+          return await step.next();
         }
+      ])
+    );
 
-        // Searches KB for the first time.
+    min.dialogs.add(
+      new WaterfallDialog("/answer", [
+        async step => {
+          const user = await min.userProfile.get(step.context, {});
+          let text = step.options["query"];
+          if (!text) {
+            throw new Error(`/answer being called with no args.query text.`);
+          }
 
-        user.lastQuestion = text;
-        await min.userProfile.set(step.context, user);
-        let resultsA = await service.ask(
-          min.instance,
-          text,
-          min.instance.searchScore,
-          user.subjects
-        );
+          let locale = step.context.activity.locale;
 
-        // If there is some result, answer immediately.
+          // Stops any content on projector.
 
-        if (resultsA && resultsA.answer) {
-          // Saves some context info.
+          await min.conversationalService.sendEvent(step, "stop", null);
 
-          user.isAsking = false;
-          user.lastQuestionId = resultsA.questionId;
+          // Handle extra text from FAQ.
+
+          if (step.options && step.options["query"]) {
+            text = step.options["query"];
+          } else if (step.options && step.options["fromFaq"]) {
+            await step.context.sendActivity(Messages[locale].going_answer);
+          }
+
+          // Spells check the input text before sending Search or NLP.
+
+          if (min.instance.spellcheckerKey) {
+            let data = await AzureText.getSpelledText(
+              min.instance.spellcheckerKey,
+              text
+            );
+
+            if (data != text) {
+              logger.info(`Spelling corrected: ${data}`);
+              text = data;
+            }
+          }
+
+          // Searches KB for the first time.
+
+          user.lastQuestion = text;
           await min.userProfile.set(step.context, user);
-
-          // Sends the answer to all outputs, including projector.
-
-          await service.sendAnswer(
-            min.conversationalService,
-            step,
-            resultsA.answer
-          );
-
-          // Goes to ask loop, again.
-
-          await step.replaceDialog("/ask", { isReturning: true });
-        } else {
-          // Second time running Search, now with no filter.
-
-          let resultsB = await service.ask(
+          let resultsA = await service.ask(
             min.instance,
             text,
             min.instance.searchScore,
-            null
+            user.subjects
           );
 
           // If there is some result, answer immediately.
 
-          if (resultsB && resultsB.answer) {
+          if (resultsA && resultsA.answer) {
             // Saves some context info.
 
-            const user = await min.userProfile.get(step.context, {});
-
             user.isAsking = false;
-            user.lastQuestionId = resultsB.questionId;
+            user.lastQuestionId = resultsA.questionId;
             await min.userProfile.set(step.context, user);
-
-            // Informs user that a broader search will be used.
-
-            if (user.subjects.length > 0) {
-              let subjectText = `${KBService.getSubjectItemsSeparatedBySpaces(
-                user.subjects
-              )}`;
-              await step.context.sendActivity(Messages[locale].wider_answer);
-            }
 
             // Sends the answer to all outputs, including projector.
 
             await service.sendAnswer(
               min.conversationalService,
               step,
-              resultsB.answer
+              resultsA.answer
             );
-            await step.replaceDialog("/ask", { isReturning: true });
+
+            // Goes to ask loop, again.
+
+            return await step.replaceDialog("/ask", { isReturning: true });
           } else {
-            if (!(await min.conversationalService.routeNLP(step, min, text))) {
-              await step.context.sendActivity(Messages[locale].did_not_find);
-              await step.replaceDialog("/ask", { isReturning: true });
+            // Second time running Search, now with no filter.
+
+            let resultsB = await service.ask(
+              min.instance,
+              text,
+              min.instance.searchScore,
+              null
+            );
+
+            // If there is some result, answer immediately.
+
+            if (resultsB && resultsB.answer) {
+              // Saves some context info.
+
+              const user = await min.userProfile.get(step.context, {});
+
+              user.isAsking = false;
+              user.lastQuestionId = resultsB.questionId;
+              await min.userProfile.set(step.context, user);
+
+              // Informs user that a broader search will be used.
+
+              if (user.subjects.length > 0) {
+                let subjectText = `${KBService.getSubjectItemsSeparatedBySpaces(
+                  user.subjects
+                )}`;
+                await step.context.sendActivity(Messages[locale].wider_answer);
+              }
+
+              // Sends the answer to all outputs, including projector.
+
+              await service.sendAnswer(
+                min.conversationalService,
+                step,
+                resultsB.answer
+              );
+              return await step.replaceDialog("/ask", { isReturning: true });
+            } else {
+              if (
+                !(await min.conversationalService.routeNLP(step, min, text))
+              ) {
+                await step.context.sendActivity(Messages[locale].did_not_find);
+                return await step.replaceDialog("/ask", { isReturning: true });
+              }
             }
           }
         }
-        return await step.next();
-      }
-    ]));
+      ])
+    );
 
-    min.dialogs.add(new WaterfallDialog("/ask", [
-      async step =>  {
-        const locale = step.context.activity.locale;
-        const user = await min.userProfile.get(step.context, {});
-        user.isAsking = true;
-        if (!user.subjects) {
-          user.subjects = [];
+    min.dialogs.add(
+      new WaterfallDialog("/ask", [
+        async step => {
+          const locale = step.context.activity.locale;
+          const user = await min.userProfile.get(step.context, {});
+          user.isAsking = true;
+          if (!user.subjects) {
+            user.subjects = [];
+          }
+          let text;
+
+          // Three forms of asking.
+
+          if (step.options && step.options["firstTime"]) {
+            text = Messages[locale].ask_first_time;
+          } else if (step.options && step.options["isReturning"]) {
+            text = Messages[locale].anything_else;
+          } else if (user.subjects.length > 0) {
+            text = Messages[locale].which_question;
+          } else {
+            throw new Error("Invalid use of /ask");
+          }
+
+          if (text.length > 0) {
+            return await step.prompt("textPrompt", text);
+          }
+          return await step.next();
+        },
+        async step => {
+          return await step.replaceDialog("/answer", { query: step.result });
         }
-        let text;
-
-        // Three forms of asking.
-
-        if (step.options && step.options["firstTime"]) {
-          text = Messages[locale].ask_first_time;
-        } else if (step.options && step.options["isReturning"]) {
-          text = Messages[locale].anything_else;
-        } else if (user.subjects.length > 0) {
-          text = Messages[locale].which_question;
-        } else {
-          throw new Error("Invalid use of /ask");
-        }
-
-        if (text.length > 0) {
-          await step.prompt("textPrompt", text);
-        }
-        return await step.next();
-      },
-      async step => {
-        await step.replaceDialog("/answer", { query: step.result });
-        return await step.next();
-      }
-    ]));
+      ])
+    );
   }
 }
