@@ -202,8 +202,8 @@ export class WhatsappDirectLine extends GBService {
         if (activities && activities.length) {
 
             // Ignore own messages.
-			// TODO: this.botId instead of "general-bot-9672a8d3"
-            activities = activities.filter((m) => { return (m.from.id === "GeneralBots")  && m.type === "message" })
+
+		activities = activities.filter((m) => { return (m.from.id === "GeneralBots")  && m.type === "message" })
               
             if (activities.length) {
 

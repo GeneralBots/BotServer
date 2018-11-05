@@ -1,3 +1,5 @@
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+
 ** **Checkout our FREE [Intranet Quickstart Bot](https://github.com/pragmatismo-io/IntranetBotQuickStart.gbai)** ** 
 
 Welcome to General Bot Community Edition
@@ -204,6 +206,7 @@ Discontinued commands:
 * David Lerner (david.lerner@hotmail.com) - UI, UX & Theming.
 * Eduardo Romeiro (eromeirosp@outlook.com) - Content & UX.
 * Jorge Ramos (jramos@pobox.com) - Coding, Docs & Architecture.
+* PH Nascimento (ph.an@outlook.com) - Product Manager
 
 Powered by  Microsoft [BOT Framework](https://dev.botframework.com/) and [Azure](http://www.azure.com).
 
