@@ -3,6 +3,5 @@ packages/default.gbui/build
 guaribas.sqlite
 guaribas.log
 work
-dist
 tmp
 .env
