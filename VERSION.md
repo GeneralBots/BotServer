@@ -1,10 +1,15 @@
 # Release History
 
+## Version 0.1.8
+
+* Republishing.
+
 ## Version 0.1.7
 
-* Azure Deployer
-* Strategy to replicate itself in several subscriptions.
-* Nkrok experiments to allow 100% automated development environement setup.
+* 100% automated development environement setup.
+* Azure Deployer based on ARM done - setup is easy as F5 in Visual Studio.
+* Auto-ngrok - No more reverse proxy manual configuration.
+* Strategy to replicate itself in several subscriptions done.
 
 ## Version 0.1.6
 

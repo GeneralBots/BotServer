@@ -216,7 +216,7 @@ export class GBServer {
 
           // Setup server dynamic (per bot instance) resources and listeners.
 
-          logger.info(`Mouting instances...`);
+          logger.info(`Publishing instances...`);
           let minService = new GBMinService(
             core,
             conversationalService,
