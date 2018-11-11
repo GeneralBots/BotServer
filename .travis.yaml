@@ -1,30 +1,22 @@
 language: node_js
-
 node_js:
-  - 'node'
-  - '10'
-  - '6'
-
-sudo: false
-
-env:
-  - workerCount=3 timeout=600000
-
-matrix:
-  fast_finish: true
-
-branches:
-  only:
-  - master
-  
+- lts/*
+notifications:
+  email: false
+before_install:
+- npm install --global nyc mocha typescript
 install:
-  - npm uninstall typescript --no-save
-  - npm uninstall tslint --no-save
-  - npm install
-
-cache:
-  directories:
-    - node_modules
-
-git:
-  depth: 1
+- npm run update-versions
+script:
+- npm run test:travis
+- npm run tslint
+after_success:
+- echo TRAVIS_EVENT_TYPE = $TRAVIS_EVENT_TYPE
+- test $TRAVIS_EVENT_TYPE = "cron"
+  && echo Begin deploy
+#  && npm publish BotServer --registry=
+  && echo End deploy
+  
+env:
+  global:
+  - Version=4.2.0-preview.${TRAVIS_BUILD_NUMBER}

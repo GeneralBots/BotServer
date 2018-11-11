@@ -30,6 +30,10 @@
 |                                                                             |
 \*****************************************************************************/
 
+/**
+ * @fileoverview General Bots server core.
+ */
+
 "use strict";
 
 const logger = require("../../../src/logger");

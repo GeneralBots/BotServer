@@ -4,3 +4,5 @@ guaribas.log
 work
 tmp
 .env
+.coveralls.yml
+coverage

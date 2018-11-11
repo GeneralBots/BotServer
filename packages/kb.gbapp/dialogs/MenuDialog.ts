@@ -1,3 +1,4 @@
+
 /*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
@@ -9,7 +10,7 @@
 |                                                                             |
 | General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
 | Licensed under the AGPL-3.0.                                                |
-|                                                                             | 
+|                                                                             |
 | According to our dual licensing model, this program can be used either      |
 | under the terms of the GNU Affero General Public License, version 3,        |
 | or under a proprietary license.                                             |
@@ -30,18 +31,22 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+/**
+ * @fileoverview Main dialog for kb.gbapp
+ */
 
-const UrlJoin = require("url-join");
+'use strict';
 
-import { BotAdapter, CardFactory, MessageFactory } from "botbuilder";
-import { IGBDialog } from "botlib";
-import { GBMinInstance } from "botlib";
-import { GuaribasSubject } from "../models";
-import { KBService } from "../services/KBService";
-import { Messages } from "../strings";
-import { AzureText } from "pragmatismo-io-framework";
-import { WaterfallDialog } from "botbuilder-dialogs";
+const UrlJoin = require('url-join');
+
+import { BotAdapter, CardFactory, MessageFactory } from 'botbuilder';
+import { WaterfallDialog } from 'botbuilder-dialogs';
+import { IGBDialog } from 'botlib';
+import { GBMinInstance } from 'botlib';
+import { AzureText } from 'pragmatismo-io-framework';
+import { GuaribasSubject } from '../models';
+import { KBService } from '../services/KBService';
+import { Messages } from '../strings';
 
 export class MenuDialog extends IGBDialog {
   /**
@@ -50,22 +55,22 @@ export class MenuDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  static setup(bot: BotAdapter, min: GBMinInstance) {
-    var service = new KBService(min.core.sequelize);
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
+    const service = new KBService(min.core.sequelize);
 
-    min.dialogs.add(new WaterfallDialog("/menu", [
+    min.dialogs.add(new WaterfallDialog('/menu', [
       async step => {
         const locale = step.context.activity.locale;
-        var rootSubjectId = null;
+        let rootSubjectId = null;
 
-        if (step.options && step.options["data"]) {
-          var subject = step.result.data;
+        if (step.options && step.options['data']) {
+          const subject = step.result.data;
 
           // If there is a shortcut specified as subject destination, go there.
 
           if (subject.to) {
-            let dialog = subject.to.split(":")[1];
-            await step.replaceDialog("/" + dialog);
+            const dialog = subject.to.split(':')[1];
+            await step.replaceDialog('/' + dialog);
             await step.endDialog();
             return;
           }
@@ -79,12 +84,12 @@ export class MenuDialog extends IGBDialog {
           // Whenever a subject is selected, shows a faq about it.
 
           if (user.subjects.length > 0) {
-            let data = await service.getFaqBySubjectArray(
-              "menu",
+            const data = await service.getFaqBySubjectArray(
+              'menu',
               user.subjects
             );
-            await min.conversationalService.sendEvent(step, "play", {
-              playerType: "bullet",
+            await min.conversationalService.sendEvent(step, 'play', {
+              playerType: 'bullet',
               data: data.slice(0, 10)
             });
           }
@@ -96,27 +101,28 @@ export class MenuDialog extends IGBDialog {
           user.isAsking = false;
         }
 
-        const msg = MessageFactory.text("");
-        var attachments = [];
+        const msg = MessageFactory.text('');
+        const attachments = [];
 
-        let data = await service.getSubjectItems(
+        const data = await service.getSubjectItems(
           min.instance.instanceId,
           rootSubjectId
         );
 
-        msg.attachmentLayout = "carousel";
+        msg.attachmentLayout = 'carousel';
 
         data.forEach(function(item: GuaribasSubject) {
-          var subject = item;
-          var card = CardFactory.heroCard(
+          const subject = item;
+          const card = CardFactory.heroCard(
             subject.title,
             subject.description,
             CardFactory.images([
-              UrlJoin("/kb", min.instance.kb, "subjects", "subject.png")
+              UrlJoin('/kb', min.instance.kb, 'subjects', 'subject.png')
             ]),
             CardFactory.actions([
-              {
-                type: "postBack",
+               {
+                 channelData: null,
+                type: 'postBack',
                 title: Messages[locale].menu_select,
                 value: JSON.stringify({
                   title: subject.title,
@@ -132,7 +138,7 @@ export class MenuDialog extends IGBDialog {
           attachments.push(card);
         });
 
-        if (attachments.length == 0) {
+        if (attachments.length === 0) {
           const user = await min.userProfile.get(context, {});
 
           if (user.subjects && user.subjects.length > 0) {
@@ -143,7 +149,7 @@ export class MenuDialog extends IGBDialog {
             );
           }
 
-          await step.replaceDialog("/ask", {});
+          await step.replaceDialog('/ask', {});
         } else {
           msg.attachments = attachments;
           await step.context.sendActivity(msg);
@@ -154,12 +160,12 @@ export class MenuDialog extends IGBDialog {
         return await step.next();
       },
       async step => {
-        var text = step.result;
+        const text = step.result;
         const locale = step.context.activity.locale;
         if (AzureText.isIntentNo(locale, text)) {
-          await step.replaceDialog("/feedback");
+          await step.replaceDialog('/feedback');
         } else {
-          await step.replaceDialog("/ask");
+          await step.replaceDialog('/ask');
         }
         return await step.next();
       }

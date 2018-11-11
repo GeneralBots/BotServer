@@ -7,3 +7,5 @@ work
 tmp
 docs
 .env
+.coveralls.yml
+coverage
