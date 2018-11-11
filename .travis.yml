@@ -20,7 +20,6 @@ script:
 - npm run tslit
 - npm run coveralls
 
-
 branches:
   only:
   - master
