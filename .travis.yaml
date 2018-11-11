@@ -1,22 +1,24 @@
+
 language: node_js
+
 node_js:
 - lts/*
+
 notifications:
   email: false
+
 before_install:
 - npm install --global nyc mocha typescript
+
 install:
 - npm run update-versions
+
 script:
-- npm run test:travis
+- npm run build
+- npm run test
 - npm run tslint
-after_success:
-- echo TRAVIS_EVENT_TYPE = $TRAVIS_EVENT_TYPE
-- test $TRAVIS_EVENT_TYPE = "cron"
-  && echo Begin deploy
-#  && npm publish BotServer --registry=
-  && echo End deploy
-  
-env:
-  global:
-  - Version=4.2.0-preview.${TRAVIS_BUILD_NUMBER}
+
+branches:
+  only:
+  - master
+
