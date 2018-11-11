@@ -26,7 +26,7 @@ branches:
   - master
 
 after_success:
-- npm run typedoc
+#- npm run typedoc
 - npm pack
 
 deploy:
@@ -36,11 +36,11 @@ deploy:
     file: src/**/*
     skip_cleanup: true
     on:
-      tags: true
+      tags: false
 
   - provider: npm
     skip_cleanup: true
     email: "operations@pragmatismo.io"
     api_key: $NPM_TOKEN
     on:
-      tags: true
+      tags: false
