@@ -14,6 +14,10 @@ Welcome to General Bot Community Edition
 [![Dependencies](https://david-dm.org/pragmatismo-io/botserver.svg)](https://david-dm.org)
 [![Open-source](https://badges.frapsoft.com/os/v2/open-source.svg)](https://badges.frapsoft.com)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+[![Issues](https://github-basic-badges.herokuapp.com/issues/pragmatismo-io/BotServer.svg)](https://github.com/kennedyoliveira/github-basic-badges)
+[![Commits](https://github-basic-badges.herokuapp.com/commits/pragmatismo-io/BotServer.svg)](https://github.com/kennedyoliveira/github-basic-badges)
+[![License](https://github-basic-badges.herokuapp.com/license/pragmatismo-io/BotServer.svg)](https://github.com/kennedyoliveira/github-basic-badges)
+[![Pulls](https://github-basic-badges.herokuapp.com/pulls/pragmatismo-io/BotServer.svg)](https://github.com/kennedyoliveira/github-basic-badges)
 
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
