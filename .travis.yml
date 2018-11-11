@@ -8,7 +8,7 @@ notifications:
   email: false
 
 before_install:
-- npm install --global nyc mocha typescript
+- npm install --global nyc mocha typescript rimraf
 
 install:
 - npm run clean
