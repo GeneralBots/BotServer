@@ -27,7 +27,7 @@ branches:
 
 after_success:
 - npm pack
-- provider: releases
+  provider: releases
     api_key: $GITHUB_TOKEN
     file_glob: true
     file: "{YOURLIB}-*.tgz"
@@ -35,7 +35,7 @@ after_success:
     on:
       tags: true
 
-- provider: npm
+  provider: npm
     skip_cleanup: true
     email: "operations@pragmatismo.io"
     api_key: $NPM_TOKEN
