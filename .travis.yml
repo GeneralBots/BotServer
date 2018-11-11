@@ -8,14 +8,16 @@ notifications:
   email: false
 
 before_install:
-- npm install --global nyc mocha typescript rimraf
+- npm install --global nyc mocha typescript rimraf shx
 
+  
 install:
 - npm install
 
-script:
-- npm run clean
+before_script:
 - npm run build
+
+script:
 - npm run build-docs
 - npm run tslint
 - npm run coveralls
@@ -23,3 +25,22 @@ script:
 branches:
   only:
   - master
+
+after_success:
+- npm run typedoc
+- npm pack
+
+deploy:
+  - provider: releases
+    api_key: $GITHUB_TOKEN
+    file_glob: true
+    file: "{YOURLIB}-*.tgz"
+    skip_cleanup: true
+    on:
+      tags: true
+  - provider: npm
+    skip_cleanup: true
+    email: "operations@pragmatismo.io"
+    api_key: $NPM_TOKEN
+    on:
+      tags: true

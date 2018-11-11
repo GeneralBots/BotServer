@@ -6,3 +6,4 @@ tmp
 .env
 .coveralls.yml
 coverage
+{YOUR_LIB}-*.tgz
