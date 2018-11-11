@@ -10,7 +10,6 @@ Welcome to General Bot Community Edition
 
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 [![forthebadge](https://badge.fury.io/js/botserver.svg)](https://badge.fury.io)
-[![forthebadge](https://badge.fury.io/js/botlib.svg)](https://badge.fury.io)
 [![Dependencies](https://david-dm.org/pragmatismo-io/botserver.svg)](https://david-dm.org)
 [![Open-source](https://badges.frapsoft.com/os/v2/open-source.svg)](https://badges.frapsoft.com)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
