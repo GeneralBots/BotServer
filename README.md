@@ -8,6 +8,7 @@
 Welcome to General Bot Community Edition
 ----------------
 
+[![Build Status](https://travis-ci.com/pragmatismo-io/BotServer.svg?branch=master)](https://travis-ci.com/pragmatismo-io/BotServer)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 [![forthebadge](https://badge.fury.io/js/botserver.svg)](https://badge.fury.io)
 [![Dependencies](https://david-dm.org/pragmatismo-io/botserver.svg)](https://david-dm.org)
