@@ -8,20 +8,19 @@ notifications:
   email: false
 
 before_install:
-- npm install --global nyc mocha typescript
+- npm install --global nyc mocha typescript rimraf
 
 install:
+- npm install
+
+script:
 - npm run clean
 - npm run build
 - npm run build-docs
 - npm run tslit
 - npm run coveralls
 
-script:
-
 
 branches:
   only:
   - master
-
-
