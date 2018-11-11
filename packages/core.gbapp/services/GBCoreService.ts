@@ -40,7 +40,7 @@ import { IGBCoreService, IGBInstance } from 'botlib';
 import * as fs from 'fs';
 import processExists = require('process-exists');
 import { Sequelize } from 'sequelize-typescript';
-import logger = require('../../../src/logger');
+const logger = require('../../../src/logger');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
