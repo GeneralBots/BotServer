@@ -32,7 +32,7 @@ deploy:
   - provider: releases
     api_key: $GITHUB_TOKEN
     file_glob: true
-    file: src/**/*
+    file: "{YOURLIB}-*.tgz"
     skip_cleanup: true
     on:
       tags: false
