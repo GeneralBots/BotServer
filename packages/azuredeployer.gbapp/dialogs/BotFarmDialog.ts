@@ -9,7 +9,7 @@
 |                                                                             |
 | General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
 | Licensed under the AGPL-3.0.                                                |
-|                                                                             | 
+|                                                                             |
 | According to our dual licensing model, this program can be used either      |
 | under the terms of the GNU Affero General Public License, version 3,        |
 | or under a proprietary license.                                             |
@@ -30,38 +30,40 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+/**
+ * @fileoverview General Bots server core.
+ */
 
-import { GBMinInstance } from "botlib";
-import { IGBDialog } from "botlib";
-import { BotAdapter } from "botbuilder";
-import { Messages } from "../strings";
+'use strict';
+
+import { BotAdapter } from 'botbuilder';
+import { GBMinInstance } from 'botlib';
+import { IGBDialog } from 'botlib';
+import { Messages } from '../strings';
 
 export class BotFarmDialog extends IGBDialog {
-
-  
   /**
    * Setup dialogs flows and define services call.
    *
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add("/createBotFarm", [
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
+    min.dialogs.add('/createBotFarm', [
       async step => {
-        let locale = step.context.activity.locale;
-        await step.prompt("choicePrompt", Messages[locale].what_about_me, [
-          "1",
-          "2",
-          "3",
-          "4",
-          "5"
+        const locale = step.context.activity.locale;
+        await step.prompt('choicePrompt', Messages[locale].what_about_me, [
+          '1',
+          '2',
+          '3',
+          '4',
+          '5',
         ]);
       },
       async step => {
-        let locale = step.context.activity.locale;
+        const locale = step.context.activity.locale;
         await step.context.sendActivity(Messages[locale].thanks);
-      }
+      },
     ]);
   }
 }

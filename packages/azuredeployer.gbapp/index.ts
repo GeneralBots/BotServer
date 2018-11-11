@@ -9,7 +9,7 @@
 |                                                                             |
 | General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
 | Licensed under the AGPL-3.0.                                                |
-|                                                                             | 
+|                                                                             |
 | According to our dual licensing model, this program can be used either      |
 | under the terms of the GNU Affero General Public License, version 3,        |
 | or under a proprietary license.                                             |
@@ -30,32 +30,25 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict"
+/**
+ * @fileoverview General Bots server core.
+ */
 
-const UrlJoin = require("url-join")
-import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib"
-import { Sequelize } from "sequelize-typescript"
+'use strict';
 
+const UrlJoin = require('url-join');
+import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { Sequelize } from 'sequelize-typescript';
 
 export class GBWhatsappPackage implements IGBPackage {
+  public sysPackages: IGBPackage[] = null;
 
-    sysPackages: IGBPackage[] = null
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
 
-    loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-    }
+  public unloadPackage(core: IGBCoreService): void {}
 
-    unloadPackage(core: IGBCoreService): void {
+  public loadBot(min: GBMinInstance): void {}
 
-    }
-
-    loadBot(min: GBMinInstance): void {
-       
-    }
-
-    unloadBot(min: GBMinInstance): void {
-
-    }
-    onNewSession(min: GBMinInstance, step: any): void {
-
-    }
+  public unloadBot(min: GBMinInstance): void {}
+  public onNewSession(min: GBMinInstance, step: any): void {}
 }

@@ -9,7 +9,7 @@
 |                                                                             |
 | General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
 | Licensed under the AGPL-3.0.                                                |
-|                                                                             | 
+|                                                                             |
 | According to our dual licensing model, this program can be used either      |
 | under the terms of the GNU Affero General Public License, version 3,        |
 | or under a proprietary license.                                             |
@@ -34,26 +34,21 @@
  * @fileoverview General Bots server core.
  */
 
-"use strict";
+'use strict';
 
-const logger = require("../../../src/logger");
-import { Sequelize } from "sequelize-typescript";
-import * as fs from "fs";
-import { GBConfigService } from "./GBConfigService";
-import { IGBInstance, IGBCoreService } from "botlib";
-import { GuaribasInstance } from "../models/GBModel";
-import { GBAdminService } from "../../admin.gbapp/services/GBAdminService";
-const processExists = require("process-exists");
-const TextDecoder = require("util").TextDecoder;
+import { IGBCoreService, IGBInstance } from 'botlib';
+import * as fs from 'fs';
+import processExists = require('process-exists');
+import { Sequelize } from 'sequelize-typescript';
+import logger = require('../../../src/logger');
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
+import { GuaribasInstance } from '../models/GBModel';
+import { GBConfigService } from './GBConfigService';
 
 /**
  *  Core service layer.
  */
 export class GBCoreService implements IGBCoreService {
-  isCloudSetup() {
-    return GBConfigService.tryGet("STORAGE_DIALECT");
-  }
-
   /**
    * Data access layer instance.
    */
@@ -72,12 +67,16 @@ export class GBCoreService implements IGBCoreService {
   /**
    * Custom create table query.
    */
-  private createTableQuery: (tableName, attributes, options) => string;
+  private createTableQuery: (
+    tableName: string,
+    attributes: any,
+    options: any,
+  ) => string;
 
   /**
    * Custom change column query.
    */
-  private changeColumnQuery: (tableName, attributes) => string;
+  private changeColumnQuery: (tableName: string, attributes: any) => string;
 
   /**
    * Dialect used. Tested: mssql and sqlite.
@@ -94,75 +93,149 @@ export class GBCoreService implements IGBCoreService {
   /**
    * Gets database config and connect to storage.
    */
-  async initDatabase() {
-    return new Promise((resolve, reject) => {
-      try {
-        this.dialect = GBConfigService.get("STORAGE_DIALECT");
+  public async initDatabase(): Promise<any> {
+    return new Promise(
+      (resolve: any, reject: any): any => {
+        try {
+          this.dialect = GBConfigService.get('STORAGE_DIALECT');
 
-        let host: string | undefined;
-        let database: string | undefined;
-        let username: string | undefined;
-        let password: string | undefined;
-        let storage: string | undefined;
+          let host: string | undefined;
+          let database: string | undefined;
+          let username: string | undefined;
+          let password: string | undefined;
+          let storage: string | undefined;
 
-        if (this.dialect === "mssql") {
-          host = GBConfigService.get("STORAGE_SERVER");
-          database = GBConfigService.get("STORAGE_NAME");
-          username = GBConfigService.get("STORAGE_USERNAME");
-          password = GBConfigService.get("STORAGE_PASSWORD");
-        } else if (this.dialect === "sqlite") {
-          storage = GBConfigService.get("STORAGE_STORAGE");
-        } else {
-          reject(`Unknown dialect: ${this.dialect}.`);
-        }
-
-        let logging =
-          GBConfigService.get("STORAGE_LOGGING") === "true"
-            ? (str: string) => {
-                logger.info(str);
-              }
-            : false;
-
-        let encrypt = GBConfigService.get("STORAGE_ENCRYPT") === "true";
-
-        this.sequelize = new Sequelize({
-          host: host,
-          database: database,
-          username: username,
-          password: password,
-          logging: logging,
-          operatorsAliases: false,
-          dialect: this.dialect,
-          storage: storage,
-          dialectOptions: {
-            encrypt: encrypt
-          },
-          pool: {
-            max: 32,
-            min: 8,
-            idle: 40000,
-            evict: 40000,
-            acquire: 40000
+          if (this.dialect === 'mssql') {
+            host = GBConfigService.get('STORAGE_SERVER');
+            database = GBConfigService.get('STORAGE_NAME');
+            username = GBConfigService.get('STORAGE_USERNAME');
+            password = GBConfigService.get('STORAGE_PASSWORD');
+          } else if (this.dialect === 'sqlite') {
+            storage = GBConfigService.get('STORAGE_STORAGE');
+          } else {
+            reject(`Unknown dialect: ${this.dialect}.`);
           }
-        });
 
-        if (this.dialect === "mssql") {
-          this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
-          this.createTableQuery = this.queryGenerator.createTableQuery;
-          this.queryGenerator.createTableQuery = (
-            tableName,
-            attributes,
-            options
-          ) => this.createTableQueryOverride(tableName, attributes, options);
-          this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
-          this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
-            this.changeColumnQueryOverride(tableName, attributes);
+          const logging: any =
+            GBConfigService.get('STORAGE_LOGGING') === 'true'
+              ? (str: string): void => {
+                  logger.info(str);
+                }
+              : false;
+
+          const encrypt: boolean =
+            GBConfigService.get('STORAGE_ENCRYPT') === 'true';
+
+          this.sequelize = new Sequelize({
+            host: host,
+            database: database,
+            username: username,
+            password: password,
+            logging: logging,
+            operatorsAliases: false,
+            dialect: this.dialect,
+            storage: storage,
+            dialectOptions: {
+              encrypt: encrypt,
+            },
+            pool: {
+              max: 32,
+              min: 8,
+              idle: 40000,
+              evict: 40000,
+              acquire: 40000,
+            },
+          });
+
+          if (this.dialect === 'mssql') {
+            this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
+            this.createTableQuery = this.queryGenerator.createTableQuery;
+            this.queryGenerator.createTableQuery = (
+              tableName,
+              attributes,
+              options,
+            ) => this.createTableQueryOverride(tableName, attributes, options);
+            this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
+            this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
+              this.changeColumnQueryOverride(tableName, attributes);
+          }
+          resolve();
+        } catch (error) {
+          reject(error);
         }
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    });
+      },
+    );
+  }
+
+  public async syncDatabaseStructure() {
+    if (GBConfigService.get('STORAGE_SYNC') === 'true') {
+      const alter = GBConfigService.get('STORAGE_SYNC_ALTER') === 'true';
+      const force = GBConfigService.get('STORAGE_SYNC_FORCE') === 'true';
+      logger.info('Syncing database...');
+      return this.sequelize.sync({
+        alter: alter,
+        force: force,
+      });
+    } else {
+      const msg = 'Database synchronization is disabled.';
+      logger.info(msg);
+    }
+  }
+
+  /**
+   * Loads all items to start several listeners.
+   */
+  public async loadInstances(): Promise<IGBInstance> {
+    return GuaribasInstance.findAll({});
+  }
+
+  /**
+   * Loads just one Bot instance by its internal Id.
+   */
+  public async loadInstanceById(instanceId: string): Promise<IGBInstance> {
+    const options = { where: { instanceId: instanceId } };
+    return GuaribasInstance.findOne(options);
+  }
+
+  /**
+   * Loads just one Bot instance.
+   */
+  public async loadInstance(botId: string): Promise<IGBInstance> {
+    const options = { where: {} };
+
+    if (botId !== '[default]') {
+      options.where = { botId: botId };
+    }
+
+    return GuaribasInstance.findOne(options);
+  }
+
+  public async writeEnv(instance: IGBInstance) {
+    const env =
+      `ADDITIONAL_DEPLOY_PATH=\n` +
+      `ADMIN_PASS=${instance.adminPass}\n` +
+      `CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}\n` +
+      `CLOUD_LOCATION=${instance.cloudLocation}\n` +
+      `CLOUD_GROUP=${instance.botId}\n` +
+      `CLOUD_USERNAME=${instance.cloudUsername}\n` +
+      `CLOUD_PASSWORD=${instance.cloudPassword}\n` +
+      `MARKETPLACE_ID=${instance.marketplaceId}\n` +
+      `MARKETPLACE_SECRET=${instance.marketplacePassword}\n` +
+      `NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}\n` +
+      `STORAGE_DIALECT=${instance.storageDialect}\n` +
+      `STORAGE_SERVER=${instance.storageServer}.database.windows.net\n` +
+      `STORAGE_NAME=${instance.storageName}\n` +
+      `STORAGE_USERNAME=${instance.storageUsername}\n` +
+      `STORAGE_PASSWORD=${instance.storagePassword}\n` +
+      `STORAGE_SYNC=true\n`;
+
+    fs.writeFileSync('.env', env);
+  }
+
+  public async ensureProxy(port): Promise<string> {
+    let proxyAddress: string;
+    const ngrok = require('ngrok');
+    return await ngrok.connect({ port: port });
   }
 
   /**
@@ -184,7 +257,7 @@ export class GBCoreService implements IGBCoreService {
     let sql: string = this.createTableQuery.apply(this.queryGenerator, [
       tableName,
       attributes,
-      options
+      options,
     ]);
     const re1 = /CREATE\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
@@ -194,8 +267,8 @@ export class GBCoreService implements IGBCoreService {
       sql = sql.replace(
         re2,
         (match: string, ...args: any[]): string => {
-          return "CONSTRAINT [" + table + "_pk] " + match;
-        }
+          return 'CONSTRAINT [' + table + '_pk] ' + match;
+        },
       );
       const re3 = /FOREIGN\s+KEY\s+\((\[[^\]]*\](?:,\s*\[[^\]]*\])*)\)/g;
       const re4 = /\[([^\]]*)\]/g;
@@ -206,11 +279,11 @@ export class GBCoreService implements IGBCoreService {
           let fkname = table;
           let matches = re4.exec(fkcols);
           while (matches != null) {
-            fkname += "_" + matches[1];
+            fkname += '_' + matches[1];
             matches = re4.exec(fkcols);
           }
-          return "CONSTRAINT [" + fkname + "_fk] FOREIGN KEY (" + fkcols + ")";
-        }
+          return 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
+        },
       );
     }
     return sql;
@@ -227,7 +300,7 @@ export class GBCoreService implements IGBCoreService {
   private changeColumnQueryOverride(tableName, attributes): string {
     let sql: string = this.changeColumnQuery.apply(this.queryGenerator, [
       tableName,
-      attributes
+      attributes,
     ]);
     const re1 = /ALTER\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
@@ -242,91 +315,20 @@ export class GBCoreService implements IGBCoreService {
           let fkname = table;
           let matches = re3.exec(fkcols);
           while (matches != null) {
-            fkname += "_" + matches[1];
+            fkname += '_' + matches[1];
             matches = re3.exec(fkcols);
           }
           return (
-            (args[0] ? args[0] : "") +
-            "CONSTRAINT [" +
+            (args[0] ? args[0] : '') +
+            'CONSTRAINT [' +
             fkname +
-            "_fk] FOREIGN KEY (" +
+            '_fk] FOREIGN KEY (' +
             fkcols +
-            ")"
+            ')'
           );
-        }
+        },
       );
     }
     return sql;
-  }
-
-  async syncDatabaseStructure() {
-    if (GBConfigService.get("STORAGE_SYNC") === "true") {
-      const alter = GBConfigService.get("STORAGE_SYNC_ALTER") === "true";
-      const force = GBConfigService.get("STORAGE_SYNC_FORCE") === "true";
-      logger.info("Syncing database...");
-      return this.sequelize.sync({
-        alter: alter,
-        force: force
-      });
-    } else {
-      let msg = "Database synchronization is disabled.";
-      logger.info(msg);
-    }
-  }
-
-  /**
-   * Loads all items to start several listeners.
-   */
-  async loadInstances(): Promise<IGBInstance> {
-    return GuaribasInstance.findAll({});
-  }
-
-  /**
-   * Loads just one Bot instance by its internal Id.
-   */
-  async loadInstanceById(instanceId: string): Promise<IGBInstance> {
-    let options = { where: { instanceId: instanceId } };
-    return GuaribasInstance.findOne(options);
-  }
-
-  /**
-   * Loads just one Bot instance.
-   */
-  async loadInstance(botId: string): Promise<IGBInstance> {
-    let options = { where: {} };
-
-    if (botId != "[default]") {
-      options.where = { botId: botId };
-    }
-
-    return GuaribasInstance.findOne(options);
-  }
-
-  public async writeEnv(instance: IGBInstance) {
-    let env =
-      `ADDITIONAL_DEPLOY_PATH=\n` +
-      `ADMIN_PASS=${instance.adminPass}\n` +
-      `CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}\n` +
-      `CLOUD_LOCATION=${instance.cloudLocation}\n` +
-      `CLOUD_GROUP=${instance.botId}\n` +
-      `CLOUD_USERNAME=${instance.cloudUsername}\n` +
-      `CLOUD_PASSWORD=${instance.cloudPassword}\n` +
-      `MARKETPLACE_ID=${instance.marketplaceId}\n`+
-      `MARKETPLACE_SECRET=${instance.marketplacePassword}\n`+
-      `NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}\n`+
-      `STORAGE_DIALECT=${instance.storageDialect}\n` +
-      `STORAGE_SERVER=${instance.storageServer}.database.windows.net\n` +
-      `STORAGE_NAME=${instance.storageName}\n` +
-      `STORAGE_USERNAME=${instance.storageUsername}\n` +
-      `STORAGE_PASSWORD=${instance.storagePassword}\n` +
-      `STORAGE_SYNC=true\n`;
-
-    fs.writeFileSync(".env", env);
-  }
-
-  public async ensureProxy(port): Promise<string> {
-    let proxyAddress: string;
-    const ngrok = require("ngrok");
-    return await ngrok.connect({port:port});
   }
 }

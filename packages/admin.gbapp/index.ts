@@ -9,7 +9,7 @@
 |                                                                             |
 | General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
 | Licensed under the AGPL-3.0.                                                |
-|                                                                             | 
+|                                                                             |
 | According to our dual licensing model, this program can be used either      |
 | under the terms of the GNU Affero General Public License, version 3,        |
 | or under a proprietary license.                                             |
@@ -30,35 +30,27 @@
 |                                                                             |
 \*****************************************************************************/
 
-'use strict'
+/**
+ * @fileoverview General Bots server core.
+ */
 
-const UrlJoin = require('url-join')
+'use strict';
 
-import { AdminDialog } from './dialogs/AdminDialog'
-import { GBMinInstance, IGBPackage, IGBCoreService } from 'botlib'
+import urlJoin = require('url-join');
 
-import { Sequelize } from 'sequelize-typescript'
+import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { Sequelize } from 'sequelize-typescript';
+import { AdminDialog } from './dialogs/AdminDialog';
 import { GuaribasAdmin } from './models/AdminModel';
 
 export class GBAdminPackage implements IGBPackage {
-  sysPackages: IGBPackage[] = null
+  public sysPackages: IGBPackage[] = null;
 
-  loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-    core.sequelize.addModels([
-      GuaribasAdmin
-    ])
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+    core.sequelize.addModels([GuaribasAdmin]);
   }
 
-  unloadPackage(core: IGBCoreService): void {
-  }
-
-  loadBot(min: GBMinInstance): void {
-    AdminDialog.setup(min.bot, min)
-  }
-
-  unloadBot(min: GBMinInstance): void {
-  }
-
-  onNewSession(min: GBMinInstance, step: any): void {
+  public loadBot(min: GBMinInstance): void {
+    AdminDialog.setup(min.bot, min);
   }
 }

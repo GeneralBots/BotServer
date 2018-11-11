@@ -19,6 +19,7 @@
         "no-parameter-properties": false,
         "no-reserved-keywords": false,
         "no-unnecessary-class":false,
+        "no-require-imports": false,
         "function-name": false,
         "no-redundant-jsdoc": false,
         "no-return-await": false,
@@ -32,6 +33,7 @@
         "no-parameter-reassignment":false,
         "export-name":false,
         "no-relative-imports": false,
+        "no-backbone-get-set-outside-model": false,
         "max-line-length": [true,{"limit":80,"ignore-pattern":"^\\s+\\*"}]
     }
 }

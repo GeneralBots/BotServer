@@ -9,7 +9,7 @@
 |                                                                             |
 | General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
 | Licensed under the AGPL-3.0.                                                |
-|                                                                             | 
+|                                                                             |
 | According to our dual licensing model, this program can be used either      |
 | under the terms of the GNU Affero General Public License, version 3,        |
 | or under a proprietary license.                                             |
@@ -30,85 +30,85 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict"
+/**
+ * @fileoverview General Bots server core.
+ */
+
+'use strict';
 
 import {
-  DataTypes,
-  DataTypeUUIDv4,
-  DataTypeDate,
-  DataTypeDecimal
-} from "sequelize"
-
-import {
+  AutoIncrement,
+  BelongsTo,
+  Column,
+  CreatedAt,
+  DataType,
+  ForeignKey,
+  HasMany,
+  HasOne,
+  IsUUID,
+  Length,
+  Model,
+  PrimaryKey,
   Sequelize,
   Table,
-  Column,
-  Model,
-  HasMany,
-  BelongsTo,
-  BelongsToMany,
-  Length,
-  ForeignKey,
-  CreatedAt,
-  UpdatedAt,
-  DataType,
-  IsUUID,
-  PrimaryKey,
-  AutoIncrement,
-  HasOne
-} from "sequelize-typescript"
+  UpdatedAt
+} from 'sequelize-typescript';
 
-import { GuaribasUser } from "../../security.gblib/models"
-import { GuaribasInstance, GuaribasPackage } from "../../core.gbapp/models/GBModel"
+import {
+  GuaribasInstance,
+  GuaribasPackage
+} from '../../core.gbapp/models/GBModel';
+import { GuaribasUser } from '../../security.gblib/models';
 
 @Table
 export class GuaribasSubject extends Model<GuaribasSubject> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  subjectId: number
+  public subjectId: number;
 
-  @Column internalId: string
+  @Column public internalId: string;
 
-  @Column title: string
+  @Column public title: string;
 
   @Column(DataType.STRING(512))
-  @Column description: string
+  @Column
+  public description: string;
 
-  @Column from: string
+  @Column public from: string;
 
-  @Column to: string
+  @Column public to: string;
 
   @ForeignKey(() => GuaribasSubject)
   @Column
-  parentSubjectId: number
+  public parentSubjectId: number;
 
-  @BelongsTo(() => GuaribasSubject, "parentSubjectId")
-  parentSubject: GuaribasSubject
+  @BelongsTo(() => GuaribasSubject, 'parentSubjectId')
+  public parentSubject: GuaribasSubject;
 
-  @HasMany(() => GuaribasSubject, { foreignKey: "parentSubjectId" })
-  childrenSubjects: GuaribasSubject[]
+  @HasMany(() => GuaribasSubject, { foreignKey: 'parentSubjectId' })
+  public childrenSubjects: GuaribasSubject[];
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number
+  public instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance
+  public instance: GuaribasInstance;
 
   @ForeignKey(() => GuaribasUser)
   @Column
-  responsibleUserId: number
+  public responsibleUserId: number;
 
   @BelongsTo(() => GuaribasUser)
-  responsibleUser: GuaribasUser
+  public responsibleUser: GuaribasUser;
 
   @ForeignKey(() => GuaribasPackage)
   @Column
-  packageId: number
+  public packageId: number;
 
   @BelongsTo(() => GuaribasPackage)
-  package: GuaribasPackage
+  public package: GuaribasPackage;
 }
 
 @Table
@@ -116,62 +116,62 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  questionId: number
+  public questionId: number;
 
   @Column(DataType.STRING(64))
   @Column
-  subject1: string
+  public subject1: string;
 
   @Column(DataType.STRING(64))
   @Column
-  subject2: string
+  public subject2: string;
 
   @Column(DataType.STRING(64))
   @Column
-  subject3: string
+  public subject3: string;
 
   @Column(DataType.STRING(64))
   @Column
-  subject4: string
+  public subject4: string;
 
   @Column(DataType.STRING(1024))
   @Column
-  keywords: string
+  public keywords: string;
 
   @Column(DataType.STRING(512))
-  from: string
+  public from: string;
 
   @Column(DataType.STRING(512))
-  to: string
+  public to: string;
 
   @Column(DataType.TEXT)
-  content: string
+  public content: string;
 
   @Column
   @CreatedAt
-  createdAt: Date
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date
+  public updatedAt: Date;
 
   @ForeignKey(() => GuaribasAnswer)
   @Column
-  answerId: number
+  public answerId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance
+  public instance: GuaribasInstance;
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number
+  public instanceId: number;
 
   @ForeignKey(() => GuaribasPackage)
   @Column
-  packageId: number
+  public packageId: number;
 
   @BelongsTo(() => GuaribasPackage)
-  package: GuaribasPackage
+  public package: GuaribasPackage;
 }
 
 @Table
@@ -179,53 +179,52 @@ export class GuaribasAnswer extends Model<GuaribasAnswer> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  answerId: number
+  public answerId: number;
 
   @Length({ min: 0, max: 512 })
   @Column
-  media: string
+  public media: string;
 
   @Length({ min: 0, max: 12 })
   @Column
-  format: string
+  public format: string;
 
   @Column(DataType.TEXT)
-  content: string
+  public content: string;
 
   @Column
   @CreatedAt
-  createdAt: Date
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date
+  public updatedAt: Date;
 
   @HasMany(() => GuaribasQuestion)
-  questions: GuaribasQuestion[]
+  public questions: GuaribasQuestion[];
 
   @HasOne(() => GuaribasQuestion)
-  prev: GuaribasQuestion
+  public prev: GuaribasQuestion;
 
   @HasOne(() => GuaribasQuestion)
-  next: GuaribasQuestion
+  public next: GuaribasQuestion;
 
   @ForeignKey(() => GuaribasQuestion)
   @Column
-  nextId: number
+  public nextId: number;
 
   @ForeignKey(() => GuaribasQuestion)
   @Column
-  prevId: number
+  public prevId: number;
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number
+  public instanceId: number;
 
   @ForeignKey(() => GuaribasPackage)
   @Column
-  packageId: number
+  public packageId: number;
 
   @BelongsTo(() => GuaribasPackage)
-  package: GuaribasPackage
-
+  public package: GuaribasPackage;
 }

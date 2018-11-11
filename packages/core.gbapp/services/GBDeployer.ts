@@ -9,7 +9,7 @@
 |                                                                             |
 | General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
 | Licensed under the AGPL-3.0.                                                |
-|                                                                             | 
+|                                                                             |
 | According to our dual licensing model, this program can be used either      |
 | under the terms of the GNU Affero General Public License, version 3,        |
 | or under a proprietary license.                                             |
@@ -30,7 +30,11 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict";
+/**
+ * @fileoverview General Bots server core.
+ */
+
+'use strict';
 
 const logger = require("../../../src/logger");
 const Path = require("path");
@@ -72,7 +76,7 @@ export class GBDeployer {
     appPackages: Array<IGBPackage>
   ) {
     let _this = this;
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve: any, reject: any): any => {
       let totalPackages = 0;
       let additionalPath = GBConfigService.get("ADDITIONAL_DEPLOY_PATH");
       let paths = [GBDeployer.deployFolder];
