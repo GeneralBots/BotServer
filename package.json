@@ -93,5 +93,8 @@
     "wait-until": "0.0.2",
     "walk-promise": "0.2.0",
     "winston": "3.1.0"
+  },
+  "devDependencies": {
+    "shx": "^0.3.2"
   }
 }

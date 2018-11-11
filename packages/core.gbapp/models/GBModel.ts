@@ -32,22 +32,12 @@
 
 "use strict";
 
-import {
-  DataTypes,
-  DataTypeUUIDv4,
-  DataTypeDate,
-  DataTypeDecimal
-} from "sequelize";
 
 import {
-  Sequelize,
   Table,
   Column,
   Model,
-  HasMany,
   BelongsTo,
-  BelongsToMany,
-  Length,
   ForeignKey,
   CreatedAt,
   UpdatedAt,
