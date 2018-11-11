@@ -19,15 +19,14 @@
   },
   "scripts": {
     "clean": "rimraf dist",
-    "start": "node ./dist/src/app.js",
-    "startIde": "npm-run-all clean --parallel watch:build watch:server --print-label",
-    "watch:build": "tsc --watch",
-    "build": "tsc",
-    "watch:server": "nodemon './dist/index.js' --watch './dist'",
-    "build-docs": "typedoc --options typedoc.json src/",
     "tslint": "tslint ./packages/*/src/**/*.ts -t verbose",
+    "build": "tsc",
+    "build-docs": "typedoc --options typedoc.json src/",
     "test": "nyc --reporter=html --reporter=text mocha -r ts-node/register packages/**/*.test.ts ",
-    "coveralls": "npm run test && nyc report --reporter=text-lcov | coveralls"
+    "coveralls": "npm run test && nyc report --reporter=text-lcov | coveralls",
+    "start": "node ./dist/src/app.js",
+    "watch:build": "tsc --watch",
+    "watch:server": "nodemon './dist/index.js' --watch './dist'"
   },
   "engines": {
     "node": "=10.13.0"

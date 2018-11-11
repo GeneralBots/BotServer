@@ -14,9 +14,12 @@ install:
 - npm run update-versions
 
 script:
+- npm run clean
 - npm run build
-- npm run test
-- npm run tslint
+- npm run build-docs
+- npm run tslit
+- npm run coveralls
+
 
 branches:
   only:
