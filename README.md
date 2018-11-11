@@ -36,8 +36,11 @@ Package Quick Reference
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
 
 #### Watch a video about packages, development environment and self-deployment
+
+*Now with General Bots you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
+
 [![General Bot Video](https://img.youtube.com/vi/AfKTwljoMOs/0.jpg)](https://www.youtube.com/watch?v=AfKTwljoMOs)
-*Now with General Bots you can press F5 on Visual Studio to get a bot factory on your environment*
+
 
 
 ### The same build process for everyone
