@@ -26,11 +26,14 @@ branches:
   - master
 
 after_success:
+- npm run typedoc
 - npm pack
+
+deploy:
   provider: releases
     api_key: $GITHUB_TOKEN
     file_glob: true
-    file: "{YOURLIB}-*.tgz"
+    file: "CONTRIBUTING.md"
     skip_cleanup: true
     on:
       tags: true
