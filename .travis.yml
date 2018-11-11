@@ -17,9 +17,9 @@ before_script:
 - npm run build
 
 script:
-- npm run build-docs
-- npm run tslint
-- npm run coveralls
+#- npm run build-docs
+#- npm run tslint
+#- npm run coveralls
 
 branches:
   only:
@@ -30,7 +30,7 @@ after_success:
 - npm pack
 
 deploy:
-  provider: releases
+  - provider: releases
     api_key: $GITHUB_TOKEN
     file_glob: true
     file: "CONTRIBUTING.md"
@@ -38,7 +38,7 @@ deploy:
     on:
       tags: true
 
-  provider: npm
+  - provider: npm
     skip_cleanup: true
     email: "operations@pragmatismo.io"
     api_key: $NPM_TOKEN
