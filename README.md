@@ -1,14 +1,30 @@
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+#### Watch a video about packages, development environment and self-deployment
 
-** **Checkout our FREE [Intranet Quickstart Bot](https://github.com/pragmatismo-io/IntranetBotQuickStart.gbai)** ** 
+*Now with General Bots you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
+
+[![General Bot Video](https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/video-01-thumb.jpg)](https://www.youtube.com/watch?v=AfKTwljoMOs)
+
 
 Welcome to General Bot Community Edition
 ----------------
+
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+[![forthebadge](https://badge.fury.io/js/botserver.svg)](https://badge.fury.io)
+[![Dependencies](https://david-dm.org/pragmatismo-io/botserver.svg)](https://david-dm.org)
+[![Open-source](https://badges.frapsoft.com/os/v2/open-source.svg)](https://badges.frapsoft.com)
+[![Coverage Status](https://coveralls.io/repos/github/pragmatismo-io/BotServer/badge.svg)](https://coveralls.io/github/pragmatismo-io/BotServer)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+[![Issues](https://github-basic-badges.herokuapp.com/issues/pragmatismo-io/BotServer.svg)](https://github.com/kennedyoliveira/github-basic-badges)
+[![Commits](https://github-basic-badges.herokuapp.com/commits/pragmatismo-io/BotServer.svg)](https://github.com/kennedyoliveira/github-basic-badges)
+[![License](https://github-basic-badges.herokuapp.com/license/pragmatismo-io/BotServer.svg)](https://github.com/kennedyoliveira/github-basic-badges)
+[![Pulls](https://github-basic-badges.herokuapp.com/pulls/pragmatismo-io/BotServer.svg)](https://github.com/kennedyoliveira/github-basic-badges)
 
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
 General Bot is a package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
 In this [MSDN](https://blogs.msdn.microsoft.com/buckwoody/2018/09/25/applied-ai-using-a-bot-for-password-reset/) article you can have an overview of a General Bots application.
+
+*Checkout our FREE [Intranet Quickstart Bot](https://github.com/pragmatismo-io/IntranetBotQuickStart.gbai)*
 
 
 ### What is a Bot Server?
@@ -34,14 +50,6 @@ Package Quick Reference
 |[whatsapp.gblib](https://github.com/pragmatismo-io/BotServer/tree/master/packages/whatsapp.gblib)|[default.gbui](https://github.com/pragmatismo-io/BotServer/tree/master/packages/default.gbui)|[core.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/packages/core.gbapp)|[kb.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/packages/kb.gbapp)|
 
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
-
-#### Watch a video about packages, development environment and self-deployment
-
-*Now with General Bots you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
-
-[![General Bot Video](https://img.youtube.com/vi/AfKTwljoMOs/0.jpg)](https://www.youtube.com/watch?v=AfKTwljoMOs)
-
-
 
 ### The same build process for everyone
 
