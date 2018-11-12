@@ -23,8 +23,11 @@ branches:
   only:
   - master
   - /^greenkeeper/.*$/
+  except:
+  - /^v\d+\.\d+\.\d+$/
 
 after_success:
+- npm run travis-deploy-once "npm run semantic-release"
 #- npm run typedoc
 - npm pack
 
