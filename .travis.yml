@@ -33,7 +33,7 @@ deploy:
   - provider: releases
     api_key: $GITHUB_TOKEN
     file_glob: true
-    file: src/**/*
+    file: "BotServer-*.tgz"
     skip_cleanup: true
     on:
       tags: false
