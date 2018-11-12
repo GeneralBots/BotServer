@@ -204,8 +204,7 @@
         ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       },
-      "@semantic-release/git",
-      "@semantic-release/github"
+      "@semantic-release/git"
     ],
     "publish": [
       "@semantic-release/changelog",
@@ -228,9 +227,9 @@
       "pre-push": [
         "echo skip npm run unused-deps",
         "echo skip npm npm run secure",
-        "npm run license",
-        "npm run ban -- --all",
-        "echo npm run size"
+        "echo skip npm run license",
+        "echo skip npm run ban -- --all",
+        "echo skip run size"
       ],
       "post-commit": [],
       "post-checkout": [],
