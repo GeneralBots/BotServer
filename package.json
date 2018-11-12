@@ -201,7 +201,7 @@
         "echo skip npm npm run secure",
         "npm run license",
         "npm run ban -- --all",
-        "npm run size"
+        "echo npm run size"
       ],
       "post-commit": [],
       "post-checkout": [],
