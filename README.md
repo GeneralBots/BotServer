@@ -1,3 +1,10 @@
+| Area                         | Status                                                                                             |
+|------------------------------|----------------------------------------------------------------------------------------------------|
+| Management                   | [![Waffle.io - Columns and their card count](https://badge.waffle.io/pragmatismo-io/BotServer.svg?columns=all)](https://waffle.io/pragmatismo-io/BotServer) |
+| Building & Quality           | [![Build Status](https://travis-ci.com/pragmatismo-io/BotServer.svg?branch=master)](https://travis-ci.com/pragmatismo-io/BotServer)  [![Coverage Status](https://coveralls.io/repos/github/pragmatismo-io/BotServer/badge.svg)](https://coveralls.io/github/pragmatismo-io/BotServer) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) |
+| Packaging                    | [![forthebadge](https://badge.fury.io/js/botserver.svg)](https://badge.fury.io) [![Dependencies](https://david-dm.org/pragmatismo-io/botserver.svg)](https://david-dm.org)  [![Greenkeeper badge](https://badges.greenkeeper.io/pragmatismo-io/BotServer.svg)](https://greenkeeper.io/) |
+| Community                    | [![Open-source](https://badges.frapsoft.com/os/v2/open-source.svg)](https://badges.frapsoft.com) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) |
+
 #### Watch a video about packages, development environment and self-deployment
 
 *Now with General Bots you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
@@ -8,13 +15,6 @@
 Welcome to General Bot Community Edition
 ----------------
 
-[![Build Status](https://travis-ci.com/pragmatismo-io/BotServer.svg?branch=master)](https://travis-ci.com/pragmatismo-io/BotServer)
-[![Coverage Status](https://coveralls.io/repos/github/pragmatismo-io/BotServer/badge.svg)](https://coveralls.io/github/pragmatismo-io/BotServer)
-[![Open-source](https://badges.frapsoft.com/os/v2/open-source.svg)](https://badges.frapsoft.com)
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
-[![forthebadge](https://badge.fury.io/js/botserver.svg)](https://badge.fury.io)
-[![Dependencies](https://david-dm.org/pragmatismo-io/botserver.svg)](https://david-dm.org)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
