@@ -29,7 +29,7 @@ branches:
 after_success:
 - npm run travis-deploy-once "npm run semantic-release"
 #- npm run typedoc
-- npm pack
+#- npm pack
 
 deploy:
 
