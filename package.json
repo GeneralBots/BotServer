@@ -188,13 +188,11 @@
   "release": {
     "debug": true,
     "verifyConditions": [
-      "@semantic-release/commit-analyzer",
       "@semantic-release/npm",
       "@semantic-release/git",
       "@semantic-release/github"
     ],
     "prepare": [
-
       "@semantic-release/changelog",
       "@semantic-release/release-notes-generator",
       "@semantic-release/npm",
