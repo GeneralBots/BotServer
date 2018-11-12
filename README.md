@@ -15,8 +15,7 @@
 
 
 Welcome to General Bot Community Edition
-----------------
-
+----------------------------------------
 
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
