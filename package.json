@@ -81,7 +81,7 @@
     "reflect-metadata": "0.1.12",
     "request-promise-native": "1.0.5",
     "scanf": "^1.0.2",
-    "sequelize": "4.41.1",
+    "sequelize": "4.41.2",
     "sequelize-typescript": "0.6.6",
     "simple-git": "^1.107.0",
     "sqlite3": "4.0.4",
@@ -99,7 +99,7 @@
     "winston": "3.1.0"
   },
   "devDependencies": {
-    "@types/mocha": "^2.2.47",
+    "@types/mocha": "^5.2.5",
     "chai": "^4.2.0",
     "coveralls": "^3.0.2",
     "mocha": "^5.2.0",
