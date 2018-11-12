@@ -1,10 +1,10 @@
 | Area                         | Status                                                                                             |
 |------------------------------|----------------------------------------------------------------------------------------------------|
 | Management                   | [![Waffle.io - Columns and their card count](https://badge.waffle.io/pragmatismo-io/BotServer.svg?columns=all)](https://waffle.io/pragmatismo-io/BotServer) |
-| Security                     | [![Known Vulnerabilities](https://snyk.io/test/github/pragmatismo-io/BotServer/badge.svg)](https://snyk.io/test/github/pragmatismo-io/BotServer)|
+| Security                     | [![Known Vulnerabilities](https://snyk.io/test/github/pragmatismo-io/BotServer/badge.svg)](https://snyk.io/test/github/pragmatismo-io/BotServer) |
 | Building & Quality           | [![Build Status](https://travis-ci.com/pragmatismo-io/BotServer.svg?branch=master)](https://travis-ci.com/pragmatismo-io/BotServer)  [![Coverage Status](https://coveralls.io/repos/github/pragmatismo-io/BotServer/badge.svg)](https://coveralls.io/github/pragmatismo-io/BotServer) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) |
 | Packaging                    | [![forthebadge](https://badge.fury.io/js/botserver.svg)](https://badge.fury.io) [![Dependencies](https://david-dm.org/pragmatismo-io/botserver.svg)](https://david-dm.org)  [![Greenkeeper badge](https://badges.greenkeeper.io/pragmatismo-io/BotServer.svg)](https://greenkeeper.io/) |
-| Community                    | [![Open-source](https://badges.frapsoft.com/os/v2/open-source.svg)](https://badges.frapsoft.com) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) |
+| Community                    | [![Open-source](https://badges.frapsoft.com/os/v2/open-source.svg)](https://badges.frapsoft.com) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) [![License](https://img.shields.io/badge/license-AGPL-blue.svg)](https://github.com/pragmatismo-io/BotServer/blob/master/LICENSE)|
 
 #### Watch a video about packages, development environment and self-deployment
 
@@ -227,6 +227,17 @@ Powered by  Microsoft [BOT Framework](https://dev.botframework.com/) and [Azure]
 General Bot Code Name is [Guaribas](https://en.wikipedia.org/wiki/Guaribas), the name of a city in Brasil, state of Piaui.
 [Roberto Mangabeira Unger](http://www.robertounger.com/en/): "No one should have to do work that can be done by a machine".
 
+## Contributing
+
+This project welcomes contributions and suggestions. 
+See our [Contribution Guidelines](https://github.com/pragmatismo-io/BotServer/CONTRIBUTING.md) for more details.
+
+## Reporting Security Issues
+
+Security issues and bugs should be reported privately, via email, to the Pragmatismo.io Security
+team at [security@pragmatismo.io](mailto:security@pragmatismo.io). You should
+receive a response within 24 hours. If for some reason you do not, please follow up via
+email to ensure we received your original message. 
 
 ## License & Warranty
 
