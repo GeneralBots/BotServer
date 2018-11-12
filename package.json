@@ -38,7 +38,7 @@
     "secure": "nsp check",
     "size": "t=\"$(npm pack .)\"; wc -c \"${t}\"; tar tvf \"${t}\"; rm \"${t}\";",
     "unused-deps": "dependency-check --unused --no-dev ./package.json",
-    "travis-deploy-once": "travis-deploy-once",
+    "travis-deploy-once": "travis-deploy-once -pro",
     "semantic-release": "semantic-release",
     "commit": "git-cz"
   },
@@ -187,9 +187,14 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     },
+        
     "pre-git": {
       "commit-msg": "simple",
-      "pre-commit": [],
+      "pre-commit": [
+        "npm prune",
+        "git add packages/*.ts",
+        "npm run ban"
+      ],
       "pre-push": [],
       "post-commit": [],
       "post-checkout": [],
