@@ -47,7 +47,7 @@ deploy:
     skip_cleanup: true
     on:
       tags: false
-      branch: main
+      branch: master
 
   - provider: npm
     skip_cleanup: true
@@ -55,4 +55,4 @@ deploy:
     api_key: $NPM_TOKEN
     on:
       tags: false
-      branch: main
+      branch: master
