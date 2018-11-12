@@ -59,10 +59,10 @@ export class AskDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/answerEvent', [
         async step => {
-          if (step.options && step.options.questionId) {
+          if (step.options && step.options['questionId']) {
             const question = await service.getQuestionById(
               min.instance.instanceId,
-              step.options.questionId
+              step.options['questionId']
             );
             const answer = await service.getAnswerById(
               min.instance.instanceId,
@@ -84,9 +84,9 @@ export class AskDialog extends IGBDialog {
       new WaterfallDialog('/answer', [
         async step => {
           const user = await min.userProfile.get(step.context, {});
-          let text = step.options.query;
+          let text = step.options['query'];
           if (!text) {
-            throw new Error(`/answer being called with no args.query text.`);
+            throw new Error(`/answer being called with no args query text.`);
           }
 
           const locale = step.context.activity.locale;
@@ -97,9 +97,9 @@ export class AskDialog extends IGBDialog {
 
           // Handle extra text from FAQ.
 
-          if (step.options && step.options.query) {
-            text = step.options.query;
-          } else if (step.options && step.options.fromFaq) {
+          if (step.options && step.options['query']) {
+            text = step.options['query'];
+          } else if (step.options && step.options['fromFaq']) {
             await step.context.sendActivity(Messages[locale].going_answer);
           }
 
@@ -212,9 +212,9 @@ export class AskDialog extends IGBDialog {
 
           // Three forms of asking.
 
-          if (step.options && step.options.firstTime) {
+          if (step.options && step.options['firstTime'] ) {
             text = Messages[locale].ask_first_time;
-          } else if (step.options && step.options.isReturning) {
+          } else if (step.options && step.options['isReturning'] ) {
             text = Messages[locale].anything_else;
           } else if (user.subjects.length > 0) {
             text = Messages[locale].which_question;

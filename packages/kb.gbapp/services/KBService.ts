@@ -210,7 +210,7 @@ export class KBService {
 
   public async getFaqBySubjectArray(from: string, subjects: any): Promise<GuaribasQuestion[]> {
     const where = {
-      from: from
+      from: from, subject1: null, subject2: null, subject3: null, subject4:null
     };
 
     if (subjects) {

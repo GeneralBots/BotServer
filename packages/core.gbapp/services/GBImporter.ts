@@ -55,7 +55,7 @@ export class GBImporter {
     localPath: string) {
 
     const packageJson = JSON.parse(
-      Fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8')
+      fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8')
     );
 
     const botId = packageJson.botId;
@@ -74,10 +74,10 @@ export class GBImporter {
     packageJson: any
   ) {
     const settings = JSON.parse(
-      Fs.readFileSync(UrlJoin(localPath, 'settings.json'), 'utf8')
+      fs.readFileSync(UrlJoin(localPath, 'settings.json'), 'utf8')
     );
     const servicesJson = JSON.parse(
-      Fs.readFileSync(UrlJoin(localPath, 'services.json'), 'utf8')
+      fs.readFileSync(UrlJoin(localPath, 'services.json'), 'utf8')
     );
 
     packageJson = {...packageJson, ...settings, ...servicesJson};
