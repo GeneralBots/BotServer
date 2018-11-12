@@ -109,6 +109,7 @@
     "winston": "3.1.0"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^3.0.1",
     "@semantic-release/commit-analyzer": "^6.1.0",
     "@semantic-release/git": "^7.0.5",
     "@semantic-release/npm": "^5.1.1",
@@ -118,7 +119,6 @@
     "@types/sequelize": "4.27.30",
     "@types/url-join": "0.8.2",
     "@types/winston": "2.4.4",
-    "@semantic-release/changelog": "^3.0.1",
     "ban-sensitive-files": "1.9.2",
     "chai": "^4.2.0",
     "commitizen": "^3.0.4",
@@ -186,6 +186,7 @@
     }
   },
   "release": {
+    "debug": true,
     "verifyConditions": [
       "@semantic-release/changelog",
       "@semantic-release/npm",
@@ -202,10 +203,14 @@
           "CHANGELOG.md"
         ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-      }
+      },
+      "@semantic-release/git",
+      "@semantic-release/github"
     ],
     "publish": [
+      "@semantic-release/changelog",
       "@semantic-release/npm",
+      "@semantic-release/git",
       "@semantic-release/github"
     ]
   },

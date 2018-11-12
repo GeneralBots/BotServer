@@ -13,7 +13,7 @@ install:
 - npm install
 
 before_script:
-- npm run build
+#- npm run build
 
 script:
 #- npm run build-docs
