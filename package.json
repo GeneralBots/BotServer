@@ -194,7 +194,6 @@
     ],
     "prepare": [
       "@semantic-release/changelog",
-      "@semantic-release/release-notes-generator",
       "@semantic-release/npm",
       {
         "path": "@semantic-release/git",
