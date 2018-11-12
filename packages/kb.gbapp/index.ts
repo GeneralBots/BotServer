@@ -34,45 +34,45 @@
  * @fileoverview General Bots server core.
  */
 
-'use strict'
+'use strict';
 
-const UrlJoin = require("url-join")
+const UrlJoin = require('url-join');
 
-import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index'
-import { GBMinInstance, IGBPackage } from "botlib"
+import { GBMinInstance, IGBPackage } from 'botlib';
+import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index';
 
-import { AskDialog } from "./dialogs/AskDialog"
-import { FaqDialog } from "./dialogs/FaqDialog"
-import { MenuDialog } from "./dialogs/MenuDialog"
-import { Sequelize } from 'sequelize-typescript'
-import { IGBCoreService } from 'botlib'
+import { IGBCoreService } from 'botlib';
+import { Sequelize } from 'sequelize-typescript';
+import { AskDialog } from './dialogs/AskDialog';
+import { FaqDialog } from './dialogs/FaqDialog';
+import { MenuDialog } from './dialogs/MenuDialog';
 
 export class GBKBPackage implements IGBPackage {
 
-  sysPackages: IGBPackage[] = null
-  
-  loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+  public sysPackages: IGBPackage[] = null;
+
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasAnswer,
       GuaribasQuestion,
       GuaribasSubject
-    ])
-    
-  }
-  unloadPackage(core: IGBCoreService): void {
-    
-  }
-  loadBot(min: GBMinInstance): void {
+    ]);
 
-    AskDialog.setup(min.bot, min)
-    FaqDialog.setup(min.bot, min)
-    MenuDialog.setup(min.bot, min)
-    
   }
-  unloadBot(min: GBMinInstance): void {
-    
+  public unloadPackage(core: IGBCoreService): void {
+
   }
-  onNewSession(min: GBMinInstance, step: any): void {
-    
+  public loadBot(min: GBMinInstance): void {
+
+    AskDialog.setup(min.bot, min);
+    FaqDialog.setup(min.bot, min);
+    MenuDialog.setup(min.bot, min);
+
+  }
+  public unloadBot(min: GBMinInstance): void {
+
+  }
+  public onNewSession(min: GBMinInstance, step: any): void {
+
   }
 }

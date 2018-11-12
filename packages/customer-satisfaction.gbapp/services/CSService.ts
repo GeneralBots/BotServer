@@ -30,12 +30,12 @@
 |                                                                             |
 \*****************************************************************************/
 
-import { GuaribasQuestionAlternate } from '../models'
-import { GuaribasConversation } from '../../analytics.gblib/models'
+import { GuaribasConversation } from '../../analytics.gblib/models';
+import { GuaribasQuestionAlternate } from '../models';
 
 export class CSService {
 
-  async resolveQuestionAlternate(
+  public async resolveQuestionAlternate(
     instanceId: number,
     questionTyped: string): Promise<GuaribasQuestionAlternate> {
 
@@ -44,24 +44,24 @@ export class CSService {
         instanceId: instanceId,
         questionTyped: questionTyped
       }
-    })
+    });
   }
 
-  async insertQuestionAlternate(
+  public async insertQuestionAlternate(
     instanceId: number,
     questionTyped: string,
     questionText: string): Promise<GuaribasQuestionAlternate> {
     return GuaribasQuestionAlternate.create({
       questionTyped: questionTyped,
       questionText: questionText
-    })
+    });
   }
 
-  async updateConversationRate(
+  public async updateConversationRate(
     conversation: GuaribasConversation,
     rate: number
   ): Promise<GuaribasConversation> {
-    conversation.rate = rate
-    return conversation.save()
+    conversation.rate = rate;
+    return conversation.save();
   }
 }

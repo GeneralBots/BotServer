@@ -36,17 +36,17 @@
 
 'use strict';
 
-const logger = require("../../../src/logger");
+const logger = require('../../../src/logger');
 
-import { GBCoreService } from "./GBCoreService";
-import { IGBConversationalService } from "botlib";
-import { GBMinInstance } from "botlib";
-import { LuisRecognizer } from "botbuilder-ai";
-import { MessageFactory } from "botbuilder";
-import { Messages } from "../strings";
-import { AzureText } from "pragmatismo-io-framework";
-import { any } from "bluebird";
-const Nexmo = require("nexmo");
+import { any } from 'bluebird';
+import { MessageFactory } from 'botbuilder';
+import { LuisRecognizer } from 'botbuilder-ai';
+import { IGBConversationalService } from 'botlib';
+import { GBMinInstance } from 'botlib';
+import { AzureText } from 'pragmatismo-io-framework';
+import { Messages } from '../strings';
+import { GBCoreService } from './GBCoreService';
+const Nexmo = require('nexmo');
 
 export interface LanguagePickerSettings {
   defaultLocale?: string;
@@ -54,27 +54,27 @@ export interface LanguagePickerSettings {
 }
 
 export class GBConversationalService implements IGBConversationalService {
-  coreService: GBCoreService;
+  public coreService: GBCoreService;
 
   constructor(coreService: GBCoreService) {
     this.coreService = coreService;
   }
 
-  getCurrentLanguage(step: any) {
+  public getCurrentLanguage(step: any) {
     return step.context.activity.locale;
   }
 
-  async sendEvent(step: any, name: string, value: any): Promise<any> {
-    if (step.context.activity.channelId === "webchat") {
-      const msg = MessageFactory.text("");
+  public async sendEvent(step: any, name: string, value: any): Promise<any> {
+    if (step.context.activity.channelId === 'webchat') {
+      const msg = MessageFactory.text('');
       msg.value = value;
-      msg.type = "event";
+      msg.type = 'event';
       msg.name = name;
       return step.context.sendActivity(msg);
     }
   }
 
-  async sendSms(
+  public async sendSms(
     min: GBMinInstance,
     mobile: string,
     text: string
@@ -99,7 +99,7 @@ export class GBConversationalService implements IGBConversationalService {
     });
   }
 
-  async routeNLP(step: any, min: GBMinInstance, text: string): Promise<boolean> {
+  public async routeNLP(step: any, min: GBMinInstance, text: string): Promise<boolean> {
     // Invokes LUIS.
 
     const model = new LuisRecognizer({
@@ -112,39 +112,38 @@ export class GBConversationalService implements IGBConversationalService {
     try {
       nlp = await model.recognize(step.context);
     } catch (error) {
-      if (error.statusCode == 404){
-        logger.warn ('NLP application still not publish and there are no other options for answering.')
+      if (error.statusCode == 404) {
+        logger.warn ('NLP application still not publish and there are no other options for answering.');
         return Promise.resolve(false);
-      }
-      else{
-      let msg = `Error calling NLP server, check if you have a published model and assigned keys on the service. Error: ${
-        error.statusCode ? error.statusCode : ""
+      } else {
+      const msg = `Error calling NLP server, check if you have a published model and assigned keys on the service. Error: ${
+        error.statusCode ? error.statusCode : ''
       } ${error.message}`;
-      return Promise.reject(new Error(msg));}
+      return Promise.reject(new Error(msg)); }
 
     }
 
     // Resolves intents returned from LUIS.
 
-    let topIntent = LuisRecognizer.topIntent(nlp);
+    const topIntent = LuisRecognizer.topIntent(nlp);
     if (topIntent) {
-      var intent = topIntent;
-      var entity =
+      const intent = topIntent;
+      const entity =
         nlp.entities && nlp.entities.length > 0
           ? nlp.entities[0].entity.toUpperCase()
           : null;
 
-      if (intent === "None") {
+      if (intent === 'None') {
         return Promise.resolve(false);
       }
 
-      logger.info("NLP called:" + intent + ", " + entity);
+      logger.info('NLP called:' + intent + ', ' + entity);
 
       try {
-        await step.replace("/" + intent, nlp.entities);
+        await step.replace('/' + intent, nlp.entities);
         return Promise.resolve(true);
       } catch (error) {
-        let msg = `Error finding dialog associated to NLP event: ${intent}: ${
+        const msg = `Error finding dialog associated to NLP event: ${intent}: ${
           error.message
         }`;
         return Promise.reject(new Error(msg));
@@ -153,20 +152,20 @@ export class GBConversationalService implements IGBConversationalService {
     return Promise.resolve(false);
   }
 
-  async checkLanguage(step, min, text) {
-    let locale = await AzureText.getLocale(
+  public async checkLanguage(step, min, text) {
+    const locale = await AzureText.getLocale(
       min.instance.textAnalyticsKey,
       min.instance.textAnalyticsEndpoint,
       text
     );
-    if (locale != step.context.activity.locale.split("-")[0]) {
+    if (locale != step.context.activity.locale.split('-')[0]) {
       switch (locale) {
-        case "pt":
-          step.context.activity.locale = "pt-BR";
+        case 'pt':
+          step.context.activity.locale = 'pt-BR';
           await step.context.sendActivity(Messages[locale].changing_language);
           break;
-        case "en":
-          step.context.activity.locale = "en-US";
+        case 'en':
+          step.context.activity.locale = 'en-US';
           await step.context.sendActivity(Messages[locale].changing_language);
           break;
         default:

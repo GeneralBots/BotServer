@@ -36,15 +36,15 @@
 
 'use strict';
 
-import { IGBDialog } from "botlib";
-import { AzureText } from "pragmatismo-io-framework";
-import { GBMinInstance } from "botlib";
-import { KBService } from "./../services/KBService";
-import { BotAdapter } from "botbuilder";
-import { Messages } from "../strings";
-import { WaterfallDialog } from "botbuilder-dialogs";
+import { BotAdapter } from 'botbuilder';
+import { WaterfallDialog } from 'botbuilder-dialogs';
+import { IGBDialog } from 'botlib';
+import { GBMinInstance } from 'botlib';
+import { AzureText } from 'pragmatismo-io-framework';
+import { Messages } from '../strings';
+import { KBService } from './../services/KBService';
 
-const logger = require("../../../src/logger");
+const logger = require('../../../src/logger');
 
 export class AskDialog extends IGBDialog {
   /**
@@ -53,18 +53,18 @@ export class AskDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  static setup(bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new KBService(min.core.sequelize);
 
     min.dialogs.add(
-      new WaterfallDialog("/answerEvent", [
+      new WaterfallDialog('/answerEvent', [
         async step => {
-          if (step.options && step.options["questionId"]) {
-            let question = await service.getQuestionById(
+          if (step.options && step.options.questionId) {
+            const question = await service.getQuestionById(
               min.instance.instanceId,
-              step.options["questionId"]
+              step.options.questionId
             );
-            let answer = await service.getAnswerById(
+            const answer = await service.getAnswerById(
               min.instance.instanceId,
               question.answerId
             );
@@ -73,7 +73,7 @@ export class AskDialog extends IGBDialog {
 
             await service.sendAnswer(min.conversationalService, step, answer);
 
-            await step.replaceDialog("/ask", { isReturning: true });
+            await step.replaceDialog('/ask', { isReturning: true });
           }
           return await step.next();
         }
@@ -81,32 +81,32 @@ export class AskDialog extends IGBDialog {
     );
 
     min.dialogs.add(
-      new WaterfallDialog("/answer", [
+      new WaterfallDialog('/answer', [
         async step => {
           const user = await min.userProfile.get(step.context, {});
-          let text = step.options["query"];
+          let text = step.options.query;
           if (!text) {
             throw new Error(`/answer being called with no args.query text.`);
           }
 
-          let locale = step.context.activity.locale;
+          const locale = step.context.activity.locale;
 
           // Stops any content on projector.
 
-          await min.conversationalService.sendEvent(step, "stop", null);
+          await min.conversationalService.sendEvent(step, 'stop', null);
 
           // Handle extra text from FAQ.
 
-          if (step.options && step.options["query"]) {
-            text = step.options["query"];
-          } else if (step.options && step.options["fromFaq"]) {
+          if (step.options && step.options.query) {
+            text = step.options.query;
+          } else if (step.options && step.options.fromFaq) {
             await step.context.sendActivity(Messages[locale].going_answer);
           }
 
           // Spells check the input text before sending Search or NLP.
 
           if (min.instance.spellcheckerKey) {
-            let data = await AzureText.getSpelledText(
+            const data = await AzureText.getSpelledText(
               min.instance.spellcheckerKey,
               text
             );
@@ -121,7 +121,7 @@ export class AskDialog extends IGBDialog {
 
           user.lastQuestion = text;
           await min.userProfile.set(step.context, user);
-          let resultsA = await service.ask(
+          const resultsA = await service.ask(
             min.instance,
             text,
             min.instance.searchScore,
@@ -147,11 +147,11 @@ export class AskDialog extends IGBDialog {
 
             // Goes to ask loop, again.
 
-            return await step.replaceDialog("/ask", { isReturning: true });
+            return await step.replaceDialog('/ask', { isReturning: true });
           } else {
             // Second time running Search, now with no filter.
 
-            let resultsB = await service.ask(
+            const resultsB = await service.ask(
               min.instance,
               text,
               min.instance.searchScore,
@@ -172,7 +172,7 @@ export class AskDialog extends IGBDialog {
               // Informs user that a broader search will be used.
 
               if (user.subjects.length > 0) {
-                let subjectText = `${KBService.getSubjectItemsSeparatedBySpaces(
+                const subjectText = `${KBService.getSubjectItemsSeparatedBySpaces(
                   user.subjects
                 )}`;
                 await step.context.sendActivity(Messages[locale].wider_answer);
@@ -185,13 +185,13 @@ export class AskDialog extends IGBDialog {
                 step,
                 resultsB.answer
               );
-              return await step.replaceDialog("/ask", { isReturning: true });
+              return await step.replaceDialog('/ask', { isReturning: true });
             } else {
               if (
                 !(await min.conversationalService.routeNLP(step, min, text))
               ) {
                 await step.context.sendActivity(Messages[locale].did_not_find);
-                return await step.replaceDialog("/ask", { isReturning: true });
+                return await step.replaceDialog('/ask', { isReturning: true });
               }
             }
           }
@@ -200,7 +200,7 @@ export class AskDialog extends IGBDialog {
     );
 
     min.dialogs.add(
-      new WaterfallDialog("/ask", [
+      new WaterfallDialog('/ask', [
         async step => {
           const locale = step.context.activity.locale;
           const user = await min.userProfile.get(step.context, {});
@@ -212,23 +212,23 @@ export class AskDialog extends IGBDialog {
 
           // Three forms of asking.
 
-          if (step.options && step.options["firstTime"]) {
+          if (step.options && step.options.firstTime) {
             text = Messages[locale].ask_first_time;
-          } else if (step.options && step.options["isReturning"]) {
+          } else if (step.options && step.options.isReturning) {
             text = Messages[locale].anything_else;
           } else if (user.subjects.length > 0) {
             text = Messages[locale].which_question;
           } else {
-            throw new Error("Invalid use of /ask");
+            throw new Error('Invalid use of /ask');
           }
 
           if (text.length > 0) {
-            return await step.prompt("textPrompt", text);
+            return await step.prompt('textPrompt', text);
           }
           return await step.next();
         },
         async step => {
-          return await step.replaceDialog("/answer", { query: step.result });
+          return await step.replaceDialog('/answer', { query: step.result });
         }
       ])
     );

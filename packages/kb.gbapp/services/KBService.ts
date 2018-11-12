@@ -30,40 +30,57 @@
 |                                                                             |
 \*****************************************************************************/
 
-const logger = require("../../../src/logger")
-const Path = require("path")
-const Fs = require("fs")
-const promise = require('bluebird')
-const parse = promise.promisify(require('csv-parse'))
-const UrlJoin = require("url-join")
-const marked = require("marked")
-const path = require("path")
-const asyncPromise = require('async-promises')
-const walkPromise = require('walk-promise')
-import { Messages } from "../strings";
+const logger = require('../../../src/logger');
+const Path = require('path');
+const Fs = require('fs');
+const promise = require('bluebird');
+const parse = promise.promisify(require('csv-parse'));
+const UrlJoin = require('url-join');
+const marked = require('marked');
+const path = require('path');
+const asyncPromise = require('async-promises');
+const walkPromise = require('walk-promise');
+import { Messages } from '../strings';
 
-import { Sequelize } from 'sequelize-typescript'
-import { GBConfigService } from './../../core.gbapp/services/GBConfigService'
-import { GuaribasQuestion, GuaribasAnswer, GuaribasSubject } from "../models"
-import { IGBCoreService, IGBConversationalService, IGBInstance } from "botlib"
-import { AzureSearch } from "pragmatismo-io-framework"
-import { GBDeployer } from "../../core.gbapp/services/GBDeployer"
-import { GuaribasPackage } from "../../core.gbapp/models/GBModel"
+import { IGBConversationalService, IGBCoreService, IGBInstance } from 'botlib';
+import { AzureSearch } from 'pragmatismo-io-framework';
+import { Sequelize } from 'sequelize-typescript';
+import { GuaribasPackage } from '../../core.gbapp/models/GBModel';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
+import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
+import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 
 export class KBServiceSearchResults {
-  answer: GuaribasAnswer
-  questionId: number
+  public answer: GuaribasAnswer;
+  public questionId: number;
 }
 
 export class KBService {
 
-  sequelize: Sequelize
+  public sequelize: Sequelize;
 
   constructor(sequelize: Sequelize) {
-    this.sequelize = sequelize
+    this.sequelize = sequelize;
   }
 
-  async getQuestionById(
+  public static getFormattedSubjectItems(subjects: GuaribasSubject[]) {
+    if (!subjects) { return ''; }
+    const out = [];
+    subjects.forEach(subject => {
+      out.push(subject.title);
+    });
+    return out.join(', ');
+  }
+
+  public static getSubjectItemsSeparatedBySpaces(subjects: GuaribasSubject[]) {
+    const out = [];
+    subjects.forEach(subject => {
+      out.push(subject.internalId);
+    });
+    return out.join(' ');
+  }
+
+  public async getQuestionById(
     instanceId: number,
     questionId: number
   ): Promise<GuaribasQuestion> {
@@ -72,10 +89,10 @@ export class KBService {
         instanceId: instanceId,
         questionId: questionId
       }
-    })
+    });
   }
 
-  async getAnswerById(
+  public async getAnswerById(
     instanceId: number,
     answerId: number
   ): Promise<GuaribasAnswer> {
@@ -84,47 +101,47 @@ export class KBService {
         instanceId: instanceId,
         answerId: answerId
       }
-    })
+    });
   }
 
-  async getAnswerByText(
+  public async getAnswerByText(
     instanceId: number,
     text: string
   ): Promise<any> {
 
-    const Op = Sequelize.Op
+    const Op = Sequelize.Op;
 
-    let question = await GuaribasQuestion.findOne({
+    const question = await GuaribasQuestion.findOne({
       where: {
         instanceId: instanceId,
         content: { [Op.like]: `%${text.trim()}%` }
       }
-    })
+    });
 
     if (question) {
-      let answer = await GuaribasAnswer.findOne({
+      const answer = await GuaribasAnswer.findOne({
         where: {
           instanceId: instanceId,
           answerId: question.answerId
         }
-      })
-      return Promise.resolve({ question: question, answer: answer })
+      });
+      return Promise.resolve({ question: question, answer: answer });
     }
-    return Promise.resolve(null)
+    return Promise.resolve(null);
   }
 
-  async addAnswer(obj: GuaribasAnswer): Promise<GuaribasAnswer> {
+  public async addAnswer(obj: GuaribasAnswer): Promise<GuaribasAnswer> {
     return new Promise<GuaribasAnswer>(
       (resolve, reject) => {
         GuaribasAnswer.create(obj).then(item => {
-          resolve(item)
+          resolve(item);
         }).error((reason) => {
-          reject(reason)
-        })
-      })
+          reject(reason);
+        });
+      });
   }
 
-  async ask(
+  public async ask(
     instance: IGBInstance,
     query: string,
     searchScore: number,
@@ -133,185 +150,165 @@ export class KBService {
 
     // Builds search query.
 
-    query = query.toLowerCase()
-    query = query.replace("?", " ")
-    query = query.replace("!", " ")
-    query = query.replace(".", " ")
-    query = query.replace("/", " ")
-    query = query.replace("\\", " ")
+    query = query.toLowerCase();
+    query = query.replace('?', ' ');
+    query = query.replace('!', ' ');
+    query = query.replace('.', ' ');
+    query = query.replace('/', ' ');
+    query = query.replace('\\', ' ');
 
     if (subjects) {
-      let text = KBService.getSubjectItemsSeparatedBySpaces(subjects)
+      const text = KBService.getSubjectItemsSeparatedBySpaces(subjects);
       if (text) {
-        query = `${query} ${text}`
+        query = `${query} ${text}`;
       }
     }
     // TODO: Filter by instance. what = `${what}&$filter=instanceId eq ${instanceId}`
     try {
-      if (instance.searchKey && GBConfigService.get("STORAGE_DIALECT") == "mssql") {
-        let service = new AzureSearch(
+      if (instance.searchKey && GBConfigService.get('STORAGE_DIALECT') == 'mssql') {
+        const service = new AzureSearch(
           instance.searchKey,
           instance.searchHost,
           instance.searchIndex,
           instance.searchIndexer
-        )
-        let results = await service.search(query) 
+        );
+        const results = await service.search(query);
         if (results && results.length > 0 &&
-          results[0]["@search.score"] >= searchScore) {
-          let value = await this.getAnswerById(
+          results[0]['@search.score'] >= searchScore) {
+          const value = await this.getAnswerById(
             instance.instanceId,
-            results[0].answerId)
+            results[0].answerId);
           if (value) {
-            return Promise.resolve({ answer: value, questionId: results[0].questionId })
-          }
-          else {
-            return Promise.resolve({ answer: null, questionId: 0 })
+            return Promise.resolve({ answer: value, questionId: results[0].questionId });
+          } else {
+            return Promise.resolve({ answer: null, questionId: 0 });
           }
         }
       } else {
-        let data = await this.getAnswerByText(instance.instanceId, query)
+        const data = await this.getAnswerByText(instance.instanceId, query);
         if (data) {
           return Promise.resolve(
-            { answer: data.answer, questionId: data.question.questionId })
+            { answer: data.answer, questionId: data.question.questionId });
         } else {
-          return Promise.resolve({ answer: null, questionId: 0 })
+          return Promise.resolve({ answer: null, questionId: 0 });
         }
       }
-    }
-    catch (reason) {
+    } catch (reason) {
       return Promise.reject(new Error(reason));
     }
   }
 
-
-  static getFormattedSubjectItems(subjects: GuaribasSubject[]) {
-    if (!subjects) return ""
-    let out = []
-    subjects.forEach(subject => {
-      out.push(subject.title)
-    })
-    return out.join(", ")
-  }
-
-  static getSubjectItemsSeparatedBySpaces(subjects: GuaribasSubject[]) {
-    let out = []
-    subjects.forEach(subject => {
-      out.push(subject.internalId)
-    })
-    return out.join(" ")
-  }
-
-  async getSubjectItems(
+  public async getSubjectItems(
     instanceId: number,
     parentId: number
   ): Promise<GuaribasSubject[]> {
-    var where = { parentSubjectId: parentId, instanceId: instanceId }
+    const where = { parentSubjectId: parentId, instanceId: instanceId };
     return GuaribasSubject.findAll({
       where: where
-    })
+    });
   }
 
-  async getFaqBySubjectArray(from: string, subjects: any): Promise<GuaribasQuestion[]> {
-    let where = {
+  public async getFaqBySubjectArray(from: string, subjects: any): Promise<GuaribasQuestion[]> {
+    const where = {
       from: from
-    }
+    };
 
     if (subjects) {
       if (subjects[0]) {
-        where["subject1"] = subjects[0].internalId
+        where.subject1 = subjects[0].internalId;
       }
 
       if (subjects[1]) {
-        where["subject2"] = subjects[1].internalId
+        where.subject2 = subjects[1].internalId;
       }
 
       if (subjects[2]) {
-        where["subject3"] = subjects[2].internalId
+        where.subject3 = subjects[2].internalId;
       }
 
       if (subjects[3]) {
-        where["subject4"] = subjects[3].internalId
+        where.subject4 = subjects[3].internalId;
       }
     }
     return await GuaribasQuestion.findAll({
       where: where
-    })
+    });
   }
 
-  async importKbTabularFile(
+  public async importKbTabularFile(
     filePath: string,
     instanceId: number,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
 
-    let file = Fs.readFileSync(filePath, "UCS-2")
-    let opts = {
-      delimiter: "\t"
-    }
+    const file = Fs.readFileSync(filePath, 'UCS-2');
+    const opts = {
+      delimiter: '\t'
+    };
 
     let lastQuestion: GuaribasQuestion;
     let lastAnswer: GuaribasAnswer;
 
-    let data = await parse(file, opts)
+    const data = await parse(file, opts);
     return asyncPromise.eachSeries(data, async line => {
 
       // Extracts values from columns in the current line.
 
-      let subjectsText = line[0]
-      var from = line[1]
-      var to = line[2]
-      var question = line[3]
-      var answer = line[4]
+      const subjectsText = line[0];
+      const from = line[1];
+      const to = line[2];
+      const question = line[3];
+      let answer = line[4];
 
       // Skips the first line.
 
-      if (!(subjectsText === "subjects" && from == "from")) {
-        let format = ".txt"
+      if (!(subjectsText === 'subjects' && from == 'from')) {
+        let format = '.txt';
 
         // Extracts answer from external media if any.
 
-        if (answer.indexOf(".md") > -1) {
-          let mediaFilename = UrlJoin(path.dirname(filePath), "..", "articles", answer)
+        if (answer.indexOf('.md') > -1) {
+          const mediaFilename = UrlJoin(path.dirname(filePath), '..', 'articles', answer);
           if (Fs.existsSync(mediaFilename)) {
-            answer = Fs.readFileSync(mediaFilename, "utf8")
-            format = ".md"
+            answer = Fs.readFileSync(mediaFilename, 'utf8');
+            format = '.md';
           } else {
-            logger.info(`[GBImporter] File not found: ${mediaFilename}.`)
-            answer = ""
+            logger.info(`[GBImporter] File not found: ${mediaFilename}.`);
+            answer = '';
           }
         }
 
         // Processes subjects hierarchy splitting by dots.
 
-        let subjectArray = subjectsText.split(".")
+        const subjectArray = subjectsText.split('.');
         let subject1: string, subject2: string, subject3: string,
-          subject4: string
-        var indexer = 0
+          subject4: string;
+        let indexer = 0;
 
         subjectArray.forEach(element => {
           if (indexer == 0) {
-            subject1 = subjectArray[indexer].substring(0, 63)
+            subject1 = subjectArray[indexer].substring(0, 63);
           } else if (indexer == 1) {
-            subject2 = subjectArray[indexer].substring(0, 63)
+            subject2 = subjectArray[indexer].substring(0, 63);
           } else if (indexer == 2) {
-            subject3 = subjectArray[indexer].substring(0, 63)
+            subject3 = subjectArray[indexer].substring(0, 63);
           } else if (indexer == 3) {
-            subject4 = subjectArray[indexer].substring(0, 63)
+            subject4 = subjectArray[indexer].substring(0, 63);
           }
-          indexer++
-        })
+          indexer++;
+        });
 
         // Now with all the data ready, creates entities in the store.
 
-        let answer1 = await GuaribasAnswer.create({
+        const answer1 = await GuaribasAnswer.create({
           instanceId: instanceId,
           content: answer,
           format: format,
           packageId: packageId,
-          prevId: lastQuestion ? lastQuestion.questionId : 0,
-        })
+          prevId: lastQuestion ? lastQuestion.questionId : 0
+        });
 
-        let question1 = await GuaribasQuestion.create({
+        const question1 = await GuaribasQuestion.create({
           from: from,
           to: to,
           subject1: subject1,
@@ -322,41 +319,41 @@ export class KBService {
           instanceId: instanceId,
           answerId: answer1.answerId,
           packageId: packageId
-        })
+        });
 
         if (lastAnswer && lastQuestion) {
-          await lastAnswer.updateAttributes({ nextId: lastQuestion.questionId })
+          await lastAnswer.updateAttributes({ nextId: lastQuestion.questionId });
         }
-        lastAnswer = answer1
-        lastQuestion = question1
+        lastAnswer = answer1;
+        lastQuestion = question1;
 
-        return Promise.resolve(lastQuestion)
+        return Promise.resolve(lastQuestion);
 
       } else {
 
         // Skips the header.
 
-        return Promise.resolve(null)
+        return Promise.resolve(null);
       }
-    })
+    });
   }
 
-  async sendAnswer(conversationalService: IGBConversationalService,
-    step: any, answer: GuaribasAnswer) {
+  public async sendAnswer(conversationalService: IGBConversationalService,
+                          step: any, answer: GuaribasAnswer) {
 
     if (answer.content.endsWith('.mp4')) {
-      await conversationalService.sendEvent(step, "play", {
-        playerType: "video",
+      await conversationalService.sendEvent(step, 'play', {
+        playerType: 'video',
         data: answer.content
-      })
+      });
     } else if (answer.content.length > 140 &&
-      step.context._activity.channelId === "webchat") {
+      step.context._activity.channelId === 'webchat') {
       const locale = step.context.activity.locale;
 
-      await step.context.sendActivity(Messages[locale].will_answer_projector) // TODO: Handle rnd.
-      var html = answer.content
+      await step.context.sendActivity(Messages[locale].will_answer_projector); // TODO: Handle rnd.
+      let html = answer.content;
 
-      if (answer.format === ".md") {
+      if (answer.format === '.md') {
         marked.setOptions({
           renderer: new marked.Renderer(),
           gfm: true,
@@ -367,23 +364,23 @@ export class KBService {
           smartLists: true,
           smartypants: false,
           xhtml: false
-        })
-        html = marked(answer.content)
+        });
+        html = marked(answer.content);
       }
-      await conversationalService.sendEvent(step, "play",
-        {
-          playerType: "markdown", data: {
+      await conversationalService.sendEvent(step, 'play',
+                                            {
+          playerType: 'markdown', data: {
             content: html, answer: answer,
             prevId: answer.prevId, nextId: answer.nextId
           }
-        })
+        });
     } else {
-      await step.context.sendActivity(answer.content)
-      await conversationalService.sendEvent(step, "stop", null)
+      await step.context.sendActivity(answer.content);
+      await conversationalService.sendEvent(step, 'stop', null);
     }
   }
 
-  async importKbPackage(
+  public async importKbPackage(
     localPath: string,
     packageStorage: GuaribasPackage,
     instance: IGBInstance
@@ -393,8 +390,8 @@ export class KBService {
 
     await this.importSubjectFile(
       packageStorage.packageId,
-      UrlJoin(localPath, "subjects.json"),
-      instance)
+      UrlJoin(localPath, 'subjects.json'),
+      instance);
 
     // Import all .tsv files in the tabular directory.
 
@@ -402,41 +399,40 @@ export class KBService {
       localPath,
       instance,
       packageStorage.packageId
-    )
+    );
   }
 
-
-  async importKbTabularDirectory(
+  public async importKbTabularDirectory(
     localPath: string,
     instance: IGBInstance,
     packageId: number
   ): Promise<any> {
 
-    let files = await walkPromise(UrlJoin(localPath, "tabular"))
+    const files = await walkPromise(UrlJoin(localPath, 'tabular'));
 
     return Promise.all(files.map(async file => {
-      if (file.name.endsWith(".tsv")) {
+      if (file.name.endsWith('.tsv')) {
         return this.importKbTabularFile(
           UrlJoin(file.root, file.name),
           instance.instanceId,
-          packageId)
+          packageId);
       }
-    }))
+    }));
 
   }
 
-  async importSubjectFile(
+  public async importSubjectFile(
     packageId: number,
     filename: string,
     instance: IGBInstance
   ): Promise<any> {
-    var subjects = JSON.parse(Fs.readFileSync(filename, "utf8"))
+    const subjects = JSON.parse(Fs.readFileSync(filename, 'utf8'));
 
     const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
       return asyncPromise.eachSeries(subjects, async item => {
-        let mediaFilename = item.id + ".png"
+        const mediaFilename = item.id + '.png';
 
-        let value = await GuaribasSubject.create({
+        const value = await GuaribasSubject.create({
           internalId: item.id,
           parentSubjectId: parentSubjectId,
           instanceId: instance.instanceId,
@@ -445,20 +441,19 @@ export class KBService {
           title: item.title,
           description: item.description,
           packageId: packageId
-        })
+        });
 
         if (item.children) {
-          return Promise.resolve(doIt(item.children, value.subjectId))
+          return Promise.resolve(doIt(item.children, value.subjectId));
+        } else {
+          return Promise.resolve(item);
         }
-        else {
-          return Promise.resolve(item)
-        }
-      })
-    }
-    return doIt(subjects.children, null)
+      });
+    };
+    return doIt(subjects.children, null);
   }
 
-  async undeployKbFromStorage(
+  public async undeployKbFromStorage(
     instance: IGBInstance,
     deployer: GBDeployer,
     packageId: number
@@ -466,41 +461,41 @@ export class KBService {
 
     await GuaribasQuestion.destroy({
       where: { instanceId: instance.instanceId, packageId: packageId }
-    })
+    });
     await GuaribasAnswer.destroy({
       where: { instanceId: instance.instanceId, packageId: packageId }
-    })
+    });
     await GuaribasSubject.destroy({
       where: { instanceId: instance.instanceId, packageId: packageId }
-    })
+    });
     await GuaribasPackage.destroy({
       where: { instanceId: instance.instanceId, packageId: packageId }
-    })
+    });
 
-    await deployer.rebuildIndex(instance)
+    await deployer.rebuildIndex(instance);
   }
 
   /**
   * Deploys a knowledge base to the storage using the .gbkb format.
-  * 
+  *
   * @param localPath Path to the .gbkb folder.
   */
-  async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string) {
-    let packageType = Path.extname(localPath)
-    let packageName = Path.basename(localPath)
-    logger.info(`[GBDeployer] Opening package: ${localPath}`)
-    let packageObject = JSON.parse(
-      Fs.readFileSync(UrlJoin(localPath, "package.json"), "utf8")
-    )
+  public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string) {
+    const packageType = Path.extname(localPath);
+    const packageName = Path.basename(localPath);
+    logger.info(`[GBDeployer] Opening package: ${localPath}`);
+    const packageObject = JSON.parse(
+      Fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8')
+    );
 
-    let instance = await core.loadInstance(packageObject.botId)
-    logger.info(`[GBDeployer] Importing: ${localPath}`)
-    let p = await deployer.deployPackageToStorage(
+    const instance = await core.loadInstance(packageObject.botId);
+    logger.info(`[GBDeployer] Importing: ${localPath}`);
+    const p = await deployer.deployPackageToStorage(
       instance.instanceId,
-      packageName)
-    await this.importKbPackage(localPath, p, instance)
+      packageName);
+    await this.importKbPackage(localPath, p, instance);
 
-    deployer.rebuildIndex(instance)
-    logger.info(`[GBDeployer] Finished import of ${localPath}`)
+    deployer.rebuildIndex(instance);
+    logger.info(`[GBDeployer] Finished import of ${localPath}`);
   }
 }

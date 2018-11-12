@@ -34,36 +34,36 @@
  * @fileoverview General Bots server core.
  */
 
-'use strict'
+'use strict';
 
 import {
-  DataTypes,
-  DataTypeUUIDv4,
   DataTypeDate,
-  DataTypeDecimal
-} from "sequelize"
+  DataTypeDecimal,
+  DataTypes,
+  DataTypeUUIDv4
+} from 'sequelize';
 
 import {
-  Sequelize,
-  Table,
-  Column,
-  Model,
-  HasMany,
+  AutoIncrement,
   BelongsTo,
   BelongsToMany,
-  Length,
-  ForeignKey,
+  Column,
   CreatedAt,
-  UpdatedAt,
   DataType,
+  ForeignKey,
+  HasMany,
   IsUUID,
+  Length,
+  Model,
   PrimaryKey,
-  AutoIncrement
-} from "sequelize-typescript"
+  Sequelize,
+  Table,
+  UpdatedAt
+} from 'sequelize-typescript';
 
-import { GuaribasSubject } from "../../kb.gbapp/models"
-import { GuaribasUser } from "../../security.gblib/models"
-import { GuaribasChannel, GuaribasInstance } from "../../core.gbapp/models/GBModel"
+import { GuaribasChannel, GuaribasInstance } from '../../core.gbapp/models/GBModel';
+import { GuaribasSubject } from '../../kb.gbapp/models';
+import { GuaribasUser } from '../../security.gblib/models';
 
 @Table
 export class GuaribasConversation extends Model<GuaribasConversation> {
@@ -71,40 +71,40 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  conversationId: number
+  public conversationId: number;
 
   @ForeignKey(() => GuaribasSubject)
   @Column
-  startSubjectId: number
+  public startSubjectId: number;
 
   @BelongsTo(() => GuaribasSubject)
-  startSubject: GuaribasSubject
+  public startSubject: GuaribasSubject;
 
   @ForeignKey(() => GuaribasChannel)
   @Column
-  channelId: string
+  public channelId: string;
 
-  @Column rateDate: Date
+  @Column public rateDate: Date;
 
   @Column(DataType.FLOAT)
   @Column
-  rate: number
+  public rate: number;
 
   @Column
   @CreatedAt
-  createdAt: Date
+  public createdAt: Date;
 
-  @Column text: string
+  @Column public text: string;
 
   @HasMany(() => GuaribasConversationMessage)
-  conversationMessage: GuaribasConversationMessage[]
+  public conversationMessage: GuaribasConversationMessage[];
 
   @ForeignKey(() => GuaribasUser)
   @Column
-  startedByUserId: number
+  public startedByUserId: number;
 
   @BelongsTo(() => GuaribasUser)
-  startedBy: GuaribasUser
+  public startedBy: GuaribasUser;
 }
 
 @Table
@@ -113,38 +113,38 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
   @PrimaryKey
   @AutoIncrement
   @Column
-  conversationMessageId: number
+  public conversationMessageId: number;
 
   @ForeignKey(() => GuaribasSubject)
   @Column
-  subjectId: number
+  public subjectId: number;
 
   @Column(DataType.TEXT)
-  content: string
+  public content: string;
 
   @Column
   @CreatedAt
-  createdAt: Date
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date
+  public updatedAt: Date;
 
   @ForeignKey(() => GuaribasConversation)
   @Column
-  conversationId: number
+  public conversationId: number;
 
   @BelongsTo(() => GuaribasConversation)
-  conversation: GuaribasConversation
+  public conversation: GuaribasConversation;
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number
+  public instanceId: number;
 
   @ForeignKey(() => GuaribasUser)
   @Column
-  userId: number
+  public userId: number;
 
   @BelongsTo(() => GuaribasUser)
-  user: GuaribasUser
+  public user: GuaribasUser;
 }

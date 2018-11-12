@@ -30,20 +30,20 @@
 |                                                                             |
 \*****************************************************************************/
 
-const logger = require("../../../src/logger");
-import * as fs from "fs";
+const logger = require('../../../src/logger');
+import * as fs from 'fs';
 
 /**
  * @fileoverview General Bots server core.
  */
 
-"use strict";
+'use strict';
 
 export class GBConfigService {
-  static init(): any {
+  public static init(): any {
     try {
-      require("dotenv-extended").load({
-        path: ".env",
+      require('dotenv-extended').load({
+        path: '.env',
         errorOnMissing: true,
         errorOnExtra: false,
         overrideProcessEnv: true
@@ -54,52 +54,52 @@ export class GBConfigService {
     }
   }
 
-  static get(key: string): string | undefined {
+  public static get(key: string): string | undefined {
     let value = GBConfigService.tryGet(key);
 
     if (!value) {
       switch (key) {
-        case "CLOUD_USERNAME":
+        case 'CLOUD_USERNAME':
           value = undefined;
           break;
-        case "BOT_ID":
+        case 'BOT_ID':
           value = undefined;
           break;
-        case "CLOUD_PASSWORD":
+        case 'CLOUD_PASSWORD':
           value = undefined;
           break;
-        case "CLOUD_SUBSCRIPTIONID":
+        case 'CLOUD_SUBSCRIPTIONID':
           value = undefined;
           break;
-        case "CLOUD_LOCATION":
+        case 'CLOUD_LOCATION':
           value = undefined;
           break;
-        case "NLP_AUTHORING_KEY":
+        case 'NLP_AUTHORING_KEY':
           value = undefined;
           break;
-        case "STORAGE_DIALECT":
+        case 'STORAGE_DIALECT':
           value = undefined;
           break;
-        case "STORAGE_STORAGE":
-          value = "./guaribas.sqlite";
+        case 'STORAGE_STORAGE':
+          value = './guaribas.sqlite';
           break;
-        case "ADDITIONAL_DEPLOY_PATH":
+        case 'ADDITIONAL_DEPLOY_PATH':
           value = undefined;
           break;
-        case "STORAGE_SYNC":
-          value = "false";
+        case 'STORAGE_SYNC':
+          value = 'false';
           break;
-        case "STORAGE_SYNC_ALTER":
-          value = "false";
+        case 'STORAGE_SYNC_ALTER':
+          value = 'false';
           break;
-        case "STORAGE_SYNC_FORCE":
-          value = "false";
+        case 'STORAGE_SYNC_FORCE':
+          value = 'false';
           break;
-        case "STORAGE_LOGGING":
-          value = "false";
+        case 'STORAGE_LOGGING':
+          value = 'false';
           break;
-        case "STORAGE_ENCRYPT":
-          value = "true";
+        case 'STORAGE_ENCRYPT':
+          value = 'true';
           break;
         default:
           logger.warn(`Invalid key on .env file: '${key}'`);
@@ -110,7 +110,7 @@ export class GBConfigService {
   }
 
   public static tryGet(key: string) {
-    let value = process.env["container:" + key];
+    let value = process.env['container:' + key];
     if (!value) {
       value = process.env[key];
     }

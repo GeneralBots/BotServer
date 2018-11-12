@@ -36,11 +36,11 @@
 
 'use strict';
 
-import { IGBDialog } from "botlib";
-import { GBMinInstance } from "botlib";
-import { BotAdapter } from "botbuilder";
-import {WaterfallDialog } from "botbuilder-dialogs";
-import { Messages } from "../strings";
+import { BotAdapter } from 'botbuilder';
+import {WaterfallDialog } from 'botbuilder-dialogs';
+import { IGBDialog } from 'botlib';
+import { GBMinInstance } from 'botlib';
+import { Messages } from '../strings';
 
 export class WelcomeDialog extends IGBDialog {
   /**
@@ -49,20 +49,20 @@ export class WelcomeDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  static setup(bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
 
-    min.dialogs.add(new WaterfallDialog("/", [
-      async step => { 
-        
+    min.dialogs.add(new WaterfallDialog('/', [
+      async step => {
+
         const user = await min.userProfile.get(context, {});
         const locale = step.context.activity.locale;
 
         if (!user.once) {
           user.once = true;
           await min.userProfile.set(step.context, user);
-          var a = new Date();
+          const a = new Date();
           const date = a.getHours();
-          var msg =
+          const msg =
             date < 12
               ? Messages[locale].good_morning
               : date < 18
@@ -70,18 +70,18 @@ export class WelcomeDialog extends IGBDialog {
                 : Messages[locale].good_night;
 
           await step.context.sendActivity(Messages[locale].hi(msg));
-          await step.replaceDialog("/ask", { firstTime: true });
+          await step.replaceDialog('/ask', { firstTime: true });
 
           if (
             step.context.activity &&
-            step.context.activity.type == "message" &&
-            step.context.activity.text != ""
+            step.context.activity.type == 'message' &&
+            step.context.activity.text != ''
           ) {
-            await step.replaceDialog("/answer", { query: step.context.activity.text });
+            await step.replaceDialog('/answer', { query: step.context.activity.text });
           }
         }
         return await step.next();
       }
-    ]))
+    ]));
   }
 }

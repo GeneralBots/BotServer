@@ -36,21 +36,20 @@
 
 'use strict';
 
-
 import {
-  Table,
-  Column,
-  Model,
+  AutoIncrement,
   BelongsTo,
-  ForeignKey,
+  Column,
   CreatedAt,
-  UpdatedAt,
   DataType,
+  ForeignKey,
+  Model,
   PrimaryKey,
-  AutoIncrement
-} from "sequelize-typescript";
+  Table,
+  UpdatedAt
+} from 'sequelize-typescript';
 
-import { IGBInstance } from "botlib";
+import { IGBInstance } from 'botlib';
 
 @Table
 export class GuaribasInstance extends Model<GuaribasInstance>
@@ -58,185 +57,185 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   @PrimaryKey
   @AutoIncrement
   @Column
-  instanceId: number;
+  public instanceId: number;
 
   @Column
-  botEndpoint: string;
+  public botEndpoint: string;
 
   @Column
-  whoAmIVideo: string;
+  public whoAmIVideo: string;
 
   @Column
-  botId: string;
+  public botId: string;
 
   @Column
-  title: string;
+  public title: string;
 
   @Column
-  description: string;
+  public description: string;
 
   @Column
-  version: string;
+  public version: string;
 
   @Column
-  enabledAdmin: boolean;
+  public enabledAdmin: boolean;
 
   /* Services section on bot.json */
 
   @Column
-  engineName: string;
+  public engineName: string;
 
   @Column
-  marketplaceId: string;
+  public marketplaceId: string;
 
   @Column
-  textAnalyticsKey: string;
+  public textAnalyticsKey: string;
 
   @Column
-  textAnalyticsEndpoint: string;
+  public textAnalyticsEndpoint: string;
 
   @Column
-  marketplacePassword: string;
+  public marketplacePassword: string;
 
   @Column
-  webchatKey: string;
+  public webchatKey: string;
 
   @Column
-  authenticatorTenant: string;
+  public authenticatorTenant: string;
 
   @Column
-  authenticatorAuthorityHostUrl: string;
+  public authenticatorAuthorityHostUrl: string;
 
   @Column
-  authenticatorClientId: string;
+  public authenticatorClientId: string;
 
   @Column
-  authenticatorClientSecret: string;
+  public authenticatorClientSecret: string;
 
   @Column
-  cloudSubscriptionId: string;
-  
-  @Column
-  cloudUsername: string;
+  public cloudSubscriptionId: string;
 
   @Column
-  cloudPassword: string;
+  public cloudUsername: string;
 
   @Column
-  cloudLocation: string;
+  public cloudPassword: string;
 
   @Column
-  whatsappBotKey: string;
+  public cloudLocation: string;
 
   @Column
-  whatsappServiceKey: string;
+  public whatsappBotKey: string;
 
   @Column
-  whatsappServiceNumber: string;
+  public whatsappServiceKey: string;
 
   @Column
-  whatsappServiceUrl: string;
+  public whatsappServiceNumber: string;
 
   @Column
-  whatsappServiceWebhookUrl: string;
+  public whatsappServiceUrl: string;
 
   @Column
-  smsKey: string;
+  public whatsappServiceWebhookUrl: string;
 
   @Column
-  smsSecret: string;
+  public smsKey: string;
 
   @Column
-  smsServiceNumber: string;
+  public smsSecret: string;
 
   @Column
-  speechKey: string;
+  public smsServiceNumber: string;
 
   @Column
-  speechKeyEndpoint: string;
+  public speechKey: string;
 
   @Column
-  spellcheckerKey: string;
+  public speechKeyEndpoint: string;
 
   @Column
-  spellcheckerEndpoint: string;
+  public spellcheckerKey: string;
 
   @Column
-  theme: string;
+  public spellcheckerEndpoint: string;
 
   @Column
-  ui: string;
+  public theme: string;
 
   @Column
-  kb: string;
+  public ui: string;
 
   @Column
-  nlpAppId: string;
+  public kb: string;
 
   @Column
-  nlpKey: string;
+  public nlpAppId: string;
+
+  @Column
+  public nlpKey: string;
 
   @Column
   @Column({ type: DataType.STRING(512) })
-  nlpEndpoint: string;
+  public nlpEndpoint: string;
 
   @Column
-  nlpAuthoringKey: string;
-  
-  @Column
-  deploymentPaths: string;
+  public nlpAuthoringKey: string;
 
   @Column
-  searchHost: string;
+  public deploymentPaths: string;
 
   @Column
-  searchKey: string;
+  public searchHost: string;
 
   @Column
-  searchIndex: string;
+  public searchKey: string;
 
   @Column
-  searchIndexer: string;
+  public searchIndex: string;
 
   @Column
-  storageUsername: string;
+  public searchIndexer: string;
 
   @Column
-  storagePassword: string;
+  public storageUsername: string;
 
   @Column
-  storageName: string;
+  public storagePassword: string;
 
   @Column
-  storageServer: string;
+  public storageName: string;
 
   @Column
-  storageDialect: string;
+  public storageServer: string;
 
   @Column
-  storagePath: string;
+  public storageDialect: string;
 
   @Column
-  adminPass: string;
+  public storagePath: string;
+
+  @Column
+  public adminPass: string;
 
   /* Settings section of bot.json */
 
   @Column(DataType.FLOAT)
-  nlpVsSearch: number;
+  public nlpVsSearch: number;
 
   @Column(DataType.FLOAT)
-  searchScore: number;
+  public searchScore: number;
 
   @Column(DataType.FLOAT)
-  nlpScore: number;
+  public nlpScore: number;
 
   @Column
   @CreatedAt
-  createdAt: Date;
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date;
+  public updatedAt: Date;
 }
 
 @Table
@@ -244,25 +243,25 @@ export class GuaribasPackage extends Model<GuaribasPackage> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  packageId: number;
+  public packageId: number;
 
   @Column
-  packageName: string;
+  public packageName: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number;
+  public instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance;
+  public instance: GuaribasInstance;
 
   @Column
   @CreatedAt
-  createdAt: Date;
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date;
+  public updatedAt: Date;
 }
 
 @Table
@@ -270,18 +269,18 @@ export class GuaribasChannel extends Model<GuaribasChannel> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  channelId: number;
+  public channelId: number;
 
   @Column
-  title: string;
+  public title: string;
 
   @Column
   @CreatedAt
-  createdAt: Date;
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date;
+  public updatedAt: Date;
 }
 
 @Table
@@ -289,23 +288,23 @@ export class GuaribasException extends Model<GuaribasException> {
   @PrimaryKey
   @AutoIncrement
   @Column
-  exceptionId: number;
+  public exceptionId: number;
 
   @Column
-  message: string;
+  public message: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number;
+  public instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance;
+  public instance: GuaribasInstance;
 
   @Column
   @CreatedAt
-  createdAt: Date;
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date;
+  public updatedAt: Date;
 }

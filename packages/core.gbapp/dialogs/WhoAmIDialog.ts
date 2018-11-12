@@ -36,11 +36,11 @@
 
 'use strict';
 
-import { IGBDialog } from "botlib";
-import { GBMinInstance } from "botlib";
-import { BotAdapter } from "botbuilder";
-import { Messages } from "../strings";
-import { WaterfallDialog } from "botbuilder-dialogs";
+import { BotAdapter } from 'botbuilder';
+import { WaterfallDialog } from 'botbuilder-dialogs';
+import { IGBDialog } from 'botlib';
+import { GBMinInstance } from 'botlib';
+import { Messages } from '../strings';
 
 export class WhoAmIDialog extends IGBDialog {
   /**
@@ -49,21 +49,21 @@ export class WhoAmIDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add(new WaterfallDialog("/whoAmI", [
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
+    min.dialogs.add(new WaterfallDialog('/whoAmI', [
       async step => {
-        let locale = step.context.activity.locale;
+        const locale = step.context.activity.locale;
         await step.context.sendActivity(`${min.instance.description}`);
 
         if (min.instance.whoAmIVideo) {
           await step.context.sendActivity(Messages[locale].show_video);
-          await min.conversationalService.sendEvent(step, "play", {
-            playerType: "video",
+          await min.conversationalService.sendEvent(step, 'play', {
+            playerType: 'video',
             data: min.instance.whoAmIVideo.trim()
           });
         }
 
-        await step.replaceDialog("/ask", { isReturning: true });
+        await step.replaceDialog('/ask', { isReturning: true });
         return await step.next();
       }
     ]));

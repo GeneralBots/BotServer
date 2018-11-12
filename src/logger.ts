@@ -30,7 +30,7 @@
 |                                                                             |
 \*****************************************************************************/
 
-const { createLogger, format, transports } = require('winston')
+const { createLogger, format, transports } = require('winston');
 
 const config = {
   levels: {
@@ -53,7 +53,7 @@ const config = {
     silly: 'magenta',
     custom: 'yellow'
   }
-}
+};
 
 const logger = createLogger({
   format: format.combine(
@@ -62,11 +62,11 @@ const logger = createLogger({
     format.label({ label: 'GeneralBots' }),
     format.timestamp(),
     format.printf(nfo => {
-      return `${nfo.timestamp} [${nfo.label}] ${nfo.level}: ${nfo.message}`
+      return `${nfo.timestamp} [${nfo.label}] ${nfo.level}: ${nfo.message}`;
     })
   ),
   levels: config.levels,
-  transports: [new transports.Console()]  
-})
+  transports: [new transports.Console()]
+});
 
-module.exports=logger
+module.exports = logger;

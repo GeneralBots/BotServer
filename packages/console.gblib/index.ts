@@ -34,32 +34,32 @@
  * @fileoverview General Bots server core.
  */
 
-'use strict'
+'use strict';
 
-const UrlJoin = require("url-join")
+const UrlJoin = require('url-join');
 
-import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib"
+import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 
-import { Sequelize } from 'sequelize-typescript'
-import { ConsoleDirectLine } from "./services/ConsoleDirectLine"
+import { Sequelize } from 'sequelize-typescript';
+import { ConsoleDirectLine } from './services/ConsoleDirectLine';
 
 export class GBConsolePackage implements IGBPackage {
-  sysPackages: IGBPackage[] = null
-  channel: ConsoleDirectLine
+  public sysPackages: IGBPackage[] = null;
+  public channel: ConsoleDirectLine;
 
-  loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
   }
 
-  unloadPackage(core: IGBCoreService): void {
+  public unloadPackage(core: IGBCoreService): void {
   }
 
-  loadBot(min: GBMinInstance): void {
-    this.channel = new ConsoleDirectLine(min.instance.webchatKey)
+  public loadBot(min: GBMinInstance): void {
+    this.channel = new ConsoleDirectLine(min.instance.webchatKey);
   }
 
-  unloadBot(min: GBMinInstance): void {
+  public unloadBot(min: GBMinInstance): void {
   }
 
-  onNewSession(min: GBMinInstance, step: any): void {
+  public onNewSession(min: GBMinInstance, step: any): void {
   }
 }

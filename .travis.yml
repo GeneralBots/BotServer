@@ -7,7 +7,7 @@ notifications:
   email: false
 
 before_install:
-- npm install --global nyc mocha typescript rimraf shx
+- npm install --global nyc mocha typescript shx
   
 install:
 - npm install
@@ -17,7 +17,6 @@ before_script:
 
 script:
 #- npm run build-docs
-#- npm run tslint
 #- npm run coveralls
 
 branches:
@@ -29,10 +28,17 @@ after_success:
 - npm pack
 
 deploy:
+  - provider: pages
+    skip_cleanup: true
+    local_dir: docs/reference
+    github_token: $GITHUB_TOKEN
+    on:
+      tags: false
+  
   - provider: releases
     api_key: $GITHUB_TOKEN
     file_glob: true
-    file: "{YOURLIB}-*.tgz"
+    file: "BotServer-*.tgz"
     skip_cleanup: true
     on:
       tags: false

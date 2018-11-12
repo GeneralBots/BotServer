@@ -57,13 +57,13 @@ export class BotFarmDialog extends IGBDialog {
           '2',
           '3',
           '4',
-          '5',
+          '5'
         ]);
       },
       async step => {
         const locale = step.context.activity.locale;
         await step.context.sendActivity(Messages[locale].thanks);
-      },
+      }
     ]);
   }
 }

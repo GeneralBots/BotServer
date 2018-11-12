@@ -36,14 +36,14 @@
 
 'use strict';
 
-import { IGBDialog } from "botlib";
+import { IGBDialog } from 'botlib';
 
-import { GBMinInstance } from "botlib";
-import { CSService } from "../services/CSService";
-import { BotAdapter } from "botbuilder";
-import { Messages } from "../strings";
-import { WaterfallDialog } from "botbuilder-dialogs";
-const logger = require("../../../src/logger");
+import { BotAdapter } from 'botbuilder';
+import { WaterfallDialog } from 'botbuilder-dialogs';
+import { GBMinInstance } from 'botlib';
+import { CSService } from '../services/CSService';
+import { Messages } from '../strings';
+const logger = require('../../../src/logger');
 
 export class QualityDialog extends IGBDialog {
   /**
@@ -52,18 +52,18 @@ export class QualityDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  static setup(bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new CSService();
 
-    min.dialogs.add(   new WaterfallDialog("/quality", [
+    min.dialogs.add(new WaterfallDialog('/quality', [
       async step =>  {
         const locale = step.context.activity.locale;
         const user = await min.userProfile.get(context, {});
-        
-        var score = step.result;
+
+        const score = step.result;
 
         setTimeout(
-          () => min.conversationalService.sendEvent(step, "stop", null),
+          () => min.conversationalService.sendEvent(step, 'stop', null),
           400
         );
 
@@ -77,7 +77,7 @@ export class QualityDialog extends IGBDialog {
             user.lastQuestion,
             user.lastQuestionId
           );
-          await step.replaceDialog("/ask", { isReturning: true });
+          await step.replaceDialog('/ask', { isReturning: true });
         }
         return await step.next();
       }

@@ -37,30 +37,30 @@
 
 'use strict';
 
-const logger = require("./logger");
-const express = require("express");
-const bodyParser = require("body-parser");
+const logger = require('./logger');
+const express = require('express');
+const bodyParser = require('body-parser');
 const opn = require('opn');
 
-import { GBConfigService } from "../packages/core.gbapp/services/GBConfigService";
-import { GBConversationalService } from "../packages/core.gbapp/services/GBConversationalService";
-import { GBMinService } from "../packages/core.gbapp/services/GBMinService";
-import { GBDeployer } from "../packages/core.gbapp/services/GBDeployer";
-import { GBWhatsappPackage } from "./../packages/whatsapp.gblib/index";
-import { GBCoreService } from "../packages/core.gbapp/services/GBCoreService";
-import { GBImporter } from "../packages/core.gbapp/services/GBImporter";
-import { GBAnalyticsPackage } from "../packages/analytics.gblib";
-import { GBCorePackage } from "../packages/core.gbapp";
-import { GBKBPackage } from "../packages/kb.gbapp";
-import { GBSecurityPackage } from "../packages/security.gblib";
-import { GBAdminPackage } from "../packages/admin.gbapp/index";
-import { GBCustomerSatisfactionPackage } from "../packages/customer-satisfaction.gbapp";
-import { GBAdminService } from "../packages/admin.gbapp/services/GBAdminService";
-import { GuaribasInstance } from "../packages/core.gbapp/models/GBModel";
-import { AzureDeployerService } from "../packages/azuredeployer.gbapp/services/AzureDeployerService";
-import { IGBPackage, IGBInstance } from "botlib";
+import { IGBInstance, IGBPackage } from 'botlib';
+import { GBAdminPackage } from '../packages/admin.gbapp/index';
+import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService';
+import { GBAnalyticsPackage } from '../packages/analytics.gblib';
+import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService';
+import { GBCorePackage } from '../packages/core.gbapp';
+import { GuaribasInstance } from '../packages/core.gbapp/models/GBModel';
+import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService';
+import { GBConversationalService } from '../packages/core.gbapp/services/GBConversationalService';
+import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService';
+import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
+import { GBImporter } from '../packages/core.gbapp/services/GBImporter';
+import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
+import { GBCustomerSatisfactionPackage } from '../packages/customer-satisfaction.gbapp';
+import { GBKBPackage } from '../packages/kb.gbapp';
+import { GBSecurityPackage } from '../packages/security.gblib';
+import { GBWhatsappPackage } from './../packages/whatsapp.gblib/index';
 
-let appPackages = new Array<IGBPackage>();
+const appPackages = new Array<IGBPackage>();
 
 /**
  * General Bots open-core entry point.
@@ -71,7 +71,7 @@ export class GBServer {
    *  Program entry-point.
    */
 
-  static run() {
+  public static run() {
 
     logger.info(`The Bot Server is in STARTING mode...`);
 
@@ -79,8 +79,8 @@ export class GBServer {
     // bot instance. This allows the same server to attend multiple Bot on
     // the Marketplace until GB get serverless.
 
-    let port = process.env.port || process.env.PORT || 4242;
-    let server = express();
+    const port = process.env.port || process.env.PORT || 4242;
+    const server = express();
 
     server.use(bodyParser.json()); // to support JSON-encoded bodies
     server.use(
@@ -99,15 +99,15 @@ export class GBServer {
           // Reads basic configuration, initialize minimal services.
 
           GBConfigService.init();
-          let core = new GBCoreService();
+          const core = new GBCoreService();
 
           // Ensures cloud / on-premises infrastructure is setup.
 
           logger.info(`Establishing a development local proxy (ngrok)...`);
-          let proxyAddress = await core.ensureProxy(port);
+          const proxyAddress = await core.ensureProxy(port);
 
-          let deployer = new GBDeployer(core, new GBImporter(core));
-          let azureDeployer = new AzureDeployerService(deployer);
+          const deployer = new GBDeployer(core, new GBImporter(core));
+          const azureDeployer = new AzureDeployerService(deployer);
 
           try {
             await core.initDatabase();
@@ -117,7 +117,7 @@ export class GBServer {
               bootInstance = await azureDeployer.deployFarm(proxyAddress);
             } catch (error) {
               logger.warn(
-                "In case of error, please cleanup any infrastructure objects created during this procedure and .env before running again."
+                'In case of error, please cleanup any infrastructure objects created during this procedure and .env before running again.'
               );
               throw error;
             }
@@ -132,13 +132,13 @@ export class GBServer {
 
           // Check admin password.
 
-          let conversationalService = new GBConversationalService(core);
-          let adminService = new GBAdminService(core);
-          let password = GBConfigService.get("ADMIN_PASS");
+          const conversationalService = new GBConversationalService(core);
+          const adminService = new GBAdminService(core);
+          const password = GBConfigService.get('ADMIN_PASS');
 
           if (!GBAdminService.StrongRegex.test(password)) {
             throw new Error(
-              "Please, define a really strong password in ADMIN_PASS environment variable before running the server."
+              'Please, define a really strong password in ADMIN_PASS environment variable before running the server.'
             );
           }
 
@@ -155,7 +155,7 @@ export class GBServer {
             GBWhatsappPackage
           ].forEach(e => {
             logger.info(`Loading sys package: ${e.name}...`);
-            let p = Object.create(e.prototype) as IGBPackage;
+            const p = Object.create(e.prototype) as IGBPackage;
             p.loadPackage(core, core.sequelize);
           });
 
@@ -165,9 +165,9 @@ export class GBServer {
           let instances: GuaribasInstance[];
           try {
             instances = await core.loadInstances();
-            let instance = instances[0];
-            
-            if (process.env.NODE_ENV === "development") {
+            const instance = instances[0];
+
+            if (process.env.NODE_ENV === 'development') {
               logger.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
 
               await azureDeployer.updateBotProxy(
@@ -177,30 +177,30 @@ export class GBServer {
               );
             }
           } catch (error) {
-            if (error.parent.code === "ELOGIN") {
-              let group = GBConfigService.get("CLOUD_GROUP");
-              let serverName = GBConfigService.get("STORAGE_SERVER").split(
-                ".database.windows.net"
+            if (error.parent.code === 'ELOGIN') {
+              const group = GBConfigService.get('CLOUD_GROUP');
+              const serverName = GBConfigService.get('STORAGE_SERVER').split(
+                '.database.windows.net'
               )[0];
               await azureDeployer.openStorageFirewall(group, serverName);
             } else {
               // Check if storage is empty and needs formatting.
 
-              let isInvalidObject =
+              const isInvalidObject =
                 error.parent.number == 208 || error.parent.errno == 1; // MSSQL or SQLITE.
 
               if (isInvalidObject) {
-                if (GBConfigService.get("STORAGE_SYNC") != "true") {
-                  throw `Operating storage is out of sync or there is a storage connection error. Try setting STORAGE_SYNC to true in .env file. Error: ${
+                if (GBConfigService.get('STORAGE_SYNC') != 'true') {
+                  throw new Error(`Operating storage is out of sync or there is a storage connection error. Try setting STORAGE_SYNC to true in .env file. Error: ${
                     error.message
-                  }.`;
+                  }.`);
                 } else {
                   logger.info(
                     `Storage is empty. After collecting storage structure from all .gbapps it will get synced.`
                   );
                 }
               } else {
-                throw `Cannot connect to operating storage: ${error.message}.`;
+                throw new Error(`Cannot connect to operating storage: ${error.message}.`);
               }
             }
           }
@@ -213,7 +213,7 @@ export class GBServer {
           // If instances is undefined here it's because storage has been formatted.
           // Load all instances from .gbot found on deploy package directory.
           if (!instances) {
-            let saveInstance = new GuaribasInstance(bootInstance);
+            const saveInstance = new GuaribasInstance(bootInstance);
             await saveInstance.save();
             instances = await core.loadInstances();
           }
@@ -221,7 +221,7 @@ export class GBServer {
           // Setup server dynamic (per bot instance) resources and listeners.
 
           logger.info(`Publishing instances...`);
-          let minService = new GBMinService(
+          const minService = new GBMinService(
             core,
             conversationalService,
             adminService,
@@ -230,13 +230,13 @@ export class GBServer {
           await minService.buildMin(server, appPackages, instances);
           logger.info(`The Bot Server is in RUNNING mode...`);
 
-          if (process.env.NODE_ENV === "development") {
+          if (process.env.NODE_ENV === 'development') {
             opn('http://localhost:4242');
           }
 
           return core;
         } catch (err) {
-          logger.error(`STOP: ${err} ${err.stack ? err.stack : ""}`);
+          logger.error(`STOP: ${err} ${err.stack ? err.stack : ''}`);
           process.exit(1);
         }
       })();

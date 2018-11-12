@@ -37,32 +37,30 @@
 'use strict';
 
 import {
-  Table,
   Column,
-  Model,
   CreatedAt,
-  UpdatedAt,
-} from "sequelize-typescript";
-
+  Model,
+  Table,
+  UpdatedAt
+} from 'sequelize-typescript';
 
 @Table
-export class GuaribasAdmin extends Model<GuaribasAdmin>
- {
+export class GuaribasAdmin extends Model<GuaribasAdmin> {
 
   @Column
-  instanceId: number;
+  public instanceId: number;
 
   @Column
-  key: string;
+  public key: string;
 
   @Column
-  value: string;
+  public value: string;
 
   @Column
   @CreatedAt
-  createdAt: Date;
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  updatedAt: Date;
+  public updatedAt: Date;
 }

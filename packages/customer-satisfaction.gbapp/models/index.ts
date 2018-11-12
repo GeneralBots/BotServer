@@ -34,34 +34,34 @@
  * @fileoverview General Bots server core.
  */
 
-'use strict'
+'use strict';
 
 import {
-  DataTypes,
-  DataTypeUUIDv4,
   DataTypeDate,
-  DataTypeDecimal
-} from "sequelize"
+  DataTypeDecimal,
+  DataTypes,
+  DataTypeUUIDv4
+} from 'sequelize';
 
 import {
-  Sequelize,
-  Table,
-  Column,
-  Model,
-  HasMany,
+  AutoIncrement,
   BelongsTo,
   BelongsToMany,
-  Length,
-  ForeignKey,
+  Column,
   CreatedAt,
-  UpdatedAt,
   DataType,
+  ForeignKey,
+  HasMany,
   IsUUID,
+  Length,
+  Model,
   PrimaryKey,
-  AutoIncrement
-} from "sequelize-typescript"
+  Sequelize,
+  Table,
+  UpdatedAt
+} from 'sequelize-typescript';
 
-import { GuaribasInstance } from "../../core.gbapp/models/GBModel"
+import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 
 @Table
 export class GuaribasQuestionAlternate extends Model<GuaribasQuestionAlternate> {
@@ -69,16 +69,16 @@ export class GuaribasQuestionAlternate extends Model<GuaribasQuestionAlternate> 
   @PrimaryKey
   @AutoIncrement
   @Column
-  quickAnswerId: number
+  public quickAnswerId: number;
 
-  @Column questionTyped: string
+  @Column public questionTyped: string;
 
-  @Column questionText: string
+  @Column public questionText: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column
-  instanceId: number
+  public instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance
+  public instance: GuaribasInstance;
 }

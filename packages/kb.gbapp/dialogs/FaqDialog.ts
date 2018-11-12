@@ -34,41 +34,41 @@
  * @fileoverview General Bots server core.
  */
 
-'use strict'
+'use strict';
 
-import { KBService } from './../services/KBService'
-import { IGBDialog } from "botlib"
-import { BotAdapter } from "botbuilder"
-import { Messages } from "../strings";
-import { GBMinInstance } from "botlib"
+import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
+import { IGBDialog } from 'botlib';
+import { GBMinInstance } from 'botlib';
+import { Messages } from '../strings';
+import { KBService } from './../services/KBService';
 
 export class FaqDialog extends IGBDialog {
   /**
    * Setup dialogs flows and define services call.
-   * 
+   *
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  static setup(bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
 
-    const service = new KBService(min.core.sequelize)
+    const service = new KBService(min.core.sequelize);
 
-    min.dialogs.add(new WaterfallDialog("/faq", [
+    min.dialogs.add(new WaterfallDialog('/faq', [
       async step => {
-        let data = await service.getFaqBySubjectArray("faq", null)
+        const data = await service.getFaqBySubjectArray('faq', null);
         const locale = step.context.activity.locale;
         if (data) {
-          await min.conversationalService.sendEvent(step, "play", {
-            playerType: "bullet",
+          await min.conversationalService.sendEvent(step, 'play', {
+            playerType: 'bullet',
             data: data.slice(0, 10)
-          })
-          
-          await step.context.sendActivity(Messages[locale].see_faq) // TODO: RND messages.
-          await step.endDialog()
+          });
+
+          await step.context.sendActivity(Messages[locale].see_faq); // TODO: RND messages.
+          await step.endDialog();
           return await step.next();
         }
       }
-    ]))
+    ]));
   }
 }

@@ -34,38 +34,38 @@
  * @fileoverview General Bots server core.
  */
 
-import { GuaribasUser } from "../../security.gblib/models"
-import { GuaribasConversation, GuaribasConversationMessage } from "../models"
+import { GuaribasUser } from '../../security.gblib/models';
+import { GuaribasConversation, GuaribasConversationMessage } from '../models';
 
 export class AnalyticsService {
-  async createConversation(
+  public async createConversation(
     user: GuaribasUser
   ): Promise<GuaribasConversation> {
     return new Promise<GuaribasConversation>(
       (resolve, reject) => {
-        let conversation = new GuaribasConversation()
-        conversation.startedBy = user
-        conversation.startedByUserId = user.userId
+        const conversation = new GuaribasConversation();
+        conversation.startedBy = user;
+        conversation.startedByUserId = user.userId;
         conversation.save().then((value: GuaribasConversation) => {
-          resolve(value)
-        })
-      })
+          resolve(value);
+        });
+      });
   }
 
-  createMessage(
+  public createMessage(
     conversation: GuaribasConversation,
     user: GuaribasUser,
     content: string
   ): Promise<GuaribasConversationMessage> {
     return new Promise<GuaribasConversationMessage>(
       (resolve, reject) => {
-        let message = GuaribasConversationMessage.build()
-        message.conversation = conversation
-        message.user = user
-        message.content = content
+        const message = GuaribasConversationMessage.build();
+        message.conversation = conversation;
+        message.user = user;
+        message.content = content;
         message.save().then((value: GuaribasConversationMessage) => {
-          resolve(value)
-        })
-      })
+          resolve(value);
+        });
+      });
   }
 }

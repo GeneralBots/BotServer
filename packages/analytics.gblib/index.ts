@@ -34,33 +34,31 @@
  * @fileoverview General Bots server core.
  */
 
-'use strict'
+'use strict';
 
-const UrlJoin = require("url-join")
+const UrlJoin = require('url-join');
 
+import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 
-
-import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib"
-
-import { Sequelize } from "sequelize-typescript"
+import { Sequelize } from 'sequelize-typescript';
 
 export class GBAnalyticsPackage implements IGBPackage {
-  
-  sysPackages: IGBPackage[] = null
-    
-  loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-    
+
+  public sysPackages: IGBPackage[] = null;
+
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+
   }
-  unloadPackage(core: IGBCoreService): void {
-    
+  public unloadPackage(core: IGBCoreService): void {
+
   }
-  loadBot(min: GBMinInstance): void {
-    
+  public loadBot(min: GBMinInstance): void {
+
   }
-  unloadBot(min: GBMinInstance): void {
-    
+  public unloadBot(min: GBMinInstance): void {
+
   }
-  onNewSession(min: GBMinInstance, step: any): void {
-    
+  public onNewSession(min: GBMinInstance, step: any): void {
+
   }
 }

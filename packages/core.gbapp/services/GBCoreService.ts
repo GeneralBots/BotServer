@@ -70,7 +70,7 @@ export class GBCoreService implements IGBCoreService {
   private createTableQuery: (
     tableName: string,
     attributes: any,
-    options: any,
+    options: any
   ) => string;
 
   /**
@@ -136,15 +136,15 @@ export class GBCoreService implements IGBCoreService {
             dialect: this.dialect,
             storage: storage,
             dialectOptions: {
-              encrypt: encrypt,
+              encrypt: encrypt
             },
             pool: {
               max: 32,
               min: 8,
               idle: 40000,
               evict: 40000,
-              acquire: 40000,
-            },
+              acquire: 40000
+            }
           });
 
           if (this.dialect === 'mssql') {
@@ -153,7 +153,7 @@ export class GBCoreService implements IGBCoreService {
             this.queryGenerator.createTableQuery = (
               tableName,
               attributes,
-              options,
+              options
             ) => this.createTableQueryOverride(tableName, attributes, options);
             this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
             this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
@@ -163,7 +163,7 @@ export class GBCoreService implements IGBCoreService {
         } catch (error) {
           reject(error);
         }
-      },
+      }
     );
   }
 
@@ -174,7 +174,7 @@ export class GBCoreService implements IGBCoreService {
       logger.info('Syncing database...');
       return this.sequelize.sync({
         alter: alter,
-        force: force,
+        force: force
       });
     } else {
       const msg = 'Database synchronization is disabled.';
@@ -257,7 +257,7 @@ export class GBCoreService implements IGBCoreService {
     let sql: string = this.createTableQuery.apply(this.queryGenerator, [
       tableName,
       attributes,
-      options,
+      options
     ]);
     const re1 = /CREATE\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
@@ -268,7 +268,7 @@ export class GBCoreService implements IGBCoreService {
         re2,
         (match: string, ...args: any[]): string => {
           return 'CONSTRAINT [' + table + '_pk] ' + match;
-        },
+        }
       );
       const re3 = /FOREIGN\s+KEY\s+\((\[[^\]]*\](?:,\s*\[[^\]]*\])*)\)/g;
       const re4 = /\[([^\]]*)\]/g;
@@ -283,7 +283,7 @@ export class GBCoreService implements IGBCoreService {
             matches = re4.exec(fkcols);
           }
           return 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
-        },
+        }
       );
     }
     return sql;
@@ -300,7 +300,7 @@ export class GBCoreService implements IGBCoreService {
   private changeColumnQueryOverride(tableName, attributes): string {
     let sql: string = this.changeColumnQuery.apply(this.queryGenerator, [
       tableName,
-      attributes,
+      attributes
     ]);
     const re1 = /ALTER\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
@@ -326,7 +326,7 @@ export class GBCoreService implements IGBCoreService {
             fkcols +
             ')'
           );
-        },
+        }
       );
     }
     return sql;

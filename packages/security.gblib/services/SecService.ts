@@ -30,48 +30,48 @@
 |                                                                             |
 \*****************************************************************************/
 
-const Path = require("path")
-const Fs = require("fs")
-const _ = require("lodash")
-const Parse = require("csv-parse")
-const Async = require("async")
-const UrlJoin = require("url-join")
-const Walk = require("fs-walk")
-const logger = require("../../../src/logger")
+const Path = require('path');
+const Fs = require('fs');
+const _ = require('lodash');
+const Parse = require('csv-parse');
+const Async = require('async');
+const UrlJoin = require('url-join');
+const Walk = require('fs-walk');
+const logger = require('../../../src/logger');
 
-import { GBServiceCallback, GBService, IGBInstance } from "botlib"
-import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from "../models"
+import { GBService, GBServiceCallback, IGBInstance } from 'botlib';
+import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models';
 
 export class SecService extends GBService {
 
-  async importSecurityFile(localPath: string, instance: IGBInstance) {
-    let security = JSON.parse(
-      Fs.readFileSync(UrlJoin(localPath, "security.json"), "utf8")
-    )
+  public async importSecurityFile(localPath: string, instance: IGBInstance) {
+    const security = JSON.parse(
+      Fs.readFileSync(UrlJoin(localPath, 'security.json'), 'utf8')
+    );
     security.groups.forEach(group => {
-      let groupDb = GuaribasGroup.build({
+      const groupDb = GuaribasGroup.build({
         instanceId: instance.instanceId,
         displayName: group.displayName
-      })
+      });
       groupDb.save().then(groupDb => {
         group.users.forEach(user => {
-          let userDb = GuaribasUser.build({
+          const userDb = GuaribasUser.build({
             instanceId: instance.instanceId,
             groupId: groupDb.groupId,
             userName: user.userName
-          })
+          });
           userDb.save().then(userDb => {
-            let userGroup = GuaribasUserGroup.build()
-            userGroup.groupId = groupDb.groupId
-            userGroup.userId = userDb.userId
-            userGroup.save()
-          })
-        })
-      })
-    })
+            const userGroup = GuaribasUserGroup.build();
+            userGroup.groupId = groupDb.groupId;
+            userGroup.userId = userDb.userId;
+            userGroup.save();
+          });
+        });
+      });
+    });
   }
 
-  async ensureUser(
+  public async ensureUser(
     instanceId: number,
     userSystemId: string,
     userName: string,
@@ -83,24 +83,24 @@ export class SecService extends GBService {
       (resolve, reject) => {
 
         GuaribasUser.findOne({
-          attributes: ["instanceId", "internalAddress"],
+          attributes: ['instanceId', 'internalAddress'],
           where: {
             instanceId: instanceId,
             userSystemId: userSystemId
           }
         }).then(user => {
           if (!user) {
-            user = GuaribasUser.build()
+            user = GuaribasUser.build();
           }
-          user.userSystemId = userSystemId
-          user.userName = userName
-          user.displayName = displayName
-          user.internalAddress = address
-          user.email = userName
-          user.defaultChannel = channelName
-          user.save()
-          resolve(user)
-        }).error(reason => reject(reason))
-      })
+          user.userSystemId = userSystemId;
+          user.userName = userName;
+          user.displayName = displayName;
+          user.internalAddress = address;
+          user.email = userName;
+          user.defaultChannel = channelName;
+          user.save();
+          resolve(user);
+        }).error(reject);
+      });
   }
 }

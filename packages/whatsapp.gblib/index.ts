@@ -34,43 +34,41 @@
  * @fileoverview General Bots server core.
  */
 
-'use strict'
+'use strict';
 
-const UrlJoin = require("url-join")
+const UrlJoin = require('url-join');
 
+import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 
-import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib"
-
-import { Sequelize } from "sequelize-typescript"
-import { WhatsappDirectLine } from "./services/WhatsappDirectLine"
-
+import { Sequelize } from 'sequelize-typescript';
+import { WhatsappDirectLine } from './services/WhatsappDirectLine';
 
 export class GBWhatsappPackage implements IGBPackage {
 
-    sysPackages: IGBPackage[] = null
-    channel: WhatsappDirectLine
+    public sysPackages: IGBPackage[] = null;
+    public channel: WhatsappDirectLine;
 
-    loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+    public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     }
 
-    unloadPackage(core: IGBCoreService): void {
+    public unloadPackage(core: IGBCoreService): void {
 
     }
 
-    loadBot(min: GBMinInstance): void {
-        
+    public loadBot(min: GBMinInstance): void {
+
         // Only loads engine if it is defined on services.json.
 
-        if (min.instance.whatsappBotKey != "") {
+        if (min.instance.whatsappBotKey != '') {
             this.channel = new WhatsappDirectLine(min.botId, min.instance.whatsappBotKey, min.instance.whatsappServiceKey,
-                min.instance.whatsappServiceNumber, min.instance.whatsappServiceUrl, min.instance.whatsappServiceWebhookUrl)
+                                                  min.instance.whatsappServiceNumber, min.instance.whatsappServiceUrl, min.instance.whatsappServiceWebhookUrl);
         }
     }
 
-    unloadBot(min: GBMinInstance): void {
+    public unloadBot(min: GBMinInstance): void {
 
     }
-    onNewSession(min: GBMinInstance, step: any): void {
+    public onNewSession(min: GBMinInstance, step: any): void {
 
     }
 }

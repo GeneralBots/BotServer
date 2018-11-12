@@ -34,44 +34,44 @@
  * @fileoverview General Bots server core.
  */
 
-'use strict'
+'use strict';
 
-const UrlJoin = require("url-join")
+const UrlJoin = require('url-join');
 
-import { GBMinInstance, IGBPackage } from "botlib"
+import { GBMinInstance, IGBPackage } from 'botlib';
 
-import { WelcomeDialog } from "./dialogs/WelcomeDialog"
-import { WhoAmIDialog } from "./dialogs/WhoAmIDialog"
-import { IGBCoreService} from "botlib"
-import { Sequelize } from "sequelize-typescript"
-import { GuaribasInstance, GuaribasException, GuaribasPackage, GuaribasChannel } from "./models/GBModel"
+import { IGBCoreService} from 'botlib';
+import { Sequelize } from 'sequelize-typescript';
+import { WelcomeDialog } from './dialogs/WelcomeDialog';
+import { WhoAmIDialog } from './dialogs/WhoAmIDialog';
+import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage } from './models/GBModel';
 
 export class GBCorePackage implements IGBPackage {
-  sysPackages: IGBPackage[] = null
-  public static CurrentEngineName = "guaribas-1.0.0";
-  
-  loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+  public static CurrentEngineName = 'guaribas-1.0.0';
+  public sysPackages: IGBPackage[] = null;
+
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasInstance,
       GuaribasPackage,
       GuaribasChannel,
-      GuaribasException,
-    ])
+      GuaribasException
+    ]);
   }
 
-  unloadPackage(core: IGBCoreService): void {
-    
+  public unloadPackage(core: IGBCoreService): void {
+
   }
 
-  loadBot(min: GBMinInstance): void {
-    WelcomeDialog.setup(min.bot, min)
-    WhoAmIDialog.setup(min.bot, min)
+  public loadBot(min: GBMinInstance): void {
+    WelcomeDialog.setup(min.bot, min);
+    WhoAmIDialog.setup(min.bot, min);
   }
 
-  unloadBot(min: GBMinInstance): void {
-    
+  public unloadBot(min: GBMinInstance): void {
+
   }
-  onNewSession(min: GBMinInstance, step: any): void {
-    
+  public onNewSession(min: GBMinInstance, step: any): void {
+
   }
 }

@@ -34,40 +34,39 @@
  * @fileoverview General Bots server core.
  */
 
-'use strict'
+'use strict';
 
-const UrlJoin = require("url-join")
+const UrlJoin = require('url-join');
 
+import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 
-import { GBMinInstance, IGBPackage, IGBCoreService } from "botlib"
-
-import { Sequelize } from "sequelize-typescript"
-import { GuaribasUser, GuaribasGroup, GuaribasUserGroup } from "./models"
+import { Sequelize } from 'sequelize-typescript';
+import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models';
 
 export class GBSecurityPackage implements IGBPackage {
-  sysPackages: IGBPackage[] = null
-  loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+  public sysPackages: IGBPackage[] = null;
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([
       GuaribasGroup,
       GuaribasUser,
       GuaribasUserGroup
-    ])
+    ]);
 
-    core
+    core;
   }
 
-  unloadPackage(core: IGBCoreService): void {
-
-  }
-
-  loadBot(min: GBMinInstance): void {
+  public unloadPackage(core: IGBCoreService): void {
 
   }
 
-  unloadBot(min: GBMinInstance): void {
+  public loadBot(min: GBMinInstance): void {
 
   }
-  onNewSession(min: GBMinInstance, step: any): void {
+
+  public unloadBot(min: GBMinInstance): void {
+
+  }
+  public onNewSession(min: GBMinInstance, step: any): void {
 
   }
 }

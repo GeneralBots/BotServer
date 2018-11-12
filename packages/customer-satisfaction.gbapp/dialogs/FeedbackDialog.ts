@@ -36,13 +36,13 @@
 
 'use strict';
 
-import { CSService } from "../services/CSService";
-import { AzureText } from "pragmatismo-io-framework";
-import { GBMinInstance } from "botlib";
-import { IGBDialog } from "botlib";
-import { BotAdapter } from "botbuilder";
-import { Messages } from "../strings";
-import { WaterfallDialog } from "botbuilder-dialogs";
+import { BotAdapter } from 'botbuilder';
+import { WaterfallDialog } from 'botbuilder-dialogs';
+import { GBMinInstance } from 'botlib';
+import { IGBDialog } from 'botlib';
+import { AzureText } from 'pragmatismo-io-framework';
+import { CSService } from '../services/CSService';
+import { Messages } from '../strings';
 
 export class FeedbackDialog extends IGBDialog {
   /**
@@ -51,13 +51,13 @@ export class FeedbackDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  static setup(bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new CSService();
 
     min.dialogs.add(
-      new WaterfallDialog("/feedbackNumber", [
+      new WaterfallDialog('/feedbackNumber', [
         async step => {
-          let locale = step.context.activity.locale;
+          const locale = step.context.activity.locale;
           // TODO: Migrate to 4.*+ await step.prompt("choicePrompt", Messages[locale].what_about_me, [
           //   "1",
           //   "2",
@@ -68,8 +68,8 @@ export class FeedbackDialog extends IGBDialog {
           return await step.next();
         },
         async step => {
-          let locale = step.context.activity.locale;
-          let rate = step.result.entity;
+          const locale = step.context.activity.locale;
+          const rate = step.result.entity;
           const user = await min.userProfile.get(context, {});
           await service.updateConversationRate(user.conversation, rate);
           await step.context.sendActivity(Messages[locale].thanks);
@@ -78,19 +78,19 @@ export class FeedbackDialog extends IGBDialog {
       ])
     );
 
-    min.dialogs.add(new WaterfallDialog("/feedback", [
+    min.dialogs.add(new WaterfallDialog('/feedback', [
       async step => {
-        let locale = step.context.activity.locale;
+        const locale = step.context.activity.locale;
         if (step.result.fromMenu) {
           await step.context.sendActivity(Messages[locale].about_suggestions);
         }
 
-        await step.prompt("textPrompt", Messages[locale].what_about_service);
+        await step.prompt('textPrompt', Messages[locale].what_about_service);
         return await step.next();
       },
       async step => {
-        let locale = step.context.activity.locale;
-        let rate = await AzureText.getSentiment(
+        const locale = step.context.activity.locale;
+        const rate = await AzureText.getSentiment(
           min.instance.textAnalyticsKey,
           min.instance.textAnalyticsEndpoint,
           min.conversationalService.getCurrentLanguage(step),
@@ -104,7 +104,7 @@ export class FeedbackDialog extends IGBDialog {
 
           // TODO: Record.
         }
-        await step.replaceDialog("/ask", { isReturning: true });
+        await step.replaceDialog('/ask', { isReturning: true });
         return await step.next();
       }
     ]));

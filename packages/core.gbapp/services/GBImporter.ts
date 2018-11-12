@@ -30,42 +30,41 @@
 |                                                                             |
 \*****************************************************************************/
 
-
 /**
  * @fileoverview General Bots server core.
  */
 
-'use strict'
+'use strict';
 
-const UrlJoin = require("url-join")
-import Fs = require("fs")
-import Path = require("path")
-import { IGBCoreService, IGBInstance } from "botlib"
-import { SecService } from "../../security.gblib/services/SecService"
-import { GuaribasInstance } from "../models/GBModel"
+const UrlJoin = require('url-join');
+import { IGBCoreService, IGBInstance } from 'botlib';
+import fs = require('fs');
+import path = require('path');
+import { SecService } from '../../security.gblib/services/SecService';
+import { GuaribasInstance } from '../models/GBModel';
 
 export class GBImporter {
-  core: IGBCoreService
+  public core: IGBCoreService;
 
   constructor(core: IGBCoreService) {
-    this.core = core
+    this.core = core;
   }
 
-  async importIfNotExistsBotPackage(
+  public async importIfNotExistsBotPackage(
     packageName: string,
     localPath: string) {
 
-    let packageJson = JSON.parse(
-      Fs.readFileSync(UrlJoin(localPath, "package.json"), "utf8")
-    )
+    const packageJson = JSON.parse(
+      Fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8')
+    );
 
-    let botId = packageJson.botId
+    const botId = packageJson.botId;
 
-    let instance = await this.core.loadInstance(botId)
+    const instance = await this.core.loadInstance(botId);
     if (instance) {
-      return Promise.resolve(instance)
+      return Promise.resolve(instance);
     } else {
-      return this.createInstanceInternal(packageName, localPath, packageJson)
+      return this.createInstanceInternal(packageName, localPath, packageJson);
     }
   }
 
@@ -75,20 +74,20 @@ export class GBImporter {
     packageJson: any
   ) {
     const settings = JSON.parse(
-      Fs.readFileSync(UrlJoin(localPath, "settings.json"), "utf8")
-    )
+      Fs.readFileSync(UrlJoin(localPath, 'settings.json'), 'utf8')
+    );
     const servicesJson = JSON.parse(
-      Fs.readFileSync(UrlJoin(localPath, "services.json"), "utf8")
-    )
+      Fs.readFileSync(UrlJoin(localPath, 'services.json'), 'utf8')
+    );
 
-    packageJson = Object.assign(packageJson, settings, servicesJson)
+    packageJson = {...packageJson, ...settings, ...servicesJson};
 
     GuaribasInstance.create(packageJson).then((instance: IGBInstance) => {
 
-      let service = new SecService()
+      const service = new SecService();
       // TODO: service.importSecurityFile(localPath, instance)
 
-      Promise.resolve(instance)
-    })
+      Promise.resolve(instance);
+    });
   }
 }

@@ -36,116 +36,41 @@
 
 'use strict';
 
-import { GuaribasAdmin } from "../models/AdminModel";
-import { IGBCoreService } from "botlib";
-import { AuthenticationContext, TokenResponse } from "adal-node";
-const UrlJoin = require("url-join");
-const msRestAzure = require("ms-rest-azure");
-const PasswordGenerator = require("strict-password-generator").default;
+import { AuthenticationContext, TokenResponse } from 'adal-node';
+import { IGBCoreService } from 'botlib';
+import { GuaribasAdmin } from '../models/AdminModel';
+const UrlJoin = require('url-join');
+const msRestAzure = require('ms-rest-azure');
+const PasswordGenerator = require('strict-password-generator').default;
 
 export class GBAdminService {
 
-  static GB_PROMPT: string = "GeneralBots: "
-
-  static generateUuid(): string {
-    return msRestAzure.generateUuid();
-  }
-  static masterBotInstanceId = 0;
+  public static GB_PROMPT: string = 'GeneralBots: ';
+  public static masterBotInstanceId = 0;
 
   public static StrongRegex = new RegExp(
-    "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*+_-])(?=.{8,})"
+    '^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*+_-])(?=.{8,})'
   );
 
-  core: IGBCoreService;
+  public core: IGBCoreService;
 
   constructor(core: IGBCoreService) {
     this.core = core;
   }
 
-  public async setValue(
-    instanceId: number,
-    key: string,
-    value: string
-  ): Promise<GuaribasAdmin> {
-    let options = { where: {} };
-    options.where = { key: key };
-    let admin = await GuaribasAdmin.findOne(options);
-    if (admin == null) {
-      admin = new GuaribasAdmin();
-      admin.key = key;
-    }
-    admin.value = value;
-    admin.instanceId = instanceId;
-    return admin.save();
-  }
-
-  public async getValue(instanceId: number, key: string) {
-    let options = { where: {} };
-    options.where = { key: key, instanceId: instanceId };
-    let obj = await GuaribasAdmin.findOne(options);
-    return Promise.resolve(obj.value);
-  }
-
-  public async acquireElevatedToken(instanceId): Promise<string> {
-    return new Promise<string>(async (resolve, reject) => {
-      let instance = await this.core.loadInstanceById(instanceId);
-
-      let expiresOn = new Date(await this.getValue(instanceId, "expiresOn"));
-      if (expiresOn.getTime() > new Date().getTime()) {
-        let accessToken = await this.getValue(instanceId, "accessToken");
-        resolve(accessToken);
-      } else {
-        let authorizationUrl = UrlJoin(
-          instance.authenticatorAuthorityHostUrl,
-          instance.authenticatorTenant,
-          "/oauth2/authorize"
-        );
-
-        let refreshToken = await this.getValue(instanceId, "refreshToken");
-        let resource = "https://graph.microsoft.com";
-        var authenticationContext = new AuthenticationContext(authorizationUrl);
-        authenticationContext.acquireTokenWithRefreshToken(
-          refreshToken,
-          instance.authenticatorClientId,
-          instance.authenticatorClientSecret,
-          resource,
-          async (err, res) => {
-            if (err) {
-              reject(err);
-            } else {
-              let token = res as TokenResponse;
-              await this.setValue(
-                instanceId,
-                "accessToken",
-                token.accessToken
-              );
-              await this.setValue(
-                instanceId,
-                "refreshToken",
-                token.refreshToken
-              );
-              await this.setValue(
-                instanceId,
-                "expiresOn",
-                token.expiresOn.toString()
-              );
-              resolve(token.accessToken);
-            }
-          }
-        );
-      }
-    });
+  public static generateUuid(): string {
+    return msRestAzure.generateUuid();
   }
 
   public static async getADALTokenFromUsername(
     username: string,
     password: string
   ) {
-    let credentials = await GBAdminService.getADALCredentialsFromUsername(
+    const credentials = await GBAdminService.getADALCredentialsFromUsername(
       username,
       password
     );
-    let accessToken = credentials.tokenCache._entries[0].accessToken;
+    const accessToken = credentials.tokenCache._entries[0].accessToken;
     return accessToken;
   }
 
@@ -153,7 +78,7 @@ export class GBAdminService {
     username: string,
     password: string
   ) {
-    let credentials = await msRestAzure.loginWithUsernamePassword(
+    const credentials = await msRestAzure.loginWithUsernamePassword(
       username,
       password
     );
@@ -171,7 +96,7 @@ export class GBAdminService {
       maximumLength: 14
     };
     let password = passwordGenerator.generatePassword(options);
-    password = password.replace(/@[=:;\?]/g, "#");
+    password = password.replace(/@[=:;\?]/g, '#');
     return password;
   }
 
@@ -185,8 +110,83 @@ export class GBAdminService {
       minimumLength: 12,
       maximumLength: 14
     };
-    let name = passwordGenerator.generatePassword(options);
+    const name = passwordGenerator.generatePassword(options);
     return name;
+  }
+
+  public async setValue(
+    instanceId: number,
+    key: string,
+    value: string
+  ): Promise<GuaribasAdmin> {
+    const options = { where: {} };
+    options.where = { key: key };
+    let admin = await GuaribasAdmin.findOne(options);
+    if (admin == null) {
+      admin = new GuaribasAdmin();
+      admin.key = key;
+    }
+    admin.value = value;
+    admin.instanceId = instanceId;
+    return admin.save();
+  }
+
+  public async getValue(instanceId: number, key: string) {
+    const options = { where: {} };
+    options.where = { key: key, instanceId: instanceId };
+    const obj = await GuaribasAdmin.findOne(options);
+    return Promise.resolve(obj.value);
+  }
+
+  public async acquireElevatedToken(instanceId): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+      const instance = await this.core.loadInstanceById(instanceId);
+
+      const expiresOn = new Date(await this.getValue(instanceId, 'expiresOn'));
+      if (expiresOn.getTime() > new Date().getTime()) {
+        const accessToken = await this.getValue(instanceId, 'accessToken');
+        resolve(accessToken);
+      } else {
+        const authorizationUrl = UrlJoin(
+          instance.authenticatorAuthorityHostUrl,
+          instance.authenticatorTenant,
+          '/oauth2/authorize'
+        );
+
+        const refreshToken = await this.getValue(instanceId, 'refreshToken');
+        const resource = 'https://graph.microsoft.com';
+        const authenticationContext = new AuthenticationContext(authorizationUrl);
+        authenticationContext.acquireTokenWithRefreshToken(
+          refreshToken,
+          instance.authenticatorClientId,
+          instance.authenticatorClientSecret,
+          resource,
+          async (err, res) => {
+            if (err) {
+              reject(err);
+            } else {
+              const token = res as TokenResponse;
+              await this.setValue(
+                instanceId,
+                'accessToken',
+                token.accessToken
+              );
+              await this.setValue(
+                instanceId,
+                'refreshToken',
+                token.refreshToken
+              );
+              await this.setValue(
+                instanceId,
+                'expiresOn',
+                token.expiresOn.toString()
+              );
+              resolve(token.accessToken);
+            }
+          }
+        );
+      }
+    });
   }
 
 }
