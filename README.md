@@ -230,7 +230,7 @@ General Bot Code Name is [Guaribas](https://en.wikipedia.org/wiki/Guaribas), the
 ## Contributing
 
 This project welcomes contributions and suggestions. 
-See our [Contribution Guidelines](https://github.com/pragmatismo-io/BotServer/CONTRIBUTING.md) for more details.
+See our [Contribution Guidelines](https://github.com/pragmatismo-io/BotServer/blob/master/CONTRIBUTING.md) for more details.
 
 ## Reporting Security Issues
 
