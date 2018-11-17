@@ -186,6 +186,7 @@
     }
   },
   "release": {
+    "tagFormat": "${version}",
     "debug": true,
     "plugins": [
       "@semantic-release/commit-analyzer",
