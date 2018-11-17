@@ -227,7 +227,7 @@ export class GBDeployer {
             })
             .done(function(result) {
               if (botPackages.length === 0) {
-                logger.warn(
+                logger.info(
                   'No external packages to load, please use ADDITIONAL_DEPLOY_PATH to point to a .gbai package folder.'
                 );
               } else {
