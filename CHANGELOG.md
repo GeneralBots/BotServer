@@ -1,3 +1,10 @@
+## [1.0.7](https://github.com/pragmatismo-io/BotServer/compare/1.0.6...1.0.7) (2018-11-18)
+
+
+### Bug Fixes
+
+* **config:** CHANGELOG generator fixing. ([ac18782](https://github.com/pragmatismo-io/BotServer/commit/ac18782))
+
 # Release History
 
 ## Version 0.1.9
