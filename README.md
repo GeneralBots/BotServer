@@ -11,7 +11,7 @@
 
 *Now with General Bots you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
 
-[![General Bot Video](https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/video-01-thumb.jpg)](https://www.youtube.com/watch?v=AfKTwljoMOs)
+[![General Bot Video](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-01-thumb.jpg)](https://www.youtube.com/watch?v=AfKTwljoMOs)
 
 
 Welcome to General Bot Community Edition
