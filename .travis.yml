@@ -16,8 +16,8 @@ before_script:
 - npm run build
 
 script:
-#- npm run build-docs
-#- npm run coveralls
+- npm run build-docs
+- npm run coveralls
 
 branches:
   only:
@@ -28,7 +28,7 @@ branches:
 
 after_success:
 - npm run travis-deploy-once "npm run semantic-release"
-#- npm run typedoc
+- npm run typedoc
 - npm pack
 
 deploy:
@@ -37,22 +37,6 @@ deploy:
     skip_cleanup: true
     local_dir: docs/reference
     github_token: $GITHUB_TOKEN
-    on:
-      tags: false
-  
-  - provider: releases
-    api_key: $GITHUB_TOKEN
-    file_glob: true
-    file: "BotServer-*.tgz"
-    skip_cleanup: true
-    on:
-      tags: false
-      branch: master
-
-  - provider: npm
-    skip_cleanup: true
-    email: "operations@pragmatismo.io"
-    api_key: $NPM_TOKEN
     on:
       tags: false
       branch: master
