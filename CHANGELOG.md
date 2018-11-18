@@ -1,3 +1,10 @@
+## [1.0.8](https://github.com/pragmatismo-io/BotServer/compare/1.0.7...1.0.8) (2018-11-18)
+
+
+### Bug Fixes
+
+* **docs:** Video thumbnail update to raw picture URL. ([564b394](https://github.com/pragmatismo-io/BotServer/commit/564b394))
+
 ## [1.0.7](https://github.com/pragmatismo-io/BotServer/compare/1.0.6...1.0.7) (2018-11-18)
 
 
