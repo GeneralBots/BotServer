@@ -5,9 +5,7 @@
 
 * **config:** CHANGELOG generator fixing. ([ac18782](https://github.com/pragmatismo-io/BotServer/commit/ac18782))
 
-# Release History
-
-## Version 0.1.9
+## Version 0.1.9 (Before CI with Semantic Release)
 
 * Republishing.
 
