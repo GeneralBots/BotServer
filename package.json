@@ -188,12 +188,21 @@
   "release": {
     "tagFormat": "${version}",
     "debug": true,
-    "plugins": [
-      "@semantic-release/npm",
+    "verifyConditions": [
       "@semantic-release/github"
-      
-    ]
-  },
+     ],
+     "prepare": [
+      "@semantic-release/npm",
+      {
+       "path": "@semantic-release/git",
+       "assets": [
+        "package.json"
+       ]
+      }
+     ],
+     "publish": [
+      "@semantic-release/github"
+     ]  },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
