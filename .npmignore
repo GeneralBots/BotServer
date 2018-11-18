@@ -1,9 +1,13 @@
-node_modules
-guaribas.sqlite
-guaribas.log
-work
-tmp
-.env
+# This file must be a copy of .gitignore except for the WILLSHIP commented lines below.
 .coveralls.yml
+.env
+.npmrc
+.nyc_output
 coverage
-BotServer-*.tgz
+# WILLSHIP dist
+guaribas.log
+guaribas.sqlite
+node_modules
+# WILLSHIP packages/default.gbui/build
+tmp
+work
