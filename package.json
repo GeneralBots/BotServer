@@ -189,7 +189,6 @@
     "tagFormat": "${version}",
     "debug": true,
     "plugins": [
-      "@semantic-release/changelog",
       "@semantic-release/npm",
       ["@semantic-release/git", {
         "assets": ["package.json"],
