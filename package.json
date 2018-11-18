@@ -1,6 +1,6 @@
 {
   "name": "botserver",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "General Bot Community Edition open-core server.",
   "main": "./src/app.ts",
   "bugs": "https://github.com/pragmatismo-io/BotServer/issues",
@@ -208,7 +208,8 @@
     "publish": [
       "@semantic-release/npm",
       "@semantic-release/github"
-    ]
+    ],
+    "analyzeCommits": "simple-commit-message"
   },
   "config": {
     "commitizen": {
