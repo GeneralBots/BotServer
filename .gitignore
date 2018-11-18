@@ -9,3 +9,4 @@ docs
 .env
 .coveralls.yml
 coverage
+.npmrc
