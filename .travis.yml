@@ -5,18 +5,11 @@ node_js:
 
 notifications:
   email: false
-
-before_install:
-- npm install --global nyc mocha shx
   
-install:
-- npm install
-
 before_script:
 - npm run build
 
 script:
-- npm run build-docs
 - npm run coveralls
 
 branches:
@@ -28,7 +21,6 @@ branches:
 
 after_success:
 - npm run travis-deploy-once "npm run semantic-release"
-- npm run typedoc
 - npm pack
 
 deploy:

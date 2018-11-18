@@ -2,7 +2,7 @@
 .coveralls.yml
 .env
 .npmrc
-.nyc_output
+# WILLSHIP .nyc_output
 coverage
 # WILLSHIP dist
 guaribas.log
