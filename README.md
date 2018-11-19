@@ -1,7 +1,7 @@
 | Area                         | Status                                                                                             |
 |------------------------------|----------------------------------------------------------------------------------------------------|
-| Community                    | [![Gitter](https://img.shields.io/gitter/room/pragmatismo-io/GeneralBots.svg)](https://gitter.im/GeneralBots) [![Open-source](https://badges.frapsoft.com/os/v2/open-source.svg)](https://badges.frapsoft.com) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) [![License](https://img.shields.io/badge/license-AGPL-blue.svg)](https://github.com/pragmatismo-io/BotServer/blob/master/LICENSE.txt)|
-| Management                   | [![Waffle.io - Columns and their card count](https://badge.waffle.io/pragmatismo-io/BotServer.svg?columns=all)](https://waffle.io/pragmatismo-io/BotServer) |
+| Community                    | [![StackExchange](https://img.shields.io/stackexchange/stackoverflow/t/generalbots.svg)](https://stackoverflow.com/questions/tagged/generalbots)  [![Gitter](https://img.shields.io/gitter/room/pragmatismo-io/GeneralBots.svg)](https://gitter.im/GeneralBots) [![Ask Me Anything !](https://img.shields.io/badge/Ask%20me-anything-1abc9c.svg)](info@pragmatismo.io)  [![Open-source](https://badges.frapsoft.com/os/v2/open-source.svg)](https://badges.frapsoft.com) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) [![License](https://img.shields.io/badge/license-AGPL-blue.svg)](https://github.com/pragmatismo-io/BotServer/blob/master/LICENSE.txt)|
+| Management                   | [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity) [![Waffle.io - Columns and their card count](https://badge.waffle.io/pragmatismo-io/BotServer.svg?columns=all)](https://waffle.io/pragmatismo-io/BotServer) |
 | Security                     | [![Known Vulnerabilities](https://snyk.io/test/github/pragmatismo-io/BotServer/badge.svg)](https://snyk.io/test/github/pragmatismo-io/BotServer) |
 | Building & Quality           | [![Build Status](https://travis-ci.com/pragmatismo-io/BotServer.svg?branch=master)](https://travis-ci.com/pragmatismo-io/BotServer)  [![Coverage Status](https://coveralls.io/repos/github/pragmatismo-io/BotServer/badge.svg)](https://coveralls.io/github/pragmatismo-io/BotServer) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) |
 | Packaging                    | [![forthebadge](https://badge.fury.io/js/botserver.svg)](https://badge.fury.io) [![Dependencies](https://david-dm.org/pragmatismo-io/botserver.svg)](https://david-dm.org)  [![Greenkeeper badge](https://badges.greenkeeper.io/pragmatismo-io/BotServer.svg)](https://greenkeeper.io/) [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/) |
@@ -261,3 +261,7 @@ GNU Affero General Public License for more details.
 The licensing of the program under the AGPLv3 does not imply a
 trademark license. Therefore any rights, title and interest in
 our trademarks remain entirely with us.
+
+
+<a href="https://stackoverflow.com/questions/ask?tags=generalbots">:speech_balloon: Ask a question</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="/docs">:book: Read the Docs</a>
+</h2>
