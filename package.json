@@ -26,7 +26,7 @@
     "tslint": "tslint --fix ./src/*.ts ./packages/**/*.ts -t verbose",
     "build": "npm install && npm run build-server && npm run build-gbui && npm run build-docs",
     "build-server": "tsc",
-    "build-gbui": "cd packages/default.gbui && npm install && npm run build",
+    "build-gbui": "cd packages/default.gbui && echo SKIP_PREFLIGHT_CHECK=true >.env &&  npm install && npm run build",
     "build-docs": "typedoc --options typedoc.json src/",
     "test": "nyc --reporter=html --reporter=text mocha -r ts-node/register packages/**/*.test.ts ",
     "pretest": "npm run build",
