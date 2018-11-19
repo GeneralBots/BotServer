@@ -5,32 +5,25 @@
     "declaration": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "skipLibCheck": true,
     "mapRoot": "./dist/",
     "module": "commonjs",
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "outDir": "./dist",
     "paths": {
-      "botlib/*": [
-        "node_modules/botlib/*"
-      ],
-      "pragmatismo-io-framework/*": [
-        "node_modules/pragmatismo-io-framework/*"
-      ]
+      "botlib/*": ["node_modules/botlib/*"],
+      "pragmatismo-io-framework/*": ["node_modules/pragmatismo-io-framework/*"]
     },
     "sourceMap": true,
     "target": "es6",
-    "typeRoots": [
-      "node_modules/@types"
-    ]
+    "typeRoots": ["node_modules/@types"]
   },
   "include": [
     "test/**/*",
     "src/**/*",
-    "deploy/*.gbapp/**/*",
-    "deploy/*.gblib/**/*"
+    "packages/*.gbapp/**/*",
+    "packages/*.gblib/**/*"
   ],
-  "exclude": [
-    "dist",
-    "node_modules"
-  ]
+  "exclude": ["dist", "node_modules"]
 }

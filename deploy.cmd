@@ -96,7 +96,7 @@ call :SelectNodeVersion
 :: 3. Install npm packages
 IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
   pushd "%DEPLOYMENT_TARGET%"
-  echo GUARIBASDEPLOYER ------------------ Installing packages for server.
+  echo [GUARIBASDEPLOYER]  Installing packages for server.
   call :ExecuteCmd !NPM_CMD! install --production
   IF !ERRORLEVEL! NEQ 0 goto error
   popd
@@ -104,19 +104,21 @@ IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
 
 :: 3.1 Install npm packages on UI
 IF EXIST "%DEPLOYMENT_TARGET%\deploy\default.gbui\package.json" (
+  call :ExecuteCmd !NPM_CMD! config set scripts-prepend-node-path true
   pushd "%DEPLOYMENT_TARGET%\deploy\default.gbui"
-  echo GUARIBASDEPLOYER ------------------ Installing packages for default.gbui.
+  echo [GUARIBASDEPLOYER]  Installing packages for default.gbui.
   call :ExecuteCmd !NPM_CMD! install
-  echo GUARIBASDEPLOYER ------------------ Building default.gbui.
+  echo [GUARIBASDEPLOYER]  Building default.gbui.
   call :ExecuteCmd !NPM_CMD! run build
   IF !ERRORLEVEL! NEQ 0 goto error
   popd
-)
- 
+)  
 
 ::  4. Install typescript 
-echo GUARIBASDEPLOYER ------------------ Transpiling...
+echo [GUARIBASDEPLOYER] Transpiling...
+call :ExecuteCmd node %DEPLOYMENT_TARGET%\node_modules\typescript\bin\tsc -v
 call :ExecuteCmd node %DEPLOYMENT_TARGET%\node_modules\typescript\bin\tsc -p "%DEPLOYMENT_TARGET%"
+
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 goto end

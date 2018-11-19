@@ -1,6 +1,6 @@
 {
   "mode": "modules",
-  "out": "docs",
+  "out": "docs/reference",
   "name": "General Bots Open Core",
   "theme": "default",
   "ignoreCompilerErrors": "true",

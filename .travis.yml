@@ -1,0 +1,34 @@
+language: node_js
+
+node_js:
+- lts/*
+
+notifications:
+  email: false
+  
+before_script:
+- npm run build
+
+script:
+- npm run coveralls
+
+branches:
+  only:
+  - master
+  - /^greenkeeper/.*$/
+  except:
+  - /^v\d+\.\d+\.\d+$/
+
+after_success:
+- npm run travis-deploy-once "npm run semantic-release"
+- npm pack
+
+deploy:
+
+  - provider: pages
+    skip_cleanup: true
+    local_dir: docs/reference
+    github_token: $GITHUB_TOKEN
+    on:
+      tags: false
+      branch: master

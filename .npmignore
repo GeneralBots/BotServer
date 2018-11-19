@@ -1,5 +1,15 @@
-node_modules
-/deploy/default.gbui/build
-/guaribas.sqlite
+# This file must be a copy of .gitignore except for the WILLSHIP commented lines below.
+/.coveralls.yml
+/.env
+/.npmrc
+# WILLSHIP /.nyc_output
+/coverage
+# WILLSHIP /dist
 /guaribas.log
+/guaribas.sqlite
+/node_modules
+# WILLSHIP /packages/default.gbui/build
+/packages/default.gbui/.env
+/packages/default.gbui/node_modules
+/tmp
 /work

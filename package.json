@@ -1,13 +1,17 @@
 {
   "name": "botserver",
-  "version": "0.0.30",
+  "version": "1.0.8",
   "description": "General Bot Community Edition open-core server.",
   "main": "./src/app.ts",
-  "homepage": "http://www.generalbot.com",
+  "bugs": "https://github.com/pragmatismo-io/BotServer/issues",
+  "homepage": "https://github.com/pragmatismo-io/BotServer/#readme",
   "contributors": [
     "Rodrigo Rodriguez <me@rodrigorodriguez.com>",
     "Jorge Ramos <jramos@pobox.com>"
   ],
+  "engines": {
+    "node": "=10.13.0"
+  },
   "license": "AGPL-3.0",
   "preferGlobal": true,
   "bin": {
@@ -18,52 +22,225 @@
     "url": "https://github.com/pragmatismo-io/BotServer.git"
   },
   "scripts": {
-    "clean": "rimraf dist",
+    "clean": "shx rm -rf node_modules/ dist/ docs/reference",
+    "tslint": "tslint --fix ./src/*.ts ./packages/**/*.ts -t verbose",
+    "build": "npm install && npm run build-server && npm run build-gbui && npm run build-docs",
+    "build-server": "tsc",
+    "build-gbui": "cd packages/default.gbui && echo SKIP_PREFLIGHT_CHECK=true >.env &&  npm install && npm run build",
+    "build-docs": "typedoc --options typedoc.json src/",
+    "test": "nyc --reporter=html --reporter=text mocha -r ts-node/register packages/**/*.test.ts ",
+    "pretest": "npm run build",
+    "coveralls": "npm run test && nyc report --reporter=text-lcov | coveralls",
     "start": "node ./dist/src/app.js",
-    "startIde": "npm-run-all clean --parallel watch:build watch:server --print-label",
     "watch:build": "tsc --watch",
     "watch:server": "nodemon './dist/index.js' --watch './dist'",
-    "test": "mocha  -r ts-node/register src/**/*.test.ts",
-    "build-docs": "typedoc --options typedoc.json src/"
-  },
-  "engines": {
-    "node": ">=8.9.4"
+    "posttypedoc": "shx cp .nojekyll docs/reference/.nojekyll",
+    "ban": "ban",
+    "issues": "git-issues",
+    "license": "license-checker --production --onlyunknown --csv",
+    "pretslint": "npm run pretty",
+    "pretty": "prettier-standard 'src/*.ts' 'packages/**/*.ts'",
+    "secure": "nsp check",
+    "size": "t=\"$(npm pack .)\"; wc -c \"${t}\"; tar tvf \"${t}\"; rm \"${t}\";",
+    "unused-deps": "dependency-check --unused --no-dev ./package.json",
+    "travis-deploy-once": "travis-deploy-once --pro",
+    "semantic-release": "semantic-release",
+    "commit": "git-cz"
   },
   "dependencies": {
-    "async": "^2.6.1",
-    "body-parser": "^1.18.3",
-    "botbuilder": "^3.15.0",
-    "botlib": "^0.0.31",
-    "chokidar": "^2.0.3",
-    "csv-parse": "^2.4.0",
-    "dotenv-extended": "^2.0.2",
-    "express": "^4.16.2",
-    "fs-extra": "^6.0.1",
-    "fs-walk": "^0.0.2",
-    "marked": "^0.3.12",
-    "pragmatismo-io-framework": "^1.0.14",
-    "reflect-metadata": "^0.1.12",
-    "request-promise-native": "^1.0.5",
-    "sequelize": "^4.37.10",
-    "sequelize-typescript": "^0.6.5",
-    "sqlite3": "^4.0.0",
-    "swagger-client": "^2.1.18",
-    "tedious": "^2.1.1",
-    "url-join": "^4.0.0",
-    "wait-until": "^0.0.2",
-    "winston": "^2.4.2"
+    "@microsoft/microsoft-graph-client": "1.3.0",
+    "@semantic-release/exec": "^3.3.0",
+    "adal-node": "0.1.28",
+    "async": "2.6.1",
+    "async-promises": "0.2.1",
+    "azure-arm-cognitiveservices": "2.4.0",
+    "azure-arm-resource": "7.2.0",
+    "azure-arm-search": "^1.3.0-preview",
+    "azure-arm-sql": "5.6.0",
+    "azure-arm-website": "5.7.0",
+    "body-parser": "1.18.3",
+    "botbuilder": "^4.1.5",
+    "botbuilder-ai": "^4.1.5",
+    "botbuilder-azure": "^4.1.5",
+    "botbuilder-choices": "^4.0.0-preview1.2",
+    "botbuilder-dialogs": "^4.1.5",
+    "botbuilder-prompts": "^4.0.0-preview1.2",
+    "botlib": "0.1.6",
+    "chai": "4.2.0",
+    "child_process": "^1.0.2",
+    "chokidar": "2.0.4",
+    "cli-spinner": "^0.2.8",
+    "csv-parse": "3.2.0",
+    "dotenv-extended": "2.3.0",
+    "express": "4.16.4",
+    "express-promise-router": "3.0.3",
+    "fs-extra": "7.0.1",
+    "fs-walk": "0.0.2",
+    "ip": "^1.1.5",
+    "localize": "0.4.7",
+    "marked": "0.5.1",
+    "mocha": "5.2.0",
+    "mocha-typescript": "1.1.17",
+    "ms": "2.1.1",
+    "ms-rest-azure": "2.5.9",
+    "nexmo": "2.4.0",
+    "ngrok": "^3.1.0",
+    "nyc": "^13.1.0",
+    "opn": "^5.4.0",
+    "pragmatismo-io-framework": "1.0.18",
+    "process-exists": "^3.1.0",
+    "public-ip": "^2.4.0",
+    "reflect-metadata": "0.1.12",
+    "request-promise-native": "1.0.5",
+    "scanf": "^1.0.2",
+    "sequelize": "4.41.2",
+    "sequelize-typescript": "0.6.6",
+    "shx": "^0.3.2",
+    "simple-git": "^1.107.0",
+    "sqlite3": "4.0.4",
+    "strict-password-generator": "^1.1.1",
+    "swagger-client": "3.8.22",
+    "tedious": "3.0.1",
+    "ts-node": "7.0.1",
+    "typedoc": "0.13.0",
+    "typedoc-plugin-external-module-name": "^1.1.3",
+    "typedoc-plugin-markdown": "^1.1.18",
+    "typescript": "3.1.6",
+    "url-join": "4.0.0",
+    "wait-until": "0.0.2",
+    "walk-promise": "0.2.0",
+    "winston": "3.1.0"
   },
   "devDependencies": {
-    "@types/chai": "^4.1.3",
-    "@types/mocha": "^5.2.0",
-    "@types/sequelize": "^4.27.20",
-    "@types/url-join": "^0.8.2",
-    "@types/winston": "^2.3.9",
-    "chai": "^4.1.2",
+    "@semantic-release/changelog": "^3.0.1",
+    "@semantic-release/commit-analyzer": "^6.1.0",
+    "@semantic-release/git": "^7.0.5",
+    "@semantic-release/github": "^5.2.1",
+    "@semantic-release/npm": "^5.1.1",
+    "@semantic-release/release-notes-generator": "^7.1.4",
+    "@types/chai": "4.1.7",
+    "@types/mocha": "5.2.5",
+    "@types/sequelize": "4.27.30",
+    "@types/url-join": "0.8.2",
+    "@types/winston": "2.4.4",
+    "ban-sensitive-files": "1.9.2",
+    "chai": "^4.2.0",
+    "commitizen": "^3.0.4",
+    "coveralls": "^3.0.2",
+    "cz-conventional-changelog": "^2.1.0",
+    "dependency-check": "3.2.1",
+    "deps-ok": "1.4.1",
+    "git-issues": "1.3.1",
+    "license-checker": "24.0.1",
     "mocha": "^5.2.0",
-    "mocha-typescript": "^1.1.14",
-    "ts-node": "^6.0.5",
-    "typedoc": "^0.11.1",
-    "typescript": "^2.8.3"
+    "nsp": "3.2.1",
+    "pre-git": "3.17.1",
+    "prettier-standard": "8.0.1",
+    "semantic-release": "^15.12.0",
+    "standard": "12.0.1",
+    "travis-deploy-once": "5.0.9",
+    "ts-loader": "^5.3.0",
+    "tslint": "^5.11.0",
+    "tslint-microsoft-contrib": "^5.2.1"
+  },
+  "eslintConfig": {
+    "env": {
+      "node": true,
+      "es6": true,
+      "mocha": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+      "ecmaVersion": 2017
+    },
+    "rules": {
+      "indent": "off",
+      "linebreak-style": [
+        "warn",
+        "unix"
+      ],
+      "no-unused-vars": [
+        "warn"
+      ],
+      "no-undef": [
+        "warn"
+      ],
+      "no-console": [
+        "warn"
+      ],
+      "no-case-declarations": [
+        "warn"
+      ],
+      "no-extra-semi": [
+        "warn"
+      ],
+      "no-unreachable": [
+        "warn"
+      ],
+      "no-redeclare": [
+        "warn"
+      ],
+      "no-useless-escape": [
+        "warn"
+      ],
+      "no-constant-condition": [
+        "warn"
+      ]
+    }
+  },
+  "release": {
+    "tagFormat": "${version}",
+    "debug": true,
+    "verifyConditions": [
+      "@semantic-release/github"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog"
+    ],
+    "prepare": [
+      "@semantic-release/npm",
+      {
+        "path": "@semantic-release/exec",
+        "cmd": "git status"
+      },
+      "@semantic-release/changelog",
+      {
+        "path": "@semantic-release/git",
+        "assets": [
+          "package.json",
+          "CHANGELOG.md"
+        ]
+      }
+    ],
+    "publish": [
+      "@semantic-release/npm",
+      "@semantic-release/github"
+    ],
+    "analyzeCommits": "simple-commit-message"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    },
+    "pre-git": {
+      "commit-msg": "simple",
+      "pre-commit": [
+        "npm prune",
+        "git add packages/*.ts",
+        "npm run ban"
+      ],
+      "pre-push": [
+        "echo skip npm run unused-deps",
+        "echo skip npm npm run secure",
+        "echo skip npm run license",
+        "echo skip npm run ban -- --all",
+        "echo skip run size"
+      ],
+      "post-commit": [],
+      "post-checkout": [],
+      "post-merge": []
+    }
   }
 }
