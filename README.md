@@ -47,14 +47,15 @@ Package Quick Reference
 |----|-----|----|----|
 |[whatsapp.gblib](https://github.com/pragmatismo-io/BotServer/tree/master/packages/whatsapp.gblib)|[default.gbui](https://github.com/pragmatismo-io/BotServer/tree/master/packages/default.gbui)|[core.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/packages/core.gbapp)|[kb.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/packages/kb.gbapp)|
 
+### The bot development stack
+
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
 
-### The same build process for everyone
+### The Bot Factory
 
 ![General Bots Block Architecture](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-block-architecture.png)
 
-GeneralBots aims to delivery bots in azure in a very easy and fast fashion. Use
-Office tools like Word or Excel to edit your Bot - using code (JavaScript or TypeScript) just to empower custom requirements.
+GeneralBots aims to delivery bots in azure in a very easy and fast fashion. Use Office tools like Word or Excel to edit your Bot - using code (JavaScript or TypeScript) just to empower custom requirements.
 
 
 #### Use Excel for (Hierarchical) Knowledge Base Editing
@@ -133,7 +134,6 @@ the UI application itself (HTML & JS).
 
 Package Types
 -------------
-
 
 ### .gbai
 
