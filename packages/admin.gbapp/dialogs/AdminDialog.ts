@@ -43,7 +43,7 @@ import { GBMinInstance } from 'botlib';
 import { IGBDialog } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { GBImporter } from '../../core.gbapp/services/GBImporter';
+import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { GBAdminService } from '../services/GBAdminService';
 import { Messages } from '../strings';
 

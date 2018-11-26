@@ -1,7 +1,7 @@
 
 import { expect } from 'chai';
 import 'mocha';
-import {GBImporter} from '../services/GBImporter';
+import {GBImporter} from '../services/GBImporterService';
 
 describe('Hello function', () => {
 

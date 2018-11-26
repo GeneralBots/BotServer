@@ -1,0 +1,58 @@
+{
+  "children": [
+    {
+      "title": "Bots & AI",
+      "description": "Bots & inteligência artificial.",
+      "id": "bots-ai",
+      "children": [
+        {
+          "title": "General Bots",
+          "description": "Plataforma de bots da Pragmatismo.io.",
+          "id": "general-bots"
+        },
+        {
+          "title": "Cortana Intelligence Suite",
+          "description": "Suite de Big Data da Microsoft.",
+          "id": "cortana"
+        }
+      ]
+    },
+    {
+      "title": "Produtividade",
+      "description": "Artigos sobre sistemas Internos.",
+      "id": "produtividade",
+      "children": [
+        {
+          "title": "Microsoft Project Online",
+          "description": "Artigos sobre o Microsoft Project Online.",
+          "id": "msproject"
+        },
+        {
+          "title": "SharePoint",
+          "description": "SharePoint, sites e serviços.",
+          "id": "sharepoint"
+        },
+        {
+          "title": "Office 365",
+          "description": "Plataforma colaborativa moderna da Microsoft.",
+          "id": "office365"
+        },
+        {
+          "title": "Microsoft Dynamics",
+          "description": "Artigos sobre plataforma de CRM da Microsoft.",
+          "id": "msdynamics"
+        },
+        {
+          "title": "Power BI",
+          "description": "Dashboards modernos e intuitivos.",
+          "id": "powerbi"
+        }
+      ]
+    },
+    {
+      "title": "Sobre",
+      "description": "Artigos sobre o Bot da Pragmatismo.io",
+      "id": "sobre"
+    }
+  ]
+}

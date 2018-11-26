@@ -53,7 +53,7 @@ import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService
 import { GBConversationalService } from '../packages/core.gbapp/services/GBConversationalService';
 import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService';
 import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
-import { GBImporter } from '../packages/core.gbapp/services/GBImporter';
+import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
 import { GBCustomerSatisfactionPackage } from '../packages/customer-satisfaction.gbapp';
 import { GBKBPackage } from '../packages/kb.gbapp';

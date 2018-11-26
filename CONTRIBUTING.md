@@ -22,12 +22,10 @@ When logging a bug, please be sure to include the following:
 
 We also accept suggestions in the issue tracker. 
 
-
 In general, things we find useful when reviewing suggestions are:
 * A description of the problem you're trying to solve
 * An overview of the suggested solution
 * Examples of how the suggestion would work in various places
-
 
 # Instructions for Contributing Code
 
