@@ -36,14 +36,23 @@
 
 'use strict';
 
-import { IGBCoreService, IGBInstance } from 'botlib';
+import { IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import * as fs from 'fs';
-import processExists = require('process-exists');
 import { Sequelize } from 'sequelize-typescript';
-const logger = require('../../../src/logger');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
+import { AzureDeployerService } from 'packages/azuredeployer.gbapp/services/AzureDeployerService';
+import { GBAnalyticsPackage } from 'packages/analytics.gblib';
+import { GBAdminPackage } from 'packages/admin.gbapp/index';
+import { GBCorePackage } from 'packages/core.gbapp';
+import { GBCustomerSatisfactionPackage } from 'packages/customer-satisfaction.gbapp';
+import { GBKBPackage } from 'packages/kb.gbapp';
+import { GBSecurityPackage } from 'packages/security.gblib';
+import { GBWhatsappPackage } from 'packages/whatsapp.gblib/index';
+
+const logger = require('../../../src/logger');
+const opn = require('opn');
 
 /**
  *  Core service layer.
@@ -70,7 +79,7 @@ export class GBCoreService implements IGBCoreService {
   private createTableQuery: (
     tableName: string,
     attributes: any,
-    options: any
+    options: any,
   ) => string;
 
   /**
@@ -136,15 +145,15 @@ export class GBCoreService implements IGBCoreService {
             dialect: this.dialect,
             storage: storage,
             dialectOptions: {
-              encrypt: encrypt
+              encrypt: encrypt,
             },
             pool: {
               max: 32,
               min: 8,
               idle: 40000,
               evict: 40000,
-              acquire: 40000
-            }
+              acquire: 40000,
+            },
           });
 
           if (this.dialect === 'mssql') {
@@ -153,7 +162,7 @@ export class GBCoreService implements IGBCoreService {
             this.queryGenerator.createTableQuery = (
               tableName,
               attributes,
-              options
+              options,
             ) => this.createTableQueryOverride(tableName, attributes, options);
             this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
             this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
@@ -163,7 +172,7 @@ export class GBCoreService implements IGBCoreService {
         } catch (error) {
           reject(error);
         }
-      }
+      },
     );
   }
 
@@ -174,7 +183,7 @@ export class GBCoreService implements IGBCoreService {
       logger.info('Syncing database...');
       return this.sequelize.sync({
         alter: alter,
-        force: force
+        force: force,
       });
     } else {
       const msg = 'Database synchronization is disabled.';
@@ -257,7 +266,7 @@ export class GBCoreService implements IGBCoreService {
     let sql: string = this.createTableQuery.apply(this.queryGenerator, [
       tableName,
       attributes,
-      options
+      options,
     ]);
     const re1 = /CREATE\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
@@ -268,7 +277,7 @@ export class GBCoreService implements IGBCoreService {
         re2,
         (match: string, ...args: any[]): string => {
           return 'CONSTRAINT [' + table + '_pk] ' + match;
-        }
+        },
       );
       const re3 = /FOREIGN\s+KEY\s+\((\[[^\]]*\](?:,\s*\[[^\]]*\])*)\)/g;
       const re4 = /\[([^\]]*)\]/g;
@@ -283,7 +292,7 @@ export class GBCoreService implements IGBCoreService {
             matches = re4.exec(fkcols);
           }
           return 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
-        }
+        },
       );
     }
     return sql;
@@ -300,7 +309,7 @@ export class GBCoreService implements IGBCoreService {
   private changeColumnQueryOverride(tableName, attributes): string {
     let sql: string = this.changeColumnQuery.apply(this.queryGenerator, [
       tableName,
-      attributes
+      attributes,
     ]);
     const re1 = /ALTER\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
@@ -326,9 +335,151 @@ export class GBCoreService implements IGBCoreService {
             fkcols +
             ')'
           );
-        }
+        },
       );
     }
     return sql;
   }
+
+  /**
+   * Loads all bot instances from object storage, if it's formatted.
+   *
+   * @param core
+   * @param azureDeployer
+   * @param proxyAddress
+   */
+  public async loadAllInstances(
+    core: GBCoreService,
+    azureDeployer: AzureDeployerService,
+    proxyAddress: string,
+  ) {
+    logger.info(`Loading instances from storage...`);
+    let instances: GuaribasInstance[];
+    try {
+      instances = await core.loadInstances();
+      const instance = instances[0];
+      if (process.env.NODE_ENV === 'development') {
+        logger.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
+        await azureDeployer.updateBotProxy(
+          instance.botId,
+          instance.botId,
+          `${proxyAddress}/api/messages/${instance.botId}`,
+        );
+      }
+    } catch (error) {
+      if (error.parent.code === 'ELOGIN') {
+        const group = GBConfigService.get('CLOUD_GROUP');
+        const serverName = GBConfigService.get('STORAGE_SERVER').split(
+          '.database.windows.net',
+        )[0];
+        await azureDeployer.openStorageFirewall(group, serverName);
+      } else {
+        // Check if storage is empty and needs formatting.
+        const isInvalidObject =
+          error.parent.number == 208 || error.parent.errno == 1; // MSSQL or SQLITE.
+        if (isInvalidObject) {
+          if (GBConfigService.get('STORAGE_SYNC') != 'true') {
+            throw new Error(
+              `Operating storage is out of sync or there is a storage connection error. Try setting STORAGE_SYNC to true in .env file. Error: ${
+                error.message
+              }.`,
+            );
+          } else {
+            logger.info(
+              `Storage is empty. After collecting storage structure from all .gbapps it will get synced.`,
+            );
+          }
+        } else {
+          throw new Error(
+            `Cannot connect to operating storage: ${error.message}.`,
+          );
+        }
+      }
+    }
+    return instances;
+  }
+
+  /**
+   * If instances is undefined here it's because storage has been formatted.
+   * Load all instances from .gbot found on deploy package directory.
+   * @param instances
+   * @param bootInstance
+   * @param core
+   */
+  public async ensureInstances(
+    instances: GuaribasInstance[],
+    bootInstance: any,
+    core: GBCoreService,
+  ) {
+    if (!instances) {
+      const saveInstance = new GuaribasInstance(bootInstance);
+      await saveInstance.save();
+      instances = await core.loadInstances();
+    }
+    return instances;
+  }
+
+  public loadSysPackages(core: GBCoreService) {
+    // NOTE: if there is any code before this line a semicolon
+    // will be necessary before this line.
+    // Loads all system packages.
+
+    [
+      GBAdminPackage,
+      GBAnalyticsPackage,
+      GBCorePackage,
+      GBSecurityPackage,
+      GBKBPackage,
+      GBCustomerSatisfactionPackage,
+      GBWhatsappPackage,
+    ].forEach(e => {
+      logger.info(`Loading sys package: ${e.name}...`);
+      const p = Object.create(e.prototype) as IGBPackage;
+      p.loadPackage(core, core.sequelize);
+    });
+  }
+
+  public ensureAdminIsSecured() {
+    const password = GBConfigService.get('ADMIN_PASS');
+    if (!GBAdminService.StrongRegex.test(password)) {
+      throw new Error(
+        'Please, define a really strong password in ADMIN_PASS environment variable before running the server.',
+      );
+    }
+  }
+
+  public async createBootInstance(
+    core: GBCoreService,
+    azureDeployer: AzureDeployerService,
+    proxyAddress: string,
+  ) {
+    let bootInstance: IGBInstance;
+    try {
+      await core.initDatabase();
+    } catch (error) {
+      logger.info(
+        `Deploying cognitive infrastructure (on the cloud / on premises)...`,
+      );
+      try {
+        bootInstance = await azureDeployer.deployFarm(proxyAddress);
+      } catch (error) {
+        logger.warn(
+          'In case of error, please cleanup any infrastructure objects created during this procedure and .env before running again.',
+        );
+        throw error;
+      }
+      core.writeEnv(bootInstance);
+      logger.info(`File .env written, starting General Bots...`);
+      GBConfigService.init();
+      await core.initDatabase();
+    }
+    return bootInstance;
+  }
+
+  public openBrowserInDevelopment() {
+    if (process.env.NODE_ENV === 'development') {
+      opn('http://localhost:4242');
+    }
+  }
+
 }

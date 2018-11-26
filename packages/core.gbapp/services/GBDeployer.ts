@@ -52,6 +52,7 @@ import { GuaribasInstance, GuaribasPackage } from '../models/GBModel';
 import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBConfigService } from './GBConfigService';
 import { GBImporter } from './GBImporterService';
+import { GBVMService } from './GBVMService';
 
 /** Deployer service for bots, themes, ai and more. */
 export class GBDeployer {
@@ -266,6 +267,10 @@ export class GBDeployer {
     });
   }
 
+  public deployScriptToStorage(instanceId: number, localPath: string) {
+    
+  }
+
   public deployTheme(localPath: string) {
     // DISABLED: Until completed, "/ui/public".
     // FsExtra.copy(localPath, this.workDir + packageName)
@@ -297,14 +302,12 @@ export class GBDeployer {
         break;
 
       case '.gbdialog':
-        const vm = new VMService(this.core.sequelize);
+        const vm = new GBVMService();
         return service.deployKb(this.core, this, localPath);
-
-        break;
 
       default:
         const err = GBError.create(
-          `GuaribasBusinessError: Unknow package type: ${packageType}.`,
+          `GuaribasBusinessError: Unknown package type: ${packageType}.`
         );
         Promise.reject(err);
         break;

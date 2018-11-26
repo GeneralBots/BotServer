@@ -43,7 +43,7 @@ describe('Load function', () => {
   it('should fail on invalid file', () => {
     try {
       const service = new GBVMService();
-      service.loadJS('invalid.file');
+      service.loadJS('invalid.file', null, null, null, null);
     } catch (error) {
       expect(error).to.equal(0);
     }

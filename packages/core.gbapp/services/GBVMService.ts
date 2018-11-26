@@ -36,13 +36,17 @@ import { IGBCoreService, IGBInstance } from 'botlib';
 import { GBError } from 'botlib';
 import { IGBPackage } from 'botlib';
 const logger = require('../../../src/logger');
-import * as fs from 'fs';
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
+import * as fs from 'fs';
 import { Messages } from '../strings';
+import { DialogClass } from './GBAPIService';
 import { GBDeployer } from './GBDeployer';
 const util = require('util');
 const vm = require('vm');
+import processExists = require('process-exists');
+import { Sequelize } from 'sequelize-typescript';
+const UrlJoin = require('url-join');
 
 /**
  * @fileoverview General Bots server core.
@@ -50,50 +54,27 @@ const vm = require('vm');
 
 export class GBVMService implements IGBCoreService {
 
-  public static setup(bot: BotAdapter, min: IGBInstance) {
+  private script = new vm.Script();
 
-  }
-
-  public loadJS(
+  public async loadJS(
     filename: string,
     min: IGBInstance,
     core: IGBCoreService,
     deployer: GBDeployer,
     localPath: string
-  ) {
+  ): Promise<void> {
 
-    const sandbox = {
-      animal: 'cat',
-      count: 2,
-    };
+    const code = fs.readFileSync(UrlJoin(localPath, filename), 'utf8');
+    const sandbox = new DialogClass(min);
 
-    const script = new vm.Script('count += 1; name = "kitty";');
     const context = vm.createContext(sandbox);
-
-    for (let i = 0; i < 10; ++i) {
-      script.runInContext(context);
-    }
-
+    this.script.runInContext(context);
     console.log(util.inspect(sandbox));
 
-    // { animal: 'cat', count: 12, name: 'kitty' }
-
-    const packageType = Path.extname(localPath);
-    const packageName = Path.basename(localPath);
-    logger.info(`[GBDeployer] Opening package: ${localPath}`);
-    const packageObject = JSON.parse(
-      Fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8'),
+    await deployer.deployScriptToStorage(
+      min.instanceId,
+      filename
     );
-
-    const instance = await core.loadInstance(packageObject.botId);
-    logger.info(`[GBDeployer] Importing: ${localPath}`);
-    const p = await deployer.deployPackageToStorage(
-      instance.instanceId,
-      packageName,
-    );
-    await this.importKbPackage(localPath, p, instance);
-
-    deployer.rebuildIndex(instance);
-    logger.info(`[GBDeployer] Finished import of ${localPath}`);
+    logger.info(`[GBVMService] Finished loading of ${filename}`);
   }
 }
