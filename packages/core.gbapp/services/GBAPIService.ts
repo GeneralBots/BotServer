@@ -46,7 +46,7 @@ export class DialogClass {
     this.min = min;
   }
 
-  public async expectMessage(text: string): Promise<any> {
+  public async hear(text: string): Promise<any> {
     return new Promise((resolve, reject) => {
       this.min.dialogs.add(
         new WaterfallDialog('/vmExpect', [
@@ -63,7 +63,11 @@ export class DialogClass {
     });
   }
 
-  public sendMessage(text: string) {
+  public post(url: string, data) {
+
+  }
+
+  public talk(text: string) {
     this.min.dialogs.add(
       new WaterfallDialog('/vmSend', [
         async step => {

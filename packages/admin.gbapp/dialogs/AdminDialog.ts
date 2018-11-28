@@ -63,11 +63,11 @@ export class AdminDialog extends IGBDialog {
     );
   }
 
-  public static async deployPackageCommand(text: string, deployer: GBDeployer) {
+  public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: GBDeployer) {
     const packageName = text.split(' ')[1];
     const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
-    await deployer.deployPackageFromLocalPath(
-      UrlJoin(additionalPath, packageName)
+    await deployer.deployPackageFromLocalPath(min,
+                                              UrlJoin(additionalPath, packageName)
     );
   }
   /**
@@ -119,11 +119,11 @@ export class AdminDialog extends IGBDialog {
             await AdminDialog.createFarmCommand(text, deployer);
             await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'deployPackage') {
-            await AdminDialog.deployPackageCommand(text, deployer);
+            await AdminDialog.deployPackageCommand(min, text, deployer);
             await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'redeployPackage') {
             await AdminDialog.undeployPackageCommand(text, min);
-            await AdminDialog.deployPackageCommand(text, deployer);
+            await AdminDialog.deployPackageCommand(min, text, deployer);
             await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'undeployPackage') {
             await AdminDialog.undeployPackageCommand(text, min);

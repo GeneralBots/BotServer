@@ -84,7 +84,7 @@ export class GBDeployer {
   public deployPackages(
     core: IGBCoreService,
     server: any,
-    appPackages: IGBPackage[],
+    appPackages: IGBPackage[]
   ) {
     const _this = this;
     return new Promise(
@@ -93,7 +93,6 @@ export class GBDeployer {
         const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
         let paths = [GBDeployer.deployFolder];
         if (additionalPath) {
-
           paths = paths.concat(additionalPath.toLowerCase().split(';'));
         }
         const botPackages = new Array<string>();
@@ -124,7 +123,7 @@ export class GBDeployer {
         }
 
         logger.info(
-          `Starting looking for packages (.gbot, .gbtheme, .gbkb, .gbapp)...`,
+          `Starting looking for packages (.gbot, .gbtheme, .gbkb, .gbapp)...`
         );
         paths.forEach(e => {
           logger.info(`Looking in: ${e}...`);
@@ -199,19 +198,21 @@ export class GBDeployer {
                 server.use('/themes/' + filenameOnly, express.static(filename));
                 logger.info(
                   `Theme (.gbtheme) assets accessible at: ${'/themes/' +
-                    filenameOnly}.`,
+                    filenameOnly}.`
                 );
 
                 /** Knowledge base for bots. */
               } else if (Path.extname(filename) === '.gbkb') {
                 server.use(
                   '/kb/' + filenameOnly + '/subjects',
-                  express.static(UrlJoin(filename, 'subjects')),
+                  express.static(UrlJoin(filename, 'subjects'))
                 );
                 logger.info(
-                  `KB (.gbkb) assets accessible at: ${'/kb/' + filenameOnly}.`,
+                  `KB (.gbkb) assets accessible at: ${'/kb/' + filenameOnly}.`
                 );
               } else if (Path.extname(filename) === '.gbui') {
+                // Already Handled
+              } else if (Path.extname(filename) === '.gbdialog') {
                 // Already Handled
               } else {
                 /** Unknown package format. */
@@ -231,7 +232,7 @@ export class GBDeployer {
               .done(function(result) {
                 if (botPackages.length === 0) {
                   logger.info(
-                    'No external packages to load, please use ADDITIONAL_DEPLOY_PATH to point to a .gbai package folder.',
+                    'No external packages to load, please use ADDITIONAL_DEPLOY_PATH to point to a .gbai package folder.'
                   );
                 } else {
                   logger.info(`Package deployment done.`);
@@ -239,7 +240,7 @@ export class GBDeployer {
                 resolve();
               });
           });
-      },
+      }
     );
   }
 
@@ -252,24 +253,22 @@ export class GBDeployer {
     const packageName = Path.basename(localPath);
     const instance = await this.importer.importIfNotExistsBotPackage(
       packageName,
-      localPath,
+      localPath
     );
     return instance;
   }
 
   public async deployPackageToStorage(
     instanceId: number,
-    packageName: string,
+    packageName: string
   ): Promise<GuaribasPackage> {
     return GuaribasPackage.create({
       packageName: packageName,
-      instanceId: instanceId,
+      instanceId: instanceId
     });
   }
 
-  public deployScriptToStorage(instanceId: number, localPath: string) {
-    
-  }
+  public deployScriptToStorage(instanceId: number, localPath: string) {}
 
   public deployTheme(localPath: string) {
     // DISABLED: Until completed, "/ui/public".
@@ -283,7 +282,7 @@ export class GBDeployer {
     //   })
   }
 
-  public async deployPackageFromLocalPath(localPath: string) {
+  public async deployPackageFromLocalPath(min: IGBInstance, localPath: string) {
     const packageType = Path.extname(localPath);
 
     switch (packageType) {
@@ -303,7 +302,7 @@ export class GBDeployer {
 
       case '.gbdialog':
         const vm = new GBVMService();
-        return service.deployKb(this.core, this, localPath);
+        return vm.loadJS(localPath, min, this.core, this, localPath);
 
       default:
         const err = GBError.create(
@@ -316,7 +315,7 @@ export class GBDeployer {
 
   public async undeployPackageFromLocalPath(
     instance: IGBInstance,
-    localPath: string,
+    localPath: string
   ) {
     const packageType = Path.extname(localPath);
     const packageName = Path.basename(localPath);
@@ -339,9 +338,12 @@ export class GBDeployer {
       case '.gbui':
         break;
 
+      case '.gbdialog':
+        break;
+
       default:
         const err = GBError.create(
-          `GuaribasBusinessError: Unknown package type: ${packageType}.`,
+          `GuaribasBusinessError: Unknown package type: ${packageType}.`
         );
         Promise.reject(err);
         break;
@@ -353,11 +355,11 @@ export class GBDeployer {
       instance.searchKey,
       instance.searchHost,
       instance.searchIndex,
-      instance.searchIndexer,
+      instance.searchIndexer
     );
 
     const connectionString = GBDeployer.getConnectionStringFromInstance(
-      instance,
+      instance
     );
 
     const dsName = 'gb';
@@ -375,7 +377,7 @@ export class GBDeployer {
       dsName,
       'GuaribasQuestion',
       'azuresql',
-      connectionString,
+      connectionString
     );
 
     try {
@@ -388,35 +390,17 @@ export class GBDeployer {
     }
     await search.createIndex(
       AzureDeployerService.getKBSearchSchema(instance.searchIndex),
-      dsName,
+      dsName
     );
   }
 
   public async getPackageByName(
     instanceId: number,
-    packageName: string,
+    packageName: string
   ): Promise<GuaribasPackage> {
     const where = { packageName: packageName, instanceId: instanceId };
     return GuaribasPackage.findOne({
-      where: where,
+      where: where
     });
-  }
-
-  /**
-   *
-   * Hot deploy processing.
-   *
-   */
-  public async scanBootPackage() {
-    const deployFolder = 'packages';
-    const bootPackage = GBConfigService.get('BOOT_PACKAGE');
-
-    if (bootPackage === 'none') {
-      return Promise.resolve(true);
-    } else {
-      return this.deployPackageFromLocalPath(
-        UrlJoin(deployFolder, bootPackage),
-      );
-    }
   }
 }

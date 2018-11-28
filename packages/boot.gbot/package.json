@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "theme": "default.gbtheme",
+  "ui": "default.gbui",
+  "kb": "default.gbkb",
+  "title": "Default General Bot",
+  "description": "Default General Bot",
+  "whoAmIVideo": "TODO.mp4",
+  "author": "pragmatismo.io",
+  "license": "AGPL",
+  "engineName": "guaribas-1.0.0"
+}

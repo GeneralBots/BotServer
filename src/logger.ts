@@ -30,6 +30,10 @@
 |                                                                             |
 \*****************************************************************************/
 
+/**
+ * @fileoverview Logging support.
+ */
+
 const { createLogger, format, transports } = require('winston');
 
 const config = {

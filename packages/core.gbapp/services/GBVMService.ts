@@ -53,7 +53,6 @@ const UrlJoin = require('url-join');
  */
 
 export class GBVMService implements IGBCoreService {
-
   private script = new vm.Script();
 
   public async loadJS(
@@ -63,18 +62,15 @@ export class GBVMService implements IGBCoreService {
     deployer: GBDeployer,
     localPath: string
   ): Promise<void> {
-
-    const code = fs.readFileSync(UrlJoin(localPath, filename), 'utf8');
-    const sandbox = new DialogClass(min);
-
+    localPath = UrlJoin(localPath, 'chat.dialog.js');
+    const code: string = fs.readFileSync(UrlJoin(localPath, filename), 'utf8');
+    const sandbox: DialogClass = new DialogClass(min);
     const context = vm.createContext(sandbox);
-    this.script.runInContext(context);
+
+    this.script.runInContext(code, context);
     console.log(util.inspect(sandbox));
 
-    await deployer.deployScriptToStorage(
-      min.instanceId,
-      filename
-    );
+    await deployer.deployScriptToStorage(min.instanceId, filename);
     logger.info(`[GBVMService] Finished loading of ${filename}`);
   }
 }

@@ -57,14 +57,12 @@ export class GBImporter {
     const packageJson = JSON.parse(
       fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8')
     );
-
     const botId = packageJson.botId;
-
     const instance = await this.core.loadInstance(botId);
     if (instance) {
-      return Promise.resolve(instance);
+      return instance;
     } else {
-      return this.createInstanceInternal(packageName, localPath, packageJson);
+      return await this.createInstanceInternal(packageName, localPath, packageJson);
     }
   }
 
@@ -83,7 +81,6 @@ export class GBImporter {
     packageJson = {...packageJson, ...settings, ...servicesJson};
 
     GuaribasInstance.create(packageJson).then((instance: IGBInstance) => {
-
       const service = new SecService();
       // TODO: service.importSecurityFile(localPath, instance)
 

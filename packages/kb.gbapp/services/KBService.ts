@@ -30,11 +30,15 @@
 |                                                                             |
 \*****************************************************************************/
 
+/**
+ * @fileoverview Knowledge base services and logic.
+ */
+
 const logger = require('../../../src/logger');
 const Path = require('path');
 const Fs = require('fs');
-const promise = require('bluebird');
-const parse = promise.promisify(require('csv-parse'));
+
+const parse = require('bluebird').promisify(require('csv-parse'));
 const UrlJoin = require('url-join');
 const marked = require('marked');
 const path = require('path');
@@ -69,6 +73,7 @@ export class KBService {
     subjects.forEach(subject => {
       out.push(subject.title);
     });
+
     return out.join(', ');
   }
 
@@ -77,6 +82,7 @@ export class KBService {
     subjects.forEach(subject => {
       out.push(subject.internalId);
     });
+
     return out.join(' ');
   }
 
@@ -125,8 +131,10 @@ export class KBService {
           answerId: question.answerId
         }
       });
+
       return Promise.resolve({ question: question, answer: answer });
     }
+
     return Promise.resolve(null);
   }
 
@@ -163,9 +171,9 @@ export class KBService {
         query = `${query} ${text}`;
       }
     }
-    // TODO: Filter by instance. what = `${what}&$filter=instanceId eq ${instanceId}`
+    query = `${query}&$filter=instanceId eq ${instance.instanceId}`;
     try {
-      if (instance.searchKey && GBConfigService.get('STORAGE_DIALECT') == 'mssql') {
+      if (instance.searchKey && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
         const service = new AzureSearch(
           instance.searchKey,
           instance.searchHost,
@@ -203,6 +211,7 @@ export class KBService {
     parentId: number
   ): Promise<GuaribasSubject[]> {
     const where = { parentSubjectId: parentId, instanceId: instanceId };
+
     return GuaribasSubject.findAll({
       where: where
     });
@@ -210,7 +219,7 @@ export class KBService {
 
   public async getFaqBySubjectArray(from: string, subjects: any): Promise<GuaribasQuestion[]> {
     const where = {
-      from: from, subject1: null, subject2: null, subject3: null, subject4:null
+      from: from, subject1: null, subject2: null, subject3: null, subject4: null
     };
 
     if (subjects) {
@@ -230,6 +239,7 @@ export class KBService {
         where.subject4 = subjects[3].internalId;
       }
     }
+
     return await GuaribasQuestion.findAll({
       where: where
     });
@@ -250,6 +260,7 @@ export class KBService {
     let lastAnswer: GuaribasAnswer;
 
     const data = await parse(file, opts);
+
     return asyncPromise.eachSeries(data, async line => {
 
       // Extracts values from columns in the current line.
@@ -262,7 +273,7 @@ export class KBService {
 
       // Skips the first line.
 
-      if (!(subjectsText === 'subjects' && from == 'from')) {
+      if (!(subjectsText === 'subjects' && from === 'from')) {
         let format = '.txt';
 
         // Extracts answer from external media if any.
@@ -281,8 +292,10 @@ export class KBService {
         // Processes subjects hierarchy splitting by dots.
 
         const subjectArray = subjectsText.split('.');
-        let subject1: string, subject2: string, subject3: string,
-          subject4: string;
+        let subject1: string;
+        let subject2: string;
+        let subject3: string;
+        let subject4: string;
         let indexer = 0;
 
         subjectArray.forEach(element => {

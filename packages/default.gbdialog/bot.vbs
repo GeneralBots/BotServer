@@ -36,7 +36,7 @@ function ICanSendEmails()
 
 	bot.say ("Please, what's your e-mail address?")
 	email = bot.expectEmail()
-	bot.sendMail (email, "Olá", "I'm sending a General Bots VBA e-mail.")
+	bot.sendMail (email, "Hello", "I'm sending a General Bots VBA e-mail.")
 
 end function
 

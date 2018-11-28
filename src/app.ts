@@ -75,8 +75,8 @@ export class GBServer {
     server.use(
       bodyParser.urlencoded({
         // to support URL-encoded bodies
-        extended: true,
-      }),
+        extended: true
+      })
     );
 
     let bootInstance: IGBInstance;
@@ -93,40 +93,33 @@ export class GBServer {
           // Ensures cloud / on-premises infrastructure is setup.
 
           logger.info(`Establishing a development local proxy (ngrok)...`);
-          const proxyAddress = await core.ensureProxy(port);
+          const proxyAddress: string = await core.ensureProxy(port);
 
           logger.info(`Deploying packages...`);
-          const deployer = new GBDeployer(core, new GBImporter(core));
-          const azureDeployer = new AzureDeployerService(deployer);
-          const adminService = new GBAdminService(core);
-          const conversationalService = new GBConversationalService(core);
-          bootInstance = await core.createBootInstance(
-            core,
-            azureDeployer,
-            proxyAddress,
-          );
+          const importer: GBImporter = new GBImporter(core);
+          const deployer: GBDeployer = new GBDeployer(core, importer);
+          const azureDeployer: AzureDeployerService = new AzureDeployerService(deployer);
+          const adminService: GBAdminService = new GBAdminService(core);
+          const conversationalService: GBConversationalService = new GBConversationalService(core);
           core.ensureAdminIsSecured();
-          core.loadSysPackages(core);
+
+          const bootInstance = await core.createBootInstance(core, azureDeployer, proxyAddress);
+          await core.checkStorage(azureDeployer);
+          await core.loadSysPackages(core);
           await deployer.deployPackages(core, server, appPackages);
 
           logger.info(`Publishing instances...`);
-          let instances: GuaribasInstance[] = await core.loadAllInstances(
-            core,
-            azureDeployer,
-            proxyAddress,
-          );
-          instances = await core.ensureInstances(
-            instances,
-            bootInstance,
-            core
-          );
+          const packageInstance = await importer.importIfNotExistsBotPackage('boot.gbot', 'packages/boot.gbot');
+          const fullInstance = Object.assign(packageInstance, bootInstance);
+          await core.saveInstance(fullInstance);
+          let instances: GuaribasInstance[] = await core.loadAllInstances(core, azureDeployer, proxyAddress);
+          instances = await core.ensureInstances(instances, bootInstance, core);
 
-          const minService = new GBMinService(
-            core,
-            conversationalService,
-            adminService,
-            deployer,
-          );
+          // Install default VBA module.
+
+          deployer.deployPackageFromLocalPath(instances[0], 'packages/default.gbdialog');
+
+          const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
           await minService.buildMin(server, appPackages, instances);
 
           logger.info(`The Bot Server is in RUNNING mode...`);
@@ -141,7 +134,6 @@ export class GBServer {
     });
   }
 }
- 
 
 // First line to run.
 
