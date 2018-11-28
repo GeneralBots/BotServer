@@ -50,41 +50,29 @@ export class GBImporter {
     this.core = core;
   }
 
-  public async importIfNotExistsBotPackage(
-    packageName: string,
-    localPath: string) {
-
-    const packageJson = JSON.parse(
-      fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8')
-    );
-    const botId = packageJson.botId;
+  public async importIfNotExistsBotPackage(botId: string, packageName: string, localPath: string) {
+    const packageJson = JSON.parse(fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8'));
+    if (!botId) {
+      botId = packageJson.botId;
+    }
     const instance = await this.core.loadInstance(botId);
     if (instance) {
       return instance;
     } else {
-      return await this.createInstanceInternal(packageName, localPath, packageJson);
+      return await this.createInstanceInternal(botId, packageName, localPath, packageJson);
     }
   }
 
-  private async createInstanceInternal(
-    packageName: string,
-    localPath: string,
-    packageJson: any
-  ) {
-    const settings = JSON.parse(
-      fs.readFileSync(UrlJoin(localPath, 'settings.json'), 'utf8')
-    );
-    const servicesJson = JSON.parse(
-      fs.readFileSync(UrlJoin(localPath, 'services.json'), 'utf8')
-    );
+  private async createInstanceInternal(botId: string, packageName: string, localPath: string, packageJson: any) {
+    const settings = JSON.parse(fs.readFileSync(UrlJoin(localPath, 'settings.json'), 'utf8'));
+    const servicesJson = JSON.parse(fs.readFileSync(UrlJoin(localPath, 'services.json'), 'utf8'));
 
-    packageJson = {...packageJson, ...settings, ...servicesJson};
+    packageJson = { ...packageJson, ...settings, ...servicesJson };
 
-    GuaribasInstance.create(packageJson).then((instance: IGBInstance) => {
-      const service = new SecService();
-      // TODO: service.importSecurityFile(localPath, instance)
+    if (botId){
+      packageJson.botId = botId;
+    }
 
-      Promise.resolve(instance);
-    });
+    return GuaribasInstance.create(packageJson);
   }
 }

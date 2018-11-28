@@ -184,8 +184,9 @@ export class GBCoreService implements IGBCoreService {
         alter: alter,
         force: force
       });
+
     } else {
-      const msg = 'Database synchronization is disabled.';
+      const msg = `Database synchronization is disabled.`;
       logger.info(msg);
     }
   }
@@ -218,21 +219,21 @@ export class GBCoreService implements IGBCoreService {
 
   public async writeEnv(instance: IGBInstance) {
     const env = `ADDITIONAL_DEPLOY_PATH=
-      ADMIN_PASS=${instance.adminPass}
-      CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}
-      CLOUD_LOCATION=${instance.cloudLocation}
-      CLOUD_GROUP=${instance.botId}
-      CLOUD_USERNAME=${instance.cloudUsername}
-      CLOUD_PASSWORD=${instance.cloudPassword}
-      MARKETPLACE_ID=${instance.marketplaceId}
-      MARKETPLACE_SECRET=${instance.marketplacePassword}
-      NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}
-      STORAGE_DIALECT=${instance.storageDialect}
-      STORAGE_SERVER=${instance.storageServer}.database.windows.net
-      STORAGE_NAME=${instance.storageName}
-      STORAGE_USERNAME=${instance.storageUsername}
-      STORAGE_PASSWORD=${instance.storagePassword}
-      STORAGE_SYNC=true`;
+    ADMIN_PASS=${instance.adminPass}
+    CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}
+    CLOUD_LOCATION=${instance.cloudLocation}
+    CLOUD_GROUP=${instance.botId}
+    CLOUD_USERNAME=${instance.cloudUsername}
+    CLOUD_PASSWORD=${instance.cloudPassword}
+    MARKETPLACE_ID=${instance.marketplaceId}
+    MARKETPLACE_SECRET=${instance.marketplacePassword}
+    NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}
+    STORAGE_DIALECT=${instance.storageDialect}
+    STORAGE_SERVER=${instance.storageServer}.database.windows.net
+    STORAGE_NAME=${instance.storageName}
+    STORAGE_USERNAME=${instance.storageUsername}
+    STORAGE_PASSWORD=${instance.storagePassword}
+    STORAGE_SYNC=true`;
 
     fs.writeFileSync('.env', env);
   }
@@ -312,6 +313,7 @@ export class GBCoreService implements IGBCoreService {
   }
 
   public loadSysPackages(core: GBCoreService) {
+
     // NOTE: if there is any code before this line a semicolon
     // will be necessary before this line.
     // Loads all system packages.
@@ -342,26 +344,21 @@ export class GBCoreService implements IGBCoreService {
 
   public async createBootInstance(core: GBCoreService, azureDeployer: AzureDeployerService, proxyAddress: string) {
     let instance: IGBInstance;
-    try {
-      await core.initStorage();
-    } catch (error) {
       logger.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
       try {
         instance = await azureDeployer.deployFarm(proxyAddress);
       } catch (error) {
         logger.warn(
-          'In case of error, please cleanup any infrastructure objects ' +
-            'created during this procedure and .env before running again.'
+          `In case of error, please cleanup any infrastructure objects 
+            created during this procedure and .env before running again.`
         );
         throw error;
       }
       core.writeEnv(instance);
       logger.info(`File .env written, starting General Bots...`);
       GBConfigService.init();
-      await core.initStorage();
 
-      return instance;
-    }
+    return instance;
   }
 
   public openBrowserInDevelopment() {

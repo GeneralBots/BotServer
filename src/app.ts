@@ -103,24 +103,32 @@ export class GBServer {
           const conversationalService: GBConversationalService = new GBConversationalService(core);
           core.ensureAdminIsSecured();
 
-          const bootInstance = await core.createBootInstance(core, azureDeployer, proxyAddress);
-          await core.checkStorage(azureDeployer);
+          let bootInstance: IGBInstance = null;
+          try {
+            await core.initStorage();
+          } catch (error) {
+            bootInstance = await core.createBootInstance(core, azureDeployer, proxyAddress);
+            await core.initStorage();
+          }
+
           await core.loadSysPackages(core);
+          await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, appPackages);
 
           logger.info(`Publishing instances...`);
-          const packageInstance = await importer.importIfNotExistsBotPackage('boot.gbot', 'packages/boot.gbot');
+          const packageInstance = await importer.importIfNotExistsBotPackage(
+            GBConfigService.get('CLOUD_GROUP'),
+            'boot.gbot',
+            'packages/boot.gbot'
+          );
           const fullInstance = Object.assign(packageInstance, bootInstance);
           await core.saveInstance(fullInstance);
           let instances: GuaribasInstance[] = await core.loadAllInstances(core, azureDeployer, proxyAddress);
           instances = await core.ensureInstances(instances, bootInstance, core);
 
-          // Install default VBA module.
-
-          deployer.deployPackageFromLocalPath(instances[0], 'packages/default.gbdialog');
 
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
-          await minService.buildMin(server, appPackages, instances);
+          await minService.buildMin(server, appPackages, instances, deployer);
 
           logger.info(`The Bot Server is in RUNNING mode...`);
           core.openBrowserInDevelopment();

@@ -1,4 +1,6 @@
-export function chat() {
+
+function chat(bot) {
+
   //****************************************************************************
   //                                               ( )_  _
   //    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _
@@ -31,11 +33,13 @@ export function chat() {
   //
   //****************************************************************************
 
+  bot.talk('Qual seu e-mail?');
+
   main = () => {
     bot.addFunction(PegaEmail);
 
     PegaEmail = bot => {
-      bot.say('Qual seu e-mail?');
+      bot.talk('Qual seu e-mail?');
       email = bot.expectEmail;
       bot.post('/restservice', email);
     };

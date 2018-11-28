@@ -110,7 +110,8 @@ export class GBMinService {
   public async buildMin(
     server: any,
     appPackages: IGBPackage[],
-    instances: GuaribasInstance[]
+    instances: GuaribasInstance[],
+    deployer: GBDeployer
   ): Promise<GBMinInstance> {
     // Serves default UI on root address '/'.
 
@@ -168,6 +169,11 @@ export class GBMinService {
         const { min, adapter, conversationState } = await this.buildBotAdapter(
           instance
         );
+
+        // Install default VBA module.
+
+        deployer.deployPackageFromLocalPath(min, 'packages/default.gbdialog');
+
 
         // Call the loadBot context.activity for all packages.
 

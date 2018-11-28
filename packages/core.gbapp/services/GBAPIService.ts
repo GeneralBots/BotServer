@@ -33,16 +33,16 @@
 'use strict';
 
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { IGBInstance, IGBPackage } from 'botlib';
+import { IGBInstance, IGBPackage ,GBMinInstance } from 'botlib';
 
 /**
  * @fileoverview General Bots server core.
  */
 
 export class DialogClass {
-  public min: IGBInstance;
+  public min: GBMinInstance;
 
-  constructor(min: IGBInstance) {
+  constructor(min: GBMinInstance) {
     this.min = min;
   }
 
@@ -72,6 +72,7 @@ export class DialogClass {
       new WaterfallDialog('/vmSend', [
         async step => {
           await step.context.sendActivity(text);
+
           return await step.next();
         }
       ])

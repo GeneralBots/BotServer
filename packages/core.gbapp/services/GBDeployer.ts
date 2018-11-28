@@ -43,7 +43,7 @@ const Fs = require('fs');
 const WaitUntil = require('wait-until');
 const express = require('express');
 
-import { IGBCoreService, IGBInstance } from 'botlib';
+import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
 import { GBError } from 'botlib';
 import { IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
@@ -174,9 +174,11 @@ export class GBDeployer {
             /** Deploys all .gbot files first. */
 
             botPackages.forEach(e => {
+              if (e!=='packages\\boot.gbot'){
               logger.info(`Deploying bot: ${e}...`);
               _this.deployBot(e);
               logger.info(`Bot: ${e} deployed...`);
+              }
             });
 
             /** Then all remaining generalPackages are loaded. */
@@ -251,10 +253,11 @@ export class GBDeployer {
   public async deployBot(localPath: string): Promise<IGBInstance> {
     const packageType = Path.extname(localPath);
     const packageName = Path.basename(localPath);
-    const instance = await this.importer.importIfNotExistsBotPackage(
+    const instance = await this.importer.importIfNotExistsBotPackage(null,
       packageName,
       localPath
     );
+
     return instance;
   }
 
@@ -282,7 +285,7 @@ export class GBDeployer {
     //   })
   }
 
-  public async deployPackageFromLocalPath(min: IGBInstance, localPath: string) {
+  public async deployPackageFromLocalPath(min: GBMinInstance, localPath: string) {
     const packageType = Path.extname(localPath);
 
     switch (packageType) {

@@ -33,8 +33,7 @@
 'use strict';
 
 import { IGBCoreService, IGBInstance } from 'botlib';
-import { GBError } from 'botlib';
-import { IGBPackage } from 'botlib';
+import { GBMinInstance } from 'botlib';
 const logger = require('../../../src/logger');
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
@@ -57,18 +56,20 @@ export class GBVMService implements IGBCoreService {
 
   public async loadJS(
     filename: string,
-    min: IGBInstance,
+    min: GBMinInstance,
     core: IGBCoreService,
     deployer: GBDeployer,
     localPath: string
   ): Promise<void> {
-    localPath = UrlJoin(localPath, 'chat.dialog.js');
-    const code: string = fs.readFileSync(UrlJoin(localPath, filename), 'utf8');
+
+    localPath = UrlJoin(localPath, 'bot.vbs.js');
+    const code: string = fs.readFileSync(localPath, 'utf8');
     const sandbox: DialogClass = new DialogClass(min);
     const context = vm.createContext(sandbox);
 
-    this.script.runInContext(code, context);
+    vm.runInContext(code, context);
     console.log(util.inspect(sandbox));
+    sandbox['chat'](sandbox);
 
     await deployer.deployScriptToStorage(min.instanceId, filename);
     logger.info(`[GBVMService] Finished loading of ${filename}`);
