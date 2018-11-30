@@ -108,6 +108,7 @@
     "typedoc-plugin-markdown": "^1.1.18",
     "typescript": "3.1.6",
     "url-join": "4.0.0",
+    "vbscript-to-typescript": "^1.0.8",
     "wait-until": "0.0.2",
     "walk-promise": "0.2.0",
     "winston": "3.1.0"

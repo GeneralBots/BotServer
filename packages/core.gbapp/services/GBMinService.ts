@@ -108,6 +108,7 @@ export class GBMinService {
    * */
 
   public async buildMin(
+    bootInstance: GuaribasInstance,
     server: any,
     appPackages: IGBPackage[],
     instances: GuaribasInstance[],
@@ -134,7 +135,11 @@ export class GBMinService {
           (async () => {
             // Returns the instance object to clients requesting bot info.
 
-            const botId = req.params.botId;
+            let botId = req.params.botId;
+            if (botId === '[default]'){
+              botId = bootInstance.botId;
+            }
+
             const instance = await this.core.loadInstance(botId);
 
             if (instance) {
@@ -477,8 +482,10 @@ export class GBMinService {
           // Processes messages.
         } else if (context.activity.type === 'message') {
           // Checks for /admin request.
-
-          if (context.activity.text === 'admin') {
+          if (context.activity.text === 'vba') {
+            min.sandbox.context = context;
+            min.sandbox['chat'](min.sandbox);
+          } else if (context.activity.text === 'admin') {
             await step.beginDialog('/admin');
 
             // Checks for /menu JSON signature.
@@ -500,6 +507,7 @@ export class GBMinService {
 
           // Processes events.
         } else if (context.activity.type === 'event') {
+          
           // Empties dialog stack before going to the target.
 
           await step.endAll();

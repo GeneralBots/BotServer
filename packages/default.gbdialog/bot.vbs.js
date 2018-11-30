@@ -33,15 +33,8 @@ function chat(bot) {
   //
   //****************************************************************************
 
-  bot.talk('Qual seu e-mail?');
-
-  main = () => {
-    bot.addFunction(PegaEmail);
-
-    PegaEmail = bot => {
-      bot.talk('Qual seu e-mail?');
-      email = bot.expectEmail;
-      bot.post('/restservice', email);
-    };
-  };
+  bot.talk('Please, what is your e-mail?');
+  //email = bot.expectEmail();
+  //bot.talk('Thanks, sending e-mail to: ' + email);
+  //bot.sendEmail(to, 'Message from VBA Bot', 'Yes, I can send e-mails.');
 }

@@ -125,10 +125,15 @@ export class GBServer {
           await core.saveInstance(fullInstance);
           let instances: GuaribasInstance[] = await core.loadAllInstances(core, azureDeployer, proxyAddress);
           instances = await core.ensureInstances(instances, bootInstance, core);
-
+          if(!bootInstance) {
+            bootInstance = instances[0];
+          }
 
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
-          await minService.buildMin(server, appPackages, instances, deployer);
+          await minService.buildMin(bootInstance, server, appPackages, instances, deployer);
+
+          logger.info(`Preparing default.gbui (it may take some additional time for the first time)...`);
+          deployer.installDefaultGBUI();
 
           logger.info(`The Bot Server is in RUNNING mode...`);
           core.openBrowserInDevelopment();

@@ -42,6 +42,7 @@ const UrlJoin = require('url-join');
 const Fs = require('fs');
 const WaitUntil = require('wait-until');
 const express = require('express');
+const child_process = require('child_process');
 
 import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
 import { GBError } from 'botlib';
@@ -67,13 +68,9 @@ export class GBDeployer {
   }
 
   public static getConnectionStringFromInstance(instance: GuaribasInstance) {
-    return `Server=tcp:${
-      instance.storageServer
-    }.database.windows.net,1433;Database=${instance.storageName};User ID=${
+    return `Server=tcp:${instance.storageServer}.database.windows.net,1433;Database=${instance.storageName};User ID=${
       instance.storageUsername
-    };Password=${
-      instance.storagePassword
-    };Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
+    };Password=${instance.storagePassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
   }
 
   /**
@@ -81,11 +78,7 @@ export class GBDeployer {
    * Performs package deployment in all .gbai or default.
    *
    * */
-  public deployPackages(
-    core: IGBCoreService,
-    server: any,
-    appPackages: IGBPackage[]
-  ) {
+  public deployPackages(core: IGBCoreService, server: any, appPackages: IGBPackage[]) {
     const _this = this;
     return new Promise(
       (resolve: any, reject: any): any => {
@@ -122,9 +115,7 @@ export class GBDeployer {
           });
         }
 
-        logger.info(
-          `Starting looking for packages (.gbot, .gbtheme, .gbkb, .gbapp)...`
-        );
+        logger.info(`Starting looking for packages (.gbot, .gbtheme, .gbkb, .gbapp)...`);
         paths.forEach(e => {
           logger.info(`Looking in: ${e}...`);
           doIt(e);
@@ -174,10 +165,10 @@ export class GBDeployer {
             /** Deploys all .gbot files first. */
 
             botPackages.forEach(e => {
-              if (e!=='packages\\boot.gbot'){
-              logger.info(`Deploying bot: ${e}...`);
-              _this.deployBot(e);
-              logger.info(`Bot: ${e} deployed...`);
+              if (e !== 'packages\\boot.gbot') {
+                logger.info(`Deploying bot: ${e}...`);
+                _this.deployBot(e);
+                logger.info(`Bot: ${e} deployed...`);
               }
             });
 
@@ -191,27 +182,16 @@ export class GBDeployer {
 
               /** Handles apps for general bots - .gbapp must stay out of deploy folder. */
 
-              if (
-                Path.extname(filename) === '.gbapp' ||
-                Path.extname(filename) === '.gblib'
-              ) {
+              if (Path.extname(filename) === '.gbapp' || Path.extname(filename) === '.gblib') {
                 /** Themes for bots. */
               } else if (Path.extname(filename) === '.gbtheme') {
                 server.use('/themes/' + filenameOnly, express.static(filename));
-                logger.info(
-                  `Theme (.gbtheme) assets accessible at: ${'/themes/' +
-                    filenameOnly}.`
-                );
+                logger.info(`Theme (.gbtheme) assets accessible at: ${'/themes/' + filenameOnly}.`);
 
                 /** Knowledge base for bots. */
               } else if (Path.extname(filename) === '.gbkb') {
-                server.use(
-                  '/kb/' + filenameOnly + '/subjects',
-                  express.static(UrlJoin(filename, 'subjects'))
-                );
-                logger.info(
-                  `KB (.gbkb) assets accessible at: ${'/kb/' + filenameOnly}.`
-                );
+                server.use('/kb/' + filenameOnly + '/subjects', express.static(UrlJoin(filename, 'subjects')));
+                logger.info(`KB (.gbkb) assets accessible at: ${'/kb/' + filenameOnly}.`);
               } else if (Path.extname(filename) === '.gbui') {
                 // Already Handled
               } else if (Path.extname(filename) === '.gbdialog') {
@@ -253,18 +233,12 @@ export class GBDeployer {
   public async deployBot(localPath: string): Promise<IGBInstance> {
     const packageType = Path.extname(localPath);
     const packageName = Path.basename(localPath);
-    const instance = await this.importer.importIfNotExistsBotPackage(null,
-      packageName,
-      localPath
-    );
+    const instance = await this.importer.importIfNotExistsBotPackage(null, packageName, localPath);
 
     return instance;
   }
 
-  public async deployPackageToStorage(
-    instanceId: number,
-    packageName: string
-  ): Promise<GuaribasPackage> {
+  public async deployPackageToStorage(instanceId: number, packageName: string): Promise<GuaribasPackage> {
     return GuaribasPackage.create({
       packageName: packageName,
       instanceId: instanceId
@@ -308,18 +282,13 @@ export class GBDeployer {
         return vm.loadJS(localPath, min, this.core, this, localPath);
 
       default:
-        const err = GBError.create(
-          `GuaribasBusinessError: Unknown package type: ${packageType}.`
-        );
+        const err = GBError.create(`GuaribasBusinessError: Unknown package type: ${packageType}.`);
         Promise.reject(err);
         break;
     }
   }
 
-  public async undeployPackageFromLocalPath(
-    instance: IGBInstance,
-    localPath: string
-  ) {
+  public async undeployPackageFromLocalPath(instance: IGBInstance, localPath: string) {
     const packageType = Path.extname(localPath);
     const packageName = Path.basename(localPath);
 
@@ -345,9 +314,7 @@ export class GBDeployer {
         break;
 
       default:
-        const err = GBError.create(
-          `GuaribasBusinessError: Unknown package type: ${packageType}.`
-        );
+        const err = GBError.create(`GuaribasBusinessError: Unknown package type: ${packageType}.`);
         Promise.reject(err);
         break;
     }
@@ -361,9 +328,7 @@ export class GBDeployer {
       instance.searchIndexer
     );
 
-    const connectionString = GBDeployer.getConnectionStringFromInstance(
-      instance
-    );
+    const connectionString = GBDeployer.getConnectionStringFromInstance(instance);
 
     const dsName = 'gb';
     try {
@@ -375,13 +340,7 @@ export class GBDeployer {
       }
     }
 
-    await search.createDataSource(
-      dsName,
-      dsName,
-      'GuaribasQuestion',
-      'azuresql',
-      connectionString
-    );
+    await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
 
     try {
       await search.deleteIndex();
@@ -391,19 +350,22 @@ export class GBDeployer {
         throw err;
       }
     }
-    await search.createIndex(
-      AzureDeployerService.getKBSearchSchema(instance.searchIndex),
-      dsName
-    );
+    await search.createIndex(AzureDeployerService.getKBSearchSchema(instance.searchIndex), dsName);
   }
 
-  public async getPackageByName(
-    instanceId: number,
-    packageName: string
-  ): Promise<GuaribasPackage> {
+  public async getPackageByName(instanceId: number, packageName: string): Promise<GuaribasPackage> {
     const where = { packageName: packageName, instanceId: instanceId };
     return GuaribasPackage.findOne({
       where: where
     });
+  }
+
+  public installDefaultGBUI() {
+    const root = 'packages/default.gbui';
+    if (!Fs.existsSync(`${root}/build`)) {
+      Fs.writeFileSync(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
+      child_process.execSync('npm install', { cwd: root });
+      child_process.execSync('npm run build', { cwd: root });
+    }
   }
 }

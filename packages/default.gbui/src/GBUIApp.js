@@ -318,9 +318,6 @@ class GBUIApp extends React.Component {
             gbCss = <GBCss instance={this.state.instance} />;
 
             function getToken() {
-                return new Promise((resolve: any, reject: any): any => {
-                    resolve(token);
-                });
             }
 
             // speechOptions = {

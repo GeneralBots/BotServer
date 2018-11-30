@@ -149,6 +149,7 @@ export class AskDialog extends IGBDialog {
 
             return await step.replaceDialog('/ask', { isReturning: true });
           } else {
+
             // Second time running Search, now with no filter.
 
             const resultsB = await service.ask(
@@ -161,10 +162,10 @@ export class AskDialog extends IGBDialog {
             // If there is some result, answer immediately.
 
             if (resultsB && resultsB.answer) {
+
               // Saves some context info.
 
               const user = await min.userProfile.get(step.context, {});
-
               user.isAsking = false;
               user.lastQuestionId = resultsB.questionId;
               await min.userProfile.set(step.context, user);

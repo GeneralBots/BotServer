@@ -32,23 +32,17 @@
 
 'use strict';
 
-import { IGBCoreService, IGBInstance } from 'botlib';
-import { GBMinInstance } from 'botlib';
-const logger = require('../../../src/logger');
-import { BotAdapter } from 'botbuilder';
-import { WaterfallDialog } from 'botbuilder-dialogs';
+import { GBMinInstance, IGBCoreService } from 'botlib';
 import * as fs from 'fs';
-import { Messages } from '../strings';
 import { DialogClass } from './GBAPIService';
 import { GBDeployer } from './GBDeployer';
 const util = require('util');
+const logger = require('../../../src/logger');
 const vm = require('vm');
-import processExists = require('process-exists');
-import { Sequelize } from 'sequelize-typescript';
 const UrlJoin = require('url-join');
 
 /**
- * @fileoverview General Bots server core.
+ * @fileoverview Virtualization services for emulation of BASIC.
  */
 
 export class GBVMService implements IGBCoreService {
@@ -66,12 +60,11 @@ export class GBVMService implements IGBCoreService {
     const code: string = fs.readFileSync(localPath, 'utf8');
     const sandbox: DialogClass = new DialogClass(min);
     const context = vm.createContext(sandbox);
-
     vm.runInContext(code, context);
-    console.log(util.inspect(sandbox));
-    sandbox['chat'](sandbox);
 
     await deployer.deployScriptToStorage(min.instanceId, filename);
     logger.info(`[GBVMService] Finished loading of ${filename}`);
+
+    min.sandbox = sandbox;
   }
 }

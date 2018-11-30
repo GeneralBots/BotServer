@@ -32,8 +32,8 @@
 
 'use strict';
 
-import { WaterfallDialog } from 'botbuilder-dialogs';
-import { IGBInstance, IGBPackage ,GBMinInstance } from 'botlib';
+import { TurnContext } from 'botbuilder';
+import { GBMinInstance } from 'botlib';
 
 /**
  * @fileoverview General Bots server core.
@@ -41,41 +41,30 @@ import { IGBInstance, IGBPackage ,GBMinInstance } from 'botlib';
 
 export class DialogClass {
   public min: GBMinInstance;
+  public context: TurnContext;
 
   constructor(min: GBMinInstance) {
     this.min = min;
-  }
+    }
 
   public async hear(text: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this.min.dialogs.add(
-        new WaterfallDialog('/vmExpect', [
-          async step => {
-            await step.prompt('textPrompt', text);
-            return await step.next();
-          },
-          async step => {
-            resolve(step.result);
-            return await step.next();
-          }
-        ])
-      );
-    });
-  }
-
-  public post(url: string, data) {
-
+    // await this.context.beginDialog('textPrompt', text);
   }
 
   public talk(text: string) {
-    this.min.dialogs.add(
-      new WaterfallDialog('/vmSend', [
-        async step => {
-          await step.context.sendActivity(text);
-
-          return await step.next();
-        }
-      ])
-    );
+    this.context.sendActivity(text);
   }
+
+  /**
+   * Generic function to call any REST API.
+   */
+  public sendEmail(to, subject, body) {
+    // tslint:disable-next-line:no-console
+    console.log(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
+  }
+
+  /**
+   * Generic function to call any REST API.
+   */
+  public post(url: string, data) {}
 }
