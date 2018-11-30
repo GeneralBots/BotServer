@@ -36,10 +36,12 @@ import { GBMinInstance, IGBCoreService } from 'botlib';
 import * as fs from 'fs';
 import { DialogClass } from './GBAPIService';
 import { GBDeployer } from './GBDeployer';
+import { TSCompiler } from './TSCompiler';
 const util = require('util');
 const logger = require('../../../src/logger');
 const vm = require('vm');
 const UrlJoin = require('url-join');
+const vb2ts = require('vbscript-to-typescript/dist/converter');
 
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
@@ -55,16 +57,38 @@ export class GBVMService implements IGBCoreService {
     deployer: GBDeployer,
     localPath: string
   ): Promise<void> {
+    const path = 'packages/default.gbdialog';
+    const file = 'bot.vbs';
+    const source = UrlJoin(path, file);
 
-    localPath = UrlJoin(localPath, 'bot.vbs.js');
-    const code: string = fs.readFileSync(localPath, 'utf8');
-    const sandbox: DialogClass = new DialogClass(min);
-    const context = vm.createContext(sandbox);
-    vm.runInContext(code, context);
+    // Example when handled through fs.watch() listener
+    fs.watchFile(source, async (curr, prev) => {
+      await this.run(source, path, localPath, min, deployer, filename);
+    });
+    await this.run(source, path, localPath, min, deployer, filename);
+  }
 
-    await deployer.deployScriptToStorage(min.instanceId, filename);
-    logger.info(`[GBVMService] Finished loading of ${filename}`);
+  private async run(source: any, path: string, localPath: string, min: any, deployer: GBDeployer, filename: string) {
+    // Converts VBS into TS.
 
-    min.sandbox = sandbox;
+    vb2ts.convertFile(source);
+
+    // Convert TS into JS.
+    const tsfile = `bot.ts`;
+    const tsc = new TSCompiler();
+    tsc.compile([UrlJoin(path, tsfile)]);
+    // Run JS into the GB context.
+    const jsfile = `bot.js`;
+    localPath = UrlJoin(path, jsfile);
+    if (fs.existsSync(localPath)) {
+      let code: string = fs.readFileSync(localPath, 'utf8');
+      code = code.replace(/^.*exports.*$/gm, '');
+      const sandbox: DialogClass = new DialogClass(min);
+      const context = vm.createContext(sandbox);
+      vm.runInContext(code, context);
+      min.sandbox = sandbox;
+      await deployer.deployScriptToStorage(min.instanceId, filename);
+      logger.info(`[GBVMService] Finished loading of ${filename}`);
+    }
   }
 }

@@ -30,44 +30,45 @@
 |                                                                             |
 \*****************************************************************************/
 
-'use strict';
-
-import { TurnContext } from 'botbuilder';
-import { GBMinInstance } from 'botlib';
-
 /**
  * @fileoverview General Bots server core.
  */
 
-export class DialogClass {
-  public min: GBMinInstance;
-  public context: TurnContext;
+'use strict';
 
-  constructor(min: GBMinInstance) {
-    this.min = min;
+import * as ts from 'typescript';
+const logger = require('../../../src/logger');
+
+export class TSCompiler {
+  public compile(
+    fileNames: string[],
+    options: ts.CompilerOptions = {
+      noEmitOnError: false,
+      noImplicitAny: true,
+      target: ts.ScriptTarget.ES5,
+      module: ts.ModuleKind.None,
+      moduleResolution: ts.ModuleResolutionKind.Classic,
+      noEmitHelpers: true,
+      maxNodeModuleJsDepth: 0,
+      esModuleInterop: false
+     
     }
+  ) {
+    const program = ts.createProgram(fileNames, options);
+    const emitResult = program.emit();
 
-  public hear(text: string) {
-     // TODO: await this.context.beginDialog('textPrompt', text);
-  }
+    const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
 
-  public talk(text: string) {
-    this.context.sendActivity(text);
-  }
+    allDiagnostics.forEach(diagnostic => {
+      if (diagnostic.file) {
+        const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start!);
+        const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+        logger.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+      } else {
+        logger.error(`${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`);
+      }
+    });
 
-
-  /**
-   * Generic function to call any REST API.
-   */
-  public sendEmail(to, subject, body) {
-    // tslint:disable-next-line:no-console
-    console.log(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
-  }
-
-  /**
-   * Generic function to call any REST API.
-   */
-  public post(url: string, data) {
-
+    return emitResult;
   }
 }

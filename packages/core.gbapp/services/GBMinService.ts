@@ -484,7 +484,8 @@ export class GBMinService {
           // Checks for /admin request.
           if (context.activity.text === 'vba') {
             min.sandbox.context = context;
-            min.sandbox['chat'](min.sandbox);
+            min.sandbox['bot'].bind(min.sandbox);
+            min.sandbox['bot']();
           } else if (context.activity.text === 'admin') {
             await step.beginDialog('/admin');
 

@@ -1,5 +1,4 @@
 <%
-
 '****************************************************************************
 '                                               ( )_  _                       
 '    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     
@@ -31,13 +30,10 @@
 ' our trademarks remain entirely with us.                                     
 '                                                                             
 '****************************************************************************
-	
-function ICanSendEmails()
 
-	bot.say ("Please, what's your e-mail address?")
-	email = bot.expectEmail()
-	bot.sendMail (email, "Hello", "I'm sending a General Bots VBA e-mail.")
-
-end function
+this.talk ("Please, what's your e-mail address?")
+let email = this.hear()
+this.talk("Thanks, sending e-mail to: " + email);
+this.sendEmail(email, "Message from VBA Bot", "Yes, I can send e-mails.");
 
 %>
