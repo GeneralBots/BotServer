@@ -50,6 +50,7 @@ import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService';
 import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
+import { GBVMService } from '../packages/core.gbapp/services/GBVMService';
 
 const appPackages = new Array<IGBPackage>();
 
@@ -150,5 +151,8 @@ export class GBServer {
 }
 
 // First line to run.
-
-GBServer.run();
+const path = 'packages/default.gbdialog';
+const file = 'bot.vbs';
+const source =(path + '/' + file);
+GBVMService.run2(source, path)
+//GBServer.run();

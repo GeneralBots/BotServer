@@ -31,8 +31,23 @@
 '                                                                             
 '****************************************************************************
 
-this.talk ("Please, what's your e-mail address?")
-let email = this.hear()
-this.talk("Thanks, sending e-mail to: " + email);
-this.sendEmail(email, "Message from VBA Bot", "Yes, I can send e-mails.");
-%>
+talk ("Please, what's your e-mail address?")
+email = hear ()
+talk("Thanks, sending e-mail to: " + email )
+sendEmail(email, "Message from VBA Bot", "Yes, I can send e-mails.")
+if email = "" then
+
+end if
+
+select case email
+    case 1:
+    
+    case 2:
+
+end select
+
+if i > 10 then
+
+end if
+
+%>  
