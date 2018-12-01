@@ -78,35 +78,48 @@ export class FeedbackDialog extends IGBDialog {
       ])
     );
 
-    min.dialogs.add(new WaterfallDialog('/feedback', [
-      async step => {
-        const locale = step.context.activity.locale;
-        if (step.result.fromMenu) {
+    min.dialogs.add(
+      new WaterfallDialog('/feedback', [
+        async step => {
+          const locale = step.context.activity.locale;
+
           await step.context.sendActivity(Messages[locale].about_suggestions);
+          step.activeDialog.state.cbId = step.options['id'];
+
+          return await step.prompt('textPrompt', Messages[locale].what_about_service);
+        },
+        async step => {
+          
+          console.log(step.result);
+
+          // min.sandbox.context = step.context;
+          // min.sandbox.step = step;
+
+          let cbId = step.activeDialog.state.cbId;
+          let cb = min.cbMap[cbId];
+          cb.bind({ step: step, context: step.context });
+          await cb();
+
+          // const locale = step.context.activity.locale;
+          // const rate = await AzureText.getSentiment(
+          //   min.instance.textAnalyticsKey,
+          //   min.instance.textAnalyticsEndpoint,
+          //   min.conversationalService.getCurrentLanguage(step),
+          //   step.result
+          // );
+
+          // if (rate > 0.5) {
+          //   await step.context.sendActivity(Messages[locale].glad_you_liked);
+          // } else {
+          //   await step.context.sendActivity(Messages[locale].we_will_improve);
+
+          //   // TODO: Record.
+          // }
+          // await step.replaceDialog('/ask', { isReturning: true });
+
+          return await step.next();
         }
-
-        await step.prompt('textPrompt', Messages[locale].what_about_service);
-        return await step.next();
-      },
-      async step => {
-        const locale = step.context.activity.locale;
-        const rate = await AzureText.getSentiment(
-          min.instance.textAnalyticsKey,
-          min.instance.textAnalyticsEndpoint,
-          min.conversationalService.getCurrentLanguage(step),
-          step.result
-        );
-
-        if (rate > 0.5) {
-          await step.context.sendActivity(Messages[locale].glad_you_liked);
-        } else {
-          await step.context.sendActivity(Messages[locale].we_will_improve);
-
-          // TODO: Record.
-        }
-        await step.replaceDialog('/ask', { isReturning: true });
-        return await step.next();
-      }
-    ]));
+      ])
+    );
   }
 }

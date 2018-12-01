@@ -35,5 +35,4 @@ this.talk ("Please, what's your e-mail address?")
 let email = this.hear()
 this.talk("Thanks, sending e-mail to: " + email);
 this.sendEmail(email, "Message from VBA Bot", "Yes, I can send e-mails.");
-
 %>

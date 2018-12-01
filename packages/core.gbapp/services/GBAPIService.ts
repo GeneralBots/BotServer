@@ -33,7 +33,9 @@
 'use strict';
 
 import { TurnContext } from 'botbuilder';
+import { WaterfallStepContext } from 'botbuilder-dialogs';
 import { GBMinInstance } from 'botlib';
+const WaitUntil = require('wait-until');
 
 /**
  * @fileoverview General Bots server core.
@@ -42,19 +44,21 @@ import { GBMinInstance } from 'botlib';
 export class DialogClass {
   public min: GBMinInstance;
   public context: TurnContext;
+  public step: WaterfallStepContext;
 
   constructor(min: GBMinInstance) {
     this.min = min;
-    }
-
-  public hear(text: string) {
-     // TODO: await this.context.beginDialog('textPrompt', text);
   }
 
-  public talk(text: string) {
-    this.context.sendActivity(text);
+  public async hear(cb) {
+    const id = Math.floor(Math.random() * 1000000000000);
+    this.min.cbMap[id] = cb;
+    await this.step.beginDialog('/feedback', { id: id });
   }
 
+  public async talk(text: string) {
+    return await this.context.sendActivity(text);
+  }
 
   /**
    * Generic function to call any REST API.
@@ -67,7 +71,5 @@ export class DialogClass {
   /**
    * Generic function to call any REST API.
    */
-  public post(url: string, data) {
-
-  }
+  public post(url: string, data) {}
 }

@@ -76,13 +76,15 @@ export class GBVMService implements IGBCoreService {
     // Convert TS into JS.
     const tsfile = `bot.ts`;
     const tsc = new TSCompiler();
-    tsc.compile([UrlJoin(path, tsfile)]);
+    // TODO: tsc.compile([UrlJoin(path, tsfile)]);
     // Run JS into the GB context.
     const jsfile = `bot.js`;
     localPath = UrlJoin(path, jsfile);
     if (fs.existsSync(localPath)) {
       let code: string = fs.readFileSync(localPath, 'utf8');
       code = code.replace(/^.*exports.*$/gm, '');
+      code = code.replace(/this\./gm, 'await this.');
+      code = code.replace(/function/gm, 'async function');
       const sandbox: DialogClass = new DialogClass(min);
       const context = vm.createContext(sandbox);
       vm.runInContext(code, context);

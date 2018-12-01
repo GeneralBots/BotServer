@@ -43,21 +43,9 @@ const logger = require('../../../src/logger');
 const request = require('request-promise-native');
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 
-import {
-  AutoSaveStateMiddleware,
-  BotFrameworkAdapter,
-  ConversationState,
-  MemoryStorage,
-  UserState
-} from 'botbuilder';
+import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
 
-import {
-  GBMinInstance,
-  IGBAdminService,
-  IGBConversationalService,
-  IGBCoreService,
-  IGBPackage
-} from 'botlib';
+import { GBMinInstance, IGBAdminService, IGBConversationalService, IGBCoreService, IGBPackage } from 'botlib';
 import { GBAnalyticsPackage } from '../../analytics.gblib';
 import { GBCorePackage } from '../../core.gbapp';
 import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
@@ -117,10 +105,7 @@ export class GBMinService {
     // Serves default UI on root address '/'.
 
     const uiPackage = 'default.gbui';
-    server.use(
-      '/',
-      express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, 'build'))
-    );
+    server.use('/', express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
 
     Promise.all(
       instances.map(async instance => {
@@ -136,7 +121,7 @@ export class GBMinService {
             // Returns the instance object to clients requesting bot info.
 
             let botId = req.params.botId;
-            if (botId === '[default]'){
+            if (botId === '[default]') {
               botId = bootInstance.botId;
             }
 
@@ -171,14 +156,11 @@ export class GBMinService {
 
         // Build bot adapter.
 
-        const { min, adapter, conversationState } = await this.buildBotAdapter(
-          instance
-        );
+        const { min, adapter, conversationState } = await this.buildBotAdapter(instance);
 
         // Install default VBA module.
 
         deployer.deployPackageFromLocalPath(min, 'packages/default.gbdialog');
-
 
         // Call the loadBot context.activity for all packages.
 
@@ -188,32 +170,17 @@ export class GBMinService {
 
         const url = `/api/messages/${instance.botId}`;
         server.post(url, async (req, res) => {
-          return this.receiver(
-            adapter,
-            req,
-            res,
-            conversationState,
-            min,
-            instance,
-            appPackages
-          );
+          return await this.receiver(adapter, req, res, conversationState, min, instance, appPackages);
         });
-        logger.info(
-          `GeneralBots(${instance.engineName}) listening on: ${url}.`
-        );
+        logger.info(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
 
         // Serves individual URL for each bot user interface.
 
         const uiUrl = `/${instance.botId}`;
-        server.use(
-          uiUrl,
-          express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, 'build'))
-        );
+        server.use(uiUrl, express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
 
         logger.info(`Bot UI ${uiPackage} accessible at: ${uiUrl}.`);
-        const state = `${instance.instanceId}${Math.floor(
-          Math.random() * 1000000000
-        )}`;
+        const state = `${instance.instanceId}${Math.floor(Math.random() * 1000000000)}`;
 
         // Clients get redirected here in order to create an OAuth authorize url and redirect them to AAD.
         // There they will authenticate and give their consent to allow this app access to
@@ -226,9 +193,7 @@ export class GBMinService {
           );
           authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
             min.instance.authenticatorClientId
-          }&redirect_uri=${min.instance.botEndpoint}/${
-            min.instance.botId
-          }/token`;
+          }&redirect_uri=${min.instance.botEndpoint}/${min.instance.botId}/token`;
 
           res.redirect(authorizationUrl);
         });
@@ -238,23 +203,16 @@ export class GBMinService {
         // access token that can be used to access the user owned resource.
 
         server.get(`/${min.instance.botId}/token`, async (req, res) => {
-          const state = await min.adminService.getValue(
-            min.instance.instanceId,
-            'AntiCSRFAttackState'
-          );
+          const state = await min.adminService.getValue(min.instance.instanceId, 'AntiCSRFAttackState');
 
           if (req.query.state !== state) {
-            const msg =
-              'WARNING: state field was not provided as anti-CSRF token';
+            const msg = 'WARNING: state field was not provided as anti-CSRF token';
             logger.error(msg);
             throw new Error(msg);
           }
 
           const authenticationContext = new AuthenticationContext(
-            UrlJoin(
-              min.instance.authenticatorAuthorityHostUrl,
-              min.instance.authenticatorTenant
-            )
+            UrlJoin(min.instance.authenticatorAuthorityHostUrl, min.instance.authenticatorTenant)
           );
 
           const resource = 'https://graph.microsoft.com';
@@ -271,47 +229,16 @@ export class GBMinService {
                 logger.error(msg);
                 res.send(msg);
               } else {
-                await this.adminService.setValue(
-                  instance.instanceId,
-                  'refreshToken',
-                  token.refreshToken
-                );
-                await this.adminService.setValue(
-                  instance.instanceId,
-                  'accessToken',
-                  token.accessToken
-                );
-                await this.adminService.setValue(
-                  instance.instanceId,
-                  'expiresOn',
-                  token.expiresOn.toString()
-                );
-                await this.adminService.setValue(
-                  instance.instanceId,
-                  'AntiCSRFAttackState',
-                  null
-                );
+                await this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
+                await this.adminService.setValue(instance.instanceId, 'accessToken', token.accessToken);
+                await this.adminService.setValue(instance.instanceId, 'expiresOn', token.expiresOn.toString());
+                await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', null);
 
                 res.redirect(min.instance.botEndpoint);
               }
             }
           );
         });
-
-        // Setups handlers.
-        // send: function (context.activity, next) {
-        //   logger.info(
-        //     `[SND]: ChannelID: ${context.activity.address.channelId}, ConversationID: ${context.activity.address.conversation},
-        //      Type: ${context.activity.type}              `)
-        //   this.core.createMessage(
-        //     this.min.conversation,
-        //     this.min.conversation.startedBy,
-        //     context.activity.source,
-        //     (data, err) => {
-        //       logger.info(context.activity.source)
-        //     }
-        //   )
-        //   next()
       })
     );
   }
@@ -388,8 +315,10 @@ export class GBMinService {
     min.conversationalService = this.conversationalService;
     min.adminService = this.adminService;
     min.instance = await this.core.loadInstance(min.botId);
+    
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
+
     min.dialogs = new DialogSet(dialogState);
     min.dialogs.add(new TextPrompt('textPrompt'));
 
@@ -417,18 +346,18 @@ export class GBMinService {
           p.channel.received(req, res);
         });
       }
-    },        this);
+    }, this);
 
     appPackages.forEach(e => {
       e.sysPackages = sysPackages;
       e.loadBot(min);
-    },                  this);
+    }, this);
   }
 
   /**
    * Bot Service hook method.
    */
-  private receiver(
+  private async receiver(
     adapter: BotFrameworkAdapter,
     req: any,
     res: any,
@@ -437,8 +366,9 @@ export class GBMinService {
     instance: any,
     appPackages: any[]
   ) {
-    return adapter.processActivity(req, res, async context => {
-      const state = conversationState.get(context);
+    return await adapter.processActivity(req, res, async context => {
+      // Get loaded user state
+      const state = await conversationState.get(context);
       const step = await min.dialogs.createContext(context, state);
       step.context.activity.locale = 'en-US'; // TODO: Make dynamic.
 
@@ -454,18 +384,16 @@ export class GBMinService {
           });
           user.loaded = true;
           user.subjects = [];
+          user.cb = null;
           await min.userProfile.set(step.context, user);
         }
 
         logger.info(
-          `User>: ${context.activity.text} (${context.activity.type}, ${
-            context.activity.name
-          }, ${context.activity.channelId}, {context.activity.value})`
+          `User>: ${context.activity.text} (${context.activity.type}, ${context.activity.name}, ${
+            context.activity.channelId
+          }, {context.activity.value})`
         );
-        if (
-          context.activity.type === 'conversationUpdate' &&
-          context.activity.membersAdded.length > 0
-        ) {
+        if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {
           const member = context.activity.membersAdded[0];
           if (member.name === 'GeneralBots') {
             logger.info(`Bot added to conversation, starting chat...`);
@@ -480,12 +408,15 @@ export class GBMinService {
           }
 
           // Processes messages.
+          
         } else if (context.activity.type === 'message') {
           // Checks for /admin request.
           if (context.activity.text === 'vba') {
             min.sandbox.context = context;
+            min.sandbox.step = step;
             min.sandbox['bot'].bind(min.sandbox);
-            min.sandbox['bot']();
+
+            await min.sandbox['bot']();
           } else if (context.activity.text === 'admin') {
             await step.beginDialog('/admin');
 
@@ -497,7 +428,9 @@ export class GBMinService {
 
             // Otherwise, continue to the active dialog in the stack.
           } else {
-            if (step.activeDialog) {
+            const user = await min.userProfile.get(context, {});
+
+            if (step.activeDialog || user.dialog) {
               await step.continueDialog();
             } else {
               await step.beginDialog('/answer', {
@@ -508,7 +441,6 @@ export class GBMinService {
 
           // Processes events.
         } else if (context.activity.type === 'event') {
-          
           // Empties dialog stack before going to the target.
 
           await step.endAll();
@@ -539,13 +471,12 @@ export class GBMinService {
             await step.continueDialog();
           }
         }
+        await conversationState.saveChanges(context, true);
       } catch (error) {
         const msg = `ERROR: ${error.message} ${error.stack ? error.stack : ''}`;
         logger.error(msg);
 
-        await step.context.sendActivity(
-          Messages[step.context.activity.locale].very_sorry_about_error
-        );
+        await step.context.sendActivity(Messages[step.context.activity.locale].very_sorry_about_error);
         await step.beginDialog('/ask', { isReturning: true });
       }
     });

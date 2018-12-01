@@ -184,7 +184,6 @@ export class GBCoreService implements IGBCoreService {
         alter: alter,
         force: force
       });
-
     } else {
       const msg = `Database synchronization is disabled.`;
       logger.info(msg);
@@ -239,9 +238,15 @@ export class GBCoreService implements IGBCoreService {
   }
 
   public async ensureProxy(port): Promise<string> {
-    const ngrok = require('ngrok');
-
-    return await ngrok.connect({ port: port });
+    try {
+      const ngrok = require('ngrok');
+      return await ngrok.connect({ port: port });
+    } catch (error) {
+      // There are false positive from ngrok regarding to no memory, but it's just
+      // lack of connection.
+      logger.verbose(error);
+      throw new Error('Error connecting to remote ngrok server, please check network connection.');
+    }
   }
 
   public async saveInstance(fullInstance: any) {
@@ -313,7 +318,6 @@ export class GBCoreService implements IGBCoreService {
   }
 
   public loadSysPackages(core: GBCoreService) {
-
     // NOTE: if there is any code before this line a semicolon
     // will be necessary before this line.
     // Loads all system packages.
@@ -344,19 +348,19 @@ export class GBCoreService implements IGBCoreService {
 
   public async createBootInstance(core: GBCoreService, azureDeployer: AzureDeployerService, proxyAddress: string) {
     let instance: IGBInstance;
-      logger.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
-      try {
-        instance = await azureDeployer.deployFarm(proxyAddress);
-      } catch (error) {
-        logger.warn(
-          `In case of error, please cleanup any infrastructure objects 
+    logger.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
+    try {
+      instance = await azureDeployer.deployFarm(proxyAddress);
+    } catch (error) {
+      logger.warn(
+        `In case of error, please cleanup any infrastructure objects 
             created during this procedure and .env before running again.`
-        );
-        throw error;
-      }
-      core.writeEnv(instance);
-      logger.info(`File .env written, starting General Bots...`);
-      GBConfigService.init();
+      );
+      throw error;
+    }
+    core.writeEnv(instance);
+    logger.info(`File .env written, starting General Bots...`);
+    GBConfigService.init();
 
     return instance;
   }

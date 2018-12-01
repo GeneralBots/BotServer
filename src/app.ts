@@ -93,6 +93,7 @@ export class GBServer {
           // Ensures cloud / on-premises infrastructure is setup.
 
           logger.info(`Establishing a development local proxy (ngrok)...`);
+         
           const proxyAddress: string = await core.ensureProxy(port);
 
           logger.info(`Deploying packages...`);
