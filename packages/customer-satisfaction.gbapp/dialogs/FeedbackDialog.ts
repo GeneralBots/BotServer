@@ -89,35 +89,24 @@ export class FeedbackDialog extends IGBDialog {
           return await step.prompt('textPrompt', Messages[locale].what_about_service);
         },
         async step => {
-          
-          console.log(step.result);
 
-          // min.sandbox.context = step.context;
-          // min.sandbox.step = step;
+          const locale = step.context.activity.locale;
+          const rate = await AzureText.getSentiment(
+          	min.instance.textAnalyticsKey,
+            min.instance.textAnalyticsEndpoint,
+            min.conversationalService.getCurrentLanguage(step),
+           step.result
+          );
 
-          let cbId = step.activeDialog.state.cbId;
-          let cb = min.cbMap[cbId];
-          cb.bind({ step: step, context: step.context });
-          await cb();
+          if (rate > 0.5) {
+            await step.context.sendActivity(Messages[locale].glad_you_liked);
+          } else {
+            await step.context.sendActivity(Messages[locale].we_will_improve);
 
-          // const locale = step.context.activity.locale;
-          // const rate = await AzureText.getSentiment(
-          //   min.instance.textAnalyticsKey,
-          //   min.instance.textAnalyticsEndpoint,
-          //   min.conversationalService.getCurrentLanguage(step),
-          //   step.result
-          // );
+          // TODO: Record.
+          }
+          return await step.replaceDialog('/ask', { isReturning: true });
 
-          // if (rate > 0.5) {
-          //   await step.context.sendActivity(Messages[locale].glad_you_liked);
-          // } else {
-          //   await step.context.sendActivity(Messages[locale].we_will_improve);
-
-          //   // TODO: Record.
-          // }
-          // await step.replaceDialog('/ask', { isReturning: true });
-
-          return await step.next();
         }
       ])
     );

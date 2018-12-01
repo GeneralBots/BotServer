@@ -315,7 +315,7 @@ export class GBMinService {
     min.conversationalService = this.conversationalService;
     min.adminService = this.adminService;
     min.instance = await this.core.loadInstance(min.botId);
-    
+    min.cbMap = {};
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
 
@@ -408,14 +408,12 @@ export class GBMinService {
           }
 
           // Processes messages.
-          
         } else if (context.activity.type === 'message') {
           // Checks for /admin request.
           if (context.activity.text === 'vba') {
             min.sandbox.context = context;
             min.sandbox.step = step;
             min.sandbox['bot'].bind(min.sandbox);
-
             await min.sandbox['bot']();
           } else if (context.activity.text === 'admin') {
             await step.beginDialog('/admin');

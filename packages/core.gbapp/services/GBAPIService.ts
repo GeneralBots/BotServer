@@ -51,9 +51,9 @@ export class DialogClass {
   }
 
   public async hear(cb) {
-    const id = Math.floor(Math.random() * 1000000000000);
-    this.min.cbMap[id] = cb;
-    await this.step.beginDialog('/feedback', { id: id });
+    let idCallback = Math.floor(Math.random() * 1000000000000);
+    this.min.cbMap[idCallback] = cb;
+    await this.step.beginDialog('/hear', { id: idCallback});
   }
 
   public async talk(text: string) {

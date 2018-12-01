@@ -37,6 +37,7 @@ import * as fs from 'fs';
 import { DialogClass } from './GBAPIService';
 import { GBDeployer } from './GBDeployer';
 import { TSCompiler } from './TSCompiler';
+import { WaterfallDialog } from 'botbuilder-dialogs';
 const util = require('util');
 const logger = require('../../../src/logger');
 const vm = require('vm');
@@ -66,6 +67,31 @@ export class GBVMService implements IGBCoreService {
       await this.run(source, path, localPath, min, deployer, filename);
     });
     await this.run(source, path, localPath, min, deployer, filename);
+    this.addHearDialog(min);
+  }
+
+  private addHearDialog(min) {
+    min.dialogs.add(
+      new WaterfallDialog('/hear', [
+        async step => {
+          step.activeDialog.state.cbId = step.options['id'];
+          step.activeDialog.state.idResolve = step.options['idResolve'];
+
+          return await step.prompt('textPrompt', {});
+        },
+        async step => {
+          min.sandbox.context = step.context;
+          min.sandbox.step = step;
+
+          const cbId = step.activeDialog.state.cbId;
+          const cb = min.cbMap[cbId];
+          cb.bind({ step: step, context: step.context }); // TODO: Necessary or min.sandbox
+          await cb();
+
+          return await step.next();
+        }
+      ])
+    );
   }
 
   private async run(source: any, path: string, localPath: string, min: any, deployer: GBDeployer, filename: string) {
@@ -80,11 +106,14 @@ export class GBVMService implements IGBCoreService {
     // Run JS into the GB context.
     const jsfile = `bot.js`;
     localPath = UrlJoin(path, jsfile);
+
     if (fs.existsSync(localPath)) {
       let code: string = fs.readFileSync(localPath, 'utf8');
       code = code.replace(/^.*exports.*$/gm, '');
       code = code.replace(/this\./gm, 'await this.');
       code = code.replace(/function/gm, 'async function');
+      //code = code.replace(/this\.hear\(\){/gm, 'this.hear(async () => { ');
+      
       const sandbox: DialogClass = new DialogClass(min);
       const context = vm.createContext(sandbox);
       vm.runInContext(code, context);
