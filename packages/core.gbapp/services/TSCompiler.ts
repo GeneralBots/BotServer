@@ -43,6 +43,8 @@ export class TSCompiler {
   public compile(
     fileNames: string[],
     options: ts.CompilerOptions = {
+      noStrictGenericChecks: true,
+      noImplicitUseStrict: true,
       noEmitOnError: false,
       noImplicitAny: true,
       target: ts.ScriptTarget.ES5,
@@ -51,7 +53,6 @@ export class TSCompiler {
       noEmitHelpers: true,
       maxNodeModuleJsDepth: 0,
       esModuleInterop: false
-     
     }
   ) {
     const program = ts.createProgram(fileNames, options);
