@@ -150,9 +150,10 @@ export class GBServer {
   }
 }
 
-// First line to run.
-const path = 'packages/default.gbdialog';
-const file = 'bot.vbs';
-const source =(path + '/' + file);
-GBVMService.run2(source, path)
+// // First line to run.
+ const path = 'packages/default.gbdialog';
+ const file = 'bot.vbs';
+ const source =(path + '/' + file);
+ let s = new GBVMService();
+ s.run(source, path, null, null, null)
 //GBServer.run();

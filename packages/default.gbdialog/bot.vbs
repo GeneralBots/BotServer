@@ -31,23 +31,34 @@
 '                                                                             
 '****************************************************************************
 
-talk ("Please, what's your e-mail address?")
-email = hear ()
-talk("Thanks, sending e-mail to: " + email )
-sendEmail(email, "Message from VBA Bot", "Yes, I can send e-mails.")
-if email = "" then
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    talk ("Please, what's your e-mail address?")
+    email = hear ()
+    talk("Thanks, sending e-mail to: " + email )
+    sendEmail(email, "Message from VBA Bot", "Yes, I can send e-mails.")
 
-end if
+    name = hear ()
+    talk("Hey " + name + "!")
+ 
 
-select case email
-    case 1:
-    
-    case 2:
-
-end select
-
-if i > 10 then
-
-end if
-
-%>  
+%>
