@@ -428,7 +428,7 @@ export class GBMinService {
           } else {
             const user = await min.userProfile.get(context, {});
 
-            if (step.activeDialog || user.dialog) {
+            if (step.activeDialog) {
               await step.continueDialog();
             } else {
               await step.beginDialog('/answer', {

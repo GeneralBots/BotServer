@@ -34,114 +34,74 @@
 talk ("How many installments do you want to pay your Credit?")
 installments = hear ()
 
-talk ("What is the amount requested?")
-ammount = hear ()
-
-talk ("What is the initial payment value?")
-valorEntrada = hear ()
-
-
-talk ("What is the best due date?")
-dueDate = hear ()
-
-juros =0
-coeficiente1=0
-
-if installments <12 then
-    juros = 1.60
-    coeficiente = 0.09748
-end if
-
-if installments > 12 and installments< 18 then
-   juros = 1.66
-   coeficiente = 0.06869
-end if
-
-if installments > 18 and installments< 36 then
-   juros = 1.64
-   coeficiente = 0.05397
-end if
-
-if installments > 36 and installments< 48 then
-   juros = 1.62
-   coeficiente = 0.03931
-end if
-
-if installments > 48 and installments< 60 then
-   juros = 1.70
-   coeficiente = 0.03270
-end if
-
-if installments =60 then
-   juros = 1.79
-   coeficiente = 0.02916
-end if
-
 if installments > 60 then
     talk ("The maximum number of payments is 60")
-end if
-
-
-nInstallments = parseInt(installments)
-vAmmount = parseFloat(ammount)
-first = parseFloat(vAmmount) * 0.3 ' 30% of the value
-tac = 800
-coeficiente = 1.3
-
-taxaJuros = parseFloat(juros)
-valorFinanciado = ammount - valorEntrada + tac    
-valorParcela = valorFinanciado * coeficiente
-valorTotalDoBem = valorParcela * nInstallments + valorEntrada
-
-talk("Your credit analysis is done.") 
-
-talk("First payment" + valorEntrada)
-talk("valorParcela" + valor)
-talk("taxaJuros" + taxaJuros)
-talk("valorFinanciado" + valorFinanciado)
-talk("valorTotalDoBem" + valorTotalDoBem)
-
-
-text = hear()
-
-if email = "" then
-
-	text = hear()
-
-
-	if email = "" then
-		talk ()
-		text = hear()
-
-		i1 = 10
-	end if
 else
-	text = hear()
-	if email = "" then
-		talk ()
-		text = hear()
+ 	talk ("What is the amount requested?")
+	ammount = hear ()
 
-		i2 = 10
+	if ammount >100000 then
+		talk ("We are sorry, we can only accept proposals bellow 100k")
+	else
 
-		talk ()
-		text = hear()
+		talk ("What is the best due date?")
+		dueDate = hear ()
 
-		talk ()
-		text = hear()
+		interestRate = 0
+		adjustment = 0
+
+		if installments < 12 then
+			interestRate = 1.60
+			adjustment = 0.09748
+		end if
+
+		if installments > 12 and installments < 18 then
+			interestRate = 1.66
+			adjustment = 0.06869
+		end if
+
+		if installments > 18 and installments < 36 then
+			interestRate = 1.64
+			adjustment = 0.05397
+		end if
+
+		if installments > 36 and installments < 48 then
+			interestRate = 1.62
+			adjustment = 0.03931
+		end if
+
+		if installments > 48 and installments < 60 then
+			interestRate = 1.70
+			adjustment = 0.03270
+		end if
+
+		if installments = 60 then
+			interestRate = 1.79
+			adjustment = 0.02916
+		end if
+
+		if installments > 60 then
+			talk ("The maximum number of payments is 60")
+		end if
+
+
+		nInstallments = parseInt(installments)
+		vAmmount = parseFloat(ammount)
+		initialPayment = parseFloat(vAmmount) * 0.3 ' 30% of the value
+		tac = 800
+		adjustment = 1.3
+
+		totalValue = ammount - initialPayment + tac    
+		paymentValue = totalValue * adjustment
+		finalValue = paymentValue * nInstallments + initialPayment
+
+		talk("Congratulations! Your credit analysis is **done**:") 
+		talk("First payment: **" + initialPayment + "**")
+		talk("Payment value: **" + paymentValue + "**")
+		talk("Interest Rate: **" + interestRate + "%**")
+		talk("Total Value: **" + totalValue + "**")
+		talk("Final Value: **" + finalValue + "**")
+		
 	end if
 end if
-
-talk ()
-text = hear()
-
-i = 10
-
-if i > 10 then
-	text = hear()
-	text = hear()
-else
-	text = hear()
-	text = hear()
-end if
-
 %>

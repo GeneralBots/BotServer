@@ -174,7 +174,6 @@ export class GBVMService implements IGBCoreService {
       new WaterfallDialog('/hear', [
         async step => {
           step.activeDialog.state.cbId = step.options['id'];
-          step.activeDialog.state.idResolve = step.options['idResolve'];
 
           return await step.prompt('textPrompt', {});
         },
@@ -185,9 +184,10 @@ export class GBVMService implements IGBCoreService {
           const cbId = step.activeDialog.state.cbId;
           const cb = min.cbMap[cbId];
           cb.bind({ step: step, context: step.context }); // TODO: Necessary or min.sandbox
-          await cb();
+          
+          await step.endDialog();
 
-          return await step.next();
+          return await cb(step.result);
         }
       ])
     );
