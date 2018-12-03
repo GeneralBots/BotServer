@@ -8,11 +8,15 @@
 | Releases                     | [![General Bots](https://img.shields.io/npm/dt/botserver.svg?logo=npm&label=botserver)](https://www.npmjs.com/package/botserver/) [![.gbapp lib](https://img.shields.io/npm/dt/botlib.svg?logo=npm&label=botlib)](https://www.npmjs.com/package/botlib/) [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)|
 | [Docker Image](https://github.com/lpicanco/docker-botserver) | ![Docker Automated build](https://img.shields.io/docker/automated/lpicanco/botserver.svg) ![Docker Build Status](https://img.shields.io/docker/build/lpicanco/botserver.svg) ![MicroBadger Size](https://img.shields.io/microbadger/image-size/lpicanco/botserver.svg) ![MicroBadger Layers](https://img.shields.io/microbadger/layers/lpicanco/botserver.svg) ![Docker Pulls](https://img.shields.io/docker/pulls/lpicanco/botserver.svg) <br/> *Provided by [@lpicanco](https://github.com/lpicanco/docker-botserver)* |
 
-#### Watch a video about packages, development environment and self-deployment
+#### Watch a video about easeness authoring of bot packages, development environment and self-deployment
 
-*Now with General Bots you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
+* Now with General Bots you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
 
 [![General Bot Video](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-01-thumb.jpg)](https://www.youtube.com/watch?v=AfKTwljoMOs)
+
+* See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC * published on December 3rd, 2018.
+
+[![See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-02-thumb.jpg)](https://www.youtube.com/watch?v=yX1sF9n9628)
 
 
 Welcome to General Bot Community Edition
