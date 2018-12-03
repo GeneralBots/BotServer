@@ -29,7 +29,7 @@ General Bot is a package based chat bot server focused in convention over config
 
 # Sample Package: [AzureADPasswordReset.gbapp](https://github.com/pragmatismo-io/AzureADPasswordReset.gbapp)
 
-Custom dialogs for reseting user password in Azure Active Directory, Office 365, Dynamics 365 or any app published through Azure AD. Se also [IntranetBotQuickStart.gbai](https://github.com/pragmatismo-io/IntranetBotQuickStart.gbai) and related MSDN article **[Applied AI – Using a Bot for Password Reset](https://blogs.msdn.microsoft.com/buckwoody/2018/09/25/applied-ai-using-a-bot-for-password-reset)** by *Rodrigo Souza*.
+Custom dialogs for reseting user password in Azure Active Directory, Office 365, Dynamics 365 or any app published through Azure AD. See also [IntranetBotQuickStart.gbai](https://github.com/pragmatismo-io/IntranetBotQuickStart.gbai) and related MSDN article **[Applied AI – Using a Bot for Password Reset](https://blogs.msdn.microsoft.com/buckwoody/2018/09/25/applied-ai-using-a-bot-for-password-reset)** by *Rodrigo Souza*.
 
 
 ## Bot Administrator - Setup Security
