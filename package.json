@@ -87,7 +87,7 @@
     "ngrok": "^3.1.0",
     "nyc": "^13.1.0",
     "opn": "^5.4.0",
-    "pragmatismo-io-framework": "1.0.18",
+    "pragmatismo-io-framework": "1.0.19",
     "process-exists": "^3.1.0",
     "public-ip": "^2.4.0",
     "reflect-metadata": "0.1.12",
