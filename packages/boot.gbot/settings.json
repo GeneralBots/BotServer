@@ -1,0 +1,6 @@
+{
+  "enabledAdmin": "true",
+  "searchScore": ".15",
+  "nlpScore": ".15",
+  "nlpVsSearch": ".4"
+}

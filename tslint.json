@@ -15,6 +15,8 @@
     ],
     "jsRules": {},
     "rules": {
+        "no-var-requires":false,
+        "typedef":false,
         "variable-name": false,
         "no-parameter-properties": false,
         "no-reserved-keywords": false,
@@ -34,6 +36,6 @@
         "export-name":false,
         "no-relative-imports": false,
         "no-backbone-get-set-outside-model": false,
-        "max-line-length": [true,{"limit":80,"ignore-pattern":"^\\s+\\*"}]
+        "max-line-length": [true,{"limit":120,"ignore-pattern":"^\\s+\\*"}]
     }
 }

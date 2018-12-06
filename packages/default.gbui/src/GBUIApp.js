@@ -314,6 +314,7 @@ class GBUIApp extends React.Component {
 
             // let speechOptions;
             // let token = this.state.instanceClient.speechToken;
+
             // speechOptions = {
             //     speechRecognizer: new SpeechRecognizer({
             //         locale: "pt-br",

@@ -141,7 +141,6 @@ export class AdminDialog extends IGBDialog {
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'addConnection') {
             await AdminDialog.addConnectionCommand(min, text);
-
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'undeployPackage') {
             await AdminDialog.undeployPackageCommand(text, min);

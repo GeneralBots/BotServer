@@ -30,24 +30,22 @@
 |                                                                             |
 \*****************************************************************************/
 
-/**
- * @fileoverview General Bots server core.
- */
-
 'use strict';
 
-const UrlJoin = require('url-join');
+/**
+ * @fileoverview Tests for General Bots VM.
+ */
 
-import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { expect } from 'chai';
+import { GBVMService } from '../services/GBVMService';
 
-import { Sequelize } from 'sequelize-typescript';
-
-export class GBAnalyticsPackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = null;
-
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
-  public unloadPackage(core: IGBCoreService): void {}
-  public loadBot(min: GBMinInstance): void {}
-  public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: any): void {}
-}
+describe('Load function', () => {
+  it('should fail on invalid file', () => {
+    try {
+      const service = new GBVMService();
+      service.loadJS('invalid.file', null, null, null, null);
+    } catch (error) {
+      expect(error).to.equal(0);
+    }
+  });
+});

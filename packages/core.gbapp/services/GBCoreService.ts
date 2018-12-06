@@ -36,14 +36,24 @@
 
 'use strict';
 
-import { IGBCoreService, IGBInstance } from 'botlib';
+import { IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import * as fs from 'fs';
-import processExists = require('process-exists');
 import { Sequelize } from 'sequelize-typescript';
-const logger = require('../../../src/logger');
+import { GBAdminPackage } from '../../admin.gbapp/index';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
+import { GBAnalyticsPackage } from '../../analytics.gblib';
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
+import { GBCorePackage } from '../../core.gbapp';
+import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
+import { GBKBPackage } from '../../kb.gbapp';
+import { GBSecurityPackage } from '../../security.gblib';
+import { GBWhatsappPackage } from '../../whatsapp.gblib/index';
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
+import { GBImporter } from './GBImporterService';
+
+const logger = require('../../../src/logger');
+const opn = require('opn');
 
 /**
  *  Core service layer.
@@ -67,11 +77,7 @@ export class GBCoreService implements IGBCoreService {
   /**
    * Custom create table query.
    */
-  private createTableQuery: (
-    tableName: string,
-    attributes: any,
-    options: any
-  ) => string;
+  private createTableQuery: (tableName: string, attributes: any, options: any) => string;
 
   /**
    * Custom change column query.
@@ -93,78 +99,79 @@ export class GBCoreService implements IGBCoreService {
   /**
    * Gets database config and connect to storage.
    */
-  public async initDatabase(): Promise<any> {
-    return new Promise(
-      (resolve: any, reject: any): any => {
-        try {
-          this.dialect = GBConfigService.get('STORAGE_DIALECT');
 
-          let host: string | undefined;
-          let database: string | undefined;
-          let username: string | undefined;
-          let password: string | undefined;
-          let storage: string | undefined;
+  public async initStorage(): Promise<any> {
+    this.dialect = GBConfigService.get('STORAGE_DIALECT');
 
-          if (this.dialect === 'mssql') {
-            host = GBConfigService.get('STORAGE_SERVER');
-            database = GBConfigService.get('STORAGE_NAME');
-            username = GBConfigService.get('STORAGE_USERNAME');
-            password = GBConfigService.get('STORAGE_PASSWORD');
-          } else if (this.dialect === 'sqlite') {
-            storage = GBConfigService.get('STORAGE_STORAGE');
-          } else {
-            reject(`Unknown dialect: ${this.dialect}.`);
+    let host: string | undefined;
+    let database: string | undefined;
+    let username: string | undefined;
+    let password: string | undefined;
+    let storage: string | undefined;
+
+    if (this.dialect === 'mssql') {
+      host = GBConfigService.get('STORAGE_SERVER');
+      database = GBConfigService.get('STORAGE_NAME');
+      username = GBConfigService.get('STORAGE_USERNAME');
+      password = GBConfigService.get('STORAGE_PASSWORD');
+    } else if (this.dialect === 'sqlite') {
+      storage = GBConfigService.get('STORAGE_STORAGE');
+    } else {
+      throw new Error(`Unknown dialect: ${this.dialect}.`);
+    }
+
+    const logging: any =
+      GBConfigService.get('STORAGE_LOGGING') === 'true'
+        ? (str: string): void => {
+            logger.info(str);
           }
+        : false;
 
-          const logging: any =
-            GBConfigService.get('STORAGE_LOGGING') === 'true'
-              ? (str: string): void => {
-                  logger.info(str);
-                }
-              : false;
+    const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
 
-          const encrypt: boolean =
-            GBConfigService.get('STORAGE_ENCRYPT') === 'true';
-
-          this.sequelize = new Sequelize({
-            host: host,
-            database: database,
-            username: username,
-            password: password,
-            logging: logging,
-            operatorsAliases: false,
-            dialect: this.dialect,
-            storage: storage,
-            dialectOptions: {
-              encrypt: encrypt
-            },
-            pool: {
-              max: 32,
-              min: 8,
-              idle: 40000,
-              evict: 40000,
-              acquire: 40000
-            }
-          });
-
-          if (this.dialect === 'mssql') {
-            this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
-            this.createTableQuery = this.queryGenerator.createTableQuery;
-            this.queryGenerator.createTableQuery = (
-              tableName,
-              attributes,
-              options
-            ) => this.createTableQueryOverride(tableName, attributes, options);
-            this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
-            this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
-              this.changeColumnQueryOverride(tableName, attributes);
-          }
-          resolve();
-        } catch (error) {
-          reject(error);
-        }
+    this.sequelize = new Sequelize({
+      host: host,
+      database: database,
+      username: username,
+      password: password,
+      logging: logging,
+      operatorsAliases: false,
+      dialect: this.dialect,
+      storage: storage,
+      dialectOptions: {
+        encrypt: encrypt
+      },
+      pool: {
+        max: 32,
+        min: 8,
+        idle: 40000,
+        evict: 40000,
+        acquire: 40000
       }
-    );
+    });
+
+    if (this.dialect === 'mssql') {
+      this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
+      this.createTableQuery = this.queryGenerator.createTableQuery;
+      this.queryGenerator.createTableQuery = (tableName, attributes, options) =>
+        this.createTableQueryOverride(tableName, attributes, options);
+      this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
+      this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
+        this.changeColumnQueryOverride(tableName, attributes);
+    }
+  }
+
+  public async checkStorage(azureDeployer: AzureDeployerService) {
+    try {
+      await this.sequelize.authenticate();
+    } catch (error) {
+      logger.info('Opening storage firewall on infrastructure...');
+      if (error.parent.code === 'ELOGIN') {
+        await this.openStorageFrontier(azureDeployer);
+      } else {
+        throw error;
+      }
+    }
   }
 
   public async syncDatabaseStructure() {
@@ -172,12 +179,13 @@ export class GBCoreService implements IGBCoreService {
       const alter = GBConfigService.get('STORAGE_SYNC_ALTER') === 'true';
       const force = GBConfigService.get('STORAGE_SYNC_FORCE') === 'true';
       logger.info('Syncing database...');
+
       return this.sequelize.sync({
         alter: alter,
         force: force
       });
     } else {
-      const msg = 'Database synchronization is disabled.';
+      const msg = `Database synchronization is disabled.`;
       logger.info(msg);
     }
   }
@@ -194,6 +202,7 @@ export class GBCoreService implements IGBCoreService {
    */
   public async loadInstanceById(instanceId: string): Promise<IGBInstance> {
     const options = { where: { instanceId: instanceId } };
+
     return GuaribasInstance.findOne(options);
   }
 
@@ -202,63 +211,183 @@ export class GBCoreService implements IGBCoreService {
    */
   public async loadInstance(botId: string): Promise<IGBInstance> {
     const options = { where: {} };
+    options.where = { botId: botId };
 
-    if (botId !== '[default]') {
-      options.where = { botId: botId };
-    }
-
-    return GuaribasInstance.findOne(options);
+    return await GuaribasInstance.findOne(options);
   }
 
   public async writeEnv(instance: IGBInstance) {
-    const env =
-      `ADDITIONAL_DEPLOY_PATH=\n` +
-      `ADMIN_PASS=${instance.adminPass}\n` +
-      `CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}\n` +
-      `CLOUD_LOCATION=${instance.cloudLocation}\n` +
-      `CLOUD_GROUP=${instance.botId}\n` +
-      `CLOUD_USERNAME=${instance.cloudUsername}\n` +
-      `CLOUD_PASSWORD=${instance.cloudPassword}\n` +
-      `MARKETPLACE_ID=${instance.marketplaceId}\n` +
-      `MARKETPLACE_SECRET=${instance.marketplacePassword}\n` +
-      `NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}\n` +
-      `STORAGE_DIALECT=${instance.storageDialect}\n` +
-      `STORAGE_SERVER=${instance.storageServer}.database.windows.net\n` +
-      `STORAGE_NAME=${instance.storageName}\n` +
-      `STORAGE_USERNAME=${instance.storageUsername}\n` +
-      `STORAGE_PASSWORD=${instance.storagePassword}\n` +
-      `STORAGE_SYNC=true\n`;
+    const env = `ADDITIONAL_DEPLOY_PATH=
+    ADMIN_PASS=${instance.adminPass}
+    CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}
+    CLOUD_LOCATION=${instance.cloudLocation}
+    CLOUD_GROUP=${instance.botId}
+    CLOUD_USERNAME=${instance.cloudUsername}
+    CLOUD_PASSWORD=${instance.cloudPassword}
+    MARKETPLACE_ID=${instance.marketplaceId}
+    MARKETPLACE_SECRET=${instance.marketplacePassword}
+    NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}
+    STORAGE_DIALECT=${instance.storageDialect}
+    STORAGE_SERVER=${instance.storageServer}.database.windows.net
+    STORAGE_NAME=${instance.storageName}
+    STORAGE_USERNAME=${instance.storageUsername}
+    STORAGE_PASSWORD=${instance.storagePassword}
+    STORAGE_SYNC=true`;
 
     fs.writeFileSync('.env', env);
   }
 
   public async ensureProxy(port): Promise<string> {
-    let proxyAddress: string;
-    const ngrok = require('ngrok');
-    return await ngrok.connect({ port: port });
+    try {
+      const ngrok = require('ngrok');
+      return await ngrok.connect({ port: port });
+    } catch (error) {
+      // There are false positive from ngrok regarding to no memory, but it's just
+      // lack of connection.
+      logger.verbose(error);
+      throw new Error('Error connecting to remote ngrok server, please check network connection.');
+    }
+  }
+
+  public async saveInstance(fullInstance: any) {
+    const options = { where: {} };
+    options.where = { botId: fullInstance.botId };
+    let instance = await GuaribasInstance.findOne(options);
+    // tslint:disable-next-line:prefer-object-spread
+    instance = Object.assign(instance, fullInstance);
+
+    return await instance.save();
+  }
+
+  /**
+   * Loads all bot instances from object storage, if it's formatted.
+   *
+   * @param core
+   * @param azureDeployer
+   * @param proxyAddress
+   */
+  public async loadAllInstances(core: GBCoreService, azureDeployer: AzureDeployerService, proxyAddress: string) {
+    logger.info(`Loading instances from storage...`);
+    let instances: GuaribasInstance[];
+    try {
+      instances = await core.loadInstances();
+      const instance = instances[0];
+      if (process.env.NODE_ENV === 'development') {
+        logger.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
+        await azureDeployer.updateBotProxy(
+          instance.botId,
+          instance.botId,
+          `${proxyAddress}/api/messages/${instance.botId}`
+        );
+      }
+    } catch (error) {
+      // Check if storage is empty and needs formatting.
+      const isInvalidObject = error.parent.number == 208 || error.parent.errno == 1; // MSSQL or SQLITE.
+      if (isInvalidObject) {
+        if (GBConfigService.get('STORAGE_SYNC') != 'true') {
+          throw new Error(
+            `Operating storage is out of sync or there is a storage connection error.
+            Try setting STORAGE_SYNC to true in .env file. Error: ${error.message}.`
+          );
+        } else {
+          logger.info(`Storage is empty. After collecting storage structure from all .gbapps it will get synced.`);
+        }
+      } else {
+        throw new Error(`Cannot connect to operating storage: ${error.message}.`);
+      }
+    }
+
+    return instances;
+  }
+
+  /**
+   * If instances is undefined here it's because storage has been formatted.
+   * Load all instances from .gbot found on deploy package directory.
+   * @param instances
+   * @param bootInstance
+   * @param core
+   */
+  public async ensureInstances(instances: GuaribasInstance[], bootInstance: any, core: GBCoreService) {
+    if (!instances) {
+      const saveInstance = new GuaribasInstance(bootInstance);
+      await saveInstance.save();
+      instances = await core.loadInstances();
+    }
+
+    return instances;
+  }
+
+  public loadSysPackages(core: GBCoreService) {
+    // NOTE: if there is any code before this line a semicolon
+    // will be necessary before this line.
+    // Loads all system packages.
+
+    [
+      GBAdminPackage,
+      GBAnalyticsPackage,
+      GBCorePackage,
+      GBSecurityPackage,
+      GBKBPackage,
+      GBCustomerSatisfactionPackage,
+      GBWhatsappPackage
+    ].forEach(e => {
+      logger.info(`Loading sys package: ${e.name}...`);
+      const p = Object.create(e.prototype) as IGBPackage;
+      p.loadPackage(core, core.sequelize);
+    });
+  }
+
+  public ensureAdminIsSecured() {
+    const password = GBConfigService.get('ADMIN_PASS');
+    if (!GBAdminService.StrongRegex.test(password)) {
+      throw new Error(
+        'Please, define a really strong password in ADMIN_PASS environment variable before running the server.'
+      );
+    }
+  }
+
+  public async createBootInstance(core: GBCoreService, azureDeployer: AzureDeployerService, proxyAddress: string) {
+    let instance: IGBInstance;
+    logger.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
+    try {
+      instance = await azureDeployer.deployFarm(proxyAddress);
+    } catch (error) {
+      logger.warn(
+        `In case of error, please cleanup any infrastructure objects 
+            created during this procedure and .env before running again.`
+      );
+      throw error;
+    }
+    core.writeEnv(instance);
+    logger.info(`File .env written, starting General Bots...`);
+    GBConfigService.init();
+
+    return instance;
+  }
+
+  public openBrowserInDevelopment() {
+    if (process.env.NODE_ENV === 'development') {
+      opn('http://localhost:4242');
+    }
   }
 
   /**
    * SQL:
    *
    * // let sql: string = '' +
-   * //   'IF OBJECT_ID(\'[UserGroup]\', \'U\') IS NULL\n' +
-   * //   'CREATE TABLE [UserGroup] (\n' +
-   * //   '  [id] INTEGER NOT NULL IDENTITY(1,1),\n' +
-   * //   '  [userId] INTEGER NULL,\n' +
-   * //   '  [groupId] INTEGER NULL,\n' +
-   * //   '  [instanceId] INTEGER NULL,\n' +
-   * //   '  PRIMARY KEY ([id1], [id2]),\n' +
-   * //   '  FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,\n' +
-   * //   '  FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId1]) ON DELETE NO ACTION,\n' +
+   * //   'IF OBJECT_ID(\'[UserGroup]\', \'U\') IS NULL' +
+   * //   'CREATE TABLE [UserGroup] (' +
+   * //   '  [id] INTEGER NOT NULL IDENTITY(1,1),' +
+   * //   '  [userId] INTEGER NULL,' +
+   * //   '  [groupId] INTEGER NULL,' +
+   * //   '  [instanceId] INTEGER NULL,' +
+   * //   '  PRIMARY KEY ([id1], [id2]),' +
+   * //   '  FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,' +
+   * //   '  FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId1]) ON DELETE NO ACTION,' +
    * //   '  FOREIGN KEY ([instanceId]) REFERENCES [Instance] ([instanceId]) ON DELETE NO ACTION)'
    */
   private createTableQueryOverride(tableName, attributes, options): string {
-    let sql: string = this.createTableQuery.apply(this.queryGenerator, [
-      tableName,
-      attributes,
-      options
-    ]);
+    let sql: string = this.createTableQuery.apply(this.queryGenerator, [tableName, attributes, options]);
     const re1 = /CREATE\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
     if (matches) {
@@ -292,16 +421,13 @@ export class GBCoreService implements IGBCoreService {
   /**
    * SQL:
    * let sql = '' +
-   * 'ALTER TABLE [UserGroup]\n' +
-   * '  ADD CONSTRAINT [invalid1] FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,\n' +
-   * '      CONSTRAINT [invalid2] FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId2]) ON DELETE NO ACTION, \n' +
-   * '      CONSTRAINT [invalid3] FOREIGN KEY ([instanceId1]) REFERENCES [Instance] ([instanceId1]) ON DELETE NO ACTION\n'
+   * 'ALTER TABLE [UserGroup]' +
+   * '  ADD CONSTRAINT [invalid1] FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,' +
+   * '      CONSTRAINT [invalid2] FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId2]) ON DELETE NO ACTION, ' +
+   * '      CONSTRAINT [invalid3] FOREIGN KEY ([instanceId1]) REFERENCES [Instance] ([instanceId1]) ON DELETE NO ACTION'
    */
   private changeColumnQueryOverride(tableName, attributes): string {
-    let sql: string = this.changeColumnQuery.apply(this.queryGenerator, [
-      tableName,
-      attributes
-    ]);
+    let sql: string = this.changeColumnQuery.apply(this.queryGenerator, [tableName, attributes]);
     const re1 = /ALTER\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
     if (matches) {
@@ -318,17 +444,21 @@ export class GBCoreService implements IGBCoreService {
             fkname += '_' + matches[1];
             matches = re3.exec(fkcols);
           }
-          return (
-            (args[0] ? args[0] : '') +
-            'CONSTRAINT [' +
-            fkname +
-            '_fk] FOREIGN KEY (' +
-            fkcols +
-            ')'
-          );
+          return (args[0] ? args[0] : '') + 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
         }
       );
     }
     return sql;
+  }
+
+  /**
+   * Opens storage firewall.
+   *
+   * @param azureDeployer Infrastructure Deployer instance.
+   */
+  private async openStorageFrontier(deployer: AzureDeployerService) {
+    const group = GBConfigService.get('CLOUD_GROUP');
+    const serverName = GBConfigService.get('STORAGE_SERVER').split('.database.windows.net')[0];
+    await deployer.openStorageFirewall(group, serverName);
   }
 }

@@ -37,17 +37,42 @@
 'use strict';
 
 const UrlJoin = require('url-join');
+import { IGBCoreService, IGBInstance } from 'botlib';
+import fs = require('fs');
+import path = require('path');
+import { SecService } from '../../security.gblib/services/SecService';
+import { GuaribasInstance } from '../models/GBModel';
 
-import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+export class GBImporter {
+  public core: IGBCoreService;
 
-import { Sequelize } from 'sequelize-typescript';
+  constructor(core: IGBCoreService) {
+    this.core = core;
+  }
 
-export class GBAnalyticsPackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = null;
+  public async importIfNotExistsBotPackage(botId: string, packageName: string, localPath: string) {
+    const packageJson = JSON.parse(fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8'));
+    if (!botId) {
+      botId = packageJson.botId;
+    }
+    const instance = await this.core.loadInstance(botId);
+    if (instance) {
+      return instance;
+    } else {
+      return await this.createInstanceInternal(botId, packageName, localPath, packageJson);
+    }
+  }
 
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
-  public unloadPackage(core: IGBCoreService): void {}
-  public loadBot(min: GBMinInstance): void {}
-  public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: any): void {}
+  private async createInstanceInternal(botId: string, packageName: string, localPath: string, packageJson: any) {
+    const settings = JSON.parse(fs.readFileSync(UrlJoin(localPath, 'settings.json'), 'utf8'));
+    const servicesJson = JSON.parse(fs.readFileSync(UrlJoin(localPath, 'services.json'), 'utf8'));
+
+    packageJson = { ...packageJson, ...settings, ...servicesJson };
+
+    if (botId){
+      packageJson.botId = botId;
+    }
+
+    return GuaribasInstance.create(packageJson);
+  }
 }

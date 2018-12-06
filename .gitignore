@@ -13,3 +13,5 @@
 /packages/default.gbui/node_modules
 /tmp
 /work
+/packages/default.gbdialog/bot.js
+/packages/default.gbdialog/bot.ts

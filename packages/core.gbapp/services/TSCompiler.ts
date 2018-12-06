@@ -36,18 +36,40 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
+import * as ts from 'typescript';
+const logger = require('../../../src/logger');
 
-import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+export class TSCompiler {
+  public compile(
+    fileNames: string[],
+    options: ts.CompilerOptions = {
+      noStrictGenericChecks: true,
+      noImplicitUseStrict: true,
+      noEmitOnError: false,
+      noImplicitAny: true,
+      target: ts.ScriptTarget.ES5,
+      module: ts.ModuleKind.None,
+      moduleResolution: ts.ModuleResolutionKind.Classic,
+      noEmitHelpers: true,
+      maxNodeModuleJsDepth: 0,
+      esModuleInterop: false
+    }
+  ) {
+    const program = ts.createProgram(fileNames, options);
+    const emitResult = program.emit();
 
-import { Sequelize } from 'sequelize-typescript';
+    const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
 
-export class GBAnalyticsPackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = null;
+    allDiagnostics.forEach(diagnostic => {
+      if (diagnostic.file) {
+        const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start!);
+        const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+        logger.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+      } else {
+        logger.error(`${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`);
+      }
+    });
 
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
-  public unloadPackage(core: IGBCoreService): void {}
-  public loadBot(min: GBMinInstance): void {}
-  public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: any): void {}
+    return emitResult;
+  }
 }

@@ -30,64 +30,46 @@
 |                                                                             |
 \*****************************************************************************/
 
+'use strict';
+
+import { TurnContext } from 'botbuilder';
+import { WaterfallStepContext } from 'botbuilder-dialogs';
+import { GBMinInstance } from 'botlib';
+const WaitUntil = require('wait-until');
+
 /**
  * @fileoverview General Bots server core.
  */
 
-'use strict';
+export class DialogClass {
+  public min: GBMinInstance;
+  public context: TurnContext;
+  public step: WaterfallStepContext;
 
-const UrlJoin = require('url-join');
-import { IGBCoreService, IGBInstance } from 'botlib';
-import fs = require('fs');
-import path = require('path');
-import { SecService } from '../../security.gblib/services/SecService';
-import { GuaribasInstance } from '../models/GBModel';
-
-export class GBImporter {
-  public core: IGBCoreService;
-
-  constructor(core: IGBCoreService) {
-    this.core = core;
+  constructor(min: GBMinInstance) {
+    this.min = min;
   }
 
-  public async importIfNotExistsBotPackage(
-    packageName: string,
-    localPath: string) {
-
-    const packageJson = JSON.parse(
-      fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8')
-    );
-
-    const botId = packageJson.botId;
-
-    const instance = await this.core.loadInstance(botId);
-    if (instance) {
-      return Promise.resolve(instance);
-    } else {
-      return this.createInstanceInternal(packageName, localPath, packageJson);
-    }
+  public async hear(cb) {
+    let idCallback = Math.floor(Math.random() * 1000000000000);
+    this.min.cbMap[idCallback] = cb;
+    await this.step.beginDialog('/hear', { id: idCallback});
   }
 
-  private async createInstanceInternal(
-    packageName: string,
-    localPath: string,
-    packageJson: any
-  ) {
-    const settings = JSON.parse(
-      fs.readFileSync(UrlJoin(localPath, 'settings.json'), 'utf8')
-    );
-    const servicesJson = JSON.parse(
-      fs.readFileSync(UrlJoin(localPath, 'services.json'), 'utf8')
-    );
-
-    packageJson = {...packageJson, ...settings, ...servicesJson};
-
-    GuaribasInstance.create(packageJson).then((instance: IGBInstance) => {
-
-      const service = new SecService();
-      // TODO: service.importSecurityFile(localPath, instance)
-
-      Promise.resolve(instance);
-    });
+  public async talk(text: string) {
+    return await this.context.sendActivity(text);
   }
+
+  /**
+   * Generic function to call any REST API.
+   */
+  public sendEmail(to, subject, body) {
+    // tslint:disable-next-line:no-console
+    console.log(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
+  }
+
+  /**
+   * Generic function to call any REST API.
+   */
+  public post(url: string, data) {}
 }

@@ -80,6 +80,7 @@ export class WelcomeDialog extends IGBDialog {
             await step.replaceDialog('/answer', { query: step.context.activity.text });
           }
         }
+
         return await step.next();
       }
     ]));
