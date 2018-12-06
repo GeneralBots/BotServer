@@ -43,7 +43,7 @@ import { GBMinInstance } from 'botlib';
 import { IGBDialog } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { GBImporter } from '../../core.gbapp/services/GBImporter';
+import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { GBAdminService } from '../services/GBAdminService';
 import { Messages } from '../strings';
 
@@ -57,19 +57,27 @@ export class AdminDialog extends IGBDialog {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
-    await deployer.undeployPackageFromLocalPath(
-      min.instance,
-      UrlJoin('packages', packageName)
-    );
+    await deployer.undeployPackageFromLocalPath(min.instance, UrlJoin('packages', packageName));
   }
 
-  public static async deployPackageCommand(text: string, deployer: GBDeployer) {
+  public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: GBDeployer) {
     const packageName = text.split(' ')[1];
     const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
-    await deployer.deployPackageFromLocalPath(
-      UrlJoin(additionalPath, packageName)
-    );
+    await deployer.deployPackageFromLocalPath(min, UrlJoin(additionalPath, packageName));
   }
+
+  public static async rebuildIndexPackageCommand(min: GBMinInstance, text: string, deployer: GBDeployer) {
+    await deployer.rebuildIndex(min.instance);
+  }
+
+  public static async   addConnectionCommand(min: GBMinInstance, text: any) {
+    const packageName = text.split(' ')[1];
+    const importer = new GBImporter(min.core);
+    const admin = new GBAdminService(min.core);
+    // TODO: await admin.addConnection
+  }
+
+
   /**
    * Setup dialogs flows and define services call.
    *
@@ -87,23 +95,22 @@ export class AdminDialog extends IGBDialog {
         async step => {
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].authenticate;
-          await step.prompt('textPrompt', prompt);
-          return await step.next();
+
+          return await step.prompt('textPrompt', prompt);
         },
         async step => {
           const locale = step.context.activity.locale;
           const password = step.result;
-          if (
-            password === GBConfigService.get('ADMIN_PASS') &&
-            GBAdminService.StrongRegex.test(password)
-          ) {
+
+          if (password === GBConfigService.get('ADMIN_PASS')) {
             await step.context.sendActivity(Messages[locale].welcome);
-            await step.prompt('textPrompt', Messages[locale].which_task);
+
+            return await step.prompt('textPrompt', Messages[locale].which_task);
           } else {
-            await step.prompt('textPrompt', Messages[locale].wrong_password);
-            await step.endDialog();
+            await step.context.sendActivity(Messages[locale].wrong_password);
+
+            return await step.endDialog();
           }
-          return await step.next();
         },
         async step => {
           const locale = step.context.activity.locale;
@@ -114,20 +121,32 @@ export class AdminDialog extends IGBDialog {
           let unknownCommand = false;
 
           if (text === 'quit') {
-            await step.replaceDialog('/');
+            return await step.replaceDialog('/');
           } else if (cmdName === 'createFarm') {
             await AdminDialog.createFarmCommand(text, deployer);
-            await step.replaceDialog('/admin', { firstRun: false });
+
+            return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'deployPackage') {
-            await AdminDialog.deployPackageCommand(text, deployer);
-            await step.replaceDialog('/admin', { firstRun: false });
+            await AdminDialog.deployPackageCommand(min, text, deployer);
+
+            return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'redeployPackage') {
             await AdminDialog.undeployPackageCommand(text, min);
-            await AdminDialog.deployPackageCommand(text, deployer);
-            await step.replaceDialog('/admin', { firstRun: false });
+            await AdminDialog.deployPackageCommand(min, text, deployer);
+
+            return await step.replaceDialog('/admin', { firstRun: false });
+          } else if (cmdName === 'rebuildIndex') {
+            await AdminDialog.rebuildIndexPackageCommand(min, text, deployer);
+
+            return await step.replaceDialog('/admin', { firstRun: false });
+          } else if (cmdName === 'addConnection') {
+            await AdminDialog.addConnectionCommand(min, text);
+
+            return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'undeployPackage') {
             await AdminDialog.undeployPackageCommand(text, min);
-            await step.replaceDialog('/admin', { firstRun: false });
+
+            return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'setupSecurity') {
             await AdminDialog.setupSecurity(min, step);
           } else {
@@ -137,13 +156,11 @@ export class AdminDialog extends IGBDialog {
           if (unknownCommand) {
             await step.context.sendActivity(Messages[locale].unknown_command);
           } else {
-            await step.context.sendActivity(
-              Messages[locale].finshed_working(cmdName)
-            );
+            await step.context.sendActivity(Messages[locale].finshed_working(cmdName));
           }
           await step.endDialog();
-          await step.replaceDialog('/answer', { query: text });
-          return await step.next();
+
+          return await step.replaceDialog('/answer', { query: text });
         }
       ])
     );
@@ -151,17 +168,9 @@ export class AdminDialog extends IGBDialog {
 
   private static async setupSecurity(min: any, step: any) {
     const locale = step.activity.locale;
-    const state = `${min.instance.instanceId}${Math.floor(
-      Math.random() * 1000000000
-    )}`;
-    await min.adminService.setValue(
-      min.instance.instanceId,
-      'AntiCSRFAttackState',
-      state
-    );
-    const url = `https://login.microsoftonline.com/${
-      min.instance.authenticatorTenant
-    }/oauth2/authorize?client_id=${
+    const state = `${min.instance.instanceId}${Math.floor(Math.random() * 1000000000)}`;
+    await min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
+    const url = `https://login.microsoftonline.com/${min.instance.authenticatorTenant}/oauth2/authorize?client_id=${
       min.instance.authenticatorClientId
     }&response_type=code&redirect_uri=${min.instance.botEndpoint}/${
       min.instance.botId
