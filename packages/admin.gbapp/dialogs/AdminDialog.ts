@@ -70,7 +70,7 @@ export class AdminDialog extends IGBDialog {
     await deployer.rebuildIndex(min.instance);
   }
 
-  public static async   addConnectionCommand(text: any, min: GBMinInstance) {
+  public static async   addConnectionCommand(min: GBMinInstance, text: any) {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const admin = new GBAdminService(min.core);
@@ -140,8 +140,7 @@ export class AdminDialog extends IGBDialog {
 
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'addConnection') {
-            await AdminDialog.addConnectionCommand(min, text, deployer);
-
+            await AdminDialog.addConnectionCommand(min, text);
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'undeployPackage') {
             await AdminDialog.undeployPackageCommand(text, min);

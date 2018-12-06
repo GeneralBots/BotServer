@@ -40,13 +40,9 @@ import SidebarMenu from "./components/SidebarMenu.js";
 import GBCss from "./components/GBCss.js";
 import { DirectLine } from "botframework-directlinejs";
 import { ConnectionStatus } from "botframework-directlinejs";
-import { SpeechRecognizer } from "botframework-webchat";
-import { SpeechSynthesizer } from "botframework-webchat";
-import { SynthesisGender } from "botframework-webchat";
 import { Chat } from "botframework-webchat";
 import GBPowerBIPlayer from "./players/GBPowerBIPlayer.js";
-import { UserAgentApplication } from "msal";
-import { Observable } from 'rxjs'
+
 
 class GBUIApp extends React.Component {
     constructor() {
@@ -117,11 +113,11 @@ class GBUIApp extends React.Component {
 
     configureChat() {
         var botId = window.location.href.split("/")[3];
-        if (botId.indexOf('#') != -1) {
+        if (botId.indexOf('#') !== -1) {
             botId = botId.split("#")[0];
         }
 
-        if (!botId || botId == "") {
+        if (!botId || botId === "") {
             botId = "[default]";
         }
 
@@ -302,7 +298,7 @@ class GBUIApp extends React.Component {
 
         }
 
-        let speechOptions;
+        
         let chat = <div />;
         let gbCss = <div />;
 
@@ -314,11 +310,10 @@ class GBUIApp extends React.Component {
         );
 
         if (this.state.line && this.state.instance) {
-            let token = this.state.instanceClient.speechToken;
             gbCss = <GBCss instance={this.state.instance} />;
 
-            function getToken() {
-            }
+            // let speechOptions;
+            // let token = this.state.instanceClient.speechToken;
 
             // speechOptions = {
             //     speechRecognizer: new SpeechRecognizer({

@@ -43,14 +43,6 @@ class GBLoginPlayer extends React.Component {
   }
 
   doLogin(info) {
-    let logger = new Logger(
-      (logLevel, message, piiEnabled) => {
-        console.log(message);
-      },
-      { level: LogLevel.Verbose }
-    );
-
-    
     let authority =
       "https://login.microsoftonline.com/" +
       this.state.login.authenticatorTenant;
