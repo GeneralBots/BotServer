@@ -42,7 +42,7 @@ import { DirectLine } from "botframework-directlinejs";
 import { ConnectionStatus } from "botframework-directlinejs";
 import { Chat } from "botframework-webchat";
 import GBPowerBIPlayer from "./players/GBPowerBIPlayer.js";
-
+import { UserAgentApplication } from "msal";
 
 class GBUIApp extends React.Component {
     constructor() {
