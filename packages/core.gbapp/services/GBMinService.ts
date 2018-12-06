@@ -410,7 +410,7 @@ export class GBMinService {
           // Processes messages.
         } else if (context.activity.type === 'message') {
           // Checks for /admin request.
-          if (context.activity.text === 'vba') {
+          if (context.activity.text === 'alpha-vba') {
             min.sandbox.context = context;
             min.sandbox.step = step;
             min.sandbox['bot'].bind(min.sandbox);

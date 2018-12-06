@@ -10,6 +10,9 @@
 '                                                                             
 ' General Bots Copyright (c) Pragmatismo.io. All rights reserved.             
 ' Licensed under the AGPL-3.0.                                                
+'
+' This BASIC file is based on this JavaScript file by Rodrigo Ruotolo:
+'   -> http://jsfiddle.net/roderick/dym05hsy
 '                                                                              
 ' According to our dual licensing model, this program can be used either      
 ' under the terms of the GNU Affero General Public License, version 3,        
@@ -30,6 +33,8 @@
 ' our trademarks remain entirely with us.                                     
 '                                                                             
 '****************************************************************************
+
+
 
 talk ("How many installments do you want to pay your Credit?")
 installments = hear ()
@@ -85,6 +90,8 @@ else
 		end if
 
 
+		' TODO: This must be reviewed in terms of financing logic.
+		
 		nInstallments = parseInt(installments)
 		vAmmount = parseFloat(ammount)
 		initialPayment = parseFloat(vAmmount) * 0.3 ' 30% of the value

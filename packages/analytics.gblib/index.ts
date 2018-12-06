@@ -43,22 +43,11 @@ import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 
 export class GBAnalyticsPackage implements IGBPackage {
-
   public sysPackages: IGBPackage[] = null;
 
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-
-  }
-  public unloadPackage(core: IGBCoreService): void {
-
-  }
-  public loadBot(min: GBMinInstance): void {
-
-  }
-  public unloadBot(min: GBMinInstance): void {
-
-  }
-  public onNewSession(min: GBMinInstance, step: any): void {
-
-  }
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
+  public unloadPackage(core: IGBCoreService): void {}
+  public loadBot(min: GBMinInstance): void {}
+  public unloadBot(min: GBMinInstance): void {}
+  public onNewSession(min: GBMinInstance, step: any): void {}
 }
