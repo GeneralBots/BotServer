@@ -1,3 +1,36 @@
+# [1.1.0](https://github.com/pragmatismo-io/BotServer/compare/1.0.8...1.1.0) (2018-12-06)
+
+
+### Bug Fixes
+
+* **CI:** default.gbui compilation issues. ([7a11919](https://github.com/pragmatismo-io/BotServer/commit/7a11919))
+* **CI:** Migrating CI logic to package.json. ([8ee048f](https://github.com/pragmatismo-io/BotServer/commit/8ee048f))
+* **core:** Bot boot logic being fixed. ([1761e06](https://github.com/pragmatismo-io/BotServer/commit/1761e06))
+* **core:** Bot Server is runnable again after refactory. ([9379dec](https://github.com/pragmatismo-io/BotServer/commit/9379dec))
+* **core:** Loaded dynamically a .js file containing converted VBA dialogs. ([3f32e48](https://github.com/pragmatismo-io/BotServer/commit/3f32e48))
+* **core:** Moved logic from app to core. ([c1db8be](https://github.com/pragmatismo-io/BotServer/commit/c1db8be))
+* **default.gbui:** Removing warnings. ([02ed085](https://github.com/pragmatismo-io/BotServer/commit/02ed085))
+* **gbdialog:** Renamed alpha command to alpha-VBA added documentation files. ([9cd66b8](https://github.com/pragmatismo-io/BotServer/commit/9cd66b8))
+* **gbdialog:** Support for multiples hear blocks. ([3bb9d65](https://github.com/pragmatismo-io/BotServer/commit/3bb9d65))
+* **gbdialog:** Trying to save context. ([ce04290](https://github.com/pragmatismo-io/BotServer/commit/ce04290))
+* **gbdialog:** Updating packages to latest versions and sync *-lock file. ([dcafb7a](https://github.com/pragmatismo-io/BotServer/commit/dcafb7a))
+* **gbdialog:** VBA hear must be a wrapper call. ([6915d58](https://github.com/pragmatismo-io/BotServer/commit/6915d58))
+* **gbdialog:** VBA is running financial simulations. ([9fb431c](https://github.com/pragmatismo-io/BotServer/commit/9fb431c))
+* **gbdialog:** VBA is running. ([2dd359a](https://github.com/pragmatismo-io/BotServer/commit/2dd359a))
+* **gbdialog:** VBA loop done - one thing left to automate: Hear wrapper. ([776fe03](https://github.com/pragmatismo-io/BotServer/commit/776fe03))
+* **package:** update azure-arm-resource to version 7.2.1 ([4e72507](https://github.com/pragmatismo-io/BotServer/commit/4e72507))
+* **package:** update botlib to version 0.1.7 ([8205599](https://github.com/pragmatismo-io/BotServer/commit/8205599))
+* **package:** update csv-parse to version 4.0.0 ([3fb5a9a](https://github.com/pragmatismo-io/BotServer/commit/3fb5a9a))
+* **package:** update marked to version 0.5.2 ([405fc96](https://github.com/pragmatismo-io/BotServer/commit/405fc96))
+* **package:** update pragmatismo-io-framework to version 1.0.19 ([67c2ce7](https://github.com/pragmatismo-io/BotServer/commit/67c2ce7))
+* **tests:** Disabling VM tests tentative for now. ([9d5a9c6](https://github.com/pragmatismo-io/BotServer/commit/9d5a9c6))
+
+
+### Features
+
+* **gbdialog:** The first VBA code is run. ([f0a0cd3](https://github.com/pragmatismo-io/BotServer/commit/f0a0cd3))
+* **scripting:** First code changes to VBA implementation. ([09715bc](https://github.com/pragmatismo-io/BotServer/commit/09715bc))
+
 ## [1.0.8](https://github.com/pragmatismo-io/BotServer/compare/1.0.7...1.0.8) (2018-11-18)
 
 
