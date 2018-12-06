@@ -119,16 +119,16 @@ class GBMarkdownPlayer extends Component {
     }
 
     if (this.state.prevId) {
-      prev = <a style={{ color: 'blue', cursor: 'pointer' }} href={"#"}
+      prev = <button style={{ color: 'blue', cursor: 'pointer' }}
         onClick={() => this.sendAnswer(this.state.prevId)}>
         Back
-      </a>
+      </button>
     }
     if (this.state.nextId) {
-      next = <a style={{ color: 'blue', cursor: 'pointer' }} href={"#"}
+      next = <button style={{ color: 'blue', cursor: 'pointer' }}
         onClick={() => this.sendAnswer(this.state.nextId)}>
         Next
-      </a>
+      </button>
     }
 
     return (
