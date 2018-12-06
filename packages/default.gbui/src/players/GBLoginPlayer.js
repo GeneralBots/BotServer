@@ -31,7 +31,7 @@
 \*****************************************************************************/
 
 import React from "react";
-import { Logger, LogLevel } from "msal";
+import { Logger } from "msal";
 import { UserAgentApplication } from "msal";
 
 class GBLoginPlayer extends React.Component {
