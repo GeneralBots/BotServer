@@ -1,17 +1,22 @@
 | Area                         | Status                                                                                             |
 |------------------------------|----------------------------------------------------------------------------------------------------|
 | Community                    | [![StackExchange](https://img.shields.io/stackexchange/stackoverflow/t/generalbots.svg)](https://stackoverflow.com/questions/tagged/generalbots)  [![Gitter](https://img.shields.io/gitter/room/pragmatismo-io/GeneralBots.svg)](https://gitter.im/GeneralBots) [![Open-source](https://badges.frapsoft.com/os/v2/open-source.svg)](https://badges.frapsoft.com) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) [![License](https://img.shields.io/badge/license-AGPL-blue.svg)](https://github.com/pragmatismo-io/BotServer/blob/master/LICENSE.txt)|
-| Management                   | [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity) [![Waffle.io - Columns and their card count](https://badge.waffle.io/pragmatismo-io/BotServer.svg?columns=all)](https://waffle.io/pragmatismo-io/BotServer) |
+| Management                   | [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://gitHub.com/pragmatismo-io/BotServer/graphs/commit-activity) [![Waffle.io - Columns and their card count](https://badge.waffle.io/pragmatismo-io/BotServer.svg?columns=all)](https://waffle.io/pragmatismo-io/BotServer) |
 | Security                     | [![Known Vulnerabilities](https://snyk.io/test/github/pragmatismo-io/BotServer/badge.svg)](https://snyk.io/test/github/pragmatismo-io/BotServer) |
 | Building & Quality           | [![Build Status](https://travis-ci.com/pragmatismo-io/BotServer.svg?branch=master)](https://travis-ci.com/pragmatismo-io/BotServer)  [![Coverage Status](https://coveralls.io/repos/github/pragmatismo-io/BotServer/badge.svg)](https://coveralls.io/github/pragmatismo-io/BotServer) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) |
 | Packaging                    | [![forthebadge](https://badge.fury.io/js/botserver.svg)](https://badge.fury.io) [![Dependencies](https://david-dm.org/pragmatismo-io/botserver.svg)](https://david-dm.org)  [![Greenkeeper badge](https://badges.greenkeeper.io/pragmatismo-io/BotServer.svg)](https://greenkeeper.io/) [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/) |
 | Releases                     | [![General Bots](https://img.shields.io/npm/dt/botserver.svg?logo=npm&label=botserver)](https://www.npmjs.com/package/botserver/) [![.gbapp lib](https://img.shields.io/npm/dt/botlib.svg?logo=npm&label=botlib)](https://www.npmjs.com/package/botlib/) [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)|
+| [Docker Image](https://github.com/lpicanco/docker-botserver) | ![Docker Automated build](https://img.shields.io/docker/automated/lpicanco/botserver.svg) ![Docker Build Status](https://img.shields.io/docker/build/lpicanco/botserver.svg) ![MicroBadger Size](https://img.shields.io/microbadger/image-size/lpicanco/botserver.svg) ![MicroBadger Layers](https://img.shields.io/microbadger/layers/lpicanco/botserver.svg) ![Docker Pulls](https://img.shields.io/docker/pulls/lpicanco/botserver.svg) <br/> *Provided by [@lpicanco](https://github.com/lpicanco/docker-botserver)* |
 
-#### Watch a video about packages, development environment and self-deployment
+#### Watch a video about easeness authoring of bot packages, development environment and self-deployment
 
-*Now with General Bots you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
+* Now with General Bots you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
 
 [![General Bot Video](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-01-thumb.jpg)](https://www.youtube.com/watch?v=AfKTwljoMOs)
+
+* See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC * published on December 3rd, 2018.
+
+[![See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-02-thumb.jpg)](https://www.youtube.com/watch?v=yX1sF9n9628)
 
 
 Welcome to General Bot Community Edition
@@ -20,9 +25,39 @@ Welcome to General Bot Community Edition
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
 
 General Bot is a package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
-In this [MSDN](https://blogs.msdn.microsoft.com/buckwoody/2018/09/25/applied-ai-using-a-bot-for-password-reset/) article you can have an overview of a General Bots application.
 
-*Checkout our FREE [Intranet Quickstart Bot](https://github.com/pragmatismo-io/IntranetBotQuickStart.gbai)*
+
+# Sample Package: [AzureADPasswordReset.gbapp](https://github.com/pragmatismo-io/AzureADPasswordReset.gbapp)
+
+Custom dialogs for reseting user password in Azure Active Directory, Office 365, Dynamics 365 or any app published through Azure AD. See also [IntranetBotQuickStart.gbai](https://github.com/pragmatismo-io/IntranetBotQuickStart.gbai) and related MSDN article **[Applied AI – Using a Bot for Password Reset](https://blogs.msdn.microsoft.com/buckwoody/2018/09/25/applied-ai-using-a-bot-for-password-reset)** by *Rodrigo Souza*.
+
+
+## Bot Administrator - Setup Security
+
+So the Bot provides an **admin** mode allowing the user having the Directory.AccessAsUser.All permission to be logged on Administrative interface to obtain and save its token into the database.
+
+![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/AzureADPasswordReset.gbapp/master/docs/general-bots-reset-ad-password-admin.gif)
+
+## Bot User - Reset Password
+
+
+With the access token stored in the database, any user can access anonymously  the 
+bot and through a combination of e-mail and mobile received code, the user will be able to reset her or his password.
+
+### Reset password via Web
+
+Any user can use a web address to talk to a reset password bot. Just provide credentials that are confronted with Microsoft Graph to ensure security.
+
+![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/AzureADPasswordReset.gbapp/master/docs/password.gif)
+
+general-bots-reset-ad-password.gif	
+
+### Reset password via Skype
+
+This is the case when user does not have the password to login on Skype for Business or Teams, and they need to reset their password, so the right tool is Skype.
+
+![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/AzureADPasswordReset.gbapp/master/docs/general-bots-reset-ad-password.gif)
+
 
 
 ### What is a Bot Server?
@@ -47,14 +82,15 @@ Package Quick Reference
 |----|-----|----|----|
 |[whatsapp.gblib](https://github.com/pragmatismo-io/BotServer/tree/master/packages/whatsapp.gblib)|[default.gbui](https://github.com/pragmatismo-io/BotServer/tree/master/packages/default.gbui)|[core.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/packages/core.gbapp)|[kb.gbapp](https://github.com/pragmatismo-io/BotServer/tree/master/packages/kb.gbapp)|
 
+### The bot development stack
+
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
 
-### The same build process for everyone
+### The Bot Factory
 
 ![General Bots Block Architecture](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-block-architecture.png)
 
-GeneralBots aims to delivery bots in azure in a very easy and fast fashion. Use
-Office tools like Word or Excel to edit your Bot - using code (JavaScript or TypeScript) just to empower custom requirements.
+GeneralBots aims to delivery bots in azure in a very easy and fast fashion. Use Office tools like Word or Excel to edit your Bot - using code (JavaScript or TypeScript) just to empower custom requirements.
 
 
 #### Use Excel for (Hierarchical) Knowledge Base Editing
@@ -133,7 +169,6 @@ the UI application itself (HTML & JS).
 
 Package Types
 -------------
-
 
 ### .gbai
 
