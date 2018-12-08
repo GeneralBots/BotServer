@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/pragmatismo-io/BotServer/compare/1.1.0...1.1.1) (2018-12-08)
+
+
+### Bug Fixes
+
+* **package:** update csv-parse to version 4.1.0 ([a606ef1](https://github.com/pragmatismo-io/BotServer/commit/a606ef1))
+
 # [1.1.0](https://github.com/pragmatismo-io/BotServer/compare/1.0.8...1.1.0) (2018-12-06)
 
 
