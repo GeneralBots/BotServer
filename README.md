@@ -14,10 +14,6 @@
 
 [![General Bot Video](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-01-thumb.jpg)](https://www.youtube.com/watch?v=AfKTwljoMOs)
 
-* See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC * published on December 3rd, 2018.
-
-[![See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-02-thumb.jpg)](https://www.youtube.com/watch?v=yX1sF9n9628)
-
 
 Welcome to General Bot Community Edition
 ----------------------------------------
@@ -27,25 +23,33 @@ Welcome to General Bot Community Edition
 General Bot is a package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
 
 
-# Sample Package #1: [AzureADPasswordReset.gbapp (TypeScript)](https://github.com/pragmatismo-io/AzureADPasswordReset.gbapp)
-# Sample Package #2: [default.gbdialog (VBA)](https://github.com/pragmatismo-io/BotServer/tree/master/packages/default.gbdialog)
+## Sample Package #1: [default.gbdialog (VBA)](https://github.com/pragmatismo-io/BotServer/tree/master/packages/default.gbdialog)
+
+
+* See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC * published on December 3rd, 2018.
+
+[![See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-02-thumb.jpg)](https://www.youtube.com/watch?v=yX1sF9n9628)
+
+
+## Sample Package #2: [AzureADPasswordReset.gbapp (TypeScript)](https://github.com/pragmatismo-io/AzureADPasswordReset.gbapp)
+
 
 Custom dialogs for reseting user password in Azure Active Directory, Office 365, Dynamics 365 or any app published through Azure AD. See also [IntranetBotQuickStart.gbai](https://github.com/pragmatismo-io/IntranetBotQuickStart.gbai) and related MSDN article **[Applied AI – Using a Bot for Password Reset](https://blogs.msdn.microsoft.com/buckwoody/2018/09/25/applied-ai-using-a-bot-for-password-reset)** by *Rodrigo Souza*.
 
 
-## Bot Administrator - Setup Security
+### Bot Administrator - Setup Security
 
 So the Bot provides an **admin** mode allowing the user having the Directory.AccessAsUser.All permission to be logged on Administrative interface to obtain and save its token into the database.
 
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/AzureADPasswordReset.gbapp/master/docs/general-bots-reset-ad-password-admin.gif)
 
-## Bot User - Reset Password
+### Bot User - Reset Password
 
 
 With the access token stored in the database, any user can access anonymously  the 
 bot and through a combination of e-mail and mobile received code, the user will be able to reset her or his password.
 
-### Reset password via Web
+#### Reset password via Web
 
 Any user can use a web address to talk to a reset password bot. Just provide credentials that are confronted with Microsoft Graph to ensure security.
 
@@ -53,15 +57,14 @@ Any user can use a web address to talk to a reset password bot. Just provide cre
 
 general-bots-reset-ad-password.gif	
 
-### Reset password via Skype
+#### Reset password via Skype
 
 This is the case when user does not have the password to login on Skype for Business or Teams, and they need to reset their password, so the right tool is Skype.
 
 ![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/AzureADPasswordReset.gbapp/master/docs/general-bots-reset-ad-password.gif)
 
 
-
-### What is a Bot Server?
+## What is a Bot Server?
 
 ![General Bots Starting From Scrach](https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-open-core-starting-from-scratch.gif)
 
