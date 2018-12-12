@@ -96,7 +96,7 @@ export class GBAdminService {
       maximumLength: 14
     };
     let password = passwordGenerator.generatePassword(options);
-    password = password.replace(/@[=:;\?]/g, '#');
+    password = password.replace(/[\@\[\=\:\;\?]/g, '#');
     return password;
   }
 
