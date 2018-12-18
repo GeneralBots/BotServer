@@ -145,7 +145,7 @@ class GBUIApp extends React.Component {
     let userAgentApplication = new UserAgentApplication(
       this.state.instanceClient.authenticatorClientId,
       authority,
-      function (errorDesc, token, error, tokenType) {
+      function(errorDesc, token, error, tokenType) {
         if (error) {
           console.log(error);
         }
@@ -157,10 +157,10 @@ class GBUIApp extends React.Component {
       var user = userAgentApplication.getUser();
       if (user) {
         userAgentApplication.acquireTokenSilent(graphScopes).then(
-          function (accessToken) {
+          function(accessToken) {
             _this_.sendToken(accessToken);
           },
-          function (error) {
+          function(error) {
             console.log(error);
           }
         );
@@ -179,6 +179,7 @@ class GBUIApp extends React.Component {
     line.connectionStatus$.subscribe(connectionStatus => {
       if (connectionStatus === ConnectionStatus.Online) {
         _this_.setState({ line: line });
+        window['botConnection'] = line;
         line.postActivity({
           type: 'event',
           value: 'startGB',
@@ -298,7 +299,9 @@ class GBUIApp extends React.Component {
       </div>
     );
 
-    if (this.state.line) {
+    if (this.state.line && this.state.instance) {
+      gbCss = <GBCss instance={this.state.instance} />;
+
       // let speechOptions;
       // let token = this.state.instanceClient.speechToken;
 
@@ -325,15 +328,13 @@ class GBUIApp extends React.Component {
           directLine={this.state.line}
           user={this.getUser()}
           bot={{ id: 'bot@gb', name: 'Bot' }}
-        // speechOptions={speechOptions}
+          // speechOptions={speechOptions}
         />
       );
     }
 
     if (!this.state.instance) {
       sideBar = '';
-    } else {
-      gbCss = <GBCss instance={this.state.instance} />;
     }
 
     return (
@@ -341,7 +342,9 @@ class GBUIApp extends React.Component {
         {gbCss}
         {sideBar}
         <div className="player">{playerComponent}</div>
-        <div className="webchat">{chat}</div>
+        <div className="webchat">
+            {chat}
+        </div>
       </div>
     );
   }

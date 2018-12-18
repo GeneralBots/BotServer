@@ -45,13 +45,13 @@ const express = require('express');
 const child_process = require('child_process');
 
 import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
-import { GBError } from 'botlib';
-import { IGBPackage } from 'botlib';
+import { GBError,IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasInstance, GuaribasPackage } from '../models/GBModel';
 import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBConfigService } from './GBConfigService';
+import { GBCoreService } from './GBCoreService';
 import { GBImporter } from './GBImporterService';
 import { GBVMService } from './GBVMService';
 
@@ -77,9 +77,10 @@ export class GBDeployer {
    *
    * Performs package deployment in all .gbai or default.
    *
-   * */
-  public deployPackages(core: IGBCoreService, server: any, appPackages: IGBPackage[]) {
+   */
+  public async deployPackages(core: IGBCoreService, server: any, appPackages: IGBPackage[]) {
     const _this = this;
+
     return new Promise(
       (resolve: any, reject: any): any => {
         let totalPackages = 0;
@@ -121,106 +122,30 @@ export class GBDeployer {
           doIt(e);
         });
 
-        /** Deploys all .gbapp files first. */
+        // Deploys all .gbapp files first.
 
-        let appPackagesProcessed = 0;
-
-        gbappPackages.forEach(e => {
-          // Skips .gbapp inside deploy folder.
-          if (!e.startsWith('packages')) {
-            logger.info(`Deploying app: ${e}...`);
-            import(e)
-              .then(m => {
-                const p = new m.Package();
-                p.loadPackage(core, core.sequelize);
-                appPackages.push(p);
-                logger.info(`App (.gbapp) deployed: ${e}.`);
-                appPackagesProcessed++;
-              })
-              .catch(err => {
-                logger.error(`Error deploying App (.gbapp): ${e}: ${err}`);
-                appPackagesProcessed++;
-              });
-          } else {
-            appPackagesProcessed++;
-          }
-        });
+        const appPackagesProcessed = this.deployAppPackages(gbappPackages, core, appPackages);
 
         WaitUntil()
           .interval(1000)
           .times(10)
-          .condition(function(cb) {
+          .condition(cb => {
             logger.info(`Waiting for app package deployment...`);
-            cb(appPackagesProcessed == gbappPackages.length);
+            cb(appPackagesProcessed === gbappPackages.length);
           })
           .done(async result => {
             logger.info(`App Package deployment done.`);
 
-            try {
-              await core.syncDatabaseStructure();
-            } catch (e) {
-              throw e;
-            }
-
-            /** Deploys all .gbot files first. */
-
-            botPackages.forEach(e => {
-              if (e !== 'packages\\boot.gbot') {
-                logger.info(`Deploying bot: ${e}...`);
-                _this.deployBot(e);
-                logger.info(`Bot: ${e} deployed...`);
-              }
-            });
-
-            /** Then all remaining generalPackages are loaded. */
-
-            generalPackages = generalPackages.filter(p => !p.endsWith('.git'));
-
-            generalPackages.forEach(filename => {
-              const filenameOnly = Path.basename(filename);
-              logger.info(`Deploying package: ${filename}...`);
-
-              /** Handles apps for general bots - .gbapp must stay out of deploy folder. */
-
-              if (Path.extname(filename) === '.gbapp' || Path.extname(filename) === '.gblib') {
-                /** Themes for bots. */
-              } else if (Path.extname(filename) === '.gbtheme') {
-                server.use('/themes/' + filenameOnly, express.static(filename));
-                logger.info(`Theme (.gbtheme) assets accessible at: ${'/themes/' + filenameOnly}.`);
-
-                /** Knowledge base for bots. */
-              } else if (Path.extname(filename) === '.gbkb') {
-                server.use('/kb/' + filenameOnly + '/subjects', express.static(UrlJoin(filename, 'subjects')));
-                logger.info(`KB (.gbkb) assets accessible at: ${'/kb/' + filenameOnly}.`);
-              } else if (Path.extname(filename) === '.gbui') {
-                // Already Handled
-              } else if (Path.extname(filename) === '.gbdialog') {
-                // Already Handled
-              } else {
-                /** Unknown package format. */
-                const err = new Error(`Package type not handled: ${filename}.`);
-                reject(err);
-              }
-              totalPackages++;
-            });
-
-            WaitUntil()
-              .interval(100)
-              .times(5)
-              .condition(function(cb) {
-                logger.info(`Waiting for package deployment...`);
-                cb(totalPackages == generalPackages.length);
-              })
-              .done(function(result) {
-                if (botPackages.length === 0) {
-                  logger.info(
-                    'No external packages to load, please use ADDITIONAL_DEPLOY_PATH to point to a .gbai package folder.'
-                  );
-                } else {
-                  logger.info(`Package deployment done.`);
-                }
-                resolve();
-              });
+            ({ generalPackages, totalPackages } = await this.deployDataPackages(
+              core,
+              botPackages,
+              _this,
+              generalPackages,
+              server,
+              reject,
+              totalPackages,
+              resolve
+            ));
           });
       }
     );
@@ -363,9 +288,109 @@ export class GBDeployer {
   public installDefaultGBUI() {
     const root = 'packages/default.gbui';
     if (!Fs.existsSync(`${root}/build`)) {
+      logger.info(`Preparing default.gbui (it may take some additional time for the first time)...`);
       Fs.writeFileSync(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
       child_process.execSync('npm install', { cwd: root });
       child_process.execSync('npm run build', { cwd: root });
     }
+  }
+
+  private async deployDataPackages(
+    core: GBCoreService,
+    botPackages: string[],
+    _this: this,
+    generalPackages: string[],
+    server: any,
+    reject: any,
+    totalPackages: number,
+    resolve: any
+  ) {
+    try {
+      await core.syncDatabaseStructure();
+    } catch (e) {
+      throw e;
+    }
+
+    // Deploys all .gbot files first.
+
+    botPackages.forEach(e => {
+      if (e !== 'packages\\boot.gbot') {
+        logger.info(`Deploying bot: ${e}...`);
+        _this.deployBot(e);
+        logger.info(`Bot: ${e} deployed...`);
+      }
+    });
+
+    // Then all remaining generalPackages are loaded.
+
+    generalPackages = generalPackages.filter(p => !p.endsWith('.git'));
+    generalPackages.forEach(filename => {
+      const filenameOnly = Path.basename(filename);
+      logger.info(`Deploying package: ${filename}...`);
+
+      // Handles apps for general bots - .gbapp must stay out of deploy folder.
+
+      if (Path.extname(filename) === '.gbapp' || Path.extname(filename) === '.gblib') {
+        // Themes for bots.
+      } else if (Path.extname(filename) === '.gbtheme') {
+        server.use('/themes/' + filenameOnly, express.static(filename));
+        logger.info(`Theme (.gbtheme) assets accessible at: ${'/themes/' + filenameOnly}.`);
+      } else if (Path.extname(filename) === '.gbkb') {
+        server.use('/kb/' + filenameOnly + '/subjects', express.static(UrlJoin(filename, 'subjects')));
+        logger.info(`KB (.gbkb) assets accessible at: ${'/kb/' + filenameOnly}.`);
+      } else if (Path.extname(filename) === '.gbui') {
+        // Already Handled
+      } else if (Path.extname(filename) === '.gbdialog') {
+        // Already Handled
+      } else {
+        // Unknown package format.
+        const err = new Error(`Package type not handled: ${filename}.`);
+        reject(err);
+      }
+      totalPackages++;
+    });
+
+    WaitUntil()
+      .interval(100)
+      .times(5)
+      .condition(cb => {
+        logger.info(`Waiting for package deployment...`);
+        cb(totalPackages === generalPackages.length);
+      })
+      .done(result => {
+        if (botPackages.length === 0) {
+          logger.info('Use ADDITIONAL_DEPLOY_PATH to point to a .gbai package folder (no external packages).');
+        } else {
+          logger.info(`Package deployment done.`);
+        }
+        resolve();
+      });
+
+    return { generalPackages, totalPackages };
+  }
+
+  private deployAppPackages(gbappPackages: string[], core: any, appPackages: any[]) {
+    let appPackagesProcessed = 0;
+    gbappPackages.forEach(e => {
+      // Skips .gbapp inside deploy folder.
+      if (!e.startsWith('packages')) {
+        logger.info(`Deploying app: ${e}...`);
+        import(e)
+          .then(m => {
+            const p = new m.Package();
+            p.loadPackage(core, core.sequelize);
+            appPackages.push(p);
+            logger.info(`App (.gbapp) deployed: ${e}.`);
+            appPackagesProcessed++;
+          })
+          .catch(err => {
+            logger.error(`Error deploying App (.gbapp): ${e}: ${err}`);
+            appPackagesProcessed++;
+          });
+      } else {
+        appPackagesProcessed++;
+      }
+    });
+    return appPackagesProcessed;
   }
 }

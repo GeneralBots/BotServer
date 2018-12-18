@@ -247,7 +247,7 @@ export class AzureDeployerService extends GBService {
     instance.storageServer = storageServer;
 
     logger.info(`Deploying Search...`);
-    const searchName = `${name}-search`;
+    const searchName = `${name}-search`.toLowerCase();
     await this.createSearch(name, searchName, instance.cloudLocation);
     const searchKeys = await this.searchClient.adminKeys.get(
       name,
@@ -473,7 +473,7 @@ export class AzureDeployerService extends GBService {
     const retrieveBotId = () => {
       if (!botId) {
         process.stdout.write(
-          `${GBAdminService.GB_PROMPT}Bot Id must only contain lowercase letters, digits or dashes, cannot start or end with or contain consecutive dashes and is limited from 4 to 42 characters long.\n`
+          `${GBAdminService.GB_PROMPT}Choose a unique bot Id containing lowercase letters, digits or dashes (cannot use dash as the first two or last one characters), cannot start or end with or contain consecutive dashes and having 4 to 42 characters long.\n`
         );
         process.stdout.write(`${GBAdminService.GB_PROMPT}BOT_ID:`);
         botId = scanf('%s').replace(/(\n|\r)+$/, ''); // TODO: Update this regexp to match description of it.

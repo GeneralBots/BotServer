@@ -77,7 +77,7 @@ export class MenuDialog extends IGBDialog {
 
           // Adds to bot a perception of a new subject.
 
-          const user = await min.userProfile.get(context, {});
+          const user = await min.userProfile.get(step.context, {});
           user.subjects.push(subject);
           rootSubjectId = subject.subjectId;
 
@@ -94,7 +94,7 @@ export class MenuDialog extends IGBDialog {
             });
           }
         } else {
-          const user = await min.userProfile.get(context, {});
+          const user = await min.userProfile.get(step.context, {});
           user.subjects = [];
 
           await step.context.sendActivity(Messages[locale].here_is_subjects); // TODO: Handle rnd.
@@ -139,7 +139,7 @@ export class MenuDialog extends IGBDialog {
         });
 
         if (attachments.length === 0) {
-          const user = await min.userProfile.get(context, {});
+          const user = await min.userProfile.get(step.context, {});
 
           if (user.subjects && user.subjects.length > 0) {
             await step.context.sendActivity(
@@ -155,7 +155,7 @@ export class MenuDialog extends IGBDialog {
           await step.context.sendActivity(msg);
         }
 
-        const user = await min.userProfile.get(context, {});
+        const user = await min.userProfile.get(step.context, {});
         user.isAsking = true;
         return await step.next();
       },

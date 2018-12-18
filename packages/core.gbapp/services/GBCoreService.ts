@@ -218,21 +218,22 @@ export class GBCoreService implements IGBCoreService {
 
   public async writeEnv(instance: IGBInstance) {
     const env = `ADDITIONAL_DEPLOY_PATH=
-    ADMIN_PASS=${instance.adminPass}
-    CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}
-    CLOUD_LOCATION=${instance.cloudLocation}
-    CLOUD_GROUP=${instance.botId}
-    CLOUD_USERNAME=${instance.cloudUsername}
-    CLOUD_PASSWORD=${instance.cloudPassword}
-    MARKETPLACE_ID=${instance.marketplaceId}
-    MARKETPLACE_SECRET=${instance.marketplacePassword}
-    NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}
-    STORAGE_DIALECT=${instance.storageDialect}
-    STORAGE_SERVER=${instance.storageServer}.database.windows.net
-    STORAGE_NAME=${instance.storageName}
-    STORAGE_USERNAME=${instance.storageUsername}
-    STORAGE_PASSWORD=${instance.storagePassword}
-    STORAGE_SYNC=true`;
+ADMIN_PASS=${instance.adminPass}
+CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}
+CLOUD_LOCATION=${instance.cloudLocation}
+CLOUD_GROUP=${instance.botId}
+CLOUD_USERNAME=${instance.cloudUsername}
+CLOUD_PASSWORD=${instance.cloudPassword}
+MARKETPLACE_ID=${instance.marketplaceId}
+MARKETPLACE_SECRET=${instance.marketplacePassword}
+NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}
+STORAGE_DIALECT=${instance.storageDialect}
+STORAGE_SERVER=${instance.storageServer}.database.windows.net
+STORAGE_NAME=${instance.storageName}
+STORAGE_USERNAME=${instance.storageUsername}
+STORAGE_PASSWORD=${instance.storagePassword}
+STORAGE_SYNC=true
+`;
 
     fs.writeFileSync('.env', env);
   }
