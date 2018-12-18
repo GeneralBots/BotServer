@@ -90,21 +90,21 @@ export class GBServer {
 
           GBConfigService.init();
           const core = new GBCoreService();
+          core.ensureAdminIsSecured();
 
-          // Ensures cloud / on-premises infrastructure is setup.
-
-          logger.info(`Establishing a development local proxy (ngrok)...`);
-         
-          const proxyAddress: string = await core.ensureProxy(port);
-
-          logger.info(`Deploying packages...`);
           const importer: GBImporter = new GBImporter(core);
           const deployer: GBDeployer = new GBDeployer(core, importer);
           const azureDeployer: AzureDeployerService = new AzureDeployerService(deployer);
           const adminService: GBAdminService = new GBAdminService(core);
           const conversationalService: GBConversationalService = new GBConversationalService(core);
-          core.ensureAdminIsSecured();
 
+          // Ensure that local development proxy is setup.
+
+          logger.info(`Establishing a development local proxy (ngrok)...`);
+          const proxyAddress: string = await core.ensureProxy(port);
+          
+          // Creates a boot instance or load it frmo storage.
+          
           let bootInstance: IGBInstance = null;
           try {
             await core.initStorage();
@@ -113,9 +113,15 @@ export class GBServer {
             await core.initStorage();
           }
 
+          // Deploys system and user packages.
+
+          logger.info(`Deploying packages...`);
           await core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, appPackages);
+
+          
+          // Loads all bot instances.
 
           logger.info(`Publishing instances...`);
           const packageInstance = await importer.importIfNotExistsBotPackage(
@@ -127,20 +133,27 @@ export class GBServer {
           await core.saveInstance(fullInstance);
           let instances: GuaribasInstance[] = await core.loadAllInstances(core, azureDeployer, proxyAddress);
           instances = await core.ensureInstances(instances, bootInstance, core);
-          if(!bootInstance) {
+          if (!bootInstance) {
             bootInstance = instances[0];
           }
+
+          // Builds minimal service infrastructure.
 
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
           await minService.buildMin(bootInstance, server, appPackages, instances, deployer);
 
-          logger.info(`Preparing default.gbui (it may take some additional time for the first time)...`);
+          // Deployment of local applications for the first time.
+
           deployer.installDefaultGBUI();
 
           logger.info(`The Bot Server is in RUNNING mode...`);
+
+          // Opens Navigator.
+
           core.openBrowserInDevelopment();
 
           return core;
+          
         } catch (err) {
           logger.error(`STOP: ${err} ${err.stack ? err.stack : ''}`);
           process.exit(1);
@@ -151,11 +164,5 @@ export class GBServer {
 }
 
 // First line to run.
-
-// const path = 'packages/default.gbdialog';
-// const file = 'bot.vbs';
-// const source =(path + '/' + file);
-// let s = new GBVMService();
-// s.run(source, path, null, null, null)
 
 GBServer.run();

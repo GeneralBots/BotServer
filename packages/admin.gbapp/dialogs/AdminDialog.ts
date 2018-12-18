@@ -63,6 +63,10 @@ export class AdminDialog extends IGBDialog {
   public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: GBDeployer) {
     const packageName = text.split(' ')[1];
     const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
+    if (!additionalPath)
+    {
+      throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
+    }
     await deployer.deployPackageFromLocalPath(min, UrlJoin(additionalPath, packageName));
   }
 
