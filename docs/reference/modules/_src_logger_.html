@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>&quot;src/logger&quot; | botserver</title>
+	<title>&quot;src/logger&quot; | General Bots Open Core</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -22,7 +22,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="../index.html" class="title">botserver</a>
+					<a href="../index.html" class="title">General Bots Open Core</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -66,6 +66,43 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>\
+							|                                               ( )_  _                       |
+							|    _ _    _ <em>_   _ _    __    <strong>_ _</strong>     _ _ | ,</em>)(<em>)  <strong>_   _</strong>     _     |
+								|   ( &#39;</em><code>\ ( &#39;__)/&#39;_</code> ) /&#39;_ <code>\/&#39; _</code> _ <code>\ /&#39;_</code> )| |  | |/&#39;,<strong>)/&#39; _ <code>\ /&#39;_</code>\   |
+								|   | (<em>) )| |  ( (</em>| |( (<em>) || ( ) ( ) |( (</em>| || |_ | |\</strong>, | ( ) |( (<em>) )  |
+								|   | ,__/&#39;(</em>)  <code>\__,_)</code>__  |(<em>) (</em>) (<em>)`__,</em>)<code>\__)(_)(____/(_) (_)</code>_<strong>/&#39;  |
+								|   | |                ( )<em>) |                                                |
+							|   (</em>)                 _</strong>/&#39;                                                |
+							|                                                                             |
+							| General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
+							| Licensed under the AGPL-3.0.                                                |
+							|                                                                             |
+							| According to our dual licensing model, this program can be used either      |
+							| under the terms of the GNU Affero General Public License, version 3,        |
+							| or under a proprietary license.                                             |
+							|                                                                             |
+							| The texts of the GNU Affero General Public License with an additional       |
+							| permission and of our proprietary license can be found at and               |
+							| in the LICENSE file you have received along with this program.              |
+							|                                                                             |
+							| This program is distributed in the hope that it will be useful,             |
+							| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
+							| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
+							| GNU Affero General Public License for more details.                         |
+							|                                                                             |
+							| &quot;General Bots&quot; is a registered trademark of Pragmatismo.io.                 |
+							| The licensing of the program under the AGPLv3 does not imply a              |
+							| trademark license. Therefore any rights, title and interest in              |
+							| our trademarks remain entirely with us.                                     |
+							|                                                                             |
+						\</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel-group tsd-index-group">
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
@@ -96,7 +133,7 @@
 					<div class="tsd-signature tsd-kind-icon">create<wbr>Logger<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L33">src/logger.ts:33</a></li>
+							<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L37">src/logger.ts:37</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -106,17 +143,17 @@
 					<div class="tsd-signature tsd-kind-icon">format<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L33">src/logger.ts:33</a></li>
+							<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L37">src/logger.ts:37</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 					<a name="logger" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagConst">Const</span> logger</h3>
-					<div class="tsd-signature tsd-kind-icon">logger<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;createLogger({format: format.combine(format.colorize(),format.simple(),format.label({ label: &#x27;GeneralBots&#x27; }),format.timestamp(),format.printf(nfo &#x3D;&gt; {return &#x60;${nfo.timestamp} [${nfo.label}] ${nfo.level}: ${nfo.message}&#x60;})),levels: config.levels,transports: [new transports.Console()]})</span></div>
+					<div class="tsd-signature tsd-kind-icon">logger<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;createLogger({format: format.combine(format.colorize(),format.simple(),format.label({ label: &#x27;GeneralBots&#x27; }),format.timestamp(),format.printf(nfo &#x3D;&gt; {return &#x60;${nfo.timestamp} [${nfo.label}] ${nfo.level}: ${nfo.message}&#x60;;})),levels: config.levels,transports: [new transports.Console()]})</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L58">src/logger.ts:58</a></li>
+							<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L62">src/logger.ts:62</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -126,7 +163,7 @@
 					<div class="tsd-signature tsd-kind-icon">transports<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L33">src/logger.ts:33</a></li>
+							<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L37">src/logger.ts:37</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -139,7 +176,7 @@
 					<div class="tsd-signature tsd-kind-icon">config<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L35">src/logger.ts:35</a></li>
+							<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L39">src/logger.ts:39</a></li>
 						</ul>
 					</aside>
 					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal tsd-is-not-exported">
@@ -148,7 +185,7 @@
 						<div class="tsd-signature tsd-kind-icon">colors<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L46">src/logger.ts:46</a></li>
+								<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L50">src/logger.ts:50</a></li>
 							</ul>
 						</aside>
 						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
@@ -157,7 +194,7 @@
 							<div class="tsd-signature tsd-kind-icon">custom<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;yellow&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L54">src/logger.ts:54</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L58">src/logger.ts:58</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -167,7 +204,7 @@
 							<div class="tsd-signature tsd-kind-icon">data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;grey&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L50">src/logger.ts:50</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L54">src/logger.ts:54</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -177,7 +214,7 @@
 							<div class="tsd-signature tsd-kind-icon">debug<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;blue&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L48">src/logger.ts:48</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L52">src/logger.ts:52</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -187,7 +224,7 @@
 							<div class="tsd-signature tsd-kind-icon">error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;red&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L47">src/logger.ts:47</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L51">src/logger.ts:51</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -197,7 +234,7 @@
 							<div class="tsd-signature tsd-kind-icon">info<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;green&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L51">src/logger.ts:51</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L55">src/logger.ts:55</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -207,7 +244,7 @@
 							<div class="tsd-signature tsd-kind-icon">silly<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;magenta&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L53">src/logger.ts:53</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L57">src/logger.ts:57</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -217,7 +254,7 @@
 							<div class="tsd-signature tsd-kind-icon">verbose<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;cyan&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L52">src/logger.ts:52</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L56">src/logger.ts:56</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -227,7 +264,7 @@
 							<div class="tsd-signature tsd-kind-icon">warn<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;yellow&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L49">src/logger.ts:49</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L53">src/logger.ts:53</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -238,7 +275,7 @@
 						<div class="tsd-signature tsd-kind-icon">levels<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L36">src/logger.ts:36</a></li>
+								<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L40">src/logger.ts:40</a></li>
 							</ul>
 						</aside>
 						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
@@ -247,7 +284,7 @@
 							<div class="tsd-signature tsd-kind-icon">custom<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;7</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L44">src/logger.ts:44</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L48">src/logger.ts:48</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -257,7 +294,7 @@
 							<div class="tsd-signature tsd-kind-icon">data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;3</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L40">src/logger.ts:40</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L44">src/logger.ts:44</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -267,7 +304,7 @@
 							<div class="tsd-signature tsd-kind-icon">debug<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;1</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L38">src/logger.ts:38</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L42">src/logger.ts:42</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -277,7 +314,7 @@
 							<div class="tsd-signature tsd-kind-icon">error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L37">src/logger.ts:37</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L41">src/logger.ts:41</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -287,7 +324,7 @@
 							<div class="tsd-signature tsd-kind-icon">info<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;4</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L41">src/logger.ts:41</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L45">src/logger.ts:45</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -297,7 +334,7 @@
 							<div class="tsd-signature tsd-kind-icon">silly<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;6</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L43">src/logger.ts:43</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L47">src/logger.ts:47</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -307,7 +344,7 @@
 							<div class="tsd-signature tsd-kind-icon">verbose<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;5</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L42">src/logger.ts:42</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L46">src/logger.ts:46</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -317,7 +354,7 @@
 							<div class="tsd-signature tsd-kind-icon">warn<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;2</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/pragmatismo-io/botserver/blob/ecf2ba3/src/logger.ts#L39">src/logger.ts:39</a></li>
+									<li>Defined in <a href="https://github.com/rodrigorodriguez/BotServer/blob/8490f5e/src/logger.ts#L43">src/logger.ts:43</a></li>
 								</ul>
 							</aside>
 						</section>

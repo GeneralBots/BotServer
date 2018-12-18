@@ -325,7 +325,7 @@ class GBUIApp extends React.Component {
             this.chat = chat;
           }}
           locale={'pt-br'}
-          botConnection={this.state.line}
+          directLine={this.state.line}
           user={this.getUser()}
           bot={{ id: 'bot@gb', name: 'Bot' }}
           // speechOptions={speechOptions}
@@ -342,7 +342,9 @@ class GBUIApp extends React.Component {
         {gbCss}
         {sideBar}
         <div className="player">{playerComponent}</div>
-        {chat}
+        <div className="webchat">
+            {chat}
+        </div>
       </div>
     );
   }

@@ -441,7 +441,7 @@ export class GBMinService {
         } else if (context.activity.type === 'event') {
           // Empties dialog stack before going to the target.
 
-          await step.endAll();
+          // TODO: Understand MSFT changes: await step.endAll();
 
           if (context.activity.name === 'whoAmI') {
             await step.beginDialog('/whoAmI');

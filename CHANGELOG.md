@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/pragmatismo-io/BotServer/compare/1.1.1...1.2.0) (2018-12-13)
+
+
+### Features
+
+* **webchat:** Update of webchat to the newer version 4. ([0270a8e](https://github.com/pragmatismo-io/BotServer/commit/0270a8e))
+
 ## [1.1.1](https://github.com/pragmatismo-io/BotServer/compare/1.1.0...1.1.1) (2018-12-08)
 
 
