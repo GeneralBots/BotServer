@@ -1,3 +1,12 @@
+## [1.2.1](https://github.com/pragmatismo-io/BotServer/compare/1.2.0...1.2.1) (2018-12-18)
+
+
+### Bug Fixes
+
+* **kb:** Fix in Faq and Menu dialogs. ([6ba8c09](https://github.com/pragmatismo-io/BotServer/commit/6ba8c09))
+* **startup:** Startup improved and more checks added. ([5d6c60e](https://github.com/pragmatismo-io/BotServer/commit/5d6c60e))
+* **webchat:** Sync versions and MSFT strategy. ([238c0bf](https://github.com/pragmatismo-io/BotServer/commit/238c0bf))
+
 # [1.2.0](https://github.com/pragmatismo-io/BotServer/compare/1.1.1...1.2.0) (2018-12-13)
 
 
