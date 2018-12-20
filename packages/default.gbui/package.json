@@ -14,7 +14,7 @@
     "fetch": "1.1.0",
     "msal": "0.2.3",
     "powerbi-client": "2.6.5",
-    "react": "16.6.3",
+    "react": "16.7.0",
     "react-dom": "16.6.3",
     "react-helmet": "5.2.0",
     "react-player": "1.7.1",
