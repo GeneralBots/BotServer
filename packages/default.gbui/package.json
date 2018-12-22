@@ -8,7 +8,7 @@
   "homepage": ".",
   "dependencies": {
     "ajv": "6.6.1",
-    "botframework-directlinejs": "0.10.0",
+    "botframework-directlinejs": "0.10.1",
     "botframework-webchat": "4.2.0",
     "deep-extend": "0.6.0",
     "fetch": "1.1.0",
