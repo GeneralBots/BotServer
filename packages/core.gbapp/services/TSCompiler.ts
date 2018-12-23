@@ -40,6 +40,18 @@ import * as ts from 'typescript';
 const logger = require('../../../src/logger');
 
 export class TSCompiler {
+
+
+  private static shouldIgnoreError(diagnostic) {
+    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+
+    if (message.indexOf('Cannot find name') >= 0 || message.indexOf('Cannot use imports') >= 0) {
+      return true;
+    }
+
+    return false;
+  }
+
   public compile(
     fileNames: string[],
     options: ts.CompilerOptions = {
@@ -61,15 +73,19 @@ export class TSCompiler {
     const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
 
     allDiagnostics.forEach(diagnostic => {
-      if (diagnostic.file) {
-        const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start!);
+      if (!TSCompiler.shouldIgnoreError(diagnostic)) {
         const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-        logger.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
-      } else {
-        logger.error(`${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`);
+
+        if (diagnostic.file) {
+          const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+          logger.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+        } else {
+          logger.error(`${message}`);
+        }
       }
     });
 
     return emitResult;
   }
+
 }
