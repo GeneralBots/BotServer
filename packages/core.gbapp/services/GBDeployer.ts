@@ -45,7 +45,7 @@ const express = require('express');
 const child_process = require('child_process');
 
 import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
-import { GBError,IGBPackage } from 'botlib';
+import { GBError, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasInstance, GuaribasPackage } from '../models/GBModel';
@@ -375,18 +375,38 @@ export class GBDeployer {
       // Skips .gbapp inside deploy folder.
       if (!e.startsWith('packages')) {
         logger.info(`Deploying app: ${e}...`);
-        import(e)
-          .then(m => {
-            const p = new m.Package();
-            p.loadPackage(core, core.sequelize);
-            appPackages.push(p);
-            logger.info(`App (.gbapp) deployed: ${e}.`);
+
+        let folder = Path.join(e, 'node_modules');
+        if (!Fs.existsSync(folder)) {
+          logger.info(`Installing modules for ${e}...`);
+          child_process.execSync('npm install', { cwd: e });
+        }
+
+        folder = Path.join(e, 'dist');
+        if (!Fs.existsSync()) {
+          logger.info(`Compiling ${e}...`);
+
+          try {
+            child_process.execSync(Path.join(e, 'node_modules/.bin/tsc'), { cwd: e });
+            import(e)
+            .then(m => {
+              const p = new m.Package();
+              p.loadPackage(core, core.sequelize);
+              appPackages.push(p);
+              logger.info(`App (.gbapp) deployed: ${e}.`);
+              appPackagesProcessed++;
+            })
+            .catch(err => {
+              logger.error(`Error deploying .gbapp package: ${e}\n${err}`);
+              appPackagesProcessed++;
+            });
+  
+          } catch (error) {
+            logger.error(`Error compiling .gbapp package ${e}:\n${error.stdout.toString()}`);
             appPackagesProcessed++;
-          })
-          .catch(err => {
-            logger.error(`Error deploying App (.gbapp): ${e}: ${err}`);
-            appPackagesProcessed++;
-          });
+          }
+        }
+
       } else {
         appPackagesProcessed++;
       }
