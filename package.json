@@ -71,7 +71,7 @@
     "child_process": "^1.0.2",
     "chokidar": "2.0.4",
     "cli-spinner": "^0.2.8",
-    "csv-parse": "4.1.0",
+    "csv-parse": "4.3.0",
     "dotenv-extended": "2.3.0",
     "express": "4.16.4",
     "express-promise-router": "3.0.3",
