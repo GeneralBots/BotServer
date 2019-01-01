@@ -79,7 +79,7 @@
     "fs-walk": "0.0.2",
     "ip": "^1.1.5",
     "localize": "0.4.7",
-    "marked": "0.5.2",
+    "marked": "0.6.0",
     "mocha": "5.2.0",
     "mocha-typescript": "1.1.17",
     "ms": "2.1.1",
