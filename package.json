@@ -98,7 +98,7 @@
     "sequelize-typescript": "0.6.6",
     "shx": "^0.3.2",
     "simple-git": "^1.107.0",
-    "sqlite3": "4.0.4",
+    "sqlite3": "4.0.6",
     "strict-password-generator": "^1.1.1",
     "swagger-client": "3.8.22",
     "tedious": "3.0.1",
