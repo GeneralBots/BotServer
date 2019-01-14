@@ -83,7 +83,7 @@
     "mocha": "5.2.0",
     "mocha-typescript": "1.1.17",
     "ms": "2.1.1",
-    "ms-rest-azure": "2.5.9",
+    "ms-rest-azure": "2.6.0",
     "nexmo": "2.4.0",
     "ngrok": "^3.1.0",
     "nyc": "^13.1.0",
