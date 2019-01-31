@@ -36,11 +36,11 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
 import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 
-export class GBWhatsappPackage implements IGBPackage {
+export class GBAzureDeployerPackage implements IGBPackage {
+
   public sysPackages: IGBPackage[] = null;
 
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}

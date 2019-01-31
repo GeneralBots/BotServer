@@ -32,12 +32,12 @@
 
 'use strict';
 
+import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBCoreService } from 'botlib';
 import * as fs from 'fs';
 import { DialogClass } from './GBAPIService';
 import { GBDeployer } from './GBDeployer';
 import { TSCompiler } from './TSCompiler';
-import { WaterfallDialog } from 'botbuilder-dialogs';
 const util = require('util');
 const logger = require('../../../src/logger');
 const vm = require('vm');
@@ -46,10 +46,14 @@ const vb2ts = require('vbscript-to-typescript/dist/converter');
 
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
+ * This alpha version is using a converter to translate BASIC to TS
+ * and string replacements to emulate await code.
+ * http://stevehanov.ca/blog/index.php?id=92 should be used to run it without
+ * translation and enhance classic BASIC experience.
  */
 
 export class GBVMService implements IGBCoreService {
-  private script = new vm.Script();
+  private readonly script = new vm.Script();
 
   public async loadJS(
     filename: string,
@@ -82,7 +86,7 @@ export class GBVMService implements IGBCoreService {
 
     // Run JS into the GB context.
     const jsfile = `bot.js`;
-    let localPath = UrlJoin(path, jsfile);
+    const localPath = UrlJoin(path, jsfile);
 
     if (fs.existsSync(localPath)) {
       let code: string = fs.readFileSync(localPath, 'utf8');
@@ -91,12 +95,11 @@ export class GBVMService implements IGBCoreService {
       // Finds all hear calls.
 
       let parsedCode = code;
-      let hearExp = /(\w+).*hear.*\(\)/;
+      const hearExp = /(\w+).*hear.*\(\)/;
 
       let match1;
 
       while ((match1 = hearExp.exec(code))) {
-
         let pos = 0;
 
         // Writes async body.
@@ -110,7 +113,7 @@ export class GBVMService implements IGBCoreService {
 
         pos = pos + match1.index;
         let tempCode = code.substring(pos + match1[0].length + 1);
-        let start = pos;
+        const start = pos;
 
         // Balances code blocks and checks for exits.
 
@@ -143,15 +146,15 @@ export class GBVMService implements IGBCoreService {
         code = parsedCode;
       }
 
-      parsedCode = parsedCode.replace(/("[^"]*"|'[^']*')|\btalk\b/g, function($0, $1) {
+      parsedCode = parsedCode.replace(/("[^"]*"|'[^']*')|\btalk\b/g, ($0, $1) => {
         return $1 == undefined ? 'this.talk' : $1;
       });
 
-      parsedCode = parsedCode.replace(/("[^"]*"|'[^']*')|\bhear\b/g, function($0, $1) {
+      parsedCode = parsedCode.replace(/("[^"]*"|'[^']*')|\bhear\b/g, ($0, $1) => {
         return $1 == undefined ? 'this.hear' : $1;
       });
 
-      parsedCode = parsedCode.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/g, function($0, $1) {
+      parsedCode = parsedCode.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/g, ($0, $1) => {
         return $1 == undefined ? 'this.sendEmail' : $1;
       });
 
@@ -183,8 +186,8 @@ export class GBVMService implements IGBCoreService {
 
           const cbId = step.activeDialog.state.cbId;
           const cb = min.cbMap[cbId];
-          cb.bind({ step: step, context: step.context }); // TODO: Necessary or min.sandbox
-          
+          cb.bind({ step: step, context: step.context }); // TODO: Necessary or min.sandbox?
+
           await step.endDialog();
 
           return await cb(step.result);

@@ -43,19 +43,25 @@ const Fs = require('fs');
 const WaitUntil = require('wait-until');
 const express = require('express');
 const child_process = require('child_process');
+const graph = require('@microsoft/microsoft-graph-client');
 
 import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
 import { GBError, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasInstance, GuaribasPackage } from '../models/GBModel';
+import { GBAdminService } from './../../admin.gbapp/services/GBAdminService';
 import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBConfigService } from './GBConfigService';
 import { GBCoreService } from './GBCoreService';
 import { GBImporter } from './GBImporterService';
 import { GBVMService } from './GBVMService';
 
-/** Deployer service for bots, themes, ai and more. */
+/**
+ *
+ * Deployer service for bots, themes, ai and more.
+ */
+
 export class GBDeployer {
   public static deployFolder = 'packages';
   public core: IGBCoreService;
@@ -170,6 +176,25 @@ export class GBDeployer {
     });
   }
 
+  public async deployFromSharePoint(instanceId: number, path: string) {
+    const adminService = new GBAdminService(this.core);
+    const accessToken = adminService.acquireElevatedToken(instanceId);
+
+    // Initialize Graph client.
+
+    const client = graph.Client.init({
+      authProvider: done => {
+        done(null, accessToken);
+      }
+    });
+
+    const events = await client
+      .api('/me/events')
+      .select('subject,organizer,start,end')
+      .orderby('createdDateTime DESC')
+      .get();
+  }
+
   public deployScriptToStorage(instanceId: number, localPath: string) {}
 
   public deployTheme(localPath: string) {
@@ -183,6 +208,8 @@ export class GBDeployer {
     //     )
     //   })
   }
+
+  public async deployPackageFromSharePoint(min: GBMinInstance, path: string) {}
 
   public async deployPackageFromLocalPath(min: GBMinInstance, localPath: string) {
     const packageType = Path.extname(localPath);
@@ -389,24 +416,22 @@ export class GBDeployer {
           try {
             child_process.execSync(Path.join(e, 'node_modules/.bin/tsc'), { cwd: e });
             import(e)
-            .then(m => {
-              const p = new m.Package();
-              p.loadPackage(core, core.sequelize);
-              appPackages.push(p);
-              logger.info(`App (.gbapp) deployed: ${e}.`);
-              appPackagesProcessed++;
-            })
-            .catch(err => {
-              logger.error(`Error deploying .gbapp package: ${e}\n${err}`);
-              appPackagesProcessed++;
-            });
-  
+              .then(m => {
+                const p = new m.Package();
+                p.loadPackage(core, core.sequelize);
+                appPackages.push(p);
+                logger.info(`App (.gbapp) deployed: ${e}.`);
+                appPackagesProcessed++;
+              })
+              .catch(err => {
+                logger.error(`Error deploying .gbapp package: ${e}\n${err}`);
+                appPackagesProcessed++;
+              });
           } catch (error) {
             logger.error(`Error compiling .gbapp package ${e}:\n${error.stdout.toString()}`);
             appPackagesProcessed++;
           }
         }
-
       } else {
         appPackagesProcessed++;
       }
