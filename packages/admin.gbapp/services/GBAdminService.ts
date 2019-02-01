@@ -38,19 +38,20 @@
 
 import { AuthenticationContext, TokenResponse } from 'adal-node';
 import { IGBCoreService } from 'botlib';
+import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 import { GuaribasAdmin } from '../models/AdminModel';
 const UrlJoin = require('url-join');
 const msRestAzure = require('ms-rest-azure');
 const PasswordGenerator = require('strict-password-generator').default;
 
+/**
+ * Services for server administration.
+ */
 export class GBAdminService {
-
   public static GB_PROMPT: string = 'GeneralBots: ';
   public static masterBotInstanceId = 0;
 
-  public static StrongRegex = new RegExp(
-    '^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*+_-])(?=.{8,})'
-  );
+  public static StrongRegex = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*+_-])(?=.{8,})');
 
   public core: IGBCoreService;
 
@@ -62,26 +63,16 @@ export class GBAdminService {
     return msRestAzure.generateUuid();
   }
 
-  public static async getADALTokenFromUsername(
-    username: string,
-    password: string
-  ) {
-    const credentials = await GBAdminService.getADALCredentialsFromUsername(
-      username,
-      password
-    );
+  public static async getADALTokenFromUsername(username: string, password: string) {
+    const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
     const accessToken = credentials.tokenCache._entries[0].accessToken;
+
     return accessToken;
   }
 
-  public static async getADALCredentialsFromUsername(
-    username: string,
-    password: string
-  ) {
-    const credentials = await msRestAzure.loginWithUsernamePassword(
-      username,
-      password
-    );
+  public static async getADALCredentialsFromUsername(username: string, password: string) {
+    const credentials = await msRestAzure.loginWithUsernamePassword(username, password);
+
     return credentials;
   }
 
@@ -114,31 +105,47 @@ export class GBAdminService {
     return name;
   }
 
-  public async setValue(
-    instanceId: number,
-    key: string,
-    value: string
-  ): Promise<GuaribasAdmin> {
+  public async setValue(instanceId: number, key: string, value: string): Promise<GuaribasAdmin> {
     const options = { where: {} };
     options.where = { key: key };
     let admin = await GuaribasAdmin.findOne(options);
-    if (admin == null) {
+    if (admin === null) {
       admin = new GuaribasAdmin();
       admin.key = key;
     }
     admin.value = value;
     admin.instanceId = instanceId;
+
     return admin.save();
+  }
+
+  public async updateSecurityInfo(
+    instanceId: number,
+    authenticatorTenant: string,
+    authenticatorAuthorityHostUrl: string,
+    authenticatorClientId: string,
+    authenticatorClientSecret: string
+  ): Promise<GuaribasInstance> {
+    const options = { where: {} };
+    options.where = { instanceId: instanceId };
+    const item = await GuaribasInstance.findOne(options);
+    item.authenticatorTenant = authenticatorTenant;
+    item.authenticatorAuthorityHostUrl = authenticatorAuthorityHostUrl;
+    item.authenticatorClientId = authenticatorClientId;
+    item.authenticatorClientSecret = authenticatorClientSecret;
+
+    return item.save();
   }
 
   public async getValue(instanceId: number, key: string) {
     const options = { where: {} };
     options.where = { key: key, instanceId: instanceId };
     const obj = await GuaribasAdmin.findOne(options);
+
     return Promise.resolve(obj.value);
   }
 
-  public async acquireElevatedToken(instanceId): Promise<string> {
+  public async acquireElevatedToken(instanceId: number): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const instance = await this.core.loadInstanceById(instanceId);
 
@@ -166,21 +173,9 @@ export class GBAdminService {
               reject(err);
             } else {
               const token = res as TokenResponse;
-              await this.setValue(
-                instanceId,
-                'accessToken',
-                token.accessToken
-              );
-              await this.setValue(
-                instanceId,
-                'refreshToken',
-                token.refreshToken
-              );
-              await this.setValue(
-                instanceId,
-                'expiresOn',
-                token.expiresOn.toString()
-              );
+              await this.setValue(instanceId, 'accessToken', token.accessToken);
+              await this.setValue(instanceId, 'refreshToken', token.refreshToken);
+              await this.setValue(instanceId, 'expiresOn', token.expiresOn.toString());
               resolve(token.accessToken);
             }
           }
@@ -188,5 +183,4 @@ export class GBAdminService {
       }
     });
   }
-
 }

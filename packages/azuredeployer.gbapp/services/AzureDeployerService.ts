@@ -224,7 +224,7 @@ export class AzureDeployerService extends GBService {
     logger.info(`Deploying Bot Storage...`);
     const administratorLogin = `sa${GBAdminService.getRndReadableIdentifier()}`;
     const administratorPassword = GBAdminService.getRndPassword();
-    const storageServer = `${name}-storage-server`;
+    const storageServer = `${name.toLowerCase()}-storage-server`;
     const storageName = `${name}-storage`;
     await this.createStorageServer(
       name,
@@ -311,6 +311,11 @@ export class AzureDeployerService extends GBService {
     instance.nlpAppId = nlpAppId;
 
     logger.info(`Deploying Bot...`);
+
+    // TODO: Default endpoint, will be updated when it runs in production.
+    
+    instance.botEndpoint = 'http://localhost:4242';
+
     instance = await this.deployBootBot(
       instance,
       name,

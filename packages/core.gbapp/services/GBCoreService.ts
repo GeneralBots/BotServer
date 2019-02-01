@@ -177,12 +177,11 @@ export class GBCoreService implements IGBCoreService {
   public async syncDatabaseStructure() {
     if (GBConfigService.get('STORAGE_SYNC') === 'true') {
       const alter = GBConfigService.get('STORAGE_SYNC_ALTER') === 'true';
-      const force = GBConfigService.get('STORAGE_SYNC_FORCE') === 'true';
       logger.info('Syncing database...');
 
       return this.sequelize.sync({
         alter: alter,
-        force: force
+        force: false // Keep it false this due to data loss danger.
       });
     } else {
       const msg = `Database synchronization is disabled.`;

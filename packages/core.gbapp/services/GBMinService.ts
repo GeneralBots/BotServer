@@ -56,6 +56,7 @@ import { GuaribasInstance } from '../models/GBModel';
 import { Messages } from '../strings';
 import { GBAdminPackage } from './../../admin.gbapp/index';
 import { GBDeployer } from './GBDeployer';
+import { ConfirmPrompt } from 'botbuilder-dialogs';
 
 /** Minimal service layer for a bot. */
 
@@ -193,7 +194,7 @@ export class GBMinService {
           );
           authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
             min.instance.authenticatorClientId
-          }&redirect_uri=${min.instance.botEndpoint}/${min.instance.botId}/token`;
+          }&redirect_uri=${UrlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
 
           res.redirect(authorizationUrl);
         });
@@ -321,6 +322,7 @@ export class GBMinService {
 
     min.dialogs = new DialogSet(dialogState);
     min.dialogs.add(new TextPrompt('textPrompt'));
+    min.dialogs.add(new ConfirmPrompt('confirmPrompt'));
 
     return { min, adapter, conversationState };
   }

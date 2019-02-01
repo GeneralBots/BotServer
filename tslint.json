@@ -36,6 +36,7 @@
         "export-name":false,
         "no-relative-imports": false,
         "no-backbone-get-set-outside-model": false,
-        "max-line-length": [true,{"limit":120,"ignore-pattern":"^\\s+\\*"}]
+        "max-line-length": [true,{"limit":120,"ignore-pattern":"^\\s+\\*"}],
+        "await-promise": [true, "Bluebird"]
     }
 }

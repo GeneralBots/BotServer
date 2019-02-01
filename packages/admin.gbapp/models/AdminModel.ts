@@ -41,7 +41,8 @@ import {
   CreatedAt,
   Model,
   Table,
-  UpdatedAt
+  UpdatedAt,
+  DataType
 } from 'sequelize-typescript';
 
 @Table
@@ -53,7 +54,7 @@ export class GuaribasAdmin extends Model<GuaribasAdmin> {
   @Column
   public key: string;
 
-  @Column
+  @Column(DataType.STRING(1024))
   public value: string;
 
   @Column

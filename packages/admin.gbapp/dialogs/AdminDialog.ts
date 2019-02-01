@@ -38,7 +38,7 @@
 
 const UrlJoin = require('url-join');
 import { BotAdapter } from 'botbuilder';
-import { WaterfallDialog } from 'botbuilder-dialogs';
+import { WaterfallDialog, WaterfallStep, WaterfallStepContext } from 'botbuilder-dialogs';
 import { GBMinInstance } from 'botlib';
 import { IGBDialog } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
@@ -60,27 +60,34 @@ export class AdminDialog extends IGBDialog {
     await deployer.undeployPackageFromLocalPath(min.instance, UrlJoin('packages', packageName));
   }
 
+  public static isSharePointPath(path: string) {
+    return path.indexOf('sharepoint.com') > 0;
+  }
+
   public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: GBDeployer) {
     const packageName = text.split(' ')[1];
-    const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
-    if (!additionalPath)
-    {
-      throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
+
+    if (AdminDialog.isSharePointPath(packageName)) {
+      await deployer.deployFromSharePoint(min.instance.instanceId, packageName);
+    } else {
+      const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
+      if (!additionalPath) {
+        throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
+      }
+      await deployer.deployPackageFromLocalPath(min, UrlJoin(additionalPath, packageName));
     }
-    await deployer.deployPackageFromLocalPath(min, UrlJoin(additionalPath, packageName));
   }
 
   public static async rebuildIndexPackageCommand(min: GBMinInstance, text: string, deployer: GBDeployer) {
     await deployer.rebuildIndex(min.instance);
   }
 
-  public static async   addConnectionCommand(min: GBMinInstance, text: any) {
+  public static async addConnectionCommand(min: GBMinInstance, text: any) {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const admin = new GBAdminService(min.core);
     // TODO: await admin.addConnection
   }
-
 
   /**
    * Setup dialogs flows and define services call.
@@ -93,6 +100,8 @@ export class AdminDialog extends IGBDialog {
 
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
+
+    AdminDialog.setupSecurityDialogs(min);
 
     min.dialogs.add(
       new WaterfallDialog('/admin', [
@@ -151,7 +160,7 @@ export class AdminDialog extends IGBDialog {
 
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'setupSecurity') {
-            await AdminDialog.setupSecurity(min, step);
+            return await step.beginDialog('/setupSecurity');
           } else {
             unknownCommand = true;
           }
@@ -159,7 +168,7 @@ export class AdminDialog extends IGBDialog {
           if (unknownCommand) {
             await step.context.sendActivity(Messages[locale].unknown_command);
           } else {
-            await step.context.sendActivity(Messages[locale].finshed_working(cmdName));
+            await step.context.sendActivity(Messages[locale].finished_working);
           }
           await step.endDialog();
 
@@ -169,16 +178,66 @@ export class AdminDialog extends IGBDialog {
     );
   }
 
-  private static async setupSecurity(min: any, step: any) {
-    const locale = step.activity.locale;
-    const state = `${min.instance.instanceId}${Math.floor(Math.random() * 1000000000)}`;
-    await min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
-    const url = `https://login.microsoftonline.com/${min.instance.authenticatorTenant}/oauth2/authorize?client_id=${
-      min.instance.authenticatorClientId
-    }&response_type=code&redirect_uri=${min.instance.botEndpoint}/${
-      min.instance.botId
-    }/token&state=${state}&response_mode=query`;
+  private static setupSecurityDialogs(min: any) {
+    min.dialogs.add(
+      new WaterfallDialog('/setupSecurity', [
+        async step => {
+          const locale = step.context.activity.locale;
+          const prompt = Messages[locale].enter_authenticator_tenant;
 
-    await step.sendActivity(Messages[locale].consent(url));
+          return await step.prompt('textPrompt', prompt);
+        },
+        async step => {
+          step.activeDialog.state.authenticatorTenant = step.result;
+          const locale = step.context.activity.locale;
+          const prompt = Messages[locale].enter_authenticator_authority_host_url;
+
+          return await step.prompt('textPrompt', prompt);
+        },
+        async step => {
+          step.activeDialog.state.authenticatorAuthorityHostUrl = step.result;
+          const locale = step.context.activity.locale;
+          const prompt = Messages[locale].enter_authenticator_client_id;
+
+          return await step.prompt('textPrompt', prompt);
+        },
+        async step => {
+          step.activeDialog.state.authenticatorClientId = step.result;
+          const locale = step.context.activity.locale;
+          const prompt = Messages[locale].enter_authenticator_client_secret;
+
+          return await step.prompt('textPrompt', prompt);
+        },
+        async step => {
+          step.activeDialog.state.authenticatorClientSecret = step.result;
+
+          await min.adminService.updateSecurityInfo(
+            min.instance.instanceId,
+            step.activeDialog.state.authenticatorTenant,
+            step.activeDialog.state.authenticatorAuthorityHostUrl,
+            step.activeDialog.state.authenticatorClientId,
+            step.activeDialog.state.authenticatorClientSecret
+          );
+
+          const locale = step.context.activity.locale;
+          const state = `${min.instance.instanceId}${Math.floor(Math.random() * 1000000000)}`;
+
+          await min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
+
+          const url = `https://login.microsoftonline.com/${min.instance.authenticatorTenant}/oauth2/authorize?client_id=${
+            min.instance.authenticatorClientId
+          }&response_type=code&redirect_uri=${UrlJoin(
+            min.instance.botEndpoint,
+            min.instance.botId,
+            '/token'
+          )}&state=${state}&response_mode=query`;
+
+          await step.context.sendActivity(Messages[locale].consent(url));
+
+          return await step.replaceDialog('/ask', {isReturning: true});
+        }
+      ])
+    );
   }
+
 }
