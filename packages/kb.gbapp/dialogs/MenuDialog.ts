@@ -64,7 +64,7 @@ export class MenuDialog extends IGBDialog {
         let rootSubjectId = null;
 
         if (step.options && step.options['data']) {
-          const subject = step.result.data;
+          const subject = step.options['data'];
 
           // If there is a shortcut specified as subject destination, go there.
 
@@ -149,7 +149,6 @@ export class MenuDialog extends IGBDialog {
             );
           }
 
-          await step.replaceDialog('/ask', {});
         } else {
           msg.attachments = attachments;
           await step.context.sendActivity(msg);
@@ -157,16 +156,6 @@ export class MenuDialog extends IGBDialog {
 
         const user = await min.userProfile.get(step.context, {});
         user.isAsking = true;
-        return await step.next();
-      },
-      async step => {
-        const text = step.result;
-        const locale = step.context.activity.locale;
-        if (AzureText.isIntentNo(locale, text)) {
-          await step.replaceDialog('/feedback');
-        } else {
-          await step.replaceDialog('/ask');
-        }
         return await step.next();
       }
     ]));

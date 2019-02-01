@@ -60,14 +60,8 @@ export class AskDialog extends IGBDialog {
       new WaterfallDialog('/answerEvent', [
         async step => {
           if (step.options && step.options['questionId']) {
-            const question = await service.getQuestionById(
-              min.instance.instanceId,
-              step.options['questionId']
-            );
-            const answer = await service.getAnswerById(
-              min.instance.instanceId,
-              question.answerId
-            );
+            const question = await service.getQuestionById(min.instance.instanceId, step.options['questionId']);
+            const answer = await service.getAnswerById(min.instance.instanceId, question.answerId);
 
             // Sends the answer to all outputs, including projector.
 
@@ -106,10 +100,7 @@ export class AskDialog extends IGBDialog {
           // Spells check the input text before sending Search or NLP.
 
           if (min.instance.spellcheckerKey) {
-            const data = await AzureText.getSpelledText(
-              min.instance.spellcheckerKey,
-              text
-            );
+            const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
 
             if (data != text) {
               logger.info(`Spelling corrected: ${data}`);
@@ -121,12 +112,7 @@ export class AskDialog extends IGBDialog {
 
           user.lastQuestion = text;
           await min.userProfile.set(step.context, user);
-          const resultsA = await service.ask(
-            min.instance,
-            text,
-            min.instance.searchScore,
-            user.subjects
-          );
+          const resultsA = await service.ask(min.instance, text, min.instance.searchScore, user.subjects);
 
           // If there is some result, answer immediately.
 
@@ -139,30 +125,19 @@ export class AskDialog extends IGBDialog {
 
             // Sends the answer to all outputs, including projector.
 
-            await service.sendAnswer(
-              min.conversationalService,
-              step,
-              resultsA.answer
-            );
+            await service.sendAnswer(min.conversationalService, step, resultsA.answer);
 
             // Goes to ask loop, again.
 
             return await step.replaceDialog('/ask', { isReturning: true });
           } else {
-
             // Second time running Search, now with no filter.
 
-            const resultsB = await service.ask(
-              min.instance,
-              text,
-              min.instance.searchScore,
-              null
-            );
+            const resultsB = await service.ask(min.instance, text, min.instance.searchScore, null);
 
             // If there is some result, answer immediately.
 
             if (resultsB && resultsB.answer) {
-
               // Saves some context info.
 
               const user = await min.userProfile.get(step.context, {});
@@ -173,24 +148,16 @@ export class AskDialog extends IGBDialog {
               // Informs user that a broader search will be used.
 
               if (user.subjects.length > 0) {
-                const subjectText = `${KBService.getSubjectItemsSeparatedBySpaces(
-                  user.subjects
-                )}`;
+                const subjectText = `${KBService.getSubjectItemsSeparatedBySpaces(user.subjects)}`;
                 await step.context.sendActivity(Messages[locale].wider_answer);
               }
 
               // Sends the answer to all outputs, including projector.
 
-              await service.sendAnswer(
-                min.conversationalService,
-                step,
-                resultsB.answer
-              );
+              await service.sendAnswer(min.conversationalService, step, resultsB.answer);
               return await step.replaceDialog('/ask', { isReturning: true });
             } else {
-              if (
-                !(await min.conversationalService.routeNLP(step, min, text))
-              ) {
+              if (!(await min.conversationalService.routeNLP(step, min, text))) {
                 await step.context.sendActivity(Messages[locale].did_not_find);
                 return await step.replaceDialog('/ask', { isReturning: true });
               }
@@ -229,7 +196,11 @@ export class AskDialog extends IGBDialog {
           return await step.next();
         },
         async step => {
-          return await step.replaceDialog('/answer', { query: step.result });
+          if (step.result) {
+            return await step.replaceDialog('/answer', { query: step.result });
+          } else {
+            return await step.next();
+          }
         }
       ])
     );
