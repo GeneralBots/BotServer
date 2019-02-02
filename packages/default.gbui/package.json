@@ -7,7 +7,7 @@
   "license": "AGPL-3.0",
   "homepage": ".",
   "dependencies": {
-    "ajv": "6.6.1",
+    "ajv": "6.8.0",
     "botframework-directlinejs": "0.10.0",
     "botframework-webchat": "4.2.0",
     "deep-extend": "0.6.0",
