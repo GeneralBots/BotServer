@@ -122,7 +122,7 @@
     "@semantic-release/release-notes-generator": "^7.1.4",
     "@types/chai": "4.1.7",
     "@types/mocha": "5.2.5",
-    "@types/sequelize": "4.27.34",
+    "@types/sequelize": "4.27.35",
     "@types/url-join": "4.0.0",
     "@types/winston": "2.4.4",
     "ban-sensitive-files": "1.9.2",
