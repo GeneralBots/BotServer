@@ -138,16 +138,13 @@ Note:
 2. Install [git](`https://git-scm.com/`), a Software Configuration Management (SCM).;
 3. Install [Node.js](npmjs.com/get-npm), a [Runtime system](https://en.wikipedia.org/wiki/Runtime_system).
 (https://www.npmjs.com/get-npm) (suggested: LTS 8.x.x);
-4. Install [Visual Studio Code](https://chocolatey.org/packages/nodejs.install), Brackets or Atom as an editor of your choice;
-5. [Fork](https://en.wikipedia.org/wiki/Fork_(software_development)) by visiting https://github.com/pragmatismo-io/BotServer/fork
-6. Clone the just forked repository by running `git clone <your-forked-repository-url>/BotServer.git` ;
-7. Run `npm install -g typescript`;
-8. Run `npm install` on Command Prompt or PowerShell on the General Bot source-code folder;
-9. Enter './packages/default.gbui' folder;
-10. Run `npm install` folled by `npm run build` (To build default Bot UI);
-11. Enter the On the downloaded folder (../..);
-12. Compile the bot server by `tsc`.
-13. Run the bot server by `npm start`.
+4. Install npm install -g npm-check-updates;
+5. Install [Visual Studio Code](https://chocolatey.org/packages/nodejs.install), Brackets or Atom as an editor of your choice;
+6. [Fork](https://en.wikipedia.org/wiki/Fork_(software_development)) by visiting https://github.com/pragmatismo-io/BotServer/fork
+7. Clone the just forked repository by running `git clone <your-forked-repository-url>/BotServer.git` ;
+8. Run `npm install -g typescript`;
+9. Compile the bot server by `tsc`.
+10. Run the bot server by `npm start`.
 
 Note:
 
