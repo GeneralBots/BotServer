@@ -18,7 +18,7 @@ General Bot is a strongly typed package based chat bot server focused in convent
 
 ## Guide
 
-[Read the General Bots Guide](/generalbots/botbook).
+[Read the General Bots Guide](https://github.com/GeneralBots/BotBook/blob/master/01%20-%20Overview.md).
 
 ## Contributing
 
@@ -56,7 +56,7 @@ trademark license. Therefore any rights, title and interest in
 our trademarks remain entirely with us.
 
 
-<a href="https://stackoverflow.com/questions/ask?tags=generalbots">:speech_balloon: Ask a question</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="/GeneralBots/BotBook">:book: Read the Docs</a>
+<a href="https://stackoverflow.com/questions/ask?tags=generalbots">:speech_balloon: Ask a question</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="https://github.com/GeneralBots/BotBook/blob/master/01%20-%20Overview.md">:book: Read the Docs</a>
 </h2>
 
 # Videos
