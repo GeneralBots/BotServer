@@ -35,7 +35,7 @@
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBCoreService } from 'botlib';
 import * as fs from 'fs';
-import { DialogClass } from './GBAPIService';
+import DialogClass from './GBAPIService';
 import { GBDeployer } from './GBDeployer';
 import { TSCompiler } from './TSCompiler';
 const util = require('util');

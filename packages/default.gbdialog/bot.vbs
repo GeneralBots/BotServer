@@ -34,8 +34,6 @@
 '                                                                             
 '****************************************************************************
 
-
-
 talk ("How many installments do you want to pay your Credit?")
 installments = hear ()
 

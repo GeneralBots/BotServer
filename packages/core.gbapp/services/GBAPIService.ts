@@ -37,21 +37,45 @@ import { WaterfallStepContext } from 'botbuilder-dialogs';
 import { GBMinInstance } from 'botlib';
 const WaitUntil = require('wait-until');
 
-/**
- * @fileoverview General Bots server core.
- */
-
-export class DialogClass {
+class SysClass {
   public min: GBMinInstance;
-  public context: TurnContext;
-  public step: WaterfallStepContext;
 
   constructor(min: GBMinInstance) {
     this.min = min;
   }
 
+  public async deployBot(
+    botId,
+    description,
+    location,
+    nlpAuthoringKey,
+    appId,
+    appPassword,
+    subscriptionId
+  ) {
+
+  }
+}
+/**
+ * @fileoverview General Bots server core.
+ */
+
+export default class DialogClass {
+  public min: GBMinInstance;
+  public context: TurnContext;
+  public step: WaterfallStepContext;
+  public internalSys: SysClass;
+
+  constructor(min: GBMinInstance) {
+    this.min = min;
+  }
+
+  public async sys() {
+    return this.internalSys;
+  }
+
   public async hear(cb) {
-    let idCallback = Math.floor(Math.random() * 1000000000000);
+    const idCallback = Math.floor(Math.random() * 1000000000000);
     this.min.cbMap[idCallback] = cb;
     await this.step.beginDialog('/hear', { id: idCallback});
   }
