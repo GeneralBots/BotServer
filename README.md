@@ -16,6 +16,8 @@ General Bots
 
 General Bot is a strongly typed package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
 
+![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/general-bots-stack.png)
+
 ## Guide
 
 [Read the General Bots Guide](https://github.com/GeneralBots/BotBook/blob/master/01%20-%20Overview.md).
