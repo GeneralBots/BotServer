@@ -490,7 +490,7 @@ export class AzureDeployerService extends GBService {
         process.stdout.write(
           `${GBAdminService.GB_PROMPT}Due to this opened issue: https://github.com/Microsoft/botbuilder-tools/issues/550\n`
         );
-        process.stdout.write(`${GBAdminService.GB_PROMPT}Please enter your LUIS Authoring Key:`);
+        process.stdout.write(`${GBAdminService.GB_PROMPT}Please enter your LUIS Authoring Key:`); // TODO: INCLUDE URL
         authoringKey = scanf('%s').replace(/(\n|\r)+$/, '');
       }
     };
