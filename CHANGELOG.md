@@ -1,3 +1,22 @@
+## [1.2.2](https://github.com/pragmatismo-io/BotServer/compare/1.2.1...1.2.2) (2019-02-01)
+
+
+### Bug Fixes
+
+* **auth:** setupSecurity now is a complete setup process for tokens. ([4718fe4](https://github.com/pragmatismo-io/BotServer/commit/4718fe4))
+* **deployer:** Installs and compiles additional .gbapps on server startup. ([cfe5cd2](https://github.com/pragmatismo-io/BotServer/commit/cfe5cd2))
+* **kb.gbapp:** Menu and Ask dialog flows fixing. ([d884bc3](https://github.com/pragmatismo-io/BotServer/commit/d884bc3))
+* **VBA:** Removal of invalid error messages. ([dd92032](https://github.com/pragmatismo-io/BotServer/commit/dd92032))
+
+## [1.2.1](https://github.com/pragmatismo-io/BotServer/compare/1.2.0...1.2.1) (2018-12-18)
+
+
+### Bug Fixes
+
+* **kb:** Fix in Faq and Menu dialogs. ([6ba8c09](https://github.com/pragmatismo-io/BotServer/commit/6ba8c09))
+* **startup:** Startup improved and more checks added. ([5d6c60e](https://github.com/pragmatismo-io/BotServer/commit/5d6c60e))
+* **webchat:** Sync versions and MSFT strategy. ([238c0bf](https://github.com/pragmatismo-io/BotServer/commit/238c0bf))
+
 # [1.2.0](https://github.com/pragmatismo-io/BotServer/compare/1.1.1...1.2.0) (2018-12-13)
 
 
