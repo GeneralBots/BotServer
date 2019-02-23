@@ -104,7 +104,7 @@ export class GBConversationalService implements IGBConversationalService {
       nlp = await model.recognize(step.context);
     } catch (error) {
       if (error.statusCode === 404) {
-        logger.warn('NLP application still not publish and there are no other options for answering.');
+        logger.warn('NLP application still not publish and there are no other options for answering, please associate the key on NLP portal.');
 
         return Promise.resolve(false);
       } else {
