@@ -45,6 +45,7 @@ const AuthenticationContext = require('adal-node').AuthenticationContext;
 
 import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
 
+import { ConfirmPrompt } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBAdminService, IGBConversationalService, IGBCoreService, IGBPackage } from 'botlib';
 import { GBAnalyticsPackage } from '../../analytics.gblib';
 import { GBCorePackage } from '../../core.gbapp';
@@ -56,7 +57,6 @@ import { GuaribasInstance } from '../models/GBModel';
 import { Messages } from '../strings';
 import { GBAdminPackage } from './../../admin.gbapp/index';
 import { GBDeployer } from './GBDeployer';
-import { ConfirmPrompt } from 'botbuilder-dialogs';
 
 /** Minimal service layer for a bot. */
 
@@ -108,7 +108,7 @@ export class GBMinService {
     const uiPackage = 'default.gbui';
     server.use('/', express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
 
-    Promise.all(
+    await Promise.all(
       instances.map(async instance => {
         // Gets the authorization key for each instance from Bot Service.
 
@@ -119,39 +119,7 @@ export class GBMinService {
 
         server.get('/instances/:botId', (req, res) => {
           (async () => {
-            // Returns the instance object to clients requesting bot info.
-
-            let botId = req.params.botId;
-            if (botId === '[default]') {
-              botId = bootInstance.botId;
-            }
-
-            const instance = await this.core.loadInstance(botId);
-
-            if (instance) {
-              const speechToken = await this.getSTSToken(instance);
-              let theme = instance.theme;
-              if (!theme) {
-                theme = 'default.gbtheme';
-              }
-
-              res.send(
-                JSON.stringify({
-                  instanceId: instance.instanceId,
-                  botId: botId,
-                  theme: theme,
-                  secret: instance.webchatKey, // TODO: Use token.
-                  speechToken: speechToken,
-                  conversationId: webchatToken.conversationId,
-                  authenticatorTenant: instance.authenticatorTenant,
-                  authenticatorClientId: instance.authenticatorClientId
-                })
-              );
-            } else {
-              const error = `Instance not found: ${botId}.`;
-              res.sendStatus(error);
-              logger.error(error);
-            }
+            await this.sendInstanceToClient(req, bootInstance, res, webchatToken);
           })();
         });
 
@@ -171,7 +139,7 @@ export class GBMinService {
 
         const url = `/api/messages/${instance.botId}`;
         server.post(url, async (req, res) => {
-          return await this.receiver(adapter, req, res, conversationState, min, instance, appPackages);
+          await this.receiver(adapter, req, res, conversationState, min, instance, appPackages);
         });
         logger.info(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
 
@@ -186,62 +154,85 @@ export class GBMinService {
         // Clients get redirected here in order to create an OAuth authorize url and redirect them to AAD.
         // There they will authenticate and give their consent to allow this app access to
         // some resource they own.
-        server.get(`/${min.instance.botId}/auth`, function(req, res) {
-          let authorizationUrl = UrlJoin(
-            min.instance.authenticatorAuthorityHostUrl,
-            min.instance.authenticatorTenant,
-            '/oauth2/authorize'
-          );
-          authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
-            min.instance.authenticatorClientId
-          }&redirect_uri=${UrlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
 
-          res.redirect(authorizationUrl);
-        });
+        this.handleOAuthRequests(server, min);
 
         // After consent is granted AAD redirects here.  The ADAL library
         // is invoked via the AuthenticationContext and retrieves an
         // access token that can be used to access the user owned resource.
 
-        server.get(`/${min.instance.botId}/token`, async (req, res) => {
-          const state = await min.adminService.getValue(min.instance.instanceId, 'AntiCSRFAttackState');
-
-          if (req.query.state !== state) {
-            const msg = 'WARNING: state field was not provided as anti-CSRF token';
-            logger.error(msg);
-            throw new Error(msg);
-          }
-
-          const authenticationContext = new AuthenticationContext(
-            UrlJoin(min.instance.authenticatorAuthorityHostUrl, min.instance.authenticatorTenant)
-          );
-
-          const resource = 'https://graph.microsoft.com';
-
-          authenticationContext.acquireTokenWithAuthorizationCode(
-            req.query.code,
-            UrlJoin(instance.botEndpoint, min.instance.botId, '/token'),
-            resource,
-            instance.authenticatorClientId,
-            instance.authenticatorClientSecret,
-            async (err, token) => {
-              if (err) {
-                const msg = `Error acquiring token: ${err}`;
-                logger.error(msg);
-                res.send(msg);
-              } else {
-                await this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
-                await this.adminService.setValue(instance.instanceId, 'accessToken', token.accessToken);
-                await this.adminService.setValue(instance.instanceId, 'expiresOn', token.expiresOn.toString());
-                await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', null);
-
-                res.redirect(min.instance.botEndpoint);
-              }
-            }
-          );
-        });
+        this.handleOAuthTokenRequests(server, min, instance);
       })
     );
+  }
+
+  private handleOAuthTokenRequests(server: any, min: GBMinInstance, instance: GuaribasInstance) {
+    server.get(`/${min.instance.botId}/token`, async (req, res) => {
+      const state = await min.adminService.getValue(min.instance.instanceId, 'AntiCSRFAttackState');
+      if (req.query.state !== state) {
+        const msg = 'WARNING: state field was not provided as anti-CSRF token';
+        logger.error(msg);
+        throw new Error(msg);
+      }
+      const authenticationContext = new AuthenticationContext(
+        UrlJoin(min.instance.authenticatorAuthorityHostUrl, min.instance.authenticatorTenant));
+      const resource = 'https://graph.microsoft.com';
+      authenticationContext.acquireTokenWithAuthorizationCode(
+        req.query.code, UrlJoin(instance.botEndpoint, min.instance.botId, '/token'), 
+        resource, instance.authenticatorClientId, instance.authenticatorClientSecret, async (err, token) => {
+        if (err) {
+          const msg = `Error acquiring token: ${err}`;
+          logger.error(msg);
+          res.send(msg);
+        } else {
+          await this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
+          await this.adminService.setValue(instance.instanceId, 'accessToken', token.accessToken);
+          await this.adminService.setValue(instance.instanceId, 'expiresOn', token.expiresOn.toString());
+          await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', null);
+          res.redirect(min.instance.botEndpoint);
+        }
+      });
+    });
+  }
+
+  private handleOAuthRequests(server: any, min: GBMinInstance) {
+    server.get(`/${min.instance.botId}/auth`, function (req, res) {
+      let authorizationUrl = UrlJoin(min.instance.authenticatorAuthorityHostUrl, min.instance.authenticatorTenant, '/oauth2/authorize');
+      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.authenticatorClientId}&redirect_uri=${UrlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+      res.redirect(authorizationUrl);
+    });
+  }
+
+  /**
+   * Returns the instance object to clients requesting bot info.
+   */
+  private async sendInstanceToClient(req, bootInstance: GuaribasInstance, res: any, webchatToken: any) {
+    let botId = req.params.botId;
+    if (botId === '[default]') {
+      botId = bootInstance.botId;
+    }
+    const instance = await this.core.loadInstance(botId);
+    if (instance) {
+      const speechToken = await this.getSTSToken(instance);
+      let theme = instance.theme;
+      if (!theme) {
+        theme = 'default.gbtheme';
+      }
+      res.send(JSON.stringify({
+        instanceId: instance.instanceId,
+        botId: botId,
+        theme: theme,
+        secret: instance.webchatKey,
+        speechToken: speechToken,
+        conversationId: webchatToken.conversationId,
+        authenticatorTenant: instance.authenticatorTenant,
+        authenticatorClientId: instance.authenticatorClientId
+      }));
+    } else {
+      const error = `Instance not found: ${botId}.`;
+      res.sendStatus(error);
+      logger.error(error);
+    }
   }
 
   /**
@@ -250,7 +241,7 @@ export class GBMinService {
    * @param instance The Bot instance.
    *
    */
-  public async getWebchatToken(instance: any) {
+  private async getWebchatToken(instance: any) {
     const options = {
       url: 'https://directline.botframework.com/v3/directline/tokens/generate',
       method: 'POST',
@@ -276,7 +267,7 @@ export class GBMinService {
    * @param instance The general bot instance.
    *
    */
-  public async getSTSToken(instance: any) {
+  private async getSTSToken(instance: any) {
     // TODO: Make dynamic: https://CHANGE.api.cognitive.microsoft.com/sts/v1.0
 
     const options = {
@@ -327,7 +318,7 @@ export class GBMinService {
     return { min, adapter, conversationState };
   }
 
-  private invokeLoadBot(appPackages: any[], min: any, server: any) {
+  private invokeLoadBot(appPackages: any[], min: GBMinInstance, server: any) {
     const sysPackages = new Array<IGBPackage>();
     // NOTE: A semicolon is necessary before this line.
     [
@@ -348,12 +339,12 @@ export class GBMinService {
           p.channel.received(req, res);
         });
       }
-    }, this);
+    },        this);
 
     appPackages.forEach(e => {
       e.sysPackages = sysPackages;
       e.loadBot(min);
-    }, this);
+    },                  this);
   }
 
   /**
@@ -364,11 +355,13 @@ export class GBMinService {
     req: any,
     res: any,
     conversationState: ConversationState,
-    min: any,
+    min: GBMinInstance,
     instance: any,
     appPackages: any[]
   ) {
-    return await adapter.processActivity(req, res, async context => {
+
+    await adapter.processActivity(req, res, async context => {
+
       // Get loaded user state
       const state = await conversationState.get(context);
       const step = await min.dialogs.createContext(context, state);
@@ -412,32 +405,7 @@ export class GBMinService {
           // Processes messages.
         } else if (context.activity.type === 'message') {
           // Checks for /admin request.
-          if (context.activity.text === 'alpha-vba') {
-            min.sandbox.context = context;
-            min.sandbox.step = step;
-            min.sandbox['bot'].bind(min.sandbox);
-            await min.sandbox['bot']();
-          } else if (context.activity.text === 'admin') {
-            await step.beginDialog('/admin');
-
-            // Checks for /menu JSON signature.
-          } else if (context.activity.text.startsWith('{"title"')) {
-            await step.beginDialog('/menu', {
-              data: JSON.parse(context.activity.text)
-            });
-
-            // Otherwise, continue to the active dialog in the stack.
-          } else {
-            const user = await min.userProfile.get(context, {});
-
-            if (step.activeDialog) {
-              await step.continueDialog();
-            } else {
-              await step.beginDialog('/answer', {
-                query: context.activity.text
-              });
-            }
-          }
+          await this.processMessageActivity(context, min, step);
 
           // Processes events.
         } else if (context.activity.type === 'event') {
@@ -445,31 +413,7 @@ export class GBMinService {
 
           // TODO: Understand MSFT changes: await step.endAll();
 
-          if (context.activity.name === 'whoAmI') {
-            await step.beginDialog('/whoAmI');
-          } else if (context.activity.name === 'showSubjects') {
-            await step.beginDialog('/menu');
-          } else if (context.activity.name === 'giveFeedback') {
-            await step.beginDialog('/feedback', {
-              fromMenu: true
-            });
-          } else if (context.activity.name === 'showFAQ') {
-            await step.beginDialog('/faq');
-          } else if (context.activity.name === 'answerEvent') {
-            await step.beginDialog('/answerEvent', {
-              questionId: (context.activity as any).data,
-              fromFaq: true
-            });
-          } else if (context.activity.name === 'quality') {
-            await step.beginDialog('/quality', {
-              score: (context.activity as any).data
-            });
-          } else if (context.activity.name === 'updateToken') {
-            const token = (context.activity as any).data;
-            await step.beginDialog('/adminUpdateToken', { token: token });
-          } else {
-            await step.continueDialog();
-          }
+          await this.processEventActivity(context, step);
         }
         await conversationState.saveChanges(context, true);
       } catch (error) {
@@ -480,5 +424,70 @@ export class GBMinService {
         await step.beginDialog('/ask', { isReturning: true });
       }
     });
+  }
+
+  private async processEventActivity(context, step: any) {
+    if (context.activity.name === 'whoAmI') {
+      await step.beginDialog('/whoAmI');
+    } else if (context.activity.name === 'showSubjects') {
+      await step.beginDialog('/menu');
+    } else if (context.activity.name === 'giveFeedback') {
+      await step.beginDialog('/feedback', {
+        fromMenu: true
+      });
+    } else if (context.activity.name === 'showFAQ') {
+      await step.beginDialog('/faq');
+    } else if (context.activity.name === 'answerEvent') {
+      await step.beginDialog('/answerEvent', {
+        questionId: (context.activity).data,
+        fromFaq: true
+      });
+    } else if (context.activity.name === 'quality') {
+      await step.beginDialog('/quality', {
+        score: (context.activity).data
+      });
+    } else if (context.activity.name === 'updateToken') {
+      const token = (context.activity).data;
+      await step.beginDialog('/adminUpdateToken', { token: token });
+    } else {
+      await step.continueDialog();
+    }
+  }
+
+  private async processMessageActivity(context, min: GBMinInstance, step: any) {
+
+    // Direct script invoking by itent name.
+
+    let mainMethod = min.scriptMap[context.activity.text];
+    if (mainMethod != undefined) {
+      min.sandbox.context = context;
+      min.sandbox.step = step;
+      min.sandbox[mainMethod].bind(min.sandbox);
+      await min.sandbox[mainMethod]();
+    
+    }else  if (context.activity.text === 'admin') {
+
+      await step.beginDialog('/admin');
+
+    // Checks for /menu JSON signature.
+    } else if (context.activity.text.startsWith('{"title"')) {
+
+      await step.beginDialog('/menu', {
+        data: JSON.parse(context.activity.text)
+      });
+      // Otherwise, continue to the active dialog in the stack.
+
+    } else {
+
+      const user = await min.userProfile.get(context, {});
+      if (step.activeDialog) {
+        await step.continueDialog();
+      } else {
+        await step.beginDialog('/answer', {
+          query: context.activity.text
+        });
+      }
+
+    }
   }
 }

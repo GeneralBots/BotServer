@@ -1,54 +1,20 @@
-<%
-'****************************************************************************
-'                                               ( )_  _                       
-'    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     
-'   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   
-'   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  
-'   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  
-'   | |                ( )_) |                                                
-'   (_)                 \___/'                                                
-'                                                                             
-' General Bots Copyright (c) Pragmatismo.io. All rights reserved.             
-' Licensed under the AGPL-3.0.                                                
-'
-' This BASIC file is based on this JavaScript file by Rodrigo Ruotolo:
-'   -> http://jsfiddle.net/roderick/dym05hsy
-'                                                                              
-' According to our dual licensing model, this program can be used either      
-' under the terms of the GNU Affero General Public License, version 3,        
-' or under a proprietary license.                                             
-'                                                                             
-' The texts of the GNU Affero General Public License with an additional       
-' permission and of our proprietary license can be found at and               
-' in the LICENSE file you have received along with this program.              
-'                                                                             
-' This program is distributed in the hope that it will be useful,             
-' but WITHOUT ANY WARRANTY, without even the implied warranty of              
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                
-' GNU Affero General Public License for more details.                         
-'                                                                             
-' "General Bots" is a registered trademark of Pragmatismo.io.                 
-' The licensing of the program under the AGPLv3 does not imply a              
-' trademark license. Therefore any rights, title and interest in              
-' our trademarks remain entirely with us.                                     
-'                                                                             
-'****************************************************************************
+' General Bots Copyright (c) Pragmatismo.io. All rights reserved. Licensed under the AGPL-3.0. 
 
-talk ("How many installments do you want to pay your Credit?")
-installments = hear ()
+talk "How many installments do you want to pay your Credit?"
+hear installments 
 
 if installments > 60 then
-    talk ("The maximum number of payments is 60")
+    talk "The maximum number of payments is 60"
 else
- 	talk ("What is the amount requested?")
-	ammount = hear ()
+ 	talk "What is the amount requested?"
+	hear ammount 
 
 	if ammount >100000 then
-		talk ("We are sorry, we can only accept proposals bellow 100k")
+		talk "We are sorry, we can only accept proposals bellow 100k"
 	else
 
-		talk ("What is the best due date?")
-		dueDate = hear ()
+		talk "What is the best due date?"
+		hear dueDate 
 
 		interestRate = 0
 		adjustment = 0
@@ -84,15 +50,15 @@ else
 		end if
 
 		if installments > 60 then
-			talk ("The maximum number of payments is 60")
+			talk "The maximum number of payments is 60"
 		end if
 
 
 		' TODO: This must be reviewed in terms of financing logic.
 		
-		nInstallments = parseInt(installments)
-		vAmmount = parseFloat(ammount)
-		initialPayment = parseFloat(vAmmount) * 0.3 ' 30% of the value
+		nInstallments = parseIntinstallments
+		vAmmount = parseFloatammount
+		initialPayment = parseFloatvAmmount * 0.3 ' 30% of the value
 		tac = 800
 		adjustment = 1.3
 
@@ -100,13 +66,12 @@ else
 		paymentValue = totalValue * adjustment
 		finalValue = paymentValue * nInstallments + initialPayment
 
-		talk("Congratulations! Your credit analysis is **done**:") 
-		talk("First payment: **" + initialPayment + "**")
-		talk("Payment value: **" + paymentValue + "**")
-		talk("Interest Rate: **" + interestRate + "%**")
-		talk("Total Value: **" + totalValue + "**")
-		talk("Final Value: **" + finalValue + "**")
+		talk "Congratulations! Your credit analysis is **done**:" 
+		talk "First payment: **" + initialPayment + "**"
+		talk "Payment value: **" + paymentValue + "**"
+		talk "Interest Rate: **" + interestRate + "%**"
+		talk "Total Value: **" + totalValue + "**"
+		talk "Final Value: **" + finalValue + "**"
 		
 	end if
 end if
-%>

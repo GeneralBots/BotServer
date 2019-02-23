@@ -51,6 +51,7 @@ import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
 import { GBVMService } from '../packages/core.gbapp/services/GBVMService';
+import { load } from 'dotenv';
 
 const appPackages = new Array<IGBPackage>();
 
@@ -163,6 +164,9 @@ export class GBServer {
   }
 }
 
+let service:GBVMService = new GBVMService ();
+service.loadDialogPackage('C:\\Sources\\opensource\\BotServer\\packages\\default.gbdialog',null,null,null);
+
 // First line to run.
 
-GBServer.run();
+// GBServer.run();

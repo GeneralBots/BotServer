@@ -35,6 +35,7 @@
 import { TurnContext } from 'botbuilder';
 import { WaterfallStepContext } from 'botbuilder-dialogs';
 import { GBMinInstance } from 'botlib';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 const WaitUntil = require('wait-until');
 
 class SysClass {
@@ -44,7 +45,11 @@ class SysClass {
     this.min = min;
   }
 
-  public async deployBot(
+  public generatePassword(){
+    return GBAdminService.getRndPassword();
+  }
+
+  public async createABotFarmUsing(
     botId,
     description,
     location,
