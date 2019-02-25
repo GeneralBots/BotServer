@@ -165,7 +165,7 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
           GBAdminService.GB_PROMPT
         }Due to this opened issue: https://github.com/Microsoft/botbuilder-tools/issues/550\n`
       );
-      process.stdout.write(`${GBAdminService.GB_PROMPT}Please enter your LUIS Authoring Key:`);
+      process.stdout.write(`${GBAdminService.GB_PROMPT}Please enter your LUIS Authoring Key, get it here: https://www.luis.ai/user/settings and paste it to me:`);
       authoringKey = scanf('%s').replace(/(\n|\r)+$/, '');
     }
 
