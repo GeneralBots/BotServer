@@ -48,9 +48,7 @@ const scanf = require('scanf');
  * Handles command-line dialog for getting info for Boot Bot.
  */
 export class StartDialog {
-
   public static async createBaseInstance() {
-
     // No .env so asks for cloud credentials to start a new farm.
 
     if (!fs.existsSync(`.env`)) {
@@ -105,7 +103,7 @@ export class StartDialog {
     }
 
     // Prepares the first instance on bot farm.
-    const instance = new GuaribasInstance();
+    const instance: IGBInstance = {};
 
     instance.botId = botId;
     instance.cloudUsername = username;
@@ -117,7 +115,7 @@ export class StartDialog {
     instance.marketplacePassword = appPassword;
     instance.adminPass = GBAdminService.getRndPassword();
 
-    return {instance, credentials, subscriptionId};
+    return { instance, credentials, subscriptionId };
   }
 
   private static retrieveUsername() {
@@ -165,7 +163,11 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
           GBAdminService.GB_PROMPT
         }Due to this opened issue: https://github.com/Microsoft/botbuilder-tools/issues/550\n`
       );
-      process.stdout.write(`${GBAdminService.GB_PROMPT}Please enter your LUIS Authoring Key, get it here: https://www.luis.ai/user/settings and paste it to me:`);
+      process.stdout.write(
+        `${
+          GBAdminService.GB_PROMPT
+        }Please enter your LUIS Authoring Key, get it here: https://www.luis.ai/user/settings and paste it to me:`
+      );
       authoringKey = scanf('%s').replace(/(\n|\r)+$/, '');
     }
 

@@ -91,7 +91,6 @@ export class GBServer {
 
           GBConfigService.init();
           const core = new GBCoreService();
-          core.ensureAdminIsSecured();
 
           const importer: GBImporter = new GBImporter(core);
           const deployer: GBDeployer = new GBDeployer(core, importer);
@@ -113,6 +112,8 @@ export class GBServer {
             bootInstance = await core.createBootInstance(core, azureDeployer, proxyAddress);
             await core.initStorage();
           }
+
+          core.ensureAdminIsSecured();
 
           // Deploys system and user packages.
 

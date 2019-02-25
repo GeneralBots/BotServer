@@ -309,8 +309,8 @@ STORAGE_SYNC=true
    */
   public async ensureInstances(instances: GuaribasInstance[], bootInstance: any, core: GBCoreService) {
     if (!instances) {
-      const saveInstance = new GuaribasInstance(bootInstance);
-      await saveInstance.save();
+      const instance: IGBInstance = {};
+      await instance.save();
       instances = await core.loadInstances();
     }
 

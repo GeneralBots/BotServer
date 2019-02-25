@@ -74,6 +74,12 @@ export class GBConfigService {
         case 'CLOUD_LOCATION':
           value = undefined;
           break;
+        case 'MARKETPLACE_ID':
+          value = undefined;
+          break;
+        case 'MARKETPLACE_SECRET':
+          value = undefined;
+          break;
         case 'NLP_AUTHORING_KEY':
           value = undefined;
           break;

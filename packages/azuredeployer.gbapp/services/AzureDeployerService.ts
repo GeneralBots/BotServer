@@ -367,7 +367,7 @@ export class AzureDeployerService extends GBService {
     subscriptionId
   ) {
 
-    const instance = new GuaribasInstance();
+    const instance: IGBInstance = {};
 
     instance.botId = title;
     instance.cloudUsername = username;
@@ -494,7 +494,6 @@ export class AzureDeployerService extends GBService {
       const res = await httpClient.sendRequest(req);
       if (!(res.bodyAsJson as any).id) {
         reject(res.bodyAsText);
-
         return;
       }
 
