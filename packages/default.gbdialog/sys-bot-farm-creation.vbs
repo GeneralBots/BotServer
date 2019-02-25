@@ -7,25 +7,24 @@ talk "If you tell me your username/password, I can show service subscription lis
 talk "What is your Username (eg.: human@domain.bot)"
 hear email
 
+talk "What is your Password"
+hear password
+
 talk "Your password? (Will be discarded after sigining process)"
-talk "Let's generate a very dificult to guess password for the new bot:"
-generate a password
-talk "Your password is *" + password + "*. Keep it on a safe place only acessible to you."
 talk "Can you describe in a few words what the bot is about?"
 hear description
 
-talk "Please, choose what subscription would you like to connect to:"
-
-subscriptionId = ""
+talk "Please, paste the Subscription ID (Azure):"
+hear subscriptionId
 
 talk "Please, provide the cloud location just like 'westus'?"
-hear cloudLocation 
+hear location
 
 talk "Please, provide the Authoring Key for NLP service (LUIS)?"
-hear nlpKey
+hear authoringKey
 
 talk "Sorry, this part cannot be automated yet due to Microsoft schedule, please go to https://apps.dev.microsoft.com/portal/register-app to generate manually an App ID and App Secret."
-wait 1
+wait 5
 
 talk "Please, provide the App ID you just generated:"
 hear appId
@@ -35,4 +34,4 @@ hear appPassword
 
 talk "Now, I am going to create a Bot farm... Wait 5 minutes or more..."
 
-create a bot farm using title, username, password, description, cloudLocation, nlpKey, appId, appPassword, subscriptionId
+create a bot farm using title, email, password, location, authoringKey, appId, appPassword, subscriptionId

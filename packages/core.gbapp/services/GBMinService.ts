@@ -175,30 +175,42 @@ export class GBMinService {
         throw new Error(msg);
       }
       const authenticationContext = new AuthenticationContext(
-        UrlJoin(min.instance.authenticatorAuthorityHostUrl, min.instance.authenticatorTenant));
+        UrlJoin(min.instance.authenticatorAuthorityHostUrl, min.instance.authenticatorTenant)
+      );
       const resource = 'https://graph.microsoft.com';
       authenticationContext.acquireTokenWithAuthorizationCode(
-        req.query.code, UrlJoin(instance.botEndpoint, min.instance.botId, '/token'), 
-        resource, instance.authenticatorClientId, instance.authenticatorClientSecret, async (err, token) => {
-        if (err) {
-          const msg = `Error acquiring token: ${err}`;
-          logger.error(msg);
-          res.send(msg);
-        } else {
-          await this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
-          await this.adminService.setValue(instance.instanceId, 'accessToken', token.accessToken);
-          await this.adminService.setValue(instance.instanceId, 'expiresOn', token.expiresOn.toString());
-          await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', null);
-          res.redirect(min.instance.botEndpoint);
+        req.query.code,
+        UrlJoin(instance.botEndpoint, min.instance.botId, '/token'),
+        resource,
+        instance.authenticatorClientId,
+        instance.authenticatorClientSecret,
+        async (err, token) => {
+          if (err) {
+            const msg = `Error acquiring token: ${err}`;
+            logger.error(msg);
+            res.send(msg);
+          } else {
+            await this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
+            await this.adminService.setValue(instance.instanceId, 'accessToken', token.accessToken);
+            await this.adminService.setValue(instance.instanceId, 'expiresOn', token.expiresOn.toString());
+            await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', null);
+            res.redirect(min.instance.botEndpoint);
+          }
         }
-      });
+      );
     });
   }
 
   private handleOAuthRequests(server: any, min: GBMinInstance) {
-    server.get(`/${min.instance.botId}/auth`, function (req, res) {
-      let authorizationUrl = UrlJoin(min.instance.authenticatorAuthorityHostUrl, min.instance.authenticatorTenant, '/oauth2/authorize');
-      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.authenticatorClientId}&redirect_uri=${UrlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+    server.get(`/${min.instance.botId}/auth`, function(req, res) {
+      let authorizationUrl = UrlJoin(
+        min.instance.authenticatorAuthorityHostUrl,
+        min.instance.authenticatorTenant,
+        '/oauth2/authorize'
+      );
+      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
+        min.instance.authenticatorClientId
+      }&redirect_uri=${UrlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
       res.redirect(authorizationUrl);
     });
   }
@@ -218,16 +230,18 @@ export class GBMinService {
       if (!theme) {
         theme = 'default.gbtheme';
       }
-      res.send(JSON.stringify({
-        instanceId: instance.instanceId,
-        botId: botId,
-        theme: theme,
-        secret: instance.webchatKey,
-        speechToken: speechToken,
-        conversationId: webchatToken.conversationId,
-        authenticatorTenant: instance.authenticatorTenant,
-        authenticatorClientId: instance.authenticatorClientId
-      }));
+      res.send(
+        JSON.stringify({
+          instanceId: instance.instanceId,
+          botId: botId,
+          theme: theme,
+          secret: instance.webchatKey,
+          speechToken: speechToken,
+          conversationId: webchatToken.conversationId,
+          authenticatorTenant: instance.authenticatorTenant,
+          authenticatorClientId: instance.authenticatorClientId
+        })
+      );
     } else {
       const error = `Instance not found: ${botId}.`;
       res.sendStatus(error);
@@ -308,6 +322,7 @@ export class GBMinService {
     min.adminService = this.adminService;
     min.instance = await this.core.loadInstance(min.botId);
     min.cbMap = {};
+    min.scriptMap = {};
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
 
@@ -339,12 +354,12 @@ export class GBMinService {
           p.channel.received(req, res);
         });
       }
-    },        this);
+    }, this);
 
     appPackages.forEach(e => {
       e.sysPackages = sysPackages;
       e.loadBot(min);
-    },                  this);
+    }, this);
   }
 
   /**
@@ -359,9 +374,7 @@ export class GBMinService {
     instance: any,
     appPackages: any[]
   ) {
-
     await adapter.processActivity(req, res, async context => {
-
       // Get loaded user state
       const state = await conversationState.get(context);
       const step = await min.dialogs.createContext(context, state);
@@ -439,15 +452,15 @@ export class GBMinService {
       await step.beginDialog('/faq');
     } else if (context.activity.name === 'answerEvent') {
       await step.beginDialog('/answerEvent', {
-        questionId: (context.activity).data,
+        questionId: context.activity.data,
         fromFaq: true
       });
     } else if (context.activity.name === 'quality') {
       await step.beginDialog('/quality', {
-        score: (context.activity).data
+        score: context.activity.data
       });
     } else if (context.activity.name === 'updateToken') {
-      const token = (context.activity).data;
+      const token = context.activity.data;
       await step.beginDialog('/adminUpdateToken', { token: token });
     } else {
       await step.continueDialog();
@@ -455,30 +468,28 @@ export class GBMinService {
   }
 
   private async processMessageActivity(context, min: GBMinInstance, step: any) {
-
     // Direct script invoking by itent name.
 
-    let mainMethod = min.scriptMap[context.activity.text];
-    if (mainMethod != undefined) {
+    let isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
+
+    if (isVMCall) {
+
+      let mainMethod = context.activity.text;
+
       min.sandbox.context = context;
       min.sandbox.step = step;
       min.sandbox[mainMethod].bind(min.sandbox);
       await min.sandbox[mainMethod]();
-    
-    }else  if (context.activity.text === 'admin') {
-
+    } else if (context.activity.text === 'admin') {
       await step.beginDialog('/admin');
 
-    // Checks for /menu JSON signature.
+      // Checks for /menu JSON signature.
     } else if (context.activity.text.startsWith('{"title"')) {
-
       await step.beginDialog('/menu', {
         data: JSON.parse(context.activity.text)
       });
       // Otherwise, continue to the active dialog in the stack.
-
     } else {
-
       const user = await min.userProfile.get(context, {});
       if (step.activeDialog) {
         await step.continueDialog();
@@ -487,7 +498,6 @@ export class GBMinService {
           query: context.activity.text
         });
       }
-
     }
   }
 }

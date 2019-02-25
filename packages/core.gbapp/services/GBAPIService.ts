@@ -36,8 +36,12 @@ import { TurnContext } from 'botbuilder';
 import { WaterfallStepContext } from 'botbuilder-dialogs';
 import { GBMinInstance } from 'botlib';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-const WaitUntil = require('wait-until');
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 
+
+/**
+ * BASIC system class for extra manipulation of bot behaviour.
+ */
 class SysClass {
   public min: GBMinInstance;
 
@@ -45,20 +49,36 @@ class SysClass {
     this.min = min;
   }
 
-  public generatePassword(){
+  public async wait(seconds: number) {
+    const timeout = ms => new Promise(resolve => setTimeout(resolve, ms));
+    await timeout(seconds * 1000);
+  }
+
+  public generatePassword() {
     return GBAdminService.getRndPassword();
   }
 
   public async createABotFarmUsing(
     botId,
-    description,
+    username,
+    password,
     location,
     nlpAuthoringKey,
     appId,
     appPassword,
     subscriptionId
   ) {
-
+    const service = new AzureDeployerService(this.min.deployer);
+    await service.deployToCloud(
+      botId,
+      username,
+      password,
+      location,
+      nlpAuthoringKey,
+      appId,
+      appPassword,
+      subscriptionId
+    );
   }
 }
 /**
@@ -66,6 +86,7 @@ class SysClass {
  */
 
 export default class DialogClass {
+
   public min: GBMinInstance;
   public context: TurnContext;
   public step: WaterfallStepContext;
@@ -73,16 +94,17 @@ export default class DialogClass {
 
   constructor(min: GBMinInstance) {
     this.min = min;
+    this.internalSys = new SysClass(min);
   }
 
-  public async sys() {
+  public sys(): SysClass {
     return this.internalSys;
   }
 
   public async hear(cb) {
     const idCallback = Math.floor(Math.random() * 1000000000000);
     this.min.cbMap[idCallback] = cb;
-    await this.step.beginDialog('/hear', { id: idCallback});
+    await this.step.beginDialog('/hear', { id: idCallback });
   }
 
   public async talk(text: string) {

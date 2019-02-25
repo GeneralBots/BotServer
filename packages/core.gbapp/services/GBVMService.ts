@@ -37,8 +37,8 @@ import { GBMinInstance, IGBCoreService } from 'botlib';
 import * as fs from 'fs';
 import { GBDeployer } from './GBDeployer';
 import { TSCompiler } from './TSCompiler';
-import GBAPIService from './GBAPIService';
 import DialogClass from './GBAPIService';
+
 const walkPromise = require('walk-promise');
 const logger = require('../../../src/logger');
 const vm = require('vm');
@@ -59,7 +59,9 @@ export class GBVMService implements IGBCoreService {
   private readonly script = new vm.Script();
 
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
+
     const files = await walkPromise(folder);
+    this.addHearDialog(min);
 
     return Promise.all(
       files.map(async file => {
@@ -70,14 +72,14 @@ export class GBVMService implements IGBCoreService {
           file.name.endsWith('.bas')
         ) {
           const mainName = file.name.replace(/\-|\./g, '');
-          // min.scriptMap[file.name] = ;
+          min.scriptMap[file.name] = mainName;
 
           const filename = UrlJoin(folder, file.name);
           fs.watchFile(filename, async () => {
             await this.run(filename, min, deployer, mainName);
           });
+
           await this.run(filename, min, deployer, mainName);
-          this.addHearDialog(min);
         }
       })
     );

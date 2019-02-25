@@ -103,9 +103,9 @@ export class GBServer {
 
           logger.info(`Establishing a development local proxy (ngrok)...`);
           const proxyAddress: string = await core.ensureProxy(port);
-          
+
           // Creates a boot instance or load it frmo storage.
-          
+
           let bootInstance: IGBInstance = null;
           try {
             await core.initStorage();
@@ -117,11 +117,10 @@ export class GBServer {
           // Deploys system and user packages.
 
           logger.info(`Deploying packages...`);
-          await core.loadSysPackages(core);
+          core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, appPackages);
 
-          
           // Loads all bot instances.
 
           logger.info(`Publishing instances...`);
@@ -153,8 +152,6 @@ export class GBServer {
 
           core.openBrowserInDevelopment();
 
-          return core;
-          
         } catch (err) {
           logger.error(`STOP: ${err} ${err.stack ? err.stack : ''}`);
           process.exit(1);
@@ -164,9 +161,6 @@ export class GBServer {
   }
 }
 
-let service:GBVMService = new GBVMService ();
-service.loadDialogPackage('C:\\Sources\\opensource\\BotServer\\packages\\default.gbdialog',null,null,null);
-
 // First line to run.
 
-// GBServer.run();
+GBServer.run();
