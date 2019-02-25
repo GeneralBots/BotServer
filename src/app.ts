@@ -51,6 +51,7 @@ import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
 import { GBVMService } from '../packages/core.gbapp/services/GBVMService';
+import { load } from 'dotenv';
 
 const appPackages = new Array<IGBPackage>();
 
@@ -90,7 +91,6 @@ export class GBServer {
 
           GBConfigService.init();
           const core = new GBCoreService();
-          core.ensureAdminIsSecured();
 
           const importer: GBImporter = new GBImporter(core);
           const deployer: GBDeployer = new GBDeployer(core, importer);
@@ -102,9 +102,9 @@ export class GBServer {
 
           logger.info(`Establishing a development local proxy (ngrok)...`);
           const proxyAddress: string = await core.ensureProxy(port);
-          
+
           // Creates a boot instance or load it frmo storage.
-          
+
           let bootInstance: IGBInstance = null;
           try {
             await core.initStorage();
@@ -113,14 +113,15 @@ export class GBServer {
             await core.initStorage();
           }
 
+          core.ensureAdminIsSecured();
+
           // Deploys system and user packages.
 
           logger.info(`Deploying packages...`);
-          await core.loadSysPackages(core);
+          core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, appPackages);
 
-          
           // Loads all bot instances.
 
           logger.info(`Publishing instances...`);
@@ -152,8 +153,6 @@ export class GBServer {
 
           core.openBrowserInDevelopment();
 
-          return core;
-          
         } catch (err) {
           logger.error(`STOP: ${err} ${err.stack ? err.stack : ''}`);
           process.exit(1);

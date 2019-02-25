@@ -231,7 +231,7 @@ export class GBDeployer {
 
       case '.gbdialog':
         const vm = new GBVMService();
-        return vm.loadJS(localPath, min, this.core, this, localPath);
+        return vm.loadDialogPackage(localPath, min, this.core, this);
 
       default:
         const err = GBError.create(`GuaribasBusinessError: Unknown package type: ${packageType}.`);

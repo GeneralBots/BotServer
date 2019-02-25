@@ -178,7 +178,7 @@ export class AdminDialog extends IGBDialog {
     );
   }
 
-  private static setupSecurityDialogs(min: any) {
+  private static setupSecurityDialogs(min: GBMinInstance) {
     min.dialogs.add(
       new WaterfallDialog('/setupSecurity', [
         async step => {

@@ -35,25 +35,76 @@
 import { TurnContext } from 'botbuilder';
 import { WaterfallStepContext } from 'botbuilder-dialogs';
 import { GBMinInstance } from 'botlib';
-const WaitUntil = require('wait-until');
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
+
 
 /**
- * @fileoverview General Bots server core.
+ * BASIC system class for extra manipulation of bot behaviour.
  */
-
-export class DialogClass {
+class SysClass {
   public min: GBMinInstance;
-  public context: TurnContext;
-  public step: WaterfallStepContext;
 
   constructor(min: GBMinInstance) {
     this.min = min;
   }
 
+  public async wait(seconds: number) {
+    const timeout = ms => new Promise(resolve => setTimeout(resolve, ms));
+    await timeout(seconds * 1000);
+  }
+
+  public generatePassword() {
+    return GBAdminService.getRndPassword();
+  }
+
+  public async createABotFarmUsing(
+    botId,
+    username,
+    password,
+    location,
+    nlpAuthoringKey,
+    appId,
+    appPassword,
+    subscriptionId
+  ) {
+    const service = new AzureDeployerService(this.min.deployer);
+    await service.deployToCloud(
+      botId,
+      username,
+      password,
+      location,
+      nlpAuthoringKey,
+      appId,
+      appPassword,
+      subscriptionId
+    );
+  }
+}
+/**
+ * @fileoverview General Bots server core.
+ */
+
+export default class DialogClass {
+
+  public min: GBMinInstance;
+  public context: TurnContext;
+  public step: WaterfallStepContext;
+  public internalSys: SysClass;
+
+  constructor(min: GBMinInstance) {
+    this.min = min;
+    this.internalSys = new SysClass(min);
+  }
+
+  public sys(): SysClass {
+    return this.internalSys;
+  }
+
   public async hear(cb) {
-    let idCallback = Math.floor(Math.random() * 1000000000000);
+    const idCallback = Math.floor(Math.random() * 1000000000000);
     this.min.cbMap[idCallback] = cb;
-    await this.step.beginDialog('/hear', { id: idCallback});
+    await this.step.beginDialog('/hear', { id: idCallback });
   }
 
   public async talk(text: string) {

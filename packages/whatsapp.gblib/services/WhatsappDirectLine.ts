@@ -36,7 +36,6 @@ const _ = require('lodash');
 const Parse = require('csv-parse');
 const Async = require('async');
 const UrlJoin = require('url-join');
-const Walk = require('fs-walk');
 const logger = require('../../../src/logger');
 const Swagger = require('swagger-client');
 const rp = require('request-promise');

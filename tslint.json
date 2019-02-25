@@ -15,6 +15,7 @@
     ],
     "jsRules": {},
     "rules": {
+        "no-floating-promises": false,
         "no-var-requires":false,
         "typedef":false,
         "variable-name": false,

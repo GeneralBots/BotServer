@@ -50,7 +50,7 @@ import { GBSecurityPackage } from '../../security.gblib';
 import { GBWhatsappPackage } from '../../whatsapp.gblib/index';
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
-import { GBImporter } from './GBImporterService';
+import { StartDialog } from '../../azuredeployer.gbapp/dialogs/StartDialog';
 
 const logger = require('../../../src/logger');
 const opn = require('opn');
@@ -274,7 +274,7 @@ STORAGE_SYNC=true
       const instance = instances[0];
       if (process.env.NODE_ENV === 'development') {
         logger.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
-        await azureDeployer.updateBotProxy(
+        await AzureDeployerService.updateBotProxy(
           instance.botId,
           instance.botId,
           `${proxyAddress}/api/messages/${instance.botId}`
@@ -309,8 +309,8 @@ STORAGE_SYNC=true
    */
   public async ensureInstances(instances: GuaribasInstance[], bootInstance: any, core: GBCoreService) {
     if (!instances) {
-      const saveInstance = new GuaribasInstance(bootInstance);
-      await saveInstance.save();
+      const instance: IGBInstance = {};
+      await instance.save();
       instances = await core.loadInstances();
     }
 
@@ -347,22 +347,22 @@ STORAGE_SYNC=true
   }
 
   public async createBootInstance(core: GBCoreService, azureDeployer: AzureDeployerService, proxyAddress: string) {
-    let instance: IGBInstance;
     logger.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
     try {
-      instance = await azureDeployer.deployFarm(proxyAddress);
+      let { instance, credentials, subscriptionId } = await StartDialog.createBaseInstance();
+      instance = await azureDeployer.deployFarm(proxyAddress, instance, credentials, subscriptionId);
+      core.writeEnv(instance);
+      logger.info(`File .env written, starting General Bots...`);
+      GBConfigService.init();
+
+      return instance;
     } catch (error) {
       logger.warn(
-        `In case of error, please cleanup any infrastructure objects 
+        `In case of error, please cleanup any infrastructure objects
             created during this procedure and .env before running again.`
       );
       throw error;
     }
-    core.writeEnv(instance);
-    logger.info(`File .env written, starting General Bots...`);
-    GBConfigService.init();
-
-    return instance;
   }
 
   public openBrowserInDevelopment() {
@@ -407,7 +407,7 @@ STORAGE_SYNC=true
           const fkcols = args[0];
           let fkname = table;
           let matches = re4.exec(fkcols);
-          while (matches != null) {
+          while (matches != undefined) {
             fkname += '_' + matches[1];
             matches = re4.exec(fkcols);
           }
@@ -440,7 +440,7 @@ STORAGE_SYNC=true
           const fkcols = args[2];
           let fkname = table;
           let matches = re3.exec(fkcols);
-          while (matches != null) {
+          while (matches != undefined) {
             fkname += '_' + matches[1];
             matches = re3.exec(fkcols);
           }
@@ -459,6 +459,6 @@ STORAGE_SYNC=true
   private async openStorageFrontier(deployer: AzureDeployerService) {
     const group = GBConfigService.get('CLOUD_GROUP');
     const serverName = GBConfigService.get('STORAGE_SERVER').split('.database.windows.net')[0];
-    await deployer.openStorageFirewall(group, serverName);
+    await AzureDeployerService.openStorageFirewall(group, serverName);
   }
 }

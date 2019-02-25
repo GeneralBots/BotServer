@@ -15,3 +15,6 @@
 /work
 /packages/default.gbdialog/bot.js
 /packages/default.gbdialog/bot.ts
+*.vbs.compiled
+*.vbs.js
+*.vbs.ts
