@@ -102,6 +102,9 @@ export class StartDialog {
       authoringKey = this.retrieveAuthoringKey();
     }
 
+    process.stdout.write(`${GBAdminService.GB_PROMPT}Thank you. That is enough information.\nNow building farm...`);
+
+
     // Prepares the first instance on bot farm.
     const instance: IGBInstance = {};
 

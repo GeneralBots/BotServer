@@ -51,6 +51,7 @@ import { GBWhatsappPackage } from '../../whatsapp.gblib/index';
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
 import { StartDialog } from '../../azuredeployer.gbapp/dialogs/StartDialog';
+import { WaterfallDialog } from 'botbuilder-dialogs';
 
 const logger = require('../../../src/logger');
 const opn = require('opn');
