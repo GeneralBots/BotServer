@@ -93,10 +93,12 @@ export class GBConversationalService implements IGBConversationalService {
   public async routeNLP(step: any, min: GBMinInstance, text: string): Promise<boolean> {
     // Invokes LUIS.
 
+    let endpoint = min.instance.nlpEndpoint.replace('/luis/v2.0', '');
+
     const model = new LuisRecognizer({
       applicationId: min.instance.nlpAppId,
       endpointKey: min.instance.nlpKey,
-      endpoint: min.instance.nlpEndpoint
+      endpoint: endpoint
     });
 
     let nlp: any;
@@ -130,7 +132,7 @@ export class GBConversationalService implements IGBConversationalService {
       logger.info(`NLP called: ${intent}, ${entity}`);
 
       try {
-        await step.replace(`/${intent}`, nlp.entities);
+        await step.replaceDialog(`/${intent}`, nlp.entities);
 
         return Promise.resolve(true);
       } catch (error) {

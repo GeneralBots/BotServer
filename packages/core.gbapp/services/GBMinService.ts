@@ -45,7 +45,7 @@ const AuthenticationContext = require('adal-node').AuthenticationContext;
 
 import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
 
-import { ConfirmPrompt } from 'botbuilder-dialogs';
+import { ConfirmPrompt, WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBAdminService, IGBConversationalService, IGBCoreService, IGBPackage } from 'botlib';
 import { GBAnalyticsPackage } from '../../analytics.gblib';
 import { GBCorePackage } from '../../core.gbapp';
@@ -356,9 +356,15 @@ export class GBMinService {
       }
     }, this);
 
-    appPackages.forEach(e => {
-      e.sysPackages = sysPackages;
-      e.loadBot(min);
+    appPackages.forEach(p => {
+      p.sysPackages = sysPackages;
+      p.loadBot(min);
+      if (p.getDialogs !== undefined) {
+        let dialogs = p.getDialogs(min);
+        dialogs.forEach(dialog => {
+          min.dialogs.add(new WaterfallDialog(dialog.name, dialog.waterfall));
+        });
+      }
     }, this);
   }
 
@@ -473,7 +479,6 @@ export class GBMinService {
     let isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
 
     if (isVMCall) {
-
       let mainMethod = context.activity.text;
 
       min.sandbox.context = context;
