@@ -30,9 +30,13 @@ Everyone can create bots by just copying and pasting some files and using their
 favorite tools from Office (or any text editor) or Photoshop (or any image
 editor). BASIC can be used to build custom dialogs so Bot can be extended just like VBA for Excel  (currently in alpha).
 
+## Samples
+
+[General Bots Samples Repository](https://github.com/GeneralBots-Samples).
+
 ## Guide
 
-[Read the General Bots Guide](https://github.com/GeneralBots/BotBook/blob/master/01%20-%20Overview.md).
+[Read the General Bots Guide](https://github.com/GeneralBots/BotBook/blob/master/book/chapter-01-Index.md).
 
 ## Contributing
 
@@ -86,3 +90,4 @@ our trademarks remain entirely with us.
 * See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC * published on December 3rd, 2018.
 
 [![See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-02-thumb.jpg)](https://www.youtube.com/watch?v=yX1sF9n9628)
+ 
