@@ -324,6 +324,8 @@ export class AzureDeployerService extends GBService {
     instance.textAnalyticsEndpoint = textAnalytics.endpoint;
     instance.textAnalyticsKey = keys.key1;
 
+    // TODO: Check quotes being added when NLP field is filled.
+
     logger.info(`Deploying NLP...`);
     const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
     keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
