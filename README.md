@@ -36,7 +36,7 @@ editor). BASIC can be used to build custom dialogs so Bot can be extended just l
 
 ## Guide
 
-[Read the General Bots Guide](https://github.com/GeneralBots/BotBook/blob/master/book/chapter-01-Index.md).
+[Read the General Bots Guide](https://github.com/GeneralBots/BotBook/blob/master/book/chapter-01-index.md).
 
 ## Contributing
 
@@ -91,3 +91,4 @@ our trademarks remain entirely with us.
 
 [![See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-02-thumb.jpg)](https://www.youtube.com/watch?v=yX1sF9n9628)
  
+  
