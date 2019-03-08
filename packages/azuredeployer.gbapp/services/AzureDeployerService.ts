@@ -43,7 +43,7 @@ import { SearchManagementClient } from 'azure-arm-search';
 import { SqlManagementClient } from 'azure-arm-sql';
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan } from 'azure-arm-website/lib/models';
-import { IGBInstance, IGBInstallationDeployer } from 'botlib';
+import { IGBInstallationDeployer, IGBInstance } from 'botlib';
 import { HttpMethods, ServiceClient, WebResource } from 'ms-rest-js';
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService';
 import { GBCorePackage } from '../../../packages/core.gbapp';
@@ -75,6 +75,19 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   constructor(deployer: GBDeployer) {
     this.deployer = deployer;
+  }
+
+  private static createRequestObject(url: string, accessToken: string, verb: HttpMethods, body: string) {
+    const req = new WebResource();
+    req.method = verb;
+    req.url = url;
+    req.headers = {};
+    req.headers['Content-Type'] = 'application/json';
+    req.headers['accept-language'] = '*';
+    req.headers.Authorization = 'Bearer ' + accessToken;
+    req.body = body;
+
+    return req;
   }
 
   public async getSubscriptions(credentials) {
@@ -228,19 +241,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await storageClient.firewallRules.createOrUpdate(groupName, serverName, 'gb', params);
   }
 
-  private static createRequestObject(url: string, accessToken: string, verb: HttpMethods, body: string) {
-    const req = new WebResource();
-    req.method = verb;
-    req.url = url;
-    req.headers = {};
-    req.headers['Content-Type'] = 'application/json';
-    req.headers['accept-language'] = '*';
-    req.headers.Authorization = 'Bearer ' + accessToken;
-    req.body = body;
-
-    return req;
-  }
-
   public async deployFarm(
     proxyAddress: string,
     instance: IGBInstance,
@@ -344,6 +344,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     );
 
     spinner.stop();
+
     return instance;
   }
 
@@ -384,7 +385,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     this.searchClient = new SearchManagementClient(credentials, subscriptionId);
     this.accessToken = credentials.tokenCache._entries[0].accessToken;
   }
-
 
   private async createStorageServer(group, name, administratorLogin, administratorPassword, serverName, location) {
     const params = {
@@ -471,6 +471,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       const res = await httpClient.sendRequest(req);
       if (!(res.bodyAsJson as any).id) {
         reject(res.bodyAsText);
+
         return;
       }
 
@@ -588,6 +589,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   private async createDeployGroup(name, location) {
     const params = { location: location };
+
     return this.resourceClient.resourceGroups.createOrUpdate(name, params);
   }
 
@@ -610,6 +612,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       location: location,
       serverFarmId: farmId
     };
+
     return this.webSiteClient.webApps.createOrUpdate(group, name, parameters);
   }
 }

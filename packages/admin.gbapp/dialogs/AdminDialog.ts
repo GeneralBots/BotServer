@@ -40,12 +40,12 @@ const UrlJoin = require('url-join');
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { GBAdminService } from '../services/GBAdminService';
 import { Messages } from '../strings';
-import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 
 /**
  * Dialogs for administration tasks.
@@ -157,6 +157,7 @@ export class AdminDialog extends IGBDialog {
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'addConnection') {
             await AdminDialog.addConnectionCommand(min, text);
+
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'undeployPackage') {
             await AdminDialog.undeployPackageCommand(text, min);

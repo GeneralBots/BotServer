@@ -142,12 +142,13 @@ export class WhatsappDirectLine extends GBService {
       })
         .then(response => {
           this.watermark = response.obj.watermark;
+
           return response.obj.activities;
         })
         .then(activities => {
           this.printMessages(activities, conversationId, from, fromName);
         });
-    }, this.pollInterval);
+    },          this.pollInterval);
   }
 
   public printMessages(activities, conversationId, from, fromName) {

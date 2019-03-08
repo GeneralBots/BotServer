@@ -54,7 +54,7 @@ import { IGBInstance } from 'botlib';
 @Table
 export class GuaribasInstance extends Model<GuaribasInstance>
   implements IGBInstance {
-  
+
   @PrimaryKey
   @AutoIncrement
   @Column

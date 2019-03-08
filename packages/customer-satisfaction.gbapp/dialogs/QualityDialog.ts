@@ -79,6 +79,7 @@ export class QualityDialog extends IGBDialog {
           );
           await step.replaceDialog('/ask', { isReturning: true });
         }
+
         return await step.next();
       }
     ]));

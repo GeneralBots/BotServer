@@ -44,7 +44,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { ConsoleDirectLine } from './services/ConsoleDirectLine';
 
 export class GBConsolePackage implements IGBPackage {
-  
+
   public sysPackages: IGBPackage[] = undefined;
   public channel: ConsoleDirectLine;
   public getDialogs(min: GBMinInstance) {}

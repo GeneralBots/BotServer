@@ -112,6 +112,7 @@ export class GBConfigService {
           break;
       }
     }
+
     return value;
   }
 
@@ -120,6 +121,7 @@ export class GBConfigService {
     if (!value) {
       value = process.env[key];
     }
+
     return value;
   }
 }

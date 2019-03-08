@@ -136,6 +136,7 @@ export class StartDialog {
       process.stdout.write(`${GBAdminService.GB_PROMPT}CLOUD_PASSWORD:`);
       password = scanf('%s').replace(/(\n|\r)+$/, '');
     }
+
     return password;
   }
 

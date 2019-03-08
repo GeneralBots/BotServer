@@ -420,10 +420,12 @@ STORAGE_SYNC=true
             fkname += '_' + matches[1];
             matches = re4.exec(fkcols);
           }
+
           return 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
         }
       );
     }
+
     return sql;
   }
 
@@ -453,10 +455,12 @@ STORAGE_SYNC=true
             fkname += '_' + matches[1];
             matches = re3.exec(fkcols);
           }
+
           return (args[0] ? args[0] : '') + 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
         }
       );
     }
+
     return sql;
   }
 

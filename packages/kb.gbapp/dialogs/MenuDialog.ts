@@ -63,8 +63,8 @@ export class MenuDialog extends IGBDialog {
         const locale = step.context.activity.locale;
         let rootSubjectId = null;
 
-        if (step.options && step.options['data']) {
-          const subject = step.options['data'];
+        if (step.options && step.options.data) {
+          const subject = step.options.data;
 
           // If there is a shortcut specified as subject destination, go there.
 
@@ -72,6 +72,7 @@ export class MenuDialog extends IGBDialog {
             const dialog = subject.to.split(':')[1];
             await step.replaceDialog('/' + dialog);
             await step.endDialog();
+
             return;
           }
 
@@ -156,6 +157,7 @@ export class MenuDialog extends IGBDialog {
 
         const user = await min.userProfile.get(step.context, {});
         user.isAsking = true;
+
         return await step.next();
       }
     ]));

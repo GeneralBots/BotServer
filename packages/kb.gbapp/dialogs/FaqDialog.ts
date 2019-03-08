@@ -64,7 +64,7 @@ export class FaqDialog extends IGBDialog {
             data: data.slice(0, 10)
           });
 
-          await step.context.sendActivity(Messages[locale].see_faq); // TODO: RND messages.
+          await step.context.sendActivity(Messages[locale].see_faq); 
           return await step.next();
         }
       }

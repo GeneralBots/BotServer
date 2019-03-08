@@ -64,6 +64,7 @@ export class ConsoleDirectLine extends GBService {
             .then(function (client) {
                 client.clientAuthorizations.add('AuthorizationBotConnector',
                                                 new Swagger.ApiKeyAuthorization('Authorization', 'Bearer ' + directLineSecret, 'header'));
+
                 return client;
             })
             .catch(function (err) {
@@ -129,7 +130,7 @@ export class ConsoleDirectLine extends GBService {
         setInterval(function () {
             client.Conversations.Conversations_GetActivities({ conversationId: conversationId, watermark: watermark })
                 .then(function (response) {
-                    watermark = response.obj.watermark;                                 // use watermark so subsequent requests skip old messages
+                    watermark = response.obj.watermark; 
                     return response.obj.activities;
                 })
                 .then(_this_.printMessages, _this_.directLineClientName);

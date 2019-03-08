@@ -224,6 +224,7 @@ export class GBDeployer {
       // PACKAGE: Put in package logic.
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
+
         return service.deployKb(this.core, this, localPath);
 
       case '.gbui':
@@ -231,6 +232,7 @@ export class GBDeployer {
 
       case '.gbdialog':
         const vm = new GBVMService();
+
         return vm.loadDialogPackage(localPath, min, this.core, this);
 
       default:
@@ -257,6 +259,7 @@ export class GBDeployer {
 
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
+
         return service.undeployKbFromStorage(instance, this, p.packageId);
 
       case '.gbui':
@@ -307,6 +310,7 @@ export class GBDeployer {
 
   public async getPackageByName(instanceId: number, packageName: string): Promise<GuaribasPackage> {
     const where = { packageName: packageName, instanceId: instanceId };
+
     return GuaribasPackage.findOne({
       where: where
     });
@@ -436,6 +440,7 @@ export class GBDeployer {
         appPackagesProcessed++;
       }
     });
+
     return appPackagesProcessed;
   }
 }

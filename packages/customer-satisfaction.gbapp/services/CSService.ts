@@ -62,6 +62,7 @@ export class CSService {
     rate: number
   ): Promise<GuaribasConversation> {
     conversation.rate = rate;
+
     return conversation.save();
   }
 }

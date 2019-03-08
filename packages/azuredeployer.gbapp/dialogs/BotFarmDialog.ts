@@ -39,8 +39,8 @@
 import { BotAdapter } from 'botbuilder';
 import { GBMinInstance } from 'botlib';
 import { IGBDialog } from 'botlib';
-import { Messages } from '../strings';
 import { WaterfallDialog } from 'botlib/node_modules/botbuilder-dialogs';
+import { Messages } from '../strings';
 
 export class BotFarmDialog extends IGBDialog {
   /**

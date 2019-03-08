@@ -44,7 +44,7 @@ describe('Load function', () => {
     try {
       // const service = new GBVMService();
       // TODO: service.loadJS('invalid.file', null, null, null, null);
-	  
+
     } catch (error) {
       expect(error).to.equal(0);
     }

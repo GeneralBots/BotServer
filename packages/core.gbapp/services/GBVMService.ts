@@ -33,19 +33,19 @@
 'use strict';
 
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBCoreService, GBService } from 'botlib';
+import { GBMinInstance, GBService, IGBCoreService } from 'botlib';
 import * as fs from 'fs';
+import GBAPIService from './GBAPIService';
+import GBAPIService from './GBAPIService';
 import { GBDeployer } from './GBDeployer';
 import { TSCompiler } from './TSCompiler';
-import GBAPIService from './GBAPIService';
-import DialogClass from './GBAPIService';
 
 const walkPromise = require('walk-promise');
 const logger = require('../../../src/logger');
 const vm = require('vm');
 const UrlJoin = require('url-join');
 const vb2ts = require('vbscript-to-typescript/dist/converter');
-let beautify = require('js-beautify').js;
+const beautify = require('js-beautify').js;
 
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
@@ -250,7 +250,7 @@ export class GBVMService extends GBService {
     min.dialogs.add(
       new WaterfallDialog('/hear', [
         async step => {
-          step.activeDialog.state.cbId = step.options['id'];
+          step.activeDialog.state.cbId = step.options.id;
 
           return await step.prompt('textPrompt', {});
         },

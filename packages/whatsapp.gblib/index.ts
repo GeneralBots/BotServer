@@ -45,9 +45,9 @@ import { WhatsappDirectLine } from './services/WhatsappDirectLine';
 
 export class GBWhatsappPackage implements IGBPackage {
   public sysPackages: IGBPackage[] = undefined;
-  public getDialogs(min: GBMinInstance) {}
 
   public channel: WhatsappDirectLine;
+  public getDialogs(min: GBMinInstance) {}
 
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
 

@@ -38,7 +38,6 @@
     "ban": "ban",
     "issues": "git-issues",
     "license": "license-checker --production --onlyunknown --csv",
-    "pretslint": "npm run pretty",
     "pretty": "prettier-standard 'src/*.ts' 'packages/**/*.ts'",
     "secure": "nsp check",
     "size": "t=\"$(npm pack .)\"; wc -c \"${t}\"; tar tvf \"${t}\"; rm \"${t}\";",

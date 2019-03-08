@@ -41,7 +41,6 @@ const logger = require('../../../src/logger');
 
 export class TSCompiler {
 
-
   private static shouldIgnoreError(diagnostic) {
     const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
 

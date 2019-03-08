@@ -39,10 +39,10 @@
 import {
   Column,
   CreatedAt,
+  DataType,
   Model,
   Table,
-  UpdatedAt,
-  DataType
+  UpdatedAt
 } from 'sequelize-typescript';
 
 @Table

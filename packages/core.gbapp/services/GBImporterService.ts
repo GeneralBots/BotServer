@@ -69,7 +69,7 @@ export class GBImporter {
 
     packageJson = { ...packageJson, ...settings, ...servicesJson };
 
-    if (botId){
+    if (botId) {
       packageJson.botId = botId;
     }
 

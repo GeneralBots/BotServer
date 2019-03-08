@@ -37,7 +37,7 @@
 'use strict';
 
 import { AuthenticationContext, TokenResponse } from 'adal-node';
-import { IGBCoreService, IGBAdminService } from 'botlib';
+import { IGBAdminService, IGBCoreService } from 'botlib';
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 import { GuaribasAdmin } from '../models/AdminModel';
 const UrlJoin = require('url-join');
@@ -88,6 +88,7 @@ export class GBAdminService implements IGBAdminService {
     };
     let password = passwordGenerator.generatePassword(options);
     password = password.replace(/[\@\[\=\:\;\?]/g, '#');
+
     return password;
   }
 
@@ -102,6 +103,7 @@ export class GBAdminService implements IGBAdminService {
       maximumLength: 14
     };
     const name = passwordGenerator.generatePassword(options);
+
     return name;
   }
 

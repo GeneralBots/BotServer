@@ -49,11 +49,11 @@ import { Messages } from '../strings';
 import { IGBConversationalService, IGBCoreService, IGBInstance } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { Sequelize } from 'sequelize-typescript';
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasPackage } from '../../core.gbapp/models/GBModel';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
-import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 
 export class KBServiceSearchResults {
   public answer: GuaribasAnswer;
@@ -433,6 +433,7 @@ export class KBService {
         }
       });
     };
+
     return doIt(subjects.children, null);
   }
 

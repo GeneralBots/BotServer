@@ -58,6 +58,7 @@ export class FeedbackDialog extends IGBDialog {
       new WaterfallDialog('/feedbackNumber', [
         async step => {
           const locale = step.context.activity.locale;
+
           // TODO: Migrate to 4.*+ await step.prompt("choicePrompt", Messages[locale].what_about_me, [
           //   "1",
           //   "2",
@@ -73,6 +74,7 @@ export class FeedbackDialog extends IGBDialog {
           const user = await min.userProfile.get(context, {});
           await service.updateConversationRate(user.conversation, rate);
           await step.context.sendActivity(Messages[locale].thanks);
+
           return await step.next();
         }
       ])
@@ -84,7 +86,7 @@ export class FeedbackDialog extends IGBDialog {
           const locale = step.context.activity.locale;
 
           await step.context.sendActivity(Messages[locale].about_suggestions);
-          step.activeDialog.state.cbId = step.options['id'];
+          step.activeDialog.state.cbId = step.options.id;
 
           return await step.prompt('textPrompt', Messages[locale].what_about_service);
         },
@@ -93,8 +95,8 @@ export class FeedbackDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const rate = await AzureText.getSentiment(
           	min.instance.textAnalyticsKey,
-            min.instance.textAnalyticsEndpoint,
-            min.conversationalService.getCurrentLanguage(step),
+           min.instance.textAnalyticsEndpoint,
+           min.conversationalService.getCurrentLanguage(step),
            step.result
           );
 
@@ -105,6 +107,7 @@ export class FeedbackDialog extends IGBDialog {
 
           // TODO: Record.
           }
+
           return await step.replaceDialog('/ask', { isReturning: true });
 
         }

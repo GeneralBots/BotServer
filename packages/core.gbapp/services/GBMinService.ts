@@ -46,7 +46,7 @@ const AuthenticationContext = require('adal-node').AuthenticationContext;
 import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
 
 import { ConfirmPrompt, WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBAdminService, IGBConversationalService, IGBCoreService, IGBPackage, IGBInstance } from 'botlib';
+import { GBMinInstance, IGBAdminService, IGBConversationalService, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { GBAnalyticsPackage } from '../../analytics.gblib';
 import { GBCorePackage } from '../../core.gbapp';
 import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
@@ -266,11 +266,13 @@ export class GBMinService {
 
     try {
       const json = await request(options);
+
       return Promise.resolve(JSON.parse(json));
     } catch (error) {
       const msg = `[botId:${
         instance.botId
       }] Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
+
       return Promise.reject(new Error(msg));
     }
   }
@@ -296,6 +298,7 @@ export class GBMinService {
       return await request(options);
     } catch (error) {
       const msg = `Error calling Speech to Text client. Error is: ${error}.`;
+
       return Promise.reject(new Error(msg));
     }
   }
@@ -351,21 +354,21 @@ export class GBMinService {
       if (sysPackage.name === 'GBWhatsappPackage') {
         const url = '/instances/:botId/whatsapp';
         server.post(url, (req, res) => {
-          p['channel'].received(req, res);
+          p.channel.received(req, res);
         });
       }
-    }, this);
+    },        this);
 
     appPackages.forEach(p => {
       p.sysPackages = sysPackages;
       p.loadBot(min);
       if (p.getDialogs !== undefined) {
-        let dialogs = p.getDialogs(min);
+        const dialogs = p.getDialogs(min);
         dialogs.forEach(dialog => {
           min.dialogs.add(new WaterfallDialog(dialog.name, dialog.waterfall));
         });
       }
-    }, this);
+    },                  this);
   }
 
   /**
@@ -476,10 +479,10 @@ export class GBMinService {
   private async processMessageActivity(context, min: GBMinInstance, step: any) {
     // Direct script invoking by itent name.
 
-    let isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
+    const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
 
     if (isVMCall) {
-      let mainMethod = context.activity.text;
+      const mainMethod = context.activity.text;
 
       min.sandBoxMap[mainMethod].context = context;
       min.sandBoxMap[mainMethod].step = step;
