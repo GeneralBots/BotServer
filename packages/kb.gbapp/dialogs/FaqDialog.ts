@@ -59,7 +59,7 @@ export class FaqDialog extends IGBDialog {
         const data = await service.getFaqBySubjectArray('faq', null);
         const locale = step.context.activity.locale;
         if (data) {
-          await min.conversationalService.sendEvent(step: GBDialogStep, 'play', {
+          await min.conversationalService.sendEvent(step, 'play', {
             playerType: 'bullet',
             data: data.slice(0, 10)
           });

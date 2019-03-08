@@ -37,6 +37,7 @@
 'use strict';
 
 import * as ts from 'typescript';
+import { GBLog } from 'botlib';
 
 export class TSCompiler {
 

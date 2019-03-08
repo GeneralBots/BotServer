@@ -57,7 +57,7 @@ export class WhoAmIDialog extends IGBDialog {
 
         if (min.instance.whoAmIVideo) {
           await step.context.sendActivity(Messages[locale].show_video);
-          await min.conversationalService.sendEvent(step: GBDialogStep, 'play', {
+          await min.conversationalService.sendEvent(step, 'play', {
             playerType: 'video',
             data: min.instance.whoAmIVideo.trim()
           });

@@ -62,7 +62,7 @@ export class QualityDialog extends IGBDialog {
         const score = step.result;
 
         setTimeout(
-          () => min.conversationalService.sendEvent(step: GBDialogStep, 'stop', null),
+          () => min.conversationalService.sendEvent(step, 'stop', null),
           400
         );
 

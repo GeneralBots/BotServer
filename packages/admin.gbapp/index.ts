@@ -36,7 +36,7 @@
 
 'use strict';
 
-import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBMinInstance, IGBCoreService, IGBPackage, GBDialogStep } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 import { AdminDialog } from './dialogs/AdminDialog';
 import { GuaribasAdmin } from './models/AdminModel';
@@ -54,6 +54,6 @@ export class GBAdminPackage implements IGBPackage {
   }
 
   public loadBot(min: GBMinInstance): void {
-    AdminDialog.setup(min.bot, min);
+    AdminDialog.setup(min);
   }
 }

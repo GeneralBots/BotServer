@@ -40,7 +40,7 @@
 const logger = require('./logger');
 const express = require('express');
 const bodyParser = require('body-parser');
-import { IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
+import { IGBCoreService, IGBInstance, IGBPackage, GBLog } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasInstance } from '../packages/core.gbapp/models/GBModel';
