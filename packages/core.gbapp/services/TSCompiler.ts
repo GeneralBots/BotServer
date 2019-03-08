@@ -37,7 +37,7 @@
 'use strict';
 
 import * as ts from 'typescript';
-const logger = require('../../../src/logger');
+
 
 export class TSCompiler {
 
@@ -77,9 +77,9 @@ export class TSCompiler {
 
         if (diagnostic.file) {
           const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-          logger.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+          GBLog.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
         } else {
-          logger.error(`${message}`);
+          GBLog.error(`${message}`);
         }
       }
     });

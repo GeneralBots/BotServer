@@ -56,5 +56,5 @@ export class GBSecurityPackage implements IGBPackage {
   public loadBot(min: GBMinInstance): void {}
 
   public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: any): void {}
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {}
 }

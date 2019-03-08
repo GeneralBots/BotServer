@@ -1,5 +1,5 @@
 const UrlJoin = require('url-join');
-const logger = require('../../../src/logger');
+
 const Swagger = require('swagger-client');
 const rp = require('request-promise');
 import { GBService } from 'botlib';
@@ -65,15 +65,15 @@ export class WhatsappDirectLine extends GBService {
 
         try {
           const result = await request.post(options);
-          logger.info(result);
+          GBLog.info(result);
         } catch (error) {
-          logger.error('Error initializing 3rd party Whatsapp provider.', error);
+          GBLog.error('Error initializing 3rd party Whatsapp provider.', error);
         }
 
         return client;
       })
       .catch(err => {
-        logger.error('Error initializing DirectLine client', err);
+        GBLog.error('Error initializing DirectLine client', err);
       });
   }
 
@@ -86,13 +86,13 @@ export class WhatsappDirectLine extends GBService {
       return; // Exit here.
     }
 
-    logger.info(`GBWhatsapp: Hook called. from: ${from}(${fromName}), text: ${text})`);
+    GBLog.info(`GBWhatsapp: Hook called. from: ${from}(${fromName}), text: ${text})`);
 
     const conversationId = this.conversationIds[from];
 
     this.directLineClient.then(client => {
       if (this.conversationIds[from] == undefined) {
-        logger.info(`GBWhatsapp: Starting new conversation on Bot.`);
+        GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
         client.Conversations.Conversations_StartConversation()
           .then(response => {
             return response.obj.conversationId;
@@ -127,12 +127,12 @@ export class WhatsappDirectLine extends GBService {
         replyToId: from
       }
     }).catch(err => {
-      logger.error(`GBWhatsapp: Error receiving message: ${err}.`);
+      GBLog.error(`GBWhatsapp: Error receiving message: ${err}.`);
     });
   }
 
   public pollMessages(client, conversationId, from, fromName) {
-    logger.info(`GBWhatsapp: Starting polling message for conversationId:
+    GBLog.info(`GBWhatsapp: Starting polling message for conversationId:
         ${conversationId}.`);
 
     setInterval(() => {
@@ -171,7 +171,7 @@ export class WhatsappDirectLine extends GBService {
     let output = '';
 
     if (activity.text) {
-      logger.info(`GBWhatsapp: MSG: ${activity.text}`);
+      GBLog.info(`GBWhatsapp: MSG: ${activity.text}`);
       output = activity.text;
     }
 
@@ -183,7 +183,7 @@ export class WhatsappDirectLine extends GBService {
             break;
 
           case 'image/png':
-            logger.info('Opening the requested image ' + attachment.contentUrl);
+            GBLog.info('Opening the requested image ' + attachment.contentUrl);
             output += `\n${attachment.contentUrl}`;
             break;
         }

@@ -34,7 +34,7 @@
  * @fileoverview Knowledge base services and logic.
  */
 
-const logger = require('../../../src/logger');
+
 const Path = require('path');
 const Fs = require('fs');
 
@@ -276,7 +276,7 @@ export class KBService {
             answer = Fs.readFileSync(mediaFilename, 'utf8');
             format = '.md';
           } else {
-            logger.info(`[GBImporter] File not found: ${mediaFilename}.`);
+            GBLog.info(`[GBImporter] File not found: ${mediaFilename}.`);
             answer = '';
           }
         }
@@ -341,9 +341,9 @@ export class KBService {
     });
   }
 
-  public async sendAnswer(conversationalService: IGBConversationalService, step: any, answer: GuaribasAnswer) {
+  public async sendAnswer(conversationalService: IGBConversationalService, step: GBDialogStep, answer: GuaribasAnswer) {
     if (answer.content.endsWith('.mp4')) {
-      await conversationalService.sendEvent(step, 'play', {
+      await conversationalService.sendEvent(step: GBDialogStep, 'play', {
         playerType: 'video',
         data: answer.content
       });
@@ -367,7 +367,7 @@ export class KBService {
         });
         html = marked(answer.content);
       }
-      await conversationalService.sendEvent(step, 'play', {
+      await conversationalService.sendEvent(step: GBDialogStep, 'play', {
         playerType: 'markdown',
         data: {
           content: html,
@@ -378,7 +378,7 @@ export class KBService {
       });
     } else {
       await step.context.sendActivity(answer.content);
-      await conversationalService.sendEvent(step, 'stop', null);
+      await conversationalService.sendEvent(step: GBDialogStep, 'stop', null);
     }
   }
 
@@ -462,15 +462,15 @@ export class KBService {
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string) {
     const packageType = Path.extname(localPath);
     const packageName = Path.basename(localPath);
-    logger.info(`[GBDeployer] Opening package: ${localPath}`);
+    GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
     const packageObject = JSON.parse(Fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8'));
 
     const instance = await core.loadInstance(packageObject.botId);
-    logger.info(`[GBDeployer] Importing: ${localPath}`);
+    GBLog.info(`[GBDeployer] Importing: ${localPath}`);
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(localPath, p, instance);
 
     deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
-    logger.info(`[GBDeployer] Finished import of ${localPath}`);
+    GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
   }
 }

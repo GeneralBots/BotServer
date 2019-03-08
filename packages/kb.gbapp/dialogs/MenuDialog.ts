@@ -89,7 +89,7 @@ export class MenuDialog extends IGBDialog {
               'menu',
               user.subjects
             );
-            await min.conversationalService.sendEvent(step, 'play', {
+            await min.conversationalService.sendEvent(step: GBDialogStep, 'play', {
               playerType: 'bullet',
               data: data.slice(0, 10)
             });

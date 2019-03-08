@@ -51,7 +51,7 @@ import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigS
 import { GBDeployer } from '../../../packages/core.gbapp/services/GBDeployer';
 
 const Spinner = require('cli-spinner').Spinner;
-const logger = require('../../../src/logger');
+
 const UrlJoin = require('url-join');
 const iconUrl = 'https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png';
 const publicIp = require('public-ip');
@@ -221,7 +221,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     if (!(res.bodyAsJson as any).id) {
       throw res.bodyAsText;
     }
-    logger.info(`Bot proxy updated at: ${endpoint}.`);
+    GBLog.info(`Bot proxy updated at: ${endpoint}.`);
   }
 
   public async openStorageFirewall(groupName, serverName) {
@@ -258,14 +258,14 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     let keys: any;
     const name = instance.botId;
 
-    logger.info(`Deploying Deploy Group (It may take a few minutes)...`);
+    GBLog.info(`Deploying Deploy Group (It may take a few minutes)...`);
     await this.createDeployGroup(name, instance.cloudLocation);
 
-    logger.info(`Deploying Bot Server...`);
+    GBLog.info(`Deploying Bot Server...`);
     const serverFarm = await this.createHostingPlan(name, `${name}-server-plan`, instance.cloudLocation);
     await this.createServer(serverFarm.id, name, `${name}-server`, instance.cloudLocation);
 
-    logger.info(`Deploying Bot Storage...`);
+    GBLog.info(`Deploying Bot Storage...`);
     const administratorLogin = `sa${GBAdminService.getRndReadableIdentifier()}`;
     const administratorPassword = GBAdminService.getRndPassword();
     const storageServer = `${name.toLowerCase()}-storage-server`;
@@ -285,7 +285,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.storageDialect = 'mssql';
     instance.storageServer = storageServer;
 
-    logger.info(`Deploying Search...`);
+    GBLog.info(`Deploying Search...`);
     const searchName = `${name}-search`.toLowerCase();
     await this.createSearch(name, searchName, instance.cloudLocation);
     const searchKeys = await this.searchClient.adminKeys.get(name, searchName);
@@ -295,19 +295,19 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.searchKey = searchKeys.primaryKey;
     this.deployer.rebuildIndex(instance, this.deployer);
 
-    logger.info(`Deploying Speech...`);
+    GBLog.info(`Deploying Speech...`);
     const speech = await this.createSpeech(name, `${name}-speech`, instance.cloudLocation);
     keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
     instance.speechEndpoint = speech.endpoint;
     instance.speechKey = keys.key1;
 
-    logger.info(`Deploying SpellChecker...`);
+    GBLog.info(`Deploying SpellChecker...`);
     const spellChecker = await this.createSpellChecker(name, `${name}-spellchecker`);
     keys = await this.cognitiveClient.accounts.listKeys(name, spellChecker.name);
     instance.spellcheckerKey = keys.key1;
     instance.spellcheckerEndpoint = spellChecker.endpoint;
 
-    logger.info(`Deploying Text Analytics...`);
+    GBLog.info(`Deploying Text Analytics...`);
     const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);
     keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
     instance.textAnalyticsEndpoint = textAnalytics.endpoint;
@@ -315,7 +315,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     // TODO: Check quotes being added when NLP field is filled.
 
-    logger.info(`Deploying NLP...`);
+    GBLog.info(`Deploying NLP...`);
     const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
     keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
     const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
@@ -324,7 +324,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.nlpKey = keys.key1;
     instance.nlpAppId = nlpAppId;
 
-    logger.info(`Deploying Bot...`);
+    GBLog.info(`Deploying Bot...`);
     instance.botEndpoint = this.defaultEndPoint;
 
     instance = await this.internalDeployBot(

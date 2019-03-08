@@ -47,7 +47,7 @@ export class GBAdminPackage implements IGBPackage {
   public unloadPackage(core: IGBCoreService): void {}
   public getDialogs(min: GBMinInstance) {}
   public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: any): void {}
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {}
 
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([GuaribasAdmin]);

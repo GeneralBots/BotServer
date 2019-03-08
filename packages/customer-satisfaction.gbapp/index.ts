@@ -57,5 +57,5 @@ export class GBCustomerSatisfactionPackage implements IGBPackage {
     QualityDialog.setup(min.bot, min);
   }
   public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: any): void {}
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {}
 }

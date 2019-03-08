@@ -39,14 +39,14 @@
 const { DialogSet, TextPrompt } = require('botbuilder-dialogs');
 const UrlJoin = require('url-join');
 const express = require('express');
-const logger = require('../../../src/logger');
+
 const request = require('request-promise-native');
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 
 import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
 
 import { ConfirmPrompt, WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBAdminService, IGBConversationalService, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBAdminService, IGBConversationalService, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { GBAnalyticsPackage } from '../../analytics.gblib';
 import { GBCorePackage } from '../../core.gbapp';
 import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
@@ -141,14 +141,14 @@ export class GBMinService {
         server.post(url, async (req, res) => {
           await this.receiver(adapter, req, res, conversationState, min, instance, appPackages);
         });
-        logger.info(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
+        GBLog.info(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
 
         // Serves individual URL for each bot user interface.
 
         const uiUrl = `/${instance.botId}`;
         server.use(uiUrl, express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
 
-        logger.info(`Bot UI ${uiPackage} accessible at: ${uiUrl}.`);
+        GBLog.info(`Bot UI ${uiPackage} accessible at: ${uiUrl}.`);
         const state = `${instance.instanceId}${Math.floor(Math.random() * 1000000000)}`;
 
         // Clients get redirected here in order to create an OAuth authorize url and redirect them to AAD.
@@ -171,7 +171,7 @@ export class GBMinService {
       const state = await min.adminService.getValue(instance.instanceId, 'AntiCSRFAttackState');
       if (req.query.state !== state) {
         const msg = 'WARNING: state field was not provided as anti-CSRF token';
-        logger.error(msg);
+        GBLog.error(msg);
         throw new Error(msg);
       }
       const authenticationContext = new AuthenticationContext(
@@ -187,7 +187,7 @@ export class GBMinService {
         async (err, token) => {
           if (err) {
             const msg = `Error acquiring token: ${err}`;
-            logger.error(msg);
+            GBLog.error(msg);
             res.send(msg);
           } else {
             await this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
@@ -245,7 +245,7 @@ export class GBMinService {
     } else {
       const error = `Instance not found: ${botId}.`;
       res.sendStatus(error);
-      logger.error(error);
+      GBLog.error(error);
     }
   }
 
@@ -354,7 +354,7 @@ export class GBMinService {
       if (sysPackage.name === 'GBWhatsappPackage') {
         const url = '/instances/:botId/whatsapp';
         server.post(url, (req, res) => {
-          p.channel.received(req, res);
+          p['channel'].received(req, res);
         });
       }
     },        this);
@@ -405,7 +405,7 @@ export class GBMinService {
           await min.userProfile.set(step.context, user);
         }
 
-        logger.info(
+        GBLog.info(
           `User>: ${context.activity.text} (${context.activity.type}, ${context.activity.name}, ${
             context.activity.channelId
           }, {context.activity.value})`
@@ -413,7 +413,7 @@ export class GBMinService {
         if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {
           const member = context.activity.membersAdded[0];
           if (member.name === 'GeneralBots') {
-            logger.info(`Bot added to conversation, starting chat...`);
+            GBLog.info(`Bot added to conversation, starting chat...`);
             appPackages.forEach(e => {
               e.onNewSession(min, step);
             });
@@ -421,7 +421,7 @@ export class GBMinService {
 
             await step.beginDialog('/');
           } else {
-            logger.info(`Member added to conversation: ${member.name}`);
+            GBLog.info(`Member added to conversation: ${member.name}`);
           }
 
           // Processes messages.
@@ -440,7 +440,7 @@ export class GBMinService {
         await conversationState.saveChanges(context, true);
       } catch (error) {
         const msg = `ERROR: ${error.message} ${error.stack ? error.stack : ''}`;
-        logger.error(msg);
+        GBLog.error(msg);
 
         await step.context.sendActivity(Messages[step.context.activity.locale].very_sorry_about_error);
         await step.beginDialog('/ask', { isReturning: true });
@@ -448,7 +448,7 @@ export class GBMinService {
     });
   }
 
-  private async processEventActivity(context, step: any) {
+  private async processEventActivity(context, step: GBDialogStep) {
     if (context.activity.name === 'whoAmI') {
       await step.beginDialog('/whoAmI');
     } else if (context.activity.name === 'showSubjects') {
@@ -476,7 +476,7 @@ export class GBMinService {
     }
   }
 
-  private async processMessageActivity(context, min: GBMinInstance, step: any) {
+  private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
     // Direct script invoking by itent name.
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;

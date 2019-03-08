@@ -36,7 +36,7 @@
 
 'use strict';
 
-const logger = require('../../../src/logger');
+
 const Path = require('path');
 const UrlJoin = require('url-join');
 const Fs = require('fs');
@@ -109,7 +109,7 @@ export class GBDeployer {
           const dirs = getDirectories(path);
           dirs.forEach(element => {
             if (element.startsWith('.')) {
-              logger.info(`Ignoring ${element}...`);
+              GBLog.info(`Ignoring ${element}...`);
             } else {
               if (element.endsWith('.gbot')) {
                 botPackages.push(element);
@@ -122,9 +122,9 @@ export class GBDeployer {
           });
         }
 
-        logger.info(`Starting looking for packages (.gbot, .gbtheme, .gbkb, .gbapp)...`);
+        GBLog.info(`Starting looking for packages (.gbot, .gbtheme, .gbkb, .gbapp)...`);
         paths.forEach(e => {
-          logger.info(`Looking in: ${e}...`);
+          GBLog.info(`Looking in: ${e}...`);
           doIt(e);
         });
 
@@ -136,11 +136,11 @@ export class GBDeployer {
           .interval(1000)
           .times(10)
           .condition(cb => {
-            logger.info(`Waiting for app package deployment...`);
+            GBLog.info(`Waiting for app package deployment...`);
             cb(appPackagesProcessed === gbappPackages.length);
           })
           .done(async result => {
-            logger.info(`App Package deployment done.`);
+            GBLog.info(`App Package deployment done.`);
 
             ({ generalPackages, totalPackages } = await this.deployDataPackages(
               core,
@@ -319,7 +319,7 @@ export class GBDeployer {
   public runOnce() {
     const root = 'packages/default.gbui';
     if (!Fs.existsSync(`${root}/build`)) {
-      logger.info(`Preparing default.gbui (it may take some additional time for the first time)...`);
+      GBLog.info(`Preparing default.gbui (it may take some additional time for the first time)...`);
       Fs.writeFileSync(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
       child_process.execSync('npm install', { cwd: root });
       child_process.execSync('npm run build', { cwd: root });
@@ -346,9 +346,9 @@ export class GBDeployer {
 
     botPackages.forEach(e => {
       if (e !== 'packages\\boot.gbot') {
-        logger.info(`Deploying bot: ${e}...`);
+        GBLog.info(`Deploying bot: ${e}...`);
         _this.deployBot(e);
-        logger.info(`Bot: ${e} deployed...`);
+        GBLog.info(`Bot: ${e} deployed...`);
       }
     });
 
@@ -357,7 +357,7 @@ export class GBDeployer {
     generalPackages = generalPackages.filter(p => !p.endsWith('.git'));
     generalPackages.forEach(filename => {
       const filenameOnly = Path.basename(filename);
-      logger.info(`Deploying package: ${filename}...`);
+      GBLog.info(`Deploying package: ${filename}...`);
 
       // Handles apps for general bots - .gbapp must stay out of deploy folder.
 
@@ -365,10 +365,10 @@ export class GBDeployer {
         // Themes for bots.
       } else if (Path.extname(filename) === '.gbtheme') {
         server.use('/themes/' + filenameOnly, express.static(filename));
-        logger.info(`Theme (.gbtheme) assets accessible at: ${'/themes/' + filenameOnly}.`);
+        GBLog.info(`Theme (.gbtheme) assets accessible at: ${'/themes/' + filenameOnly}.`);
       } else if (Path.extname(filename) === '.gbkb') {
         server.use('/kb/' + filenameOnly + '/subjects', express.static(UrlJoin(filename, 'subjects')));
-        logger.info(`KB (.gbkb) assets accessible at: ${'/kb/' + filenameOnly}.`);
+        GBLog.info(`KB (.gbkb) assets accessible at: ${'/kb/' + filenameOnly}.`);
       } else if (Path.extname(filename) === '.gbui') {
         // Already Handled
       } else if (Path.extname(filename) === '.gbdialog') {
@@ -385,14 +385,14 @@ export class GBDeployer {
       .interval(100)
       .times(5)
       .condition(cb => {
-        logger.info(`Waiting for package deployment...`);
+        GBLog.info(`Waiting for package deployment...`);
         cb(totalPackages === generalPackages.length);
       })
       .done(result => {
         if (botPackages.length === 0) {
-          logger.info('Use ADDITIONAL_DEPLOY_PATH to point to a .gbai package folder (no external packages).');
+          GBLog.info('Use ADDITIONAL_DEPLOY_PATH to point to a .gbai package folder (no external packages).');
         } else {
-          logger.info(`Package deployment done.`);
+          GBLog.info(`Package deployment done.`);
         }
         resolve();
       });
@@ -405,17 +405,17 @@ export class GBDeployer {
     gbappPackages.forEach(e => {
       // Skips .gbapp inside deploy folder.
       if (!e.startsWith('packages')) {
-        logger.info(`Deploying app: ${e}...`);
+        GBLog.info(`Deploying app: ${e}...`);
 
         let folder = Path.join(e, 'node_modules');
         if (!Fs.existsSync(folder)) {
-          logger.info(`Installing modules for ${e}...`);
+          GBLog.info(`Installing modules for ${e}...`);
           child_process.execSync('npm install', { cwd: e });
         }
 
         folder = Path.join(e, 'dist');
         if (!Fs.existsSync()) {
-          logger.info(`Compiling ${e}...`);
+          GBLog.info(`Compiling ${e}...`);
 
           try {
             child_process.execSync(Path.join(e, 'node_modules/.bin/tsc'), { cwd: e });
@@ -424,15 +424,15 @@ export class GBDeployer {
                 const p = new m.Package();
                 p.loadPackage(core, core.sequelize);
                 appPackages.push(p);
-                logger.info(`App (.gbapp) deployed: ${e}.`);
+                GBLog.info(`App (.gbapp) deployed: ${e}.`);
                 appPackagesProcessed++;
               })
               .catch(err => {
-                logger.error(`Error deploying .gbapp package: ${e}\n${err}`);
+                GBLog.error(`Error deploying .gbapp package: ${e}\n${err}`);
                 appPackagesProcessed++;
               });
           } catch (error) {
-            logger.error(`Error compiling .gbapp package ${e}:\n${error.stdout.toString()}`);
+            GBLog.error(`Error compiling .gbapp package ${e}:\n${error.stdout.toString()}`);
             appPackagesProcessed++;
           }
         }

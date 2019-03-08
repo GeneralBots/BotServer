@@ -30,7 +30,7 @@
 |                                                                             |
 \*****************************************************************************/
 
-const logger = require('../../../src/logger');
+
 import * as fs from 'fs';
 
 /**
@@ -108,7 +108,7 @@ export class GBConfigService {
           value = 'true';
           break;
         default:
-          logger.warn(`Invalid key on .env file: '${key}'`);
+          GBLog.warn(`Invalid key on .env file: '${key}'`);
           break;
       }
     }

@@ -23,7 +23,7 @@
   },
   "scripts": {
     "clean": "shx rm -rf node_modules/ dist/ docs/reference",
-    "tslint": "tslint --fix ./src/*.ts ./packages/**/*.ts -t verbose",
+    "tslint": "tslint --fix ./src/*.ts ./packages/**/*.ts -t verbose -e ./packages/default.gbui/**/* -e ./packages/**/*.gbdialog/**/*",
     "build": "npm install && npm run build-server && npm run build-gbui && npm run build-docs",
     "build-server": "tsc",
     "build-gbui": "cd packages/default.gbui && echo SKIP_PREFLIGHT_CHECK=true >.env &&  npm install && npm run build",

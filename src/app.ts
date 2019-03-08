@@ -62,7 +62,7 @@ export class GBServer {
    */
 
   public static run() {
-    logger.info(`The Bot Server is in STARTING mode...`);
+    GBLog.info(`The Bot Server is in STARTING mode...`);
 
     // Creates a basic HTTP server that will serve several URL, one for each
     // bot instance. This allows the same server to attend multiple Bot on
@@ -83,7 +83,7 @@ export class GBServer {
     server.listen(port, () => {
       (async () => {
         try {
-          logger.info(`Now accepting connections on ${port}...`);
+          GBLog.info(`Now accepting connections on ${port}...`);
 
           // Reads basic configuration, initialize minimal services.
 
@@ -98,7 +98,7 @@ export class GBServer {
 
           // Ensure that local development proxy is setup.
 
-          logger.info(`Establishing a development local proxy (ngrok)...`);
+          GBLog.info(`Establishing a development local proxy (ngrok)...`);
           const proxyAddress: string = await core.ensureProxy(port);
 
           // Creates a boot instance or load it from storage.
@@ -115,14 +115,14 @@ export class GBServer {
 
           // Deploys system and user packages.
 
-          logger.info(`Deploying packages...`);
+          GBLog.info(`Deploying packages...`);
           core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, appPackages);
 
           // Loads all bot instances.
 
-          logger.info(`Publishing instances...`);
+          GBLog.info(`Publishing instances...`);
           const packageInstance = await importer.importIfNotExistsBotPackage(
             GBConfigService.get('CLOUD_GROUP'),
             'boot.gbot',
@@ -145,13 +145,13 @@ export class GBServer {
 
           deployer.runOnce();
 
-          logger.info(`The Bot Server is in RUNNING mode...`);
+          GBLog.info(`The Bot Server is in RUNNING mode...`);
 
           // Opens Navigator.
 
           core.openBrowserInDevelopment();
         } catch (err) {
-          logger.error(`STOP: ${err} ${err.stack ? err.stack : ''}`);
+          GBLog.error(`STOP: ${err} ${err.stack ? err.stack : ''}`);
           process.exit(1);
         }
       })();

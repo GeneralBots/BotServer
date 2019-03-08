@@ -49,5 +49,5 @@ export class GBAnalyticsPackage implements IGBPackage {
   public unloadPackage(core: IGBCoreService): void {}
   public loadBot(min: GBMinInstance): void {}
   public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: any): void {}
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {}
 }

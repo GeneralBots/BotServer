@@ -33,19 +33,18 @@
 'use strict';
 
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, GBService, IGBCoreService } from 'botlib';
+import { GBLog, GBMinInstance, GBService, IGBCoreService } from 'botlib';
 import * as fs from 'fs';
-import GBAPIService from './GBAPIService';
-import GBAPIService from './GBAPIService';
 import { GBDeployer } from './GBDeployer';
 import { TSCompiler } from './TSCompiler';
 
 const walkPromise = require('walk-promise');
-const logger = require('../../../src/logger');
+
 const vm = require('vm');
 const UrlJoin = require('url-join');
 const vb2ts = require('vbscript-to-typescript/dist/converter');
 const beautify = require('js-beautify').js;
+
 
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
@@ -220,7 +219,7 @@ export class GBVMService extends GBService {
       vm.runInContext(parsedCode, context);
       min.sandBoxMap[mainName] = sandbox;
       await deployer.deployScriptToStorage(1, filename); // TODO: Per bot storage.
-      logger.info(`[GBVMService] Finished loading of ${filename}`);
+      GBLog.info(`[GBVMService] Finished loading of ${filename}`);
     }
   }
 
@@ -260,7 +259,7 @@ export class GBVMService extends GBService {
 
           const cbId = step.activeDialog.state.cbId;
           const cb = min.cbMap[cbId];
-          cb.bind({ step: step, context: step.context }); // TODO: Necessary or min.sandbox?
+          cb.bind({ step: step: GBDialogStep, context: step.context }); // TODO: Necessary or min.sandbox?
 
           await step.endDialog();
 

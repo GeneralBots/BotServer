@@ -44,7 +44,7 @@ import { AzureText } from 'pragmatismo-io-framework';
 import { Messages } from '../strings';
 import { KBService } from './../services/KBService';
 
-const logger = require('../../../src/logger');
+
 
 export class AskDialog extends IGBDialog {
   /**
@@ -65,7 +65,7 @@ export class AskDialog extends IGBDialog {
 
             // Sends the answer to all outputs, including projector.
 
-            await service.sendAnswer(min.conversationalService, step, answer);
+            await service.sendAnswer(min.conversationalService, step: GBDialogStep, answer);
 
             await step.replaceDialog('/ask', { isReturning: true });
           }
@@ -88,7 +88,7 @@ export class AskDialog extends IGBDialog {
 
           // Stops any content on projector.
 
-          await min.conversationalService.sendEvent(step, 'stop', null);
+          await min.conversationalService.sendEvent(step: GBDialogStep, 'stop', null);
 
           // Handle extra text from FAQ.
 
@@ -104,7 +104,7 @@ export class AskDialog extends IGBDialog {
             const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
 
             if (data != text) {
-              logger.info(`Spelling corrected: ${data}`);
+              GBLog.info(`Spelling corrected: ${data}`);
               text = data;
             }
           }
@@ -126,7 +126,7 @@ export class AskDialog extends IGBDialog {
 
             // Sends the answer to all outputs, including projector.
 
-            await service.sendAnswer(min.conversationalService, step, resultsA.answer);
+            await service.sendAnswer(min.conversationalService, step: GBDialogStep, resultsA.answer);
 
             // Goes to ask loop, again.
 
@@ -155,11 +155,11 @@ export class AskDialog extends IGBDialog {
 
               // Sends the answer to all outputs, including projector.
 
-              await service.sendAnswer(min.conversationalService, step, resultsB.answer);
+              await service.sendAnswer(min.conversationalService, step: GBDialogStep, resultsB.answer);
 
               return await step.replaceDialog('/ask', { isReturning: true });
             } else {
-              if (!(await min.conversationalService.routeNLP(step, min, text))) {
+              if (!(await min.conversationalService.routeNLP(step: GBDialogStep, min, text))) {
                 await step.context.sendActivity(Messages[locale].did_not_find);
 
                 return await step.replaceDialog('/ask', { isReturning: true });

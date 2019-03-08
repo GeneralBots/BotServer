@@ -43,7 +43,7 @@ import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance } from 'botlib';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
-const logger = require('../../../src/logger');
+
 
 export class QualityDialog extends IGBDialog {
   /**
@@ -63,7 +63,7 @@ export class QualityDialog extends IGBDialog {
         const score = step.result;
 
         setTimeout(
-          () => min.conversationalService.sendEvent(step, 'stop', null),
+          () => min.conversationalService.sendEvent(step: GBDialogStep, 'stop', null),
           400
         );
 
