@@ -39,7 +39,7 @@
 const logger = require('../../../src/logger');
 import { MessageFactory } from 'botbuilder';
 import { LuisRecognizer } from 'botbuilder-ai';
-import { GBMinInstance, IGBConversationalService } from 'botlib';
+import { GBMinInstance, IGBConversationalService, IGBCoreService } from 'botlib';
 import { AzureText } from 'pragmatismo-io-framework';
 import { Messages } from '../strings';
 import { GBCoreService } from './GBCoreService';
@@ -51,9 +51,10 @@ export interface LanguagePickerSettings {
 }
 
 export class GBConversationalService implements IGBConversationalService {
-  public coreService: GBCoreService;
 
-  constructor(coreService: GBCoreService) {
+  public coreService: IGBCoreService;
+
+  constructor(coreService: IGBCoreService) {
     this.coreService = coreService;
   }
 
@@ -93,7 +94,7 @@ export class GBConversationalService implements IGBConversationalService {
   public async routeNLP(step: any, min: GBMinInstance, text: string): Promise<boolean> {
     // Invokes LUIS.
 
-    let endpoint = min.instance.nlpEndpoint.replace('/luis/v2.0', '');
+    const endpoint = min.instance.nlpEndpoint.replace('/luis/v2.0', '');
 
     const model = new LuisRecognizer({
       applicationId: min.instance.nlpAppId,

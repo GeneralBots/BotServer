@@ -53,6 +53,7 @@ import { GuaribasPackage } from '../../core.gbapp/models/GBModel';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 
 export class KBServiceSearchResults {
   public answer: GuaribasAnswer;
@@ -326,7 +327,7 @@ export class KBService {
         });
 
         if (lastAnswer && lastQuestionId) {
-          await lastAnswer.updateAttributes({ nextId: lastQuestionId });
+          await lastAnswer.update({ nextId: lastQuestionId });
         }
         lastAnswer = answer1;
         lastQuestionId = question1.questionId;
@@ -449,7 +450,7 @@ export class KBService {
       where: { instanceId: instance.instanceId, packageId: packageId }
     });
 
-    await deployer.rebuildIndex(instance);
+    await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
   }
 
   /**
@@ -468,7 +469,7 @@ export class KBService {
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(localPath, p, instance);
 
-    deployer.rebuildIndex(instance);
+    deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
     logger.info(`[GBDeployer] Finished import of ${localPath}`);
   }
 }

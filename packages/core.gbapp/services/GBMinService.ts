@@ -46,7 +46,7 @@ const AuthenticationContext = require('adal-node').AuthenticationContext;
 import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
 
 import { ConfirmPrompt, WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBAdminService, IGBConversationalService, IGBCoreService, IGBPackage } from 'botlib';
+import { GBMinInstance, IGBAdminService, IGBConversationalService, IGBCoreService, IGBPackage, IGBInstance } from 'botlib';
 import { GBAnalyticsPackage } from '../../analytics.gblib';
 import { GBCorePackage } from '../../core.gbapp';
 import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
@@ -97,12 +97,12 @@ export class GBMinService {
    * */
 
   public async buildMin(
-    bootInstance: GuaribasInstance,
+    bootInstance: IGBInstance,
     server: any,
     appPackages: IGBPackage[],
-    instances: GuaribasInstance[],
+    instances: IGBInstance[],
     deployer: GBDeployer
-  ): Promise<GBMinInstance> {
+  ) {
     // Serves default UI on root address '/'.
 
     const uiPackage = 'default.gbui';
@@ -166,9 +166,9 @@ export class GBMinService {
     );
   }
 
-  private handleOAuthTokenRequests(server: any, min: GBMinInstance, instance: GuaribasInstance) {
+  private handleOAuthTokenRequests(server: any, min: GBMinInstance, instance: IGBInstance) {
     server.get(`/${min.instance.botId}/token`, async (req, res) => {
-      const state = await min.adminService.getValue(min.instance.instanceId, 'AntiCSRFAttackState');
+      const state = await min.adminService.getValue(instance.instanceId, 'AntiCSRFAttackState');
       if (req.query.state !== state) {
         const msg = 'WARNING: state field was not provided as anti-CSRF token';
         logger.error(msg);
@@ -218,7 +218,7 @@ export class GBMinService {
   /**
    * Returns the instance object to clients requesting bot info.
    */
-  private async sendInstanceToClient(req, bootInstance: GuaribasInstance, res: any, webchatToken: any) {
+  private async sendInstanceToClient(req, bootInstance: IGBInstance, res: any, webchatToken: any) {
     let botId = req.params.botId;
     if (botId === '[default]') {
       botId = bootInstance.botId;
@@ -351,7 +351,7 @@ export class GBMinService {
       if (sysPackage.name === 'GBWhatsappPackage') {
         const url = '/instances/:botId/whatsapp';
         server.post(url, (req, res) => {
-          p.channel.received(req, res);
+          p['channel'].received(req, res);
         });
       }
     }, this);
@@ -383,7 +383,7 @@ export class GBMinService {
     await adapter.processActivity(req, res, async context => {
       // Get loaded user state
       const state = await conversationState.get(context);
-      const step = await min.dialogs.createContext(context, state);
+      const step = await min.dialogs.createContext(context);
       step.context.activity.locale = 'en-US'; // TODO: Make dynamic.
 
       try {
@@ -481,10 +481,10 @@ export class GBMinService {
     if (isVMCall) {
       let mainMethod = context.activity.text;
 
-      min.sandbox.context = context;
-      min.sandbox.step = step;
-      min.sandbox[mainMethod].bind(min.sandbox);
-      await min.sandbox[mainMethod]();
+      min.sandBoxMap[mainMethod].context = context;
+      min.sandBoxMap[mainMethod].step = step;
+      min.sandBoxMap[mainMethod][mainMethod].bind(min.sandBoxMap[mainMethod]);
+      await min.sandBoxMap[mainMethod][mainMethod]();
     } else if (context.activity.text === 'admin') {
       await step.beginDialog('/admin');
 

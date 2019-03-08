@@ -33,10 +33,11 @@
 'use strict';
 
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBCoreService } from 'botlib';
+import { GBMinInstance, IGBCoreService, GBService } from 'botlib';
 import * as fs from 'fs';
 import { GBDeployer } from './GBDeployer';
 import { TSCompiler } from './TSCompiler';
+import GBAPIService from './GBAPIService';
 import DialogClass from './GBAPIService';
 
 const walkPromise = require('walk-promise');
@@ -44,7 +45,7 @@ const logger = require('../../../src/logger');
 const vm = require('vm');
 const UrlJoin = require('url-join');
 const vb2ts = require('vbscript-to-typescript/dist/converter');
-var beautify = require('js-beautify').js;
+let beautify = require('js-beautify').js;
 
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
@@ -55,7 +56,7 @@ var beautify = require('js-beautify').js;
  * translation and enhance classic BASIC experience.
  */
 
-export class GBVMService implements IGBCoreService {
+export class GBVMService extends GBService {
   private readonly script = new vm.Script();
 
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
@@ -108,6 +109,10 @@ export class GBVMService implements IGBCoreService {
 
     code = code.replace(/(generate a password)/g, ($0, $1) => {
       return 'let password = sys().generatePassword()';
+    });
+
+    code = code.replace(/(get)(\s)(.*)/g, ($0, $1, $2) => {
+      return `sys().httpGet (${$2})`;
     });
 
     code = code.replace(/(create a bot farm using)(\s)(.*)/g, ($0, $1, $2, $3) => {
@@ -207,14 +212,14 @@ export class GBVMService implements IGBCoreService {
 
       parsedCode = this.handleThisAndAwait(parsedCode);
 
-      parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true })
+      parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true });
       fs.writeFileSync(jsfile, parsedCode);
 
-      const sandbox: DialogClass = new DialogClass(min);
+      const sandbox: DialogClass = new DialogClass(min, deployer);
       const context = vm.createContext(sandbox);
       vm.runInContext(parsedCode, context);
-      min.sandbox = sandbox;
-      await deployer.deployScriptToStorage(min.instanceId, filename);
+      min.sandBoxMap[mainName] = sandbox;
+      await deployer.deployScriptToStorage(1, filename); // TODO: Per bot storage.
       logger.info(`[GBVMService] Finished loading of ${filename}`);
     }
   }

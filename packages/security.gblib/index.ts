@@ -44,29 +44,17 @@ import { Sequelize } from 'sequelize-typescript';
 import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models';
 
 export class GBSecurityPackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = null;
+  public sysPackages: IGBPackage[] = undefined;
+  public getDialogs(min: GBMinInstance) {}
+
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-    core.sequelize.addModels([
-      GuaribasGroup,
-      GuaribasUser,
-      GuaribasUserGroup
-    ]);
-
-    core;
+    core.sequelize.addModels([GuaribasGroup, GuaribasUser, GuaribasUserGroup]);
   }
 
-  public unloadPackage(core: IGBCoreService): void {
+  public unloadPackage(core: IGBCoreService): void {}
 
-  }
+  public loadBot(min: GBMinInstance): void {}
 
-  public loadBot(min: GBMinInstance): void {
-
-  }
-
-  public unloadBot(min: GBMinInstance): void {
-
-  }
-  public onNewSession(min: GBMinInstance, step: any): void {
-
-  }
+  public unloadBot(min: GBMinInstance): void {}
+  public onNewSession(min: GBMinInstance, step: any): void {}
 }

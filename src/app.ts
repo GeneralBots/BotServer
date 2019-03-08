@@ -40,7 +40,7 @@
 const logger = require('./logger');
 const express = require('express');
 const bodyParser = require('body-parser');
-import { IGBInstance, IGBPackage } from 'botlib';
+import { IGBInstance, IGBPackage, IGBCoreService } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasInstance } from '../packages/core.gbapp/models/GBModel';
@@ -50,8 +50,6 @@ import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService';
 import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
-import { GBVMService } from '../packages/core.gbapp/services/GBVMService';
-import { load } from 'dotenv';
 
 const appPackages = new Array<IGBPackage>();
 
@@ -90,7 +88,7 @@ export class GBServer {
           // Reads basic configuration, initialize minimal services.
 
           GBConfigService.init();
-          const core = new GBCoreService();
+          const core: IGBCoreService = new GBCoreService();
 
           const importer: GBImporter = new GBImporter(core);
           const deployer: GBDeployer = new GBDeployer(core, importer);
@@ -103,7 +101,7 @@ export class GBServer {
           logger.info(`Establishing a development local proxy (ngrok)...`);
           const proxyAddress: string = await core.ensureProxy(port);
 
-          // Creates a boot instance or load it frmo storage.
+          // Creates a boot instance or load it from storage.
 
           let bootInstance: IGBInstance = null;
           try {
@@ -130,9 +128,9 @@ export class GBServer {
             'boot.gbot',
             'packages/boot.gbot'
           );
-          const fullInstance = Object.assign(packageInstance, bootInstance);
+          const fullInstance = { ...packageInstance, ...bootInstance };
           await core.saveInstance(fullInstance);
-          let instances: GuaribasInstance[] = await core.loadAllInstances(core, azureDeployer, proxyAddress);
+          let instances: IGBInstance[] = await core.loadAllInstances(core, azureDeployer, proxyAddress);
           instances = await core.ensureInstances(instances, bootInstance, core);
           if (!bootInstance) {
             bootInstance = instances[0];
@@ -145,14 +143,13 @@ export class GBServer {
 
           // Deployment of local applications for the first time.
 
-          deployer.installDefaultGBUI();
+          deployer.runOnce();
 
           logger.info(`The Bot Server is in RUNNING mode...`);
 
           // Opens Navigator.
 
           core.openBrowserInDevelopment();
-
         } catch (err) {
           logger.error(`STOP: ${err} ${err.stack ? err.stack : ''}`);
           process.exit(1);

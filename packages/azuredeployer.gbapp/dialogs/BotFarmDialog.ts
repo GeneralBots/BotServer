@@ -40,6 +40,7 @@ import { BotAdapter } from 'botbuilder';
 import { GBMinInstance } from 'botlib';
 import { IGBDialog } from 'botlib';
 import { Messages } from '../strings';
+import { WaterfallDialog } from 'botlib/node_modules/botbuilder-dialogs';
 
 export class BotFarmDialog extends IGBDialog {
   /**
@@ -49,21 +50,20 @@ export class BotFarmDialog extends IGBDialog {
    * @param min The minimal bot instance data.
    */
   public static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add('/createBotFarm', [
+    min.dialogs.add(new WaterfallDialog ('/createBotFarm', [
       async step => {
         const locale = step.context.activity.locale;
-        await step.prompt('choicePrompt', Messages[locale].what_about_me, [
-          '1',
-          '2',
-          '3',
-          '4',
-          '5'
-        ]);
+        await step.prompt('choicePrompt', Messages[locale].what_about_me);
+
+        return step.next();
       },
       async step => {
+
         const locale = step.context.activity.locale;
         await step.context.sendActivity(Messages[locale].thanks);
+
+        return step.next();
       }
-    ]);
+    ]));
   }
 }

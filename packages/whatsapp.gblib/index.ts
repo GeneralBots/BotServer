@@ -44,31 +44,30 @@ import { Sequelize } from 'sequelize-typescript';
 import { WhatsappDirectLine } from './services/WhatsappDirectLine';
 
 export class GBWhatsappPackage implements IGBPackage {
+  public sysPackages: IGBPackage[] = undefined;
+  public getDialogs(min: GBMinInstance) {}
 
-    public sysPackages: IGBPackage[] = null;
-    public channel: WhatsappDirectLine;
+  public channel: WhatsappDirectLine;
 
-    public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
+
+  public unloadPackage(core: IGBCoreService): void {}
+
+  public loadBot(min: GBMinInstance): void {
+    // Only loads engine if it is defined on services.json.
+
+    if (min.instance.whatsappBotKey) {
+      this.channel = new WhatsappDirectLine(
+        min.botId,
+        min.instance.whatsappBotKey,
+        min.instance.whatsappServiceKey,
+        min.instance.whatsappServiceNumber,
+        min.instance.whatsappServiceUrl,
+        min.instance.whatsappServiceWebhookUrl
+      );
     }
+  }
 
-    public unloadPackage(core: IGBCoreService): void {
-
-    }
-
-    public loadBot(min: GBMinInstance): void {
-
-        // Only loads engine if it is defined on services.json.
-
-        if (min.instance.whatsappBotKey) {
-            this.channel = new WhatsappDirectLine(min.botId, min.instance.whatsappBotKey, min.instance.whatsappServiceKey,
-                                                  min.instance.whatsappServiceNumber, min.instance.whatsappServiceUrl, min.instance.whatsappServiceWebhookUrl);
-        }
-    }
-
-    public unloadBot(min: GBMinInstance): void {
-
-    }
-    public onNewSession(min: GBMinInstance, step: any): void {
-
-    }
+  public unloadBot(min: GBMinInstance): void {}
+  public onNewSession(min: GBMinInstance, step: any): void {}
 }

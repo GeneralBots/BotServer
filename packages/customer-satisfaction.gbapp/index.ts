@@ -45,23 +45,17 @@ import { GuaribasQuestionAlternate } from './models/index';
 import { Sequelize } from 'sequelize-typescript';
 
 export class GBCustomerSatisfactionPackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = null;
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-    core.sequelize.addModels([
-      GuaribasQuestionAlternate
-    ]);
-  }
-  public unloadPackage(core: IGBCoreService): void {
+  public sysPackages: IGBPackage[] = undefined;
+  public getDialogs(min: GBMinInstance) {}
 
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+    core.sequelize.addModels([GuaribasQuestionAlternate]);
   }
+  public unloadPackage(core: IGBCoreService): void {}
   public loadBot(min: GBMinInstance): void {
     FeedbackDialog.setup(min.bot, min);
     QualityDialog.setup(min.bot, min);
   }
-  public unloadBot(min: GBMinInstance): void {
-
-  }
-  public onNewSession(min: GBMinInstance, step: any): void {
-
-  }
+  public unloadBot(min: GBMinInstance): void {}
+  public onNewSession(min: GBMinInstance, step: any): void {}
 }

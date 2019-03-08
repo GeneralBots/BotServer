@@ -38,14 +38,14 @@
 
 const UrlJoin = require('url-join');
 import { BotAdapter } from 'botbuilder';
-import { WaterfallDialog, WaterfallStep, WaterfallStepContext } from 'botbuilder-dialogs';
-import { GBMinInstance } from 'botlib';
-import { IGBDialog } from 'botlib';
+import { WaterfallDialog } from 'botbuilder-dialogs';
+import { GBMinInstance, IGBDialog } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { GBAdminService } from '../services/GBAdminService';
 import { Messages } from '../strings';
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 
 /**
  * Dialogs for administration tasks.
@@ -79,7 +79,10 @@ export class AdminDialog extends IGBDialog {
   }
 
   public static async rebuildIndexPackageCommand(min: GBMinInstance, text: string, deployer: GBDeployer) {
-    await deployer.rebuildIndex(min.instance);
+    await deployer.rebuildIndex(
+      min.instance,
+      new AzureDeployerService(deployer).getKBSearchSchema(min.instance.searchIndex)
+    );
   }
 
   public static async addConnectionCommand(min: GBMinInstance, text: any) {
@@ -136,7 +139,7 @@ export class AdminDialog extends IGBDialog {
           if (text === 'quit') {
             return await step.replaceDialog('/');
           } else if (cmdName === 'createFarm') {
-            await AdminDialog.createFarmCommand(text, deployer);
+            await AdminDialog.createFarmCommand(text, min);
 
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'deployPackage') {
@@ -224,9 +227,9 @@ export class AdminDialog extends IGBDialog {
 
           await min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
 
-          const url = `https://login.microsoftonline.com/${min.instance.authenticatorTenant}/oauth2/authorize?client_id=${
-            min.instance.authenticatorClientId
-          }&response_type=code&redirect_uri=${UrlJoin(
+          const url = `https://login.microsoftonline.com/${
+            min.instance.authenticatorTenant
+          }/oauth2/authorize?client_id=${min.instance.authenticatorClientId}&response_type=code&redirect_uri=${UrlJoin(
             min.instance.botEndpoint,
             min.instance.botId,
             '/token'
@@ -234,10 +237,9 @@ export class AdminDialog extends IGBDialog {
 
           await step.context.sendActivity(Messages[locale].consent(url));
 
-          return await step.replaceDialog('/ask', {isReturning: true});
+          return await step.replaceDialog('/ask', { isReturning: true });
         }
       ])
     );
   }
-
 }

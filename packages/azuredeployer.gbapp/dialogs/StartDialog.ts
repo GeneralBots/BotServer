@@ -37,18 +37,18 @@
 'use strict';
 
 import { IGBInstance } from 'botlib';
+import { IGBInstallationDeployer } from 'botlib';
 import * as fs from 'fs';
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService';
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService';
-import { AzureDeployerService } from '../services/AzureDeployerService';
-import { GuaribasInstance } from '../../../packages/core.gbapp/models/GBModel';
 const scanf = require('scanf');
 
 /**
  * Handles command-line dialog for getting info for Boot Bot.
  */
 export class StartDialog {
-  public static async createBaseInstance() {
+
+  public static async createBaseInstance(installationDeployer: IGBInstallationDeployer) {
     // No .env so asks for cloud credentials to start a new farm.
 
     if (!fs.existsSync(`.env`)) {
@@ -75,7 +75,7 @@ export class StartDialog {
     // Connects to the cloud and retrieves subscriptions.
 
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
-    const list = await AzureDeployerService.getSubscriptions(credentials);
+    const list = await installationDeployer.getSubscriptions(credentials);
 
     let subscriptionId: string;
     while (subscriptionId === undefined) {
@@ -104,9 +104,8 @@ export class StartDialog {
 
     process.stdout.write(`${GBAdminService.GB_PROMPT}Thank you. That is enough information.\nNow building farm...`);
 
-
     // Prepares the first instance on bot farm.
-    const instance: IGBInstance = {};
+    const instance = <IGBInstance>{};
 
     instance.botId = botId;
     instance.cloudUsername = username;
@@ -223,7 +222,7 @@ generate manually an App ID and App Secret.\n`
   private static retrieveLocation() {
     let location = GBConfigService.get('CLOUD_LOCATION');
     if (!location) {
-      process.stdout.write("CLOUD_LOCATION (eg. 'westus'):");
+      process.stdout.write('CLOUD_LOCATION (eg. \'westus\'):');
       location = scanf('%s');
     }
 

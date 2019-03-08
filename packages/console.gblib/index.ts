@@ -44,22 +44,20 @@ import { Sequelize } from 'sequelize-typescript';
 import { ConsoleDirectLine } from './services/ConsoleDirectLine';
 
 export class GBConsolePackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = null;
+  
+  public sysPackages: IGBPackage[] = undefined;
   public channel: ConsoleDirectLine;
+  public getDialogs(min: GBMinInstance) {}
 
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-  }
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
 
-  public unloadPackage(core: IGBCoreService): void {
-  }
+  public unloadPackage(core: IGBCoreService): void {}
 
   public loadBot(min: GBMinInstance): void {
     this.channel = new ConsoleDirectLine(min.instance.webchatKey);
   }
 
-  public unloadBot(min: GBMinInstance): void {
-  }
+  public unloadBot(min: GBMinInstance): void {}
 
-  public onNewSession(min: GBMinInstance, step: any): void {
-  }
+  public onNewSession(min: GBMinInstance, step: any): void {}
 }

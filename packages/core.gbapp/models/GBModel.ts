@@ -54,6 +54,7 @@ import { IGBInstance } from 'botlib';
 @Table
 export class GuaribasInstance extends Model<GuaribasInstance>
   implements IGBInstance {
+  
   @PrimaryKey
   @AutoIncrement
   @Column
@@ -152,7 +153,7 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   public speechKey: string;
 
   @Column
-  public speechKeyEndpoint: string;
+  public speechEndpoint: string;
 
   @Column
   public spellcheckerKey: string;

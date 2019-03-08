@@ -73,7 +73,7 @@ export class GBDeployer {
     this.importer = importer;
   }
 
-  public static getConnectionStringFromInstance(instance: GuaribasInstance) {
+  public static getConnectionStringFromInstance(instance: IGBInstance) {
     return `Server=tcp:${instance.storageServer}.database.windows.net,1433;Database=${instance.storageName};User ID=${
       instance.storageUsername
     };Password=${instance.storagePassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
@@ -272,7 +272,7 @@ export class GBDeployer {
     }
   }
 
-  public async rebuildIndex(instance: GuaribasInstance) {
+  public async rebuildIndex(instance: IGBInstance, searchSchema: any) {
     const search = new AzureSearch(
       instance.searchKey,
       instance.searchHost,
@@ -302,7 +302,7 @@ export class GBDeployer {
         throw err;
       }
     }
-    await search.createIndex(AzureDeployerService.getKBSearchSchema(instance.searchIndex), dsName);
+    await search.createIndex(searchSchema, dsName);
   }
 
   public async getPackageByName(instanceId: number, packageName: string): Promise<GuaribasPackage> {
@@ -312,7 +312,7 @@ export class GBDeployer {
     });
   }
 
-  public installDefaultGBUI() {
+  public runOnce() {
     const root = 'packages/default.gbui';
     if (!Fs.existsSync(`${root}/build`)) {
       logger.info(`Preparing default.gbui (it may take some additional time for the first time)...`);
@@ -323,7 +323,7 @@ export class GBDeployer {
   }
 
   private async deployDataPackages(
-    core: GBCoreService,
+    core: IGBCoreService,
     botPackages: string[],
     _this: this,
     generalPackages: string[],

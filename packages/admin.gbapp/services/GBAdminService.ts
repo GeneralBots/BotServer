@@ -37,7 +37,7 @@
 'use strict';
 
 import { AuthenticationContext, TokenResponse } from 'adal-node';
-import { IGBCoreService } from 'botlib';
+import { IGBCoreService, IGBAdminService } from 'botlib';
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 import { GuaribasAdmin } from '../models/AdminModel';
 const UrlJoin = require('url-join');
@@ -47,7 +47,7 @@ const PasswordGenerator = require('strict-password-generator').default;
 /**
  * Services for server administration.
  */
-export class GBAdminService {
+export class GBAdminService implements IGBAdminService {
   public static GB_PROMPT: string = 'GeneralBots: ';
   public static masterBotInstanceId = 0;
 
@@ -76,7 +76,7 @@ export class GBAdminService {
     return credentials;
   }
 
-  public static getRndPassword() {
+  public static getRndPassword(): string {
     const passwordGenerator = new PasswordGenerator();
     const options = {
       upperCaseAlpha: true,
@@ -105,7 +105,7 @@ export class GBAdminService {
     return name;
   }
 
-  public async setValue(instanceId: number, key: string, value: string): Promise<GuaribasAdmin> {
+  public async setValue(instanceId: number, key: string, value: string) {
     const options = { where: {} };
     options.where = { key: key };
     let admin = await GuaribasAdmin.findOne(options);
@@ -115,8 +115,7 @@ export class GBAdminService {
     }
     admin.value = value;
     admin.instanceId = instanceId;
-
-    return admin.save();
+    await admin.save();
   }
 
   public async updateSecurityInfo(

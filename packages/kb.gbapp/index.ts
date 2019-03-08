@@ -48,31 +48,18 @@ import { FaqDialog } from './dialogs/FaqDialog';
 import { MenuDialog } from './dialogs/MenuDialog';
 
 export class GBKBPackage implements IGBPackage {
-
-  public sysPackages: IGBPackage[] = null;
+  public sysPackages: IGBPackage[] = undefined;
+  public getDialogs(min: GBMinInstance) {}
 
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-    core.sequelize.addModels([
-      GuaribasAnswer,
-      GuaribasQuestion,
-      GuaribasSubject
-    ]);
-
+    core.sequelize.addModels([GuaribasAnswer, GuaribasQuestion, GuaribasSubject]);
   }
-  public unloadPackage(core: IGBCoreService): void {
-
-  }
+  public unloadPackage(core: IGBCoreService): void {}
   public loadBot(min: GBMinInstance): void {
-
     AskDialog.setup(min.bot, min);
     FaqDialog.setup(min.bot, min);
     MenuDialog.setup(min.bot, min);
-
   }
-  public unloadBot(min: GBMinInstance): void {
-
-  }
-  public onNewSession(min: GBMinInstance, step: any): void {
-
-  }
+  public unloadBot(min: GBMinInstance): void {}
+  public onNewSession(min: GBMinInstance, step: any): void {}
 }

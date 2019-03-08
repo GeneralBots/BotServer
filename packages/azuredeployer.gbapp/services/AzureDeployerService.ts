@@ -43,33 +43,29 @@ import { SearchManagementClient } from 'azure-arm-search';
 import { SqlManagementClient } from 'azure-arm-sql';
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan } from 'azure-arm-website/lib/models';
-import { GBService, IGBInstance } from 'botlib';
+import { IGBInstance, IGBInstallationDeployer } from 'botlib';
 import { HttpMethods, ServiceClient, WebResource } from 'ms-rest-js';
-import { GBDeployer } from '../../../packages/core.gbapp/services/GBDeployer';
-import * as simplegit from 'simple-git/promise';
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService';
 import { GBCorePackage } from '../../../packages/core.gbapp';
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService';
-import { GuaribasInstance } from '../../../packages/core.gbapp/models/GBModel';
+import { GBDeployer } from '../../../packages/core.gbapp/services/GBDeployer';
 
 const Spinner = require('cli-spinner').Spinner;
-const scanf = require('scanf');
-const git = simplegit();
 const logger = require('../../../src/logger');
 const UrlJoin = require('url-join');
 const iconUrl = 'https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png';
 const publicIp = require('public-ip');
 
-export class AzureDeployerService extends GBService {
-  public static apiVersion = '2017-12-01';
-  public static defaultEndPoint = 'http://localhost:4242';
+export class AzureDeployerService implements IGBInstallationDeployer {
+  public apiVersion = '2017-12-01';
+  public defaultEndPoint = 'http://localhost:4242';
   public instance: IGBInstance;
   public resourceClient: ResourceManagementClient.ResourceManagementClient;
   public webSiteClient: WebSiteManagementClient;
   public storageClient: SqlManagementClient;
   public cognitiveClient: CognitiveServicesManagementClient;
   public searchClient: SearchManagementClient;
-  public static provider = 'Microsoft.BotService';
+  public provider = 'Microsoft.BotService';
   public subscriptionClient: SubscriptionClient.SubscriptionClient;
   public accessToken: string;
   public location: string;
@@ -78,15 +74,16 @@ export class AzureDeployerService extends GBService {
   public deployer: GBDeployer;
 
   constructor(deployer: GBDeployer) {
-    super();
     this.deployer = deployer;
   }
-  public static async getSubscriptions(credentials) {
+
+  public async getSubscriptions(credentials) {
     const subscriptionClient = new SubscriptionClient.default(credentials);
+
     return subscriptionClient.subscriptions.list();
   }
 
-  public static getKBSearchSchema(indexName) {
+  public getKBSearchSchema(indexName) {
     return {
       name: indexName,
       fields: [
@@ -187,16 +184,13 @@ export class AzureDeployerService extends GBService {
     };
   }
 
-  public static async updateBotProxy(botId, group, endpoint) {
+  public async updateBotProxy(botId, group, endpoint) {
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
 
-    const accessToken = await GBAdminService.getADALTokenFromUsername(
-      username,
-      password
-    );
+    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
     const httpClient = new ServiceClient();
 
     const parameters = {
@@ -207,14 +201,9 @@ export class AzureDeployerService extends GBService {
 
     const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
       this.provider
-    }/botServices/${botId}?api-version=${AzureDeployerService.apiVersion}`;
+    }/botServices/${botId}?api-version=${this.apiVersion}`;
     const url = UrlJoin(baseUrl, query);
-    const req = this.createRequestObject(
-      url,
-      accessToken,
-      'PATCH',
-      JSON.stringify(parameters)
-    );
+    const req = AzureDeployerService.createRequestObject(url, accessToken, 'PATCH', JSON.stringify(parameters));
     const res = await httpClient.sendRequest(req);
     if (!(res.bodyAsJson as any).id) {
       throw res.bodyAsText;
@@ -222,7 +211,7 @@ export class AzureDeployerService extends GBService {
     logger.info(`Bot proxy updated at: ${endpoint}.`);
   }
 
-  public static async openStorageFirewall(groupName, serverName) {
+  public async openStorageFirewall(groupName, serverName) {
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
@@ -239,7 +228,7 @@ export class AzureDeployerService extends GBService {
     await storageClient.firewallRules.createOrUpdate(groupName, serverName, 'gb', params);
   }
 
-  public static createRequestObject(url: string, accessToken: string, verb: HttpMethods, body: string) {
+  private static createRequestObject(url: string, accessToken: string, verb: HttpMethods, body: string) {
     const req = new WebResource();
     req.method = verb;
     req.url = url;
@@ -304,19 +293,19 @@ export class AzureDeployerService extends GBService {
     instance.searchIndex = 'azuresql-index';
     instance.searchIndexer = 'azuresql-indexer';
     instance.searchKey = searchKeys.primaryKey;
-    this.deployer.rebuildIndex(instance);
+    this.deployer.rebuildIndex(instance, this.deployer);
 
     logger.info(`Deploying Speech...`);
     const speech = await this.createSpeech(name, `${name}-speech`, instance.cloudLocation);
     keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
-    instance.speechKeyEndpoint = speech.endpoint;
+    instance.speechEndpoint = speech.endpoint;
     instance.speechKey = keys.key1;
 
     logger.info(`Deploying SpellChecker...`);
-    const spellChecker = await this.createSpellChecker(name, `${name}-spellchecker`, instance.cloudLocation);
+    const spellChecker = await this.createSpellChecker(name, `${name}-spellchecker`);
     keys = await this.cognitiveClient.accounts.listKeys(name, spellChecker.name);
-    instance.spellCheckerKey = keys.key1;
-    instance.spellCheckerEndpoint = spellChecker.endpoint;
+    instance.spellcheckerKey = keys.key1;
+    instance.spellcheckerEndpoint = spellChecker.endpoint;
 
     logger.info(`Deploying Text Analytics...`);
     const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);
@@ -336,7 +325,7 @@ export class AzureDeployerService extends GBService {
     instance.nlpAppId = nlpAppId;
 
     logger.info(`Deploying Bot...`);
-    instance.botEndpoint = AzureDeployerService.defaultEndPoint;
+    instance.botEndpoint = this.defaultEndPoint;
 
     instance = await this.internalDeployBot(
       instance,
@@ -349,8 +338,8 @@ export class AzureDeployerService extends GBService {
       'global',
       instance.nlpAppId,
       instance.nlpKey,
-      instance.appId,
-      instance.appPassword,
+      instance.marketplaceId,
+      instance.marketplacePassword,
       instance.cloudSubscriptionId
     );
 
@@ -359,17 +348,16 @@ export class AzureDeployerService extends GBService {
   }
 
   public async deployToCloud(
-    title,
-    username,
-    password,
-    cloudLocation,
-    authoringKey,
-    appId,
-    appPassword,
-    subscriptionId
+    title: string,
+    username: string,
+    password: string,
+    cloudLocation: string,
+    authoringKey: string,
+    appId: string,
+    appPassword: string,
+    subscriptionId: string
   ) {
-
-    const instance: IGBInstance = {};
+    const instance = <IGBInstance> {};
 
     instance.botId = title;
     instance.cloudUsername = username;
@@ -397,18 +385,6 @@ export class AzureDeployerService extends GBService {
     this.accessToken = credentials.tokenCache._entries[0].accessToken;
   }
 
-  private async updateWebisteConfig(group, serverFarmId, name, location) {
-    const siteConfig = {
-      location: location,
-      serverFarmId: serverFarmId,
-      numberOfWorkers: 1,
-      phpVersion: '5.5'
-    };
-
-    // TODO: Copy .env to app settings.
-
-    return this.webSiteClient.webApps.createOrUpdateConfiguration(group, name, siteConfig);
-  }
 
   private async createStorageServer(group, name, administratorLogin, administratorPassword, serverName, location) {
     const params = {
@@ -423,7 +399,7 @@ export class AzureDeployerService extends GBService {
 
   private async registerProviders(subscriptionId, baseUrl, accessToken) {
     const query = `subscriptions/${subscriptionId}/providers/${
-      AzureDeployerService.provider
+      this.provider
     }/register?api-version=2018-02-01`;
     const requestUrl = UrlJoin(baseUrl, query);
 
@@ -436,7 +412,6 @@ export class AzureDeployerService extends GBService {
     req.headers.Authorization = 'Bearer ' + accessToken;
 
     const httpClient = new ServiceClient();
-    const res = await httpClient.sendRequest(req);
     // TODO: Check res for error.
   }
 
@@ -457,7 +432,7 @@ export class AzureDeployerService extends GBService {
     appId,
     appPassword,
     subscriptionId
-  ) {
+  ): Promise<IGBInstance> {
     return new Promise(async (resolve, reject) => {
       const baseUrl = `https://management.azure.com/`;
       await this.registerProviders(subscriptionId, baseUrl, accessToken);
@@ -489,8 +464,8 @@ export class AzureDeployerService extends GBService {
 
       const httpClient = new ServiceClient();
       let query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
-        AzureDeployerService.provider
-      }/botServices/${botId}?api-version=${AzureDeployerService.apiVersion}`;
+        this.provider
+      }/botServices/${botId}?api-version=${this.apiVersion}`;
       let url = UrlJoin(baseUrl, query);
       let req = AzureDeployerService.createRequestObject(url, accessToken, 'PUT', JSON.stringify(parameters));
       const res = await httpClient.sendRequest(req);
@@ -502,7 +477,7 @@ export class AzureDeployerService extends GBService {
       setTimeout(async () => {
         try {
           query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${
-            AzureDeployerService.apiVersion
+            this.apiVersion
           }`;
           url = UrlJoin(baseUrl, query);
           req = AzureDeployerService.createRequestObject(url, accessToken, 'GET', JSON.stringify(parameters));
@@ -513,7 +488,7 @@ export class AzureDeployerService extends GBService {
         } catch (error) {
           reject(error);
         }
-      }, 20000);
+      },         20000);
     });
   }
 
@@ -603,7 +578,7 @@ export class AzureDeployerService extends GBService {
     return await this.createCognitiveServices(group, name, location, 'LUIS');
   }
 
-  private async createSpellChecker(group, name, location): Promise<CognitiveServicesAccount> {
+  private async createSpellChecker(group, name): Promise<CognitiveServicesAccount> {
     return await this.createCognitiveServices(group, name, 'global', 'Bing.SpellCheck.v7');
   }
 
@@ -637,5 +612,4 @@ export class AzureDeployerService extends GBService {
     };
     return this.webSiteClient.webApps.createOrUpdate(group, name, parameters);
   }
-  
 }

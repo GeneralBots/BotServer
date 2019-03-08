@@ -35,22 +35,27 @@
 import { TurnContext } from 'botbuilder';
 import { WaterfallStepContext } from 'botbuilder-dialogs';
 import { GBMinInstance } from 'botlib';
+import * as request from 'request-promise-native';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
-
+import { GBDeployer } from './GBDeployer';
+const UrlJoin = require('url-join');
 
 /**
  * BASIC system class for extra manipulation of bot behaviour.
  */
 class SysClass {
   public min: GBMinInstance;
+  private readonly deployer: GBDeployer;
 
-  constructor(min: GBMinInstance) {
+  constructor(min: GBMinInstance, deployer: GBDeployer) {
     this.min = min;
+    this.deployer = deployer;
   }
 
   public async wait(seconds: number) {
-    const timeout = ms => new Promise(resolve => setTimeout(resolve, ms));
+    // tslint:disable-next-line no-string-based-set-timeout
+    const timeout = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     await timeout(seconds * 1000);
   }
 
@@ -68,7 +73,7 @@ class SysClass {
     appPassword,
     subscriptionId
   ) {
-    const service = new AzureDeployerService(this.min.deployer);
+    const service = new AzureDeployerService(this.deployer);
     await service.deployToCloud(
       botId,
       username,
@@ -80,6 +85,27 @@ class SysClass {
       subscriptionId
     );
   }
+
+  /**
+   * Generic function to call any REST API.
+   */
+  public async sendEmail(to, subject, body) {
+    // tslint:disable-next-line:no-console
+    console.log(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
+  }
+
+  /**
+   * Generic function to call any REST API.
+   */
+  public async httpGet(url: string, qs) {
+
+    const options = {
+        uri: UrlJoin(url , qs)
+    };
+
+    return await request.get(options);
+  }
+
 }
 /**
  * @fileoverview General Bots server core.
@@ -92,9 +118,9 @@ export default class DialogClass {
   public step: WaterfallStepContext;
   public internalSys: SysClass;
 
-  constructor(min: GBMinInstance) {
+  constructor(min: GBMinInstance, deployer: GBDeployer) {
     this.min = min;
-    this.internalSys = new SysClass(min);
+    this.internalSys = new SysClass(min, deployer);
   }
 
   public sys(): SysClass {
@@ -102,7 +128,7 @@ export default class DialogClass {
   }
 
   public async hear(cb) {
-    const idCallback = Math.floor(Math.random() * 1000000000000);
+    const idCallback = crypto.getRandomValues(new Uint32Array(16))[0];
     this.min.cbMap[idCallback] = cb;
     await this.step.beginDialog('/hear', { id: idCallback });
   }
@@ -110,17 +136,4 @@ export default class DialogClass {
   public async talk(text: string) {
     return await this.context.sendActivity(text);
   }
-
-  /**
-   * Generic function to call any REST API.
-   */
-  public sendEmail(to, subject, body) {
-    // tslint:disable-next-line:no-console
-    console.log(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
-  }
-
-  /**
-   * Generic function to call any REST API.
-   */
-  public post(url: string, data) {}
 }

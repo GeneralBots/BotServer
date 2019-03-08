@@ -40,7 +40,7 @@ const UrlJoin = require('url-join');
 
 import { GBMinInstance, IGBPackage } from 'botlib';
 
-import { IGBCoreService} from 'botlib';
+import { IGBCoreService } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 import { WelcomeDialog } from './dialogs/WelcomeDialog';
 import { WhoAmIDialog } from './dialogs/WhoAmIDialog';
@@ -48,30 +48,20 @@ import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage }
 
 export class GBCorePackage implements IGBPackage {
   public static CurrentEngineName = 'guaribas-1.0.0';
-  public sysPackages: IGBPackage[] = null;
+  public sysPackages: IGBPackage[] = undefined;
+  public getDialogs(min: GBMinInstance) {}
 
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-    core.sequelize.addModels([
-      GuaribasInstance,
-      GuaribasPackage,
-      GuaribasChannel,
-      GuaribasException
-    ]);
+    core.sequelize.addModels([GuaribasInstance, GuaribasPackage, GuaribasChannel, GuaribasException]);
   }
 
-  public unloadPackage(core: IGBCoreService): void {
-
-  }
+  public unloadPackage(core: IGBCoreService): void {}
 
   public loadBot(min: GBMinInstance): void {
     WelcomeDialog.setup(min.bot, min);
     WhoAmIDialog.setup(min.bot, min);
   }
 
-  public unloadBot(min: GBMinInstance): void {
-
-  }
-  public onNewSession(min: GBMinInstance, step: any): void {
-
-  }
+  public unloadBot(min: GBMinInstance): void {}
+  public onNewSession(min: GBMinInstance, step: any): void {}
 }

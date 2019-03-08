@@ -36,12 +36,13 @@
 
 'use strict';
 
-import { IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
+import { IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
 import * as fs from 'fs';
 import { Sequelize } from 'sequelize-typescript';
 import { GBAdminPackage } from '../../admin.gbapp/index';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBAnalyticsPackage } from '../../analytics.gblib';
+import { StartDialog } from '../../azuredeployer.gbapp/dialogs/StartDialog';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GBCorePackage } from '../../core.gbapp';
 import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
@@ -50,8 +51,6 @@ import { GBSecurityPackage } from '../../security.gblib';
 import { GBWhatsappPackage } from '../../whatsapp.gblib/index';
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
-import { StartDialog } from '../../azuredeployer.gbapp/dialogs/StartDialog';
-import { WaterfallDialog } from 'botbuilder-dialogs';
 
 const logger = require('../../../src/logger');
 const opn = require('opn');
@@ -60,6 +59,7 @@ const opn = require('opn');
  *  Core service layer.
  */
 export class GBCoreService implements IGBCoreService {
+
   /**
    * Data access layer instance.
    */
@@ -162,13 +162,13 @@ export class GBCoreService implements IGBCoreService {
     }
   }
 
-  public async checkStorage(azureDeployer: AzureDeployerService) {
+  public async checkStorage(installationDeployer: IGBInstallationDeployer) {
     try {
       await this.sequelize.authenticate();
     } catch (error) {
       logger.info('Opening storage firewall on infrastructure...');
       if (error.parent.code === 'ELOGIN') {
-        await this.openStorageFrontier(azureDeployer);
+        await this.openStorageFrontier(installationDeployer);
       } else {
         throw error;
       }
@@ -193,14 +193,14 @@ export class GBCoreService implements IGBCoreService {
   /**
    * Loads all items to start several listeners.
    */
-  public async loadInstances(): Promise<IGBInstance> {
+  public async loadInstances(): Promise<IGBInstance[]> {
     return GuaribasInstance.findAll({});
   }
 
   /**
    * Loads just one Bot instance by its internal Id.
    */
-  public async loadInstanceById(instanceId: string): Promise<IGBInstance> {
+  public async loadInstanceById(instanceId: number): Promise<IGBInstance> {
     const options = { where: { instanceId: instanceId } };
 
     return GuaribasInstance.findOne(options);
@@ -240,8 +240,15 @@ STORAGE_SYNC=true
 
   public async ensureProxy(port): Promise<string> {
     try {
-      const ngrok = require('ngrok');
-      return await ngrok.connect({ port: port });
+      if (fs.existsSync('node_modules/ngrok/bin/ngrok.exe')) {
+        const ngrok = require('ngrok');
+
+        return await ngrok.connect({ port: port });
+      } else {
+        logger.warn('ngrok executable not found. Check installation or node_modules folder.');
+
+        return 'localhost';
+      }
     } catch (error) {
       // There are false positive from ngrok regarding to no memory, but it's just
       // lack of connection.
@@ -267,15 +274,15 @@ STORAGE_SYNC=true
    * @param azureDeployer
    * @param proxyAddress
    */
-  public async loadAllInstances(core: GBCoreService, azureDeployer: AzureDeployerService, proxyAddress: string) {
+  public async loadAllInstances(core: IGBCoreService, installationDeployer: IGBInstallationDeployer, proxyAddress: string) {
     logger.info(`Loading instances from storage...`);
-    let instances: GuaribasInstance[];
+    let instances: IGBInstance[];
     try {
       instances = await core.loadInstances();
       const instance = instances[0];
       if (process.env.NODE_ENV === 'development') {
         logger.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
-        await AzureDeployerService.updateBotProxy(
+        await installationDeployer.updateBotProxy(
           instance.botId,
           instance.botId,
           `${proxyAddress}/api/messages/${instance.botId}`
@@ -308,9 +315,9 @@ STORAGE_SYNC=true
    * @param bootInstance
    * @param core
    */
-  public async ensureInstances(instances: GuaribasInstance[], bootInstance: any, core: GBCoreService) {
+  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {
     if (!instances) {
-      const instance: IGBInstance = {};
+      const instance = new GuaribasInstance();
       await instance.save();
       instances = await core.loadInstances();
     }
@@ -347,11 +354,12 @@ STORAGE_SYNC=true
     }
   }
 
-  public async createBootInstance(core: GBCoreService, azureDeployer: AzureDeployerService, proxyAddress: string) {
+  public async createBootInstance(core: GBCoreService, installationDeployer: IGBInstallationDeployer, proxyAddress: string) {
+
     logger.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
     try {
-      let { instance, credentials, subscriptionId } = await StartDialog.createBaseInstance();
-      instance = await azureDeployer.deployFarm(proxyAddress, instance, credentials, subscriptionId);
+      let { instance, credentials, subscriptionId } = await StartDialog.createBaseInstance(installationDeployer);
+      instance = await installationDeployer.deployFarm(proxyAddress, instance, credentials, subscriptionId);
       core.writeEnv(instance);
       logger.info(`File .env written, starting General Bots...`);
       GBConfigService.init();
@@ -457,9 +465,9 @@ STORAGE_SYNC=true
    *
    * @param azureDeployer Infrastructure Deployer instance.
    */
-  private async openStorageFrontier(deployer: AzureDeployerService) {
+  private async openStorageFrontier(installationDeployer: IGBInstallationDeployer) {
     const group = GBConfigService.get('CLOUD_GROUP');
     const serverName = GBConfigService.get('STORAGE_SERVER').split('.database.windows.net')[0];
-    await AzureDeployerService.openStorageFirewall(group, serverName);
+    await installationDeployer.openStorageFirewall(group, serverName);
   }
 }

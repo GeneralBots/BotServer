@@ -40,8 +40,8 @@ import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 
 export class GBAzureDeployerPackage implements IGBPackage {
-
-  public sysPackages: IGBPackage[] = null;
+  public sysPackages: IGBPackage[] = undefined;
+  public getDialogs(min: GBMinInstance) {}
 
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
 
