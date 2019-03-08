@@ -38,9 +38,9 @@
 
 import { AuthenticationContext, TokenResponse } from 'adal-node';
 import { IGBAdminService, IGBCoreService } from 'botlib';
+import UrlJoin = require('url-join');
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 import { GuaribasAdmin } from '../models/AdminModel';
-const UrlJoin = require('url-join');
 const msRestAzure = require('ms-rest-azure');
 const PasswordGenerator = require('strict-password-generator').default;
 
@@ -65,15 +65,13 @@ export class GBAdminService implements IGBAdminService {
 
   public static async getADALTokenFromUsername(username: string, password: string) {
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
-    const accessToken = credentials.tokenCache._entries[0].accessToken;
 
-    return accessToken;
+    return credentials.tokenCache._entries[0].accessToken;
   }
 
   public static async getADALCredentialsFromUsername(username: string, password: string) {
-    const credentials = await msRestAzure.loginWithUsernamePassword(username, password);
 
-    return credentials;
+    return await msRestAzure.loginWithUsernamePassword(username, password);
   }
 
   public static getRndPassword(): string {
@@ -102,9 +100,8 @@ export class GBAdminService implements IGBAdminService {
       minimumLength: 12,
       maximumLength: 14
     };
-    const name = passwordGenerator.generatePassword(options);
 
-    return name;
+    return  passwordGenerator.generatePassword(options);
   }
 
   public async setValue(instanceId: number, key: string, value: string) {
@@ -170,7 +167,7 @@ export class GBAdminService implements IGBAdminService {
           instance.authenticatorClientSecret,
           resource,
           async (err, res) => {
-            if (err) {
+            if (err !== undefined) {
               reject(err);
             } else {
               const token = res as TokenResponse;

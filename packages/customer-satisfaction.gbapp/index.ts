@@ -36,8 +36,8 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
-import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBMinInstance, IGBCoreService, IGBPackage, GBLog, GBDialogStep } from 'botlib';
+import UrlJoin = require('url-join');
 import { FeedbackDialog } from './dialogs/FeedbackDialog';
 import { QualityDialog } from './dialogs/QualityDialog';
 import { GuaribasQuestionAlternate } from './models/index';
@@ -46,16 +46,24 @@ import { Sequelize } from 'sequelize-typescript';
 
 export class GBCustomerSatisfactionPackage implements IGBPackage {
   public sysPackages: IGBPackage[] = undefined;
-  public getDialogs(min: GBMinInstance) {}
+  public getDialogs(min: GBMinInstance) {
+    GBLog.verbose(`getDialogs called.`);
+  }
+  public unloadPackage(core: IGBCoreService): void {
+    GBLog.verbose(`unloadPackage called.`);
+  }
+  public unloadBot(min: GBMinInstance): void {
+    GBLog.verbose(`unloadBot called.`);
+  }
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+    GBLog.verbose(`onNewSession called.`);
+  }
 
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([GuaribasQuestionAlternate]);
   }
-  public unloadPackage(core: IGBCoreService): void {}
   public loadBot(min: GBMinInstance): void {
     FeedbackDialog.setup(min.bot, min);
     QualityDialog.setup(min.bot, min);
   }
-  public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {}
 }

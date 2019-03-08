@@ -63,7 +63,7 @@ export class GBConversationalService implements IGBConversationalService {
     return step.context.activity.locale;
   }
 
-  public async sendEvent(step: GBDialogStep, name: string, value: any): Promise<any> {
+  public async sendEvent(step: GBDialogStep, name: string, value: Object): Promise<any> {
     if (step.context.activity.channelId === 'webchat') {
       const msg = MessageFactory.text('');
       msg.value = value;

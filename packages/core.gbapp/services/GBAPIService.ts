@@ -34,12 +34,12 @@
 
 import { TurnContext } from 'botbuilder';
 import { WaterfallStepContext } from 'botbuilder-dialogs';
-import { GBMinInstance } from 'botlib';
+import { GBLog, GBMinInstance } from 'botlib';
 import * as request from 'request-promise-native';
+import UrlJoin = require('url-join');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GBDeployer } from './GBDeployer';
-const UrlJoin = require('url-join');
 
 /**
  * BASIC system class for extra manipulation of bot behaviour.
@@ -64,14 +64,14 @@ class SysClass {
   }
 
   public async createABotFarmUsing(
-    botId,
-    username,
-    password,
-    location,
-    nlpAuthoringKey,
-    appId,
-    appPassword,
-    subscriptionId
+    botId: string,
+    username: string,
+    password: string,
+    location: string,
+    nlpAuthoringKey: string,
+    appId: string,
+    appPassword: string,
+    subscriptionId: string
   ) {
     const service = new AzureDeployerService(this.deployer);
     await service.deployToCloud(
@@ -91,7 +91,7 @@ class SysClass {
    */
   public async sendEmail(to, subject, body) {
     // tslint:disable-next-line:no-console
-    console.log(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
+    GBLog.info(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
   }
 
   /**

@@ -36,9 +36,9 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
+import UrlJoin = require('url-join');
 
-import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBMinInstance, IGBCoreService, IGBPackage, GBLog, GBDialogStep } from 'botlib';
 
 import { Sequelize } from 'sequelize-typescript';
 import { WhatsappDirectLine } from './services/WhatsappDirectLine';
@@ -47,11 +47,6 @@ export class GBWhatsappPackage implements IGBPackage {
   public sysPackages: IGBPackage[] = undefined;
 
   public channel: WhatsappDirectLine;
-  public getDialogs(min: GBMinInstance) {}
-
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
-
-  public unloadPackage(core: IGBCoreService): void {}
 
   public loadBot(min: GBMinInstance): void {
     // Only loads engine if it is defined on services.json.
@@ -68,6 +63,9 @@ export class GBWhatsappPackage implements IGBPackage {
     }
   }
 
-  public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {}
+  public getDialogs(min: GBMinInstance) {GBLog.verbose (`getDialogs called.`);}
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {GBLog.verbose (`loadPackage called.`);}
+  public unloadPackage(core: IGBCoreService): void {GBLog.verbose (`unloadPackage called.`);}
+  public unloadBot(min: GBMinInstance): void {GBLog.verbose (`unloadBot called.`);}
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {GBLog.verbose (`onNewSession called.`);}
 }

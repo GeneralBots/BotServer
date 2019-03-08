@@ -36,28 +36,33 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
+import UrlJoin = require('url-join');
 
-import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBMinInstance, IGBCoreService, IGBPackage, GBLog, GBDialogStep } from 'botlib';
 
 import { Sequelize } from 'sequelize-typescript';
 import { ConsoleDirectLine } from './services/ConsoleDirectLine';
 
 export class GBConsolePackage implements IGBPackage {
-
   public sysPackages: IGBPackage[] = undefined;
   public channel: ConsoleDirectLine;
-  public getDialogs(min: GBMinInstance) {}
-
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
-
-  public unloadPackage(core: IGBCoreService): void {}
+  public getDialogs(min: GBMinInstance) {
+    GBLog.verbose(`getDialogs called.`);
+  }
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+    GBLog.verbose(`loadPackage called.`);
+  }
+  public unloadPackage(core: IGBCoreService): void {
+    GBLog.verbose(`unloadPackage called.`);
+  }
+  public unloadBot(min: GBMinInstance): void {
+    GBLog.verbose(`unloadBot called.`);
+  }
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+    GBLog.verbose(`onNewSession called.`);
+  }
 
   public loadBot(min: GBMinInstance): void {
     this.channel = new ConsoleDirectLine(min.instance.webchatKey);
   }
-
-  public unloadBot(min: GBMinInstance): void {}
-
-  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {}
 }

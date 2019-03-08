@@ -44,7 +44,6 @@ import { GBMinInstance } from 'botlib';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
 
-
 export class QualityDialog extends IGBDialog {
   /**
    * Setup dialogs flows and define services call.

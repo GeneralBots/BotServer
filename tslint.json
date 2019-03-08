@@ -12,6 +12,8 @@
   "rulesDirectory": ["node_modules/tslint-microsoft-contrib"],
   "jsRules": {},
   "rules": {
+    "no-unsafe-any":false,  
+    "newline-per-chained-call": false,
     "no-floating-promises": false,
     "no-var-requires": false,
     "typedef": false,
@@ -24,6 +26,7 @@
     "no-redundant-jsdoc": false,
     "no-return-await": false,
     "prefer-type-cast": false,
+    "non-literal-fs-path": false,
     "no-object-literal-type-assertion": false,
     "no-increment-decrement": false,
     "no-any": false,

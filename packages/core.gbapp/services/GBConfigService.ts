@@ -30,8 +30,8 @@
 |                                                                             |
 \*****************************************************************************/
 
-
 import * as fs from 'fs';
+import { GBLog } from 'botlib';
 
 /**
  * @fileoverview General Bots server core.
@@ -49,7 +49,7 @@ export class GBConfigService {
         overrideProcessEnv: true
       });
     } catch (e) {
-      console.error(e.message);
+      GBLog.error(e.message);
       process.exit(3);
     }
   }

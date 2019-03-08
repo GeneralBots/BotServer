@@ -1,5 +1,5 @@
 const Fs = require('fs');
-const UrlJoin = require('url-join');
+import UrlJoin = require('url-join');
 
 import { GBService, IGBInstance } from 'botlib';
 import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models';

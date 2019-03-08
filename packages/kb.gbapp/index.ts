@@ -36,9 +36,9 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
+import UrlJoin = require('url-join');
 
-import { GBMinInstance, IGBPackage } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBPackage } from 'botlib';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index';
 
 import { IGBCoreService } from 'botlib';
@@ -49,17 +49,25 @@ import { MenuDialog } from './dialogs/MenuDialog';
 
 export class GBKBPackage implements IGBPackage {
   public sysPackages: IGBPackage[] = undefined;
-  public getDialogs(min: GBMinInstance) {}
+  public getDialogs(min: GBMinInstance) {
+    GBLog.verbose(`getDialogs called.`);
+  }
+  public unloadPackage(core: IGBCoreService): void {
+    GBLog.verbose(`unloadPackage called.`);
+  }
+  public unloadBot(min: GBMinInstance): void {
+    GBLog.verbose(`unloadBot called.`);
+  }
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+    GBLog.verbose(`onNewSession called.`);
+  }
 
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([GuaribasAnswer, GuaribasQuestion, GuaribasSubject]);
   }
-  public unloadPackage(core: IGBCoreService): void {}
   public loadBot(min: GBMinInstance): void {
     AskDialog.setup(min.bot, min);
     FaqDialog.setup(min.bot, min);
     MenuDialog.setup(min.bot, min);
   }
-  public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {}
 }

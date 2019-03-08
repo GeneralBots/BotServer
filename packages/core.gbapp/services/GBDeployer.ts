@@ -36,16 +36,15 @@
 
 'use strict';
 
-
 const Path = require('path');
-const UrlJoin = require('url-join');
+import UrlJoin = require('url-join');
 const Fs = require('fs');
 const WaitUntil = require('wait-until');
 const express = require('express');
 const child_process = require('child_process');
 const graph = require('@microsoft/microsoft-graph-client');
 
-import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
+import { GBMinInstance, IGBCoreService, IGBInstance, GBLog } from 'botlib';
 import { GBError, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';

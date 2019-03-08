@@ -36,10 +36,10 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
 import { IGBCoreService, IGBInstance } from 'botlib';
 import fs = require('fs');
 import path = require('path');
+import UrlJoin = require('url-join');
 import { SecService } from '../../security.gblib/services/SecService';
 import { GuaribasInstance } from '../models/GBModel';
 

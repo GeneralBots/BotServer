@@ -37,7 +37,7 @@
 'use strict';
 
 const { DialogSet, TextPrompt } = require('botbuilder-dialogs');
-const UrlJoin = require('url-join');
+import UrlJoin = require('url-join');
 const express = require('express');
 
 const request = require('request-promise-native');

@@ -1,8 +1,8 @@
-const UrlJoin = require('url-join');
+import UrlJoin = require('url-join');
 
 const Swagger = require('swagger-client');
 const rp = require('request-promise');
-import { GBService } from 'botlib';
+import { GBService, GBLog } from 'botlib';
 import * as request from 'request-promise-native';
 
 export class WhatsappDirectLine extends GBService {
@@ -67,13 +67,13 @@ export class WhatsappDirectLine extends GBService {
           const result = await request.post(options);
           GBLog.info(result);
         } catch (error) {
-          GBLog.error('Error initializing 3rd party Whatsapp provider.', error);
+          GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error}`);
         }
 
         return client;
       })
       .catch(err => {
-        GBLog.error('Error initializing DirectLine client', err);
+        GBLog.error(`Error initializing 3rd party Whatsapp provider(2) ${err}`);
       });
   }
 
@@ -104,7 +104,7 @@ export class WhatsappDirectLine extends GBService {
             this.pollMessages(client, conversationId, from, fromName);
           })
           .catch(err => {
-            console.error('Error starting conversation', err);
+            GBLog.error(`Error starting conversation ${err}`);
           });
       } else {
         this.inputMessage(client, conversationId, text, from, fromName);

@@ -38,7 +38,6 @@
 
 import * as ts from 'typescript';
 
-
 export class TSCompiler {
 
   private static shouldIgnoreError(diagnostic) {

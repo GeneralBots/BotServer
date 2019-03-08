@@ -41,10 +41,10 @@ import { TSCompiler } from './TSCompiler';
 const walkPromise = require('walk-promise');
 
 const vm = require('vm');
-const UrlJoin = require('url-join');
+import UrlJoin = require('url-join');
+import DialogClass from './GBAPIService';
 const vb2ts = require('vbscript-to-typescript/dist/converter');
 const beautify = require('js-beautify').js;
-
 
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
@@ -249,7 +249,7 @@ export class GBVMService extends GBService {
     min.dialogs.add(
       new WaterfallDialog('/hear', [
         async step => {
-          step.activeDialog.state.cbId = step.options.id;
+          step.activeDialog.state.cbId = step.options['id'];
 
           return await step.prompt('textPrompt', {});
         },
@@ -259,7 +259,7 @@ export class GBVMService extends GBService {
 
           const cbId = step.activeDialog.state.cbId;
           const cb = min.cbMap[cbId];
-          cb.bind({ step: step: GBDialogStep, context: step.context }); // TODO: Necessary or min.sandbox?
+          cb.bind({ step: step, context: step.context }); // TODO: Necessary or min.sandbox?
 
           await step.endDialog();
 

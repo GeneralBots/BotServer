@@ -36,18 +36,30 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
-
-import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
-
+import { GBDialogStep, GBMinInstance, IGBCoreService, IGBPackage, GBLog } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 
+/**
+ * .gblib Package handler.
+ */
 export class GBAnalyticsPackage implements IGBPackage {
   public sysPackages: IGBPackage[] = undefined;
-  public getDialogs(min: GBMinInstance) {}
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
-  public unloadPackage(core: IGBCoreService): void {}
-  public loadBot(min: GBMinInstance): void {}
-  public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {}
+  public getDialogs(min: GBMinInstance) {
+    GBLog.verbose(`getDialogs called.`);
+  }
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+    GBLog.verbose(`loadPackage called.`);
+  }
+  public unloadPackage(core: IGBCoreService): void {
+    GBLog.verbose(`unloadPackage called.`);
+  }
+  public loadBot(min: GBMinInstance): void {
+    GBLog.verbose(`loadBot called.`);
+  }
+  public unloadBot(min: GBMinInstance): void {
+    GBLog.verbose(`unloadBot called.`);
+  }
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+    GBLog.verbose(`onNewSession called.`);
+  }
 }

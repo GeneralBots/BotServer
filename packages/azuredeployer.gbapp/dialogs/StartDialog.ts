@@ -36,8 +36,7 @@
 
 'use strict';
 
-import { IGBInstance } from 'botlib';
-import { IGBInstallationDeployer } from 'botlib';
+import { GBLog, IGBInstallationDeployer, IGBInstance } from 'botlib';
 import * as fs from 'fs';
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService';
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService';
@@ -47,7 +46,6 @@ const scanf = require('scanf');
  * Handles command-line dialog for getting info for Boot Bot.
  */
 export class StartDialog {
-
   public static async createBaseInstance(installationDeployer: IGBInstallationDeployer) {
     // No .env so asks for cloud credentials to start a new farm.
 
@@ -122,7 +120,7 @@ export class StartDialog {
 
   private static retrieveUsername() {
     let value = GBConfigService.get('CLOUD_USERNAME');
-    if (!value) {
+    if (value !== undefined) {
       process.stdout.write(`${GBAdminService.GB_PROMPT}CLOUD_USERNAME:`);
       value = scanf('%s').replace(/(\n|\r)+$/, '');
     }
@@ -132,7 +130,7 @@ export class StartDialog {
 
   private static retrievePassword() {
     let password = GBConfigService.get('CLOUD_PASSWORD');
-    if (!password) {
+    if (password !== undefined) {
       process.stdout.write(`${GBAdminService.GB_PROMPT}CLOUD_PASSWORD:`);
       password = scanf('%s').replace(/(\n|\r)+$/, '');
     }
@@ -142,16 +140,13 @@ export class StartDialog {
 
   private static retrieveBotId() {
     let botId = GBConfigService.get('BOT_ID');
-    if (!botId) {
+    if (botId !== undefined) {
       process.stdout.write(
         `${GBAdminService.GB_PROMPT}Choose a unique bot Id containing lowercase letters, digits or
 dashes (cannot use dash as the first two or last one characters),
 cannot start or end with or contain consecutive dashes and having 4 to 42 characters long.\n`
       );
       process.stdout.write(`${GBAdminService.GB_PROMPT}BOT_ID:`);
-
-      // TODO: Update this regexp to match description of it.
-
       botId = scanf('%s').replace(/(\n|\r)+$/, '');
     }
 
@@ -160,7 +155,7 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
 
   private static retrieveAuthoringKey() {
     let authoringKey = GBConfigService.get('NLP_AUTHORING_KEY');
-    if (!authoringKey) {
+    if (authoringKey !== undefined) {
       process.stdout.write(
         `${
           GBAdminService.GB_PROMPT
@@ -184,7 +179,7 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
 please go to https://apps.dev.microsoft.com/portal/register-app to
 generate manually an App ID and App Secret.\n`
     );
-    if (!appId) {
+    if (appId !== undefined) {
       process.stdout.write('Generated Application Id (MARKETPLACE_ID):');
       appId = scanf('%s').replace(/(\n|\r)+$/, '');
     }
@@ -194,7 +189,7 @@ generate manually an App ID and App Secret.\n`
 
   private static retrieveAppPassword() {
     let appPassword = GBConfigService.get('MARKETPLACE_SECRET');
-    if (!appPassword) {
+    if (appPassword !== undefined) {
       process.stdout.write('Generated Password (MARKETPLACE_SECRET):');
       appPassword = scanf('%s').replace(/(\n|\r)+$/, '');
     }
@@ -207,7 +202,7 @@ generate manually an App ID and App Secret.\n`
     const map = {};
     let index = 1;
     list.forEach(element => {
-      console.log(`${index}: ${element.displayName} (${element.subscriptionId})`);
+      GBLog.info(`${index}: ${element.displayName} (${element.subscriptionId})`);
       map[index++] = element;
     });
     let subscriptionIndex;
@@ -222,8 +217,8 @@ generate manually an App ID and App Secret.\n`
 
   private static retrieveLocation() {
     let location = GBConfigService.get('CLOUD_LOCATION');
-    if (!location) {
-      process.stdout.write('CLOUD_LOCATION (eg. \'westus\'):');
+    if (location !== undefined) {
+      process.stdout.write('CLOUD_LOCATION (eg. westus):');
       location = scanf('%s');
     }
 

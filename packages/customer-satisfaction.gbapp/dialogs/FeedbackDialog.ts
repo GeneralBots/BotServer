@@ -86,7 +86,7 @@ export class FeedbackDialog extends IGBDialog {
           const locale = step.context.activity.locale;
 
           await step.context.sendActivity(Messages[locale].about_suggestions);
-          step.activeDialog.state.cbId = step.options['id'];
+          step.activeDialog.state.cbId = step.options.id;
 
           return await step.prompt('textPrompt', Messages[locale].what_about_service);
         },

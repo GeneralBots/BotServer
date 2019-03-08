@@ -37,7 +37,7 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
+import UrlJoin = require('url-join');
 
 import { BotAdapter, CardFactory, MessageFactory } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
@@ -63,8 +63,8 @@ export class MenuDialog extends IGBDialog {
         const locale = step.context.activity.locale;
         let rootSubjectId = null;
 
-        if (step.options && step.options.data) {
-          const subject = step.options.data;
+        if (step.options && step.options['data']) {
+          const subject = step.options  ['data'];
 
           // If there is a shortcut specified as subject destination, go there.
 
@@ -89,7 +89,7 @@ export class MenuDialog extends IGBDialog {
               'menu',
               user.subjects
             );
-            await min.conversationalService.sendEvent(step: GBDialogStep, 'play', {
+            await min.conversationalService.sendEvent(step, 'play', {
               playerType: 'bullet',
               data: data.slice(0, 10)
             });
