@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -63,6 +63,9 @@ import {
 
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 
+/**
+ * A user and its metadata.
+ */
 @Table
 export class GuaribasUser extends Model<GuaribasUser> {
   @PrimaryKey
@@ -90,6 +93,9 @@ export class GuaribasUser extends Model<GuaribasUser> {
   public instance: GuaribasInstance;
 }
 
+/**
+ * A group of users.
+ */
 @Table
 export class GuaribasGroup extends Model<GuaribasGroup> {
   @PrimaryKey
@@ -109,6 +115,9 @@ export class GuaribasGroup extends Model<GuaribasGroup> {
   public instance: GuaribasInstance;
 }
 
+/**
+ * Relation of groups and users.
+ */
 @Table
 export class GuaribasUserGroup extends Model<GuaribasUserGroup> {
   @ForeignKey(() => GuaribasUser)

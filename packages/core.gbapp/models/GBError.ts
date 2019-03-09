@@ -36,58 +36,15 @@
 
 'use strict';
 
-import { GBLog } from 'botlib';
-import * as ts from 'typescript';
-
-/**
- * Wrapper for a TypeScript compiler.
- */
-export class TSCompiler {
-
-  private static shouldIgnoreError(diagnostic) {
-    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-
-    if (message.indexOf('Cannot find name') >= 0 || message.indexOf('Cannot use imports') >= 0) {
-      return true;
-    }
-
-    return false;
-  }
-
-  public compile(
-    fileNames: string[],
-    options: ts.CompilerOptions = {
-      noStrictGenericChecks: true,
-      noImplicitUseStrict: true,
-      noEmitOnError: false,
-      noImplicitAny: true,
-      target: ts.ScriptTarget.ES5,
-      module: ts.ModuleKind.None,
-      moduleResolution: ts.ModuleResolutionKind.Classic,
-      noEmitHelpers: true,
-      maxNodeModuleJsDepth: 0,
-      esModuleInterop: false
-    }
-  ) {
-    const program = ts.createProgram(fileNames, options);
-    const emitResult = program.emit();
-
-    const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
-
-    allDiagnostics.forEach(diagnostic => {
-      if (!TSCompiler.shouldIgnoreError(diagnostic)) {
-        const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-
-        if (diagnostic.file !== undefined) {
-          const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-          GBLog.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
-        } else {
-          GBLog.error(`${message}`);
-        }
-      }
-    });
-
-    return emitResult;
-  }
-
-}
+import {
+  AutoIncrement,
+  BelongsTo,
+  Column,
+  CreatedAt,
+  ForeignKey,
+  Model,
+  PrimaryKey,
+  Table,
+  UpdatedAt
+} from 'sequelize-typescript';
+import { GuaribasInstance } from './GBModel';

@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -65,6 +65,56 @@ import { GuaribasChannel, GuaribasInstance } from '../../core.gbapp/models/GBMod
 import { GuaribasSubject } from '../../kb.gbapp/models';
 import { GuaribasUser } from '../../security.gblib/models';
 
+/**
+ * A single message in a conversation.
+ */
+@Table
+export class GuaribasConversationMessage extends Model<GuaribasConversationMessage> {
+
+  @PrimaryKey
+  @AutoIncrement
+  @Column
+  public conversationMessageId: number;
+
+  @ForeignKey(() => GuaribasSubject)
+  @Column
+  public subjectId: number;
+
+  @Column(DataType.TEXT)
+  public content: string;
+
+  @Column
+  @CreatedAt
+  public createdAt: Date;
+
+  @Column
+  @UpdatedAt
+  public updatedAt: Date;
+
+  //tslint:disable-next-line:no-use-before-declare
+  @ForeignKey(() => GuaribasConversation)
+  @Column
+  public conversationId: number;
+
+  //tslint:disable-next-line:no-use-before-declare
+  @BelongsTo(() => GuaribasConversation)
+  public conversation: GuaribasConversation;
+
+  @ForeignKey(() => GuaribasInstance)
+  @Column
+  public instanceId: number;
+
+  @ForeignKey(() => GuaribasUser)
+  @Column
+  public userId: number;
+
+  @BelongsTo(() => GuaribasUser)
+  public user: GuaribasUser;
+}
+
+/**
+ * A conversation that groups many messages.
+ */
 @Table
 export class GuaribasConversation extends Model<GuaribasConversation> {
 
@@ -105,46 +155,4 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
 
   @BelongsTo(() => GuaribasUser)
   public startedBy: GuaribasUser;
-}
-
-@Table
-export class GuaribasConversationMessage extends Model<GuaribasConversationMessage> {
-
-  @PrimaryKey
-  @AutoIncrement
-  @Column
-  public conversationMessageId: number;
-
-  @ForeignKey(() => GuaribasSubject)
-  @Column
-  public subjectId: number;
-
-  @Column(DataType.TEXT)
-  public content: string;
-
-  @Column
-  @CreatedAt
-  public createdAt: Date;
-
-  @Column
-  @UpdatedAt
-  public updatedAt: Date;
-
-  @ForeignKey(() => GuaribasConversation)
-  @Column
-  public conversationId: number;
-
-  @BelongsTo(() => GuaribasConversation)
-  public conversation: GuaribasConversation;
-
-  @ForeignKey(() => GuaribasInstance)
-  @Column
-  public instanceId: number;
-
-  @ForeignKey(() => GuaribasUser)
-  @Column
-  public userId: number;
-
-  @BelongsTo(() => GuaribasUser)
-  public user: GuaribasUser;
 }

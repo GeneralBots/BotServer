@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,14 +36,16 @@
 
 'use strict';
 
-import { IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib';
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance } from 'botlib';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
 
+/**
+ * Dialog for collecting quality of answer.
+ */
 export class QualityDialog extends IGBDialog {
   /**
    * Setup dialogs flows and define services call.
@@ -62,11 +64,11 @@ export class QualityDialog extends IGBDialog {
         const score = step.result;
 
         setTimeout(
-          () => min.conversationalService.sendEvent(step, 'stop', null),
+          () => min.conversationalService.sendEvent(step, 'stop', undefined),
           400
         );
 
-        if (score == 0) {
+        if (score === 0) {
           await step.context.sendActivity(Messages[locale].im_sorry_lets_try);
         } else {
           await step.context.sendActivity(Messages[locale].great_thanks);

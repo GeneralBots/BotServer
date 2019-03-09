@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,11 +36,14 @@
 
 'use strict';
 
-import { GBMinInstance, IGBCoreService, IGBPackage, GBLog, GBDialogStep } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 
+/**
+ * Package for Azure Deployer.
+ */
 export class GBAzureDeployerPackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = undefined;
+  public sysPackages: IGBPackage[];
   public getDialogs(min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);
   }

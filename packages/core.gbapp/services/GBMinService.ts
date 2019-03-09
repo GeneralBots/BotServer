@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -37,7 +37,7 @@
 'use strict';
 
 const { DialogSet, TextPrompt } = require('botbuilder-dialogs');
-import UrlJoin = require('url-join');
+import urlJoin = require('url-join');
 const express = require('express');
 
 const request = require('request-promise-native');
@@ -46,20 +46,31 @@ const AuthenticationContext = require('adal-node').AuthenticationContext;
 import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
 
 import { ConfirmPrompt, WaterfallDialog } from 'botbuilder-dialogs';
-import { GBDialogStep, GBLog, GBMinInstance, IGBAdminService, IGBConversationalService, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
+import {
+  GBDialogStep,
+  GBLog,
+  GBMinInstance,
+  IGBAdminService,
+  IGBConversationalService,
+  IGBCoreService,
+  IGBInstance,
+  IGBPackage
+} from 'botlib';
+
 import { GBAnalyticsPackage } from '../../analytics.gblib';
 import { GBCorePackage } from '../../core.gbapp';
 import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
 import { GBKBPackage } from '../../kb.gbapp';
+import { AskDialogArgs } from '../../kb.gbapp/dialogs/AskDialog';
 import { GBSecurityPackage } from '../../security.gblib';
 import { GBWhatsappPackage } from '../../whatsapp.gblib';
-import { GuaribasInstance } from '../models/GBModel';
 import { Messages } from '../strings';
 import { GBAdminPackage } from './../../admin.gbapp/index';
 import { GBDeployer } from './GBDeployer';
 
-/** Minimal service layer for a bot. */
-
+/**
+ * Minimal service layer for a bot.
+ */
 export class GBMinService {
   public core: IGBCoreService;
   public conversationalService: IGBConversationalService;
@@ -94,7 +105,7 @@ export class GBMinService {
    *
    * @return Loaded minimal bot instance.
    *
-   * */
+   */
 
   public async buildMin(
     bootInstance: IGBInstance,
@@ -106,7 +117,7 @@ export class GBMinService {
     // Serves default UI on root address '/'.
 
     const uiPackage = 'default.gbui';
-    server.use('/', express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
+    server.use('/', express.static(urlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
 
     await Promise.all(
       instances.map(async instance => {
@@ -129,7 +140,7 @@ export class GBMinService {
 
         // Install default VBA module.
 
-        deployer.deployPackageFromLocalPath(min, 'packages/default.gbdialog');
+        deployer.deployPackage(min, 'packages/default.gbdialog');
 
         // Call the loadBot context.activity for all packages.
 
@@ -146,10 +157,9 @@ export class GBMinService {
         // Serves individual URL for each bot user interface.
 
         const uiUrl = `/${instance.botId}`;
-        server.use(uiUrl, express.static(UrlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
+        server.use(uiUrl, express.static(urlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
 
         GBLog.info(`Bot UI ${uiPackage} accessible at: ${uiUrl}.`);
-        const state = `${instance.instanceId}${Math.floor(Math.random() * 1000000000)}`;
 
         // Clients get redirected here in order to create an OAuth authorize url and redirect them to AAD.
         // There they will authenticate and give their consent to allow this app access to
@@ -175,12 +185,12 @@ export class GBMinService {
         throw new Error(msg);
       }
       const authenticationContext = new AuthenticationContext(
-        UrlJoin(min.instance.authenticatorAuthorityHostUrl, min.instance.authenticatorTenant)
+        urlJoin(min.instance.authenticatorAuthorityHostUrl, min.instance.authenticatorTenant)
       );
       const resource = 'https://graph.microsoft.com';
       authenticationContext.acquireTokenWithAuthorizationCode(
         req.query.code,
-        UrlJoin(instance.botEndpoint, min.instance.botId, '/token'),
+        urlJoin(instance.botEndpoint, min.instance.botId, '/token'),
         resource,
         instance.authenticatorClientId,
         instance.authenticatorClientSecret,
@@ -193,7 +203,7 @@ export class GBMinService {
             await this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
             await this.adminService.setValue(instance.instanceId, 'accessToken', token.accessToken);
             await this.adminService.setValue(instance.instanceId, 'expiresOn', token.expiresOn.toString());
-            await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', null);
+            await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', undefined);
             res.redirect(min.instance.botEndpoint);
           }
         }
@@ -202,15 +212,15 @@ export class GBMinService {
   }
 
   private handleOAuthRequests(server: any, min: GBMinInstance) {
-    server.get(`/${min.instance.botId}/auth`, function(req, res) {
-      let authorizationUrl = UrlJoin(
+    server.get(`/${min.instance.botId}/auth`, (req, res) => {
+      let authorizationUrl = urlJoin(
         min.instance.authenticatorAuthorityHostUrl,
         min.instance.authenticatorTenant,
         '/oauth2/authorize'
       );
       authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
         min.instance.authenticatorClientId
-      }&redirect_uri=${UrlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+      }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
       res.redirect(authorizationUrl);
     });
   }
@@ -224,10 +234,10 @@ export class GBMinService {
       botId = bootInstance.botId;
     }
     const instance = await this.core.loadInstance(botId);
-    if (instance) {
+    if (instance !== undefined) {
       const speechToken = await this.getSTSToken(instance);
       let theme = instance.theme;
-      if (!theme) {
+      if (theme !== undefined) {
         theme = 'default.gbtheme';
       }
       res.send(
@@ -284,7 +294,6 @@ export class GBMinService {
    *
    */
   private async getSTSToken(instance: any) {
-    // TODO: Make dynamic: https://CHANGE.api.cognitive.microsoft.com/sts/v1.0
 
     const options = {
       url: 'https://westus.api.cognitive.microsoft.com/sts/v1.0/issueToken',
@@ -337,7 +346,7 @@ export class GBMinService {
   }
 
   private invokeLoadBot(appPackages: any[], min: GBMinInstance, server: any) {
-    const sysPackages = new Array<IGBPackage>();
+    const sysPackages : IGBPackage[] = undefined;
     // NOTE: A semicolon is necessary before this line.
     [
       GBCorePackage,
@@ -354,7 +363,7 @@ export class GBMinService {
       if (sysPackage.name === 'GBWhatsappPackage') {
         const url = '/instances/:botId/whatsapp';
         server.post(url, (req, res) => {
-          p['channel'].received(req, res);
+          (p as any).channel.received(req, res);
         });
       }
     },        this);
@@ -385,9 +394,8 @@ export class GBMinService {
   ) {
     await adapter.processActivity(req, res, async context => {
       // Get loaded user state
-      const state = await conversationState.get(context);
       const step = await min.dialogs.createContext(context);
-      step.context.activity.locale = 'en-US'; // TODO: Make dynamic.
+      step.context.activity.locale = 'en-US';
 
       try {
         const user = await min.userProfile.get(context, {});
@@ -401,7 +409,7 @@ export class GBMinService {
           });
           user.loaded = true;
           user.subjects = [];
-          user.cb = null;
+          user.cb = undefined;
           await min.userProfile.set(step.context, user);
         }
 
@@ -433,8 +441,6 @@ export class GBMinService {
         } else if (context.activity.type === 'event') {
           // Empties dialog stack before going to the target.
 
-          // TODO: Understand MSFT changes: await step.endAll();
-
           await this.processEventActivity(context, step);
         }
         await conversationState.saveChanges(context, true);
@@ -460,7 +466,7 @@ export class GBMinService {
     } else if (context.activity.name === 'showFAQ') {
       await step.beginDialog('/faq');
     } else if (context.activity.name === 'answerEvent') {
-      await step.beginDialog('/answerEvent', {
+      await step.beginDialog('/answerEvent', <AskDialogArgs>{
         questionId: context.activity.data,
         fromFaq: true
       });
@@ -493,13 +499,11 @@ export class GBMinService {
 
       // Checks for /menu JSON signature.
     } else if (context.activity.text.startsWith('{"title"')) {
-      await step.beginDialog('/menu', {
-        data: JSON.parse(context.activity.text)
-      });
+      await step.beginDialog('/menu', JSON.parse(context.activity.text));
       // Otherwise, continue to the active dialog in the stack.
     } else {
       const user = await min.userProfile.get(context, {});
-      if (step.activeDialog) {
+      if (step.activeDialog !== undefined) {
         await step.continueDialog();
       } else {
         await step.beginDialog('/answer', {

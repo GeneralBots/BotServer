@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -37,32 +37,19 @@
 'use strict';
 
 import {
-  DataTypeDate,
-  DataTypeDecimal,
-  DataTypes,
-  DataTypeUUIDv4
-} from 'sequelize';
-
-import {
   AutoIncrement,
   BelongsTo,
-  BelongsToMany,
   Column,
-  CreatedAt,
-  DataType,
   ForeignKey,
-  HasMany,
-  IsUUID,
-  Length,
   Model,
   PrimaryKey,
-  Sequelize,
-  Table,
-  UpdatedAt
-} from 'sequelize-typescript';
+  Table} from 'sequelize-typescript';
 
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 
+/**
+ * List of saved alternate questions.
+ */
 @Table
 export class GuaribasQuestionAlternate extends Model<GuaribasQuestionAlternate> {
 

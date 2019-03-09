@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -41,8 +41,9 @@ import { TSCompiler } from './TSCompiler';
 const walkPromise = require('walk-promise');
 
 const vm = require('vm');
-import UrlJoin = require('url-join');
-import DialogClass from './GBAPIService';
+import urlJoin = require('url-join');
+import { DialogClass } from './GBAPIService';
+//tslint:disable-next-line:no-submodule-imports
 const vb2ts = require('vbscript-to-typescript/dist/converter');
 const beautify = require('js-beautify').js;
 
@@ -55,11 +56,13 @@ const beautify = require('js-beautify').js;
  * translation and enhance classic BASIC experience.
  */
 
+/**
+ * Basic services for BASIC manipulation.
+ */
 export class GBVMService extends GBService {
   private readonly script = new vm.Script();
 
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
-
     const files = await walkPromise(folder);
     this.addHearDialog(min);
 
@@ -74,7 +77,7 @@ export class GBVMService extends GBService {
           const mainName = file.name.replace(/\-|\./g, '');
           min.scriptMap[file.name] = mainName;
 
-          const filename = UrlJoin(folder, file.name);
+          const filename = urlJoin(folder, file.name);
           fs.watchFile(filename, async () => {
             await this.run(filename, min, deployer, mainName);
           });
@@ -131,7 +134,7 @@ export class GBVMService extends GBService {
     // Converts General Bots BASIC into regular VBS
 
     const basicCode: string = fs.readFileSync(filename, 'utf8');
-    const vbsCode = await this.convertGBASICToVBS(basicCode);
+    const vbsCode = this.convertGBASICToVBS(basicCode);
     const vbsFile = `${filename}.compiled`;
     fs.writeFileSync(vbsFile, vbsCode, 'utf8');
 
@@ -160,9 +163,9 @@ export class GBVMService extends GBService {
       let parsedCode = code;
       const hearExp = /(\w+).*hear.*\(\)/;
 
-      let match1;
+      let match1 = hearExp.exec(code);
 
-      while ((match1 = hearExp.exec(code))) {
+      while (match1 !== undefined) {
         let pos = 0;
 
         // Writes async body.
@@ -182,8 +185,9 @@ export class GBVMService extends GBService {
 
         let right = 0;
         let left = 1;
-        let match2;
-        while ((match2 = /\{|\}/.exec(tempCode))) {
+        let match2 = /\{|\}/.exec(tempCode);
+
+        while (match2 !== undefined) {
           const c = tempCode.substring(match2.index, match2.index + 1);
 
           if (c === '}') {
@@ -198,6 +202,7 @@ export class GBVMService extends GBService {
           if (left === right) {
             break;
           }
+          match1 = hearExp.exec(code);
         }
 
         parsedCode += code.substring(start + match1[0].length + 1, pos + match1[0].length);
@@ -207,6 +212,7 @@ export class GBVMService extends GBService {
         // A interaction will be made for each hear.
 
         code = parsedCode;
+        match2 = /\{|\}/.exec(tempCode);
       }
 
       parsedCode = this.handleThisAndAwait(parsedCode);
@@ -218,7 +224,6 @@ export class GBVMService extends GBService {
       const context = vm.createContext(sandbox);
       vm.runInContext(parsedCode, context);
       min.sandBoxMap[mainName] = sandbox;
-      await deployer.deployScriptToStorage(1, filename); // TODO: Per bot storage.
       GBLog.info(`[GBVMService] Finished loading of ${filename}`);
     }
   }
@@ -228,13 +233,13 @@ export class GBVMService extends GBService {
 
     code = code.replace(/sys\(\)/g, 'this.sys()');
     code = code.replace(/("[^"]*"|'[^']*')|\btalk\b/g, ($0, $1) => {
-      return $1 == undefined ? 'this.talk' : $1;
+      return $1 === undefined ? 'this.talk' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bhear\b/g, ($0, $1) => {
-      return $1 == undefined ? 'this.hear' : $1;
+      return $1 === undefined ? 'this.hear' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/g, ($0, $1) => {
-      return $1 == undefined ? 'this.sendEmail' : $1;
+      return $1 === undefined ? 'this.sendEmail' : $1;
     });
 
     // await insertion.
@@ -249,7 +254,7 @@ export class GBVMService extends GBService {
     min.dialogs.add(
       new WaterfallDialog('/hear', [
         async step => {
-          step.activeDialog.state.cbId = step.options['id'];
+          step.activeDialog.state.cbId = (step.options as any).id;
 
           return await step.prompt('textPrompt', {});
         },
@@ -259,7 +264,7 @@ export class GBVMService extends GBService {
 
           const cbId = step.activeDialog.state.cbId;
           const cb = min.cbMap[cbId];
-          cb.bind({ step: step, context: step.context }); // TODO: Necessary or min.sandbox?
+          cb.bind({ step: step, context: step.context });
 
           await step.endDialog();
 

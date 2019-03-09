@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,14 +36,13 @@
 
 const Path = require('path');
 const Fs = require('fs');
-import UrlJoin = require('url-join');
+import urlJoin = require('url-join');
 const marked = require('marked');
 const path = require('path');
 const asyncPromise = require('async-promises');
 const walkPromise = require('walk-promise');
-// tslint:disable:no-unsafe-any
+// tslint:disable-next-line:newline-per-chained-call
 const parse = require('bluebird').promisify(require('csv-parse'));
-// tslint:enable:no-unsafe-any
 
 import { GBDialogStep, GBLog, IGBConversationalService, IGBCoreService, IGBInstance } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
@@ -275,7 +274,7 @@ export class KBService {
         // Extracts answer from external media if any.
 
         if (answer.indexOf('.md') > -1) {
-          const mediaFilename = UrlJoin(path.dirname(filePath), '..', 'articles', answer);
+          const mediaFilename = urlJoin(path.dirname(filePath), '..', 'articles', answer);
           if (Fs.existsSync(mediaFilename)) {
             answer = Fs.readFileSync(mediaFilename, 'utf8');
             format = '.md';
@@ -393,7 +392,7 @@ export class KBService {
   ): Promise<any> {
     // Imports subjects tree into database and return it.
 
-    await this.importSubjectFile(packageStorage.packageId, UrlJoin(localPath, 'subjects.json'), instance);
+    await this.importSubjectFile(packageStorage.packageId, urlJoin(localPath, 'subjects.json'), instance);
 
     // Import all .tsv files in the tabular directory.
 
@@ -401,12 +400,12 @@ export class KBService {
   }
 
   public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
-    const files = await walkPromise(UrlJoin(localPath, 'tabular'));
+    const files = await walkPromise(urlJoin(localPath, 'tabular'));
 
     return Promise.all(
       files.map(async file => {
         if (file.name.endsWith('.tsv')) {
-          return this.importKbTabularFile(UrlJoin(file.root, file.name), instance.instanceId, packageId);
+          return this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
         }
       })
     );
@@ -465,7 +464,7 @@ export class KBService {
     const packageType = Path.extname(localPath);
     const packageName = Path.basename(localPath);
     GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
-    const packageObject = JSON.parse(Fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8'));
+    const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
 
     const instance = await core.loadInstance(packageObject.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);

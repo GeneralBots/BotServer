@@ -1,10 +1,13 @@
-import UrlJoin = require('url-join');
+import urlJoin = require('url-join');
 
 const Swagger = require('swagger-client');
 const rp = require('request-promise');
-import { GBService, GBLog } from 'botlib';
+import { GBLog, GBService } from 'botlib';
 import * as request from 'request-promise-native';
 
+/**
+ * Support for Whatsapp.
+ */
 export class WhatsappDirectLine extends GBService {
   public pollInterval = 1000;
   public directLineClientName = 'DirectLineClient';
@@ -16,7 +19,7 @@ export class WhatsappDirectLine extends GBService {
   public whatsappServiceUrl: string;
   public whatsappServiceWebhookUrl: string;
   public botId: string;
-  public watermark: string = null;
+  public watermark: string;
 
   public conversationIds = {};
 
@@ -36,7 +39,6 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceUrl = whatsappServiceUrl;
     this.whatsappServiceWebhookUrl = whatsappServiceWebhookUrl;
 
-    // TODO: Migrate to Swagger 3.
     this.directLineClient = rp(this.directLineSpecUrl)
       .then(spec => {
         return new Swagger({
@@ -47,12 +49,12 @@ export class WhatsappDirectLine extends GBService {
       .then(async client => {
         client.clientAuthorizations.add(
           'AuthorizationBotConnector',
-          new Swagger.ApiKeyAuthorization('Authorization', 'Bearer ' + directLineSecret, 'header')
+          new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${directLineSecret}`, 'header')
         );
 
         const options = {
           method: 'POST',
-          url: UrlJoin(this.whatsappServiceUrl, 'webhook'),
+          url: urlJoin(this.whatsappServiceUrl, 'webhook'),
           qs: {
             token: this.whatsappServiceKey,
             webhookUrl: `${this.whatsappServiceWebhookUrl}/instances/${this.botId}/whatsapp`,
@@ -64,7 +66,7 @@ export class WhatsappDirectLine extends GBService {
         };
 
         try {
-          const result = await request.post(options);
+          const result = request.post(options);
           GBLog.info(result);
         } catch (error) {
           GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error}`);
@@ -91,17 +93,17 @@ export class WhatsappDirectLine extends GBService {
     const conversationId = this.conversationIds[from];
 
     this.directLineClient.then(client => {
-      if (this.conversationIds[from] == undefined) {
+      if (this.conversationIds[from] === undefined) {
         GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
         client.Conversations.Conversations_StartConversation()
           .then(response => {
             return response.obj.conversationId;
           })
-          .then(conversationId => {
-            this.conversationIds[from] = conversationId;
-            this.inputMessage(client, conversationId, text, from, fromName);
+          .then(generatedConversationId => {
+            this.conversationIds[from] = generatedConversationId;
+            this.inputMessage(client, generatedConversationId, text, from, fromName);
 
-            this.pollMessages(client, conversationId, from, fromName);
+            this.pollMessages(client, generatedConversationId, from, fromName);
           })
           .catch(err => {
             GBLog.error(`Error starting conversation ${err}`);
@@ -183,9 +185,11 @@ export class WhatsappDirectLine extends GBService {
             break;
 
           case 'image/png':
-            GBLog.info('Opening the requested image ' + attachment.contentUrl);
+            GBLog.info(`Opening the requested image ${attachment.contentUrl}`);
             output += `\n${attachment.contentUrl}`;
             break;
+          default:
+            GBLog.info(`Unknown content type: ${attachment.contentType}`);
         }
       });
     }
@@ -200,7 +204,7 @@ export class WhatsappDirectLine extends GBService {
   public async sendToDevice(to, msg) {
     const options = {
       method: 'POST',
-      url: UrlJoin(this.whatsappServiceUrl, 'message'),
+      url: urlJoin(this.whatsappServiceUrl, 'message'),
       qs: {
         token: this.whatsappServiceKey,
         phone: to,

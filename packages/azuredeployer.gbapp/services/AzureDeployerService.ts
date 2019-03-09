@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -54,7 +54,7 @@ const Spinner = require('cli-spinner').Spinner;
 
 // tslint:disable-next-line:no-submodule-imports
 import { CognitiveServicesAccount } from 'azure-arm-cognitiveservices/lib/models';
-import UrlJoin = require('url-join');
+import urlJoin = require('url-join');
 const iconUrl = 'https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png';
 const publicIp = require('public-ip');
 
@@ -89,7 +89,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     req.headers = <HttpHeaders>{};
     req.headers['Content-Type'] = 'application/json';
     req.headers['accept-language'] = '*';
-    req.headers['Authorization'] = `Bearer ${accessToken}`;
+    req.headers.set(' Authorization', `Bearer ${accessToken}`);
     req.body = body;
 
     return req;
@@ -220,10 +220,11 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
       this.provider
     }/botServices/${botId}?api-version=${this.apiVersion}`;
-    const url = UrlJoin(baseUrl, query);
+    const url = urlJoin(baseUrl, query);
     const req = AzureDeployerService.createRequestObject(url, accessToken, 'PATCH', JSON.stringify(parameters));
     const res = await httpClient.sendRequest(req);
-    if (!(res['bodyAsJson'] as any).id) {
+    // CHECK
+    if (!JSON.parse(res.bodyAsText).id) {
       throw res.bodyAsText;
     }
     GBLog.info(`Bot proxy updated at: ${endpoint}.`);
@@ -399,7 +400,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   private async registerProviders(subscriptionId, baseUrl, accessToken) {
     const query = `subscriptions/${subscriptionId}/providers/${this.provider}/register?api-version=2018-02-01`;
-    const requestUrl = UrlJoin(baseUrl, query);
+    const requestUrl = urlJoin(baseUrl, query);
 
     const req = new WebResource();
     req.method = 'POST';
@@ -407,7 +408,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     req.headers = <HttpHeaders>{};
     req.headers['Content-Type'] = 'application/json; charset=utf-8';
     req.headers['accept-language'] = '*';
-    req.headers['Authorization'] = `Bearer ${accessToken}`;
+    req.headers.set('Authorization', `Bearer ${accessToken}`);
   }
 
   /**
@@ -461,10 +462,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       let query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
         this.provider
       }/botServices/${botId}?api-version=${this.apiVersion}`;
-      let url = UrlJoin(baseUrl, query);
+      let url = urlJoin(baseUrl, query);
       let req = AzureDeployerService.createRequestObject(url, accessToken, 'PUT', JSON.stringify(parameters));
       const res = await httpClient.sendRequest(req);
-      if (!(res['bodyAsJson'] as any).id) {
+      if (!JSON.parse(res.bodyAsText).id) {
         reject(res.bodyAsText);
 
         return;
@@ -476,10 +477,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
           query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${
             this.apiVersion
           }`;
-          url = UrlJoin(baseUrl, query);
+          url = urlJoin(baseUrl, query);
           req = AzureDeployerService.createRequestObject(url, accessToken, 'GET', JSON.stringify(parameters));
           const resChannel = await httpClient.sendRequest(req);
-          const key = (resChannel['bodyAsJson'] as any).properties.properties.sites[0].key;
+          const key = JSON.parse(resChannel.bodyAsText).properties.properties.sites[0].key;
           instance.webchatKey = key;
           resolve(instance);
         } catch (error) {
@@ -504,7 +505,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     const body = JSON.stringify(parameters);
     const apps = await this.makeNlpRequest(location, authoringKey, undefined, 'GET', 'apps');
-    const app = (apps['bodyAsJson'] as any).filter(x => x.name === name)[0];
+    const app = JSON.parse(apps.bodyAsText).filter(x => x.name === name)[0];
     let id: string;
     if (!app) {
       const res = await this.makeNlpRequest(location, authoringKey, body, 'POST', 'apps');
@@ -526,7 +527,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const req = new WebResource();
     req.method = method;
     req.url = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/${resource}`;
-    req.headers = <HttpHeaders> {};
+    req.headers = <HttpHeaders>{};
     req.headers['Content-Type'] = 'application/json';
     req.headers['accept-language'] = '*';
     req.headers['Ocp-Apim-Subscription-Key'] = authoringKey;

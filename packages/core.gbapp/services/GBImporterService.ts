@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,13 +36,14 @@
 
 'use strict';
 
-import { IGBCoreService, IGBInstance } from 'botlib';
+import { IGBCoreService } from 'botlib';
 import fs = require('fs');
-import path = require('path');
-import UrlJoin = require('url-join');
-import { SecService } from '../../security.gblib/services/SecService';
+import urlJoin = require('url-join');
 import { GuaribasInstance } from '../models/GBModel';
 
+/**
+ * Handles the importing of packages.
+ */
 export class GBImporter {
   public core: IGBCoreService;
 
@@ -51,25 +52,25 @@ export class GBImporter {
   }
 
   public async importIfNotExistsBotPackage(botId: string, packageName: string, localPath: string) {
-    const packageJson = JSON.parse(fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8'));
-    if (!botId) {
+    const packageJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
+    if (botId !== undefined) {
       botId = packageJson.botId;
     }
     const instance = await this.core.loadInstance(botId);
-    if (instance) {
+    if (instance !== undefined) {
       return instance;
     } else {
-      return await this.createInstanceInternal(botId, packageName, localPath, packageJson);
+      return await this.createInstanceInternal(botId, localPath, packageJson);
     }
   }
 
-  private async createInstanceInternal(botId: string, packageName: string, localPath: string, packageJson: any) {
-    const settings = JSON.parse(fs.readFileSync(UrlJoin(localPath, 'settings.json'), 'utf8'));
-    const servicesJson = JSON.parse(fs.readFileSync(UrlJoin(localPath, 'services.json'), 'utf8'));
+  private async createInstanceInternal(botId: string, localPath: string, packageJson: any) {
+    const settings = JSON.parse(fs.readFileSync(urlJoin(localPath, 'settings.json'), 'utf8'));
+    const servicesJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'services.json'), 'utf8'));
 
     packageJson = { ...packageJson, ...settings, ...servicesJson };
 
-    if (botId) {
+    if (botId !== undefined) {
       packageJson.botId = botId;
     }
 

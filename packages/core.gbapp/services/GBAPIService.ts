@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,10 +36,14 @@ import { TurnContext } from 'botbuilder';
 import { WaterfallStepContext } from 'botbuilder-dialogs';
 import { GBLog, GBMinInstance } from 'botlib';
 import * as request from 'request-promise-native';
-import UrlJoin = require('url-join');
+import urlJoin = require('url-join');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GBDeployer } from './GBDeployer';
+
+/**
+ * @fileoverview General Bots server core.
+ */
 
 /**
  * BASIC system class for extra manipulation of bot behaviour.
@@ -100,18 +104,18 @@ class SysClass {
   public async httpGet(url: string, qs) {
 
     const options = {
-        uri: UrlJoin(url , qs)
+        uri: urlJoin(url , qs)
     };
 
-    return await request.get(options);
+    return request.get(options);
   }
 
 }
-/**
- * @fileoverview General Bots server core.
- */
 
-export default class DialogClass {
+/**
+ * Base services of conversation to be called by BASIC.
+ */
+export class DialogClass {
 
   public min: GBMinInstance;
   public context: TurnContext;

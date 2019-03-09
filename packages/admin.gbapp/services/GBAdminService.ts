@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -37,8 +37,8 @@
 'use strict';
 
 import { AuthenticationContext, TokenResponse } from 'adal-node';
-import { IGBAdminService, IGBCoreService } from 'botlib';
-import UrlJoin = require('url-join');
+import { IGBAdminService, IGBCoreService, IGBInstance } from 'botlib';
+import urlJoin = require('url-join');
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 import { GuaribasAdmin } from '../models/AdminModel';
 const msRestAzure = require('ms-rest-azure');
@@ -70,7 +70,6 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static async getADALCredentialsFromUsername(username: string, password: string) {
-
     return await msRestAzure.loginWithUsernamePassword(username, password);
   }
 
@@ -101,7 +100,7 @@ export class GBAdminService implements IGBAdminService {
       maximumLength: 14
     };
 
-    return  passwordGenerator.generatePassword(options);
+    return passwordGenerator.generatePassword(options);
   }
 
   public async setValue(instanceId: number, key: string, value: string) {
@@ -123,7 +122,7 @@ export class GBAdminService implements IGBAdminService {
     authenticatorAuthorityHostUrl: string,
     authenticatorClientId: string,
     authenticatorClientSecret: string
-  ): Promise<GuaribasInstance> {
+  ): Promise<IGBInstance> {
     const options = { where: {} };
     options.where = { instanceId: instanceId };
     const item = await GuaribasInstance.findOne(options);
@@ -135,7 +134,7 @@ export class GBAdminService implements IGBAdminService {
     return item.save();
   }
 
-  public async getValue(instanceId: number, key: string) {
+  public async getValue(instanceId: number, key: string): Promise<string> {
     const options = { where: {} };
     options.where = { key: key, instanceId: instanceId };
     const obj = await GuaribasAdmin.findOne(options);
@@ -152,7 +151,7 @@ export class GBAdminService implements IGBAdminService {
         const accessToken = await this.getValue(instanceId, 'accessToken');
         resolve(accessToken);
       } else {
-        const authorizationUrl = UrlJoin(
+        const authorizationUrl = urlJoin(
           instance.authenticatorAuthorityHostUrl,
           instance.authenticatorTenant,
           '/oauth2/authorize'

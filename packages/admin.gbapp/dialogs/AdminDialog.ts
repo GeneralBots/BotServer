@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -38,7 +38,7 @@
 
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import UrlJoin = require('url-join');
+import urlJoin = require('url-join');
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
@@ -53,7 +53,7 @@ export class AdminDialog extends IGBDialog {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
-    await deployer.undeployPackageFromLocalPath(min.instance, UrlJoin('packages', packageName));
+    await deployer.undeployPackageFromLocalPath(min.instance, urlJoin('packages', packageName));
   }
 
   public static isSharePointPath(path: string) {
@@ -63,14 +63,12 @@ export class AdminDialog extends IGBDialog {
   public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: GBDeployer) {
     const packageName = text.split(' ')[1];
 
-    if (AdminDialog.isSharePointPath(packageName)) {
-      await deployer.deployFromSharePoint(min.instance.instanceId, packageName);
-    } else {
+    if (!AdminDialog.isSharePointPath(packageName)) {
       const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
       if (additionalPath !== undefined) {
         throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
       }
-      await deployer.deployPackageFromLocalPath(min, UrlJoin(additionalPath, packageName));
+      await deployer.deployPackage(min, urlJoin(additionalPath, packageName));
     }
   }
 
@@ -207,7 +205,7 @@ export class AdminDialog extends IGBDialog {
 
           const url = `https://login.microsoftonline.com/${
             min.instance.authenticatorTenant
-          }/oauth2/authorize?client_id=${min.instance.authenticatorClientId}&response_type=code&redirect_uri=${UrlJoin(
+          }/oauth2/authorize?client_id=${min.instance.authenticatorClientId}&response_type=code&redirect_uri=${urlJoin(
             min.instance.botEndpoint,
             min.instance.botId,
             '/token'

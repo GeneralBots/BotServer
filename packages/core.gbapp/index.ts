@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,19 +36,18 @@
 
 'use strict';
 
-import UrlJoin = require('url-join');
-
-import { GBMinInstance, IGBPackage, GBLog, GBDialogStep } from 'botlib';
-
-import { IGBCoreService } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 import { WelcomeDialog } from './dialogs/WelcomeDialog';
 import { WhoAmIDialog } from './dialogs/WhoAmIDialog';
 import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage } from './models/GBModel';
 
+/**
+ * Package for core.gbapp.
+ */
 export class GBCorePackage implements IGBPackage {
   public static CurrentEngineName = 'guaribas-1.0.0';
-  public sysPackages: IGBPackage[] = undefined;
+  public sysPackages: IGBPackage[];
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([GuaribasInstance, GuaribasPackage, GuaribasChannel, GuaribasException]);
   }

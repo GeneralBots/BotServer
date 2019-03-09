@@ -1,9 +1,8 @@
-
 /*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -37,17 +36,26 @@
 
 'use strict';
 
-import UrlJoin = require('url-join');
+import urlJoin = require('url-join');
 
 import { BotAdapter, CardFactory, MessageFactory } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { IGBDialog } from 'botlib';
-import { GBMinInstance } from 'botlib';
-import { AzureText } from 'pragmatismo-io-framework';
+import { GBMinInstance, IGBDialog } from 'botlib';
 import { GuaribasSubject } from '../models';
 import { KBService } from '../services/KBService';
 import { Messages } from '../strings';
 
+/**
+ * Dialog arguments.
+ */
+export class MenuDialogArgs {
+  public to: string;
+  public subjectId: string;
+}
+
+/**
+ * Dialogs for handling Menu control.
+ */
 export class MenuDialog extends IGBDialog {
   /**
    * Setup dialogs flows and define services call.
@@ -58,71 +66,54 @@ export class MenuDialog extends IGBDialog {
   public static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new KBService(min.core.sequelize);
 
-    min.dialogs.add(new WaterfallDialog('/menu', [
+    min.dialogs.add(new WaterfallDialog('/menu', MenuDialog.getMenuDialog(min, service)));
+  }
+
+  private static getMenuDialog(min: GBMinInstance, service: KBService) {
+    return [
       async step => {
         const locale = step.context.activity.locale;
-        let rootSubjectId = null;
+        const user = await min.userProfile.get(step.context, {});
+        const args: MenuDialogArgs = step.options;
 
-        if (step.options && step.options['data']) {
-          const subject = step.options  ['data'];
+        let rootSubjectId;
 
+        if (args !== undefined) {
           // If there is a shortcut specified as subject destination, go there.
+          if (args.to !== undefined) {
+            const dialog = args.to.split(':')[1];
 
-          if (subject.to) {
-            const dialog = subject.to.split(':')[1];
-            await step.replaceDialog('/' + dialog);
-            await step.endDialog();
-
-            return;
+            return await step.replaceDialog(`/${dialog}`);
           }
 
-          // Adds to bot a perception of a new subject.
-
-          const user = await min.userProfile.get(step.context, {});
-          user.subjects.push(subject);
-          rootSubjectId = subject.subjectId;
+          user.subjects.push(args);
+          rootSubjectId = args.subjectId;
 
           // Whenever a subject is selected, shows a faq about it.
-
           if (user.subjects.length > 0) {
-            const data = await service.getFaqBySubjectArray(
-              'menu',
-              user.subjects
-            );
+            const list = await service.getFaqBySubjectArray('menu', user.subjects);
             await min.conversationalService.sendEvent(step, 'play', {
               playerType: 'bullet',
-              data: data.slice(0, 10)
+              data: list.slice(0, 10)
             });
           }
         } else {
-          const user = await min.userProfile.get(step.context, {});
           user.subjects = [];
-
-          await step.context.sendActivity(Messages[locale].here_is_subjects); // TODO: Handle rnd.
+          await step.context.sendActivity(Messages[locale].here_is_subjects);
           user.isAsking = false;
         }
-
         const msg = MessageFactory.text('');
         const attachments = [];
-
-        const data = await service.getSubjectItems(
-          min.instance.instanceId,
-          rootSubjectId
-        );
-
+        const data = await service.getSubjectItems(min.instance.instanceId, rootSubjectId);
         msg.attachmentLayout = 'carousel';
-
-        data.forEach(function(item: GuaribasSubject) {
+        data.forEach((item: GuaribasSubject) => {
           const subject = item;
           const card = CardFactory.heroCard(
             subject.title,
             subject.description,
-            CardFactory.images([
-              UrlJoin('/kb', min.instance.kb, 'subjects', 'subject.png')
-            ]),
+            CardFactory.images([urlJoin('/kb', min.instance.kb, 'subjects', 'subject.png')]),
             CardFactory.actions([
-               {
-                 channelData: null,
+              {
                 type: 'postBack',
                 title: Messages[locale].menu_select,
                 value: JSON.stringify({
@@ -135,31 +126,23 @@ export class MenuDialog extends IGBDialog {
               }
             ])
           );
-
           attachments.push(card);
         });
-
         if (attachments.length === 0) {
-          const user = await min.userProfile.get(step.context, {});
 
           if (user.subjects && user.subjects.length > 0) {
             await step.context.sendActivity(
-              Messages[locale].lets_search(
-                KBService.getFormattedSubjectItems(user.subjects)
-              )
+              Messages[locale].lets_search(KBService.getFormattedSubjectItems(user.subjects))
             );
           }
-
         } else {
           msg.attachments = attachments;
           await step.context.sendActivity(msg);
         }
-
-        const user = await min.userProfile.get(step.context, {});
         user.isAsking = true;
 
         return await step.next();
       }
-    ]));
+    ];
   }
 }

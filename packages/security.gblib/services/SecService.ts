@@ -1,28 +1,31 @@
 const Fs = require('fs');
-import UrlJoin = require('url-join');
+import urlJoin = require('url-join');
 
 import { GBService, IGBInstance } from 'botlib';
 import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models';
 
+/**
+ * Security service layer.
+ */
 export class SecService extends GBService {
   public async importSecurityFile(localPath: string, instance: IGBInstance) {
-    const security = JSON.parse(Fs.readFileSync(UrlJoin(localPath, 'security.json'), 'utf8'));
+    const security = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'security.json'), 'utf8'));
     security.groups.forEach(group => {
       const groupDb = GuaribasGroup.build({
         instanceId: instance.instanceId,
         displayName: group.displayName
       });
-      groupDb.save().then(groupDb => {
+      groupDb.save().then(g1 => {
         group.users.forEach(user => {
           const userDb = GuaribasUser.build({
             instanceId: instance.instanceId,
-            groupId: groupDb.groupId,
+            groupId: g1.groupId,
             userName: user.userName
           });
-          userDb.save().then(userDb => {
+          userDb.save().then(user2 => {
             const userGroup = GuaribasUserGroup.build();
-            userGroup.groupId = groupDb.groupId;
-            userGroup.userId = userDb.userId;
+            userGroup.groupId = g1.groupId;
+            userGroup.userId = user2.userId;
             userGroup.save();
           });
         });

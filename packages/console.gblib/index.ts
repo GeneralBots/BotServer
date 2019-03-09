@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,15 +36,15 @@
 
 'use strict';
 
-import UrlJoin = require('url-join');
-
-import { GBMinInstance, IGBCoreService, IGBPackage, GBLog, GBDialogStep } from 'botlib';
-
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 import { ConsoleDirectLine } from './services/ConsoleDirectLine';
 
+/**
+ * Package for console.glib.
+ */
 export class GBConsolePackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = undefined;
+  public sysPackages: IGBPackage[];
   public channel: ConsoleDirectLine;
   public getDialogs(min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);

@@ -3,7 +3,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -37,13 +37,12 @@
 
 'use strict';
 
-const logger = require('./logger');
 const express = require('express');
 const bodyParser = require('body-parser');
-import { IGBCoreService, IGBInstance, IGBPackage, GBLog } from 'botlib';
+
+import { GBLog, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService';
-import { GuaribasInstance } from '../packages/core.gbapp/models/GBModel';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService';
 import { GBConversationalService } from '../packages/core.gbapp/services/GBConversationalService';
 import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService';
@@ -51,7 +50,7 @@ import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
 
-const appPackages = new Array<IGBPackage>();
+const appPackages: IGBPackage[] = undefined;
 
 /**
  * General Bots open-core entry point.
@@ -68,7 +67,7 @@ export class GBServer {
     // bot instance. This allows the same server to attend multiple Bot on
     // the Marketplace until GB get serverless.
 
-    const port = process.env.port || process.env.PORT || 4242;
+    const port = GBConfigService.getServerPort();
     const server = express();
 
     server.use(bodyParser.json()); // to support JSON-encoded bodies
@@ -79,7 +78,6 @@ export class GBServer {
       })
     );
 
-    let bootInstance: IGBInstance;
     server.listen(port, () => {
       (async () => {
         try {
@@ -103,7 +101,7 @@ export class GBServer {
 
           // Creates a boot instance or load it from storage.
 
-          let bootInstance: IGBInstance = null;
+          let bootInstance: IGBInstance;
           try {
             await core.initStorage();
           } catch (error) {
@@ -132,7 +130,7 @@ export class GBServer {
           await core.saveInstance(fullInstance);
           let instances: IGBInstance[] = await core.loadAllInstances(core, azureDeployer, proxyAddress);
           instances = await core.ensureInstances(instances, bootInstance, core);
-          if (!bootInstance) {
+          if (bootInstance !== undefined) {
             bootInstance = instances[0];
           }
 

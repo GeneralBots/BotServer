@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,16 +36,19 @@
 
 'use strict';
 
-import { GBMinInstance, IGBCoreService, IGBPackage, GBLog, GBDialogStep } from 'botlib';
-import UrlJoin = require('url-join');
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import urlJoin = require('url-join');
 import { FeedbackDialog } from './dialogs/FeedbackDialog';
 import { QualityDialog } from './dialogs/QualityDialog';
 import { GuaribasQuestionAlternate } from './models/index';
 
 import { Sequelize } from 'sequelize-typescript';
 
+/**
+ * Package for customer-satisfaction.gblib.
+ */
 export class GBCustomerSatisfactionPackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = undefined;
+  public sysPackages: IGBPackage[];
   public getDialogs(min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);
   }

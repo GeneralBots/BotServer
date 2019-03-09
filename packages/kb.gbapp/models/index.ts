@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -60,6 +60,9 @@ import {
 } from '../../core.gbapp/models/GBModel';
 import { GuaribasUser } from '../../security.gblib/models';
 
+/**
+ * Subjects to group the pair of questions and answers.
+ */
 @Table
 export class GuaribasSubject extends Model<GuaribasSubject> {
   @PrimaryKey
@@ -111,6 +114,9 @@ export class GuaribasSubject extends Model<GuaribasSubject> {
   public package: GuaribasPackage;
 }
 
+/**
+ * A question and its metadata.
+ */
 @Table
 export class GuaribasQuestion extends Model<GuaribasQuestion> {
   @PrimaryKey
@@ -155,6 +161,7 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
   @UpdatedAt
   public updatedAt: Date;
 
+  //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasAnswer)
   @Column
   public answerId: number;
@@ -174,6 +181,9 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
   public package: GuaribasPackage;
 }
 
+/**
+ * An answer and its metadata.
+ */
 @Table
 export class GuaribasAnswer extends Model<GuaribasAnswer> {
   @PrimaryKey

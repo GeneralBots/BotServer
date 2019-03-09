@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,19 +36,18 @@
 
 'use strict';
 
-import UrlJoin = require('url-join');
-
-import { GBDialogStep, GBLog, GBMinInstance, IGBPackage } from 'botlib';
-import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index';
-
-import { IGBCoreService } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 import { AskDialog } from './dialogs/AskDialog';
 import { FaqDialog } from './dialogs/FaqDialog';
 import { MenuDialog } from './dialogs/MenuDialog';
+import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index';
 
+/**
+ * Package for kb.gbapp.
+ */
 export class GBKBPackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = undefined;
+  public sysPackages: IGBPackage[];
   public getDialogs(min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);
   }

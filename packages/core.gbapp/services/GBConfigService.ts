@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -30,16 +30,30 @@
 |                                                                             |
 \*****************************************************************************/
 
-import * as fs from 'fs';
+'use strict';
+
 import { GBLog } from 'botlib';
 
 /**
  * @fileoverview General Bots server core.
  */
 
-'use strict';
-
+/**
+ * Base configuration for the server like storage.
+ */
 export class GBConfigService {
+
+  public static getServerPort(): number {
+    if (process.env.port !== undefined) {
+      return Number(process.env.port);
+    }
+    if (process.env.PORT !== undefined) {
+      return Number(process.env.PORT);
+    }
+
+    return 4242;
+  }
+
   public static init(): any {
     try {
       require('dotenv-extended').load({
@@ -57,7 +71,7 @@ export class GBConfigService {
   public static get(key: string): string | undefined {
     let value = GBConfigService.tryGet(key);
 
-    if (!value) {
+    if (value !== undefined) {
       switch (key) {
         case 'CLOUD_USERNAME':
           value = undefined;
@@ -117,8 +131,8 @@ export class GBConfigService {
   }
 
   public static tryGet(key: string) {
-    let value = process.env['container:' + key];
-    if (!value) {
+    let value = process.env[`container:${key}`];
+    if (value !== undefined) {
       value = process.env[key];
     }
 

@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -38,10 +38,12 @@
 
 import { BotAdapter } from 'botbuilder';
 import {WaterfallDialog } from 'botbuilder-dialogs';
-import { IGBDialog } from 'botlib';
-import { GBMinInstance } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings';
 
+/**
+ *  Dialog for Welcoming people.
+ */
 export class WelcomeDialog extends IGBDialog {
   /**
    * Setup dialogs flows and define services call.
@@ -73,9 +75,9 @@ export class WelcomeDialog extends IGBDialog {
           await step.replaceDialog('/ask', { firstTime: true });
 
           if (
-            step.context.activity &&
-            step.context.activity.type == 'message' &&
-            step.context.activity.text != ''
+            step.context.activity !== undefined &&
+            step.context.activity.type === 'message' &&
+            step.context.activity.text !== ''
           ) {
             await step.replaceDialog('/answer', { query: step.context.activity.text });
           }
