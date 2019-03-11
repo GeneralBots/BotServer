@@ -91,9 +91,9 @@ export class GBDeployer {
         if (additionalPath !== undefined) {
           paths = paths.concat(additionalPath.toLowerCase().split(';'));
         }
-        const botPackages: string[] = undefined;
-        const gbappPackages: string[] = undefined;
-        let generalPackages: string[];
+        const botPackages: string[] = [];
+        const gbappPackages: string[] = [];
+        let generalPackages: string[] = [];
 
         function doIt(path) {
           const isDirectory = source => Fs.lstatSync(source).isDirectory();

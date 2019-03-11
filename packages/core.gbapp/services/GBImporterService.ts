@@ -53,7 +53,7 @@ export class GBImporter {
 
   public async importIfNotExistsBotPackage(botId: string, packageName: string, localPath: string) {
     const packageJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
-    if (botId !== undefined) {
+    if (botId === undefined) {
       botId = packageJson.botId;
     }
     const instance = await this.core.loadInstance(botId);

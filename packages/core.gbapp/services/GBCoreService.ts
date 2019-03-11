@@ -246,7 +246,7 @@ STORAGE_SYNC=true
 
         return await ngrok.connect({ port: port });
       } else {
-        GBLog.warn('ngrok executable not found. Check installation or node_modules folder.');
+        GBLog.warn('ngrok executable not found (only tested on Windows). Check installation or node_modules folder.');
 
         return 'localhost';
       }
@@ -294,19 +294,23 @@ STORAGE_SYNC=true
         );
       }
     } catch (error) {
-      // Check if storage is empty and needs formatting.
-      const isInvalidObject = error.parent.number === 208 || error.parent.errno === 1; // MSSQL or SQLITE.
-      if (isInvalidObject) {
-        if (GBConfigService.get('STORAGE_SYNC') !== 'true') {
-          throw new Error(
-            `Operating storage is out of sync or there is a storage connection error.
-            Try setting STORAGE_SYNC to true in .env file. Error: ${error.message}.`
-          );
-        } else {
-          GBLog.info(`Storage is empty. After collecting storage structure from all .gbapps it will get synced.`);
-        }
-      } else {
+      if (error.parent === undefined) {
         throw new Error(`Cannot connect to operating storage: ${error.message}.`);
+      } else {
+        // Check if storage is empty and needs formatting.
+        const isInvalidObject = error.parent.number === 208 || error.parent.errno === 1; // MSSQL or SQLITE.
+        if (isInvalidObject) {
+          if (GBConfigService.get('STORAGE_SYNC') !== 'true') {
+            throw new Error(
+              `Operating storage is out of sync or there is a storage connection error.
+            Try setting STORAGE_SYNC to true in .env file. Error: ${error.message}.`
+            );
+          } else {
+            GBLog.info(`Storage is empty. After collecting storage structure from all .gbapps it will get synced.`);
+          }
+        } else {
+          throw new Error(`Cannot connect to operating storage: ${error.message}.`);
+        }
       }
     }
 
@@ -429,7 +433,7 @@ STORAGE_SYNC=true
           const fkcols = args[0];
           let fkname = table;
           let matches2 = re4.exec(fkcols);
-          while (matches2 !== undefined) {
+          while (matches2 !== null) {
             fkname += `_${matches2[1]}`;
             matches2 = re4.exec(fkcols);
           }
@@ -464,7 +468,7 @@ STORAGE_SYNC=true
           const fkcols = args[2];
           let fkname = table;
           let matches2 = re3.exec(fkcols);
-          while (matches2 !== undefined) {
+          while (matches2 !== null) {
             fkname += `_${matches2[1]}`;
             matches2 = re3.exec(fkcols);
           }
@@ -484,8 +488,7 @@ STORAGE_SYNC=true
    */
   private async openStorageFrontier(installationDeployer: IGBInstallationDeployer) {
     const group = GBConfigService.get('CLOUD_GROUP');
-    const serverName = GBConfigService.get('STORAGE_SERVER')
-      .split('.database.windows.net')[0];
+    const serverName = GBConfigService.get('STORAGE_SERVER').split('.database.windows.net')[0];
     await installationDeployer.openStorageFirewall(group, serverName);
   }
 }

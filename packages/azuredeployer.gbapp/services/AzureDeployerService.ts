@@ -86,10 +86,9 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const req = new WebResource();
     req.method = verb;
     req.url = url;
-    req.headers = <HttpHeaders>{};
-    req.headers['Content-Type'] = 'application/json';
-    req.headers['accept-language'] = '*';
-    req.headers.set(' Authorization', `Bearer ${accessToken}`);
+    req.headers.set('Content-Type', 'application/json');
+    req.headers.set('accept-language', '*');
+    req.headers.set('Authorization', `Bearer ${accessToken}`);
     req.body = body;
 
     return req;
@@ -405,10 +404,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const req = new WebResource();
     req.method = 'POST';
     req.url = requestUrl;
-    req.headers = <HttpHeaders>{};
+    req.headers = <any>{};
     req.headers['Content-Type'] = 'application/json; charset=utf-8';
     req.headers['accept-language'] = '*';
-    req.headers.set('Authorization', `Bearer ${accessToken}`);
+    (req.headers as any).Authorization = `Bearer ${accessToken}`;
   }
 
   /**
@@ -486,7 +485,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         } catch (error) {
           reject(error);
         }
-      },         20000);
+      }, 20000);
     });
   }
 
@@ -527,10 +526,9 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const req = new WebResource();
     req.method = method;
     req.url = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/${resource}`;
-    req.headers = <HttpHeaders>{};
-    req.headers['Content-Type'] = 'application/json';
-    req.headers['accept-language'] = '*';
-    req.headers['Ocp-Apim-Subscription-Key'] = authoringKey;
+    req.headers.set('Content-Type', 'application/json');
+    req.headers.set('accept-language', '*');
+    req.headers.set('Ocp-Apim-Subscription-Key', authoringKey);
     req.body = body;
     const httpClient = new ServiceClient();
 

@@ -200,10 +200,10 @@ export class GBMinService {
             GBLog.error(msg);
             res.send(msg);
           } else {
-            await this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
-            await this.adminService.setValue(instance.instanceId, 'accessToken', token.accessToken);
-            await this.adminService.setValue(instance.instanceId, 'expiresOn', token.expiresOn.toString());
-            await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', undefined);
+            this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
+            this.adminService.setValue(instance.instanceId, 'accessToken', token.accessToken);
+            this.adminService.setValue(instance.instanceId, 'expiresOn', token.expiresOn.toString());
+            this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', undefined);
             res.redirect(min.instance.botEndpoint);
           }
         }
@@ -346,7 +346,7 @@ export class GBMinService {
   }
 
   private invokeLoadBot(appPackages: any[], min: GBMinInstance, server: any) {
-    const sysPackages : IGBPackage[] = undefined;
+    const sysPackages : IGBPackage[] = [];
     // NOTE: A semicolon is necessary before this line.
     [
       GBCorePackage,

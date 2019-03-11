@@ -42,7 +42,6 @@ import { GBLog } from 'botlib';
  * Base configuration for the server like storage.
  */
 export class GBConfigService {
-
   public static getServerPort(): number {
     if (process.env.port !== undefined) {
       return Number(process.env.port);
@@ -71,7 +70,7 @@ export class GBConfigService {
   public static get(key: string): string | undefined {
     let value = GBConfigService.tryGet(key);
 
-    if (value !== undefined) {
+    if (value === undefined) {
       switch (key) {
         case 'CLOUD_USERNAME':
           value = undefined;
@@ -130,9 +129,9 @@ export class GBConfigService {
     return value;
   }
 
-  public static tryGet(key: string) {
+  public static tryGet(key: string): any {
     let value = process.env[`container:${key}`];
-    if (value !== undefined) {
+    if (value === undefined) {
       value = process.env[key];
     }
 

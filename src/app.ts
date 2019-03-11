@@ -50,7 +50,7 @@ import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
 
-const appPackages: IGBPackage[] = undefined;
+const appPackages: IGBPackage[] = [];
 
 /**
  * General Bots open-core entry point.
@@ -64,16 +64,13 @@ export class GBServer {
     GBLog.info(`The Bot Server is in STARTING mode...`);
 
     // Creates a basic HTTP server that will serve several URL, one for each
-    // bot instance. This allows the same server to attend multiple Bot on
-    // the Marketplace until GB get serverless.
+    // bot instance.
 
     const port = GBConfigService.getServerPort();
     const server = express();
-
-    server.use(bodyParser.json()); // to support JSON-encoded bodies
+    server.use(bodyParser.json());
     server.use(
       bodyParser.urlencoded({
-        // to support URL-encoded bodies
         extended: true
       })
     );
@@ -105,6 +102,7 @@ export class GBServer {
           try {
             await core.initStorage();
           } catch (error) {
+            GBLog.verbose(`Error initializing storage: ${error}`);
             bootInstance = await core.createBootInstance(core, azureDeployer, proxyAddress);
             await core.initStorage();
           }
@@ -126,7 +124,11 @@ export class GBServer {
             'boot.gbot',
             'packages/boot.gbot'
           );
-          const fullInstance = { ...packageInstance, ...bootInstance };
+          if (bootInstance === undefined) {
+            bootInstance = packageInstance;
+          }
+          // tslint:disable-next-line:prefer-object-spread
+          const fullInstance = Object.assign(packageInstance, bootInstance);
           await core.saveInstance(fullInstance);
           let instances: IGBInstance[] = await core.loadAllInstances(core, azureDeployer, proxyAddress);
           instances = await core.ensureInstances(instances, bootInstance, core);

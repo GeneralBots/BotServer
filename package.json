@@ -95,7 +95,7 @@
     "request-promise": "4.2.4",
     "request-promise-native": "1.0.7",
     "scanf": "^1.0.2",
-    "sequelize": "4.43.0",
+    "sequelize": "^4.43.0",
     "sequelize-typescript": "0.6.7",
     "shx": "0.3.2",
     "simple-git": "1.107.0",
