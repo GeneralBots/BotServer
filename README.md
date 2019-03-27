@@ -36,7 +36,7 @@ editor). BASIC can be used to build custom dialogs so Bot can be extended just l
 
 ## Guide
 
-[Read the General Bots Guide](https://github.com/GeneralBots/BotBook/blob/master/book/chapter-01-index.md).
+[Read the General Bots Guide](https://github.com/GeneralBots/BotBook/tree/master/book).
 
 ## Contributing
 
