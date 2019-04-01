@@ -57,7 +57,7 @@ export class GBImporter {
       botId = packageJson.botId;
     }
     const instance = await this.core.loadInstance(botId);
-    if (instance !== undefined) {
+    if (instance !== null) {
       return instance;
     } else {
       return await this.createInstanceInternal(botId, localPath, packageJson);
