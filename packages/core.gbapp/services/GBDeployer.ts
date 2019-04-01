@@ -88,7 +88,7 @@ export class GBDeployer {
         let totalPackages = 0;
         const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
         let paths = [GBDeployer.deployFolder];
-        if (additionalPath !== undefined) {
+        if (additionalPath !== undefined && additionalPath !== '') {
           paths = paths.concat(additionalPath.toLowerCase().split(';'));
         }
         const botPackages: string[] = [];

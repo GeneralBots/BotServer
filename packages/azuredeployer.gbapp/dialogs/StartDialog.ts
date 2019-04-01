@@ -120,7 +120,7 @@ export class StartDialog {
 
   private static retrieveUsername() {
     let value = GBConfigService.get('CLOUD_USERNAME');
-    if (value !== undefined) {
+    if (value === undefined) {
       process.stdout.write(`${GBAdminService.GB_PROMPT}CLOUD_USERNAME:`);
       value = scanf('%s').replace(/(\n|\r)+$/, '');
     }
@@ -130,7 +130,7 @@ export class StartDialog {
 
   private static retrievePassword() {
     let password = GBConfigService.get('CLOUD_PASSWORD');
-    if (password !== undefined) {
+    if (password === undefined) {
       process.stdout.write(`${GBAdminService.GB_PROMPT}CLOUD_PASSWORD:`);
       password = scanf('%s').replace(/(\n|\r)+$/, '');
     }
@@ -140,7 +140,7 @@ export class StartDialog {
 
   private static retrieveBotId() {
     let botId = GBConfigService.get('BOT_ID');
-    if (botId !== undefined) {
+    if (botId === undefined) {
       process.stdout.write(
         `${GBAdminService.GB_PROMPT}Choose a unique bot Id containing lowercase letters, digits or
 dashes (cannot use dash as the first two or last one characters),
@@ -155,7 +155,7 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
 
   private static retrieveAuthoringKey() {
     let authoringKey = GBConfigService.get('NLP_AUTHORING_KEY');
-    if (authoringKey !== undefined) {
+    if (authoringKey === undefined) {
       process.stdout.write(
         `${
           GBAdminService.GB_PROMPT
@@ -174,12 +174,12 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
 
   private static retrieveAppId() {
     let appId = GBConfigService.get('MARKETPLACE_ID');
-    process.stdout.write(
-      `Sorry, this part cannot be automated yet due to Microsoft schedule,
+    if (appId === undefined) {
+      process.stdout.write(
+        `Sorry, this part cannot be automated yet due to Microsoft schedule,
 please go to https://apps.dev.microsoft.com/portal/register-app to
 generate manually an App ID and App Secret.\n`
-    );
-    if (appId !== undefined) {
+      );
       process.stdout.write('Generated Application Id (MARKETPLACE_ID):');
       appId = scanf('%s').replace(/(\n|\r)+$/, '');
     }
@@ -189,7 +189,7 @@ generate manually an App ID and App Secret.\n`
 
   private static retrieveAppPassword() {
     let appPassword = GBConfigService.get('MARKETPLACE_SECRET');
-    if (appPassword !== undefined) {
+    if (appPassword === undefined) {
       process.stdout.write('Generated Password (MARKETPLACE_SECRET):');
       appPassword = scanf('%s').replace(/(\n|\r)+$/, '');
     }
@@ -217,7 +217,7 @@ generate manually an App ID and App Secret.\n`
 
   private static retrieveLocation() {
     let location = GBConfigService.get('CLOUD_LOCATION');
-    if (location !== undefined) {
+    if (location === undefined) {
       process.stdout.write('CLOUD_LOCATION (eg. westus):');
       location = scanf('%s');
     }

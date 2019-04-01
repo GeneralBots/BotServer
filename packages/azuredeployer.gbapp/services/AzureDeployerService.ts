@@ -477,7 +477,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
             this.apiVersion
           }`;
           url = urlJoin(baseUrl, query);
-          req = AzureDeployerService.createRequestObject(url, accessToken, 'GET', JSON.stringify(parameters));
+          req = AzureDeployerService.createRequestObject(url, accessToken, 'POST', JSON.stringify(parameters));
           const resChannel = await httpClient.sendRequest(req);
           const key = JSON.parse(resChannel.bodyAsText).properties.properties.sites[0].key;
           instance.webchatKey = key;
@@ -485,7 +485,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         } catch (error) {
           reject(error);
         }
-      }, 20000);
+      },         20000);
     });
   }
 
