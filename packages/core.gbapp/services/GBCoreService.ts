@@ -121,8 +121,8 @@ export class GBCoreService implements IGBCoreService {
     const logging: boolean | Function =
       GBConfigService.get('STORAGE_LOGGING') === 'true'
         ? (str: string): void => {
-            GBLog.info(str);
-          }
+          GBLog.info(str);
+        }
         : false;
 
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
@@ -137,9 +137,10 @@ export class GBCoreService implements IGBCoreService {
       dialect: this.dialect,
       storage: storage,
       dialectOptions: {
-        encrypt: encrypt
-      },
-      pool: {
+        options: {
+          encrypt: encrypt
+        }
+      }, pool: {
         max: 32,
         min: 8,
         idle: 40000,
@@ -345,8 +346,8 @@ STORAGE_SYNC=true
       GBCorePackage,
       GBSecurityPackage,
       GBKBPackage,
-      GBCustomerSatisfactionPackage,
-      GBWhatsappPackage
+      GBCustomerSatisfactionPackage
+      //  GBWhatsappPackage
     ].forEach(e => {
       GBLog.info(`Loading sys package: ${e.name}...`);
       const p = Object.create(e.prototype) as IGBPackage;

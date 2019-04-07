@@ -36,12 +36,6 @@
 
 'use strict';
 
-import {
-  DataTypeDate,
-  DataTypeDecimal,
-  DataTypes,
-  DataTypeUUIDv4
-} from 'sequelize';
 
 import {
   AutoIncrement,

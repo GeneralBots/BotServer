@@ -65,7 +65,7 @@ export class AdminDialog extends IGBDialog {
 
     if (!AdminDialog.isSharePointPath(packageName)) {
       const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
-      if (additionalPath !== undefined) {
+      if (additionalPath === undefined) {
         throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
       }
       await deployer.deployPackage(min, urlJoin(additionalPath, packageName));

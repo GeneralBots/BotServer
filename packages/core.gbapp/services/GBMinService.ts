@@ -140,7 +140,7 @@ export class GBMinService {
 
         // Install default VBA module.
 
-        deployer.deployPackage(min, 'packages/default.gbdialog');
+       // DISABLED: deployer.deployPackage(min, 'packages/default.gbdialog');
 
         // Call the loadBot context.activity for all packages.
 
@@ -354,8 +354,8 @@ export class GBMinService {
       GBAdminPackage,
       GBKBPackage,
       GBAnalyticsPackage,
-      GBCustomerSatisfactionPackage,
-      GBWhatsappPackage
+      GBCustomerSatisfactionPackage
+      // DISABLED: GBWhatsappPackage
     ].forEach(sysPackage => {
       const p = Object.create(sysPackage.prototype) as IGBPackage;
       p.loadBot(min);

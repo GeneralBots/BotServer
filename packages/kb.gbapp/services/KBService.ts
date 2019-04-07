@@ -210,25 +210,29 @@ export class KBService {
     if (subjects) {
       const where = {
         from: from,
-        subject1: undefined,
-        subject2: undefined,
-        subject3: undefined,
-        subject4: undefined
+        // tslint:disable-next-line: no-null-keyword
+        subject1: null,
+        // tslint:disable-next-line: no-null-keyword
+        subject2: null,
+        // tslint:disable-next-line: no-null-keyword
+        subject3: null,
+        // tslint:disable-next-line: no-null-keyword
+        subject4: null
       };
 
-      if (subjects[0]) {
+      if (subjects[0] && subjects[0].internalId) {
         where.subject1 = subjects[0].internalId;
       }
 
-      if (subjects[1]) {
+      if (subjects[1] && subjects[1].internalId) {
         where.subject2 = subjects[1].internalId;
       }
 
-      if (subjects[2]) {
+      if (subjects[2] && subjects[2].internalId) {
         where.subject3 = subjects[2].internalId;
       }
 
-      if (subjects[3]) {
+      if (subjects[3] && subjects[3].internalId) {
         where.subject4 = subjects[3].internalId;
       }
 
@@ -329,7 +333,7 @@ export class KBService {
           packageId: packageId
         });
 
-        if (lastAnswer !== null && lastQuestionId !== 0) {
+        if (lastAnswer !== undefined && lastQuestionId !== 0) {
           await lastAnswer.update({ nextId: lastQuestionId });
         }
         lastAnswer = answer1;

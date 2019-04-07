@@ -218,7 +218,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
       this.provider
-    }/botServices/${botId}?api-version=${this.apiVersion}`;
+      }/botServices/${botId}?api-version=${this.apiVersion}`;
     const url = urlJoin(baseUrl, query);
     const req = AzureDeployerService.createRequestObject(url, accessToken, 'PATCH', JSON.stringify(parameters));
     const res = await httpClient.sendRequest(req);
@@ -313,7 +313,8 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     GBLog.info(`Deploying Text Analytics...`);
     const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);
     keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
-    instance.textAnalyticsEndpoint = textAnalytics.endpoint;
+
+    instance.textAnalyticsEndpoint = textAnalytics.endpoint.replace(`/text/analytics/v2.0`, '');
     instance.textAnalyticsKey = keys.key1;
 
     GBLog.info(`Deploying NLP...`);
@@ -460,7 +461,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       const httpClient = new ServiceClient();
       let query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
         this.provider
-      }/botServices/${botId}?api-version=${this.apiVersion}`;
+        }/botServices/${botId}?api-version=${this.apiVersion}`;
       let url = urlJoin(baseUrl, query);
       let req = AzureDeployerService.createRequestObject(url, accessToken, 'PUT', JSON.stringify(parameters));
       const res = await httpClient.sendRequest(req);
@@ -475,7 +476,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
           //tslint:disable-next-line:max-line-length
           query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${
             this.apiVersion
-          }`;
+            }`;
           url = urlJoin(baseUrl, query);
           req = AzureDeployerService.createRequestObject(url, accessToken, 'POST', JSON.stringify(parameters));
           const resChannel = await httpClient.sendRequest(req);
@@ -485,7 +486,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         } catch (error) {
           reject(error);
         }
-      },         20000);
+      }, 20000);
     });
   }
 

@@ -36,30 +36,17 @@
 
 'use strict';
 
-import {
-  DataTypeDate,
-  DataTypeDecimal,
-  DataTypes,
-  DataTypeUUIDv4
-} from 'sequelize';
 
 import {
   AutoIncrement,
   BelongsTo,
-  BelongsToMany,
   Column,
-  CreatedAt,
   DataType,
   ForeignKey,
-  HasMany,
-  IsUUID,
   Length,
   Model,
   PrimaryKey,
-  Sequelize,
-  Table,
-  UpdatedAt
-} from 'sequelize-typescript';
+  Table} from 'sequelize-typescript';
 
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 
