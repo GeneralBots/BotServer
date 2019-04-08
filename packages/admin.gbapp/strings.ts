@@ -16,7 +16,8 @@ export const Messages = {
     wrong_password: 'Sorry, wrong password. Please, try again.',
     enter_authenticator_tenant: 'Enter the Authenticator Tenant (eg.: domain.onmicrosoft.com):',
     enter_authenticator_authority_host_url: 'Enter the Authority Host URL (eg.: https://login.microsoftonline.com): ',
-    enter_authenticator_client_id: 'Enter the Client Id [Application Id](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredAppsPreview) GUID:',
+    enter_authenticator_client_id: `Enter the Client Id GUID: Get from
+    [this url](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredAppsPreview)`,
     enter_authenticator_client_secret: 'Enter the Client Secret:'
   },
   'pt-BR': {

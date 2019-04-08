@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -33,18 +33,19 @@
 'use strict';
 
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBCoreService } from 'botlib';
+import { GBLog, GBMinInstance, GBService, IGBCoreService } from 'botlib';
 import * as fs from 'fs';
 import { GBDeployer } from './GBDeployer';
 import { TSCompiler } from './TSCompiler';
-import DialogClass from './GBAPIService';
 
 const walkPromise = require('walk-promise');
-const logger = require('../../../src/logger');
+
 const vm = require('vm');
-const UrlJoin = require('url-join');
+import urlJoin = require('url-join');
+import { DialogClass } from './GBAPIService';
+//tslint:disable-next-line:no-submodule-imports
 const vb2ts = require('vbscript-to-typescript/dist/converter');
-var beautify = require('js-beautify').js;
+const beautify = require('js-beautify').js;
 
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
@@ -55,11 +56,13 @@ var beautify = require('js-beautify').js;
  * translation and enhance classic BASIC experience.
  */
 
-export class GBVMService implements IGBCoreService {
+/**
+ * Basic services for BASIC manipulation.
+ */
+export class GBVMService extends GBService {
   private readonly script = new vm.Script();
 
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
-
     const files = await walkPromise(folder);
     this.addHearDialog(min);
 
@@ -74,7 +77,7 @@ export class GBVMService implements IGBCoreService {
           const mainName = file.name.replace(/\-|\./g, '');
           min.scriptMap[file.name] = mainName;
 
-          const filename = UrlJoin(folder, file.name);
+          const filename = urlJoin(folder, file.name);
           fs.watchFile(filename, async () => {
             await this.run(filename, min, deployer, mainName);
           });
@@ -110,6 +113,10 @@ export class GBVMService implements IGBCoreService {
       return 'let password = sys().generatePassword()';
     });
 
+    code = code.replace(/(get)(\s)(.*)/g, ($0, $1, $2) => {
+      return `sys().httpGet (${$2})`;
+    });
+
     code = code.replace(/(create a bot farm using)(\s)(.*)/g, ($0, $1, $2, $3) => {
       return `sys().createABotFarmUsing (${$3})`;
     });
@@ -127,7 +134,7 @@ export class GBVMService implements IGBCoreService {
     // Converts General Bots BASIC into regular VBS
 
     const basicCode: string = fs.readFileSync(filename, 'utf8');
-    const vbsCode = await this.convertGBASICToVBS(basicCode);
+    const vbsCode = this.convertGBASICToVBS(basicCode);
     const vbsFile = `${filename}.compiled`;
     fs.writeFileSync(vbsFile, vbsCode, 'utf8');
 
@@ -156,9 +163,9 @@ export class GBVMService implements IGBCoreService {
       let parsedCode = code;
       const hearExp = /(\w+).*hear.*\(\)/;
 
-      let match1;
+      let match1 = hearExp.exec(code);
 
-      while ((match1 = hearExp.exec(code))) {
+      while (match1 !== undefined) {
         let pos = 0;
 
         // Writes async body.
@@ -178,8 +185,9 @@ export class GBVMService implements IGBCoreService {
 
         let right = 0;
         let left = 1;
-        let match2;
-        while ((match2 = /\{|\}/.exec(tempCode))) {
+        let match2 = /\{|\}/.exec(tempCode);
+
+        while (match2 !== undefined) {
           const c = tempCode.substring(match2.index, match2.index + 1);
 
           if (c === '}') {
@@ -194,6 +202,7 @@ export class GBVMService implements IGBCoreService {
           if (left === right) {
             break;
           }
+          match1 = hearExp.exec(code);
         }
 
         parsedCode += code.substring(start + match1[0].length + 1, pos + match1[0].length);
@@ -203,19 +212,19 @@ export class GBVMService implements IGBCoreService {
         // A interaction will be made for each hear.
 
         code = parsedCode;
+        match2 = /\{|\}/.exec(tempCode);
       }
 
       parsedCode = this.handleThisAndAwait(parsedCode);
 
-      parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true })
+      parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true });
       fs.writeFileSync(jsfile, parsedCode);
 
-      const sandbox: DialogClass = new DialogClass(min);
+      const sandbox: DialogClass = new DialogClass(min, deployer);
       const context = vm.createContext(sandbox);
       vm.runInContext(parsedCode, context);
-      min.sandbox = sandbox;
-      await deployer.deployScriptToStorage(min.instanceId, filename);
-      logger.info(`[GBVMService] Finished loading of ${filename}`);
+      min.sandBoxMap[mainName] = sandbox;
+      GBLog.info(`[GBVMService] Finished loading of ${filename}`);
     }
   }
 
@@ -224,13 +233,13 @@ export class GBVMService implements IGBCoreService {
 
     code = code.replace(/sys\(\)/g, 'this.sys()');
     code = code.replace(/("[^"]*"|'[^']*')|\btalk\b/g, ($0, $1) => {
-      return $1 == undefined ? 'this.talk' : $1;
+      return $1 === undefined ? 'this.talk' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bhear\b/g, ($0, $1) => {
-      return $1 == undefined ? 'this.hear' : $1;
+      return $1 === undefined ? 'this.hear' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/g, ($0, $1) => {
-      return $1 == undefined ? 'this.sendEmail' : $1;
+      return $1 === undefined ? 'this.sendEmail' : $1;
     });
 
     // await insertion.
@@ -245,7 +254,7 @@ export class GBVMService implements IGBCoreService {
     min.dialogs.add(
       new WaterfallDialog('/hear', [
         async step => {
-          step.activeDialog.state.cbId = step.options['id'];
+          step.activeDialog.state.cbId = (step.options as any).id;
 
           return await step.prompt('textPrompt', {});
         },
@@ -255,7 +264,7 @@ export class GBVMService implements IGBCoreService {
 
           const cbId = step.activeDialog.state.cbId;
           const cb = min.cbMap[cbId];
-          cb.bind({ step: step, context: step.context }); // TODO: Necessary or min.sandbox?
+          cb.bind({ step: step, context: step.context });
 
           await step.endDialog();
 

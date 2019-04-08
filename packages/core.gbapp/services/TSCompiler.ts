@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,11 +36,13 @@
 
 'use strict';
 
+import { GBLog } from 'botlib';
 import * as ts from 'typescript';
-const logger = require('../../../src/logger');
 
+/**
+ * Wrapper for a TypeScript compiler.
+ */
 export class TSCompiler {
-
 
   private static shouldIgnoreError(diagnostic) {
     const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
@@ -76,11 +78,11 @@ export class TSCompiler {
       if (!TSCompiler.shouldIgnoreError(diagnostic)) {
         const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
 
-        if (diagnostic.file) {
+        if (diagnostic.file !== undefined) {
           const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-          logger.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+          GBLog.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
         } else {
-          logger.error(`${message}`);
+          GBLog.error(`${message}`);
         }
       }
     });

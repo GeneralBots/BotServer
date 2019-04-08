@@ -3,7 +3,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -37,23 +37,20 @@
 
 'use strict';
 
-const logger = require('./logger');
 const express = require('express');
 const bodyParser = require('body-parser');
-import { IGBInstance, IGBPackage } from 'botlib';
+
+import { GBLog, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService';
-import { GuaribasInstance } from '../packages/core.gbapp/models/GBModel';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService';
 import { GBConversationalService } from '../packages/core.gbapp/services/GBConversationalService';
 import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService';
 import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
-import { GBVMService } from '../packages/core.gbapp/services/GBVMService';
-import { load } from 'dotenv';
 
-const appPackages = new Array<IGBPackage>();
+const appPackages: IGBPackage[] = [];
 
 /**
  * General Bots open-core entry point.
@@ -64,33 +61,29 @@ export class GBServer {
    */
 
   public static run() {
-    logger.info(`The Bot Server is in STARTING mode...`);
+    GBLog.info(`The Bot Server is in STARTING mode...`);
 
     // Creates a basic HTTP server that will serve several URL, one for each
-    // bot instance. This allows the same server to attend multiple Bot on
-    // the Marketplace until GB get serverless.
+    // bot instance.
 
-    const port = process.env.port || process.env.PORT || 4242;
+    const port = GBConfigService.getServerPort();
     const server = express();
-
-    server.use(bodyParser.json()); // to support JSON-encoded bodies
+    server.use(bodyParser.json());
     server.use(
       bodyParser.urlencoded({
-        // to support URL-encoded bodies
         extended: true
       })
     );
 
-    let bootInstance: IGBInstance;
     server.listen(port, () => {
       (async () => {
         try {
-          logger.info(`Now accepting connections on ${port}...`);
+          GBLog.info(`Now accepting connections on ${port}...`);
 
           // Reads basic configuration, initialize minimal services.
 
           GBConfigService.init();
-          const core = new GBCoreService();
+          const core: IGBCoreService = new GBCoreService();
 
           const importer: GBImporter = new GBImporter(core);
           const deployer: GBDeployer = new GBDeployer(core, importer);
@@ -100,15 +93,16 @@ export class GBServer {
 
           // Ensure that local development proxy is setup.
 
-          logger.info(`Establishing a development local proxy (ngrok)...`);
+          GBLog.info(`Establishing a development local proxy (ngrok)...`);
           const proxyAddress: string = await core.ensureProxy(port);
 
-          // Creates a boot instance or load it frmo storage.
+          // Creates a boot instance or load it from storage.
 
-          let bootInstance: IGBInstance = null;
+          let bootInstance: IGBInstance;
           try {
             await core.initStorage();
           } catch (error) {
+            GBLog.verbose(`Error initializing storage: ${error}`);
             bootInstance = await core.createBootInstance(core, azureDeployer, proxyAddress);
             await core.initStorage();
           }
@@ -117,24 +111,28 @@ export class GBServer {
 
           // Deploys system and user packages.
 
-          logger.info(`Deploying packages...`);
+          GBLog.info(`Deploying packages...`);
           core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, appPackages);
 
           // Loads all bot instances.
 
-          logger.info(`Publishing instances...`);
+          GBLog.info(`Publishing instances...`);
           const packageInstance = await importer.importIfNotExistsBotPackage(
             GBConfigService.get('CLOUD_GROUP'),
             'boot.gbot',
             'packages/boot.gbot'
           );
+          if (bootInstance === undefined) {
+            bootInstance = packageInstance;
+          }
+          // tslint:disable-next-line:prefer-object-spread
           const fullInstance = Object.assign(packageInstance, bootInstance);
           await core.saveInstance(fullInstance);
-          let instances: GuaribasInstance[] = await core.loadAllInstances(core, azureDeployer, proxyAddress);
+          let instances: IGBInstance[] = await core.loadAllInstances(core, azureDeployer, proxyAddress);
           instances = await core.ensureInstances(instances, bootInstance, core);
-          if (!bootInstance) {
+          if (bootInstance !== undefined) {
             bootInstance = instances[0];
           }
 
@@ -145,16 +143,15 @@ export class GBServer {
 
           // Deployment of local applications for the first time.
 
-          deployer.installDefaultGBUI();
+          deployer.runOnce();
 
-          logger.info(`The Bot Server is in RUNNING mode...`);
+          GBLog.info(`The Bot Server is in RUNNING mode...`);
 
           // Opens Navigator.
 
           core.openBrowserInDevelopment();
-
         } catch (err) {
-          logger.error(`STOP: ${err} ${err.stack ? err.stack : ''}`);
+          GBLog.error(`STOP: ${err} ${err.stack ? err.stack : ''}`);
           process.exit(1);
         }
       })();

@@ -10,9 +10,8 @@ export const Messages = {
     here_is_subjects: 'Here are some subjects to choose from...',
     menu_select: 'Select',
     lets_search: query =>
-      `Vamos pesquisar sobre ${query}... O que deseja saber?`,
-    see_faq:
-      'Please take a look at the FAQ I\'ve prepared for you. You can click on them to get the answer.',
+      `Lets search for ${query}... What do you want to know?`,
+    see_faq: 'Please take a look at the FAQ I\'ve prepared for you. You can click on them to get the answer.',
     will_answer_projector:
       'I\'ll answer on the projector to a better experience...',
     ask_first_time: 'What are you looking for?'

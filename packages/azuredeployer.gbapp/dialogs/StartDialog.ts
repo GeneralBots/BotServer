@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,19 +36,17 @@
 
 'use strict';
 
-import { IGBInstance } from 'botlib';
+import { GBLog, IGBInstallationDeployer, IGBInstance } from 'botlib';
 import * as fs from 'fs';
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService';
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService';
-import { AzureDeployerService } from '../services/AzureDeployerService';
-import { GuaribasInstance } from '../../../packages/core.gbapp/models/GBModel';
 const scanf = require('scanf');
 
 /**
  * Handles command-line dialog for getting info for Boot Bot.
  */
 export class StartDialog {
-  public static async createBaseInstance() {
+  public static async createBaseInstance(installationDeployer: IGBInstallationDeployer) {
     // No .env so asks for cloud credentials to start a new farm.
 
     if (!fs.existsSync(`.env`)) {
@@ -75,7 +73,7 @@ export class StartDialog {
     // Connects to the cloud and retrieves subscriptions.
 
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
-    const list = await AzureDeployerService.getSubscriptions(credentials);
+    const list = await installationDeployer.getSubscriptions(credentials);
 
     let subscriptionId: string;
     while (subscriptionId === undefined) {
@@ -104,9 +102,8 @@ export class StartDialog {
 
     process.stdout.write(`${GBAdminService.GB_PROMPT}Thank you. That is enough information.\nNow building farm...`);
 
-
     // Prepares the first instance on bot farm.
-    const instance: IGBInstance = {};
+    const instance = <IGBInstance>{};
 
     instance.botId = botId;
     instance.cloudUsername = username;
@@ -123,7 +120,7 @@ export class StartDialog {
 
   private static retrieveUsername() {
     let value = GBConfigService.get('CLOUD_USERNAME');
-    if (!value) {
+    if (value === undefined) {
       process.stdout.write(`${GBAdminService.GB_PROMPT}CLOUD_USERNAME:`);
       value = scanf('%s').replace(/(\n|\r)+$/, '');
     }
@@ -133,25 +130,23 @@ export class StartDialog {
 
   private static retrievePassword() {
     let password = GBConfigService.get('CLOUD_PASSWORD');
-    if (!password) {
+    if (password === undefined) {
       process.stdout.write(`${GBAdminService.GB_PROMPT}CLOUD_PASSWORD:`);
       password = scanf('%s').replace(/(\n|\r)+$/, '');
     }
+
     return password;
   }
 
   private static retrieveBotId() {
     let botId = GBConfigService.get('BOT_ID');
-    if (!botId) {
+    if (botId === undefined) {
       process.stdout.write(
         `${GBAdminService.GB_PROMPT}Choose a unique bot Id containing lowercase letters, digits or
 dashes (cannot use dash as the first two or last one characters),
 cannot start or end with or contain consecutive dashes and having 4 to 42 characters long.\n`
       );
       process.stdout.write(`${GBAdminService.GB_PROMPT}BOT_ID:`);
-
-      // TODO: Update this regexp to match description of it.
-
       botId = scanf('%s').replace(/(\n|\r)+$/, '');
     }
 
@@ -160,7 +155,7 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
 
   private static retrieveAuthoringKey() {
     let authoringKey = GBConfigService.get('NLP_AUTHORING_KEY');
-    if (!authoringKey) {
+    if (authoringKey === undefined) {
       process.stdout.write(
         `${
           GBAdminService.GB_PROMPT
@@ -179,12 +174,12 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
 
   private static retrieveAppId() {
     let appId = GBConfigService.get('MARKETPLACE_ID');
-    process.stdout.write(
-      `Sorry, this part cannot be automated yet due to Microsoft schedule,
+    if (appId === undefined) {
+      process.stdout.write(
+        `Sorry, this part cannot be automated yet due to Microsoft schedule,
 please go to https://apps.dev.microsoft.com/portal/register-app to
 generate manually an App ID and App Secret.\n`
-    );
-    if (!appId) {
+      );
       process.stdout.write('Generated Application Id (MARKETPLACE_ID):');
       appId = scanf('%s').replace(/(\n|\r)+$/, '');
     }
@@ -194,7 +189,7 @@ generate manually an App ID and App Secret.\n`
 
   private static retrieveAppPassword() {
     let appPassword = GBConfigService.get('MARKETPLACE_SECRET');
-    if (!appPassword) {
+    if (appPassword === undefined) {
       process.stdout.write('Generated Password (MARKETPLACE_SECRET):');
       appPassword = scanf('%s').replace(/(\n|\r)+$/, '');
     }
@@ -207,7 +202,7 @@ generate manually an App ID and App Secret.\n`
     const map = {};
     let index = 1;
     list.forEach(element => {
-      console.log(`${index}: ${element.displayName} (${element.subscriptionId})`);
+      GBLog.info(`${index}: ${element.displayName} (${element.subscriptionId})`);
       map[index++] = element;
     });
     let subscriptionIndex;
@@ -222,8 +217,8 @@ generate manually an App ID and App Secret.\n`
 
   private static retrieveLocation() {
     let location = GBConfigService.get('CLOUD_LOCATION');
-    if (!location) {
-      process.stdout.write("CLOUD_LOCATION (eg. 'westus'):");
+    if (location === undefined) {
+      process.stdout.write('CLOUD_LOCATION (eg. westus):');
       location = scanf('%s');
     }
 

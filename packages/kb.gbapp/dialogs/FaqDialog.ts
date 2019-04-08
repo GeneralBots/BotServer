@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -38,11 +38,13 @@
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { IGBDialog } from 'botlib';
-import { GBMinInstance } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings';
 import { KBService } from './../services/KBService';
 
+/**
+ * Handle display of FAQ allowing direct access to KB.
+ */
 export class FaqDialog extends IGBDialog {
   /**
    * Setup dialogs flows and define services call.
@@ -56,15 +58,16 @@ export class FaqDialog extends IGBDialog {
 
     min.dialogs.add(new WaterfallDialog('/faq', [
       async step => {
-        const data = await service.getFaqBySubjectArray('faq', null);
+        const data = await service.getFaqBySubjectArray('faq', undefined);
         const locale = step.context.activity.locale;
-        if (data) {
+        if (data !== undefined) {
           await min.conversationalService.sendEvent(step, 'play', {
             playerType: 'bullet',
             data: data.slice(0, 10)
           });
 
-          await step.context.sendActivity(Messages[locale].see_faq); // TODO: RND messages.
+          await step.context.sendActivity(Messages[locale].see_faq);
+
           return await step.next();
         }
       }

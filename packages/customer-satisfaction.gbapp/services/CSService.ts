@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -33,6 +33,9 @@
 import { GuaribasConversation } from '../../analytics.gblib/models';
 import { GuaribasQuestionAlternate } from '../models';
 
+/**
+ * Customer Satisfaction Service Layer.
+ */
 export class CSService {
 
   public async resolveQuestionAlternate(
@@ -62,6 +65,7 @@ export class CSService {
     rate: number
   ): Promise<GuaribasConversation> {
     conversation.rate = rate;
+
     return conversation.save();
   }
 }

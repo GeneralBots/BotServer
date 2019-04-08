@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -38,10 +38,11 @@
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { IGBDialog } from 'botlib';
-import { GBMinInstance } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings';
-
+/**
+ * Dialog for the bot explains about itself.
+ */
 export class WhoAmIDialog extends IGBDialog {
   /**
    * Setup dialogs flows and define services call.
@@ -55,7 +56,7 @@ export class WhoAmIDialog extends IGBDialog {
         const locale = step.context.activity.locale;
         await step.context.sendActivity(`${min.instance.description}`);
 
-        if (min.instance.whoAmIVideo) {
+        if (min.instance.whoAmIVideo !== undefined) {
           await step.context.sendActivity(Messages[locale].show_video);
           await min.conversationalService.sendEvent(step, 'play', {
             playerType: 'video',

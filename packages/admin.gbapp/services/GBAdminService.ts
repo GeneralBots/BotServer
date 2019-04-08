@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -37,17 +37,17 @@
 'use strict';
 
 import { AuthenticationContext, TokenResponse } from 'adal-node';
-import { IGBCoreService } from 'botlib';
+import { IGBAdminService, IGBCoreService, IGBInstance } from 'botlib';
+import urlJoin = require('url-join');
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 import { GuaribasAdmin } from '../models/AdminModel';
-const UrlJoin = require('url-join');
 const msRestAzure = require('ms-rest-azure');
 const PasswordGenerator = require('strict-password-generator').default;
 
 /**
  * Services for server administration.
  */
-export class GBAdminService {
+export class GBAdminService implements IGBAdminService {
   public static GB_PROMPT: string = 'GeneralBots: ';
   public static masterBotInstanceId = 0;
 
@@ -65,18 +65,15 @@ export class GBAdminService {
 
   public static async getADALTokenFromUsername(username: string, password: string) {
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
-    const accessToken = credentials.tokenCache._entries[0].accessToken;
 
-    return accessToken;
+    return credentials.tokenCache._entries[0].accessToken;
   }
 
   public static async getADALCredentialsFromUsername(username: string, password: string) {
-    const credentials = await msRestAzure.loginWithUsernamePassword(username, password);
-
-    return credentials;
+    return await msRestAzure.loginWithUsernamePassword(username, password);
   }
 
-  public static getRndPassword() {
+  public static getRndPassword(): string {
     const passwordGenerator = new PasswordGenerator();
     const options = {
       upperCaseAlpha: true,
@@ -88,6 +85,7 @@ export class GBAdminService {
     };
     let password = passwordGenerator.generatePassword(options);
     password = password.replace(/[\@\[\=\:\;\?]/g, '#');
+
     return password;
   }
 
@@ -101,11 +99,11 @@ export class GBAdminService {
       minimumLength: 12,
       maximumLength: 14
     };
-    const name = passwordGenerator.generatePassword(options);
-    return name;
+
+    return passwordGenerator.generatePassword(options);
   }
 
-  public async setValue(instanceId: number, key: string, value: string): Promise<GuaribasAdmin> {
+  public async setValue(instanceId: number, key: string, value: string) {
     const options = { where: {} };
     options.where = { key: key };
     let admin = await GuaribasAdmin.findOne(options);
@@ -115,8 +113,7 @@ export class GBAdminService {
     }
     admin.value = value;
     admin.instanceId = instanceId;
-
-    return admin.save();
+    await admin.save();
   }
 
   public async updateSecurityInfo(
@@ -125,7 +122,7 @@ export class GBAdminService {
     authenticatorAuthorityHostUrl: string,
     authenticatorClientId: string,
     authenticatorClientSecret: string
-  ): Promise<GuaribasInstance> {
+  ): Promise<IGBInstance> {
     const options = { where: {} };
     options.where = { instanceId: instanceId };
     const item = await GuaribasInstance.findOne(options);
@@ -137,7 +134,7 @@ export class GBAdminService {
     return item.save();
   }
 
-  public async getValue(instanceId: number, key: string) {
+  public async getValue(instanceId: number, key: string): Promise<string> {
     const options = { where: {} };
     options.where = { key: key, instanceId: instanceId };
     const obj = await GuaribasAdmin.findOne(options);
@@ -154,7 +151,7 @@ export class GBAdminService {
         const accessToken = await this.getValue(instanceId, 'accessToken');
         resolve(accessToken);
       } else {
-        const authorizationUrl = UrlJoin(
+        const authorizationUrl = urlJoin(
           instance.authenticatorAuthorityHostUrl,
           instance.authenticatorTenant,
           '/oauth2/authorize'
@@ -169,7 +166,7 @@ export class GBAdminService {
           instance.authenticatorClientSecret,
           resource,
           async (err, res) => {
-            if (err) {
+            if (err !== undefined) {
               reject(err);
             } else {
               const token = res as TokenResponse;

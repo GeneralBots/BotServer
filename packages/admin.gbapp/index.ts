@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,21 +36,35 @@
 
 'use strict';
 
-import urlJoin = require('url-join');
-
-import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 import { AdminDialog } from './dialogs/AdminDialog';
 import { GuaribasAdmin } from './models/AdminModel';
 
+/**
+ * The package for admin.gbapp.
+ */
 export class GBAdminPackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = null;
+  public sysPackages: IGBPackage[];
+
+  public getDialogs(min: GBMinInstance) {
+    GBLog.verbose(`getDialogs called.`);
+  }
+  public unloadPackage(core: IGBCoreService): void {
+    GBLog.verbose(`unloadPackage called.`);
+  }
+  public unloadBot(min: GBMinInstance): void {
+    GBLog.verbose(`unloadBot called.`);
+  }
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+    GBLog.verbose(`onNewSession called.`);
+  }
 
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     core.sequelize.addModels([GuaribasAdmin]);
   }
 
   public loadBot(min: GBMinInstance): void {
-    AdminDialog.setup(min.bot, min);
+    AdminDialog.setup(min);
   }
 }

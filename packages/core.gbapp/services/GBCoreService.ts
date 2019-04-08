@@ -36,13 +36,13 @@
 
 'use strict';
 
-import { IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
+import { GBLog, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
 import * as fs from 'fs';
 import { Sequelize } from 'sequelize-typescript';
 import { GBAdminPackage } from '../../admin.gbapp/index';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBAnalyticsPackage } from '../../analytics.gblib';
-import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
+import { StartDialog } from '../../azuredeployer.gbapp/dialogs/StartDialog';
 import { GBCorePackage } from '../../core.gbapp';
 import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
 import { GBKBPackage } from '../../kb.gbapp';
@@ -50,10 +50,7 @@ import { GBSecurityPackage } from '../../security.gblib';
 import { GBWhatsappPackage } from '../../whatsapp.gblib/index';
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
-import { StartDialog } from '../../azuredeployer.gbapp/dialogs/StartDialog';
-import { WaterfallDialog } from 'botbuilder-dialogs';
 
-const logger = require('../../../src/logger');
 const opn = require('opn');
 
 /**
@@ -121,11 +118,11 @@ export class GBCoreService implements IGBCoreService {
       throw new Error(`Unknown dialect: ${this.dialect}.`);
     }
 
-    const logging: any =
+    const logging: boolean | Function =
       GBConfigService.get('STORAGE_LOGGING') === 'true'
         ? (str: string): void => {
-            logger.info(str);
-          }
+          GBLog.info(str);
+        }
         : false;
 
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
@@ -140,9 +137,10 @@ export class GBCoreService implements IGBCoreService {
       dialect: this.dialect,
       storage: storage,
       dialectOptions: {
-        encrypt: encrypt
-      },
-      pool: {
+        options: {
+          encrypt: encrypt
+        }
+      }, pool: {
         max: 32,
         min: 8,
         idle: 40000,
@@ -153,32 +151,36 @@ export class GBCoreService implements IGBCoreService {
 
     if (this.dialect === 'mssql') {
       this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
+      // tslint:disable:no-unsafe-any
       this.createTableQuery = this.queryGenerator.createTableQuery;
       this.queryGenerator.createTableQuery = (tableName, attributes, options) =>
         this.createTableQueryOverride(tableName, attributes, options);
       this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
       this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
         this.changeColumnQueryOverride(tableName, attributes);
+      // tslint:enable:no-unsafe-any
     }
   }
 
-  public async checkStorage(azureDeployer: AzureDeployerService) {
+  public async checkStorage(installationDeployer: IGBInstallationDeployer) {
     try {
       await this.sequelize.authenticate();
     } catch (error) {
-      logger.info('Opening storage firewall on infrastructure...');
+      GBLog.info('Opening storage firewall on infrastructure...');
+      // tslint:disable:no-unsafe-any
       if (error.parent.code === 'ELOGIN') {
-        await this.openStorageFrontier(azureDeployer);
+        await this.openStorageFrontier(installationDeployer);
       } else {
         throw error;
       }
+      // tslint:ensable:no-unsafe-any
     }
   }
 
   public async syncDatabaseStructure() {
     if (GBConfigService.get('STORAGE_SYNC') === 'true') {
       const alter = GBConfigService.get('STORAGE_SYNC_ALTER') === 'true';
-      logger.info('Syncing database...');
+      GBLog.info('Syncing database...');
 
       return this.sequelize.sync({
         alter: alter,
@@ -186,21 +188,21 @@ export class GBCoreService implements IGBCoreService {
       });
     } else {
       const msg = `Database synchronization is disabled.`;
-      logger.info(msg);
+      GBLog.info(msg);
     }
   }
 
   /**
    * Loads all items to start several listeners.
    */
-  public async loadInstances(): Promise<IGBInstance> {
+  public async loadInstances(): Promise<IGBInstance[]> {
     return GuaribasInstance.findAll({});
   }
 
   /**
    * Loads just one Bot instance by its internal Id.
    */
-  public async loadInstanceById(instanceId: string): Promise<IGBInstance> {
+  public async loadInstanceById(instanceId: number): Promise<IGBInstance> {
     const options = { where: { instanceId: instanceId } };
 
     return GuaribasInstance.findOne(options);
@@ -240,12 +242,19 @@ STORAGE_SYNC=true
 
   public async ensureProxy(port): Promise<string> {
     try {
-      const ngrok = require('ngrok');
-      return await ngrok.connect({ port: port });
+      if (fs.existsSync('node_modules/ngrok/bin/ngrok.exe')) {
+        const ngrok = require('ngrok');
+
+        return await ngrok.connect({ port: port });
+      } else {
+        GBLog.warn('ngrok executable not found (only tested on Windows). Check installation or node_modules folder.');
+
+        return 'localhost';
+      }
     } catch (error) {
       // There are false positive from ngrok regarding to no memory, but it's just
       // lack of connection.
-      logger.verbose(error);
+      GBLog.verbose(error);
       throw new Error('Error connecting to remote ngrok server, please check network connection.');
     }
   }
@@ -267,34 +276,42 @@ STORAGE_SYNC=true
    * @param azureDeployer
    * @param proxyAddress
    */
-  public async loadAllInstances(core: GBCoreService, azureDeployer: AzureDeployerService, proxyAddress: string) {
-    logger.info(`Loading instances from storage...`);
-    let instances: GuaribasInstance[];
+  public async loadAllInstances(
+    core: IGBCoreService,
+    installationDeployer: IGBInstallationDeployer,
+    proxyAddress: string
+  ) {
+    GBLog.info(`Loading instances from storage...`);
+    let instances: IGBInstance[];
     try {
       instances = await core.loadInstances();
       const instance = instances[0];
       if (process.env.NODE_ENV === 'development') {
-        logger.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
-        await AzureDeployerService.updateBotProxy(
+        GBLog.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
+        await installationDeployer.updateBotProxy(
           instance.botId,
           instance.botId,
           `${proxyAddress}/api/messages/${instance.botId}`
         );
       }
     } catch (error) {
-      // Check if storage is empty and needs formatting.
-      const isInvalidObject = error.parent.number == 208 || error.parent.errno == 1; // MSSQL or SQLITE.
-      if (isInvalidObject) {
-        if (GBConfigService.get('STORAGE_SYNC') != 'true') {
-          throw new Error(
-            `Operating storage is out of sync or there is a storage connection error.
-            Try setting STORAGE_SYNC to true in .env file. Error: ${error.message}.`
-          );
-        } else {
-          logger.info(`Storage is empty. After collecting storage structure from all .gbapps it will get synced.`);
-        }
-      } else {
+      if (error.parent === undefined) {
         throw new Error(`Cannot connect to operating storage: ${error.message}.`);
+      } else {
+        // Check if storage is empty and needs formatting.
+        const isInvalidObject = error.parent.number === 208 || error.parent.errno === 1; // MSSQL or SQLITE.
+        if (isInvalidObject) {
+          if (GBConfigService.get('STORAGE_SYNC') !== 'true') {
+            throw new Error(
+              `Operating storage is out of sync or there is a storage connection error.
+            Try setting STORAGE_SYNC to true in .env file. Error: ${error.message}.`
+            );
+          } else {
+            GBLog.info(`Storage is empty. After collecting storage structure from all .gbapps it will get synced.`);
+          }
+        } else {
+          throw new Error(`Cannot connect to operating storage: ${error.message}.`);
+        }
       }
     }
 
@@ -308,9 +325,9 @@ STORAGE_SYNC=true
    * @param bootInstance
    * @param core
    */
-  public async ensureInstances(instances: GuaribasInstance[], bootInstance: any, core: GBCoreService) {
-    if (!instances) {
-      const instance: IGBInstance = {};
+  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {
+    if (instances === undefined) {
+      const instance = new GuaribasInstance();
       await instance.save();
       instances = await core.loadInstances();
     }
@@ -329,10 +346,10 @@ STORAGE_SYNC=true
       GBCorePackage,
       GBSecurityPackage,
       GBKBPackage,
-      GBCustomerSatisfactionPackage,
-      GBWhatsappPackage
+      GBCustomerSatisfactionPackage
+      //  GBWhatsappPackage
     ].forEach(e => {
-      logger.info(`Loading sys package: ${e.name}...`);
+      GBLog.info(`Loading sys package: ${e.name}...`);
       const p = Object.create(e.prototype) as IGBPackage;
       p.loadPackage(core, core.sequelize);
     });
@@ -347,18 +364,27 @@ STORAGE_SYNC=true
     }
   }
 
-  public async createBootInstance(core: GBCoreService, azureDeployer: AzureDeployerService, proxyAddress: string) {
-    logger.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
+  public async createBootInstance(
+    core: GBCoreService,
+    installationDeployer: IGBInstallationDeployer,
+    proxyAddress: string
+  ) {
+    GBLog.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
     try {
-      let { instance, credentials, subscriptionId } = await StartDialog.createBaseInstance();
-      instance = await azureDeployer.deployFarm(proxyAddress, instance, credentials, subscriptionId);
-      core.writeEnv(instance);
-      logger.info(`File .env written, starting General Bots...`);
+      const { instance, credentials, subscriptionId } = await StartDialog.createBaseInstance(installationDeployer);
+      const changedInstance = await installationDeployer.deployFarm(
+        proxyAddress,
+        instance,
+        credentials,
+        subscriptionId
+      );
+      core.writeEnv(changedInstance);
+      GBLog.info(`File .env written, starting General Bots...`);
       GBConfigService.init();
 
-      return instance;
+      return changedInstance;
     } catch (error) {
-      logger.warn(
+      GBLog.warn(
         `In case of error, please cleanup any infrastructure objects
             created during this procedure and .env before running again.`
       );
@@ -391,13 +417,13 @@ STORAGE_SYNC=true
     let sql: string = this.createTableQuery.apply(this.queryGenerator, [tableName, attributes, options]);
     const re1 = /CREATE\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
-    if (matches) {
+    if (matches !== null) {
       const table = matches[1];
       const re2 = /PRIMARY\s+KEY\s+\(\[[^\]]*\](?:,\s*\[[^\]]*\])*\)/;
       sql = sql.replace(
         re2,
         (match: string, ...args: any[]): string => {
-          return 'CONSTRAINT [' + table + '_pk] ' + match;
+          return `CONSTRAINT [${table}_pk] ${match}`;
         }
       );
       const re3 = /FOREIGN\s+KEY\s+\((\[[^\]]*\](?:,\s*\[[^\]]*\])*)\)/g;
@@ -407,15 +433,17 @@ STORAGE_SYNC=true
         (match: string, ...args: any[]): string => {
           const fkcols = args[0];
           let fkname = table;
-          let matches = re4.exec(fkcols);
-          while (matches != undefined) {
-            fkname += '_' + matches[1];
-            matches = re4.exec(fkcols);
+          let matches2 = re4.exec(fkcols);
+          while (matches2 !== null) {
+            fkname += `_${matches2[1]}`;
+            matches2 = re4.exec(fkcols);
           }
-          return 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
+
+          return `CONSTRAINT [${fkname}_fk] FOREIGN KEY (${fkcols})`;
         }
       );
     }
+
     return sql;
   }
 
@@ -431,7 +459,7 @@ STORAGE_SYNC=true
     let sql: string = this.changeColumnQuery.apply(this.queryGenerator, [tableName, attributes]);
     const re1 = /ALTER\s+TABLE\s+\[([^\]]*)\]/;
     const matches = re1.exec(sql);
-    if (matches) {
+    if (matches !== null) {
       const table = matches[1];
       const re2 = /(ADD\s+)?CONSTRAINT\s+\[([^\]]*)\]\s+FOREIGN\s+KEY\s+\((\[[^\]]*\](?:,\s*\[[^\]]*\])*)\)/g;
       const re3 = /\[([^\]]*)\]/g;
@@ -440,15 +468,17 @@ STORAGE_SYNC=true
         (match: string, ...args: any[]): string => {
           const fkcols = args[2];
           let fkname = table;
-          let matches = re3.exec(fkcols);
-          while (matches != undefined) {
-            fkname += '_' + matches[1];
-            matches = re3.exec(fkcols);
+          let matches2 = re3.exec(fkcols);
+          while (matches2 !== null) {
+            fkname += `_${matches2[1]}`;
+            matches2 = re3.exec(fkcols);
           }
-          return (args[0] ? args[0] : '') + 'CONSTRAINT [' + fkname + '_fk] FOREIGN KEY (' + fkcols + ')';
+
+          return `${args[0] ? args[0] : ''}CONSTRAINT [${fkname}_fk] FOREIGN KEY (${fkcols})`;
         }
       );
     }
+
     return sql;
   }
 
@@ -457,9 +487,9 @@ STORAGE_SYNC=true
    *
    * @param azureDeployer Infrastructure Deployer instance.
    */
-  private async openStorageFrontier(deployer: AzureDeployerService) {
+  private async openStorageFrontier(installationDeployer: IGBInstallationDeployer) {
     const group = GBConfigService.get('CLOUD_GROUP');
     const serverName = GBConfigService.get('STORAGE_SERVER').split('.database.windows.net')[0];
-    await AzureDeployerService.openStorageFirewall(group, serverName);
+    await installationDeployer.openStorageFirewall(group, serverName);
   }
 }

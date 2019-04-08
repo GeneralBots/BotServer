@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "outDir": "./dist",
     "paths": {
+      "*": ["types/*"],
       "botlib/*": ["node_modules/botlib/*"],
       "pragmatismo-io-framework/*": ["node_modules/pragmatismo-io-framework/*"]
     },

@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,42 +36,37 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
-
-import { GBMinInstance, IGBPackage } from 'botlib';
-
-import { IGBCoreService} from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 import { WelcomeDialog } from './dialogs/WelcomeDialog';
 import { WhoAmIDialog } from './dialogs/WhoAmIDialog';
 import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage } from './models/GBModel';
 
+/**
+ * Package for core.gbapp.
+ */
 export class GBCorePackage implements IGBPackage {
   public static CurrentEngineName = 'guaribas-1.0.0';
-  public sysPackages: IGBPackage[] = null;
-
+  public sysPackages: IGBPackage[];
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-    core.sequelize.addModels([
-      GuaribasInstance,
-      GuaribasPackage,
-      GuaribasChannel,
-      GuaribasException
-    ]);
+    core.sequelize.addModels([GuaribasInstance, GuaribasPackage, GuaribasChannel, GuaribasException]);
   }
 
+  public getDialogs(min: GBMinInstance) {
+    GBLog.verbose(`getDialogs called.`);
+  }
   public unloadPackage(core: IGBCoreService): void {
-
+    GBLog.verbose(`unloadPackage called.`);
+  }
+  public unloadBot(min: GBMinInstance): void {
+    GBLog.verbose(`unloadBot called.`);
+  }
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+    GBLog.verbose(`onNewSession called.`);
   }
 
   public loadBot(min: GBMinInstance): void {
     WelcomeDialog.setup(min.bot, min);
     WhoAmIDialog.setup(min.bot, min);
-  }
-
-  public unloadBot(min: GBMinInstance): void {
-
-  }
-  public onNewSession(min: GBMinInstance, step: any): void {
-
   }
 }
