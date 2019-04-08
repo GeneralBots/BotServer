@@ -76,18 +76,20 @@ export class MenuDialog extends IGBDialog {
         const user = await min.userProfile.get(step.context, {});
         const args: MenuDialogArgs = step.options;
 
-        let rootSubjectId;
+        // tslint:disable-next-line: no-null-keyword
+        let rootSubjectId = null;
 
-        if (args !== undefined) {
+        if (Object.keys(args).length > 0) {
           // If there is a shortcut specified as subject destination, go there.
-          if (args.to !== undefined) {
+          if (args.to !== null) {
             const dialog = args.to.split(':')[1];
 
             return await step.replaceDialog(`/${dialog}`);
           }
 
           user.subjects.push(args);
-          rootSubjectId = args.subjectId;
+          // tslint:disable-next-line: no-null-keyword
+          rootSubjectId = args.subjectId === undefined ? null : args.subjectId;
 
           // Whenever a subject is selected, shows a faq about it.
           if (user.subjects.length > 0) {

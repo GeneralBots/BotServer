@@ -458,7 +458,7 @@ export class GBMinService {
     if (context.activity.name === 'whoAmI') {
       await step.beginDialog('/whoAmI');
     } else if (context.activity.name === 'showSubjects') {
-      await step.beginDialog('/menu');
+      await step.beginDialog('/menu', undefined);
     } else if (context.activity.name === 'giveFeedback') {
       await step.beginDialog('/feedback', {
         fromMenu: true

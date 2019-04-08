@@ -73,7 +73,7 @@ export class KBService {
   }
 
   public static getFormattedSubjectItems(subjects: GuaribasSubject[]) {
-    if (subjects !== null) {
+    if (subjects === null) {
       return '';
     }
     const out = [];
