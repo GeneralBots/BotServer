@@ -242,14 +242,15 @@ STORAGE_SYNC=true
 
   public async ensureProxy(port): Promise<string> {
     try {
-      if (fs.existsSync('node_modules/ngrok/bin/ngrok.exe')) {
+      if (fs.existsSync('node_modules/ngrok/bin/ngrok.exe') ||
+        fs.existsSync('node_modules/ngrok/bin/ngrok')) {
         const ngrok = require('ngrok');
 
         return await ngrok.connect({ port: port });
       } else {
         GBLog.warn('ngrok executable not found (only tested on Windows). Check installation or node_modules folder.');
 
-        return 'localhost';
+        return 'https://localhost';
       }
     } catch (error) {
       // There are false positive from ngrok regarding to no memory, but it's just
