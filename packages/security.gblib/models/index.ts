@@ -36,7 +36,6 @@
 
 'use strict';
 
-
 import {
   AutoIncrement,
   BelongsTo,

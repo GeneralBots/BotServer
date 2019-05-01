@@ -486,7 +486,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         } catch (error) {
           reject(error);
         }
-      }, 20000);
+      }, 60000);
     });
   }
 
