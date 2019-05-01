@@ -141,7 +141,7 @@ export class GBConversationalService implements IGBConversationalService {
       GBLog.info(`NLP called: ${intent} ${firstEntity}`);
 
       try {
-        await step.replaceDialog(` /${intent}`, nlp.entities);
+        await step.replaceDialog(`/${intent}`, nlp.entities);
 
         return Promise.resolve(true);
       } catch (error) {
