@@ -81,7 +81,7 @@ html[dir="ltr"] .ms-Nav-compositeLink.is-selected a:after {
         position: absolute;
         top: 0;
         left: 0;
-        background-image: url(../images/logo_General_BotS.png);
+        background-image: url(../images/bot-logo.png);
         background-position: 2px 2px;
         background-repeat: no-repeat;
         background-size: contain;

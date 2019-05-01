@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -37,6 +37,9 @@
 import { GuaribasUser } from '../../security.gblib/models';
 import { GuaribasConversation, GuaribasConversationMessage } from '../models';
 
+/**
+ * Base services for Bot Analytics.
+ */
 export class AnalyticsService {
   public async createConversation(
     user: GuaribasUser
@@ -52,7 +55,7 @@ export class AnalyticsService {
       });
   }
 
-  public createMessage(
+  public async createMessage(
     conversation: GuaribasConversation,
     user: GuaribasUser,
     content: string

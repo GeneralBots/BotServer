@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -30,16 +30,29 @@
 |                                                                             |
 \*****************************************************************************/
 
-const logger = require('../../../src/logger');
-import * as fs from 'fs';
+'use strict';
+
+import { GBLog } from 'botlib';
 
 /**
  * @fileoverview General Bots server core.
  */
 
-'use strict';
-
+/**
+ * Base configuration for the server like storage.
+ */
 export class GBConfigService {
+  public static getServerPort(): number {
+    if (process.env.port !== undefined) {
+      return Number(process.env.port);
+    }
+    if (process.env.PORT !== undefined) {
+      return Number(process.env.PORT);
+    }
+
+    return 4242;
+  }
+
   public static init(): any {
     try {
       require('dotenv-extended').load({
@@ -49,7 +62,7 @@ export class GBConfigService {
         overrideProcessEnv: true
       });
     } catch (e) {
-      console.error(e.message);
+      GBLog.error(e.message);
       process.exit(3);
     }
   }
@@ -57,7 +70,7 @@ export class GBConfigService {
   public static get(key: string): string | undefined {
     let value = GBConfigService.tryGet(key);
 
-    if (!value) {
+    if (value === undefined) {
       switch (key) {
         case 'CLOUD_USERNAME':
           value = undefined;
@@ -72,6 +85,12 @@ export class GBConfigService {
           value = undefined;
           break;
         case 'CLOUD_LOCATION':
+          value = undefined;
+          break;
+        case 'MARKETPLACE_ID':
+          value = undefined;
+          break;
+        case 'MARKETPLACE_SECRET':
           value = undefined;
           break;
         case 'NLP_AUTHORING_KEY':
@@ -102,18 +121,20 @@ export class GBConfigService {
           value = 'true';
           break;
         default:
-          logger.warn(`Invalid key on .env file: '${key}'`);
+          GBLog.warn(`Invalid key on .env file: '${key}'`);
           break;
       }
     }
+
     return value;
   }
 
-  public static tryGet(key: string) {
-    let value = process.env['container:' + key];
-    if (!value) {
+  public static tryGet(key: string): any {
+    let value = process.env[`container:${key}`];
+    if (value === undefined) {
       value = process.env[key];
     }
+
     return value;
   }
 }

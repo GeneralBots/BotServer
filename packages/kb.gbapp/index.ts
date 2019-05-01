@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,43 +36,37 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
-
-import { GBMinInstance, IGBPackage } from 'botlib';
-import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index';
-
-import { IGBCoreService } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 import { AskDialog } from './dialogs/AskDialog';
 import { FaqDialog } from './dialogs/FaqDialog';
 import { MenuDialog } from './dialogs/MenuDialog';
+import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index';
 
+/**
+ * Package for kb.gbapp.
+ */
 export class GBKBPackage implements IGBPackage {
-
-  public sysPackages: IGBPackage[] = null;
-
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-    core.sequelize.addModels([
-      GuaribasAnswer,
-      GuaribasQuestion,
-      GuaribasSubject
-    ]);
-
+  public sysPackages: IGBPackage[];
+  public getDialogs(min: GBMinInstance) {
+    GBLog.verbose(`getDialogs called.`);
   }
   public unloadPackage(core: IGBCoreService): void {
+    GBLog.verbose(`unloadPackage called.`);
+  }
+  public unloadBot(min: GBMinInstance): void {
+    GBLog.verbose(`unloadBot called.`);
+  }
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+    GBLog.verbose(`onNewSession called.`);
+  }
 
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+    core.sequelize.addModels([GuaribasAnswer, GuaribasQuestion, GuaribasSubject]);
   }
   public loadBot(min: GBMinInstance): void {
-
     AskDialog.setup(min.bot, min);
     FaqDialog.setup(min.bot, min);
     MenuDialog.setup(min.bot, min);
-
-  }
-  public unloadBot(min: GBMinInstance): void {
-
-  }
-  public onNewSession(min: GBMinInstance, step: any): void {
-
   }
 }

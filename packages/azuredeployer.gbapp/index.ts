@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,19 +36,30 @@
 
 'use strict';
 
-import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 
+/**
+ * Package for Azure Deployer.
+ */
 export class GBAzureDeployerPackage implements IGBPackage {
-
-  public sysPackages: IGBPackage[] = null;
-
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {}
-
-  public unloadPackage(core: IGBCoreService): void {}
-
-  public loadBot(min: GBMinInstance): void {}
-
-  public unloadBot(min: GBMinInstance): void {}
-  public onNewSession(min: GBMinInstance, step: any): void {}
+  public sysPackages: IGBPackage[];
+  public getDialogs(min: GBMinInstance) {
+    GBLog.verbose(`getDialogs called.`);
+  }
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+    GBLog.verbose(`loadPackage called.`);
+  }
+  public unloadPackage(core: IGBCoreService): void {
+    GBLog.verbose(`unloadPackage called.`);
+  }
+  public loadBot(min: GBMinInstance): void {
+    GBLog.verbose(`loadBot called.`);
+  }
+  public unloadBot(min: GBMinInstance): void {
+    GBLog.verbose(`unloadBot called.`);
+  }
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+    GBLog.verbose(`onNewSession called.`);
+  }
 }

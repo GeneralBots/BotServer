@@ -1,193 +1,176 @@
-/*****************************************************************************\
-|                                               ( )_  _                       |
-|    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
-|   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
-|   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
-|   | |                ( )_) |                                                |
-|   (_)                 \___/'                                                |
-|                                                                             |
-| General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
-| Licensed under the AGPL-3.0.                                                |
-|                                                                             |
-| According to our dual licensing model, this program can be used either      |
-| under the terms of the GNU Affero General Public License, version 3,        |
-| or under a proprietary license.                                             |
-|                                                                             |
-| The texts of the GNU Affero General Public License with an additional       |
-| permission and of our proprietary license can be found at and               |
-| in the LICENSE file you have received along with this program.              |
-|                                                                             |
-| This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
-| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
-| GNU Affero General Public License for more details.                         |
-|                                                                             |
-| "General Bots" is a registered trademark of Pragmatismo.io.                 |
-| The licensing of the program under the AGPLv3 does not imply a              |
-| trademark license. Therefore any rights, title and interest in              |
-| our trademarks remain entirely with us.                                     |
-|                                                                             |
-\*****************************************************************************/
-
-const Path = require('path');
-const Fs = require('fs');
-const _ = require('lodash');
-const Parse = require('csv-parse');
-const Async = require('async');
-const UrlJoin = require('url-join');
-const Walk = require('fs-walk');
-const logger = require('../../../src/logger');
 const Swagger = require('swagger-client');
 const rp = require('request-promise');
-import { GBService } from 'botlib';
+import { GBLog, GBService } from 'botlib';
 
+/**
+ * Bot simulator in terminal window.
+ */
 export class ConsoleDirectLine extends GBService {
+  public pollInterval: number = 1000;
+  public directLineSecret: string = '';
+  public directLineClientName: string = 'DirectLineClient';
+  public directLineSpecUrl: string = 'https://docs.botframework.com/en-us/restapi/directline3/swagger.json';
 
-    public pollInterval = 1000;
-    public directLineSecret = '';
-    public directLineClientName = 'DirectLineClient';
-    public directLineSpecUrl = 'https://docs.botframework.com/en-us/restapi/directline3/swagger.json';
+  constructor(directLineSecret: string) {
+    super();
 
-    constructor(directLineSecret) {
-        super();
-
-        this.directLineSecret = directLineSecret;
-
-        // TODO: Migrate to Swagger 3.
-        const directLineClient = rp(this.directLineSpecUrl)
-            .then(function (spec) {
-                return new Swagger({
-                    spec: JSON.parse(spec.trim()),
-                    usePromise: true
-                });
-            })
-            .then(function (client) {
-                client.clientAuthorizations.add('AuthorizationBotConnector',
-                                                new Swagger.ApiKeyAuthorization('Authorization', 'Bearer ' + directLineSecret, 'header'));
-                return client;
-            })
-            .catch(function (err) {
-                console.error('Error initializing DirectLine client', err);
-            });
-
-        // TODO: Remove *this* issue.
-        const _this_ = this;
-        directLineClient.then((client) => {
-            client.Conversations.Conversations_StartConversation()
-                .then(function (response) {
-                    return response.obj.conversationId;
-                })
-                .then(function (conversationId) {
-                    _this_.sendMessagesFromConsole(client, conversationId);
-                    _this_.pollMessages(client, conversationId);
-                })
-                .catch(function (err) {
-                    console.error('Error starting conversation', err);
-                });
+    this.directLineSecret = directLineSecret;
+    // tslint:disable-next-line:no-unsafe-any
+    const directLineClient = rp(this.directLineSpecUrl)
+      .then((spec: string) => {
+        // tslint:disable-next-line:no-unsafe-any
+        return new Swagger({
+          spec: JSON.parse(spec.trim()),
+          usePromise: true
         });
-    }
+      })
+      .then(client => {
+        // tslint:disable-next-line:no-unsafe-any
+        client.clientAuthorizations.add(
+          'AuthorizationBotConnector',
+          // tslint:disable-next-line:no-unsafe-any
+          new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${directLineSecret}`, 'header')
+        );
 
-    public sendMessagesFromConsole(client, conversationId) {
-        const _this_ = this;
-        process.stdin.resume();
-        const stdin = process.stdin;
+        return client;
+      })
+      .catch(err => {
+        GBLog.error(`Error initializing DirectLine client ${err}`);
+      });
+
+    const _this_ = this;
+    // tslint:disable-next-line:no-unsafe-any
+    directLineClient.then(client => {
+      // tslint:disable-next-line:no-unsafe-any
+      client.Conversations.Conversations_StartConversation()
+        .then(response => {
+          // tslint:disable-next-line:no-unsafe-any
+          return response.obj.conversationId;
+        })
+        .then(conversationId => {
+          _this_.sendMessagesFromConsole(client, conversationId);
+          _this_.pollMessages(client, conversationId);
+        })
+        .catch(err => {
+          GBLog.error(`Error starting conversation ${err}`);
+        });
+    });
+  }
+
+  public sendMessagesFromConsole(client, conversationId) {
+    const _this_ = this;
+    process.stdin.resume();
+    const stdin = process.stdin;
+    process.stdout.write('Command> ');
+    stdin.addListener('data', e => {
+      // tslint:disable-next-line:no-unsafe-any
+      const input: string = e.toString().trim();
+      if (input !== undefined) {
+        // exit
+        if (input.toLowerCase() === 'exit') {
+          return process.exit();
+        }
+
+        // tslint:disable-next-line:no-unsafe-any
+        client.Conversations.Conversations_PostActivity({
+          conversationId: conversationId,
+          activity: {
+            textFormat: 'plain',
+            text: input,
+            type: 'message',
+            from: {
+              id: _this_.directLineClientName,
+              name: _this_.directLineClientName
+            }
+          }
+        }).catch(err => {
+          GBLog.error(`Error sending message: ${err}`);
+        });
+
         process.stdout.write('Command> ');
-        stdin.addListener('data', function (e) {
-            const input = e.toString().trim();
-            if (input) {
-                // exit
-                if (input.toLowerCase() === 'exit') {
-                    return process.exit();
-                }
+      }
+    });
+  }
 
-                client.Conversations.Conversations_PostActivity(
-                    {
-                        conversationId: conversationId,
-                        activity: {
-                            textFormat: 'plain',
-                            text: input,
-                            type: 'message',
-                            from: {
-                                id: _this_.directLineClientName,
-                                name: _this_.directLineClientName
-                            }
-                        }
-                    }).catch(function (err) {
-                        console.error('Error sending message:', err);
-                    });
+  public pollMessages(client, conversationId) {
+    const _this_ = this;
+    GBLog.info(`Starting polling message for conversationId: ${conversationId}`);
+    let watermark;
+    setInterval(() => {
+      // tslint:disable-next-line:no-unsafe-any
+      client.Conversations.Conversations_GetActivities({ conversationId: conversationId, watermark: watermark })
+        .then(response => {
+          // tslint:disable-next-line:no-unsafe-any
+          watermark = response.obj.watermark;
 
-                process.stdout.write('Command> ');
-            }
-        });
+          // tslint:disable-next-line:no-unsafe-any
+          return response.obj.activities;
+        })
+        .then(_this_.printMessages, _this_.directLineClientName);
+      // tslint:disable-next-line:align
+    }, this.pollInterval);
+  }
+
+  // tslint:disable:no-unsafe-any
+  public printMessages(activities, directLineClientName) {
+    if (activities && activities.length) {
+      // ignore own messages
+      activities = activities.filter(m => {
+        return m.from.id !== directLineClientName;
+      });
+
+      if (activities.length) {
+        // print other messages
+        activities.forEach(activity => {
+          GBLog.info(activity.text);
+          // tslint:disable-next-line:align
+        }, this);
+
+        process.stdout.write('Command> ');
+      }
+    }
+  }
+  // tslint:enable:no-unsafe-any
+
+  // tslint:disable:no-unsafe-any
+  public printMessage(activity) {
+    if (activity.text) {
+      GBLog.info(activity.text);
     }
 
-    /** TBD: Poll Messages from conversation using DirectLine client */
-    public pollMessages(client, conversationId) {
-        const _this_ = this;
-        console.log('Starting polling message for conversationId: ' + conversationId);
-        let watermark = null;
-        setInterval(function () {
-            client.Conversations.Conversations_GetActivities({ conversationId: conversationId, watermark: watermark })
-                .then(function (response) {
-                    watermark = response.obj.watermark;                                 // use watermark so subsequent requests skip old messages
-                    return response.obj.activities;
-                })
-                .then(_this_.printMessages, _this_.directLineClientName);
-        },          this.pollInterval);
-    }
+    if (activity.attachments) {
+      activity.attachments.forEach(attachment => {
+        switch (attachment.contentType) {
+          case 'application/vnd.microsoft.card.hero':
+            this.renderHeroCard(attachment);
+            break;
 
-    public printMessages(activities, directLineClientName) {
+          case 'image/png':
+            GBLog.info(`Opening the requested image ${attachment.contentUrl}`);
+            open(attachment.contentUrl);
+            break;
 
-        if (activities && activities.length) {
-            // ignore own messages
-            activities = activities.filter(function (m) { return m.from.id !== directLineClientName; });
-
-            if (activities.length) {
-
-                // print other messages
-                activities.forEach(activity => {
-                    console.log(activity.text);
-                },                 this);
-
-                process.stdout.write('Command> ');
-            }
+          default:
+            GBLog.info(`Unknown contentType: ${attachment.contentType}`);
+            break;
         }
+      });
     }
+  }
+  // tslint:enable:no-unsafe-any
 
-    public printMessage(activity) {
-        if (activity.text) {
-            console.log(activity.text);
-        }
+  // tslint:disable:no-unsafe-any
+  public renderHeroCard(attachment) {
+    const width = 70;
+    const contentLine = content => {
+      return `${' '.repeat((width - content.length) / 2)}content${' '.repeat((width - content.length) / 2)}`;
+    };
 
-        if (activity.attachments) {
-            activity.attachments.forEach(function (attachment) {
-                switch (attachment.contentType) {
-                    case 'application/vnd.microsoft.card.hero':
-                        this.renderHeroCard(attachment);
-                        break;
-
-                    case 'image/png':
-                        console.log('Opening the requested image ' + attachment.contentUrl);
-                        open(attachment.contentUrl);
-                        break;
-                }
-            });
-        }
-    }
-
-    public renderHeroCard(attachment) {
-        const width = 70;
-        const contentLine = function (content) {
-            return ' '.repeat((width - content.length) / 2) +
-                content +
-                ' '.repeat((width - content.length) / 2);
-        };
-
-        console.log('/' + '*'.repeat(width + 1));
-        console.log('*' + contentLine(attachment.content.title) + '*');
-        console.log('*' + ' '.repeat(width) + '*');
-        console.log('*' + contentLine(attachment.content.text) + '*');
-        console.log('*'.repeat(width + 1) + '/');
-    }
+    GBLog.info(`/${'*'.repeat(width + 1)}`);
+    GBLog.info(`*${contentLine(attachment.content.title)}*`);
+    GBLog.info(`*${' '.repeat(width)}*`);
+    GBLog.info(`*${contentLine(attachment.content.text)}*`);
+    GBLog.info(`${'*'.repeat(width + 1)}/`);
+  }
+  // tslint:enable:no-unsafe-any
 }

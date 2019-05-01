@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -38,12 +38,14 @@
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance } from 'botlib';
-import { IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib';
 import { AzureText } from 'pragmatismo-io-framework';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
 
+/**
+ * Dialog for feedback collecting.
+ */
 export class FeedbackDialog extends IGBDialog {
   /**
    * Setup dialogs flows and define services call.
@@ -58,13 +60,7 @@ export class FeedbackDialog extends IGBDialog {
       new WaterfallDialog('/feedbackNumber', [
         async step => {
           const locale = step.context.activity.locale;
-          // TODO: Migrate to 4.*+ await step.prompt("choicePrompt", Messages[locale].what_about_me, [
-          //   "1",
-          //   "2",
-          //   "3",
-          //   "4",
-          //   "5"
-          // ]);
+
           return await step.next();
         },
         async step => {
@@ -73,6 +69,7 @@ export class FeedbackDialog extends IGBDialog {
           const user = await min.userProfile.get(context, {});
           await service.updateConversationRate(user.conversation, rate);
           await step.context.sendActivity(Messages[locale].thanks);
+
           return await step.next();
         }
       ])
@@ -84,29 +81,26 @@ export class FeedbackDialog extends IGBDialog {
           const locale = step.context.activity.locale;
 
           await step.context.sendActivity(Messages[locale].about_suggestions);
-          step.activeDialog.state.cbId = step.options['id'];
+          step.activeDialog.state.cbId = (step.options as any).id;
 
           return await step.prompt('textPrompt', Messages[locale].what_about_service);
         },
         async step => {
-
           const locale = step.context.activity.locale;
           const rate = await AzureText.getSentiment(
-          	min.instance.textAnalyticsKey,
+            min.instance.textAnalyticsKey,
             min.instance.textAnalyticsEndpoint,
             min.conversationalService.getCurrentLanguage(step),
-           step.result
+            step.result
           );
 
           if (rate > 0.5) {
             await step.context.sendActivity(Messages[locale].glad_you_liked);
           } else {
             await step.context.sendActivity(Messages[locale].we_will_improve);
+        }
 
-          // TODO: Record.
-          }
           return await step.replaceDialog('/ask', { isReturning: true });
-
         }
       ])
     );

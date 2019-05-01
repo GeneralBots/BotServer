@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,34 +36,15 @@
 
 'use strict';
 
-import { BotAdapter } from 'botbuilder';
-import { GBMinInstance } from 'botlib';
-import { IGBDialog } from 'botlib';
-import { Messages } from '../strings';
-
-export class BotFarmDialog extends IGBDialog {
-  /**
-   * Setup dialogs flows and define services call.
-   *
-   * @param bot The bot adapter.
-   * @param min The minimal bot instance data.
-   */
-  public static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add('/createBotFarm', [
-      async step => {
-        const locale = step.context.activity.locale;
-        await step.prompt('choicePrompt', Messages[locale].what_about_me, [
-          '1',
-          '2',
-          '3',
-          '4',
-          '5'
-        ]);
-      },
-      async step => {
-        const locale = step.context.activity.locale;
-        await step.context.sendActivity(Messages[locale].thanks);
-      }
-    ]);
-  }
-}
+import {
+  AutoIncrement,
+  BelongsTo,
+  Column,
+  CreatedAt,
+  ForeignKey,
+  Model,
+  PrimaryKey,
+  Table,
+  UpdatedAt
+} from 'sequelize-typescript';
+import { GuaribasInstance } from './GBModel';

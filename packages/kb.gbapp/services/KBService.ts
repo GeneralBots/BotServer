@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -34,33 +34,38 @@
  * @fileoverview Knowledge base services and logic.
  */
 
-const logger = require('../../../src/logger');
 const Path = require('path');
 const Fs = require('fs');
-
-const parse = require('bluebird').promisify(require('csv-parse'));
-const UrlJoin = require('url-join');
+import urlJoin = require('url-join');
 const marked = require('marked');
 const path = require('path');
 const asyncPromise = require('async-promises');
 const walkPromise = require('walk-promise');
-import { Messages } from '../strings';
+// tslint:disable-next-line:newline-per-chained-call
+const parse = require('bluebird').promisify(require('csv-parse'));
 
-import { IGBConversationalService, IGBCoreService, IGBInstance } from 'botlib';
+import { GBDialogStep, GBLog, IGBConversationalService, IGBCoreService, IGBInstance } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { Sequelize } from 'sequelize-typescript';
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasPackage } from '../../core.gbapp/models/GBModel';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
+import { Messages } from '../strings';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 
+/**
+ * Result for quey on KB data.
+ */
 export class KBServiceSearchResults {
   public answer: GuaribasAnswer;
   public questionId: number;
 }
 
+/**
+ * All services related to knowledge base management.
+ */
 export class KBService {
-
   public sequelize: Sequelize;
 
   constructor(sequelize: Sequelize) {
@@ -68,7 +73,9 @@ export class KBService {
   }
 
   public static getFormattedSubjectItems(subjects: GuaribasSubject[]) {
-    if (!subjects) { return ''; }
+    if (subjects === null) {
+      return '';
+    }
     const out = [];
     subjects.forEach(subject => {
       out.push(subject.title);
@@ -86,10 +93,7 @@ export class KBService {
     return out.join(' ');
   }
 
-  public async getQuestionById(
-    instanceId: number,
-    questionId: number
-  ): Promise<GuaribasQuestion> {
+  public async getQuestionById(instanceId: number, questionId: number): Promise<GuaribasQuestion> {
     return GuaribasQuestion.findOne({
       where: {
         instanceId: instanceId,
@@ -98,10 +102,7 @@ export class KBService {
     });
   }
 
-  public async getAnswerById(
-    instanceId: number,
-    answerId: number
-  ): Promise<GuaribasAnswer> {
+  public async getAnswerById(instanceId: number, answerId: number): Promise<GuaribasAnswer> {
     return GuaribasAnswer.findOne({
       where: {
         instanceId: instanceId,
@@ -110,11 +111,7 @@ export class KBService {
     });
   }
 
-  public async getAnswerByText(
-    instanceId: number,
-    text: string
-  ): Promise<any> {
-
+  public async getAnswerByText(instanceId: number, text: string): Promise<any> {
     const Op = Sequelize.Op;
 
     const question = await GuaribasQuestion.findOne({
@@ -124,7 +121,7 @@ export class KBService {
       }
     });
 
-    if (question) {
+    if (question !== null) {
       const answer = await GuaribasAnswer.findOne({
         where: {
           instanceId: instanceId,
@@ -135,18 +132,19 @@ export class KBService {
       return Promise.resolve({ question: question, answer: answer });
     }
 
-    return Promise.resolve(null);
+    return Promise.resolve(undefined);
   }
 
   public async addAnswer(obj: GuaribasAnswer): Promise<GuaribasAnswer> {
-    return new Promise<GuaribasAnswer>(
-      (resolve, reject) => {
-        GuaribasAnswer.create(obj).then(item => {
+    return new Promise<GuaribasAnswer>((resolve, reject) => {
+      GuaribasAnswer.create(obj)
+        .then(item => {
           resolve(item);
-        }).error((reason) => {
+        })
+        .error(reason => {
           reject(reason);
         });
-      });
+    });
   }
 
   public async ask(
@@ -155,7 +153,6 @@ export class KBService {
     searchScore: number,
     subjects: GuaribasSubject[]
   ): Promise<KBServiceSearchResults> {
-
     // Builds search query.
 
     query = query.toLowerCase();
@@ -165,51 +162,43 @@ export class KBService {
     query = query.replace('/', ' ');
     query = query.replace('\\', ' ');
 
-    if (subjects) {
+    if (subjects !== null) {
       const text = KBService.getSubjectItemsSeparatedBySpaces(subjects);
-      if (text) {
+      if (text !== null) {
         query = `${query} ${text}`;
       }
     }
     query = `${query}&$filter=instanceId eq ${instance.instanceId}`;
-    try {
-      if (instance.searchKey && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
-        const service = new AzureSearch(
-          instance.searchKey,
-          instance.searchHost,
-          instance.searchIndex,
-          instance.searchIndexer
-        );
-        const results = await service.search(query);
-        if (results && results.length > 0 &&
-          results[0]['@search.score'] >= searchScore) {
-          const value = await this.getAnswerById(
-            instance.instanceId,
-            results[0].answerId);
-          if (value) {
-            return Promise.resolve({ answer: value, questionId: results[0].questionId });
-          } else {
-            return Promise.resolve({ answer: null, questionId: 0 });
-          }
-        }
-      } else {
-        const data = await this.getAnswerByText(instance.instanceId, query);
-        if (data) {
-          return Promise.resolve(
-            { answer: data.answer, questionId: data.question.questionId });
+
+    // tslint:disable:no-unsafe-any
+    if (instance.searchKey !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
+      const service = new AzureSearch(
+        instance.searchKey,
+        instance.searchHost,
+        instance.searchIndex,
+        instance.searchIndexer
+      );
+      const results = await service.search(query);
+
+      if (results && results.length > 0 && results[0]['@search.score'] >= searchScore) {
+        const value = await this.getAnswerById(instance.instanceId, results[0].answerId);
+        if (value !== null) {
+          return Promise.resolve({ answer: value, questionId: results[0].questionId });
         } else {
-          return Promise.resolve({ answer: null, questionId: 0 });
+          return Promise.resolve({ answer: undefined, questionId: 0 });
         }
       }
-    } catch (reason) {
-      return Promise.reject(new Error(reason));
+    } else {
+      const data = await this.getAnswerByText(instance.instanceId, query);
+      if (data) {
+        return Promise.resolve({ answer: data.answer, questionId: data.question.questionId });
+      } else {
+        return Promise.resolve({ answer: undefined, questionId: 0 });
+      }
     }
   }
 
-  public async getSubjectItems(
-    instanceId: number,
-    parentId: number
-  ): Promise<GuaribasSubject[]> {
+  public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {
     const where = { parentSubjectId: parentId, instanceId: instanceId };
 
     return GuaribasSubject.findAll({
@@ -218,31 +207,43 @@ export class KBService {
   }
 
   public async getFaqBySubjectArray(from: string, subjects: any): Promise<GuaribasQuestion[]> {
-    const where = {
-      from: from, subject1: null, subject2: null, subject3: null, subject4: null
-    };
-
     if (subjects) {
-      if (subjects[0]) {
+      const where = {
+        from: from,
+        // tslint:disable-next-line: no-null-keyword
+        subject1: null,
+        // tslint:disable-next-line: no-null-keyword
+        subject2: null,
+        // tslint:disable-next-line: no-null-keyword
+        subject3: null,
+        // tslint:disable-next-line: no-null-keyword
+        subject4: null
+      };
+
+      if (subjects[0] && subjects[0].internalId) {
         where.subject1 = subjects[0].internalId;
       }
 
-      if (subjects[1]) {
+      if (subjects[1] && subjects[1].internalId) {
         where.subject2 = subjects[1].internalId;
       }
 
-      if (subjects[2]) {
+      if (subjects[2] && subjects[2].internalId) {
         where.subject3 = subjects[2].internalId;
       }
 
-      if (subjects[3]) {
+      if (subjects[3] && subjects[3].internalId) {
         where.subject4 = subjects[3].internalId;
       }
-    }
 
-    return await GuaribasQuestion.findAll({
-      where: where
-    });
+      return await GuaribasQuestion.findAll({
+        where: where
+      });
+    } else {
+      return await GuaribasQuestion.findAll({
+        where: { from: from }
+      });
+    }
   }
 
   public async importKbTabularFile(
@@ -250,19 +251,17 @@ export class KBService {
     instanceId: number,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
-
     const file = Fs.readFileSync(filePath, 'UCS-2');
     const opts = {
       delimiter: '\t'
     };
 
-    let lastQuestion: GuaribasQuestion;
+    let lastQuestionId: number;
     let lastAnswer: GuaribasAnswer;
 
     const data = await parse(file, opts);
 
     return asyncPromise.eachSeries(data, async line => {
-
       // Extracts values from columns in the current line.
 
       const subjectsText = line[0];
@@ -279,12 +278,12 @@ export class KBService {
         // Extracts answer from external media if any.
 
         if (answer.indexOf('.md') > -1) {
-          const mediaFilename = UrlJoin(path.dirname(filePath), '..', 'articles', answer);
+          const mediaFilename = urlJoin(path.dirname(filePath), '..', 'articles', answer);
           if (Fs.existsSync(mediaFilename)) {
             answer = Fs.readFileSync(mediaFilename, 'utf8');
             format = '.md';
           } else {
-            logger.info(`[GBImporter] File not found: ${mediaFilename}.`);
+            GBLog.info(`[GBImporter] File not found: ${mediaFilename}.`);
             answer = '';
           }
         }
@@ -299,13 +298,13 @@ export class KBService {
         let indexer = 0;
 
         subjectArray.forEach(element => {
-          if (indexer == 0) {
+          if (indexer === 0) {
             subject1 = subjectArray[indexer].substring(0, 63);
-          } else if (indexer == 1) {
+          } else if (indexer === 1) {
             subject2 = subjectArray[indexer].substring(0, 63);
-          } else if (indexer == 2) {
+          } else if (indexer === 2) {
             subject3 = subjectArray[indexer].substring(0, 63);
-          } else if (indexer == 3) {
+          } else if (indexer === 3) {
             subject4 = subjectArray[indexer].substring(0, 63);
           }
           indexer++;
@@ -318,7 +317,7 @@ export class KBService {
           content: answer,
           format: format,
           packageId: packageId,
-          prevId: lastQuestion ? lastQuestion.questionId : 0
+          prevId: lastQuestionId !== null ? lastQuestionId : 0
         });
 
         const question1 = await GuaribasQuestion.create({
@@ -334,36 +333,31 @@ export class KBService {
           packageId: packageId
         });
 
-        if (lastAnswer && lastQuestion) {
-          await lastAnswer.updateAttributes({ nextId: lastQuestion.questionId });
+        if (lastAnswer !== undefined && lastQuestionId !== 0) {
+          await lastAnswer.update({ nextId: lastQuestionId });
         }
         lastAnswer = answer1;
-        lastQuestion = question1;
+        lastQuestionId = question1.questionId;
 
-        return Promise.resolve(lastQuestion);
-
+        return Promise.resolve(question1.questionId);
       } else {
-
         // Skips the header.
 
-        return Promise.resolve(null);
+        return Promise.resolve(undefined);
       }
     });
   }
 
-  public async sendAnswer(conversationalService: IGBConversationalService,
-                          step: any, answer: GuaribasAnswer) {
-
+  public async sendAnswer(conversationalService: IGBConversationalService, step: GBDialogStep, answer: GuaribasAnswer) {
     if (answer.content.endsWith('.mp4')) {
       await conversationalService.sendEvent(step, 'play', {
         playerType: 'video',
         data: answer.content
       });
-    } else if (answer.content.length > 140 &&
-      step.context._activity.channelId === 'webchat') {
+    } else if (answer.content.length > 140 && step.context.activity.channelId === 'webchat') {
       const locale = step.context.activity.locale;
 
-      await step.context.sendActivity(Messages[locale].will_answer_projector); // TODO: Handle rnd.
+      await step.context.sendActivity(Messages[locale].will_answer_projector);
       let html = answer.content;
 
       if (answer.format === '.md') {
@@ -380,16 +374,18 @@ export class KBService {
         });
         html = marked(answer.content);
       }
-      await conversationalService.sendEvent(step, 'play',
-                                            {
-          playerType: 'markdown', data: {
-            content: html, answer: answer,
-            prevId: answer.prevId, nextId: answer.nextId
-          }
-        });
+      await conversationalService.sendEvent(step, 'play', {
+        playerType: 'markdown',
+        data: {
+          content: html,
+          answer: answer,
+          prevId: answer.prevId,
+          nextId: answer.nextId
+        }
+      });
     } else {
       await step.context.sendActivity(answer.content);
-      await conversationalService.sendEvent(step, 'stop', null);
+      await conversationalService.sendEvent(step, 'stop', undefined);
     }
   }
 
@@ -398,53 +394,32 @@ export class KBService {
     packageStorage: GuaribasPackage,
     instance: IGBInstance
   ): Promise<any> {
-
     // Imports subjects tree into database and return it.
 
-    await this.importSubjectFile(
-      packageStorage.packageId,
-      UrlJoin(localPath, 'subjects.json'),
-      instance);
+    await this.importSubjectFile(packageStorage.packageId, urlJoin(localPath, 'subjects.json'), instance);
 
     // Import all .tsv files in the tabular directory.
 
-    return this.importKbTabularDirectory(
-      localPath,
-      instance,
-      packageStorage.packageId
+    return this.importKbTabularDirectory(localPath, instance, packageStorage.packageId);
+  }
+
+  public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
+    const files = await walkPromise(urlJoin(localPath, 'tabular'));
+
+    return Promise.all(
+      files.map(async file => {
+        if (file.name.endsWith('.tsv')) {
+          return this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
+        }
+      })
     );
   }
 
-  public async importKbTabularDirectory(
-    localPath: string,
-    instance: IGBInstance,
-    packageId: number
-  ): Promise<any> {
-
-    const files = await walkPromise(UrlJoin(localPath, 'tabular'));
-
-    return Promise.all(files.map(async file => {
-      if (file.name.endsWith('.tsv')) {
-        return this.importKbTabularFile(
-          UrlJoin(file.root, file.name),
-          instance.instanceId,
-          packageId);
-      }
-    }));
-
-  }
-
-  public async importSubjectFile(
-    packageId: number,
-    filename: string,
-    instance: IGBInstance
-  ): Promise<any> {
-    const subjects = JSON.parse(Fs.readFileSync(filename, 'utf8'));
+  public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise<any> {
+    const subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
 
     const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
       return asyncPromise.eachSeries(subjects, async item => {
-        const mediaFilename = item.id + '.png';
-
         const value = await GuaribasSubject.create({
           internalId: item.id,
           parentSubjectId: parentSubjectId,
@@ -463,15 +438,11 @@ export class KBService {
         }
       });
     };
-    return doIt(subjects.children, null);
+
+    return doIt(subjectsLoaded.children, undefined);
   }
 
-  public async undeployKbFromStorage(
-    instance: IGBInstance,
-    deployer: GBDeployer,
-    packageId: number
-  ) {
-
+  public async undeployKbFromStorage(instance: IGBInstance, deployer: GBDeployer, packageId: number) {
     await GuaribasQuestion.destroy({
       where: { instanceId: instance.instanceId, packageId: packageId }
     });
@@ -485,30 +456,26 @@ export class KBService {
       where: { instanceId: instance.instanceId, packageId: packageId }
     });
 
-    await deployer.rebuildIndex(instance);
+    await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
   }
 
   /**
-  * Deploys a knowledge base to the storage using the .gbkb format.
-  *
-  * @param localPath Path to the .gbkb folder.
-  */
+   * Deploys a knowledge base to the storage using the .gbkb format.
+   *
+   * @param localPath Path to the .gbkb folder.
+   */
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string) {
     const packageType = Path.extname(localPath);
     const packageName = Path.basename(localPath);
-    logger.info(`[GBDeployer] Opening package: ${localPath}`);
-    const packageObject = JSON.parse(
-      Fs.readFileSync(UrlJoin(localPath, 'package.json'), 'utf8')
-    );
+    GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
+    const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
 
     const instance = await core.loadInstance(packageObject.botId);
-    logger.info(`[GBDeployer] Importing: ${localPath}`);
-    const p = await deployer.deployPackageToStorage(
-      instance.instanceId,
-      packageName);
+    GBLog.info(`[GBDeployer] Importing: ${localPath}`);
+    const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(localPath, p, instance);
 
-    deployer.rebuildIndex(instance);
-    logger.info(`[GBDeployer] Finished import of ${localPath}`);
+    deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
+    GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
   }
 }

@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,37 +36,35 @@
 
 'use strict';
 
-const UrlJoin = require('url-join');
+import urlJoin = require('url-join');
 
-import { GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 
 import { Sequelize } from 'sequelize-typescript';
 import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models';
 
+/**
+ * Package for the security module.
+ */
 export class GBSecurityPackage implements IGBPackage {
-  public sysPackages: IGBPackage[] = null;
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
-    core.sequelize.addModels([
-      GuaribasGroup,
-      GuaribasUser,
-      GuaribasUserGroup
-    ]);
-
-    core;
+  public sysPackages: IGBPackage[];
+  public getDialogs(min: GBMinInstance) {
+    GBLog.verbose(`getDialogs called.`);
   }
-
   public unloadPackage(core: IGBCoreService): void {
-
+    GBLog.verbose(`unloadPackage called.`);
   }
-
   public loadBot(min: GBMinInstance): void {
-
+    GBLog.verbose(`loadBot called.`);
   }
-
   public unloadBot(min: GBMinInstance): void {
-
+    GBLog.verbose(`unloadBot called.`);
   }
-  public onNewSession(min: GBMinInstance, step: any): void {
+  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+    GBLog.verbose(`onNewSession called.`);
+  }
 
+  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+    core.sequelize.addModels([GuaribasGroup, GuaribasUser, GuaribasUserGroup]);
   }
 }

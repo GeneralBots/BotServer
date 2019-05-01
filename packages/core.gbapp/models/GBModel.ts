@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' _ `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| ( ) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -51,9 +51,13 @@ import {
 
 import { IGBInstance } from 'botlib';
 
+/**
+ * Base instance data for a bot.
+ */
 @Table
 export class GuaribasInstance extends Model<GuaribasInstance>
   implements IGBInstance {
+
   @PrimaryKey
   @AutoIncrement
   @Column
@@ -79,8 +83,6 @@ export class GuaribasInstance extends Model<GuaribasInstance>
 
   @Column
   public enabledAdmin: boolean;
-
-  /* Services section on bot.json */
 
   @Column
   public engineName: string;
@@ -152,7 +154,7 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   public speechKey: string;
 
   @Column
-  public speechKeyEndpoint: string;
+  public speechEndpoint: string;
 
   @Column
   public spellcheckerKey: string;
@@ -218,8 +220,6 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   @Column
   public adminPass: string;
 
-  /* Settings section of bot.json */
-
   @Column(DataType.FLOAT)
   public nlpVsSearch: number;
 
@@ -238,6 +238,9 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   public updatedAt: Date;
 }
 
+/**
+ * Each packaged listed for use in a bot instance.
+ */
 @Table
 export class GuaribasPackage extends Model<GuaribasPackage> {
   @PrimaryKey
@@ -264,6 +267,9 @@ export class GuaribasPackage extends Model<GuaribasPackage> {
   public updatedAt: Date;
 }
 
+/**
+ * A bot channel.
+ */
 @Table
 export class GuaribasChannel extends Model<GuaribasChannel> {
   @PrimaryKey
@@ -283,7 +289,11 @@ export class GuaribasChannel extends Model<GuaribasChannel> {
   public updatedAt: Date;
 }
 
+/**
+ * An exception that has been thrown.
+ */
 @Table
+//tslint:disable-next-line:max-classes-per-file
 export class GuaribasException extends Model<GuaribasException> {
   @PrimaryKey
   @AutoIncrement
