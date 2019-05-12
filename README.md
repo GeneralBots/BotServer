@@ -46,32 +46,28 @@ editor). BASIC can be used to build custom dialogs so Bot can be extended just l
 
 # Videos
 
-## Easeness authoring of bot packages, development environment and self-deployment.
-
-* Now with the General Bots server you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
+Now with the General Bots server you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
 
 [![General Bot Video](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-01-thumb.jpg)](https://www.youtube.com/watch?v=AfKTwljoMOs)
 
-## Using TALK and HEAR to build Virtual Assistants with BASIC
-
-* See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC * published on December 3rd, 2018.
+See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC * published on December 3rd, 2018.
 
 [![See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-02-thumb.jpg)](https://www.youtube.com/watch?v=yX1sF9n9628)
  
   
-  ## Contributing
+# Contributing
 
 This project welcomes contributions and suggestions. 
 See our [Contribution Guidelines](https://github.com/pragmatismo-io/BotServer/blob/master/CONTRIBUTING.md) for more details.
 
-## Reporting Security Issues
+# Reporting Security Issues
 
 Security issues and bugs should be reported privately, via email, to the Pragmatismo.io Security
 team at [security@pragmatismo.io](mailto:security@pragmatismo.io). You should
 receive a response within 24 hours. If for some reason you do not, please follow up via
 email to ensure we received your original message. 
 
-## License & Warranty
+# License & Warranty
 
 General Bot Copyright (c) Pragmatismo.io. All rights reserved.
 Licensed under the AGPL-3.0.       
@@ -94,5 +90,4 @@ The licensing of the program under the AGPLv3 does not imply a
 trademark license. Therefore any rights, title and interest in
 our trademarks remain entirely with us.
 
-
-<a href="https://stackoverflow.com/questions/ask?tags=generalbots">:speech_balloon: Ask a question</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="https://github.com/GeneralBots/BotBook/blob/master/01%20-%20Overview.md">:book: Read the Docs</a>
+<a href="https://stackoverflow.com/questions/ask?tags=generalbots">:speech_balloon: Ask a question</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="https://github.com/GeneralBots/BotBook">:book: Read the Docs</a>
