@@ -86,6 +86,7 @@ export class KBService {
 
   public static getSubjectItemsSeparatedBySpaces(subjects: GuaribasSubject[]) {
     const out = [];
+    if (subjects === undefined) { return ''; }
     subjects.forEach(subject => {
       out.push(subject.internalId);
     });
@@ -168,7 +169,7 @@ export class KBService {
         query = `${query} ${text}`;
       }
     }
-    query = `${query}&$filter=instanceId eq ${instance.instanceId}`;
+    // TODO: query = `${query}&$filter=instanceId eq ${instance.instanceId}`;
 
     // tslint:disable:no-unsafe-any
     if (instance.searchKey !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
