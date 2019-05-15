@@ -4,6 +4,7 @@ const Swagger = require('swagger-client');
 const rp = require('request-promise');
 import { GBLog, GBService } from 'botlib';
 import * as request from 'request-promise-native';
+import { GBServer } from '../../../src/app';
 
 /**
  * Support for Whatsapp.
@@ -57,7 +58,7 @@ export class WhatsappDirectLine extends GBService {
           url: urlJoin(this.whatsappServiceUrl, 'webhook'),
           qs: {
             token: this.whatsappServiceKey,
-            webhookUrl: `${this.whatsappServiceWebhookUrl}/instances/${this.botId}/whatsapp`,
+            webhookUrl: `${GBServer.globals.proxyAddress}/instances/${this.botId}/whatsapp`,
             set: true
           },
           headers: {
@@ -150,7 +151,7 @@ export class WhatsappDirectLine extends GBService {
         .then(activities => {
           this.printMessages(activities, conversationId, from, fromName);
         });
-    },          this.pollInterval);
+    }, this.pollInterval);
   }
 
   public printMessages(activities, conversationId, from, fromName) {

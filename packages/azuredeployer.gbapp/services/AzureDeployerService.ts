@@ -225,8 +225,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     // CHECK
     if (!JSON.parse(res.bodyAsText).id) {
       return false;
-    }
-    else {
+    } else {
       return true;
     }
   }
@@ -291,7 +290,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     }
     GBLog.info(`Bot proxy updated at: ${endpoint}.`);
   }
-
 
   public async openStorageFirewall(groupName, serverName) {
     const username = GBConfigService.get('CLOUD_USERNAME');

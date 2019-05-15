@@ -47,7 +47,7 @@ const graph = require('@microsoft/microsoft-graph-client');
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app';
-import { GuaribasPackage } from '../models/GBModel';
+import { GuaribasPackage, GuaribasInstance } from '../models/GBModel';
 import { GBAdminService } from './../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService';
 import { KBService } from './../../kb.gbapp/services/KBService';
@@ -164,7 +164,7 @@ export class GBDeployer {
    * Deploys a bot to the storage.
    */
 
-  public async deployBot(localPath: string, proxyAddress: string): Promise<IGBInstance> {
+  public async deployBot(localPath: string, proxyAddress: string): Promise<void> {
     const packageName = Path.basename(localPath);
 
     const service = new AzureDeployerService(this);
@@ -186,8 +186,7 @@ export class GBDeployer {
         ''
       );
 
-    }
-    else {
+    } else {
 
       instance = await service.internalDeployBot(
         instance,
@@ -205,8 +204,7 @@ export class GBDeployer {
         subscriptionId
       );
     }
-    return instance;
-
+    await this.core.saveInstance(instance);
   }
 
   public async deployPackageToStorage(instanceId: number, packageName: string): Promise<GuaribasPackage> {
@@ -234,12 +232,12 @@ export class GBDeployer {
 
     switch (packageType) {
       case '.gbot':
-        return this.deployBot(localPath, min.proxyAddress);
+        await this.deployBot(localPath, min.proxyAddress);
 
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
 
-        return service.deployKb(this.core, this, localPath);
+        await service.deployKb(this.core, this, localPath);
 
       case '.gbdialog':
         const vm = new GBVMService();
@@ -348,10 +346,10 @@ export class GBDeployer {
 
     // Deploys all .gbot files first.
 
-    botPackages.forEach(e => {
+    botPackages.forEach(async (e) => {
       if (e !== 'packages\\boot.gbot') {
         GBLog.info(`Deploying bot: ${e}...`);
-        _this.deployBot(e, GBServer.globals.proxyAddress);
+        await _this.deployBot(e, GBServer.globals.proxyAddress);
         GBLog.info(`Bot: ${e} deployed...`);
       }
     });

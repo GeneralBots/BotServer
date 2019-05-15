@@ -235,8 +235,8 @@ export class GBMinService {
       botId = bootInstance.botId;
     }
     const instance = await this.core.loadInstance(botId);
-    if (instance !== undefined) {
-      const speechToken = await this.getSTSToken(instance);
+    if (instance !== null) {
+      const speechToken = instance.speechKey != null ? await this.getSTSToken(instance) : null;
       let theme = instance.theme;
       if (theme !== undefined) {
         theme = 'default.gbtheme';
@@ -355,8 +355,8 @@ export class GBMinService {
       GBAdminPackage,
       GBKBPackage,
       GBAnalyticsPackage,
-      GBCustomerSatisfactionPackage
-      // DISABLED: GBWhatsappPackage
+      GBCustomerSatisfactionPackage,
+      GBWhatsappPackage
     ].forEach(sysPackage => {
       const p = Object.create(sysPackage.prototype) as IGBPackage;
       p.loadBot(min);
