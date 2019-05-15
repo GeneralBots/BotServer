@@ -46,8 +46,10 @@ const graph = require('@microsoft/microsoft-graph-client');
 
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
+import { GBServer } from '../../../src/app';
 import { GuaribasPackage } from '../models/GBModel';
 import { GBAdminService } from './../../admin.gbapp/services/GBAdminService';
+import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService';
 import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBConfigService } from './GBConfigService';
 import { GBImporter } from './GBImporterService';
@@ -70,9 +72,13 @@ export class GBDeployer {
   }
 
   public static getConnectionStringFromInstance(instance: IGBInstance) {
-    return `Server=tcp:torageServer}.database.windows.net,1433;Database=${instance.storageName};User ID=${
+    return `Server=tcp:${instance.storageServer}.database.windows.net,1433;Database=${
+      instance.storageName
+      };User ID=${
       instance.storageUsername
-    };Password=${instance.storagePassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
+      };Password=${
+      instance.storagePassword
+      };Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
   }
 
   /**
@@ -139,6 +145,7 @@ export class GBDeployer {
             GBLog.info(`App Package deployment done.`);
 
             ({ generalPackages, totalPackages } = await this.deployDataPackages(
+
               core,
               botPackages,
               _this,
@@ -157,10 +164,49 @@ export class GBDeployer {
    * Deploys a bot to the storage.
    */
 
-  public async deployBot(localPath: string): Promise<IGBInstance> {
+  public async deployBot(localPath: string, proxyAddress: string): Promise<IGBInstance> {
     const packageName = Path.basename(localPath);
 
-    return await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
+    const service = new AzureDeployerService(this);
+    let instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
+
+    const username = GBConfigService.get('CLOUD_USERNAME');
+    const password = GBConfigService.get('CLOUD_PASSWORD');
+    const group = GBConfigService.get('CLOUD_GROUP');
+    const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
+
+    if (await service.botExists(instance.botId, group, proxyAddress)) {
+      instance = await service.updateBot(
+        instance,
+        accessToken,
+        instance.title,
+        instance.description,
+        proxyAddress,
+        ''
+      );
+
+    }
+    else {
+
+      instance = await service.internalDeployBot(
+        instance,
+        accessToken,
+        instance.botId,
+        instance.title,
+        group,
+        instance.description,
+        `${proxyAddress}/api/messages/${instance.botId}`,
+        'global',
+        instance.nlpAppId,
+        instance.nlpKey,
+        instance.marketplaceId,
+        instance.marketplacePassword,
+        subscriptionId
+      );
+    }
+    return instance;
+
   }
 
   public async deployPackageToStorage(instanceId: number, packageName: string): Promise<GuaribasPackage> {
@@ -188,7 +234,7 @@ export class GBDeployer {
 
     switch (packageType) {
       case '.gbot':
-        return this.deployBot(localPath);
+        return this.deployBot(localPath, min.proxyAddress);
 
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
@@ -284,6 +330,7 @@ export class GBDeployer {
   }
 
   private async deployDataPackages(
+
     core: IGBCoreService,
     botPackages: string[],
     _this: this,
@@ -304,7 +351,7 @@ export class GBDeployer {
     botPackages.forEach(e => {
       if (e !== 'packages\\boot.gbot') {
         GBLog.info(`Deploying bot: ${e}...`);
-        _this.deployBot(e);
+        _this.deployBot(e, GBServer.globals.proxyAddress);
         GBLog.info(`Bot: ${e} deployed...`);
       }
     });

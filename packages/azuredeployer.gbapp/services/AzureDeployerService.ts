@@ -201,6 +201,37 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     };
   }
 
+  public async botExists(botId, group, endpoint) {
+    const baseUrl = `https://management.azure.com/`;
+    const username = GBConfigService.get('CLOUD_USERNAME');
+    const password = GBConfigService.get('CLOUD_PASSWORD');
+    const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+
+    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
+    const httpClient = new ServiceClient();
+
+    const parameters = {
+      properties: {
+        endpoint: endpoint
+      }
+    };
+
+    const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
+      this.provider
+      }/botServices/${botId}?api-version=${this.apiVersion}`;
+    const url = urlJoin(baseUrl, query);
+    const req = AzureDeployerService.createRequestObject(url, accessToken, 'GET', JSON.stringify(parameters));
+    const res = await httpClient.sendRequest(req);
+    // CHECK
+    if (!JSON.parse(res.bodyAsText).id) {
+      return false;
+    }
+    else {
+      return true;
+    }
+  }
+
+
   public async updateBotProxy(botId, group, endpoint) {
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
@@ -228,6 +259,39 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     }
     GBLog.info(`Bot proxy updated at: ${endpoint}.`);
   }
+
+  public async updateBot(botId: string, group: string, name: string,
+    description: string, endpoint: string, iconUrl: string) {
+    const baseUrl = `https://management.azure.com/`;
+    const username = GBConfigService.get('CLOUD_USERNAME');
+    const password = GBConfigService.get('CLOUD_PASSWORD');
+    const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+
+    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
+    const httpClient = new ServiceClient();
+
+    const parameters = {
+      properties: {
+        description: description,
+        displayName: name,
+        endpoint: endpoint,
+        iconUrl: iconUrl
+      }
+    };
+
+    const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
+      this.provider
+      }/botServices/${botId}?api-version=${this.apiVersion}`;
+    const url = urlJoin(baseUrl, query);
+    const req = AzureDeployerService.createRequestObject(url, accessToken, 'PATCH', JSON.stringify(parameters));
+    const res = await httpClient.sendRequest(req);
+    // CHECK
+    if (!JSON.parse(res.bodyAsText).id) {
+      throw res.bodyAsText;
+    }
+    GBLog.info(`Bot proxy updated at: ${endpoint}.`);
+  }
+
 
   public async openStorageFirewall(groupName, serverName) {
     const username = GBConfigService.get('CLOUD_USERNAME');
@@ -296,7 +360,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.searchIndex = 'azuresql-index';
     instance.searchIndexer = 'azuresql-indexer';
     instance.searchKey = searchKeys.primaryKey;
-    this.deployer.rebuildIndex(instance, this.deployer);
+    this.deployer.rebuildIndex(instance, this.getKBSearchSchema(instance.searchIndex));
 
     GBLog.info(`Deploying Speech...`);
     const speech = await this.createSpeech(name, `${name}-speech`, instance.cloudLocation);
@@ -378,43 +442,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     this.deployFarm(url, instance, credentials, subscriptionId);
   }
 
-  private initServices(credentials: any, subscriptionId: string) {
-    this.resourceClient = new ResourceManagementClient.default(credentials, subscriptionId);
-    this.webSiteClient = new WebSiteManagementClient(credentials, subscriptionId);
-    this.storageClient = new SqlManagementClient(credentials, subscriptionId);
-    this.cognitiveClient = new CognitiveServicesManagementClient(credentials, subscriptionId);
-    this.searchClient = new SearchManagementClient(credentials, subscriptionId);
-    this.accessToken = credentials.tokenCache._entries[0].accessToken;
-  }
-
-  private async createStorageServer(group, name, administratorLogin, administratorPassword, serverName, location) {
-    const params = {
-      location: location,
-      administratorLogin: administratorLogin,
-      administratorLoginPassword: administratorPassword,
-      fullyQualifiedDomainName: `${serverName}.database.windows.net`
-    };
-
-    return this.storageClient.servers.createOrUpdate(group, name, params);
-  }
-
-  private async registerProviders(subscriptionId, baseUrl, accessToken) {
-    const query = `subscriptions/${subscriptionId}/providers/${this.provider}/register?api-version=2018-02-01`;
-    const requestUrl = urlJoin(baseUrl, query);
-
-    const req = new WebResource();
-    req.method = 'POST';
-    req.url = requestUrl;
-    req.headers = <any>{};
-    req.headers['Content-Type'] = 'application/json; charset=utf-8';
-    req.headers['accept-language'] = '*';
-    (req.headers as any).Authorization = `Bearer ${accessToken}`;
-  }
-
   /**
    * @see https://github.com/Azure/azure-rest-api-specs/blob/master/specification/botservice/resource-manager/Microsoft.BotService/preview/2017-12-01/botservice.json
    */
-  private async internalDeployBot(
+  public async internalDeployBot(
     instance,
     accessToken,
     botId,
@@ -488,6 +519,39 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         }
       }, 60000);
     });
+  }
+
+  private initServices(credentials: any, subscriptionId: string) {
+    this.resourceClient = new ResourceManagementClient.default(credentials, subscriptionId);
+    this.webSiteClient = new WebSiteManagementClient(credentials, subscriptionId);
+    this.storageClient = new SqlManagementClient(credentials, subscriptionId);
+    this.cognitiveClient = new CognitiveServicesManagementClient(credentials, subscriptionId);
+    this.searchClient = new SearchManagementClient(credentials, subscriptionId);
+    this.accessToken = credentials.tokenCache._entries[0].accessToken;
+  }
+
+  private async createStorageServer(group, name, administratorLogin, administratorPassword, serverName, location) {
+    const params = {
+      location: location,
+      administratorLogin: administratorLogin,
+      administratorLoginPassword: administratorPassword,
+      fullyQualifiedDomainName: `${serverName}.database.windows.net`
+    };
+
+    return this.storageClient.servers.createOrUpdate(group, name, params);
+  }
+
+  private async registerProviders(subscriptionId, baseUrl, accessToken) {
+    const query = `subscriptions/${subscriptionId}/providers/${this.provider}/register?api-version=2018-02-01`;
+    const requestUrl = urlJoin(baseUrl, query);
+
+    const req = new WebResource();
+    req.method = 'POST';
+    req.url = requestUrl;
+    req.headers = <any>{};
+    req.headers['Content-Type'] = 'application/json; charset=utf-8';
+    req.headers['accept-language'] = '*';
+    (req.headers as any).Authorization = `Bearer ${accessToken}`;
   }
 
   private async createNLPService(

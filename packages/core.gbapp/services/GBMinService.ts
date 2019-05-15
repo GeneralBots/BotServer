@@ -112,7 +112,8 @@ export class GBMinService {
     server: any,
     appPackages: IGBPackage[],
     instances: IGBInstance[],
-    deployer: GBDeployer
+    deployer: GBDeployer,
+    proxyAddress: string
   ) {
     // Serves default UI on root address '/'.
 
@@ -136,11 +137,11 @@ export class GBMinService {
 
         // Build bot adapter.
 
-        const { min, adapter, conversationState } = await this.buildBotAdapter(instance);
+        const { min, adapter, conversationState } = await this.buildBotAdapter(instance, proxyAddress);
 
         // Install default VBA module.
 
-       // DISABLED: deployer.deployPackage(min, 'packages/default.gbdialog');
+        // DISABLED: deployer.deployPackage(min, 'packages/default.gbdialog');
 
         // Call the loadBot context.activity for all packages.
 
@@ -220,7 +221,7 @@ export class GBMinService {
       );
       authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
         min.instance.authenticatorClientId
-      }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+        }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
       res.redirect(authorizationUrl);
     });
   }
@@ -281,7 +282,7 @@ export class GBMinService {
     } catch (error) {
       const msg = `[botId:${
         instance.botId
-      }] Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
+        }] Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
 
       return Promise.reject(new Error(msg));
     }
@@ -312,7 +313,7 @@ export class GBMinService {
     }
   }
 
-  private async buildBotAdapter(instance: any) {
+  private async buildBotAdapter(instance: any, proxyAddress: string) {
     const adapter = new BotFrameworkAdapter({
       appId: instance.marketplaceId,
       appPassword: instance.marketplacePassword
@@ -346,7 +347,7 @@ export class GBMinService {
   }
 
   private invokeLoadBot(appPackages: any[], min: GBMinInstance, server: any) {
-    const sysPackages : IGBPackage[] = [];
+    const sysPackages: IGBPackage[] = [];
     // NOTE: A semicolon is necessary before this line.
     [
       GBCorePackage,
@@ -366,7 +367,7 @@ export class GBMinService {
           (p as any).channel.received(req, res);
         });
       }
-    },        this);
+    }, this);
 
     appPackages.forEach(p => {
       p.sysPackages = sysPackages;
@@ -377,7 +378,7 @@ export class GBMinService {
           min.dialogs.add(new WaterfallDialog(dialog.name, dialog.waterfall));
         });
       }
-    },                  this);
+    }, this);
   }
 
   /**
@@ -415,7 +416,7 @@ export class GBMinService {
 
         GBLog.info(
           `User>: ${context.activity.text} (${context.activity.type}, ${context.activity.name}, ${
-            context.activity.channelId
+          context.activity.channelId
           }, {context.activity.value})`
         );
         if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {

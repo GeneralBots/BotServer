@@ -5,12 +5,10 @@ node_js:
 
 notifications:
   email: false
-  
+
 before_script:
 - npm run build
 
-script:
-- npm run coveralls
 
 branches:
   only:

@@ -36,7 +36,7 @@
 
 'use strict';
 
-import { IGBCoreService } from 'botlib';
+import { IGBCoreService, IGBInstance } from 'botlib';
 import fs = require('fs');
 import urlJoin = require('url-join');
 import { GuaribasInstance } from '../models/GBModel';
@@ -57,14 +57,12 @@ export class GBImporter {
       botId = packageJson.botId;
     }
     const instance = await this.core.loadInstance(botId);
-    if (instance !== null) {
-      return instance;
-    } else {
-      return await this.createInstanceInternal(botId, localPath, packageJson);
-    }
+
+    return await this.createOrUpdateInstanceInternal(instance, botId, localPath, packageJson);
   }
 
-  private async createInstanceInternal(botId: string, localPath: string, packageJson: any) {
+  private async createOrUpdateInstanceInternal(instance: IGBInstance,
+    botId: string, localPath: string, packageJson: any) {
     const settings = JSON.parse(fs.readFileSync(urlJoin(localPath, 'settings.json'), 'utf8'));
     const servicesJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'services.json'), 'utf8'));
 
@@ -74,6 +72,12 @@ export class GBImporter {
       packageJson.botId = botId;
     }
 
-    return GuaribasInstance.create(packageJson);
+    if (instance !== null) {
+      instance = { ...instance, ...packageJson, ...settings, ...servicesJson };
+
+      return this.core.saveInstance(instance);
+    } else {
+      return GuaribasInstance.create(packageJson);
+    }
   }
 }
