@@ -101,7 +101,7 @@
     "simple-git": "1.113.0",
     "sqlite3": "4.0.8",
     "strict-password-generator": "1.1.2",
-    "swagger-client": "3.8.25",
+    "swagger-client": "^2.1.18",
     "tedious": "6.1.1",
     "temperature-js": "0.1.0",
     "ts-node": "8.1.0",

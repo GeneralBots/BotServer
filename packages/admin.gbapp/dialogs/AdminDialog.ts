@@ -36,6 +36,7 @@
 
 'use strict';
 
+var crypto = require('crypto')
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
 import urlJoin = require('url-join');
@@ -205,11 +206,11 @@ export class AdminDialog extends IGBDialog {
 
           const url = `https://login.microsoftonline.com/${
             min.instance.authenticatorTenant
-          }/oauth2/authorize?client_id=${min.instance.authenticatorClientId}&response_type=code&redirect_uri=${urlJoin(
-            min.instance.botEndpoint,
-            min.instance.botId,
-            '/token'
-          )}&state=${state}&response_mode=query`;
+            }/oauth2/authorize?client_id=${min.instance.authenticatorClientId}&response_type=code&redirect_uri=${urlJoin(
+              min.instance.botEndpoint,
+              min.instance.botId,
+              '/token'
+            )}&state=${state}&response_mode=query`;
 
           await step.context.sendActivity(Messages[locale].consent(url));
 

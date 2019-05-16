@@ -242,7 +242,7 @@ export class GBDeployer {
       case '.gbdialog':
         const vm = new GBVMService();
 
-        return vm.loadDialogPackage(localPath, min, this.core, this);
+        await vm.loadDialogPackage(localPath, min, this.core, this);
 
       default:
         const err = GBError.create(`Unhandled package type: ${packageType}.`);
@@ -375,6 +375,8 @@ export class GBDeployer {
         // Already Handled
       } else if (Path.extname(filename) === '.gbdialog') {
         // Already Handled
+      } else if (Path.extname(filename) === '.gbignore') {
+        // Ignored
       } else {
         // Unknown package format.
         const err = new Error(`Package type not handled: ${filename}.`);

@@ -141,7 +141,7 @@ export class GBMinService {
 
         // Install default VBA module.
 
-        // DISABLED: deployer.deployPackage(min, 'packages/default.gbdialog');
+        deployer.deployPackage(min, 'packages/default.gbdialog');
 
         // Call the loadBot context.activity for all packages.
 
@@ -336,6 +336,7 @@ export class GBMinService {
     min.instance = await this.core.loadInstance(min.botId);
     min.cbMap = {};
     min.scriptMap = {};
+    min.sandBoxMap = {};
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
 
@@ -396,7 +397,7 @@ export class GBMinService {
     await adapter.processActivity(req, res, async context => {
       // Get loaded user state
       const step = await min.dialogs.createContext(context);
-      step.context.activity.locale = 'en-US';
+      step.context.activity.locale = 'pt-BR';
 
       try {
         const user = await min.userProfile.get(context, {});

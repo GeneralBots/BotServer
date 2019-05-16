@@ -12,13 +12,21 @@
     "resolveJsonModule": true,
     "outDir": "./dist",
     "paths": {
-      "*": ["types/*"],
-      "botlib/*": ["node_modules/botlib/*"],
-      "pragmatismo-io-framework/*": ["node_modules/pragmatismo-io-framework/*"]
+      "*": [
+        "types/*"
+      ],
+      "botlib/*": [
+        "node_modules/botlib/*"
+      ],
+      "pragmatismo-io-framework/*": [
+        "node_modules/pragmatismo-io-framework/*"
+      ]
     },
     "sourceMap": true,
     "target": "es6",
-    "typeRoots": ["node_modules/@types"]
+    "typeRoots": [
+      "node_modules/@types"
+    ]
   },
   "include": [
     "test/**/*",
@@ -26,5 +34,8 @@
     "packages/*.gbapp/**/*",
     "packages/*.gblib/**/*"
   ],
-  "exclude": ["dist", "node_modules"]
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

@@ -163,9 +163,9 @@ export class GBVMService extends GBService {
       let parsedCode = code;
       const hearExp = /(\w+).*hear.*\(\)/;
 
-      let match1 = hearExp.exec(code);
+      let match1;
 
-      while (match1 !== undefined) {
+      while ((match1 = hearExp.exec(code))) {
         let pos = 0;
 
         // Writes async body.
@@ -185,9 +185,8 @@ export class GBVMService extends GBService {
 
         let right = 0;
         let left = 1;
-        let match2 = /\{|\}/.exec(tempCode);
-
-        while (match2 !== undefined) {
+        let match2;
+        while ((match2 = /\{|\}/.exec(tempCode))) {
           const c = tempCode.substring(match2.index, match2.index + 1);
 
           if (c === '}') {
@@ -202,7 +201,6 @@ export class GBVMService extends GBService {
           if (left === right) {
             break;
           }
-          match1 = hearExp.exec(code);
         }
 
         parsedCode += code.substring(start + match1[0].length + 1, pos + match1[0].length);
@@ -212,12 +210,11 @@ export class GBVMService extends GBService {
         // A interaction will be made for each hear.
 
         code = parsedCode;
-        match2 = /\{|\}/.exec(tempCode);
       }
 
       parsedCode = this.handleThisAndAwait(parsedCode);
 
-      parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true });
+      parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true })
       fs.writeFileSync(jsfile, parsedCode);
 
       const sandbox: DialogClass = new DialogClass(min, deployer);
@@ -225,6 +222,7 @@ export class GBVMService extends GBService {
       vm.runInContext(parsedCode, context);
       min.sandBoxMap[mainName] = sandbox;
       GBLog.info(`[GBVMService] Finished loading of ${filename}`);
+
     }
   }
 
@@ -259,9 +257,6 @@ export class GBVMService extends GBService {
           return await step.prompt('textPrompt', {});
         },
         async step => {
-          min.sandbox.context = step.context;
-          min.sandbox.step = step;
-
           const cbId = step.activeDialog.state.cbId;
           const cb = min.cbMap[cbId];
           cb.bind({ step: step, context: step.context });
