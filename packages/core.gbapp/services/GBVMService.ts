@@ -259,15 +259,8 @@ export class GBVMService extends GBService {
         async step => {
           const cbId = step.activeDialog.state.cbId;
           const cb = min.cbMap[cbId];
-          step.activeDialog.state.cb = cb;
-
-          return await step.next();
-        },
-        async step => {
-          let cb = step.activeDialog.state.cb;
           cb.bind({ step: step, context: step.context });
-          cb(step.result);
-
+          await cb(step.result);
           return await step.next();
         }
       ])
