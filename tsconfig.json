@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "allowJs": false,
-    "downlevelIteration": "true",
+    "downlevelIteration": true,
     "baseUrl": "./",
     "declaration": false,
     "emitDecoratorMetadata": true,
