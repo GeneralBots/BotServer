@@ -91,6 +91,7 @@ export class GBDeployer {
 
     return new Promise(
       (resolve: any, reject: any): any => {
+        GBLog.info(`PWD ${process.env.PWD}...`);
         let totalPackages = 0;
         const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
         let paths = [GBDeployer.deployFolder];

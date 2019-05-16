@@ -43,10 +43,10 @@ import { GBLog } from 'botlib';
  */
 export class GBConfigService {
   public static getServerPort(): number {
-    if (process.env.PORT !== null) {
+    if (process.env.PORT) {
       return Number(process.env.PORT);
     }
-    if (process.env.port !== null) {
+    if (process.env.port) {
       return Number(process.env.port);
     }
 
