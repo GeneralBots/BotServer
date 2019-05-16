@@ -136,7 +136,7 @@ export class DialogClass {
     function random(low, high) {
       return Math.random() * (high - low) + low
     }
-    const idCallback = random(0, 120000000);E
+    const idCallback = random(0, 120000000);
     this.min.cbMap[idCallback] = cb;
     await this.step.beginDialog('/hear', { id: idCallback });
   }
