@@ -66,6 +66,9 @@ export class AskDialog extends IGBDialog {
     min.dialogs.add(new WaterfallDialog('/answerEvent', AskDialog.getAnswerEventDialog(service, min)));
     min.dialogs.add(new WaterfallDialog('/answer', AskDialog.getAnswerDialog(min, service)));
     min.dialogs.add(new WaterfallDialog('/ask', AskDialog.getAskDialog(min)));
+
+
+
   }
 
   private static getAskDialog(min: GBMinInstance) {
@@ -194,4 +197,3 @@ export class AskDialog extends IGBDialog {
       }
     ];
   }
-}

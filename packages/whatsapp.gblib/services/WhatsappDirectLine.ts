@@ -4,6 +4,7 @@ const Swagger = require('swagger-client');
 const rp = require('request-promise');
 import { GBLog, GBService } from 'botlib';
 import * as request from 'request-promise-native';
+import { GBServer } from '../../../src/app';
 
 /**
  * Support for Whatsapp.
@@ -11,7 +12,6 @@ import * as request from 'request-promise-native';
 export class WhatsappDirectLine extends GBService {
   public pollInterval = 1000;
   public directLineClientName = 'DirectLineClient';
-  public directLineSpecUrl = 'https://docs.botframework.com/en-us/restapi/directline3/swagger.json';
 
   public directLineClient: any;
   public whatsappServiceKey: string;
@@ -38,15 +38,16 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
     this.whatsappServiceWebhookUrl = whatsappServiceWebhookUrl;
+    var fs = require('fs')
 
-    this.directLineClient = rp(this.directLineSpecUrl)
-      .then(spec => {
-        return new Swagger({
-          spec: JSON.parse(spec.trim()),
-          usePromise: true
-        });
-      })
+    this.directLineClient =
+      new Swagger({
+        spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
+        usePromise: true
+      });
+    this.directLineClient
       .then(async client => {
+
         client.clientAuthorizations.add(
           'AuthorizationBotConnector',
           new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${directLineSecret}`, 'header')
@@ -57,7 +58,7 @@ export class WhatsappDirectLine extends GBService {
           url: urlJoin(this.whatsappServiceUrl, 'webhook'),
           qs: {
             token: this.whatsappServiceKey,
-            webhookUrl: `${this.whatsappServiceWebhookUrl}/instances/${this.botId}/whatsapp`,
+            webhookUrl: `${GBServer.globals.proxyAddress}/instances/${this.botId}/whatsapp`,
             set: true
           },
           headers: {
@@ -71,11 +72,6 @@ export class WhatsappDirectLine extends GBService {
         } catch (error) {
           GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error}`);
         }
-
-        return client;
-      })
-      .catch(err => {
-        GBLog.error(`Error initializing 3rd party Whatsapp provider(2) ${err}`);
       });
   }
 
@@ -150,14 +146,14 @@ export class WhatsappDirectLine extends GBService {
         .then(activities => {
           this.printMessages(activities, conversationId, from, fromName);
         });
-    },          this.pollInterval);
+    }, this.pollInterval);
   }
 
   public printMessages(activities, conversationId, from, fromName) {
     if (activities && activities.length) {
       // Ignore own messages.
 
-      activities = activities.filter(m => m.from.id === 'GeneralBots' && m.type === 'message');
+      activities = activities.filter(m => m.from.id === this.botId && m.type === 'message');
 
       if (activities.length) {
         // Print other messages.
@@ -214,5 +210,12 @@ export class WhatsappDirectLine extends GBService {
         'cache-control': 'no-cache'
       }
     };
+
+    try {
+      const result = request.post(options);
+      GBLog.info(result);
+    } catch (error) {
+      GBLog.error(`Error sending message to Whatsapp provider ${error}`);
+    }
   }
 }

@@ -53,9 +53,19 @@ import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
 const appPackages: IGBPackage[] = [];
 
 /**
+ * Global shared server data;
+ */
+export class RootData {
+  public proxyAddress: string;
+}
+
+/**
  * General Bots open-core entry point.
  */
 export class GBServer {
+
+  public static globals: RootData;
+
   /**
    *  Program entry-point.
    */
@@ -66,6 +76,7 @@ export class GBServer {
     // Creates a basic HTTP server that will serve several URL, one for each
     // bot instance.
 
+    GBServer.globals = new RootData();
     const port = GBConfigService.getServerPort();
     const server = express();
     server.use(bodyParser.json());
@@ -94,7 +105,7 @@ export class GBServer {
           // Ensure that local development proxy is setup.
 
           GBLog.info(`Establishing a development local proxy (ngrok)...`);
-          const proxyAddress: string = await core.ensureProxy(port);
+          GBServer.globals.proxyAddress = await core.ensureProxy(port);
 
           // Creates a boot instance or load it from storage.
 
@@ -103,7 +114,7 @@ export class GBServer {
             await core.initStorage();
           } catch (error) {
             GBLog.verbose(`Error initializing storage: ${error}`);
-            bootInstance = await core.createBootInstance(core, azureDeployer, proxyAddress);
+            bootInstance = await core.createBootInstance(core, azureDeployer, GBServer.globals.proxyAddress);
             await core.initStorage();
           }
 
@@ -116,7 +127,7 @@ export class GBServer {
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, appPackages);
 
-          // Loads all bot instances.
+          // Loads boot bot and other instances.
 
           GBLog.info(`Publishing instances...`);
           const packageInstance = await importer.importIfNotExistsBotPackage(
@@ -130,7 +141,8 @@ export class GBServer {
           // tslint:disable-next-line:prefer-object-spread
           const fullInstance = Object.assign(packageInstance, bootInstance);
           await core.saveInstance(fullInstance);
-          let instances: IGBInstance[] = await core.loadAllInstances(core, azureDeployer, proxyAddress);
+          let instances: IGBInstance[] = await core.loadAllInstances(core, azureDeployer,
+            GBServer.globals.proxyAddress);
           instances = await core.ensureInstances(instances, bootInstance, core);
           if (bootInstance !== undefined) {
             bootInstance = instances[0];
@@ -139,7 +151,8 @@ export class GBServer {
           // Builds minimal service infrastructure.
 
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
-          await minService.buildMin(bootInstance, server, appPackages, instances, deployer);
+          await minService.buildMin(bootInstance, server, appPackages, instances,
+            deployer, GBServer.globals.proxyAddress);
 
           // Deployment of local applications for the first time.
 

@@ -43,11 +43,11 @@ import { GBLog } from 'botlib';
  */
 export class GBConfigService {
   public static getServerPort(): number {
-    if (process.env.port !== undefined) {
-      return Number(process.env.port);
-    }
-    if (process.env.PORT !== undefined) {
+    if (process.env.PORT) {
       return Number(process.env.PORT);
+    }
+    if (process.env.port) {
+      return Number(process.env.port);
     }
 
     return 4242;
@@ -101,6 +101,9 @@ export class GBConfigService {
           break;
         case 'STORAGE_STORAGE':
           value = './guaribas.sqlite';
+          break;
+        case 'GBKB_AUTO_DEPLOY':
+          value = false;
           break;
         case 'ADDITIONAL_DEPLOY_PATH':
           value = undefined;

@@ -35,6 +35,7 @@
 import { TurnContext } from 'botbuilder';
 import { WaterfallStepContext } from 'botbuilder-dialogs';
 import { GBLog, GBMinInstance } from 'botlib';
+import * as crypto from 'crypto';
 import * as request from 'request-promise-native';
 import urlJoin = require('url-join');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
@@ -104,7 +105,7 @@ class SysClass {
   public async httpGet(url: string, qs) {
 
     const options = {
-        uri: urlJoin(url , qs)
+      uri: urlJoin(url, qs)
     };
 
     return request.get(options);
@@ -132,7 +133,10 @@ export class DialogClass {
   }
 
   public async hear(cb) {
-    const idCallback = crypto.getRandomValues(new Uint32Array(16))[0];
+    function random(low, high) {
+      return Math.random() * (high - low) + low
+    }
+    const idCallback = random(0, 120000000);
     this.min.cbMap[idCallback] = cb;
     await this.step.beginDialog('/hear', { id: idCallback });
   }

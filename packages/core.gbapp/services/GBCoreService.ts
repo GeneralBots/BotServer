@@ -347,8 +347,8 @@ STORAGE_SYNC=true
       GBCorePackage,
       GBSecurityPackage,
       GBKBPackage,
-      GBCustomerSatisfactionPackage
-      //  GBWhatsappPackage
+      GBCustomerSatisfactionPackage,
+      GBWhatsappPackage
     ].forEach(e => {
       GBLog.info(`Loading sys package: ${e.name}...`);
       const p = Object.create(e.prototype) as IGBPackage;

@@ -112,7 +112,8 @@ export class GBMinService {
     server: any,
     appPackages: IGBPackage[],
     instances: IGBInstance[],
-    deployer: GBDeployer
+    deployer: GBDeployer,
+    proxyAddress: string
   ) {
     // Serves default UI on root address '/'.
 
@@ -136,11 +137,11 @@ export class GBMinService {
 
         // Build bot adapter.
 
-        const { min, adapter, conversationState } = await this.buildBotAdapter(instance);
+        const { min, adapter, conversationState } = await this.buildBotAdapter(instance, proxyAddress);
 
         // Install default VBA module.
 
-       // DISABLED: deployer.deployPackage(min, 'packages/default.gbdialog');
+        deployer.deployPackage(min, 'packages/default.gbdialog');
 
         // Call the loadBot context.activity for all packages.
 
@@ -220,7 +221,7 @@ export class GBMinService {
       );
       authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
         min.instance.authenticatorClientId
-      }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+        }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
       res.redirect(authorizationUrl);
     });
   }
@@ -234,8 +235,8 @@ export class GBMinService {
       botId = bootInstance.botId;
     }
     const instance = await this.core.loadInstance(botId);
-    if (instance !== undefined) {
-      const speechToken = await this.getSTSToken(instance);
+    if (instance !== null) {
+      const speechToken = instance.speechKey != null ? await this.getSTSToken(instance) : null;
       let theme = instance.theme;
       if (theme !== undefined) {
         theme = 'default.gbtheme';
@@ -281,7 +282,7 @@ export class GBMinService {
     } catch (error) {
       const msg = `[botId:${
         instance.botId
-      }] Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
+        }] Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
 
       return Promise.reject(new Error(msg));
     }
@@ -312,7 +313,7 @@ export class GBMinService {
     }
   }
 
-  private async buildBotAdapter(instance: any) {
+  private async buildBotAdapter(instance: any, proxyAddress: string) {
     const adapter = new BotFrameworkAdapter({
       appId: instance.marketplaceId,
       appPassword: instance.marketplacePassword
@@ -335,6 +336,7 @@ export class GBMinService {
     min.instance = await this.core.loadInstance(min.botId);
     min.cbMap = {};
     min.scriptMap = {};
+    min.sandBoxMap = {};
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
 
@@ -346,7 +348,7 @@ export class GBMinService {
   }
 
   private invokeLoadBot(appPackages: any[], min: GBMinInstance, server: any) {
-    const sysPackages : IGBPackage[] = [];
+    const sysPackages: IGBPackage[] = [];
     // NOTE: A semicolon is necessary before this line.
     [
       GBCorePackage,
@@ -354,8 +356,8 @@ export class GBMinService {
       GBAdminPackage,
       GBKBPackage,
       GBAnalyticsPackage,
-      GBCustomerSatisfactionPackage
-      // DISABLED: GBWhatsappPackage
+      GBCustomerSatisfactionPackage,
+      GBWhatsappPackage
     ].forEach(sysPackage => {
       const p = Object.create(sysPackage.prototype) as IGBPackage;
       p.loadBot(min);
@@ -366,7 +368,7 @@ export class GBMinService {
           (p as any).channel.received(req, res);
         });
       }
-    },        this);
+    }, this);
 
     appPackages.forEach(p => {
       p.sysPackages = sysPackages;
@@ -377,7 +379,7 @@ export class GBMinService {
           min.dialogs.add(new WaterfallDialog(dialog.name, dialog.waterfall));
         });
       }
-    },                  this);
+    }, this);
   }
 
   /**
@@ -395,7 +397,7 @@ export class GBMinService {
     await adapter.processActivity(req, res, async context => {
       // Get loaded user state
       const step = await min.dialogs.createContext(context);
-      step.context.activity.locale = 'en-US';
+      step.context.activity.locale = 'pt-BR';
 
       try {
         const user = await min.userProfile.get(context, {});
@@ -415,7 +417,7 @@ export class GBMinService {
 
         GBLog.info(
           `User>: ${context.activity.text} (${context.activity.type}, ${context.activity.name}, ${
-            context.activity.channelId
+          context.activity.channelId
           }, {context.activity.value})`
         );
         if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {
