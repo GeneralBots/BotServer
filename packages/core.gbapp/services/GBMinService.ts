@@ -496,8 +496,6 @@ export class GBMinService {
       min.sandBoxMap[mainMethod].step = step;
       min.sandBoxMap[mainMethod][mainMethod].bind(min.sandBoxMap[mainMethod]);
       await min.sandBoxMap[mainMethod][mainMethod]();
-    } else if (context.activity.text === 'Aprovar') {
-      await step.beginDialog('/oppt');
     } else if (context.activity.text === 'admin') {
       await step.beginDialog('/admin');
 

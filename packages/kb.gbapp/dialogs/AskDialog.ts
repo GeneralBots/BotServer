@@ -66,7 +66,7 @@ export class AskDialog extends IGBDialog {
     min.dialogs.add(new WaterfallDialog('/answerEvent', AskDialog.getAnswerEventDialog(service, min)));
     min.dialogs.add(new WaterfallDialog('/answer', AskDialog.getAnswerDialog(min, service)));
     min.dialogs.add(new WaterfallDialog('/ask', AskDialog.getAskDialog(min)));
-    min.dialogs.add(new WaterfallDialog('/oppt', AskDialog.getOPPT(min)));
+
 
 
   }
@@ -197,23 +197,3 @@ export class AskDialog extends IGBDialog {
       }
     ];
   }
-
-
-  private static getOPPT(min: GBMinInstance) {
-    return [
-      async step => {
-        await step.context.sendActivity(`Os lançamentos pendentes de aprovação são:" ** \n` +
-          `01: 12/04 Compra de Impressora - R$ 490,05 \n` +
-          `02: 15/04 Almoço - R$ 49,00 \n` +
-          `03: 19/04 Transporte aéreo - R$ 793,10 \n` +
-          `04: 22/04 Despesa de hospedagem - R$ 690,40 \n` +
-          `05: 02/05 Despesa de correios AR - R$ 395,00 \n`);
-        return await step.prompt('textPrompt', '** Informe qual deseja aprovar ou T para aprovar todos" ** ');
-      }
-      , async step => {
-        await step.context.sendActivity('Pronto! Lançamento aprovado. Até a próxima!')
-        return await step.next();
-      }
-    ];
-  }
-}
