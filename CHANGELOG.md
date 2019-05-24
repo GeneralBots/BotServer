@@ -1,3 +1,36 @@
+# [1.3.0](https://github.com/pragmatismo-io/BotServer/compare/1.2.2...1.3.0) (2019-05-12)
+
+
+### Bug Fixes
+
+* **core:** ngrok is running on linux ([000bdc1](https://github.com/pragmatismo-io/BotServer/commit/000bdc1))
+* **design:** 404 on bot logo on default.gbtheme: https://github.com/GeneralBots/BotServer/issues/80. ([f67f04a](https://github.com/pragmatismo-io/BotServer/commit/f67f04a))
+* **gbot:** gbot.cmd now installs packages and compiles the server before running. ([dca0325](https://github.com/pragmatismo-io/BotServer/commit/dca0325))
+* **gbot:** gbot.cmd now installs packages and compiles the server before running. ([b7abf5f](https://github.com/pragmatismo-io/BotServer/commit/b7abf5f))
+* **general:** tslint being applied in all sources. ([77ccc3d](https://github.com/pragmatismo-io/BotServer/commit/77ccc3d))
+* **general:** tslint being applied in all sources. ([25d1459](https://github.com/pragmatismo-io/BotServer/commit/25d1459))
+* **general:** tslint being applied in all sources. ([4b49686](https://github.com/pragmatismo-io/BotServer/commit/4b49686))
+* **general:** tslint being applied in all sources. ([895be68](https://github.com/pragmatismo-io/BotServer/commit/895be68))
+* **general:** tslint being applied in all sources. ([c74b3ee](https://github.com/pragmatismo-io/BotServer/commit/c74b3ee))
+* **general:** tslint being applied in all sources. ([ef3c5a1](https://github.com/pragmatismo-io/BotServer/commit/ef3c5a1))
+* **general:** tslint being applied in all sources. ([e9bed77](https://github.com/pragmatismo-io/BotServer/commit/e9bed77))
+* **general:** tslint being applied in all sources. ([d717de6](https://github.com/pragmatismo-io/BotServer/commit/d717de6))
+* **general:** tslint being applied in all sources. ([2c18517](https://github.com/pragmatismo-io/BotServer/commit/2c18517))
+* **general:** tslint being applied in all sources. ([cd5189d](https://github.com/pragmatismo-io/BotServer/commit/cd5189d))
+* **general:** tslint being applied in all sources. ([5d08457](https://github.com/pragmatismo-io/BotServer/commit/5d08457))
+* **general:** tslint being applied in all sources. ([6de285e](https://github.com/pragmatismo-io/BotServer/commit/6de285e))
+* **general:** tslint being applied in all sources. ([69ca62b](https://github.com/pragmatismo-io/BotServer/commit/69ca62b))
+* **general:** tslint being applied in all sources. ([8fec26c](https://github.com/pragmatismo-io/BotServer/commit/8fec26c))
+* **kb.gbapp:** FAQ now showing again. ([c70200a](https://github.com/pragmatismo-io/BotServer/commit/c70200a))
+* **kb.gbapp:** Fix in subjects null pointer. ([e21916f](https://github.com/pragmatismo-io/BotServer/commit/e21916f))
+* **NLP:** Update of platform to mach NLP URL updates and versioning. ([6588049](https://github.com/pragmatismo-io/BotServer/commit/6588049))
+* **VBA:** Several bugs fixed and refactoring on Deployer Service done. ([fecbd3e](https://github.com/pragmatismo-io/BotServer/commit/fecbd3e))
+
+
+### Features
+
+* **basic:** General Bots BASIC 2.0 with new keywords and parenthesis only when needed. ([3cc92ec](https://github.com/pragmatismo-io/BotServer/commit/3cc92ec))
+
 ## [1.2.2](https://github.com/pragmatismo-io/BotServer/compare/1.2.1...1.2.2) (2019-02-01)
 
 

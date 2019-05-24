@@ -9,7 +9,6 @@ notifications:
 before_script:
 - npm run build
 
-
 branches:
   only:
   - master
