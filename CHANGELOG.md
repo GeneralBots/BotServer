@@ -1,3 +1,22 @@
+## [1.3.1](https://github.com/pragmatismo-io/BotServer/compare/1.3.0...1.3.1) (2019-05-25)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Azure deployment. ([f1b8eb2](https://github.com/pragmatismo-io/BotServer/commit/f1b8eb2))
+* **core.gbapp:** Azure deployment. ([49e1743](https://github.com/pragmatismo-io/BotServer/commit/49e1743))
+* **core.gbapp:** Azure Deployment. ([f8fab38](https://github.com/pragmatismo-io/BotServer/commit/f8fab38))
+* **core.gbapp:** ESNext in tsconfig.json to match MSFT. ([01b8dd5](https://github.com/pragmatismo-io/BotServer/commit/01b8dd5))
+* **core.gbapp:** Fixing loading of instances. ([bc9c588](https://github.com/pragmatismo-io/BotServer/commit/bc9c588))
+* **core.gbapp:** Investigating BASIC broken. ([f0ec25e](https://github.com/pragmatismo-io/BotServer/commit/f0ec25e))
+* **core.gbapp:** package.json artifacts sync. ([01d34a6](https://github.com/pragmatismo-io/BotServer/commit/01d34a6))
+* **core.gbapp:** Publishing in Azure. ([4d6779e](https://github.com/pragmatismo-io/BotServer/commit/4d6779e))
+* **core.gbapp:** Removing POC code. ([56f46f4](https://github.com/pragmatismo-io/BotServer/commit/56f46f4))
+* **kb.gbapp:** Typo fix. ([ba26578](https://github.com/pragmatismo-io/BotServer/commit/ba26578))
+* **whatsapp.gblib:** Enabling Whatsapp. ([4351b87](https://github.com/pragmatismo-io/BotServer/commit/4351b87))
+* **whatsapp.gblib:** Enabling Whatsapp. ([74f5936](https://github.com/pragmatismo-io/BotServer/commit/74f5936))
+* **whatsapp.lib:** Enabling Whatsapp. ([85249e5](https://github.com/pragmatismo-io/BotServer/commit/85249e5))
+
 # [1.3.0](https://github.com/pragmatismo-io/BotServer/compare/1.2.2...1.3.0) (2019-05-12)
 
 
