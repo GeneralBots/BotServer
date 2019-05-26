@@ -42,7 +42,7 @@ import { SearchManagementClient } from 'azure-arm-search';
 import { SqlManagementClient } from 'azure-arm-sql';
 import { WebSiteManagementClient } from 'azure-arm-website';
 //tslint:disable-next-line:no-submodule-imports
-import { AppServicePlan } from 'azure-arm-website/lib/models';
+import { AppServicePlan, Site, SiteConfigResource, SiteSourceControl, SiteLogsConfig } from 'azure-arm-website/lib/models';
 import { GBLog, IGBInstallationDeployer, IGBInstance } from 'botlib';
 import { HttpHeaders, HttpMethods, ServiceClient, WebResource } from 'ms-rest-js';
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService';
@@ -51,6 +51,9 @@ import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigS
 import { GBDeployer } from '../../../packages/core.gbapp/services/GBDeployer';
 
 const Spinner = require('cli-spinner').Spinner;
+// tslint:disable-next-line: no-submodule-imports
+import * as simplegit from 'simple-git/promise';
+const git = simplegit();
 
 // tslint:disable-next-line:no-submodule-imports
 import { CognitiveServicesAccount } from 'azure-arm-cognitiveservices/lib/models';
@@ -230,7 +233,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     }
   }
 
-
   public async updateBotProxy(botId, group, endpoint) {
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
@@ -260,7 +262,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   }
 
   public async updateBot(botId: string, group: string, name: string,
-    description: string, endpoint: string, iconUrl: string) {
+    description: string, endpoint: string) {
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
@@ -328,20 +330,16 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     GBLog.info(`Deploying Bot Server...`);
     const serverFarm = await this.createHostingPlan(name, `${name}-server-plan`, instance.cloudLocation);
-    await this.createServer(serverFarm.id, name, `${name}-server`, instance.cloudLocation);
+    const serverName = `${name}-server`;
+    await this.createServer(serverFarm.id, name, serverName, instance.cloudLocation);
 
     GBLog.info(`Deploying Bot Storage...`);
     const administratorLogin = `sa${GBAdminService.getRndReadableIdentifier()}`;
     const administratorPassword = GBAdminService.getRndPassword();
     const storageServer = `${name.toLowerCase()}-storage-server`;
     const storageName = `${name}-storage`;
-    await this.createStorageServer(
-      name,
-      storageServer,
-      administratorLogin,
-      administratorPassword,
-      storageServer,
-      instance.cloudLocation
+    await this.createStorageServer(name, storageServer, administratorLogin,
+      administratorPassword, storageServer, instance.cloudLocation
     );
     await this.createStorage(name, storageServer, storageName, instance.cloudLocation);
     instance.storageUsername = administratorLogin;
@@ -406,6 +404,9 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       instance.marketplacePassword,
       instance.cloudSubscriptionId
     );
+
+    GBLog.info('Updating server environment variables...');
+    await this.updateWebisteConfig(name, serverName, serverFarm.id, instance);
 
     spinner.stop();
 
@@ -536,7 +537,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       fullyQualifiedDomainName: `${serverName}.database.windows.net`
     };
 
-    return this.storageClient.servers.createOrUpdate(group, name, params);
+    return await this.storageClient.servers.createOrUpdate(group, name, params);
   }
 
   private async registerProviders(subscriptionId, baseUrl, accessToken) {
@@ -604,7 +605,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       location: location
     };
 
-    return this.searchClient.services.createOrUpdate(group, name, params);
+    return await this.searchClient.services.createOrUpdate(group, name, params);
   }
 
   private async createStorage(group, serverName, name, location) {
@@ -614,7 +615,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       location: location
     };
 
-    return this.storageClient.databases.createOrUpdate(group, serverName, name, params);
+    return await this.storageClient.databases.createOrUpdate(group, serverName, name, params);
   }
 
   private async createCognitiveServices(group, name, location, kind): Promise<CognitiveServicesAccount> {
@@ -648,7 +649,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   private async createDeployGroup(name, location) {
     const params = { location: location };
 
-    return this.resourceClient.resourceGroups.createOrUpdate(name, params);
+    return await this.resourceClient.resourceGroups.createOrUpdate(name, params);
   }
 
   private async createHostingPlan(group, name, location): Promise<AppServicePlan> {
@@ -662,15 +663,74 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       }
     };
 
-    return this.webSiteClient.appServicePlans.createOrUpdate(group, name, params);
+    return await this.webSiteClient.appServicePlans.createOrUpdate(group, name, params);
   }
 
   private async createServer(farmId, group, name, location) {
-    const parameters = {
+    const parameters: Site = {
       location: location,
-      serverFarmId: farmId
+      serverFarmId: farmId,
+
+      siteConfig: {
+        nodeVersion: GBAdminService.getNodeVersion(),
+        detailedErrorLoggingEnabled: true,
+        requestTracingEnabled: true
+      }
+    };
+    const server = await this.webSiteClient.webApps.createOrUpdate(group, name, parameters);
+
+    const siteLogsConfig: SiteLogsConfig = {
+      applicationLogs: {
+        fileSystem: { level: 'Error' }
+      }
+    };
+    await this.webSiteClient.webApps.updateDiagnosticLogsConfig(group, name, siteLogsConfig);
+
+    await this.webSiteClient.webApps.update
+
+    const souceControlConfig: SiteSourceControl = {
+      repoUrl: 'https://github.com/GeneralBots/BotServer.git',
+      branch: 'master',
+      isManualIntegration: true,
+      isMercurial: false,
+      deploymentRollbackEnabled: false
     };
 
-    return this.webSiteClient.webApps.createOrUpdate(group, name, parameters);
+    await this.webSiteClient.webApps.createOrUpdateSourceControl(group, name, souceControlConfig);
+    // await this.webSiteClient.webApps.syncRepository(name, name);
+
+    return server;
   }
+
+  private async updateWebisteConfig(group, name, serverFarmId, instance: IGBInstance) {
+
+    const parameters: Site = {
+      location: instance.cloudLocation,
+      serverFarmId: serverFarmId,
+      siteConfig: {
+        appSettings: [
+          { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: GBAdminService.getNodeVersion() },
+          { name: 'ADDITIONAL_DEPLOY_PATH', value: `` },
+          { name: 'ADMIN_PASS', value: `${instance.adminPass}` },
+          { name: 'CLOUD_SUBSCRIPTIONID', value: `${instance.cloudSubscriptionId}` },
+          { name: 'CLOUD_LOCATION', value: `${instance.cloudLocation}` },
+          { name: 'CLOUD_GROUP', value: `${instance.botId}` },
+          { name: 'CLOUD_USERNAME', value: `${instance.cloudUsername}` },
+          { name: 'CLOUD_PASSWORD', value: `${instance.cloudPassword}` },
+          { name: 'MARKETPLACE_ID', value: `${instance.marketplaceId}` },
+          { name: 'MARKETPLACE_SECRET', value: `${instance.marketplacePassword}` },
+          { name: 'NLP_AUTHORING_KEY', value: `${instance.nlpAuthoringKey}` },
+          { name: 'STORAGE_DIALECT', value: `${instance.storageDialect}` },
+          { name: 'STORAGE_SERVER', value: `${instance.storageServer}.database.windows.net` },
+          { name: 'STORAGE_NAME', value: `${instance.storageName}` },
+          { name: 'STORAGE_USERNAME', value: `${instance.storageUsername}` },
+          { name: 'STORAGE_PASSWORD', value: `${instance.storagePassword}` },
+          { name: 'STORAGE_SYNC', value: `true` }]
+
+      }
+    };
+
+    return await this.webSiteClient.webApps.createOrUpdate(group, name, parameters);
+  }
+
 }

@@ -63,6 +63,14 @@ export class GBAdminService implements IGBAdminService {
     return msRestAzure.generateUuid();
   }
 
+  public static getNodeVersion() {
+    const packageJson = urlJoin(process.cwd(), 'package.json');
+    // tslint:disable-next-line: non-literal-require
+    const pjson = require(packageJson);
+
+    return pjson.engines.node.replace('=', '');
+  }
+
   public static async getADALTokenFromUsername(username: string, password: string) {
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
 
