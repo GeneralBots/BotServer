@@ -672,7 +672,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       serverFarmId: farmId,
 
       siteConfig: {
-        netFrameworkVersion
         nodeVersion: GBAdminService.getNodeVersion(),
         detailedErrorLoggingEnabled: true,
         requestTracingEnabled: true
