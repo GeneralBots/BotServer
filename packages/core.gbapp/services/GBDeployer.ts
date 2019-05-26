@@ -183,8 +183,7 @@ export class GBDeployer {
         accessToken,
         instance.title,
         instance.description,
-        proxyAddress,
-        ''
+        proxyAddress
       );
 
     } else {

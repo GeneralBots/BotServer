@@ -42,15 +42,15 @@ import { GBLog } from 'botlib';
  * Base configuration for the server like storage.
  */
 export class GBConfigService {
-  public static getServerPort(): number {
+  public static getServerPort(): string {
     if (process.env.PORT) {
-      return Number(process.env.PORT);
+      return process.env.PORT;
     }
     if (process.env.port) {
-      return Number(process.env.port);
+      return process.env.port;
     }
 
-    return 4242;
+    return '4242';
   }
 
   public static init(): any {
