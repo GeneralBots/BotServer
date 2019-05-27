@@ -404,18 +404,9 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.botEndpoint = this.defaultEndPoint;
 
     instance = await this.internalDeployBot(
-      instance,
-      this.accessToken,
-      name,
-      name,
-      name,
-      'General BootBot',
-      `${proxyAddress}/api/messages/${name}`,
-      'global',
-      instance.nlpAppId,
-      instance.nlpKey,
-      instance.marketplaceId,
-      instance.marketplacePassword,
+      instance, this.accessToken, name, name, name, 'General BootBot',
+      `${proxyAddress}/api/messages/${name}`, 'global',
+      instance.nlpAppId, instance.nlpKey, instance.marketplaceId, instance.marketplacePassword,
       instance.cloudSubscriptionId
     );
 
@@ -423,6 +414,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await this.updateWebisteConfig(name, serverName, serverFarm.id, instance);
 
     spinner.stop();
+
+    GBLog.info('Opening your browser with default.gbui...');
+    const opn = require('opn');
+    opn(`https://${serverName}.azurewebsites.net`);
 
     return instance;
   }
@@ -451,7 +446,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
     // tslint:disable-next-line:no-http-string
-    const url = `http://${instance.botId}.azurewebsites.net`;
+    const url = `https://${instance.botId}.azurewebsites.net`;
     this.deployFarm(url, instance, credentials, subscriptionId);
   }
 
@@ -713,7 +708,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     };
 
     await this.webSiteClient.webApps.createOrUpdateSourceControl(group, name, souceControlConfig);
-    // await this.webSiteClient.webApps.syncRepository(name, name);
 
     return server;
   }
@@ -725,10 +719,11 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       serverFarmId: serverFarmId,
       siteConfig: {
         appSettings: [
-          { name: 'WEBSITES_CONTAINER_START_TIME_LIMIT', value: webSiteResponseTimeout },
+          { name: 'WEBSITES_CONTAINER_START_TIME_LIMIT', value: WebSiteResponseTimeout },
           { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: GBAdminService.getNodeVersion() },
           { name: 'ADDITIONAL_DEPLOY_PATH', value: `` },
           { name: 'ADMIN_PASS', value: `${instance.adminPass}` },
+          { name: 'BOT_ID', value: `${instance.botId}` },
           { name: 'CLOUD_SUBSCRIPTIONID', value: `${instance.cloudSubscriptionId}` },
           { name: 'CLOUD_LOCATION', value: `${instance.cloudLocation}` },
           { name: 'CLOUD_GROUP', value: `${instance.botId}` },

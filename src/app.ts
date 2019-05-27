@@ -99,7 +99,7 @@ export class GBServer {
             GBLog.info(`Establishing a development local proxy (ngrok)...`);
             GBServer.globals.publicAddress = await core.ensureProxy(port);
           } else {
-            const serverAddress = `http://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net`;
+            const serverAddress = `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net`;
             GBLog.info(`Defining server address at ${serverAddress}...`);
             GBServer.globals.publicAddress = serverAddress;
           }
