@@ -67,6 +67,7 @@ import { GBWhatsappPackage } from '../../whatsapp.gblib';
 import { Messages } from '../strings';
 import { GBAdminPackage } from './../../admin.gbapp/index';
 import { GBDeployer } from './GBDeployer';
+import { GBConfigService } from './GBConfigService';
 
 /**
  * Minimal service layer for a bot.
@@ -232,7 +233,7 @@ export class GBMinService {
   private async sendInstanceToClient(req, bootInstance: IGBInstance, res: any, webchatToken: any) {
     let botId = req.params.botId;
     if (botId === '[default]') {
-      botId = bootInstance.botId;
+      botId = GBConfigService.get('BOT_ID');
     }
     const instance = await this.core.loadInstance(botId);
     if (instance !== null) {
