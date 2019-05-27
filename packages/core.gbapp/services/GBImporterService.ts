@@ -40,6 +40,7 @@ import { IGBCoreService, IGBInstance } from 'botlib';
 import fs = require('fs');
 import urlJoin = require('url-join');
 import { GuaribasInstance } from '../models/GBModel';
+import { GBConfigService } from './GBConfigService';
 
 /**
  * Handles the importing of packages.
@@ -55,6 +56,9 @@ export class GBImporter {
     const packageJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
     if (botId === undefined) {
       botId = packageJson.botId;
+    }
+    if (botId === undefined) {
+      botId = GBConfigService.get('BOT_ID');
     }
     const instance = await this.core.loadInstance(botId);
 
