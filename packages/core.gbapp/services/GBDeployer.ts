@@ -349,7 +349,7 @@ export class GBDeployer {
     botPackages.forEach(async (e) => {
       if (e !== 'packages\\boot.gbot') {
         GBLog.info(`Deploying bot: ${e}...`);
-        await _this.deployBot(e, GBServer.globals.proxyAddress);
+        await _this.deployBot(e, GBServer.globals.publicAddress);
         GBLog.info(`Bot: ${e} deployed...`);
       }
     });
