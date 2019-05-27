@@ -39,7 +39,9 @@
 import { AuthenticationContext, TokenResponse } from 'adal-node';
 import { IGBAdminService, IGBCoreService, IGBInstance } from 'botlib';
 import urlJoin = require('url-join');
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { GuaribasAdmin } from '../models/AdminModel';
 const msRestAzure = require('ms-rest-azure');
 const PasswordGenerator = require('strict-password-generator').default;

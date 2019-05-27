@@ -141,7 +141,7 @@ export class GBMinService {
 
         // Install default VBA module.
 
-        deployer.deployPackage(min, 'packages/default.gbdialog');
+        // DISABLED: deployer.deployPackage(min, 'packages/default.gbdialog');
 
         // Call the loadBot context.activity for all packages.
 

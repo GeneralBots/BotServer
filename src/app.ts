@@ -72,10 +72,9 @@ export class GBServer {
 
   public static run() {
     GBLog.info(`The Bot Server is in STARTING mode...`);
-    process.env.PWD = process.cwd();
+    process.env.PWD = __dirname;
 
-    // Creates a basic HTTP server that will serve several URL, one for each
-    // bot instance.
+    // Creates a basic HTTP server that will serve several URL, one for each bot instance.
 
     GBServer.globals = new RootData();
     const port = GBConfigService.getServerPort();
