@@ -60,6 +60,7 @@ import { CognitiveServicesAccount } from 'azure-arm-cognitiveservices/lib/models
 import urlJoin = require('url-join');
 const iconUrl = 'https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png';
 const publicIp = require('public-ip');
+const WebSiteResponseTimeout = 900;
 
 /**
  * Deployer for Microsoft cloud.
@@ -724,6 +725,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       serverFarmId: serverFarmId,
       siteConfig: {
         appSettings: [
+          { name: 'WEBSITES_CONTAINER_START_TIME_LIMIT', value: webSiteResponseTimeout },
           { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: GBAdminService.getNodeVersion() },
           { name: 'ADDITIONAL_DEPLOY_PATH', value: `` },
           { name: 'ADMIN_PASS', value: `${instance.adminPass}` },
