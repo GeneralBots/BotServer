@@ -93,7 +93,7 @@ export class GBDeployer {
       (resolve: any, reject: any): any => {
         GBLog.info(`PWD ${process.env.PWD}...`);
         let totalPackages = 0;
-        let paths = [urlJoin(process.env.PWD, '..', GBDeployer.deployFolder)];
+        let paths = [urlJoin(process.env.PWD, GBDeployer.deployFolder)];
         const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
         if (additionalPath !== undefined && additionalPath !== '') {
           paths = paths.concat(additionalPath.toLowerCase().split(';'));

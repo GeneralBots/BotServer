@@ -12,4 +12,4 @@ ECHO Compiling...
 CALL tsc
 
 :ALLSET
-node dist/src/app.js
+node app.js
