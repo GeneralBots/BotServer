@@ -221,6 +221,7 @@ export class GBCoreService implements IGBCoreService {
   public async writeEnv(instance: IGBInstance) {
     const env = `ADDITIONAL_DEPLOY_PATH=
 ADMIN_PASS=${instance.adminPass}
+BOT_ID=${instance.botId}
 CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}
 CLOUD_LOCATION=${instance.cloudLocation}
 CLOUD_GROUP=${instance.botId}

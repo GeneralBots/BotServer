@@ -232,7 +232,7 @@ export class GBMinService {
    */
   private async sendInstanceToClient(req, bootInstance: IGBInstance, res: any, webchatToken: any) {
     let botId = req.params.botId;
-    if (botId === '[default]') {
+    if (botId === '[default]'|| botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
     }
     const instance = await this.core.loadInstance(botId);
