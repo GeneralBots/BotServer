@@ -1,3 +1,12 @@
+## [1.3.6](https://github.com/pragmatismo-io/BotServer/compare/1.3.5...1.3.6) (2019-05-27)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Self-replication on Azure ([5f0fb3b](https://github.com/pragmatismo-io/BotServer/commit/5f0fb3b))
+* **core.gbapp:** Self-replication on Azure ([2509157](https://github.com/pragmatismo-io/BotServer/commit/2509157))
+* **core.gbapp:** Self-replication on Azure ([8850370](https://github.com/pragmatismo-io/BotServer/commit/8850370))
+
 ## [1.3.5](https://github.com/pragmatismo-io/BotServer/compare/1.3.4...1.3.5) (2019-05-27)
 
 
