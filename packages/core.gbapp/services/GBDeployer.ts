@@ -319,11 +319,12 @@ export class GBDeployer {
 
   public runOnce() {
     const root = 'packages/default.gbui';
+    const npm = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
     if (!Fs.existsSync(`${root}/build`)) {
       GBLog.info(`Preparing default.gbui (it may take some additional time for the first time)...`);
       Fs.writeFileSync(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
-      child_process.execSync('npm install', { cwd: root });
-      child_process.execSync('npm run build', { cwd: root });
+      child_process.execSync(`${npm} install`, { cwd: root });
+      child_process.execSync(`${npm} run build`, { cwd: root });
     }
   }
 
