@@ -1,3 +1,10 @@
+## [1.3.5](https://github.com/pragmatismo-io/BotServer/compare/1.3.4...1.3.5) (2019-05-27)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Self-replication on Azure ([f64cc4c](https://github.com/pragmatismo-io/BotServer/commit/f64cc4c))
+
 ## [1.3.4](https://github.com/pragmatismo-io/BotServer/compare/1.3.3...1.3.4) (2019-05-27)
 
 
