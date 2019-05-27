@@ -80,6 +80,12 @@ export class AdminDialog extends IGBDialog {
     );
   }
 
+  public static async syncBotServerCommand(min: GBMinInstance, deployer: GBDeployer) {
+    const serverName = `${min.instance.botId}-server`;
+    const service = await AzureDeployerService.createInstance(deployer);
+    service.syncBotServerRepository(min.instance.botId, serverName);
+  }
+
   /**
    * Setup dialogs flows and define services call.
    *
@@ -137,6 +143,10 @@ export class AdminDialog extends IGBDialog {
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'rebuildIndex') {
             await AdminDialog.rebuildIndexPackageCommand(min, deployer);
+
+            return await step.replaceDialog('/admin', { firstRun: false });
+          } else if (cmdName === 'syncBotServer') {
+            await AdminDialog.syncBotServerCommand(min, deployer);
 
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'setupSecurity') {

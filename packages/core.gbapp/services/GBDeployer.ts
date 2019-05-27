@@ -93,8 +93,8 @@ export class GBDeployer {
       (resolve: any, reject: any): any => {
         GBLog.info(`PWD ${process.env.PWD}...`);
         let totalPackages = 0;
+        let paths = [urlJoin(process.env.PWD, '..', GBDeployer.deployFolder)];
         const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
-        let paths = [GBDeployer.deployFolder];
         if (additionalPath !== undefined && additionalPath !== '') {
           paths = paths.concat(additionalPath.toLowerCase().split(';'));
         }
@@ -412,6 +412,7 @@ export class GBDeployer {
         GBLog.info(`Deploying app: ${e}...`);
 
         let folder = Path.join(e, 'node_modules');
+        let
         if (!Fs.existsSync(folder)) {
           GBLog.info(`Installing modules for ${e}...`);
           child_process.execSync('npm install', { cwd: e });

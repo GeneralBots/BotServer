@@ -85,6 +85,19 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     this.deployer = deployer;
   }
 
+  public static async createInstance(deployer: GBDeployer): Promise<AzureDeployerService> {
+
+    const username = GBConfigService.get('CLOUD_USERNAME');
+    const password = GBConfigService.get('CLOUD_PASSWORD');
+    const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
+    const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+
+    const service = new AzureDeployerService(deployer);
+    service.initServices(credentials, subscriptionId);
+
+    return service;
+  }
+
   private static createRequestObject(url: string, accessToken: string, verb: HttpMethods, body: string) {
     const req = new WebResource();
     req.method = verb;
@@ -520,7 +533,11 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     });
   }
 
-  private initServices(credentials: any, subscriptionId: string) {
+  public async syncBotServerRepository(group, name) {
+    await this.webSiteClient.webApps.syncRepository(group, name);
+  }
+
+  public initServices(credentials: any, subscriptionId: string) {
     this.resourceClient = new ResourceManagementClient.default(credentials, subscriptionId);
     this.webSiteClient = new WebSiteManagementClient(credentials, subscriptionId);
     this.storageClient = new SqlManagementClient(credentials, subscriptionId);
@@ -685,8 +702,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       }
     };
     await this.webSiteClient.webApps.updateDiagnosticLogsConfig(group, name, siteLogsConfig);
-
-    await this.webSiteClient.webApps.update
 
     const souceControlConfig: SiteSourceControl = {
       repoUrl: 'https://github.com/GeneralBots/BotServer.git',
