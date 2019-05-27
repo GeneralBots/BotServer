@@ -404,15 +404,22 @@ export class GBDeployer {
     return { generalPackages, totalPackages };
   }
 
+  private isSystemPackage(name: string): Boolean {
+    const names = ['core.gbapp', 'admin.gbapp', 'azuredeployer.gbapp', 'customer-satisfaction.gbapp', 'kb.gbapp'];
+
+    return names.indexOf(name) > -1;
+  }
+
   private deployAppPackages(gbappPackages: string[], core: any, appPackages: any[]) {
     let appPackagesProcessed = 0;
     gbappPackages.forEach(e => {
-      // Skips .gbapp inside deploy folder.
-      if (!e.startsWith('packages')) {
-        GBLog.info(`Deploying app: ${e}...`);
+      const filenameOnly = Path.basename(e);
 
+      // Skips .gbapp inside deploy folder.
+      if (this.isSystemPackage(filenameOnly) === false) {
+
+        GBLog.info(`Deploying app: ${e}...`);
         let folder = Path.join(e, 'node_modules');
-        let
         if (!Fs.existsSync(folder)) {
           GBLog.info(`Installing modules for ${e}...`);
           child_process.execSync('npm install', { cwd: e });
