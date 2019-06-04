@@ -232,7 +232,7 @@ export class GBMinService {
    */
   private async sendInstanceToClient(req, bootInstance: IGBInstance, res: any, webchatToken: any) {
     let botId = req.params.botId;
-    if (botId === '[default]'|| botId === undefined) {
+    if (botId === '[default]' || botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
     }
     const instance = await this.core.loadInstance(botId);
@@ -377,7 +377,7 @@ export class GBMinService {
       if (p.getDialogs !== undefined) {
         const dialogs = p.getDialogs(min);
         dialogs.forEach(dialog => {
-          min.dialogs.add(new WaterfallDialog(dialog.name, dialog.waterfall));
+          min.dialogs.add(new WaterfallDialog(dialog.id, dialog.waterfall));
         });
       }
     }, this);
@@ -497,6 +497,9 @@ export class GBMinService {
       min.sandBoxMap[mainMethod].step = step;
       min.sandBoxMap[mainMethod][mainMethod].bind(min.sandBoxMap[mainMethod]);
       await min.sandBoxMap[mainMethod][mainMethod]();
+    } else if (context.activity.text.charAt(0) === '/') {
+      await step.beginDialog(context.activity.text);
+
     } else if (context.activity.text === 'admin') {
       await step.beginDialog('/admin');
 
