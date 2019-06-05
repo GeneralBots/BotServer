@@ -56,6 +56,7 @@ const appPackages: IGBPackage[] = [];
  */
 export class RootData {
   public publicAddress: string;
+  public server: any;
 }
 
 /**
@@ -74,6 +75,7 @@ export class GBServer {
     GBServer.globals = new RootData();
     const port = GBConfigService.getServerPort();
     const server = express();
+    GBServer.globals.server = server;
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 

@@ -54,7 +54,7 @@ export class CSService {
     instanceId: number,
     questionTyped: string,
     questionText: string): Promise<GuaribasQuestionAlternate> {
-    return GuaribasQuestionAlternate.create({
+    return await GuaribasQuestionAlternate.create({
       questionTyped: questionTyped,
       questionText: questionText
     });
