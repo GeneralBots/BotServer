@@ -65,7 +65,7 @@
     "botbuilder-choices": "4.0.0-preview1.2",
     "botbuilder-dialogs": "4.4.0",
     "botbuilder-prompts": "4.0.0-preview1.2",
-    "botlib": "1.2.0",
+    "botlib": "^1.2.1",
     "chai": "4.2.0",
     "child_process": "1.0.2",
     "chokidar": "3.0.0",

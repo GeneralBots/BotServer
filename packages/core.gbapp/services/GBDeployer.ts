@@ -47,7 +47,7 @@ const graph = require('@microsoft/microsoft-graph-client');
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app';
-import { GuaribasPackage, GuaribasInstance } from '../models/GBModel';
+import { GuaribasPackage } from '../models/GBModel';
 import { GBAdminService } from './../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService';
 import { KBService } from './../../kb.gbapp/services/KBService';
@@ -232,7 +232,7 @@ export class GBDeployer {
 
     switch (packageType) {
       case '.gbot':
-        await this.deployBot(localPath, min.proxyAddress);
+        await this.deployBot(localPath, GBServer.globals.publicAddress);
 
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
@@ -371,6 +371,7 @@ export class GBDeployer {
         GBLog.info(`Theme (.gbtheme) assets accessible at: /themes/${filenameOnly}.`);
       } else if (Path.extname(filename) === '.gbkb') {
         server.use(`/kb/${filenameOnly}/subjects`, express.static(urlJoin(filename, 'subjects')));
+        server.use(`/kb/${filenameOnly}/images`, express.static(urlJoin(filename, 'images')));
         GBLog.info(`KB (.gbkb) assets accessible at: /kb/${filenameOnly}.`);
       } else if (Path.extname(filename) === '.gbui') {
         // Already Handled

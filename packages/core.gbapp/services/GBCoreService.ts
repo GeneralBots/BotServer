@@ -39,6 +39,7 @@
 import { GBLog, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
 import * as fs from 'fs';
 import { Sequelize } from 'sequelize-typescript';
+import { GBServer } from '../../../src/app';
 import { GBAdminPackage } from '../../admin.gbapp/index';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBAnalyticsPackage } from '../../analytics.gblib';
@@ -258,6 +259,20 @@ STORAGE_SYNC=true
       // lack of connection.
       GBLog.verbose(error);
       throw new Error('Error connecting to remote ngrok server, please check network connection.');
+    }
+  }
+
+  public installWebHook(isGet: boolean, url: string, callback: any) {
+
+    if (isGet) {
+      GBServer.globals.server.get(url, (req, res) => {
+        callback(req, res);
+      });
+    } else {
+      GBServer.globals.server.post(url, (req, res) => {
+        callback(req, res);
+      });
+
     }
   }
 
