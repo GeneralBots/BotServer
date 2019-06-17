@@ -36,15 +36,15 @@
 
 'use strict';
 
+import { HttpHeaders, HttpMethods, ServiceClient, WebResource } from '@azure/ms-rest-js';
 import { CognitiveServicesManagementClient } from 'azure-arm-cognitiveservices';
 import { ResourceManagementClient, SubscriptionClient } from 'azure-arm-resource';
 import { SearchManagementClient } from 'azure-arm-search';
 import { SqlManagementClient } from 'azure-arm-sql';
 import { WebSiteManagementClient } from 'azure-arm-website';
 //tslint:disable-next-line:no-submodule-imports
-import { AppServicePlan, Site, SiteConfigResource, SiteSourceControl, SiteLogsConfig } from 'azure-arm-website/lib/models';
+import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
 import { GBLog, IGBInstallationDeployer, IGBInstance } from 'botlib';
-import { HttpHeaders, HttpMethods, ServiceClient, WebResource } from 'ms-rest-js';
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService';
 import { GBCorePackage } from '../../../packages/core.gbapp';
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService';
@@ -719,7 +719,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       serverFarmId: serverFarmId,
       siteConfig: {
         appSettings: [
-          { name: 'WEBSITES_CONTAINER_START_TIME_LIMIT', value: WebSiteResponseTimeout },
+          { name: 'WEBSITES_CONTAINER_START_TIME_LIMIT', value: `${WebSiteResponseTimeout}` },
           { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: GBAdminService.getNodeVersion() },
           { name: 'ADDITIONAL_DEPLOY_PATH', value: `` },
           { name: 'ADMIN_PASS', value: `${instance.adminPass}` },
