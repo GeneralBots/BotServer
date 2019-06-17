@@ -12,4 +12,4 @@ ECHO Compiling...
 CALL tsc
 
 :ALLSET
-node app.js
+node boot.js

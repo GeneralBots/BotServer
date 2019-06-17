@@ -17,7 +17,6 @@ export class WhatsappDirectLine extends GBService {
   public whatsappServiceKey: string;
   public whatsappServiceNumber: string;
   public whatsappServiceUrl: string;
-  public whatsappServiceWebhookUrl: string;
   public botId: string;
   public watermark: string;
 
@@ -28,8 +27,7 @@ export class WhatsappDirectLine extends GBService {
     directLineSecret,
     whatsappServiceKey,
     whatsappServiceNumber,
-    whatsappServiceUrl,
-    whatsappServiceWebhookUrl
+    whatsappServiceUrl
   ) {
     super();
 
@@ -37,8 +35,7 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceKey = whatsappServiceKey;
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
-    this.whatsappServiceWebhookUrl = whatsappServiceWebhookUrl;
-    var fs = require('fs')
+    const fs = require('fs');
 
     this.directLineClient =
       new Swagger({
@@ -94,7 +91,10 @@ export class WhatsappDirectLine extends GBService {
         client.Conversations.Conversations_StartConversation()
           .then(response => {
             return response.obj.conversationId;
+          }).catch(err => {
+            GBLog.error(`Error calling Conversations_StartConversation on Whatsapp channel ${err}`);
           })
+
           .then(generatedConversationId => {
             this.conversationIds[from] = generatedConversationId;
             this.inputMessage(client, generatedConversationId, text, from, fromName);
@@ -108,7 +108,10 @@ export class WhatsappDirectLine extends GBService {
         this.inputMessage(client, conversationId, text, from, fromName);
       }
       res.end();
+    }).catch(err => {
+      GBLog.error(`Error initializing DirectLine for Whatsapp channel ${err}`);
     });
+
   }
 
   public inputMessage(client, conversationId, text, from, fromName) {
@@ -143,9 +146,16 @@ export class WhatsappDirectLine extends GBService {
 
           return response.obj.activities;
         })
+        .catch(err => {
+          GBLog.error(`Error calling Conversations_GetActivities on Whatsapp channel ${err}`);
+        })
         .then(activities => {
           this.printMessages(activities, conversationId, from, fromName);
+        })
+        .catch(err => {
+          GBLog.error(`Error calling printMessages on Whatsapp channel ${err}`);
         });
+
     }, this.pollInterval);
   }
 
