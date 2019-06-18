@@ -1,3 +1,10 @@
+## [1.3.9](https://github.com/pragmatismo-io/BotServer/compare/1.3.8...1.3.9) (2019-06-18)
+
+
+### Bug Fixes
+
+* **whastapp.gblib:** Fix in pro-active messaging. ([3f710e8](https://github.com/pragmatismo-io/BotServer/commit/3f710e8))
+
 ## [1.3.8](https://github.com/pragmatismo-io/BotServer/compare/1.3.7...1.3.8) (2019-06-18)
 
 
