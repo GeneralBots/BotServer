@@ -67,7 +67,7 @@ export class WhatsappDirectLine extends GBService {
           const result = request.post(options);
           GBLog.info(result);
         } catch (error) {
-          GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error}`);
+          GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
         }
       });
   }
@@ -92,7 +92,7 @@ export class WhatsappDirectLine extends GBService {
           .then(response => {
             return response.obj.conversationId;
           }).catch(err => {
-            GBLog.error(`Error calling Conversations_StartConversation on Whatsapp channel ${err}`);
+            GBLog.error(`Error calling Conversations_StartConversation on Whatsapp channel ${err.data}`);
           })
 
           .then(generatedConversationId => {
@@ -102,14 +102,14 @@ export class WhatsappDirectLine extends GBService {
             this.pollMessages(client, generatedConversationId, from, fromName);
           })
           .catch(err => {
-            GBLog.error(`Error starting conversation ${err}`);
+            GBLog.error(`Error starting conversation ${err.data}`);
           });
       } else {
         this.inputMessage(client, conversationId, text, from, fromName);
       }
       res.end();
     }).catch(err => {
-      GBLog.error(`Error initializing DirectLine for Whatsapp channel ${err}`);
+      GBLog.error(`Error initializing DirectLine for Whatsapp channel ${err.data}`);
     });
 
   }
@@ -128,7 +128,7 @@ export class WhatsappDirectLine extends GBService {
         replyToId: from
       }
     }).catch(err => {
-      GBLog.error(`GBWhatsapp: Error receiving message: ${err}.`);
+      GBLog.error(`GBWhatsapp: Error receiving message: ${err.data}.`);
     });
   }
 
@@ -147,13 +147,13 @@ export class WhatsappDirectLine extends GBService {
           return response.obj.activities;
         })
         .catch(err => {
-          GBLog.error(`Error calling Conversations_GetActivities on Whatsapp channel ${err}`);
+          GBLog.error(`Error calling Conversations_GetActivities on Whatsapp channel ${err.data}`);
         })
         .then(activities => {
           this.printMessages(activities, conversationId, from, fromName);
         })
         .catch(err => {
-          GBLog.error(`Error calling printMessages on Whatsapp channel ${err}`);
+          GBLog.error(`Error calling printMessages on Whatsapp channel ${err.data}`);
         });
 
     }, this.pollInterval);
@@ -225,7 +225,7 @@ export class WhatsappDirectLine extends GBService {
       const result = request.post(options);
       GBLog.info(result);
     } catch (error) {
-      GBLog.error(`Error sending message to Whatsapp provider ${error}`);
+      GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
     }
   }
 }

@@ -57,8 +57,7 @@ export class GBWhatsappPackage implements IGBPackage {
         min.instance.whatsappBotKey,
         min.instance.whatsappServiceKey,
         min.instance.whatsappServiceNumber,
-        min.instance.whatsappServiceUrl,
-        min.instance.botId
+        min.instance.whatsappServiceUrl
       );
     }
   }

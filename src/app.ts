@@ -57,6 +57,7 @@ const appPackages: IGBPackage[] = [];
 export class RootData {
   public publicAddress: string;
   public server: any;
+  sysPackages: any;
 }
 
 /**
@@ -122,7 +123,7 @@ export class GBServer {
           // Deploys system and user packages.
 
           GBLog.info(`Deploying packages...`);
-          core.loadSysPackages(core);
+          GBServer.globals.sysPackages = core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, appPackages);
 
