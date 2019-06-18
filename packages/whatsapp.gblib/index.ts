@@ -62,6 +62,10 @@ export class GBWhatsappPackage implements IGBPackage {
     }
   }
 
+  public getChannel() {
+      return this.channel;
+  }
+
   public getDialogs(min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);
   }

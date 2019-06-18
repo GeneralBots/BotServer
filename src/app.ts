@@ -57,7 +57,7 @@ const appPackages: IGBPackage[] = [];
 export class RootData {
   public publicAddress: string;
   public server: any;
-  sysPackages: any;
+  public sysPackages: any[];
 }
 
 /**
@@ -123,7 +123,7 @@ export class GBServer {
           // Deploys system and user packages.
 
           GBLog.info(`Deploying packages...`);
-          GBServer.globals.sysPackages = core.loadSysPackages(core);
+          const sysPackages = core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, appPackages);
 
@@ -151,7 +151,7 @@ export class GBServer {
           // Builds minimal service infrastructure.
 
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
-          await minService.buildMin(bootInstance, server, appPackages, instances,
+          await minService.buildMin(bootInstance, server, appPackages, sysPackages, instances,
             deployer, GBServer.globals.publicAddress);
 
           // Deployment of local applications for the first time.
