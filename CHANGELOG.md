@@ -1,3 +1,11 @@
+## [1.3.8](https://github.com/pragmatismo-io/BotServer/compare/1.3.7...1.3.8) (2019-06-18)
+
+
+### Bug Fixes
+
+* **core.gbapp:** ms-rest-azure updated due to  https://github.com/Azure/ms-rest-js/issues/347. ([d61d2f8](https://github.com/pragmatismo-io/BotServer/commit/d61d2f8))
+* **whatsapp.gblib:** Fixing loop behaviour. ([10d2a4a](https://github.com/pragmatismo-io/BotServer/commit/10d2a4a))
+
 ## [1.3.7](https://github.com/pragmatismo-io/BotServer/compare/1.3.6...1.3.7) (2019-06-05)
 
 
