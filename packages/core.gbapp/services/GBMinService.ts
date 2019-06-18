@@ -36,15 +36,12 @@
 
 'use strict';
 
-const { DialogSet, TextPrompt } = require('botbuilder-dialogs');
 import urlJoin = require('url-join');
+const { DialogSet, TextPrompt } = require('botbuilder-dialogs');
 const express = require('express');
-
 const request = require('request-promise-native');
 const AuthenticationContext = require('adal-node').AuthenticationContext;
-
 import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
-
 import { ConfirmPrompt, WaterfallDialog } from 'botbuilder-dialogs';
 import {
   GBDialogStep,
@@ -57,6 +54,8 @@ import {
   IGBPackage
 } from 'botlib';
 
+import { MicrosoftAppCredentials } from 'botframework-connector';
+import { GBServer } from '../../../src/app';
 import { GBAnalyticsPackage } from '../../analytics.gblib';
 import { GBCorePackage } from '../../core.gbapp';
 import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
@@ -66,8 +65,8 @@ import { GBSecurityPackage } from '../../security.gblib';
 import { GBWhatsappPackage } from '../../whatsapp.gblib';
 import { Messages } from '../strings';
 import { GBAdminPackage } from './../../admin.gbapp/index';
-import { GBDeployer } from './GBDeployer';
 import { GBConfigService } from './GBConfigService';
+import { GBDeployer } from './GBDeployer';
 
 /**
  * Minimal service layer for a bot.
@@ -319,11 +318,15 @@ export class GBMinService {
       appId: instance.marketplaceId,
       appPassword: instance.marketplacePassword
     });
-
     const storage = new MemoryStorage();
+
     const conversationState = new ConversationState(storage);
     const userState = new UserState(storage);
     adapter.use(new AutoSaveStateMiddleware(conversationState, userState));
+
+    MicrosoftAppCredentials.trustServiceUrl('https://directline.botframework.com',
+      new Date(new Date().setFullYear(new Date().getFullYear() + 10)));
+
 
     // The minimal bot is built here.
 
@@ -338,6 +341,7 @@ export class GBMinService {
     min.cbMap = {};
     min.scriptMap = {};
     min.sandBoxMap = {};
+    min.packages = GBServer.globals.sysPackages[0]; // HACK: Whatsapp now.
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
 
@@ -401,6 +405,7 @@ export class GBMinService {
       step.context.activity.locale = 'pt-BR';
 
       try {
+
         const user = await min.userProfile.get(context, {});
 
         if (!user.loaded) {
@@ -423,14 +428,11 @@ export class GBMinService {
         );
         if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {
           const member = context.activity.membersAdded[0];
-          if (member.name === 'GeneralBots') {
+          if (member.name === min.instance.title) {
             GBLog.info(`Bot added to conversation, starting chat...`);
             appPackages.forEach(e => {
               e.onNewSession(min, step);
             });
-            // Processes the root dialog.
-
-            await step.beginDialog('/');
           } else {
             GBLog.info(`Member added to conversation: ${member.name}`);
           }

@@ -305,11 +305,15 @@ STORAGE_SYNC=true
       const instance = instances[0];
       if (process.env.NODE_ENV === 'development') {
         GBLog.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
-        await installationDeployer.updateBotProxy(
-          instance.botId,
-          instance.botId,
-          `${proxyAddress}/api/messages/${instance.botId}`
-        );
+        try {
+          await installationDeployer.updateBotProxy(
+            instance.botId,
+            instance.botId,
+            `${proxyAddress}/api/messages/${instance.botId}`
+          );
+        } catch (error) {
+          throw new Error(`Error updating bot proxy with proxy address${error.message}.`);
+        }
       }
     } catch (error) {
       if (error.parent === undefined) {
@@ -356,7 +360,7 @@ STORAGE_SYNC=true
     // NOTE: if there is any code before this line a semicolon
     // will be necessary before this line.
     // Loads all system packages.
-
+    const sysPackages: IGBPackage[] = [];
     [
       GBAdminPackage,
       GBAnalyticsPackage,
@@ -367,9 +371,15 @@ STORAGE_SYNC=true
       GBWhatsappPackage
     ].forEach(e => {
       GBLog.info(`Loading sys package: ${e.name}...`);
+
       const p = Object.create(e.prototype) as IGBPackage;
+      if (e.name === 'GBWhatsappPackage') {
+        sysPackages.push(p);
+      }
       p.loadPackage(core, core.sequelize);
     });
+
+    return sysPackages;
   }
 
   public ensureAdminIsSecured() {
