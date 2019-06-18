@@ -222,7 +222,8 @@ export class WhatsappDirectLine extends GBService {
     };
 
     try {
-      const result = request.post(options);
+      // tslint:disable-next-line: await-promise
+      const result = await request.post(options);
       GBLog.info(result);
     } catch (error) {
       GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);

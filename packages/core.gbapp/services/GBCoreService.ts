@@ -373,9 +373,7 @@ STORAGE_SYNC=true
       GBLog.info(`Loading sys package: ${e.name}...`);
 
       const p = Object.create(e.prototype) as IGBPackage;
-      if (e.name === 'GBWhatsappPackage') {
-        sysPackages.push(p);
-      }
+      sysPackages.push(p);
       p.loadPackage(core, core.sequelize);
     });
 

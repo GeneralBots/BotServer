@@ -111,6 +111,7 @@ export class GBMinService {
     bootInstance: IGBInstance,
     server: any,
     appPackages: IGBPackage[],
+    sysPackages: IGBPackage[],
     instances: IGBInstance[],
     deployer: GBDeployer,
     proxyAddress: string
@@ -137,7 +138,7 @@ export class GBMinService {
 
         // Build bot adapter.
 
-        const { min, adapter, conversationState } = await this.buildBotAdapter(instance, proxyAddress);
+        const { min, adapter, conversationState } = await this.buildBotAdapter(instance, proxyAddress, sysPackages);
 
         // Install default VBA module.
 
@@ -145,7 +146,7 @@ export class GBMinService {
 
         // Call the loadBot context.activity for all packages.
 
-        this.invokeLoadBot(appPackages, min, server);
+        this.invokeLoadBot(appPackages, sysPackages, min, server);
 
         // Serves individual URL for each bot conversational interface...
 
@@ -313,7 +314,7 @@ export class GBMinService {
     }
   }
 
-  private async buildBotAdapter(instance: any, proxyAddress: string) {
+  private async buildBotAdapter(instance: any, proxyAddress: string, sysPackages: IGBPackage[]) {
     const adapter = new BotFrameworkAdapter({
       appId: instance.marketplaceId,
       appPassword: instance.marketplacePassword
@@ -341,7 +342,7 @@ export class GBMinService {
     min.cbMap = {};
     min.scriptMap = {};
     min.sandBoxMap = {};
-    min.packages = GBServer.globals.sysPackages[0]; // HACK: Whatsapp now.
+    min.packages = sysPackages;
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
 
@@ -352,27 +353,17 @@ export class GBMinService {
     return { min, adapter, conversationState };
   }
 
-  private invokeLoadBot(appPackages: any[], min: GBMinInstance, server: any) {
-    const sysPackages: IGBPackage[] = [];
-    // NOTE: A semicolon is necessary before this line.
-    [
-      GBCorePackage,
-      GBSecurityPackage,
-      GBAdminPackage,
-      GBKBPackage,
-      GBAnalyticsPackage,
-      GBCustomerSatisfactionPackage,
-      GBWhatsappPackage
-    ].forEach(sysPackage => {
-      const p = Object.create(sysPackage.prototype) as IGBPackage;
-      p.loadBot(min);
-      sysPackages.push(p);
-      if (sysPackage.name === 'GBWhatsappPackage') {
+  private invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance, server: any) {
+    let index = 0;
+    sysPackages.forEach(e => {
+      e.loadBot(min);
+      if (index === 6) { // TODO: Remove this magic number and use a map.
         const url = '/instances/:botId/whatsapp';
         server.post(url, (req, res) => {
-          (p as any).channel.received(req, res);
+          (e as any).channel.received(req, res);
         });
       }
+      index++;
     }, this);
 
     appPackages.forEach(p => {
