@@ -96,14 +96,11 @@ export class GBConversationalService implements IGBConversationalService {
   // tslint:enable:no-unsafe-any
 
   public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string): Promise<boolean> {
-    // Invokes LUIS.
-
-    const endpoint = min.instance.nlpEndpoint.replace('/luis/v2.0', '');
 
     const model = new LuisRecognizer({
       applicationId: min.instance.nlpAppId,
       endpointKey: min.instance.nlpKey,
-      endpoint: endpoint
+      endpoint: min.instance.nlpEndpoint
     });
 
     let nlp: RecognizerResult;
@@ -118,7 +115,7 @@ export class GBConversationalService implements IGBConversationalService {
       } else {
         const msg = `Error calling NLP, check if you have a published model and assigned keys. Error: ${
           error.statusCode ? error.statusCode : ''
-        } {error.message; }`;
+          } {error.message; }`;
 
         return Promise.reject(new Error(msg));
       }
