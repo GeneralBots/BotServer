@@ -1,3 +1,10 @@
+## [1.3.10](https://github.com/pragmatismo-io/BotServer/compare/1.3.9...1.3.10) (2019-06-21)
+
+
+### Bug Fixes
+
+* **core.gbapp:** MSFT changed again LUIS url. ([967f780](https://github.com/pragmatismo-io/BotServer/commit/967f780))
+
 ## [1.3.9](https://github.com/pragmatismo-io/BotServer/compare/1.3.8...1.3.9) (2019-06-18)
 
 
