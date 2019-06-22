@@ -104,6 +104,12 @@ export class WhatsappDirectLine extends GBService {
       });
   }
 
+  public static async asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
+    }
+  }
+
   public received(req, res) {
     const text = req.body.messages[0].body;
     const from = req.body.messages[0].author.split('@')[0];
@@ -183,8 +189,8 @@ export class WhatsappDirectLine extends GBService {
         .catch(err => {
           GBLog.error(`Error calling Conversations_GetActivities on Whatsapp channel ${err.data}`);
         })
-        .then(activities => {
-          this.printMessages(activities, conversationId, from, fromName);
+        .then(async activities => {
+          await this.printMessages(activities, conversationId, from, fromName);
         })
         .catch(err => {
           GBLog.error(`Error calling printMessages on Whatsapp channel ${err.data}`);
@@ -195,7 +201,7 @@ export class WhatsappDirectLine extends GBService {
     task = setInterval(worker, this.pollInterval);
   }
 
-  public printMessages(activities, conversationId, from, fromName) {
+  public async printMessages(activities, conversationId, from, fromName) {
     if (activities && activities.length) {
       // Ignore own messages.
 
@@ -204,18 +210,18 @@ export class WhatsappDirectLine extends GBService {
       if (activities.length) {
         // Print other messages.
 
-        activities.forEach(activity => {
-          this.printMessage(activity, conversationId, from, fromName);
+        await WhatsappDirectLine.asyncForEach(activities, async activity => {
+          await this.printMessage(activity, conversationId, from, fromName);
         });
       }
     }
   }
 
-  public printMessage(activity, conversationId, from, fromName) {
+  public async printMessage(activity, conversationId, from, fromName) {
     let output = '';
 
     if (activity.text) {
-      GBLog.info(`GBWhatsapp: SND ${from}(fromName): ${activity.text}`);
+      GBLog.info(`GBWhatsapp: SND ${from}(${fromName}): ${activity.text}`);
       output = activity.text;
     }
 
@@ -236,7 +242,7 @@ export class WhatsappDirectLine extends GBService {
       });
     }
 
-    this.sendToDevice(from, output);
+    await this.sendToDevice(from, output);
   }
 
   public renderHeroCard(attachment) {
