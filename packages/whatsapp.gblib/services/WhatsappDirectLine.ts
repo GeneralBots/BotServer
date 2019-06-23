@@ -171,34 +171,21 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public pollMessages(client, conversationId, from, fromName) {
-    GBLog.info(`GBWhatsapp: Starting polling message for conversationId:
-        ${conversationId}.`);
+    GBLog.info(`GBWhatsapp: Starting message polling(${from}, ${conversationId}).`);
 
-    let task: NodeJS.Timer;
-    const worker = () => {
-      clearInterval(task);
-      client.Conversations.Conversations_GetActivities({
-        conversationId: conversationId,
-        watermark: this.watermark
-      })
-        .then(response => {
-          this.watermark = response.obj.watermark;
-
-          return response.obj.activities;
-        })
-        .catch(err => {
-          GBLog.error(`Error calling Conversations_GetActivities on Whatsapp channel ${err.data}`);
-        })
-        .then(async activities => {
-          await this.printMessages(activities, conversationId, from, fromName);
-        })
-        .catch(err => {
-          GBLog.error(`Error calling printMessages on Whatsapp channel ${err.data}`);
+    const worker = async () => {
+      try {
+        const response = client.Conversations.Conversations_GetActivities({
+          conversationId: conversationId,
+          watermark: this.watermark
         });
-      task = setInterval(worker, this.pollInterval);
+        await this.printMessages(response.obj.activities, conversationId, from, fromName);
+      } catch (err) {
+        GBLog.error(`Error calling printMessages on Whatsapp channel ${err.data}`);
+      }
     };
 
-    task = setInterval(worker, this.pollInterval);
+    setInterval(worker, this.pollInterval);
   }
 
   public async printMessages(activities, conversationId, from, fromName) {
