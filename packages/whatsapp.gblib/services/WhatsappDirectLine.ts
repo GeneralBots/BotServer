@@ -50,7 +50,6 @@ export class WhatsappDirectLine extends GBService {
   public whatsappServiceNumber: string;
   public whatsappServiceUrl: string;
   public botId: string;
-  public watermark: string;
 
   public conversationIds = {};
 
@@ -173,19 +172,21 @@ export class WhatsappDirectLine extends GBService {
   public pollMessages(client, conversationId, from, fromName) {
     GBLog.info(`GBWhatsapp: Starting message polling(${from}, ${conversationId}).`);
 
+    let watermark: any;
+
     const worker = async () => {
       try {
-        const response = client.Conversations.Conversations_GetActivities({
+        const response = await client.Conversations.Conversations_GetActivities({
           conversationId: conversationId,
-          watermark: this.watermark
+          watermark: watermark
         });
+        watermark = response.obj.watermark;
         await this.printMessages(response.obj.activities, conversationId, from, fromName);
       } catch (err) {
         GBLog.error(`Error calling printMessages on Whatsapp channel ${err.data}`);
       }
+      setInterval(worker, this.pollInterval);
     };
-
-    setInterval(worker, this.pollInterval);
   }
 
   public async printMessages(activities, conversationId, from, fromName) {
