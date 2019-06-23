@@ -185,8 +185,8 @@ export class WhatsappDirectLine extends GBService {
       } catch (err) {
         GBLog.error(`Error calling printMessages on Whatsapp channel ${err.data}`);
       }
-      setInterval(worker, this.pollInterval);
     };
+    setInterval(worker, this.pollInterval);
   }
 
   public async printMessages(activities, conversationId, from, fromName) {
