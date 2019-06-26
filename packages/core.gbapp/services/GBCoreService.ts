@@ -303,7 +303,8 @@ STORAGE_SYNC=true
     try {
       instances = await core.loadInstances();
       const instance = instances[0];
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV === 'development' &&
+        GBConfigService.get('REVERSE_PROXY') === undefined) {
         GBLog.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
         try {
           await installationDeployer.updateBotProxy(

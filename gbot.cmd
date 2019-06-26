@@ -9,7 +9,7 @@ CALL npm install --silent
 :COMPILE
 IF EXIST dist goto ALLSET
 ECHO Compiling...
-CALL tsc
+CALL node_modules\.bin\tsc
 
 :ALLSET
 node boot.js

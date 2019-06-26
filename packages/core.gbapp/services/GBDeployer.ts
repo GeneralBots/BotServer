@@ -137,7 +137,7 @@ export class GBDeployer {
 
         WaitUntil()
           .interval(1000)
-          .times(10)
+          .times(5)
           .condition(cb => {
             GBLog.info(`Waiting for app package deployment...`);
             cb(appPackagesProcessed === gbappPackages.length);
@@ -432,7 +432,7 @@ export class GBDeployer {
           GBLog.info(`Compiling ${e}...`);
 
           try {
-            child_process.execSync(Path.join(e, 'node_modules/.bin/tsc'), { cwd: e });
+            child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
             import(e)
               .then(m => {
                 const p = new m.Package();

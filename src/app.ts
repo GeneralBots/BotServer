@@ -97,10 +97,16 @@ export class GBServer {
           const conversationalService: GBConversationalService = new GBConversationalService(core);
 
           if (process.env.NODE_ENV === 'development') {
-            // Ensure that local development proxy is setup.
+            const proxy = GBConfigService.get('REVERSE_PROXY');
+            if (proxy !== undefined) {
+              GBServer.globals.publicAddress = proxy;
+            }
+            else {
+              // Ensure that local development proxy is setup.
 
-            GBLog.info(`Establishing a development local proxy (ngrok)...`);
-            GBServer.globals.publicAddress = await core.ensureProxy(port);
+              GBLog.info(`Establishing a development local proxy (ngrok)...`);
+              GBServer.globals.publicAddress = await core.ensureProxy(port);
+            }
           } else {
             const serverAddress = `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net`;
             GBLog.info(`Defining server address at ${serverAddress}...`);
