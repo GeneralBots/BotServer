@@ -77,6 +77,13 @@ export class GuaribasUser extends Model<GuaribasUser> {
 
   @BelongsTo(() => GuaribasInstance)
   public instance: GuaribasInstance;
+
+  @Column
+  phone: string
+
+  @Column(DataType.TEXT)
+  @Column
+  conversationReference: string
 }
 
 /**

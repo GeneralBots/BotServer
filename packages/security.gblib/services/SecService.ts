@@ -3,6 +3,7 @@ import urlJoin = require('url-join');
 
 import { GBService, IGBInstance } from 'botlib';
 import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models';
+import { ConversationReference } from 'botbuilder';
 
 /**
  * Security service layer.
@@ -65,4 +66,26 @@ export class SecService extends GBService {
         .error(reject);
     });
   }
+
+  /**
+   * Retrives a conversation reference from contact phone.
+   */
+  public async getConversationReference(phone: string): Promise<ConversationReference> {
+    const options = { where: { phone: phone } };
+    const user = await GuaribasUser.findOne(options);
+
+    return JSON.parse(user.conversationReference);
+  }
+
+  /**
+   * Updates a conversation reference from contact phone.
+   */
+  public async updateConversationReference(phone: string, conversationReference: string) {
+    const options = { where: { phone: phone } };
+    const user = await GuaribasUser.findOne(options);
+
+    user.conversationReference = conversationReference;
+    await user.save();
+  }
+
 }
