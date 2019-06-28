@@ -116,10 +116,12 @@ export class GBMinService {
     deployer: GBDeployer,
     proxyAddress: string
   ) {
-    // Serves default UI on root address '/'.
-
     const uiPackage = 'default.gbui';
-    server.use('/', express.static(urlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
+
+    // Serves default UI on root address '/' if web enabled.
+    if (process.env.DISABLE_WEB !== 'true') {
+      server.use('/', express.static(urlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
+    }
 
     await Promise.all(
       instances.map(async instance => {
@@ -130,11 +132,13 @@ export class GBMinService {
         // Serves the bot information object via HTTP so clients can get
         // instance information stored on server.
 
-        server.get('/instances/:botId', (req, res) => {
-          (async () => {
-            await this.sendInstanceToClient(req, bootInstance, res, webchatToken);
-          })();
-        });
+        if (process.env.DISABLE_WEB !== 'true') {
+          server.get('/instances/:botId', (req, res) => {
+            (async () => {
+              await this.sendInstanceToClient(req, bootInstance, res, webchatToken);
+            })();
+          });
+        }
 
         // Build bot adapter.
 
@@ -158,11 +162,12 @@ export class GBMinService {
 
         // Serves individual URL for each bot user interface.
 
-        const uiUrl = `/${instance.botId}`;
-        server.use(uiUrl, express.static(urlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
+        if (process.env.DISABLE_WEB !== 'true') {
+          const uiUrl = `/${instance.botId}`;
+          server.use(uiUrl, express.static(urlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
 
-        GBLog.info(`Bot UI ${uiPackage} accessible at: ${uiUrl}.`);
-
+          GBLog.info(`Bot UI ${uiPackage} accessible at: ${uiUrl}.`);
+        }
         // Clients get redirected here in order to create an OAuth authorize url and redirect them to AAD.
         // There they will authenticate and give their consent to allow this app access to
         // some resource they own.
@@ -359,8 +364,8 @@ export class GBMinService {
       e.loadBot(min);
       if (index === 6) { // TODO: Remove this magic number and use a map.
         const url = '/instances/:botId/whatsapp';
-        server.post(url, (req, res) => {
-          (e as any).channel.received(req, res);
+        server.post(url, async (req, res) => {
+          await (e as any).channel.received(req, res);
         });
       }
       index++;

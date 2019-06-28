@@ -109,12 +109,19 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public received(req, res) {
+  public async received(req, res) {
+
+    if (req.body.messages === undefined) {
+      res.end();
+      return;  // Exit here.
+    }
+
     const text = req.body.messages[0].body;
     const from = req.body.messages[0].author.split('@')[0];
     const fromName = req.body.messages[0].senderName;
 
     if (req.body.messages[0].fromMe) {
+      res.end();
       return; // Exit here.
     }
 
@@ -122,37 +129,26 @@ export class WhatsappDirectLine extends GBService {
 
     const conversationId = this.conversationIds[from];
 
-    this.directLineClient.then(client => {
-      if (this.conversationIds[from] === undefined) {
-        GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
-        client.Conversations.Conversations_StartConversation()
-          .then(response => {
-            return response.obj.conversationId;
-          }).catch(err => {
-            GBLog.error(`Error calling Conversations_StartConversation on Whatsapp channel ${err.data}`);
-          })
+    let client = await this.directLineClient;
 
-          .then(generatedConversationId => {
-            this.conversationIds[from] = generatedConversationId;
-            this.inputMessage(client, generatedConversationId, text, from, fromName);
+    if (this.conversationIds[from] === undefined) {
+      GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
+      const response = await client.Conversations.Conversations_StartConversation()
+      const generatedConversationId = response.obj.conversationId;
 
-            this.pollMessages(client, generatedConversationId, from, fromName);
-          })
-          .catch(err => {
-            GBLog.error(`Error starting conversation ${err.data}`);
-          });
-      } else {
-        this.inputMessage(client, conversationId, text, from, fromName);
-      }
-      res.end();
-    }).catch(err => {
-      GBLog.error(`Error initializing DirectLine for Whatsapp channel ${err.data}`);
-    });
+      this.conversationIds[from] = generatedConversationId;
+
+      this.pollMessages(client, generatedConversationId, from, fromName);
+      this.inputMessage(client, generatedConversationId, text, from, fromName);
+    } else {
+      this.inputMessage(client, conversationId, text, from, fromName);
+    }
+    res.end();
 
   }
 
   public inputMessage(client, conversationId, text, from, fromName) {
-    client.Conversations.Conversations_PostActivity({
+    return client.Conversations.Conversations_PostActivity({
       conversationId: conversationId,
       activity: {
         textFormat: 'plain',
@@ -164,8 +160,6 @@ export class WhatsappDirectLine extends GBService {
         },
         replyToId: from
       }
-    }).catch(err => {
-      GBLog.error(`GBWhatsapp: Error receiving message: ${err.data}.`);
     });
   }
 

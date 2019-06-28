@@ -74,6 +74,7 @@ export class GBServer {
   public static run() {
     GBLog.info(`The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
+    GBConfigService.init();
     const port = GBConfigService.getServerPort();
     const server = express();
     GBServer.globals.server = server;
@@ -87,7 +88,6 @@ export class GBServer {
 
           // Reads basic configuration, initialize minimal services.
 
-          GBConfigService.init();
           const core: IGBCoreService = new GBCoreService();
 
           const importer: GBImporter = new GBImporter(core);
@@ -168,7 +168,7 @@ export class GBServer {
 
           // Opens Navigator.
 
-          core.openBrowserInDevelopment();
+          // TODO: Config: core.openBrowserInDevelopment();
         } catch (err) {
           GBLog.error(`STOP: ${err} ${err.stack ? err.stack : ''}`);
           process.exit(1);
