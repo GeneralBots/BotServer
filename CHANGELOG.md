@@ -1,3 +1,16 @@
+# [1.4.0](https://github.com/pragmatismo-io/BotServer/compare/1.3.10...1.4.0) (2019-06-28)
+
+
+### Bug Fixes
+
+* **whatsapp.gblib:** Service latency due to res.end missing call. ([82dcfac](https://github.com/pragmatismo-io/BotServer/commit/82dcfac))
+
+
+### Features
+
+* **core.gbapp:** Development options added (ngrok) ([223801d](https://github.com/pragmatismo-io/BotServer/commit/223801d))
+* **security.gblib:** Phone field and conversation refeerence. ([46261d7](https://github.com/pragmatismo-io/BotServer/commit/46261d7))
+
 ## [1.3.10](https://github.com/pragmatismo-io/BotServer/compare/1.3.9...1.3.10) (2019-06-21)
 
 
