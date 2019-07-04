@@ -6,8 +6,9 @@ export const Messages = {
     good_evening: 'good evening',
     good_night: 'good night',
     hi: (msg) => `Hello, ${msg}.`,
-    very_sorry_about_error: `I'm sorry to inform that there was an error which was recorded to be solved.`
-
+    very_sorry_about_error: `I'm sorry to inform that there was an error which was recorded to be solved.`,
+    global_quit: /^(quit|Quit)/i,
+    canceled: 'Canceled. If I can be useful, let me know how'
   },
   'pt-BR': {
     show_video: 'Vou te mostrar um vídeo. Por favor, aguarde...',
@@ -15,6 +16,8 @@ export const Messages = {
     good_evening: 'boa tarde',
     good_night: 'boa noite',
     hi: (msg) => `Oi, ${msg}.`,
-    very_sorry_about_error: `Lamento, ocorreu um erro que já foi registrado para ser tratado.`
+    very_sorry_about_error: `Lamento, ocorreu um erro que já foi registrado para ser tratado.`,
+    global_quit: /^(sair|Sair)/i, 
+    canceled: 'Cancelado, avise como posso ser útil novamente.'
   }
 };

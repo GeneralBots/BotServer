@@ -244,7 +244,7 @@ export class GBMinService {
     if (instance !== null) {
       const speechToken = instance.speechKey != null ? await this.getSTSToken(instance) : null;
       let theme = instance.theme;
-      if (theme !== undefined) {
+      if (theme === undefined) {
         theme = 'default.gbtheme';
       }
       res.send(
@@ -485,6 +485,10 @@ export class GBMinService {
 
   private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
     // Direct script invoking by itent name.
+    const globalQuit = (locale, utterance) => {
+      return utterance.match(Messages[locale].global_quit);
+    }
+
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
 
@@ -498,6 +502,9 @@ export class GBMinService {
     } else if (context.activity.text.charAt(0) === '/') {
       await step.beginDialog(context.activity.text);
 
+    } else if (globalQuit(step.context.activity.locale, context.activity.text)) {
+      await step.cancelAllDialogs();
+      await step.context.sendActivity(Messages[step.context.activity.locale].canceled);
     } else if (context.activity.text === 'admin') {
       await step.beginDialog('/admin');
 
