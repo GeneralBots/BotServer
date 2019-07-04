@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/pragmatismo-io/BotServer/compare/1.4.0...1.5.0) (2019-07-04)
+
+
+### Features
+
+* **core.gbapp:** New global quit keywords. ([15cd8d6](https://github.com/pragmatismo-io/BotServer/commit/15cd8d6))
+
 # [1.4.0](https://github.com/pragmatismo-io/BotServer/compare/1.3.10...1.4.0) (2019-06-28)
 
 
