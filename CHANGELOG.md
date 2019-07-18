@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/pragmatismo-io/BotServer/compare/1.5.0...1.5.1) (2019-07-18)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** Answers in text in case of Whatsapp channel. ([4f994b1](https://github.com/pragmatismo-io/BotServer/commit/4f994b1))
+
 # [1.5.0](https://github.com/pragmatismo-io/BotServer/compare/1.4.0...1.5.0) (2019-07-04)
 
 
