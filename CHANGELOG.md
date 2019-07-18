@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/pragmatismo-io/BotServer/compare/1.5.1...1.5.2) (2019-07-18)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Redeploy command now fixed. ([d68da40](https://github.com/pragmatismo-io/BotServer/commit/d68da40))
+
 ## [1.5.1](https://github.com/pragmatismo-io/BotServer/compare/1.5.0...1.5.1) (2019-07-18)
 
 
