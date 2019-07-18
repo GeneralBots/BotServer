@@ -128,7 +128,7 @@ export class AdminDialog extends IGBDialog {
           const text: string = step.result;
           const cmdName = text.split(' ')[0];
 
-          step.context.sendActivity(Messages[locale].working(cmdName));
+          await step.context.sendActivity(Messages[locale].working(cmdName));
           let unknownCommand = false;
 
           if (text === 'quit') {

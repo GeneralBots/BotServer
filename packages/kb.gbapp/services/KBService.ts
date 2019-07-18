@@ -252,7 +252,7 @@ export class KBService {
     instanceId: number,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
-    const file = Fs.readFileSync(filePath, 'UCS-2');
+    const file = Fs.readFileSync(filePath, 'utf8');
     const opts = {
       delimiter: '\t'
     };
