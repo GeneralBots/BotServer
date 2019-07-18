@@ -50,7 +50,7 @@ import { Messages } from '../strings';
  * Dialogs for administration tasks.
  */
 export class AdminDialog extends IGBDialog {
-  public static async undeployPamand(text: any, min: GBMinInstance) {
+  public static async undeployPackageCommand(text: any, min: GBMinInstance) {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
@@ -138,8 +138,13 @@ export class AdminDialog extends IGBDialog {
 
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'redeployPackage') {
+            await step.context.sendActivity('The package is being *unloaded*...');
+            await AdminDialog.undeployPackageCommand(text, min);
+            await step.context.sendActivity('Now, *deploying* package...');
             await AdminDialog.deployPackageCommand(min, text, deployer);
-
+            await step.context.sendActivity('Package deployed. Just need to rebuild the index... Doing it right now.');
+            await AdminDialog.rebuildIndexPackageCommand(min, deployer);
+            await step.context.sendActivity('Finished importing of that .gbkb package. Thanks.');
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'rebuildIndex') {
             await AdminDialog.rebuildIndexPackageCommand(min, deployer);
