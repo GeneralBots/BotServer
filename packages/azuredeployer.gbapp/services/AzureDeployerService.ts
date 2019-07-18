@@ -396,7 +396,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
     const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
 
-    instance.nlpEndpoint = nlp.endpoint;
+    instance.nlpEndpoint = nlp.endpoint; // TODO: Add this final URL /apps/a149dae1-5134-4624-96b5-885e9e674c9e
     instance.nlpKey = keys.key1;
     instance.nlpAppId = nlpAppId;
 
@@ -590,7 +590,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       id = app.id;
     }
 
-    return id;
+    return id.replace(/\'/gi,'');
   }
 
   private async makeNlpRequest(

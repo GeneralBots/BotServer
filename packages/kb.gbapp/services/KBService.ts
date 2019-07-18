@@ -355,7 +355,9 @@ export class KBService {
         playerType: 'video',
         data: answer.content
       });
-    } else if (answer.content.length > 140 && step.context.activity.channelId === 'webchat') {
+    } else if (answer.content.length > 140 &&
+      step.context.activity.channelId === 'webchat' &&
+      GBConfigService.get('DISABLE_WEB') !== 'true') {
       const locale = step.context.activity.locale;
 
       await step.context.sendActivity(Messages[locale].will_answer_projector);
