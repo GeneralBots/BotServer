@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/pragmatismo-io/BotServer/compare/1.5.2...1.5.3) (2019-07-18)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Deployer now imports UTF-8 .tsv files. ([daf0741](https://github.com/pragmatismo-io/BotServer/commit/daf0741))
+
 ## [1.5.2](https://github.com/pragmatismo-io/BotServer/compare/1.5.1...1.5.2) (2019-07-18)
 
 
