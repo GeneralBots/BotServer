@@ -122,10 +122,20 @@ export class GBConversationalService implements IGBConversationalService {
       // tslint:enable:no-unsafe-any
     }
 
+    let nlpActive = false;
+
+    Object.keys(nlp.intents).forEach((name) => {
+      const score = nlp.intents[name].score;
+      if (score > min.instance.nlpScore){
+        nlpActive = true;
+      }
+    });
+
     // Resolves intents returned from LUIS.
 
     const topIntent = LuisRecognizer.topIntent(nlp);
-    if (topIntent !== undefined) {
+    if (topIntent !== undefined && nlpActive) {
+              
       const intent = topIntent;
       // tslint:disable:no-unsafe-any
       const firstEntity = nlp.entities && nlp.entities.length > 0 ? nlp.entities[0].entity.toUpperCase() : undefined;

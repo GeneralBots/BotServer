@@ -248,7 +248,7 @@ STORAGE_SYNC=true
         fs.existsSync('node_modules/ngrok/bin/ngrok')) {
         const ngrok = require('ngrok');
 
-        return await ngrok.connect({ port: port });
+        return await ngrok.connectRetry({ port: port }, 10);
       } else {
         GBLog.warn('ngrok executable not found (only tested on Windows). Check installation or node_modules folder.');
 
@@ -257,8 +257,8 @@ STORAGE_SYNC=true
     } catch (error) {
       // There are false positive from ngrok regarding to no memory, but it's just
       // lack of connection.
-      GBLog.verbose(error);
-      throw new Error('Error connecting to remote ngrok server, please check network connection.');
+      
+      throw new Error(`Error connecting to remote ngrok server, please check network connection. ${error.msg}`);
     }
   }
 
