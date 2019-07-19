@@ -1,3 +1,10 @@
+## [1.5.4](https://github.com/pragmatismo-io/BotServer/compare/1.5.3...1.5.4) (2019-07-19)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** NLP scoring added again. ([c83a5f9](https://github.com/pragmatismo-io/BotServer/commit/c83a5f9))
+
 ## [1.5.3](https://github.com/pragmatismo-io/BotServer/compare/1.5.2...1.5.3) (2019-07-18)
 
 
