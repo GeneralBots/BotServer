@@ -123,7 +123,10 @@ export class GBConfigService {
         case 'STORAGE_ENCRYPT':
           value = 'true';
           break;
-        default:
+        case 'REVERSE_PROXY':
+            value = undefined;
+            break;
+          default:
           GBLog.warn(`Invalid key on .env file: '${key}'`);
           break;
       }
