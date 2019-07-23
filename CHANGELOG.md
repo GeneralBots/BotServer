@@ -1,3 +1,10 @@
+## [1.5.5](https://github.com/pragmatismo-io/BotServer/compare/1.5.4...1.5.5) (2019-07-23)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** Improvement on translate ([bc56a1d](https://github.com/pragmatismo-io/BotServer/commit/bc56a1d))
+
 ## [1.5.4](https://github.com/pragmatismo-io/BotServer/compare/1.5.3...1.5.4) (2019-07-19)
 
 
