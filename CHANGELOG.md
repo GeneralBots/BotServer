@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/pragmatismo-io/BotServer/compare/1.5.5...1.6.0) (2019-08-21)
+
+
+### Features
+
+* **boot:** Bot now can be run with VSCode F5 after cloning from git. ([29d90db](https://github.com/pragmatismo-io/BotServer/commit/29d90db))
+
 ## [1.5.5](https://github.com/pragmatismo-io/BotServer/compare/1.5.4...1.5.5) (2019-07-23)
 
 
