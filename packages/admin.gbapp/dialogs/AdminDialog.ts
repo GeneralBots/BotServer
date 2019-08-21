@@ -36,7 +36,8 @@
 
 'use strict';
 
-var crypto = require('crypto')
+const crypto = require('crypto');
+const emptyDir = require('empty-dir');
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
 import urlJoin = require('url-join');
@@ -45,6 +46,8 @@ import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { Messages } from '../strings';
+import { GBSharePointService } from '../../sharepoint.gblib/services/SharePointService';
+const Path = require('path');
 
 /**
  * Dialogs for administration tasks.
@@ -70,6 +73,18 @@ export class AdminDialog extends IGBDialog {
         throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
       }
       await deployer.deployPackage(min, urlJoin(additionalPath, packageName));
+    }
+    else {
+      let s = new GBSharePointService();
+      let siteName = text.split(' ')[1];
+      let folderName = text.split(' ')[2];
+
+      let localFolder = Path.join('tmp', Path.basename(folderName));
+      await s.downloadFolder(localFolder, siteName, folderName,
+        GBConfigService.get('CLOUD_USERNAME'), GBConfigService.get('CLOUD_PASSWORD'))
+      await deployer.deployPackage(min, localFolder);
+      await emptyDir(localFolder);
+
     }
   }
 
@@ -215,7 +230,8 @@ export class AdminDialog extends IGBDialog {
           );
 
           const locale = step.context.activity.locale;
-          const state = `${min.instance.instanceId}${crypto.getRandomValues(new Uint32Array(16))[0]}`;
+          const buf = Buffer.alloc(16);
+          const state = `${min.instance.instanceId}${crypto.randomFillSync(buf).toString('hex')}`;
 
           min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
 

@@ -47,6 +47,7 @@
     "commit": "git-cz"
   },
   "dependencies": {
+    "@azure/ms-rest-js": "1.8.13",
     "@microsoft/microsoft-graph-client": "1.6.0",
     "@semantic-release/exec": "3.3.2",
     "adal-node": "0.1.28",
@@ -72,6 +73,7 @@
     "cli-spinner": "0.2.10",
     "csv-parse": "4.4.1",
     "dotenv-extended": "2.4.0",
+    "empty-dir": "^2.0.0",
     "express": "4.16.4",
     "express-promise-router": "3.0.3",
     "fs-extra": "8.0.0",
@@ -83,7 +85,6 @@
     "mocha-typescript": "1.1.17",
     "ms": "2.1.1",
     "ms-rest-azure": "2.6.0",
-    "@azure/ms-rest-js": "1.8.13",
     "nexmo": "2.4.1",
     "ngrok": "3.1.1",
     "npm": "6.9.0",
@@ -100,6 +101,7 @@
     "sequelize-typescript": "0.6.10",
     "shx": "0.3.2",
     "simple-git": "1.113.0",
+    "sppull": "^2.4.1",
     "sqlite3": "4.0.8",
     "strict-password-generator": "1.1.2",
     "swagger-client": "^2.1.18",

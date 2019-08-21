@@ -51,6 +51,9 @@ import { GBSecurityPackage } from '../../security.gblib';
 import { GBWhatsappPackage } from '../../whatsapp.gblib/index';
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
+import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp';
+import { GBSharePointPackage } from '../../sharepoint.gblib';
+
 
 const opn = require('opn');
 
@@ -369,7 +372,9 @@ STORAGE_SYNC=true
       GBSecurityPackage,
       GBKBPackage,
       GBCustomerSatisfactionPackage,
-      GBWhatsappPackage
+      GBWhatsappPackage,
+      GBAzureDeployerPackage,
+      GBSharePointPackage,
     ].forEach(e => {
       GBLog.info(`Loading sys package: ${e.name}...`);
 
