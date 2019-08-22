@@ -41,6 +41,7 @@ import fs = require('fs');
 import urlJoin = require('url-join');
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
+import { GBServer } from '../../../src/app';
 
 /**
  * Handles the importing of packages.
@@ -61,7 +62,7 @@ export class GBImporter {
       botId = GBConfigService.get('BOT_ID');
     }
     const instance = await this.core.loadInstance(botId);
-
+    
     return await this.createOrUpdateInstanceInternal(instance, botId, localPath, packageJson);
   }
 
@@ -70,7 +71,7 @@ export class GBImporter {
     const settings = JSON.parse(fs.readFileSync(urlJoin(localPath, 'settings.json'), 'utf8'));
     const servicesJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'services.json'), 'utf8'));
 
-    packageJson = { ...packageJson, ...settings, ...servicesJson };
+    packageJson = { ...GBServer.globals.bootInstance, ...packageJson, ...settings, ...servicesJson };
 
     if (botId !== undefined) {
       packageJson.botId = botId;
@@ -81,7 +82,7 @@ export class GBImporter {
 
       return this.core.saveInstance(instance);
     } else {
-      return GuaribasInstance.create(packageJson);
+      return await GuaribasInstance.create(packageJson);
     }
   }
 }

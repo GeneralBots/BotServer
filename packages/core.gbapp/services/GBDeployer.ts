@@ -43,7 +43,7 @@ const WaitUntil = require('wait-until');
 const express = require('express');
 const child_process = require('child_process');
 const graph = require('@microsoft/microsoft-graph-client');
-const emptyDir = require('empty-dir');
+const rimraf = require('rimraf');
 
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
@@ -190,6 +190,8 @@ export class GBDeployer {
       );
 
     } else {
+      
+      console.log(GBServer.globals.bootInstance);
       instance = Object.assign(instance, GBServer.globals.bootInstance);
       instance = await service.internalDeployBot(
         instance,
@@ -214,17 +216,13 @@ export class GBDeployer {
 
 
   /**
-   * Deploys a bot to the storage.
+   * UndDeploys a bot to the storage.
    */
 
   public async undeployBot(botId: string, packageName: string): Promise<void> {
     const service = new AzureDeployerService(this);
 
-    const username = GBConfigService.get('CLOUD_USERNAME');
-    const password = GBConfigService.get('CLOUD_PASSWORD');
     const group = GBConfigService.get('CLOUD_GROUP');
-    const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
-    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
 
     if (await service.botExists(botId, group)) {
 
@@ -235,10 +233,14 @@ export class GBDeployer {
     }
     GBServer.globals.minService.unmountBot(botId);
     await this.core.deleteInstance(botId);
-    const packageFolder = urlJoin(process.env.PWD, 'work', packageName);
-    await emptyDir(packageFolder);
+    const packageFolder =Path.join(process.env.PWD, 'work', packageName);
+    rimraf.sync(packageFolder);
   }
 
+  public async undeployTheme(packageName: string): Promise<void> {
+    const packageFolder = Path.join(process.env.PWD, 'work', packageName);
+    rimraf.sync(packageFolder);
+  }
 
   public async deployPackageToStorage(instanceId: number, packageName: string): Promise<GuaribasPackage> {
     return GuaribasPackage.create({
@@ -270,14 +272,14 @@ export class GBDeployer {
 
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
-
         await service.deployKb(this.core, this, localPath);
+        break;
 
       case '.gbdialog':
         const vm = new GBVMService();
-
         await vm.loadDialogPackage(localPath, min, this.core, this);
-
+        break;
+        
       default:
         const err = GBError.create(`Unhandled package type: ${packageType}.`);
         Promise.reject(err);
@@ -300,13 +302,18 @@ export class GBDeployer {
 
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
-
         return service.undeployKbFromStorage(instance, this, p.packageId);
 
       case '.gbui':
+
+        break;
+
+      case '.gbtheme':
+        this.undeployTheme(packageName);
         break;
 
       case '.gbdialog':
+
         break;
 
       default:

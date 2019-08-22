@@ -125,6 +125,16 @@ export class GBMinService {
         })();
       });
     }
+    const url = '/webhooks/whatsapp';
+    GBServer.globals.server.post(url, async (req, res) => {
+    const text = req.body.messages[0].body;
+    const from = req.body.messages[0].author.split('@')[0];
+    const fromName = req.body.messages[0].senderName;
+
+      let botId = 'subway-prd';
+      const min = GBServer.globals.minInstances.filter(p => p.botId === botId)[0];
+      (min as any).whatsAppDirectLine.received(req, res);
+    });
 
     await Promise.all(
       instances.map(async instance => {
@@ -137,30 +147,33 @@ export class GBMinService {
 
   public async unmountBot(botId: string) {
     const url = `/api/messages/${botId}`;
-    removeRoute(GBServer.globals.server,url);
+    removeRoute(GBServer.globals.server, url);
 
     const uiUrl = `/${botId}`;
     removeRoute(GBServer.globals.server, uiUrl);
+
+    GBServer.globals.minInstances = GBServer.globals.minInstances.filter(p => p.botId !== botId);
   }
 
   public async mountBot(instance: IGBInstance) {
-    
+
     // Build bot adapter.
     const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.publicAddress, GBServer.globals.sysPackages);
-    
+    GBServer.globals.minInstances.push(min);
+
     // Install default VBA module.
     //this.deployer.deployPackage(min, 'packages/default.gbdialog');
-    
+
     // Call the loadBot context.activity for all packages.
     this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min, GBServer.globals.server);
-    
+
     // Serves individual URL for each bot conversational interface...
     const url = `/api/messages/${instance.botId}`;
     GBServer.globals.server.post(url, async (req, res) => {
       await this.receiver(adapter, req, res, conversationState, min, instance, GBServer.globals.appPackages);
     });
     GBLog.info(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
-    
+
     // Serves individual URL for each bot user interface.
     if (process.env.DISABLE_WEB !== 'true') {
       const uiUrl = `/${instance.botId}`;
@@ -172,7 +185,7 @@ export class GBMinService {
     // There they will authenticate and give their consent to allow this app access to
     // some resource they own.
     this.handleOAuthRequests(GBServer.globals.server, min);
-    
+
     // After consent is granted AAD redirects here.  The ADAL library
     // is invoked via the AuthenticationContext and retrieves an
     // access token that can be used to access the user owned resource.
@@ -359,12 +372,6 @@ export class GBMinService {
     let index = 0;
     sysPackages.forEach(e => {
       e.loadBot(min);
-      if (index === 6) { // TODO: Remove this magic number and use a map.
-        const url = '/instances/:botId/whatsapp';
-        server.post(url, async (req, res) => {
-          await (e as any).channel.received(req, res);
-        });
-      }
       index++;
     }, this);
 

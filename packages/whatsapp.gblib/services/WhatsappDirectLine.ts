@@ -86,7 +86,7 @@ export class WhatsappDirectLine extends GBService {
           url: urlJoin(this.whatsappServiceUrl, 'webhook'),
           qs: {
             token: this.whatsappServiceKey,
-            webhookUrl: `${GBServer.globals.publicAddress}/instances/${this.botId}/whatsapp`,
+            webhookUrl: `${GBServer.globals.publicAddress}/webhooks/whatsapp`,
             set: true
           },
           headers: {

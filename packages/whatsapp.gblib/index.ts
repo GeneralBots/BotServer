@@ -46,13 +46,12 @@ import { WhatsappDirectLine } from './services/WhatsappDirectLine';
 export class GBWhatsappPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
 
-  public channel: WhatsappDirectLine;
 
   public loadBot(min: GBMinInstance): void {
     // Only loads engine if it is defined on services.json.
 
     if (min.instance.whatsappBotKey !== undefined) {
-      this.channel = new WhatsappDirectLine(
+      min.whatsAppDirectLine =  new WhatsappDirectLine(
         min.botId,
         min.instance.whatsappBotKey,
         min.instance.whatsappServiceKey,
@@ -62,9 +61,6 @@ export class GBWhatsappPackage implements IGBPackage {
     }
   }
 
-  public getChannel() {
-      return this.channel;
-  }
 
   public getDialogs(min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);

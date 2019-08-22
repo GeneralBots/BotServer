@@ -49,8 +49,6 @@ import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
 
-const appPackages: IGBPackage[] = [];
-
 /**
  * Global shared server data;
  */
@@ -61,6 +59,7 @@ export class RootData {
   public appPackages: any[];
   minService: GBMinService;
   bootInstance: IGBInstance;
+  public minInstances: any[];
 }
 
 /**
@@ -81,6 +80,10 @@ export class GBServer {
     const port = GBConfigService.getServerPort();
     const server = express();
     GBServer.globals.server = server;
+    GBServer.globals.appPackages = [];
+    GBServer.globals.sysPackages = [];
+    GBServer.globals.minInstances = [];
+
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 
@@ -92,7 +95,6 @@ export class GBServer {
           // Reads basic configuration, initialize minimal services.
 
           const core: IGBCoreService = new GBCoreService();
-
           const importer: GBImporter = new GBImporter(core);
           const deployer: GBDeployer = new GBDeployer(core, importer);
           const azureDeployer: AzureDeployerService = new AzureDeployerService(deployer);
@@ -118,7 +120,6 @@ export class GBServer {
 
           // Creates a boot instance or load it from storage.
 
-          
           try {
             await core.initStorage();
           } catch (error) {
@@ -132,11 +133,9 @@ export class GBServer {
           // Deploys system and user packages.
 
           GBLog.info(`Deploying packages...`);
-          const sysPackages = core.loadSysPackages(core);
+          GBServer.globals.sysPackages = core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
-          await deployer.deployPackages(core, server, appPackages);
-          GBServer.globals.sysPackages = sysPackages;
-          GBServer.globals.appPackages = appPackages;
+          await deployer.deployPackages(core, server, GBServer.globals.appPackages);
 
           // Loads boot bot and other instances.
 
@@ -163,7 +162,7 @@ export class GBServer {
 
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
           GBServer.globals.minService = minService;
-          await minService.buildMin( instances);
+          await minService.buildMin(instances);
 
           // Deployment of local applications for the first time.
 
