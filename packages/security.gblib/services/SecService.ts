@@ -37,34 +37,36 @@ export class SecService extends GBService {
   public async ensureUser(
     instanceId: number,
     userSystemId: string,
+    currentBotId: string,
     userName: string,
     address: string,
     channelName: string,
-    displayName: string
+    displayName: string,
+    phone: string
   ): Promise<GuaribasUser> {
-    return new Promise<GuaribasUser>((resolve, reject) => {
-      GuaribasUser.findOne({
-        attributes: ['instanceId', 'internalAddress'],
-        where: {
-          instanceId: instanceId,
-          userSystemId: userSystemId
-        }
-      })
-        .then(user => {
-          if (!user) {
-            user = GuaribasUser.build();
-          }
-          user.userSystemId = userSystemId;
-          user.userName = userName;
-          user.displayName = displayName;
-          user.internalAddress = address;
-          user.email = userName;
-          user.defaultChannel = channelName;
-          user.save();
-          resolve(user);
-        })
-        .error(reject);
+    let user = await GuaribasUser.findOne({
+      
+      where: {
+        instanceId: instanceId,
+        userSystemId: userSystemId
+      }
     });
+
+    if (!user) {
+      user = GuaribasUser.build();
+    }
+
+    user.instanceId = instanceId;
+    user.userSystemId = userSystemId;
+    user.currentBotId = currentBotId;
+    user.userName = userName;
+    user.displayName = displayName;
+    user.internalAddress = address;
+    user.email = userName;
+    user.phone = phone;
+    user.defaultChannel = channelName;
+    user.save();
+    return user;
   }
 
   /**
@@ -87,5 +89,32 @@ export class SecService extends GBService {
     user.conversationReference = conversationReference;
     await user.save();
   }
+
+  public async updateCurrentBotId(
+    instanceId: number,
+    userSystemId: string,
+    currentBotId: string
+  ): Promise<GuaribasUser> {
+    let user = await GuaribasUser.findOne({
+      where: {
+        instanceId: instanceId,
+        userSystemId: userSystemId
+      }
+    });
+    user.currentBotId = currentBotId;
+    await user.save();
+    return user;
+  }
+
+  public async getUserFromPhone(
+    phone: string
+  ): Promise<GuaribasUser> {
+    return await GuaribasUser.findOne({
+      where: {
+        phone: phone
+      }
+    });
+  }
+
 
 }

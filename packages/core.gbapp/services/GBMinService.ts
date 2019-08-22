@@ -68,6 +68,7 @@ import { Messages } from '../strings';
 import { GBAdminPackage } from './../../admin.gbapp/index';
 import { GBConfigService } from './GBConfigService';
 import { GBDeployer } from './GBDeployer';
+import { SecService } from '../../security.gblib/services/SecService';
 
 /**
  * Minimal service layer for a bot.
@@ -127,11 +128,11 @@ export class GBMinService {
     }
     const url = '/webhooks/whatsapp';
     GBServer.globals.server.post(url, async (req, res) => {
-    const text = req.body.messages[0].body;
-    const from = req.body.messages[0].author.split('@')[0];
-    const fromName = req.body.messages[0].senderName;
-
-      let botId = 'subway-prd';
+      const from = req.body.messages[0].chatId.split('@')[0];
+      
+      let sec = new SecService();
+      let user = await sec.getUserFromPhone(from);
+      let botId = user.currentBotId;
       const min = GBServer.globals.minInstances.filter(p => p.botId === botId)[0];
       (min as any).whatsAppDirectLine.received(req, res);
     });
@@ -408,6 +409,8 @@ export class GBMinService {
 
         const user = await min.userProfile.get(context, {});
 
+        // First time processing.
+
         if (!user.loaded) {
           await min.conversationalService.sendEvent(step, 'loadInstance', {
             instanceId: instance.instanceId,
@@ -419,6 +422,12 @@ export class GBMinService {
           user.subjects = [];
           user.cb = undefined;
           await min.userProfile.set(step.context, user);
+
+          let sec = new SecService();
+          const member = context.activity.membersAdded[0];
+
+          await sec.ensureUser(instance.instanceId, member.id,
+             min.botId, member.id, "", "web", member.name, member.id);
         }
 
         GBLog.info(

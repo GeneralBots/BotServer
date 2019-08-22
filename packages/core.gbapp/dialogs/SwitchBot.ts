@@ -36,104 +36,35 @@
 
 'use strict';
 
-import {
-  AutoIncrement,
-  BelongsTo,
-  Column,
-  DataType,
-  ForeignKey,
-  Length,
-  Model,
-  PrimaryKey,
-  Table} from 'sequelize-typescript';
-
-import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
-
+import { BotAdapter } from 'botbuilder';
+import { WaterfallDialog } from 'botbuilder-dialogs';
+import { GBMinInstance, IGBDialog } from 'botlib';
+import { Messages } from '../strings';
+import { SecService } from '../../security.gblib/services/SecService';
 /**
- * A user and its metadata.
+ * Dialog for the bot explains about itself.
  */
-@Table
-export class GuaribasUser extends Model<GuaribasUser> {
-  @PrimaryKey
-  @AutoIncrement
-  @Column
-  public userId: number;
+export class SwitchBotDialog extends IGBDialog {
+  /**
+   * Setup dialogs flows and define services call.
+   *
+   * @param bot The bot adapter.
+   * @param min The minimal bot instance data.
+   */
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
+    min.dialogs.add(new WaterfallDialog('/bot', [
 
-  @Column public displayName: string;
-
-  @Column public userSystemId: string;
-  @Column public userName: string;
-
-  @Column public defaultChannel: string;
-
-  @Column public email: string;
-
-  @Column(DataType.STRING(512))
-  public internalAddress: string;
-
-  @ForeignKey(() => GuaribasInstance)
-  @Column
-  public instanceId: number;
-
-  @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
-
-  @Column
-  phone: string
-
-  @Column
-  currentBotId: string
-
-  @Column(DataType.TEXT)
-  @Column
-  conversationReference: string
-}
-
-/**
- * A group of users.
- */
-@Table
-export class GuaribasGroup extends Model<GuaribasGroup> {
-  @PrimaryKey
-  @AutoIncrement
-  @Column
-  public groupId: number;
-
-  @Length({ min: 0, max: 512 })
-  @Column
-  public displayName: string;
-
-  @ForeignKey(() => GuaribasInstance)
-  @Column
-  public instanceId: number;
-
-  @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
-}
-
-/**
- * Relation of groups and users.
- */
-@Table
-export class GuaribasUserGroup extends Model<GuaribasUserGroup> {
-  @ForeignKey(() => GuaribasUser)
-  @Column
-  public userId: number;
-
-  @ForeignKey(() => GuaribasGroup)
-  @Column
-  public groupId: number;
-
-  @ForeignKey(() => GuaribasInstance)
-  @Column
-  public instanceId: number;
-
-  @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
-
-  @BelongsTo(() => GuaribasGroup)
-  public group: GuaribasGroup;
-
-  @BelongsTo(() => GuaribasUser)
-  public user: GuaribasUser;
+      async step => {
+        const locale = step.context.activity.locale;
+        await step.context.sendActivity(`${min.instance.description}`);
+        return await step.prompt('textPrompt', "Qual seria o código de ativação?");
+      },
+      async step => {
+        let sec = new SecService();
+        let from = step.context.activity.from.id;
+        await sec.updateCurrentBotId(min.instance.instanceId, from, step.result);
+        return await step.next();
+      }
+    ]));
+  }
 }

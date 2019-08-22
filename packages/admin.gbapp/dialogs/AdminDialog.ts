@@ -37,7 +37,7 @@
 'use strict';
 
 const crypto = require('crypto');
-const emptyDir = require('empty-dir');
+const rimraf = require('rimraf');
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
 import urlJoin = require('url-join');
@@ -83,8 +83,7 @@ export class AdminDialog extends IGBDialog {
       await s.downloadFolder(localFolder, siteName, folderName,
         GBConfigService.get('CLOUD_USERNAME'), GBConfigService.get('CLOUD_PASSWORD'))
       await deployer.deployPackage(min, localFolder);
-      await emptyDir(localFolder);
-
+      rimraf.sync(localFolder);
     }
   }
 

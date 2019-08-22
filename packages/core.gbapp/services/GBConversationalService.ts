@@ -97,6 +97,10 @@ export class GBConversationalService implements IGBConversationalService {
 
   public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string): Promise<boolean> {
 
+    if (min.instance.nlpAppId === null){
+      return false;
+    }
+
     const model = new LuisRecognizer({
       applicationId: min.instance.nlpAppId,
       endpointKey: min.instance.nlpKey,
