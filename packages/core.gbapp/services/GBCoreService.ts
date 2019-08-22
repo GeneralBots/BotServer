@@ -279,6 +279,12 @@ STORAGE_SYNC=true
     }
   }
 
+  public async deleteInstance(botId:string) {
+    const options = { where: {} };
+    options.where = { botId: botId };
+    await GuaribasInstance.destroy(options);
+  }
+
   public async saveInstance(fullInstance: any) {
     const options = { where: {} };
     options.where = { botId: fullInstance.botId };

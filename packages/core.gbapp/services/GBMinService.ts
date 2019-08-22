@@ -40,6 +40,7 @@ import urlJoin = require('url-join');
 const { DialogSet, TextPrompt } = require('botbuilder-dialogs');
 const express = require('express');
 const request = require('request-promise-native');
+const removeRoute = require('express-remove-route');
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
 import { ConfirmPrompt, WaterfallDialog } from 'botbuilder-dialogs';
@@ -76,6 +77,7 @@ export class GBMinService {
   public conversationalService: IGBConversationalService;
   public adminService: IGBAdminService;
   public deployer: GBDeployer;
+  private static uiPackage = 'default.gbui';
 
   public corePackage = 'core.gbai';
 
@@ -108,79 +110,73 @@ export class GBMinService {
    */
 
   public async buildMin(
-    bootInstance: IGBInstance,
-    server: any,
-    appPackages: IGBPackage[],
-    sysPackages: IGBPackage[],
     instances: IGBInstance[],
-    deployer: GBDeployer,
-    proxyAddress: string
   ) {
-    const uiPackage = 'default.gbui';
-
     // Serves default UI on root address '/' if web enabled.
     if (process.env.DISABLE_WEB !== 'true') {
-      server.use('/', express.static(urlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
+      GBServer.globals.server.use('/', express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build')));
+    }
+    // Serves the bot information object via HTTP so clients can get
+    // instance information stored on server.
+    if (process.env.DISABLE_WEB !== 'true') {
+      GBServer.globals.server.get('/instances/:botId', (req, res) => {
+        (async () => {
+          await this.handleGetInstanceFroClient(req, res);
+        })();
+      });
     }
 
     await Promise.all(
       instances.map(async instance => {
         // Gets the authorization key for each instance from Bot Service.
 
-        const webchatToken = await this.getWebchatToken(instance);
-
-        // Serves the bot information object via HTTP so clients can get
-        // instance information stored on server.
-
-        if (process.env.DISABLE_WEB !== 'true') {
-          server.get('/instances/:botId', (req, res) => {
-            (async () => {
-              await this.sendInstanceToClient(req, bootInstance, res, webchatToken);
-            })();
-          });
-        }
-
-        // Build bot adapter.
-
-        const { min, adapter, conversationState } = await this.buildBotAdapter(instance, proxyAddress, sysPackages);
-
-        // Install default VBA module.
-
-        // DISABLED: deployer.deployPackage(min, 'packages/default.gbdialog');
-
-        // Call the loadBot context.activity for all packages.
-
-        this.invokeLoadBot(appPackages, sysPackages, min, server);
-
-        // Serves individual URL for each bot conversational interface...
-
-        const url = `/api/messages/${instance.botId}`;
-        server.post(url, async (req, res) => {
-          await this.receiver(adapter, req, res, conversationState, min, instance, appPackages);
-        });
-        GBLog.info(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
-
-        // Serves individual URL for each bot user interface.
-
-        if (process.env.DISABLE_WEB !== 'true') {
-          const uiUrl = `/${instance.botId}`;
-          server.use(uiUrl, express.static(urlJoin(GBDeployer.deployFolder, uiPackage, 'build')));
-
-          GBLog.info(`Bot UI ${uiPackage} accessible at: ${uiUrl}.`);
-        }
-        // Clients get redirected here in order to create an OAuth authorize url and redirect them to AAD.
-        // There they will authenticate and give their consent to allow this app access to
-        // some resource they own.
-
-        this.handleOAuthRequests(server, min);
-
-        // After consent is granted AAD redirects here.  The ADAL library
-        // is invoked via the AuthenticationContext and retrieves an
-        // access token that can be used to access the user owned resource.
-
-        this.handleOAuthTokenRequests(server, min, instance);
+        await this.mountBot(instance);
       })
     );
+  }
+
+  public async unmountBot(botId: string) {
+    const url = `/api/messages/${botId}`;
+    removeRoute(GBServer.globals.server,url);
+
+    const uiUrl = `/${botId}`;
+    removeRoute(GBServer.globals.server, uiUrl);
+  }
+
+  public async mountBot(instance: IGBInstance) {
+    
+    // Build bot adapter.
+    const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.publicAddress, GBServer.globals.sysPackages);
+    
+    // Install default VBA module.
+    //this.deployer.deployPackage(min, 'packages/default.gbdialog');
+    
+    // Call the loadBot context.activity for all packages.
+    this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min, GBServer.globals.server);
+    
+    // Serves individual URL for each bot conversational interface...
+    const url = `/api/messages/${instance.botId}`;
+    GBServer.globals.server.post(url, async (req, res) => {
+      await this.receiver(adapter, req, res, conversationState, min, instance, GBServer.globals.appPackages);
+    });
+    GBLog.info(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
+    
+    // Serves individual URL for each bot user interface.
+    if (process.env.DISABLE_WEB !== 'true') {
+      const uiUrl = `/${instance.botId}`;
+      GBServer.globals.server.use(uiUrl, express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build')));
+      GBLog.info(`Bot UI ${GBMinService.uiPackage} accessible at: ${uiUrl}.`);
+    }
+
+    // Clients get redirected here in order to create an OAuth authorize url and redirect them to AAD.
+    // There they will authenticate and give their consent to allow this app access to
+    // some resource they own.
+    this.handleOAuthRequests(GBServer.globals.server, min);
+    
+    // After consent is granted AAD redirects here.  The ADAL library
+    // is invoked via the AuthenticationContext and retrieves an
+    // access token that can be used to access the user owned resource.
+    this.handleOAuthTokenRequests(GBServer.globals.server, min, instance);
   }
 
   private handleOAuthTokenRequests(server: any, min: GBMinInstance, instance: IGBInstance) {
@@ -235,13 +231,14 @@ export class GBMinService {
   /**
    * Returns the instance object to clients requesting bot info.
    */
-  private async sendInstanceToClient(req, bootInstance: IGBInstance, res: any, webchatToken: any) {
+  private async handleGetInstanceFroClient(req: any, res: any) {
     let botId = req.params.botId;
     if (botId === '[default]' || botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
     }
     const instance = await this.core.loadInstance(botId);
     if (instance !== null) {
+      const webchatToken = await this.getWebchatToken(instance);
       const speechToken = instance.speechKey != null ? await this.getSTSToken(instance) : null;
       let theme = instance.theme;
       if (theme === undefined) {

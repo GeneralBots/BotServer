@@ -43,6 +43,7 @@ const WaitUntil = require('wait-until');
 const express = require('express');
 const child_process = require('child_process');
 const graph = require('@microsoft/microsoft-graph-client');
+const emptyDir = require('empty-dir');
 
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
@@ -54,6 +55,8 @@ import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBConfigService } from './GBConfigService';
 import { GBImporter } from './GBImporterService';
 import { GBVMService } from './GBVMService';
+import { min } from 'moment';
+import { GBMinService } from './GBMinService';
 
 /**
  *
@@ -62,9 +65,9 @@ import { GBVMService } from './GBVMService';
 
 export class GBDeployer {
   public static deployFolder = 'packages';
+  public static workFolder = 'work';
   public core: IGBCoreService;
   public importer: GBImporter;
-  public workDir: string = './work';
 
   constructor(core: IGBCoreService, importer: GBImporter) {
     this.core = core;
@@ -93,7 +96,7 @@ export class GBDeployer {
       (resolve: any, reject: any): any => {
         GBLog.info(`PWD ${process.env.PWD}...`);
         let totalPackages = 0;
-        let paths = [urlJoin(process.env.PWD, GBDeployer.deployFolder)];
+        let paths = [urlJoin(process.env.PWD, GBDeployer.deployFolder), urlJoin(process.env.PWD, GBDeployer.workFolder)];
         const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
         if (additionalPath !== undefined && additionalPath !== '') {
           paths = paths.concat(additionalPath.toLowerCase().split(';'));
@@ -165,7 +168,7 @@ export class GBDeployer {
    * Deploys a bot to the storage.
    */
 
-  public async deployBot(localPath: string, proxyAddress: string): Promise<void> {
+  public async deployBot(localPath: string, publicAddress: string): Promise<void> {
     const packageName = Path.basename(localPath);
 
     const service = new AzureDeployerService(this);
@@ -177,17 +180,17 @@ export class GBDeployer {
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
     const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
 
-    if (await service.botExists(instance.botId, group, proxyAddress)) {
-      instance = await service.updateBot(
-        instance,
-        accessToken,
+    if (await service.botExists(instance.botId, group)) {
+      await service.updateBot(
+        instance.botId,
+        group,
         instance.title,
         instance.description,
-        proxyAddress
+        `${publicAddress}/api/messages/${instance.botId}`
       );
 
     } else {
-
+      instance = Object.assign(instance, GBServer.globals.bootInstance);
       instance = await service.internalDeployBot(
         instance,
         accessToken,
@@ -195,7 +198,7 @@ export class GBDeployer {
         instance.title,
         group,
         instance.description,
-        `${proxyAddress}/api/messages/${instance.botId}`,
+        `${publicAddress}/api/messages/${instance.botId}`,
         'global',
         instance.nlpAppId,
         instance.nlpKey,
@@ -203,9 +206,39 @@ export class GBDeployer {
         instance.marketplacePassword,
         subscriptionId
       );
+
+      await GBServer.globals.minService.mountBot(instance);
     }
     await this.core.saveInstance(instance);
   }
+
+
+  /**
+   * Deploys a bot to the storage.
+   */
+
+  public async undeployBot(botId: string, packageName: string): Promise<void> {
+    const service = new AzureDeployerService(this);
+
+    const username = GBConfigService.get('CLOUD_USERNAME');
+    const password = GBConfigService.get('CLOUD_PASSWORD');
+    const group = GBConfigService.get('CLOUD_GROUP');
+    const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
+
+    if (await service.botExists(botId, group)) {
+
+      await service.deleteBot(
+        botId, group
+      );
+
+    }
+    GBServer.globals.minService.unmountBot(botId);
+    await this.core.deleteInstance(botId);
+    const packageFolder = urlJoin(process.env.PWD, 'work', packageName);
+    await emptyDir(packageFolder);
+  }
+
 
   public async deployPackageToStorage(instanceId: number, packageName: string): Promise<GuaribasPackage> {
     return GuaribasPackage.create({
@@ -233,6 +266,7 @@ export class GBDeployer {
     switch (packageType) {
       case '.gbot':
         await this.deployBot(localPath, GBServer.globals.publicAddress);
+        break;
 
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
@@ -257,7 +291,13 @@ export class GBDeployer {
 
     const p = await this.getPackageByName(instance.instanceId, packageName);
 
+
     switch (packageType) {
+      case '.gbot':
+        const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
+        await this.undeployBot(packageObject.botId, packageName);
+        break;
+
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
 

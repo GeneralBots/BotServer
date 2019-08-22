@@ -58,6 +58,9 @@ export class RootData {
   public publicAddress: string;
   public server: any;
   public sysPackages: any[];
+  public appPackages: any[];
+  minService: GBMinService;
+  bootInstance: IGBInstance;
 }
 
 /**
@@ -115,12 +118,12 @@ export class GBServer {
 
           // Creates a boot instance or load it from storage.
 
-          let bootInstance: IGBInstance;
+          
           try {
             await core.initStorage();
           } catch (error) {
             GBLog.verbose(`Error initializing storage: ${error}`);
-            bootInstance = await core.createBootInstance(core, azureDeployer, GBServer.globals.publicAddress);
+            GBServer.globals.bootInstance = await core.createBootInstance(core, azureDeployer, GBServer.globals.publicAddress);
             await core.initStorage();
           }
 
@@ -132,6 +135,8 @@ export class GBServer {
           const sysPackages = core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, appPackages);
+          GBServer.globals.sysPackages = sysPackages;
+          GBServer.globals.appPackages = appPackages;
 
           // Loads boot bot and other instances.
 
@@ -141,24 +146,24 @@ export class GBServer {
             'boot.gbot',
             'packages/boot.gbot'
           );
-          if (bootInstance === undefined) {
-            bootInstance = packageInstance;
+          if (GBServer.globals.bootInstance === undefined) {
+            GBServer.globals.bootInstance = packageInstance;
           }
           // tslint:disable-next-line:prefer-object-spread
-          const fullInstance = Object.assign(packageInstance, bootInstance);
+          const fullInstance = Object.assign(packageInstance, GBServer.globals.bootInstance);
           await core.saveInstance(fullInstance);
           let instances: IGBInstance[] = await core.loadAllInstances(core, azureDeployer,
             GBServer.globals.publicAddress);
-          instances = await core.ensureInstances(instances, bootInstance, core);
-          if (bootInstance !== undefined) {
-            bootInstance = instances[0];
+          instances = await core.ensureInstances(instances, GBServer.globals.bootInstance, core);
+          if (GBServer.globals.bootInstance !== undefined) {
+            GBServer.globals.bootInstance = instances[0];
           }
 
           // Builds minimal service infrastructure.
 
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
-          await minService.buildMin(bootInstance, server, appPackages, sysPackages, instances,
-            deployer, GBServer.globals.publicAddress);
+          GBServer.globals.minService = minService;
+          await minService.buildMin( instances);
 
           // Deployment of local applications for the first time.
 

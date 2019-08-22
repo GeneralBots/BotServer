@@ -218,7 +218,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     };
   }
 
-  public async botExists(botId, group, endpoint) {
+  public async botExists(botId, group) {
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
@@ -227,17 +227,11 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
     const httpClient = new ServiceClient();
 
-    const parameters = {
-      properties: {
-        endpoint: endpoint
-      }
-    };
-
     const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
       this.provider
       }/botServices/${botId}?api-version=${this.apiVersion}`;
     const url = urlJoin(baseUrl, query);
-    const req = AzureDeployerService.createRequestObject(url, accessToken, 'GET', JSON.stringify(parameters));
+    const req = AzureDeployerService.createRequestObject(url, accessToken, 'GET', undefined);
     const res = await httpClient.sendRequest(req);
     // CHECK
     if (!JSON.parse(res.bodyAsText).id) {
@@ -305,6 +299,28 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       throw res.bodyAsText;
     }
     GBLog.info(`Bot proxy updated at: ${endpoint}.`);
+  }
+
+  public async deleteBot(botId: string, group) {
+    const baseUrl = `https://management.azure.com/`;
+    const username = GBConfigService.get('CLOUD_USERNAME');
+    const password = GBConfigService.get('CLOUD_PASSWORD');
+    const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+
+    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
+    const httpClient = new ServiceClient();
+
+    const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
+      this.provider
+      }/botServices/${botId}?api-version=${this.apiVersion}`;
+    const url = urlJoin(baseUrl, query);
+    const req = AzureDeployerService.createRequestObject(url, accessToken, 'DELETE', undefined);
+    const res = await httpClient.sendRequest(req);
+
+    if (res.bodyAsText !== "") {
+      throw res.bodyAsText;
+    }
+    GBLog.info(`Bot ${botId} was deleted from the provider.`);
   }
 
   public async openStorageFirewall(groupName, serverName) {
@@ -590,7 +606,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       id = app.id;
     }
 
-    return id.replace(/\'/gi,'');
+    return id.replace(/\'/gi, '');
   }
 
   private async makeNlpRequest(

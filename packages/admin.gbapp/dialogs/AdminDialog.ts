@@ -57,7 +57,7 @@ export class AdminDialog extends IGBDialog {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
-    await deployer.undeployPackageFromLocalPath(min.instance, urlJoin('packages', packageName));
+    await deployer.undeployPackageFromLocalPath(min.instance, urlJoin(GBDeployer.workFolder, packageName));
   }
 
   public static isSharePointPath(path: string) {
@@ -79,7 +79,7 @@ export class AdminDialog extends IGBDialog {
       let siteName = text.split(' ')[1];
       let folderName = text.split(' ')[2];
 
-      let localFolder = Path.join('tmp', Path.basename(folderName));
+      let localFolder = Path.join('work', Path.basename(folderName));
       await s.downloadFolder(localFolder, siteName, folderName,
         GBConfigService.get('CLOUD_USERNAME'), GBConfigService.get('CLOUD_PASSWORD'))
       await deployer.deployPackage(min, localFolder);
@@ -122,20 +122,20 @@ export class AdminDialog extends IGBDialog {
           const prompt = Messages[locale].authenticate;
 
           return await step.prompt('textPrompt', prompt);
-        },
-        async step => {
-          const locale = step.context.activity.locale;
-          const sensitive = step.result;
+        // },
+        // async step => {
+        //   const locale = step.context.activity.locale;
+        //   const sensitive = step.result;
 
-          if (sensitive === GBConfigService.get('ADMIN_PASS')) {
-            await step.context.sendActivity(Messages[locale].welcome);
+        //   if (sensitive === GBConfigService.get('ADMIN_PASS')) {
+        //     await step.context.sendActivity(Messages[locale].welcome);
 
-            return await step.prompt('textPrompt', Messages[locale].which_task);
-          } else {
-            await step.context.sendActivity(Messages[locale].wrong_password);
+        //     return await step.prompt('textPrompt', Messages[locale].which_task);
+        //   } else {
+        //     await step.context.sendActivity(Messages[locale].wrong_password);
 
-            return await step.endDialog();
-          }
+        //     return await step.endDialog();
+        //   }
         },
         async step => {
           const locale: string = step.context.activity.locale;
@@ -160,6 +160,11 @@ export class AdminDialog extends IGBDialog {
             await step.context.sendActivity('Package deployed. Just need to rebuild the index... Doing it right now.');
             await AdminDialog.rebuildIndexPackageCommand(min, deployer);
             await step.context.sendActivity('Finished importing of that .gbkb package. Thanks.');
+            return await step.replaceDialog('/admin', { firstRun: false });
+          } else if (cmdName === 'undeployPackage') {
+            await step.context.sendActivity('The package is being *undeployed*...');
+            await AdminDialog.undeployPackageCommand(text, min);
+            await step.context.sendActivity('Package *undeployed*.');
             return await step.replaceDialog('/admin', { firstRun: false });
           } else if (cmdName === 'rebuildIndex') {
             await AdminDialog.rebuildIndexPackageCommand(min, deployer);
