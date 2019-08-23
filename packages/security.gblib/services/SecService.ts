@@ -91,13 +91,11 @@ export class SecService extends GBService {
   }
 
   public async updateCurrentBotId(
-    instanceId: number,
     userSystemId: string,
     currentBotId: string
   ): Promise<GuaribasUser> {
     let user = await GuaribasUser.findOne({
       where: { 
-        instanceId: instanceId,
         userSystemId: userSystemId
       }
     });

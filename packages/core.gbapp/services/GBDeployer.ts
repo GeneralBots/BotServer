@@ -190,7 +190,7 @@ export class GBDeployer {
       );
 
     } else {
-      
+
       let botId = GBConfigService.get('BOT_ID');
       let bootInstance = await this.core.loadInstance(botId);
 
@@ -203,7 +203,7 @@ export class GBDeployer {
       instance.whatsappServiceNumber = bootInstance.whatsappServiceNumber;
       instance.whatsappServiceUrl = bootInstance.whatsappServiceUrl;
       instance.whatsappServiceWebhookUrl = bootInstance.whatsappServiceWebhookUrl;
-             
+
       instance = await service.internalDeployBot(
         instance,
         accessToken,
@@ -223,7 +223,7 @@ export class GBDeployer {
       await GBServer.globals.minService.mountBot(instance);
     }
     await this.core.saveInstance(instance);
-    
+
   }
 
 
@@ -245,15 +245,8 @@ export class GBDeployer {
     }
     GBServer.globals.minService.unmountBot(botId);
     await this.core.deleteInstance(botId);
-    const packageFolder =Path.join(process.env.PWD, 'work', packageName);
-    rimraf.sync(packageFolder);
-  }
-
-  public async undeployTheme(packageName: string): Promise<void> {
     const packageFolder = Path.join(process.env.PWD, 'work', packageName);
-    rimraf.sync(packageFolder);
   }
-
   public async deployPackageToStorage(instanceId: number, packageName: string): Promise<GuaribasPackage> {
     return GuaribasPackage.create({
       packageName: packageName,
@@ -291,7 +284,7 @@ export class GBDeployer {
         const vm = new GBVMService();
         await vm.loadDialogPackage(localPath, min, this.core, this);
         break;
-        
+
       default:
         const err = GBError.create(`Unhandled package type: ${packageType}.`);
         Promise.reject(err);
@@ -303,12 +296,14 @@ export class GBDeployer {
     const packageType = Path.extname(localPath);
     const packageName = Path.basename(localPath);
 
-    const p = await this.getPackageByName(instance.instanceId, packageName);
-
+    const p = await this.getStoragePackageByName(instance.instanceId, packageName);
+    if (p === null) {
+      throw new Error(`Package ${packageName} not found on instance: ${instance.botId}.`);
+    }
+    const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
 
     switch (packageType) {
       case '.gbot':
-        const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
         await this.undeployBot(packageObject.botId, packageName);
         break;
 
@@ -321,7 +316,7 @@ export class GBDeployer {
         break;
 
       case '.gbtheme':
-        this.undeployTheme(packageName);
+        // Just remove the package.
         break;
 
       case '.gbdialog':
@@ -333,6 +328,7 @@ export class GBDeployer {
         Promise.reject(err);
         break;
     }
+    rimraf.sync(localPath);
   }
 
   public async rebuildIndex(instance: IGBInstance, searchSchema: any) {
@@ -368,10 +364,10 @@ export class GBDeployer {
     await search.createIndex(searchSchema, dsName);
   }
 
-  public async getPackageByName(instanceId: number, packageName: string): Promise<GuaribasPackage> {
+  public async getStoragePackageByName(instanceId: number, packageName: string): Promise<GuaribasPackage> {
     const where = { packageName: packageName, instanceId: instanceId };
 
-    return GuaribasPackage.findOne({
+    return await GuaribasPackage.findOne({
       where: where
     });
   }

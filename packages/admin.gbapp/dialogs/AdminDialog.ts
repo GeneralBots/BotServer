@@ -120,20 +120,20 @@ export class AdminDialog extends IGBDialog {
           const prompt = Messages[locale].authenticate;
 
           return await step.prompt('textPrompt', prompt);
-        // },
-        // async step => {
-        //   const locale = step.context.activity.locale;
-        //   const sensitive = step.result;
+          // },
+          // async step => {
+          //   const locale = step.context.activity.locale;
+          //   const sensitive = step.result;
 
-        //   if (sensitive === GBConfigService.get('ADMIN_PASS')) {
-        //     await step.context.sendActivity(Messages[locale].welcome);
+          //   if (sensitive === GBConfigService.get('ADMIN_PASS')) {
+          //     await step.context.sendActivity(Messages[locale].welcome);
 
-        //     return await step.prompt('textPrompt', Messages[locale].which_task);
-        //   } else {
-        //     await step.context.sendActivity(Messages[locale].wrong_password);
+          //     return await step.prompt('textPrompt', Messages[locale].which_task);
+          //   } else {
+          //     await step.context.sendActivity(Messages[locale].wrong_password);
 
-        //     return await step.endDialog();
-        //   }
+          //     return await step.endDialog();
+          //   }
         },
         async step => {
           const locale: string = step.context.activity.locale;
@@ -144,49 +144,55 @@ export class AdminDialog extends IGBDialog {
           await step.context.sendActivity(Messages[locale].working(cmdName));
           let unknownCommand = false;
 
-          if (text === 'quit') {
-            return await step.replaceDialog('/');
-          } else if (cmdName === 'deployPackage') {
-            await AdminDialog.deployPackageCommand(min, text, deployer);
+          try {
 
-            return await step.replaceDialog('/admin', { firstRun: false });
-          } else if (cmdName === 'redeployPackage') {
-            await step.context.sendActivity('The package is being *unloaded*...');
-            await AdminDialog.undeployPackageCommand(text, min);
-            await step.context.sendActivity('Now, *deploying* package...');
-            await AdminDialog.deployPackageCommand(min, text, deployer);
-            await step.context.sendActivity('Package deployed. Just need to rebuild the index... Doing it right now.');
-            await AdminDialog.rebuildIndexPackageCommand(min, deployer);
-            await step.context.sendActivity('Finished importing of that .gbkb package. Thanks.');
-            return await step.replaceDialog('/admin', { firstRun: false });
-          } else if (cmdName === 'undeployPackage') {
-            await step.context.sendActivity('The package is being *undeployed*...');
-            await AdminDialog.undeployPackageCommand(text, min);
-            await step.context.sendActivity('Package *undeployed*.');
-            return await step.replaceDialog('/admin', { firstRun: false });
-          } else if (cmdName === 'rebuildIndex') {
-            await AdminDialog.rebuildIndexPackageCommand(min, deployer);
 
-            return await step.replaceDialog('/admin', { firstRun: false });
-          } else if (cmdName === 'syncBotServer') {
-            await AdminDialog.syncBotServerCommand(min, deployer);
+            if (text === 'quit') {
+              return await step.replaceDialog('/');
+            } else if (cmdName === 'deployPackage') {
+              await AdminDialog.deployPackageCommand(min, text, deployer);
 
-            return await step.replaceDialog('/admin', { firstRun: false });
-          } else if (cmdName === 'setupSecurity') {
-            return await step.beginDialog('/setupSecurity');
-          } else {
-            unknownCommand = true;
+              return await step.replaceDialog('/admin', { firstRun: false });
+            } else if (cmdName === 'redeployPackage') {
+              await step.context.sendActivity('The package is being *unloaded*...');
+              await AdminDialog.undeployPackageCommand(text, min);
+              await step.context.sendActivity('Now, *deploying* package...');
+              await AdminDialog.deployPackageCommand(min, text, deployer);
+              await step.context.sendActivity('Package deployed. Just need to rebuild the index... Doing it right now.');
+              await AdminDialog.rebuildIndexPackageCommand(min, deployer);
+              await step.context.sendActivity('Finished importing of that .gbkb package. Thanks.');
+              return await step.replaceDialog('/admin', { firstRun: false });
+            } else if (cmdName === 'undeployPackage') {
+              await step.context.sendActivity('The package is being *undeployed*...');
+              await AdminDialog.undeployPackageCommand(text, min);
+              await step.context.sendActivity('Package *undeployed*.');
+              return await step.replaceDialog('/admin', { firstRun: false });
+            } else if (cmdName === 'rebuildIndex') {
+              await AdminDialog.rebuildIndexPackageCommand(min, deployer);
+
+              return await step.replaceDialog('/admin', { firstRun: false });
+            } else if (cmdName === 'syncBotServer') {
+              await AdminDialog.syncBotServerCommand(min, deployer);
+
+              return await step.replaceDialog('/admin', { firstRun: false });
+            } else if (cmdName === 'setupSecurity') {
+              return await step.beginDialog('/setupSecurity');
+            } else {
+              unknownCommand = true;
+            }
+
+            if (unknownCommand) {
+              await step.context.sendActivity(Messages[locale].unknown_command);
+            } else {
+              await step.context.sendActivity(Messages[locale].finished_working);
+            }
+                        
+          } catch (error) {
+            await step.context.sendActivity(error.message);
           }
-
-          if (unknownCommand) {
-            await step.context.sendActivity(Messages[locale].unknown_command);
-          } else {
-            await step.context.sendActivity(Messages[locale].finished_working);
-          }
-          await step.endDialog();
-
-          return await step.replaceDialog('/answer', { query: text });
+          await step.replaceDialog('/ask', { isReturning: true });
         }
+
       ])
     );
   }

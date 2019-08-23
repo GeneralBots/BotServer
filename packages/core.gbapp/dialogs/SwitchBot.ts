@@ -57,7 +57,7 @@ export class SwitchBotDialog extends IGBDialog {
 
       async step => {
         const locale = step.context.activity.locale;
-        await step.context.sendActivity(`${min.instance.description}`);
+
         return await step.prompt('textPrompt', "Qual seria o código de ativação?");
       },
       async step => {

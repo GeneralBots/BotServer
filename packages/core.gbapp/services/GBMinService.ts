@@ -69,6 +69,7 @@ import { GBAdminPackage } from './../../admin.gbapp/index';
 import { GBConfigService } from './GBConfigService';
 import { GBDeployer } from './GBDeployer';
 import { SecService } from '../../security.gblib/services/SecService';
+import { isBreakOrContinueStatement } from 'typescript';
 
 /**
  * Minimal service layer for a bot.
@@ -128,20 +129,42 @@ export class GBMinService {
     }
     const url = '/webhooks/whatsapp';
     GBServer.globals.server.post(url, async (req, res) => {
-      const id = req.body.messages[0].chatId.split('@')[0];
+      try {
 
-      let sec = new SecService();
+        const id = req.body.messages[0].chatId.split('@')[0];
+        const text = req.body.messages[0].body;
+        if (req.body.messages[0].fromMe) {
+          res.end();
+          return; // Exit here.
+        }
 
-      const minBoot = GBServer.globals.minInstances[0];
-      let user = await sec.getUserFromPhone(id);
-      if (user === null) {
-        user = await sec.ensureUser(minBoot.instance.instanceId, id,
-          minBoot.botId, id, "", "whatsapp", id, id);
+        const minBoot = GBServer.globals.bootInstance;
+        const toSwitchMin = GBServer.globals.minInstances.filter(p => p.botId === text)[0];
+        let activeMin = toSwitchMin ? toSwitchMin : minBoot;
+
+        let sec = new SecService();
+        let user = await sec.getUserFromPhone(id);
+
+        if (user === null) {
+          user = await sec.ensureUser(activeMin.instance.instanceId, id,
+            activeMin.botId, id, "", "whatsapp", id, id);
+          await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar?`);
+          res.end();
+        } else {
+          // User wants to switch bots.
+          if (toSwitchMin !== undefined) {
+            await sec.updateCurrentBotId(id, text);
+            await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Agora falando com ${activeMin.instance.title}...`);
+            res.end();
+          }
+          else {
+            activeMin = GBServer.globals.minInstances.filter(p => p.botId === user.currentBotId)[0];;
+            (activeMin as any).whatsAppDirectLine.received(req, res);
+          }
+        }
+      } catch (error) {
+        GBLog.error(`Error on Whatsapp callback: ${error.message}`);
       }
-
-      let botId = user.currentBotId;
-      const min = GBServer.globals.minInstances.filter(p => p.botId === botId)[0];
-      (min as any).whatsAppDirectLine.received(req, res);
     });
 
     await Promise.all(
