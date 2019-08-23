@@ -191,8 +191,19 @@ export class GBDeployer {
 
     } else {
       
-      console.log(GBServer.globals.bootInstance);
-      instance = Object.assign(instance, GBServer.globals.bootInstance);
+      let botId = GBConfigService.get('BOT_ID');
+      let bootInstance = await this.core.loadInstance(botId);
+
+      instance.searchHost = bootInstance.searchHost;
+      instance.searchIndex = bootInstance.searchIndex;
+      instance.searchIndexer = bootInstance.searchIndexer;
+      instance.searchKey = bootInstance.searchKey;
+      instance.whatsappServiceKey = bootInstance.whatsappServiceKey;
+      instance.whatsappBotKey = bootInstance.whatsappBotKey;
+      instance.whatsappServiceNumber = bootInstance.whatsappServiceNumber;
+      instance.whatsappServiceUrl = bootInstance.whatsappServiceUrl;
+      instance.whatsappServiceWebhookUrl = bootInstance.whatsappServiceWebhookUrl;
+             
       instance = await service.internalDeployBot(
         instance,
         accessToken,
@@ -212,6 +223,7 @@ export class GBDeployer {
       await GBServer.globals.minService.mountBot(instance);
     }
     await this.core.saveInstance(instance);
+    
   }
 
 

@@ -83,7 +83,6 @@ export class AdminDialog extends IGBDialog {
       await s.downloadFolder(localFolder, siteName, folderName,
         GBConfigService.get('CLOUD_USERNAME'), GBConfigService.get('CLOUD_PASSWORD'))
       await deployer.deployPackage(min, localFolder);
-      rimraf.sync(localFolder);
     }
   }
 

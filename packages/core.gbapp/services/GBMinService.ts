@@ -128,10 +128,17 @@ export class GBMinService {
     }
     const url = '/webhooks/whatsapp';
     GBServer.globals.server.post(url, async (req, res) => {
-      const from = req.body.messages[0].chatId.split('@')[0];
-      
+      const id = req.body.messages[0].chatId.split('@')[0];
+
       let sec = new SecService();
-      let user = await sec.getUserFromPhone(from);
+
+      const minBoot = GBServer.globals.minInstances[0];
+      let user = await sec.getUserFromPhone(id);
+      if (user === null) {
+        user = await sec.ensureUser(minBoot.instance.instanceId, id,
+          minBoot.botId, id, "", "whatsapp", id, id);
+      }
+
       let botId = user.currentBotId;
       const min = GBServer.globals.minInstances.filter(p => p.botId === botId)[0];
       (min as any).whatsAppDirectLine.received(req, res);
@@ -163,7 +170,7 @@ export class GBMinService {
     GBServer.globals.minInstances.push(min);
 
     // Install default VBA module.
-    //this.deployer.deployPackage(min, 'packages/default.gbdialog');
+    // this.deployer.deployPackage(min, 'packages/default.gbdialog');
 
     // Call the loadBot context.activity for all packages.
     this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min, GBServer.globals.server);
@@ -427,7 +434,7 @@ export class GBMinService {
           const member = context.activity.membersAdded[0];
 
           await sec.ensureUser(instance.instanceId, member.id,
-             min.botId, member.id, "", "web", member.name, member.id);
+            min.botId, member.id, "", "web", member.name, member.id);
         }
 
         GBLog.info(

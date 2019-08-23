@@ -41,6 +41,7 @@ import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings';
 import { SecService } from '../../security.gblib/services/SecService';
+import { GBServer } from '../../../src/app';
 /**
  * Dialog for the bot explains about itself.
  */
@@ -62,7 +63,10 @@ export class SwitchBotDialog extends IGBDialog {
       async step => {
         let sec = new SecService();
         let from = step.context.activity.from.id;
-        await sec.updateCurrentBotId(min.instance.instanceId, from, step.result);
+        const minBoot = GBServer.globals.minInstances[0];
+        await sec.updateCurrentBotId(minBoot.instance.instanceId, from, step.result);
+        await step.context.sendActivity(`Opa, vamos lá!`);
+                
         return await step.next();
       }
     ]));

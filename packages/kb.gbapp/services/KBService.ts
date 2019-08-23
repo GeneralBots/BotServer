@@ -43,6 +43,7 @@ const asyncPromise = require('async-promises');
 const walkPromise = require('walk-promise');
 // tslint:disable-next-line:newline-per-chained-call
 const parse = require('bluebird').promisify(require('csv-parse'));
+const { SearchService } = require('azure-search-client');
 
 import { GBDialogStep, GBLog, IGBConversationalService, IGBCoreService, IGBInstance } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
@@ -169,22 +170,23 @@ export class KBService {
         query = `${query} ${text}`;
       }
     }
-    // TODO: query = `${query}&$filter=instanceId eq ${instance.instanceId}`;
-
+ 
     // tslint:disable:no-unsafe-any
     if (instance.searchKey !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
-      const service = new AzureSearch(
-        instance.searchKey,
-        instance.searchHost,
-        instance.searchIndex,
-        instance.searchIndexer
-      );
-      const results = await service.search(query);
+      const client = new SearchService(instance.searchHost.split('.')[0], instance.searchKey );
+      const results = await client.indexes.use(instance.searchIndex)
+      .buildQuery()
+      .filter((f) => f.eq('instanceId', instance.instanceId))
+      .search(query)
+      .top(1)
+      .executeQuery();
 
-      if (results && results.length > 0 && results[0]['@search.score'] >= searchScore) {
-        const value = await this.getAnswerById(instance.instanceId, results[0].answerId);
+      const values = results.result.value;
+
+      if (values && values.length > 0 && values[0]['@search.score'] >= searchScore) {
+        const value = await this.getAnswerById(instance.instanceId, values[0].answerId);
         if (value !== null) {
-          return Promise.resolve({ answer: value, questionId: results[0].questionId });
+          return Promise.resolve({ answer: value, questionId: values[0].questionId });
         } else {
           return Promise.resolve({ answer: undefined, questionId: 0 });
         }

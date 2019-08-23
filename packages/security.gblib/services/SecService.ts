@@ -96,7 +96,7 @@ export class SecService extends GBService {
     currentBotId: string
   ): Promise<GuaribasUser> {
     let user = await GuaribasUser.findOne({
-      where: {
+      where: { 
         instanceId: instanceId,
         userSystemId: userSystemId
       }
