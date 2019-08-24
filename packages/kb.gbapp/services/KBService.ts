@@ -409,6 +409,12 @@ export class KBService {
 
     let text = answer.content;
 
+    let sleep = (ms) => {
+      return new Promise(resolve => {
+        setTimeout(resolve, ms)
+      })
+    }
+
     enum State {
       InText,
       InImage,
@@ -438,8 +444,9 @@ export class KBService {
           if (c === '[') {
             if (currentText !== '') {
               await step.context.sendActivity(currentText);
+              await sleep(3000);
             }
-       
+
             currentText = '';
             state = State.InImageCaption;
           }
@@ -463,6 +470,8 @@ export class KBService {
             state = State.InText;
             let url = urlJoin(GBServer.globals.publicAddress, currentImage);
             await conversationalService.sendFile(min, step, url);
+            await sleep(5000);
+            currentImage = '';
           }
           else {
             currentImage = currentImage.concat(c);
