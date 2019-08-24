@@ -231,6 +231,30 @@ export class WhatsappDirectLine extends GBService {
     return `${attachment.content.title} - ${attachment.content.text}`;
   }
 
+  public async sendFileToDevice(to, url) {
+    const options = {
+      method: 'POST',
+      url: urlJoin(this.whatsappServiceUrl, 'sendFile'),
+      qs: {
+        token: this.whatsappServiceKey,
+        phone: to,
+        body: url
+      },
+      headers: {
+        'cache-control': 'no-cache'
+      }
+    };
+
+    try {
+      // tslint:disable-next-line: await-promise
+      const result = await request.post(options);
+      GBLog.info(result);
+    } catch (error) {
+      GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
+    }
+  }
+
+
   public async sendToDevice(to, msg) {
     const options = {
       method: 'POST',

@@ -63,6 +63,12 @@ export class GBConversationalService implements IGBConversationalService {
     return step.context.activity.locale;
   }
 
+  public async sendFile(min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
+    let mobile = step.context.activity.from.id;
+    min.whatsAppDirectLine.sendFile(mobile, url);
+
+  }
+
   public async sendEvent(step: GBDialogStep, name: string, value: Object): Promise<any> {
     if (step.context.activity.channelId === 'webchat') {
       const msg = MessageFactory.text('');

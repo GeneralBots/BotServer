@@ -72,8 +72,10 @@
     "child_process": "1.0.2",
     "chokidar": "3.0.0",
     "cli-spinner": "0.2.10",
+    "commonmark": "^0.29.0",
     "csv-parse": "4.4.1",
     "dotenv-extended": "2.4.0",
+    "exceljs": "^1.15.0",
     "express": "4.16.4",
     "express-promise-router": "3.0.3",
     "express-remove-route": "^1.0.0",
@@ -117,7 +119,8 @@
     "vbscript-to-typescript": "1.0.8",
     "wait-until": "0.0.2",
     "walk-promise": "0.2.0",
-    "winston": "3.2.1"
+    "winston": "3.2.1",
+    "xlsx": "^0.15.1"
   },
   "devDependencies": {
     "@semantic-release/changelog": "3.0.2",

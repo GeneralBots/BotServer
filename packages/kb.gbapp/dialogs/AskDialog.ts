@@ -143,7 +143,8 @@ export class AskDialog extends IGBDialog {
           await min.userProfile.set(step.context, user);
 
           // Sends the answer to all outputs, including projector.
-          await service.sendAnswer(min.conversationalService, step, resultsA.answer);
+
+          await service.sendAnswer(AskDialog.getChannel(step), min.conversationalService, step, resultsA.answer);
 
           // Goes to ask loop, again.
           return await step.replaceDialog('/ask', { isReturning: true });
@@ -163,7 +164,7 @@ export class AskDialog extends IGBDialog {
               await step.context.sendActivity(Messages[locale].wider_answer);
             }
             // Sends the answer to all outputs, including projector.
-            await service.sendAnswer(min.conversationalService, step, resultsB.answer);
+            await service.sendAnswer(AskDialog.getChannel(step), min.conversationalService, step, resultsB.answer);
 
             return await step.replaceDialog('/ask', { isReturning: true });
           } else {
@@ -178,6 +179,10 @@ export class AskDialog extends IGBDialog {
     ];
   }
 
+  private static getChannel(step): string {
+    return Number.isInteger(step.context.activity.from.id) ? 'whatsapp' : step.context.activity.channelId;
+  }
+
   private static getAnswerEventDialog(service: KBService, min: GBMinInstance) {
     return [
       async step => {
@@ -186,7 +191,7 @@ export class AskDialog extends IGBDialog {
           const question = await service.getQuestionById(min.instance.instanceId, data.questionId);
           const answer = await service.getAnswerById(min.instance.instanceId, question.answerId);
           // Sends the answer to all outputs, including projector.
-          await service.sendAnswer(min.conversationalService, step, answer);
+          await service.sendAnswer(AskDialog.getChannel(step), min.conversationalService, step, answer);
           await step.replaceDialog('/ask', { isReturning: true });
         }
 

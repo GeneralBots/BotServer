@@ -297,9 +297,6 @@ export class GBDeployer {
     const packageName = Path.basename(localPath);
 
     const p = await this.getStoragePackageByName(instance.instanceId, packageName);
-    if (p === null) {
-      throw new Error(`Package ${packageName} not found on instance: ${instance.botId}.`);
-    }
     const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
 
     switch (packageType) {

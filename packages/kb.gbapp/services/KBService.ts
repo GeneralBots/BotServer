@@ -34,6 +34,7 @@
  * @fileoverview Knowledge base services and logic.
  */
 
+var Excel = require('exceljs');
 const Path = require('path');
 const Fs = require('fs');
 import urlJoin = require('url-join');
@@ -46,7 +47,6 @@ const parse = require('bluebird').promisify(require('csv-parse'));
 const { SearchService } = require('azure-search-client');
 
 import { GBDialogStep, GBLog, IGBConversationalService, IGBCoreService, IGBInstance } from 'botlib';
-import { AzureSearch } from 'pragmatismo-io-framework';
 import { Sequelize } from 'sequelize-typescript';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasPackage } from '../../core.gbapp/models/GBModel';
@@ -170,16 +170,16 @@ export class KBService {
         query = `${query} ${text}`;
       }
     }
- 
+
     // tslint:disable:no-unsafe-any
     if (instance.searchKey !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
-      const client = new SearchService(instance.searchHost.split('.')[0], instance.searchKey );
+      const client = new SearchService(instance.searchHost.split('.')[0], instance.searchKey);
       const results = await client.indexes.use(instance.searchIndex)
-      .buildQuery()
-      .filter((f) => f.eq('instanceId', instance.instanceId))
-      .search(query)
-      .top(1)
-      .executeQuery();
+        .buildQuery()
+        .filter((f) => f.eq('instanceId', instance.instanceId))
+        .search(query)
+        .top(1)
+        .executeQuery();
 
       const values = results.result.value;
 
@@ -254,24 +254,22 @@ export class KBService {
     instanceId: number,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
-    const file = Fs.readFileSync(filePath, 'utf8');
-    const opts = {
-      delimiter: '\t'
-    };
+
+    var workbook = new Excel.Workbook();
+    let data = await workbook.xlsx.readFile(filePath);
 
     let lastQuestionId: number;
     let lastAnswer: GuaribasAnswer;
+    let rows = data._worksheets[1]._rows;
 
-    const data = await parse(file, opts);
-
-    return asyncPromise.eachSeries(data, async line => {
+    return asyncPromise.eachSeries(rows, async line => {
       // Extracts values from columns in the current line.
 
-      const subjectsText = line[0];
-      const from = line[1];
-      const to = line[2];
-      const question = line[3];
-      let answer = line[4];
+      const subjectsText = line._cells[0].value;
+      const from = line._cells[1].value;
+      const to = line._cells[2].value;
+      const question = line._cells[3].value;
+      let answer = line._cells[4].value;
 
       // Skips the first line.
 
@@ -351,34 +349,38 @@ export class KBService {
     });
   }
 
-  public async sendAnswer(conversationalService: IGBConversationalService, step: GBDialogStep, answer: GuaribasAnswer) {
+  public async sendAnswer(channel: string, conversationalService: IGBConversationalService, step: GBDialogStep, answer: GuaribasAnswer) {
     if (answer.content.endsWith('.mp4')) {
-      await conversationalService.sendEvent(step, 'play', {
-        playerType: 'video',
-        data: answer.content
-      });
-    } else if (answer.content.length > 140 &&
-      step.context.activity.channelId === 'webchat' &&
+      await this.playVideo(conversationalService, step, answer);
+    }
+    else if (answer.format === '.md') {
+
+      await this.playMarkdown(answer, channel, step, conversationalService);
+
+    } else {
+      await step.context.sendActivity(answer.content);
+      await conversationalService.sendEvent(step, 'stop', undefined);
+    }
+  } 
+
+  private async playMarkdown(answer: GuaribasAnswer, channel: string, step: GBDialogStep, conversationalService: IGBConversationalService) {
+    let html = answer.content;
+    marked.setOptions({
+      renderer: new marked.Renderer(),
+      gfm: true,
+      tables: true,
+      breaks: false,
+      pedantic: false,
+      sanitize: false,
+      smartLists: true,
+      smartypants: false,
+      xhtml: false
+    });
+    html = marked(answer.content);
+    if (channel === 'webchat' &&
       GBConfigService.get('DISABLE_WEB') !== 'true') {
       const locale = step.context.activity.locale;
-
       await step.context.sendActivity(Messages[locale].will_answer_projector);
-      let html = answer.content;
-
-      if (answer.format === '.md') {
-        marked.setOptions({
-          renderer: new marked.Renderer(),
-          gfm: true,
-          tables: true,
-          breaks: false,
-          pedantic: false,
-          sanitize: false,
-          smartLists: true,
-          smartypants: false,
-          xhtml: false
-        });
-        html = marked(answer.content);
-      }
       await conversationalService.sendEvent(step, 'play', {
         playerType: 'markdown',
         data: {
@@ -388,81 +390,89 @@ export class KBService {
           nextId: answer.nextId
         }
       });
-    } else {
-      await step.context.sendActivity(answer.content);
-      await conversationalService.sendEvent(step, 'stop', undefined);
+    }
+    else if (channel === 'whatsapp') {
+      let from = step.context.activity.from.id;
+      //conversationalService.sendFile(min, from, answer.content);
     }
   }
 
+private async playVideo(conversationalService: IGBConversationalService, step: GBDialogStep, answer: GuaribasAnswer) {
+    await conversationalService.sendEvent(step, 'play', {
+      playerType: 'video',
+      data: answer.content
+    });
+  }
+
   public async importKbPackage(
-    localPath: string,
-    packageStorage: GuaribasPackage,
-    instance: IGBInstance
-  ): Promise<any> {
-    // Imports subjects tree into database and return it.
+  localPath: string,
+  packageStorage: GuaribasPackage,
+  instance: IGBInstance
+): Promise < any > {
+  // Imports subjects tree into database and return it.
 
-    await this.importSubjectFile(packageStorage.packageId, urlJoin(localPath, 'subjects.json'), instance);
+  await this.importSubjectFile(packageStorage.packageId, urlJoin(localPath, 'subjects.json'), instance);
 
-    // Import all .tsv files in the tabular directory.
+  // Import all .tsv files in the tabular directory.
 
-    return this.importKbTabularDirectory(localPath, instance, packageStorage.packageId);
-  }
+  return this.importKbTabularDirectory(localPath, instance, packageStorage.packageId);
+}
 
-  public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
-    const files = await walkPromise(urlJoin(localPath, 'tabular'));
+  public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise < any > {
+  const files = await walkPromise(urlJoin(localPath, 'tabular'));
 
-    return Promise.all(
-      files.map(async file => {
-        if (file.name.endsWith('.tsv')) {
-          return this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
-        }
-      })
-    );
-  }
+  return Promise.all(
+    files.map(async file => {
+      if (file.name.endsWith('.xlsx')) {
+        return this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
+      }
+    })
+  );
+}
 
-  public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise<any> {
-    const subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
+  public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise < any > {
+  const subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
 
-    const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
-      return asyncPromise.eachSeries(subjects, async item => {
-        const value = await GuaribasSubject.create({
-          internalId: item.id,
-          parentSubjectId: parentSubjectId,
-          instanceId: instance.instanceId,
-          from: item.from,
-          to: item.to,
-          title: item.title,
-          description: item.description,
-          packageId: packageId
-        });
-
-        if (item.children) {
-          return Promise.resolve(doIt(item.children, value.subjectId));
-        } else {
-          return Promise.resolve(item);
-        }
+  const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
+    return asyncPromise.eachSeries(subjects, async item => {
+      const value = await GuaribasSubject.create({
+        internalId: item.id,
+        parentSubjectId: parentSubjectId,
+        instanceId: instance.instanceId,
+        from: item.from,
+        to: item.to,
+        title: item.title,
+        description: item.description,
+        packageId: packageId
       });
-    };
 
-    return doIt(subjectsLoaded.children, undefined);
-  }
+      if (item.children) {
+        return Promise.resolve(doIt(item.children, value.subjectId));
+      } else {
+        return Promise.resolve(item);
+      }
+    });
+  };
+
+  return doIt(subjectsLoaded.children, undefined);
+}
 
   public async undeployKbFromStorage(instance: IGBInstance, deployer: GBDeployer, packageId: number) {
-    await GuaribasQuestion.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
-    await GuaribasAnswer.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
-    await GuaribasSubject.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
-    await GuaribasPackage.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
+  await GuaribasQuestion.destroy({
+    where: { instanceId: instance.instanceId, packageId: packageId }
+  });
+  await GuaribasAnswer.destroy({
+    where: { instanceId: instance.instanceId, packageId: packageId }
+  });
+  await GuaribasSubject.destroy({
+    where: { instanceId: instance.instanceId, packageId: packageId }
+  });
+  await GuaribasPackage.destroy({
+    where: { instanceId: instance.instanceId, packageId: packageId }
+  });
 
-    await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
-  }
+  await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
+}
 
   /**
    * Deploys a knowledge base to the storage using the .gbkb format.
@@ -470,17 +480,17 @@ export class KBService {
    * @param localPath Path to the .gbkb folder.
    */
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string) {
-    const packageType = Path.extname(localPath);
-    const packageName = Path.basename(localPath);
-    GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
-    const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
+  const packageType = Path.extname(localPath);
+  const packageName = Path.basename(localPath);
+  GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
+  const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
 
-    const instance = await core.loadInstance(packageObject.botId);
-    GBLog.info(`[GBDeployer] Importing: ${localPath}`);
-    const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
-    await this.importKbPackage(localPath, p, instance);
+  const instance = await core.loadInstance(packageObject.botId);
+  GBLog.info(`[GBDeployer] Importing: ${localPath}`);
+  const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
+  await this.importKbPackage(localPath, p, instance);
 
-    deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
-    GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
-  }
+  deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
+  GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
+}
 }
