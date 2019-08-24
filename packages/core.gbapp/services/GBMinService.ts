@@ -138,9 +138,8 @@ export class GBMinService {
           return; // Exit here.
         }
 
-        const minBoot = GBServer.globals.bootInstance;
         const toSwitchMin = GBServer.globals.minInstances.filter(p => p.botId === text)[0];
-        let activeMin = toSwitchMin ? toSwitchMin : minBoot;
+        let activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
 
         let sec = new SecService();
         let user = await sec.getUserFromPhone(id);
@@ -190,6 +189,10 @@ export class GBMinService {
 
     // Build bot adapter.
     const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.publicAddress, GBServer.globals.sysPackages);
+
+    if (GBServer.globals.minInstances.length === 0) {
+      GBServer.globals.minBoot = min;
+    }
     GBServer.globals.minInstances.push(min);
 
     // Install default VBA module.
@@ -453,11 +456,13 @@ export class GBMinService {
           user.cb = undefined;
           await min.userProfile.set(step.context, user);
 
-          let sec = new SecService();
-          const member = context.activity.membersAdded[0];
+          if (context.activity.membersAdded !== undefined) {
+            let sec = new SecService();
+            const member = context.activity.membersAdded[0];
 
-          await sec.ensureUser(instance.instanceId, member.id,
-            min.botId, member.id, "", "web", member.name, member.id);
+            await sec.ensureUser(instance.instanceId, member.id,
+              min.botId, member.id, "", "web", member.name, member.id);
+          }
         }
 
         GBLog.info(

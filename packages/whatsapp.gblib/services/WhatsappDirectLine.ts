@@ -231,14 +231,15 @@ export class WhatsappDirectLine extends GBService {
     return `${attachment.content.title} - ${attachment.content.text}`;
   }
 
-  public async sendFileToDevice(to, url) {
+  public async sendFileToDevice(to, url, filename) {
     const options = {
       method: 'POST',
       url: urlJoin(this.whatsappServiceUrl, 'sendFile'),
       qs: {
         token: this.whatsappServiceKey,
         phone: to,
-        body: url
+        body: url,
+        filename: filename
       },
       headers: {
         'cache-control': 'no-cache'
@@ -254,6 +255,28 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
+  public async sendAudioToDevice(to, url) {
+    const options = {
+      method: 'POST',
+      url: urlJoin(this.whatsappServiceUrl, 'sendPTT'),
+      qs: {
+        token: this.whatsappServiceKey,
+        phone: to,
+        audio:url
+      },
+      headers: {
+        'cache-control': 'no-cache'
+      }
+    };
+
+    try {
+      // tslint:disable-next-line: await-promise
+      const result = await request.post(options);
+      GBLog.info(result);
+    } catch (error) {
+      GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
+    }
+  }
 
   public async sendToDevice(to, msg) {
     const options = {

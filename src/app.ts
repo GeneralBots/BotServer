@@ -39,7 +39,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
-import { GBLog, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
+import { GBLog, IGBCoreService, IGBInstance, IGBPackage, GBMinInstance } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService';
@@ -60,6 +60,7 @@ export class RootData {
   minService: GBMinService;
   bootInstance: IGBInstance;
   public minInstances: any[];
+  minBoot: GBMinInstance;
 }
 
 /**

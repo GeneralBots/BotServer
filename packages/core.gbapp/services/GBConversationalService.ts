@@ -64,9 +64,15 @@ export class GBConversationalService implements IGBConversationalService {
   }
 
   public async sendFile(min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
-    let mobile = step.context.activity.from.id;
-    min.whatsAppDirectLine.sendFile(mobile, url);
+    const mobile = step.context.activity.from.id;
+    const filename = url.substring(url.lastIndexOf('/')+1);
+    await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename);
 
+  }
+
+  public async sendAudio(min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
+    const mobile = step.context.activity.from.id;
+    await min.whatsAppDirectLine.sendAudioToDevice(mobile, url);
   }
 
   public async sendEvent(step: GBDialogStep, name: string, value: Object): Promise<any> {

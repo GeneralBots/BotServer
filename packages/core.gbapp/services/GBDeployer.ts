@@ -203,6 +203,10 @@ export class GBDeployer {
       instance.whatsappServiceNumber = bootInstance.whatsappServiceNumber;
       instance.whatsappServiceUrl = bootInstance.whatsappServiceUrl;
       instance.whatsappServiceWebhookUrl = bootInstance.whatsappServiceWebhookUrl;
+      instance.storageServer = bootInstance.storageServer;
+      instance.storageName = bootInstance.storageName;
+      instance.storageUsername = bootInstance.storageUsername;
+      instance.storagePassword = bootInstance.storagePassword;
 
       instance = await service.internalDeployBot(
         instance,
@@ -422,9 +426,7 @@ export class GBDeployer {
         server.use(`/themes/${filenameOnly}`, express.static(filename));
         GBLog.info(`Theme (.gbtheme) assets accessible at: /themes/${filenameOnly}.`);
       } else if (Path.extname(filename) === '.gbkb') {
-        server.use(`/kb/${filenameOnly}/subjects`, express.static(urlJoin(filename, 'subjects')));
-        server.use(`/kb/${filenameOnly}/images`, express.static(urlJoin(filename, 'images')));
-        GBLog.info(`KB (.gbkb) assets accessible at: /kb/${filenameOnly}.`);
+        this.mountGBKBAssets( filenameOnly, filename);
       } else if (Path.extname(filename) === '.gbui') {
         // Already Handled
       } else if (Path.extname(filename) === '.gbdialog') {
@@ -456,6 +458,13 @@ export class GBDeployer {
       });
 
     return { generalPackages, totalPackages };
+  }
+
+  private mountGBKBAssets(packageName: any, filename: string) {
+    GBServer.globals.server.use(`/kb/${packageName}/subjects`, express.static(urlJoin(filename, 'subjects')));
+    GBServer.globals.server.use(`/kb/${packageName}/images`, express.static(urlJoin(filename, 'images')));
+    GBServer.globals.server.use(`/kb/${packageName}/audios`, express.static(urlJoin(filename, 'audios')));
+    GBLog.info(`KB (.gbkb) assets accessible at: /kb/${packageName}.`);
   }
 
   private isSystemPackage(name: string): Boolean {

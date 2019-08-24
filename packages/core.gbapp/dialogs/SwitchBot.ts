@@ -63,7 +63,6 @@ export class SwitchBotDialog extends IGBDialog {
       async step => {
         let sec = new SecService();
         let from = step.context.activity.from.id;
-        const minBoot = GBServer.globals.minInstances[0];
         await sec.updateCurrentBotId(from, step.result);
         await step.context.sendActivity(`Opa, vamos lá!`);
                 
