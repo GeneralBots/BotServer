@@ -388,21 +388,26 @@ export class KBService {
     html = marked(answer.content);
     if (channel === 'webchat' &&
       GBConfigService.get('DISABLE_WEB') !== 'true') {
-      const locale = step.context.activity.locale;
-      await step.context.sendActivity(Messages[locale].will_answer_projector);
-      await conversationalService.sendEvent(step, 'play', {
-        playerType: 'markdown',
-        data: {
-          content: html,
-          answer: answer,
-          prevId: answer.prevId,
-          nextId: answer.nextId
-        }
-      });
+      await this.sendMarkdownToWeb(step, conversationalService, html, answer);
     }
     else if (channel === 'whatsapp') {
       await this.sendMarkdownToMobile(step, answer, conversationalService, min);
     }
+  }
+
+  private async sendMarkdownToWeb(step: GBDialogStep, conversationalService: IGBConversationalService, html: string, answer: GuaribasAnswer) {
+    const locale = step.context.activity.locale;
+    await step.context.sendActivity(Messages[locale].will_answer_projector);
+    html = html.replace(/src\=\"kb\//g, `src=\"../kb/`);
+    await conversationalService.sendEvent(step, 'play', {
+      playerType: 'markdown',
+      data: {
+        content: html,
+        answer: answer,
+        prevId: answer.prevId,
+        nextId: answer.nextId
+      }
+    });
   }
 
   private async sendMarkdownToMobile(step: GBDialogStep, answer: GuaribasAnswer, conversationalService: IGBConversationalService, min: GBMinInstance) {
