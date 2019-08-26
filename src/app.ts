@@ -40,6 +40,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 import * as fs from 'fs';
 var mkdirp = require('mkdirp');
+var Path = require('path');
 
 import { GBLog, IGBCoreService, IGBInstance, IGBPackage, GBMinInstance } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService';
@@ -92,11 +93,10 @@ export class GBServer {
 
     // Creates working directory.
 
-    const workDir = 'workDir'; 
+    const workDir = Path.join(process.env.PWD, 'work'); 
     if (!fs.existsSync(workDir)){
       mkdirp.sync(workDir);
     } 
-
 
     server.listen(port, () => {
       (async () => {
