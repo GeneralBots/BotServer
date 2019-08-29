@@ -1,3 +1,27 @@
+# [1.7.0](https://github.com/pragmatismo-io/BotServer/compare/1.6.0...1.7.0) (2019-08-29)
+
+
+### Bug Fixes
+
+* **whatsapp.gblib:** BASIC enabled with Promises. ([47df1f1](https://github.com/pragmatismo-io/BotServer/commit/47df1f1))
+* **whatsapp.gblib:** BASIC is disabled again. ([fa9f260](https://github.com/pragmatismo-io/BotServer/commit/fa9f260))
+* **whatsapp.gblib:** BASIC is disabled again. ([4828a33](https://github.com/pragmatismo-io/BotServer/commit/4828a33))
+* **whatsapp.gblib:** User can say the activation code as the first message. ([3f6668d](https://github.com/pragmatismo-io/BotServer/commit/3f6668d))
+* **whatsapp.gblib:** Web can show images again and working directory on startup being created. ([8d512ca](https://github.com/pragmatismo-io/BotServer/commit/8d512ca))
+* **whatsapp.gblib:** Work directory being created now on startup. ([ca98965](https://github.com/pragmatismo-io/BotServer/commit/ca98965))
+
+
+### Features
+
+* **core.gbapp:** New bot management (CRUD) from SharePoint packages. ([9a961e7](https://github.com/pragmatismo-io/BotServer/commit/9a961e7))
+* **kb.gbapp:** TSV are replaced with MS Excel files, to store tabular information. ([246b222](https://github.com/pragmatismo-io/BotServer/commit/246b222))
+* **sharepoint:** SharePoint deployPackage added. ([ae73cf8](https://github.com/pragmatismo-io/BotServer/commit/ae73cf8))
+* **whatsapp.gblib:** Image will be send as a message and md can be read easily on the phone. ([2b4fb68](https://github.com/pragmatismo-io/BotServer/commit/2b4fb68))
+* **whatsapp.gblib:** Now Whatsapp will display markdown from .gbkb including images. ([faa5ec7](https://github.com/pragmatismo-io/BotServer/commit/faa5ec7))
+* **whatsapp.gblib:** Same chat-api provider now shared between instances and deploy improvements. ([b2da413](https://github.com/pragmatismo-io/BotServer/commit/b2da413))
+* **whatsapp.gblib:** Switch from Whatsapp channel which bot to talk to with the same number. ([650779e](https://github.com/pragmatismo-io/BotServer/commit/650779e))
+* **whatsapp.gblib:** Switch from Whatsapp channel which bot to talk to with the same number. ([cb3d241](https://github.com/pragmatismo-io/BotServer/commit/cb3d241))
+
 # [1.6.0](https://github.com/pragmatismo-io/BotServer/compare/1.5.5...1.6.0) (2019-08-21)
 
 
