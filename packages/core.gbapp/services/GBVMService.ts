@@ -122,7 +122,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(talk)(\s)(.*)/g, ($0, $1, $2, $3) => {
-      return `talk (${$3})\n`;
+      return `talk (step, ${$3})\n`;
     });
 
     code = `${code}\n%>`;
@@ -144,7 +144,7 @@ export class GBVMService extends GBService {
     // Convert TS into JS.
     const tsfile: string = `${filename}.ts`;
     let tsCode: string = fs.readFileSync(tsfile, 'utf8');
-    tsCode = tsCode.replace(/export.*\n/g, `export function ${mainName}() {`);
+    tsCode = tsCode.replace(/export.*\n/g, `export function ${mainName}(step) { let resolve = undefined;`);
     fs.writeFileSync(tsfile, tsCode);
 
     const tsc = new TSCompiler();
@@ -171,9 +171,12 @@ export class GBVMService extends GBService {
         // Writes async body.
 
         const variable = match1[1]; // Construct variable = hear ().
+        const promiseName = `promiseFor${variable}`;
 
         parsedCode = code.substring(pos, pos + match1.index);
-        parsedCode += `hear (async (${variable}) => {\n`;
+        parsedCode += ``;
+        parsedCode += `const ${promiseName}= async (step, ${variable}) => {`
+        parsedCode += `   return new Promise(async (resolve) => {`
 
         // Skips old construction and point to the async block.
 
@@ -205,6 +208,8 @@ export class GBVMService extends GBService {
 
         parsedCode += code.substring(start + match1[0].length + 1, pos + match1[0].length);
         parsedCode += '});\n';
+        parsedCode += '}\n';
+        parsedCode += `hear (step, ${promiseName}, resolve);\n`;
         parsedCode += code.substring(pos + match1[0].length);
 
         // A interaction will be made for each hear.
@@ -252,15 +257,19 @@ export class GBVMService extends GBService {
     min.dialogs.add(
       new WaterfallDialog('/hear', [
         async step => {
-          step.activeDialog.state.cbId = (step.options as any).id;
+          step.activeDialog.state.options = {};
+          step.activeDialog.state.options.cbId = (step.options as any).id;
+          step.activeDialog.state.options.previousResolve = (step.options as any).previousResolve;
 
           return await step.prompt('textPrompt', {});
         },
         async step => {
-          const cbId = step.activeDialog.state.cbId;
-          const cb = min.cbMap[cbId];
-          cb.bind({ step: step, context: step.context });
-          await cb(step.result);
+          const cbId = step.activeDialog.state.options.cbId;
+          const promise = min.cbMap[cbId];
+          const res = await promise(step, step.result);
+          if (step.activeDialog.state.options.previousResolve != undefined){
+            step.activeDialog.state.options.previousResolve();
+          }
           return await step.next();
         }
       ])

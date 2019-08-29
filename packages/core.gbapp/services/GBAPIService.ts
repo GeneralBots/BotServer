@@ -132,16 +132,16 @@ export class DialogClass {
     return this.internalSys;
   }
 
-  public async hear(cb) {
+  public async hear(step, promise, previousResolve) {
     function random(low, high) {
       return Math.random() * (high - low) + low
     }
-    const idCallback = random(0, 120000000);
-    this.min.cbMap[idCallback] = cb;
-    await this.step.beginDialog('/hear', { id: idCallback });
+    const idPromise = random(0, 120000000);
+    this.min.cbMap[idPromise] = promise;
+    return await step.beginDialog('/hear', { id: idPromise, previousResolve: previousResolve });
   }
 
-  public async talk(text: string) {
-    return await this.context.sendActivity(text);
+  public async talk(step, text: string) {
+    return await step.context.sendActivity(text);
   }
 }

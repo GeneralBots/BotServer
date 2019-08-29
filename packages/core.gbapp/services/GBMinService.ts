@@ -195,8 +195,9 @@ export class GBMinService {
     }
     GBServer.globals.minInstances.push(min);
 
-    // Install default VBA module.
-    //this.deployer.deployPackage(min, 'packages/default.gbdialog');
+    // Install default BASIC module.
+
+    this.deployer.deployPackage(min, 'packages/default.gbdialog');
 
     // Call the loadBot context.activity for all packages.
     this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min, GBServer.globals.server);
@@ -537,16 +538,12 @@ export class GBMinService {
       return utterance.match(Messages[locale].global_quit);
     }
 
-
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
 
     if (isVMCall) {
       const mainMethod = context.activity.text;
-
-      min.sandBoxMap[mainMethod].context = context;
-      min.sandBoxMap[mainMethod].step = step;
       min.sandBoxMap[mainMethod][mainMethod].bind(min.sandBoxMap[mainMethod]);
-      await min.sandBoxMap[mainMethod][mainMethod]();
+      await min.sandBoxMap[mainMethod][mainMethod](step);
     } else if (context.activity.text.charAt(0) === '/') {
       await step.beginDialog(context.activity.text);
 
