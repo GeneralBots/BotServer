@@ -56,9 +56,9 @@ else
 
 		' TODO: This must be reviewed in terms of financing logic.
 		
-		nInstallments = parseIntinstallments
-		vAmmount = parseFloatammount
-		initialPayment = parseFloatvAmmount * 0.3 ' 30% of the value
+		nInstallments = parseInt(installments)
+		vAmmount = parseFloat(ammount)
+		initialPayment = vAmmount * 0.3 ' 30% of the value
 		tac = 800
 		adjustment = 1.3
 
