@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/pragmatismo-io/BotServer/compare/1.7.0...1.7.1) (2019-08-30)
+
+
+### Bug Fixes
+
+* **whatsapp.gblib:** Multi-turn dialog fixed in BASIC processing. ([4689bfb](https://github.com/pragmatismo-io/BotServer/commit/4689bfb))
+
 # [1.7.0](https://github.com/pragmatismo-io/BotServer/compare/1.6.0...1.7.0) (2019-08-29)
 
 
