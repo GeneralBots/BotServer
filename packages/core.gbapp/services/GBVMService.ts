@@ -260,17 +260,16 @@ export class GBVMService extends GBService {
           step.activeDialog.state.options = {};
           step.activeDialog.state.options.cbId = (step.options as any).id;
           step.activeDialog.state.options.previousResolve = (step.options as any).previousResolve;
-
           return await step.prompt('textPrompt', {});
         },
         async step => {
           const cbId = step.activeDialog.state.options.cbId;
-          const promise = min.cbMap[cbId];
-          const res = await promise(step, step.result);
-          if (step.activeDialog.state.options.previousResolve != undefined){
-            step.activeDialog.state.options.previousResolve();
-          }
-          return await step.next();
+          const promise = min.cbMap[cbId].promise;
+
+          delete min.cbMap[cbId];
+          const opts = await promise(step, step.result);
+          
+          return await step.replaceDialog ('/hear', opts);
         }
       ])
     );

@@ -137,8 +137,16 @@ export class DialogClass {
       return Math.random() * (high - low) + low
     }
     const idPromise = random(0, 120000000);
-    this.min.cbMap[idPromise] = promise;
-    return await step.beginDialog('/hear', { id: idPromise, previousResolve: previousResolve });
+    this.min.cbMap[idPromise] = {};
+    this.min.cbMap[idPromise].promise = promise;
+    
+    const opts = { id: idPromise, previousResolve: previousResolve };
+    if (previousResolve !== undefined) { 
+      previousResolve(opts); 
+    }
+    else{
+      await step.beginDialog('/hear', opts);
+    }        
   }
 
   public async talk(step, text: string) {
