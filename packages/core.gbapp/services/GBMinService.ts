@@ -197,7 +197,7 @@ export class GBMinService {
 
     // Install default BASIC module.
 
-    this.deployer.deployPackage(min, 'packages/default.gbdialog');
+    // this.deployer.deployPackage(min, 'packages/default.gbdialog');
 
     // Call the loadBot context.activity for all packages.
     this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min, GBServer.globals.server);
