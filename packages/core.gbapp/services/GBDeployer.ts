@@ -114,7 +114,7 @@ export class GBDeployer {
 
           const dirs = getDirectories(path);
           dirs.forEach(element => {
-            if (element.startsWith('.')) {
+            if (element === '.') {
               GBLog.info(`Ignoring ${element}...`);
             } else {
               if (element.endsWith('.gbot')) {
@@ -494,7 +494,8 @@ export class GBDeployer {
 
           try {
             child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
-            import(e)
+            GBLog.info(`Importando o pacote '${e}' on dir ${process.env.PWD}`);
+            import(Path.join(process.env.PWD, e))
               .then(m => {
                 const p = new m.Package();
                 p.loadPackage(core, core.sequelize);

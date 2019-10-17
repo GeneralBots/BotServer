@@ -140,15 +140,7 @@ export class KBService {
   }
 
   public async addAnswer(obj: GuaribasAnswer): Promise<GuaribasAnswer> {
-    return new Promise<GuaribasAnswer>((resolve, reject) => {
-      GuaribasAnswer.create(obj)
-        .then(item => {
-          resolve(item);
-        })
-        .error(reason => {
-          reject(reason);
-        });
-    });
+    return await GuaribasAnswer.create(obj);
   }
 
   public async ask(
