@@ -1,3 +1,10 @@
+## [1.7.4](https://github.com/pragmatismo-io/BotServer/compare/1.7.3...1.7.4) (2019-10-17)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** Use of await style call ([a034abf](https://github.com/pragmatismo-io/BotServer/commit/a034abf))
+
 ## [1.7.3](https://github.com/pragmatismo-io/BotServer/compare/1.7.2...1.7.3) (2019-10-10)
 
 
