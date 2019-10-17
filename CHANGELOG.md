@@ -1,3 +1,10 @@
+## [1.7.3](https://github.com/pragmatismo-io/BotServer/compare/1.7.2...1.7.3) (2019-10-10)
+
+
+### Bug Fixes
+
+* **basic:** Adicionando .env no .gitignore e desabilitando suporte a linguagem BASIC por default ([91d1476](https://github.com/pragmatismo-io/BotServer/commit/91d1476))
+
 ## [1.7.2](https://github.com/pragmatismo-io/BotServer/compare/1.7.1...1.7.2) (2019-08-30)
 
 
