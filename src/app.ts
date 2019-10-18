@@ -39,10 +39,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 import * as fs from 'fs';
-var mkdirp = require('mkdirp');
-var Path = require('path');
+let mkdirp = require('mkdirp');
+let Path = require('path');
 
-import { GBLog, IGBCoreService, IGBInstance, IGBPackage, GBMinInstance } from 'botlib';
+import { GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService';
@@ -56,14 +56,14 @@ import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
  * Global shared server data;
  */
 export class RootData {
-  public publicAddress: string;
-  public server: any;
-  public sysPackages: any[];
-  public appPackages: any[];
-  minService: GBMinService;
-  bootInstance: IGBInstance;
-  public minInstances: any[];
-  minBoot: GBMinInstance;
+  public publicAddress: string; // URI for BotServer
+  public server: any; // Express reference
+  public sysPackages: any[]; // Loaded system package list
+  public appPackages: any[]; // Loaded .gbapp package list
+  public minService: GBMinService;  // Minimalist service core
+  public bootInstance: IGBInstance; // General Bot Interface Instance
+  public minInstances: any[]; //
+  public minBoot: GBMinInstance;
 }
 
 /**
@@ -93,10 +93,10 @@ export class GBServer {
 
     // Creates working directory.
 
-    const workDir = Path.join(process.env.PWD, 'work'); 
-    if (!fs.existsSync(workDir)){
+    const workDir = Path.join(process.env.PWD, 'work');
+    if (!fs.existsSync(workDir)) {
       mkdirp.sync(workDir);
-    } 
+    }
 
     server.listen(port, () => {
       (async () => {
@@ -116,8 +116,7 @@ export class GBServer {
             const proxy = GBConfigService.get('REVERSE_PROXY');
             if (proxy !== undefined) {
               GBServer.globals.publicAddress = proxy;
-            }
-            else {
+            } else {
               // Ensure that local development proxy is setup.
 
               GBLog.info(`Establishing a development local proxy (ngrok)...`);
@@ -163,7 +162,7 @@ export class GBServer {
           const fullInstance = Object.assign(packageInstance, GBServer.globals.bootInstance);
           await core.saveInstance(fullInstance);
           let instances: IGBInstance[] = await core.loadAllInstances(core, azureDeployer,
-            GBServer.globals.publicAddress);
+                                                                     GBServer.globals.publicAddress);
           instances = await core.ensureInstances(instances, GBServer.globals.bootInstance, core);
           if (GBServer.globals.bootInstance !== undefined) {
             GBServer.globals.bootInstance = instances[0];

@@ -17,7 +17,7 @@ export const Messages = {
     good_night: 'boa noite',
     hi: (msg) => `Oi, ${msg}.`,
     very_sorry_about_error: `Lamento, ocorreu um erro que já foi registrado para ser tratado.`,
-    global_quit: /^(sair|Sair)/i, 
+    global_quit: /^(sair|Sair)/i,
     canceled: 'Cancelado, avise como posso ser útil novamente.'
   }
 };

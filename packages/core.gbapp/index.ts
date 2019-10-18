@@ -38,10 +38,10 @@
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
+import { SwitchBotDialog } from './dialogs/SwitchBot';
 import { WelcomeDialog } from './dialogs/WelcomeDialog';
 import { WhoAmIDialog } from './dialogs/WhoAmIDialog';
 import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage } from './models/GBModel';
-import { SwitchBotDialog } from './dialogs/SwitchBot';
 
 /**
  * Package for core.gbapp.
