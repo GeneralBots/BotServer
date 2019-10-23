@@ -1,3 +1,10 @@
+## [1.7.5](https://github.com/pragmatismo-io/BotServer/compare/1.7.4...1.7.5) (2019-10-18)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Clean-up of system code ([9311943](https://github.com/pragmatismo-io/BotServer/commit/9311943))
+
 ## [1.7.4](https://github.com/pragmatismo-io/BotServer/compare/1.7.3...1.7.4) (2019-10-17)
 
 
