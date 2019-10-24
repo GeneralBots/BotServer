@@ -373,7 +373,7 @@ export class GBDeployer {
     });
   }
 
-  public runOnce() {
+  public setupDefaultGBUI() {
     const root = 'packages/default.gbui';
     const npm = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
     if (!Fs.existsSync(`${root}/build`)) {
