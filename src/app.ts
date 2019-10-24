@@ -176,7 +176,7 @@ export class GBServer {
 
           // Deployment of local applications for the first time.
 
-          deployer.runOnce();
+          deployer.setupDefaultGBUI();
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
 

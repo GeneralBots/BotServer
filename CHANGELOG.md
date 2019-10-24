@@ -1,3 +1,10 @@
+## [1.7.6](https://github.com/pragmatismo-io/BotServer/compare/1.7.5...1.7.6) (2019-10-24)
+
+
+### Bug Fixes
+
+* **core.gbapp:** fix of sts token generation ([d6aa65d](https://github.com/pragmatismo-io/BotServer/commit/d6aa65d))
+
 ## [1.7.5](https://github.com/pragmatismo-io/BotServer/compare/1.7.4...1.7.5) (2019-10-18)
 
 

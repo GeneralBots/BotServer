@@ -348,7 +348,7 @@ export class GBMinService {
   private async getSTSToken(instance: any) {
 
     const options = {
-      url: 'https://westus.api.cognitive.microsoft.com/sts/v1.0/issueToken',
+      url: instance.speechEndpoint,
       method: 'POST',
       headers: {
         'Ocp-Apim-Subscription-Key': instance.speechKey
