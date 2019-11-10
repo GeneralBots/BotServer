@@ -39,7 +39,7 @@
 const crypto = require('crypto');
 const rimraf = require('rimraf');
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog, GBLog } from 'botlib';
 import urlJoin = require('url-join');
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
@@ -80,6 +80,7 @@ export class AdminDialog extends IGBDialog {
       let folderName = text.split(' ')[2];
 
       let localFolder = Path.join('work', Path.basename(folderName));
+      GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
       await s.downloadFolder(localFolder, siteName, folderName,
         GBConfigService.get('CLOUD_USERNAME'), GBConfigService.get('CLOUD_PASSWORD'))
       await deployer.deployPackage(min, localFolder);
@@ -151,6 +152,12 @@ export class AdminDialog extends IGBDialog {
               return await step.replaceDialog('/');
             } else if (cmdName === 'deployPackage') {
               await AdminDialog.deployPackageCommand(min, text, deployer);
+
+              return await step.replaceDialog('/admin', { firstRun: false });
+            } else if (cmdName === 'dp') {
+              let BOT_NAME = text;
+              let address = `https://pragmatismo.sharepoint.com/sites/bots /Shared%20Documents/Rascunho/${BOT_NAME}/${BOT_NAME}.gbai/${BOT_NAME}.gbkb`;
+              await AdminDialog.deployPackageCommand(min, address, deployer);
 
               return await step.replaceDialog('/admin', { firstRun: false });
             } else if (cmdName === 'redeployPackage') {

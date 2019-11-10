@@ -131,6 +131,7 @@ export class GBCoreService implements IGBCoreService {
 
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
 
+    const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
     this.sequelize = new Sequelize({
       host: host,
       database: database,
@@ -149,7 +150,7 @@ export class GBCoreService implements IGBCoreService {
         min: 8,
         idle: 40000,
         evict: 40000,
-        acquire: 40000
+        acquire: acquire
       }
     });
 
@@ -291,8 +292,8 @@ STORAGE_SYNC=true
     let instance = await GuaribasInstance.findOne(options);
     // tslint:disable-next-line:prefer-object-spread
     instance = Object.assign(instance, fullInstance);
-
-    return await instance.save();
+    let ret = await instance.save();
+    return ret;
   }
 
   /**

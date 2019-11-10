@@ -82,7 +82,7 @@ export class GBConversationalService implements IGBConversationalService {
       msg.type = 'event';
       msg.name = name;
 
-      return step.context.sendActivity(msg);
+      return await step.context.sendActivity(msg);
     }
   }
 

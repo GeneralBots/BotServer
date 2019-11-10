@@ -207,6 +207,7 @@ export class GBDeployer {
       instance.storageName = bootInstance.storageName;
       instance.storageUsername = bootInstance.storageUsername;
       instance.storagePassword = bootInstance.storagePassword;
+      instance.webchatKey = bootInstance.webchatKey;
 
       instance = await service.internalDeployBot(
         instance,

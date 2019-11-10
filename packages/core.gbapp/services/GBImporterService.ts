@@ -54,35 +54,41 @@ export class GBImporter {
   }
 
   public async importIfNotExistsBotPackage(botId: string, packageName: string, localPath: string) {
-    const packageJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
+    const settingsJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'settings.json'), 'utf8'));
     if (botId === undefined) {
-      botId = packageJson.botId;
+      botId = settingsJson.botId;
     }
     if (botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
     }
     const instance = await this.core.loadInstance(botId);
-    
-    return await this.createOrUpdateInstanceInternal(instance, botId, localPath, packageJson);
+
+    if (instance.botId === undefined || instance.botId === null) {
+      console.log("••• Atenção botId é nulo ou undefined");
+    }
+    return await this.createOrUpdateInstanceInternal(instance, botId, localPath, settingsJson);
   }
 
   private async createOrUpdateInstanceInternal(instance: IGBInstance,
-    botId: string, localPath: string, packageJson: any) {
-    const settings = JSON.parse(fs.readFileSync(urlJoin(localPath, 'settings.json'), 'utf8'));
+    botId: string, localPath: string, settingsJson: any) {
+    let packageJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
     const servicesJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'services.json'), 'utf8'));
 
-    packageJson = { ...GBServer.globals.bootInstance, ...packageJson, ...settings, ...servicesJson };
+    let fullSettingsJson = { ...GBServer.globals.bootInstance, ...packageJson, ...settingsJson, ...servicesJson };
 
     if (botId !== undefined) {
-      packageJson.botId = botId;
+      fullSettingsJson.botId = botId;
     }
 
     if (instance !== null) {
-      instance = { ...instance, ...packageJson, ...settings, ...servicesJson };
+      instance = { ...instance, ...fullSettingsJson };
 
-      return this.core.saveInstance(instance);
+      if (instance.botId === undefined || instance.botId === null) {
+        console.log("••• Atenção botId é nulo ou undefined");
+      }
+      return await this.core.saveInstance(instance);
     } else {
-      return await GuaribasInstance.create(packageJson);
+      return await GuaribasInstance.create(fullSettingsJson);
     }
   }
 }
