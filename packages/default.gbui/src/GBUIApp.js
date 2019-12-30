@@ -41,7 +41,7 @@ import GBCss from './components/GBCss.js';
 import { DirectLine } from 'botframework-directlinejs';
 import { ConnectionStatus } from 'botframework-directlinejs';
 import ReactWebChat from 'botframework-webchat';
-import GBPowerBIPlayer from './players/GBPowerBIPlayer.js';
+// import GBPowerBIPlayer from './players/GBPowerBIPlayer.js';
 import { UserAgentApplication } from 'msal';
 
 class GBUIApp extends React.Component {
@@ -264,7 +264,7 @@ class GBUIApp extends React.Component {
             />
           );
           break;
-        case 'pbi':
+     /* case 'pbi':
           playerComponent = (
             <GBPowerBIPlayer
               app={this}
@@ -273,7 +273,7 @@ class GBUIApp extends React.Component {
               }}
             />
           );
-          break;
+          break; */
         case 'login':
           playerComponent = (
             <GBLoginPlayer
@@ -328,7 +328,6 @@ class GBUIApp extends React.Component {
           directLine={this.state.line}
           user={this.getUser()}
           bot={{ id: 'bot@gb', name: 'Bot' }}
-          // speechOptions={speechOptions}
         />
       );
     }
@@ -336,7 +335,17 @@ class GBUIApp extends React.Component {
     if (!this.state.instance) {
       sideBar = '';
     }
-
+    
+        return (
+          <div>
+            {gbCss}
+            {sideBar}
+            <div className="player">{playerComponent}</div>
+            <div className="webchat">
+            </div>
+          </div>
+        ); 
+/*
     return (
       <div>
         {gbCss}
@@ -346,7 +355,7 @@ class GBUIApp extends React.Component {
             {chat}
         </div>
       </div>
-    );
+    ); */
   }
 }
 

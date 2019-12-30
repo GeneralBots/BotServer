@@ -56,9 +56,16 @@ export class GBConfigService {
   public static init(): any {
     try {
       require('dotenv-extended').load({
+        encoding: 'utf8',
+        silent: true,
         path: '.env',
+        defaults: '.env.defaults',
+        schema: '.env.schema',
         errorOnMissing: true,
         errorOnExtra: false,
+        errorOnRegex: true,
+        includeProcessEnv: false,
+        assignToProcessEnv: true,
         overrideProcessEnv: true
       });
     } catch (e) {
