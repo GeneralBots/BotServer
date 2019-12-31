@@ -47,6 +47,7 @@ const parse = require('bluebird').promisify(require('csv-parse'));
 const { SearchService } = require('azure-search-client');
 
 import { GBDialogStep, GBLog, IGBConversationalService, IGBCoreService, IGBInstance, GBMinInstance } from 'botlib';
+import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasPackage } from '../../core.gbapp/models/GBModel';
@@ -116,8 +117,6 @@ export class KBService {
   }
 
   public async getAnswerByText(instanceId: number, text: string): Promise<any> {
-    const Op = Sequelize.Op;
-
     const question = await GuaribasQuestion.findOne({
       where: {
         instanceId: instanceId,

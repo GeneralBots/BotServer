@@ -39,6 +39,7 @@
 import { GBLog, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
 import * as fs from 'fs';
 import { Sequelize } from 'sequelize-typescript';
+import { Op, Dialect } from 'sequelize';
 import { GBServer } from '../../../src/app';
 import { GBAdminPackage } from '../../admin.gbapp/index';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
@@ -132,14 +133,10 @@ export class GBCoreService implements IGBCoreService {
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
 
     const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
-    this.sequelize = new Sequelize({
+    const sequelizeOptions = {
       host: host,
-      database: database,
-      username: username,
-      password: password,
-      logging: logging,
-      operatorsAliases: false,
-      dialect: this.dialect,
+      logging: logging as boolean,
+      dialect: this.dialect as Dialect,
       storage: storage,
       dialectOptions: {
         options: {
@@ -152,7 +149,14 @@ export class GBCoreService implements IGBCoreService {
         evict: 40000,
         acquire: acquire
       }
-    });
+    };
+
+    this.sequelize = new Sequelize(
+      database,
+      username,
+      password, 
+      sequelizeOptions
+    );
 
     if (this.dialect === 'mssql') {
       this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
