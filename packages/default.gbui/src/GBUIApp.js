@@ -335,17 +335,7 @@ class GBUIApp extends React.Component {
     if (!this.state.instance) {
       sideBar = '';
     }
-    
-        return (
-          <div>
-            {gbCss}
-            {sideBar}
-            <div className="player">{playerComponent}</div>
-            <div className="webchat">
-            </div>
-          </div>
-        ); 
-/*
+
     return (
       <div>
         {gbCss}
@@ -355,7 +345,7 @@ class GBUIApp extends React.Component {
             {chat}
         </div>
       </div>
-    ); */
+    ); 
   }
 }
 

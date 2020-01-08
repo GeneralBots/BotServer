@@ -33,8 +33,8 @@
     "pretest": "npm run build",
     "coveralls": "npm run test && nyc report --reporter=text-lcov | coveralls",
     "start": "node ./boot.js",
+    "reverse-proxy": "node_modules/.bin/ngrok http 4242",
     "watch:build": "tsc --watch",
-    "watch:server": "nodemon './dist/index.js' --watch './dist'",
     "posttypedoc": "shx cp .nojekyll docs/reference/.nojekyll",
     "ban": "ban",
     "issues": "git-issues",
@@ -116,7 +116,6 @@
     "git-issues": "1.3.1",
     "license-checker": "25.0.1",
     "nsp": "3.2.1",
-    "pre-commit": "^1.2.2",
     "prettier-standard": "^16.1.0",
     "semantic-release": "^15.14.0",
     "travis-deploy-once": "5.0.11",
@@ -205,18 +204,8 @@
     },
     "pre-git": {
       "commit-msg": "simple",
-      "pre-commit": [
-        "npm prune",
-        "git add packages/*.ts",
-        "npm run ban"
-      ],
-      "pre-push": [
-        "echo skip npm run unused-deps",
-        "echo skip npm npm run secure",
-        "echo skip npm run license",
-        "echo skip npm run ban -- --all",
-        "echo skip run size"
-      ],
+      "pre-commit": [],
+      "pre-push": [],
       "post-commit": [],
       "post-checkout": [],
       "post-merge": []

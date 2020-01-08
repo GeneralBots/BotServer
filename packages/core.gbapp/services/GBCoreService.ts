@@ -38,7 +38,7 @@
 
 import { GBLog, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
 import * as fs from 'fs';
-import { Sequelize } from 'sequelize-typescript';
+import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Op, Dialect } from 'sequelize';
 import { GBServer } from '../../../src/app';
 import { GBAdminPackage } from '../../admin.gbapp/index';
@@ -133,7 +133,11 @@ export class GBCoreService implements IGBCoreService {
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
 
     const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
-    const sequelizeOptions = {
+    const sequelizeOptions: SequelizeOptions = {
+      define: {
+        freezeTableName: true,
+        timestamps: false
+      },
       host: host,
       logging: logging as boolean,
       dialect: this.dialect as Dialect,
@@ -154,7 +158,7 @@ export class GBCoreService implements IGBCoreService {
     this.sequelize = new Sequelize(
       database,
       username,
-      password, 
+      password,
       sequelizeOptions
     );
 
@@ -265,7 +269,7 @@ STORAGE_SYNC=true
     } catch (error) {
       // There are false positive from ngrok regarding to no memory, but it's just
       // lack of connection.
-      
+
       throw new Error(`Error connecting to remote ngrok server, please check network connection. ${error.msg}`);
     }
   }
@@ -284,7 +288,7 @@ STORAGE_SYNC=true
     }
   }
 
-  public async deleteInstance(botId:string) {
+  public async deleteInstance(botId: string) {
     const options = { where: {} };
     options.where = { botId: botId };
     await GuaribasInstance.destroy(options);
