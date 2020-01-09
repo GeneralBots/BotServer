@@ -24,7 +24,7 @@ var now = () => {
 try {
 
     var run = () => {
-        console.log(`[GB Runtime] Now starting General Bots Server...`);
+        console.log(`[GB Runtime] Initializing General Bots Server...`);
         const GBServer = require("./dist/src/app").GBServer
         console.log(`[GB Runtime] ${now()} - Running '${GBServer.name}' on '${__dirname}' directory`);
         process.env.PWD = __dirname;

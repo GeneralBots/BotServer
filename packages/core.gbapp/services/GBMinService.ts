@@ -297,7 +297,7 @@ export class GBMinService {
           instanceId: instance.instanceId,
           botId: botId,
           theme: theme,
-          secret: instance.webchatKey,
+          webchatToken: webchatToken,
           speechToken: speechToken,
           conversationId: webchatToken.conversationId,
           authenticatorTenant: instance.authenticatorTenant,

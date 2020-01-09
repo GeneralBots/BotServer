@@ -332,12 +332,21 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const storageClient = new SqlManagementClient(credentials, subscriptionId);
 
     const ip = await publicIp.v4();
-    const params = {
+    let params = {
       startIpAddress: ip,
       endIpAddress: ip
     };
-
     await storageClient.firewallRules.createOrUpdate(groupName, serverName, 'gb', params);
+       
+    // AllowAllWindowsAzureIps must be created that way, so the Azure Search can 
+    // access SQL Database to index its contents.
+
+    params = {
+      startIpAddress: '0.0.0.0',
+      endIpAddress: '0.0.0.0'
+    };
+    await storageClient.firewallRules.createOrUpdate(groupName, serverName, 'AllowAllWindowsAzureIps', params);
+
   }
 
   public async deployFarm(
@@ -357,6 +366,15 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     GBLog.info(`Deploying Deploy Group (It may take a few minutes)...`);
     await this.createDeployGroup(name, instance.cloudLocation);
+
+    GBLog.info(`Deploying NLP...`);
+    const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
+    keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
+    const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
+
+    instance.nlpEndpoint =  urlJoin(nlp.endpoint, 'apps');
+    instance.nlpKey = keys.key1;
+    instance.nlpAppId = nlpAppId;
 
     GBLog.info(`Deploying Bot Server...`);
     const serverFarm = await this.createHostingPlan(name, `${name}-server-plan`, instance.cloudLocation);
@@ -406,17 +424,9 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     instance.textAnalyticsEndpoint = textAnalytics.endpoint.replace(`/text/analytics/v2.0`, '');
     instance.textAnalyticsKey = keys.key1;
-    if (false) {
 
-      GBLog.info(`Deploying NLP...`);
-      const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
-      keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
-      const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
+    // NLP
 
-      instance.nlpEndpoint = nlp.endpoint; // TODO: Add this final URL /apps/a149dae1-5134-4624-96b5-885e9e674c9e
-      instance.nlpKey = keys.key1;
-      instance.nlpAppId = nlpAppId;
-    }
     GBLog.info(`Deploying Bot...`);
     instance.botEndpoint = this.defaultEndPoint;
 
