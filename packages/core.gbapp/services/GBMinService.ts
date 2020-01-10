@@ -286,7 +286,7 @@ export class GBMinService {
     }
     const instance = await this.core.loadInstance(botId);
     if (instance !== null) {
-      const webchatToken = await this.getWebchatToken(instance);
+      const webchatTokenContainer = await this.getWebchatToken(instance);
       const speechToken = instance.speechKey != null ? await this.getSTSToken(instance) : null;
       let theme = instance.theme;
       if (theme === undefined) {
@@ -297,9 +297,9 @@ export class GBMinService {
           instanceId: instance.instanceId,
           botId: botId,
           theme: theme,
-          webchatToken: webchatToken,
+          webchatToken: webchatTokenContainer.token,
           speechToken: speechToken,
-          conversationId: webchatToken.conversationId,
+          conversationId: webchatTokenContainer.conversationId,
           authenticatorTenant: instance.authenticatorTenant,
           authenticatorClientId: instance.authenticatorClientId
         })
@@ -541,9 +541,7 @@ export class GBMinService {
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
 
     if (isVMCall) {
-      const mainMethod = context.activity.text;
-      min.sandBoxMap[mainMethod][mainMethod].bind(min.sandBoxMap[mainMethod]);
-      await min.sandBoxMap[mainMethod][mainMethod](step);
+      await GBMinService.callVM(context.activity.text, min, step);
     } else if (context.activity.text.charAt(0) === '/') {
       await step.beginDialog(context.activity.text);
 
@@ -567,5 +565,11 @@ export class GBMinService {
         });
       }
     }
+  }
+
+  public static async callVM(text: string, min: GBMinInstance, step: GBDialogStep) {
+    const mainMethod = text;
+    min.sandBoxMap[mainMethod][mainMethod].bind(min.sandBoxMap[mainMethod]);
+    return await min.sandBoxMap[mainMethod][mainMethod](step);
   }
 }

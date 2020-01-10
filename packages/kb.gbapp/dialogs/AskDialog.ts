@@ -42,6 +42,8 @@ import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { AzureText } from 'pragmatismo-io-framework';
 import { Messages } from '../strings';
 import { KBService } from './../services/KBService';
+import { GuaribasAnswer } from '../models';
+import { GBMinService } from '../../../packages/core.gbapp/services/GBMinService';
 
 /**
  * Dialog arguments.
@@ -144,10 +146,8 @@ export class AskDialog extends IGBDialog {
 
           // Sends the answer to all outputs, including projector.
 
-          await service.sendAnswer(min, AskDialog.getChannel(step), step, resultsA.answer);
+          return await AskDialog.handleAnswer(service, min, step, resultsA.answer);
 
-          // Goes to ask loop, again.
-          return await step.replaceDialog('/ask', { isReturning: true });
         } else {
           // Second time running Search, now with no filter.
           const resultsB = await service.ask(min.instance, text, min.instance.searchScore, undefined);
@@ -163,10 +163,12 @@ export class AskDialog extends IGBDialog {
             if (user2.subjects.length > 0) {
               await step.context.sendActivity(Messages[locale].wider_answer);
             }
-            // Sends the answer to all outputs, including projector.
-            await service.sendAnswer(min, AskDialog.getChannel(step), step, resultsB.answer);
 
-            return await step.replaceDialog('/ask', { isReturning: true });
+            if (resultsB.answer)
+
+              // Sends the answer to all outputs, including projector.
+
+              return await AskDialog.handleAnswer(service, min, step, resultsA.answer);
           } else {
             if (!(await min.conversationalService.routeNLP(step, min, text))) {
               await step.context.sendActivity(Messages[locale].did_not_find);
@@ -177,6 +179,27 @@ export class AskDialog extends IGBDialog {
         }
       }
     ];
+  }
+
+  private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, answer: GuaribasAnswer) {
+
+    const dialogSufix = 'dialog:';
+    const urlSufix = 'url:';
+    const scriptSufix = 'script:';
+
+    if (answer.content.startsWith(dialogSufix)) {
+      let dialogName = answer.content.substring(dialogSufix.length);
+      return await step.replaceDialog(`/${dialogName}`, { isReturning: true });
+    } else if (answer.content.startsWith(scriptSufix)) {
+      let scriptName = answer.content.substring(scriptSufix.length);
+
+      return await GBMinService.callVM(scriptName, min, step);
+    } else {
+      await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
+
+      return await step.replaceDialog('/ask', { isReturning: true });
+    }
+
   }
 
   private static getChannel(step): string {
