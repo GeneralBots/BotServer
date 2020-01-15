@@ -32,7 +32,7 @@ editor). BASIC can be used to build custom dialogs so Bot can be extended just l
 
 ## Samples
 
-[General Bots Samples Repository](https://github.com/GeneralBots-Samples).
+Several samples, including a Bot for AD Password Reset is avaiable on the [repository list](https://github.com/GeneralBots).
 
 ## Guide
 
