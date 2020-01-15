@@ -36,7 +36,7 @@ Several samples, including a Bot for AD Password Reset is avaiable on the [repos
 
 ## Guide
 
-[Read the General Bots Guide](https://github.com/GeneralBots/BotBook/tree/master/book).
+[Read the General Bots BotBook Guide](https://github.com/GeneralBots/BotBook/tree/master/book).
 
 # Videos
 
