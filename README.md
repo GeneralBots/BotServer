@@ -86,5 +86,3 @@ our trademarks remain entirely with us.
 
 <a href="https://stackoverflow.com/questions/ask?tags=generalbots">:speech_balloon: Ask a question</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="https://github.com/GeneralBots/BotBook">:book: Read the Docs</a>
 
-* About Semantic Release: [https://medium.com/faun/automate-your-releases-versioning-and-release-notes-with-semantic-release-d5575b73d986](https://medium.com/faun/automate-your-releases-versioning-and-release-notes-with-semantic-release-d5575b73d986)
-
