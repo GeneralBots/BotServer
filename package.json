@@ -97,7 +97,8 @@
     "url-join": "4.0.1",
     "vbscript-to-typescript": "1.0.8",
     "wait-until": "0.0.2",
-    "walk-promise": "0.2.0"
+    "walk-promise": "0.2.0",
+    "washyourmouthoutwithsoap": "^1.0.2"
   },
   "devDependencies": {
     "@types/chai": "^4.2.7",

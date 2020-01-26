@@ -7,7 +7,8 @@ export const Messages = {
     what_about_me: 'What about the service, please rate between 1 and 5.',
     thanks: 'Thanks!',
     im_sorry_lets_try: 'I\'m sorry. Let\'s try again...',
-    great_thanks: 'Great, thanks for sharing your thoughts.'
+    great_thanks: 'Great, thanks for sharing your thoughts.',
+    please_no_bad_words: 'Please, no bad words.'
   },
   'pt-BR': {
     about_suggestions: 'Sugestões melhoram muito minha qualidade...',
@@ -17,6 +18,7 @@ export const Messages = {
     what_about_me: 'O que achou do meu atendimento, de 1 a 5?',
     thanks: 'Obrigado!',
     im_sorry_lets_try: 'Desculpe-me, vamos tentar novamente.',
-    great_thanks: 'Ótimo, obrigado por contribuir com sua resposta.'
+    great_thanks: 'Ótimo, obrigado por contribuir com sua resposta.',
+    please_no_bad_words: 'Por favor, sem palavrões!'
   }
 };

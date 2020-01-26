@@ -57,6 +57,19 @@ export class FeedbackDialog extends IGBDialog {
     const service = new CSService();
 
     min.dialogs.add(
+      new WaterfallDialog('/pleaseNoBadWords', [
+        async step => {
+          const locale = step.context.activity.locale;
+          await step.context.sendActivity(Messages[locale].please_no_bad_words);
+
+          return await step.next();
+        }
+      ])
+    );
+
+
+
+    min.dialogs.add(
       new WaterfallDialog('/feedbackNumber', [
         async step => {
           const locale = step.context.activity.locale;

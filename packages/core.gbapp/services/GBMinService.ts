@@ -42,6 +42,7 @@ const express = require('express');
 const request = require('request-promise-native');
 const removeRoute = require('express-remove-route');
 const AuthenticationContext = require('adal-node').AuthenticationContext;
+const wash = require('washyourmouthoutwithsoap');
 import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
 import { ConfirmPrompt, WaterfallDialog } from 'botbuilder-dialogs';
 import {
@@ -540,7 +541,12 @@ export class GBMinService {
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
 
-    if (isVMCall) {
+    const simpleLocale = context.activity.locale.substring(0, 2);
+    const hasBadWord = wash.check(simpleLocale, context.activity.text);
+    
+    if (hasBadWord) {
+      await step.beginDialog('/pleaseNoBadWords');
+    }else if (isVMCall) {
       await GBMinService.callVM(context.activity.text, min, step);
     } else if (context.activity.text.charAt(0) === '/') {
       await step.beginDialog(context.activity.text);
