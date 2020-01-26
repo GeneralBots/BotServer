@@ -41,18 +41,15 @@ import { GuaribasConversation, GuaribasConversationMessage } from '../models';
  * Base services for Bot Analytics.
  */
 export class AnalyticsService {
+
   public async createConversation(
     user: GuaribasUser
   ): Promise<GuaribasConversation> {
-    return new Promise<GuaribasConversation>(
-      (resolve, reject) => {
         const conversation = new GuaribasConversation();
         conversation.startedBy = user;
         conversation.startedByUserId = user.userId;
-        conversation.save().then((value: GuaribasConversation) => {
-          resolve(value);
-        });
-      });
+
+        return await conversation.save();
   }
 
   public async createMessage(
@@ -60,15 +57,10 @@ export class AnalyticsService {
     user: GuaribasUser,
     content: string
   ): Promise<GuaribasConversationMessage> {
-    return new Promise<GuaribasConversationMessage>(
-      (resolve, reject) => {
         const message = GuaribasConversationMessage.build();
         message.conversation = conversation;
         message.user = user;
         message.content = content;
-        message.save().then((value: GuaribasConversationMessage) => {
-          resolve(value);
-        });
-      });
+        return await message.save();
   }
 }

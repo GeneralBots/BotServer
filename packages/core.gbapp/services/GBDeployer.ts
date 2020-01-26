@@ -55,8 +55,7 @@ import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBConfigService } from './GBConfigService';
 import { GBImporter } from './GBImporterService';
 import { GBVMService } from './GBVMService';
-import { min } from 'moment';
-import { GBMinService } from './GBMinService';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 
 /**
  *
@@ -93,7 +92,7 @@ export class GBDeployer {
     const _this = this;
 
     return new Promise(
-      (resolve: any, reject: any): any => {
+      async (resolve: any, reject: any)=> {
         GBLog.info(`PWD ${process.env.PWD}...`);
         let totalPackages = 0;
         let paths = [urlJoin(process.env.PWD, GBDeployer.deployFolder), urlJoin(process.env.PWD, GBDeployer.workFolder)];
@@ -105,7 +104,7 @@ export class GBDeployer {
         const gbappPackages: string[] = [];
         let generalPackages: string[] = [];
 
-        function doIt(path) {
+        async function scanPackageDirectory(path) {
           const isDirectory = source => Fs.lstatSync(source).isDirectory();
           const getDirectories = source =>
             Fs.readdirSync(source)
@@ -113,7 +112,7 @@ export class GBDeployer {
               .filter(isDirectory);
 
           const dirs = getDirectories(path);
-          dirs.forEach(element => {
+          await CollectionUtil.asyncForEach(dirs, async element => {
             if (element === '.') {
               GBLog.info(`Ignoring ${element}...`);
             } else {
@@ -129,14 +128,14 @@ export class GBDeployer {
         }
 
         GBLog.info(`Starting looking for packages (.gbot, .gbtheme, .gbkb, .gbapp)...`);
-        paths.forEach(e => {
+        await CollectionUtil.asyncForEach(paths, async e => {
           GBLog.info(`Looking in: ${e}...`);
-          doIt(e);
+          await scanPackageDirectory(e);
         });
 
         // Deploys all .gbapp files first.
 
-        const appPackagesProcessed = this.deployAppPackages(gbappPackages, core, appPackages);
+        const appPackagesProcessed = await this.deployAppPackages(gbappPackages, core, appPackages);
 
         WaitUntil()
           .interval(1000)
@@ -404,7 +403,7 @@ export class GBDeployer {
 
     // Deploys all .gbot files first.
 
-    botPackages.forEach(async (e) => {
+    await CollectionUtil.asyncForEach(botPackages, async e => {
       if (e !== 'packages\\boot.gbot') {
         GBLog.info(`Deploying bot: ${e}...`);
         await _this.deployBot(e, GBServer.globals.publicAddress);
@@ -415,7 +414,7 @@ export class GBDeployer {
     // Then all remaining generalPackages are loaded.
 
     generalPackages = generalPackages.filter(p => !p.endsWith('.git'));
-    generalPackages.forEach(filename => {
+    await CollectionUtil.asyncForEach(generalPackages, async filename => {
       const filenameOnly = Path.basename(filename);
       GBLog.info(`Deploying package: ${filename}...`);
 
@@ -427,7 +426,7 @@ export class GBDeployer {
         server.use(`/themes/${filenameOnly}`, express.static(filename));
         GBLog.info(`Theme (.gbtheme) assets accessible at: /themes/${filenameOnly}.`);
       } else if (Path.extname(filename) === '.gbkb') {
-        this.mountGBKBAssets( filenameOnly, filename);
+        this.mountGBKBAssets(filenameOnly, filename);
       } else if (Path.extname(filename) === '.gbui') {
         // Already Handled
       } else if (Path.extname(filename) === '.gbdialog') {
@@ -474,9 +473,9 @@ export class GBDeployer {
     return names.indexOf(name) > -1;
   }
 
-  private deployAppPackages(gbappPackages: string[], core: any, appPackages: any[]) {
+  private async deployAppPackages(gbappPackages: string[], core: any, appPackages: any[]) {
     let appPackagesProcessed = 0;
-    gbappPackages.forEach(e => {
+    await CollectionUtil.asyncForEach(gbappPackages, async e => {
       const filenameOnly = Path.basename(e);
 
       // Skips .gbapp inside deploy folder.
@@ -496,18 +495,12 @@ export class GBDeployer {
           try {
             child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
             GBLog.info(`Importando o pacote '${e}' on dir ${process.env.PWD}`);
-            import(Path.join(process.env.PWD, e))
-              .then(m => {
-                const p = new m.Package();
-                p.loadPackage(core, core.sequelize);
-                appPackages.push(p);
-                GBLog.info(`App (.gbapp) deployed: ${e}.`);
-                appPackagesProcessed++;
-              })
-              .catch(err => {
-                GBLog.error(`Error deploying .gbapp package: ${e}\n${err}`);
-                appPackagesProcessed++;
-              });
+            const m = await import(Path.join(process.env.PWD, e));
+            const p = new m.Package();
+            p.loadPackage(core, core.sequelize);
+            appPackages.push(p);
+            GBLog.info(`App (.gbapp) deployed: ${e}.`);
+            appPackagesProcessed++;
           } catch (error) {
             GBLog.error(`Error compiling .gbapp package ${e}:\n${error.stdout.toString()}`);
             appPackagesProcessed++;
