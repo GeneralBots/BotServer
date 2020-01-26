@@ -53,11 +53,16 @@ const Path = require('path');
  * Dialogs for administration tasks.
  */
 export class AdminDialog extends IGBDialog {
+
   public static async undeployPackageCommand(text: any, min: GBMinInstance) {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
     await deployer.undeployPackageFromLocalPath(min.instance, urlJoin(GBDeployer.workFolder, packageName));
+  }
+
+  public static async broadcastCommand(text: any, min: GBMinInstance) {
+    const packageName = text.split(' ')[1];
   }
 
   public static isSharePointPath(path: string) {

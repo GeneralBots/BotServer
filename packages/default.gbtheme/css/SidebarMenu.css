@@ -151,7 +151,7 @@ html[dir="ltr"] .ms-Nav-compositeLink.is-selected a:after {
     .sidebar {
         display: inline-block !important;
         background-color: #3f3f3f !important;
-        height: 13%;
+        height: 15%;
         position: absolute;
         top: 1%;
         left: 1%;
@@ -162,7 +162,6 @@ html[dir="ltr"] .ms-Nav-compositeLink.is-selected a:after {
     .tittleSideBarMenu {
         color: white;
         text-align: center;
-        margin-top: 10px;
     }
 
     .iconMenu {
@@ -189,12 +188,6 @@ html[dir="ltr"] .ms-Nav-compositeLink.is-selected a:after {
 
     .iconText {
         cursor: pointer;
-    }
-}
-
-@media screen and (max-height: 684px) {
-    .tittleSideBarMenu {
-        display: none;
     }
 }
 
