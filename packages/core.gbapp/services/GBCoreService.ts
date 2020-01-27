@@ -382,11 +382,11 @@ STORAGE_SYNC=true
     const sysPackages: IGBPackage[] = [];
     [
       GBAdminPackage,
-      GBAnalyticsPackage,
       GBCorePackage,
       GBSecurityPackage,
       GBKBPackage,
       GBCustomerSatisfactionPackage,
+      GBAnalyticsPackage,
       GBWhatsappPackage,
       GBAzureDeployerPackage,
       GBSharePointPackage,

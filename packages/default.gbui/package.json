@@ -1,6 +1,6 @@
 {
   "name": "default.gbui",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "private": false,
   "repository": "https://github.com/pragmatismo-io/BotServer",
   "description": "Default web interface for General Bots open-core",
@@ -12,6 +12,7 @@
     "botframework-webchat": "^4.7.1",
     "deep-extend": "0.6.0",
     "fetch": "1.1.0",
+    "fingerprintjs2": "^2.1.0",
     "msal": "^1.2.0",
     "powerbi-client": "2.10.2",
     "react": "^16.12.0",

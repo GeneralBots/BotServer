@@ -42,6 +42,7 @@ import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
+import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 
 /**
  * Dialog for collecting quality of answer.
@@ -78,6 +79,14 @@ export class QualityDialog extends IGBDialog {
             user.lastQuestion,
             user.lastQuestionId
           );
+
+          // Updates values to perform Bot Analytics.
+          
+          const analytics = new AnalyticsService();
+          analytics.updateConversationRate(min.instance.instanceId, user.conversation, score);
+
+          // Goes to the ask loop.
+
           await step.replaceDialog('/ask', { isReturning: true });
         }
 

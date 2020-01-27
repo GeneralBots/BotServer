@@ -41,8 +41,8 @@ import GBCss from './components/GBCss.js';
 import { DirectLine } from 'botframework-directlinejs';
 import { ConnectionStatus } from 'botframework-directlinejs';
 import ReactWebChat from 'botframework-webchat';
-// import GBPowerBIPlayer from './players/GBPowerBIPlayer.js';
 import { UserAgentApplication } from 'msal';
+import Fingerprint2 from 'fingerprintjs2';
 
 class GBUIApp extends React.Component {
   constructor() {
@@ -90,7 +90,8 @@ class GBUIApp extends React.Component {
   }
 
   getUser() {
-    return { id: 'webUser@gb', name: 'You' };
+
+    return { id: 'web@gb', name: 'You' };
   }
 
   postEvent(name, value) {
@@ -145,7 +146,7 @@ class GBUIApp extends React.Component {
     let userAgentApplication = new UserAgentApplication(
       this.state.instanceClient.authenticatorClientId,
       authority,
-      function(errorDesc, token, error, tokenType) {
+      function (errorDesc, token, error, tokenType) {
         if (error) {
           console.log(error);
         }
@@ -157,10 +158,10 @@ class GBUIApp extends React.Component {
       var user = userAgentApplication.getUser();
       if (user) {
         userAgentApplication.acquireTokenSilent(graphScopes).then(
-          function(accessToken) {
+          function (accessToken) {
             _this_.sendToken(accessToken);
           },
-          function(error) {
+          function (error) {
             console.log(error);
           }
         );
@@ -264,16 +265,16 @@ class GBUIApp extends React.Component {
             />
           );
           break;
-     /* case 'pbi':
-          playerComponent = (
-            <GBPowerBIPlayer
-              app={this}
-              ref={player => {
-                this.player = player;
-              }}
-            />
-          );
-          break; */
+        /* case 'pbi':
+             playerComponent = (
+               <GBPowerBIPlayer
+                 app={this}
+                 ref={player => {
+                   this.player = player;
+                 }}
+               />
+             );
+             break; */
         case 'login':
           playerComponent = (
             <GBLoginPlayer
@@ -342,10 +343,10 @@ class GBUIApp extends React.Component {
         {sideBar}
         <div className="player">{playerComponent}</div>
         <div className="webchat">
-            {chat}
+          {chat}
         </div>
       </div>
-    ); 
+    );
   }
 }
 

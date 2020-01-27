@@ -58,6 +58,50 @@ import { GuaribasChannel, GuaribasInstance } from '../../core.gbapp/models/GBMod
 import { GuaribasSubject } from '../../kb.gbapp/models';
 import { GuaribasUser } from '../../security.gblib/models';
 
+
+/**
+ * A conversation that groups many messages.
+ */
+@Table
+export class GuaribasConversation extends Model<GuaribasConversation> {
+
+  @PrimaryKey
+  @AutoIncrement
+  @Column
+  public conversationId: number;
+
+  @ForeignKey(() => GuaribasSubject)
+  @Column
+  public startSubjectId: number;
+
+  @BelongsTo(() => GuaribasSubject)
+  public startSubject: GuaribasSubject;
+
+  @ForeignKey(() => GuaribasChannel)
+  @Column
+  public channelId: string;
+
+  @Column public rateDate: Date;
+
+  @Column(DataType.FLOAT)
+  @Column
+  public rate: number;
+
+  @Column
+  @CreatedAt
+  public createdAt: Date;
+
+  @Column public text: string;
+
+  @ForeignKey(() => GuaribasUser)
+  @Column
+  public startedByUserId: number;
+
+  @BelongsTo(() => GuaribasUser)
+  public startedBy: GuaribasUser;
+}
+
+
 /**
  * A single message in a conversation.
  */
@@ -103,49 +147,4 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
 
   @BelongsTo(() => GuaribasUser)
   public user: GuaribasUser;
-}
-
-/**
- * A conversation that groups many messages.
- */
-@Table
-export class GuaribasConversation extends Model<GuaribasConversation> {
-
-  @PrimaryKey
-  @AutoIncrement
-  @Column
-  public conversationId: number;
-
-  @ForeignKey(() => GuaribasSubject)
-  @Column
-  public startSubjectId: number;
-
-  @BelongsTo(() => GuaribasSubject)
-  public startSubject: GuaribasSubject;
-
-  @ForeignKey(() => GuaribasChannel)
-  @Column
-  public channelId: string;
-
-  @Column public rateDate: Date;
-
-  @Column(DataType.FLOAT)
-  @Column
-  public rate: number;
-
-  @Column
-  @CreatedAt
-  public createdAt: Date;
-
-  @Column public text: string;
-
-  @HasMany(() => GuaribasConversationMessage)
-  public conversationMessage: GuaribasConversationMessage[];
-
-  @ForeignKey(() => GuaribasUser)
-  @Column
-  public startedByUserId: number;
-
-  @BelongsTo(() => GuaribasUser)
-  public startedBy: GuaribasUser;
 }

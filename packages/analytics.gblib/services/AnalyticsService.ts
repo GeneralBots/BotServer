@@ -45,22 +45,41 @@ export class AnalyticsService {
   public async createConversation(
     user: GuaribasUser
   ): Promise<GuaribasConversation> {
-        const conversation = new GuaribasConversation();
-        conversation.startedBy = user;
-        conversation.startedByUserId = user.userId;
+    const conversation = new GuaribasConversation();
+    conversation.startedBy = user;
+    conversation.startedByUserId = user.userId;
 
-        return await conversation.save();
+    return await conversation.save();
   }
 
+  public async updateConversationRate(
+    instanceId: number, 
+    conversationId: number,
+    rate: number
+  ): Promise<GuaribasConversation> {
+    const options = { where: {} };
+    // TODO: Filter by instanceId: instanceId
+    options.where = {  conversationId: conversationId };
+    const item = await GuaribasConversation.findOne(options);
+    item.rate = rate;
+    item.rateDate = new Date();    
+    return item.save();
+  }
+
+
   public async createMessage(
+    instanceId: number, 
     conversation: GuaribasConversation,
     user: GuaribasUser,
     content: string
   ): Promise<GuaribasConversationMessage> {
-        const message = GuaribasConversationMessage.build();
-        message.conversation = conversation;
-        message.user = user;
-        message.content = content;
-        return await message.save();
+
+    const message = GuaribasConversationMessage.build();
+    message.content = content;
+    message.instanceId = instanceId;
+    message.userId = user.userId;
+    message.conversationId = conversation.conversationId;
+
+    return await message.save();
   }
 }

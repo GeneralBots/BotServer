@@ -58,19 +58,12 @@ import {
 
 import { MicrosoftAppCredentials } from 'botframework-connector';
 import { GBServer } from '../../../src/app';
-import { GBAnalyticsPackage } from '../../analytics.gblib';
-import { GBCorePackage } from '../../core.gbapp';
-import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
-import { GBKBPackage } from '../../kb.gbapp';
 import { AskDialogArgs } from '../../kb.gbapp/dialogs/AskDialog';
-import { GBSecurityPackage } from '../../security.gblib';
-import { GBWhatsappPackage } from '../../whatsapp.gblib';
 import { Messages } from '../strings';
-import { GBAdminPackage } from './../../admin.gbapp/index';
 import { GBConfigService } from './GBConfigService';
 import { GBDeployer } from './GBDeployer';
 import { SecService } from '../../security.gblib/services/SecService';
-import { isBreakOrContinueStatement } from 'typescript';
+import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 
 /**
  * Minimal service layer for a bot.
@@ -124,7 +117,7 @@ export class GBMinService {
     if (process.env.DISABLE_WEB !== 'true') {
       GBServer.globals.server.get('/instances/:botId', (req, res) => {
         (async () => {
-          await this.handleGetInstanceFroClient(req, res);
+          await this.handleGetInstanceForClient(req, res);
         })();
       });
     }
@@ -189,7 +182,7 @@ export class GBMinService {
   public async mountBot(instance: IGBInstance) {
 
     // Build bot adapter.
-    const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.publicAddress, GBServer.globals.sysPackages);
+    const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.sysPackages);
 
     if (GBServer.globals.minInstances.length === 0) {
       GBServer.globals.minBoot = min;
@@ -201,7 +194,7 @@ export class GBMinService {
     // this.deployer.deployPackage(min, 'packages/default.gbdialog');
 
     // Call the loadBot context.activity for all packages.
-    this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min, GBServer.globals.server);
+    this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min);
 
     // Serves individual URL for each bot conversational interface...
     const url = `/api/messages/${instance.botId}`;
@@ -280,7 +273,7 @@ export class GBMinService {
   /**
    * Returns the instance object to clients requesting bot info.
    */
-  private async handleGetInstanceFroClient(req: any, res: any) {
+  private async handleGetInstanceForClient(req: any, res: any) {
     let botId = req.params.botId;
     if (botId === '[default]' || botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
@@ -365,7 +358,7 @@ export class GBMinService {
     }
   }
 
-  private async buildBotAdapter(instance: any, proxyAddress: string, sysPackages: IGBPackage[]) {
+  private async buildBotAdapter(instance: any, sysPackages: IGBPackage[]) {
     const adapter = new BotFrameworkAdapter({
       appId: instance.marketplaceId,
       appPassword: instance.marketplacePassword
@@ -404,11 +397,9 @@ export class GBMinService {
     return { min, adapter, conversationState };
   }
 
-  private invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance, server: any) {
-    let index = 0;
+  private invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance) {
     sysPackages.forEach(e => {
       e.loadBot(min);
-      index++;
     }, this);
 
     appPackages.forEach(p => {
@@ -456,15 +447,24 @@ export class GBMinService {
           user.loaded = true;
           user.subjects = [];
           user.cb = undefined;
-          await min.userProfile.set(step.context, user);
+
 
           if (context.activity.membersAdded !== undefined) {
             let sec = new SecService();
             const member = context.activity.membersAdded[0];
 
-            await sec.ensureUser(instance.instanceId, member.id,
+            const persistedUser = await sec.ensureUser(instance.instanceId, member.id,
               min.botId, member.id, "", "web", member.name, member.id);
+
+            const analytics = new AnalyticsService();
+
+            user.systemUser = persistedUser;
+            user.conversation = await analytics.createConversation(persistedUser);
+
           }
+
+          await min.userProfile.set(step.context, user);
+
         }
 
         GBLog.info(
@@ -534,7 +534,17 @@ export class GBMinService {
   }
 
   private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
-    // Direct script invoking by itent name.
+
+    // Adds message to the analytics layer.
+
+    const analytics = new AnalyticsService();
+    const user = await min.userProfile.get(context, {});
+    analytics.createMessage(min.instance.instanceId,
+      user.conversation, user.systemUser,
+      context.activity.text);
+
+    // Checks for global exit kewywords cancelling any active dialogs.
+
     const globalQuit = (locale, utterance) => {
       return utterance.match(Messages[locale].global_quit);
     }
@@ -543,10 +553,10 @@ export class GBMinService {
 
     const simpleLocale = context.activity.locale.substring(0, 2);
     const hasBadWord = wash.check(simpleLocale, context.activity.text);
-    
+
     if (hasBadWord) {
       await step.beginDialog('/pleaseNoBadWords');
-    }else if (isVMCall) {
+    } else if (isVMCall) {
       await GBMinService.callVM(context.activity.text, min, step);
     } else if (context.activity.text.charAt(0) === '/') {
       await step.beginDialog(context.activity.text);
@@ -562,7 +572,6 @@ export class GBMinService {
       await step.beginDialog('/menu', JSON.parse(context.activity.text));
       // Otherwise, continue to the active dialog in the stack.
     } else {
-      const user = await min.userProfile.get(context, {});
       if (step.activeDialog !== undefined) {
         await step.continueDialog();
       } else {

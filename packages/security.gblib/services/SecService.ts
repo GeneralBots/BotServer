@@ -65,8 +65,7 @@ export class SecService extends GBService {
     user.email = userName;
     user.phone = phone;
     user.defaultChannel = channelName;
-    user.save();
-    return user;
+    return await user.save();
   }
 
   /**

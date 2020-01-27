@@ -38,6 +38,7 @@
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
+import { GuaribasConversation, GuaribasConversationMessage } from './models';
 
 /**
  * .gblib Package handler.
@@ -49,6 +50,8 @@ export class GBAnalyticsPackage implements IGBPackage {
   }
   public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
     GBLog.verbose(`loadPackage called.`);
+    core.sequelize.addModels([GuaribasConversation, GuaribasConversationMessage]);
+
   }
   public unloadPackage(core: IGBCoreService): void {
     GBLog.verbose(`unloadPackage called.`);
