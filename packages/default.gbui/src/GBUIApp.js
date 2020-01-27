@@ -42,7 +42,7 @@ import { DirectLine } from 'botframework-directlinejs';
 import { ConnectionStatus } from 'botframework-directlinejs';
 import ReactWebChat from 'botframework-webchat';
 import { UserAgentApplication } from 'msal';
-import Fingerprint2 from 'fingerprintjs2';
+
 
 class GBUIApp extends React.Component {
   constructor() {

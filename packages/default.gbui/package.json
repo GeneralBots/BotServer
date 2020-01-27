@@ -12,7 +12,6 @@
     "botframework-webchat": "^4.7.1",
     "deep-extend": "0.6.0",
     "fetch": "1.1.0",
-    "fingerprintjs2": "^2.1.0",
     "msal": "^1.2.0",
     "powerbi-client": "2.10.2",
     "react": "^16.12.0",
