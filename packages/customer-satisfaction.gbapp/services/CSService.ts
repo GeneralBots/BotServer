@@ -32,22 +32,36 @@
 
 import { GuaribasConversation } from '../../analytics.gblib/models';
 import { GuaribasQuestionAlternate } from '../models';
+import { GuaribasQuestion } from 'packages/kb.gbapp/models';
 
 /**
  * Customer Satisfaction Service Layer.
  */
 export class CSService {
 
-  public async resolveQuestionAlternate(
+  public async getQuestionFromAlternateText(
     instanceId: number,
-    questionTyped: string): Promise<GuaribasQuestionAlternate> {
+    text: string): Promise<GuaribasQuestion> {
 
-    return GuaribasQuestionAlternate.findOne({
+    let questionAlternate = await GuaribasQuestionAlternate.findOne({
       where: {
         instanceId: instanceId,
-        questionTyped: questionTyped
+        questionTyped: text
       }
     });
+
+    let question: GuaribasQuestion = null;
+
+    if (questionAlternate !== null) {
+
+      question = await GuaribasQuestion.findOne({
+        where: {
+          instanceId: instanceId,
+          questionId: questionAlternate.questionTyped;
+        }
+      });
+    }
+    return question;
   }
 
   public async insertQuestionAlternate(

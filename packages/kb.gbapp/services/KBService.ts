@@ -56,6 +56,7 @@ import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
 import { Messages } from '../strings';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 import { GBServer } from '../../../src/app';
+import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
 
 
 /**
@@ -117,12 +118,19 @@ export class KBService {
   }
 
   public async getAnswerByText(instanceId: number, text: string): Promise<any> {
-    const question = await GuaribasQuestion.findOne({
-      where: {
-        instanceId: instanceId,
-        content: { [Op.like]: `%${text.trim()}%` }
-      }
-    });
+
+    text = text.trim();
+    const service = new CSService();
+    let question = await service.getQuestionFromAlternateText(instanceId, text);
+
+    if (question !== null) {
+      question = await GuaribasQuestion.findOne({
+        where: {
+          instanceId: instanceId,
+          content: { [Op.like]: `%${text}%` }
+        }
+      });
+    }
 
     if (question !== null) {
       const answer = await GuaribasAnswer.findOne({
