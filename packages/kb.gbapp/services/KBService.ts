@@ -392,6 +392,10 @@ export class KBService {
     else if (channel === 'whatsapp') {
       await this.sendMarkdownToMobile(step, answer, conversationalService, min);
     }
+    else
+    {
+      await step.context.sendActivity(html);
+    }
   }
 
   private async sendMarkdownToWeb(step: GBDialogStep, conversationalService: IGBConversationalService, html: string, answer: GuaribasAnswer) {
