@@ -48,7 +48,7 @@ const rimraf = require('rimraf');
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app';
-import { GuaribasPackage } from '../models/GBModel';
+import { GuaribasPackage, GuaribasInstance } from '../models/GBModel';
 import { GBAdminService } from './../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService';
 import { KBService } from './../../kb.gbapp/services/KBService';
@@ -163,16 +163,20 @@ export class GBDeployer {
     );
   }
 
+
+  public async deployBlankBot(botId: string){
+    let instance = await this.importer.createBotInstance(botId);
+    return this.deployBotFull(instance, GBServer.globals.publicAddress);
+
+  }
+
   /**
    * Deploys a bot to the storage.
    */
 
-  public async deployBot(localPath: string, publicAddress: string): Promise<void> {
-    const packageName = Path.basename(localPath);
+  public async deployBotFull(instance: IGBInstance, publicAddress: string): Promise<void> {
 
     const service = new AzureDeployerService(this);
-    let instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
-
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
     const group = GBConfigService.get('CLOUD_GROUP');
@@ -227,9 +231,18 @@ export class GBDeployer {
       await GBServer.globals.minService.mountBot(instance);
     }
     await this.core.saveInstance(instance);
-
+    
   }
 
+  /**
+   * Deploys a bot to the storage from a .gbot folder.
+   */
+
+  public async deployBotFromLocalPath(localPath: string, publicAddress: string): Promise<void> {
+    const packageName = Path.basename(localPath);
+    let instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
+    this.deployBotFull(instance, publicAddress);
+  }
 
   /**
    * UndDeploys a bot to the storage.
@@ -276,7 +289,7 @@ export class GBDeployer {
 
     switch (packageType) {
       case '.gbot':
-        await this.deployBot(localPath, GBServer.globals.publicAddress);
+        await this.deployBotFromLocalPath(localPath, GBServer.globals.publicAddress);
         break;
 
       case '.gbkb':
@@ -406,7 +419,7 @@ export class GBDeployer {
     await CollectionUtil.asyncForEach(botPackages, async e => {
       if (e !== 'packages\\boot.gbot') {
         GBLog.info(`Deploying bot: ${e}...`);
-        await _this.deployBot(e, GBServer.globals.publicAddress);
+        await _this.deployBotFromLocalPath(e, GBServer.globals.publicAddress);
         GBLog.info(`Bot: ${e} deployed...`);
       }
     });

@@ -288,6 +288,12 @@ STORAGE_SYNC=true
     }
   }
 
+  public setWWWRoot(localPath: string)
+  {
+    GBServer.globals.wwwroot = localPath;
+  }
+
+
   public async deleteInstance(botId: string) {
     const options = { where: {} };
     options.where = { botId: botId };

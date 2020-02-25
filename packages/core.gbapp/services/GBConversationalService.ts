@@ -41,6 +41,7 @@ import { LuisRecognizer } from 'botbuilder-ai';
 import { GBDialogStep, GBLog, GBMinInstance, IGBConversationalService, IGBCoreService } from 'botlib';
 import { AzureText } from 'pragmatismo-io-framework';
 import { Messages } from '../strings';
+const PasswordGenerator = require("strict-password-generator").default;
 const Nexmo = require('nexmo');
 
 export interface LanguagePickerSettings {
@@ -57,6 +58,20 @@ export class GBConversationalService implements IGBConversationalService {
 
   constructor(coreService: IGBCoreService) {
     this.coreService = coreService;
+  }
+
+  public static getNewMobileCode() {
+    const passwordGenerator = new PasswordGenerator();
+    const options = {
+      upperCaseAlpha: false,
+      lowerCaseAlpha: false,
+      number: true,
+      specialCharacter: false,
+      minimumLength: 4,
+      maximumLength: 4
+    };
+    let code = passwordGenerator.generatePassword(options);
+    return code;
   }
 
   public getCurrentLanguage(step: GBDialogStep) {

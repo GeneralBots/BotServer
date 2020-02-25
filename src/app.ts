@@ -64,6 +64,7 @@ export class RootData {
   public bootInstance: IGBInstance; // General Bot Interface Instance
   public minInstances: any[]; //
   public minBoot: GBMinInstance;
+  public wwwroot: string; // .gbui or a static webapp.
 }
 
 /**
@@ -87,6 +88,7 @@ export class GBServer {
     GBServer.globals.appPackages = [];
     GBServer.globals.sysPackages = [];
     GBServer.globals.minInstances = [];
+    GBServer.globals.wwwroot = null;
 
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));

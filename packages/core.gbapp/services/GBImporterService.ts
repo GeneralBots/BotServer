@@ -64,10 +64,17 @@ export class GBImporter {
     const instance = await this.core.loadInstance(botId);
 
     if (instance.botId === undefined || instance.botId === null) {
-      console.log("••• Atenção botId é nulo ou undefined");
+      console.log(`Null BotId after load instance with botId: ${botId}.`);
     }
     return await this.createOrUpdateInstanceInternal(instance, botId, localPath, settingsJson);
   }
+
+  public async createBotInstance(botId: string) {
+    let fullSettingsJson = { ...GBServer.globals.bootInstance };
+    fullSettingsJson.botId = botId;
+    return await GuaribasInstance.create(fullSettingsJson);
+  }
+
 
   private async createOrUpdateInstanceInternal(instance: IGBInstance,
     botId: string, localPath: string, settingsJson: any) {
@@ -83,9 +90,6 @@ export class GBImporter {
     if (instance !== null) {
       instance = { ...instance, ...fullSettingsJson };
 
-      if (instance.botId === undefined || instance.botId === null) {
-        console.log("••• Atenção botId é nulo ou undefined");
-      }
       return await this.core.saveInstance(instance);
     } else {
       return await GuaribasInstance.create(fullSettingsJson);

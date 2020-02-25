@@ -110,7 +110,10 @@ export class GBMinService {
   ) {
     // Serves default UI on root address '/' if web enabled.
     if (process.env.DISABLE_WEB !== 'true') {
-      GBServer.globals.server.use('/', express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build')));
+      let url = urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build');
+
+      GBServer.globals.server.use('/', express.static(GBServer.globals.wwwroot ? 
+        GBServer.globals.wwwroot : url));
     }
     // Serves the bot information object via HTTP so clients can get
     // instance information stored on server.
@@ -382,6 +385,7 @@ export class GBMinService {
     min.core = this.core;
     min.conversationalService = this.conversationalService;
     min.adminService = this.adminService;
+    min.deployer = this.deployer;
     min.instance = await this.core.loadInstance(min.botId);
     min.cbMap = {};
     min.scriptMap = {};
