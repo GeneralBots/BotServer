@@ -288,6 +288,11 @@ STORAGE_SYNC=true
     }
   }
 
+  public setEntryPointDialog(dialogName: string)
+  {
+    GBServer.globals.entryPointDialog = dialogName;
+  }
+
   public setWWWRoot(localPath: string)
   {
     GBServer.globals.wwwroot = localPath;

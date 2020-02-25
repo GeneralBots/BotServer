@@ -163,11 +163,23 @@ export class GBDeployer {
     );
   }
 
-
   public async deployBlankBot(botId: string){
     let instance = await this.importer.createBotInstance(botId);
-    return this.deployBotFull(instance, GBServer.globals.publicAddress);
+    
+    const username = GBConfigService.get('CLOUD_USERNAME');
+    const password = GBConfigService.get('CLOUD_PASSWORD');
+    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
 
+    const service = new AzureDeployerService(this);
+    let application = service.createApplication(accessToken, botId);
+
+    instance.marketplaceId = (application as any).appId;
+    instance.marketplacePassword = (application as any).passwordCredentials[0];
+    instance.adminPass = GBAdminService.getRndPassword();
+
+    await this.core.saveInstance(instance);
+
+    return this.deployBotFull(instance, GBServer.globals.publicAddress);
   }
 
   /**
@@ -179,9 +191,9 @@ export class GBDeployer {
     const service = new AzureDeployerService(this);
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
+    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
     const group = GBConfigService.get('CLOUD_GROUP');
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
-    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
 
     if (await service.botExists(instance.botId, group)) {
       await service.updateBot(

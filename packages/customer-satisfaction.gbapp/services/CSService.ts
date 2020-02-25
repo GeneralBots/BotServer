@@ -32,7 +32,7 @@
 
 import { GuaribasConversation } from '../../analytics.gblib/models';
 import { GuaribasQuestionAlternate } from '../models';
-import { GuaribasQuestion } from 'packages/kb.gbapp/models';
+import { GuaribasQuestion } from '../../../packages/kb.gbapp/models';
 
 /**
  * Customer Satisfaction Service Layer.
@@ -57,7 +57,7 @@ export class CSService {
       question = await GuaribasQuestion.findOne({
         where: {
           instanceId: instanceId,
-          questionId: questionAlternate.questionTyped;
+          questionId: questionAlternate.questionTyped
         }
       });
     }

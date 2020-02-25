@@ -49,6 +49,7 @@ import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminSe
 import { GBCorePackage } from '../../../packages/core.gbapp';
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService';
 import { GBDeployer } from '../../../packages/core.gbapp/services/GBDeployer';
+const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
 
 const Spinner = require('cli-spinner').Spinner;
 // tslint:disable-next-line: no-submodule-imports
@@ -337,7 +338,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       endIpAddress: ip
     };
     await storageClient.firewallRules.createOrUpdate(groupName, serverName, 'gb', params);
-       
+
     // AllowAllWindowsAzureIps must be created that way, so the Azure Search can 
     // access SQL Database to index its contents.
 
@@ -372,7 +373,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
     const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
 
-    instance.nlpEndpoint =  urlJoin(nlp.endpoint, 'apps');
+    instance.nlpEndpoint = urlJoin(nlp.endpoint, 'apps');
     instance.nlpKey = keys.key1;
     instance.nlpAppId = nlpAppId;
 
@@ -579,6 +580,28 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     };
 
     return await this.storageClient.servers.createOrUpdate(group, name, params);
+  }
+
+  public async createApplication(token: string, name: string) {
+    return new Promise<string>((resolve, reject) => {
+      let client = MicrosoftGraph.Client.init({
+        authProvider: done => {
+          done(null, token);
+        }
+      });
+      const app = {
+        displayName: name
+      };
+
+      client.api(`/applications`).post(app, (err, res) => {
+        if (err) {
+          reject(err)
+        }
+        else {
+          resolve(res);
+        }
+      });
+    });
   }
 
   private async registerProviders(subscriptionId, baseUrl, accessToken) {

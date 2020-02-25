@@ -65,6 +65,7 @@ export class RootData {
   public minInstances: any[]; //
   public minBoot: GBMinInstance;
   public wwwroot: string; // .gbui or a static webapp.
+  public entryPointDialog: string; // To replace default welcome dialog.
 }
 
 /**

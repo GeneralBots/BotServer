@@ -40,6 +40,7 @@ import { BotAdapter } from 'botbuilder';
 import {WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings';
+import { GBServer } from '../../../src/app';
 
 /**
  *  Dialog for Welcoming people.
@@ -55,6 +56,12 @@ export class WelcomeDialog extends IGBDialog {
 
     min.dialogs.add(new WaterfallDialog('/', [
       async step => {
+
+        if (GBServer.globals.entryPointDialog !== undefined)
+        {
+
+          return step.replaceDialog(GBServer.globals.entryPointDialog);
+        }
 
         const user = await min.userProfile.get(context, {});
         const locale = step.context.activity.locale;

@@ -60,7 +60,7 @@ export class GBConversationalService implements IGBConversationalService {
     this.coreService = coreService;
   }
 
-  public static getNewMobileCode() {
+  public getNewMobileCode() {
     const passwordGenerator = new PasswordGenerator();
     const options = {
       upperCaseAlpha: false,

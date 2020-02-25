@@ -385,7 +385,7 @@ export class GBMinService {
     min.core = this.core;
     min.conversationalService = this.conversationalService;
     min.adminService = this.adminService;
-    min.deployer = this.deployer;
+    min.deployService = this.deployer;
     min.instance = await this.core.loadInstance(min.botId);
     min.cbMap = {};
     min.scriptMap = {};
