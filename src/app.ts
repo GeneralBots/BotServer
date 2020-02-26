@@ -90,6 +90,7 @@ export class GBServer {
     GBServer.globals.sysPackages = [];
     GBServer.globals.minInstances = [];
     GBServer.globals.wwwroot = null;
+    GBServer.globals.entryPointDialog = null;
 
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));

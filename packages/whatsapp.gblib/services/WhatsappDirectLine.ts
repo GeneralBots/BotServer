@@ -251,7 +251,7 @@ export class WhatsappDirectLine extends GBService {
       const result = await request.post(options);
       GBLog.info(result);
     } catch (error) {
-      GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
+      GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
     }
   }
 
@@ -274,7 +274,7 @@ export class WhatsappDirectLine extends GBService {
       const result = await request.post(options);
       GBLog.info(result);
     } catch (error) {
-      GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
+      GBLog.error(`Error sending audio message to Whatsapp provider ${error.message}`);
     }
   }
 
@@ -298,6 +298,8 @@ export class WhatsappDirectLine extends GBService {
       GBLog.info(result);
     } catch (error) {
       GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
+
+      // TODO: Handle Error: socket hang up and retry.
     }
   }
 }

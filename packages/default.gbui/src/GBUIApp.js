@@ -138,6 +138,11 @@ class GBUIApp extends React.Component {
   }
 
   authenticate() {
+    
+    if (this.state.instanceClient.authenticatorClientId === null) {
+      return;
+    }
+
     let _this_ = this;
     let authority = 'https://login.microsoftonline.com/' + this.state.instanceClient.authenticatorTenant;
 

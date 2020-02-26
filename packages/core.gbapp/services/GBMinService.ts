@@ -110,10 +110,11 @@ export class GBMinService {
   ) {
     // Serves default UI on root address '/' if web enabled.
     if (process.env.DISABLE_WEB !== 'true') {
-      let url = urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build');
+      let url = GBServer.globals.wwwroot ?
+        GBServer.globals.wwwroot :
+         urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build');
 
-      GBServer.globals.server.use('/', express.static(GBServer.globals.wwwroot ? 
-        GBServer.globals.wwwroot : url));
+      GBServer.globals.server.use('/', express.static(url));
     }
     // Serves the bot information object via HTTP so clients can get
     // instance information stored on server.
@@ -483,6 +484,7 @@ export class GBMinService {
             appPackages.forEach(e => {
               e.onNewSession(min, step);
             });
+            await step.beginDialog('/');
           } else {
             GBLog.info(`Member added to conversation: ${member.name}`);
           }

@@ -57,9 +57,8 @@ export class WelcomeDialog extends IGBDialog {
     min.dialogs.add(new WaterfallDialog('/', [
       async step => {
 
-        if (GBServer.globals.entryPointDialog !== undefined)
+        if (GBServer.globals.entryPointDialog !== null)
         {
-
           return step.replaceDialog(GBServer.globals.entryPointDialog);
         }
 

@@ -92,7 +92,7 @@ export class GBDeployer {
     const _this = this;
 
     return new Promise(
-      async (resolve: any, reject: any)=> {
+      async (resolve: any, reject: any) => {
         GBLog.info(`PWD ${process.env.PWD}...`);
         let totalPackages = 0;
         let paths = [urlJoin(process.env.PWD, GBDeployer.deployFolder), urlJoin(process.env.PWD, GBDeployer.workFolder)];
@@ -163,9 +163,9 @@ export class GBDeployer {
     );
   }
 
-  public async deployBlankBot(botId: string){
+  public async deployBlankBot(botId: string) {
     let instance = await this.importer.createBotInstance(botId);
-    
+
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
     const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
@@ -243,7 +243,7 @@ export class GBDeployer {
       await GBServer.globals.minService.mountBot(instance);
     }
     await this.core.saveInstance(instance);
-    
+
   }
 
   /**
@@ -514,13 +514,12 @@ export class GBDeployer {
         }
 
         folder = Path.join(e, 'dist');
-        if (!Fs.existsSync()) {
+        if (!Fs.existsSync()) { 
           GBLog.info(`Compiling ${e}...`);
 
           try {
             child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
-            GBLog.info(`Importando o pacote '${e}' on dir ${process.env.PWD}`);
-            const m = await import(Path.join(process.env.PWD, e));
+            const m = await import(e);
             const p = new m.Package();
             p.loadPackage(core, core.sequelize);
             appPackages.push(p);

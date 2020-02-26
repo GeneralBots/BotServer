@@ -1,8 +1,8 @@
 {
   "name": "default.gbui",
-  "version": "0.0.13",
+  "version": "1.0.0",
   "private": false,
-  "repository": "https://github.com/pragmatismo-io/BotServer",
+  "repository": "https://github.com/GeneralBots/BotServer",
   "description": "Default web interface for General Bots open-core",
   "license": "AGPL-3.0",
   "homepage": ".",
