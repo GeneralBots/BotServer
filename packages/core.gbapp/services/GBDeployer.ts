@@ -171,7 +171,7 @@ export class GBDeployer {
     const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
 
     const service = new AzureDeployerService(this);
-    let application = service.createApplication(accessToken, botId);
+    let application = await service.createApplication(accessToken, botId);
 
     instance.marketplaceId = (application as any).appId;
     instance.marketplacePassword = (application as any).passwordCredentials[0];
