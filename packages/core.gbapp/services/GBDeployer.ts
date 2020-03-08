@@ -166,27 +166,29 @@ export class GBDeployer {
   public async deployBlankBot(botId: string) {
     let instance = await this.importer.createBotInstance(botId);
 
-    const username = GBConfigService.get('CLOUD_USERNAME');
-    const password = GBConfigService.get('CLOUD_PASSWORD');
-    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
+    const accessToken = await GBServer.globals.minBoot.adminService
+      .acquireElevatedToken(GBServer.globals.bootInstance.instanceId);
 
     const service = new AzureDeployerService(this);
     let application = await service.createApplication(accessToken, botId);
 
     instance.marketplaceId = (application as any).appId;
-    instance.marketplacePassword = (application as any).passwordCredentials[0];
+    instance.marketplacePassword = await service.createApplicationSecret(
+      accessToken, (application as any).id);
     instance.adminPass = GBAdminService.getRndPassword();
+    instance.title = botId;
+
 
     await this.core.saveInstance(instance);
 
-    return this.deployBotFull(instance, GBServer.globals.publicAddress);
+    return await this.deployBotFull(instance, GBServer.globals.publicAddress);
   }
 
   /**
    * Deploys a bot to the storage.
    */
 
-  public async deployBotFull(instance: IGBInstance, publicAddress: string): Promise<void> {
+  public async deployBotFull(instance: IGBInstance, publicAddress: string): Promise<IGBInstance> {
 
     const service = new AzureDeployerService(this);
     const username = GBConfigService.get('CLOUD_USERNAME');
@@ -242,7 +244,7 @@ export class GBDeployer {
 
       await GBServer.globals.minService.mountBot(instance);
     }
-    await this.core.saveInstance(instance);
+    return await this.core.saveInstance(instance);
 
   }
 
@@ -514,7 +516,7 @@ export class GBDeployer {
         }
 
         folder = Path.join(e, 'dist');
-        if (!Fs.existsSync()) { 
+        if (!Fs.existsSync()) {
           GBLog.info(`Compiling ${e}...`);
 
           try {

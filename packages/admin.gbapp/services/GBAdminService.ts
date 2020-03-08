@@ -176,7 +176,7 @@ export class GBAdminService implements IGBAdminService {
           instance.authenticatorClientSecret,
           resource,
           async (err, res) => {
-            if (err !== undefined) {
+            if (err !== null) {
               reject(err);
             } else {
               const token = res as TokenResponse;

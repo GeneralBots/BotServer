@@ -520,8 +520,8 @@ export class AzureDeployerService implements IGBInstallationDeployer {
           luisKey: nlpKey,
           msaAppId: appId,
           msaAppPassword: appPassword,
-          enabledChannels: ['webchat'], // , "skype", "facebook"],
-          configuredChannels: ['webchat'] // , "skype", "facebook"]
+          enabledChannels: ['webchat', "skype"],//, "facebook"],
+          configuredChannels: ['webchat' , "skype"]//, "facebook"]
         }
       };
 
@@ -599,6 +599,30 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         }
         else {
           resolve(res);
+        }
+      });
+    });
+  }
+
+  public async createApplicationSecret(token: string, appId: string) {
+    return new Promise<string>((resolve, reject) => {
+      let client = MicrosoftGraph.Client.init({
+        authProvider: done => {
+          done(null, token);
+        }
+      });
+      const body = {
+        passwordCredential: {
+          displayName: "General Bots Generated"
+        }
+      };
+
+      client.api(`/applications/${appId}/addPassword`).post(body, (err, res) => {
+        if (err) {
+          reject(err)
+        }
+        else {
+          resolve(res.secretText);
         }
       });
     });

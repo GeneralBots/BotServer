@@ -62,7 +62,7 @@ export class WelcomeDialog extends IGBDialog {
           return step.replaceDialog(GBServer.globals.entryPointDialog);
         }
 
-        const user = await min.userProfile.get(context, {});
+        const user = await min.userProfile.get(step.context, {});
         const locale = step.context.activity.locale;
 
         if (!user.once) {

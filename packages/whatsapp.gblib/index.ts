@@ -49,7 +49,7 @@ export class GBWhatsappPackage implements IGBPackage {
   public loadBot(min: GBMinInstance): void {
     // Only loads engine if it is defined on services.json.
 
-    if (min.instance.whatsappBotKey !== undefined && min.instance.whatsappBotKey !== null ) {
+    if (min.instance.whatsappServiceKey !== null ) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
         min.botId,
         min.instance.whatsappBotKey,

@@ -57,7 +57,7 @@ export class GuaribasAdmin extends Model<GuaribasAdmin> {
   @Column
   public key: string;
 
-  @Column(DataType.STRING(1024))
+  @Column(DataType.STRING(2048))
   public value: string;
 
   @Column

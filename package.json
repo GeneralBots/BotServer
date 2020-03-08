@@ -86,6 +86,7 @@
     "request-promise-native": "1.0.8",
     "rimraf": "3.0.0",
     "scanf": "1.1.1",
+    "sequelize": "5.21.5",
     "sequelize-typescript": "1.1.0",
     "shx": "0.3.2",
     "simple-git": "1.129.0",

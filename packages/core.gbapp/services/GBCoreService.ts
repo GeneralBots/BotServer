@@ -311,8 +311,7 @@ STORAGE_SYNC=true
     let instance = await GuaribasInstance.findOne(options);
     // tslint:disable-next-line:prefer-object-spread
     instance = Object.assign(instance, fullInstance);
-    let ret = await instance.save();
-    return ret;
+    return await instance.save();
   }
 
   /**

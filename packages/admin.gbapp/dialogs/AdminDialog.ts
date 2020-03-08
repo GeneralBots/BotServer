@@ -126,20 +126,20 @@ export class AdminDialog extends IGBDialog {
           const prompt = Messages[locale].authenticate;
 
           return await step.prompt('textPrompt', prompt);
-          // },
-          // async step => {
-          //   const locale = step.context.activity.locale;
-          //   const sensitive = step.result;
+        },
+        async step => {
+          const locale = step.context.activity.locale;
+          const sensitive = step.result;
 
-          //   if (sensitive === GBConfigService.get('ADMIN_PASS')) {
-          //     await step.context.sendActivity(Messages[locale].welcome);
+          if (sensitive === GBConfigService.get('ADMIN_PASS')) {
+            await step.context.sendActivity(Messages[locale].welcome);
 
-          //     return await step.prompt('textPrompt', Messages[locale].which_task);
-          //   } else {
-          //     await step.context.sendActivity(Messages[locale].wrong_password);
+            return await step.prompt('textPrompt', Messages[locale].which_task);
+          } else {
+            await step.context.sendActivity(Messages[locale].wrong_password);
 
-          //     return await step.endDialog();
-          //   }
+            return await step.endDialog();
+          }
         },
         async step => {
           const locale: string = step.context.activity.locale;
@@ -198,7 +198,7 @@ export class AdminDialog extends IGBDialog {
             } else {
               await step.context.sendActivity(Messages[locale].finished_working);
             }
-                        
+
           } catch (error) {
             await step.context.sendActivity(error.message);
           }
