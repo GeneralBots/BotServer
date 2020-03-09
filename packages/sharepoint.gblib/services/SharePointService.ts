@@ -36,32 +36,7 @@
 
 'use strict';
 
-import { HttpHeaders, HttpMethods, ServiceClient, WebResource } from '@azure/ms-rest-js';
-import { CognitiveServicesManagementClient } from 'azure-arm-cognitiveservices';
-import { ResourceManagementClient, SubscriptionClient } from 'azure-arm-resource';
-import { SearchManagementClient } from 'azure-arm-search';
-import { SqlManagementClient } from 'azure-arm-sql';
-import { WebSiteManagementClient } from 'azure-arm-website';
-//tslint:disable-next-line:no-submodule-imports
-import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
-import { GBLog, IGBInstallationDeployer, IGBInstance } from 'botlib';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { GBCorePackage } from '../../core.gbapp';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
-
-const Spinner = require('cli-spinner').Spinner;
-// tslint:disable-next-line: no-submodule-imports
-import * as simplegit from 'simple-git/promise';
-const git = simplegit();
-
-// tslint:disable-next-line:no-submodule-imports
-import { CognitiveServicesAccount } from 'azure-arm-cognitiveservices/lib/models';
-import urlJoin = require('url-join');
-const iconUrl = 'https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png';
-const publicIp = require('public-ip');
-const WebSiteResponseTimeout = 900;
+const { sppull } = require("sppull");
 
 /**
  * Service facade for SharePoint Online.
@@ -69,7 +44,6 @@ const WebSiteResponseTimeout = 900;
 export class GBSharePointService {
 
     public async downloadFolder(localPath: string, siteUrl: string, folderUrl: string, username: string, password: string) {
-        const { sppull } = require("sppull");
 
         const context = {
             siteUrl: siteUrl,
@@ -86,5 +60,6 @@ export class GBSharePointService {
 
         return await sppull(context, options);
     }
+
 
 }

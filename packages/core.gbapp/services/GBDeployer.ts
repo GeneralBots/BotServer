@@ -178,7 +178,6 @@ export class GBDeployer {
     instance.adminPass = GBAdminService.getRndPassword();
     instance.title = botId;
 
-
     await this.core.saveInstance(instance);
 
     return await this.deployBotFull(instance, GBServer.globals.publicAddress);
