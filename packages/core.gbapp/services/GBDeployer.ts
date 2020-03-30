@@ -508,18 +508,22 @@ export class GBDeployer {
       if (this.isSystemPackage(filenameOnly) === false) {
 
         GBLog.info(`Deploying app: ${e}...`);
-        let folder = Path.join(e, 'node_modules');
-        if (!Fs.existsSync(folder)) {
-          GBLog.info(`Installing modules for ${e}...`);
-          child_process.execSync('npm install', { cwd: e });
-        }
 
+        let folder = Path.join(e, 'node_modules');
+        if (process.env.GBAPP_DISABLE_COMPILE !== "true") {
+          if (!Fs.existsSync(folder)) {
+            GBLog.info(`Installing modules for ${e}...`);
+            child_process.execSync('npm install', { cwd: e });
+          }
+        }
         folder = Path.join(e, 'dist');
         if (!Fs.existsSync()) {
           GBLog.info(`Compiling ${e}...`);
 
           try {
-            child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
+            if (process.env.GBAPP_DISABLE_COMPILE !== "true") {
+              child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
+            }
             const m = await import(e);
             const p = new m.Package();
             p.loadPackage(core, core.sequelize);

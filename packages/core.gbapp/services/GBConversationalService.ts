@@ -41,6 +41,8 @@ import { LuisRecognizer } from 'botbuilder-ai';
 import { GBDialogStep, GBLog, GBMinInstance, IGBConversationalService, IGBCoreService } from 'botlib';
 import { AzureText } from 'pragmatismo-io-framework';
 import { Messages } from '../strings';
+import { GBServer } from '../../../src/app';
+const urlJoin = require('url-join');
 const PasswordGenerator = require("strict-password-generator").default;
 const Nexmo = require('nexmo');
 
@@ -80,7 +82,7 @@ export class GBConversationalService implements IGBConversationalService {
 
   public async sendFile(min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
     const mobile = step.context.activity.from.id;
-    const filename = url.substring(url.lastIndexOf('/')+1);
+    const filename = url.substring(url.lastIndexOf('/') + 1);
     await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename);
 
   }
@@ -120,11 +122,107 @@ export class GBConversationalService implements IGBConversationalService {
       }
     );
   }
+
+  public async sendToMobile(min: GBMinInstance, mobile: string, message: string) {
+    
+    // HACK: Gets the sendToDevice method of whatsapp.gblib and setups scheduler.
+
+    const whatsappChannel = (min.packages[6] as any).getChannel();
+    const sendToDevice = whatsappChannel.sendToDevice.bind(whatsappChannel);
+    sendToDevice(mobile, message);
+  }
+
   // tslint:enable:no-unsafe-any
+
+  public async sendMarkdownToMobile(min: GBMinInstance, step: GBDialogStep, mobile: string, text: string) {
+
+    let sleep = (ms) => {
+      return new Promise(resolve => {
+        setTimeout(resolve, ms)
+      })
+    }
+    enum State {
+      InText,
+      InImage,
+      InImageBegin,
+      InImageCaption,
+      InImageAddressBegin,
+      InImageAddressBody
+    };
+    let state = State.InText;
+    let currentImage = '';
+    let currentText = '';
+
+    //![General Bots](/instance/images/gb.png)
+    for (var i = 0; i < text.length; i++) {
+      const c = text.charAt(i);
+
+      switch (state) {
+        case State.InText:
+          if (c === '!') {
+            state = State.InImageBegin;
+          }
+          else {
+            currentText = currentText.concat(c);
+          }
+          break;
+        case State.InImageBegin:
+          if (c === '[') {
+            if (currentText !== '') {
+              if (mobile === null)      {
+                await step.context.sendActivity(currentText);
+              }
+              else{
+                this.sendToMobile(min, mobile, currentText);
+              }              
+              await sleep(3000);
+            }
+            currentText = '';
+            state = State.InImageCaption;
+          }
+          else {
+            state = State.InText;
+            currentText = currentText.concat('!').concat(c);
+          }
+          break;
+        case State.InImageCaption:
+          if (c === ']') {
+            state = State.InImageAddressBegin;
+          }
+          break;
+        case State.InImageAddressBegin:
+          if (c === '(') {
+            state = State.InImageAddressBody;
+          }
+          break;
+        case State.InImageAddressBody:
+          if (c === ')') {
+            state = State.InText;
+            let url = urlJoin(GBServer.globals.publicAddress, currentImage);
+            await this.sendFile(min, step, url);
+            await sleep(5000);
+            currentImage = '';
+          }
+          else {
+            currentImage = currentImage.concat(c);
+          }
+          break;
+      }
+
+    }
+    if (currentText !== '') {
+      if (mobile === null)      {
+        await step.context.sendActivity(currentText);
+      }
+      else{
+        this.sendToMobile(min, mobile, currentText);
+      }
+    }
+  }
 
   public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string): Promise<boolean> {
 
-    if (min.instance.nlpAppId === null){
+    if (min.instance.nlpAppId === null) {
       return false;
     }
 
@@ -157,7 +255,7 @@ export class GBConversationalService implements IGBConversationalService {
 
     Object.keys(nlp.intents).forEach((name) => {
       const score = nlp.intents[name].score;
-      if (score > min.instance.nlpScore){
+      if (score > min.instance.nlpScore) {
         nlpActive = true;
       }
     });
@@ -166,7 +264,7 @@ export class GBConversationalService implements IGBConversationalService {
 
     const topIntent = LuisRecognizer.topIntent(nlp);
     if (topIntent !== undefined && nlpActive) {
-              
+
       const intent = topIntent;
       // tslint:disable:no-unsafe-any
       const firstEntity = nlp.entities && nlp.entities.length > 0 ? nlp.entities[0].entity.toUpperCase() : undefined;

@@ -59,6 +59,7 @@ import {
 import { MicrosoftAppCredentials } from 'botframework-connector';
 import { GBServer } from '../../../src/app';
 import { AskDialogArgs } from '../../kb.gbapp/dialogs/AskDialog';
+import { KBService } from '../../kb.gbapp/services/KBService';
 import { Messages } from '../strings';
 import { GBConfigService } from './GBConfigService';
 import { GBDeployer } from './GBDeployer';
@@ -73,6 +74,7 @@ export class GBMinService {
   public conversationalService: IGBConversationalService;
   public adminService: IGBAdminService;
   public deployer: GBDeployer;
+
   private static uiPackage = 'default.gbui';
 
   public corePackage = 'core.gbai';
@@ -387,6 +389,7 @@ export class GBMinService {
     min.conversationalService = this.conversationalService;
     min.adminService = this.adminService;
     min.deployService = this.deployer;
+    min.kbService = new KBService(this.core.sequelize);
     min.instance = await this.core.loadInstance(min.botId);
     min.cbMap = {};
     min.scriptMap = {};

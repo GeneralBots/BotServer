@@ -37,7 +37,7 @@
 var Excel = require('exceljs');
 const Path = require('path');
 const Fs = require('fs');
-import urlJoin = require('url-join');
+const urlJoin = require('url-join');
 const marked = require('marked');
 const path = require('path');
 const asyncPromise = require('async-promises');
@@ -46,7 +46,7 @@ const walkPromise = require('walk-promise');
 const parse = require('bluebird').promisify(require('csv-parse'));
 const { SearchService } = require('azure-search-client');
 
-import { GBDialogStep, GBLog, IGBConversationalService, IGBCoreService, IGBInstance, GBMinInstance } from 'botlib';
+import { IGBKBService, GBDialogStep, GBLog, IGBConversationalService, IGBCoreService, IGBInstance, GBMinInstance } from 'botlib';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
@@ -55,7 +55,6 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
 import { Messages } from '../strings';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
-import { GBServer } from '../../../src/app';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
 
 
@@ -70,7 +69,7 @@ export class KBServiceSearchResults {
 /**
  * All services related to knowledge base management.
  */
-export class KBService {
+export class KBService implements IGBKBService {
   public sequelize: Sequelize;
 
   constructor(sequelize: Sequelize) {
@@ -97,6 +96,17 @@ export class KBService {
     });
 
     return out.join(' ');
+  }
+
+  public async getAnswerTextByMediaName(instanceId: number, answerMediaName: string): Promise<string>{
+    const answer = await GuaribasAnswer.findOne({
+      where: {
+        instanceId: instanceId,
+        media: answerMediaName
+      }
+    });
+
+    return answer.content;
   }
 
   public async getQuestionById(instanceId: number, questionId: number): Promise<GuaribasQuestion> {
@@ -279,11 +289,14 @@ export class KBService {
 
         // Extracts answer from external media if any.
 
+        let media = null;
+
         if (answer.indexOf('.md') > -1) {
           const mediaFilename = urlJoin(path.dirname(filePath), '..', 'articles', answer);
           if (Fs.existsSync(mediaFilename)) {
             answer = Fs.readFileSync(mediaFilename, 'utf8');
             format = '.md';
+            media = path.basename(mediaFilename);
           } else {
             GBLog.info(`[GBImporter] File not found: ${mediaFilename}.`);
             answer = '';
@@ -318,6 +331,7 @@ export class KBService {
           instanceId: instanceId,
           content: answer,
           format: format,
+          media: media,
           packageId: packageId,
           prevId: lastQuestionId !== null ? lastQuestionId : 0
         });
@@ -390,7 +404,7 @@ export class KBService {
       await this.sendMarkdownToWeb(step, conversationalService, html, answer);
     }
     else if (channel === 'whatsapp') {
-      await this.sendMarkdownToMobile(step, answer, conversationalService, min);
+      await conversationalService.sendMarkdownToMobile(min, step, null, answer.content);
     }
     else
     {
@@ -413,85 +427,6 @@ export class KBService {
     });
   }
 
-  private async sendMarkdownToMobile(step: GBDialogStep, answer: GuaribasAnswer, conversationalService: IGBConversationalService, min: GBMinInstance) {
-
-    let text = answer.content;
-
-    let sleep = (ms) => {
-      return new Promise(resolve => {
-        setTimeout(resolve, ms)
-      })
-    }
-
-    enum State {
-      InText,
-      InImage,
-      InImageBegin,
-      InImageCaption,
-      InImageAddressBegin,
-      InImageAddressBody
-    };
-    let state = State.InText;
-    let currentImage = '';
-    let currentText = '';
-
-    //![General Bots](/instance/images/gb.png)
-    for (var i = 0; i < text.length; i++) {
-      const c = text.charAt(i);
-
-      switch (state) {
-        case State.InText:
-          if (c === '!') {
-            state = State.InImageBegin;
-          }
-          else {
-            currentText = currentText.concat(c);
-          }
-          break;
-        case State.InImageBegin:
-          if (c === '[') {
-            if (currentText !== '') {
-              await step.context.sendActivity(currentText);
-              await sleep(3000);
-            }
-
-            currentText = '';
-            state = State.InImageCaption;
-          }
-          else {
-            state = State.InText;
-            currentText = currentText.concat('!').concat(c);
-          }
-          break;
-        case State.InImageCaption:
-          if (c === ']') {
-            state = State.InImageAddressBegin;
-          }
-          break;
-        case State.InImageAddressBegin:
-          if (c === '(') {
-            state = State.InImageAddressBody;
-          }
-          break;
-        case State.InImageAddressBody:
-          if (c === ')') {
-            state = State.InText;
-            let url = urlJoin(GBServer.globals.publicAddress, currentImage);
-            await conversationalService.sendFile(min, step, url);
-            await sleep(5000);
-            currentImage = '';
-          }
-          else {
-            currentImage = currentImage.concat(c);
-          }
-          break;
-      }
-
-    }
-    if (currentText !== '') {
-      await step.context.sendActivity(currentText);
-    }
-  }
 
   private async playVideo(conversationalService: IGBConversationalService, step: GBDialogStep, answer: GuaribasAnswer) {
     await conversationalService.sendEvent(step, 'play', {
