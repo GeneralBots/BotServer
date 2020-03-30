@@ -139,9 +139,6 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   public whatsappServiceUrl: string;
 
   @Column
-  public whatsappServiceWebhookUrl: string;
-
-  @Column
   public smsKey: string;
 
   @Column

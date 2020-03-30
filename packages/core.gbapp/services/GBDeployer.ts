@@ -218,7 +218,6 @@ export class GBDeployer {
       instance.whatsappBotKey = bootInstance.whatsappBotKey;
       instance.whatsappServiceNumber = bootInstance.whatsappServiceNumber;
       instance.whatsappServiceUrl = bootInstance.whatsappServiceUrl;
-      instance.whatsappServiceWebhookUrl = bootInstance.whatsappServiceWebhookUrl;
       instance.storageServer = bootInstance.storageServer;
       instance.storageName = bootInstance.storageName;
       instance.storageUsername = bootInstance.storageUsername;
