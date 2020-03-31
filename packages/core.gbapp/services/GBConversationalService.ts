@@ -80,7 +80,7 @@ export class GBConversationalService implements IGBConversationalService {
     return step.context.activity.locale;
   }
 
-  public async sendFile(min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
+  public async sendFile(min: GBMinInstance, step: GBDialogStep, url: string, caption: string): Promise<any> {
     const mobile = step.context.activity.from.id;
     const filename = url.substring(url.lastIndexOf('/') + 1);
     await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename);
@@ -199,7 +199,8 @@ export class GBConversationalService implements IGBConversationalService {
           if (c === ')') {
             state = State.InText;
             let url = urlJoin(GBServer.globals.publicAddress, currentImage);
-            await this.sendFile(min, step, url);
+            let caption = null; // TODO: Parse. 
+            await this.sendFile(min, step, url, caption);
             await sleep(5000);
             currentImage = '';
           }

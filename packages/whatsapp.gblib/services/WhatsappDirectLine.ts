@@ -231,7 +231,7 @@ export class WhatsappDirectLine extends GBService {
     return `${attachment.content.title} - ${attachment.content.text}`;
   }
 
-  public async sendFileToDevice(to, url, filename) {
+  public async sendFileToDevice(to, url, filename, caption) {
     const options = {
       method: 'POST',
       url: urlJoin(this.whatsappServiceUrl, 'sendFile'),
@@ -239,7 +239,8 @@ export class WhatsappDirectLine extends GBService {
         token: this.whatsappServiceKey,
         phone: to,
         body: url,
-        filename: filename
+        filename: filename,
+        caption: caption
       },
       headers: {
         'cache-control': 'no-cache'
