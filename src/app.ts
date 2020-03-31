@@ -51,6 +51,7 @@ import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService';
 import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
+import { GBWhatsappPackage } from '../packages/whatsapp.gblib';
 
 /**
  * Global shared server data;
@@ -114,7 +115,7 @@ export class GBServer {
           const deployer: GBDeployer = new GBDeployer(core, importer);
           const azureDeployer: AzureDeployerService = new AzureDeployerService(deployer);
           const adminService: GBAdminService = new GBAdminService(core);
-          const conversationalService: GBConversationalService = new GBConversationalService(core);
+          
 
           if (process.env.NODE_ENV === 'development') {
             const proxy = GBConfigService.get('REVERSE_PROXY');
@@ -173,7 +174,8 @@ export class GBServer {
           }
 
           // Builds minimal service infrastructure.
-
+    
+          const conversationalService: GBConversationalService = new GBConversationalService(core);
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
           GBServer.globals.minService = minService;
           await minService.buildMin(instances);

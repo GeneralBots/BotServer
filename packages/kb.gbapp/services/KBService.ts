@@ -98,7 +98,7 @@ export class KBService implements IGBKBService {
     return out.join(' ');
   }
 
-  public async getAnswerTextByMediaName(instanceId: number, answerMediaName: string): Promise<string>{
+  public async getAnswerTextByMediaName(instanceId: number, answerMediaName: string): Promise<string> {
     const answer = await GuaribasAnswer.findOne({
       where: {
         instanceId: instanceId,
@@ -106,7 +106,7 @@ export class KBService implements IGBKBService {
       }
     });
 
-    return answer.content;
+    return answer != null ? answer.content : null;
   }
 
   public async getQuestionById(instanceId: number, questionId: number): Promise<GuaribasQuestion> {
@@ -406,8 +406,7 @@ export class KBService implements IGBKBService {
     else if (channel === 'whatsapp') {
       await conversationalService.sendMarkdownToMobile(min, step, null, answer.content);
     }
-    else
-    {
+    else {
       await step.context.sendActivity(html);
     }
   }

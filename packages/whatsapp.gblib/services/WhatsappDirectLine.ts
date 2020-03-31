@@ -68,12 +68,13 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceUrl = whatsappServiceUrl;
     const fs = require('fs');
 
-    this.directLineClient =
+    let directLineClient =
       new Swagger({
         spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
         usePromise: true
       });
-    this.directLineClient
+    this.directLineClient = directLineClient;
+    directLineClient
       .then(async client => {
 
         client.clientAuthorizations.add(
@@ -231,7 +232,7 @@ export class WhatsappDirectLine extends GBService {
     return `${attachment.content.title} - ${attachment.content.text}`;
   }
 
-  public async sendFileToDevice(to, url, filename) {
+  public async sendFileToDevice(to, url, filename, caption) {
     const options = {
       method: 'POST',
       url: urlJoin(this.whatsappServiceUrl, 'sendFile'),
@@ -239,7 +240,8 @@ export class WhatsappDirectLine extends GBService {
         token: this.whatsappServiceKey,
         phone: to,
         body: url,
-        filename: filename
+        filename: filename,
+        caption: caption
       },
       headers: {
         'cache-control': 'no-cache'
@@ -262,7 +264,7 @@ export class WhatsappDirectLine extends GBService {
       qs: {
         token: this.whatsappServiceKey,
         phone: to,
-        audio:url
+        audio: url
       },
       headers: {
         'cache-control': 'no-cache'

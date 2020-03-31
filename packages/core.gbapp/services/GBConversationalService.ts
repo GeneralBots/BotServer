@@ -42,6 +42,7 @@ import { GBDialogStep, GBLog, GBMinInstance, IGBConversationalService, IGBCoreSe
 import { AzureText } from 'pragmatismo-io-framework';
 import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
+import { GBWhatsappPackage } from '../../whatsapp.gblib';
 const urlJoin = require('url-join');
 const PasswordGenerator = require("strict-password-generator").default;
 const Nexmo = require('nexmo');
@@ -80,8 +81,10 @@ export class GBConversationalService implements IGBConversationalService {
     return step.context.activity.locale;
   }
 
-  public async sendFile(min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
-    const mobile = step.context.activity.from.id;
+  public async sendFile(min: GBMinInstance, step: GBDialogStep, mobile: string, url: string, caption: string): Promise<any> {
+    if (step !== null) {
+      mobile = step.context.activity.from.id;
+    }
     const filename = url.substring(url.lastIndexOf('/') + 1);
     await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename);
 
@@ -124,12 +127,7 @@ export class GBConversationalService implements IGBConversationalService {
   }
 
   public async sendToMobile(min: GBMinInstance, mobile: string, message: string) {
-    
-    // HACK: Gets the sendToDevice method of whatsapp.gblib and setups scheduler.
-
-    const whatsappChannel = (min.packages[6] as any).getChannel();
-    const sendToDevice = whatsappChannel.sendToDevice.bind(whatsappChannel);
-    sendToDevice(mobile, message);
+    min.whatsAppDirectLine.sendToDevice(mobile, message);
   }
 
   // tslint:enable:no-unsafe-any
@@ -152,6 +150,7 @@ export class GBConversationalService implements IGBConversationalService {
     let state = State.InText;
     let currentImage = '';
     let currentText = '';
+    let currentCaption = '';
 
     //![General Bots](/instance/images/gb.png)
     for (var i = 0; i < text.length; i++) {
@@ -169,12 +168,12 @@ export class GBConversationalService implements IGBConversationalService {
         case State.InImageBegin:
           if (c === '[') {
             if (currentText !== '') {
-              if (mobile === null)      {
+              if (mobile === null) {
                 await step.context.sendActivity(currentText);
               }
-              else{
+              else {
                 this.sendToMobile(min, mobile, currentText);
-              }              
+              }
               await sleep(3000);
             }
             currentText = '';
@@ -189,6 +188,9 @@ export class GBConversationalService implements IGBConversationalService {
           if (c === ']') {
             state = State.InImageAddressBegin;
           }
+          else {
+            currentCaption = currentCaption.concat(c);
+          }
           break;
         case State.InImageAddressBegin:
           if (c === '(') {
@@ -199,7 +201,8 @@ export class GBConversationalService implements IGBConversationalService {
           if (c === ')') {
             state = State.InText;
             let url = urlJoin(GBServer.globals.publicAddress, currentImage);
-            await this.sendFile(min, step, url);
+            await this.sendFile(min, step, mobile, url, currentCaption);
+            currentCaption = '';
             await sleep(5000);
             currentImage = '';
           }
@@ -211,10 +214,10 @@ export class GBConversationalService implements IGBConversationalService {
 
     }
     if (currentText !== '') {
-      if (mobile === null)      {
+      if (mobile === null) {
         await step.context.sendActivity(currentText);
       }
-      else{
+      else {
         this.sendToMobile(min, mobile, currentText);
       }
     }

@@ -114,7 +114,7 @@ export class GBMinService {
     if (process.env.DISABLE_WEB !== 'true') {
       let url = GBServer.globals.wwwroot ?
         GBServer.globals.wwwroot :
-         urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build');
+        urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build');
 
       GBServer.globals.server.use('/', express.static(url));
     }
@@ -544,14 +544,17 @@ export class GBMinService {
 
   private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
 
-    // Adds message to the analytics layer.
+    if (process.env.PRIVACY_STORE_MESSAGES === "true") {
 
-    const analytics = new AnalyticsService();
-    const user = await min.userProfile.get(context, {});
-    analytics.createMessage(min.instance.instanceId,
-      user.conversation, user.systemUser,
-      context.activity.text);
+      // Adds message to the analytics layer.
 
+      const analytics = new AnalyticsService();
+      const user = await min.userProfile.get(context, {});
+      analytics.createMessage(min.instance.instanceId,
+        user.conversation, user.systemUser,
+        context.activity.text);
+    }
+    
     // Checks for global exit kewywords cancelling any active dialogs.
 
     const globalQuit = (locale, utterance) => {
@@ -568,7 +571,12 @@ export class GBMinService {
     } else if (isVMCall) {
       await GBMinService.callVM(context.activity.text, min, step);
     } else if (context.activity.text.charAt(0) === '/') {
-      await step.beginDialog(context.activity.text);
+      let text = context.activity.text;
+      let parts = text.split(' ');
+      let dialogName = parts[0];
+      parts.splice(0, 1);
+      let args = parts.join(' ');
+      await step.beginDialog(dialogName, { args: args });
 
     } else if (globalQuit(step.context.activity.locale, context.activity.text)) {
       await step.cancelAllDialogs();
