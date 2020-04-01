@@ -86,7 +86,7 @@ export class GBConversationalService implements IGBConversationalService {
       mobile = step.context.activity.from.id;
     }
     const filename = url.substring(url.lastIndexOf('/') + 1);
-    await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename);
+    await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
 
   }
 
@@ -145,12 +145,17 @@ export class GBConversationalService implements IGBConversationalService {
       InImageBegin,
       InImageCaption,
       InImageAddressBegin,
-      InImageAddressBody
+      InImageAddressBody,
+      InEmbedBegin,
+      InEmbedEnd,
+      InEmbedAddressBegin,
+      InEmbedAddressEnd
     };
     let state = State.InText;
     let currentImage = '';
     let currentText = '';
     let currentCaption = '';
+    let currentEmbedUrl = '';
 
     //![General Bots](/instance/images/gb.png)
     for (var i = 0; i < text.length; i++) {
@@ -161,8 +166,44 @@ export class GBConversationalService implements IGBConversationalService {
           if (c === '!') {
             state = State.InImageBegin;
           }
+          else if (c === '[') {
+            state = State.InEmbedBegin;
+          }
           else {
             currentText = currentText.concat(c);
+          }
+          break;
+        case State.InEmbedBegin:
+          if (c === '=') {
+            if (currentText !== '') {
+              if (mobile === null) {
+                await step.context.sendActivity(currentText);
+              }
+              else {
+                this.sendToMobile(min, mobile, currentText);
+              }
+              await sleep(3000);
+            }
+            currentText = '';
+            state = State.InEmbedAddressBegin;
+          }
+          
+          break;
+        case State.InEmbedAddressBegin:
+          if (c === ']') {
+            state = State.InEmbedEnd;
+            let url = urlJoin(GBServer.globals.publicAddress, currentEmbedUrl);
+            await this.sendFile(min, step, mobile, url, null);
+            await sleep(5000);
+            currentEmbedUrl = '';
+          }
+          else{
+            currentEmbedUrl = currentEmbedUrl.concat(c);
+          }
+          break;
+        case State.InEmbedEnd:
+          if (c === ']') {
+            state = State.InText;
           }
           break;
         case State.InImageBegin:

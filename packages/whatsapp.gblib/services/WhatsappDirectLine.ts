@@ -96,8 +96,7 @@ export class WhatsappDirectLine extends GBService {
         };
 
         try {
-          const result = request.post(options);
-          GBLog.info(result);
+          request.post(options);
         } catch (error) {
           GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
         }

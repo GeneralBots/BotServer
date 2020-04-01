@@ -37,73 +37,19 @@
 'use strict';
 
 const crypto = require('crypto');
-const rimraf = require('rimraf');
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog, GBLog } from 'botlib';
 import urlJoin = require('url-join');
-import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { Messages } from '../strings';
-import { GBSharePointService } from '../../sharepoint.gblib/services/SharePointService';
-const Path = require('path');
+import { GBAdminService } from '../services/GBAdminService';
 
 /**
  * Dialogs for administration tasks.
  */
 export class AdminDialog extends IGBDialog {
-
-  public static async undeployPackageCommand(text: any, min: GBMinInstance) {
-    const packageName = text.split(' ')[1];
-    const importer = new GBImporter(min.core);
-    const deployer = new GBDeployer(min.core, importer);
-    await deployer.undeployPackageFromLocalPath(min.instance, urlJoin(GBDeployer.workFolder, packageName));
-  }
-
-  public static async broadcastCommand(text: any, min: GBMinInstance) {
-    const packageName = text.split(' ')[1];
-  }
-
-  public static isSharePointPath(path: string) {
-    return path.indexOf('sharepoint.com') > 0;
-  }
-
-  public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: GBDeployer) {
-    const packageName = text.split(' ')[1];
-
-    if (!AdminDialog.isSharePointPath(packageName)) {
-      const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
-      if (additionalPath === undefined) {
-        throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
-      }
-      await deployer.deployPackage(min, urlJoin(additionalPath, packageName));
-    }
-    else {
-      let s = new GBSharePointService();
-      let siteName = text.split(' ')[1];
-      let folderName = text.split(' ')[2];
-
-      let localFolder = Path.join('work', Path.basename(folderName));
-      GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
-      await s.downloadFolder(localFolder, siteName, folderName,
-        GBConfigService.get('CLOUD_USERNAME'), GBConfigService.get('CLOUD_PASSWORD'))
-      await deployer.deployPackage(min, localFolder);
-    }
-  }
-
-  public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: GBDeployer) {
-    await deployer.rebuildIndex(
-      min.instance,
-      new AzureDeployerService(deployer).getKBSearchSchema(min.instance.searchIndex)
-    );
-  }
-
-  public static async syncBotServerCommand(min: GBMinInstance, deployer: GBDeployer) {
-    const serverName = `${min.instance.botId}-server`;
-    const service = await AzureDeployerService.createInstance(deployer);
-    service.syncBotServerRepository(min.instance.botId, serverName);
-  }
 
   /**
    * Setup dialogs flows and define services call.
@@ -116,6 +62,7 @@ export class AdminDialog extends IGBDialog {
 
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
+    const adminService = new GBAdminService(min.core);
 
     AdminDialog.setupSecurityDialogs(min);
 
@@ -156,35 +103,35 @@ export class AdminDialog extends IGBDialog {
             if (text === 'quit') {
               return await step.replaceDialog('/');
             } else if (cmdName === 'deployPackage') {
-              await AdminDialog.deployPackageCommand(min, text, deployer);
+              await GBAdminService.deployPackageCommand(min, text, deployer);
 
               return await step.replaceDialog('/admin', { firstRun: false });
             } else if (cmdName === 'dp') {
               let BOT_NAME = text;
               let address = `https://pragmatismo.sharepoint.com/sites/bots /Shared%20Documents/Rascunho/${BOT_NAME}/${BOT_NAME}.gbai/${BOT_NAME}.gbkb`;
-              await AdminDialog.deployPackageCommand(min, address, deployer);
+              await GBAdminService.deployPackageCommand(min, address, deployer);
 
               return await step.replaceDialog('/admin', { firstRun: false });
             } else if (cmdName === 'redeployPackage') {
               await step.context.sendActivity('The package is being *unloaded*...');
-              await AdminDialog.undeployPackageCommand(text, min);
+              await GBAdminService.undeployPackageCommand(text, min);
               await step.context.sendActivity('Now, *deploying* package...');
-              await AdminDialog.deployPackageCommand(min, text, deployer);
+              await GBAdminService.deployPackageCommand(min, text, deployer);
               await step.context.sendActivity('Package deployed. Just need to rebuild the index... Doing it right now.');
-              await AdminDialog.rebuildIndexPackageCommand(min, deployer);
+              await GBAdminService.rebuildIndexPackageCommand(min, deployer);
               await step.context.sendActivity('Finished importing of that .gbkb package. Thanks.');
               return await step.replaceDialog('/admin', { firstRun: false });
             } else if (cmdName === 'undeployPackage') {
               await step.context.sendActivity('The package is being *undeployed*...');
-              await AdminDialog.undeployPackageCommand(text, min);
+              await GBAdminService.undeployPackageCommand(text, min);
               await step.context.sendActivity('Package *undeployed*.');
               return await step.replaceDialog('/admin', { firstRun: false });
             } else if (cmdName === 'rebuildIndex') {
-              await AdminDialog.rebuildIndexPackageCommand(min, deployer);
+              await GBAdminService.rebuildIndexPackageCommand(min, deployer);
 
               return await step.replaceDialog('/admin', { firstRun: false });
             } else if (cmdName === 'syncBotServer') {
-              await AdminDialog.syncBotServerCommand(min, deployer);
+              await GBAdminService.syncBotServerCommand(min, deployer);
 
               return await step.replaceDialog('/admin', { firstRun: false });
             } else if (cmdName === 'setupSecurity') {
@@ -253,7 +200,7 @@ export class AdminDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const buf = Buffer.alloc(16);
           const state = `${min.instance.instanceId}${crypto.randomFillSync(buf).toString('hex')}`;
-
+          
           min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
 
           const url = `https://login.microsoftonline.com/${

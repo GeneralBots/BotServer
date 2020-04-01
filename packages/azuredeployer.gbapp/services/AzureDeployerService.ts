@@ -44,7 +44,7 @@ import { SqlManagementClient } from 'azure-arm-sql';
 import { WebSiteManagementClient } from 'azure-arm-website';
 //tslint:disable-next-line:no-submodule-imports
 import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
-import { GBLog, IGBInstallationDeployer, IGBInstance } from 'botlib';
+import { GBLog, IGBInstallationDeployer, IGBInstance, IGBDeployer } from 'botlib';
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService';
 import { GBCorePackage } from '../../../packages/core.gbapp';
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService';
@@ -81,9 +81,9 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   public location: string;
   public subscriptionId: string;
   public farmName: any;
-  public deployer: GBDeployer;
+  public deployer: IGBDeployer;
 
-  constructor(deployer: GBDeployer) {
+  constructor(deployer: IGBDeployer) {
     this.deployer = deployer;
   }
 

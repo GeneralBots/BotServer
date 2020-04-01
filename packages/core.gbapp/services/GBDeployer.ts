@@ -45,7 +45,7 @@ const child_process = require('child_process');
 const graph = require('@microsoft/microsoft-graph-client');
 const rimraf = require('rimraf');
 
-import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
+import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage, IGBDeployer } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app';
 import { GuaribasPackage, GuaribasInstance } from '../models/GBModel';
@@ -57,12 +57,13 @@ import { GBImporter } from './GBImporterService';
 import { GBVMService } from './GBVMService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 
+
 /**
  *
  * Deployer service for bots, themes, ai and more.
  */
 
-export class GBDeployer {
+export class GBDeployer implements IGBDeployer{
   public static deployFolder = 'packages';
   public static workFolder = 'work';
   public core: IGBCoreService;
@@ -294,6 +295,8 @@ export class GBDeployer {
         done(undefined, accessToken);
       }
     });
+
+    // TODO: Today a download only approach is used. 
   }
 
   public async deployPackage(min: GBMinInstance, localPath: string) {
@@ -487,6 +490,7 @@ export class GBDeployer {
 
   private mountGBKBAssets(packageName: any, filename: string) {
     GBServer.globals.server.use(`/kb/${packageName}/subjects`, express.static(urlJoin(filename, 'subjects')));
+    GBServer.globals.server.use(`/kb/${packageName}/assets`, express.static(urlJoin(filename, 'assets')));
     GBServer.globals.server.use(`/kb/${packageName}/images`, express.static(urlJoin(filename, 'images')));
     GBServer.globals.server.use(`/kb/${packageName}/audios`, express.static(urlJoin(filename, 'audios')));
     GBLog.info(`KB (.gbkb) assets accessible at: /kb/${packageName}.`);
