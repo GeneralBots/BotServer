@@ -63,7 +63,7 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
  * Deployer service for bots, themes, ai and more.
  */
 
-export class GBDeployer implements IGBDeployer{
+export class GBDeployer implements IGBDeployer {
   public static deployFolder = 'packages';
   public static workFolder = 'work';
   public core: IGBCoreService;
@@ -368,6 +368,7 @@ export class GBDeployer implements IGBDeployer{
       instance.searchIndexer
     );
 
+
     const connectionString = GBDeployer.getConnectionStringFromInstance(instance);
 
     const dsName = 'gb';
@@ -380,7 +381,13 @@ export class GBDeployer implements IGBDeployer{
       }
     }
 
-    await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
+    try {
+      await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
+    } catch (err) {
+      GBLog.error(err);
+      throw err;
+
+    }
 
     try {
       await search.deleteIndex();
@@ -390,6 +397,7 @@ export class GBDeployer implements IGBDeployer{
         throw err;
       }
     }
+
     await search.createIndex(searchSchema, dsName);
   }
 

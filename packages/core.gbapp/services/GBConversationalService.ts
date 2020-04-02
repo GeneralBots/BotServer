@@ -149,7 +149,8 @@ export class GBConversationalService implements IGBConversationalService {
       InEmbedBegin,
       InEmbedEnd,
       InEmbedAddressBegin,
-      InEmbedAddressEnd
+      InEmbedAddressEnd,
+      InLineBreak,
     };
     let state = State.InText;
     let currentImage = '';
@@ -163,16 +164,35 @@ export class GBConversationalService implements IGBConversationalService {
 
       switch (state) {
         case State.InText:
+          
           if (c === '!') {
             state = State.InImageBegin;
           }
           else if (c === '[') {
             state = State.InEmbedBegin;
           }
+          else if  (c === '\n') {
+            state = State.InLineBreak;
+          }
           else {
             currentText = currentText.concat(c);
           }
           break;
+        case State.InLineBreak:
+          if (c === '\n') {
+            if (currentText !== '') {
+              if (mobile === null) {
+                await step.context.sendActivity(currentText);
+              }
+              else {
+                this.sendToMobile(min, mobile, currentText);
+              }
+              await sleep(3000);
+            }
+            currentText = '';
+            state = State.InText;
+          }
+        break;
         case State.InEmbedBegin:
           if (c === '=') {
             if (currentText !== '') {

@@ -8,8 +8,9 @@
   "contributors": [
     "Rodrigo Rodriguez <me@rodrigorodriguez.com>",
     "João Ferreira <joao.parana@gmail.com>",
-    "Jorge Ramos <jramos@pobox.com>"
-  ],
+    "Jorge Ramos <jramos@pobox.com>",
+    "PH <ph.an@outlook.com>",
+    "Dário Vieira <dario.junior3@gmail.com>"  ],
   "engines": {
     "node": "=10.15.2"
   },
@@ -63,7 +64,7 @@
     "botbuilder-ai": "4.7.0",
     "botbuilder-dialogs": "4.7.0",
     "botframework-connector": "4.7.0",
-    "botlib": "1.4.4",
+    "botlib": "1.4.5",
     "chai": "4.2.0",
     "cli-spinner": "0.2.10",
     "csv-parse": "4.8.3",

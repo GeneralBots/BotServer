@@ -73,8 +73,6 @@ export class GBAdminService implements IGBAdminService {
     }
     GBLog.info('Now, *deploying* package...');
     await GBAdminService.deployPackageCommand(min, `deployPackage ${packageName}`, min.deployService);
-    GBLog.info('Package deployed. Just need to rebuild the index... Doing it right now.');
-    await GBAdminService.rebuildIndexPackageCommand(min, min.deployService);
     GBLog.info('Finished importing of that .gbkb package.');
   }
 

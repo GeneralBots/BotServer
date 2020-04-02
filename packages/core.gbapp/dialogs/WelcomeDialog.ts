@@ -66,7 +66,7 @@ export class WelcomeDialog extends IGBDialog {
         const user = await min.userProfile.get(step.context, {});
         const locale = step.context.activity.locale;
 
-        if (!user.once) {
+        if (!user.once && step.context.activity.channelId === "webchat") {
           user.once = true;
           await min.userProfile.set(step.context, user);
           const a = new Date();
