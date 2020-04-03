@@ -131,12 +131,15 @@ export class GBConfigService {
           value = 'true';
           break;
         case 'REVERSE_PROXY':
-            value = undefined;
-            break;
+          value = undefined;
+          break;
+        case 'DISABLE_WEB':
+          value = "false";
+          break;
         case 'STORAGE_ACQUIRE_TIMEOUT':
-            value = 40000;
-            break;
-          default:
+          value = 40000;
+          break;
+        default:
           GBLog.warn(`Invalid key on .env file: '${key}'`);
           break;
       }

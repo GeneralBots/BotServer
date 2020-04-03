@@ -115,7 +115,7 @@ export class GBServer {
           const deployer: GBDeployer = new GBDeployer(core, importer);
           const azureDeployer: AzureDeployerService = new AzureDeployerService(deployer);
           const adminService: GBAdminService = new GBAdminService(core);
-          
+
 
           if (process.env.NODE_ENV === 'development') {
             const proxy = GBConfigService.get('REVERSE_PROXY');
@@ -167,14 +167,14 @@ export class GBServer {
           const fullInstance = Object.assign(packageInstance, GBServer.globals.bootInstance);
           await core.saveInstance(fullInstance);
           let instances: IGBInstance[] = await core.loadAllInstances(core, azureDeployer,
-                                                                     GBServer.globals.publicAddress);
+            GBServer.globals.publicAddress);
           instances = await core.ensureInstances(instances, GBServer.globals.bootInstance, core);
           if (GBServer.globals.bootInstance !== undefined) {
             GBServer.globals.bootInstance = instances[0];
           }
 
           // Builds minimal service infrastructure.
-    
+
           const conversationalService: GBConversationalService = new GBConversationalService(core);
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
           GBServer.globals.minService = minService;
@@ -182,7 +182,9 @@ export class GBServer {
 
           // Deployment of local applications for the first time.
 
-          deployer.setupDefaultGBUI();
+          if (GBConfigService.get("DISABLE_WEB") !== "true") {
+            deployer.setupDefaultGBUI();
+          }
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
 
