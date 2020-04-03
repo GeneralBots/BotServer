@@ -542,6 +542,9 @@ export class GBDeployer implements IGBDeployer {
           GBLog.info(`App (.gbapp) deployed: ${e}.`);
           appPackagesProcessed++;
         } catch (error) {
+          GBLog.error(`Error message: ${error.message}`);
+          GBLog.error(`Error message: ${error.stack}`);
+          GBLog.error(`Error compiling .gbapp package ${e}:\n${error.stderr.toString()}`);
           GBLog.error(`Error compiling .gbapp package ${e}:\n${error.stdout.toString()}`);
           appPackagesProcessed++;
         }
