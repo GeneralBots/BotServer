@@ -60,7 +60,7 @@ export class QualityDialog extends IGBDialog {
     min.dialogs.add(new WaterfallDialog('/quality', [
       async step =>  {
         const locale = step.context.activity.locale;
-        const user = await min.userProfile.get(context, {});
+        const user = await min.userProfile.get(step.context, {});
 
         const score = step.result;
 
