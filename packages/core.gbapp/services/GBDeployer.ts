@@ -338,7 +338,7 @@ export class GBDeployer implements IGBDeployer {
 
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
-        return service.undeployKbFromStorage(instance, this, p.packageId);
+        return await service.undeployKbFromStorage(instance, this, p.packageId);
 
       case '.gbui':
 
