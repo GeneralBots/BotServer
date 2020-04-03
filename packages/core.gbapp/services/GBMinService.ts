@@ -137,33 +137,40 @@ export class GBMinService {
           res.end();
           return; // Exit here.
         }
+        let activeMin;
+        if (process.env.WHATSAPP_WELCOME_DISABLED !== "true") {
 
-        const toSwitchMin = GBServer.globals.minInstances.filter(p => p.botId === text)[0];
-        let activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
+          const toSwitchMin = GBServer.globals.minInstances.filter(p => p.botId === text)[0];
+          activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
 
-        let sec = new SecService();
-        let user = await sec.getUserFromPhone(id);
+          let sec = new SecService();
+          let user = await sec.getUserFromPhone(id);
 
-        if (user === null) {
-          user = await sec.ensureUser(activeMin.instance.instanceId, id,
-            activeMin.botId, id, "", "whatsapp", id, id);
-          await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar?`);
-          res.end();
-        } else {
-          // User wants to switch bots.
-          if (toSwitchMin !== undefined) {
-            await sec.updateCurrentBotId(id, text);
-            await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Agora falando com ${activeMin.instance.title}...`);
+          if (user === null) {
+            user = await sec.ensureUser(activeMin.instance.instanceId, id,
+              activeMin.botId, id, "", "whatsapp", id, id);
+            await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar?`);
             res.end();
+          } else {
+            // User wants to switch bots.
+            if (toSwitchMin !== undefined) {
+              await sec.updateCurrentBotId(id, text);
+              await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Agora falando com ${activeMin.instance.title}...`);
+              res.end();
+            }
+            else {
+              activeMin = GBServer.globals.minInstances.filter(p => p.botId === user.currentBotId)[0];;
+              (activeMin as any).whatsAppDirectLine.received(req, res);
+            }
           }
-          else {
-            activeMin = GBServer.globals.minInstances.filter(p => p.botId === user.currentBotId)[0];;
-            (activeMin as any).whatsAppDirectLine.received(req, res);
-          }
+        }
+        else {
+          (GBServer.globals.minBoot as any).whatsAppDirectLine.received(req, res);
         }
       } catch (error) {
         GBLog.error(`Error on Whatsapp callback: ${error.message}`);
       }
+
     });
 
     await Promise.all(
@@ -554,7 +561,7 @@ export class GBMinService {
         user.conversation, user.systemUser,
         context.activity.text);
     }
-    
+
     // Checks for global exit kewywords cancelling any active dialogs.
 
     const globalQuit = (locale, utterance) => {
