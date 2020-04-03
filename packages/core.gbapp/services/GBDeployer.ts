@@ -528,27 +528,23 @@ export class GBDeployer implements IGBDeployer {
           }
         }
         folder = Path.join(e, 'dist');
-        if (!Fs.existsSync()) {
-          
 
-          try {
-            GBLog.info(`process.env.GBAPP_DISABLE_COMPILE: ${process.env.GBAPP_DISABLE_COMPILE}`);
-            if (process.env.GBAPP_DISABLE_COMPILE !== "true" && false) {
-              child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
-            }
-            const m = await import(e);
-            const p = new m.Package();
-            p.loadPackage(core, core.sequelize);
-            appPackages.push(p);
-            GBLog.info(`App (.gbapp) deployed: ${e}.`);
-            appPackagesProcessed++;
-          } catch (error) {
-            GBLog.error(`Error compiling .gbapp package ${e}:\n${error.stdout.toString()}`);
-            appPackagesProcessed++;
+
+        try {
+          if (process.env.GBAPP_DISABLE_COMPILE !== "true") {
+            GBLog.info(`Compiling .gbapp: ${e}.`);
+            child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
           }
+          const m = await import(e);
+          const p = new m.Package();
+          p.loadPackage(core, core.sequelize);
+          appPackages.push(p);
+          GBLog.info(`App (.gbapp) deployed: ${e}.`);
+          appPackagesProcessed++;
+        } catch (error) {
+          GBLog.error(`Error compiling .gbapp package ${e}:\n${error.stdout.toString()}`);
+          appPackagesProcessed++;
         }
-      } else {
-        appPackagesProcessed++;
       }
     });
 

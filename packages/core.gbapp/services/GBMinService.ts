@@ -209,7 +209,7 @@ export class GBMinService {
     // this.deployer.deployPackage(min, 'packages/default.gbdialog');
 
     // Call the loadBot context.activity for all packages.
-    await this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min);
+    this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min);
 
     // Serves individual URL for each bot conversational interface...
     const url = `/api/messages/${instance.botId}`;
@@ -404,7 +404,7 @@ export class GBMinService {
     min.scriptMap = {};
     min.sandBoxMap = {};
     min.packages = sysPackages;
-    if (min.instance.whatsappServiceKey !== null ) {
+    if (min.instance.whatsappServiceKey !== null) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
         min.botId,
         min.instance.whatsappBotKey,
@@ -424,11 +424,12 @@ export class GBMinService {
     return { min, adapter, conversationState };
   }
 
-  private async invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance) {
-    await CollectionUtil.asyncForEach(sysPackages, async e => {
+  private invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance) {
+    sysPackages.forEach(e => {
       e.loadBot(min);
-    });
-    await CollectionUtil.asyncForEach(appPackages, async p => {
+    }, this);
+
+    appPackages.forEach(p => {
       p.sysPackages = sysPackages;
       p.loadBot(min);
       if (p.getDialogs !== undefined) {
@@ -437,7 +438,7 @@ export class GBMinService {
           min.dialogs.add(new WaterfallDialog(dialog.id, dialog.waterfall));
         });
       }
-    });
+    }, this);
   }
 
   /**
