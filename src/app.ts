@@ -128,7 +128,7 @@ export class GBServer {
               GBServer.globals.publicAddress = await core.ensureProxy(port);
             }
           } else {
-            const serverAddress = `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net`;
+            const serverAddress = process.env.BOT_URL;
             GBLog.info(`Defining server address at ${serverAddress}...`);
             GBServer.globals.publicAddress = serverAddress;
           }
