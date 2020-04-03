@@ -529,10 +529,11 @@ export class GBDeployer implements IGBDeployer {
         }
         folder = Path.join(e, 'dist');
         if (!Fs.existsSync()) {
-          GBLog.info(`Compiling ${e}...`);
+          
 
           try {
-            if (process.env.GBAPP_DISABLE_COMPILE !== "true") {
+            GBLog.info(`process.env.GBAPP_DISABLE_COMPILE: ${process.env.GBAPP_DISABLE_COMPILE}`);
+            if (process.env.GBAPP_DISABLE_COMPILE !== "true" && false) {
               child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
             }
             const m = await import(e);

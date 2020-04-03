@@ -44,6 +44,7 @@ const removeRoute = require('express-remove-route');
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 const wash = require('washyourmouthoutwithsoap');
 import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 import { ConfirmPrompt, WaterfallDialog } from 'botbuilder-dialogs';
 import {
   GBDialogStep,
@@ -65,6 +66,7 @@ import { GBConfigService } from './GBConfigService';
 import { GBDeployer } from './GBDeployer';
 import { SecService } from '../../security.gblib/services/SecService';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
+import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 
 /**
  * Minimal service layer for a bot.
@@ -207,7 +209,7 @@ export class GBMinService {
     // this.deployer.deployPackage(min, 'packages/default.gbdialog');
 
     // Call the loadBot context.activity for all packages.
-    this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min);
+    await this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min);
 
     // Serves individual URL for each bot conversational interface...
     const url = `/api/messages/${instance.botId}`;
@@ -402,6 +404,16 @@ export class GBMinService {
     min.scriptMap = {};
     min.sandBoxMap = {};
     min.packages = sysPackages;
+    if (min.instance.whatsappServiceKey !== null ) {
+      min.whatsAppDirectLine = new WhatsappDirectLine(
+        min.botId,
+        min.instance.whatsappBotKey,
+        min.instance.whatsappServiceKey,
+        min.instance.whatsappServiceNumber,
+        min.instance.whatsappServiceUrl
+      );
+    }
+
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
 
@@ -412,12 +424,11 @@ export class GBMinService {
     return { min, adapter, conversationState };
   }
 
-  private invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance) {
-    sysPackages.forEach(e => {
+  private async invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance) {
+    await CollectionUtil.asyncForEach(sysPackages, async e => {
       e.loadBot(min);
-    }, this);
-
-    appPackages.forEach(p => {
+    });
+    await CollectionUtil.asyncForEach(appPackages, async p => {
       p.sysPackages = sysPackages;
       p.loadBot(min);
       if (p.getDialogs !== undefined) {
@@ -426,7 +437,7 @@ export class GBMinService {
           min.dialogs.add(new WaterfallDialog(dialog.id, dialog.waterfall));
         });
       }
-    }, this);
+    });
   }
 
   /**
