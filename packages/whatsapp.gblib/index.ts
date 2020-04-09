@@ -49,7 +49,7 @@ export class GBWhatsappPackage implements IGBPackage {
   public loadBot(min: GBMinInstance): void {
     // Only loads engine if it is defined on services.json.
 
-    if (min.instance.whatsappServiceKey !== null ) {
+    if (min.instance.whatsappServiceKey !== null) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
         min.botId,
         min.instance.whatsappBotKey,
@@ -57,6 +57,9 @@ export class GBWhatsappPackage implements IGBPackage {
         min.instance.whatsappServiceNumber,
         min.instance.whatsappServiceUrl
       );
+      (async () => {
+        await min.whatsAppDirectLine.setup();
+      });
     }
   }
 

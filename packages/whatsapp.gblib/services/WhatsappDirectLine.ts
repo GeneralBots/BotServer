@@ -36,6 +36,7 @@ const Swagger = require('swagger-client');
 const rp = require('request-promise');
 import { GBLog, GBService } from 'botlib';
 import * as request from 'request-promise-native';
+const fs = require('fs');
 import { GBServer } from '../../../src/app';
 
 /**
@@ -50,6 +51,7 @@ export class WhatsappDirectLine extends GBService {
   public whatsappServiceNumber: string;
   public whatsappServiceUrl: string;
   public botId: string;
+  private directLineSecret: string;
 
   public conversationIds = {};
 
@@ -63,44 +65,46 @@ export class WhatsappDirectLine extends GBService {
     super();
 
     this.botId = botId;
+    this.directLineSecret = directLineSecret;
     this.whatsappServiceKey = whatsappServiceKey;
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
-    const fs = require('fs');
 
-    let directLineClient =
+  }
+
+  public async setup() {
+    this.directLineClient =
       new Swagger({
         spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
         usePromise: true
       });
-    this.directLineClient = directLineClient;
-    directLineClient
-      .then(async client => {
+    let client = await this.directLineClient;
 
-        client.clientAuthorizations.add(
-          'AuthorizationBotConnector',
-          new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${directLineSecret}`, 'header')
-        );
+    client.clientAuthorizations.add(
+      'AuthorizationBotConnector',
+      new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${this.directLineSecret}`, 'header')
+    );
 
-        const options = {
-          method: 'POST',
-          url: urlJoin(this.whatsappServiceUrl, 'webhook'),
-          qs: {
-            token: this.whatsappServiceKey,
-            webhookUrl: `${GBServer.globals.publicAddress}/webhooks/whatsapp`,
-            set: true
-          },
-          headers: {
-            'cache-control': 'no-cache'
-          }
-        };
+    const options = {
+      method: 'POST',
+      url: urlJoin(this.whatsappServiceUrl, 'webhook'),
+      qs: {
+        token: this.whatsappServiceKey,
+        webhookUrl: `${GBServer.globals.publicAddress}/webhooks/whatsapp`,
+        set: true
+      },
+      headers: {
+        'cache-control': 'no-cache'
+      }
+    };
 
-        try {
-          request.post(options);
-        } catch (error) {
-          GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
-        }
-      });
+    try {
+      request.post(options);
+    } catch (error) {
+      GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
+    }
+
+
   }
 
   public static async asyncForEach(array, callback) {
