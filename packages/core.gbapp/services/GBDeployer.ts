@@ -338,7 +338,7 @@ export class GBDeployer implements IGBDeployer {
 
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
-        return service.undeployKbFromStorage(instance, this, p.packageId);
+        return await service.undeployKbFromStorage(instance, this, p.packageId);
 
       case '.gbui':
 
@@ -528,26 +528,26 @@ export class GBDeployer implements IGBDeployer {
           }
         }
         folder = Path.join(e, 'dist');
-        if (!Fs.existsSync()) {
-          GBLog.info(`Compiling ${e}...`);
 
-          try {
-            if (process.env.GBAPP_DISABLE_COMPILE !== "true") {
-              child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
-            }
-            const m = await import(e);
-            const p = new m.Package();
-            p.loadPackage(core, core.sequelize);
-            appPackages.push(p);
-            GBLog.info(`App (.gbapp) deployed: ${e}.`);
-            appPackagesProcessed++;
-          } catch (error) {
-            GBLog.error(`Error compiling .gbapp package ${e}:\n${error.stdout.toString()}`);
-            appPackagesProcessed++;
+
+        try {
+          if (process.env.GBAPP_DISABLE_COMPILE !== "true") {
+            GBLog.info(`Compiling .gbapp: ${e}.`);
+            child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
           }
+          const m = await import(e);
+          const p = new m.Package();
+          p.loadPackage(core, core.sequelize);
+          appPackages.push(p);
+          GBLog.info(`App (.gbapp) deployed: ${e}.`);
+          appPackagesProcessed++;
+        } catch (error) {
+          GBLog.error(`Error message: ${error.message}`);
+          GBLog.error(`Error message: ${error.stack}`);
+          GBLog.error(`Error compiling .gbapp package ${e}:\n${error.stderr.toString()}`);
+          GBLog.error(`Error compiling .gbapp package ${e}:\n${error.stdout.toString()}`);
+          appPackagesProcessed++;
         }
-      } else {
-        appPackagesProcessed++;
       }
     });
 

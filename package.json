@@ -10,7 +10,8 @@
     "João Ferreira <joao.parana@gmail.com>",
     "Jorge Ramos <jramos@pobox.com>",
     "PH <ph.an@outlook.com>",
-    "Dário Vieira <dario.junior3@gmail.com>"  ],
+    "Dário Vieira <dario.junior3@gmail.com>"
+  ],
   "engines": {
     "node": "=10.15.2"
   },

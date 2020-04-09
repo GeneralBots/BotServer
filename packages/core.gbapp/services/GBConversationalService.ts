@@ -151,6 +151,8 @@ export class GBConversationalService implements IGBConversationalService {
       InEmbedAddressBegin,
       InEmbedAddressEnd,
       InLineBreak,
+      InLineBreak1,
+      InLineBreak2,
     };
     let state = State.InText;
     let currentImage = '';
@@ -164,35 +166,57 @@ export class GBConversationalService implements IGBConversationalService {
 
       switch (state) {
         case State.InText:
-          
+
           if (c === '!') {
             state = State.InImageBegin;
           }
           else if (c === '[') {
             state = State.InEmbedBegin;
           }
-          else if  (c === '\n') {
+          else if (c === '\n') {
             state = State.InLineBreak;
           }
           else {
+            state = State.InText;
             currentText = currentText.concat(c);
           }
           break;
         case State.InLineBreak:
           if (c === '\n') {
-            if (currentText !== '') {
-              if (mobile === null) {
-                await step.context.sendActivity(currentText);
-              }
-              else {
-                this.sendToMobile(min, mobile, currentText);
-              }
-              await sleep(3000);
+            state = State.InLineBreak1;
+          }
+          else if (c === '!') {
+            state = State.InImageBegin;
+          }
+          else if (c === '[') {
+            state = State.InEmbedBegin;
+          } else {
+            currentText = currentText.concat('\n', c);
+            state = State.InText;
+          }
+          break;
+        case State.InLineBreak1:
+          if (c === '\n') {
+            if (mobile === null) {
+              await step.context.sendActivity(currentText);
             }
+            else {
+              this.sendToMobile(min, mobile, currentText);
+            }
+            await sleep(3000);
             currentText = '';
             state = State.InText;
           }
-        break;
+          else if (c === '!') {
+            state = State.InImageBegin;
+          }
+          else if (c === '[') {
+            state = State.InEmbedBegin;
+          } else {
+            currentText = currentText.concat('\n', '\n', c);
+            state = State.InText;
+          }
+          break;
         case State.InEmbedBegin:
           if (c === '=') {
             if (currentText !== '') {
@@ -207,7 +231,7 @@ export class GBConversationalService implements IGBConversationalService {
             currentText = '';
             state = State.InEmbedAddressBegin;
           }
-          
+
           break;
         case State.InEmbedAddressBegin:
           if (c === ']') {
@@ -217,7 +241,7 @@ export class GBConversationalService implements IGBConversationalService {
             await sleep(5000);
             currentEmbedUrl = '';
           }
-          else{
+          else {
             currentEmbedUrl = currentEmbedUrl.concat(c);
           }
           break;
