@@ -67,6 +67,7 @@ export class RootData {
   public minBoot: GBMinInstance;
   public wwwroot: string; // .gbui or a static webapp.
   public entryPointDialog: string; // To replace default welcome dialog.
+  
 }
 
 /**
@@ -148,7 +149,7 @@ export class GBServer {
           // Deploys system and user packages.
 
           GBLog.info(`Deploying packages...`);
-          GBServer.globals.sysPackages = core.loadSysPackages(core);
+          GBServer.globals.sysPackages = await core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
 

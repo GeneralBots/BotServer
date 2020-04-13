@@ -537,7 +537,7 @@ export class GBDeployer implements IGBDeployer {
           }
           const m = await import(e);
           const p = new m.Package();
-          p.loadPackage(core, core.sequelize);
+          await p.loadPackage(core, core.sequelize);
           appPackages.push(p);
           GBLog.info(`App (.gbapp) deployed: ${e}.`);
           appPackagesProcessed++;

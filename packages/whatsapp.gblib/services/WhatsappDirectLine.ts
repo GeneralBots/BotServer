@@ -34,10 +34,11 @@ import urlJoin = require('url-join');
 
 const Swagger = require('swagger-client');
 const rp = require('request-promise');
-import { GBLog, GBService } from 'botlib';
+import { GBLog, GBService, GBMinInstance } from 'botlib';
 import * as request from 'request-promise-native';
 const fs = require('fs');
 import { GBServer } from '../../../src/app';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 
 /**
  * Support for Whatsapp.
@@ -52,10 +53,13 @@ export class WhatsappDirectLine extends GBService {
   public whatsappServiceUrl: string;
   public botId: string;
   private directLineSecret: string;
+  
 
   public conversationIds = {};
+  min: GBMinInstance;
 
   constructor(
+    min: GBMinInstance,
     botId,
     directLineSecret,
     whatsappServiceKey,
@@ -64,6 +68,7 @@ export class WhatsappDirectLine extends GBService {
   ) {
     super();
 
+    this.min = min;
     this.botId = botId;
     this.directLineSecret = directLineSecret;
     this.whatsappServiceKey = whatsappServiceKey;
@@ -99,7 +104,8 @@ export class WhatsappDirectLine extends GBService {
     };
 
     try {
-      request.post(options);
+      let res = await request.post(options);
+      GBLog.info(res);
     } catch (error) {
       GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
     }
@@ -120,16 +126,34 @@ export class WhatsappDirectLine extends GBService {
       return;  // Exit here.
     }
 
-    const text = req.body.messages[0].body;
-    const from = req.body.messages[0].author.split('@')[0];
-    const fromName = req.body.messages[0].senderName;
+    const message = req.body.messages[0];
+    let text = message.body;
+    const from = message.author.split('@')[0];
+    const fromName = message.senderName;
 
     if (req.body.messages[0].fromMe) {
       res.end();
       return; // Exit here.
     }
-
     GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
+
+    if (message.type === "ptt") {
+
+      const options = {
+        url: message.body,
+        method: 'GET',
+        encoding: 'binary'
+      };
+
+      const res = await request(options);
+      let buf =  Buffer.from(res, 'binary');
+      text = await GBConversationalService.getTextFromAudioBuffer(
+        this.min.instance.speechKey,
+        this.min.instance.cloudLocation,
+        buf, 'pt-br'
+      );      
+
+    }
 
     const conversationId = this.conversationIds[from];
 

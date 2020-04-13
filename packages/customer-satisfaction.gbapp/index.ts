@@ -49,23 +49,23 @@ import { Sequelize } from 'sequelize-typescript';
  */
 export class GBCustomerSatisfactionPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
-  public getDialogs(min: GBMinInstance) {
+  public async getDialogs(min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);
   }
-  public unloadPackage(core: IGBCoreService): void {
+  public async unloadPackage(core: IGBCoreService): Promise<void> {
     GBLog.verbose(`unloadPackage called.`);
   }
-  public unloadBot(min: GBMinInstance): void {
+  public async unloadBot(min: GBMinInstance): Promise<void> {
     GBLog.verbose(`unloadBot called.`);
   }
-  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
     GBLog.verbose(`onNewSession called.`);
   }
 
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasQuestionAlternate]);
   }
-  public loadBot(min: GBMinInstance): void {
+  public async loadBot(min: GBMinInstance): Promise<void> {
     FeedbackDialog.setup(min.bot, min);
     QualityDialog.setup(min.bot, min);
   }

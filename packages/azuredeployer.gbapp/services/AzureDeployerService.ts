@@ -502,7 +502,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
       instance.marketplaceId = appId;
       instance.marketplacePassword = appPassword;
-      instance.engineName = GBCorePackage.CurrentEngineName;
+      instance.engineName = GBCorePackage['CurrentEngineName'];
 
       const parameters = {
         location: location,

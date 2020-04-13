@@ -54,6 +54,7 @@ import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
 import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp';
 import { GBSharePointPackage } from '../../sharepoint.gblib';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 
 
 const opn = require('opn');
@@ -385,27 +386,30 @@ STORAGE_SYNC=true
     return instances;
   }
 
-  public loadSysPackages(core: GBCoreService) {
+  public async loadSysPackages(core: GBCoreService) : Promise<IGBPackage[]>{
     // NOTE: if there is any code before this line a semicolon
     // will be necessary before this line.
     // Loads all system packages.
     const sysPackages: IGBPackage[] = [];
-    [
-      GBAdminPackage,
-      GBCorePackage,
-      GBSecurityPackage,
-      GBKBPackage,
-      GBCustomerSatisfactionPackage,
-      GBAnalyticsPackage,
-      GBWhatsappPackage,
-      GBAzureDeployerPackage,
-      GBSharePointPackage,
-    ].forEach(e => {
+    
+      await CollectionUtil.asyncForEach([
+        GBAdminPackage,
+        GBCorePackage,
+        GBSecurityPackage,
+        GBKBPackage,
+        GBCustomerSatisfactionPackage,
+        GBAnalyticsPackage,
+        GBWhatsappPackage,
+        GBAzureDeployerPackage,
+        GBSharePointPackage,
+      ], async e => {
       GBLog.info(`Loading sys package: ${e.name}...`);
 
       const p = Object.create(e.prototype) as IGBPackage;
       sysPackages.push(p);
-      p.loadPackage(core, core.sequelize);
+
+      await p.loadPackage(core, core.sequelize);
+      
     });
 
     return sysPackages;

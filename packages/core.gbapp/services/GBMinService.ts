@@ -209,7 +209,7 @@ export class GBMinService {
     // this.deployer.deployPackage(min, 'packages/default.gbdialog');
 
     // Call the loadBot context.activity for all packages.
-    this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min);
+    await this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min);
 
     // Serves individual URL for each bot conversational interface...
     const url = `/api/messages/${instance.botId}`;
@@ -406,6 +406,7 @@ export class GBMinService {
     min.packages = sysPackages;
     if (min.instance.whatsappServiceKey !== null) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
+        min,
         min.botId,
         min.instance.whatsappBotKey,
         min.instance.whatsappServiceKey,
@@ -424,21 +425,22 @@ export class GBMinService {
     return { min, adapter, conversationState };
   }
 
-  private invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance) {
-    sysPackages.forEach(e => {
-      e.loadBot(min);
-    }, this);
+  private async invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance) {
+    await CollectionUtil.asyncForEach(sysPackages, async e => {
+      await e.loadBot(min);
+    });
 
-    appPackages.forEach(p => {
+    await CollectionUtil.asyncForEach(appPackages, async p => {
       p.sysPackages = sysPackages;
-      p.loadBot(min);
+      await p.loadBot(min);
       if (p.getDialogs !== undefined) {
-        const dialogs = p.getDialogs(min);
+        const dialogs = await p.getDialogs(min);
         dialogs.forEach(dialog => {
           min.dialogs.add(new WaterfallDialog(dialog.id, dialog.waterfall));
         });
       }
-    }, this);
+    });
+
   }
 
   /**
@@ -503,8 +505,8 @@ export class GBMinService {
           const member = context.activity.membersAdded[0];
           if (member.name === min.instance.title) {
             GBLog.info(`Bot added to conversation, starting chat...`);
-            appPackages.forEach(e => {
-              e.onNewSession(min, step);
+            await CollectionUtil.asyncForEach(appPackages, async e => {
+              await e.onNewSession(min, step);
             });
             await step.beginDialog('/');
           } else {

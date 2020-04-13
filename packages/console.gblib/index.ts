@@ -46,23 +46,23 @@ import { ConsoleDirectLine } from './services/ConsoleDirectLine';
 export class GBConsolePackage implements IGBPackage {
   public sysPackages: IGBPackage[];
   public channel: ConsoleDirectLine;
-  public getDialogs(min: GBMinInstance) {
+  public async getDialogs(min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);
   }
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     GBLog.verbose(`loadPackage called.`);
   }
-  public unloadPackage(core: IGBCoreService): void {
+  public async unloadPackage(core: IGBCoreService): Promise<void> {
     GBLog.verbose(`unloadPackage called.`);
   }
-  public unloadBot(min: GBMinInstance): void {
+  public async unloadBot(min: GBMinInstance): Promise<void> {
     GBLog.verbose(`unloadBot called.`);
   }
-  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
     GBLog.verbose(`onNewSession called.`);
   }
 
-  public loadBot(min: GBMinInstance): void {
+  public async loadBot(min: GBMinInstance): Promise<void> {
     this.channel = new ConsoleDirectLine(min.instance.webchatKey);
   }
 }

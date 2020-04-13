@@ -42,10 +42,13 @@ import { GBDialogStep, GBLog, GBMinInstance, IGBConversationalService, IGBCoreSe
 import { AzureText } from 'pragmatismo-io-framework';
 import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
-import { GBWhatsappPackage } from '../../whatsapp.gblib';
 const urlJoin = require('url-join');
 const PasswordGenerator = require("strict-password-generator").default;
 const Nexmo = require('nexmo');
+let sdk = require("microsoft-cognitiveservices-speech-sdk");
+var fs = require('fs')
+import { Readable } from 'stream'
+const prism = require('prism-media');
 
 export interface LanguagePickerSettings {
   defaultLocale?: string;
@@ -130,6 +133,70 @@ export class GBConversationalService implements IGBConversationalService {
     min.whatsAppDirectLine.sendToDevice(mobile, message);
   }
 
+  public static async  getTextFromAudioBuffer(speechKey, cloudRegion, buffer, locale): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+      try {
+        let subscriptionKey = speechKey;
+        let serviceRegion = cloudRegion;
+
+        var samplingRate = 16000;
+        var frameDuration = 20;
+        var channels = 1;
+        var frameSize = samplingRate * frameDuration / 1000;
+
+        const oggFile = new Readable();
+        oggFile._read = () => { } // _read is required but you can noop it
+        oggFile.push(buffer);
+        oggFile.push(null);
+
+        // TODO: Use stream directly without physical files.
+
+        fs.writeFileSync('audio.ogg', buffer);
+
+        let wr = fs.createWriteStream('audio.pcm');
+        wr.on('finish', () => {
+          let data = fs.readFileSync('audio.pcm');
+
+          let pushStream = sdk.AudioInputStream.createPushStream();
+          pushStream.write(data);
+          pushStream.close();
+
+          let audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
+          let speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
+          speechConfig.speechRecognitionLanguage = locale;
+          let recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+
+          recognizer.recognizeOnceAsync(
+            (result) => {
+
+              resolve(result.text ? result.text : 'audio not converted');
+
+              recognizer.close();
+              recognizer = undefined;
+            },
+            (err) => {
+              reject(err);
+
+              recognizer.close();
+              recognizer = undefined;
+            });
+        });
+
+        fs.createReadStream('audio.ogg')
+          .pipe(new prism.opus.OggDemuxer())
+          .pipe(new prism.opus.Decoder({
+            rate: samplingRate,
+            channels: channels, frameSize: frameSize
+          }))
+          .pipe(wr);
+      } catch (error) {
+        GBLog.error(error);
+        return Promise.reject(error);
+      }
+    });
+  }
+
+
   // tslint:enable:no-unsafe-any
 
   public async sendMarkdownToMobile(min: GBMinInstance, step: GBDialogStep, mobile: string, text: string) {
@@ -161,7 +228,7 @@ export class GBConversationalService implements IGBConversationalService {
     let currentEmbedUrl = '';
 
     //![General Bots](/instance/images/gb.png)
-    for (var i = 0; i < text.length; i++) {
+    for (let i = 0; i < text.length; i++) {
       const c = text.charAt(i);
 
       switch (state) {

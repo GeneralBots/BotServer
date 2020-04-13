@@ -46,36 +46,34 @@ import { WhatsappDirectLine } from './services/WhatsappDirectLine';
 export class GBWhatsappPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
 
-  public loadBot(min: GBMinInstance): void {
+  public async loadBot(min: GBMinInstance): Promise<void> {
     // Only loads engine if it is defined on services.json.
 
     if (min.instance.whatsappServiceKey !== null) {
-      min.whatsAppDirectLine = new WhatsappDirectLine(
+      min.whatsAppDirectLine = new WhatsappDirectLine(min, 
         min.botId,
         min.instance.whatsappBotKey,
         min.instance.whatsappServiceKey,
         min.instance.whatsappServiceNumber,
         min.instance.whatsappServiceUrl
       );
-      (async () => {
-        await min.whatsAppDirectLine.setup();
-      });
+      await min.whatsAppDirectLine.setup();
     }
   }
 
-  public getDialogs(min: GBMinInstance) {
+  public async getDialogs(min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);
   }
-  public loadPackage(core: IGBCoreService, sequelize: Sequelize): void {
+  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     GBLog.verbose(`loadPackage called.`);
   }
-  public unloadPackage(core: IGBCoreService): void {
+  public async unloadPackage(core: IGBCoreService): Promise<void> {
     GBLog.verbose(`unloadPackage called.`);
   }
-  public unloadBot(min: GBMinInstance): void {
+  public async unloadBot(min: GBMinInstance): Promise<void> {
     GBLog.verbose(`unloadBot called.`);
   }
-  public onNewSession(min: GBMinInstance, step: GBDialogStep): void {
+  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
     GBLog.verbose(`onNewSession called.`);
   }
 }
