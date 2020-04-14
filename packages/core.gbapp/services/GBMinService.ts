@@ -414,6 +414,10 @@ export class GBMinService {
         min.instance.whatsappServiceUrl
       );
     }
+    else {
+      min.whatsAppDirectLine =
+        (GBServer.globals.minBoot as any).whatsAppDirectLine;
+    }
 
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');

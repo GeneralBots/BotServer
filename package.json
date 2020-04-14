@@ -74,6 +74,7 @@
     "express": "4.17.1",
     "express-remove-route": "1.0.0",
     "ffmpeg-static": "^4.1.0",
+    "google-libphonenumber": "^3.2.8",
     "js-beautify": "1.10.2",
     "marked": "0.8.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.11.0",
