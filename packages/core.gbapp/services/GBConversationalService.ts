@@ -48,6 +48,7 @@ const Nexmo = require('nexmo');
 let sdk = require("microsoft-cognitiveservices-speech-sdk");
 var fs = require('fs')
 import { Readable } from 'stream'
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 const prism = require('prism-media');
 
 export interface LanguagePickerSettings {
@@ -149,13 +150,13 @@ export class GBConversationalService implements IGBConversationalService {
         oggFile.push(buffer);
         oggFile.push(null);
 
-        // TODO: Use stream directly without physical files.
+        const name = GBAdminService.getRndReadableIdentifier();
 
-        fs.writeFileSync('audio.ogg', buffer);
+        fs.writeFileSync(`work/tmp${name}.ogg`, buffer);
 
-        let wr = fs.createWriteStream('audio.pcm');
+        let wr = fs.createWriteStream(`work/tmp${name}.pcm`);
         wr.on('finish', () => {
-          let data = fs.readFileSync('audio.pcm');
+          let data = fs.readFileSync(`work/tmp${name}.pcm`);
 
           let pushStream = sdk.AudioInputStream.createPushStream();
           pushStream.write(data);
@@ -169,7 +170,7 @@ export class GBConversationalService implements IGBConversationalService {
           recognizer.recognizeOnceAsync(
             (result) => {
 
-              resolve(result.text ? result.text : 'audio not converted');
+              resolve(result.text ? result.text : 'Speech to Text failed: Audio not converted');
 
               recognizer.close();
               recognizer = undefined;
@@ -181,8 +182,8 @@ export class GBConversationalService implements IGBConversationalService {
               recognizer = undefined;
             });
         });
-
-        fs.createReadStream('audio.ogg')
+        
+        fs.createReadStream(`work/tmp${name}.ogg`)
           .pipe(new prism.opus.OggDemuxer())
           .pipe(new prism.opus.Decoder({
             rate: samplingRate,

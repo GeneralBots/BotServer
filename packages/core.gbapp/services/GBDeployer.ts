@@ -224,6 +224,9 @@ export class GBDeployer implements IGBDeployer {
       instance.storageUsername = bootInstance.storageUsername;
       instance.storagePassword = bootInstance.storagePassword;
       instance.webchatKey = bootInstance.webchatKey;
+      instance.cloudLocation = bootInstance.cloudLocation;
+      instance.speechEndpoint = bootInstance.speechEndpoint;
+      instance.speechKey = bootInstance.speechKey;
 
       instance = await service.internalDeployBot(
         instance,

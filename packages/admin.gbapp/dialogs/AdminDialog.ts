@@ -78,7 +78,7 @@ export class AdminDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const sensitive = step.result;
 
-          if (sensitive === GBConfigService.get('ADMIN_PASS')) {
+          if (sensitive === min.instance.adminPass) {
             await step.context.sendActivity(Messages[locale].welcome);
 
             return await step.prompt('textPrompt', Messages[locale].which_task);
