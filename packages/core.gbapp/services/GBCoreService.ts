@@ -289,13 +289,11 @@ STORAGE_SYNC=true
     }
   }
 
-  public setEntryPointDialog(dialogName: string)
-  {
+  public setEntryPointDialog(dialogName: string) {
     GBServer.globals.entryPointDialog = dialogName;
   }
 
-  public setWWWRoot(localPath: string)
-  {
+  public setWWWRoot(localPath: string) {
     GBServer.globals.wwwroot = localPath;
   }
 
@@ -331,20 +329,24 @@ STORAGE_SYNC=true
     let instances: IGBInstance[];
     try {
       instances = await core.loadInstances();
-      const instance = instances[0];
-      if (process.env.NODE_ENV === 'development' &&
-        GBConfigService.get('REVERSE_PROXY') === undefined) {
-        GBLog.info(`Updating bot endpoint to local reverse proxy (ngrok)...`);
+      await CollectionUtil.asyncForEach(instances, async instance => {
+        GBLog.info(`Updating bot endpoint for ${instance.botId}...`);
         try {
           await installationDeployer.updateBotProxy(
             instance.botId,
-            instance.botId,
+            GBConfigService.get("CLOUD_GROUP"),
             `${proxyAddress}/api/messages/${instance.botId}`
           );
         } catch (error) {
-          throw new Error(`Error updating bot proxy with proxy address${error.message}.`);
+          if (error.code === "ResourceNotFound") {
+            GBLog.warn(`Bot ${instance.botId} not found on resource group ${GBConfigService.get("CLOUD_GROUP")}.`);
+          }
+          else {
+
+            throw new Error(`Error updating bot proxy, details: ${error.message}.`);
+          }
         }
-      }
+      });
     } catch (error) {
       if (error.parent === undefined) {
         throw new Error(`Cannot connect to operating storage: ${error.message}.`);
@@ -386,30 +388,30 @@ STORAGE_SYNC=true
     return instances;
   }
 
-  public async loadSysPackages(core: GBCoreService) : Promise<IGBPackage[]>{
+  public async loadSysPackages(core: GBCoreService): Promise<IGBPackage[]> {
     // NOTE: if there is any code before this line a semicolon
     // will be necessary before this line.
     // Loads all system packages.
     const sysPackages: IGBPackage[] = [];
-    
-      await CollectionUtil.asyncForEach([
-        GBAdminPackage,
-        GBCorePackage,
-        GBSecurityPackage,
-        GBKBPackage,
-        GBCustomerSatisfactionPackage,
-        GBAnalyticsPackage,
-        GBWhatsappPackage,
-        GBAzureDeployerPackage,
-        GBSharePointPackage,
-      ], async e => {
+
+    await CollectionUtil.asyncForEach([
+      GBAdminPackage,
+      GBCorePackage,
+      GBSecurityPackage,
+      GBKBPackage,
+      GBCustomerSatisfactionPackage,
+      GBAnalyticsPackage,
+      GBWhatsappPackage,
+      GBAzureDeployerPackage,
+      GBSharePointPackage,
+    ], async e => {
       GBLog.info(`Loading sys package: ${e.name}...`);
 
       const p = Object.create(e.prototype) as IGBPackage;
       sysPackages.push(p);
 
       await p.loadPackage(core, core.sequelize);
-      
+
     });
 
     return sysPackages;

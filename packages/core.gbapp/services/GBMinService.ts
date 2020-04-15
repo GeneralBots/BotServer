@@ -157,17 +157,18 @@ export class GBMinService {
             // User wants to switch bots.
             if (toSwitchMin !== undefined) {
               await sec.updateCurrentBotId(id, text);
+              await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
               await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Agora falando com ${activeMin.instance.title}...`);
               res.end();
             }
             else {
               activeMin = GBServer.globals.minInstances.filter(p => p.botId === user.currentBotId)[0];;
-              (activeMin as any).whatsAppDirectLine.received(req, res);
+              await (activeMin as any).whatsAppDirectLine.received(req, res);
             }
           }
         }
         else {
-          (GBServer.globals.minBoot as any).whatsAppDirectLine.received(req, res);
+          await (GBServer.globals.minBoot as any).whatsAppDirectLine.received(req, res);
         }
       } catch (error) {
         GBLog.error(`Error on Whatsapp callback: ${error.message}`);
@@ -198,10 +199,6 @@ export class GBMinService {
 
     // Build bot adapter.
     const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.sysPackages);
-
-    if (GBServer.globals.minInstances.length === 0) {
-      GBServer.globals.minBoot = min;
-    }
     GBServer.globals.minInstances.push(min);
 
     // Install default BASIC module.
@@ -391,6 +388,11 @@ export class GBMinService {
     // The minimal bot is built here.
 
     const min = new GBMinInstance();
+
+    if (GBServer.globals.minBoot === undefined) {
+      GBServer.globals.minBoot = min;
+    }
+
     min.botId = instance.botId;
     min.bot = adapter;
     min.userState = userState;
@@ -404,6 +406,7 @@ export class GBMinService {
     min.scriptMap = {};
     min.sandBoxMap = {};
     min.packages = sysPackages;
+
     if (min.instance.whatsappServiceKey !== null) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
         min,
@@ -413,12 +416,22 @@ export class GBMinService {
         min.instance.whatsappServiceNumber,
         min.instance.whatsappServiceUrl
       );
+      await min.whatsAppDirectLine.setup(true);  
     }
     else {
+      const minBoot = GBServer.globals.minBoot as any;
       min.whatsAppDirectLine =
-        (GBServer.globals.minBoot as any).whatsAppDirectLine;
+        new WhatsappDirectLine(
+          min,
+          min.botId,
+          min.instance.webchatKey, 
+          minBoot.instance.whatsappServiceKey,
+          minBoot.instance.whatsappServiceNumber,
+          minBoot.instance.whatsappServiceUrl
+        );
+        await min.whatsAppDirectLine.setup(false);
     }
-
+    
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
 

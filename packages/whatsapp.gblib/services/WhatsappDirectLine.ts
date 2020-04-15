@@ -53,7 +53,7 @@ export class WhatsappDirectLine extends GBService {
   public whatsappServiceUrl: string;
   public botId: string;
   private directLineSecret: string;
-  
+
 
   public conversationIds = {};
   min: GBMinInstance;
@@ -77,7 +77,7 @@ export class WhatsappDirectLine extends GBService {
 
   }
 
-  public async setup() {
+  public async setup(setUrl) {
     this.directLineClient =
       new Swagger({
         spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
@@ -103,13 +103,14 @@ export class WhatsappDirectLine extends GBService {
       }
     };
 
-    try {
-      let res = await request.post(options);
-      GBLog.info(res);
-    } catch (error) {
-      GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
+    if (setUrl) {
+      try {
+        let res = await request.post(options);
+        GBLog.info(res);
+      } catch (error) {
+        GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
+      }
     }
-
 
   }
 
@@ -117,6 +118,10 @@ export class WhatsappDirectLine extends GBService {
     for (let index = 0; index < array.length; index++) {
       await callback(array[index], index, array);
     }
+  }
+
+  public resetConversationId(number) {
+    this.conversationIds[number] = undefined;
   }
 
   public async received(req, res) {
@@ -146,12 +151,12 @@ export class WhatsappDirectLine extends GBService {
       };
 
       const res = await request(options);
-      let buf =  Buffer.from(res, 'binary');
+      let buf = Buffer.from(res, 'binary');
       text = await GBConversationalService.getTextFromAudioBuffer(
         this.min.instance.speechKey,
         this.min.instance.cloudLocation,
         buf, 'pt-br'
-      );      
+      );
 
     }
 
