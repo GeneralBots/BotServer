@@ -151,7 +151,7 @@ export class GBMinService {
           if (user === null) {
             user = await sec.ensureUser(activeMin.instance.instanceId, id,
               activeMin.botId, id, "", "whatsapp", id, id);
-            await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar?`);
+            await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`);
             res.end();
           } else {
             // User wants to switch bots.

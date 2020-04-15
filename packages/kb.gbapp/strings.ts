@@ -32,6 +32,6 @@ export const Messages = {
       'Veja algumas perguntas mais frequentes logo na tela. Clique numa delas para eu responder.',
     will_answer_projector:
       'Vou te responder na tela para melhor visualização...',
-    ask_first_time: 'Sobre como eu poderia ajudar?'
+    ask_first_time: 'Como eu posso ajudar?'
   }
 };

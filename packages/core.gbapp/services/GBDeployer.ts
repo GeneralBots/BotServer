@@ -184,6 +184,10 @@ export class GBDeployer implements IGBDeployer {
     return await this.deployBotFull(instance, GBServer.globals.publicAddress);
   }
 
+  public async botExists(instance: IGBInstance, group, publicAddress: string): Promise<boolean> {
+    const service = new AzureDeployerService(this);
+    return await service.botExists(instance.botId, group);
+  }
   /**
    * Deploys a bot to the storage.
    */
