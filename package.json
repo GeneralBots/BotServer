@@ -13,7 +13,8 @@
     "Dário Vieira <dario.junior3@gmail.com>"
   ],
   "engines": {
-    "node": "=12.0.0"
+    "node": "=12.15.0",
+    "npm": "=6.9.0"
   },
   "license": "AGPL-3.0",
   "preferGlobal": true,
