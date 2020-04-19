@@ -336,10 +336,10 @@ export class GBDeployer implements IGBDeployer {
     const packageName = Path.basename(localPath);
 
     const p = await this.getStoragePackageByName(instance.instanceId, packageName);
-    const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
-
+    
     switch (packageType) {
       case '.gbot':
+        const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
         await this.undeployBot(packageObject.botId, packageName);
         break;
 
@@ -508,6 +508,7 @@ export class GBDeployer implements IGBDeployer {
     GBServer.globals.server.use(`/kb/${packageName}/assets`, express.static(urlJoin(filename, 'assets')));
     GBServer.globals.server.use(`/kb/${packageName}/images`, express.static(urlJoin(filename, 'images')));
     GBServer.globals.server.use(`/kb/${packageName}/audios`, express.static(urlJoin(filename, 'audios')));
+    GBServer.globals.server.use(`/kb/${packageName}/videos`, express.static(urlJoin(filename, 'videos')));
     GBLog.info(`KB (.gbkb) assets accessible at: /kb/${packageName}.`);
   }
 
