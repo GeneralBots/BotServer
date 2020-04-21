@@ -127,6 +127,7 @@ export class GBServer {
 
               GBLog.info(`Establishing a development local proxy (ngrok)...`);
               GBServer.globals.publicAddress = await core.ensureProxy(port);
+              process.env.BOT_URL = GBServer.globals.publicAddress;
             }
           } else {
             const serverAddress = process.env.BOT_URL;

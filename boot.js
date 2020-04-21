@@ -6,10 +6,11 @@ const { exec } = require('child_process');
 
 // Displays version of Node JS being used at runtime and others attributes.
 
-console.log(`[GB Runtime] NodeJS    = ${process.version}`);
-console.log(`[GB Runtime] platform  = ${process.platform}`);
-console.log(`[GB Runtime] argv      = ${process.argv}`);
-console.log(`[GB Runtime] debugPort = ${process.debugPort}`);
+console.log(`[GB Runtime] NodeJS        = ${process.version}`);
+console.log(`[GB Runtime] platform      = ${process.platform}`);
+console.log(`[GB Runtime] architecture  = ${process.arch}`);
+console.log(`[GB Runtime] argv          = ${process.argv}`);
+console.log(`[GB Runtime] debugPort     = ${process.debugPort}`);
 
 var now = () => { 
     return (new Date()).toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC';
