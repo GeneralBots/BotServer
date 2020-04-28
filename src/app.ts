@@ -67,7 +67,7 @@ export class RootData {
   public minBoot: GBMinInstance;
   public wwwroot: string; // .gbui or a static webapp.
   public entryPointDialog: string; // To replace default welcome dialog.
-  
+
 }
 
 /**
@@ -82,6 +82,7 @@ export class GBServer {
    */
 
   public static run() {
+ 
     GBLog.info(`The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
     GBConfigService.init();
@@ -127,8 +128,8 @@ export class GBServer {
 
               GBLog.info(`Establishing a development local proxy (ngrok)...`);
               GBServer.globals.publicAddress = await core.ensureProxy(port);
-              process.env.BOT_URL = GBServer.globals.publicAddress;
             }
+            process.env.BOT_URL = GBServer.globals.publicAddress;
           } else {
             const serverAddress = process.env.BOT_URL;
             GBLog.info(`Defining server address at ${serverAddress}...`);

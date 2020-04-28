@@ -38,7 +38,7 @@
 
 import { MessageFactory, RecognizerResult } from 'botbuilder';
 import { LuisRecognizer } from 'botbuilder-ai';
-import { GBDialogStep, GBLog, GBMinInstance, IGBConversationalService, IGBCoreService } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService } from 'botlib';
 import { AzureText } from 'pragmatismo-io-framework';
 import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
@@ -60,7 +60,7 @@ export interface LanguagePickerSettings {
  * Provides basic services for handling messages and dispatching to back-end
  * services like NLP or Search.
  */
-export class GBConversationalService implements IGBConversationalService {
+export class GBConversationalService {
   public coreService: IGBCoreService;
 
   constructor(coreService: IGBCoreService) {
@@ -134,6 +134,72 @@ export class GBConversationalService implements IGBConversationalService {
     min.whatsAppDirectLine.sendToDevice(mobile, message);
   }
 
+  public static async getAudioBufferFromText(speechKey, cloudRegion, text, locale): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+      const name = GBAdminService.getRndReadableIdentifier();
+
+      const waveFilename = `work/tmp${name}.pcm`;
+
+      var audioConfig = sdk.AudioConfig.fromAudioFileOutput(waveFilename);
+      var speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, cloudRegion);
+
+      var synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
+
+      try {
+        speechConfig.speechSynthesisLanguage = locale;
+        speechConfig.speechSynthesisVoiceName = "pt-BR-Daniel-Apollo" // pt-BR-HeloisaRUS;
+
+        synthesizer.speakTextAsync(text,
+          (result) => {
+            if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
+              let raw = Buffer.from(result.audioData);
+              fs.writeFileSync(waveFilename, raw);
+              GBLog.info(`Audio data byte size: ${result.audioData.byteLength}.`)
+              const oggFilenameOnly = `tmp${name}.ogg`;
+              const oggFilename = `work/${oggFilenameOnly}`;
+
+              const ffmpeg = prism.FFmpeg.getInfo();
+
+              console.log(`Using FFmpeg version ${ffmpeg.version}`);
+
+              if (ffmpeg.output.includes('--enable-libopus')) {
+                console.log('libopus is available!');
+              } else {
+                console.log('libopus is unavailable!');
+              }
+
+              const output = fs.createWriteStream(oggFilename);
+              const transcoder = new prism.FFmpeg({
+                args: [
+                  '-analyzeduration', '0',
+                  '-loglevel', '0',
+                  '-f', 'opus',
+                  '-ar', '16000',
+                  '-ac', '1',
+                ],
+              });
+
+              fs.createReadStream(waveFilename)
+                .pipe(transcoder)
+                .pipe(output);
+
+              console.log("synthesis finished.");
+
+              let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
+              resolve(url);
+            } else {
+              const error = "Speech synthesis canceled, " + result.errorDetails;
+              reject(error);
+            }
+            synthesizer.close();
+            synthesizer = undefined;
+          });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
   public static async  getTextFromAudioBuffer(speechKey, cloudRegion, buffer, locale): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       try {
@@ -182,7 +248,7 @@ export class GBConversationalService implements IGBConversationalService {
               recognizer = undefined;
             });
         });
-        
+
         fs.createReadStream(`work/tmp${name}.ogg`)
           .pipe(new prism.opus.OggDemuxer())
           .pipe(new prism.opus.Decoder({

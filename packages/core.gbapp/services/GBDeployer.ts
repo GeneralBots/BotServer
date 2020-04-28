@@ -48,7 +48,7 @@ const rimraf = require('rimraf');
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage, IGBDeployer } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app';
-import { GuaribasPackage, GuaribasInstance } from '../models/GBModel';
+import { GuaribasPackage} from '../models/GBModel';
 import { GBAdminService } from './../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService';
 import { KBService } from './../../kb.gbapp/services/KBService';

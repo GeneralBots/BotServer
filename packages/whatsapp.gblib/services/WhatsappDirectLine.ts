@@ -104,6 +104,9 @@ export class WhatsappDirectLine extends GBService {
     };
 
     if (setUrl) {
+      const express = require('express');
+      GBServer.globals.server.use(`/audios`, express.static('work'));
+
       try {
         let res = await request.post(options);
         GBLog.info(res);
@@ -210,7 +213,7 @@ export class WhatsappDirectLine extends GBService {
         watermark = response.obj.watermark;
         await this.printMessages(response.obj.activities, conversationId, from, fromName);
       } catch (err) {
-        GBLog.error(`Error calling printMessages on Whatsapp channel ${err.data}`);
+        GBLog.error(`Error calling printMessages on Whatsapp channel ${err.data === undefined ? err : err.data}`);
       }
     };
     setInterval(worker, this.pollInterval);
@@ -296,7 +299,7 @@ export class WhatsappDirectLine extends GBService {
       qs: {
         token: this.whatsappServiceKey,
         phone: to,
-        audio: url
+        body: url
       },
       headers: {
         'cache-control': 'no-cache'
@@ -312,28 +315,49 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
+  public async sendTextAsAudioToDevice(to, msg) {
+
+    let url = await GBConversationalService.getAudioBufferFromText(
+      this.min.instance.speechKey,
+      this.min.instance.cloudLocation,
+      msg, 'pt-br'
+    );
+
+    await this.sendFileToDevice(to, url, 'Audio', msg);
+
+  }
+
   public async sendToDevice(to, msg) {
-    const options = {
-      method: 'POST',
-      url: urlJoin(this.whatsappServiceUrl, 'message'),
-      qs: {
-        token: this.whatsappServiceKey,
-        phone: to,
-        body: msg
-      },
-      headers: {
-        'cache-control': 'no-cache'
+
+    const cmd = '/audio ';
+    if (msg.startsWith (cmd)) {
+      msg = msg.substr(cmd.length);
+      return await this.sendTextAsAudioToDevice(to, msg);
+    }
+    else {
+
+      const options = {
+        method: 'POST',
+        url: urlJoin(this.whatsappServiceUrl, 'message'),
+        qs: {
+          token: this.whatsappServiceKey,
+          phone: to,
+          body: msg
+        },
+        headers: {
+          'cache-control': 'no-cache'
+        }
+      };
+
+      try {
+        // tslint:disable-next-line: await-promise
+        const result = await request.post(options);
+        GBLog.info(result);
+      } catch (error) {
+        GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
+
+        // TODO: Handle Error: socket hang up and retry.
       }
-    };
-
-    try {
-      // tslint:disable-next-line: await-promise
-      const result = await request.post(options);
-      GBLog.info(result);
-    } catch (error) {
-      GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
-
-      // TODO: Handle Error: socket hang up and retry.
     }
   }
 }
