@@ -320,7 +320,7 @@ export class WhatsappDirectLine extends GBService {
     let url = await GBConversationalService.getAudioBufferFromText(
       this.min.instance.speechKey,
       this.min.instance.cloudLocation,
-      msg, 'pt-br'
+      msg, 'pt-BR'
     );
 
     await this.sendFileToDevice(to, url, 'Audio', msg);

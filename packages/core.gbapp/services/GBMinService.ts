@@ -163,6 +163,10 @@ export class GBMinService {
             }
             else {
               activeMin = GBServer.globals.minInstances.filter(p => p.botId === user.currentBotId)[0];;
+              if (activeMin === undefined) {
+                activeMin = GBServer.globals.minBoot;
+                await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `O outro Bot que você estava falando(${user.currentBotId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`);
+              }
               await (activeMin as any).whatsAppDirectLine.received(req, res);
             }
           }
@@ -416,7 +420,7 @@ export class GBMinService {
         min.instance.whatsappServiceNumber,
         min.instance.whatsappServiceUrl
       );
-      await min.whatsAppDirectLine.setup(true);  
+      await min.whatsAppDirectLine.setup(true);
     }
     else {
       const minBoot = GBServer.globals.minBoot as any;
@@ -424,14 +428,14 @@ export class GBMinService {
         new WhatsappDirectLine(
           min,
           min.botId,
-          min.instance.webchatKey, 
+          min.instance.webchatKey,
           minBoot.instance.whatsappServiceKey,
           minBoot.instance.whatsappServiceNumber,
           minBoot.instance.whatsappServiceUrl
         );
-        await min.whatsAppDirectLine.setup(false);
+      await min.whatsAppDirectLine.setup(false);
     }
-    
+
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
 

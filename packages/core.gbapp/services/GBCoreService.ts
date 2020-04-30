@@ -210,7 +210,15 @@ export class GBCoreService implements IGBCoreService {
    * Loads all items to start several listeners.
    */
   public async loadInstances(): Promise<IGBInstance[]> {
-    return GuaribasInstance.findAll({});
+    if (process.env.LOAD_ONLY !== undefined)
+    {
+      const options = { where: { botId: process.env.LOAD_ONLY } };
+      return GuaribasInstance.findAll(options);
+    }
+    else
+    {
+      return GuaribasInstance.findAll({});
+    }
   }
 
   /**

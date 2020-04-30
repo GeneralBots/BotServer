@@ -147,7 +147,7 @@ export class GBConversationalService {
 
       try {
         speechConfig.speechSynthesisLanguage = locale;
-        speechConfig.speechSynthesisVoiceName = "pt-BR-Daniel-Apollo" // pt-BR-HeloisaRUS;
+        speechConfig.speechSynthesisVoiceName = "pt-BR-HeloisaRUS";
 
         synthesizer.speakTextAsync(text,
           (result) => {
