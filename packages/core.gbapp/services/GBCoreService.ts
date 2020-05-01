@@ -351,7 +351,7 @@ STORAGE_SYNC=true
           }
           else {
 
-            throw new Error(`Error updating bot proxy, details: ${error.message}.`);
+            throw new Error(`Error updating bot proxy, details: ${error}.`);
           }
         }
       });

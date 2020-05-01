@@ -42,14 +42,16 @@ import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService } from 'botlib';
 import { AzureText } from 'pragmatismo-io-framework';
 import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
+import { Readable } from 'stream'
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 const urlJoin = require('url-join');
 const PasswordGenerator = require("strict-password-generator").default;
 const Nexmo = require('nexmo');
-let sdk = require("microsoft-cognitiveservices-speech-sdk");
-var fs = require('fs')
-import { Readable } from 'stream'
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-const prism = require('prism-media');
+const { join } = require('path')
+const shell = require('any-shell-escape')
+const { exec } = require('child_process')
+const fs = require('fs')
+const sdk = require("microsoft-cognitiveservices-speech-sdk");
 
 export interface LanguagePickerSettings {
   defaultLocale?: string;
@@ -147,7 +149,7 @@ export class GBConversationalService {
 
       try {
         speechConfig.speechSynthesisLanguage = locale;
-        speechConfig.speechSynthesisVoiceName = "pt-BR-HeloisaRUS";
+        speechConfig.speechSynthesisVoiceName = "pt-BR-FranciscaNeural";
 
         synthesizer.speakTextAsync(text,
           (result) => {
@@ -158,15 +160,6 @@ export class GBConversationalService {
               const oggFilenameOnly = `tmp${name}.ogg`;
               const oggFilename = `work/${oggFilenameOnly}`;
 
-              const ffmpeg = prism.FFmpeg.getInfo();
-
-              console.log(`Using FFmpeg version ${ffmpeg.version}`);
-
-              if (ffmpeg.output.includes('--enable-libopus')) {
-                console.log('libopus is available!');
-              } else {
-                console.log('libopus is unavailable!');
-              }
 
               const output = fs.createWriteStream(oggFilename);
               const transcoder = new prism.FFmpeg({
@@ -183,7 +176,6 @@ export class GBConversationalService {
                 .pipe(transcoder)
                 .pipe(output);
 
-              console.log("synthesis finished.");
 
               let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
               resolve(url);
@@ -206,11 +198,6 @@ export class GBConversationalService {
         let subscriptionKey = speechKey;
         let serviceRegion = cloudRegion;
 
-        var samplingRate = 16000;
-        var frameDuration = 20;
-        var channels = 1;
-        var frameSize = samplingRate * frameDuration / 1000;
-
         const oggFile = new Readable();
         oggFile._read = () => { } // _read is required but you can noop it
         oggFile.push(buffer);
@@ -218,44 +205,53 @@ export class GBConversationalService {
 
         const name = GBAdminService.getRndReadableIdentifier();
 
-        fs.writeFileSync(`work/tmp${name}.ogg`, buffer);
+        const dest = `work/tmp${name}.wav`;
+        const src = `work/tmp${name}.ogg`;
+        fs.writeFileSync(src, oggFile.read());
 
-        let wr = fs.createWriteStream(`work/tmp${name}.pcm`);
-        wr.on('finish', () => {
-          let data = fs.readFileSync(`work/tmp${name}.pcm`);
+        const makeMp3 = shell([
+          'node_modules/ffmpeg-static/ffmpeg.exe', '-y', '-v', 'error',
+          '-i', join(process.cwd(), src),
+          '-ar', '16000',
+          '-ac', '1',
+          '-acodec', 'pcm_s16le',
+          join(process.cwd(), dest)
+        ])
 
-          let pushStream = sdk.AudioInputStream.createPushStream();
-          pushStream.write(data);
-          pushStream.close();
+        exec(makeMp3, (error) => {
+          if (error) {
+            GBLog.error(error);
+            return Promise.reject(error);
+          } else {
+            let data = fs.readFileSync(dest);
 
-          let audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
-          let speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
-          speechConfig.speechRecognitionLanguage = locale;
-          let recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+            let pushStream = sdk.AudioInputStream.createPushStream();
+            pushStream.write(data);
+            pushStream.close();
 
-          recognizer.recognizeOnceAsync(
-            (result) => {
+            let audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
+            let speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
+            speechConfig.speechRecognitionLanguage = locale;
+            let recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
 
-              resolve(result.text ? result.text : 'Speech to Text failed: Audio not converted');
+            recognizer.recognizeOnceAsync(
+              (result) => {
 
-              recognizer.close();
-              recognizer = undefined;
-            },
-            (err) => {
-              reject(err);
+                resolve(result.text ? result.text : 'Speech to Text failed: Audio not converted');
 
-              recognizer.close();
-              recognizer = undefined;
-            });
-        });
+                recognizer.close();
+                recognizer = undefined;
+              },
+              (err) => {
+                reject(err);
 
-        fs.createReadStream(`work/tmp${name}.ogg`)
-          .pipe(new prism.opus.OggDemuxer())
-          .pipe(new prism.opus.Decoder({
-            rate: samplingRate,
-            channels: channels, frameSize: frameSize
-          }))
-          .pipe(wr);
+                recognizer.close();
+                recognizer = undefined;
+              });
+
+          }
+        })
+
       } catch (error) {
         GBLog.error(error);
         return Promise.reject(error);
