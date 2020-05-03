@@ -134,6 +134,7 @@ export class GBMinService {
       try {
 
         const id = req.body.messages[0].chatId.split('@')[0];
+        const senderName = req.body.messages[0].senderName;
         const text = req.body.messages[0].body;
         if (req.body.messages[0].fromMe) {
           res.end();
@@ -142,30 +143,33 @@ export class GBMinService {
         let activeMin;
         if (process.env.WHATSAPP_WELCOME_DISABLED !== "true") {
 
-          const toSwitchMin = GBServer.globals.minInstances.filter(p => p.botId === text)[0];
+          const toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.botId === text)[0];
           activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
 
           let sec = new SecService();
-          let user = await sec.getUserFromPhone(id);
+          const instance = await this.core.loadInstanceByBotId(activeMin.botId);
+          let user = await sec.getUserFromSystemId(id);
 
           if (user === null) {
-            user = await sec.ensureUser(activeMin.instance.instanceId, id,
-              activeMin.botId, id, "", "whatsapp", id, id);
+            user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, "", "whatsapp", senderName);
             await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`);
             res.end();
           } else {
             // User wants to switch bots.
             if (toSwitchMin !== undefined) {
-              await sec.updateCurrentBotId(id, text);
+              const botId = text;
+              const instance = await this.core.loadInstanceByBotId(botId);
+              await sec.updateUserInstance(id, instance.instanceId);
+
               await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
               await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Agora falando com ${activeMin.instance.title}...`);
               res.end();
             }
             else {
-              activeMin = GBServer.globals.minInstances.filter(p => p.botId === user.currentBotId)[0];;
+              activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];;
               if (activeMin === undefined) {
                 activeMin = GBServer.globals.minBoot;
-                await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `O outro Bot que você estava falando(${user.currentBotId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`);
+                await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`);
               }
               await (activeMin as any).whatsAppDirectLine.received(req, res);
             }
@@ -196,7 +200,7 @@ export class GBMinService {
     const uiUrl = `/${botId}`;
     removeRoute(GBServer.globals.server, uiUrl);
 
-    GBServer.globals.minInstances = GBServer.globals.minInstances.filter(p => p.botId !== botId);
+    GBServer.globals.minInstances = GBServer.globals.minInstances.filter(p => p.instance.botId !== botId);
   }
 
   public async mountBot(instance: IGBInstance) {
@@ -294,7 +298,7 @@ export class GBMinService {
     if (botId === '[default]' || botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
     }
-    const instance = await this.core.loadInstance(botId);
+    const instance = await this.core.loadInstanceByBotId(botId);
     if (instance !== null) {
       const webchatTokenContainer = await this.getWebchatToken(instance);
       const speechToken = instance.speechKey != null ? await this.getSTSToken(instance) : null;
@@ -405,7 +409,7 @@ export class GBMinService {
     min.adminService = this.adminService;
     min.deployService = this.deployer;
     min.kbService = new KBService(this.core.sequelize);
-    min.instance = await this.core.loadInstance(min.botId);
+    min.instance = await this.core.loadInstanceByBotId(min.botId);
     min.cbMap = {};
     min.scriptMap = {};
     min.sandBoxMap = {};
@@ -504,7 +508,7 @@ export class GBMinService {
             const member = context.activity.membersAdded[0];
 
             const persistedUser = await sec.ensureUser(instance.instanceId, member.id,
-              min.botId, member.id, "", "web", member.name, member.id);
+              member.name, "", "web", member.name);
 
             const analytics = new AnalyticsService();
 

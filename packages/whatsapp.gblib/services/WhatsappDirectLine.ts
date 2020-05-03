@@ -34,11 +34,13 @@ import urlJoin = require('url-join');
 
 const Swagger = require('swagger-client');
 const rp = require('request-promise');
+const fs = require('fs');
 import { GBLog, GBService, GBMinInstance } from 'botlib';
 import * as request from 'request-promise-native';
-const fs = require('fs');
 import { GBServer } from '../../../src/app';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
+import { SecService } from '../../security.gblib/services/SecService';
+import { Messages } from '../strings';
 
 /**
  * Support for Whatsapp.
@@ -53,7 +55,7 @@ export class WhatsappDirectLine extends GBService {
   public whatsappServiceUrl: string;
   public botId: string;
   private directLineSecret: string;
-
+  private locale: string = 'pt-BR';
 
   public conversationIds = {};
   min: GBMinInstance;
@@ -158,7 +160,7 @@ export class WhatsappDirectLine extends GBService {
       text = await GBConversationalService.getTextFromAudioBuffer(
         this.min.instance.speechKey,
         this.min.instance.cloudLocation,
-        buf, 'pt-br'
+        buf, this.locale
       );
 
     }
@@ -167,18 +169,75 @@ export class WhatsappDirectLine extends GBService {
 
     let client = await this.directLineClient;
 
-    if (this.conversationIds[from] === undefined) {
-      GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
-      const response = await client.Conversations.Conversations_StartConversation()
-      const generatedConversationId = response.obj.conversationId;
+    const id = req.body.messages[0].chatId.split('@')[0];
+    const senderName = req.body.messages[0].senderName;
+    let sec = new SecService();
 
-      this.conversationIds[from] = generatedConversationId;
+    const user = await sec.ensureUser(this.min.instance.instanceId, id,
+      senderName, "", "whatsapp", senderName);
 
-      this.pollMessages(client, generatedConversationId, from, fromName);
-      this.inputMessage(client, generatedConversationId, text, from, fromName);
-    } else {
-      this.inputMessage(client, conversationId, text, from, fromName);
+    if (user.agentMode === "self") {
+      let manualUser = await sec.getUserFromAgentSystemId(id);
+      const cmd = '/reply ';
+      if (text.startsWith(cmd)) {
+        let filename = text.substr(cmd.length);
+        let message = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
+        
+        if (message === null) {
+          await this.sendToDevice(user.userSystemId, `File ${filename} not found in any .gbkb published. Check the name or publish again the associated .gbkb.`);
+        } else {
+          await this.min.conversationalService.sendMarkdownToMobile(this.min,null, user.userSystemId, message);
+        }
+      } else if (text === '/qt') {
+        // TODO: Transfers only in pt-br for now.
+        await this.sendToDevice(manualUser.userSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
+        await this.sendToDevice(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
+
+        await sec.updateCurrentAgent(manualUser.userSystemId, this.min.instance.instanceId, null);
+      }
+      else {
+        GBLog.info(`HUMAN AGENT (${id}) TO USER ${manualUser.userSystemId}: ${text}`);
+        this.sendToDevice(manualUser.userSystemId, `${manualUser.userSystemId}: ${text}`);
+      }
     }
+    else if (user.agentMode === "human") {
+      let agent = await sec.getUserFromSystemId(user.agentSystemId);
+      if (text === '/t') {
+        await this.sendToDevice(user.userSystemId, `Você já está sendo atendido por ${agent.userSystemId}.`);
+      }
+      else if (text === '/qt') {
+        // TODO: Transfers only in pt-br for now.
+        await this.sendToDevice(id, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
+        await this.sendToDevice(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
+
+        await sec.updateCurrentAgent(id, this.min.instance.instanceId, null);
+      }
+      else {
+        GBLog.info(`USER (${id}) TO AGENT ${agent.userSystemId}: ${text}`);
+        this.sendToDevice(user.agentSystemId, `${id}: ${text}`);
+      }
+
+    }
+    else if (user.agentMode === "bot" || user.agentMode === null) {
+
+      if (this.conversationIds[from] === undefined) {
+        GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
+        const response = await client.Conversations.Conversations_StartConversation()
+        const generatedConversationId = response.obj.conversationId;
+
+        this.conversationIds[from] = generatedConversationId;
+
+        this.pollMessages(client, generatedConversationId, from, fromName);
+        this.inputMessage(client, generatedConversationId, text, from, fromName);
+      } else {
+
+        this.inputMessage(client, conversationId, text, from, fromName);
+      }
+    }
+    else {
+      GBLog.warn(`Inconsistencty found: Invalid agentMode on User Table: ${user.agentMode}`);
+    }
+
     res.end();
 
   }
@@ -320,17 +379,16 @@ export class WhatsappDirectLine extends GBService {
     let url = await GBConversationalService.getAudioBufferFromText(
       this.min.instance.speechKey,
       this.min.instance.cloudLocation,
-      msg, 'pt-BR'
+      msg, this.locale
     );
 
     await this.sendFileToDevice(to, url, 'Audio', msg);
-
   }
 
   public async sendToDevice(to, msg) {
 
     const cmd = '/audio ';
-    if (msg.startsWith (cmd)) {
+    if (msg.startsWith(cmd)) {
       msg = msg.substr(cmd.length);
       return await this.sendTextAsAudioToDevice(to, msg);
     }

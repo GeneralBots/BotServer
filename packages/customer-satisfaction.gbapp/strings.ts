@@ -1,14 +1,17 @@
 export const Messages = {
   'en-US': {
-    about_suggestions:  'Suggestions are welcomed and improve my quality...',
+    about_suggestions: 'Suggestions are welcomed and improve my quality...',
     what_about_service: 'What about my service?',
-    glad_you_liked:     'I\'m glad you liked. I\'m here for you.',
-    we_will_improve:    'Let\'s take note of that, thanks for sharing.',
+    glad_you_liked: 'I\'m glad you liked. I\'m here for you.',
+    we_will_improve: 'Let\'s take note of that, thanks for sharing.',
     what_about_me: 'What about the service, please rate between 1 and 5.',
     thanks: 'Thanks!',
     im_sorry_lets_try: 'I\'m sorry. Let\'s try again...',
     great_thanks: 'Great, thanks for sharing your thoughts.',
-    please_no_bad_words: 'Please, no bad words.'
+    please_no_bad_words: 'Please, no bad words.',
+    please_wait_transfering: 'Please, wait while I find an agent to answer you.',
+    notify_agent: (name) => `New call available for *${name}*, you can answer right here when you are finished, type /qt.`,
+    notify_end_transfer: (botName) => `Now talking to ${botName} again.`,
   },
   'pt-BR': {
     about_suggestions: 'Sugestões melhoram muito minha qualidade...',
@@ -19,6 +22,9 @@ export const Messages = {
     thanks: 'Obrigado!',
     im_sorry_lets_try: 'Desculpe-me, vamos tentar novamente.',
     great_thanks: 'Ótimo, obrigado por contribuir com sua resposta.',
-    please_no_bad_words: 'Por favor, sem palavrões!'
+    please_no_bad_words: 'Por favor, sem palavrões!',
+    please_wait_transfering: 'Por favor, aguarde enquanto eu localizo alguém para te atender.',
+    notify_agent: (name) => `Existe um novo atendimento para *${name}*, por favor, responda aqui mesmo para a pessoa. Para finalizar, digite /qt.`
+
   }
 };

@@ -233,7 +233,7 @@ export class GBCoreService implements IGBCoreService {
   /**
    * Loads just one Bot instance.
    */
-  public async loadInstance(botId: string): Promise<IGBInstance> {
+  public async loadInstanceByBotId(botId: string): Promise<IGBInstance> {
     const options = { where: {} };
     options.where = { botId: botId };
 

@@ -6,6 +6,7 @@ import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models';
 import { ConversationReference } from 'botbuilder';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 
+
 /**
  * Security service layer.
  */
@@ -37,17 +38,14 @@ export class SecService extends GBService {
   public async ensureUser(
     instanceId: number,
     userSystemId: string,
-    currentBotId: string,
     userName: string,
     address: string,
     channelName: string,
-    displayName: string,
-    phone: string
+    displayName: string
   ): Promise<GuaribasUser> {
     let user = await GuaribasUser.findOne({
 
       where: {
-        instanceId: instanceId,
         userSystemId: userSystemId
       }
     });
@@ -58,12 +56,9 @@ export class SecService extends GBService {
 
     user.instanceId = instanceId;
     user.userSystemId = userSystemId;
-    user.currentBotId = currentBotId;
     user.userName = userName;
     user.displayName = displayName;
-    user.internalAddress = address;
     user.email = userName;
-    user.phone = phone;
     user.defaultChannel = channelName;
     return await user.save();
   }
@@ -89,29 +84,126 @@ export class SecService extends GBService {
     await user.save();
   }
 
-  public async updateCurrentBotId(
+  public async updateUserInstance(
     userSystemId: string,
-    currentBotId: string
+    instanceId: number
   ): Promise<GuaribasUser> {
+
+    
+
     let user = await GuaribasUser.findOne({
       where: {
         userSystemId: userSystemId
       }
     });
-    user.currentBotId = currentBotId;
+    user.instanceId = instanceId;
+
+    return await user.save();
+  }
+
+  public async updateCurrentAgent(
+    userSystemId: string,
+    instanceId: number,
+    agentSystemId: string
+  ): Promise<GuaribasUser> {
+    const user = await GuaribasUser.findOne({
+      where: {
+        userSystemId: userSystemId
+      }
+    });
+
+    if (agentSystemId === null) {
+
+      const agent = await GuaribasUser.findOne({
+        where: {
+          userSystemId: user.agentSystemId
+        }
+      });
+
+      if (agent !== null && agent !== undefined) {
+        agent.agentMode = "bot";
+        agent.agentSystemId = null;
+        await agent.save();
+      }
+
+      user.agentMode = "bot";
+      user.agentSystemId = null;
+
+    } else {
+      user.agentMode = "human";
+      user.agentSystemId = agentSystemId;
+      const agent = await GuaribasUser.findOne({
+        where: {
+          userSystemId: agentSystemId
+        }
+      });
+
+      agent.instanceId = user.instanceId;
+      agent.agentMode = "self";
+      agent.agentSystemId = null;
+      await agent.save();
+    }
+
     await user.save();
     return user;
   }
 
-  public async getUserFromPhone(
-    phone: string
+  public async isAgentSystemId(systemId: string): Promise<Boolean> {
+    let user = await GuaribasUser.findOne({
+      where: {
+        userSystemId: systemId
+      }
+    });
+
+    if (user === null) {
+      throw `TRANSFER_TO phones must talk first to the bot before becoming an agent.`;
+    }
+
+    return (user.agentMode === "self");
+  }
+
+
+  public async assignHumanAgent(
+    userSystemId: string,
+    instanceId: number
+  ): Promise<string> {
+
+    let agentSystemId;
+    const list = process.env.TRANSFER_TO.split(';');
+    await CollectionUtil.asyncForEach(list, async item => {
+      
+      if (!await this.isAgentSystemId(item) && item !== undefined &&
+        agentSystemId === undefined && item !== userSystemId) { // TODO: Optimize loop.
+        agentSystemId = item;
+      }
+
+    });
+
+    await this.updateCurrentAgent(userSystemId, instanceId, agentSystemId);
+
+    return agentSystemId;
+
+  }
+
+  public async getUserFromSystemId(
+    systemId: string
   ): Promise<GuaribasUser> {
     return await GuaribasUser.findOne({
       where: {
-        phone: phone
+        userSystemId: systemId
       }
     });
   }
 
+  public async getUserFromAgentSystemId(
+    systemId: string
+  ): Promise<GuaribasUser> {
+    return await GuaribasUser.findOne({
+      where: {
+        agentSystemId: systemId,
+        
+      }
+    });
+  }
 
 }

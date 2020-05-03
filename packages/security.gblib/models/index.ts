@@ -68,9 +68,6 @@ export class GuaribasUser extends Model<GuaribasUser> {
 
   @Column public email: string;
 
-  @Column(DataType.STRING(512))
-  public internalAddress: string;
-
   @ForeignKey(() => GuaribasInstance)
   @Column
   public instanceId: number;
@@ -78,11 +75,15 @@ export class GuaribasUser extends Model<GuaribasUser> {
   @BelongsTo(() => GuaribasInstance)
   public instance: GuaribasInstance;
 
+  @Column(DataType.STRING(16))
+  agentSystemId: string
+  
+  @Column(DataType.DATE)
   @Column
-  phone: string
+  agentContacted: Date;
 
-  @Column
-  currentBotId: string
+  @Column(DataType.STRING(16))
+  agentMode: string;
 
   @Column(DataType.TEXT)
   @Column

@@ -51,6 +51,7 @@ const { join } = require('path')
 const shell = require('any-shell-escape')
 const { exec } = require('child_process')
 const fs = require('fs')
+const prism = require('prism-media')
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 
 export interface LanguagePickerSettings {

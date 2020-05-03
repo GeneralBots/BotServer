@@ -42,6 +42,7 @@ import { GBMinInstance, IGBDialog } from 'botlib';
 import { AzureText } from 'pragmatismo-io-framework';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
+import { SecService } from '../../security.gblib/services/SecService';
 
 /**
  * Dialog for feedback collecting.
@@ -67,6 +68,42 @@ export class FeedbackDialog extends IGBDialog {
       ])
     );
 
+    min.dialogs.add(
+      new WaterfallDialog('/t', [
+        async step => {
+
+          const locale = step.context.activity.locale;
+
+          let sec = new SecService();
+          let from = step.context.activity.from.id;
+
+          await step.context.sendActivity(Messages[locale].please_wait_transfering);
+          let agentSystemId = await sec.assignHumanAgent(from, min.instance.instanceId);
+
+          await min.whatsAppDirectLine.sendToDevice(agentSystemId, 
+            Messages[locale].notify_agent(step.context.activity.from.name));
+          
+          return await step.next();
+        }
+      ])
+    );
+
+    min.dialogs.add(
+      new WaterfallDialog('/qt', [
+        async step => {
+
+          const locale = step.context.activity.locale;
+
+          let sec = new SecService();
+          let from = step.context.activity.from.id;
+
+          await sec.updateCurrentAgent(from, min.instance.instanceId, null);
+          await step.context.sendActivity(Messages[locale].notify_end_transfer(min.instance.botId));
+          
+          return await step.next();
+        }
+      ])
+    );
 
 
     min.dialogs.add(
@@ -111,7 +148,7 @@ export class FeedbackDialog extends IGBDialog {
             await step.context.sendActivity(Messages[locale].glad_you_liked);
           } else {
             await step.context.sendActivity(Messages[locale].we_will_improve);
-        }
+          }
 
           return await step.replaceDialog('/ask', { isReturning: true });
         }
