@@ -61,7 +61,7 @@ export class GBImporter {
     if (botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
     }
-    const instance = await this.core.loadInstanceByBotId(botId);
+    const instance = await this.core.loadInstance(botId);
 
     if (instance != null && instance.botId === null) {
       console.log(`Null BotId after load instance with botId: ${botId}.`);

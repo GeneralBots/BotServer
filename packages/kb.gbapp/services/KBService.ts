@@ -560,7 +560,7 @@ export class KBService implements IGBKBService {
     GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
     const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
 
-    const instance = await core.loadInstanceByBotId(packageObject.botId);
+    const instance = await core.loadInstance(packageObject.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(localPath, p, instance);

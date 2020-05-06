@@ -213,7 +213,7 @@ export class GBDeployer implements IGBDeployer {
     } else {
 
       let botId = GBConfigService.get('BOT_ID');
-      let bootInstance = await this.core.loadInstanceByBotId(botId);
+      let bootInstance = await this.core.loadInstance(botId);
 
       instance.searchHost = bootInstance.searchHost;
       instance.searchIndex = bootInstance.searchIndex;
