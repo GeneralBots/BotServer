@@ -1,0 +1,12 @@
+' General Bots Copyright (c) Pragmatismo.io. All rights reserved. Licensed under the AGPL-3.0. 
+
+talk "Quer pagar quanto?"
+hear ammount
+
+if ammount < 5  then
+    talk "O mínimo que vendo este produto é 5."
+else
+	get payment ammount
+end if
+
+talk "Valeu!"

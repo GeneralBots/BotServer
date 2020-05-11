@@ -97,10 +97,19 @@ export class GBVMService extends GBService {
   public convertGBASICToVBS(code: string) {
     // Start and End of VB2TS tags of processing.
 
-    code = `<%\n${code}`;
+    code = `<%\n
+    
+    from = this.getFrom(step)
+    today = this.getToday(step)
+    id = sys().getRandomId()
+    
+    ${code}
+    `;
 
     // Keywords from General Bots BASIC.
 
+    code = code.replace(/(hear email)/g, `email = askEmail()`);
+    
     code = code.replace(/(hear)\s*(\w+)/g, ($0, $1, $2) => {
       return `${$2} = hear()`;
     });
@@ -109,8 +118,8 @@ export class GBVMService extends GBService {
       return `sys().wait(${$2})`;
     });
 
-    code = code.replace(/(generate a password)/g, ($0, $1) => {
-      return 'let password = sys().generatePassword()';
+    code = code.replace(/(get stock for )(.*)/g, ($0, $1, $2) => {
+      return `let stock = sys().getStock(${$2})`;
     });
 
     code = code.replace(/(get)(\s)(.*)/g, ($0, $1, $2) => {
@@ -123,6 +132,10 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(talk)(\s)(.*)/g, ($0, $1, $2, $3) => {
       return `talk (step, ${$3})\n`;
+    });
+
+    code = code.replace(/(save)(\s)(.*)/g, ($0, $1, $2, $3) => {
+      return `sys().save(${$3})\n`;
     });
 
     code = `${code}\n%>`;
@@ -144,7 +157,7 @@ export class GBVMService extends GBService {
     // Convert TS into JS.
     const tsfile: string = `${filename}.ts`;
     let tsCode: string = fs.readFileSync(tsfile, 'utf8');
-    tsCode = tsCode.replace(/export.*\n/g, `export function ${mainName}(step) { let resolve = undefined;`);
+    tsCode = tsCode.replace(/export.*\n/g, `export function ${mainName}(step:any) { let resolve = undefined;`);
     fs.writeFileSync(tsfile, tsCode);
 
     const tsc = new TSCompiler();
@@ -222,11 +235,16 @@ export class GBVMService extends GBService {
       parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true })
       fs.writeFileSync(jsfile, parsedCode);
 
-      const sandbox: DialogClass = new DialogClass(min, deployer);
-      const context = vm.createContext(sandbox);
-      vm.runInContext(parsedCode, context);
-      min.sandBoxMap[mainName] = sandbox;
-      GBLog.info(`[GBVMService] Finished loading of ${filename}`);
+      try {
+        const sandbox: DialogClass = new DialogClass(min, deployer);
+        const context = vm.createContext(sandbox);
+        vm.runInContext(parsedCode, context);
+        min.sandBoxMap[mainName] = sandbox;
+        GBLog.info(`[GBVMService] Finished loading of ${filename}`);
+      } catch (error) {
+        GBLog.error(`[GBVMService] ERROR loading ${error}`);
+        
+      }
 
     }
   }
@@ -243,6 +261,9 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/g, ($0, $1) => {
       return $1 === undefined ? 'this.sendEmail' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\baskEmail\b/g, ($0, $1) => {
+      return $1 === undefined ? 'this.askEmail' : $1;
     });
 
     // await insertion.

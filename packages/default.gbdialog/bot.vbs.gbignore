@@ -73,5 +73,7 @@ else
 		talk "Total Value: **" + totalValue + "**"
 		talk "Final Value: **" + finalValue + "**"
 		
+
+		
 	end if
 end if

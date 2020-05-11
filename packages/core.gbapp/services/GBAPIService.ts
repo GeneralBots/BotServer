@@ -32,15 +32,18 @@
 
 'use strict';
 
-import { TurnContext } from 'botbuilder';
-import { WaterfallStepContext } from 'botbuilder-dialogs';
+import { TurnContext, BotAdapter } from 'botbuilder';
+import { WaterfallStepContext, WaterfallDialog } from 'botbuilder-dialogs';
 import { GBLog, GBMinInstance } from 'botlib';
-import * as crypto from 'crypto';
 import * as request from 'request-promise-native';
 import urlJoin = require('url-join');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GBDeployer } from './GBDeployer';
+const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
+import { Messages } from "../strings";
+import { sys } from 'typescript';
+const request = require('request-promise-native');
 
 /**
  * @fileoverview General Bots server core.
@@ -58,10 +61,86 @@ class SysClass {
     this.deployer = deployer;
   }
 
+  public async getFileContents(url) {
+    const options = {
+      url: url,
+      method: 'GET',
+      encoding: 'binary'
+    };
+
+    try {
+      const res = await request(options);
+      return Promise.resolve(Buffer.from(res, 'binary').toString);
+    } catch (error) {
+      return Promise.reject(new Error(error));
+    }
+  }
+
+  public async getRandomId() {
+    return GBAdminService.getRndReadableIdentifier().substr(5);
+  }
+
+  public async getStock(symbol) {
+    var options = {
+      uri: `http://live-nse.herokuapp.com/?symbol=${symbol}`
+    };
+
+    let data = await request.get(options);
+    return data;
+  }
+
   public async wait(seconds: number) {
     // tslint:disable-next-line no-string-based-set-timeout
     const timeout = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     await timeout(seconds * 1000);
+  }
+
+  public async save(file: string, ...args): Promise<any> {
+
+    let token =
+      await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+
+    let siteId = process.env.SAAS_SHAREPOINT_SITE_ID;
+    let libraryId = process.env.SAAS_SHAREPOINT_LIBRARY_ID;
+
+    let client = MicrosoftGraph.Client.init({
+      authProvider: done => {
+        done(null, token);
+      }
+    });
+    const botId = this.min.instance.botId;
+    const path = `/${botId}/${botId}.gbdata`;
+
+    let res = await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+      .get();
+
+    let document = res.value.filter(m => {
+      return m.name === file
+    });
+
+    await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z1')/insert`)
+      .post({});
+
+    if (document === undefined) {
+      throw `File '${file}' specified on save GBasic command SAVE not found. Check the .gbdata or the .gbdialog associated.`;
+    }
+    if (args.length > 27) {
+      throw `File '${file}' has a SAVE call with more than 27 arguments. Check the .gbdialog associated.`;
+    }
+
+    let body =
+      { "values": [[]] };
+
+    for (let index = 0; index < 26; index++) {
+      body.values[0][index] = args[index];
+    }
+
+    let res2 = await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:Z2')`)
+      .patch(body);
+
   }
 
   public generatePassword() {
@@ -108,7 +187,7 @@ class SysClass {
       uri: urlJoin(url, qs)
     };
 
-    return request.get(options);
+    return await request.get(options);
   }
 
 }
@@ -128,8 +207,70 @@ export class DialogClass {
     this.internalSys = new SysClass(min, deployer);
   }
 
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
+    min.dialogs.add(new WaterfallDialog('/gbasic-email', [
+
+      async step => {
+        const locale = step.context.activity.locale;
+        if ((step.options as any).ask) {
+          await step.context.sendActivity(Messages[locale].whats_email);
+        }
+        return await step.prompt("textPrompt", {});
+      },
+      async step => {
+        const locale = step.context.activity.locale;
+
+        const extractEntity = (text) => {
+          return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi);
+        }
+
+        const value = extractEntity(step.result);
+
+        if (value === null) {
+          await step.context.sendActivity(Messages[locale].validation_enter_valid_email);
+          return await step.replaceDialog('/gbasic-email', { ask: true });
+        }
+        else {
+          return await step.endDialog(value[0]);
+        }
+      }]));
+  }
+
   public sys(): SysClass {
     return this.internalSys;
+  }
+
+
+  public async getToday(step) {
+    var d = new Date(),
+      month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+    if (month.length < 2)
+      month = '0' + month;
+    if (day.length < 2)
+      day = '0' + day;
+
+    const locale = step.context.activity.locale;
+    switch (locale) {
+      case 'pt-BR':
+        return [day, month, year].join('/');
+
+      case 'en-US':
+        return [month, day, year].join('/');
+
+      default:
+        return [year, month, day].join('/');
+    }
+  }
+
+  public async getFrom(step) {
+    return step.context.activity.from.id;
+  }
+
+  public async askEmail(step) {
+    return await step.beginDialog('/gbasic-email');
   }
 
   public async hear(step, promise, previousResolve) {
@@ -139,14 +280,14 @@ export class DialogClass {
     const idPromise = random(0, 120000000);
     this.min.cbMap[idPromise] = {};
     this.min.cbMap[idPromise].promise = promise;
-    
+
     const opts = { id: idPromise, previousResolve: previousResolve };
-    if (previousResolve !== undefined) { 
-      previousResolve(opts); 
+    if (previousResolve !== undefined) {
+      previousResolve(opts);
     }
-    else{
+    else {
       await step.beginDialog('/hear', opts);
-    }        
+    }
   }
 
   public async talk(step, text: string) {

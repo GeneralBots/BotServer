@@ -8,7 +8,9 @@ export const Messages = {
     hi: (msg) => `Hello, ${msg}.`,
     very_sorry_about_error: `I'm sorry to inform that there was an error which was recorded to be solved.`,
     global_quit: /^(quit|Quit)/i,
-    canceled: 'Canceled. If I can be useful, let me know how'
+    canceled: 'Canceled. If I can be useful, let me know how',
+    whats_email: "What's your E-mail address?",
+    validation_enter_valid_email: "Please enter a valid e-mail."   
   },
   'pt-BR': {
     show_video: 'Vou te mostrar um vídeo. Por favor, aguarde...',
@@ -18,6 +20,8 @@ export const Messages = {
     hi: (msg) => `Oi, ${msg}.`,
     very_sorry_about_error: `Lamento, ocorreu um erro que já foi registrado para ser tratado.`,
     global_quit: /^(sair|Sair)/i,
-    canceled: 'Cancelado, avise como posso ser útil novamente.'
+    canceled: 'Cancelado, avise como posso ser útil novamente.',
+    whats_email: "Qual seu e-mail?",
+    validation_enter_valid_email: "Por favor digite um email válido."
   }
 };

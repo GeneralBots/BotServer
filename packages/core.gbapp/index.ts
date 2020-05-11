@@ -42,6 +42,7 @@ import { SwitchBotDialog } from './dialogs/SwitchBot';
 import { WelcomeDialog } from './dialogs/WelcomeDialog';
 import { WhoAmIDialog } from './dialogs/WhoAmIDialog';
 import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage } from './models/GBModel';
+import { DialogClass } from './services/GBAPIService';
 
 /**
  * Package for core.gbapp.
@@ -70,5 +71,6 @@ export class GBCorePackage implements IGBPackage {
     WelcomeDialog.setup(min.bot, min);
     WhoAmIDialog.setup(min.bot, min);
     SwitchBotDialog.setup(min.bot, min);
+    DialogClass.setup(min.bot, min);
   }
 }
