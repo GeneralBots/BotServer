@@ -147,7 +147,7 @@ export class GBMinService {
           activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
 
           let sec = new SecService();
-          const instance = await this.core.loadInstance(activeMin.botId);
+          const instance = await this.core.loadInstanceByBotId(activeMin.botId);
           let user = await sec.getUserFromSystemId(id);
 
           if (user === null) {
@@ -158,7 +158,7 @@ export class GBMinService {
             // User wants to switch bots.
             if (toSwitchMin !== undefined) {
               const botId = text;
-              const instance = await this.core.loadInstance(botId);
+              const instance = await this.core.loadInstanceByBotId(botId);
               await sec.updateUserInstance(id, instance.instanceId);
 
               await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
@@ -300,7 +300,7 @@ export class GBMinService {
     if (botId === '[default]' || botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
     }
-    const instance = await this.core.loadInstance(botId);
+    const instance = await this.core.loadInstanceByBotId(botId);
     if (instance !== null) {
       const webchatTokenContainer = await this.getWebchatToken(instance);
       const speechToken = instance.speechKey != null ? await this.getSTSToken(instance) : null;
@@ -411,7 +411,7 @@ export class GBMinService {
     min.adminService = this.adminService;
     min.deployService = this.deployer;
     min.kbService = new KBService(this.core.sequelize);
-    min.instance = await this.core.loadInstance(min.botId);
+    min.instance = await this.core.loadInstanceByBotId(min.botId);
     min.cbMap = {};
     min.scriptMap = {};
     min.sandBoxMap = {};
