@@ -299,7 +299,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     if (!JSON.parse(res.bodyAsText).id) {
       throw res.bodyAsText;
     }
-    GBLog.info(`Bot proxy updated at: ${endpoint}.`);
+    GBLog.info(`Bot updated at: ${endpoint}.`);
   }
 
   public async deleteBot(botId: string, group) {
