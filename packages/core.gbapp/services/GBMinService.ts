@@ -185,7 +185,7 @@ export class GBMinService {
     });
 
     await CollectionUtil.asyncForEach(instances, async instance => {
-      try{
+      try {
         await this.mountBot(instance);
       } catch (error) {
         GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}`);
@@ -211,9 +211,9 @@ export class GBMinService {
 
     // Install default BASIC module.
 
-    
+
     // this.deployer.deployPackage(min, 'packages/default.gbdialog');
-    
+
 
     // Call the loadBot context.activity for all packages.
     await this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min);
@@ -241,7 +241,24 @@ export class GBMinService {
     // is invoked via the AuthenticationContext and retrieves an
     // access token that can be used to access the user owned resource.
     this.handleOAuthTokenRequests(GBServer.globals.server, min, instance);
+
+    this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
   }
+
+  private createCheckHealthAddress(server: any, min: GBMinInstance, instance: IGBInstance) {
+    server.get(`/${min.instance.botId}/check`, async (req, res) => {
+      try {
+        if (min.whatsAppDirectLine != undefined && instance.whatsappServiceKey !== null) {
+          min.whatsAppDirectLine.check(min);
+        }
+        res.status(200).send(`General Bot ${min.botId} is healthly.`);
+      } catch (error) {
+        GBLog.error(error);
+        res.status(500).send(error.toString());
+      }
+    });
+  }
+
 
   private handleOAuthTokenRequests(server: any, min: GBMinInstance, instance: IGBInstance) {
     server.get(`/${min.instance.botId}/token`, async (req, res) => {

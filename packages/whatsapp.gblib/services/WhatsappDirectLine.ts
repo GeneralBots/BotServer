@@ -130,6 +130,22 @@ export class WhatsappDirectLine extends GBService {
     this.conversationIds[number] = undefined;
   }
 
+  public async check() {
+
+    GBLog.info(`GBWhatsapp: Cheking server...`);
+
+    const options = {
+      url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}` ,
+      method: 'GET',
+      
+    };
+
+    const res = await request(options);
+
+    return res.body.accountStatus === "authenticated";
+
+  }
+
   public async received(req, res) {
 
     if (req.body.messages === undefined) {
@@ -183,11 +199,11 @@ export class WhatsappDirectLine extends GBService {
       if (text.startsWith(cmd)) {
         let filename = text.substr(cmd.length);
         let message = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
-        
+
         if (message === null) {
           await this.sendToDevice(user.userSystemId, `File ${filename} not found in any .gbkb published. Check the name or publish again the associated .gbkb.`);
         } else {
-          await this.min.conversationalService.sendMarkdownToMobile(this.min,null, user.userSystemId, message);
+          await this.min.conversationalService.sendMarkdownToMobile(this.min, null, user.userSystemId, message);
         }
       } else if (text === '/qt') {
         // TODO: Transfers only in pt-br for now.

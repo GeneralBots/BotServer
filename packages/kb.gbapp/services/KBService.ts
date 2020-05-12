@@ -273,6 +273,8 @@ export class KBService implements IGBKBService {
     let lastAnswer: GuaribasAnswer;
     let rows = data._worksheets[1]._rows;
 
+    GBLog.info(`Now importing ${rows.length} rows from tabular file ${filePath}...`);
+
     return asyncPromise.eachSeries(rows, async line => {
 
       // Skips the first line.
@@ -554,16 +556,17 @@ export class KBService implements IGBKBService {
    *
    * @param localPath Path to the .gbkb folder.
    */
-  public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string) {
+  public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
     const packageType = Path.extname(localPath);
     const packageName = Path.basename(localPath);
     GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
     const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
 
-    const instance = await core.loadInstanceByBotId(packageObject.botId);
+    const instance = await core.loadInstanceByBotId(min.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(localPath, p, instance);
+    deployer.mountGBKBAssets(packageName, localPath);
 
     deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
     GBLog.info(`[GBDeployer] Finished import of ${localPath}`);

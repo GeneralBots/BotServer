@@ -48,7 +48,7 @@ const rimraf = require('rimraf');
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage, IGBDeployer } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app';
-import { GuaribasPackage} from '../models/GBModel';
+import { GuaribasPackage } from '../models/GBModel';
 import { GBAdminService } from './../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService';
 import { KBService } from './../../kb.gbapp/services/KBService';
@@ -138,28 +138,19 @@ export class GBDeployer implements IGBDeployer {
 
         const appPackagesProcessed = await this.deployAppPackages(gbappPackages, core, appPackages);
 
-        WaitUntil()
-          .interval(1000)
-          .times(5)
-          .condition(cb => {
-            GBLog.info(`Waiting for app package deployment...`);
-            cb(appPackagesProcessed === gbappPackages.length);
-          })
-          .done(async () => {
-            GBLog.info(`App Package deployment done.`);
+        GBLog.info(`App Package deployment done.`);
 
-            ({ generalPackages, totalPackages } = await this.deployDataPackages(
+        ({ generalPackages, totalPackages } = await this.deployDataPackages(
 
-              core,
-              botPackages,
-              _this,
-              generalPackages,
-              server,
-              reject,
-              totalPackages,
-              resolve
-            ));
-          });
+          core,
+          botPackages,
+          _this,
+          generalPackages,
+          server,
+          reject,
+          totalPackages,
+          resolve
+        ));
       }
     );
   }
@@ -316,7 +307,7 @@ export class GBDeployer implements IGBDeployer {
 
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
-        await service.deployKb(this.core, this, localPath);
+        await service.deployKb(this.core, this, localPath, min);
         break;
 
       case '.gbdialog':
@@ -336,7 +327,7 @@ export class GBDeployer implements IGBDeployer {
     const packageName = Path.basename(localPath);
 
     const p = await this.getStoragePackageByName(instance.instanceId, packageName);
-    
+
     switch (packageType) {
       case '.gbot':
         const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
@@ -503,7 +494,7 @@ export class GBDeployer implements IGBDeployer {
     return { generalPackages, totalPackages };
   }
 
-  private mountGBKBAssets(packageName: any, filename: string) {
+  public mountGBKBAssets(packageName: any, filename: string) {
     GBServer.globals.server.use(`/kb/${packageName}/subjects`, express.static(urlJoin(filename, 'subjects')));
     GBServer.globals.server.use(`/kb/${packageName}/assets`, express.static(urlJoin(filename, 'assets')));
     GBServer.globals.server.use(`/kb/${packageName}/images`, express.static(urlJoin(filename, 'images')));
