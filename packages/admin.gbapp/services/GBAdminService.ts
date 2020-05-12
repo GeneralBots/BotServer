@@ -65,17 +65,6 @@ export class GBAdminService implements IGBAdminService {
     this.core = core;
   }
 
-  public async publish(min: GBMinInstance, packageName: string, republish: boolean) {
-    if (republish) {
-      GBLog.info('The package is being *unloaded*...');
-      let packageNameOnly = Path.basename(packageName);
-      await GBAdminService.undeployPackageCommand(`undeployPackage ${packageNameOnly}`, min);
-    }
-    GBLog.info('Now, *deploying* package...');
-    await GBAdminService.deployPackageCommand(min, `deployPackage ${packageName}`, min.deployService);
-    GBLog.info('Finished importing of that .gbkb package.');
-  }
-
   public static generateUuid(): string {
     return msRestAzure.generateUuid();
   }
@@ -168,6 +157,12 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public async acquireElevatedToken(instanceId: number): Promise<string> {
+
+    // TODO: Use boot bot as base for authentication.
+
+    let botId = GBConfigService.get('BOT_ID');
+    instanceId = (await this.core.loadInstanceByBotId(botId)).instanceId;
+
     return new Promise<string>(async (resolve, reject) => {
       const instance = await this.core.loadInstanceById(instanceId);
 

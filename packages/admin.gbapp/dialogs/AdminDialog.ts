@@ -102,17 +102,11 @@ export class AdminDialog extends IGBDialog {
 
             if (text === 'quit') {
               return await step.replaceDialog('/');
-            } else if (cmdName === 'deployPackage') {
+            } else if (cmdName === 'deployPackage' || cmdName === 'dp') {
               await GBAdminService.deployPackageCommand(min, text, deployer);
 
               return await step.replaceDialog('/admin', { firstRun: false });
-            } else if (cmdName === 'dp') {
-              let BOT_NAME = text;
-              let address = `https://pragmatismo.sharepoint.com/sites/bots /Shared%20Documents/Rascunho/${BOT_NAME}/${BOT_NAME}.gbai/${BOT_NAME}.gbkb`;
-              await GBAdminService.deployPackageCommand(min, address, deployer);
-
-              return await step.replaceDialog('/admin', { firstRun: false });
-            } else if (cmdName === 'redeployPackage') {
+            } else if (cmdName === 'redeployPackage' || cmdName === 'rp') {
               await step.context.sendActivity('The package is being *unloaded*...');
               await GBAdminService.undeployPackageCommand(text, min);
               await step.context.sendActivity('Now, *deploying* package...');
@@ -121,12 +115,12 @@ export class AdminDialog extends IGBDialog {
               await GBAdminService.rebuildIndexPackageCommand(min, deployer);
               await step.context.sendActivity('Finished importing of that .gbkb package. Thanks.');
               return await step.replaceDialog('/admin', { firstRun: false });
-            } else if (cmdName === 'undeployPackage') {
+            } else if (cmdName === 'undeployPackage' || cmdName === 'up') {
               await step.context.sendActivity('The package is being *undeployed*...');
               await GBAdminService.undeployPackageCommand(text, min);
               await step.context.sendActivity('Package *undeployed*.');
               return await step.replaceDialog('/admin', { firstRun: false });
-            } else if (cmdName === 'rebuildIndex') {
+            } else if (cmdName === 'rebuildIndex' || cmdName === 'ri') {
               await GBAdminService.rebuildIndexPackageCommand(min, deployer);
 
               return await step.replaceDialog('/admin', { firstRun: false });
@@ -154,7 +148,37 @@ export class AdminDialog extends IGBDialog {
 
       ])
     );
+
+    min.dialogs.add(
+      new WaterfallDialog('/publish', [
+        async step => {
+          const locale = step.context.activity.locale;
+          await step.context.sendActivity(Messages[locale].working('Publishing from WhatsApp'));
+          let unknownCommand = false;
+
+          try {
+
+            const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${min.instance.botId}.gbai/${min.instance.botId}.gbkb`;
+
+            await step.context.sendActivity('Publishing your .gbkb and .gbdialog packages...');
+            if (await (deployer as any).getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`) !== null) { // TODO: Move to interface.
+              const cmd2 = `undeployPackage ${min.instance.botId}.gbkb`;
+              await GBAdminService.undeployPackageCommand(cmd2, min);
+            }
+            await GBAdminService.deployPackageCommand(min, cmd1, deployer);
+            await step.context.sendActivity('Package deployed. Just need to rebuild the index... Doing it right now.');
+            await GBAdminService.rebuildIndexPackageCommand(min, deployer);
+            await step.context.sendActivity('Finished importing of all your packages. Thanks.');
+            return await step.replaceDialog('/ask', { firstRun: false });
+
+          } catch (error) {
+            await step.context.sendActivity(error.message);
+          }
+          await step.replaceDialog('/ask', { isReturning: true });
+
+        }]));
   }
+
 
   private static setupSecurityDialogs(min: GBMinInstance) {
     min.dialogs.add(
@@ -200,7 +224,7 @@ export class AdminDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const buf = Buffer.alloc(16);
           const state = `${min.instance.instanceId}${crypto.randomFillSync(buf).toString('hex')}`;
-          
+
           min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
 
           const url = `https://login.microsoftonline.com/${
