@@ -132,7 +132,7 @@ export class WhatsappDirectLine extends GBService {
 
   public async check() {
 
-    GBLog.info(`GBWhatsapp: Cheking server...`);
+    GBLog.info(`GBWhatsapp: Checking server...`);
 
     const options = {
       url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}` ,
@@ -141,8 +141,8 @@ export class WhatsappDirectLine extends GBService {
     };
 
     const res = await request(options);
-
-    return res.body.accountStatus === "authenticated";
+    const json = JSON.parse(res);
+    return json.accountStatus === "authenticated";
 
   }
 

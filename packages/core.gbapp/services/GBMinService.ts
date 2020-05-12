@@ -249,7 +249,13 @@ export class GBMinService {
     server.get(`/${min.instance.botId}/check`, async (req, res) => {
       try {
         if (min.whatsAppDirectLine != undefined && instance.whatsappServiceKey !== null) {
-          min.whatsAppDirectLine.check(min);
+          if (!await min.whatsAppDirectLine.check(min)) {
+            const error = `WhatsApp API lost connection.`;
+            GBLog.error(error);
+            res.status(500).send(error);
+            
+            return;
+          }
         }
         res.status(200).send(`General Bot ${min.botId} is healthly.`);
       } catch (error) {
