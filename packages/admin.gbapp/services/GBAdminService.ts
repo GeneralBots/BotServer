@@ -216,6 +216,10 @@ export class GBAdminService implements IGBAdminService {
     return path.indexOf('sharepoint.com') > 0;
   }
 
+  public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void>
+  {
+
+  }
   public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: IGBDeployer) {
     const packageName = text.split(' ')[1];
 
