@@ -545,7 +545,7 @@ export class GBDeployer implements IGBDeployer {
 
   public async callGBAppCompiler(gbappPath: string, core: IGBCoreService,
     appPackages: any[] = undefined, appPackagesProcessed: number = 0) {
-    GBLog.info(`Deploying General Bots Application (.gbapp) or Library (.gblib): ${Path.basepath(gbappPath)}...`);
+    GBLog.info(`Deploying General Bots Application (.gbapp) or Library (.gblib): ${Path.basename(gbappPath)}...`);
     let folder = Path.join(gbappPath, 'node_modules');
     if (process.env.GBAPP_DISABLE_COMPILE !== "true") {
       if (!Fs.existsSync(folder)) {

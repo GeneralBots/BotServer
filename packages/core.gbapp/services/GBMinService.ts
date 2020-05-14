@@ -210,6 +210,9 @@ export class GBMinService {
     const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.sysPackages);
     GBServer.globals.minInstances.push(min);
 
+
+    this.deployer.deployPackage(min, 'packages/default.gbdialog');
+
     // Install per bot deployed packages.
 
     let packagePath = `work/${min.botId}.gbdialog`;
