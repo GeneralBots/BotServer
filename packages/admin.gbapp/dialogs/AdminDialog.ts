@@ -45,6 +45,8 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { Messages } from '../strings';
 import { GBAdminService } from '../services/GBAdminService';
+import { CollectionUtil } from 'pragmatismo-io-framework';
+
 
 /**
  * Dialogs for administration tasks.
@@ -153,22 +155,44 @@ export class AdminDialog extends IGBDialog {
       new WaterfallDialog('/publish', [
         async step => {
           const locale = step.context.activity.locale;
-          await step.context.sendActivity(Messages[locale].working('Publishing from WhatsApp'));
+          await step.context.sendActivity(Messages[locale].working('Publishing'));
           let unknownCommand = false;
+          step.activeDialog.state.options.args = (step.options as any).args;
+          let args = step.activeDialog.state.options.args.split(' ');
+          let filename = args[0];
+          const packages = [];
+          if (filename === null) {
+            await step.context.sendActivity(`Starting publishing for all bot packages...`);
+            packages.push(`${min.instance.botId}.gbkb`);
+            packages.push(`${min.instance.botId}.gbdialog`);
+            packages.push(`${min.instance.botId}.gbot`);
+            packages.push(`${min.instance.botId}.gbtheme`);
+            packages.push(`${min.instance.botId}.gbapp`);
+            packages.push(`${min.instance.botId}.gblib`);
+          } else {
+            await step.context.sendActivity(`Starting publishing for ${filename}...`);
+            packages.push(filename);
+          }
 
           try {
 
-            const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${min.instance.botId}.gbai/${min.instance.botId}.gbkb`;
+            await CollectionUtil.asyncForEach(packages, async packageName => {
 
-            await step.context.sendActivity('Publishing your .gbkb and .gbdialog packages...');
-            if (await (deployer as any).getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`) !== null) { // TODO: Move to interface.
-              const cmd2 = `undeployPackage ${min.instance.botId}.gbkb`;
-              await GBAdminService.undeployPackageCommand(cmd2, min);
-            }
-            await GBAdminService.deployPackageCommand(min, cmd1, deployer);
-            await step.context.sendActivity('Package deployed. Just need to rebuild the index... Doing it right now.');
-            await GBAdminService.rebuildIndexPackageCommand(min, deployer);
-            await step.context.sendActivity('Finished importing of all your packages. Thanks.');
+              const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${min.instance.botId}.gbai/${packageName}`;
+
+              if (await (deployer as any).getStoragePackageByName(min.instance.instanceId,
+                packageName) !== null) { // TODO: Move to interface.
+                const cmd2 = `undeployPackage ${packageName}`;
+                await GBAdminService.undeployPackageCommand(cmd2, min);
+              }
+              await GBAdminService.deployPackageCommand(min, cmd1, deployer);
+              if (packageName.endsWith('.gbkb')) {
+                await step.context.sendActivity('Rebuilding my own index, wait a minute, please...');
+                await GBAdminService.rebuildIndexPackageCommand(min, deployer);
+              }
+              await step.context.sendActivity(`Finished publishing ${packageName}.`);
+            });
+
             return await step.replaceDialog('/ask', { firstRun: false });
 
           } catch (error) {

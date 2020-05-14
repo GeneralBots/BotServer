@@ -67,6 +67,7 @@ import { GBDeployer } from './GBDeployer';
 import { SecService } from '../../security.gblib/services/SecService';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
+import fs = require('fs');
 
 /**
  * Minimal service layer for a bot.
@@ -209,11 +210,24 @@ export class GBMinService {
     const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.sysPackages);
     GBServer.globals.minInstances.push(min);
 
-    // Install default BASIC module.
+    // Install per bot deployed packages.
 
-
-    // this.deployer.deployPackage(min, 'packages/default.gbdialog');
-
+    let packagePath = `work/${min.botId}.gbdialog`;
+    if (fs.existsSync(packagePath)) {
+      await this.deployer.deployPackage(min, packagePath);
+    }
+    packagePath = `work/${min.botId}.gbapp`;
+    if (fs.existsSync(packagePath)) {
+      await this.deployer.deployPackage(min, packagePath);
+    }
+    packagePath = `work/${min.botId}.gbtheme`;
+    if (fs.existsSync(packagePath)) {
+      await this.deployer.deployPackage(min, packagePath);
+    }
+    packagePath = `work/${min.botId}.gblib`;
+    if (fs.existsSync(packagePath)) {
+      await this.deployer.deployPackage(min, packagePath);
+    }
 
     // Call the loadBot context.activity for all packages.
     await this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min);
@@ -253,7 +267,7 @@ export class GBMinService {
             const error = `WhatsApp API lost connection.`;
             GBLog.error(error);
             res.status(500).send(error);
-            
+
             return;
           }
         }

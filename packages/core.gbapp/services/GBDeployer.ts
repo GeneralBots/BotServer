@@ -315,6 +315,21 @@ export class GBDeployer implements IGBDeployer {
         await vm.loadDialogPackage(localPath, min, this.core, this);
         break;
 
+      case '.gbtheme':
+        const packageName = Path.basename(localPath);
+        GBServer.globals.server.use(`/themes/${packageName}`, express.static(packageName));
+        GBLog.info(`Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
+
+        break;
+
+      case '.gbapp':
+        await this.callGBAppCompiler(localPath, this.core);
+        break;
+
+      case '.gblib':
+        await this.callGBAppCompiler(localPath, this.core);
+        break;
+
       default:
         const err = GBError.create(`Unhandled package type: ${packageType}.`);
         Promise.reject(err);
@@ -343,13 +358,19 @@ export class GBDeployer implements IGBDeployer {
         break;
 
       case '.gbtheme':
-        // Just remove the package.
+
         break;
 
       case '.gbdialog':
 
         break;
 
+      case '.gblib':
+
+        break;
+      case '.gbapp':
+
+        break;
       default:
         const err = GBError.create(`Unhandled package type: ${packageType}.`);
         Promise.reject(err);
@@ -457,8 +478,6 @@ export class GBDeployer implements IGBDeployer {
       if (Path.extname(filename) === '.gbapp' || Path.extname(filename) === '.gblib') {
         // Themes for bots.
       } else if (Path.extname(filename) === '.gbtheme') {
-        server.use(`/themes/${filenameOnly}`, express.static(filename));
-        GBLog.info(`Theme (.gbtheme) assets accessible at: /themes/${filenameOnly}.`);
       } else if (Path.extname(filename) === '.gbkb') {
         this.mountGBKBAssets(filenameOnly, filename);
       } else if (Path.extname(filename) === '.gbui') {
@@ -517,39 +536,43 @@ export class GBDeployer implements IGBDeployer {
       // Skips .gbapp inside deploy folder.
       if (this.isSystemPackage(filenameOnly) === false) {
 
-        GBLog.info(`Deploying app: ${e}...`);
-
-        let folder = Path.join(e, 'node_modules');
-        if (process.env.GBAPP_DISABLE_COMPILE !== "true") {
-          if (!Fs.existsSync(folder)) {
-            GBLog.info(`Installing modules for ${e}...`);
-            child_process.execSync('npm install', { cwd: e });
-          }
-        }
-        folder = Path.join(e, 'dist');
-
-
-        try {
-          if (process.env.GBAPP_DISABLE_COMPILE !== "true") {
-            GBLog.info(`Compiling .gbapp: ${e}.`);
-            child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: e });
-          }
-          const m = await import(e);
-          const p = new m.Package();
-          await p.loadPackage(core, core.sequelize);
-          appPackages.push(p);
-          GBLog.info(`App (.gbapp) deployed: ${e}.`);
-          appPackagesProcessed++;
-        } catch (error) {
-          GBLog.error(`Error message: ${error.message}`);
-          GBLog.error(`Error message: ${error.stack}`);
-          GBLog.error(`Error compiling .gbapp package ${e}:\n${error.stderr.toString()}`);
-          GBLog.error(`Error compiling .gbapp package ${e}:\n${error.stdout.toString()}`);
-          appPackagesProcessed++;
-        }
+        appPackagesProcessed = await this.callGBAppCompiler(e, core, appPackages, appPackagesProcessed);
       }
     });
 
+    return appPackagesProcessed;
+  }
+
+  public async callGBAppCompiler(gbappPath: string, core: IGBCoreService,
+    appPackages: any[] = undefined, appPackagesProcessed: number = 0) {
+    GBLog.info(`Deploying General Bots Application (.gbapp) or Library (.gblib): ${Path.basepath(gbappPath)}...`);
+    let folder = Path.join(gbappPath, 'node_modules');
+    if (process.env.GBAPP_DISABLE_COMPILE !== "true") {
+      if (!Fs.existsSync(folder)) {
+        GBLog.info(`Installing modules for ${gbappPath}...`);
+        child_process.execSync('npm install', { cwd: gbappPath });
+      }
+    }
+    folder = Path.join(gbappPath, 'dist');
+    try {
+      if (process.env.GBAPP_DISABLE_COMPILE !== "true") {
+        GBLog.info(`Compiling: ${gbappPath}.`);
+        child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: gbappPath });
+      }
+      const m = await import(gbappPath);
+      const p = new m.Package();
+      await p.loadPackage(core, core.sequelize);
+      if (appPackages !== undefined) {
+        appPackages.push(p);
+      }
+      GBLog.info(`.gbapp or .gblib deployed: ${gbappPath}.`);
+      appPackagesProcessed++;
+    }
+    catch (error) {
+      GBLog.error(`Error message: ${error.stack}`);
+      GBLog.error(`Error compiling package ${gbappPath}:\n${error.stdout.toString()}`);
+      appPackagesProcessed++;
+    }
     return appPackagesProcessed;
   }
 }

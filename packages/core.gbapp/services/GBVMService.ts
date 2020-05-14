@@ -46,6 +46,7 @@ import { DialogClass } from './GBAPIService';
 //tslint:disable-next-line:no-submodule-imports
 const vb2ts = require('vbscript-to-typescript/dist/converter');
 const beautify = require('js-beautify').js;
+const parseOffice = require('bluebird').promisify(require('officeparser').parseOffice);
 
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
@@ -68,21 +69,35 @@ export class GBVMService extends GBService {
 
     return Promise.all(
       files.map(async file => {
-        if (
-          file.name.endsWith('.vbs') ||
-          file.name.endsWith('.vb') ||
-          file.name.endsWith('.basic') ||
-          file.name.endsWith('.bas')
-        ) {
-          const mainName = file.name.replace(/\-|\./g, '');
-          min.scriptMap[file.name] = mainName;
 
-          const filename = urlJoin(folder, file.name);
-          fs.watchFile(filename, async () => {
-            await this.run(filename, min, deployer, mainName);
+        let filename:string = file.name;
+
+        if (
+          filename.endsWith('.vbs') ||
+          filename.endsWith('.vb') ||
+          filename.endsWith('.basic') ||
+          filename.endsWith('.bas') ||
+          filename.endsWith('.docx')
+        ) {
+
+          if (filename.endsWith('.docx')) {
+            const text = await parseOffice(filename);
+
+            filename = filename.substr(0, file.indexOf('docx')) + '.vbs';
+
+            fs.writeFileSync(urlJoin(folder, filename), text);
+
+          }
+
+          const mainName = filename.replace(/\-|\./g, '');
+          min.scriptMap[filename] = mainName;
+
+          const fullFilename = urlJoin(folder, filename);
+          fs.watchFile(fullFilename, async () => {
+            await this.run(fullFilename, min, deployer, mainName);
           });
 
-          await this.run(filename, min, deployer, mainName);
+          await this.run(fullFilename, min, deployer, mainName);
         }
       })
     );
@@ -103,15 +118,19 @@ export class GBVMService extends GBService {
     today = this.getToday(step)
     id = sys().getRandomId()
     
+    
     ${code}
     `;
 
     // Keywords from General Bots BASIC.
 
     code = code.replace(/(hear email)/g, `email = askEmail()`);
-    
+
     code = code.replace(/(hear)\s*(\w+)/g, ($0, $1, $2) => {
       return `${$2} = hear()`;
+    });
+    code = code.replace(/(\w)\s*\=\s*find\s*(.*)/g, ($0, $1, $2, $3) => {
+      return `${$1} = sys().find(${$2})\n`;
     });
 
     code = code.replace(/(wait)\s*(\d+)/g, ($0, $1, $2) => {
@@ -243,7 +262,7 @@ export class GBVMService extends GBService {
         GBLog.info(`[GBVMService] Finished loading of ${filename}`);
       } catch (error) {
         GBLog.error(`[GBVMService] ERROR loading ${error}`);
-        
+
       }
 
     }
@@ -289,8 +308,8 @@ export class GBVMService extends GBService {
 
           delete min.cbMap[cbId];
           const opts = await promise(step, step.result);
-          
-          return await step.replaceDialog ('/hear', opts);
+
+          return await step.replaceDialog('/hear', opts);
         }
       ])
     );
