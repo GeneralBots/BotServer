@@ -163,31 +163,13 @@ class SysClass {
       `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
       .get();
 
+
+    // Performs validation.
+
     let document = res.value.filter(m => {
       return m.name === file
     });
 
-    // POST https://graph.microsoft.com/v1.0/drives/.../workbook/createSession
-    // BODY => {persistChanges:false}
-
-    // POST https://graph.microsoft.com/v1.0/drives/.../workbook/worksheets('Sheet4')/tables(id='4')/columns('employeeName')/filter/apply
-    // HEADER => workbook-session-id: session_Id
-    // BODY => {  criteria: {  filterOn: "Custom",  criterion1: "=John", operator: "Or", criterion2: null }
-
-    // GET https://graph.microsoft.com/v1.0/drives/.../workbook/worksheets('Sheet4')/tables('4')/range/visibleView/rows?$select=values
-    // HEADER => workbook-session-id: session_Id
-
-    let headers = await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z1')`)
-      .get({});
-
-    for (let index = 0; index < 26; index++) {
-        headers[0] = args[index];
-      }
-
-    await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:Z2')/insert`)
-      .post({});
 
     if (document === undefined) {
       throw `File '${file}' specified on save GBasic command FIND not found. Check the .gbdata or the .gbdialog associated.`;
@@ -196,23 +178,42 @@ class SysClass {
       throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
     }
 
-    let body =
-      { "values": [[]] };
+    // Creates workbook session that will be discarded.
 
-    for (let index = 0; index < 26; index++) {
-      body.values[0][index] = args[index];
-    }
+    const columnName = "CPF";
+    const value = "99988877766";
 
+    let body = { "persistChanges": false };
 
-    let index = 4;
-    let result = await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A${index}:Z${index}')`)
+    const session = await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/createSession`)
       .get(body);
-    for (let index = 0; index < 26; index++) {
-        body.values[0][index] = args[index];
+
+    // Applies filtering.
+
+    const bodyFilter = {
+      criteria:
+      {
+        filterOn: "Custom",
+        criterion1: `=${value}`
       }
-  
-  
+    };
+
+    let filtered = await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/tables(id='Table1')/columns('${columnName}')/filter/apply`)
+      .headers("workbook-session-id", session.session_Id)
+      .get(bodyFilter);
+
+
+    // Get the filtered values.
+
+    let results = await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/tables('Table1')/range/visibleView/rows?$select=values`)
+      .headers("workbook-session-id", session.session_Id)
+      .get(bodyFilter);
+
+    return results;
+
   }
 
   public generatePassword() {
