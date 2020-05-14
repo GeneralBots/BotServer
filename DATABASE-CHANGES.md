@@ -18,3 +18,15 @@ ALTER TABLE [dbo].[GuaribasUser] DROP COLUMN [currentBotId]
 GO
 
 ```
+
+
+# 1.7.7
+``` SQL
+ALTER TABLE [dbo].[GuaribasInstance] DROP COLUMN [authenticatorClientId]
+GO
+
+ALTER TABLE [dbo].[GuaribasInstance] DROP COLUMN [authenticatorClientSecret]
+GO
+
+
+```

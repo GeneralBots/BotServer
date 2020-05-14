@@ -262,9 +262,7 @@ export class GBVMService extends GBService {
         GBLog.info(`[GBVMService] Finished loading of ${filename}`);
       } catch (error) {
         GBLog.error(`[GBVMService] ERROR loading ${error}`);
-
       }
-
     }
   }
 

@@ -51,7 +51,6 @@ import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService';
 import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
-import { GBWhatsappPackage } from '../packages/whatsapp.gblib';
 
 /**
  * Global shared server data;

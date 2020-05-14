@@ -19,3 +19,32 @@ else
 end if
 
 talk "Valeu!"
+
+
+
+Falar "Qual seu nome?"
+Ouvir nome
+
+Falar "Informe seu CEP, por favor:"
+Ouvir CEP
+
+Address = CEP
+
+Confira seu endereço:
+
+Address.Street
+Address.Number
+
+
+Falar "Manda sua localização para eu pedir a alguém para sair agora com o seu pedido"
+Hear Location
+
+SAve "Pedidos.xlsx", Nome, From, Location.Street, Location.Number
+
+
+
+Falar "Manda sua localização que eu encontro o posto mais próximo"
+Hear Location
+
+Find "Postos.xlsx", "Endereço=" + Location
+ 

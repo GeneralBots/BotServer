@@ -133,17 +133,13 @@ export class GBAdminService implements IGBAdminService {
   public async updateSecurityInfo(
     instanceId: number,
     authenticatorTenant: string,
-    authenticatorAuthorityHostUrl: string,
-    authenticatorClientId: string,
-    authenticatorClientSecret: string
+    authenticatorAuthorityHostUrl: string
   ): Promise<IGBInstance> {
     const options = { where: {} };
     options.where = { instanceId: instanceId };
     const item = await GuaribasInstance.findOne(options);
     item.authenticatorTenant = authenticatorTenant;
     item.authenticatorAuthorityHostUrl = authenticatorAuthorityHostUrl;
-    item.authenticatorClientId = authenticatorClientId;
-    item.authenticatorClientSecret = authenticatorClientSecret;
 
     return item.save();
   }
@@ -182,8 +178,8 @@ export class GBAdminService implements IGBAdminService {
         const authenticationContext = new AuthenticationContext(authorizationUrl);
         authenticationContext.acquireTokenWithRefreshToken(
           refreshToken,
-          instance.authenticatorClientId,
-          instance.authenticatorClientSecret,
+          instance.marketplaceId,
+          instance.marketplacePassword,
           resource,
           async (err, res) => {
             if (err !== null) {

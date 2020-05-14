@@ -109,12 +109,6 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   public authenticatorAuthorityHostUrl: string;
 
   @Column
-  public authenticatorClientId: string;
-
-  @Column
-  public authenticatorClientSecret: string;
-
-  @Column
   public cloudSubscriptionId: string;
 
   @Column

@@ -222,27 +222,11 @@ export class AdminDialog extends IGBDialog {
         },
         async step => {
           step.activeDialog.state.authenticatorAuthorityHostUrl = step.result;
-          const locale = step.context.activity.locale;
-          const prompt = Messages[locale].enter_authenticator_client_id;
-
-          return await step.prompt('textPrompt', prompt);
-        },
-        async step => {
-          step.activeDialog.state.authenticatorClientId = step.result;
-          const locale = step.context.activity.locale;
-          const prompt = Messages[locale].enter_authenticator_client_secret;
-
-          return await step.prompt('textPrompt', prompt);
-        },
-        async step => {
-          step.activeDialog.state.authenticatorClientSecret = step.result;
 
           await min.adminService.updateSecurityInfo(
             min.instance.instanceId,
             step.activeDialog.state.authenticatorTenant,
-            step.activeDialog.state.authenticatorAuthorityHostUrl,
-            step.activeDialog.state.authenticatorClientId,
-            step.activeDialog.state.authenticatorClientSecret
+            step.activeDialog.state.authenticatorAuthorityHostUrl
           );
 
           const locale = step.context.activity.locale;
@@ -253,7 +237,7 @@ export class AdminDialog extends IGBDialog {
 
           const url = `https://login.microsoftonline.com/${
             min.instance.authenticatorTenant
-            }/oauth2/authorize?client_id=${min.instance.authenticatorClientId}&response_type=code&redirect_uri=${urlJoin(
+            }/oauth2/authorize?client_id=${min.instance.marketplaceId}&response_type=code&redirect_uri=${urlJoin(
               min.instance.botEndpoint,
               min.instance.botId,
               '/token'

@@ -210,7 +210,6 @@ export class GBMinService {
     const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.sysPackages);
     GBServer.globals.minInstances.push(min);
 
-
     this.deployer.deployPackage(min, 'packages/default.gbdialog');
 
     // Install per bot deployed packages.
@@ -299,8 +298,8 @@ export class GBMinService {
         req.query.code,
         urlJoin(instance.botEndpoint, min.instance.botId, '/token'),
         resource,
-        instance.authenticatorClientId,
-        instance.authenticatorClientSecret,
+        instance.marketplaceId,
+        instance.marketplacePassword,
         async (err, token) => {
           if (err) {
             const msg = `Error acquiring token: ${err}`;
@@ -326,7 +325,7 @@ export class GBMinService {
         '/oauth2/authorize'
       );
       authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
-        min.instance.authenticatorClientId
+        min.instance.marketplaceId
         }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
       res.redirect(authorizationUrl);
     });
@@ -357,7 +356,7 @@ export class GBMinService {
           speechToken: speechToken,
           conversationId: webchatTokenContainer.conversationId,
           authenticatorTenant: instance.authenticatorTenant,
-          authenticatorClientId: instance.authenticatorClientId
+          authenticatorClientId: instance.marketplaceId
         })
       );
     } else {

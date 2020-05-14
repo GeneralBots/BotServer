@@ -157,7 +157,8 @@ class SysClass {
       }
     });
     const botId = this.min.instance.botId;
-    const path = `/${botId}/${botId}.gbdata`;
+
+    const path = `/${botId}.gbai/${botId}.gbdata`;
 
     let res = await client.api(
       `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
@@ -187,7 +188,7 @@ class SysClass {
 
     const session = await client.api(
       `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/createSession`)
-      .get(body);
+      .post(body);
 
     // Applies filtering.
 
@@ -199,21 +200,29 @@ class SysClass {
       }
     };
 
-    let filtered = await client.api(
+    await client.api(
       `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/tables(id='Table1')/columns('${columnName}')/filter/apply`)
-      .headers("workbook-session-id", session.session_Id)
-      .get(bodyFilter);
-
+      .headers("workbook-session-id", session.id)
+      .post(bodyFilter);
 
     // Get the filtered values.
 
     let results = await client.api(
       `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/tables('Table1')/range/visibleView/rows?$select=values`)
-      .headers("workbook-session-id", session.session_Id)
-      .get(bodyFilter);
+      .headers("workbook-session-id", session.id)
+      .get();
 
-    return results;
 
+      // Translate an array into a readable BASIC object.
+
+      let output = {};         
+      results.value[1].values[0]
+      const firstRow = results.value[0];
+      for (let index = 0; index < firstRow.values[0].length; index++) {
+        output[firstRow.values[0][index]] = results.value[1].values[0][index];
+      }      
+
+    return output;
   }
 
   public generatePassword() {
