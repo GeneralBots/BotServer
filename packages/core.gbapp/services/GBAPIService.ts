@@ -143,6 +143,78 @@ class SysClass {
 
   }
 
+  public async find(file: string, ...args): Promise<any> {
+
+    let token =
+      await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+
+    let siteId = process.env.SAAS_SHAREPOINT_SITE_ID;
+    let libraryId = process.env.SAAS_SHAREPOINT_LIBRARY_ID;
+
+    let client = MicrosoftGraph.Client.init({
+      authProvider: done => {
+        done(null, token);
+      }
+    });
+    const botId = this.min.instance.botId;
+    const path = `/${botId}/${botId}.gbdata`;
+
+    let res = await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+      .get();
+
+    let document = res.value.filter(m => {
+      return m.name === file
+    });
+
+    // POST https://graph.microsoft.com/v1.0/drives/.../workbook/createSession
+    // BODY => {persistChanges:false}
+
+    // POST https://graph.microsoft.com/v1.0/drives/.../workbook/worksheets('Sheet4')/tables(id='4')/columns('employeeName')/filter/apply
+    // HEADER => workbook-session-id: session_Id
+    // BODY => {  criteria: {  filterOn: "Custom",  criterion1: "=John", operator: "Or", criterion2: null }
+
+    // GET https://graph.microsoft.com/v1.0/drives/.../workbook/worksheets('Sheet4')/tables('4')/range/visibleView/rows?$select=values
+    // HEADER => workbook-session-id: session_Id
+
+    let headers = await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z1')`)
+      .get({});
+
+    for (let index = 0; index < 26; index++) {
+        headers[0] = args[index];
+      }
+
+    await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:Z2')/insert`)
+      .post({});
+
+    if (document === undefined) {
+      throw `File '${file}' specified on save GBasic command FIND not found. Check the .gbdata or the .gbdialog associated.`;
+    }
+    if (args.length > 1) {
+      throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
+    }
+
+    let body =
+      { "values": [[]] };
+
+    for (let index = 0; index < 26; index++) {
+      body.values[0][index] = args[index];
+    }
+
+
+    let index = 4;
+    let result = await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A${index}:Z${index}')`)
+      .get(body);
+    for (let index = 0; index < 26; index++) {
+        body.values[0][index] = args[index];
+      }
+  
+  
+  }
+
   public generatePassword() {
     return GBAdminService.getRndPassword();
   }
@@ -188,6 +260,10 @@ class SysClass {
     };
 
     return await request.get(options);
+  }
+
+  public async numberOnly(text: string) {
+    return text.replace(/\D/g, "");
   }
 
 }
