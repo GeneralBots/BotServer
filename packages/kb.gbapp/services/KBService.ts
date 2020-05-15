@@ -34,7 +34,6 @@
  * @fileoverview Knowledge base services and logic.
  */
 
-var Excel = require('exceljs');
 const Path = require('path');
 const Fs = require('fs');
 const urlJoin = require('url-join');
@@ -43,9 +42,8 @@ const path = require('path');
 const asyncPromise = require('async-promises');
 const walkPromise = require('walk-promise');
 // tslint:disable-next-line:newline-per-chained-call
-const parse = require('bluebird').promisify(require('csv-parse'));
 const { SearchService } = require('azure-search-client');
-
+var Excel = require('exceljs');
 import { IGBKBService, GBDialogStep, GBLog, IGBConversationalService, IGBCoreService, IGBInstance, GBMinInstance } from 'botlib';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';

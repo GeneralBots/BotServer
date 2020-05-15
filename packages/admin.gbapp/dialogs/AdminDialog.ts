@@ -154,21 +154,22 @@ export class AdminDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/publish', [
         async step => {
+          const botId = min.instance.botId;
           const locale = step.context.activity.locale;
           await step.context.sendActivity(Messages[locale].working('Publishing'));
-          let unknownCommand = false;
+          
           step.activeDialog.state.options.args = (step.options as any).args;
           let args = step.activeDialog.state.options.args.split(' ');
           let filename = args[0];
           const packages = [];
           if (filename === null) {
             await step.context.sendActivity(`Starting publishing for all bot packages...`);
-            packages.push(`${min.instance.botId}.gbkb`);
-            packages.push(`${min.instance.botId}.gbdialog`);
-            packages.push(`${min.instance.botId}.gbot`);
-            packages.push(`${min.instance.botId}.gbtheme`);
-            packages.push(`${min.instance.botId}.gbapp`);
-            packages.push(`${min.instance.botId}.gblib`);
+            packages.push(`${botId}.gbkb`);
+            packages.push(`${botId}.gbdialog`);
+            packages.push(`${botId}.gbot`);
+            packages.push(`${botId}.gbtheme`);
+            packages.push(`${botId}.gbapp`);
+            packages.push(`${botId}.gblib`);
           } else {
             await step.context.sendActivity(`Starting publishing for ${filename}...`);
             packages.push(filename);
@@ -178,7 +179,7 @@ export class AdminDialog extends IGBDialog {
 
             await CollectionUtil.asyncForEach(packages, async packageName => {
 
-              const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${min.instance.botId}.gbai/${packageName}`;
+              const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
 
               if (await (deployer as any).getStoragePackageByName(min.instance.instanceId,
                 packageName) !== null) { // TODO: Move to interface.
@@ -193,7 +194,7 @@ export class AdminDialog extends IGBDialog {
               await step.context.sendActivity(`Finished publishing ${packageName}.`);
             });
 
-            return await step.replaceDialog('/ask', { firstRun: false });
+            return await step.replaceDialog('/ask', { isReturning: true });
 
           } catch (error) {
             await step.context.sendActivity(error.message);

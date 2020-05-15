@@ -42,7 +42,7 @@ import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDe
 import { GBDeployer } from './GBDeployer';
 const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
 import { Messages } from "../strings";
-import { sys } from 'typescript';
+import { GBServer } from '../../../src/app';
 const request = require('request-promise-native');
 
 /**
@@ -160,69 +160,64 @@ class SysClass {
 
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
-    let res = await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
-      .get();
+    try {
 
 
-    // Performs validation.
-
-    let document = res.value.filter(m => {
-      return m.name === file
-    });
+      let res = await client.api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+        .get();
 
 
-    if (document === undefined) {
-      throw `File '${file}' specified on save GBasic command FIND not found. Check the .gbdata or the .gbdialog associated.`;
-    }
-    if (args.length > 1) {
-      throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
-    }
+      // Performs validation.
 
-    // Creates workbook session that will be discarded.
+      let document = res.value.filter(m => {
+        return m.name === file
+      });
 
-    const columnName = "CPF";
-    const value = "99988877766";
-
-    let body = { "persistChanges": false };
-
-    const session = await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/createSession`)
-      .post(body);
-
-    // Applies filtering.
-
-    const bodyFilter = {
-      criteria:
-      {
-        filterOn: "Custom",
-        criterion1: `=${value}`
+      if (document === undefined) {
+        throw `File '${file}' specified on save GBasic command FIND not found. Check the .gbdata or the .gbdialog associated.`;
       }
-    };
+      if (args.length > 1) {
+        throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
+      }
 
-    await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/tables(id='Table1')/columns('${columnName}')/filter/apply`)
-      .headers("workbook-session-id", session.id)
-      .post(bodyFilter);
+      // Creates workbook session that will be discarded.
 
-    // Get the filtered values.
+      const filter = args[0].split('=');
+      const columnName = filter[0];
+      const value = filter[1];
+      let results = await client.api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z100')`)
+        .get();
 
-    let results = await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/tables('Table1')/range/visibleView/rows?$select=values`)
-      .headers("workbook-session-id", session.id)
-      .get();
+      let columnIndex = 0;
+      const header = results.text[0];
+      for (; columnIndex < header.length; columnIndex++) {
+        if (header[columnIndex] === columnName) {
+          break;
+        }
+      }
 
-
-      // Translate an array into a readable BASIC object.
-
-      let output = {};         
-      results.value[1].values[0]
-      const firstRow = results.value[0];
-      for (let index = 0; index < firstRow.values[0].length; index++) {
-        output[firstRow.values[0][index]] = results.value[1].values[0][index];
-      }      
-
-    return output;
+      let foundIndex = 0;
+      for (; foundIndex < results.text.length; foundIndex++) {
+        if (results.text[foundIndex][columnIndex] === value) {
+          break;
+        }
+      }
+      if (foundIndex === results.text.length) {
+        return null;
+      }
+      else {
+        let output = {};
+        const row = results.text[foundIndex];
+        for (let colIndex = 0; colIndex < row.length; colIndex++) {
+          output[header[colIndex]] = row[colIndex];
+        }
+        return output;
+      }
+    } catch (error) {
+      GBLog.error(error);
+    }
   }
 
   public generatePassword() {
@@ -349,6 +344,12 @@ export class DialogClass {
       default:
         return [year, month, day].join('/');
     }
+  }
+
+  public async sendFile(step, filename, caption) {
+    let url = urlJoin(GBServer.globals.publicAddress, 'kb', this.min.botId + '.gbkb', 'assets', filename);
+    await this.min.conversationalService.sendFile(this.min, step,
+      null, url, caption);
   }
 
   public async getFrom(step) {

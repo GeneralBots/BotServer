@@ -39,7 +39,6 @@
 const Path = require('path');
 import urlJoin = require('url-join');
 const Fs = require('fs');
-const WaitUntil = require('wait-until');
 const express = require('express');
 const child_process = require('child_process');
 const graph = require('@microsoft/microsoft-graph-client');
@@ -92,67 +91,63 @@ export class GBDeployer implements IGBDeployer {
   public async deployPackages(core: IGBCoreService, server: any, appPackages: IGBPackage[]) {
     const _this = this;
 
-    return new Promise(
-      async (resolve: any, reject: any) => {
-        GBLog.info(`PWD ${process.env.PWD}...`);
-        let totalPackages = 0;
-        let paths = [urlJoin(process.env.PWD, GBDeployer.deployFolder), urlJoin(process.env.PWD, GBDeployer.workFolder)];
-        const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
-        if (additionalPath !== undefined && additionalPath !== '') {
-          paths = paths.concat(additionalPath.toLowerCase().split(';'));
+
+    GBLog.info(`PWD ${process.env.PWD}...`);
+    let totalPackages = 0;
+    let paths = [urlJoin(process.env.PWD, GBDeployer.deployFolder), urlJoin(process.env.PWD, GBDeployer.workFolder)];
+    const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
+    if (additionalPath !== undefined && additionalPath !== '') {
+      paths = paths.concat(additionalPath.toLowerCase().split(';'));
+    }
+    const botPackages: string[] = [];
+    const gbappPackages: string[] = [];
+    let generalPackages: string[] = [];
+
+    async function scanPackageDirectory(path) {
+      const isDirectory = source => Fs.lstatSync(source).isDirectory();
+      const getDirectories = source =>
+        Fs.readdirSync(source)
+          .map(name => Path.join(source, name))
+          .filter(isDirectory);
+
+      const dirs = getDirectories(path);
+      await CollectionUtil.asyncForEach(dirs, async element => {
+        if (element === '.') {
+          GBLog.info(`Ignoring ${element}...`);
+        } else {
+          if (element.endsWith('.gbot')) {
+            botPackages.push(element);
+          } else if (element.endsWith('.gbapp')) {
+            gbappPackages.push(element);
+          } else {
+            generalPackages.push(element);
+          }
         }
-        const botPackages: string[] = [];
-        const gbappPackages: string[] = [];
-        let generalPackages: string[] = [];
+      });
+    }
 
-        async function scanPackageDirectory(path) {
-          const isDirectory = source => Fs.lstatSync(source).isDirectory();
-          const getDirectories = source =>
-            Fs.readdirSync(source)
-              .map(name => Path.join(source, name))
-              .filter(isDirectory);
+    GBLog.info(`Starting looking for packages (.gbot, .gbtheme, .gbkb, .gbapp)...`);
+    await CollectionUtil.asyncForEach(paths, async e => {
+      GBLog.info(`Looking in: ${e}...`);
+      await scanPackageDirectory(e);
+    });
 
-          const dirs = getDirectories(path);
-          await CollectionUtil.asyncForEach(dirs, async element => {
-            if (element === '.') {
-              GBLog.info(`Ignoring ${element}...`);
-            } else {
-              if (element.endsWith('.gbot')) {
-                botPackages.push(element);
-              } else if (element.endsWith('.gbapp')) {
-                gbappPackages.push(element);
-              } else {
-                generalPackages.push(element);
-              }
-            }
-          });
-        }
+    // Deploys all .gbapp files first.
 
-        GBLog.info(`Starting looking for packages (.gbot, .gbtheme, .gbkb, .gbapp)...`);
-        await CollectionUtil.asyncForEach(paths, async e => {
-          GBLog.info(`Looking in: ${e}...`);
-          await scanPackageDirectory(e);
-        });
+    await this.deployAppPackages(gbappPackages, core, appPackages);
 
-        // Deploys all .gbapp files first.
+    GBLog.info(`App Package deployment done.`);
 
-        const appPackagesProcessed = await this.deployAppPackages(gbappPackages, core, appPackages);
+    ({ generalPackages, totalPackages } = await this.deployDataPackages(
 
-        GBLog.info(`App Package deployment done.`);
+      core,
+      botPackages,
+      _this,
+      generalPackages,
+      server,
+      totalPackages
+    ));
 
-        ({ generalPackages, totalPackages } = await this.deployDataPackages(
-
-          core,
-          botPackages,
-          _this,
-          generalPackages,
-          server,
-          reject,
-          totalPackages,
-          resolve
-        ));
-      }
-    );
   }
 
   public async deployBlankBot(botId: string) {
@@ -317,7 +312,7 @@ export class GBDeployer implements IGBDeployer {
 
       case '.gbtheme':
         const packageName = Path.basename(localPath);
-        GBServer.globals.server.use(`/themes/${packageName}`, express.static(packageName));
+        GBServer.globals.server.use(`/themes/${packageName}`, express.static(localPath));
         GBLog.info(`Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
 
         break;
@@ -446,9 +441,8 @@ export class GBDeployer implements IGBDeployer {
     _this: this,
     generalPackages: string[],
     server: any,
-    reject: any,
-    totalPackages: number,
-    resolve: any
+    totalPackages: number
+
   ) {
     try {
       await core.syncDatabaseStructure();
@@ -489,27 +483,13 @@ export class GBDeployer implements IGBDeployer {
       } else {
         // Unknown package format.
         const err = new Error(`Package type not handled: ${filename}.`);
-        reject(err);
+        throw err;
+
       }
       totalPackages++;
     });
 
-    WaitUntil()
-      .interval(100)
-      .times(5)
-      .condition(cb => {
-        GBLog.info(`Waiting for package deployment...`);
-        cb(totalPackages === generalPackages.length);
-      })
-      .done(() => {
-        if (botPackages.length === 0) {
-          GBLog.info('Use ADDITIONAL_DEPLOY_PATH to point to a .gbai package folder (no external packages).');
-        } else {
-          GBLog.info(`Package deployment done.`);
-        }
-        resolve();
-      });
-
+    GBLog.info(`Package deployment done.`);
     return { generalPackages, totalPackages };
   }
 

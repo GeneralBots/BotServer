@@ -79,10 +79,15 @@ export class TSCompiler {
         const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
 
         if (diagnostic.file !== undefined) {
-          const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-          GBLog.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+          if (
+            diagnostic.file.fileName.indexOf('readable-stream') == -1 &&
+            diagnostic.file.fileName.indexOf('request-promise') == -1
+          ) {
+            const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+            GBLog.warn(`BASIC error: ${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+          }
         } else {
-          GBLog.error(`${message}`);
+          GBLog.warn(`BASIC error: ${message}`);
         }
       }
     });

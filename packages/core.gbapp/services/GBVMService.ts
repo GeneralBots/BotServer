@@ -43,10 +43,11 @@ const walkPromise = require('walk-promise');
 const vm = require('vm');
 import urlJoin = require('url-join');
 import { DialogClass } from './GBAPIService';
+import { Messages } from '../strings';
 //tslint:disable-next-line:no-submodule-imports
 const vb2ts = require('vbscript-to-typescript/dist/converter');
 const beautify = require('js-beautify').js;
-const parseOffice = require('bluebird').promisify(require('officeparser').parseOffice);
+var textract = require('textract');
 
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
@@ -70,7 +71,7 @@ export class GBVMService extends GBService {
     return Promise.all(
       files.map(async file => {
 
-        let filename:string = file.name;
+        let filename: string = file.name;
 
         if (
           filename.endsWith('.vbs') ||
@@ -81,26 +82,38 @@ export class GBVMService extends GBService {
         ) {
 
           if (filename.endsWith('.docx')) {
-            const text = await parseOffice(filename);
-
-            filename = filename.substr(0, file.indexOf('docx')) + '.vbs';
-
+            let text = await this.getTextFromWord(folder, filename);
+            filename = filename.substr(0, filename.indexOf('docx')) + 'vbs';
             fs.writeFileSync(urlJoin(folder, filename), text);
-
           }
 
-          const mainName = filename.replace(/\-|\./g, '');
+          const mainName = filename.replace(/\s|\-/g, '').split('.')[0];
           min.scriptMap[filename] = mainName;
 
           const fullFilename = urlJoin(folder, filename);
-          fs.watchFile(fullFilename, async () => {
-            await this.run(fullFilename, min, deployer, mainName);
-          });
+          // TODO: Implement in development mode, how swap for .vbs files
+          // fs.watchFile(fullFilename, async () => {
+          //   await this.run(fullFilename, min, deployer, mainName);
+          // });
 
           await this.run(fullFilename, min, deployer, mainName);
         }
       })
     );
+  }
+
+  private async getTextFromWord(folder: string, filename: string) {
+    return new Promise<string>(async (resolve, reject) => {
+      textract.fromFileWithPath(urlJoin(folder, filename), { preserveLineBreaks: true },
+        (error, text) => {
+          if (error) {
+            reject(error);
+          }
+          else {
+            resolve(text);
+          }
+        });
+    });
   }
 
   /**
@@ -151,6 +164,9 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(talk)(\s)(.*)/g, ($0, $1, $2, $3) => {
       return `talk (step, ${$3})\n`;
+    });
+    code = code.replace(/(send file)(\s*)(.*)/g, ($0, $1, $2, $3) => {
+      return `sendFile (step, ${$3})\n`;
     });
 
     code = code.replace(/(save)(\s)(.*)/g, ($0, $1, $2, $3) => {
@@ -282,6 +298,10 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\baskEmail\b/g, ($0, $1) => {
       return $1 === undefined ? 'this.askEmail' : $1;
     });
+    code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/g, ($0, $1) => {
+      return $1 === undefined ? 'this.sendFile' : $1;
+    });
+
 
     // await insertion.
 
@@ -305,9 +325,17 @@ export class GBVMService extends GBService {
           const promise = min.cbMap[cbId].promise;
 
           delete min.cbMap[cbId];
-          const opts = await promise(step, step.result);
+          try {
+            const opts = await promise(step, step.result);
 
-          return await step.replaceDialog('/hear', opts);
+            return await step.replaceDialog('/hear', opts);
+          } catch (error) {
+            GBLog.error(`Error running BASIC code: ${error}`);
+            const locale = step.context.activity.locale;
+            step.context.sendActivity(Messages[locale].very_sorry_about_error);
+
+            return await step.replaceDialog('/ask', { isReturning: true });
+          }
         }
       ])
     );

@@ -91,10 +91,14 @@ export class GBConversationalService {
   public async sendFile(min: GBMinInstance, step: GBDialogStep, mobile: string, url: string, caption: string): Promise<any> {
     if (step !== null) {
       mobile = step.context.activity.from.id;
+      if (step.context.activity.channelId === 'whatsapp') {
+        const filename = url.substring(url.lastIndexOf('/') + 1);
+        await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
+      }
+      else {
+        await step.context.sendActivity(url);
+      }
     }
-    const filename = url.substring(url.lastIndexOf('/') + 1);
-    await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
-
   }
 
   public async sendAudio(min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
