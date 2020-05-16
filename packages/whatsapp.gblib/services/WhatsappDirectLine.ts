@@ -135,9 +135,9 @@ export class WhatsappDirectLine extends GBService {
     GBLog.info(`GBWhatsapp: Checking server...`);
 
     const options = {
-      url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}` ,
+      url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`,
       method: 'GET',
-      
+
     };
 
     const res = await request(options);
@@ -195,26 +195,32 @@ export class WhatsappDirectLine extends GBService {
 
     if (user.agentMode === "self") {
       let manualUser = await sec.getUserFromAgentSystemId(id);
-      const cmd = '/reply ';
-      if (text.startsWith(cmd)) {
-        let filename = text.substr(cmd.length);
-        let message = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
 
-        if (message === null) {
-          await this.sendToDevice(user.userSystemId, `File ${filename} not found in any .gbkb published. Check the name or publish again the associated .gbkb.`);
-        } else {
-          await this.min.conversationalService.sendMarkdownToMobile(this.min, null, user.userSystemId, message);
-        }
-      } else if (text === '/qt') {
-        // TODO: Transfers only in pt-br for now.
-        await this.sendToDevice(manualUser.userSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
-        await this.sendToDevice(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
-
-        await sec.updateCurrentAgent(manualUser.userSystemId, this.min.instance.instanceId, null);
+      if (manualUser === null) {
+        await sec.updateCurrentAgent(id, this.min.instance.instanceId, null);
       }
       else {
-        GBLog.info(`HUMAN AGENT (${id}) TO USER ${manualUser.userSystemId}: ${text}`);
-        this.sendToDevice(manualUser.userSystemId, `${manualUser.userSystemId}: ${text}`);
+        const cmd = '/reply ';
+        if (text.startsWith(cmd)) {
+          let filename = text.substr(cmd.length);
+          let message = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
+
+          if (message === null) {
+            await this.sendToDevice(user.userSystemId, `File ${filename} not found in any .gbkb published. Check the name or publish again the associated .gbkb.`);
+          } else {
+            await this.min.conversationalService.sendMarkdownToMobile(this.min, null, user.userSystemId, message);
+          }
+        } else if (text === '/qt') {
+          // TODO: Transfers only in pt-br for now.
+          await this.sendToDevice(manualUser.userSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
+          await this.sendToDevice(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
+
+          await sec.updateCurrentAgent(manualUser.userSystemId, this.min.instance.instanceId, null);
+        }
+        else {
+          GBLog.info(`HUMAN AGENT (${id}) TO USER ${manualUser.userSystemId}: ${text}`);
+          this.sendToDevice(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`);
+        }
       }
     }
     else if (user.agentMode === "human") {
@@ -222,7 +228,7 @@ export class WhatsappDirectLine extends GBService {
       if (text === '/t') {
         await this.sendToDevice(user.userSystemId, `Você já está sendo atendido por ${agent.userSystemId}.`);
       }
-      else if (text === '/qt') {
+      else if (text === '/qt' || text === "Sair" || text === "Fechar" ) {
         // TODO: Transfers only in pt-br for now.
         await this.sendToDevice(id, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
         await this.sendToDevice(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
@@ -230,7 +236,7 @@ export class WhatsappDirectLine extends GBService {
         await sec.updateCurrentAgent(id, this.min.instance.instanceId, null);
       }
       else {
-        GBLog.info(`USER (${id}) TO AGENT ${agent.userSystemId}: ${text}`);
+        GBLog.info(`USER (${id}) TO AGENT ${user.userSystemId}: ${text}`);
         this.sendToDevice(user.agentSystemId, `${id}: ${text}`);
       }
 

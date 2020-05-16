@@ -183,17 +183,11 @@ export class AskDialog extends IGBDialog {
 
   private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, answer: GuaribasAnswer) {
 
-    const dialogSufix = 'dialog:';
     const urlSufix = 'url:';
-    const scriptSufix = 'script:';
 
-    if (answer.content.startsWith(dialogSufix)) {
-      let dialogName = answer.content.substring(dialogSufix.length);
-      return await step.replaceDialog(`/${dialogName}`, { isReturning: true });
-    } else if (answer.content.startsWith(scriptSufix)) {
-      let scriptName = answer.content.substring(scriptSufix.length);
-
-      return await GBMinService.callVM(scriptName, min, step);
+    if (answer.content.endsWith('.docx')) {
+      const mainName = answer.content.replace(/\s|\-/g, '').split('.')[0];
+      return await GBMinService.callVM(mainName, min, step);
     } else {
       await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
 
