@@ -30,3 +30,17 @@ GO
 
 
 ```
+
+# 1.7.8
+``` SQL
+ALTER TABLE dbo.GuaribasUser ADD
+	locale nvarchar(5) NULL
+GO
+
+
+ALTER TABLE dbo.GuaribasInstance ADD
+	translatorKey nvarchar(64) NULL
+	translatorEndpoint nvarchar(64) NULL
+GO
+
+```

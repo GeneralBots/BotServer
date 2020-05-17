@@ -1,0 +1,13 @@
+rem hi
+
+talk "Qual seu nome?"
+hear name
+
+talk "Qual seu CPF?"
+hear CPF
+
+talk "Por que você abrirá este chamado?"
+hear translated motivo
+
+talk "Seu nome: " + name
+talk "Você disse em Português " + motivo.

@@ -44,6 +44,7 @@ import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
 import { Readable } from 'stream'
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
+import { SecService } from '../../security.gblib/services/SecService';
 const urlJoin = require('url-join');
 const PasswordGenerator = require("strict-password-generator").default;
 const Nexmo = require('nexmo');
@@ -53,6 +54,8 @@ const { exec } = require('child_process')
 const fs = require('fs')
 const prism = require('prism-media')
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
+const uuidv4 = require('uuid/v4');
+const request = require('request-promise-native');
 
 export interface LanguagePickerSettings {
   defaultLocale?: string;
@@ -511,6 +514,60 @@ export class GBConversationalService {
     }
 
     return Promise.resolve(false);
+  }
+
+
+  async translate(
+    key: string,
+    endPoint: string,
+    text: string,
+    language: string
+  ): Promise<string> {
+
+    let options = {
+      method: 'POST',
+      baseUrl: endPoint,
+      url: 'translate',
+      qs: {
+        'api-version': '3.0',
+        'to': [language]
+      },
+      headers: {
+        'Ocp-Apim-Subscription-Key': key,
+        'Ocp-Apim-Subscription-Region': 'westeurope',
+        'Content-type': 'application/json',
+        'X-ClientTraceId': uuidv4().toString()
+      },
+      body: [{
+        'text': text
+      }],
+      json: true,
+    }
+
+    try {
+      const results = await request(options);
+      
+      return results[0].translations[0].text;
+    } catch (error) {
+      const msg = `Error calling Translator service layer. Error is: ${error}.`;
+
+      return Promise.reject(new Error(msg));
+    }
+  }
+
+  public async sendText(min, step, text) {
+
+    let sec = new SecService();
+    const member = step.context.activity.from;
+    const user = await sec.ensureUser(min.instance.instanceId, member.id,
+      member.name, "", "web", member.name);
+    text = await min.conversationalService.translate(
+      min.instance.translatorKey,
+      min.instance.translatorEndpoint,
+      text,
+      user.locale
+    );
+
   }
 
   public async checkLanguage(step: GBDialogStep, min, text) {

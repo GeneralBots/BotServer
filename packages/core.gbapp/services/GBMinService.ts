@@ -44,7 +44,7 @@ const removeRoute = require('express-remove-route');
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 const wash = require('washyourmouthoutwithsoap');
 import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
 import { ConfirmPrompt, WaterfallDialog } from 'botbuilder-dialogs';
 import {
   GBDialogStep,
@@ -210,7 +210,6 @@ export class GBMinService {
     const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.sysPackages);
     GBServer.globals.minInstances.push(min);
 
-    await this.deployer.deployPackage(min, 'packages/default.gbdialog');
     await this.deployer.deployPackage(min, 'packages/default.gbtheme');
 
     // Install per bot deployed packages.
@@ -434,7 +433,6 @@ export class GBMinService {
     MicrosoftAppCredentials.trustServiceUrl('https://directline.botframework.com',
       new Date(new Date().setFullYear(new Date().getFullYear() + 10)));
 
-
     // The minimal bot is built here.
 
     const min = new GBMinInstance();
@@ -646,7 +644,7 @@ export class GBMinService {
     // Checks for global exit kewywords cancelling any active dialogs.
 
     const globalQuit = (locale, utterance) => {
-      return utterance.match(Messages[locale].global_quit);
+      return utterance.match(Messages.global_quit);
     }
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
@@ -666,7 +664,7 @@ export class GBMinService {
       let args = parts.join(' ');
       await step.beginDialog(dialogName, { args: args });
 
-    } else if (globalQuit(step.context.activity.locale, context.activity.text)) {
+    } else if (globalQuit(step.context.activity.locale, context.activity.text)) { // TODO: Hard-code additional languages.
       await step.cancelAllDialogs();
       await step.context.sendActivity(Messages[step.context.activity.locale].canceled);
     } else if (context.activity.text === 'admin') {
@@ -680,8 +678,29 @@ export class GBMinService {
       if (step.activeDialog !== undefined) {
         await step.continueDialog();
       } else {
+
+        let query = context.activity.text;
+        
+        const locale = await AzureText.getLocale(min.instance.textAnalyticsKey,
+          min.instance.textAnalyticsEndpoint, query);
+
+        let sec = new SecService();
+        const member = step.context.activity.from;
+
+        const user = await sec.ensureUser(min.instance.instanceId, member.id,
+          member.name, "", "web", member.name);
+        user.locale = locale;
+        await user.save();
+
+        query = await min.conversationalService.translate(
+          min.instance.translatorKey,
+          min.instance.translatorEndpoint,
+          query,
+          'pt');
+        GBLog.info(`Translated text: ${query}.`)
+
         await step.beginDialog('/answer', {
-          query: context.activity.text
+          query: query
         });
       }
     }

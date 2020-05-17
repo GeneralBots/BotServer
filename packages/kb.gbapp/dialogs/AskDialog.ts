@@ -44,6 +44,7 @@ import { Messages } from '../strings';
 import { KBService } from './../services/KBService';
 import { GuaribasAnswer } from '../models';
 import { GBMinService } from '../../../packages/core.gbapp/services/GBMinService';
+import { SecService } from '../../security.gblib/services/SecService';
 
 /**
  * Dialog arguments.
@@ -98,7 +99,9 @@ export class AskDialog extends IGBDialog {
       },
       async step => {
         if (step.result) {
-          return await step.replaceDialog('/answer', { query: step.result });
+
+          let query = step.result;
+          return await step.replaceDialog('/answer', { query: query });
         } else {
           return await step.next();
         }

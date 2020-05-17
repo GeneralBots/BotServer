@@ -96,6 +96,14 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   @Column
   public textAnalyticsEndpoint: string;
 
+  
+  @Column({ type: DataType.STRING(64) })
+  public translatorKey: string;
+
+  @Column
+  @Column({ type: DataType.STRING(64) })
+  public translatorEndpoint: string;
+
   @Column
   public marketplacePassword: string;
 

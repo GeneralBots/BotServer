@@ -68,6 +68,9 @@ export class GuaribasUser extends Model<GuaribasUser> {
 
   @Column public email: string;
 
+  @Column(DataType.STRING(5))
+  @Column public locale: string;
+
   @ForeignKey(() => GuaribasInstance)
   @Column
   public instanceId: number;
