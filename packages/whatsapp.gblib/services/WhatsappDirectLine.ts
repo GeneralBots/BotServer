@@ -164,6 +164,14 @@ export class WhatsappDirectLine extends GBService {
     }
     GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
 
+    const id = req.body.messages[0].chatId.split('@')[0];
+    const senderName = req.body.messages[0].senderName;
+    let sec = new SecService();
+
+    const user = await sec.ensureUser(this.min.instance.instanceId, id,
+      senderName, "", "whatsapp", senderName);
+
+      const locale = user.locale ? user.locale : 'pt';
     if (message.type === "ptt") {
 
       const options = {
@@ -177,7 +185,7 @@ export class WhatsappDirectLine extends GBService {
       text = await GBConversationalService.getTextFromAudioBuffer(
         this.min.instance.speechKey,
         this.min.instance.cloudLocation,
-        buf, this.locale
+        buf, locale
       );
 
     }
@@ -185,14 +193,6 @@ export class WhatsappDirectLine extends GBService {
     const conversationId = this.conversationIds[from];
 
     let client = await this.directLineClient;
-
-    const id = req.body.messages[0].chatId.split('@')[0];
-    const senderName = req.body.messages[0].senderName;
-    let sec = new SecService();
-
-    const user = await sec.ensureUser(this.min.instance.instanceId, id,
-      senderName, "", "whatsapp", senderName);
-
     if (user.agentMode === "self") {
       let manualUser = await sec.getUserFromAgentSystemId(id);
 
@@ -206,38 +206,39 @@ export class WhatsappDirectLine extends GBService {
           let message = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
 
           if (message === null) {
-            await this.sendToDevice(user.userSystemId, `File ${filename} not found in any .gbkb published. Check the name or publish again the associated .gbkb.`);
+            await this.sendToDeviceEx(user.userSystemId, `File ${filename} not found in any .gbkb published. Check the name or publish again the associated .gbkb.`,
+            locale);
           } else {
             await this.min.conversationalService.sendMarkdownToMobile(this.min, null, user.userSystemId, message);
           }
         } else if (text === '/qt') {
           // TODO: Transfers only in pt-br for now.
-          await this.sendToDevice(manualUser.userSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
-          await this.sendToDevice(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
+          await this.sendToDeviceEx(manualUser.userSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+          await this.sendToDeviceEx(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
 
           await sec.updateCurrentAgent(manualUser.userSystemId, this.min.instance.instanceId, null);
         }
         else {
           GBLog.info(`HUMAN AGENT (${id}) TO USER ${manualUser.userSystemId}: ${text}`);
-          this.sendToDevice(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`);
+          this.sendToDeviceEx(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`, locale);
         }
       }
     }
     else if (user.agentMode === "human") {
       let agent = await sec.getUserFromSystemId(user.agentSystemId);
       if (text === '/t') {
-        await this.sendToDevice(user.userSystemId, `Você já está sendo atendido por ${agent.userSystemId}.`);
+        await this.sendToDeviceEx(user.userSystemId, `Você já está sendo atendido por ${agent.userSystemId}.`, locale);
       }
-      else if (text === '/qt' || text === "Sair" || text === "Fechar" ) {
+      else if (text === '/qt' || text === "Sair" || text === "Fechar") {
         // TODO: Transfers only in pt-br for now.
-        await this.sendToDevice(id, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
-        await this.sendToDevice(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
+        await this.sendToDeviceEx(id, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+        await this.sendToDeviceEx(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
 
         await sec.updateCurrentAgent(id, this.min.instance.instanceId, null);
       }
       else {
         GBLog.info(`USER (${id}) TO AGENT ${user.userSystemId}: ${text}`);
-        this.sendToDevice(user.agentSystemId, `${id}: ${text}`);
+        this.sendToDeviceEx(user.agentSystemId, `${id}: ${text}`, locale);
       }
 
     }
@@ -408,6 +409,16 @@ export class WhatsappDirectLine extends GBService {
     await this.sendFileToDevice(to, url, 'Audio', msg);
   }
 
+  public async sendToDeviceEx(to, msg, locale) {
+    const text = await this.min.conversationalService.translate(
+      this.min.instance.translatorKey,
+      this.min.instance.translatorEndpoint,
+      msg,
+      locale
+    );
+    await this.sendToDevice(to, text);
+
+  }
   public async sendToDevice(to, msg) {
 
     const cmd = '/audio ';

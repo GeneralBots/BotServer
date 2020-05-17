@@ -158,7 +158,7 @@ export class GBServer {
 
           GBLog.info(`Publishing instances...`);
           const packageInstance = await importer.importIfNotExistsBotPackage(
-            GBConfigService.get('CLOUD_GROUP'),
+            GBConfigService.get('BOT_ID'),
             'boot.gbot',
             'packages/boot.gbot'
           );
