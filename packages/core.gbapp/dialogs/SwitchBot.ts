@@ -42,6 +42,7 @@ import { GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings';
 import { SecService } from '../../security.gblib/services/SecService';
 import { GBServer } from '../../../src/app';
+import { GBConversationalService } from '../services/GBConversationalService';
 /**
  * Dialog for the bot explains about itself.
  */
@@ -58,7 +59,7 @@ export class SwitchBotDialog extends IGBDialog {
       async step => {
         const locale = step.context.activity.locale;
 
-        return await step.prompt('textPrompt', "Qual seria o código de ativação?");
+        return await min.conversationalService.prompt (min, step,  "Qual seria o código de ativação?");
       },
       async step => {
         let sec = new SecService();
@@ -66,7 +67,7 @@ export class SwitchBotDialog extends IGBDialog {
         const botId = step.result;
         const instance = await min.core.loadInstanceByBotId(botId);
         await sec.updateUserInstance(from, instance.instanceId);
-        await step.context.sendActivity(`Opa, vamos lá!`);
+        await min.conversationalService.sendText(min, step, `Opa, vamos lá!`);
                 
         return await step.next();
       }

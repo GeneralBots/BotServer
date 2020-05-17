@@ -46,6 +46,7 @@ import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { Messages } from '../strings';
 import { GBAdminService } from '../services/GBAdminService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 
 
 /**
@@ -74,18 +75,18 @@ export class AdminDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].authenticate;
 
-          return await step.prompt('textPrompt', prompt);
+          return await min.conversationalService.prompt (min, step,  prompt);
         },
         async step => {
           const locale = step.context.activity.locale;
           const sensitive = step.result;
 
           if (sensitive === min.instance.adminPass) {
-            await step.context.sendActivity(Messages[locale].welcome);
+            await min.conversationalService.sendText(min, step, Messages[locale].welcome);
 
-            return await step.prompt('textPrompt', Messages[locale].which_task);
+            return await min.conversationalService.prompt (min, step,  Messages[locale].which_task);
           } else {
-            await step.context.sendActivity(Messages[locale].wrong_password);
+            await min.conversationalService.sendText(min, step, Messages[locale].wrong_password);
 
             return await step.endDialog();
           }
@@ -96,7 +97,7 @@ export class AdminDialog extends IGBDialog {
           const text: string = step.result;
           const cmdName = text.split(' ')[0];
 
-          await step.context.sendActivity(Messages[locale].working(cmdName));
+          await min.conversationalService.sendText(min, step, Messages[locale].working(cmdName));
           let unknownCommand = false;
 
           try {
@@ -109,18 +110,18 @@ export class AdminDialog extends IGBDialog {
 
               return await step.replaceDialog('/admin', { firstRun: false });
             } else if (cmdName === 'redeployPackage' || cmdName === 'rp') {
-              await step.context.sendActivity('The package is being *unloaded*...');
+              await min.conversationalService.sendText(min, step, 'The package is being *unloaded*...');
               await GBAdminService.undeployPackageCommand(text, min);
-              await step.context.sendActivity('Now, *deploying* package...');
+              await min.conversationalService.sendText(min, step, 'Now, *deploying* package...');
               await GBAdminService.deployPackageCommand(min, text, deployer);
-              await step.context.sendActivity('Package deployed. Just need to rebuild the index... Doing it right now.');
+              await min.conversationalService.sendText(min, step, 'Package deployed. Just need to rebuild the index... Doing it right now.');
               await GBAdminService.rebuildIndexPackageCommand(min, deployer);
-              await step.context.sendActivity('Finished importing of that .gbkb package. Thanks.');
+              await min.conversationalService.sendText(min, step, 'Finished importing of that .gbkb package. Thanks.');
               return await step.replaceDialog('/admin', { firstRun: false });
             } else if (cmdName === 'undeployPackage' || cmdName === 'up') {
-              await step.context.sendActivity('The package is being *undeployed*...');
+              await min.conversationalService.sendText(min, step, 'The package is being *undeployed*...');
               await GBAdminService.undeployPackageCommand(text, min);
-              await step.context.sendActivity('Package *undeployed*.');
+              await min.conversationalService.sendText(min, step, 'Package *undeployed*.');
               return await step.replaceDialog('/admin', { firstRun: false });
             } else if (cmdName === 'rebuildIndex' || cmdName === 'ri') {
               await GBAdminService.rebuildIndexPackageCommand(min, deployer);
@@ -137,13 +138,13 @@ export class AdminDialog extends IGBDialog {
             }
 
             if (unknownCommand) {
-              await step.context.sendActivity(Messages[locale].unknown_command);
+              await min.conversationalService.sendText(min, step, Messages[locale].unknown_command);
             } else {
-              await step.context.sendActivity(Messages[locale].finished_working);
+              await min.conversationalService.sendText(min, step, Messages[locale].finished_working);
             }
 
           } catch (error) {
-            await step.context.sendActivity(error.message);
+            await min.conversationalService.sendText(min, step, error.message);
           }
           await step.replaceDialog('/ask', { isReturning: true });
         }
@@ -156,14 +157,14 @@ export class AdminDialog extends IGBDialog {
         async step => {
           const botId = min.instance.botId;
           const locale = step.context.activity.locale;
-          await step.context.sendActivity(Messages[locale].working('Publishing'));
+          await min.conversationalService.sendText(min, step, Messages[locale].working('Publishing'));
           
           step.activeDialog.state.options.args = (step.options as any).args;
           let args = step.activeDialog.state.options.args.split(' ');
           let filename = args[0];
           const packages = [];
           if (filename === null) {
-            await step.context.sendActivity(`Starting publishing for all bot packages...`);
+            await min.conversationalService.sendText(min, step, `Starting publishing for all bot packages...`);
             packages.push(`${botId}.gbkb`);
             packages.push(`${botId}.gbdialog`);
             packages.push(`${botId}.gbot`);
@@ -171,7 +172,7 @@ export class AdminDialog extends IGBDialog {
             packages.push(`${botId}.gbapp`);
             packages.push(`${botId}.gblib`);
           } else {
-            await step.context.sendActivity(`Starting publishing for ${filename}...`);
+            await min.conversationalService.sendText(min, step, `Starting publishing for ${filename}...`);
             packages.push(filename);
           }
 
@@ -188,16 +189,16 @@ export class AdminDialog extends IGBDialog {
               }
               await GBAdminService.deployPackageCommand(min, cmd1, deployer);
               if (packageName.endsWith('.gbkb')) {
-                await step.context.sendActivity('Rebuilding my own index, wait a minute, please...');
+                await min.conversationalService.sendText(min, step, 'Rebuilding my own index, wait a minute, please...');
                 await GBAdminService.rebuildIndexPackageCommand(min, deployer);
               }
-              await step.context.sendActivity(`Finished publishing ${packageName}.`);
+              await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
             });
 
             return await step.replaceDialog('/ask', { isReturning: true });
 
           } catch (error) {
-            await step.context.sendActivity(error.message);
+            await min.conversationalService.sendText(min, step, error.message);
           }
           await step.replaceDialog('/ask', { isReturning: true });
 
@@ -212,14 +213,14 @@ export class AdminDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].enter_authenticator_tenant;
 
-          return await step.prompt('textPrompt', prompt);
+          return await min.conversationalService.prompt (min, step,  prompt);
         },
         async step => {
           step.activeDialog.state.authenticatorTenant = step.result;
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].enter_authenticator_authority_host_url;
 
-          return await step.prompt('textPrompt', prompt);
+          return await min.conversationalService.prompt (min, step,  prompt);
         },
         async step => {
           step.activeDialog.state.authenticatorAuthorityHostUrl = step.result;
@@ -244,7 +245,7 @@ export class AdminDialog extends IGBDialog {
               '/token'
             )}&state=${state}&response_mode=query`;
 
-          await step.context.sendActivity(Messages[locale].consent(url));
+          await min.conversationalService.sendText(min, step, Messages[locale].consent(url));
 
           return await step.replaceDialog('/ask', { isReturning: true });
         }

@@ -41,6 +41,7 @@ import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings';
 import { KBService } from './../services/KBService';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 
 /**
  * Handle display of FAQ allowing direct access to KB.
@@ -61,12 +62,12 @@ export class FaqDialog extends IGBDialog {
         const data = await service.getFaqBySubjectArray('faq', undefined);
         const locale = step.context.activity.locale;
         if (data !== undefined) {
-          await min.conversationalService.sendEvent(step, 'play', {
+          await min.conversationalService.sendEvent(min, step, 'play', {
             playerType: 'bullet',
             data: data.slice(0, 10)
           });
 
-          await step.context.sendActivity(Messages[locale].see_faq);
+          await min.conversationalService.sendText(min, step, Messages[locale].see_faq);
 
           return await step.next();
         }

@@ -45,6 +45,7 @@ import { KBService } from './../services/KBService';
 import { GuaribasAnswer } from '../models';
 import { GBMinService } from '../../../packages/core.gbapp/services/GBMinService';
 import { SecService } from '../../security.gblib/services/SecService';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 
 /**
  * Dialog arguments.
@@ -92,7 +93,7 @@ export class AskDialog extends IGBDialog {
           throw new Error('Invalid use of /ask');
         }
         if (text.length > 0) {
-          return await step.prompt('textPrompt', text);
+          return await min.conversationalService.prompt(min, step, text);
         }
 
         return await step.next();
@@ -101,6 +102,24 @@ export class AskDialog extends IGBDialog {
         if (step.result) {
 
           let query = step.result;
+
+          const locale = await AzureText.getLocale(min.instance.textAnalyticsKey,
+            min.instance.textAnalyticsEndpoint, query);
+
+          let sec = new SecService();
+          const member = step.context.activity.from;
+
+          const user = await sec.ensureUser(min.instance.instanceId, member.id,
+            member.name, "", "web", member.name);
+          user.locale = locale;
+          await user.save();
+
+          query = await min.conversationalService.translate(
+            min.instance.translatorKey,
+            min.instance.translatorEndpoint,
+            query,
+            'pt');
+          GBLog.info(`Translated text: ${query}.`)
           return await step.replaceDialog('/answer', { query: query });
         } else {
           return await step.next();
@@ -114,17 +133,29 @@ export class AskDialog extends IGBDialog {
       async step => {
         const user = await min.userProfile.get(step.context, {});
         let text = step.options.query;
+
+        let sec = new SecService();
+        const member = step.context.activity.from;
+        const userDb = await sec.ensureUser(min.instance.instanceId, member.id,
+          member.name, "", "web", member.name);
+        text = await min.conversationalService.translate(
+          min.instance.translatorKey,
+          min.instance.translatorEndpoint,
+          text,
+          userDb.locale ? userDb.locale : 'pt'
+        );      
+
         if (!text) {
           throw new Error(`/answer being called with no args query text.`);
         }
         const locale = step.context.activity.locale;
         // Stops any content on projector.
-        await min.conversationalService.sendEvent(step, 'stop', undefined);
+        await min.conversationalService.sendEvent(min, step, 'stop', undefined);
         // Handle extra text from FAQ.
         if (step.options && step.options.query) {
           text = step.options.query;
         } else if (step.options && step.options.fromFaq) {
-          await step.context.sendActivity(Messages[locale].going_answer);
+          await min.conversationalService.sendText(min, step, Messages[locale].going_answer);
         }
         // Spells check the input text before sending Search or NLP.
         if (min.instance.spellcheckerKey !== undefined) {
@@ -164,7 +195,7 @@ export class AskDialog extends IGBDialog {
             await min.userProfile.set(step.context, user2);
             // Informs user that a broader search will be used.
             if (user2.subjects.length > 0) {
-              await step.context.sendActivity(Messages[locale].wider_answer);
+              await min.conversationalService.sendText(min, step, Messages[locale].wider_answer);
             }
 
             if (resultsB.answer)
@@ -174,7 +205,7 @@ export class AskDialog extends IGBDialog {
               return await AskDialog.handleAnswer(service, min, step, resultsA.answer);
           } else {
             if (!(await min.conversationalService.routeNLP(step, min, text))) {
-              await step.context.sendActivity(Messages[locale].did_not_find);
+              await min.conversationalService.sendText(min, step, Messages[locale].did_not_find);
 
               return await step.replaceDialog('/ask', { isReturning: true });
             }

@@ -44,6 +44,7 @@ const vm = require('vm');
 import urlJoin = require('url-join');
 import { DialogClass } from './GBAPIService';
 import { Messages } from '../strings';
+import { GBConversationalService } from './GBConversationalService';
 //tslint:disable-next-line:no-submodule-imports
 const vb2ts = require('vbscript-to-typescript/dist/converter');
 const beautify = require('js-beautify').js;
@@ -318,7 +319,7 @@ export class GBVMService extends GBService {
           step.activeDialog.state.options = {};
           step.activeDialog.state.options.cbId = (step.options as any).id;
           step.activeDialog.state.options.previousResolve = (step.options as any).previousResolve;
-          return await step.prompt('textPrompt', {});
+          return await min.conversationalService.prompt (min, step,null);
         },
         async step => {
           const cbId = step.activeDialog.state.options.cbId;

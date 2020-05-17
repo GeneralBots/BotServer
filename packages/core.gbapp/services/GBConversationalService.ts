@@ -99,7 +99,7 @@ export class GBConversationalService {
         await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
       }
       else {
-        await step.context.sendActivity(url);
+        await min.conversationalService.sendText(min, step, url);
       }
     }
   }
@@ -109,7 +109,7 @@ export class GBConversationalService {
     await min.whatsAppDirectLine.sendAudioToDevice(mobile, url);
   }
 
-  public async sendEvent(step: GBDialogStep, name: string, value: Object): Promise<any> {
+  public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
     if (step.context.activity.channelId === 'webchat') {
       const msg = MessageFactory.text('');
       msg.value = value;
@@ -439,6 +439,7 @@ export class GBConversationalService {
     if (currentText !== '') {
       if (mobile === null) {
         await step.context.sendActivity(currentText);
+
       }
       else {
         this.sendToMobile(min, mobile, currentText);
@@ -546,7 +547,7 @@ export class GBConversationalService {
 
     try {
       const results = await request(options);
-      
+
       return results[0].translations[0].text;
     } catch (error) {
       const msg = `Error calling Translator service layer. Error is: ${error}.`;
@@ -555,7 +556,7 @@ export class GBConversationalService {
     }
   }
 
-  public async sendText(min, step, text) {
+  public  async prompt(min: GBMinInstance, step: GBDialogStep, text: string) {
 
     let sec = new SecService();
     const member = step.context.activity.from;
@@ -565,9 +566,26 @@ export class GBConversationalService {
       min.instance.translatorKey,
       min.instance.translatorEndpoint,
       text,
-      user.locale
+      user.locale ? user.locale : 'pt'
     );
 
+    return await step.prompt("textPrompt", text ? text : {});
+  }
+  
+  public  async sendText(min, step, text) {
+
+    let sec = new SecService();
+    const member = step.context.activity.from;
+    const user = await sec.ensureUser(min.instance.instanceId, member.id,
+      member.name, "", "web", member.name);
+    text = await min.conversationalService.translate(
+      min.instance.translatorKey,
+      min.instance.translatorEndpoint,
+      text,
+      user.locale? user.locale: 'pt'
+    );  
+
+    await step.context.sendActivity(text);
   }
 
   public async checkLanguage(step: GBDialogStep, min, text) {
@@ -576,14 +594,14 @@ export class GBConversationalService {
       switch (locale) {
         case 'pt':
           step.context.activity.locale = 'pt-BR';
-          await step.context.sendActivity(Messages[locale].changing_language);
+          await min.conversationalService.sendText(min, step, Messages[locale].changing_language);
           break;
         case 'en':
           step.context.activity.locale = 'en-US';
-          await step.context.sendActivity(Messages[locale].changing_language);
+          await min.conversationalService.sendText(min, step, Messages[locale].changing_language);
           break;
         default:
-          await step.context.sendActivity(`; Unknown; language: $;{locale;}`);
+          await min.conversationalService.sendText(min, step, `; Unknown; language: $;{locale;}`);
           break;
       }
     }

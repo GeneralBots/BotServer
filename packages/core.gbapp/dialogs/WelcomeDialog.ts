@@ -41,6 +41,7 @@ import {WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
+import { GBConversationalService } from '../services/GBConversationalService';
 
 /**
  *  Dialog for Welcoming people.
@@ -79,7 +80,7 @@ export class WelcomeDialog extends IGBDialog {
                 ? Messages[locale].good_evening
                 : Messages[locale].good_night;
 
-          await step.context.sendActivity(Messages[locale].hi(msg));
+          await min.conversationalService.sendText(min, step, Messages[locale].hi(msg));
           await step.replaceDialog('/ask', { firstTime: true });
 
           if (

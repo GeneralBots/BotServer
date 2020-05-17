@@ -44,6 +44,7 @@ import { GBMinInstance, IGBDialog } from 'botlib';
 import { GuaribasSubject } from '../models';
 import { KBService } from '../services/KBService';
 import { Messages } from '../strings';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 
 /**
  * Dialog arguments.
@@ -94,14 +95,14 @@ export class MenuDialog extends IGBDialog {
           // Whenever a subject is selected, shows a faq about it.
           if (user.subjects.length > 0) {
             const list = await service.getFaqBySubjectArray('menu', user.subjects);
-            await min.conversationalService.sendEvent(step, 'play', {
+            await min.conversationalService.sendEvent(min, step, 'play', {
               playerType: 'bullet',
               data: list.slice(0, 10)
             });
           }
         } else {
           user.subjects = [];
-          await step.context.sendActivity(Messages[locale].here_is_subjects);
+          await min.conversationalService.sendText(min, step, Messages[locale].here_is_subjects);
           user.isAsking = false;
         }
         const msg = MessageFactory.text('');
@@ -133,7 +134,7 @@ export class MenuDialog extends IGBDialog {
         if (attachments.length === 0) {
 
           if (user.subjects && user.subjects.length > 0) {
-            await step.context.sendActivity(
+            await min.conversationalService.sendText(min, step, 
               Messages[locale].lets_search(KBService.getFormattedSubjectItems(user.subjects))
             );
           }

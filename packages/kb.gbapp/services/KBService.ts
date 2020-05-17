@@ -54,7 +54,7 @@ import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
 import { Messages } from '../strings';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
-
+import { SecService } from '../../security.gblib/services/SecService';
 
 /**
  * Result for quey on KB data.
@@ -376,7 +376,7 @@ export class KBService implements IGBKBService {
 
   public async sendAnswer(min: GBMinInstance, channel: string, step: GBDialogStep, answer: GuaribasAnswer) {
     if (answer.content.endsWith('.mp4')) {
-      await this.playVideo(min.conversationalService, step, answer);
+      await this.playVideo(min, min.conversationalService, step, answer);
     }
     else if (answer.format === '.md') {
 
@@ -386,8 +386,8 @@ export class KBService implements IGBKBService {
 
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else {
-      await step.context.sendActivity(answer.content);
-      await min.conversationalService.sendEvent(step, 'stop', undefined);
+      await min.conversationalService.sendText(min, step, answer.content);
+      await min.conversationalService.sendEvent(min, step, 'stop', undefined);
     }
   }
 
@@ -411,21 +411,45 @@ export class KBService implements IGBKBService {
     html = marked(answer.content);
     if (channel === 'webchat' &&
       GBConfigService.get('DISABLE_WEB') !== 'true') {
-      await this.sendMarkdownToWeb(step, conversationalService, html, answer);
+      
+      await this.sendMarkdownToWeb(min, step, conversationalService, html, answer);
     }
     else if (channel === 'whatsapp') {
+      let sec = new SecService();
+      const member = step.context.activity.from;
+      const user = await sec.ensureUser(min.instance.instanceId, member.id,
+        member.name, "", "web", member.name);
+      let text = await min.conversationalService.translate(
+        min.instance.translatorKey,
+        min.instance.translatorEndpoint,
+        answer.content,
+        user.locale ? user.locale : 'pt'
+      );
+  
       await conversationalService.sendMarkdownToMobile(min, step, null, answer.content);
     }
     else {
-      await step.context.sendActivity(html);
+      await min.conversationalService.sendText(min, step, html);
     }
   }
 
-  private async sendMarkdownToWeb(step: GBDialogStep, conversationalService: IGBConversationalService, html: string, answer: GuaribasAnswer) {
+  private async sendMarkdownToWeb(min, step: GBDialogStep, conversationalService: IGBConversationalService, html: string, answer: GuaribasAnswer) {
+    
+    let sec = new SecService();
+    const member = step.context.activity.from;
+    const user = await sec.ensureUser(min.instance.instanceId, member.id,
+      member.name, "", "web", member.name);
+    html = await min.conversationalService.translate(
+      min.instance.translatorKey,
+      min.instance.translatorEndpoint,
+      html,
+      user.locale ? user.locale : 'pt'
+    );
+
     const locale = step.context.activity.locale;
-    await step.context.sendActivity(Messages[locale].will_answer_projector);
+    await min.conversationalService.sendText( min, step, Messages[locale].will_answer_projector);
     html = html.replace(/src\=\"kb\//g, `src=\"../kb/`);
-    await conversationalService.sendEvent(step, 'play', {
+    await conversationalService.sendEvent(min, step, 'play', {
       playerType: 'markdown',
       data: {
         content: html,
@@ -437,8 +461,8 @@ export class KBService implements IGBKBService {
   }
 
 
-  private async playVideo(conversationalService: IGBConversationalService, step: GBDialogStep, answer: GuaribasAnswer) {
-    await conversationalService.sendEvent(step, 'play', {
+  private async playVideo(min, conversationalService: IGBConversationalService, step: GBDialogStep, answer: GuaribasAnswer) {
+    await conversationalService.sendEvent(min, step, 'play', {
       playerType: 'video',
       data: answer.content
     });

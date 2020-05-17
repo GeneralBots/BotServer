@@ -43,6 +43,7 @@ import { WaterfallDialog } from 'botbuilder-dialogs';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 
 /**
  * Dialog for collecting quality of answer.
@@ -65,14 +66,14 @@ export class QualityDialog extends IGBDialog {
         const score = step.result;
 
         setTimeout(
-          () => min.conversationalService.sendEvent(step, 'stop', undefined),
+          () => min.conversationalService.sendEvent(min, step, 'stop', undefined),
           400
         );
 
         if (score === 0) {
-          await step.context.sendActivity(Messages[locale].im_sorry_lets_try);
+          await min.conversationalService.sendText(min, step, Messages[locale].im_sorry_lets_try);
         } else {
-          await step.context.sendActivity(Messages[locale].great_thanks);
+          await min.conversationalService.sendText(min, step, Messages[locale].great_thanks);
 
           await service.insertQuestionAlternate(
             min.instance.instanceId,

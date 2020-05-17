@@ -68,6 +68,7 @@ import { SecService } from '../../security.gblib/services/SecService';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import fs = require('fs');
+import { GBConversationalService } from './GBConversationalService';
 
 /**
  * Minimal service layer for a bot.
@@ -532,7 +533,7 @@ export class GBMinService {
         // First time processing.
 
         if (!user.loaded) {
-          await min.conversationalService.sendEvent(step, 'loadInstance', {
+          await min.conversationalService.sendEvent(min, step, 'loadInstance', {
             instanceId: instance.instanceId,
             botId: instance.botId,
             theme: instance.theme ? instance.theme : 'default.gbtheme',
@@ -594,7 +595,7 @@ export class GBMinService {
         const msg = `ERROR: ${error.message} ${error.stack ? error.stack : ''}`;
         GBLog.error(msg);
 
-        await step.context.sendActivity(Messages[step.context.activity.locale].very_sorry_about_error);
+        await min.conversationalService.sendText(min, step, Messages[step.context.activity.locale].very_sorry_about_error);
         await step.beginDialog('/ask', { isReturning: true });
       }
     });
@@ -666,7 +667,7 @@ export class GBMinService {
 
     } else if (globalQuit(step.context.activity.locale, context.activity.text)) { // TODO: Hard-code additional languages.
       await step.cancelAllDialogs();
-      await step.context.sendActivity(Messages[step.context.activity.locale].canceled);
+      await min.conversationalService.sendText(min, step, Messages[step.context.activity.locale].canceled);
     } else if (context.activity.text === 'admin') {
       await step.beginDialog('/admin');
 

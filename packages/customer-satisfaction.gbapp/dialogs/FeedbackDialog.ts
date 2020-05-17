@@ -43,6 +43,7 @@ import { AzureText } from 'pragmatismo-io-framework';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
 import { SecService } from '../../security.gblib/services/SecService';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 
 /**
  * Dialog for feedback collecting.
@@ -61,7 +62,7 @@ export class FeedbackDialog extends IGBDialog {
       new WaterfallDialog('/pleaseNoBadWords', [
         async step => {
           const locale = step.context.activity.locale;
-          await step.context.sendActivity(Messages[locale].please_no_bad_words);
+          await min.conversationalService.sendText(min, step, Messages[locale].please_no_bad_words);
 
           return await step.next();
         }
@@ -77,7 +78,7 @@ export class FeedbackDialog extends IGBDialog {
           let sec = new SecService();
           let from = step.context.activity.from.id;
 
-          await step.context.sendActivity(Messages[locale].please_wait_transfering);
+          await min.conversationalService.sendText(min, step, Messages[locale].please_wait_transfering);
           let agentSystemId = await sec.assignHumanAgent(from, min.instance.instanceId);
 
           await min.whatsAppDirectLine.sendToDevice(agentSystemId, 
@@ -98,7 +99,7 @@ export class FeedbackDialog extends IGBDialog {
           let from = step.context.activity.from.id;
 
           await sec.updateCurrentAgent(from, min.instance.instanceId, null);
-          await step.context.sendActivity(Messages[locale].notify_end_transfer(min.instance.botId));
+          await min.conversationalService.sendText(min, step, Messages[locale].notify_end_transfer(min.instance.botId));
           
           return await step.next();
         }
@@ -118,7 +119,7 @@ export class FeedbackDialog extends IGBDialog {
           const rate = step.result.entity;
           const user = await min.userProfile.get(step.context, {});
           await service.updateConversationRate(user.conversation, rate);
-          await step.context.sendActivity(Messages[locale].thanks);
+          await min.conversationalService.sendText(min, step, Messages[locale].thanks);
 
           return await step.next();
         }
@@ -130,10 +131,10 @@ export class FeedbackDialog extends IGBDialog {
         async step => {
           const locale = step.context.activity.locale;
 
-          await step.context.sendActivity(Messages[locale].about_suggestions);
+          await min.conversationalService.sendText(min, step, Messages[locale].about_suggestions);
           step.activeDialog.state.cbId = (step.options as any).id;
 
-          return await step.prompt('textPrompt', Messages[locale].what_about_service);
+          return await min.conversationalService.prompt (min, step,  Messages[locale].what_about_service);
         },
         async step => {
           const locale = step.context.activity.locale;
@@ -145,9 +146,9 @@ export class FeedbackDialog extends IGBDialog {
           );
 
           if (rate > 0.5) {
-            await step.context.sendActivity(Messages[locale].glad_you_liked);
+            await min.conversationalService.sendText(min, step, Messages[locale].glad_you_liked);
           } else {
-            await step.context.sendActivity(Messages[locale].we_will_improve);
+            await min.conversationalService.sendText(min, step, Messages[locale].we_will_improve);
           }
 
           return await step.replaceDialog('/ask', { isReturning: true });

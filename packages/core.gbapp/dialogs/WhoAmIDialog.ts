@@ -40,6 +40,7 @@ import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings';
+import { GBConversationalService } from '../services/GBConversationalService';
 /**
  * Dialog for the bot explains about itself.
  */
@@ -54,11 +55,11 @@ export class WhoAmIDialog extends IGBDialog {
     min.dialogs.add(new WaterfallDialog('/whoAmI', [
       async step => {
         const locale = step.context.activity.locale;
-        await step.context.sendActivity(`${min.instance.description}`);
+        await min.conversationalService.sendText(min, step, `${min.instance.description}`);
 
         if (min.instance.whoAmIVideo !== undefined) {
-          await step.context.sendActivity(Messages[locale].show_video);
-          await min.conversationalService.sendEvent(step, 'play', {
+          await min.conversationalService.sendText(min, step, Messages[locale].show_video);
+          await min.conversationalService.sendEvent(min, step, 'play', {
             playerType: 'video',
             data: min.instance.whoAmIVideo.trim()
           });

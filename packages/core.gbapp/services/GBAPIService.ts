@@ -43,6 +43,7 @@ import { GBDeployer } from './GBDeployer';
 const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
 import { Messages } from "../strings";
 import { GBServer } from '../../../src/app';
+import { GBConversationalService } from './GBConversationalService';
 const request = require('request-promise-native');
 
 /**
@@ -294,7 +295,7 @@ export class DialogClass {
       async step => {
         const locale = step.context.activity.locale;
         if ((step.options as any).ask) {
-          await step.context.sendActivity(Messages[locale].whats_email);
+          await min.conversationalService.sendText(min, step, Messages[locale].whats_email);
         }
         return await step.prompt("textPrompt", {});
       },
@@ -308,7 +309,7 @@ export class DialogClass {
         const value = extractEntity(step.result);
 
         if (value === null) {
-          await step.context.sendActivity(Messages[locale].validation_enter_valid_email);
+          await min.conversationalService.sendText(min, step, Messages[locale].validation_enter_valid_email);
           return await step.replaceDialog('/gbasic-email', { ask: true });
         }
         else {
@@ -378,6 +379,6 @@ export class DialogClass {
   }
 
   public async talk(step, text: string) {
-    return await step.context.sendActivity(text);
+    return await this.min.conversationalService.sendText(this.min, step, text);
   }
 }
