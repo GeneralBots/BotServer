@@ -525,6 +525,10 @@ export class GBConversationalService {
     language: string
   ): Promise<string> {
 
+    if (process.env.TRANSLATOR_DISABLED === "true"){
+      return text;      
+    }
+
     let options = {
       method: 'POST',
       baseUrl: endPoint,
@@ -588,22 +592,4 @@ export class GBConversationalService {
     await step.context.sendActivity(text);
   }
 
-  public async checkLanguage(step: GBDialogStep, min, text) {
-    const locale = await AzureText.getLocale(min.instance.textAnalyticsKey, min.instance.textAnalyticsEndpoint, text);
-    if (locale !== step.context.activity.locale.split('-')[0]) {
-      switch (locale) {
-        case 'pt':
-          step.context.activity.locale = 'pt-BR';
-          await min.conversationalService.sendText(min, step, Messages[locale].changing_language);
-          break;
-        case 'en':
-          step.context.activity.locale = 'en-US';
-          await min.conversationalService.sendText(min, step, Messages[locale].changing_language);
-          break;
-        default:
-          await min.conversationalService.sendText(min, step, `; Unknown; language: $;{locale;}`);
-          break;
-      }
-    }
-  }
 }

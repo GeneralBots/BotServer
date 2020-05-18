@@ -1,7 +1,6 @@
 export const Messages = {
   'en-US': {
     did_not_find: 'I\'m sorry I didn\'t find anything.',
-    changing_language: 'OK, changing language to English...',
     going_answer: 'Great choice, now looking for your answer...',
     wider_answer: subjectText =>
       `Answering to you in a broader way... Not just about  ${subjectText}.`,
@@ -18,7 +17,6 @@ export const Messages = {
   },
   'pt-BR': {
     did_not_find: 'Desculpe-me, não encontrei nada a respeito.',
-    changing_language: 'OK, mundando de idioma para o Português...',
     going_answer: 'Ótima escolha, procurando resposta para sua questão...',
     wider_answer: subjectText =>
       `Vou te responder de modo mais abrangente... Não apenas sobre ${subjectText}`,

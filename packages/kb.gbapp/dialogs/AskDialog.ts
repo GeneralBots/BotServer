@@ -103,9 +103,12 @@ export class AskDialog extends IGBDialog {
 
           let query = step.result;
 
-          const locale = await AzureText.getLocale(min.instance.textAnalyticsKey,
+          let locale = 'pt';
+          if (process.env.TRANSLATOR_DISABLED !== "true"){
+            locale = await AzureText.getLocale(min.instance.textAnalyticsKey,
             min.instance.textAnalyticsEndpoint, query);
-
+          }
+      
           let sec = new SecService();
           const member = step.context.activity.from;
 
