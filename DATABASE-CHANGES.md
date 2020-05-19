@@ -43,4 +43,12 @@ ALTER TABLE dbo.GuaribasInstance ADD
 	translatorEndpoint nvarchar(64) NULL
 GO
 
+# 1.7.9
+
+ALTER TABLE dbo.GuaribasInstance ADD
+	activationCode nvarchar(16) NULL
+GO
+
+
+
 ```

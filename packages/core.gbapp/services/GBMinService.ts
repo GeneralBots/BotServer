@@ -145,11 +145,11 @@ export class GBMinService {
         let activeMin;
         if (process.env.WHATSAPP_WELCOME_DISABLED !== "true") {
 
-          const toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.botId === text)[0];
+          const toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.activationCode === text)[0];
           activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
 
           let sec = new SecService();
-          const instance = await this.core.loadInstanceByBotId(activeMin.botId);
+          
           let user = await sec.getUserFromSystemId(id);
 
           if (user === null) {

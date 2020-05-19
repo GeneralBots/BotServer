@@ -271,7 +271,7 @@ export class WhatsappDirectLine extends GBService {
       conversationId: conversationId,
       activity: {
         textFormat: 'plain',
-        text: text,
+        text: text, 
         type: 'message',
         from: {
           id: from,
