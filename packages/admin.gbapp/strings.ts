@@ -18,7 +18,11 @@ export const Messages = {
     enter_authenticator_authority_host_url: 'Enter the Authority Host URL (eg.: https://login.microsoftonline.com): ',
     enter_authenticator_client_id: `Enter the Client Id GUID: Get from
     [this url](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredAppsPreview)`,
-    enter_authenticator_client_secret: 'Enter the Client Secret:'
+    enter_authenticator_client_secret: 'Enter the Client Secret:',
+    publish_must_be_admin: 'Seu telefone precisa estar com privilégios administrativos para realizar publicação.',
+    publish_success: 'Publicação realizada.',
+    publish_type_yes: 'Por favor, digite *Sim* para continuar com a publicação.',
+    publish_canceled: 'Publicação cancelada.',
   },
   'pt-BR': {
     authenticate: 'Please, authenticate:',
@@ -39,6 +43,10 @@ export const Messages = {
     enter_authenticator_authority_host_url: 'Enter the Authority Host URL (eg.: https://login.microsoftonline.com): ',
     enter_authenticator_client_id: `Enter the Client Id GUID: Get from
     [this url](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredAppsPreview)`,
-    enter_authenticator_client_secret: 'Enter the Client Secret:'
+    enter_authenticator_client_secret: 'Enter the Client Secret:',
+    publish_must_be_admin: 'Seu telefone precisa estar com privilégios administrativos para realizar publicação.',
+    publish_success: 'Publicação realizada.',
+    publish_type_yes: 'Por favor, digite *Sim* para continuar com a publicação.',
+    publish_canceled: 'Publicação cancelada.',    
   }
 };

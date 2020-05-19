@@ -1,7 +1,7 @@
 {
   "enabledAdmin": "true",
-  "searchScore": ".15",
-  "nlpScore": ".40",
+  "searchScore": ".45",
+  "nlpScore": ".80",
   "nlpVsSearch": ".4",
   "autoPackageSync": "gbdialog, gbot, gbtheme"
 }

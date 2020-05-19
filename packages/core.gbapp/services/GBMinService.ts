@@ -245,8 +245,11 @@ export class GBMinService {
     // Serves individual URL for each bot user interface.
     if (process.env.DISABLE_WEB !== 'true') {
       const uiUrl = `/${instance.botId}`;
+      const uiUrlAlt = `/${instance.activationCode}`;
       GBServer.globals.server.use(uiUrl, express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build')));
-      GBLog.info(`Bot UI ${GBMinService.uiPackage} accessible at: ${uiUrl}.`);
+      GBServer.globals.server.use(uiUrlAlt, express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build')));
+
+      GBLog.info(`Bot UI ${GBMinService.uiPackage} accessible at: ${uiUrl} and ${uiUrlAlt}.`);
     }
 
     // Clients get redirected here in order to create an OAuth authorize url and redirect them to AAD.

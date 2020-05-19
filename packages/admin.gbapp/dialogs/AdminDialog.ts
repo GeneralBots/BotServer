@@ -178,8 +178,12 @@ export class AdminDialog extends IGBDialog {
           if (AdminDialog.isIntentYes(locale, step.result)) {
 
             let from = step.context.activity.from.id;
+            
+            let canPublish = process.env.SECURITY_CAN_PUBLISH? 
+                AdminDialog.canSendBroadcast(from):
+                true; // TODO: Disable all can publish from web.
 
-            if (AdminDialog.canSendBroadcast(from)) {
+            if (canPublish) {
 
               const botId = min.instance.botId;
               const locale = step.context.activity.locale;
@@ -227,8 +231,7 @@ export class AdminDialog extends IGBDialog {
               if (!step.activeDialog.state.options.confirm) {
                 return await step.replaceDialog('/ask', { isReturning: true });
               }
-              else
-              {
+              else {
                 return await step.endDialog();
               }
 

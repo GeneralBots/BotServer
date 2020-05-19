@@ -12,10 +12,7 @@ export const Messages = {
     whats_email: "What's your E-mail address?",
     validation_enter_valid_email: "Please enter a valid e-mail."   ,
     affirmative_sentences: /^(sim|s|positivo|afirmativo|claro|evidente|sem dúvida|confirmo|confirmar|confirmado|uhum)/i,
-    publish_must_be_admin: 'Seu telefone precisa estar com privilégios administrativos para realizar publicação.',
-    publish_success: 'Publicação realizada.',
-    publish_type_yes: 'Por favor, digite *Sim* para continuar com a publicação.',
-    publish_canceled: 'Publicação cancelada.',
+
   },
   'pt-BR': {
     show_video: 'Vou te mostrar um vídeo. Por favor, aguarde...',
@@ -28,9 +25,6 @@ export const Messages = {
     whats_email: "Qual seu e-mail?",
     validation_enter_valid_email: "Por favor digite um email válido.",
     affirmative_sentences: /^(sim|s|positivo|afirmativo|claro|evidente|sem dúvida|confirmo|confirmar|confirmado|uhum)/i,
-    publish_must_be_admin: 'Seu telefone precisa estar com privilégios administrativos para realizar publicação.',
-    publish_success: 'Publicação realizada.',
-    publish_type_yes: 'Por favor, digite *Sim* para continuar com a publicação.',
-    publish_canceled: 'Publicação cancelada.',
+
   }
 };
