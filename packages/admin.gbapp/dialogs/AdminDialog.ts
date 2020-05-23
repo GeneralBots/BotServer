@@ -179,7 +179,7 @@ export class AdminDialog extends IGBDialog {
 
             let from = step.context.activity.from.id;
 
-            let canPublish = AdminDialog.canPublish(min, from);              
+            let canPublish = AdminDialog.canPublish(min, from);
 
             if (canPublish) {
 
@@ -188,8 +188,9 @@ export class AdminDialog extends IGBDialog {
               await min.conversationalService.sendText(min, step, Messages[locale].working('Publishing'));
 
               step.activeDialog.state.options.args = (step.options as any).args;
-              let args = step.activeDialog.state.options.args.split(' ');
-              let filename = args[0];
+              const filename = step.activeDialog.state.options.args ?
+                step.activeDialog.state.options.args.split(' ')[0] : null;
+
               const packages = [];
               if (filename === null || filename === "") {
                 await min.conversationalService.sendText(min, step, `Starting publishing for ${botId}.gbkb...`);
@@ -206,7 +207,7 @@ export class AdminDialog extends IGBDialog {
                   const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
 
                   if (await (deployer as any).getStoragePackageByName(min.instance.instanceId,
-                    packageName) !== null) { 
+                    packageName) !== null) {
                     const cmd2 = `undeployPackage ${packageName}`;
                     await GBAdminService.undeployPackageCommand(cmd2, min);
                   }
@@ -214,7 +215,7 @@ export class AdminDialog extends IGBDialog {
                   await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
                 });
               } catch (error) {
-                await min.conversationalService.sendText(min, step, `ERROR: ${error}` );
+                await min.conversationalService.sendText(min, step, `ERROR: ${error}`);
                 GBLog.error(error);
                 return await step.replaceDialog('/ask', { isReturning: true });
               }
@@ -251,7 +252,7 @@ export class AdminDialog extends IGBDialog {
     }
     return result;
   }
-  
+
   private static setupSecurityDialogs(min: GBMinInstance) {
     min.dialogs.add(
       new WaterfallDialog('/setupSecurity', [
