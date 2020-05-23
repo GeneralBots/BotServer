@@ -59,6 +59,10 @@ export class GBAdminPackage implements IGBPackage {
   public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
     GBLog.verbose(`onNewSession called.`);
   }
+  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
+    GBLog.verbose(`onExchangeData called.`);
+  }
+
 
   public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasAdmin]);
@@ -67,4 +71,5 @@ export class GBAdminPackage implements IGBPackage {
   public async loadBot(min: GBMinInstance): Promise<void> {
     AdminDialog.setup(min);
   }
+
 }

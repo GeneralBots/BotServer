@@ -210,13 +210,11 @@ export class GBCoreService implements IGBCoreService {
    * Loads all items to start several listeners.
    */
   public async loadInstances(): Promise<IGBInstance[]> {
-    if (process.env.LOAD_ONLY !== undefined)
-    {
+    if (process.env.LOAD_ONLY !== undefined) {
       const options = { where: { botId: process.env.LOAD_ONLY } };
       return GuaribasInstance.findAll(options);
     }
-    else
-    {
+    else {
       return GuaribasInstance.findAll({});
     }
   }
@@ -318,6 +316,11 @@ STORAGE_SYNC=true
     let instance = await GuaribasInstance.findOne(options);
     // tslint:disable-next-line:prefer-object-spread
     instance = Object.assign(instance, fullInstance);
+    try {
+      instance.params = JSON.stringify(JSON.parse(instance.params));
+    } catch (err) {
+      instance.params = JSON.stringify(instance.params);
+    }
     return await instance.save();
   }
 
@@ -433,7 +436,7 @@ STORAGE_SYNC=true
       );
     }
   }
-  
+
   public async createBootInstance(
     core: GBCoreService,
     installationDeployer: IGBInstallationDeployer,

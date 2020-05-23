@@ -55,7 +55,7 @@ import { GBConfigService } from './GBConfigService';
 import { GBImporter } from './GBImporterService';
 import { GBVMService } from './GBVMService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-
+const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
 
 /**
  *
@@ -246,10 +246,59 @@ export class GBDeployer implements IGBDeployer {
    */
 
   public async deployBotFromLocalPath(localPath: string, publicAddress: string): Promise<void> {
+
     const packageName = Path.basename(localPath);
     let instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
     this.deployBotFull(instance, publicAddress);
   }
+
+  public async loadParamsFromExcel(min: GBMinInstance): Promise<any> {
+
+    let token =
+      await min.adminService.acquireElevatedToken(min.instance.instanceId);
+
+    let siteId = process.env.STORAGE_SITE_ID;
+    let libraryId = process.env.STORAGE_LIBRARY;
+
+    let client = MicrosoftGraph.Client.init({
+      authProvider: done => {
+        done(null, token);
+      }
+    });
+    const botId = min.instance.botId;
+    const path = `/${botId}.gbai/${botId}.gbot`;
+
+    let res = await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+      .get();
+
+
+    // Performs validation.
+
+    let document = res.value.filter(m => {
+      return m.name === "Config.xlsx"
+    });
+    if (document === undefined) {
+      throw `Config.xlsx not found on .bot folder, check the package.`;
+    }
+
+    // Creates workbook session that will be discarded.
+
+    let results = await client.api(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('General')/range(address='A7:B100')`)
+      .get();
+
+    let index = 0;
+    let obj = {};
+    for (; index < results.text.length; index++) {
+      if (results.text[index][0] === "") {
+        return obj;
+      }
+      obj[results.text[index][0]] = results.text[index][1];
+    }
+    return obj;
+  }
+
 
   /**
    * UndDeploys a bot to the storage.
@@ -298,7 +347,12 @@ export class GBDeployer implements IGBDeployer {
 
     switch (packageType) {
       case '.gbot':
-        await this.deployBotFromLocalPath(localPath, GBServer.globals.publicAddress);
+        if (Fs.existsSync(localPath)) {
+          await this.deployBotFromLocalPath(localPath, GBServer.globals.publicAddress);
+        }
+        min.instance.params = await this.loadParamsFromExcel(min);
+        await this.core.saveInstance(min.instance);
+
         break;
 
       case '.gbkb':
@@ -404,7 +458,7 @@ export class GBDeployer implements IGBDeployer {
         throw err;
       }
     }
-    
+
     try {
       await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
     } catch (err) {

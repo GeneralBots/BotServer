@@ -65,4 +65,8 @@ export class GBAnalyticsPackage implements IGBPackage {
   public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
     GBLog.verbose(`onNewSession called.`);
   }
+  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
+    GBLog.verbose(`onExchangeData called.`);
+  }
+
 }

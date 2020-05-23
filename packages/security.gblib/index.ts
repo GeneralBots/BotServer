@@ -63,6 +63,10 @@ export class GBSecurityPackage implements IGBPackage {
   public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
     GBLog.verbose(`onNewSession called.`);
   }
+  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
+    GBLog.verbose(`onExchangeData called.`);
+  }
+
 
   public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasGroup, GuaribasUser, GuaribasUserGroup]);

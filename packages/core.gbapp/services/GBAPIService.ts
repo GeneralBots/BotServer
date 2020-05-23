@@ -43,7 +43,6 @@ import { GBDeployer } from './GBDeployer';
 const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
 import { Messages } from "../strings";
 import { GBServer } from '../../../src/app';
-import { GBConversationalService } from './GBConversationalService';
 const request = require('request-promise-native');
 
 /**
@@ -101,8 +100,8 @@ class SysClass {
     let token =
       await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
-    let siteId = process.env.SAAS_SHAREPOINT_SITE_ID;
-    let libraryId = process.env.SAAS_SHAREPOINT_LIBRARY_ID;
+    let siteId = process.env.STORAGE_SITE_ID;
+    let libraryId = process.env.STORAGE_LIBRARY;
 
     let client = MicrosoftGraph.Client.init({
       authProvider: done => {
@@ -149,21 +148,17 @@ class SysClass {
     let token =
       await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
-    let siteId = process.env.SAAS_SHAREPOINT_SITE_ID;
-    let libraryId = process.env.SAAS_SHAREPOINT_LIBRARY_ID;
-
     let client = MicrosoftGraph.Client.init({
       authProvider: done => {
         done(null, token);
       }
     });
+    let siteId = process.env.STORAGE_SITE_ID;
+    let libraryId = process.env.STORAGE_LIBRARY;
     const botId = this.min.instance.botId;
-
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
     try {
-
-
       let res = await client.api(
         `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
         .get();

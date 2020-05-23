@@ -61,6 +61,10 @@ export class GBConsolePackage implements IGBPackage {
   public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
     GBLog.verbose(`onNewSession called.`);
   }
+  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
+    GBLog.verbose(`onExchangeData called.`);
+  }
+
 
   public async loadBot(min: GBMinInstance): Promise<void> {
     this.channel = new ConsoleDirectLine(min.instance.webchatKey);

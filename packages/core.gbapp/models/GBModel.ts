@@ -238,6 +238,9 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   @Column
   @UpdatedAt
   public updatedAt: Date;
+
+  @Column(DataType.STRING(4000))
+  public params: string;
 }
 
 /**
@@ -267,6 +270,7 @@ export class GuaribasPackage extends Model<GuaribasPackage> {
   @Column
   @UpdatedAt
   public updatedAt: Date;
+ 
 }
 
 /**

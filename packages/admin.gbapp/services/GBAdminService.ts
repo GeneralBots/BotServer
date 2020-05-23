@@ -212,8 +212,7 @@ export class GBAdminService implements IGBAdminService {
     return path.indexOf('sharepoint.com') > 0;
   }
 
-  public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void>
-  {
+  public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void> {
 
   }
   public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: IGBDeployer) {
@@ -227,18 +226,24 @@ export class GBAdminService implements IGBAdminService {
       await deployer.deployPackage(min, urlJoin(additionalPath, packageName));
     }
     else {
-      let s = new GBSharePointService();
       let siteName = text.split(' ')[1];
       let folderName = text.split(' ')[2];
 
-      let localFolder = Path.join('work', Path.basename(folderName));
-      GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
-      await s.downloadFolder(localFolder, siteName, folderName,
-        GBConfigService.get('CLOUD_USERNAME'), GBConfigService.get('CLOUD_PASSWORD'))
-      await deployer.deployPackage(min, localFolder);
+      let packageType = Path.extname(folderName);
+      if (packageType !== '.gbot') {
+        let s = new GBSharePointService();
+
+        let localFolder = Path.join('work', Path.basename(folderName));
+        GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
+        await s.downloadFolder(localFolder, siteName, folderName,
+          GBConfigService.get('CLOUD_USERNAME'), GBConfigService.get('CLOUD_PASSWORD'))
+        await deployer.deployPackage(min, localFolder);
+      }
+      else {
+        await deployer.deployPackage(min, folderName);
+      }
     }
   }
-
   public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: IGBDeployer) {
     await deployer.rebuildIndex(
       min.instance,

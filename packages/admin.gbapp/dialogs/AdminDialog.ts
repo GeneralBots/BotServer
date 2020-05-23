@@ -179,9 +179,7 @@ export class AdminDialog extends IGBDialog {
 
             let from = step.context.activity.from.id;
 
-            let canPublish = process.env.SECURITY_CAN_PUBLISH ?
-              AdminDialog.canSendBroadcast(from) :
-              
+            let canPublish = AdminDialog.canPublish(min, from);              
 
             if (canPublish) {
 
@@ -216,7 +214,9 @@ export class AdminDialog extends IGBDialog {
                   await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
                 });
               } catch (error) {
-                await min.conversationalService.sendText(min, step, error.message);
+                await min.conversationalService.sendText(min, step, `ERROR: ${error}` );
+                GBLog.error(error);
+                return await step.replaceDialog('/ask', { isReturning: true });
               }
               await min.conversationalService.sendText(min, step, Messages[locale].publish_success);
               if (!step.activeDialog.state.options.confirm) {
@@ -240,13 +240,18 @@ export class AdminDialog extends IGBDialog {
 * the /broadcast command with specific phone numbers.
 * @param phone Phone number to check (eg.: +5521900002233)
 */
-  public static canSendBroadcast(phone: string): Boolean {
-    return true; // TODO: REMOVE THIS.
+  public static canPublish(min: GBMinInstance, phone: string): Boolean {
+
     const list = process.env.SECURITY_CAN_PUBLISH.split(';');
-    return list.includes(phone);
+    let result = list.includes(phone);
+
+    if (!result && min.instance.params) {
+      const params = JSON.parse(min.instance.params);
+      return list.includes(params['Can Publish']);
+    }
+    return result;
   }
-
-
+  
   private static setupSecurityDialogs(min: GBMinInstance) {
     min.dialogs.add(
       new WaterfallDialog('/setupSecurity', [
