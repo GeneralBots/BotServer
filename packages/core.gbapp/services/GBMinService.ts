@@ -144,8 +144,8 @@ export class GBMinService {
         }
         let activeMin;
         if (process.env.WHATSAPP_WELCOME_DISABLED !== "true") {
-
-          const toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.activationCode === text)[0];
+      // TODO: Active in two modes.
+          const toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.botId === text)[0];
           activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
 
           let sec = new SecService();
@@ -168,7 +168,7 @@ export class GBMinService {
               res.end();
             }
             else {
-              activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];;
+              activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
               if (activeMin === undefined) {
                 activeMin = GBServer.globals.minBoot;
                 await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`);

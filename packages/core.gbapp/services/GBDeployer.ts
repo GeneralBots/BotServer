@@ -397,14 +397,6 @@ export class GBDeployer implements IGBDeployer {
     }
 
     try {
-      await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
-    } catch (err) {
-      GBLog.error(err);
-      throw err;
-
-    }
-
-    try {
       await search.deleteIndex();
     } catch (err) {
       if (err.code !== 404) {
@@ -412,6 +404,15 @@ export class GBDeployer implements IGBDeployer {
         throw err;
       }
     }
+    
+    try {
+      await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
+    } catch (err) {
+      GBLog.error(err);
+      throw err;
+
+    }
+
 
     await search.createIndex(searchSchema, dsName);
   }

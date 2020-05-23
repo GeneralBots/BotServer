@@ -178,10 +178,10 @@ export class AdminDialog extends IGBDialog {
           if (AdminDialog.isIntentYes(locale, step.result)) {
 
             let from = step.context.activity.from.id;
-            
-            let canPublish = process.env.SECURITY_CAN_PUBLISH? 
-                AdminDialog.canSendBroadcast(from):
-                true; // TODO: Disable all can publish from web.
+
+            let canPublish = process.env.SECURITY_CAN_PUBLISH ?
+              AdminDialog.canSendBroadcast(from) :
+              
 
             if (canPublish) {
 
@@ -193,14 +193,9 @@ export class AdminDialog extends IGBDialog {
               let args = step.activeDialog.state.options.args.split(' ');
               let filename = args[0];
               const packages = [];
-              if (filename === null) {
-                await min.conversationalService.sendText(min, step, `Starting publishing for all bot packages...`);
+              if (filename === null || filename === "") {
+                await min.conversationalService.sendText(min, step, `Starting publishing for ${botId}.gbkb...`);
                 packages.push(`${botId}.gbkb`);
-                packages.push(`${botId}.gbdialog`);
-                packages.push(`${botId}.gbot`);
-                packages.push(`${botId}.gbtheme`);
-                packages.push(`${botId}.gbapp`);
-                packages.push(`${botId}.gblib`);
               } else {
                 await min.conversationalService.sendText(min, step, `Starting publishing for ${filename}...`);
                 packages.push(filename);
@@ -213,15 +208,11 @@ export class AdminDialog extends IGBDialog {
                   const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
 
                   if (await (deployer as any).getStoragePackageByName(min.instance.instanceId,
-                    packageName) !== null) { // TODO: Move to interface.
+                    packageName) !== null) { 
                     const cmd2 = `undeployPackage ${packageName}`;
                     await GBAdminService.undeployPackageCommand(cmd2, min);
                   }
                   await GBAdminService.deployPackageCommand(min, cmd1, deployer);
-                  if (packageName.endsWith('.gbkb')) {
-                    await min.conversationalService.sendText(min, step, 'Rebuilding my own index, wait a minute, please...');
-                    await GBAdminService.rebuildIndexPackageCommand(min, deployer);
-                  }
                   await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
                 });
               } catch (error) {
@@ -250,6 +241,7 @@ export class AdminDialog extends IGBDialog {
 * @param phone Phone number to check (eg.: +5521900002233)
 */
   public static canSendBroadcast(phone: string): Boolean {
+    return true; // TODO: REMOVE THIS.
     const list = process.env.SECURITY_CAN_PUBLISH.split(';');
     return list.includes(phone);
   }
