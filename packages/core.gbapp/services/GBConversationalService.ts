@@ -525,8 +525,13 @@ export class GBConversationalService {
     language: string
   ): Promise<string> {
 
-    if (process.env.TRANSLATOR_DISABLED === "true"){
+        if (process.env.TRANSLATOR_DISABLED === "true"){
       return text;      
+    }
+
+    if (text.length > 5000){
+      text = text.substr(0,4999);
+      GBLog.warn(`Text that bot will translate will be truncated due to MSFT service limitations.`);
     }
 
     let options = {

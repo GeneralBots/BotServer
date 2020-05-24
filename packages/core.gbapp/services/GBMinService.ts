@@ -343,7 +343,12 @@ export class GBMinService {
     if (botId === '[default]' || botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
     }
-    const instance = await this.core.loadInstanceByBotId(botId);
+    let instance = await this.core.loadInstanceByBotId(botId);
+
+    if (instance === null){
+      instance = await this.core.loadInstanceByActivationCode(botId);
+    }
+
     if (instance !== null) {
       const webchatTokenContainer = await this.getWebchatToken(instance);
       const speechToken = instance.speechKey != null ? await this.getSTSToken(instance) : null;

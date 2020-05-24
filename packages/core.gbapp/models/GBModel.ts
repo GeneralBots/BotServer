@@ -81,6 +81,9 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   @Column
   public description: string;
 
+  @Column({ type: DataType.STRING(16) })
+  public state: string;
+
   @Column
   public version: string;
 

@@ -49,11 +49,17 @@ ALTER TABLE dbo.GuaribasInstance ADD
 	activationCode nvarchar(16) NULL
 GO
 
-# 1.7.9
+#
 
 ALTER TABLE dbo.GuaribasInstance ADD
 	params nvarchar(4000) NULL
 GO
 
+#
+
+ALTER TABLE dbo.GuaribasInstance ADD
+	state nvarchar(16) NULL
+GO
+UPDATE dbo.GuaribasInstance SET state= 'active' 
 
 ```

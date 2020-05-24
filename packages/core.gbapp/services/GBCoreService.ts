@@ -215,7 +215,8 @@ export class GBCoreService implements IGBCoreService {
       return GuaribasInstance.findAll(options);
     }
     else {
-      return GuaribasInstance.findAll({});
+      const options = { where: { state: 'active' } };
+      return GuaribasInstance.findAll(options);
     }
   }
 
@@ -223,17 +224,25 @@ export class GBCoreService implements IGBCoreService {
    * Loads just one Bot instance by its internal Id.
    */
   public async loadInstanceById(instanceId: number): Promise<IGBInstance> {
-    const options = { where: { instanceId: instanceId } };
+    const options = { where: { instanceId: instanceId, state: 'active' } };
 
     return GuaribasInstance.findOne(options);
   }
+  /**
+   * Loads just one Bot instance.
+   */
+  public async loadInstanceByActivationCode(code: string): Promise<IGBInstance> {
 
+    let options = { where: { activationCode: code, state: 'active' } };
+
+    return await GuaribasInstance.findOne(options);
+  }
   /**
    * Loads just one Bot instance.
    */
   public async loadInstanceByBotId(botId: string): Promise<IGBInstance> {
     const options = { where: {} };
-    options.where = { botId: botId };
+    options.where = { botId: botId, state: 'active' };
 
     return await GuaribasInstance.findOne(options);
   }

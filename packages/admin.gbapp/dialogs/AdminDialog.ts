@@ -77,6 +77,29 @@ export class AdminDialog extends IGBDialog {
     AdminDialog.setupSecurityDialogs(min);
 
     min.dialogs.add(
+      new WaterfallDialog('/admin-auth', [
+        async step => {
+          const locale = step.context.activity.locale;
+          const prompt = Messages[locale].authenticate;
+
+          return await min.conversationalService.prompt(min, step, prompt);
+        },
+        async step => {
+          const locale = step.context.activity.locale;
+          const sensitive = step.result;
+
+          if (sensitive === process.env.ADMIN_PASS ) { // TODO: Per bot: min.instance.adminPass
+            await min.conversationalService.sendText(min, step, Messages[locale].welcome);
+
+            return await step.endDialog(true);
+
+          } else {
+            await min.conversationalService.sendText(min, step, Messages[locale].wrong_password);
+            return await step.replaceDialog('/admin-auth');
+          }
+        }]));
+
+    min.dialogs.add(
       new WaterfallDialog('/admin', [
         async step => {
           const locale = step.context.activity.locale;
@@ -181,57 +204,69 @@ export class AdminDialog extends IGBDialog {
 
             let canPublish = AdminDialog.canPublish(min, from);
 
-            if (canPublish) {
-
-              const botId = min.instance.botId;
-              const locale = step.context.activity.locale;
-              await min.conversationalService.sendText(min, step, Messages[locale].working('Publishing'));
-
-              step.activeDialog.state.options.args = (step.options as any).args;
-              const filename = step.activeDialog.state.options.args ?
-                step.activeDialog.state.options.args.split(' ')[0] : null;
-
-              const packages = [];
-              if (filename === null || filename === "") {
-                await min.conversationalService.sendText(min, step, `Starting publishing for ${botId}.gbkb...`);
-                packages.push(`${botId}.gbkb`);
-              } else {
-                await min.conversationalService.sendText(min, step, `Starting publishing for ${filename}...`);
-                packages.push(filename);
-              }
-
-              try {
-
-                await CollectionUtil.asyncForEach(packages, async packageName => {
-
-                  const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
-
-                  if (await (deployer as any).getStoragePackageByName(min.instance.instanceId,
-                    packageName) !== null) {
-                    const cmd2 = `undeployPackage ${packageName}`;
-                    await GBAdminService.undeployPackageCommand(cmd2, min);
-                  }
-                  await GBAdminService.deployPackageCommand(min, cmd1, deployer);
-                  await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
-                });
-              } catch (error) {
-                await min.conversationalService.sendText(min, step, `ERROR: ${error}`);
-                GBLog.error(error);
-                return await step.replaceDialog('/ask', { isReturning: true });
-              }
-              await min.conversationalService.sendText(min, step, Messages[locale].publish_success);
-              if (!step.activeDialog.state.options.confirm) {
-                return await step.replaceDialog('/ask', { isReturning: true });
-              }
-              else {
-                return await step.endDialog();
-              }
-
-            } else {
-              await min.conversationalService.sendText(min, step, Messages[locale].publish_must_be_admin);
+            if (!canPublish) {
+              await step.beginDialog('/admin-auth');
+            }
+            else {
+              step.next(true);
             }
           }
-          await min.conversationalService.sendText(min, step, Messages[locale].publish_canceled);
+          else {
+            await min.conversationalService.sendText(min, step, Messages[locale].publish_canceled);
+          }
+        },
+        async step => {
+          const locale = step.context.activity.locale;
+          if (!step.result) {
+            await min.conversationalService.sendText(min, step, Messages[locale].publish_must_be_admin);
+
+            return step.endDialog();
+          }
+
+          const botId = min.instance.botId;
+          
+          await min.conversationalService.sendText(min, step, Messages[locale].working('Publishing'));
+
+          step.activeDialog.state.options.args = (step.options as any).args;
+          const filename = step.activeDialog.state.options.args ?
+            step.activeDialog.state.options.args.split(' ')[0] : null;
+
+          const packages = [];
+          if (filename === null || filename === "") {
+            await min.conversationalService.sendText(min, step, `Starting publishing for ${botId}.gbkb...`);
+            packages.push(`${botId}.gbkb`);
+          } else {
+            await min.conversationalService.sendText(min, step, `Starting publishing for ${filename}...`);
+            packages.push(filename);
+          }
+
+          try {
+
+            await CollectionUtil.asyncForEach(packages, async packageName => {
+
+              const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
+
+              if (await (deployer as any).getStoragePackageByName(min.instance.instanceId,
+                packageName) !== null) {
+                const cmd2 = `undeployPackage ${packageName}`;
+                await GBAdminService.undeployPackageCommand(cmd2, min);
+              }
+              await GBAdminService.deployPackageCommand(min, cmd1, deployer);
+              await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
+            });
+          } catch (error) {
+            await min.conversationalService.sendText(min, step, `ERROR: ${error}`);
+            GBLog.error(error);
+            return await step.replaceDialog('/ask', { isReturning: true });
+          }
+          await min.conversationalService.sendText(min, step, Messages[locale].publish_success);
+          if (!step.activeDialog.state.options.confirm) {
+            return await step.replaceDialog('/ask', { isReturning: true });
+          }
+          else {
+            return await step.endDialog();
+          }
+
         }]));
   }
 
