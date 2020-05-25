@@ -39,8 +39,6 @@
 import { MessageFactory, RecognizerResult } from 'botbuilder';
 import { LuisRecognizer } from 'botbuilder-ai';
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService } from 'botlib';
-import { AzureText } from 'pragmatismo-io-framework';
-import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
 import { Readable } from 'stream'
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
@@ -54,6 +52,7 @@ const { exec } = require('child_process')
 const fs = require('fs')
 const prism = require('prism-media')
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
+sdk.Recognizer.enableTelemetry(false);
 const uuidv4 = require('uuid/v4');
 const request = require('request-promise-native');
 
@@ -90,15 +89,22 @@ export class GBConversationalService {
   public getCurrentLanguage(step: GBDialogStep) {
     return step.context.activity.locale;
   }
+  private static getChannel(step): string {
+    return !isNaN(step.context.activity.from.id) ? 'whatsapp' : step.context.activity.channelId;
+  }
+
 
   public async sendFile(min: GBMinInstance, step: GBDialogStep, mobile: string, url: string, caption: string): Promise<any> {
+    
     if (step !== null) {
       mobile = step.context.activity.from.id;
-      if (step.context.activity.channelId === 'whatsapp') {
+      if (GBConversationalService.getChannel(step) === 'whatsapp') {
+        GBLog.info(`Sending file ${url} to ${step.context.activity.from.id}...`)
         const filename = url.substring(url.lastIndexOf('/') + 1);
         await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
       }
       else {
+        GBLog.info(`Sending ${url} as file attachment not available in this channel ${step.context.activity.from.id}...`);
         await min.conversationalService.sendText(min, step, url);
       }
     }
@@ -525,12 +531,12 @@ export class GBConversationalService {
     language: string
   ): Promise<string> {
 
-        if (process.env.TRANSLATOR_DISABLED === "true"){
-      return text;      
+    if (process.env.TRANSLATOR_DISABLED === "true") {
+      return text;
     }
 
-    if (text.length > 5000){
-      text = text.substr(0,4999);
+    if (text.length > 5000) {
+      text = text.substr(0, 4999);
       GBLog.warn(`Text that bot will translate will be truncated due to MSFT service limitations.`);
     }
 
@@ -565,7 +571,7 @@ export class GBConversationalService {
     }
   }
 
-  public  async prompt(min: GBMinInstance, step: GBDialogStep, text: string) {
+  public async prompt(min: GBMinInstance, step: GBDialogStep, text: string) {
 
     let sec = new SecService();
     const member = step.context.activity.from;
@@ -580,8 +586,8 @@ export class GBConversationalService {
 
     return await step.prompt("textPrompt", text ? text : {});
   }
-  
-  public  async sendText(min, step, text) {
+
+  public async sendText(min, step, text) {
 
     let sec = new SecService();
     const member = step.context.activity.from;
@@ -591,8 +597,8 @@ export class GBConversationalService {
       min.instance.translatorKey,
       min.instance.translatorEndpoint,
       text,
-      user.locale? user.locale: 'pt'
-    );  
+      user.locale ? user.locale : 'pt'
+    );
 
     await step.context.sendActivity(text);
   }

@@ -571,9 +571,7 @@ export class GBMinService {
         }
 
         GBLog.info(
-          `User>: ${context.activity.text} (${context.activity.type}, ${context.activity.name}, ${
-          context.activity.channelId
-          }, {context.activity.value})`
+          `User>: text:${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId}, value: ${context.activity.value})`
         );
         if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {
           const member = context.activity.membersAdded[0];
