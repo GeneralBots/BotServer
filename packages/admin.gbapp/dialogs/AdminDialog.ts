@@ -88,7 +88,7 @@ export class AdminDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const sensitive = step.result;
 
-          if (sensitive === process.env.ADMIN_PASS ) { // TODO: Per bot: min.instance.adminPass
+          if (sensitive === process.env.ADMIN_PASS) { // TODO: Per bot: min.instance.adminPass
             await min.conversationalService.sendText(min, step, Messages[locale].welcome);
 
             return await step.endDialog(true);
@@ -208,7 +208,7 @@ export class AdminDialog extends IGBDialog {
               await step.beginDialog('/admin-auth');
             }
             else {
-              step.next(true);
+              await step.next(true);
             }
           }
           else {
@@ -224,7 +224,7 @@ export class AdminDialog extends IGBDialog {
           }
 
           const botId = min.instance.botId;
-          
+
           await min.conversationalService.sendText(min, step, Messages[locale].working('Publishing'));
 
           step.activeDialog.state.options.args = (step.options as any).args;

@@ -369,7 +369,7 @@ export class WhatsappDirectLine extends GBService {
     try {
       // tslint:disable-next-line: await-promise
       const result = await request.post(options);
-      GBLog.info(result);
+      GBLog.info( `File ${url} sent to ${to}: ${result}`);
     } catch (error) {
       GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
     }
@@ -392,7 +392,7 @@ export class WhatsappDirectLine extends GBService {
     try {
       // tslint:disable-next-line: await-promise
       const result = await request.post(options);
-      GBLog.info(result);
+      GBLog.info( `Audio ${url} sent to ${to}: ${result}`);
     } catch (error) {
       GBLog.error(`Error sending audio message to Whatsapp provider ${error.message}`);
     }
@@ -444,7 +444,7 @@ export class WhatsappDirectLine extends GBService {
       try {
         // tslint:disable-next-line: await-promise
         const result = await request.post(options);
-        GBLog.info(result);
+        GBLog.info( `Message [${msg}] sent to ${to}: ${result}`);
       } catch (error) {
         GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
 

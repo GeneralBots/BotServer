@@ -89,16 +89,13 @@ export class GBConversationalService {
   public getCurrentLanguage(step: GBDialogStep) {
     return step.context.activity.locale;
   }
-  private static getChannel(step): string {
-    return !isNaN(step.context.activity.from.id) ? 'whatsapp' : step.context.activity.channelId;
-  }
+  
 
 
   public async sendFile(min: GBMinInstance, step: GBDialogStep, mobile: string, url: string, caption: string): Promise<any> {
-    
+
     if (step !== null) {
-      mobile = step.context.activity.from.id;
-      if (GBConversationalService.getChannel(step) === 'whatsapp') {
+      if (!isNaN(step.context.activity.from.id as any)) {
         GBLog.info(`Sending file ${url} to ${step.context.activity.from.id}...`)
         const filename = url.substring(url.lastIndexOf('/') + 1);
         await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
@@ -107,6 +104,12 @@ export class GBConversationalService {
         GBLog.info(`Sending ${url} as file attachment not available in this channel ${step.context.activity.from.id}...`);
         await min.conversationalService.sendText(min, step, url);
       }
+    }
+    else
+    {
+      GBLog.info(`Sending file ${url} to ${mobile}...`)
+      const filename = url.substring(url.lastIndexOf('/') + 1);
+      await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
     }
   }
 
@@ -600,7 +603,13 @@ export class GBConversationalService {
       user.locale ? user.locale : 'pt'
     );
 
-    await step.context.sendActivity(text);
+    if (!isNaN(member.id)) {
+      await min.whatsAppDirectLine.sendToDevice(member.id, text);
+    }
+    else {
+      await step.context.sendActivity(text);
+    }
+
   }
 
 }
