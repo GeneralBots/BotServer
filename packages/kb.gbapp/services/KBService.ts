@@ -55,6 +55,7 @@ import { Messages } from '../strings';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
 import { SecService } from '../../security.gblib/services/SecService';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 
 /**
  * Result for quey on KB data.
@@ -382,7 +383,7 @@ export class KBService implements IGBKBService {
 
       await this.playMarkdown(min, answer, channel, step, min.conversationalService);
 
-    } else if (answer.content.endsWith('.ogg')) {
+    } else if (answer.content.endsWith('.ogg') && process.env.AUDIO_DISABLED !== "true") {
 
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else {
@@ -411,7 +412,7 @@ export class KBService implements IGBKBService {
     html = marked(answer.content);
     if (channel === 'webchat' &&
       GBConfigService.get('DISABLE_WEB') !== 'true') {
-      
+
       await this.sendMarkdownToWeb(min, step, conversationalService, html, answer);
     }
     else if (channel === 'whatsapp') {
@@ -425,7 +426,7 @@ export class KBService implements IGBKBService {
         answer.content,
         user.locale ? user.locale : 'pt'
       );
-  
+
       await conversationalService.sendMarkdownToMobile(min, step, null, answer.content);
     }
     else {
@@ -434,7 +435,7 @@ export class KBService implements IGBKBService {
   }
 
   private async sendMarkdownToWeb(min, step: GBDialogStep, conversationalService: IGBConversationalService, html: string, answer: GuaribasAnswer) {
-    
+
     let sec = new SecService();
     const member = step.context.activity.from;
     const user = await sec.ensureUser(min.instance.instanceId, member.id,
@@ -447,7 +448,7 @@ export class KBService implements IGBKBService {
     );
 
     const locale = step.context.activity.locale;
-    await min.conversationalService.sendText( min, step, Messages[locale].will_answer_projector);
+    await min.conversationalService.sendText(min, step, Messages[locale].will_answer_projector);
     html = html.replace(/src\=\"kb\//g, `src=\"../kb/`);
     await conversationalService.sendEvent(min, step, 'play', {
       playerType: 'markdown',
@@ -476,7 +477,11 @@ export class KBService implements IGBKBService {
 
     // Imports subjects tree into database and return it.
 
-    await this.importSubjectFile(packageStorage.packageId, urlJoin(localPath, 'subjects.json'), instance);
+    const subjectFile = urlJoin(localPath, 'subjects.json');
+
+    if (Fs.existsSync(subjectFile)) {
+      await this.importSubjectFile(packageStorage.packageId, subjectFile, instance);
+    }
 
     // Import tabular files in the tabular directory.
 
@@ -493,39 +498,45 @@ export class KBService implements IGBKBService {
   public async importRemainingArticles(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
     const files = await walkPromise(urlJoin(localPath, 'articles'));
 
-    return Promise.all(
-      files.map(async file => {
-        if (file.name.endsWith('.md')) {
+    await CollectionUtil.asyncForEach(files, async file => {
+      if (file !== null && file.name.endsWith('.md')) {
 
-          let content = await this.getAnswerTextByMediaName(instance.instanceId, file.name);
+        let content = await this.getAnswerTextByMediaName(instance.instanceId, file.name);
 
-          if (content === null) {
+        if (content === null) {
 
-            const fullFilename = urlJoin(file.root, file.name);
-            content = Fs.readFileSync(fullFilename, 'utf-8');
+          const fullFilename = urlJoin(file.root, file.name);
+          content = Fs.readFileSync(fullFilename, 'utf-8');
 
-            await GuaribasAnswer.create({
-              instanceId: instance.instanceId,
-              content: content,
-              format: ".md",
-              media: file.name,
-              packageId: packageId,
-              prevId: 0 // TODO: Calculate total rows and increment.
-            });
-          }
+          await GuaribasAnswer.create({
+            instanceId: instance.instanceId,
+            content: content,
+            format: ".md",
+            media: file.name,
+            packageId: packageId,
+            prevId: 0 // TODO: Calculate total rows and increment.
+          });
         }
-      }));
+      }
+    });
   }
   public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
-    const files = await walkPromise(urlJoin(localPath, 'tabular'));
+    let files = await walkPromise(localPath);
 
-    return Promise.all(
-      files.map(async file => {
-        if (file.name.endsWith('.xlsx')) {
-          return await this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
-        }
-      })
-    );
+    await CollectionUtil.asyncForEach(files, async file => {
+      if (file !== null && file.name.endsWith('.xlsx')) {
+        return await this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
+      }
+    })
+    files = await walkPromise(urlJoin(localPath, 'tabular'));
+
+    await CollectionUtil.asyncForEach(files, async file => {
+
+      if (file !== null && file.name.endsWith('.xlsx')) {
+        return await this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
+      }
+    });
+
   }
 
   public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise<any> {
@@ -582,7 +593,7 @@ export class KBService implements IGBKBService {
     const packageType = Path.extname(localPath);
     const packageName = Path.basename(localPath);
     GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
-    const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
+
 
     const instance = await core.loadInstanceByBotId(min.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);

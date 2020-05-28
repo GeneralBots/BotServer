@@ -165,6 +165,7 @@ export class GBDeployer implements IGBDeployer {
     instance.adminPass = GBAdminService.getRndPassword();
     instance.title = botId;
     instance.activationCode = instance.botId;
+    instance.state = 'active';
 
     await this.core.saveInstance(instance);
 

@@ -43,7 +43,7 @@ import { AzureText } from 'pragmatismo-io-framework';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
 import { SecService } from '../../security.gblib/services/SecService';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
+import { GBServer } from '../../../src/app';
 
 /**
  * Dialog for feedback collecting.
@@ -81,9 +81,9 @@ export class FeedbackDialog extends IGBDialog {
           await min.conversationalService.sendText(min, step, Messages[locale].please_wait_transfering);
           let agentSystemId = await sec.assignHumanAgent(from, min.instance.instanceId);
 
-          await min.whatsAppDirectLine.sendToDevice(agentSystemId, 
+          await min.whatsAppDirectLine.sendToDevice(agentSystemId,
             Messages[locale].notify_agent(step.context.activity.from.name));
-          
+
           return await step.next();
         }
       ])
@@ -100,7 +100,7 @@ export class FeedbackDialog extends IGBDialog {
 
           await sec.updateCurrentAgent(from, min.instance.instanceId, null);
           await min.conversationalService.sendText(min, step, Messages[locale].notify_end_transfer(min.instance.botId));
-          
+
           return await step.next();
         }
       ])
@@ -134,13 +134,17 @@ export class FeedbackDialog extends IGBDialog {
           await min.conversationalService.sendText(min, step, Messages[locale].about_suggestions);
           step.activeDialog.state.cbId = (step.options as any).id;
 
-          return await min.conversationalService.prompt (min, step,  Messages[locale].what_about_service);
+          return await min.conversationalService.prompt(min, step, Messages[locale].what_about_service);
         },
         async step => {
+          const minBoot = GBServer.globals.minBoot as any;
+
           const locale = step.context.activity.locale;
           const rate = await AzureText.getSentiment(
-            min.instance.textAnalyticsKey,
-            min.instance.textAnalyticsEndpoint,
+            minBoot.instance.textAnalyticsKey ?
+              minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
+            minBoot.instance.textAnalyticsEndpoint ?
+              minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsKeyEndpoint,
             min.conversationalService.getCurrentLanguage(step),
             step.result
           );

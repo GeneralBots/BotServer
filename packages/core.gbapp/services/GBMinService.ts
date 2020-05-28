@@ -144,12 +144,12 @@ export class GBMinService {
         }
         let activeMin;
         if (process.env.WHATSAPP_WELCOME_DISABLED !== "true") {
-      // TODO: Active in two modes.
+          // TODO: Active in two modes.
           const toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.botId === text)[0];
           activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
 
           let sec = new SecService();
-          
+
           let user = await sec.getUserFromSystemId(id);
 
           if (user === null) {
@@ -345,7 +345,7 @@ export class GBMinService {
     }
     let instance = await this.core.loadInstanceByBotId(botId);
 
-    if (instance === null){
+    if (instance === null) {
       instance = await this.core.loadInstanceByActivationCode(botId);
     }
 
@@ -687,11 +687,14 @@ export class GBMinService {
       } else {
 
         let query = context.activity.text;
-        
+
         let locale = 'pt';
-        if (process.env.TRANSLATOR_DISABLED !== "true"){
-          locale = await AzureText.getLocale(min.instance.textAnalyticsKey,
-          min.instance.textAnalyticsEndpoint, query);
+        if (process.env.TRANSLATOR_DISABLED !== "true") {
+          const minBoot = GBServer.globals.minBoot as any; // TODO: Switch keys automatically to master/per bot.
+          locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
+            minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
+            minBoot.instance.textAnalyticsEndpoint ?
+            minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsKeyEndpoint, query);
         }
 
         let sec = new SecService();

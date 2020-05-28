@@ -171,23 +171,27 @@ export class WhatsappDirectLine extends GBService {
     const user = await sec.ensureUser(this.min.instance.instanceId, id,
       senderName, "", "whatsapp", senderName);
 
-      const locale = user.locale ? user.locale : 'pt';
+    const locale = user.locale ? user.locale : 'pt';
     if (message.type === "ptt") {
 
-      const options = {
-        url: message.body,
-        method: 'GET',
-        encoding: 'binary'
-      };
+      if (process.env.AUDIO_DISABLED !== "true") {
+        const options = {
+          url: message.body,
+          method: 'GET',
+          encoding: 'binary'
+        };
 
-      const res = await request(options);
-      let buf = Buffer.from(res, 'binary');
-      text = await GBConversationalService.getTextFromAudioBuffer(
-        this.min.instance.speechKey,
-        this.min.instance.cloudLocation,
-        buf, locale
-      );
-
+        const res = await request(options);
+        let buf = Buffer.from(res, 'binary');
+        text = await GBConversationalService.getTextFromAudioBuffer(
+          this.min.instance.speechKey,
+          this.min.instance.cloudLocation,
+          buf, locale
+        );
+      }
+      else{
+        await this.sendToDevice(user.userSystemId, `No momento estou apenas conseguindo ler mensagens de texto.`);
+      }
     }
 
     const conversationId = this.conversationIds[from];
@@ -207,7 +211,7 @@ export class WhatsappDirectLine extends GBService {
 
           if (message === null) {
             await this.sendToDeviceEx(user.userSystemId, `File ${filename} not found in any .gbkb published. Check the name or publish again the associated .gbkb.`,
-            locale);
+              locale);
           } else {
             await this.min.conversationalService.sendMarkdownToMobile(this.min, null, user.userSystemId, message);
           }
@@ -271,7 +275,7 @@ export class WhatsappDirectLine extends GBService {
       conversationId: conversationId,
       activity: {
         textFormat: 'plain',
-        text: text, 
+        text: text,
         type: 'message',
         from: {
           id: from,
@@ -369,7 +373,7 @@ export class WhatsappDirectLine extends GBService {
     try {
       // tslint:disable-next-line: await-promise
       const result = await request.post(options);
-      GBLog.info( `File ${url} sent to ${to}: ${result}`);
+      GBLog.info(`File ${url} sent to ${to}: ${result}`);
     } catch (error) {
       GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
     }
@@ -392,7 +396,7 @@ export class WhatsappDirectLine extends GBService {
     try {
       // tslint:disable-next-line: await-promise
       const result = await request.post(options);
-      GBLog.info( `Audio ${url} sent to ${to}: ${result}`);
+      GBLog.info(`Audio ${url} sent to ${to}: ${result}`);
     } catch (error) {
       GBLog.error(`Error sending audio message to Whatsapp provider ${error.message}`);
     }
@@ -422,7 +426,7 @@ export class WhatsappDirectLine extends GBService {
   public async sendToDevice(to, msg) {
 
     const cmd = '/audio ';
-    if (msg.startsWith(cmd)) {
+    if (msg.startsWith(cmd) && process.env.AUDIO_DISABLED !== 'true') {
       msg = msg.substr(cmd.length);
       return await this.sendTextAsAudioToDevice(to, msg);
     }
@@ -444,7 +448,7 @@ export class WhatsappDirectLine extends GBService {
       try {
         // tslint:disable-next-line: await-promise
         const result = await request.post(options);
-        GBLog.info( `Message [${msg}] sent to ${to}: ${result}`);
+        GBLog.info(`Message [${msg}] sent to ${to}: ${result}`);
       } catch (error) {
         GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
 

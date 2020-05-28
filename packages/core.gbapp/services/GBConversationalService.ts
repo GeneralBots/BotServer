@@ -534,7 +534,7 @@ export class GBConversationalService {
     language: string
   ): Promise<string> {
 
-    if (process.env.TRANSLATOR_DISABLED === "true") {
+    if (endPoint === null || process.env.TRANSLATOR_DISABLED === "true") {
       return text;
     }
 

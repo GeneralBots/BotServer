@@ -36,6 +36,7 @@
 
 'use strict';
 
+import { GBServer } from '../../../src/app';
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
@@ -104,11 +105,14 @@ export class AskDialog extends IGBDialog {
           let query = step.result;
 
           let locale = 'pt';
-          if (process.env.TRANSLATOR_DISABLED !== "true"){
-            locale = await AzureText.getLocale(min.instance.textAnalyticsKey,
-            min.instance.textAnalyticsEndpoint, query);
-          }
-      
+          if (process.env.TRANSLATOR_DISABLED !== "true") {
+            const minBoot = GBServer.globals.minBoot as any;
+            locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
+              minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
+              minBoot.instance.textAnalyticsEndpoint ?
+              minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsKeyEndpoint, query);
+            }
+
           let sec = new SecService();
           const member = step.context.activity.from;
 
@@ -146,7 +150,7 @@ export class AskDialog extends IGBDialog {
           min.instance.translatorEndpoint,
           text,
           userDb.locale ? userDb.locale : 'pt'
-        );      
+        );
 
         if (!text) {
           throw new Error(`/answer being called with no args query text.`);
