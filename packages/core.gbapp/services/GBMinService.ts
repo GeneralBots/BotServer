@@ -181,7 +181,7 @@ export class GBMinService {
           await (GBServer.globals.minBoot as any).whatsAppDirectLine.received(req, res);
         }
       } catch (error) {
-        GBLog.error(`Error on Whatsapp callback: ${error.message}`);
+        GBLog.error(`Error on Whatsapp callback: ${error}`);
       }
 
     });
