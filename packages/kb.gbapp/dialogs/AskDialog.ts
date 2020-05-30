@@ -46,7 +46,6 @@ import { KBService } from './../services/KBService';
 import { GuaribasAnswer } from '../models';
 import { GBMinService } from '../../../packages/core.gbapp/services/GBMinService';
 import { SecService } from '../../security.gblib/services/SecService';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 
 /**
  * Dialog arguments.
@@ -105,13 +104,14 @@ export class AskDialog extends IGBDialog {
           let query = step.result;
 
           let locale = 'pt';
+          const minBoot = GBServer.globals.minBoot as any;
           if (process.env.TRANSLATOR_DISABLED !== "true") {
-            const minBoot = GBServer.globals.minBoot as any;
+
             locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
               minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
               minBoot.instance.textAnalyticsEndpoint ?
-              minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsKeyEndpoint, query);
-            }
+                minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint, query);
+          }
 
           let sec = new SecService();
           const member = step.context.activity.from;
@@ -122,8 +122,8 @@ export class AskDialog extends IGBDialog {
           await user.save();
 
           query = await min.conversationalService.translate(
-            min.instance.translatorKey,
-            min.instance.translatorEndpoint,
+            min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
+            min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
             query,
             'pt');
           GBLog.info(`Translated text: ${query}.`)
@@ -145,9 +145,10 @@ export class AskDialog extends IGBDialog {
         const member = step.context.activity.from;
         const userDb = await sec.ensureUser(min.instance.instanceId, member.id,
           member.name, "", "web", member.name);
+        const minBoot = GBServer.globals.minBoot as any;
         text = await min.conversationalService.translate(
-          min.instance.translatorKey,
-          min.instance.translatorEndpoint,
+          min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
+          min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           text,
           userDb.locale ? userDb.locale : 'pt'
         );

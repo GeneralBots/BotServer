@@ -89,7 +89,7 @@ export class GBConversationalService {
   public getCurrentLanguage(step: GBDialogStep) {
     return step.context.activity.locale;
   }
-  
+
 
 
   public async sendFile(min: GBMinInstance, step: GBDialogStep, mobile: string, url: string, caption: string): Promise<any> {
@@ -105,8 +105,7 @@ export class GBConversationalService {
         await min.conversationalService.sendText(min, step, url);
       }
     }
-    else
-    {
+    else {
       GBLog.info(`Sending file ${url} to ${mobile}...`)
       const filename = url.substring(url.lastIndexOf('/') + 1);
       await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
@@ -575,14 +574,15 @@ export class GBConversationalService {
   }
 
   public async prompt(min: GBMinInstance, step: GBDialogStep, text: string) {
+    const minBoot = GBServer.globals.minBoot as any;
 
     let sec = new SecService();
     const member = step.context.activity.from;
     const user = await sec.ensureUser(min.instance.instanceId, member.id,
       member.name, "", "web", member.name);
     text = await min.conversationalService.translate(
-      min.instance.translatorKey,
-      min.instance.translatorEndpoint,
+      min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
+      min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
       text,
       user.locale ? user.locale : 'pt'
     );
@@ -596,10 +596,11 @@ export class GBConversationalService {
     const member = step.context.activity.from;
     const user = await sec.ensureUser(min.instance.instanceId, member.id,
       member.name, "", "web", member.name);
+    const minBoot = GBServer.globals.minBoot as any;
     text = await min.conversationalService.translate(
-      min.instance.translatorKey,
-      min.instance.translatorEndpoint,
-      text,
+      min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
+      min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
+    text,
       user.locale ? user.locale : 'pt'
     );
 

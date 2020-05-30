@@ -107,7 +107,7 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   public translatorKey: string;
 
   @Column
-  @Column({ type: DataType.STRING(64) })
+  @Column({ type: DataType.STRING(128) })
   public translatorEndpoint: string;
 
   @Column
@@ -226,7 +226,7 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   public adminPass: string;
 
   @Column(DataType.FLOAT)
-  public nlpVsSearch: number;
+  public nlpVsSearch: number;  // TODO: Remove field.
 
   @Column(DataType.FLOAT)
   public searchScore: number;

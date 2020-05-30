@@ -144,7 +144,7 @@ export class FeedbackDialog extends IGBDialog {
             minBoot.instance.textAnalyticsKey ?
               minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
             minBoot.instance.textAnalyticsEndpoint ?
-              minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsKeyEndpoint,
+              minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint,
             min.conversationalService.getCurrentLanguage(step),
             step.result
           );

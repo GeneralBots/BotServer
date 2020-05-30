@@ -189,7 +189,7 @@ export class WhatsappDirectLine extends GBService {
           buf, locale
         );
       }
-      else{
+      else {
         await this.sendToDevice(user.userSystemId, `No momento estou apenas conseguindo ler mensagens de texto.`);
       }
     }
@@ -414,9 +414,11 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async sendToDeviceEx(to, msg, locale) {
+    const minBoot = GBServer.globals.minBoot as any;
+
     const text = await this.min.conversationalService.translate(
-      this.min.instance.translatorKey,
-      this.min.instance.translatorEndpoint,
+      this.min.instance.translatorKey ? this.min.instance.translatorKey : minBoot.instance.translatorKey,
+      this.min.instance.translatorEndpoint ? this.min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
       msg,
       locale
     );

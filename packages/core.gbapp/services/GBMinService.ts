@@ -694,7 +694,7 @@ export class GBMinService {
           locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
             minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
             minBoot.instance.textAnalyticsEndpoint ?
-            minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsKeyEndpoint, query);
+              minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint, query);
         }
 
         let sec = new SecService();
@@ -704,10 +704,10 @@ export class GBMinService {
           member.name, "", "web", member.name);
         user.locale = locale;
         await user.save();
-
+        const minBoot = GBServer.globals.minBoot as any;
         query = await min.conversationalService.translate(
-          min.instance.translatorKey,
-          min.instance.translatorEndpoint,
+          min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
+          min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           query,
           'pt');
         GBLog.info(`Translated text: ${query}.`)

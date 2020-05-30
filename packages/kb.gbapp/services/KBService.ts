@@ -44,6 +44,7 @@ const walkPromise = require('walk-promise');
 // tslint:disable-next-line:newline-per-chained-call
 const { SearchService } = require('azure-search-client');
 var Excel = require('exceljs');
+import { GBServer } from '../../../src/app';
 import { IGBKBService, GBDialogStep, GBLog, IGBConversationalService, IGBCoreService, IGBInstance, GBMinInstance } from 'botlib';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
@@ -420,14 +421,15 @@ export class KBService implements IGBKBService {
       const member = step.context.activity.from;
       const user = await sec.ensureUser(min.instance.instanceId, member.id,
         member.name, "", "web", member.name);
+      const minBoot = GBServer.globals.minBoot as any;
       let text = await min.conversationalService.translate(
-        min.instance.translatorKey,
-        min.instance.translatorEndpoint,
+        min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
+        min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
         answer.content,
         user.locale ? user.locale : 'pt'
       );
 
-      await conversationalService.sendMarkdownToMobile(min, step, null, answer.content);
+      await conversationalService.sendMarkdownToMobile(min, step, null, text);
     }
     else {
       await min.conversationalService.sendText(min, step, html);
@@ -440,9 +442,10 @@ export class KBService implements IGBKBService {
     const member = step.context.activity.from;
     const user = await sec.ensureUser(min.instance.instanceId, member.id,
       member.name, "", "web", member.name);
+    const minBoot = GBServer.globals.minBoot as any;
     html = await min.conversationalService.translate(
-      min.instance.translatorKey,
-      min.instance.translatorEndpoint,
+      min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
+      min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
       html,
       user.locale ? user.locale : 'pt'
     );

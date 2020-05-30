@@ -166,6 +166,8 @@ export class GBDeployer implements IGBDeployer {
     instance.title = botId;
     instance.activationCode = instance.botId;
     instance.state = 'active';
+    instance.nlpScore = 0.80; // TODO: Migrate to Excel Config.xlsx. 
+    instance.searchScore = 0.45;
 
     await this.core.saveInstance(instance);
 
