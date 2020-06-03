@@ -57,6 +57,7 @@ import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
 import { SecService } from '../../security.gblib/services/SecService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
+import { try } from 'bluebird';
 
 /**
  * Result for quey on KB data.
@@ -286,12 +287,11 @@ export class KBService implements IGBKBService {
         line._cells[4] !== undefined) {
         // Extracts values from columns in the current line.
 
-        const subjectsText = line._cells[0].value;
-        const from = line._cells[1].value;
-        const to = line._cells[2].value;
-        const question = line._cells[3].value;
-        let answer = line._cells[4].value;
-
+        const subjectsText = line._cells[0].text;
+        const from = line._cells[1].text;
+        const to = line._cells[2].text;
+        const question = line._cells[3].text;
+        let answer = line._cells[4].text;
 
         if (!(subjectsText === 'subjects' && from === 'from')
           && (answer !== null && question !== null)) {
@@ -302,7 +302,10 @@ export class KBService implements IGBKBService {
 
           let media = null;
 
-          if (answer.indexOf('.md') > -1) {
+          if (!answer) {
+            GBLog.info(`[GBImporter] Answer is NULL related to Question '${question}'.`);
+            answer = 'Existe um problema na base de conhecimento. Fui treinado para entender sua pergunta, avise a quem me criou que a resposta não foi informada para esta pergunta.';
+          } else if (answer.indexOf('.md') > -1) {
             const mediaFilename = urlJoin(path.dirname(filePath), '..', 'articles', answer);
             if (Fs.existsSync(mediaFilename)) {
               answer = Fs.readFileSync(mediaFilename, 'utf8');

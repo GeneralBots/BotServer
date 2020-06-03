@@ -166,7 +166,8 @@ export class AskDialog extends IGBDialog {
           await min.conversationalService.sendText(min, step, Messages[locale].going_answer);
         }
         // Spells check the input text before sending Search or NLP.
-        if (min.instance.spellcheckerKey !== undefined) {
+        const key = min.instance.spellcheckerKey ? minBoot.instance.spellcheckerKey : min.instance.spellcheckerKey;
+        if ( key) {
           const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
           if (data !== text) {
             GBLog.info(`Spelling corrected: ${data}`);
@@ -174,10 +175,11 @@ export class AskDialog extends IGBDialog {
           }
         }
 
+        const searchScore = min.instance.searchScore? min.instance.searchScore: minBoot.instance.searchScore;
         // Searches KB for the first time.
         user.lastQuestion = text;
         await min.userProfile.set(step.context, user);
-        const resultsA = await service.ask(min.instance, text, min.instance.searchScore, user.subjects);
+        const resultsA = await service.ask(min.instance, text, searchScore, user.subjects);
 
         // If there is some result, answer immediately.
         if (resultsA !== undefined && resultsA.answer !== undefined) {
@@ -192,7 +194,7 @@ export class AskDialog extends IGBDialog {
 
         } else {
           // Second time running Search, now with no filter.
-          const resultsB = await service.ask(min.instance, text, min.instance.searchScore, undefined);
+          const resultsB = await service.ask(min.instance, text, searchScore, undefined);
           // If there is some result, answer immediately.
 
           if (resultsB !== undefined && resultsB.answer !== undefined) {
