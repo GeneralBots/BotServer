@@ -301,7 +301,7 @@ export class KBService implements IGBKBService {
 
           let media = null;
 
-          if (typeof (answer) !== "string" ) {
+          if (typeof (answer) !== "string") {
             GBLog.info(`[GBImporter] Answer is NULL related to Question '${question}'.`);
             answer = 'Existe um problema na base de conhecimento. Fui treinado para entender sua pergunta, avise a quem me criou que a resposta não foi informada para esta pergunta.';
           } else if (answer.indexOf('.md') > -1) {
@@ -400,7 +400,24 @@ export class KBService implements IGBKBService {
   }
 
   private async playMarkdown(min: GBMinInstance, answer: GuaribasAnswer, channel: string, step: GBDialogStep, conversationalService: IGBConversationalService) {
-    let html = answer.content;
+
+    let sec = new SecService();
+    const member = step.context.activity.from;
+    const user = await sec.ensureUser(min.instance.instanceId, member.id,
+      member.name, "", "web", member.name);
+    const minBoot = GBServer.globals.minBoot as any;
+
+    // Calls language translator.
+
+    let text = await min.conversationalService.translate(
+      min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
+      min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
+      answer.content,
+      user.locale ? user.locale : 'pt'
+    );
+
+    // Converts from Markdown to HTML.
+
     marked.setOptions({
       renderer: new marked.Renderer(),
       gfm: true,
@@ -412,24 +429,19 @@ export class KBService implements IGBKBService {
       smartypants: false,
       xhtml: false
     });
-    html = marked(answer.content);
+
+    // MSFT Translator breaks markdown, so we need to fix it:
+    text = text.replace('! [', '![').replace('] (','](');
+    
+    const html = marked(text);
+
+    // According to the channel, formats the output optimized to it.
+
     if (channel === 'webchat' &&
       GBConfigService.get('DISABLE_WEB') !== 'true') {
-
       await this.sendMarkdownToWeb(min, step, conversationalService, html, answer);
     }
     else if (channel === 'whatsapp') {
-      let sec = new SecService();
-      const member = step.context.activity.from;
-      const user = await sec.ensureUser(min.instance.instanceId, member.id,
-        member.name, "", "web", member.name);
-      const minBoot = GBServer.globals.minBoot as any;
-      let text = await min.conversationalService.translate(
-        min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
-        min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-        answer.content,
-        user.locale ? user.locale : 'pt'
-      );
 
       await conversationalService.sendMarkdownToMobile(min, step, null, text);
     }
@@ -533,7 +545,7 @@ export class KBService implements IGBKBService {
         return await this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
       }
     })
-    
+
   }
 
   public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise<any> {
