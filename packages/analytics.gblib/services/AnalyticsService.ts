@@ -70,14 +70,14 @@ export class AnalyticsService {
   public async createMessage(
     instanceId: number, 
     conversation: GuaribasConversation,
-    user: GuaribasUser,
+    userId: number,
     content: string
   ): Promise<GuaribasConversationMessage> {
 
     const message = GuaribasConversationMessage.build();
     message.content = content;
     message.instanceId = instanceId;
-    message.userId = user.userId;
+    message.userId = userId;
     message.conversationId = conversation.conversationId;
 
     return await message.save();

@@ -441,7 +441,6 @@ export class GBDeployer implements IGBDeployer {
       instance.searchIndexer
     );
 
-
     const connectionString = GBDeployer.getConnectionStringFromInstance(instance);
 
     const dsName = 'gb';
@@ -468,9 +467,7 @@ export class GBDeployer implements IGBDeployer {
     } catch (err) {
       GBLog.error(err);
       throw err;
-
     }
-
 
     await search.createIndex(searchSchema, dsName);
   }

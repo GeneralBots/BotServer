@@ -43,6 +43,7 @@ import { GBServer } from '../../../src/app';
 import { Readable } from 'stream'
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { SecService } from '../../security.gblib/services/SecService';
+import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 const urlJoin = require('url-join');
 const PasswordGenerator = require("strict-password-generator").default;
 const Nexmo = require('nexmo');
@@ -593,26 +594,29 @@ export class GBConversationalService {
   }
 
   public async sendText(min, step, text) {
-
-    let sec = new SecService();
     const member = step.context.activity.from;
-    const user = await sec.ensureUser(min.instance.instanceId, member.id,
-      member.name, "", "web", member.name);
-    const minBoot = GBServer.globals.minBoot as any;
-    text = await min.conversationalService.translate(
-      min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
-      min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-      text,
-      user.locale ? user.locale : 'pt'
-    );
+    const user = await min.userProfile.get(step.context, {});
+    if (user) {
+      const minBoot = GBServer.globals.minBoot as any;
+      text = await min.conversationalService.translate(
+        min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
+        min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
+        text,
+        user.systemUser.locale ? user.systemUser.locale : 'pt'
+      );
+      const analytics = new AnalyticsService();
 
-    if (!isNaN(member.id)) {
-      await min.whatsAppDirectLine.sendToDevice(member.id, text);
-    }
-    else {
-      await step.context.sendActivity(text);
-    }
+      analytics.createMessage(min.instance.instanceId,
+        user.conversation, null,
+        text);
 
+      if (!isNaN(member.id)) {
+        await min.whatsAppDirectLine.sendToDevice(member.id, text);
+      }
+      else {
+        await step.context.sendActivity(text);
+      }
+
+    }
   }
-
 }

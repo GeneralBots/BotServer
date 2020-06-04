@@ -203,6 +203,7 @@ export class AskDialog extends IGBDialog {
             user2.isAsking = false;
             user2.lastQuestionId = resultsB.questionId;
             await min.userProfile.set(step.context, user2);
+            
             // Informs user that a broader search will be used.
             if (user2.subjects.length > 0) {
               await min.conversationalService.sendText(min, step, Messages[locale].wider_answer);

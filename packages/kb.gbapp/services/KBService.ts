@@ -533,15 +533,7 @@ export class KBService implements IGBKBService {
         return await this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
       }
     })
-    files = await walkPromise(urlJoin(localPath, 'tabular'));
-
-    await CollectionUtil.asyncForEach(files, async file => {
-
-      if (file !== null && file.name.endsWith('.xlsx')) {
-        return await this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
-      }
-    });
-
+    
   }
 
   public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise<any> {
@@ -595,7 +587,6 @@ export class KBService implements IGBKBService {
    * @param localPath Path to the .gbkb folder.
    */
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
-    const packageType = Path.extname(localPath);
     const packageName = Path.basename(localPath);
     GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
 
@@ -606,7 +597,7 @@ export class KBService implements IGBKBService {
     await this.importKbPackage(localPath, p, instance);
     deployer.mountGBKBAssets(packageName, localPath);
 
-    deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
+    await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
     GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
   }
 }

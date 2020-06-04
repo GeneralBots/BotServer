@@ -145,7 +145,7 @@ export class GBMinService {
         let activeMin;
         if (process.env.WHATSAPP_WELCOME_DISABLED !== "true") {
           let toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.botId.toLowerCase() === text.toLowerCase())[0];
-          if (!toSwitchMin){
+          if (!toSwitchMin) {
             toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.activationCode.toLowerCase() === text.toLowerCase())[0];
           }
 
@@ -162,7 +162,7 @@ export class GBMinService {
           } else {
             // User wants to switch bots.
             if (toSwitchMin !== undefined) {
-              
+
               const instance = await this.core.loadInstanceByBotId(activeMin.botId);
               await sec.updateUserInstance(id, instance.instanceId);
 
@@ -554,10 +554,9 @@ export class GBMinService {
           user.subjects = [];
           user.cb = undefined;
 
-
-          if (context.activity.membersAdded !== undefined) {
+          if (context.activity.from.id !== min.botId) {
             let sec = new SecService();
-            const member = context.activity.membersAdded[0];
+            const member = context.activity.from;
 
             const persistedUser = await sec.ensureUser(instance.instanceId, member.id,
               member.name, "", "web", member.name);
@@ -566,7 +565,6 @@ export class GBMinService {
 
             user.systemUser = persistedUser;
             user.conversation = await analytics.createConversation(persistedUser);
-
           }
 
           await min.userProfile.set(step.context, user);
@@ -646,9 +644,11 @@ export class GBMinService {
 
       const analytics = new AnalyticsService();
       const user = await min.userProfile.get(context, {});
-      analytics.createMessage(min.instance.instanceId,
-        user.conversation, user.systemUser,
-        context.activity.text);
+      if (user) {
+        analytics.createMessage(min.instance.instanceId,
+          user.conversation, user.systemUser.userId,
+          context.activity.text);
+      }
     }
 
     // Checks for global exit kewywords cancelling any active dialogs.
