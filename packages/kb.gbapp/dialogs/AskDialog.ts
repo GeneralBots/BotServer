@@ -167,7 +167,7 @@ export class AskDialog extends IGBDialog {
         }
         // Spells check the input text before sending Search or NLP.
         const key = min.instance.spellcheckerKey ? minBoot.instance.spellcheckerKey : min.instance.spellcheckerKey;
-        if ( key) {
+        if (key) {
           const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
           if (data !== text) {
             GBLog.info(`Spelling corrected: ${data}`);
@@ -175,7 +175,7 @@ export class AskDialog extends IGBDialog {
           }
         }
 
-        const searchScore = min.instance.searchScore? min.instance.searchScore: minBoot.instance.searchScore;
+        const searchScore = min.instance.searchScore ? min.instance.searchScore : minBoot.instance.searchScore;
         // Searches KB for the first time.
         user.lastQuestion = text;
         await min.userProfile.set(step.context, user);
@@ -227,16 +227,14 @@ export class AskDialog extends IGBDialog {
 
   private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, answer: GuaribasAnswer) {
 
-    const urlSufix = 'url:';
-
     if (answer.content.endsWith('.docx')) {
       const mainName = answer.content.replace(/\s|\-/gi, '').split('.')[0];
-      return await GBMinService.callVM(mainName, min, step);
+      await GBMinService.callVM(mainName, min, step);
+
     } else {
       await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
-
-      return await step.replaceDialog('/ask', { isReturning: true });
     }
+    return await step.replaceDialog('/ask', { isReturning: true });
 
   }
 
