@@ -109,7 +109,7 @@ class SysClass {
         }
       });
       const botId = this.min.instance.botId;
-      const path = `/${botId}/${botId}.gbdata`;
+      const path = `/${botId}.gbai/${botId}.gbdata`;
 
       let res = await client.api(
         `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
