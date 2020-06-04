@@ -409,7 +409,7 @@ export class KBService implements IGBKBService {
 
     // Calls language translator.
 
-    let text = await min.conversationalService.translate(
+    let text = await min.conversationalService.translate(min, 
       min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
       min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
       answer.content,
@@ -457,7 +457,7 @@ export class KBService implements IGBKBService {
     const user = await sec.ensureUser(min.instance.instanceId, member.id,
       member.name, "", "web", member.name);
     const minBoot = GBServer.globals.minBoot as any;
-    html = await min.conversationalService.translate(
+    html = await min.conversationalService.translate(min, 
       min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
       min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
       html,

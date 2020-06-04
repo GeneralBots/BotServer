@@ -418,7 +418,7 @@ export class WhatsappDirectLine extends GBService {
   public async sendToDeviceEx(to, msg, locale) {
     const minBoot = GBServer.globals.minBoot as any;
 
-    const text = await this.min.conversationalService.translate(
+    const text = await this.min.conversationalService.translate(this.min, 
       this.min.instance.translatorKey ? this.min.instance.translatorKey : minBoot.instance.translatorKey,
       this.min.instance.translatorEndpoint ? this.min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
       msg,
@@ -430,7 +430,7 @@ export class WhatsappDirectLine extends GBService {
   public async sendToDevice(to, msg) {
 
     const cmd = '/audio ';
-    if (msg.startsWith(cmd) && process.env.AUDIO_DISABLED !== 'true') {
+    if (msg.startsWith(cmd)) {
       msg = msg.substr(cmd.length);
       return await this.sendTextAsAudioToDevice(to, msg);
     }

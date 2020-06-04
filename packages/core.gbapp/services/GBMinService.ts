@@ -691,8 +691,16 @@ export class GBMinService {
 
         let query = context.activity.text;
 
+        const translatorEnabled = () => {
+          if (min.instance.params) {
+            const params = JSON.parse(min.instance.params);
+            return params['Enable Worldwide Translator'] === "TRUE";
+          }
+          return false;
+        } // TODO: Encapsulate.
+
         let locale = 'pt';
-        if (process.env.TRANSLATOR_DISABLED !== "true") {
+        if (process.env.TRANSLATOR_DISABLED !== "true" || translatorEnabled()) {
           const minBoot = GBServer.globals.minBoot as any; // TODO: Switch keys automatically to master/per bot.
           locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
             minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
@@ -708,7 +716,7 @@ export class GBMinService {
         user.locale = locale;
         await user.save();
         const minBoot = GBServer.globals.minBoot as any;
-        query = await min.conversationalService.translate(
+        query = await min.conversationalService.translate(min, 
           min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
           min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           query,

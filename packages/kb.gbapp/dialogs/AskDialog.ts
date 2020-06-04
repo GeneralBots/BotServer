@@ -100,13 +100,19 @@ export class AskDialog extends IGBDialog {
       },
       async step => {
         if (step.result) {
+          const translatorEnabled = () => {
+            if (min.instance.params) {
+              const params = JSON.parse(min.instance.params);
+              return params['Enable Worldwide Translator'] === "TRUE";
+            }
+            return false;
+          } // TODO: Encapsulate.
 
           let query = step.result;
 
           let locale = 'pt';
           const minBoot = GBServer.globals.minBoot as any;
-          if (process.env.TRANSLATOR_DISABLED !== "true") {
-
+          if (process.env.TRANSLATOR_DISABLED !== "true" && translatorEnabled()) {
             locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
               minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
               minBoot.instance.textAnalyticsEndpoint ?
@@ -121,7 +127,7 @@ export class AskDialog extends IGBDialog {
           user.locale = locale;
           await user.save();
 
-          query = await min.conversationalService.translate(
+          query = await min.conversationalService.translate(min, 
             min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
             min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
             query,
@@ -146,7 +152,7 @@ export class AskDialog extends IGBDialog {
         const userDb = await sec.ensureUser(min.instance.instanceId, member.id,
           member.name, "", "web", member.name);
         const minBoot = GBServer.globals.minBoot as any;
-        text = await min.conversationalService.translate(
+        text = await min.conversationalService.translate(min, 
           min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
           min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           text,
