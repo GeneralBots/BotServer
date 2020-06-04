@@ -404,18 +404,19 @@ export class GBDeployer implements IGBDeployer {
 
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
+        rimraf.sync(localPath);
         return await service.undeployKbFromStorage(instance, this, p.packageId);
 
       case '.gbui':
-
+        
         break;
 
       case '.gbtheme':
-
+        rimraf.sync(localPath);
         break;
 
       case '.gbdialog':
-
+        rimraf.sync(localPath);
         break;
 
       case '.gblib':

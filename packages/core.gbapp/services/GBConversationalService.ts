@@ -580,12 +580,14 @@ export class GBConversationalService {
     const member = step.context.activity.from;
     const user = await sec.ensureUser(min.instance.instanceId, member.id,
       member.name, "", "web", member.name);
-    text = await min.conversationalService.translate(
-      min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
-      min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-      text,
-      user.locale ? user.locale : 'pt'
-    );
+    if (text !== null) {
+      text = await min.conversationalService.translate(
+        min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
+        min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
+        text,
+        user.locale ? user.locale : 'pt'
+      );
+    }
 
     return await step.prompt("textPrompt", text ? text : {});
   }
@@ -600,7 +602,7 @@ export class GBConversationalService {
     text = await min.conversationalService.translate(
       min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
       min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-    text,
+      text,
       user.locale ? user.locale : 'pt'
     );
 

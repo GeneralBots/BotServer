@@ -57,7 +57,6 @@ import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
 import { SecService } from '../../security.gblib/services/SecService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { try } from 'bluebird';
 
 /**
  * Result for quey on KB data.
@@ -302,7 +301,7 @@ export class KBService implements IGBKBService {
 
           let media = null;
 
-          if (!answer) {
+          if (typeof (answer) !== "string" ) {
             GBLog.info(`[GBImporter] Answer is NULL related to Question '${question}'.`);
             answer = 'Existe um problema na base de conhecimento. Fui treinado para entender sua pergunta, avise a quem me criou que a resposta não foi informada para esta pergunta.';
           } else if (answer.indexOf('.md') > -1) {
@@ -455,7 +454,7 @@ export class KBService implements IGBKBService {
 
     const locale = step.context.activity.locale;
     await min.conversationalService.sendText(min, step, Messages[locale].will_answer_projector);
-    html = html.replace(/src\=\"kb\//g, `src=\"../kb/`);
+    html = html.replace(/src\=\"kb\//gi, `src=\"../kb/`);
     await conversationalService.sendEvent(min, step, 'play', {
       playerType: 'markdown',
       data: {

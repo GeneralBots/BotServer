@@ -88,8 +88,9 @@ export class GBVMService extends GBService {
             fs.writeFileSync(urlJoin(folder, filename), text);
           }
 
-          const mainName = filename.replace(/\s|\-/g, '').split('.')[0];
-          min.scriptMap[filename] = mainName;
+          let mainName = filename.replace(/\s|\-/gi, '').split('.')[0];
+          mainName = mainName.toLowerCase();
+          min.scriptMap[filename] = mainName.toLowerCase();
 
           const fullFilename = urlJoin(folder, filename);
           // TODO: Implement in development mode, how swap for .vbs files
@@ -138,39 +139,39 @@ export class GBVMService extends GBService {
 
     // Keywords from General Bots BASIC.
 
-    code = code.replace(/(hear email)/g, `email = askEmail()`);
+    code = code.replace(/(hear email)/gi, `email = askEmail()`);
 
-    code = code.replace(/(hear)\s*(\w+)/g, ($0, $1, $2) => {
+    code = code.replace(/(hear)\s*(\w+)/gi, ($0, $1, $2) => {
       return `${$2} = hear()`;
     });
-    code = code.replace(/(\w)\s*\=\s*find\s*(.*)/g, ($0, $1, $2, $3) => {
+    code = code.replace(/(\w)\s*\=\s*find\s*(.*)/gi, ($0, $1, $2, $3) => {
       return `${$1} = sys().find(${$2})\n`;
     });
 
-    code = code.replace(/(wait)\s*(\d+)/g, ($0, $1, $2) => {
+    code = code.replace(/(wait)\s*(\d+)/gi, ($0, $1, $2) => {
       return `sys().wait(${$2})`;
     });
 
-    code = code.replace(/(get stock for )(.*)/g, ($0, $1, $2) => {
+    code = code.replace(/(get stock for )(.*)/gi, ($0, $1, $2) => {
       return `let stock = sys().getStock(${$2})`;
     });
 
-    code = code.replace(/(get)(\s)(.*)/g, ($0, $1, $2) => {
+    code = code.replace(/(get)(\s)(.*)/gi, ($0, $1, $2) => {
       return `sys().httpGet (${$2})`;
     });
 
-    code = code.replace(/(create a bot farm using)(\s)(.*)/g, ($0, $1, $2, $3) => {
+    code = code.replace(/(create a bot farm using)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().createABotFarmUsing (${$3})`;
     });
 
-    code = code.replace(/(talk)(\s)(.*)/g, ($0, $1, $2, $3) => {
+    code = code.replace(/(talk)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `talk (step, ${$3})\n`;
     });
-    code = code.replace(/(send file)(\s*)(.*)/g, ($0, $1, $2, $3) => {
+    code = code.replace(/(send file)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `sendFile (step, ${$3})\n`;
     });
 
-    code = code.replace(/(save)(\s)(.*)/g, ($0, $1, $2, $3) => {
+    code = code.replace(/(save)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().save(${$3})\n`;
     });
 
@@ -193,7 +194,7 @@ export class GBVMService extends GBService {
     // Convert TS into JS.
     const tsfile: string = `${filename}.ts`;
     let tsCode: string = fs.readFileSync(tsfile, 'utf8');
-    tsCode = tsCode.replace(/export.*\n/g, `export function ${mainName}(step:any) { let resolve = undefined;`);
+    tsCode = tsCode.replace(/export.*\n/gi, `export function ${mainName}(step:any) { let resolve = undefined;`);
     fs.writeFileSync(tsfile, tsCode);
 
     const tsc = new TSCompiler();
@@ -275,7 +276,7 @@ export class GBVMService extends GBService {
         const sandbox: DialogClass = new DialogClass(min, deployer);
         const context = vm.createContext(sandbox);
         vm.runInContext(parsedCode, context);
-        min.sandBoxMap[mainName] = sandbox;
+        min.sandBoxMap[mainName.toLowerCase()] = sandbox;
         GBLog.info(`[GBVMService] Finished loading of ${filename}`);
       } catch (error) {
         GBLog.error(`[GBVMService] ERROR loading ${error}`);
@@ -286,20 +287,20 @@ export class GBVMService extends GBService {
   private handleThisAndAwait(code: string) {
     // this insertion.
 
-    code = code.replace(/sys\(\)/g, 'this.sys()');
-    code = code.replace(/("[^"]*"|'[^']*')|\btalk\b/g, ($0, $1) => {
+    code = code.replace(/sys\(\)/gi, 'this.sys()');
+    code = code.replace(/("[^"]*"|'[^']*')|\btalk\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.talk' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\bhear\b/g, ($0, $1) => {
+    code = code.replace(/("[^"]*"|'[^']*')|\bhear\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.hear' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/g, ($0, $1) => {
+    code = code.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendEmail' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\baskEmail\b/g, ($0, $1) => {
+    code = code.replace(/("[^"]*"|'[^']*')|\baskEmail\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.askEmail' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/g, ($0, $1) => {
+    code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendFile' : $1;
     });
 

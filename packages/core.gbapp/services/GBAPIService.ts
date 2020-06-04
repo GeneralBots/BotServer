@@ -96,50 +96,54 @@ class SysClass {
   }
 
   public async save(file: string, ...args): Promise<any> {
+    try {
+      let token =
+        await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
-    let token =
-      await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+      let siteId = process.env.STORAGE_SITE_ID;
+      let libraryId = process.env.STORAGE_LIBRARY;
 
-    let siteId = process.env.STORAGE_SITE_ID;
-    let libraryId = process.env.STORAGE_LIBRARY;
+      let client = MicrosoftGraph.Client.init({
+        authProvider: done => {
+          done(null, token);
+        }
+      });
+      const botId = this.min.instance.botId;
+      const path = `/${botId}/${botId}.gbdata`;
 
-    let client = MicrosoftGraph.Client.init({
-      authProvider: done => {
-        done(null, token);
+      let res = await client.api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+        .get();
+
+      let document = res.value.filter(m => {
+        return m.name === file
+      });
+
+      await client.api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z1')/insert`)
+        .post({});
+
+      if (document === undefined) {
+        throw `File '${file}' specified on save GBasic command SAVE not found. Check the .gbdata or the .gbdialog associated.`;
       }
-    });
-    const botId = this.min.instance.botId;
-    const path = `/${botId}/${botId}.gbdata`;
+      if (args.length > 27) {
+        throw `File '${file}' has a SAVE call with more than 27 arguments. Check the .gbdialog associated.`;
+      }
 
-    let res = await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
-      .get();
+      let body =
+        { "values": [[]] };
 
-    let document = res.value.filter(m => {
-      return m.name === file
-    });
+      for (let index = 0; index < 26; index++) {
+        body.values[0][index] = args[index];
+      }
 
-    await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z1')/insert`)
-      .post({});
-
-    if (document === undefined) {
-      throw `File '${file}' specified on save GBasic command SAVE not found. Check the .gbdata or the .gbdialog associated.`;
+      let res2 = await client.api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:Z2')`)
+        .patch(body);
+    } catch (error) {
+      GBLog.error(`SAVE BASIC error: ${error.message}`);
+      throw error;
     }
-    if (args.length > 27) {
-      throw `File '${file}' has a SAVE call with more than 27 arguments. Check the .gbdialog associated.`;
-    }
-
-    let body =
-      { "values": [[]] };
-
-    for (let index = 0; index < 26; index++) {
-      body.values[0][index] = args[index];
-    }
-
-    let res2 = await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:Z2')`)
-      .patch(body);
 
   }
 
@@ -264,7 +268,7 @@ class SysClass {
   }
 
   public async numberOnly(text: string) {
-    return text.replace(/\D/g, "");
+    return text.replace(/\D/gi, "");
   }
 
 }

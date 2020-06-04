@@ -720,7 +720,7 @@ export class GBMinService {
   }
 
   public static async callVM(text: string, min: GBMinInstance, step: GBDialogStep) {
-    const mainMethod = text;
+    const mainMethod = text.toLowerCase();
     min.sandBoxMap[mainMethod][mainMethod].bind(min.sandBoxMap[mainMethod]);
     return await min.sandBoxMap[mainMethod][mainMethod](step);
   }

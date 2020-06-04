@@ -230,7 +230,7 @@ export class AskDialog extends IGBDialog {
     const urlSufix = 'url:';
 
     if (answer.content.endsWith('.docx')) {
-      const mainName = answer.content.replace(/\s|\-/g, '').split('.')[0];
+      const mainName = answer.content.replace(/\s|\-/gi, '').split('.')[0];
       return await GBMinService.callVM(mainName, min, step);
     } else {
       await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
