@@ -211,7 +211,16 @@ export class GBCoreService implements IGBCoreService {
    */
   public async loadInstances(): Promise<IGBInstance[]> {
     if (process.env.LOAD_ONLY !== undefined) {
-      const options = { where: { botId: process.env.LOAD_ONLY } };
+      
+      const bots = process.env.LOAD_ONLY.split(`;`);
+      const and = [];
+      await CollectionUtil.asyncForEach(bots, async e => {
+        and.push({botId: e});
+      });
+      
+      const options = {where: {
+        [Op.or]: and
+      }};
       return GuaribasInstance.findAll(options);
     }
     else {
@@ -349,24 +358,26 @@ STORAGE_SYNC=true
     let instances: IGBInstance[];
     try {
       instances = await core.loadInstances();
-      await CollectionUtil.asyncForEach(instances, async instance => {
-        GBLog.info(`Updating bot endpoint for ${instance.botId}...`);
-        try {
-          await installationDeployer.updateBotProxy(
-            instance.botId,
-            GBConfigService.get("CLOUD_GROUP"),
-            `${proxyAddress}/api/messages/${instance.botId}`
-          );
-        } catch (error) {
-          if (error.code === "ResourceNotFound") {
-            GBLog.warn(`Bot ${instance.botId} not found on resource group ${GBConfigService.get("CLOUD_GROUP")}.`);
-          }
-          else {
+      if (process.env.ENDPOINT_UPDATE === "true") {
+        await CollectionUtil.asyncForEach(instances, async instance => {
+          GBLog.info(`Updating bot endpoint for ${instance.botId}...`);
+          try {
+            await installationDeployer.updateBotProxy(
+              instance.botId,
+              GBConfigService.get("CLOUD_GROUP"),
+              `${proxyAddress}/api/messages/${instance.botId}`
+            );
+          } catch (error) {
+            if (error.code === "ResourceNotFound") {
+              GBLog.warn(`Bot ${instance.botId} not found on resource group ${GBConfigService.get("CLOUD_GROUP")}.`);
+            }
+            else {
 
-            throw new Error(`Error updating bot proxy, details: ${error}.`);
+              throw new Error(`Error updating bot proxy, details: ${error}.`);
+            }
           }
-        }
-      });
+        });
+      }
     } catch (error) {
       if (error.parent === undefined) {
         throw new Error(`Cannot connect to operating storage: ${error.message}.`);

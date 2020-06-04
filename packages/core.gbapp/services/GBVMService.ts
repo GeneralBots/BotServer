@@ -74,19 +74,26 @@ export class GBVMService extends GBService {
 
         let filename: string = file.name;
 
-        if (
-          filename.endsWith('.vbs') ||
-          filename.endsWith('.vb') ||
-          filename.endsWith('.basic') ||
-          filename.endsWith('.bas') ||
-          filename.endsWith('.docx')
-        ) {
-
-          if (filename.endsWith('.docx')) {
-            let text = await this.getTextFromWord(folder, filename);
-            filename = filename.substr(0, filename.indexOf('docx')) + 'vbs';
-            fs.writeFileSync(urlJoin(folder, filename), text);
+        if (filename.endsWith('.docx')) {
+          const wordFile = filename;
+          const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
+          const fullVbsFile = urlJoin(folder, vbsFile);
+          const docxStat = fs.statSync(urlJoin(folder, wordFile));
+          const interval = 30000; // If compiled is older 30 seconds, then recompile.
+          let writeVBS = true;
+          if (fs.existsSync(fullVbsFile)) {
+            const vbsStat = fs.statSync(fullVbsFile);
+            if (docxStat.mtimeMs < (vbsStat.mtimeMs + interval)) {
+              writeVBS = false;
+            }
           }
+          if (writeVBS) {
+
+            let text = await this.getTextFromWord(folder, wordFile);
+            fs.writeFileSync(urlJoin(folder, vbsFile), text);
+          }
+
+          filename = vbsFile;
 
           let mainName = filename.replace(/\s|\-/gi, '').split('.')[0];
           mainName = mainName.toLowerCase();
@@ -98,7 +105,24 @@ export class GBVMService extends GBService {
           //   await this.run(fullFilename, min, deployer, mainName);
           // });
 
-          await this.run(fullFilename, min, deployer, mainName);
+          const compiledAt = fs.statSync(fullFilename);
+          const jsfile = urlJoin(folder, `${filename}.js`);
+
+          if (fs.existsSync(jsfile)) {
+            const jsStat = fs.statSync(jsfile);
+            const interval = 30000; // If compiled is older 30 seconds, then recompile.
+            if (compiledAt.isFile() && compiledAt.mtimeMs > (jsStat.mtimeMs + interval)) {
+              await this.executeBASIC(fullFilename, min, deployer, mainName);
+            }
+            else {
+              const parsedCode: string = fs.readFileSync(jsfile, 'utf8');
+              this.executeJS(min, deployer, parsedCode, mainName);
+            }
+          }
+          else {
+            await this.executeBASIC(fullFilename, min, deployer, mainName);
+          }
+
         }
       })
     );
@@ -180,7 +204,7 @@ export class GBVMService extends GBService {
     return code;
   }
 
-  public async run(filename: any, min: GBMinInstance, deployer: GBDeployer, mainName: string) {
+  public async executeBASIC(filename: any, min: GBMinInstance, deployer: GBDeployer, mainName: string) {
     // Converts General Bots BASIC into regular VBS
 
     const basicCode: string = fs.readFileSync(filename, 'utf8');
@@ -272,15 +296,20 @@ export class GBVMService extends GBService {
       parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true })
       fs.writeFileSync(jsfile, parsedCode);
 
-      try {
-        const sandbox: DialogClass = new DialogClass(min, deployer);
-        const context = vm.createContext(sandbox);
-        vm.runInContext(parsedCode, context);
-        min.sandBoxMap[mainName.toLowerCase()] = sandbox;
-        GBLog.info(`[GBVMService] Finished loading of ${filename}`);
-      } catch (error) {
-        GBLog.error(`[GBVMService] ERROR loading ${error}`);
-      }
+      this.executeJS(min, deployer, parsedCode, mainName);
+      GBLog.info(`[GBVMService] Finished loading of ${filename}`);
+    }
+  }
+
+  private executeJS(min: GBMinInstance, deployer: GBDeployer, parsedCode: string, mainName: string) {
+    try {
+      const sandbox: DialogClass = new DialogClass(min, deployer);
+      const context = vm.createContext(sandbox);
+      vm.runInContext(parsedCode, context);
+      min.sandBoxMap[mainName.toLowerCase()] = sandbox;
+    }
+    catch (error) {
+      GBLog.error(`[GBVMService] ERROR loading ${error}`);
     }
   }
 
@@ -320,7 +349,7 @@ export class GBVMService extends GBService {
           step.activeDialog.state.options = {};
           step.activeDialog.state.options.cbId = (step.options as any).id;
           step.activeDialog.state.options.previousResolve = (step.options as any).previousResolve;
-          return await min.conversationalService.prompt (min, step,null);
+          return await min.conversationalService.prompt(min, step, null);
         },
         async step => {
           const cbId = step.activeDialog.state.options.cbId;

@@ -110,11 +110,13 @@ export class WhatsappDirectLine extends GBService {
       const express = require('express');
       GBServer.globals.server.use(`/audios`, express.static('work'));
 
-      try {
-        let res = await request.post(options);
-        GBLog.info(res);
-      } catch (error) {
-        GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
+      if (process.env.ENDPOINT_UPDATE === "true") {
+        try {
+          let res = await request.post(options);
+          GBLog.info(res);
+        } catch (error) {
+          GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
+        }
       }
     }
 
