@@ -144,8 +144,11 @@ export class GBMinService {
         }
         let activeMin;
         if (process.env.WHATSAPP_WELCOME_DISABLED !== "true") {
-          // TODO: Active in two modes.
-          const toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.botId === text)[0];
+          let toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.botId.toLowerCase() === text.toLowerCase())[0];
+          if (!toSwitchMin){
+            toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.activationCode.toLowerCase() === text.toLowerCase())[0];
+          }
+
           activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
 
           let sec = new SecService();
@@ -159,8 +162,8 @@ export class GBMinService {
           } else {
             // User wants to switch bots.
             if (toSwitchMin !== undefined) {
-              const botId = text;
-              const instance = await this.core.loadInstanceByBotId(botId);
+              
+              const instance = await this.core.loadInstanceByBotId(activeMin.botId);
               await sec.updateUserInstance(id, instance.instanceId);
 
               await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
