@@ -97,7 +97,8 @@ export class GBConversationalService {
 
     if (step !== null) {
       if (!isNaN(step.context.activity.from.id as any)) {
-        GBLog.info(`Sending file ${url} to ${step.context.activity.from.id}...`)
+        mobile = step.context.activity.from.id;
+        GBLog.info(`Sending file ${url} to ${mobile}...`)
         const filename = url.substring(url.lastIndexOf('/') + 1);
         await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
       }
@@ -348,7 +349,7 @@ export class GBConversationalService {
               await step.context.sendActivity(currentText);
             }
             else {
-              this.sendToMobile(min, mobile, currentText);
+              await this.sendToMobile(min, mobile, currentText);
             }
             await sleep(3000);
             currentText = '';
@@ -371,7 +372,7 @@ export class GBConversationalService {
                 await step.context.sendActivity(currentText);
               }
               else {
-                this.sendToMobile(min, mobile, currentText);
+                await this.sendToMobile(min, mobile, currentText);
               }
               await sleep(3000);
             }
@@ -404,9 +405,9 @@ export class GBConversationalService {
                 await step.context.sendActivity(currentText);
               }
               else {
-                this.sendToMobile(min, mobile, currentText);
+                await this.sendToMobile(min, mobile, currentText);
               }
-              await sleep(3000);
+              await sleep(2900);
             }
             currentText = '';
             state = State.InImageCaption;
@@ -435,7 +436,7 @@ export class GBConversationalService {
             let url = urlJoin(GBServer.globals.publicAddress, currentImage);
             await this.sendFile(min, step, mobile, url, currentCaption);
             currentCaption = '';
-            await sleep(5000);
+            await sleep(4500);
             currentImage = '';
           }
           else {
@@ -451,7 +452,7 @@ export class GBConversationalService {
 
       }
       else {
-        this.sendToMobile(min, mobile, currentText);
+        await this.sendToMobile(min, mobile, currentText);
       }
     }
   }
@@ -590,7 +591,7 @@ export class GBConversationalService {
     const user = await sec.ensureUser(min.instance.instanceId, member.id,
       member.name, "", "web", member.name);
     if (text !== null) {
-      text = await min.conversationalService.translate(min, 
+      text = await min.conversationalService.translate(min,
         min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
         min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
         text,
@@ -606,7 +607,7 @@ export class GBConversationalService {
     const user = await min.userProfile.get(step.context, {});
     if (user) {
       const minBoot = GBServer.globals.minBoot as any;
-      text = await min.conversationalService.translate(min, 
+      text = await min.conversationalService.translate(min,
         min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
         min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
         text,

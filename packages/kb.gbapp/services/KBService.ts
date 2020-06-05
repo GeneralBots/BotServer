@@ -380,7 +380,7 @@ export class KBService implements IGBKBService {
 
   public async sendAnswer(min: GBMinInstance, channel: string, step: GBDialogStep, answer: GuaribasAnswer) {
     if (answer.content.endsWith('.mp4')) {
-      await this.playVideo(min, min.conversationalService, step, answer);
+      await this.playVideo(min, min.conversationalService, step, answer, channel);
     }
     else if (answer.format === '.md') {
 
@@ -433,14 +433,14 @@ export class KBService implements IGBKBService {
     // MSFT Translator breaks markdown, so we need to fix it:
 
     text = text.replace('! [', '![').replace('] (', '](');
-    text = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', ''); // TODO: Improve it.
 
-    const html = marked(text);
+    let html = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', ''); // TODO: Improve it.
 
     // According to the channel, formats the output optimized to it.
 
     if (channel === 'webchat' &&
       GBConfigService.get('DISABLE_WEB') !== 'true') {
+      html = marked(text);
       await this.sendMarkdownToWeb(min, step, conversationalService, html, answer);
     }
     else if (channel === 'whatsapp') {
@@ -448,6 +448,7 @@ export class KBService implements IGBKBService {
       await conversationalService.sendMarkdownToMobile(min, step, user.userSystemId, text);
     }
     else {
+      html = marked(text);
       await min.conversationalService.sendText(min, step, html);
     }
   }
@@ -481,11 +482,16 @@ export class KBService implements IGBKBService {
   }
 
 
-  private async playVideo(min, conversationalService: IGBConversationalService, step: GBDialogStep, answer: GuaribasAnswer) {
-    await conversationalService.sendEvent(min, step, 'play', {
-      playerType: 'video',
-      data: answer.content
-    });
+  private async playVideo(min, conversationalService: IGBConversationalService,
+    step: GBDialogStep, answer: GuaribasAnswer, channel: string) {
+    if (channel === "whatsapp") {
+      await min.conversationalService.sendFile(min, step, null, answer.content, "");
+    } else {
+      await conversationalService.sendEvent(min, step, 'play', {
+        playerType: 'video',
+        data: answer.content
+      });
+    }
   }
 
   public async importKbPackage(

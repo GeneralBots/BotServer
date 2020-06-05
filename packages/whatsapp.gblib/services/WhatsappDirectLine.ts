@@ -428,7 +428,7 @@ export class WhatsappDirectLine extends GBService {
 
   }
 
-  public async sendToDevice(to, msg) {
+  public async sendToDevice(to: string, msg: string) {
 
     const cmd = '/audio ';
     if (msg.startsWith(cmd)) {
