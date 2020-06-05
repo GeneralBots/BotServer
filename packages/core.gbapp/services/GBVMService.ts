@@ -349,6 +349,7 @@ export class GBVMService extends GBService {
           step.activeDialog.state.options = {};
           step.activeDialog.state.options.cbId = (step.options as any).id;
           step.activeDialog.state.options.previousResolve = (step.options as any).previousResolve;
+          GBLog.info('BASIC: Asking for input (HEAR).');
           return await min.conversationalService.prompt(min, step, null);
         },
         async step => {

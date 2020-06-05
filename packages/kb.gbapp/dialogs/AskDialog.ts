@@ -236,12 +236,12 @@ export class AskDialog extends IGBDialog {
 
     if (answer.content.endsWith('.docx')) {
       const mainName = answer.content.replace(/\s|\-/gi, '').split('.')[0];
-      await GBMinService.callVM(mainName, min, step);
+      return await GBMinService.callVM(mainName, min, step);
 
     } else {
       await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
+      return await step.replaceDialog('/ask', { isReturning: true });
     }
-    return await step.replaceDialog('/ask', { isReturning: true });
 
   }
 
