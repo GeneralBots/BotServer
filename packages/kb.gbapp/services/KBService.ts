@@ -443,7 +443,7 @@ export class KBService implements IGBKBService {
     }
     else if (channel === 'whatsapp') {
 
-      await conversationalService.sendMarkdownToMobile(min, step, null, text);
+      await conversationalService.sendMarkdownToMobile(min, step, user.userSystemId, text);
     }
     else {
       await min.conversationalService.sendText(min, step, html);

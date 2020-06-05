@@ -146,7 +146,7 @@ export class GBMinService {
         if (process.env.WHATSAPP_WELCOME_DISABLED !== "true") {
           let toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.botId.toLowerCase() === text.toLowerCase())[0];
           if (!toSwitchMin) {
-            toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.activationCode.toLowerCase() === text.toLowerCase())[0];
+            toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.activationCode ? p.instance.activationCode.toLowerCase() === text.toLowerCase() : false)[0];
           }
 
           activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
@@ -716,7 +716,7 @@ export class GBMinService {
         user.locale = locale;
         await user.save();
         const minBoot = GBServer.globals.minBoot as any;
-        query = await min.conversationalService.translate(min, 
+        query = await min.conversationalService.translate(min,
           min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
           min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           query,
