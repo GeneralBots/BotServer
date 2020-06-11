@@ -480,16 +480,19 @@ export class GBMinService {
     }
     else {
       const minBoot = GBServer.globals.minBoot as any;
-      min.whatsAppDirectLine =
-        new WhatsappDirectLine(
-          min,
-          min.botId,
-          min.instance.webchatKey,
-          minBoot.instance.whatsappServiceKey,
-          minBoot.instance.whatsappServiceNumber,
-          minBoot.instance.whatsappServiceUrl
-        );
-      await min.whatsAppDirectLine.setup(false);
+      if (minBoot.instance.whatsappServiceKey) {
+
+        min.whatsAppDirectLine =
+          new WhatsappDirectLine(
+            min,
+            min.botId,
+            min.instance.webchatKey,
+            minBoot.instance.whatsappServiceKey,
+            minBoot.instance.whatsappServiceNumber,
+            minBoot.instance.whatsappServiceUrl
+          );
+        await min.whatsAppDirectLine.setup(false);
+      }
     }
 
     min.userProfile = conversationState.createProperty('userProfile');

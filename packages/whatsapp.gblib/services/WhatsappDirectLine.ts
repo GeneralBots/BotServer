@@ -244,7 +244,7 @@ export class WhatsappDirectLine extends GBService {
       }
       else {
         GBLog.info(`USER (${id}) TO AGENT ${user.userSystemId}: ${text}`);
-        this.sendToDeviceEx(user.agentSystemId, `${id}: ${text}`, locale);
+        this.sendToDeviceEx(user.agentSystemId, `Bot: ${this.min.instance.botId}\n${id}: ${text}`, locale);
       }
 
     }

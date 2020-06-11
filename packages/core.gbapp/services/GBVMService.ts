@@ -218,7 +218,7 @@ export class GBVMService extends GBService {
     // Convert TS into JS.
     const tsfile: string = `${filename}.ts`;
     let tsCode: string = fs.readFileSync(tsfile, 'utf8');
-    tsCode = tsCode.replace(/export.*\n/gi, `export function ${mainName}(step:any) { let resolve = undefined;`);
+    tsCode = tsCode.replace(/export.*\n/gi, `export function ${mainName}(step:any) { let resolve;`);
     fs.writeFileSync(tsfile, tsCode);
 
     const tsc = new TSCompiler();

@@ -219,7 +219,8 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     };
   }
 
-  public async botExists(botId, group) {
+  public async botExists(botId) {
+    const group = GBConfigService.get('CLOUD_GROUP');
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');

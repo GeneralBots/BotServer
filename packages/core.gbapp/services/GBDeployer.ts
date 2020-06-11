@@ -174,9 +174,9 @@ export class GBDeployer implements IGBDeployer {
     return await this.deployBotFull(instance, GBServer.globals.publicAddress);
   }
 
-  public async botExists(instance: IGBInstance, group, publicAddress: string): Promise<boolean> {
+  public async botExists(botId: string): Promise<boolean> {
     const service = new AzureDeployerService(this);
-    return await service.botExists(instance.botId, group);
+    return await service.botExists(botId);
   }
   /**
    * Deploys a bot to the storage.
@@ -191,7 +191,7 @@ export class GBDeployer implements IGBDeployer {
     const group = GBConfigService.get('CLOUD_GROUP');
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
 
-    if (await service.botExists(instance.botId, group)) {
+    if (await service.botExists(instance.botId)) {
       await service.updateBot(
         instance.botId,
         group,
@@ -312,7 +312,7 @@ export class GBDeployer implements IGBDeployer {
 
     const group = GBConfigService.get('CLOUD_GROUP');
 
-    if (await service.botExists(botId, group)) {
+    if (await service.botExists(botId)) {
 
       await service.deleteBot(
         botId, group
@@ -408,7 +408,7 @@ export class GBDeployer implements IGBDeployer {
         return await service.undeployKbFromStorage(instance, this, p.packageId);
 
       case '.gbui':
-        
+
         break;
 
       case '.gbtheme':
