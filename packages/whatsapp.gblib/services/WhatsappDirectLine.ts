@@ -35,12 +35,13 @@ import urlJoin = require('url-join');
 const Swagger = require('swagger-client');
 const rp = require('request-promise');
 const fs = require('fs');
-import { GBLog, GBService, GBMinInstance } from 'botlib';
+import { GBLog, GBService, GBMinInstance, IGBPackage } from 'botlib';
 import * as request from 'request-promise-native';
 import { GBServer } from '../../../src/app';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 import { SecService } from '../../security.gblib/services/SecService';
 import { Messages } from '../strings';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 
 /**
  * Support for Whatsapp.
@@ -150,6 +151,7 @@ export class WhatsappDirectLine extends GBService {
 
   public async received(req, res) {
 
+
     if (req.body.messages === undefined) {
       res.end();
       return;  // Exit here.
@@ -166,6 +168,10 @@ export class WhatsappDirectLine extends GBService {
     }
     GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
 
+    await CollectionUtil.asyncForEach(this.min.appPackages, async (e:IGBPackage) => {
+      await e.onExchangeData(this.min, "whatsappMessage", message);
+    });
+    
     const id = req.body.messages[0].chatId.split('@')[0];
     const senderName = req.body.messages[0].senderName;
     let sec = new SecService();

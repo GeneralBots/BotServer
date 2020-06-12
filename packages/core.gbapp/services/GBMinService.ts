@@ -211,7 +211,7 @@ export class GBMinService {
   public async mountBot(instance: IGBInstance) {
 
     // Build bot adapter.
-    const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.sysPackages);
+    const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.sysPackages, GBServer.globals.appPackages);
     GBServer.globals.minInstances.push(min);
 
     await this.deployer.deployPackage(min, 'packages/default.gbtheme');
@@ -431,7 +431,7 @@ export class GBMinService {
     }
   }
 
-  private async buildBotAdapter(instance: any, sysPackages: IGBPackage[]) {
+  private async buildBotAdapter(instance: any, sysPackages: IGBPackage[], appPackages: IGBPackage[]) {
     const adapter = new BotFrameworkAdapter({
       appId: instance.marketplaceId,
       appPassword: instance.marketplacePassword
@@ -466,6 +466,7 @@ export class GBMinService {
     min.scriptMap = {};
     min.sandBoxMap = {};
     min.packages = sysPackages;
+    min.appPackages = appPackages;
 
     if (min.instance.whatsappServiceKey !== null) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
