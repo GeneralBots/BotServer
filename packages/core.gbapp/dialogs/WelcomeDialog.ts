@@ -81,6 +81,7 @@ export class WelcomeDialog extends IGBDialog {
                 : Messages[locale].good_night;
 
           await min.conversationalService.sendText(min, step, Messages[locale].hi(msg));
+          
           await step.replaceDialog('/ask', { firstTime: true });
 
           if (

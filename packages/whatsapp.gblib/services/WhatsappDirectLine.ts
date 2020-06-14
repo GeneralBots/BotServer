@@ -150,8 +150,6 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async received(req, res) {
-
-
     if (req.body.messages === undefined) {
       res.end();
       return;  // Exit here.

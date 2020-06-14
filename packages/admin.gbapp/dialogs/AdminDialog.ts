@@ -232,18 +232,22 @@ export class AdminDialog extends IGBDialog {
             step.activeDialog.state.options.args.split(' ')[0] : null;
 
           const packages = [];
+          let skipError = false;
           if (filename === null || filename === "") {
-            await min.conversationalService.sendText(min, step, `Starting publishing for ${botId}.gbkb...`);
+            await min.conversationalService.sendText(min, step, `Starting publishing for ${botId} packages...`);
             packages.push(`${botId}.gbkb`);
+            packages.push(`${botId}.gbtheme`);
+            packages.push(`${botId}.gbdialog`);
+            packages.push(`${botId}.gbot`);
+            skipError = true;
           } else {
             await min.conversationalService.sendText(min, step, `Starting publishing for ${filename}...`);
             packages.push(filename);
           }
 
-          try {
+          await CollectionUtil.asyncForEach(packages, async packageName => {
 
-            await CollectionUtil.asyncForEach(packages, async packageName => {
-
+            try {
               const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
 
               if (await (deployer as any).getStoragePackageByName(min.instance.instanceId,
@@ -253,12 +257,16 @@ export class AdminDialog extends IGBDialog {
               }
               await GBAdminService.deployPackageCommand(min, cmd1, deployer);
               await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
-            });
-          } catch (error) {
-            await min.conversationalService.sendText(min, step, `ERROR: ${error}`);
-            GBLog.error(error);
-            return await step.replaceDialog('/ask', { isReturning: true });
-          }
+
+            } catch (error) {
+              GBLog.error(error);
+              if (!skipError) {
+                await min.conversationalService.sendText(min, step, `ERROR: ${error}`);
+
+                return await step.replaceDialog('/ask', { isReturning: true });
+              }
+            }
+          });
           await min.conversationalService.sendText(min, step, Messages[locale].publish_success);
           if (!step.activeDialog.state.options.confirm) {
             return await step.replaceDialog('/ask', { isReturning: true });
