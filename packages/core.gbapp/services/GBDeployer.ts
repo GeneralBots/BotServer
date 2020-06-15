@@ -170,7 +170,6 @@ export class GBDeployer implements IGBDeployer {
     instance.nlpScore = 0.80; // TODO: Migrate to Excel Config.xlsx. 
     instance.searchScore = 0.45;
     instance.whatsappServiceKey = bootInstance.whatsappServiceKey;
-    instance.whatsappBotKey = bootInstance.whatsappBotKey;
     instance.whatsappServiceNumber = bootInstance.whatsappServiceNumber;
     instance.whatsappServiceUrl = bootInstance.whatsappServiceUrl;
 
@@ -215,14 +214,12 @@ export class GBDeployer implements IGBDeployer {
       instance.searchIndexer = bootInstance.searchIndexer;
       instance.searchKey = bootInstance.searchKey;
       instance.whatsappServiceKey = bootInstance.whatsappServiceKey;
-      instance.whatsappBotKey = bootInstance.whatsappBotKey;
       instance.whatsappServiceNumber = bootInstance.whatsappServiceNumber;
       instance.whatsappServiceUrl = bootInstance.whatsappServiceUrl;
       instance.storageServer = bootInstance.storageServer;
       instance.storageName = bootInstance.storageName;
       instance.storageUsername = bootInstance.storageUsername;
       instance.storagePassword = bootInstance.storagePassword;
-      instance.webchatKey = bootInstance.webchatKey;
       instance.cloudLocation = bootInstance.cloudLocation;
       instance.speechEndpoint = bootInstance.speechEndpoint;
       instance.speechKey = bootInstance.speechKey;

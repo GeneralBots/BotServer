@@ -459,7 +459,7 @@ export class GBConversationalService {
 
   public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string): Promise<boolean> {
 
-    if (min.instance.nlpAppId === null) {
+    if (min.instance.nlpAppId === null || min.instance.nlpAppId === undefined) {
       return false;
     }
 

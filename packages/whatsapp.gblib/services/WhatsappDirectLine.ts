@@ -58,7 +58,7 @@ export class WhatsappDirectLine extends GBService {
   private directLineSecret: string;
   private locale: string = 'pt-BR';
 
-  public conversationIds = {};
+  static conversationIds = {};
   min: GBMinInstance;
 
   constructor(
@@ -130,7 +130,7 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async resetConversationId(number) {
-    this.conversationIds[number] = undefined;
+    WhatsappDirectLine.conversationIds[number] = undefined;
   }
 
   public async check() {
@@ -200,7 +200,7 @@ export class WhatsappDirectLine extends GBService {
       }
     }
 
-    const conversationId = this.conversationIds[from];
+    const conversationId = WhatsappDirectLine.conversationIds[from];
 
     let client = await this.directLineClient;
     if (user.agentMode === "self") {
@@ -254,12 +254,12 @@ export class WhatsappDirectLine extends GBService {
     }
     else if (user.agentMode === "bot" || user.agentMode === null) {
 
-      if (this.conversationIds[from] === undefined) {
+      if (WhatsappDirectLine.conversationIds[from] === undefined) {
         GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
-        const response = await client.Conversations.Conversations_StartConversation()
+        const response = await client.Conversations.Conversations_StartConversation();
         const generatedConversationId = response.obj.conversationId;
 
-        this.conversationIds[from] = generatedConversationId;
+        WhatsappDirectLine.conversationIds[from] = generatedConversationId;
 
         this.pollMessages(client, generatedConversationId, from, fromName);
         this.inputMessage(client, generatedConversationId, text, from, fromName);

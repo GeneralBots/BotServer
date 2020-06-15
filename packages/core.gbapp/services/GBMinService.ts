@@ -461,7 +461,7 @@ export class GBMinService {
     min.adminService = this.adminService;
     min.deployService = this.deployer;
     min.kbService = new KBService(this.core.sequelize);
-    min.instance = await this.core.loadInstanceByBotId(min.botId);
+    min.instance = instance;
     min.cbMap = {};
     min.scriptMap = {};
     min.sandBoxMap = {};
@@ -487,7 +487,7 @@ export class GBMinService {
           new WhatsappDirectLine(
             min,
             min.botId,
-            min.instance.webchatKey,
+            min.instance.whatsappBotKey,
             minBoot.instance.whatsappServiceKey,
             minBoot.instance.whatsappServiceNumber,
             minBoot.instance.whatsappServiceUrl
@@ -690,54 +690,52 @@ export class GBMinService {
       await step.beginDialog('/menu', JSON.parse(context.activity.text));
       // Otherwise, continue to the active dialog in the stack.
     } else {
+      if (!await this.deployer.getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`)) {
+        await step.context.sendActivity(`Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`);
+        return await step.beginDialog('/publish', { confirm: true });
+      }
+
       if (step.activeDialog !== undefined) {
         await step.continueDialog();
       } else {
 
-        if (!await this.deployer.getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`)) {
-          await step.context.sendActivity(`Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`);
-          return await step.beginDialog('/publish', { confirm: true });
-        }
-        else {
+        let query = context.activity.text;
 
-          let query = context.activity.text;
-
-          const translatorEnabled = () => {
-            if (min.instance.params) {
-              const params = JSON.parse(min.instance.params);
-              return params?params['Enable Worldwide Translator'] === "TRUE": false;
-            }
-            return false;
-          } // TODO: Encapsulate.
-
-          let locale = 'pt';
-          if (process.env.TRANSLATOR_DISABLED !== "true" || translatorEnabled()) {
-            const minBoot = GBServer.globals.minBoot as any; // TODO: Switch keys automatically to master/per bot.
-            locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
-              minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
-              minBoot.instance.textAnalyticsEndpoint ?
-                minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint, query);
+        const translatorEnabled = () => {
+          if (min.instance.params) {
+            const params = JSON.parse(min.instance.params);
+            return params ? params['Enable Worldwide Translator'] === "TRUE" : false;
           }
+          return false;
+        } // TODO: Encapsulate.
 
-          let sec = new SecService();
-          const member = step.context.activity.from;
-
-          const user = await sec.ensureUser(min.instance.instanceId, member.id,
-            member.name, "", "web", member.name);
-          user.locale = locale;
-          await user.save();
-          const minBoot = GBServer.globals.minBoot as any;
-          query = await min.conversationalService.translate(min,
-            min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
-            min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-            query,
-            'pt');
-          GBLog.info(`Translated text: ${query}.`)
-
-          await step.beginDialog('/answer', {
-            query: query
-          });
+        let locale = 'pt';
+        if (process.env.TRANSLATOR_DISABLED !== "true" || translatorEnabled()) {
+          const minBoot = GBServer.globals.minBoot as any; // TODO: Switch keys automatically to master/per bot.
+          locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
+            minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
+            minBoot.instance.textAnalyticsEndpoint ?
+              minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint, query);
         }
+
+        let sec = new SecService();
+        const member = step.context.activity.from;
+
+        const user = await sec.ensureUser(min.instance.instanceId, member.id,
+          member.name, "", "web", member.name);
+        user.locale = locale;
+        await user.save();
+        const minBoot = GBServer.globals.minBoot as any;
+        query = await min.conversationalService.translate(min,
+          min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
+          min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
+          query,
+          'pt');
+        GBLog.info(`Translated text: ${query}.`)
+
+        await step.beginDialog('/answer', {
+          query: query
+        });
       }
     }
   }
