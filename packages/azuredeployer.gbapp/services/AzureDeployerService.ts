@@ -229,18 +229,20 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
     const httpClient = new ServiceClient();
 
-    const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
+    const query = `providers/${
       this.provider
-      }/botServices/${botId}?api-version=${this.apiVersion}`;
+      }/checkNameAvailability/Action?api-version=${this.apiVersion}`;
+
     const url = urlJoin(baseUrl, query);
-    const req = AzureDeployerService.createRequestObject(url, accessToken, 'GET', undefined);
+    const body = {
+      name: botId,
+      type: "botServices"
+    };
+
+    const req = AzureDeployerService.createRequestObject(url, accessToken, 'POST', JSON.stringify(body));
     const res = await httpClient.sendRequest(req);
-    // CHECK
-    if (!JSON.parse(res.bodyAsText).id) {
-      return false;
-    } else {
-      return true;
-    }
+
+    return res.parsedBody.valid;
   }
 
   public async updateBotProxy(botId, group, endpoint) {
