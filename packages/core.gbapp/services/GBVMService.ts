@@ -37,9 +37,8 @@ import { GBLog, GBMinInstance, GBService, IGBCoreService } from 'botlib';
 import * as fs from 'fs';
 import { GBDeployer } from './GBDeployer';
 import { TSCompiler } from './TSCompiler';
-
+import { CollectionUtil } from 'pragmatismo-io-framework';
 const walkPromise = require('walk-promise');
-
 const vm = require('vm');
 import urlJoin = require('url-join');
 import { DialogClass } from './GBAPIService';
@@ -69,63 +68,65 @@ export class GBVMService extends GBService {
     const files = await walkPromise(folder);
     this.addHearDialog(min);
 
-    return Promise.all(
-      files.map(async file => {
+    await CollectionUtil.asyncForEach(files, async file => {
+      if (!file) {
 
-        let filename: string = file.name;
+        return;
+      }
 
-        if (filename.endsWith('.docx')) {
-          const wordFile = filename;
-          const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
-          const fullVbsFile = urlJoin(folder, vbsFile);
-          const docxStat = fs.statSync(urlJoin(folder, wordFile));
+      let filename: string = file.name;
+
+      if (filename.endsWith('.docx')) {
+        const wordFile = filename;
+        const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
+        const fullVbsFile = urlJoin(folder, vbsFile);
+        const docxStat = fs.statSync(urlJoin(folder, wordFile));
+        const interval = 30000; // If compiled is older 30 seconds, then recompile.
+        let writeVBS = true;
+        if (fs.existsSync(fullVbsFile)) {
+          const vbsStat = fs.statSync(fullVbsFile);
+          if (docxStat.mtimeMs < (vbsStat.mtimeMs + interval)) {
+            writeVBS = false;
+          }
+        }
+        if (writeVBS) {
+
+          let text = await this.getTextFromWord(folder, wordFile);
+          fs.writeFileSync(urlJoin(folder, vbsFile), text);
+        }
+
+        filename = vbsFile;
+
+        let mainName = filename.replace(/\s|\-/gi, '').split('.')[0];
+        mainName = mainName.toLowerCase();
+        min.scriptMap[filename] = mainName.toLowerCase();
+
+        const fullFilename = urlJoin(folder, filename);
+        // TODO: Implement in development mode, how swap for .vbs files
+        // fs.watchFile(fullFilename, async () => {
+        //   await this.run(fullFilename, min, deployer, mainName);
+        // });
+
+        const compiledAt = fs.statSync(fullFilename);
+        const jsfile = urlJoin(folder, `${filename}.js`);
+
+        if (fs.existsSync(jsfile)) {
+          const jsStat = fs.statSync(jsfile);
           const interval = 30000; // If compiled is older 30 seconds, then recompile.
-          let writeVBS = true;
-          if (fs.existsSync(fullVbsFile)) {
-            const vbsStat = fs.statSync(fullVbsFile);
-            if (docxStat.mtimeMs < (vbsStat.mtimeMs + interval)) {
-              writeVBS = false;
-            }
-          }
-          if (writeVBS) {
-
-            let text = await this.getTextFromWord(folder, wordFile);
-            fs.writeFileSync(urlJoin(folder, vbsFile), text);
-          }
-
-          filename = vbsFile;
-
-          let mainName = filename.replace(/\s|\-/gi, '').split('.')[0];
-          mainName = mainName.toLowerCase();
-          min.scriptMap[filename] = mainName.toLowerCase();
-
-          const fullFilename = urlJoin(folder, filename);
-          // TODO: Implement in development mode, how swap for .vbs files
-          // fs.watchFile(fullFilename, async () => {
-          //   await this.run(fullFilename, min, deployer, mainName);
-          // });
-
-          const compiledAt = fs.statSync(fullFilename);
-          const jsfile = urlJoin(folder, `${filename}.js`);
-
-          if (fs.existsSync(jsfile)) {
-            const jsStat = fs.statSync(jsfile);
-            const interval = 30000; // If compiled is older 30 seconds, then recompile.
-            if (compiledAt.isFile() && compiledAt.mtimeMs > (jsStat.mtimeMs + interval)) {
-              await this.executeBASIC(fullFilename, min, deployer, mainName);
-            }
-            else {
-              const parsedCode: string = fs.readFileSync(jsfile, 'utf8');
-              this.executeJS(min, deployer, parsedCode, mainName);
-            }
-          }
-          else {
+          if (compiledAt.isFile() && compiledAt.mtimeMs > (jsStat.mtimeMs + interval)) {
             await this.executeBASIC(fullFilename, min, deployer, mainName);
           }
-
+          else {
+            const parsedCode: string = fs.readFileSync(jsfile, 'utf8');
+            this.executeJS(min, deployer, parsedCode, mainName);
+          }
         }
-      })
-    );
+        else {
+          await this.executeBASIC(fullFilename, min, deployer, mainName);
+        }
+
+      }
+    });
   }
 
   private async getTextFromWord(folder: string, filename: string) {

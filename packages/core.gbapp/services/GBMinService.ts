@@ -184,7 +184,7 @@ export class GBMinService {
           await (GBServer.globals.minBoot as any).whatsAppDirectLine.received(req, res);
         }
       } catch (error) {
-        GBLog.error(`Error on Whatsapp callback: ${error}`);
+        GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error}`);
       }
 
     });
@@ -705,7 +705,7 @@ export class GBMinService {
           const translatorEnabled = () => {
             if (min.instance.params) {
               const params = JSON.parse(min.instance.params);
-              return params['Enable Worldwide Translator'] === "TRUE";
+              return params?params['Enable Worldwide Translator'] === "TRUE": false;
             }
             return false;
           } // TODO: Encapsulate.

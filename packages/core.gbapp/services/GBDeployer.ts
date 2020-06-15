@@ -153,8 +153,9 @@ export class GBDeployer implements IGBDeployer {
   public async deployBlankBot(botId: string) {
     let instance = await this.importer.createBotInstance(botId);
 
+    const bootInstance = GBServer.globals.bootInstance;
     const accessToken = await GBServer.globals.minBoot.adminService
-      .acquireElevatedToken(GBServer.globals.bootInstance.instanceId);
+      .acquireElevatedToken(bootInstance.instanceId);
 
     const service = new AzureDeployerService(this);
     let application = await service.createApplication(accessToken, botId);
@@ -168,6 +169,10 @@ export class GBDeployer implements IGBDeployer {
     instance.state = 'active';
     instance.nlpScore = 0.80; // TODO: Migrate to Excel Config.xlsx. 
     instance.searchScore = 0.45;
+    instance.whatsappServiceKey = bootInstance.whatsappServiceKey;
+    instance.whatsappBotKey = bootInstance.whatsappBotKey;
+    instance.whatsappServiceNumber = bootInstance.whatsappServiceNumber;
+    instance.whatsappServiceUrl = bootInstance.whatsappServiceUrl;
 
     await this.core.saveInstance(instance);
 
@@ -281,8 +286,9 @@ export class GBDeployer implements IGBDeployer {
     let document = res.value.filter(m => {
       return m.name === "Config.xlsx"
     });
-    if (document === undefined) {
-      throw `Config.xlsx not found on .bot folder, check the package.`;
+    if (document === undefined || document.length === 0) {
+      GBLog.info(`Config.xlsx not found on .bot folder, check the package.`);
+      return null;
     }
 
     // Creates workbook session that will be discarded.

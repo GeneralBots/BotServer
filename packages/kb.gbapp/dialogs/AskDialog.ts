@@ -103,7 +103,7 @@ export class AskDialog extends IGBDialog {
           const translatorEnabled = () => {
             if (min.instance.params) {
               const params = JSON.parse(min.instance.params);
-              return params['Enable Worldwide Translator'] === "TRUE";
+              return params?params['Enable Worldwide Translator'] === "TRUE": false;
             }
             return false;
           } // TODO: Encapsulate.

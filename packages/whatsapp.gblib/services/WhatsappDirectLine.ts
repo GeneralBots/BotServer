@@ -129,7 +129,7 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public resetConversationId(number) {
+  public async resetConversationId(number) {
     this.conversationIds[number] = undefined;
   }
 
