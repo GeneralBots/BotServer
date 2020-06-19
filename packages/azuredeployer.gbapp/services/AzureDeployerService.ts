@@ -242,7 +242,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const req = AzureDeployerService.createRequestObject(url, accessToken, 'POST', JSON.stringify(body));
     const res = await httpClient.sendRequest(req);
 
-    return res.parsedBody.valid;
+    return !res.parsedBody.valid;
   }
 
   public async updateBotProxy(botId, group, endpoint) {
