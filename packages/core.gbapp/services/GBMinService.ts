@@ -733,9 +733,20 @@ export class GBMinService {
           'pt');
         GBLog.info(`Translated text: ${query}.`)
 
-        await step.beginDialog('/answer', {
-          query: query
+        // Checks if any .gbapp will handle this answer, if not goes to kb.gbapp.
+
+        let handled = false;
+        await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+          if (await e.onExchangeData(min, "handleAnswer", { query: query, step: step })) {
+            handled = true;
+          }
         });
+
+        if (!handled) {
+          await step.beginDialog('/answer', {
+            query: query
+          });
+        }
       }
     }
   }

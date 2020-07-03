@@ -599,12 +599,16 @@ export class GBDeployer implements IGBDeployer {
         GBLog.info(`Compiling: ${gbappPath}.`);
         child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: gbappPath });
       }
-      const m = await import(gbappPath);
-      const p = new m.Package();
-      await p.loadPackage(core, core.sequelize);
-      if (appPackages !== undefined) {
-        appPackages.push(p);
+
+      if(gbappPath.endsWith('.gbapp')){
+        const m = await import(gbappPath);
+        const p = new m.Package();
+        await p.loadPackage(core, core.sequelize);
+        if (appPackages !== undefined) {
+          appPackages.push(p);
+        }
       }
+      
       GBLog.info(`.gbapp or .gblib deployed: ${gbappPath}.`);
       appPackagesProcessed++;
     }
