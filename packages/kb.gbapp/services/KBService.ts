@@ -593,12 +593,16 @@ export class KBService implements IGBKBService {
     await GuaribasSubject.destroy({
       where: { instanceId: instance.instanceId, packageId: packageId }
     });
-    await GuaribasPackage.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
+    await this.undeployPackageFromStorage(instance, packageId);
 
     GBLog.info("Remember to call rebuild index manually after package removal.");
 
+  }
+
+  private async undeployPackageFromStorage(instance: any, packageId: number) {
+    await GuaribasPackage.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
+    });
   }
 
   /**

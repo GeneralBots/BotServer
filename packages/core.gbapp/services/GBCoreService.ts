@@ -585,4 +585,32 @@ STORAGE_SYNC=true
     const serverName = GBConfigService.get('STORAGE_SERVER').split('.database.windows.net')[0];
     await installationDeployer.openStorageFirewall(group, serverName);
   }
+
+  /**
+   * Get a dynamic param from instance. Dynamic params are defined in Config.xlsx
+   * and loaded into the work folder from /publish command.
+   * 
+   * @param name Name of param to get from instance.
+   * @param defaultValue Value returned when no param is defined in Config.xlsx.
+   */
+  public static getParam<T>(instance, name: string, defaultValue?: T): any {
+    let value = null;
+    if (instance.params) {
+      const params = JSON.parse(instance.params);
+      value = params ? params[name] : defaultValue;
+    }
+    if (typeof (defaultValue) === "boolean") {
+      return new Boolean(value ? value.toLowerCase() === "true" : defaultValue);
+    }
+    if (typeof (defaultValue) === "string") {
+      return value ? value : defaultValue;
+    }
+    if (typeof (defaultValue) === "number") {
+      return new Number(value ? defaultValue : (defaultValue ? defaultValue : 0));
+    }
+  }
+
+
+
+
 }

@@ -69,6 +69,7 @@ import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsServic
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import fs = require('fs');
 import { GBConversationalService } from './GBConversationalService';
+import { GuaribasConversationMessage } from 'packages/analytics.gblib/models';
 
 /**
  * Minimal service layer for a bot.
@@ -642,6 +643,8 @@ export class GBMinService {
 
   private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
 
+    let message: GuaribasConversationMessage;
+
     if (process.env.PRIVACY_STORE_MESSAGES === "true") {
 
       // Adds message to the analytics layer.
@@ -649,7 +652,7 @@ export class GBMinService {
       const analytics = new AnalyticsService();
       const user = await min.userProfile.get(context, {});
       if (user) {
-        analytics.createMessage(min.instance.instanceId,
+        message = await analytics.createMessage(min.instance.instanceId,
           user.conversation, user.systemUser.userId,
           context.activity.text);
       }
@@ -701,16 +704,9 @@ export class GBMinService {
 
         let query = context.activity.text;
 
-        const translatorEnabled = () => {
-          if (min.instance.params) {
-            const params = JSON.parse(min.instance.params);
-            return params ? params['Enable Worldwide Translator'] === "TRUE" : false;
-          }
-          return false;
-        } // TODO: Encapsulate.
 
         let locale = 'pt';
-        if (process.env.TRANSLATOR_DISABLED !== "true" || translatorEnabled()) {
+        if (process.env.TRANSLATOR_DISABLED !== "true" || min.getParam('Enable Worldwide Translator')  ) {
           const minBoot = GBServer.globals.minBoot as any; // TODO: Switch keys automatically to master/per bot.
           locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
             minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
@@ -726,18 +722,22 @@ export class GBMinService {
         user.locale = locale;
         await user.save();
         const minBoot = GBServer.globals.minBoot as any;
+        const notTranslatedQuery = query;
         query = await min.conversationalService.translate(min,
           min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
           min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           query,
           'pt');
-        GBLog.info(`Translated text: ${query}.`)
+        GBLog.info(`Translated text: ${query}.`);
 
         // Checks if any .gbapp will handle this answer, if not goes to kb.gbapp.
 
         let handled = false;
         await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-          if (await e.onExchangeData(min, "handleAnswer", { query: query, step: step })) {
+          if (await e.onExchangeData(min, "handleAnswer", { query: query, step: step,
+            notTranslatedQuery: notTranslatedQuery,
+            message: message,
+            user })) {
             handled = true;
           }
         });
