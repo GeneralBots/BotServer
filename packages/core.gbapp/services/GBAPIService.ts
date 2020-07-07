@@ -356,6 +356,23 @@ export class DialogClass {
     return step.context.activity.from.id;
   }
 
+  public async getUserName(step) {
+    return step.context.activity.from.name;
+  }
+
+  public async getUserMobile(step) {
+
+    if (isNaN(step.context.activity.from.id))
+    {
+      return ('No mobile available.');
+    }
+    else
+    {
+      return (step.context.activity.from.id);
+    }
+
+  }
+
   public async askEmail(step) {
     return await step.beginDialog('/gbasic-email');
   }

@@ -157,7 +157,8 @@ export class GBVMService extends GBService {
     from = this.getFrom(step)
     today = this.getToday(step)
     id = sys().getRandomId()
-    
+    username = this.getUserName();
+    mobile = this.getUserMobile();
     
     ${code}
     `;
@@ -169,6 +170,7 @@ export class GBVMService extends GBService {
     code = code.replace(/(hear)\s*(\w+)/gi, ($0, $1, $2) => {
       return `${$2} = hear()`;
     });
+
     code = code.replace(/(\w)\s*\=\s*find\s*(.*)/gi, ($0, $1, $2, $3) => {
       return `${$1} = sys().find(${$2})\n`;
     });
