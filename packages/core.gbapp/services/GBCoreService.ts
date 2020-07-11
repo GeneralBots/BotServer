@@ -593,7 +593,7 @@ STORAGE_SYNC=true
    * @param name Name of param to get from instance.
    * @param defaultValue Value returned when no param is defined in Config.xlsx.
    */
-  public static getParam<T>(instance, name: string, defaultValue?: T): any {
+  public  getParam<T>(instance:IGBInstance, name: string, defaultValue?: T): any {
     let value = null;
     if (instance.params) {
       const params = JSON.parse(instance.params);

@@ -68,8 +68,8 @@ import { SecService } from '../../security.gblib/services/SecService';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import fs = require('fs');
-import { GBConversationalService } from './GBConversationalService';
-import { GuaribasConversationMessage } from 'packages/analytics.gblib/models';
+import { GuaribasConversationMessage } from '../../analytics.gblib/models';
+import { GBCoreService } from './GBCoreService';
 
 /**
  * Minimal service layer for a bot.
@@ -706,7 +706,8 @@ export class GBMinService {
 
 
         let locale = 'pt';
-        if (process.env.TRANSLATOR_DISABLED !== "true" || min.getParam('Enable Worldwide Translator')  ) {
+        if (process.env.TRANSLATOR_DISABLED !== "true" || 
+        min.core.getParam<boolean> (min.instance,'Enable Worldwide Translator')  ) {
           const minBoot = GBServer.globals.minBoot as any; // TODO: Switch keys automatically to master/per bot.
           locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
             minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
