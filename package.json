@@ -50,6 +50,9 @@
   "dependencies": {
     "@azure/ms-rest-js": "2.0.4",
     "@microsoft/microsoft-graph-client": "2.0.0",
+    "@semantic-release/changelog": "^5.0.1",
+    "@semantic-release/exec": "^5.0.0",
+    "@semantic-release/git": "^9.0.0",
     "@types/validator": "12.0.1",
     "adal-node": "0.2.1",
     "any-shell-escape": "^0.1.1",
@@ -94,6 +97,7 @@
     "scanf": "1.1.1",
     "sequelize": "5.21.5",
     "sequelize-typescript": "1.1.0",
+    "simple-commit-message": "^4.0.13",
     "simple-git": "1.129.0",
     "sppull": "2.5.1",
     "strict-password-generator": "1.1.2",
