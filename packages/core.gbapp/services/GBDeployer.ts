@@ -516,7 +516,7 @@ export class GBDeployer implements IGBDeployer {
       if (e !== 'packages\\boot.gbot') {
         GBLog.info(`Deploying bot: ${e}...`);
         await _this.deployBotFromLocalPath(e, GBServer.globals.publicAddress);
-        GBLog.info(`Bot: ${e} deployed...`);
+        GBLog.info(`√ Bot: ${e} deployed...`);
       }
     });
 

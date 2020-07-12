@@ -11,7 +11,7 @@ export const Messages = {
     undeployPackage: text => `Undeploying package ${text}...`,
     deployPackage: text => `Deploying package ${text}...`,
     redeployPackage: text => `Redeploying package ${text}...`,
-    packageUndeployed: text => `Package ${text} undeployed...`,
+    packageUndeployed: text => `√ Package ${text} undeployed...`,
     consent: (url) => `Please, consent access to this app at: [Microsoft Online](${url}).`,
     wrong_password: 'Sorry, wrong password. Please, try again.',
     enter_authenticator_tenant: 'Enter the Authenticator Tenant (eg.: domain.onmicrosoft.com):',
