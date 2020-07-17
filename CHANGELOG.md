@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/pragmatismo-io/BotServer/compare/2.0.0...2.0.1) (2020-07-17)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fixed translator bug. ([0accd05](https://github.com/pragmatismo-io/BotServer/commit/0accd05b4937d2c9d82d18def25f03e3b716cb97))
+
 # [2.0.0](https://github.com/pragmatismo-io/BotServer/compare/1.7.6...2.0.0) (2020-07-12)
 
 
