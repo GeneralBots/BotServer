@@ -609,8 +609,4 @@ STORAGE_SYNC=true
       return new Number(value ? defaultValue : (defaultValue ? defaultValue : 0));
     }
   }
-
-
-
-
 }
