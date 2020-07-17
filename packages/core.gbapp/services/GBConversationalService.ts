@@ -210,7 +210,7 @@ export class GBConversationalService {
     });
   }
 
-  public static async  getTextFromAudioBuffer(speechKey, cloudRegion, buffer, locale): Promise<string> {
+  public static async getTextFromAudioBuffer(speechKey, cloudRegion, buffer, locale): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       try {
         let subscriptionKey = speechKey;
@@ -603,20 +603,23 @@ export class GBConversationalService {
   }
 
   public async sendText(min, step, text) {
+    let sec = new SecService();
     const member = step.context.activity.from;
-    const user = await min.userProfile.get(step.context, {});
+    const user = await sec.ensureUser(min.instance.instanceId, member.id,
+      member.name, "", "web", member.name);
+
     if (user) {
       const minBoot = GBServer.globals.minBoot as any;
       text = await min.conversationalService.translate(min,
         min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
         min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
         text,
-        user.systemUser.locale ? user.systemUser.locale : 'pt'
+        user.locale ? user.locale : 'pt'
       );
       const analytics = new AnalyticsService();
-
+      const userProfile = await min.userProfile.get(step.context, {});
       analytics.createMessage(min.instance.instanceId,
-        user.conversation, null,
+        userProfile.conversation, null,
         text);
 
       if (!isNaN(member.id)) {

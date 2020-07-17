@@ -456,6 +456,8 @@ export class GBDeployer implements IGBDeployer {
       }
     }
 
+    // TODO: Use temporary names for index for exchanging them after the new one is created.
+    
     try {
       await search.deleteIndex();
     } catch (err) {
