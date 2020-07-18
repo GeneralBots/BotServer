@@ -112,12 +112,13 @@ export class GBDeployer implements IGBDeployer {
 
       const dirs = getDirectories(path);
       await CollectionUtil.asyncForEach(dirs, async element => {
+        element = element.toLowerCase();
         if (element === '.') {
           GBLog.info(`Ignoring ${element}...`);
         } else {
           if (element.endsWith('.gbot')) {
             botPackages.push(element);
-          } else if (element.endsWith('.gbapp')) {
+          } else if (element.endsWith('.gbapp') || element.endsWith('.gblib')) {
             gbappPackages.push(element);
           } else {
             generalPackages.push(element);
@@ -132,9 +133,21 @@ export class GBDeployer implements IGBDeployer {
       await scanPackageDirectory(e);
     });
 
-    // Deploys all .gbapp files first.
+    // Deploys all .gblib files first.
 
-    await this.deployAppPackages(gbappPackages, core, appPackages);
+    let list = [];
+    for (let index = 0; index < gbappPackages.length; index++) {
+      const element = gbappPackages[index];
+      if (element.endsWith('.gblib')) {
+        list.push(element);
+        gbappPackages.splice(index, 1);
+      }
+    }
+    for (let index = 0; index < gbappPackages.length; index++) {
+      const element = gbappPackages[index];
+      list.push(element);
+    }
+    await this.deployAppPackages(list, core, appPackages);
 
     GBLog.info(`App Package deployment done.`);
 
@@ -351,6 +364,32 @@ export class GBDeployer implements IGBDeployer {
   public async deployPackage(min: GBMinInstance, localPath: string) {
     const packageType = Path.extname(localPath);
 
+    const _this = this;
+    let handled = false;
+    let pck = null;
+
+    // .gbapp package or platform package checking.
+
+    await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+      if (pck = await e.onExchangeData(min, "handlePackage", {
+        name: localPath,
+        createPackage: async () => {
+          return await _this.deployPackageToStorage(min.instance.instanceId, localPath);
+        }, updatePackage: async (p: GuaribasPackage) => {
+          p.save();
+        }
+      })) {
+        handled = true;
+      }
+    });
+
+    if (handled) {
+
+      return pck;
+    }
+
+    // Deploy platform packages here.
+
     switch (packageType) {
       case '.gbot':
         if (Fs.existsSync(localPath)) {
@@ -457,7 +496,7 @@ export class GBDeployer implements IGBDeployer {
     }
 
     // TODO: Use temporary names for index for exchanging them after the new one is created.
-    
+
     try {
       await search.deleteIndex();
     } catch (err) {
@@ -565,7 +604,7 @@ export class GBDeployer implements IGBDeployer {
   }
 
   private isSystemPackage(name: string): Boolean {
-    const names = ['core.gbapp', 'admin.gbapp', 'azuredeployer.gbapp', 'customer-satisfaction.gbapp', 'kb.gbapp'];
+    const names = ['analytics.gblib', 'console.gblib', 'security.gblib', 'whatsapp.gblib', 'sharepoint.gblib', 'core.gbapp', 'admin.gbapp', 'azuredeployer.gbapp', 'customer-satisfaction.gbapp', 'kb.gbapp'];
 
     return names.indexOf(name) > -1;
   }
@@ -602,7 +641,7 @@ export class GBDeployer implements IGBDeployer {
         child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: gbappPath });
       }
 
-      if(gbappPath.endsWith('.gbapp')){
+      if (gbappPath.endsWith('.gbapp')) {
         const m = await import(gbappPath);
         const p = new m.Package();
         await p.loadPackage(core, core.sequelize);
@@ -610,13 +649,15 @@ export class GBDeployer implements IGBDeployer {
           appPackages.push(p);
         }
       }
-      
+
       GBLog.info(`.gbapp or .gblib deployed: ${gbappPath}.`);
       appPackagesProcessed++;
     }
     catch (error) {
-      GBLog.error(`Error message: ${error.stack}`);
-      GBLog.error(`Error compiling package ${gbappPath}:\n${error.stdout.toString()}`);
+      GBLog.error(`Error compiling package, message:  ${error.message}\n${error.stack}`);
+      if (error.stdout) {
+        GBLog.error(`Error compiling package, stdout: ${gbappPath}:\n${error.stdout.toString()}`);
+      }
       appPackagesProcessed++;
     }
     return appPackagesProcessed;

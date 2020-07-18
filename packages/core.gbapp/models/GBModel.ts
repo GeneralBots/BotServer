@@ -273,7 +273,9 @@ export class GuaribasPackage extends Model<GuaribasPackage> {
   @Column
   @UpdatedAt
   public updatedAt: Date;
- 
+
+  @Column({ type: DataType.STRING(512) })
+  public custom: string;
 }
 
 /**
