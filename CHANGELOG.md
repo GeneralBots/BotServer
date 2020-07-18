@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/pragmatismo-io/BotServer/compare/2.0.1...2.0.2) (2020-07-17)
+
+
+### Bug Fixes
+
+* **all:** Code formatting. ([eaef7e4](https://github.com/pragmatismo-io/BotServer/commit/eaef7e49c0e995712a9a17a5e63b3d1f692c6b5d))
+
 ## [2.0.1](https://github.com/pragmatismo-io/BotServer/compare/2.0.0...2.0.1) (2020-07-17)
 
 
