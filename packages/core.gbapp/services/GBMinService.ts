@@ -517,9 +517,11 @@ export class GBMinService {
       await p.loadBot(min);
       if (p.getDialogs !== undefined) {
         const dialogs = await p.getDialogs(min);
-        dialogs.forEach(dialog => {
-          min.dialogs.add(new WaterfallDialog(dialog.id, dialog.waterfall));
-        });
+        if (dialogs!== undefined){
+          dialogs.forEach(dialog => {
+            min.dialogs.add(new WaterfallDialog(dialog.id, dialog.waterfall));
+          });
+        }
       }
     });
 
