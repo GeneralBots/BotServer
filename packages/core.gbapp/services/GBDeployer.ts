@@ -91,9 +91,6 @@ export class GBDeployer implements IGBDeployer {
   public async deployPackages(core: IGBCoreService, server: any, appPackages: IGBPackage[]) {
     const _this = this;
 
-
-    GBLog.info(`PWD ${process.env.PWD}...`);
-    let totalPackages = 0;
     let paths = [urlJoin(process.env.PWD, GBDeployer.deployFolder), urlJoin(process.env.PWD, GBDeployer.workFolder)];
     const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
     if (additionalPath !== undefined && additionalPath !== '') {
@@ -151,14 +148,12 @@ export class GBDeployer implements IGBDeployer {
 
     GBLog.info(`App Package deployment done.`);
 
-    ({ generalPackages, totalPackages } = await this.deployDataPackages(
+    ({ generalPackages } = await this.deployDataPackages(
 
       core,
       botPackages,
       _this,
-      generalPackages,
-      server,
-      totalPackages
+      generalPackages
     ));
 
   }
@@ -337,7 +332,7 @@ export class GBDeployer implements IGBDeployer {
     }
     GBServer.globals.minService.unmountBot(botId);
     await this.core.deleteInstance(botId);
-    const packageFolder = Path.join(process.env.PWD, 'work', packageName);
+    const packageFolder = Path.join(process.env.PWD, 'work', `${botId}.gbai`, packageName);
   }
   public async deployPackageToStorage(instanceId: number, packageName: string): Promise<GuaribasPackage> {
     return GuaribasPackage.create({
@@ -373,8 +368,8 @@ export class GBDeployer implements IGBDeployer {
     await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
       if (pck = await e.onExchangeData(min, "handlePackage", {
         name: localPath,
-        createPackage: async () => {
-          return await _this.deployPackageToStorage(min.instance.instanceId, localPath);
+        createPackage: async (packageName) => {
+          return await _this.deployPackageToStorage(min.instance.instanceId, packageName);
         }, updatePackage: async (p: GuaribasPackage) => {
           p.save();
         }
@@ -540,10 +535,7 @@ export class GBDeployer implements IGBDeployer {
     core: IGBCoreService,
     botPackages: string[],
     _this: this,
-    generalPackages: string[],
-    server: any,
-    totalPackages: number
-
+    generalPackages: string[]
   ) {
     try {
       await core.syncDatabaseStructure();
@@ -563,44 +555,23 @@ export class GBDeployer implements IGBDeployer {
 
     // Then all remaining generalPackages are loaded.
 
-    generalPackages = generalPackages.filter(p => !p.endsWith('.git'));
-    await CollectionUtil.asyncForEach(generalPackages, async filename => {
-      const filenameOnly = Path.basename(filename);
-      GBLog.info(`Deploying package: ${filename}...`);
+    const instances = core.loadInstances();
+    await CollectionUtil.asyncForEach(instances, async instance => {
 
-      // Handles apps for general bots - .gbapp must stay out of deploy folder.
-
-      if (Path.extname(filename) === '.gbapp' || Path.extname(filename) === '.gblib') {
-        // Themes for bots.
-      } else if (Path.extname(filename) === '.gbtheme') {
-      } else if (Path.extname(filename) === '.gbkb') {
-        this.mountGBKBAssets(filenameOnly, filename);
-      } else if (Path.extname(filename) === '.gbui') {
-        // Already Handled
-      } else if (Path.extname(filename) === '.gbdialog') {
-        // Already Handled
-      } else if (Path.extname(filename) === '.gbignore') {
-        // Ignored
-      } else {
-        // Unknown package format.
-        const err = new Error(`Package type not handled: ${filename}.`);
-        throw err;
-
-      }
-      totalPackages++;
+      this.mountGBKBAssets(`{instance.botId}.gbkb`, instance.botId, `{instance.botId}.gbkb`);
     });
 
     GBLog.info(`Package deployment done.`);
-    return { generalPackages, totalPackages };
+    return { generalPackages};
   }
 
-  public mountGBKBAssets(packageName: any, filename: string) {
-    GBServer.globals.server.use(`/kb/${packageName}/subjects`, express.static(urlJoin(filename, 'subjects')));
-    GBServer.globals.server.use(`/kb/${packageName}/assets`, express.static(urlJoin(filename, 'assets')));
-    GBServer.globals.server.use(`/kb/${packageName}/images`, express.static(urlJoin(filename, 'images')));
-    GBServer.globals.server.use(`/kb/${packageName}/audios`, express.static(urlJoin(filename, 'audios')));
-    GBServer.globals.server.use(`/kb/${packageName}/videos`, express.static(urlJoin(filename, 'videos')));
-    GBLog.info(`KB (.gbkb) assets accessible at: /kb/${packageName}.`);
+  public mountGBKBAssets(packageName: any, botId: string, filename: string) {
+    GBServer.globals.server.use(`/kb/${botId}.gbai/${packageName}/subjects`, express.static(urlJoin(filename, 'subjects')));
+    GBServer.globals.server.use(`/kb/${botId}.gbai/${packageName}/assets`, express.static(urlJoin(filename, 'assets')));
+    GBServer.globals.server.use(`/kb/${botId}.gbai/${packageName}/images`, express.static(urlJoin(filename, 'images')));
+    GBServer.globals.server.use(`/kb/${botId}.gbai/${packageName}/audios`, express.static(urlJoin(filename, 'audios')));
+    GBServer.globals.server.use(`/kb/${botId}.gbai/${packageName}/videos`, express.static(urlJoin(filename, 'videos')));
+    GBLog.info(`KB (.gbkb) assets accessible at: /kb/${botId}.gbai/${packageName}.`);
   }
 
   private isSystemPackage(name: string): Boolean {

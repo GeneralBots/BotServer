@@ -4,6 +4,7 @@
     {
       "type": "node",
       "request": "launch",
+      "sourceMaps": true,
       "name": "Debug Program",
       "program": "${workspaceRoot}/boot.js",
       "cwd": "${workspaceRoot}",

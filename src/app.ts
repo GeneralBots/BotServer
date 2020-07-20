@@ -134,7 +134,7 @@ export class GBServer {
             GBLog.info(`Defining server address at ${serverAddress}...`);
             GBServer.globals.publicAddress = serverAddress;
           }
-
+          
           // Creates a boot instance or load it from storage.
 
           try {

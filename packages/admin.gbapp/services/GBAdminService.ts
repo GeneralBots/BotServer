@@ -233,7 +233,7 @@ export class GBAdminService implements IGBAdminService {
       if (packageType !== '.gbot') {
         let s = new GBSharePointService();
 
-        let localFolder = Path.join('work', Path.basename(folderName));
+        let localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(folderName));
         GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
         await s.downloadFolder(localFolder, siteName, folderName,
           GBConfigService.get('CLOUD_USERNAME'), GBConfigService.get('CLOUD_PASSWORD'))

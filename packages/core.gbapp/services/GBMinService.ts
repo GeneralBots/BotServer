@@ -219,19 +219,19 @@ export class GBMinService {
 
     // Install per bot deployed packages.
 
-    let packagePath = `work/${min.botId}.gbdialog`;
+    let packagePath = `work/${min.botId}.gbai/${min.botId}.gbdialog`;
     if (fs.existsSync(packagePath)) {
       await this.deployer.deployPackage(min, packagePath);
     }
-    packagePath = `work/${min.botId}.gbapp`;
+    packagePath = `work/${min.botId}.gbai/${min.botId}.gbapp`;
     if (fs.existsSync(packagePath)) {
       await this.deployer.deployPackage(min, packagePath);
     }
-    packagePath = `work/${min.botId}.gbtheme`;
+    packagePath = `work/${min.botId}.gbai/${min.botId}.gbtheme`;
     if (fs.existsSync(packagePath)) {
       await this.deployer.deployPackage(min, packagePath);
     }
-    packagePath = `work/${min.botId}.gblib`;
+    packagePath = `work/${min.botId}.gbai/${min.botId}.gblib`;
     if (fs.existsSync(packagePath)) {
       await this.deployer.deployPackage(min, packagePath);
     }
