@@ -1,3 +1,10 @@
+## [2.0.3](https://github.com/pragmatismo-io/BotServer/compare/2.0.2...2.0.3) (2020-07-19)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Database changes and fix in .gblib load. ([4ba3db7](https://github.com/pragmatismo-io/BotServer/commit/4ba3db79de4ba7219a7cc7f00b74f63bdfa9c754))
+
 ## [2.0.2](https://github.com/pragmatismo-io/BotServer/compare/2.0.1...2.0.2) (2020-07-17)
 
 
