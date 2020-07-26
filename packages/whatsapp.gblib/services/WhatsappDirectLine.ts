@@ -39,7 +39,7 @@ import { GBLog, GBService, GBMinInstance, IGBPackage } from 'botlib';
 import * as request from 'request-promise-native';
 import { GBServer } from '../../../src/app';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
-import { SecService } from '../../security.gblib/services/SecService';
+import { SecService } from '../../security.gbapp/services/SecService';
 import { Messages } from '../strings';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 

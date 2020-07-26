@@ -58,7 +58,7 @@ import {
   GuaribasInstance,
   GuaribasPackage
 } from '../../core.gbapp/models/GBModel';
-import { GuaribasUser } from '../../security.gblib/models';
+import { GuaribasUser } from '../../security.gbapp/models';
 
 /**
  * Subjects to group the pair of questions and answers.

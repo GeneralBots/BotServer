@@ -134,7 +134,7 @@ export class GBServer {
             GBLog.info(`Defining server address at ${serverAddress}...`);
             GBServer.globals.publicAddress = serverAddress;
           }
-          
+
           // Creates a boot instance or load it from storage.
 
           try {
@@ -189,12 +189,12 @@ export class GBServer {
           }
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
-
+      
           // Opens Navigator.
 
           // TODO: Config: core.openBrowserInDevelopment();
         } catch (err) {
-          GBLog.error(`STOP: ${err} ${err.stack ? err.stack : ''}`);
+          GBLog.error(`STOP: ${err.message ? err.message : err} ${err.stack ? err.stack : ''}`);
           process.exit(1);
         }
       })();

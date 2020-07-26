@@ -42,7 +42,7 @@ import { GBMinInstance, IGBDialog } from 'botlib';
 import { AzureText } from 'pragmatismo-io-framework';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
-import { SecService } from '../../security.gblib/services/SecService';
+import { SecService } from '../../security.gbapp/services/SecService';
 import { GBServer } from '../../../src/app';
 
 /**

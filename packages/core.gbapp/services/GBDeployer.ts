@@ -575,7 +575,7 @@ export class GBDeployer implements IGBDeployer {
   }
 
   private isSystemPackage(name: string): Boolean {
-    const names = ['analytics.gblib', 'console.gblib', 'security.gblib', 'whatsapp.gblib', 'sharepoint.gblib', 'core.gbapp', 'admin.gbapp', 'azuredeployer.gbapp', 'customer-satisfaction.gbapp', 'kb.gbapp'];
+    const names = ['analytics.gblib', 'console.gblib', 'security.gbapp', 'whatsapp.gblib', 'sharepoint.gblib', 'core.gbapp', 'admin.gbapp', 'azuredeployer.gbapp', 'customer-satisfaction.gbapp', 'kb.gbapp'];
 
     return names.indexOf(name) > -1;
   }

@@ -86,6 +86,21 @@ export class GBAdminService implements IGBAdminService {
   public static async getADALCredentialsFromUsername(username: string, password: string) {
     return await msRestAzure.loginWithUsernamePassword(username, password);
   }
+  
+  public static getMobileCode() {
+    const passwordGenerator = new PasswordGenerator();
+    const options = {
+      upperCaseAlpha: false,
+      lowerCaseAlpha: false,
+      number: true,
+      specialCharacter: false,
+      minimumLength: 6,
+      maximumLength: 6
+    };
+
+    return passwordGenerator.generatePassword(options);
+  }
+
 
   public static getRndPassword(): string {
     const passwordGenerator = new PasswordGenerator();

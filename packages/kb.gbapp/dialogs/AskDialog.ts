@@ -39,13 +39,13 @@
 import { GBServer } from '../../../src/app';
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
-import { AzureText } from 'pragmatismo-io-framework';
+import { GBLog, GBMinInstance, IGBDialog, IGBPackage } from 'botlib';
 import { Messages } from '../strings';
 import { KBService } from './../services/KBService';
 import { GuaribasAnswer } from '../models';
 import { GBMinService } from '../../../packages/core.gbapp/services/GBMinService';
-import { SecService } from '../../security.gblib/services/SecService';
+import { SecService } from '../../security.gbapp/services/SecService';
+import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
 
 /**
  * Dialog arguments.
@@ -103,7 +103,7 @@ export class AskDialog extends IGBDialog {
           const translatorEnabled = () => {
             if (min.instance.params) {
               const params = JSON.parse(min.instance.params);
-              return params?params['Enable Worldwide Translator'] === "TRUE": false;
+              return params ? params['Enable Worldwide Translator'] === "TRUE" : false;
             }
             return false;
           } // TODO: Encapsulate.
@@ -126,14 +126,35 @@ export class AskDialog extends IGBDialog {
             member.name, "", "web", member.name);
           user.locale = locale;
           await user.save();
-
-          query = await min.conversationalService.translate(min, 
+          const notTranslatedQuery = query;
+          query = await min.conversationalService.translate(min,
             min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
             min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
             query,
             'pt');
           GBLog.info(`Translated text: ${query}.`)
-          return await step.replaceDialog('/answer', { query: query });
+
+          let handled = false;
+          await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+            if (await e.onExchangeData(min, "handleAnswer", {
+              query: query, step: step,
+              notTranslatedQuery: notTranslatedQuery,
+              message: query,
+              user: user['dataValues']
+            })) {
+              handled = true;
+            }
+          });
+
+          if (!handled) {
+            return await step.beginDialog('/answer', {
+              query: query
+            });
+          } else {
+            return await step.next();
+          }
+
+
         } else {
           return await step.next();
         }
@@ -152,7 +173,7 @@ export class AskDialog extends IGBDialog {
         const userDb = await sec.ensureUser(min.instance.instanceId, member.id,
           member.name, "", "web", member.name);
         const minBoot = GBServer.globals.minBoot as any;
-        text = await min.conversationalService.translate(min, 
+        text = await min.conversationalService.translate(min,
           min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
           min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           text,
@@ -209,7 +230,7 @@ export class AskDialog extends IGBDialog {
             user2.isAsking = false;
             user2.lastQuestionId = resultsB.questionId;
             await min.userProfile.set(step.context, user2);
-            
+
             // Informs user that a broader search will be used.
             if (user2.subjects.length > 0) {
               await min.conversationalService.sendText(min, step, Messages[locale].wider_answer);

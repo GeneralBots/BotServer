@@ -42,7 +42,7 @@ import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService } from 'botlib';
 import { GBServer } from '../../../src/app';
 import { Readable } from 'stream'
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { SecService } from '../../security.gblib/services/SecService';
+import { SecService } from '../../security.gbapp/services/SecService';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 const urlJoin = require('url-join');
 const PasswordGenerator = require("strict-password-generator").default;

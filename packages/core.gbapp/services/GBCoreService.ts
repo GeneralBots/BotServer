@@ -48,7 +48,7 @@ import { StartDialog } from '../../azuredeployer.gbapp/dialogs/StartDialog';
 import { GBCorePackage } from '../../core.gbapp';
 import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
 import { GBKBPackage } from '../../kb.gbapp';
-import { GBSecurityPackage } from '../../security.gblib';
+import { GBSecurityPackage } from '../../security.gbapp';
 import { GBWhatsappPackage } from '../../whatsapp.gblib/index';
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
@@ -211,16 +211,18 @@ export class GBCoreService implements IGBCoreService {
    */
   public async loadInstances(): Promise<IGBInstance[]> {
     if (process.env.LOAD_ONLY !== undefined) {
-      
+
       const bots = process.env.LOAD_ONLY.split(`;`);
       const and = [];
       await CollectionUtil.asyncForEach(bots, async e => {
-        and.push({botId: e});
+        and.push({ botId: e });
       });
-      
-      const options = {where: {
-        [Op.or]: and
-      }};
+
+      const options = {
+        where: {
+          [Op.or]: and
+        }
+      };
       return GuaribasInstance.findAll(options);
     }
     else {
@@ -593,7 +595,7 @@ STORAGE_SYNC=true
    * @param name Name of param to get from instance.
    * @param defaultValue Value returned when no param is defined in Config.xlsx.
    */
-  public  getParam<T>(instance:IGBInstance, name: string, defaultValue?: T): any {
+  public getParam<T>(instance: IGBInstance, name: string, defaultValue?: T): any {
     let value = null;
     if (instance.params) {
       const params = JSON.parse(instance.params);
@@ -608,5 +610,12 @@ STORAGE_SYNC=true
     if (typeof (defaultValue) === "number") {
       return new Number(value ? defaultValue : (defaultValue ? defaultValue : 0));
     }
+    value = instance['dataValues'][name];
+    if (value === null) {
+      const minBoot = GBServer.globals.minBoot as any;
+      value = minBoot.instance.datavalues[name];
+    }
+
+    return value;
   }
 }

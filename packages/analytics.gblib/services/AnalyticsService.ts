@@ -34,7 +34,7 @@
  * @fileoverview General Bots server core.
  */
 
-import { GuaribasUser } from '../../security.gblib/models';
+import { GuaribasUser } from '../../security.gbapp/models';
 import { GuaribasConversation, GuaribasConversationMessage } from '../models';
 
 /**

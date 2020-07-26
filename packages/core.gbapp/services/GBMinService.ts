@@ -64,7 +64,7 @@ import { KBService } from '../../kb.gbapp/services/KBService';
 import { Messages } from '../strings';
 import { GBConfigService } from './GBConfigService';
 import { GBDeployer } from './GBDeployer';
-import { SecService } from '../../security.gblib/services/SecService';
+import { SecService } from '../../security.gbapp/services/SecService';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import fs = require('fs');
@@ -469,6 +469,17 @@ export class GBMinService {
     min.packages = sysPackages;
     min.appPackages = appPackages;
 
+    // Create a hub of services available in .gbapps.
+
+    let handled = false;
+    await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+      let services: ConcatArray<never>;
+      if (services = await e.onExchangeData(min, "getServices", null)) {
+        min.gbappServices.concat(services);
+      }
+    });
+
+
     if (min.instance.whatsappServiceKey !== null) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
         min,
@@ -517,7 +528,7 @@ export class GBMinService {
       await p.loadBot(min);
       if (p.getDialogs !== undefined) {
         const dialogs = await p.getDialogs(min);
-        if (dialogs!== undefined){
+        if (dialogs !== undefined) {
           dialogs.forEach(dialog => {
             min.dialogs.add(new WaterfallDialog(dialog.id, dialog.waterfall));
           });
@@ -708,8 +719,8 @@ export class GBMinService {
 
 
         let locale = 'pt';
-        if (process.env.TRANSLATOR_DISABLED !== "true" || 
-        min.core.getParam<boolean> (min.instance,'Enable Worldwide Translator')  ) {
+        if (process.env.TRANSLATOR_DISABLED !== "true" ||
+          min.core.getParam<boolean>(min.instance, 'Enable Worldwide Translator')) {
           const minBoot = GBServer.globals.minBoot as any; // TODO: Switch keys automatically to master/per bot.
           locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
             minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
@@ -737,17 +748,19 @@ export class GBMinService {
 
         let handled = false;
         await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-          if (await e.onExchangeData(min, "handleAnswer", { query: query, step: step,
+          if (await e.onExchangeData(min, "handleAnswer", {
+            query: query, step: step,
             notTranslatedQuery: notTranslatedQuery,
-            message: message,
-            user })) {
+            message: message['dataValues'],
+            user: user['dataValues']
+          })) {
             handled = true;
           }
         });
 
         if (!handled) {
           await step.beginDialog('/answer', {
-            query: query
+            query: query, message: message
           });
         }
       }

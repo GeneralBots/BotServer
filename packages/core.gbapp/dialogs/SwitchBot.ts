@@ -40,7 +40,7 @@ import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings';
-import { SecService } from '../../security.gblib/services/SecService';
+import { SecService } from '../../security.gbapp/services/SecService';
 import { GBServer } from '../../../src/app';
 import { GBConversationalService } from '../services/GBConversationalService';
 /**

@@ -56,7 +56,7 @@ import {
 
 import { GuaribasChannel, GuaribasInstance } from '../../core.gbapp/models/GBModel';
 import { GuaribasSubject } from '../../kb.gbapp/models';
-import { GuaribasUser } from '../../security.gblib/models';
+import { GuaribasUser } from '../../security.gbapp/models';
 
 
 /**

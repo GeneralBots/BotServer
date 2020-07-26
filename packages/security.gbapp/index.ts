@@ -39,7 +39,7 @@
 import urlJoin = require('url-join');
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
-
+import {ProfileDialog} from './dialogs/ProfileDialog'
 import { Sequelize } from 'sequelize-typescript';
 import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models';
 
@@ -49,6 +49,12 @@ import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models';
 export class GBSecurityPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
   public async getDialogs(min: GBMinInstance) {
+    return [
+      ProfileDialog.getNameDialog(min),
+      ProfileDialog.getEmailDialog(min),
+      ProfileDialog.getMobileDialog(min),
+      ProfileDialog.getMobileConfirmDialog(min),
+    ];
     GBLog.verbose(`getDialogs called.`);
   }
   public async unloadPackage(core: IGBCoreService): Promise<void> {

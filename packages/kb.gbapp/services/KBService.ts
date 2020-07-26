@@ -55,7 +55,7 @@ import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
 import { Messages } from '../strings';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
-import { SecService } from '../../security.gblib/services/SecService';
+import { SecService } from '../../security.gbapp/services/SecService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 
 /**
