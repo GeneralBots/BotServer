@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/pragmatismo-io/BotServer/compare/2.0.3...2.0.4) (2020-07-20)
+
+
+### Bug Fixes
+
+* **core.gbapp:** .gbapp now can be debugged within .ts files. ([10990e6](https://github.com/pragmatismo-io/BotServer/commit/10990e601c67edf791ef0ab2e0cc2cf9419f7b21))
+
 ## [2.0.3](https://github.com/pragmatismo-io/BotServer/compare/2.0.2...2.0.3) (2020-07-19)
 
 
