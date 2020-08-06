@@ -55,8 +55,9 @@ export class ProfileDialog extends IGBDialog {
   static getNameDialog(min: GBMinInstance) {
 
     return {
-      id: '/welcome_saas_name', waterfall: [
+      id: '/profile_name', waterfall: [
         async step => {
+          step.activeDialog.state.options = step.options;
           const locale = step.context.activity.locale;
           await step.prompt("textPrompt", Messages[locale].whats_name);
         },
@@ -71,12 +72,12 @@ export class ProfileDialog extends IGBDialog {
 
           if (value === null) {
             await step.context.sendActivity(Messages[locale].validation_enter_name);
-            await step.replaceDialog('/welcome_saas_name', step.activeDialog.state.options);
+            await step.replaceDialog('/profile_name', step.activeDialog.state.options);
           }
           else {
             step.activeDialog.state.options.name = value[0];
 
-            return await step.replaceDialog('/welcome_saas_mobile', step.activeDialog.state.options);
+            return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);
 
           }
         }]
@@ -87,10 +88,9 @@ export class ProfileDialog extends IGBDialog {
   static getMobileDialog(min: GBMinInstance) {
 
     return {
-      id: '/store_mobile', waterfall: [
+      id: '/profile_mobile', waterfall: [
         async step => {
-
-
+          step.activeDialog.state.options = step.options;
           const locale = step.context.activity.locale;
           await step.prompt("textPrompt", Messages[locale].whats_mobile);
         },
@@ -103,18 +103,18 @@ export class ProfileDialog extends IGBDialog {
           } catch (error) {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_mobile);
 
-            return await step.replaceDialog('/store_mobile', step.activeDialog.state.options);
+            return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);
           }
           if (!phoneUtil.isPossibleNumber(phoneNumber)) {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_mobile);
 
-            return await step.replaceDialog('/store_mobile', step.activeDialog.state.options);
+            return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);
           }
           else {
             step.activeDialog.state.options.mobile = `${phoneNumber.values_['1']}${phoneNumber.values_['2']}`;
             step.activeDialog.state.options.mobileCode = GBAdminService.getMobileCode();
 
-            return await step.replaceDialog('/store_mobile_confirm', step.activeDialog.state.options);
+            return await step.replaceDialog('/profile_mobile_confirm', step.activeDialog.state.options);
           }
         }]
     }
@@ -123,8 +123,9 @@ export class ProfileDialog extends IGBDialog {
   static getMobileConfirmDialog(min: GBMinInstance) {
 
     return {
-      id: '/store_mobile_confirm', waterfall: [
+      id: '/profile_mobile_confirm', waterfall: [
         async step => {
+          step.activeDialog.state.options = step.options;
           const locale = step.context.activity.locale;
           let from = step.activeDialog.state.options.mobile;
           if (min.whatsAppDirectLine) {
@@ -142,10 +143,10 @@ export class ProfileDialog extends IGBDialog {
           if (step.result !== step.activeDialog.state.options.mobileCode) {
             await step.context.sendActivity(Messages[locale].confirm_mobile_again);
 
-            return await step.replaceDialog('/store_mobile_confirm', step.activeDialog.state.options);
+            return await step.replaceDialog('/profile_mobile_confirm', step.activeDialog.state.options);
           }
           else {
-            await step.replaceDialog('/store_botxxxxxxxxxxxxxxxxxxxxxxxxxx', step.activeDialog.state.options);
+            await step.replaceDialog('/profile_email', step.activeDialog.state.options);
           }
         }]
     }
@@ -154,7 +155,7 @@ export class ProfileDialog extends IGBDialog {
 
   static getEmailDialog(min: GBMinInstance) {
     return {
-      id: '/store_email', waterfall: [
+      id: '/profile_email', waterfall: [
         async step => {
           const locale = step.context.activity.locale;
           await step.prompt("textPrompt", Messages[locale].whats_email);
@@ -170,12 +171,11 @@ export class ProfileDialog extends IGBDialog {
 
           if (value === null) {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_email);
-            await step.replaceDialog('/store_email', step.activeDialog.state.options);
+            await step.replaceDialog('/profile_email', step.activeDialog.state.options);
           }
           else {
             step.activeDialog.state.options.email = value[0];
-            
-
+            await step.replaceDialog(`/${step.activeDialog.state.options.nextDialog}`, step.activeDialog.state.options);
           }
         }]
     }

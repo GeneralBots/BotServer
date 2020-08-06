@@ -1,35 +1,21 @@
 export const Messages = {
   'en-US': {
-    did_not_find: 'I\'m sorry I didn\'t find anything.',
-    going_answer: 'Great choice, now looking for your answer...',
-    wider_answer: subjectText =>
-      `Answering to you in a broader way... Not just about  ${subjectText}.`,
-    which_question: 'What\'s your question?',
-    anything_else: 'So, may I help with anything else?',
-    here_is_subjects: 'Here are some subjects to choose from...',
-    menu_select: 'Select',
-    lets_search: query =>
-      `Lets search for ${query}... What do you want to know?`,
-    see_faq: 'Please take a look at the FAQ I\'ve prepared for you. You can click on them to get the answer.',
-    will_answer_projector:
-      'I\'ll answer on the projector to a better experience...',
-    ask_first_time: 'What are you looking for?'
+    whats_name: "What's your name?",
+    whats_mobile: "What's your mobile number including country code (e.g. +1 222 9998888)?",
+    confirm_mobile: "Please type the code just sent to your mobile.",
+    whats_email: "What's your E-mail address?",
+    validation_enter_name: "Please enter your full name.",
+    validation_enter_valid_mobile: "Please enter a valid mobile number.",
+    validation_enter_valid_email: "Please enter a valid e-mail.",
   },
   'pt-BR': {
-    did_not_find: 'Desculpe-me, não encontrei nada a respeito.',
-    going_answer: 'Ótima escolha, procurando resposta para sua questão...',
-    wider_answer: subjectText =>
-      `Vou te responder de modo mais abrangente... Não apenas sobre ${subjectText}`,
-    which_question: 'Qual a pergunta?',
-    anything_else: 'Então, posso ajudar em algo mais?',
-    here_is_subjects: 'Aqui estão algumas categorias de assuntos...',
-    menu_select: 'Selecionar',
-    lets_search: query =>
-      `Let's search about ${query}... What do you want to know?`,
-    see_faq:
-      'Veja algumas perguntas mais frequentes logo na tela. Clique numa delas para eu responder.',
-    will_answer_projector:
-      'Vou te responder na tela para melhor visualização...',
-    ask_first_time: 'Como eu posso ajudar?'
+    whats_name: "Qual o seu nome?",
+    whats_email: "Qual o seu e-mail?",
+    whats_mobile: "Qual o seu celular?",
+    confirm_mobile: "Por favor, digite o código enviado para seu celular.",
+    confirm_mobile_again: "Esse não me parece ser um código numérico válido. Por favor, digite novamente o código enviado para seu celular.",
+    validation_enter_valid_email: "Por favor, digite um e-mail válido no formato nome@domínio.com.br.",
+    validation_enter_name: "Por favor, digite seu nome completo",
+    validation_enter_valid_mobile: "Por favor, insira um número de celular válido (ex.: +55 21 98888-7766).",
   }
 };
