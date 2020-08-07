@@ -40,22 +40,24 @@ import { MessageFactory, RecognizerResult } from 'botbuilder';
 import { LuisRecognizer } from 'botbuilder-ai';
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService } from 'botlib';
 import { GBServer } from '../../../src/app';
-import { Readable } from 'stream'
+import { Readable } from 'stream';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 const urlJoin = require('url-join');
-const PasswordGenerator = require("strict-password-generator").default;
+const PasswordGenerator = require('strict-password-generator').default;
 const Nexmo = require('nexmo');
-const { join } = require('path')
-const shell = require('any-shell-escape')
-const { exec } = require('child_process')
-const fs = require('fs')
-const prism = require('prism-media')
-const sdk = require("microsoft-cognitiveservices-speech-sdk");
+const { join } = require('path');
+const shell = require('any-shell-escape');
+const { exec } = require('child_process');
+const prism = require('prism-media');
+const sdk = require('microsoft-cognitiveservices-speech-sdk');
 sdk.Recognizer.enableTelemetry(false);
 const uuidv4 = require('uuid/v4');
 const request = require('request-promise-native');
+const fs = require('fs');
+const SpeechToTextV1 = require('ibm-watson/speech-to-text/v1');
+const { IamAuthenticator } = require('ibm-watson/auth');
 
 export interface LanguagePickerSettings {
   defaultLocale?: string;
@@ -91,24 +93,27 @@ export class GBConversationalService {
     return step.context.activity.locale;
   }
 
-
-
-  public async sendFile(min: GBMinInstance, step: GBDialogStep, mobile: string, url: string, caption: string): Promise<any> {
-
+  public async sendFile(
+    min: GBMinInstance,
+    step: GBDialogStep,
+    mobile: string,
+    url: string,
+    caption: string
+  ): Promise<any> {
     if (step !== null) {
       if (!isNaN(step.context.activity.from.id as any)) {
         mobile = step.context.activity.from.id;
-        GBLog.info(`Sending file ${url} to ${mobile}...`)
+        GBLog.info(`Sending file ${url} to ${mobile}...`);
         const filename = url.substring(url.lastIndexOf('/') + 1);
         await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
-      }
-      else {
-        GBLog.info(`Sending ${url} as file attachment not available in this channel ${step.context.activity.from.id}...`);
+      } else {
+        GBLog.info(
+          `Sending ${url} as file attachment not available in this channel ${step.context.activity.from.id}...`
+        );
         await min.conversationalService.sendText(min, step, url);
       }
-    }
-    else {
-      GBLog.info(`Sending file ${url} to ${mobile}...`)
+    } else {
+      GBLog.info(`Sending file ${url} to ${mobile}...`);
       const filename = url.substring(url.lastIndexOf('/') + 1);
       await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
     }
@@ -132,22 +137,20 @@ export class GBConversationalService {
 
   // tslint:disable:no-unsafe-any due to Nexmo.
   public async sendSms(min: GBMinInstance, mobile: string, text: string): Promise<any> {
-    return new Promise(
-      (resolve: any, reject: any): any => {
-        const nexmo = new Nexmo({
-          apiKey: min.instance.smsKey,
-          apiSecret: min.instance.smsSecret
-        });
-        // tslint:disable-next-line:no-unsafe-any
-        nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, (err, data) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(data);
-          }
-        });
-      }
-    );
+    return new Promise((resolve: any, reject: any): any => {
+      const nexmo = new Nexmo({
+        apiKey: min.instance.smsKey,
+        apiSecret: min.instance.smsSecret
+      });
+      // tslint:disable-next-line:no-unsafe-any
+      nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, (err, data) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
+      });
+    });
   }
 
   public async sendToMobile(min: GBMinInstance, mobile: string, message: string) {
@@ -167,43 +170,32 @@ export class GBConversationalService {
 
       try {
         speechConfig.speechSynthesisLanguage = locale;
-        speechConfig.speechSynthesisVoiceName = "pt-BR-FranciscaNeural";
+        speechConfig.speechSynthesisVoiceName = 'pt-BR-FranciscaNeural';
 
-        synthesizer.speakTextAsync(text,
-          (result) => {
-            if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
-              let raw = Buffer.from(result.audioData);
-              fs.writeFileSync(waveFilename, raw);
-              GBLog.info(`Audio data byte size: ${result.audioData.byteLength}.`)
-              const oggFilenameOnly = `tmp${name}.ogg`;
-              const oggFilename = `work/${oggFilenameOnly}`;
+        synthesizer.speakTextAsync(text, result => {
+          if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
+            let raw = Buffer.from(result.audioData);
+            fs.writeFileSync(waveFilename, raw);
+            GBLog.info(`Audio data byte size: ${result.audioData.byteLength}.`);
+            const oggFilenameOnly = `tmp${name}.ogg`;
+            const oggFilename = `work/${oggFilenameOnly}`;
 
+            const output = fs.createWriteStream(oggFilename);
+            const transcoder = new prism.FFmpeg({
+              args: ['-analyzeduration', '0', '-loglevel', '0', '-f', 'opus', '-ar', '16000', '-ac', '1']
+            });
 
-              const output = fs.createWriteStream(oggFilename);
-              const transcoder = new prism.FFmpeg({
-                args: [
-                  '-analyzeduration', '0',
-                  '-loglevel', '0',
-                  '-f', 'opus',
-                  '-ar', '16000',
-                  '-ac', '1',
-                ],
-              });
+            fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
 
-              fs.createReadStream(waveFilename)
-                .pipe(transcoder)
-                .pipe(output);
-
-
-              let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
-              resolve(url);
-            } else {
-              const error = "Speech synthesis canceled, " + result.errorDetails;
-              reject(error);
-            }
-            synthesizer.close();
-            synthesizer = undefined;
-          });
+            let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
+            resolve(url);
+          } else {
+            const error = 'Speech synthesis canceled, ' + result.errorDetails;
+            reject(error);
+          }
+          synthesizer.close();
+          synthesizer = undefined;
+        });
       } catch (error) {
         reject(error);
       }
@@ -217,7 +209,7 @@ export class GBConversationalService {
         let serviceRegion = cloudRegion;
 
         const oggFile = new Readable();
-        oggFile._read = () => { } // _read is required but you can noop it
+        oggFile._read = () => {}; // _read is required but you can noop it
         oggFile.push(buffer);
         oggFile.push(null);
 
@@ -228,48 +220,78 @@ export class GBConversationalService {
         fs.writeFileSync(src, oggFile.read());
 
         const makeMp3 = shell([
-          'node_modules/ffmpeg-static/ffmpeg.exe', '-y', '-v', 'error',
-          '-i', join(process.cwd(), src),
-          '-ar', '16000',
-          '-ac', '1',
-          '-acodec', 'pcm_s16le',
+          'node_modules/ffmpeg-static/ffmpeg.exe',
+          '-y',
+          '-v',
+          'error',
+          '-i',
+          join(process.cwd(), src),
+          '-ar',
+          '44100',
+          '-ac',
+          '1',
+          '-acodec',
+          'pcm_s16le',
           join(process.cwd(), dest)
-        ])
+        ]);
 
-        exec(makeMp3, (error) => {
+        exec(makeMp3, error => {
           if (error) {
             GBLog.error(error);
             return Promise.reject(error);
           } else {
             let data = fs.readFileSync(dest);
 
-            let pushStream = sdk.AudioInputStream.createPushStream();
-            pushStream.write(data);
-            pushStream.close();
+            const speechToText = new SpeechToTextV1({
+              authenticator: new IamAuthenticator({ apikey: process.env.WATSON_STT_KEY }),
+              url: process.env.WATSON_STT_URL
+            });
 
-            let audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
-            let speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
-            speechConfig.speechRecognitionLanguage = locale;
-            let recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+            const params = {
+              audio: data,
+              contentType: 'audio/l16; rate=44100',
+              model: "pt-BR_BroadbandModel",
+              keywords: ['azul', 'céu', 'sol'],
+              keywordsThreshold: 0.5
+            };
 
-            recognizer.recognizeOnceAsync(
-              (result) => {
-
-                resolve(result.text ? result.text : 'Speech to Text failed: Audio not converted');
-
-                recognizer.close();
-                recognizer = undefined;
-              },
-              (err) => {
-                reject(err);
-
-                recognizer.close();
-                recognizer = undefined;
+            speechToText
+              .recognize(params)
+              .then(response => {
+                if (response.result.results.length > 0) {
+                  resolve(response.result.results[0].alternatives[0].transcript);
+                }
+              })
+              .catch(error => {
+                GBLog.error(error);
+                return Promise.reject(error);
               });
 
-          }
-        })
+            // let pushStream = sdk.AudioInputStream.createPushStream();
+            // pushStream.write(data);
+            // pushStream.close();
 
+            // let audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
+            // let speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
+            // speechConfig.speechRecognitionLanguage = locale;
+            // let recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+
+            // recognizer.recognizeOnceAsync(
+            //   (result) => {
+
+            //     resolve(result.text ? result.text : 'Speech to Text failed: Audio not converted');
+
+            //     recognizer.close();
+            //     recognizer = undefined;
+            //   },
+            //   (err) => {
+            //     reject(err);
+
+            //     recognizer.close();
+            //     recognizer = undefined;
+            //   });
+          }
+        });
       } catch (error) {
         GBLog.error(error);
         return Promise.reject(error);
@@ -277,16 +299,14 @@ export class GBConversationalService {
     });
   }
 
-
   // tslint:enable:no-unsafe-any
 
   public async sendMarkdownToMobile(min: GBMinInstance, step: GBDialogStep, mobile: string, text: string) {
-
-    let sleep = (ms) => {
+    let sleep = ms => {
       return new Promise(resolve => {
-        setTimeout(resolve, ms)
-      })
-    }
+        setTimeout(resolve, ms);
+      });
+    };
     enum State {
       InText,
       InImage,
@@ -300,8 +320,8 @@ export class GBConversationalService {
       InEmbedAddressEnd,
       InLineBreak,
       InLineBreak1,
-      InLineBreak2,
-    };
+      InLineBreak2
+    }
     let state = State.InText;
     let currentImage = '';
     let currentText = '';
@@ -314,17 +334,13 @@ export class GBConversationalService {
 
       switch (state) {
         case State.InText:
-
           if (c === '!') {
             state = State.InImageBegin;
-          }
-          else if (c === '[') {
+          } else if (c === '[') {
             state = State.InEmbedBegin;
-          }
-          else if (c === '\n') {
+          } else if (c === '\n') {
             state = State.InLineBreak;
-          }
-          else {
+          } else {
             state = State.InText;
             currentText = currentText.concat(c);
           }
@@ -332,11 +348,9 @@ export class GBConversationalService {
         case State.InLineBreak:
           if (c === '\n') {
             state = State.InLineBreak1;
-          }
-          else if (c === '!') {
+          } else if (c === '!') {
             state = State.InImageBegin;
-          }
-          else if (c === '[') {
+          } else if (c === '[') {
             state = State.InEmbedBegin;
           } else {
             currentText = currentText.concat('\n', c);
@@ -347,18 +361,15 @@ export class GBConversationalService {
           if (c === '\n') {
             if (mobile === null) {
               await step.context.sendActivity(currentText);
-            }
-            else {
+            } else {
               await this.sendToMobile(min, mobile, currentText);
             }
             await sleep(3000);
             currentText = '';
             state = State.InText;
-          }
-          else if (c === '!') {
+          } else if (c === '!') {
             state = State.InImageBegin;
-          }
-          else if (c === '[') {
+          } else if (c === '[') {
             state = State.InEmbedBegin;
           } else {
             currentText = currentText.concat('\n', '\n', c);
@@ -370,8 +381,7 @@ export class GBConversationalService {
             if (currentText !== '') {
               if (mobile === null) {
                 await step.context.sendActivity(currentText);
-              }
-              else {
+              } else {
                 await this.sendToMobile(min, mobile, currentText);
               }
               await sleep(3000);
@@ -388,8 +398,7 @@ export class GBConversationalService {
             await this.sendFile(min, step, mobile, url, null);
             await sleep(5000);
             currentEmbedUrl = '';
-          }
-          else {
+          } else {
             currentEmbedUrl = currentEmbedUrl.concat(c);
           }
           break;
@@ -403,16 +412,14 @@ export class GBConversationalService {
             if (currentText !== '') {
               if (mobile === null) {
                 await step.context.sendActivity(currentText);
-              }
-              else {
+              } else {
                 await this.sendToMobile(min, mobile, currentText);
               }
               await sleep(2900);
             }
             currentText = '';
             state = State.InImageCaption;
-          }
-          else {
+          } else {
             state = State.InText;
             currentText = currentText.concat('!').concat(c);
           }
@@ -420,8 +427,7 @@ export class GBConversationalService {
         case State.InImageCaption:
           if (c === ']') {
             state = State.InImageAddressBegin;
-          }
-          else {
+          } else {
             currentCaption = currentCaption.concat(c);
           }
           break;
@@ -438,27 +444,22 @@ export class GBConversationalService {
             currentCaption = '';
             await sleep(4500);
             currentImage = '';
-          }
-          else {
+          } else {
             currentImage = currentImage.concat(c);
           }
           break;
       }
-
     }
     if (currentText !== '') {
       if (mobile === null) {
         await step.context.sendActivity(currentText);
-
-      }
-      else {
+      } else {
         await this.sendToMobile(min, mobile, currentText);
       }
     }
   }
 
   public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string): Promise<boolean> {
-
     if (min.instance.nlpAppId === null || min.instance.nlpAppId === undefined) {
       return false;
     }
@@ -481,7 +482,7 @@ export class GBConversationalService {
       } else {
         const msg = `Error calling NLP, check if you have a published model and assigned keys. Error: ${
           error.statusCode ? error.statusCode : ''
-          } {error.message; }`;
+        } {error.message; }`;
 
         return Promise.reject(new Error(msg));
       }
@@ -490,7 +491,7 @@ export class GBConversationalService {
 
     let nlpActive = false;
 
-    Object.keys(nlp.intents).forEach((name) => {
+    Object.keys(nlp.intents).forEach(name => {
       const score = nlp.intents[name].score;
       if (score > min.instance.nlpScore) {
         nlpActive = true;
@@ -501,7 +502,6 @@ export class GBConversationalService {
 
     const topIntent = LuisRecognizer.topIntent(nlp);
     if (topIntent !== undefined && nlpActive) {
-
       const intent = topIntent;
       // tslint:disable:no-unsafe-any
       const firstEntity = nlp.entities && nlp.entities.length > 0 ? nlp.entities[0].entity.toUpperCase() : undefined;
@@ -527,23 +527,16 @@ export class GBConversationalService {
     return Promise.resolve(false);
   }
 
-
-  async translate(min: GBMinInstance,
-    key: string,
-    endPoint: string,
-    text: string,
-    language: string
-  ): Promise<string> {
-
+  async translate(min: GBMinInstance, key: string, endPoint: string, text: string, language: string): Promise<string> {
     const translatorEnabled = () => {
       if (min.instance.params) {
         const params = JSON.parse(min.instance.params);
-        return params ? params['Enable Worldwide Translator'] === "TRUE" : false;
+        return params ? params['Enable Worldwide Translator'] === 'TRUE' : false;
       }
       return false;
-    } // TODO: Encapsulate.
+    }; // TODO: Encapsulate.
 
-    if (endPoint === null || (!translatorEnabled() || process.env.TRANSLATOR_DISABLED === "true")) {
+    if (endPoint === null || !translatorEnabled() || process.env.TRANSLATOR_DISABLED === 'true') {
       return text;
     }
 
@@ -558,7 +551,7 @@ export class GBConversationalService {
       url: 'translate',
       qs: {
         'api-version': '3.0',
-        'to': [language]
+        to: [language]
       },
       headers: {
         'Ocp-Apim-Subscription-Key': key,
@@ -566,11 +559,13 @@ export class GBConversationalService {
         'Content-type': 'application/json',
         'X-ClientTraceId': uuidv4().toString()
       },
-      body: [{
-        'text': text
-      }],
-      json: true,
-    }
+      body: [
+        {
+          text: text
+        }
+      ],
+      json: true
+    };
 
     try {
       const results = await request(options);
@@ -588,10 +583,10 @@ export class GBConversationalService {
 
     let sec = new SecService();
     const member = step.context.activity.from;
-    const user = await sec.ensureUser(min.instance.instanceId, member.id,
-      member.name, "", "web", member.name);
+    const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
     if (text !== null) {
-      text = await min.conversationalService.translate(min,
+      text = await min.conversationalService.translate(
+        min,
         min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
         min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
         text,
@@ -599,18 +594,18 @@ export class GBConversationalService {
       );
     }
 
-    return await step.prompt("textPrompt", text ? text : {});
+    return await step.prompt('textPrompt', text ? text : {});
   }
 
   public async sendText(min, step, text) {
     let sec = new SecService();
     const member = step.context.activity.from;
-    const user = await sec.ensureUser(min.instance.instanceId, member.id,
-      member.name, "", "web", member.name);
+    const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
 
     if (user) {
       const minBoot = GBServer.globals.minBoot as any;
-      text = await min.conversationalService.translate(min,
+      text = await min.conversationalService.translate(
+        min,
         min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
         min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
         text,
@@ -618,17 +613,13 @@ export class GBConversationalService {
       );
       const analytics = new AnalyticsService();
       const userProfile = await min.userProfile.get(step.context, {});
-      analytics.createMessage(min.instance.instanceId,
-        userProfile.conversation, null,
-        text);
+      analytics.createMessage(min.instance.instanceId, userProfile.conversation, null, text);
 
       if (!isNaN(member.id)) {
         await min.whatsAppDirectLine.sendToDevice(member.id, text);
-      }
-      else {
+      } else {
         await step.context.sendActivity(text);
       }
-
     }
   }
 }
