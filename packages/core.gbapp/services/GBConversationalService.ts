@@ -250,9 +250,7 @@ export class GBConversationalService {
             const params = {
               audio: data,
               contentType: 'audio/l16; rate=44100',
-              model: "pt-BR_BroadbandModel",
-              keywords: ['azul', 'céu', 'sol'],
-              keywordsThreshold: 0.5
+              model: "pt-BR_BroadbandModel"
             };
 
             speechToText

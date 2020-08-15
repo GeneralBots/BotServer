@@ -40,8 +40,8 @@ import urlJoin = require('url-join');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GBDeployer } from './GBDeployer';
-const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
-import { Messages } from "../strings";
+const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
+import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
 const request = require('request-promise-native');
 
@@ -95,10 +95,10 @@ class SysClass {
     await timeout(seconds * 1000);
   }
 
-  public async save(file: string, ...args): Promise<any> {
+
+  public async set(file: string, address:string, value: any): Promise<any> {
     try {
-      let token =
-        await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+      let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
       let siteId = process.env.STORAGE_SITE_ID;
       let libraryId = process.env.STORAGE_LIBRARY;
@@ -111,16 +111,59 @@ class SysClass {
       const botId = this.min.instance.botId;
       const path = `/${botId}.gbai/${botId}.gbdata`;
 
-      let res = await client.api(
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+      let res = await client
+        .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
         .get();
 
       let document = res.value.filter(m => {
-        return m.name === file
+        return m.name === file;
       });
 
-      await client.api(
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z1')/insert`)
+      if (document === undefined) {
+        throw `File '${file}' specified on save GBasic command SET not found. Check the .gbdata or the .gbdialog associated.`;
+      }
+     
+      let body = { values: [[]] };
+      body.values[0][0] = value;
+
+      let res2 = await client
+        .api(
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='${address}')`
+        )
+        .patch(body);
+    } catch (error) {
+      GBLog.error(`SAVE BASIC error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  public async save(file: string, ...args): Promise<any> {
+    try {
+      let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+
+      let siteId = process.env.STORAGE_SITE_ID;
+      let libraryId = process.env.STORAGE_LIBRARY;
+
+      let client = MicrosoftGraph.Client.init({
+        authProvider: done => {
+          done(null, token);
+        }
+      });
+      const botId = this.min.instance.botId;
+      const path = `/${botId}.gbai/${botId}.gbdata`;
+
+      let res = await client
+        .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+        .get();
+
+      let document = res.value.filter(m => {
+        return m.name === file;
+      });
+
+      await client
+        .api(
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z1')/insert`
+        )
         .post({});
 
       if (document === undefined) {
@@ -130,27 +173,25 @@ class SysClass {
         throw `File '${file}' has a SAVE call with more than 27 arguments. Check the .gbdialog associated.`;
       }
 
-      let body =
-        { "values": [[]] };
+      let body = { values: [[]] };
 
       for (let index = 0; index < 26; index++) {
         body.values[0][index] = args[index];
       }
 
-      let res2 = await client.api(
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:Z2')`)
+      let res2 = await client
+        .api(
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:Z2')`
+        )
         .patch(body);
     } catch (error) {
       GBLog.error(`SAVE BASIC error: ${error.message}`);
       throw error;
     }
-
   }
 
-  public async find(file: string, ...args): Promise<any> {
-
-    let token =
-      await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+  public async get(file: string, address: string): Promise<any> {
+    let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
     let client = MicrosoftGraph.Client.init({
       authProvider: done => {
@@ -163,15 +204,55 @@ class SysClass {
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
     try {
-      let res = await client.api(
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+      let res = await client
+        .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
         .get();
-
 
       // Performs validation.
 
       let document = res.value.filter(m => {
-        return m.name === file
+        return m.name === file;
+      });
+
+      if (document === undefined) {
+        throw `File '${file}' specified on save GBasic command GET not found. Check the .gbdata or the .gbdialog associated.`;
+      }
+
+      // Creates workbook session that will be discarded.
+
+      let results = await client
+        .api(
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='${address}')`
+        )
+        .get();
+
+        return results.text[0][0];
+    } catch (error) {
+      GBLog.error(error);
+    }
+  }
+  public async find(file: string, ...args): Promise<any> {
+    let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+
+    let client = MicrosoftGraph.Client.init({
+      authProvider: done => {
+        done(null, token);
+      }
+    });
+    let siteId = process.env.STORAGE_SITE_ID;
+    let libraryId = process.env.STORAGE_LIBRARY;
+    const botId = this.min.instance.botId;
+    const path = `/${botId}.gbai/${botId}.gbdata`;
+
+    try {
+      let res = await client
+        .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+        .get();
+
+      // Performs validation.
+
+      let document = res.value.filter(m => {
+        return m.name === file;
       });
 
       if (document === undefined) {
@@ -186,8 +267,10 @@ class SysClass {
       const filter = args[0].split('=');
       const columnName = filter[0];
       const value = filter[1];
-      let results = await client.api(
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z100')`)
+      let results = await client
+        .api(
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z100')`
+        )
         .get();
 
       let columnIndex = 0;
@@ -206,8 +289,7 @@ class SysClass {
       }
       if (foundIndex === results.text.length) {
         return null;
-      }
-      else {
+      } else {
         let output = {};
         const row = results.text[foundIndex];
         for (let colIndex = 0; colIndex < row.length; colIndex++) {
@@ -258,26 +340,40 @@ class SysClass {
   /**
    * Generic function to call any REST API.
    */
-  public async httpGet(url: string, qs) {
-
+  public async httpGet(url: string) {
     const options = {
-      uri: urlJoin(url, qs)
+      uri: url
     };
 
-    return await request.get(options);
+    let result = await request.get(options);
+    GBLog.info(`[GET]: ${url} : ${result}`);
+    return JSON.parse(result);
+  }
+
+  /**
+   * Generic function to call any REST API by POST.
+   */
+  public async httpPost(url: string, data) {
+    const options = {
+      uri: url,
+      json: true,
+      body: data
+    };
+
+    let result = await request.post(options);
+    GBLog.info(`[POST]: ${url} (${data}): ${result}`);
+    return JSON.parse(result);
   }
 
   public async numberOnly(text: string) {
-    return text.replace(/\D/gi, "");
+    return text.replace(/\D/gi, '');
   }
-
 }
 
 /**
  * Base services of conversation to be called by BASIC.
  */
 export class DialogClass {
-
   public min: GBMinInstance;
   public context: TurnContext;
   public step: WaterfallStepContext;
@@ -289,38 +385,38 @@ export class DialogClass {
   }
 
   public static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add(new WaterfallDialog('/gbasic-email', [
+    min.dialogs.add(
+      new WaterfallDialog('/gbasic-email', [
+        async step => {
+          const locale = step.context.activity.locale;
+          if ((step.options as any).ask) {
+            await min.conversationalService.sendText(min, step, Messages[locale].whats_email);
+          }
+          return await step.prompt('textPrompt', {});
+        },
+        async step => {
+          const locale = step.context.activity.locale;
 
-      async step => {
-        const locale = step.context.activity.locale;
-        if ((step.options as any).ask) {
-          await min.conversationalService.sendText(min, step, Messages[locale].whats_email);
-        }
-        return await step.prompt("textPrompt", {});
-      },
-      async step => {
-        const locale = step.context.activity.locale;
+          const extractEntity = text => {
+            return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi);
+          };
 
-        const extractEntity = (text) => {
-          return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi);
-        }
+          const value = extractEntity(step.result);
 
-        const value = extractEntity(step.result);
-
-        if (value === null) {
-          await min.conversationalService.sendText(min, step, Messages[locale].validation_enter_valid_email);
-          return await step.replaceDialog('/gbasic-email', { ask: true });
+          if (value === null) {
+            await min.conversationalService.sendText(min, step, Messages[locale].validation_enter_valid_email);
+            return await step.replaceDialog('/gbasic-email', { ask: true });
+          } else {
+            return await step.endDialog(value[0]);
+          }
         }
-        else {
-          return await step.endDialog(value[0]);
-        }
-      }]));
+      ])
+    );
   }
 
   public sys(): SysClass {
     return this.internalSys;
   }
-
 
   public async getToday(step) {
     var d = new Date(),
@@ -328,10 +424,8 @@ export class DialogClass {
       day = '' + d.getDate(),
       year = d.getFullYear();
 
-    if (month.length < 2)
-      month = '0' + month;
-    if (day.length < 2)
-      day = '0' + day;
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
 
     const locale = step.context.activity.locale;
     switch (locale) {
@@ -348,8 +442,7 @@ export class DialogClass {
 
   public async sendFile(step, filename, caption) {
     let url = urlJoin(GBServer.globals.publicAddress, 'kb', this.min.botId + '.gbkb', 'assets', filename);
-    await this.min.conversationalService.sendFile(this.min, step,
-      null, url, caption);
+    await this.min.conversationalService.sendFile(this.min, step, null, url, caption);
   }
 
   public async getFrom(step) {
@@ -361,16 +454,11 @@ export class DialogClass {
   }
 
   public async getUserMobile(step) {
-
-    if (isNaN(step.context.activity.from.id))
-    {
-      return ('No mobile available.');
+    if (isNaN(step.context.activity.from.id)) {
+      return 'No mobile available.';
+    } else {
+      return step.context.activity.from.id;
     }
-    else
-    {
-      return (step.context.activity.from.id);
-    }
-
   }
 
   public async askEmail(step) {
@@ -379,7 +467,7 @@ export class DialogClass {
 
   public async hear(step, promise, previousResolve) {
     function random(low, high) {
-      return Math.random() * (high - low) + low
+      return Math.random() * (high - low) + low;
     }
     const idPromise = random(0, 120000000);
     this.min.cbMap[idPromise] = {};
@@ -388,8 +476,7 @@ export class DialogClass {
     const opts = { id: idPromise, previousResolve: previousResolve };
     if (previousResolve !== undefined) {
       previousResolve(opts);
-    }
-    else {
+    } else {
       await step.beginDialog('/hear', opts);
     }
   }

@@ -137,6 +137,12 @@ export class GBVMService extends GBService {
             reject(error);
           }
           else {
+            text = text.replace('“', '\"');
+            text = text.replace('”', '\"');
+            text = text.replace('‘', '\'');
+            text = text.replace('’', '\'');
+            
+            
             resolve(text);
           }
         });
@@ -157,8 +163,8 @@ export class GBVMService extends GBService {
     from = this.getFrom(step)
     today = this.getToday(step)
     id = sys().getRandomId()
-    username = this.getUserName();
-    mobile = this.getUserMobile();
+    username = this.getUserName(step);
+    mobile = this.getUserMobile(step);
     
     ${code}
     `;
@@ -183,8 +189,12 @@ export class GBVMService extends GBService {
       return `let stock = sys().getStock(${$2})`;
     });
 
-    code = code.replace(/(get)(\s)(.*)/gi, ($0, $1, $2) => {
-      return `sys().httpGet (${$2})`;
+    code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2) => {
+      return `let ${$1} = sys().httpGet (${$2})`;
+    });
+
+    code = code.replace(/(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
+      return `let ${$1} = sys().httpPost (${$2}, ${$3})`;
     });
 
     code = code.replace(/(create a bot farm using)(\s)(.*)/gi, ($0, $1, $2, $3) => {

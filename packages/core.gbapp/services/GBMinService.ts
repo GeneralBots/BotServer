@@ -519,8 +519,18 @@ export class GBMinService {
   }
 
   private async invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance) {
-    await CollectionUtil.asyncForEach(sysPackages, async e => {
-      await e.loadBot(min);
+    await CollectionUtil.asyncForEach(sysPackages, async p => {
+      p.sysPackages = sysPackages;
+      if (p.getDialogs !== undefined) {
+        const dialogs = await p.getDialogs(min);
+        if (dialogs !== undefined) {
+          dialogs.forEach(dialog => {
+            min.dialogs.add(new WaterfallDialog(dialog.id, dialog.waterfall));
+          });
+        }
+      }
+
+      await p.loadBot(min);
     });
 
     await CollectionUtil.asyncForEach(appPackages, async p => {
