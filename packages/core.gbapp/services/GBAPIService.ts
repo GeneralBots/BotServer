@@ -126,7 +126,7 @@ class SysClass {
       let body = { values: [[]] };
       body.values[0][0] = value;
 
-      let res2 = await client
+      await client
         .api(
           `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='${address}')`
         )
@@ -214,7 +214,7 @@ class SysClass {
         return m.name === file;
       });
 
-      if (document === undefined) {
+      if (!document || document.length === 0) {
         throw `File '${file}' specified on save GBasic command GET not found. Check the .gbdata or the .gbdialog associated.`;
       }
 
