@@ -150,10 +150,10 @@ export class KBService implements IGBKBService {
         }
       });
 
-      return Promise.resolve({ question: question, answer: answer });
+      return { question: question, answer: answer };
     }
 
-    return Promise.resolve(undefined);
+    return undefined;
   }
 
   public async addAnswer(obj: GuaribasAnswer): Promise<GuaribasAnswer> {
@@ -197,17 +197,17 @@ export class KBService implements IGBKBService {
       if (values && values.length > 0 && values[0]['@search.score'] >= searchScore) {
         const value = await this.getAnswerById(instance.instanceId, values[0].answerId);
         if (value !== null) {
-          return Promise.resolve({ answer: value, questionId: values[0].questionId });
+          return { answer: value, questionId: values[0].questionId };
         } else {
-          return Promise.resolve({ answer: undefined, questionId: 0 });
+          return { answer: undefined, questionId: 0 };
         }
       }
     } else {
       const data = await this.getAnswerByText(instance.instanceId, query);
       if (data) {
-        return Promise.resolve({ answer: data.answer, questionId: data.question.questionId });
+        return { answer: data.answer, questionId: data.question.questionId };
       } else {
-        return Promise.resolve({ answer: undefined, questionId: 0 });
+        return { answer: undefined, questionId: 0 };
       }
     }
   }
@@ -368,11 +368,11 @@ export class KBService implements IGBKBService {
           lastAnswer = answer1;
           lastQuestionId = question1.questionId;
 
-          return Promise.resolve(question1.questionId);
+          return question1.questionId;
         } else {
           // Skips the header.
 
-          return Promise.resolve(undefined);
+          return undefined;
         }
       }
     });
@@ -573,9 +573,9 @@ export class KBService implements IGBKBService {
         });
 
         if (item.children) {
-          return Promise.resolve(doIt(item.children, value.subjectId));
+          return doIt(item.children, value.subjectId);
         } else {
-          return Promise.resolve(item);
+          return item;
         }
       });
     };

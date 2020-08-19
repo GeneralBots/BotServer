@@ -397,7 +397,7 @@ export class GBMinService {
     try {
       const json = await request(options);
 
-      return Promise.resolve(JSON.parse(json));
+      return JSON.parse(json);
     } catch (error) {
       const msg = `[botId:${
         instance.botId

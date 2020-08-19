@@ -164,7 +164,7 @@ export class GBAdminService implements IGBAdminService {
     options.where = { key: key, instanceId: instanceId };
     const obj = await GuaribasAdmin.findOne(options);
 
-    return Promise.resolve(obj.value);
+    return obj.value;
   }
 
   public async acquireElevatedToken(instanceId: number): Promise<string> {

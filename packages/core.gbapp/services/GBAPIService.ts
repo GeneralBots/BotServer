@@ -70,9 +70,9 @@ class SysClass {
 
     try {
       const res = await request(options);
-      return Promise.resolve(Buffer.from(res, 'binary').toString);
+      return Buffer.from(res, 'binary').toString();
     } catch (error) {
-      return Promise.reject(new Error(error));
+      throw new Error(error);
     }
   }
 

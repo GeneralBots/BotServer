@@ -250,7 +250,7 @@ export class GBConversationalService {
             const params = {
               audio: data,
               contentType: 'audio/l16; rate=44100',
-              model: "pt-BR_BroadbandModel"
+              model: 'pt-BR_BroadbandModel'
             };
 
             speechToText
@@ -476,13 +476,13 @@ export class GBConversationalService {
       if (error.statusCode === 404) {
         GBLog.warn('NLP application still not publish and there are no other options for answering.');
 
-        return Promise.resolve(false);
+        return false;
       } else {
         const msg = `Error calling NLP, check if you have a published model and assigned keys. Error: ${
           error.statusCode ? error.statusCode : ''
         } {error.message; }`;
 
-        return Promise.reject(new Error(msg));
+        throw new Error(msg);
       }
       // tslint:enable:no-unsafe-any
     }
@@ -506,7 +506,7 @@ export class GBConversationalService {
       // tslint:ensable:no-unsafe-any
 
       if (intent === 'None') {
-        return Promise.resolve(false);
+        return false;
       }
 
       GBLog.info(`NLP called: ${intent} ${firstEntity}`);
@@ -514,15 +514,15 @@ export class GBConversationalService {
       try {
         await step.replaceDialog(`/${intent}`, nlp.entities);
 
-        return Promise.resolve(true);
+        return true;
       } catch (error) {
         const msg = `Error finding dialog associated to NLP event: ${intent}: ${error.message}`;
 
-        return Promise.reject(new Error(msg));
+        throw new Error(msg);
       }
     }
 
-    return Promise.resolve(false);
+    return false;
   }
 
   async translate(min: GBMinInstance, key: string, endPoint: string, text: string, language: string): Promise<string> {
