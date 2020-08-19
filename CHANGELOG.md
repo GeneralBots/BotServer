@@ -1,3 +1,10 @@
+## [2.0.5](https://github.com/pragmatismo-io/BotServer/compare/2.0.4...2.0.5) (2020-08-19)
+
+
+### Bug Fixes
+
+* **all:** Code cleanup. ([8db0505](https://github.com/pragmatismo-io/BotServer/commit/8db05053d5447d554fd6f475822a414a44c65f23))
+
 ## [2.0.4](https://github.com/pragmatismo-io/BotServer/compare/2.0.3...2.0.4) (2020-07-20)
 
 
