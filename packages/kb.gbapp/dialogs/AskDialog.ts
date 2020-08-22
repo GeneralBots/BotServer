@@ -103,45 +103,52 @@ export class AskDialog extends IGBDialog {
           const translatorEnabled = () => {
             if (min.instance.params) {
               const params = JSON.parse(min.instance.params);
-              return params ? params['Enable Worldwide Translator'] === "TRUE" : false;
+              return params ? params['Enable Worldwide Translator'] === 'TRUE' : false;
             }
             return false;
-          } // TODO: Encapsulate.
+          }; // TODO: Encapsulate.
 
           let query = step.result;
 
           let locale = 'pt';
           const minBoot = GBServer.globals.minBoot as any;
-          if (process.env.TRANSLATOR_DISABLED !== "true" && translatorEnabled()) {
-            locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
-              minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
-              minBoot.instance.textAnalyticsEndpoint ?
-                minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint, query);
+          if (process.env.TRANSLATOR_DISABLED !== 'true' && translatorEnabled()) {
+            locale = await AzureText.getLocale(
+              minBoot.instance.textAnalyticsKey ? minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
+              minBoot.instance.textAnalyticsEndpoint
+                ? minBoot.instance.textAnalyticsEndpoint
+                : minBoot.instance.textAnalyticsEndpoint,
+              query
+            );
           }
 
           let sec = new SecService();
           const member = step.context.activity.from;
 
-          const user = await sec.ensureUser(min.instance.instanceId, member.id,
-            member.name, "", "web", member.name);
+          const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
           user.locale = locale;
           await user.save();
           const notTranslatedQuery = query;
-          query = await min.conversationalService.translate(min,
+          query = await min.conversationalService.translate(
+            min,
             min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
             min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
             query,
-            'pt');
-          GBLog.info(`Translated text: ${query}.`)
+            'pt'
+          );
+          GBLog.info(`Translated text: ${query}.`);
 
           let handled = false;
           await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-            if (await e.onExchangeData(min, "handleAnswer", {
-              query: query, step: step,
-              notTranslatedQuery: notTranslatedQuery,
-              message: query,
-              user: user['dataValues']
-            })) {
+            if (
+              await e.onExchangeData(min, 'handleAnswer', {
+                query: query,
+                step: step,
+                notTranslatedQuery: notTranslatedQuery,
+                message: query,
+                user: user ? user['dataValues'] : null
+              })
+            ) {
               handled = true;
             }
           });
@@ -153,8 +160,6 @@ export class AskDialog extends IGBDialog {
           } else {
             return await step.next();
           }
-
-
         } else {
           return await step.next();
         }
@@ -170,10 +175,10 @@ export class AskDialog extends IGBDialog {
 
         let sec = new SecService();
         const member = step.context.activity.from;
-        const userDb = await sec.ensureUser(min.instance.instanceId, member.id,
-          member.name, "", "web", member.name);
+        const userDb = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
         const minBoot = GBServer.globals.minBoot as any;
-        text = await min.conversationalService.translate(min,
+        text = await min.conversationalService.translate(
+          min,
           min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
           min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           text,
@@ -218,7 +223,6 @@ export class AskDialog extends IGBDialog {
           // Sends the answer to all outputs, including projector.
 
           return await AskDialog.handleAnswer(service, min, step, resultsA.answer);
-
         } else {
           // Second time running Search, now with no filter.
           const resultsB = await service.ask(min.instance, text, searchScore, undefined);
@@ -237,7 +241,6 @@ export class AskDialog extends IGBDialog {
             }
 
             if (resultsB.answer)
-
               // Sends the answer to all outputs, including projector.
 
               return await AskDialog.handleAnswer(service, min, step, resultsA.answer);
@@ -254,16 +257,13 @@ export class AskDialog extends IGBDialog {
   }
 
   private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, answer: GuaribasAnswer) {
-
     if (answer.content.endsWith('.docx')) {
       const mainName = answer.content.replace(/\s|\-/gi, '').split('.')[0];
       return await GBMinService.callVM(mainName, min, step);
-
     } else {
       await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
       return await step.replaceDialog('/ask', { isReturning: true });
     }
-
   }
 
   private static getChannel(step): string {

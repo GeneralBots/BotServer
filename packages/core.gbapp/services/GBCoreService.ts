@@ -56,7 +56,6 @@ import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp';
 import { GBSharePointPackage } from '../../sharepoint.gblib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 
-
 const opn = require('opn');
 
 /**
@@ -127,8 +126,8 @@ export class GBCoreService implements IGBCoreService {
     const logging: boolean | Function =
       GBConfigService.get('STORAGE_LOGGING') === 'true'
         ? (str: string): void => {
-          GBLog.info(str);
-        }
+            GBLog.info(str);
+          }
         : false;
 
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
@@ -147,7 +146,8 @@ export class GBCoreService implements IGBCoreService {
         options: {
           encrypt: encrypt
         }
-      }, pool: {
+      },
+      pool: {
         max: 32,
         min: 8,
         idle: 40000,
@@ -156,12 +156,7 @@ export class GBCoreService implements IGBCoreService {
       }
     };
 
-    this.sequelize = new Sequelize(
-      database,
-      username,
-      password,
-      sequelizeOptions
-    );
+    this.sequelize = new Sequelize(database, username, password, sequelizeOptions);
 
     if (this.dialect === 'mssql') {
       this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
@@ -211,7 +206,6 @@ export class GBCoreService implements IGBCoreService {
    */
   public async loadInstances(): Promise<IGBInstance[]> {
     if (process.env.LOAD_ONLY !== undefined) {
-
       const bots = process.env.LOAD_ONLY.split(`;`);
       const and = [];
       await CollectionUtil.asyncForEach(bots, async e => {
@@ -224,8 +218,7 @@ export class GBCoreService implements IGBCoreService {
         }
       };
       return GuaribasInstance.findAll(options);
-    }
-    else {
+    } else {
       const options = { where: { state: 'active' } };
       return GuaribasInstance.findAll(options);
     }
@@ -243,7 +236,6 @@ export class GBCoreService implements IGBCoreService {
    * Loads just one Bot instance.
    */
   public async loadInstanceByActivationCode(code: string): Promise<IGBInstance> {
-
     let options = { where: { activationCode: code, state: 'active' } };
 
     return await GuaribasInstance.findOne(options);
@@ -283,8 +275,7 @@ STORAGE_SYNC=true
 
   public async ensureProxy(port): Promise<string> {
     try {
-      if (fs.existsSync('node_modules/ngrok/bin/ngrok.exe') ||
-        fs.existsSync('node_modules/ngrok/bin/ngrok')) {
+      if (fs.existsSync('node_modules/ngrok/bin/ngrok.exe') || fs.existsSync('node_modules/ngrok/bin/ngrok')) {
         const ngrok = require('ngrok');
 
         return await ngrok.connect({ port: port }, 10);
@@ -302,7 +293,6 @@ STORAGE_SYNC=true
   }
 
   public installWebHook(isGet: boolean, url: string, callback: any) {
-
     if (isGet) {
       GBServer.globals.server.get(url, (req, res) => {
         callback(req, res);
@@ -311,7 +301,6 @@ STORAGE_SYNC=true
       GBServer.globals.server.post(url, (req, res) => {
         callback(req, res);
       });
-
     }
   }
 
@@ -322,7 +311,6 @@ STORAGE_SYNC=true
   public setWWWRoot(localPath: string) {
     GBServer.globals.wwwroot = localPath;
   }
-
 
   public async deleteInstance(botId: string) {
     const options = { where: {} };
@@ -360,21 +348,19 @@ STORAGE_SYNC=true
     let instances: IGBInstance[];
     try {
       instances = await core.loadInstances();
-      if (process.env.ENDPOINT_UPDATE === "true") {
+      if (process.env.ENDPOINT_UPDATE === 'true') {
         await CollectionUtil.asyncForEach(instances, async instance => {
           GBLog.info(`Updating bot endpoint for ${instance.botId}...`);
           try {
             await installationDeployer.updateBotProxy(
               instance.botId,
-              GBConfigService.get("CLOUD_GROUP"),
+              GBConfigService.get('CLOUD_GROUP'),
               `${proxyAddress}/api/messages/${instance.botId}`
             );
           } catch (error) {
-            if (error.code === "ResourceNotFound") {
-              GBLog.warn(`Bot ${instance.botId} not found on resource group ${GBConfigService.get("CLOUD_GROUP")}.`);
-            }
-            else {
-
+            if (error.code === 'ResourceNotFound') {
+              GBLog.warn(`Bot ${instance.botId} not found on resource group ${GBConfigService.get('CLOUD_GROUP')}.`);
+            } else {
               throw new Error(`Error updating bot proxy, details: ${error}.`);
             }
           }
@@ -427,25 +413,27 @@ STORAGE_SYNC=true
     // Loads all system packages.
     const sysPackages: IGBPackage[] = [];
 
-    await CollectionUtil.asyncForEach([
-      GBAdminPackage,
-      GBCorePackage,
-      GBSecurityPackage,
-      GBKBPackage,
-      GBCustomerSatisfactionPackage,
-      GBAnalyticsPackage,
-      GBWhatsappPackage,
-      GBAzureDeployerPackage,
-      GBSharePointPackage,
-    ], async e => {
-      GBLog.info(`Loading sys package: ${e.name}...`);
+    await CollectionUtil.asyncForEach(
+      [
+        GBAdminPackage,
+        GBCorePackage,
+        GBSecurityPackage,
+        GBKBPackage,
+        GBCustomerSatisfactionPackage,
+        GBAnalyticsPackage,
+        GBWhatsappPackage,
+        GBAzureDeployerPackage,
+        GBSharePointPackage
+      ],
+      async e => {
+        GBLog.info(`Loading sys package: ${e.name}...`);
 
-      const p = Object.create(e.prototype) as IGBPackage;
-      sysPackages.push(p);
+        const p = Object.create(e.prototype) as IGBPackage;
+        sysPackages.push(p);
 
-      await p.loadPackage(core, core.sequelize);
-
-    });
+        await p.loadPackage(core, core.sequelize);
+      }
+    );
 
     return sysPackages;
   }
@@ -515,28 +503,22 @@ STORAGE_SYNC=true
     if (matches !== null) {
       const table = matches[1];
       const re2 = /PRIMARY\s+KEY\s+\(\[[^\]]*\](?:,\s*\[[^\]]*\])*\)/;
-      sql = sql.replace(
-        re2,
-        (match: string, ...args: any[]): string => {
-          return `CONSTRAINT [${table}_pk] ${match}`;
-        }
-      );
+      sql = sql.replace(re2, (match: string, ...args: any[]): string => {
+        return `CONSTRAINT [${table}_pk] ${match}`;
+      });
       const re3 = /FOREIGN\s+KEY\s+\((\[[^\]]*\](?:,\s*\[[^\]]*\])*)\)/g;
       const re4 = /\[([^\]]*)\]/g;
-      sql = sql.replace(
-        re3,
-        (match: string, ...args: any[]): string => {
-          const fkcols = args[0];
-          let fkname = table;
-          let matches2 = re4.exec(fkcols);
-          while (matches2 !== null) {
-            fkname += `_${matches2[1]}`;
-            matches2 = re4.exec(fkcols);
-          }
-
-          return `CONSTRAINT [${fkname}_fk] FOREIGN KEY (${fkcols})`;
+      sql = sql.replace(re3, (match: string, ...args: any[]): string => {
+        const fkcols = args[0];
+        let fkname = table;
+        let matches2 = re4.exec(fkcols);
+        while (matches2 !== null) {
+          fkname += `_${matches2[1]}`;
+          matches2 = re4.exec(fkcols);
         }
-      );
+
+        return `CONSTRAINT [${fkname}_fk] FOREIGN KEY (${fkcols})`;
+      });
     }
 
     return sql;
@@ -558,20 +540,17 @@ STORAGE_SYNC=true
       const table = matches[1];
       const re2 = /(ADD\s+)?CONSTRAINT\s+\[([^\]]*)\]\s+FOREIGN\s+KEY\s+\((\[[^\]]*\](?:,\s*\[[^\]]*\])*)\)/g;
       const re3 = /\[([^\]]*)\]/g;
-      sql = sql.replace(
-        re2,
-        (match: string, ...args: any[]): string => {
-          const fkcols = args[2];
-          let fkname = table;
-          let matches2 = re3.exec(fkcols);
-          while (matches2 !== null) {
-            fkname += `_${matches2[1]}`;
-            matches2 = re3.exec(fkcols);
-          }
-
-          return `${args[0] ? args[0] : ''}CONSTRAINT [${fkname}_fk] FOREIGN KEY (${fkcols})`;
+      sql = sql.replace(re2, (match: string, ...args: any[]): string => {
+        const fkcols = args[2];
+        let fkname = table;
+        let matches2 = re3.exec(fkcols);
+        while (matches2 !== null) {
+          fkname += `_${matches2[1]}`;
+          matches2 = re3.exec(fkcols);
         }
-      );
+
+        return `${args[0] ? args[0] : ''}CONSTRAINT [${fkname}_fk] FOREIGN KEY (${fkcols})`;
+      });
     }
 
     return sql;
@@ -591,7 +570,7 @@ STORAGE_SYNC=true
   /**
    * Get a dynamic param from instance. Dynamic params are defined in Config.xlsx
    * and loaded into the work folder from /publish command.
-   * 
+   *
    * @param name Name of param to get from instance.
    * @param defaultValue Value returned when no param is defined in Config.xlsx.
    */
@@ -601,19 +580,22 @@ STORAGE_SYNC=true
       const params = JSON.parse(instance.params);
       value = params ? params[name] : defaultValue;
     }
-    if (typeof (defaultValue) === "boolean") {
-      return new Boolean(value ? value.toLowerCase() === "true" : defaultValue);
+    if (typeof defaultValue === 'boolean') {
+      return new Boolean(value ? value.toLowerCase() === 'true' : defaultValue);
     }
-    if (typeof (defaultValue) === "string") {
+    if (typeof defaultValue === 'string') {
       return value ? value : defaultValue;
     }
-    if (typeof (defaultValue) === "number") {
-      return new Number(value ? defaultValue : (defaultValue ? defaultValue : 0));
+    if (typeof defaultValue === 'number') {
+      return new Number(value ? defaultValue : defaultValue ? defaultValue : 0);
     }
-    value = instance['dataValues'][name];
-    if (value === null) {
-      const minBoot = GBServer.globals.minBoot as any;
-      value = minBoot.instance.datavalues[name];
+
+    if (instance['dataValues']) {
+      value = instance['dataValues'][name];
+      if (value === null) {
+        const minBoot = GBServer.globals.minBoot as any;
+        value = minBoot.instance.datavalues[name];
+      }
     }
 
     return value;

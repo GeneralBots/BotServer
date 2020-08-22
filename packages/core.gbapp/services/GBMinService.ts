@@ -112,14 +112,12 @@ export class GBMinService {
    *
    */
 
-  public async buildMin(
-    instances: IGBInstance[],
-  ) {
+  public async buildMin(instances: IGBInstance[]) {
     // Serves default UI on root address '/' if web enabled.
     if (process.env.DISABLE_WEB !== 'true') {
-      let url = GBServer.globals.wwwroot ?
-        GBServer.globals.wwwroot :
-        urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build');
+      let url = GBServer.globals.wwwroot
+        ? GBServer.globals.wwwroot
+        : urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build');
 
       GBServer.globals.server.use('/', express.static(url));
     }
@@ -135,7 +133,6 @@ export class GBMinService {
     const url = '/webhooks/whatsapp';
     GBServer.globals.server.post(url, async (req, res) => {
       try {
-
         const id = req.body.messages[0].chatId.split('@')[0];
         const senderName = req.body.messages[0].senderName;
         const text = req.body.messages[0].body;
@@ -144,10 +141,14 @@ export class GBMinService {
           return; // Exit here.
         }
         let activeMin;
-        if (process.env.WHATSAPP_WELCOME_DISABLED !== "true") {
-          let toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.botId.toLowerCase() === text.toLowerCase())[0];
+        if (process.env.WHATSAPP_WELCOME_DISABLED !== 'true') {
+          let toSwitchMin = GBServer.globals.minInstances.filter(
+            p => p.instance.botId.toLowerCase() === text.toLowerCase()
+          )[0];
           if (!toSwitchMin) {
-            toSwitchMin = GBServer.globals.minInstances.filter(p => p.instance.activationCode ? p.instance.activationCode.toLowerCase() === text.toLowerCase() : false)[0];
+            toSwitchMin = GBServer.globals.minInstances.filter(p =>
+              p.instance.activationCode ? p.instance.activationCode.toLowerCase() === text.toLowerCase() : false
+            )[0];
           }
 
           activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
@@ -157,37 +158,42 @@ export class GBMinService {
           let user = await sec.getUserFromSystemId(id);
 
           if (user === null) {
-            user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, "", "whatsapp", senderName);
-            await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`);
+            user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, '', 'whatsapp', senderName);
+            await (activeMin as any).whatsAppDirectLine.sendToDevice(
+              id,
+              `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`
+            );
             res.end();
           } else {
             // User wants to switch bots.
             if (toSwitchMin !== undefined) {
-
               const instance = await this.core.loadInstanceByBotId(activeMin.botId);
               await sec.updateUserInstance(id, instance.instanceId);
 
               await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
-              await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `Agora falando com ${activeMin.instance.title}...`);
+              await (activeMin as any).whatsAppDirectLine.sendToDevice(
+                id,
+                `Agora falando com ${activeMin.instance.title}...`
+              );
               res.end();
-            }
-            else {
+            } else {
               activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
               if (activeMin === undefined) {
                 activeMin = GBServer.globals.minBoot;
-                await (activeMin as any).whatsAppDirectLine.sendToDevice(id, `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`);
+                await (activeMin as any).whatsAppDirectLine.sendToDevice(
+                  id,
+                  `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`
+                );
               }
               await (activeMin as any).whatsAppDirectLine.received(req, res);
             }
           }
-        }
-        else {
+        } else {
           await (GBServer.globals.minBoot as any).whatsAppDirectLine.received(req, res);
         }
       } catch (error) {
         GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error}`);
       }
-
     });
 
     await CollectionUtil.asyncForEach(instances, async instance => {
@@ -210,9 +216,12 @@ export class GBMinService {
   }
 
   public async mountBot(instance: IGBInstance) {
-
     // Build bot adapter.
-    const { min, adapter, conversationState } = await this.buildBotAdapter(instance, GBServer.globals.sysPackages, GBServer.globals.appPackages);
+    const { min, adapter, conversationState } = await this.buildBotAdapter(
+      instance,
+      GBServer.globals.sysPackages,
+      GBServer.globals.appPackages
+    );
     GBServer.globals.minInstances.push(min);
 
     await this.deployer.deployPackage(min, 'packages/default.gbtheme');
@@ -250,8 +259,14 @@ export class GBMinService {
     if (process.env.DISABLE_WEB !== 'true') {
       const uiUrl = `/${instance.botId}`;
       const uiUrlAlt = `/${instance.activationCode}`;
-      GBServer.globals.server.use(uiUrl, express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build')));
-      GBServer.globals.server.use(uiUrlAlt, express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build')));
+      GBServer.globals.server.use(
+        uiUrl,
+        express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
+      );
+      GBServer.globals.server.use(
+        uiUrlAlt,
+        express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
+      );
 
       GBLog.info(`Bot UI ${GBMinService.uiPackage} accessible at: ${uiUrl} and ${uiUrlAlt}.`);
     }
@@ -273,7 +288,7 @@ export class GBMinService {
     server.get(`/${min.instance.botId}/check`, async (req, res) => {
       try {
         if (min.whatsAppDirectLine != undefined && instance.whatsappServiceKey !== null) {
-          if (!await min.whatsAppDirectLine.check(min)) {
+          if (!(await min.whatsAppDirectLine.check(min))) {
             const error = `WhatsApp API lost connection.`;
             GBLog.error(error);
             res.status(500).send(error);
@@ -288,7 +303,6 @@ export class GBMinService {
       }
     });
   }
-
 
   private handleOAuthTokenRequests(server: any, min: GBMinInstance, instance: IGBInstance) {
     server.get(`/${min.instance.botId}/token`, async (req, res) => {
@@ -334,7 +348,7 @@ export class GBMinService {
       );
       authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
         min.instance.marketplaceId
-        }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+      }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
       res.redirect(authorizationUrl);
     });
   }
@@ -399,9 +413,7 @@ export class GBMinService {
 
       return JSON.parse(json);
     } catch (error) {
-      const msg = `[botId:${
-        instance.botId
-        }] Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
+      const msg = `[botId:${instance.botId}] Error calling Direct Line client, verify Bot endpoint on the cloud. Error is: ${error}.`;
 
       return Promise.reject(new Error(msg));
     }
@@ -414,7 +426,6 @@ export class GBMinService {
    *
    */
   private async getSTSToken(instance: any) {
-
     const options = {
       url: instance.speechEndpoint,
       method: 'POST',
@@ -443,8 +454,10 @@ export class GBMinService {
     const userState = new UserState(storage);
     adapter.use(new AutoSaveStateMiddleware(conversationState, userState));
 
-    MicrosoftAppCredentials.trustServiceUrl('https://directline.botframework.com',
-      new Date(new Date().setFullYear(new Date().getFullYear() + 10)));
+    MicrosoftAppCredentials.trustServiceUrl(
+      'https://directline.botframework.com',
+      new Date(new Date().setFullYear(new Date().getFullYear() + 10))
+    );
 
     // The minimal bot is built here.
 
@@ -474,11 +487,10 @@ export class GBMinService {
     let handled = false;
     await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
       let services: ConcatArray<never>;
-      if (services = await e.onExchangeData(min, "getServices", null)) {
+      if ((services = await e.onExchangeData(min, 'getServices', null))) {
         min.gbappServices.concat(services);
       }
     });
-
 
     if (min.instance.whatsappServiceKey !== null) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
@@ -490,20 +502,17 @@ export class GBMinService {
         min.instance.whatsappServiceUrl
       );
       await min.whatsAppDirectLine.setup(true);
-    }
-    else {
+    } else {
       const minBoot = GBServer.globals.minBoot as any;
       if (minBoot.instance.whatsappServiceKey) {
-
-        min.whatsAppDirectLine =
-          new WhatsappDirectLine(
-            min,
-            min.botId,
-            min.instance.whatsappBotKey,
-            minBoot.instance.whatsappServiceKey,
-            minBoot.instance.whatsappServiceNumber,
-            minBoot.instance.whatsappServiceUrl
-          );
+        min.whatsAppDirectLine = new WhatsappDirectLine(
+          min,
+          min.botId,
+          min.instance.whatsappBotKey,
+          minBoot.instance.whatsappServiceKey,
+          minBoot.instance.whatsappServiceNumber,
+          minBoot.instance.whatsappServiceUrl
+        );
         await min.whatsAppDirectLine.setup(false);
       }
     }
@@ -545,7 +554,6 @@ export class GBMinService {
         }
       }
     });
-
   }
 
   /**
@@ -566,7 +574,6 @@ export class GBMinService {
       step.context.activity.locale = 'pt-BR';
 
       try {
-
         const user = await min.userProfile.get(context, {});
 
         // First time processing.
@@ -586,8 +593,14 @@ export class GBMinService {
             let sec = new SecService();
             const member = context.activity.from;
 
-            const persistedUser = await sec.ensureUser(instance.instanceId, member.id,
-              member.name, "", "web", member.name);
+            const persistedUser = await sec.ensureUser(
+              instance.instanceId,
+              member.id,
+              member.name,
+              '',
+              'web',
+              member.name
+            );
 
             const analytics = new AnalyticsService();
 
@@ -596,7 +609,6 @@ export class GBMinService {
           }
 
           await min.userProfile.set(step.context, user);
-
         }
 
         GBLog.info(
@@ -630,7 +642,11 @@ export class GBMinService {
         const msg = `ERROR: ${error.message} ${error.stack ? error.stack : ''}`;
         GBLog.error(msg);
 
-        await min.conversationalService.sendText(min, step, Messages[step.context.activity.locale].very_sorry_about_error);
+        await min.conversationalService.sendText(
+          min,
+          step,
+          Messages[step.context.activity.locale].very_sorry_about_error
+        );
         await step.beginDialog('/ask', { isReturning: true });
       }
     });
@@ -665,19 +681,20 @@ export class GBMinService {
   }
 
   private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
-
     let message: GuaribasConversationMessage;
 
-    if (process.env.PRIVACY_STORE_MESSAGES === "true") {
-
+    if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
       // Adds message to the analytics layer.
 
       const analytics = new AnalyticsService();
       const user = await min.userProfile.get(context, {});
       if (user) {
-        message = await analytics.createMessage(min.instance.instanceId,
-          user.conversation, user.systemUser.userId,
-          context.activity.text);
+        message = await analytics.createMessage(
+          min.instance.instanceId,
+          user.conversation,
+          user.systemUser.userId,
+          context.activity.text
+        );
       }
     }
 
@@ -685,13 +702,12 @@ export class GBMinService {
 
     const globalQuit = (locale, utterance) => {
       return utterance.match(Messages.global_quit);
-    }
+    };
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
 
     const simpleLocale = context.activity.locale.substring(0, 2);
     const hasBadWord = wash.check(simpleLocale, context.activity.text);
-
 
     if (hasBadWord) {
       await step.beginDialog('/pleaseNoBadWords');
@@ -704,8 +720,8 @@ export class GBMinService {
       parts.splice(0, 1);
       let args = parts.join(' ');
       await step.beginDialog(dialogName, { args: args });
-
-    } else if (globalQuit(step.context.activity.locale, context.activity.text)) { // TODO: Hard-code additional languages.
+    } else if (globalQuit(step.context.activity.locale, context.activity.text)) {
+      // TODO: Hard-code additional languages.
       await step.cancelAllDialogs();
       await min.conversationalService.sendText(min, step, Messages[step.context.activity.locale].canceled);
     } else if (context.activity.text === 'admin') {
@@ -716,61 +732,71 @@ export class GBMinService {
       await step.beginDialog('/menu', JSON.parse(context.activity.text));
       // Otherwise, continue to the active dialog in the stack.
     } else {
-      if (!await this.deployer.getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`)) {
-        await step.context.sendActivity(`Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`);
+      if (!(await this.deployer.getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`))) {
+        await step.context.sendActivity(
+          `Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`
+        );
         return await step.beginDialog('/publish', { confirm: true });
       }
 
       if (step.activeDialog !== undefined) {
         await step.continueDialog();
       } else {
-
         let query = context.activity.text;
 
-
         let locale = 'pt';
-        if (process.env.TRANSLATOR_DISABLED !== "true" ||
-          min.core.getParam<boolean>(min.instance, 'Enable Worldwide Translator')) {
+        if (
+          process.env.TRANSLATOR_DISABLED !== 'true' ||
+          min.core.getParam<boolean>(min.instance, 'Enable Worldwide Translator')
+        ) {
           const minBoot = GBServer.globals.minBoot as any; // TODO: Switch keys automatically to master/per bot.
-          locale = await AzureText.getLocale(minBoot.instance.textAnalyticsKey ?
-            minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
-            minBoot.instance.textAnalyticsEndpoint ?
-              minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint, query);
+          locale = await AzureText.getLocale(
+            minBoot.instance.textAnalyticsKey ? minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
+            minBoot.instance.textAnalyticsEndpoint
+              ? minBoot.instance.textAnalyticsEndpoint
+              : minBoot.instance.textAnalyticsEndpoint,
+            query
+          );
         }
 
         let sec = new SecService();
         const member = step.context.activity.from;
 
-        const user = await sec.ensureUser(min.instance.instanceId, member.id,
-          member.name, "", "web", member.name);
+        const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
         user.locale = locale;
         await user.save();
         const minBoot = GBServer.globals.minBoot as any;
         const notTranslatedQuery = query;
-        query = await min.conversationalService.translate(min,
+        query = await min.conversationalService.translate(
+          min,
           min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
           min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           query,
-          'pt');
+          'pt'
+        );
         GBLog.info(`Translated text: ${query}.`);
 
         // Checks if any .gbapp will handle this answer, if not goes to kb.gbapp.
 
         let handled = false;
         await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-          if (await e.onExchangeData(min, "handleAnswer", {
-            query: query, step: step,
-            notTranslatedQuery: notTranslatedQuery,
-            message: message['dataValues'],
-            user: user['dataValues']
-          })) {
+          if (
+            await e.onExchangeData(min, 'handleAnswer', {
+              query: query,
+              step: step,
+              notTranslatedQuery: notTranslatedQuery,
+              message: message ? message['dataValues'] : null,
+              user: user ? user['dataValues'] : null
+            })
+          ) {
             handled = true;
           }
         });
 
         if (!handled) {
           await step.beginDialog('/answer', {
-            query: query, message: message
+            query: query,
+            message: message
           });
         }
       }

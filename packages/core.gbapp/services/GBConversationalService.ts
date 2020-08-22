@@ -51,8 +51,6 @@ const { join } = require('path');
 const shell = require('any-shell-escape');
 const { exec } = require('child_process');
 const prism = require('prism-media');
-const sdk = require('microsoft-cognitiveservices-speech-sdk');
-sdk.Recognizer.enableTelemetry(false);
 const uuidv4 = require('uuid/v4');
 const request = require('request-promise-native');
 const fs = require('fs');
@@ -162,7 +160,9 @@ export class GBConversationalService {
       const name = GBAdminService.getRndReadableIdentifier();
 
       const waveFilename = `work/tmp${name}.pcm`;
-
+      const sdk = require('microsoft-cognitiveservices-speech-sdk');
+      sdk.Recognizer.enableTelemetry(false);
+      
       var audioConfig = sdk.AudioConfig.fromAudioFileOutput(waveFilename);
       var speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, cloudRegion);
 

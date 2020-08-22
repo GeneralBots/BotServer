@@ -374,7 +374,9 @@ export class GBDeployer implements IGBDeployer {
         if (Fs.existsSync(localPath)) {
           await this.deployBotFromLocalPath(localPath, GBServer.globals.publicAddress);
         }
-        min.instance.params = await this.loadParamsFromExcel(min);
+        if (process.env.ENABLE_PARAMS_ONLINE === "true"){
+          min.instance.params = await this.loadParamsFromExcel(min);
+        }
         await this.core.saveInstance(min.instance);
 
         break;
