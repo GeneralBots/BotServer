@@ -45,7 +45,15 @@ const walkPromise = require('walk-promise');
 const { SearchService } = require('azure-search-client');
 var Excel = require('exceljs');
 import { GBServer } from '../../../src/app';
-import { IGBKBService, GBDialogStep, GBLog, IGBConversationalService, IGBCoreService, IGBInstance, GBMinInstance } from 'botlib';
+import {
+  IGBKBService,
+  GBDialogStep,
+  GBLog,
+  IGBConversationalService,
+  IGBCoreService,
+  IGBInstance,
+  GBMinInstance
+} from 'botlib';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
@@ -90,7 +98,9 @@ export class KBService implements IGBKBService {
 
   public static getSubjectItemsSeparatedBySpaces(subjects: GuaribasSubject[]) {
     const out = [];
-    if (subjects === undefined) { return ''; }
+    if (subjects === undefined) {
+      return '';
+    }
     subjects.forEach(subject => {
       out.push(subject.internalId);
     });
@@ -128,7 +138,6 @@ export class KBService implements IGBKBService {
   }
 
   public async getAnswerByText(instanceId: number, text: string): Promise<any> {
-
     text = text.trim();
     const service = new CSService();
     let question = await service.getQuestionFromAlternateText(instanceId, text);
@@ -185,9 +194,10 @@ export class KBService implements IGBKBService {
     // tslint:disable:no-unsafe-any
     if (instance.searchKey !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
       const client = new SearchService(instance.searchHost.split('.')[0], instance.searchKey);
-      const results = await client.indexes.use(instance.searchIndex)
+      const results = await client.indexes
+        .use(instance.searchIndex)
         .buildQuery()
-        .filter((f) => f.eq('instanceId', instance.instanceId))
+        .filter(f => f.eq('instanceId', instance.instanceId))
         .search(query)
         .top(1)
         .executeQuery();
@@ -265,25 +275,39 @@ export class KBService implements IGBKBService {
     instanceId: number,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
-
+    GBLog.info(`Now reading file ${filePath}...`);
     var workbook = new Excel.Workbook();
     let data = await workbook.xlsx.readFile(filePath);
 
     let lastQuestionId: number;
     let lastAnswer: GuaribasAnswer;
-    let rows = data._worksheets[1]._rows;
+
+    // Finds a valid worksheet because Excel returns empty slots
+    // when loading worksheets collection.
+    
+    let worksheet: any;
+    for (let t = 0; t < data._worksheets.length; t++) {
+      worksheet = data._worksheets[t];
+      if (worksheet)
+      {
+        break;
+      }
+    }
+
+    let rows = worksheet._rows;
 
     GBLog.info(`Now importing ${rows.length} rows from tabular file ${filePath}...`);
-
     return asyncPromise.eachSeries(rows, async line => {
-
       // Skips the first line.
 
-      if (line._cells[0] !== undefined &&
+      if (
+        line != undefined &&
+        line._cells[0] !== undefined &&
         line._cells[1] !== undefined &&
         line._cells[2] !== undefined &&
         line._cells[3] !== undefined &&
-        line._cells[4] !== undefined) {
+        line._cells[4] !== undefined
+      ) {
         // Extracts values from columns in the current line.
 
         const subjectsText = line._cells[0].text;
@@ -292,18 +316,17 @@ export class KBService implements IGBKBService {
         const question = line._cells[3].text;
         let answer = line._cells[4].text;
 
-        if (!(subjectsText === 'subjects' && from === 'from')
-          && (answer !== null && question !== null)) {
-
+        if (!(subjectsText === 'subjects' && from === 'from') && answer !== null && question !== null) {
           let format = '.txt';
 
           // Extracts answer from external media if any.
 
           let media = null;
 
-          if (typeof (answer) !== "string") {
+          if (typeof answer !== 'string') {
             GBLog.info(`[GBImporter] Answer is NULL related to Question '${question}'.`);
-            answer = 'Existe um problema na base de conhecimento. Fui treinado para entender sua pergunta, avise a quem me criou que a resposta não foi informada para esta pergunta.';
+            answer =
+              'Existe um problema na base de conhecimento. Fui treinado para entender sua pergunta, avise a quem me criou que a resposta não foi informada para esta pergunta.';
           } else if (answer.indexOf('.md') > -1) {
             const mediaFilename = urlJoin(path.dirname(filePath), '..', 'articles', answer);
             if (Fs.existsSync(mediaFilename)) {
@@ -381,13 +404,9 @@ export class KBService implements IGBKBService {
   public async sendAnswer(min: GBMinInstance, channel: string, step: GBDialogStep, answer: GuaribasAnswer) {
     if (answer.content.endsWith('.mp4')) {
       await this.playVideo(min, min.conversationalService, step, answer, channel);
-    }
-    else if (answer.format === '.md') {
-
+    } else if (answer.format === '.md') {
       await this.playMarkdown(min, answer, channel, step, min.conversationalService);
-
-    } else if (answer.content.endsWith('.ogg') && process.env.AUDIO_DISABLED !== "true") {
-
+    } else if (answer.content.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else {
       await min.conversationalService.sendText(min, step, answer.content);
@@ -395,21 +414,32 @@ export class KBService implements IGBKBService {
     }
   }
 
-  private async playAudio(min: GBMinInstance, answer: GuaribasAnswer, channel: string, step: GBDialogStep, conversationalService: IGBConversationalService) {
+  private async playAudio(
+    min: GBMinInstance,
+    answer: GuaribasAnswer,
+    channel: string,
+    step: GBDialogStep,
+    conversationalService: IGBConversationalService
+  ) {
     conversationalService.sendAudio(min, step, answer.content);
   }
 
-  private async playMarkdown(min: GBMinInstance, answer: GuaribasAnswer, channel: string, step: GBDialogStep, conversationalService: IGBConversationalService) {
-
+  private async playMarkdown(
+    min: GBMinInstance,
+    answer: GuaribasAnswer,
+    channel: string,
+    step: GBDialogStep,
+    conversationalService: IGBConversationalService
+  ) {
     let sec = new SecService();
     const member = step.context.activity.from;
-    const user = await sec.ensureUser(min.instance.instanceId, member.id,
-      member.name, "", "web", member.name);
+    const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
     const minBoot = GBServer.globals.minBoot as any;
 
     // Calls language translator.
 
-    let text = await min.conversationalService.translate(min,
+    let text = await min.conversationalService.translate(
+      min,
       min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
       min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
       answer.content,
@@ -438,29 +468,30 @@ export class KBService implements IGBKBService {
 
     // According to the channel, formats the output optimized to it.
 
-    if (channel === 'webchat' &&
-      GBConfigService.get('DISABLE_WEB') !== 'true') {
+    if (channel === 'webchat' && GBConfigService.get('DISABLE_WEB') !== 'true') {
       html = marked(text);
       await this.sendMarkdownToWeb(min, step, conversationalService, html, answer);
-    }
-    else if (channel === 'whatsapp') {
-
+    } else if (channel === 'whatsapp') {
       await conversationalService.sendMarkdownToMobile(min, step, user.userSystemId, text);
-    }
-    else {
+    } else {
       html = marked(text);
       await min.conversationalService.sendText(min, step, html);
     }
   }
 
-  private async sendMarkdownToWeb(min, step: GBDialogStep, conversationalService: IGBConversationalService, html: string, answer: GuaribasAnswer) {
-
+  private async sendMarkdownToWeb(
+    min,
+    step: GBDialogStep,
+    conversationalService: IGBConversationalService,
+    html: string,
+    answer: GuaribasAnswer
+  ) {
     let sec = new SecService();
     const member = step.context.activity.from;
-    const user = await sec.ensureUser(min.instance.instanceId, member.id,
-      member.name, "", "web", member.name);
+    const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
     const minBoot = GBServer.globals.minBoot as any;
-    html = await min.conversationalService.translate(min,
+    html = await min.conversationalService.translate(
+      min,
       min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
       min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
       html,
@@ -481,11 +512,15 @@ export class KBService implements IGBKBService {
     });
   }
 
-
-  private async playVideo(min, conversationalService: IGBConversationalService,
-    step: GBDialogStep, answer: GuaribasAnswer, channel: string) {
-    if (channel === "whatsapp") {
-      await min.conversationalService.sendFile(min, step, null, answer.content, "");
+  private async playVideo(
+    min,
+    conversationalService: IGBConversationalService,
+    step: GBDialogStep,
+    answer: GuaribasAnswer,
+    channel: string
+  ) {
+    if (channel === 'whatsapp') {
+      await min.conversationalService.sendFile(min, step, null, answer.content, '');
     } else {
       await conversationalService.sendEvent(min, step, 'play', {
         playerType: 'video',
@@ -499,7 +534,6 @@ export class KBService implements IGBKBService {
     packageStorage: GuaribasPackage,
     instance: IGBInstance
   ): Promise<any> {
-
     // Imports subjects tree into database and return it.
 
     const subjectFile = urlJoin(localPath, 'subjects.json');
@@ -525,18 +559,16 @@ export class KBService implements IGBKBService {
 
     await CollectionUtil.asyncForEach(files, async file => {
       if (file !== null && file.name.endsWith('.md')) {
-
         let content = await this.getAnswerTextByMediaName(instance.instanceId, file.name);
 
         if (content === null) {
-
           const fullFilename = urlJoin(file.root, file.name);
           content = Fs.readFileSync(fullFilename, 'utf-8');
 
           await GuaribasAnswer.create({
             instanceId: instance.instanceId,
             content: content,
-            format: ".md",
+            format: '.md',
             media: file.name,
             packageId: packageId,
             prevId: 0 // TODO: Calculate total rows and increment.
@@ -552,8 +584,7 @@ export class KBService implements IGBKBService {
       if (file !== null && file.name.endsWith('.xlsx')) {
         return await this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
       }
-    })
-
+    });
   }
 
   public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise<any> {
@@ -595,8 +626,7 @@ export class KBService implements IGBKBService {
     });
     await this.undeployPackageFromStorage(instance, packageId);
 
-    GBLog.info("Remember to call rebuild index manually after package removal.");
-
+    GBLog.info('Remember to call rebuild index manually after package removal.');
   }
 
   private async undeployPackageFromStorage(instance: any, packageId: number) {
@@ -614,12 +644,11 @@ export class KBService implements IGBKBService {
     const packageName = Path.basename(localPath);
     GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
 
-
     const instance = await core.loadInstanceByBotId(min.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(localPath, p, instance);
-    deployer.mountGBKBAssets(packageName,min.botId, localPath);
+    deployer.mountGBKBAssets(packageName, min.botId, localPath);
 
     await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
     GBLog.info(`[GBDeployer] Finished import of ${localPath}`);

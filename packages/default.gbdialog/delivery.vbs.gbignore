@@ -1,17 +1,17 @@
 ' General Bots Copyright (c) Pragmatismo.io. All rights reserved. Licensed under the AGPL-3.0. 
 
 talk "Quer pagar quanto?"
-hear ammount
+hear amount
 
 talk "Para onde?"
 hear address
 
-if ammount < 5  then
+if amount < 5  then
     talk "O mínimo que vendo este produto é 5."
 else
 
     if address is in "Rio" then 
-        get payment ammount
+        get payment amount
         delivery to address
     else
         talk "Vou ver se tenho um parceiro para entregar aí e te falo. Eu só entrego no Rio."   

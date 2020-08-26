@@ -1,12 +1,12 @@
 ' General Bots Copyright (c) Pragmatismo.io. All rights reserved. Licensed under the AGPL-3.0. 
 
 talk "Quer pagar quanto?"
-hear ammount
+hear amount
 
-if ammount < 5  then
+if amount < 5  then
     talk "O mínimo que vendo este produto é 5."
 else
-	get payment ammount
+	get payment amount
 end if
 
 talk "Valeu!"
