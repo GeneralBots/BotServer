@@ -1,3 +1,10 @@
+## [2.0.7](https://github.com/pragmatismo-io/BotServer/compare/2.0.6...2.0.7) (2020-08-29)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Context in VM is isolated now. ([42a7074](https://github.com/pragmatismo-io/BotServer/commit/42a707408135ba352cf44c9dd842b3cd913d15c9))
+
 ## [2.0.6](https://github.com/pragmatismo-io/BotServer/compare/2.0.5...2.0.6) (2020-08-26)
 
 
