@@ -1,3 +1,10 @@
+## [2.0.6](https://github.com/pragmatismo-io/BotServer/compare/2.0.5...2.0.6) (2020-08-26)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** Importing improved. ([4cb9d5b](https://github.com/pragmatismo-io/BotServer/commit/4cb9d5b9068c930cfcfc1e6590b793201e3613d8))
+
 ## [2.0.5](https://github.com/pragmatismo-io/BotServer/compare/2.0.4...2.0.5) (2020-08-19)
 
 
