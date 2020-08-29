@@ -43,9 +43,11 @@ import { GBLog, GBMinInstance, IGBDialog, IGBPackage } from 'botlib';
 import { Messages } from '../strings';
 import { KBService } from './../services/KBService';
 import { GuaribasAnswer } from '../models';
-import { GBMinService } from '../../../packages/core.gbapp/services/GBMinService';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
+import { GBVMService } from '../../core.gbapp/services/GBVMService';
+import { GBImporter } from '../../core.gbapp/services/GBImporterService';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 
 /**
  * Dialog arguments.
@@ -59,6 +61,7 @@ export class AskDialogArgs {
  * Handle the ask loop on knowledge base data or delegate to other services.
  */
 export class AskDialog extends IGBDialog {
+  static deployer: any;
   /**
    * Setup dialogs flows and define services call.
    *
@@ -67,6 +70,9 @@ export class AskDialog extends IGBDialog {
    */
   public static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new KBService(min.core.sequelize);
+    const importer = new GBImporter(min.core);
+    this.deployer = new GBDeployer(min.core, importer);
+
     min.dialogs.add(new WaterfallDialog('/answerEvent', AskDialog.getAnswerEventDialog(service, min)));
     min.dialogs.add(new WaterfallDialog('/answer', AskDialog.getAnswerDialog(min, service)));
     min.dialogs.add(new WaterfallDialog('/ask', AskDialog.getAskDialog(min)));
@@ -259,7 +265,7 @@ export class AskDialog extends IGBDialog {
   private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, answer: GuaribasAnswer) {
     if (answer.content.endsWith('.docx')) {
       const mainName = answer.content.replace(/\s|\-/gi, '').split('.')[0];
-      return await GBMinService.callVM(mainName, min, step);
+      return await GBVMService.callVM(mainName, min, step, this.deployer);
     } else {
       await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
       return await step.replaceDialog('/ask', { isReturning: true });

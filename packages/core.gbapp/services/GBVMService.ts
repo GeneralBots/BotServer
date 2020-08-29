@@ -33,18 +33,18 @@
 'use strict';
 
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBLog, GBMinInstance, GBService, IGBCoreService } from 'botlib';
+import { GBLog, GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
 import * as fs from 'fs';
 import { GBDeployer } from './GBDeployer';
 import { TSCompiler } from './TSCompiler';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 const walkPromise = require('walk-promise');
-const vm = require('vm');
 import urlJoin = require('url-join');
 import { DialogClass } from './GBAPIService';
 import { Messages } from '../strings';
 import { GBConversationalService } from './GBConversationalService';
 //tslint:disable-next-line:no-submodule-imports
+const vm = require('vm');
 const vb2ts = require('vbscript-to-typescript/dist/converter');
 const beautify = require('js-beautify').js;
 var textract = require('textract');
@@ -62,15 +62,12 @@ var textract = require('textract');
  * Basic services for BASIC manipulation.
  */
 export class GBVMService extends GBService {
-  private readonly script = new vm.Script();
-
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
     const files = await walkPromise(folder);
     this.addHearDialog(min);
 
     await CollectionUtil.asyncForEach(files, async file => {
       if (!file) {
-
         return;
       }
 
@@ -85,12 +82,11 @@ export class GBVMService extends GBService {
         let writeVBS = true;
         if (fs.existsSync(fullVbsFile)) {
           const vbsStat = fs.statSync(fullVbsFile);
-          if (docxStat.mtimeMs < (vbsStat.mtimeMs + interval)) {
+          if (docxStat.mtimeMs < vbsStat.mtimeMs + interval) {
             writeVBS = false;
           }
         }
         if (writeVBS) {
-
           let text = await this.getTextFromWord(folder, wordFile);
           fs.writeFileSync(urlJoin(folder, vbsFile), text);
         }
@@ -113,39 +109,33 @@ export class GBVMService extends GBService {
         if (fs.existsSync(jsfile)) {
           const jsStat = fs.statSync(jsfile);
           const interval = 30000; // If compiled is older 30 seconds, then recompile.
-          if (compiledAt.isFile() && compiledAt.mtimeMs > (jsStat.mtimeMs + interval)) {
+          if (compiledAt.isFile() && compiledAt.mtimeMs > jsStat.mtimeMs + interval) {
             await this.executeBASIC(fullFilename, min, deployer, mainName);
-          }
-          else {
+          } else {
             const parsedCode: string = fs.readFileSync(jsfile, 'utf8');
             this.executeJS(min, deployer, parsedCode, mainName);
           }
-        }
-        else {
+        } else {
           await this.executeBASIC(fullFilename, min, deployer, mainName);
         }
-
       }
     });
   }
 
   private async getTextFromWord(folder: string, filename: string) {
     return new Promise<string>(async (resolve, reject) => {
-      textract.fromFileWithPath(urlJoin(folder, filename), { preserveLineBreaks: true },
-        (error, text) => {
-          if (error) {
-            reject(error);
-          }
-          else {
-            text = text.replace('“', '\"');
-            text = text.replace('”', '\"');
-            text = text.replace('‘', '\'');
-            text = text.replace('’', '\'');
-            
-            
-            resolve(text);
-          }
-        });
+      textract.fromFileWithPath(urlJoin(folder, filename), { preserveLineBreaks: true }, (error, text) => {
+        if (error) {
+          reject(error);
+        } else {
+          text = text.replace('“', '"');
+          text = text.replace('”', '"');
+          text = text.replace('‘', "'");
+          text = text.replace('’', "'");
+
+          resolve(text);
+        }
+      });
     });
   }
 
@@ -262,8 +252,8 @@ export class GBVMService extends GBService {
 
         parsedCode = code.substring(pos, pos + match1.index);
         parsedCode += ``;
-        parsedCode += `const ${promiseName}= async (step, ${variable}) => {`
-        parsedCode += `   return new Promise(async (resolve) => {`
+        parsedCode += `const ${promiseName}= async (step, ${variable}) => {`;
+        parsedCode += `   return new Promise(async (resolve) => {`;
 
         // Skips old construction and point to the async block.
 
@@ -306,7 +296,7 @@ export class GBVMService extends GBService {
 
       parsedCode = this.handleThisAndAwait(parsedCode);
 
-      parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true })
+      parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true });
       fs.writeFileSync(jsfile, parsedCode);
 
       this.executeJS(min, deployer, parsedCode, mainName);
@@ -316,12 +306,8 @@ export class GBVMService extends GBService {
 
   private executeJS(min: GBMinInstance, deployer: GBDeployer, parsedCode: string, mainName: string) {
     try {
-      const sandbox: DialogClass = new DialogClass(min, deployer);
-      const context = vm.createContext(sandbox);
-      vm.runInContext(parsedCode, context);
-      min.sandBoxMap[mainName.toLowerCase()] = sandbox;
-    }
-    catch (error) {
+      min.sandBoxMap[mainName.toLowerCase()] = parsedCode;
+    } catch (error) {
       GBLog.error(`[GBVMService] ERROR loading ${error}`);
     }
   }
@@ -345,7 +331,6 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendFile' : $1;
     });
-
 
     // await insertion.
 
@@ -384,5 +369,16 @@ export class GBVMService extends GBService {
         }
       ])
     );
+  }
+
+  public static async callVM(text: string, min: GBMinInstance, step: GBDialogStep, deployer: GBDeployer) {
+    const sandbox: DialogClass = new DialogClass(min, deployer);
+    const context = vm.createContext(sandbox);
+    const code = min.sandBoxMap[text];
+    vm.runInContext(code, context);
+
+    const mainMethod = text.toLowerCase();
+    sandbox[mainMethod].bind(sandbox);
+    return await sandbox[mainMethod](step);
   }
 }

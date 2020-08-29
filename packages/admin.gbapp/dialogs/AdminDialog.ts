@@ -72,7 +72,6 @@ export class AdminDialog extends IGBDialog {
 
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
-    const adminService = new GBAdminService(min.core);
 
     AdminDialog.setupSecurityDialogs(min);
 

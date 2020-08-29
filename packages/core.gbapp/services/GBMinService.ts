@@ -70,6 +70,8 @@ import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirect
 import fs = require('fs');
 import { GuaribasConversationMessage } from '../../analytics.gblib/models';
 import { GBCoreService } from './GBCoreService';
+import { DialogClass } from './GBAPIService';
+import { GBVMService } from './GBVMService';
 
 /**
  * Minimal service layer for a bot.
@@ -712,7 +714,7 @@ export class GBMinService {
     if (hasBadWord) {
       await step.beginDialog('/pleaseNoBadWords');
     } else if (isVMCall) {
-      await GBMinService.callVM(context.activity.text, min, step);
+      await GBVMService.callVM(context.activity.text, min, step, this.deployer);
     } else if (context.activity.text.charAt(0) === '/') {
       let text = context.activity.text;
       let parts = text.split(' ');
@@ -803,9 +805,4 @@ export class GBMinService {
     }
   }
 
-  public static async callVM(text: string, min: GBMinInstance, step: GBDialogStep) {
-    const mainMethod = text.toLowerCase();
-    min.sandBoxMap[mainMethod][mainMethod].bind(min.sandBoxMap[mainMethod]);
-    return await min.sandBoxMap[mainMethod][mainMethod](step);
-  }
 }
