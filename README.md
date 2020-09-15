@@ -30,6 +30,8 @@ Everyone can create bots by just copying and pasting some files and using their
 favorite tools from Office (or any text editor) or Photoshop (or any image
 editor). BASIC can be used to build custom dialogs so Bot can be extended just like VBA for Excel  (currently in alpha).
 
+![General Bot Reference Architecture](https://raw.githubusercontent.com/GeneralBots/BotBook/master/images/general-bots-reference-architecture.png)
+
 ## Samples
 
 Several samples, including a Bot for AD Password Reset, are avaiable on the [repository list](https://github.com/GeneralBots).
