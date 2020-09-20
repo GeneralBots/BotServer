@@ -162,7 +162,7 @@ export class GBConversationalService {
       const waveFilename = `work/tmp${name}.pcm`;
       const sdk = require('microsoft-cognitiveservices-speech-sdk');
       sdk.Recognizer.enableTelemetry(false);
-      
+
       var audioConfig = sdk.AudioConfig.fromAudioFileOutput(waveFilename);
       var speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, cloudRegion);
 
@@ -392,7 +392,9 @@ export class GBConversationalService {
         case State.InEmbedAddressBegin:
           if (c === ']') {
             state = State.InEmbedEnd;
-            let url = urlJoin(GBServer.globals.publicAddress, currentEmbedUrl);
+            let url = currentEmbedUrl.startsWith('http')
+              ? currentEmbedUrl
+              : urlJoin(GBServer.globals.publicAddress, currentEmbedUrl);
             await this.sendFile(min, step, mobile, url, null);
             await sleep(5000);
             currentEmbedUrl = '';
@@ -437,7 +439,9 @@ export class GBConversationalService {
         case State.InImageAddressBody:
           if (c === ')') {
             state = State.InText;
-            let url = urlJoin(GBServer.globals.publicAddress, currentImage);
+            let url = currentImage.startsWith('http')
+              ? currentImage
+              : urlJoin(GBServer.globals.publicAddress, currentImage);
             await this.sendFile(min, step, mobile, url, currentCaption);
             currentCaption = '';
             await sleep(4500);

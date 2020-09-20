@@ -36,7 +36,7 @@
 
 'use strict';
 
-import { IGBCoreService, IGBInstance } from 'botlib';
+import { IGBCoreService, IGBInstance, GBMinInstance } from 'botlib';
 import fs = require('fs');
 import urlJoin = require('url-join');
 import { GuaribasInstance } from '../models/GBModel';
@@ -58,15 +58,34 @@ export class GBImporter {
     if (botId === undefined) {
       botId = settingsJson.botId;
     }
+    let instance: IGBInstance;
     if (botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
+      instance = await this.core.loadInstanceByBotId(botId);
+      if (!instance) {
+        instance = <IGBInstance>{};
+        instance.adminPass = GBConfigService.get('ADMIN_PASS');
+        instance.botId = GBConfigService.get('BOT_ID');
+        instance.cloudSubscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+        instance.cloudLocation = GBConfigService.get('CLOUD_LOCATION');
+        instance.cloudUsername = GBConfigService.get('CLOUD_USERNAME');
+        instance.cloudPassword = GBConfigService.get('CLOUD_PASSWORD');
+        instance.marketplaceId = GBConfigService.get('MARKETPLACE_ID');
+        instance.marketplacePassword = GBConfigService.get('MARKETPLACE_SECRET');
+        instance.storageDialect = GBConfigService.get('STORAGE_DIALECT');
+        instance.storageServer = GBConfigService.get('STORAGE_SERVER');
+        instance.storageName = GBConfigService.get('STORAGE_NAME');
+        instance.storageUsername = GBConfigService.get('STORAGE_USERNAME');
+        instance.storagePassword = GBConfigService.get('STORAGE_PASSWORD');
+      }
+    } else {
+      instance = await this.core.loadInstanceByBotId(botId);
     }
-    const instance = await this.core.loadInstanceByBotId(botId);
 
     if (instance != null && instance.botId === null) {
       console.log(`Null BotId after load instance with botId: ${botId}.`);
     }
-    
+
     return await this.createOrUpdateInstanceInternal(instance, botId, localPath, settingsJson);
   }
 
@@ -76,9 +95,12 @@ export class GBImporter {
     return await GuaribasInstance.create(fullSettingsJson);
   }
 
-
-  private async createOrUpdateInstanceInternal(instance: IGBInstance,
-    botId: string, localPath: string, settingsJson: any) {
+  private async createOrUpdateInstanceInternal(
+    instance: IGBInstance,
+    botId: string,
+    localPath: string,
+    settingsJson: any
+  ) {
     let packageJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
     const servicesJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'services.json'), 'utf8'));
 

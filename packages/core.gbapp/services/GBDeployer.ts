@@ -250,7 +250,7 @@ export class GBDeployer implements IGBDeployer {
   public async deployBotFromLocalPath(localPath: string, publicAddress: string): Promise<void> {
     const packageName = Path.basename(localPath);
     let instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
-    this.deployBotFull(instance, publicAddress);
+    await this.deployBotFull(instance, publicAddress);
   }
 
   public async loadParamsFromExcel(min: GBMinInstance): Promise<any> {

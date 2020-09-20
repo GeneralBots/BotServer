@@ -224,6 +224,16 @@ export class GBCoreService implements IGBCoreService {
     }
   }
 
+  // public async getPackagesByInstanceId(instanceId: number): Promise<IGBPackage[]> {
+
+  //     const options = {
+  //       where: {
+  //         instanceId: instanceId
+  //       }
+  //     };
+  //     return GuaribasApplications.findAll(options);
+  // }
+
   /**
    * Loads just one Bot instance by its internal Id.
    */
@@ -323,7 +333,11 @@ STORAGE_SYNC=true
     options.where = { botId: fullInstance.botId };
     let instance = await GuaribasInstance.findOne(options);
     // tslint:disable-next-line:prefer-object-spread
-    instance = Object.assign(instance, fullInstance);
+    if (instance) {
+      instance = Object.assign(instance, fullInstance);
+    } else {
+      instance = Object.assign(new GuaribasInstance(), fullInstance);
+    }
     try {
       instance.params = JSON.stringify(JSON.parse(instance.params));
     } catch (err) {

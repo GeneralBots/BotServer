@@ -482,7 +482,8 @@ export class GBMinService {
     min.scriptMap = {};
     min.sandBoxMap = {};
     min.packages = sysPackages;
-    min.appPackages = appPackages;
+    min.appPackages =  appPackages;
+    // TODO: min.appPackages =  core.getPackagesByInstanceId(min.instance.instanceId);
 
     // Create a hub of services available in .gbapps.
 
