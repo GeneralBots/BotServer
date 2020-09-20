@@ -516,7 +516,8 @@ export class GBConversationalService {
       GBLog.info(`NLP called: ${intent} ${firstEntity}`);
 
       try {
-        await step.replaceDialog(`/${intent}`, nlp.entities);
+        step.activeDialog.state.otptions.entities = nlp.entities;
+        await step.replaceDialog(`/${intent}`, step.activeDialog.state.options );
 
         return true;
       } catch (error) {

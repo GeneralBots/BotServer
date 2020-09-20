@@ -799,6 +799,7 @@ export class GBMinService {
         if (!handled) {
           await step.beginDialog('/answer', {
             query: query,
+            user: user ? user['dataValues'] : null,
             message: message
           });
         }
