@@ -38,7 +38,7 @@
 
 const crypto = require('crypto');
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog, GBLog } from 'botlib';
+import { GBMinInstance, IGBDialog, GBLog, IGBPackage } from 'botlib';
 import urlJoin = require('url-join');
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService';
@@ -46,13 +46,10 @@ import { Messages } from '../strings';
 import { GBAdminService } from '../services/GBAdminService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 
-
 /**
  * Dialogs for administration tasks.
  */
 export class AdminDialog extends IGBDialog {
-
-
   public static isIntentYes(locale, utterance) {
     return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
   }
@@ -87,16 +84,18 @@ export class AdminDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const sensitive = step.result;
 
-          if (sensitive === process.env.ADMIN_PASS) { // TODO: Per bot: min.instance.adminPass
+          if (sensitive === process.env.ADMIN_PASS) {
+            // TODO: Per bot: min.instance.adminPass
             await min.conversationalService.sendText(min, step, Messages[locale].welcome);
 
             return await step.endDialog(true);
-
           } else {
             await min.conversationalService.sendText(min, step, Messages[locale].wrong_password);
             return await step.replaceDialog('/admin-auth');
           }
-        }]));
+        }
+      ])
+    );
 
     min.dialogs.add(
       new WaterfallDialog('/admin', [
@@ -130,8 +129,6 @@ export class AdminDialog extends IGBDialog {
           let unknownCommand = false;
 
           try {
-
-
             if (text === 'quit') {
               return await step.replaceDialog('/');
             } else if (cmdName === 'deployPackage' || cmdName === 'dp') {
@@ -143,7 +140,11 @@ export class AdminDialog extends IGBDialog {
               await GBAdminService.undeployPackageCommand(text, min);
               await min.conversationalService.sendText(min, step, 'Now, *deploying* package...');
               await GBAdminService.deployPackageCommand(min, text, deployer);
-              await min.conversationalService.sendText(min, step, 'Package deployed. Just need to rebuild the index... Doing it right now.');
+              await min.conversationalService.sendText(
+                min,
+                step,
+                'Package deployed. Just need to rebuild the index... Doing it right now.'
+              );
               await GBAdminService.rebuildIndexPackageCommand(min, deployer);
               await min.conversationalService.sendText(min, step, 'Finished importing of that .gbkb package. Thanks.');
               return await step.replaceDialog('/admin', { firstRun: false });
@@ -171,23 +172,21 @@ export class AdminDialog extends IGBDialog {
             } else {
               await min.conversationalService.sendText(min, step, Messages[locale].finished_working);
             }
-
           } catch (error) {
             await min.conversationalService.sendText(min, step, error.message);
           }
           await step.replaceDialog('/ask', { isReturning: true });
         }
-
       ])
     );
 
     min.dialogs.add(
-      new WaterfallDialog('/publish', [
+      new WaterfallDialog('/install', [
         async step => {
+          step.activeDialog.state.options.args = (step.options as any).args;
           if (step.activeDialog.state.options.confirm) {
             return await step.next('sim');
-          }
-          else {
+          } else {
             const locale = step.context.activity.locale;
             return await min.conversationalService.prompt(min, step, Messages[locale].publish_type_yes);
           }
@@ -198,19 +197,46 @@ export class AdminDialog extends IGBDialog {
           // If the user says yes, starts publishing.
 
           if (AdminDialog.isIntentYes(locale, step.result)) {
+            step.activeDialog.state.options.args;
+            
+            for (let index = 0; index < min.appPackages.length; index++) {
+              const element = min.appPackages[index];
+              await element.onExchangeData(min, 'install', null);
+              // TODO: Filter just to the .gbapp being installed.
+            }
+          } else {
+            await min.conversationalService.sendText(min, step, Messages[locale].publish_canceled);
+          }
+        }
+      ])
+    );
 
+    min.dialogs.add(
+      new WaterfallDialog('/publish', [
+        async step => {
+          if (step.activeDialog.state.options.confirm) {
+            return await step.next('sim');
+          } else {
+            const locale = step.context.activity.locale;
+            return await min.conversationalService.prompt(min, step, Messages[locale].publish_type_yes);
+          }
+        },
+        async step => {
+          const locale = step.context.activity.locale;
+
+          // If the user says yes, starts publishing.
+
+          if (AdminDialog.isIntentYes(locale, step.result)) {
             let from = step.context.activity.from.id;
 
             let canPublish = AdminDialog.canPublish(min, from);
 
             if (!canPublish) {
               await step.beginDialog('/admin-auth');
-            }
-            else {
+            } else {
               await step.next(true);
             }
-          }
-          else {
+          } else {
             await min.conversationalService.sendText(min, step, Messages[locale].publish_canceled);
           }
         },
@@ -227,12 +253,13 @@ export class AdminDialog extends IGBDialog {
           await min.conversationalService.sendText(min, step, Messages[locale].working('Publishing'));
 
           step.activeDialog.state.options.args = (step.options as any).args;
-          const filename = step.activeDialog.state.options.args ?
-            step.activeDialog.state.options.args.split(' ')[0] : null;
+          const filename = step.activeDialog.state.options.args
+            ? step.activeDialog.state.options.args.split(' ')[0]
+            : null;
 
           const packages = [];
           let skipError = false;
-          if (filename === null || filename === "") {
+          if (filename === null || filename === '') {
             await min.conversationalService.sendText(min, step, `Starting publishing for ${botId} packages...`);
             packages.push(`${botId}.gbkb`);
             packages.push(`${botId}.gbtheme`);
@@ -245,18 +272,15 @@ export class AdminDialog extends IGBDialog {
           }
 
           await CollectionUtil.asyncForEach(packages, async packageName => {
-
             try {
               const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
 
-              if (await (deployer as any).getStoragePackageByName(min.instance.instanceId,
-                packageName) !== null) {
+              if ((await (deployer as any).getStoragePackageByName(min.instance.instanceId, packageName)) !== null) {
                 const cmd2 = `undeployPackage ${packageName}`;
                 await GBAdminService.undeployPackageCommand(cmd2, min);
               }
               await GBAdminService.deployPackageCommand(min, cmd1, deployer);
               await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
-
             } catch (error) {
               GBLog.error(error);
               if (!skipError) {
@@ -269,22 +293,20 @@ export class AdminDialog extends IGBDialog {
           await min.conversationalService.sendText(min, step, Messages[locale].publish_success);
           if (!step.activeDialog.state.options.confirm) {
             return await step.replaceDialog('/ask', { isReturning: true });
-          }
-          else {
+          } else {
             return await step.endDialog();
           }
-
-        }]));
+        }
+      ])
+    );
   }
 
-
   /**
-* Check if the specified phone can receive a message by running 
-* the /broadcast command with specific phone numbers.
-* @param phone Phone number to check (eg.: +5521900002233)
-*/
+   * Check if the specified phone can receive a message by running
+   * the /broadcast command with specific phone numbers.
+   * @param phone Phone number to check (eg.: +5521900002233)
+   */
   public static canPublish(min: GBMinInstance, phone: string): Boolean {
-
     const list = process.env.SECURITY_CAN_PUBLISH.split(';');
     let result = list.includes(phone);
 
@@ -328,11 +350,11 @@ export class AdminDialog extends IGBDialog {
 
           const url = `https://login.microsoftonline.com/${
             min.instance.authenticatorTenant
-            }/oauth2/authorize?client_id=${min.instance.marketplaceId}&response_type=code&redirect_uri=${urlJoin(
-              min.instance.botEndpoint,
-              min.instance.botId,
-              '/token'
-            )}&state=${state}&response_mode=query`;
+          }/oauth2/authorize?client_id=${min.instance.marketplaceId}&response_type=code&redirect_uri=${urlJoin(
+            min.instance.botEndpoint,
+            min.instance.botId,
+            '/token'
+          )}&state=${state}&response_mode=query`;
 
           await min.conversationalService.sendText(min, step, Messages[locale].consent(url));
 
