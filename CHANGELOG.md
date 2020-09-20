@@ -1,3 +1,10 @@
+## [2.0.8](https://github.com/pragmatismo-io/BotServer/compare/2.0.7...2.0.8) (2020-09-20)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Instance loading fix and external url for images. ([aa976ae](https://github.com/pragmatismo-io/BotServer/commit/aa976aeb8c031c6319978b85d59939a461130b69))
+
 ## [2.0.7](https://github.com/pragmatismo-io/BotServer/compare/2.0.6...2.0.7) (2020-08-29)
 
 
