@@ -482,7 +482,7 @@ export class GBMinService {
     min.scriptMap = {};
     min.sandBoxMap = {};
     min.packages = sysPackages;
-    min.appPackages =  appPackages;
+    min.appPackages = appPackages;
     // TODO: min.appPackages =  core.getPackagesByInstanceId(min.instance.instanceId);
 
     // Create a hub of services available in .gbapps.
@@ -491,7 +491,7 @@ export class GBMinService {
     await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
       let services: ConcatArray<never>;
       if ((services = await e.onExchangeData(min, 'getServices', null))) {
-        min.gbappServices.concat(services);
+        min.gbappServices = Object.assign(min.gbappServices, services);
       }
     });
 
@@ -806,5 +806,4 @@ export class GBMinService {
       }
     }
   }
-
 }
