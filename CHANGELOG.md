@@ -1,3 +1,10 @@
+## [2.0.9](https://github.com/pragmatismo-io/BotServer/compare/2.0.8...2.0.9) (2020-09-21)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Dynamic services from .gbapps. ([c01430f](https://github.com/pragmatismo-io/BotServer/commit/c01430f0f38ccbf7abfd7a69c3ed238fbac04180))
+
 ## [2.0.8](https://github.com/pragmatismo-io/BotServer/compare/2.0.7...2.0.8) (2020-09-20)
 
 
