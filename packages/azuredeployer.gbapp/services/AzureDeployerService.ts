@@ -690,6 +690,25 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     return await httpClient.sendRequest(req);
   }
 
+  private async refreshEntityList(
+    location: string,
+    nlpAppId: string, 
+    clEntityId: string,
+    data: any,
+  ) {
+    
+    const req = new WebResource();
+    req.method = 'PUT';
+    req.url = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/${nlpAppId}/closedlists/${clEntityId}`;
+    req.headers.set('Content-Type', 'application/json');
+    req.headers.set('accept-language', '*');
+    req.headers.set('Ocp-Apim-Subscription-Key', authoringKey);
+    req.body = data;
+    const httpClient = new ServiceClient();
+
+    return await httpClient.sendRequest(req);
+  }
+
   private async createSearch(group, name, location) {
     const params = {
       sku: { name: 'free' },
