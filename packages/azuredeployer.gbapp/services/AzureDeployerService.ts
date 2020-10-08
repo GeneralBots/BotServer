@@ -694,6 +694,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     location: string,
     nlpAppId: string, 
     clEntityId: string,
+    authoringKey: string,
     data: any,
   ) {
     
