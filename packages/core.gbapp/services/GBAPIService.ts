@@ -95,8 +95,7 @@ class SysClass {
     await timeout(seconds * 1000);
   }
 
-
-  public async set(file: string, address:string, value: any): Promise<any> {
+  public async set(file: string, address: string, value: any): Promise<any> {
     try {
       let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
@@ -122,7 +121,7 @@ class SysClass {
       if (document === undefined) {
         throw `File '${file}' specified on save GBasic command SET not found. Check the .gbdata or the .gbdialog associated.`;
       }
-     
+
       let body = { values: [[]] };
       body.values[0][0] = value;
 
@@ -226,7 +225,7 @@ class SysClass {
         )
         .get();
 
-        return results.text[0][0];
+      return results.text[0][0];
     } catch (error) {
       GBLog.error(error);
     }
@@ -441,7 +440,14 @@ export class DialogClass {
   }
 
   public async sendFile(step, filename, caption) {
-    let url = urlJoin(GBServer.globals.publicAddress, 'kb', this.min.botId + '.gbkb', 'assets', filename);
+    let url = urlJoin(
+      GBServer.globals.publicAddress,
+      'kb',
+      `${this.min.botId}.gbai`,
+      `${this.min.botId}.gbkb`,
+      'assets',
+      filename
+    );
     await this.min.conversationalService.sendFile(this.min, step, null, url, caption);
   }
 

@@ -36,7 +36,7 @@
 
 'use strict';
 
-import { MessageFactory, RecognizerResult } from 'botbuilder';
+import { MessageFactory, RecognizerResult, TurnContext } from 'botbuilder';
 import { LuisRecognizer } from 'botbuilder-ai';
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService } from 'botlib';
 import { GBServer } from '../../../src/app';
@@ -517,7 +517,7 @@ export class GBConversationalService {
 
       try {
         step.activeDialog.state.otptions.entities = nlp.entities;
-        await step.replaceDialog(`/${intent}`, step.activeDialog.state.options );
+        await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
 
         return true;
       } catch (error) {

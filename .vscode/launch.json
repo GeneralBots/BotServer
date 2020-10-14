@@ -18,8 +18,7 @@
         "node_modules/**/*.js"
       ],
       "outFiles": [
-        "${workspaceRoot}/dist/*.js"
-      ],
+        "${workspaceRoot}/dist/**/*.js"],
       "stopOnEntry": false,
       "console": "integratedTerminal"
     }

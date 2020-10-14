@@ -227,7 +227,8 @@ export class GBMinService {
     GBServer.globals.minInstances.push(min);
 
     await this.deployer.deployPackage(min, 'packages/default.gbtheme');
-
+    
+    
     // Install per bot deployed packages.
 
     let packagePath = `work/${min.botId}.gbai/${min.botId}.gbdialog`;
