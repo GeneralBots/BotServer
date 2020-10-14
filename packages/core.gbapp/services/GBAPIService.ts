@@ -471,6 +471,11 @@ export class DialogClass {
     return await step.beginDialog('/gbasic-email');
   }
 
+  public async transfer(step) {
+    return await step.beginDialog('/t');
+  }
+
+
   public async hear(step, promise, previousResolve) {
     function random(low, high) {
       return Math.random() * (high - low) + low;

@@ -191,6 +191,10 @@ export class GBVMService extends GBService {
       return `sys().createABotFarmUsing (${$3})`;
     });
 
+    code = code.replace(/(transfer)/gi, () => {
+      return `transfer (step)\n`;
+    });
+
     code = code.replace(/(talk)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `talk (step, ${$3})\n`;
     });
@@ -330,6 +334,9 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendFile' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\btransfer\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.transfer' : $1;
     });
 
     // await insertion.
