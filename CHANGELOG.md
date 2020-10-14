@@ -1,3 +1,10 @@
+## [2.0.10](https://github.com/pragmatismo-io/BotServer/compare/2.0.9...2.0.10) (2020-10-08)
+
+
+### Bug Fixes
+
+* **azuredeployer.gbapp:** NLP automation fixes. ([99633fe](https://github.com/pragmatismo-io/BotServer/commit/99633fe59de65fdd15a1ff9d2974c194b109b1de))
+
 ## [2.0.9](https://github.com/pragmatismo-io/BotServer/compare/2.0.8...2.0.9) (2020-09-21)
 
 
