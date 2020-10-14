@@ -1,3 +1,10 @@
+## [2.0.11](https://github.com/pragmatismo-io/BotServer/compare/2.0.10...2.0.11) (2020-10-14)
+
+
+### Bug Fixes
+
+* **all:** sendFile working after path fix. ([2c901f4](https://github.com/pragmatismo-io/BotServer/commit/2c901f451bac49a58e2c1a8e8f4cb99f82b8c465))
+
 ## [2.0.10](https://github.com/pragmatismo-io/BotServer/compare/2.0.9...2.0.10) (2020-10-08)
 
 
