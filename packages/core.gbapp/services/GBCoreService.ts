@@ -144,6 +144,7 @@ export class GBCoreService implements IGBCoreService {
       storage: storage,
       dialectOptions: {
         options: {
+          trustServerCertificate: true,
           encrypt: encrypt
         }
       },
