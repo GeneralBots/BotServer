@@ -201,10 +201,14 @@ export class GBAdminService implements IGBAdminService {
               reject(err);
             } else {
               const token = res as TokenResponse;
-              await this.setValue(instanceId, 'accessToken', token.accessToken);
-              await this.setValue(instanceId, 'refreshToken', token.refreshToken);
-              await this.setValue(instanceId, 'expiresOn', token.expiresOn.toString());
-              resolve(token.accessToken);
+              try {
+                await this.setValue(instanceId, 'accessToken', token.accessToken);
+                await this.setValue(instanceId, 'refreshToken', token.refreshToken);
+                await this.setValue(instanceId, 'expiresOn', token.expiresOn.toString());
+                resolve(token.accessToken);
+              } catch (error) {
+                reject(err);
+              }
             }
           }
         );

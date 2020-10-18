@@ -198,7 +198,7 @@ export class AdminDialog extends IGBDialog {
 
           if (AdminDialog.isIntentYes(locale, step.result)) {
             step.activeDialog.state.options.args;
-            
+
             for (let index = 0; index < min.appPackages.length; index++) {
               const element = min.appPackages[index];
               await element.onExchangeData(min, 'install', null);
@@ -273,8 +273,12 @@ export class AdminDialog extends IGBDialog {
 
           await CollectionUtil.asyncForEach(packages, async packageName => {
             try {
-              const cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
-
+              let cmd1;
+              if (packageName.indexOf('.') !== -1) {
+                cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
+              } else {
+                cmd1 = `deployPackage ${packageName}`; 
+              }
               if ((await (deployer as any).getStoragePackageByName(min.instance.instanceId, packageName)) !== null) {
                 const cmd2 = `undeployPackage ${packageName}`;
                 await GBAdminService.undeployPackageCommand(cmd2, min);

@@ -11,14 +11,10 @@
 /packages/default.gbui/build
 /packages/default.gbui/.env
 /packages/default.gbui/node_modules
-/tmp
 /work
-/packages/default.gbdialog/bot.js
-/packages/default.gbdialog/bot.ts
 *.vbs.compiled
 *.vbs.js
 *.vbs.ts
 .env
-teste.sql
-poc/
 *.env
+.vscode/launch.json

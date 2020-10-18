@@ -330,8 +330,9 @@ export class GBMinService {
             GBLog.error(msg);
             res.send(msg);
           } else {
-            this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
+            // TODO: await these calls.
             this.adminService.setValue(instance.instanceId, 'accessToken', token.accessToken);
+            this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
             this.adminService.setValue(instance.instanceId, 'expiresOn', token.expiresOn.toString());
             this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', undefined);
             res.redirect(min.instance.botEndpoint);
