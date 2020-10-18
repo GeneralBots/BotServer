@@ -110,8 +110,10 @@ export class GBDeployer implements IGBDeployer {
         } else {
           const name = Path.basename(element).toLowerCase();
 
-          if (process.env.GBAPP_SKIP && (process.env.GBAPP_SKIP.toLowerCase().indexOf(name) !== -1 || 
-          process.env.GBAPP_SKIP === "true")) {
+          if (
+            process.env.GBAPP_SKIP &&
+            (process.env.GBAPP_SKIP.toLowerCase().indexOf(name) !== -1 || process.env.GBAPP_SKIP === 'true')
+          ) {
             return;
           }
 
@@ -243,6 +245,19 @@ export class GBDeployer implements IGBDeployer {
     return await this.core.saveInstance(instance);
   }
 
+  public async refreshNLPEntity(instance: IGBInstance, listName, listData): Promise<void> {
+    const service = new AzureDeployerService(this);
+    const res =  await service.refreshEntityList(
+      instance.cloudLocation,
+      instance.nlpAppId,
+      listName,
+      instance.nlpAuthoringKey,
+      listData
+    );
+    if(res.status !== 200) throw res.bodyAsText;
+    GBLog.info(res);
+  }
+
   /**
    * Deploys a bot to the storage from a .gbot folder.
    */
@@ -348,18 +363,22 @@ export class GBDeployer implements IGBDeployer {
     // .gbapp package or platform package checking.
 
     await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-      if (
-        (pck = await e.onExchangeData(min, 'handlePackage', {
-          name: localPath,
-          createPackage: async packageName => {
-            return await _this.deployPackageToStorage(min.instance.instanceId, packageName);
-          },
-          updatePackage: async (p: GuaribasPackage) => {
-            p.save();
-          }
-        }))
-      ) {
-        handled = true;
+      try {
+        if (
+          (pck = await e.onExchangeData(min, 'handlePackage', {
+            name: localPath,
+            createPackage: async packageName => {
+              return await _this.deployPackageToStorage(min.instance.instanceId, packageName);
+            },
+            updatePackage: async (p: GuaribasPackage) => {
+              p.save();
+            }
+          }))
+        ) {
+          handled = true;
+        }
+      } catch (error) {
+        GBLog.error(error);
       }
     });
 
@@ -374,7 +393,7 @@ export class GBDeployer implements IGBDeployer {
         if (Fs.existsSync(localPath)) {
           await this.deployBotFromLocalPath(localPath, GBServer.globals.publicAddress);
         }
-        if (process.env.ENABLE_PARAMS_ONLINE === "true"){
+        if (process.env.ENABLE_PARAMS_ONLINE === 'true') {
           min.instance.params = await this.loadParamsFromExcel(min);
         }
         await this.core.saveInstance(min.instance);
