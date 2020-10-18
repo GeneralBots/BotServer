@@ -223,10 +223,6 @@ export class GBAdminService implements IGBAdminService {
     await deployer.undeployPackageFromLocalPath(min.instance, urlJoin(GBDeployer.workFolder, packageName));
   }
 
-  public static async broadcastCommand(text: any, min: GBMinInstance) {
-    const packageName = text.split(' ')[1];
-  }
-
   public static isSharePointPath(path: string) {
     return path.indexOf('sharepoint.com') > 0;
   }

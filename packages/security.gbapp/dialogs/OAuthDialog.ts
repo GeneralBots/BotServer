@@ -31,51 +31,39 @@
 \*****************************************************************************/
 
 /**
- * @fileoverview General Bots server core.
+ * @fileoverview Dialog for handling OAuth scenarios.
  */
 
 'use strict';
 
-import urlJoin = require('url-join');
-
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
-import {ProfileDialog} from './dialogs/ProfileDialog'
-import { Sequelize } from 'sequelize-typescript';
-import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models';
-import { OAuthDialog } from './dialogs/OAuthDialog';
+import { TokenResponse } from 'botbuilder';
+import { IGBDialog, GBLog, GBMinInstance } from 'botlib';
+import { Messages } from '../strings';
 
 /**
- * Package for the security module.
+ * Dialogs for handling Menu control.
  */
-export class GBSecurityPackage implements IGBPackage {
-  public sysPackages: IGBPackage[];
-  public async getDialogs(min: GBMinInstance) {
-    return [
-      ProfileDialog.getNameDialog(min),
-      ProfileDialog.getEmailDialog(min),
-      ProfileDialog.getMobileDialog(min),
-      ProfileDialog.getMobileConfirmDialog(min),
-      OAuthDialog.getOAuthDialog(min),
-    ];
-    
-  }
-  public async unloadPackage(core: IGBCoreService): Promise<void> {
-    GBLog.verbose(`unloadPackage called.`);
-  }
-  public async loadBot(min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`loadBot called.`);
-  }
-  public async unloadBot(min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`unloadBot called.`);
-  }
-  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
-    GBLog.verbose(`onNewSession called.`);
-  }
-  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
-    GBLog.verbose(`onExchangeData called.`);
-  }
-  
-  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
-    core.sequelize.addModels([GuaribasGroup, GuaribasUser, GuaribasUserGroup]);
+export class OAuthDialog extends IGBDialog {
+  public static getOAuthDialog(min: GBMinInstance) {
+    return {
+      id: '/auth',
+      waterfall: [
+        async step => {
+          step.activeDialog.state.options = step.options;
+          return await step.beginDialog('oAuthPrompt');
+        },
+        async step => {
+          const tokenResponse: TokenResponse = step.result;
+          if (tokenResponse) {
+            GBLog.info('Token acquired.');
+
+            return await step.endDialog(tokenResponse);
+          } else {
+            await step.context.sendActivity('Please sign in so I can show you your profile.');
+            return await step.replaceDialog('/auth');
+          }
+        }
+      ]
+    };
   }
 }

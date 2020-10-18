@@ -44,6 +44,9 @@ import { Readable } from 'stream';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
+import { CollectionUtil } from 'pragmatismo-io-framework';
+import { WaterfallStep, WaterfallStepContext } from 'botbuilder-dialogs';
+import { MicrosoftAppCredentials } from 'botframework-connector';
 const urlJoin = require('url-join');
 const PasswordGenerator = require('strict-password-generator').default;
 const Nexmo = require('nexmo');
@@ -624,5 +627,32 @@ export class GBConversationalService {
         await step.context.sendActivity(text);
       }
     }
+  }
+
+  public async broadcast(min: GBMinInstance, message: string) {
+    GBLog.info(`Sending broadcast notifications...`);
+
+    let sleep = ms => {
+      return new Promise(resolve => {
+        setTimeout(resolve, ms);
+      });
+    };
+
+    const service = new SecService();
+    const users = await service.getAllUsers(min.instance.instanceId);
+    await CollectionUtil.asyncForEach(users, async user => {
+      if (user.conversationReference) {
+        const ref = JSON.parse(user.conversationReference);
+        MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
+        await min.bot['createConversation'](ref, async t1 => {
+          const ref2 = TurnContext.getConversationReference(t1.activity);
+          await min.bot.continueConversation(ref2, async t2 => {
+            await t2.sendActivity(message);
+          });
+        });
+      } else {
+        GBLog.info(`User: ${user.systemUserId} with no conversation ID while broadcasting.`);
+      }
+    });
   }
 }

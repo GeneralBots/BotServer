@@ -43,9 +43,16 @@ const request = require('request-promise-native');
 const removeRoute = require('express-remove-route');
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 const wash = require('washyourmouthoutwithsoap');
-import { AutoSaveStateMiddleware, BotFrameworkAdapter, ConversationState, MemoryStorage, UserState } from 'botbuilder';
+import {
+  AutoSaveStateMiddleware,
+  BotFrameworkAdapter,
+  ConversationState,
+  MemoryStorage,
+  TurnContext,
+  UserState
+} from 'botbuilder';
 import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
-import { ConfirmPrompt, WaterfallDialog } from 'botbuilder-dialogs';
+import { ConfirmPrompt, OAuthPrompt, WaterfallDialog } from 'botbuilder-dialogs';
 import {
   GBDialogStep,
   GBLog,
@@ -227,7 +234,7 @@ export class GBMinService {
     GBServer.globals.minInstances.push(min);
 
     await this.deployer.deployPackage(min, 'packages/default.gbtheme');
-    
+
     // Install per bot deployed packages.
 
     let packagePath = `work/${min.botId}.gbai/${min.botId}.gbdialog`;
@@ -527,6 +534,14 @@ export class GBMinService {
     min.dialogs = new DialogSet(dialogState);
     min.dialogs.add(new TextPrompt('textPrompt'));
     min.dialogs.add(new ConfirmPrompt('confirmPrompt'));
+    min.dialogs.add(
+      new OAuthPrompt('oAuthPrompt', {
+        connectionName: 'OAuth2',
+        text: 'Please sign in.',
+        title: 'Sign in',
+        timeout: 300000
+      })
+    );
 
     return { min, adapter, conversationState };
   }
@@ -582,6 +597,7 @@ export class GBMinService {
 
         // First time processing.
 
+        const sec = new SecService();
         if (!user.loaded) {
           await min.conversationalService.sendEvent(min, step, 'loadInstance', {
             instanceId: instance.instanceId,
@@ -594,7 +610,6 @@ export class GBMinService {
           user.cb = undefined;
 
           if (context.activity.from.id !== min.botId) {
-            let sec = new SecService();
             const member = context.activity.from;
 
             const persistedUser = await sec.ensureUser(
@@ -605,7 +620,10 @@ export class GBMinService {
               'web',
               member.name
             );
-
+            if (step.context.activity.channelId === "msteams"){
+              persistedUser.conversationReference = JSON.stringify(TurnContext.getConversationReference(context.activity));
+              await persistedUser.save();
+            }
             const analytics = new AnalyticsService();
 
             user.systemUser = persistedUser;

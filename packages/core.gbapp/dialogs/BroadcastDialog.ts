@@ -36,46 +36,36 @@
 
 'use strict';
 
-import urlJoin = require('url-join');
-
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
-import {ProfileDialog} from './dialogs/ProfileDialog'
-import { Sequelize } from 'sequelize-typescript';
-import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models';
-import { OAuthDialog } from './dialogs/OAuthDialog';
-
+import { BotAdapter } from 'botbuilder';
+import { WaterfallDialog } from 'botbuilder-dialogs';
+import { GBMinInstance, IGBDialog } from 'botlib';
+import { Messages } from '../strings';
+import { SecService } from '../../security.gbapp/services/SecService';
+import { GBServer } from '../../../src/app';
+import { GBConversationalService } from '../services/GBConversationalService';
 /**
- * Package for the security module.
+ * Dialog for the bot explains about itself.
  */
-export class GBSecurityPackage implements IGBPackage {
-  public sysPackages: IGBPackage[];
-  public async getDialogs(min: GBMinInstance) {
-    return [
-      ProfileDialog.getNameDialog(min),
-      ProfileDialog.getEmailDialog(min),
-      ProfileDialog.getMobileDialog(min),
-      ProfileDialog.getMobileConfirmDialog(min),
-      OAuthDialog.getOAuthDialog(min),
-    ];
-    
-  }
-  public async unloadPackage(core: IGBCoreService): Promise<void> {
-    GBLog.verbose(`unloadPackage called.`);
-  }
-  public async loadBot(min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`loadBot called.`);
-  }
-  public async unloadBot(min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`unloadBot called.`);
-  }
-  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
-    GBLog.verbose(`onNewSession called.`);
-  }
-  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
-    GBLog.verbose(`onExchangeData called.`);
-  }
-  
-  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
-    core.sequelize.addModels([GuaribasGroup, GuaribasUser, GuaribasUserGroup]);
+export class BroadcastDialog extends IGBDialog {
+  /**
+   * Setup dialogs flows and define services call.
+   *
+   * @param bot The bot adapter.
+   * @param min The minimal bot instance data.
+   */
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
+    min.dialogs.add(
+      new WaterfallDialog('/gb-broadcast', [
+        async step => {
+          const locale = step.context.activity.locale;
+
+          return await min.conversationalService.prompt(min, step, 'Type the message and the broadcast will start.');
+        },
+        async step => {
+          await min.conversationalService['broadcast'](min, step.result);
+          return await step.next();
+        }
+      ])
+    );
   }
 }
