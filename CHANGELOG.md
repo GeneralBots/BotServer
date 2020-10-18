@@ -1,3 +1,10 @@
+## [2.0.12](https://github.com/pragmatismo-io/BotServer/compare/2.0.11...2.0.12) (2020-10-18)
+
+
+### Bug Fixes
+
+* **admin.gbapp:** AccessToken MSFT has changed. ([c36939e](https://github.com/pragmatismo-io/BotServer/commit/c36939e221de0ec3f21a84358de14f86bab385c7))
+
 ## [2.0.11](https://github.com/pragmatismo-io/BotServer/compare/2.0.10...2.0.11) (2020-10-14)
 
 
