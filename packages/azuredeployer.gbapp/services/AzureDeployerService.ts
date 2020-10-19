@@ -704,7 +704,46 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     req.headers.set('Content-Type', 'application/json');
     req.headers.set('accept-language', '*');
     req.headers.set('Ocp-Apim-Subscription-Key', nlpAuthoringKey);
-    req.body = data;
+    req.body = JSON.stringify(data);
+    const httpClient = new ServiceClient();
+
+    return await httpClient.sendRequest(req);
+  }
+
+  public async trainNLP(
+    location: string,
+    nlpAppId: string, 
+    nlpAuthoringKey: string,
+  ) {
+    
+    const req = new WebResource();
+    req.method = 'POST';
+    req.url = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/apps/${nlpAppId}/versions/0.1/train`;
+    req.headers.set('Content-Type', 'application/json');
+    req.headers.set('accept-language', '*');
+    req.headers.set('Ocp-Apim-Subscription-Key', nlpAuthoringKey);
+    const httpClient = new ServiceClient();
+
+    return await httpClient.sendRequest(req);
+  }
+
+  public async publishNLP(
+    location: string,
+    nlpAppId: string, 
+    nlpAuthoringKey: string,
+  ) {
+    const body = {
+      versionId: "0.1",
+      isStaging: false,
+      directVersionPublish: false
+   }
+    const req = new WebResource();
+    req.method = 'POST';
+    req.url = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/apps/${nlpAppId}/publish`;
+    req.headers.set('Content-Type', 'application/json');
+    req.headers.set('accept-language', '*');
+    req.headers.set('Ocp-Apim-Subscription-Key', nlpAuthoringKey);
+    req.body = body;
     const httpClient = new ServiceClient();
 
     return await httpClient.sendRequest(req);

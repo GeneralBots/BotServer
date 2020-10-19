@@ -245,6 +245,33 @@ export class GBDeployer implements IGBDeployer {
     return await this.core.saveInstance(instance);
   }
 
+  public async publishNLP(instance: IGBInstance): Promise<void> {
+    const service = new AzureDeployerService(this);
+    const res =  await service.publishNLP(
+      instance.cloudLocation,
+      instance.nlpAppId,
+      instance.nlpAuthoringKey,
+    );
+    if(res.status !== 200) throw res.bodyAsText;
+    
+  }
+
+  public async trainNLP(instance: IGBInstance): Promise<void> {
+    const service = new AzureDeployerService(this);
+    const res =  await service.trainNLP(
+      instance.cloudLocation,
+      instance.nlpAppId,
+      instance.nlpAuthoringKey,
+    );
+    if(res.status !== 200) throw res.bodyAsText;
+    let sleep = ms => {
+      return new Promise(resolve => {
+        setTimeout(resolve, ms);
+      });
+    };
+    sleep(5000);
+  }
+
   public async refreshNLPEntity(instance: IGBInstance, listName, listData): Promise<void> {
     const service = new AzureDeployerService(this);
     const res =  await service.refreshEntityList(
@@ -255,7 +282,7 @@ export class GBDeployer implements IGBDeployer {
       listData
     );
     if(res.status !== 200) throw res.bodyAsText;
-    GBLog.info(res);
+    
   }
 
   /**
