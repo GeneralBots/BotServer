@@ -294,6 +294,7 @@ class SysClass {
         for (let colIndex = 0; colIndex < row.length; colIndex++) {
           output[header[colIndex]] = row[colIndex];
         }
+        output['line'] = foundIndex + 1;
         return output;
       }
     } catch (error) {
