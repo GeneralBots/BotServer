@@ -1,3 +1,10 @@
+## [2.0.13](https://github.com/pragmatismo-io/BotServer/compare/2.0.12...2.0.13) (2020-10-21)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Field active is now being filled at instance creation. ([aee2c17](https://github.com/pragmatismo-io/BotServer/commit/aee2c17d4c60a972f6b64f588343d9e86327d48d))
+
 ## [2.0.12](https://github.com/pragmatismo-io/BotServer/compare/2.0.11...2.0.12) (2020-10-18)
 
 
