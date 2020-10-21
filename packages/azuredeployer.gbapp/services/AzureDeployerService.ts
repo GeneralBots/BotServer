@@ -464,7 +464,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     subscriptionId: string
   ) {
     const instance = <IGBInstance>{};
-
+    instance.state = 'active';
     instance.botId = title;
     instance.cloudUsername = username;
     instance.cloudPassword = password;

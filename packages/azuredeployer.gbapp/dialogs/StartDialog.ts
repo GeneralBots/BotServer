@@ -104,6 +104,7 @@ export class StartDialog {
     const instance = <IGBInstance>{};
 
     instance.botId = botId;
+    instance.state ='active';
     instance.cloudUsername = username;
     instance.cloudPassword = password;
     instance.cloudSubscriptionId = subscriptionId;

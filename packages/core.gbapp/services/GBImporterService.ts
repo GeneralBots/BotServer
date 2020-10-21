@@ -64,6 +64,7 @@ export class GBImporter {
       instance = await this.core.loadInstanceByBotId(botId);
       if (!instance) {
         instance = <IGBInstance>{};
+        instance.state = 'active';
         instance.adminPass = GBConfigService.get('ADMIN_PASS');
         instance.botId = GBConfigService.get('BOT_ID');
         instance.cloudSubscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
