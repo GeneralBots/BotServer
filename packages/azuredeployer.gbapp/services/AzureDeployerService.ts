@@ -735,7 +735,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const body = {
       versionId: "0.1",
       isStaging: false,
-      directVersionPublish: false
+      directVersionPublish: true
    }
     const req = new WebResource();
     req.method = 'POST';
@@ -743,7 +743,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     req.headers.set('Content-Type', 'application/json');
     req.headers.set('accept-language', '*');
     req.headers.set('Ocp-Apim-Subscription-Key', nlpAuthoringKey);
-    req.body = body;
+    req.body = JSON.stringify(body);
     const httpClient = new ServiceClient();
 
     return await httpClient.sendRequest(req);

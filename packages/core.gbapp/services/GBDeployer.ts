@@ -252,7 +252,7 @@ export class GBDeployer implements IGBDeployer {
       instance.nlpAppId,
       instance.nlpAuthoringKey,
     );
-    if(res.status !== 200) throw res.bodyAsText;
+    if(res.status !== 200 && res.status !== 201) throw res.bodyAsText;
     
   }
 
@@ -263,7 +263,7 @@ export class GBDeployer implements IGBDeployer {
       instance.nlpAppId,
       instance.nlpAuthoringKey,
     );
-    if(res.status !== 200) throw res.bodyAsText;
+    if(res.status !== 200 && res.status !== 202) throw res.bodyAsText;
     let sleep = ms => {
       return new Promise(resolve => {
         setTimeout(resolve, ms);
