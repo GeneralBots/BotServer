@@ -508,18 +508,14 @@ export class GBConversationalService {
     const topIntent = LuisRecognizer.topIntent(nlp);
     if (topIntent !== undefined && nlpActive) {
       const intent = topIntent;
-      // tslint:disable:no-unsafe-any
-      const firstEntity = nlp.entities && nlp.entities.length > 0 ? nlp.entities[0].entity.toUpperCase() : undefined;
-      // tslint:ensable:no-unsafe-any
-
       if (intent === 'None') {
         return false;
       }
 
-      GBLog.info(`NLP called: ${intent} ${firstEntity}`);
+      GBLog.info(`NLP called: ${intent}, entities: ${nlp.entities}`);
 
       try {
-        step.activeDialog.state.otptions.entities = nlp.entities;
+        step.activeDialog.state.options.entities = nlp.entities;
         await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
 
         return true;

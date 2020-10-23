@@ -571,16 +571,6 @@ export class GBDeployer implements IGBDeployer {
       throw e;
     }
 
-    // Deploys all .gbot files first.
-
-    await CollectionUtil.asyncForEach(botPackages, async e => {
-      if (e !== 'packages\\boot.gbot') {
-        GBLog.info(`Deploying bot: ${e}...`);
-        await _this.deployBotFromLocalPath(e, GBServer.globals.publicAddress);
-        GBLog.info(`√ Bot: ${e} deployed...`);
-      }
-    });
-
     // Then all remaining generalPackages are loaded.
 
     const instances = core.loadInstances();

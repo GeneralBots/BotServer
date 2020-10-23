@@ -60,20 +60,18 @@ export class RootData {
   public server: any; // Express reference
   public sysPackages: any[]; // Loaded system package list
   public appPackages: any[]; // Loaded .gbapp package list
-  public minService: GBMinService;  // Minimalist service core
+  public minService: GBMinService; // Minimalist service core
   public bootInstance: IGBInstance; // General Bot Interface Instance
   public minInstances: any[]; //
   public minBoot: GBMinInstance;
   public wwwroot: string; // .gbui or a static webapp.
   public entryPointDialog: string; // To replace default welcome dialog.
-
 }
 
 /**
  * General Bots open-core entry point.
  */
 export class GBServer {
-
   public static globals: RootData;
 
   /**
@@ -81,7 +79,6 @@ export class GBServer {
    */
 
   public static run() {
-
     GBLog.info(`The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
     GBConfigService.init();
@@ -117,7 +114,6 @@ export class GBServer {
           const azureDeployer: AzureDeployerService = new AzureDeployerService(deployer);
           const adminService: GBAdminService = new GBAdminService(core);
 
-
           if (process.env.NODE_ENV === 'development') {
             const proxy = GBConfigService.get('REVERSE_PROXY');
             if (proxy !== undefined) {
@@ -141,7 +137,7 @@ export class GBServer {
             await core.initStorage();
           } catch (error) {
             GBLog.verbose(`Error initializing storage: ${error}`);
-            GBServer.globals.bootInstance = await core.createBootInstance(core, azureDeployer, GBServer.globals.publicAddress);
+            await core.createBootInstance(core, azureDeployer, GBServer.globals.publicAddress);
             await core.initStorage();
           }
 
@@ -156,24 +152,12 @@ export class GBServer {
 
           // Loads boot bot and other instances.
 
-          GBLog.info(`Publishing instances...`);
-          const packageInstance = await importer.importIfNotExistsBotPackage(
-            GBConfigService.get('BOT_ID'),
-            'boot.gbot',
-            'packages/boot.gbot'
+          let instances: IGBInstance[] = await core.loadAllInstances(
+            core,
+            azureDeployer,
+            GBServer.globals.publicAddress
           );
-          if (GBServer.globals.bootInstance === undefined) {
-            GBServer.globals.bootInstance = packageInstance;
-          }
-          // tslint:disable-next-line:prefer-object-spread
-          const fullInstance = Object.assign(packageInstance, GBServer.globals.bootInstance);
-          await core.saveInstance(fullInstance);
-          let instances: IGBInstance[] = await core.loadAllInstances(core, azureDeployer,
-            GBServer.globals.publicAddress);
-          instances = await core.ensureInstances(instances, GBServer.globals.bootInstance, core);
-          if (GBServer.globals.bootInstance !== undefined) {
-            GBServer.globals.bootInstance = instances[0];
-          }
+          GBServer.globals.bootInstance = instances[0];
 
           // Builds minimal service infrastructure.
 
@@ -184,12 +168,12 @@ export class GBServer {
 
           // Deployment of local applications for the first time.
 
-          if (GBConfigService.get("DISABLE_WEB") !== "true") {
+          if (GBConfigService.get('DISABLE_WEB') !== 'true') {
             deployer.setupDefaultGBUI();
           }
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
-      
+
           // Opens Navigator.
 
           // TODO: Config: core.openBrowserInDevelopment();

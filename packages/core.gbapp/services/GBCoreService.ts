@@ -98,7 +98,9 @@ export class GBCoreService implements IGBCoreService {
   constructor() {
     this.adminService = new GBAdminService(this);
   }
-
+  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {
+    
+  }
   /**
    * Gets database config and connect to storage.
    */
@@ -400,23 +402,6 @@ STORAGE_SYNC=true
           throw new Error(`Cannot connect to operating storage: ${error.message}.`);
         }
       }
-    }
-
-    return instances;
-  }
-
-  /**
-   * If instances is undefined here it's because storage has been formatted.
-   * Load all instances from .gbot found on deploy package directory.
-   * @param instances
-   * @param bootInstance
-   * @param core
-   */
-  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {
-    if (instances === undefined) {
-      const instance = new GuaribasInstance();
-      await instance.save();
-      instances = await core.loadInstances();
     }
 
     return instances;
