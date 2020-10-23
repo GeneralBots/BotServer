@@ -1,3 +1,10 @@
+## [2.0.14](https://github.com/pragmatismo-io/BotServer/compare/2.0.13...2.0.14) (2020-10-23)
+
+
+### Bug Fixes
+
+* **core.gbapp:** NLP composing now is partially automated. ([0aca385](https://github.com/pragmatismo-io/BotServer/commit/0aca3853d6abbbea2ba8b661ac15150b35e99b99))
+
 ## [2.0.13](https://github.com/pragmatismo-io/BotServer/compare/2.0.12...2.0.13) (2020-10-21)
 
 
