@@ -1,3 +1,10 @@
+## [2.0.15](https://github.com/pragmatismo-io/BotServer/compare/2.0.14...2.0.15) (2020-10-24)
+
+
+### Bug Fixes
+
+* **all:** Debugging of .gbapp allowed when launch.json is tailored on outFiles .gbapp dist files. ([201b8c7](https://github.com/pragmatismo-io/BotServer/commit/201b8c7dac654096600daa7101ad4a0d379b7058))
+
 ## [2.0.14](https://github.com/pragmatismo-io/BotServer/compare/2.0.13...2.0.14) (2020-10-23)
 
 
