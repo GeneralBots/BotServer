@@ -477,7 +477,10 @@ export class GBConversationalService {
 
     let nlp: RecognizerResult;
     try {
+      const saved = step.context.activity.text
+      step.context.activity.text = text;
       nlp = await model.recognize(step.context);
+      step.context.activity.text = saved;
     } catch (error) {
       // tslint:disable:no-unsafe-any
       if (error.statusCode === 404) {

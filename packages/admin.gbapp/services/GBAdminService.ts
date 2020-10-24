@@ -86,7 +86,7 @@ export class GBAdminService implements IGBAdminService {
   public static async getADALCredentialsFromUsername(username: string, password: string) {
     return await msRestAzure.loginWithUsernamePassword(username, password);
   }
-  
+
   public static getMobileCode() {
     const passwordGenerator = new PasswordGenerator();
     const options = {
@@ -100,7 +100,6 @@ export class GBAdminService implements IGBAdminService {
 
     return passwordGenerator.generatePassword(options);
   }
-
 
   public static getRndPassword(): string {
     const passwordGenerator = new PasswordGenerator();
@@ -168,7 +167,6 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public async acquireElevatedToken(instanceId: number): Promise<string> {
-
     // TODO: Use boot bot as base for authentication.
 
     let botId = GBConfigService.get('BOT_ID');
@@ -227,9 +225,7 @@ export class GBAdminService implements IGBAdminService {
     return path.indexOf('sharepoint.com') > 0;
   }
 
-  public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void> {
-
-  }
+  public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void> {}
   public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: IGBDeployer) {
     const packageName = text.split(' ')[1];
 
@@ -239,24 +235,22 @@ export class GBAdminService implements IGBAdminService {
         throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
       }
       await deployer.deployPackage(min, urlJoin(additionalPath, packageName));
-    }
-    else {
+    } else {
       let siteName = text.split(' ')[1];
       let folderName = text.split(' ')[2];
 
-      let packageType = Path.extname(folderName);
-      if (packageType !== '.gbot') {
-        let s = new GBSharePointService();
+      let s = new GBSharePointService();
 
-        let localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(folderName));
-        GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
-        await s.downloadFolder(localFolder, siteName, folderName,
-          GBConfigService.get('CLOUD_USERNAME'), GBConfigService.get('CLOUD_PASSWORD'))
-        await deployer.deployPackage(min, localFolder);
-      }
-      else {
-        await deployer.deployPackage(min, folderName);
-      }
+      let localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(folderName));
+      GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
+      await s.downloadFolder(
+        localFolder,
+        siteName,
+        folderName,
+        GBConfigService.get('CLOUD_USERNAME'),
+        GBConfigService.get('CLOUD_PASSWORD')
+      );
+      await deployer.deployPackage(min, localFolder);
     }
   }
   public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: IGBDeployer) {
@@ -271,7 +265,4 @@ export class GBAdminService implements IGBAdminService {
     const service = await AzureDeployerService.createInstance(deployer);
     service.syncBotServerRepository(min.instance.botId, serverName);
   }
-
-
-
 }

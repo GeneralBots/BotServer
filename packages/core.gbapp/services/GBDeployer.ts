@@ -247,23 +247,14 @@ export class GBDeployer implements IGBDeployer {
 
   public async publishNLP(instance: IGBInstance): Promise<void> {
     const service = new AzureDeployerService(this);
-    const res =  await service.publishNLP(
-      instance.cloudLocation,
-      instance.nlpAppId,
-      instance.nlpAuthoringKey,
-    );
-    if(res.status !== 200 && res.status !== 201) throw res.bodyAsText;
-    
+    const res = await service.publishNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
+    if (res.status !== 200 && res.status !== 201) throw res.bodyAsText;
   }
 
   public async trainNLP(instance: IGBInstance): Promise<void> {
     const service = new AzureDeployerService(this);
-    const res =  await service.trainNLP(
-      instance.cloudLocation,
-      instance.nlpAppId,
-      instance.nlpAuthoringKey,
-    );
-    if(res.status !== 200 && res.status !== 202) throw res.bodyAsText;
+    const res = await service.trainNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
+    if (res.status !== 200 && res.status !== 202) throw res.bodyAsText;
     let sleep = ms => {
       return new Promise(resolve => {
         setTimeout(resolve, ms);
@@ -274,15 +265,14 @@ export class GBDeployer implements IGBDeployer {
 
   public async refreshNLPEntity(instance: IGBInstance, listName, listData): Promise<void> {
     const service = new AzureDeployerService(this);
-    const res =  await service.refreshEntityList(
+    const res = await service.refreshEntityList(
       instance.cloudLocation,
       instance.nlpAppId,
       listName,
       instance.nlpAuthoringKey,
       listData
     );
-    if(res.status !== 200) throw res.bodyAsText;
-    
+    if (res.status !== 200) throw res.bodyAsText;
   }
 
   /**
@@ -295,7 +285,7 @@ export class GBDeployer implements IGBDeployer {
     await this.deployBotFull(instance, publicAddress);
   }
 
-  public async loadParamsFromExcel(min: GBMinInstance): Promise<any> {
+  public async loadParamsFromTabular(min: GBMinInstance): Promise<any> {
     let token = await min.adminService.acquireElevatedToken(min.instance.instanceId);
 
     let siteId = process.env.STORAGE_SITE_ID;
@@ -417,11 +407,12 @@ export class GBDeployer implements IGBDeployer {
 
     switch (packageType) {
       case '.gbot':
-        if (Fs.existsSync(localPath)) {
-          await this.deployBotFromLocalPath(localPath, GBServer.globals.publicAddress);
-        }
-        if (process.env.ENABLE_PARAMS_ONLINE === 'true') {
-          min.instance.params = await this.loadParamsFromExcel(min);
+        if (process.env.ENABLE_PARAMS_ONLINE === 'false') {
+          if (Fs.existsSync(localPath)) {
+            await this.deployBotFromLocalPath(localPath, GBServer.globals.publicAddress);
+          }
+        } else {
+          min.instance.params = await this.loadParamsFromTabular(min);
         }
         await this.core.saveInstance(min.instance);
 

@@ -794,7 +794,7 @@ export class GBMinService {
           min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
           min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           query,
-          'pt'
+          'en'
         );
         GBLog.info(`Translated text: ${query}.`);
 
