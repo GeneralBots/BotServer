@@ -137,7 +137,8 @@ export class GBServer {
             await core.initStorage();
           } catch (error) {
             GBLog.verbose(`Error initializing storage: ${error}`);
-            await core.createBootInstance(core, azureDeployer, GBServer.globals.publicAddress);
+            GBServer.globals.bootInstance = 
+              await core.createBootInstance(core, azureDeployer, GBServer.globals.publicAddress);
             await core.initStorage();
           }
 
@@ -149,14 +150,25 @@ export class GBServer {
           GBServer.globals.sysPackages = await core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
-
-          // Loads boot bot and other instances.
-
+          
+          GBLog.info(`Publishing instances...`);
           let instances: IGBInstance[] = await core.loadAllInstances(
             core,
             azureDeployer,
             GBServer.globals.publicAddress
           );
+
+          if (instances.length === 0) {
+            const instance = await importer.importIfNotExistsBotPackage(
+              GBConfigService.get('BOT_ID'),
+              'boot.gbot',
+              'packages/boot.gbot',
+              GBServer.globals.bootInstance
+            );
+            await deployer.deployBotFull(instance, GBServer.globals.publicAddress);
+            instances.push(instance);
+          }
+
           GBServer.globals.bootInstance = instances[0];
 
           // Builds minimal service infrastructure.

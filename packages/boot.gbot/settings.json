@@ -3,5 +3,6 @@
   "searchScore": ".45",
   "nlpScore": ".80",
   "nlpVsSearch": ".4",
+  "state":"active",
   "autoPackageSync": "gbdialog, gbot, gbtheme"
 }

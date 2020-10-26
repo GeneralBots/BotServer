@@ -388,7 +388,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     GBLog.info(`Deploying Bot Storage...`);
     const administratorLogin = `sa${GBAdminService.getRndReadableIdentifier()}`;
     const administratorPassword = GBAdminService.getRndPassword();
-    const storageServer = `${name.toLowerCase()}-storage-server`;
+    const storageServer = `${name.toLowerCase()}-storage-server2`;
     const storageName = `${name}-storage`;
     await this.createStorageServer(name, storageServer, administratorLogin,
       administratorPassword, storageServer, instance.cloudLocation

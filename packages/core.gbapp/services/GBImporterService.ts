@@ -53,7 +53,8 @@ export class GBImporter {
     this.core = core;
   }
 
-  public async importIfNotExistsBotPackage(botId: string, packageName: string, localPath: string) {
+  public async importIfNotExistsBotPackage(botId: string, 
+    packageName: string, localPath: string, additionalInstance: IGBInstance = null) {
     const settingsJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'settings.json'), 'utf8'));
     if (botId === undefined) {
       botId = settingsJson.botId;
@@ -85,6 +86,9 @@ export class GBImporter {
 
     if (instance != null && instance.botId === null) {
       console.log(`Null BotId after load instance with botId: ${botId}.`);
+    }
+    else{
+      instance = additionalInstance;
     }
 
     return await this.createOrUpdateInstanceInternal(instance, botId, localPath, settingsJson);
