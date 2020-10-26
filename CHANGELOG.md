@@ -1,3 +1,10 @@
+## [2.0.17](https://github.com/pragmatismo-io/BotServer/compare/2.0.16...2.0.17) (2020-10-26)
+
+
+### Bug Fixes
+
+* **all:** Bug fix in startup on a blank environment. ([7a2232e](https://github.com/pragmatismo-io/BotServer/commit/7a2232efe4bb165b7efc48569990ba1c91ef5f7d))
+
 ## [2.0.16](https://github.com/pragmatismo-io/BotServer/compare/2.0.15...2.0.16) (2020-10-24)
 
 
