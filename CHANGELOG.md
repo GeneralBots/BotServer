@@ -1,3 +1,10 @@
+## [2.0.16](https://github.com/pragmatismo-io/BotServer/compare/2.0.15...2.0.16) (2020-10-24)
+
+
+### Bug Fixes
+
+* **core.gbapp:** .gbot download from tabular is now OK. ([a7fce94](https://github.com/pragmatismo-io/BotServer/commit/a7fce94545522a7695694099c70320a62e352ef9))
+
 ## [2.0.15](https://github.com/pragmatismo-io/BotServer/compare/2.0.14...2.0.15) (2020-10-24)
 
 
