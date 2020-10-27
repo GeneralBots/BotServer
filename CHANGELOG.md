@@ -1,3 +1,10 @@
+## [2.0.19](https://github.com/pragmatismo-io/BotServer/compare/2.0.18...2.0.19) (2020-10-27)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Logging improvements. ([b2159b0](https://github.com/pragmatismo-io/BotServer/commit/b2159b0030c64974fa9453b6678d0e8d4dc09f79))
+
 ## [2.0.18](https://github.com/pragmatismo-io/BotServer/compare/2.0.17...2.0.18) (2020-10-27)
 
 
