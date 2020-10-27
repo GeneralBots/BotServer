@@ -498,9 +498,10 @@ export class GBConversationalService {
     }
 
     let nlpActive = false;
+    let score = 0;
 
     Object.keys(nlp.intents).forEach(name => {
-      const score = nlp.intents[name].score;
+      score = nlp.intents[name].score;
       if (score > min.instance.nlpScore) {
         nlpActive = true;
       }
@@ -515,7 +516,7 @@ export class GBConversationalService {
         return false;
       }
 
-      GBLog.info(`NLP called: ${intent}, entities: ${nlp.entities}`);
+      GBLog.info(`NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${min.instance.nlpScore}`);
 
       try {
         step.activeDialog.state.options.entities = nlp.entities;
