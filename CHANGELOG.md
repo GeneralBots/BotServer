@@ -1,3 +1,10 @@
+## [2.0.18](https://github.com/pragmatismo-io/BotServer/compare/2.0.17...2.0.18) (2020-10-27)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Auto-publish fixed. ([398b95d](https://github.com/pragmatismo-io/BotServer/commit/398b95d148f8db3d4c0feb92da7521e78825d3f4))
+
 ## [2.0.17](https://github.com/pragmatismo-io/BotServer/compare/2.0.16...2.0.17) (2020-10-26)
 
 
