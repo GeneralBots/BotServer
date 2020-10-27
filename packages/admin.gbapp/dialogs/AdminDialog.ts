@@ -229,7 +229,12 @@ export class AdminDialog extends IGBDialog {
           if (AdminDialog.isIntentYes(locale, step.result)) {
             let from = step.context.activity.from.id;
 
-            let canPublish = AdminDialog.canPublish(min, from);
+            let canPublish: Boolean;
+            if (step.activeDialog.state.options.firstTime) {
+              canPublish = true;
+            } else {
+              canPublish = AdminDialog.canPublish(min, from);
+            }
 
             if (!canPublish) {
               await step.beginDialog('/admin-auth');
@@ -277,7 +282,7 @@ export class AdminDialog extends IGBDialog {
               if (packageName.indexOf('.') !== -1) {
                 cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
               } else {
-                cmd1 = `deployPackage ${packageName}`; 
+                cmd1 = `deployPackage ${packageName}`;
               }
               if ((await (deployer as any).getStoragePackageByName(min.instance.instanceId, packageName)) !== null) {
                 const cmd2 = `undeployPackage ${packageName}`;
@@ -311,14 +316,16 @@ export class AdminDialog extends IGBDialog {
    * @param phone Phone number to check (eg.: +5521900002233)
    */
   public static canPublish(min: GBMinInstance, phone: string): Boolean {
-    const list = process.env.SECURITY_CAN_PUBLISH.split(';');
-    let result = list.includes(phone);
+    if (process.env.SECURITY_CAN_PUBLISH !== undefined) {
+      const list = process.env.SECURITY_CAN_PUBLISH.split(';');
+      let result = list.includes(phone);
 
-    if (!result && min.instance.params) {
-      const params = JSON.parse(min.instance.params);
-      return list.includes(params['Can Publish']);
+      if (!result && min.instance.params) {
+        const params = JSON.parse(min.instance.params);
+        return list.includes(params['Can Publish']);
+      }
+      return result;
     }
-    return result;
   }
 
   private static setupSecurityDialogs(min: GBMinInstance) {
@@ -353,7 +360,7 @@ export class AdminDialog extends IGBDialog {
           min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
 
           const url = `https://login.microsoftonline.com/${
-            min.instance.authenticatorTenant
+            step.activeDialog.state.authenticatorTenant
           }/oauth2/authorize?client_id=${min.instance.marketplaceId}&response_type=code&redirect_uri=${urlJoin(
             min.instance.botEndpoint,
             min.instance.botId,

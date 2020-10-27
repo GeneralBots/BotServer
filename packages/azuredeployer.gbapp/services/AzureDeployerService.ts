@@ -376,7 +376,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
     const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
 
-    instance.nlpEndpoint = urlJoin(nlp.endpoint, 'apps');
+    instance.nlpEndpoint = nlp.endpoint;
     instance.nlpKey = keys.key1;
     instance.nlpAppId = nlpAppId;
 
@@ -388,7 +388,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     GBLog.info(`Deploying Bot Storage...`);
     const administratorLogin = `sa${GBAdminService.getRndReadableIdentifier()}`;
     const administratorPassword = GBAdminService.getRndPassword();
-    const storageServer = `${name.toLowerCase()}-storage-server2`;
+    const storageServer = `${name.toLowerCase()}-storage-server`;
     const storageName = `${name}-storage`;
     await this.createStorageServer(name, storageServer, administratorLogin,
       administratorPassword, storageServer, instance.cloudLocation

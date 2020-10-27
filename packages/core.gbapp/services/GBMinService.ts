@@ -620,8 +620,10 @@ export class GBMinService {
               'web',
               member.name
             );
-            if (step.context.activity.channelId === "msteams"){
-              persistedUser.conversationReference = JSON.stringify(TurnContext.getConversationReference(context.activity));
+            if (step.context.activity.channelId === 'msteams') {
+              persistedUser.conversationReference = JSON.stringify(
+                TurnContext.getConversationReference(context.activity)
+              );
               await persistedUser.save();
             }
             const analytics = new AnalyticsService();
@@ -753,14 +755,12 @@ export class GBMinService {
     } else if (context.activity.text.startsWith('{"title"')) {
       await step.beginDialog('/menu', JSON.parse(context.activity.text));
       // Otherwise, continue to the active dialog in the stack.
+    } else if (!(await this.deployer.getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`))) {
+      await step.context.sendActivity(
+        `Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`
+      );
+      await step.beginDialog('/publish', { confirm: true, firstTime: true });
     } else {
-      if (!(await this.deployer.getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`))) {
-        await step.context.sendActivity(
-          `Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`
-        );
-        return await step.beginDialog('/publish', { confirm: true });
-      }
-
       if (step.activeDialog !== undefined) {
         await step.continueDialog();
       } else {
