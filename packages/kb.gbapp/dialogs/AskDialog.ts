@@ -115,6 +115,7 @@ export class AskDialog extends IGBDialog {
           }; // TODO: Encapsulate.
 
           let text = step.result;
+          text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/ig, "");
 
           let locale = 'en';
           const minBoot = GBServer.globals.minBoot as any;
@@ -190,6 +191,7 @@ export class AskDialog extends IGBDialog {
       async step => {
         const user = await min.userProfile.get(step.context, {});
         let text = step.options.query;
+        text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/ig, "");
 
         let sec = new SecService();
         const member = step.context.activity.from;
