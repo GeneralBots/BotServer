@@ -765,8 +765,8 @@ export class GBMinService {
         await step.continueDialog();
       } else {
         let text = context.activity.text;
-        text = text.replace(/<\/?[^>]+(>|$)/g, "");
-        
+        text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/ig, "");
+
         // Spells check the input text before translating.
 
         const key = min.instance.spellcheckerKey ? min.instance.spellcheckerKey : min.instance.spellcheckerKey;
