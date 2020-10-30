@@ -1,3 +1,10 @@
+## [2.0.20](https://github.com/pragmatismo-io/BotServer/compare/2.0.19...2.0.20) (2020-10-30)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** Adjustments in .gbkb engine. ([4927959](https://github.com/pragmatismo-io/BotServer/commit/4927959a5c3e45b63938ff34c3aea8388b5b46c7))
+
 ## [2.0.19](https://github.com/pragmatismo-io/BotServer/compare/2.0.18...2.0.19) (2020-10-27)
 
 
