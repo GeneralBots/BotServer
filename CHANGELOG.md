@@ -1,3 +1,10 @@
+## [2.0.23](https://github.com/pragmatismo-io/BotServer/compare/2.0.22...2.0.23) (2020-10-30)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Remove HTML from input. ([85df283](https://github.com/pragmatismo-io/BotServer/commit/85df2830050c0b2b72e5d5d6d4a08f2123823889))
+
 ## [2.0.22](https://github.com/pragmatismo-io/BotServer/compare/2.0.21...2.0.22) (2020-10-30)
 
 
