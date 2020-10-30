@@ -596,8 +596,9 @@ export class GBConversationalService {
         min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
         min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
         text,
-        user.locale ? user.locale : 'pt'
+        user.locale ? user.locale : 'en'
       );
+      GBLog.info(`Translated text(4): ${text}.`);
     }
 
     return await step.prompt('textPrompt', text ? text : {});
@@ -615,8 +616,10 @@ export class GBConversationalService {
         min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
         min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
         text,
-        user.locale ? user.locale : 'pt'
+        user.locale ? user.locale : 'en'
       );
+      GBLog.info(`Translated text(5): ${text}.`);
+      
       const analytics = new AnalyticsService();
       const userProfile = await min.userProfile.get(step.context, {});
       analytics.createMessage(min.instance.instanceId, userProfile.conversation, null, text);

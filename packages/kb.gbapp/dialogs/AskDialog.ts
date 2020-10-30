@@ -116,7 +116,7 @@ export class AskDialog extends IGBDialog {
 
           let query = step.result;
 
-          let locale = 'pt';
+          let locale = 'en';
           const minBoot = GBServer.globals.minBoot as any;
           if (process.env.TRANSLATOR_DISABLED !== 'true' && translatorEnabled()) {
             locale = await AzureText.getLocale(
@@ -142,7 +142,7 @@ export class AskDialog extends IGBDialog {
             query,
             'en'
           );
-          GBLog.info(`Translated text: ${query}.`);
+          GBLog.info(`Translated text (3): ${query}.`);
 
           let handled = false;
           await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
@@ -183,13 +183,29 @@ export class AskDialog extends IGBDialog {
         const member = step.context.activity.from;
         const userDb = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
         const minBoot = GBServer.globals.minBoot as any;
+
+        // Spells check the input text before translating.
+
+        const key = min.instance.spellcheckerKey ? minBoot.instance.spellcheckerKey : min.instance.spellcheckerKey;
+        if (key) {
+          const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
+          if (data !== text) {
+            GBLog.info(`Spelling corrected: ${data}`);
+            text = data;
+          }
+        }
+        
+        // Translates text before sending Search or NLP.
+        
         text = await min.conversationalService.translate(
           min,
           min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
           min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           text,
-          userDb.locale ? userDb.locale : 'pt'
-        );
+          userDb.locale ? userDb.locale : 'en'
+          );
+
+          GBLog.info(`Translated text (2): ${text}`);
 
         if (!text) {
           throw new Error(`/answer being called with no args query text.`);
@@ -203,20 +219,12 @@ export class AskDialog extends IGBDialog {
         } else if (step.options && step.options.fromFaq) {
           await min.conversationalService.sendText(min, step, Messages[locale].going_answer);
         }
-        // Spells check the input text before sending Search or NLP.
-        const key = min.instance.spellcheckerKey ? minBoot.instance.spellcheckerKey : min.instance.spellcheckerKey;
-        if (key) {
-          const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
-          if (data !== text) {
-            GBLog.info(`Spelling corrected: ${data}`);
-            text = data;
-          }
-        }
 
         const searchScore = min.instance.searchScore ? min.instance.searchScore : minBoot.instance.searchScore;
         // Searches KB for the first time.
         user.lastQuestion = text;
         await min.userProfile.set(step.context, user);
+
         const resultsA = await service.ask(min.instance, text, searchScore, user.subjects);
 
         // If there is some result, answer immediately.
@@ -246,6 +254,8 @@ export class AskDialog extends IGBDialog {
               await min.conversationalService.sendText(min, step, Messages[locale].wider_answer);
             }
 
+            // TODO: Put braces in this IF statment.
+            
             if (resultsB.answer)
               // Sends the answer to all outputs, including projector.
 

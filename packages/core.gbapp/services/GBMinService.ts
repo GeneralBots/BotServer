@@ -764,9 +764,20 @@ export class GBMinService {
       if (step.activeDialog !== undefined) {
         await step.continueDialog();
       } else {
-        let query = context.activity.text;
+        let text = context.activity.text;
 
-        let locale = 'pt';
+        // Spells check the input text before translating.
+
+        const key = min.instance.spellcheckerKey ? min.instance.spellcheckerKey : min.instance.spellcheckerKey;
+        if (key) {
+          const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
+          if (data !== text) {
+            GBLog.info(`Spelling corrected: ${data}`);
+            text = data;
+          }
+        }
+
+        let locale = 'en';
         if (
           process.env.TRANSLATOR_DISABLED !== 'true' ||
           min.core.getParam<boolean>(min.instance, 'Enable Worldwide Translator')
@@ -777,7 +788,7 @@ export class GBMinService {
             minBoot.instance.textAnalyticsEndpoint
               ? minBoot.instance.textAnalyticsEndpoint
               : minBoot.instance.textAnalyticsEndpoint,
-            query
+            text
           );
         }
 
@@ -788,15 +799,15 @@ export class GBMinService {
         user.locale = locale;
         await user.save();
         const minBoot = GBServer.globals.minBoot as any;
-        const notTranslatedQuery = query;
-        query = await min.conversationalService.translate(
+        const notTranslatedQuery = text;
+        text = await min.conversationalService.translate(
           min,
           min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
           min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-          query,
+          text,
           'en'
         );
-        GBLog.info(`Translated text: ${query}.`);
+        GBLog.info(`Translated text (1): ${text}.`);
 
         // Checks if any .gbapp will handle this answer, if not goes to kb.gbapp.
 
@@ -804,7 +815,7 @@ export class GBMinService {
         await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
           if (
             await e.onExchangeData(min, 'handleAnswer', {
-              query: query,
+              query: text,
               step: step,
               notTranslatedQuery: notTranslatedQuery,
               message: message ? message['dataValues'] : null,
@@ -817,7 +828,7 @@ export class GBMinService {
 
         if (!handled) {
           await step.beginDialog('/answer', {
-            query: query,
+            query: text,
             user: user ? user['dataValues'] : null,
             message: message
           });

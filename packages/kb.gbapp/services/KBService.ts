@@ -204,6 +204,8 @@ export class KBService implements IGBKBService {
 
       const values = results.result.value;
 
+
+
       if (values && values.length > 0 && values[0]['@search.score'] >= searchScore) {
         const value = await this.getAnswerById(instance.instanceId, values[0].answerId);
         if (value !== null) {
@@ -213,6 +215,7 @@ export class KBService implements IGBKBService {
         }
       }
     } else {
+
       const data = await this.getAnswerByText(instance.instanceId, query);
       if (data) {
         return { answer: data.answer, questionId: data.question.questionId };
@@ -298,6 +301,7 @@ export class KBService implements IGBKBService {
 
     GBLog.info(`Now importing ${rows.length} rows from tabular file ${filePath}...`);
     return asyncPromise.eachSeries(rows, async line => {
+      
       // Skips the first line.
 
       if (
@@ -308,6 +312,7 @@ export class KBService implements IGBKBService {
         line._cells[3] !== undefined &&
         line._cells[4] !== undefined
       ) {
+      
         // Extracts values from columns in the current line.
 
         const subjectsText = line._cells[0].text;
@@ -443,7 +448,7 @@ export class KBService implements IGBKBService {
       min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
       min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
       answer.content,
-      user.locale ? user.locale : 'pt'
+      user.locale ? user.locale : 'en'
     );
 
     // Converts from Markdown to HTML.
