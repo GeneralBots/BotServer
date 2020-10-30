@@ -114,7 +114,7 @@ export class AskDialog extends IGBDialog {
             return false;
           }; // TODO: Encapsulate.
 
-          let query = step.result;
+          let text = step.result;
 
           let locale = 'en';
           const minBoot = GBServer.globals.minBoot as any;
@@ -124,34 +124,45 @@ export class AskDialog extends IGBDialog {
               minBoot.instance.textAnalyticsEndpoint
                 ? minBoot.instance.textAnalyticsEndpoint
                 : minBoot.instance.textAnalyticsEndpoint,
-              query
+              text
             );
           }
 
           let sec = new SecService();
           const member = step.context.activity.from;
 
+          // Spells check the input text before translating.
+
+          const key = min.instance.spellcheckerKey ? min.instance.spellcheckerKey : min.instance.spellcheckerKey;
+          if (key) {
+            const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
+            if (data !== text) {
+              GBLog.info(`Spelling corrected (3): ${data}`);
+              text = data;
+            }
+          }
+
           const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
           user.locale = locale;
           await user.save();
-          const notTranslatedQuery = query;
-          query = await min.conversationalService.translate(
+          const notTranslatedQuery = text;
+          text = await min.conversationalService.translate(
             min,
             min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
             min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-            query,
+            text,
             'en'
           );
-          GBLog.info(`Translated text (3): ${query}.`);
+          GBLog.info(`Translated text (3): ${text}.`);
 
           let handled = false;
           await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
             if (
               await e.onExchangeData(min, 'handleAnswer', {
-                query: query,
+                query: text,
                 step: step,
                 notTranslatedQuery: notTranslatedQuery,
-                message: query,
+                message: text,
                 user: user ? user['dataValues'] : null
               })
             ) {
@@ -161,7 +172,7 @@ export class AskDialog extends IGBDialog {
 
           if (!handled) {
             return await step.beginDialog('/answer', {
-              query: query
+              query: text
             });
           } else {
             return await step.next();
@@ -194,18 +205,18 @@ export class AskDialog extends IGBDialog {
             text = data;
           }
         }
-        
+
         // Translates text before sending Search or NLP.
-        
+
         text = await min.conversationalService.translate(
           min,
           min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
           min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
           text,
           userDb.locale ? userDb.locale : 'en'
-          );
+        );
 
-          GBLog.info(`Translated text (2): ${text}`);
+        GBLog.info(`Translated text (2): ${text}`);
 
         if (!text) {
           throw new Error(`/answer being called with no args query text.`);
@@ -255,7 +266,7 @@ export class AskDialog extends IGBDialog {
             }
 
             // TODO: Put braces in this IF statment.
-            
+
             if (resultsB.answer)
               // Sends the answer to all outputs, including projector.
 
