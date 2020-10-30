@@ -1,3 +1,10 @@
+## [2.0.21](https://github.com/pragmatismo-io/BotServer/compare/2.0.20...2.0.21) (2020-10-30)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** Spelling set before translation. ([bfbbf69](https://github.com/pragmatismo-io/BotServer/commit/bfbbf696900748d3fe9ac329b2b7f46b5878c504))
+
 ## [2.0.20](https://github.com/pragmatismo-io/BotServer/compare/2.0.19...2.0.20) (2020-10-30)
 
 
