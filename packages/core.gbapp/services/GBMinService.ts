@@ -770,6 +770,7 @@ export class GBMinService {
 
         const key = min.instance.spellcheckerKey ? min.instance.spellcheckerKey : min.instance.spellcheckerKey;
         if (key) {
+          text = text.charAt(0).toUpperCase() + text.slice(1);
           const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
           if (data !== text) {
             GBLog.info(`Spelling corrected: ${data}`);

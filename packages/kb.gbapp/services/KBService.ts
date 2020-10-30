@@ -183,6 +183,7 @@ export class KBService implements IGBKBService {
     query = query.replace('.', ' ');
     query = query.replace('/', ' ');
     query = query.replace('\\', ' ');
+    query = query.replace('\r\n', ' ');
 
     if (subjects !== null) {
       const text = KBService.getSubjectItemsSeparatedBySpaces(subjects);

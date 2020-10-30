@@ -132,9 +132,10 @@ export class AskDialog extends IGBDialog {
           const member = step.context.activity.from;
 
           // Spells check the input text before translating.
-
+          text = text.charAt(0).toUpperCase() + text.slice(1);
           const key = min.instance.spellcheckerKey ? min.instance.spellcheckerKey : min.instance.spellcheckerKey;
           if (key) {
+            
             const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
             if (data !== text) {
               GBLog.info(`Spelling corrected (3): ${data}`);
@@ -199,6 +200,7 @@ export class AskDialog extends IGBDialog {
 
         const key = min.instance.spellcheckerKey ? minBoot.instance.spellcheckerKey : min.instance.spellcheckerKey;
         if (key) {
+          text = text.charAt(0).toUpperCase() + text.slice(1);
           const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
           if (data !== text) {
             GBLog.info(`Spelling corrected: ${data}`);
