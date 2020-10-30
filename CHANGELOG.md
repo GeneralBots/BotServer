@@ -1,3 +1,10 @@
+## [2.0.22](https://github.com/pragmatismo-io/BotServer/compare/2.0.21...2.0.22) (2020-10-30)
+
+
+### Bug Fixes
+
+* **all:** Spelled now received first letter in uppercase. ([b1359bb](https://github.com/pragmatismo-io/BotServer/commit/b1359bbf09a558fed45d8bf8b79712407bf4d2c8))
+
 ## [2.0.21](https://github.com/pragmatismo-io/BotServer/compare/2.0.20...2.0.21) (2020-10-30)
 
 
