@@ -173,7 +173,7 @@ export class AdminDialog extends IGBDialog {
               await min.conversationalService.sendText(min, step, Messages[locale].finished_working);
             }
           } catch (error) {
-            await min.conversationalService.sendText(min, step, error.message);
+            await min.conversationalService.sendText(min, step, error.message?error.message: error);
           }
           await step.replaceDialog('/ask', { isReturning: true });
         }

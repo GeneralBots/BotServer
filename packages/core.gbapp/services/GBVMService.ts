@@ -93,9 +93,8 @@ export class GBVMService extends GBService {
 
         filename = vbsFile;
 
-        let mainName = filename.replace(/\s|\-/gi, '').split('.')[0];
-        mainName = mainName.toLowerCase();
-        min.scriptMap[filename] = mainName.toLowerCase();
+        let mainName = GBVMService.getMethodNameFromVBSFilename(filename);
+        min.scriptMap[filename] = mainName;
 
         const fullFilename = urlJoin(folder, filename);
         // TODO: Implement in development mode, how swap for .vbs files
@@ -120,6 +119,11 @@ export class GBVMService extends GBService {
         }
       }
     });
+  }
+
+  public static getMethodNameFromVBSFilename(filename: string) {
+    let mainName = filename.replace(/\s|\-/gi, '').split('.')[0];
+    return mainName.toLowerCase();
   }
 
   private async getTextFromWord(folder: string, filename: string) {

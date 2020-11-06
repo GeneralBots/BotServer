@@ -74,7 +74,7 @@ export class GBDeployer implements IGBDeployer {
   }
 
   public static getConnectionStringFromInstance(instance: IGBInstance) {
-    return `Server=tcp:${instance.storageServer}.database.windows.net,1433;Database=${instance.storageName};User ID=${instance.storageUsername};Password=${instance.storagePassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
+    return `Server=tcp:${instance.storageServer},1433;Database=${instance.storageName};User ID=${instance.storageUsername};Password=${instance.storagePassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
   }
 
   /**
