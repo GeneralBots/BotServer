@@ -1,3 +1,10 @@
+## [2.0.26](https://github.com/pragmatismo-io/BotServer/compare/2.0.25...2.0.26) (2020-11-06)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fix GET/SET in .gbdialog. ([8842bf7](https://github.com/pragmatismo-io/BotServer/commit/8842bf7e4f09c2a6606f95fcc505ff3d3becd837))
+
 ## [2.0.25](https://github.com/pragmatismo-io/BotServer/compare/2.0.24...2.0.25) (2020-10-30)
 
 
