@@ -180,7 +180,15 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2) => {
-      return `let ${$1} = sys().httpGet (${$2})`;
+      if ($2.indexOf('http') !== -1) {
+        return `let ${$1} = sys().httpGet (${$2})`;
+      } else {
+        return `let ${$1} = sys().get (${$2})`;
+      }
+    });
+
+    code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
+        return `sys().set (${$1})`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {

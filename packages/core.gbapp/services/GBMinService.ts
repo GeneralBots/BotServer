@@ -740,10 +740,16 @@ export class GBMinService {
     } else if (context.activity.text.charAt(0) === '/') {
       let text = context.activity.text;
       let parts = text.split(' ');
-      let dialogName = parts[0];
+      let cmdOrDialogName = parts[0];
       parts.splice(0, 1);
       let args = parts.join(' ');
-      await step.beginDialog(dialogName, { args: args });
+
+      if (cmdOrDialogName === '/call'){
+        await GBVMService.callVM(args, min, step, this.deployer);
+      }
+      else{
+        await step.beginDialog(cmdOrDialogName, { args: args });
+      }
     } else if (globalQuit(step.context.activity.locale, context.activity.text)) {
       // TODO: Hard-code additional languages.
       await step.cancelAllDialogs();
