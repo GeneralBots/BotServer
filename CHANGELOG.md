@@ -1,3 +1,10 @@
+## [2.0.27](https://github.com/pragmatismo-io/BotServer/compare/2.0.26...2.0.27) (2020-11-06)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Any question can be forwarded to .docx dialogs. ([4f3ada1](https://github.com/pragmatismo-io/BotServer/commit/4f3ada1902e4ec4e4a24e701c70e8df1ff408e76))
+
 ## [2.0.26](https://github.com/pragmatismo-io/BotServer/compare/2.0.25...2.0.26) (2020-11-06)
 
 
