@@ -43,6 +43,7 @@ import { GBDeployer } from './GBDeployer';
 const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
 import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 const request = require('request-promise-native');
 
 /**
@@ -91,11 +92,18 @@ class SysClass {
 
   public async wait(seconds: number) {
     // tslint:disable-next-line no-string-based-set-timeout
+    GBLog.info(`BASIC: Talking to a specific user (TALK TO).`);
     const timeout = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     await timeout(seconds * 1000);
   }
 
+  public async talkTo(mobile: any, message: string) {
+    GBLog.info(`BASIC: Talking '${message}' to a specific user (${mobile}) (TALK TO). `);
+    await this.min.conversationalService.sendMarkdownToMobile(this.min, null, mobile, message);
+  }
+
   public async set(file: string, address: string, value: any): Promise<any> {
+    GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
     try {
       let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
@@ -131,12 +139,13 @@ class SysClass {
         )
         .patch(body);
     } catch (error) {
-      GBLog.error(`SAVE BASIC error: ${error.message}`);
+      GBLog.error(`SET BASIC error: ${error.message}`);
       throw error;
     }
   }
 
   public async save(file: string, ...args): Promise<any> {
+    GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     try {
       let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
@@ -225,12 +234,16 @@ class SysClass {
         )
         .get();
 
-      return results.text[0][0];
+      let val = results.text[0][0];
+      GBLog.info(`BASIC: Getting '${file}' (GET). Value= ${val}.`);
+      return val;
+
     } catch (error) {
       GBLog.error(error);
     }
   }
-  public async find(file: string, ...args): Promise<any> {
+
+  public async findV1(file: string, ...args): Promise<any> {
     let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
     let client = MicrosoftGraph.Client.init({
@@ -296,6 +309,85 @@ class SysClass {
         }
         output['line'] = foundIndex + 1;
         return output;
+      }
+    } catch (error) {
+      GBLog.error(error);
+    }
+  }
+
+  public async find(file: string, ...args): Promise<any> {
+    let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+
+    let client = MicrosoftGraph.Client.init({
+      authProvider: done => {
+        done(null, token);
+      }
+    });
+    let siteId = process.env.STORAGE_SITE_ID;
+    let libraryId = process.env.STORAGE_LIBRARY;
+    const botId = this.min.instance.botId;
+    const path = `/${botId}.gbai/${botId}.gbdata`;
+
+    try {
+      let res = await client
+        .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+        .get();
+
+      // Performs validation.
+
+      let document = res.value.filter(m => {
+        return m.name === file;
+      });
+
+      if (document === undefined) {
+        throw `File '${file}' specified on save GBasic command FIND not found. Check the .gbdata or the .gbdialog associated.`;
+      }
+      if (args.length > 1) {
+        throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
+      }
+
+      // Creates workbook session that will be discarded.
+
+      const filter = args[0].split('=');
+      const columnName = filter[0];
+      const value = filter[1];
+      let results = await client
+        .api(
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z100')`
+        )
+        .get();
+
+      let columnIndex = 0;
+      const header = results.text[0];
+      for (; columnIndex < header.length; columnIndex++) {
+        if (header[columnIndex] === columnName) {
+          break;
+        }
+      }
+
+      let array = [];
+      let foundIndex = 0;
+      for (; foundIndex < results.text.length; foundIndex++) {
+        if (results.text[foundIndex][columnIndex] === value) {
+          let output = {};
+          const row = results.text[foundIndex];
+          for (let colIndex = 0; colIndex < row.length; colIndex++) {
+            output[header[colIndex]] = row[colIndex];
+          }
+          output['line'] = foundIndex + 1;
+          array.push(output);
+        }
+      }
+
+      if (array.length === 0) {
+        GBLog.info(`BASIC: FIND the data set is empty.`);
+        return null;
+      } else if (array.length === 1) {
+        GBLog.info(`BASIC: FIND single result: ${array[0]}.`);
+        return array[0];
+      } else {
+        GBLog.info(`BASIC: FIND multiple result count: ${array.length}.`);
+        return array;
       }
     } catch (error) {
       GBLog.error(error);
@@ -440,16 +532,29 @@ export class DialogClass {
     }
   }
 
+  public async getNow(step) {
+    var d = new Date();
+    return d.getHours() + ':' + d.getMinutes();
+
+    // TODO: Choose Fuse with country code or consent IP.
+  }
+
   public async sendFile(step, filename, caption) {
-    let url = urlJoin(
-      GBServer.globals.publicAddress,
-      'kb',
-      `${this.min.botId}.gbai`,
-      `${this.min.botId}.gbkb`,
-      'assets',
-      filename
-    );
-    await this.min.conversationalService.sendFile(this.min, step, null, url, caption);
+    if (filename.indexOf('.md') > -1) {
+      let md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
+      await this.min.conversationalService.sendMarkdownToMobile(this.min, step, null, md);
+    } else {
+      let url = urlJoin(
+        GBServer.globals.publicAddress,
+        'kb',
+        `${this.min.botId}.gbai`,
+        `${this.min.botId}.gbkb`,
+        'assets',
+        filename
+      );
+
+      await this.min.conversationalService.sendFile(this.min, step, null, url, caption);
+    }
   }
 
   public async getFrom(step) {
@@ -475,7 +580,6 @@ export class DialogClass {
   public async transfer(step) {
     return await step.beginDialog('/t');
   }
-
 
   public async hear(step, promise, previousResolve) {
     function random(low, high) {

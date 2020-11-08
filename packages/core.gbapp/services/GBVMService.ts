@@ -156,10 +156,12 @@ export class GBVMService extends GBService {
     
     from = this.getFrom(step)
     today = this.getToday(step)
+    now = this.getNow(step)
     id = sys().getRandomId()
     username = this.getUserName(step);
     mobile = this.getUserMobile(step);
-    
+    ubound = (list) => list.length;
+
     ${code}
     `;
 
@@ -207,6 +209,10 @@ export class GBVMService extends GBService {
       return `transfer (step)\n`;
     });
 
+    code = code.replace(/(talk to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
+      return `sys().talkTo(${$3})\n`;
+    });
+
     code = code.replace(/(talk)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `talk (step, ${$3})\n`;
     });
@@ -217,6 +223,7 @@ export class GBVMService extends GBService {
     code = code.replace(/(save)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().save(${$3})\n`;
     });
+
 
     code = `${code}\n%>`;
 

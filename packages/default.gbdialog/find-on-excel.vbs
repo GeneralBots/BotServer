@@ -1,5 +1,4 @@
-talk "Para conseguir te ajudar, você quer informar o CPF ou código?"
-hear consulta
+
 
 if consulta = "cpf" then
     talk "Qual seu CPF?"
