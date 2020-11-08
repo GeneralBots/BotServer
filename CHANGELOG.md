@@ -1,3 +1,10 @@
+## [2.0.28](https://github.com/pragmatismo-io/BotServer/compare/2.0.27...2.0.28) (2020-11-08)
+
+
+### Bug Fixes
+
+* **core.gbapp:** New keywords and Loops. ([8693511](https://github.com/pragmatismo-io/BotServer/commit/869351113e76f9ebe9736fbd6e7f8311e89ec995))
+
 ## [2.0.27](https://github.com/pragmatismo-io/BotServer/compare/2.0.26...2.0.27) (2020-11-06)
 
 
