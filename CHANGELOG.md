@@ -1,3 +1,10 @@
+## [2.0.29](https://github.com/pragmatismo-io/BotServer/compare/2.0.28...2.0.29) (2020-11-08)
+
+
+### Bug Fixes
+
+* **all:** node.js rollback due to Azure. ([29e9535](https://github.com/pragmatismo-io/BotServer/commit/29e953542fc468059c4fc87d8ad35433cc75d625))
+
 ## [2.0.28](https://github.com/pragmatismo-io/BotServer/compare/2.0.27...2.0.28) (2020-11-08)
 
 
