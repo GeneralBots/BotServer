@@ -1,3 +1,10 @@
+## [2.0.34](https://github.com/pragmatismo-io/BotServer/compare/2.0.33...2.0.34) (2020-11-09)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fixed the file server addresses and availability. ([8cbf3d3](https://github.com/pragmatismo-io/BotServer/commit/8cbf3d364c42dfbd103d441cb993e35c4ce9474a))
+
 ## [2.0.33](https://github.com/pragmatismo-io/BotServer/compare/2.0.32...2.0.33) (2020-11-09)
 
 
