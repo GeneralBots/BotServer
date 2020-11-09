@@ -378,7 +378,7 @@ export class GBVMService extends GBService {
         async step => {
           const cbId = step.activeDialog.state.options.cbId;
 
-          if (min.cbMap[cbId] !== null) {
+          if (min.cbMap[cbId]) {
             const promise = min.cbMap[cbId].promise;
             delete min.cbMap[cbId];
             try {

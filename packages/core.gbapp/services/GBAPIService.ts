@@ -539,11 +539,14 @@ export class DialogClass {
     // TODO: Choose Fuse with country code or consent IP.
   }
 
+
   public async sendFile(step, filename, caption) {
     if (filename.indexOf('.md') > -1) {
+      GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile.`);
       let md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
       await this.min.conversationalService.sendMarkdownToMobile(this.min, step, null, md);
     } else {
+      GBLog.info(`BASIC: Sending the file ${filename} to mobile.`);
       let url = urlJoin(
         GBServer.globals.publicAddress,
         'kb',
