@@ -1,3 +1,10 @@
+## [2.0.33](https://github.com/pragmatismo-io/BotServer/compare/2.0.32...2.0.33) (2020-11-09)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fixing missing await calls. ([e0b18c0](https://github.com/pragmatismo-io/BotServer/commit/e0b18c00f150aab6bace7f6b45590b64e5960207))
+
 ## [2.0.32](https://github.com/pragmatismo-io/BotServer/compare/2.0.31...2.0.32) (2020-11-09)
 
 
