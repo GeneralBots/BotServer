@@ -1,3 +1,10 @@
+## [2.0.30](https://github.com/pragmatismo-io/BotServer/compare/2.0.29...2.0.30) (2020-11-09)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Trying to fix Word language finishing error. ([3ae1b75](https://github.com/pragmatismo-io/BotServer/commit/3ae1b75afd6fce7ecaaec2cf623e74e0b0df80c4))
+
 ## [2.0.29](https://github.com/pragmatismo-io/BotServer/compare/2.0.28...2.0.29) (2020-11-08)
 
 
