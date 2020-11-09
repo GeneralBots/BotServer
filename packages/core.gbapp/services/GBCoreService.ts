@@ -220,10 +220,10 @@ export class GBCoreService implements IGBCoreService {
           [Op.or]: and
         }
       };
-      return GuaribasInstance.findAll(options);
+      return await GuaribasInstance.findAll(options);
     } else {
       const options = { where: { state: 'active' } };
-      return GuaribasInstance.findAll(options);
+      return await GuaribasInstance.findAll(options);
     }
   }
 
@@ -243,7 +243,7 @@ export class GBCoreService implements IGBCoreService {
   public async loadInstanceById(instanceId: number): Promise<IGBInstance> {
     const options = { where: { instanceId: instanceId, state: 'active' } };
 
-    return GuaribasInstance.findOne(options);
+    return await GuaribasInstance.findOne(options);
   }
   /**
    * Loads just one Bot instance.
