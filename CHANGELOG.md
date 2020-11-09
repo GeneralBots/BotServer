@@ -1,3 +1,10 @@
+## [2.0.31](https://github.com/pragmatismo-io/BotServer/compare/2.0.30...2.0.31) (2020-11-09)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fixing .gbdialog last call error. ([ff20ef2](https://github.com/pragmatismo-io/BotServer/commit/ff20ef2494c556dfacd63cfd69ffe56ca4c870ed))
+
 ## [2.0.30](https://github.com/pragmatismo-io/BotServer/compare/2.0.29...2.0.30) (2020-11-09)
 
 
