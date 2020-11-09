@@ -566,7 +566,8 @@ export class GBDeployer implements IGBDeployer {
 
     const instances = await core.loadInstances();
     await CollectionUtil.asyncForEach(instances, async instance => {
-      this.mountGBKBAssets(`{instance.botId}.gbkb`, instance.botId, `{instance.botId}.gbkb`);
+      this.mountGBKBAssets(`${instance.botId}.gbkb`, 
+        instance.botId, `${instance.botId}.gbkb`);
     });
 
     GBLog.info(`Package deployment done.`);
@@ -578,10 +579,14 @@ export class GBDeployer implements IGBDeployer {
       `/kb/${botId}.gbai/${packageName}/subjects`,
       express.static(urlJoin(filename, 'subjects'))
     );
-    GBServer.globals.server.use(`/kb/${botId}.gbai/${packageName}/assets`, express.static(urlJoin(filename, 'assets')));
-    GBServer.globals.server.use(`/kb/${botId}.gbai/${packageName}/images`, express.static(urlJoin(filename, 'images')));
-    GBServer.globals.server.use(`/kb/${botId}.gbai/${packageName}/audios`, express.static(urlJoin(filename, 'audios')));
-    GBServer.globals.server.use(`/kb/${botId}.gbai/${packageName}/videos`, express.static(urlJoin(filename, 'videos')));
+
+    const gbaiName = `${botId}.gbai`;
+
+    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/assets`, express.static(urlJoin('work', gbaiName, filename, 'assets')));
+    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/images`, express.static(urlJoin('work', gbaiName, filename, 'images')));
+    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/audios`, express.static(urlJoin('work', gbaiName, filename, 'audios')));
+    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/videos`, express.static(urlJoin('work', gbaiName, filename, 'videos')));
+
     GBLog.info(`KB (.gbkb) assets accessible at: /kb/${botId}.gbai/${packageName}.`);
   }
 
