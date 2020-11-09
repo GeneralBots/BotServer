@@ -194,7 +194,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
-        return `sys().set (${$1})`;
+      return `sys().set (${$1})`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
@@ -223,7 +223,6 @@ export class GBVMService extends GBService {
     code = code.replace(/(save)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().save(${$3})\n`;
     });
-
 
     code = `${code}\n%>`;
 
@@ -378,19 +377,22 @@ export class GBVMService extends GBService {
         },
         async step => {
           const cbId = step.activeDialog.state.options.cbId;
-          const promise = min.cbMap[cbId].promise;
 
-          delete min.cbMap[cbId];
-          try {
-            const opts = await promise(step, step.result);
-
-            return await step.replaceDialog('/hear', opts);
-          } catch (error) {
-            GBLog.error(`Error running BASIC code: ${error}`);
-            const locale = step.context.activity.locale;
-            step.context.sendActivity(Messages[locale].very_sorry_about_error);
-
-            return await step.replaceDialog('/ask', { isReturning: true });
+          if (min.cbMap[cbId] !== null) {
+            const promise = min.cbMap[cbId].promise;
+            delete min.cbMap[cbId];
+            try {
+              const opts = await promise(step, step.result);
+              return await step.replaceDialog('/hear', opts);
+            } catch (error) {
+              GBLog.error(`Error running BASIC code: ${error}`);
+              const locale = step.context.activity.locale;
+              step.context.sendActivity(Messages[locale].very_sorry_about_error);
+              return await step.replaceDialog('/ask', { isReturning: true });
+            }
+          } else {
+            GBLog.warn(`BASIC callback dialog called with no map for cbId: ${cbId}`);
+            await step.replaceDialog('/ask', { isReturning: true });
           }
         }
       ])
