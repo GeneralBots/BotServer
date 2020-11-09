@@ -1,3 +1,10 @@
+## [2.0.32](https://github.com/pragmatismo-io/BotServer/compare/2.0.31...2.0.32) (2020-11-09)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fix deployment of assets missing await. ([ddaa8d5](https://github.com/pragmatismo-io/BotServer/commit/ddaa8d5e5d86d01f8214728a790442c440954f25))
+
 ## [2.0.31](https://github.com/pragmatismo-io/BotServer/compare/2.0.30...2.0.31) (2020-11-09)
 
 
