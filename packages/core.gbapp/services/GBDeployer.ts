@@ -564,7 +564,7 @@ export class GBDeployer implements IGBDeployer {
 
     // Then all remaining generalPackages are loaded.
 
-    const instances = core.loadInstances();
+    const instances = await core.loadInstances();
     await CollectionUtil.asyncForEach(instances, async instance => {
       this.mountGBKBAssets(`{instance.botId}.gbkb`, instance.botId, `{instance.botId}.gbkb`);
     });
