@@ -391,9 +391,9 @@ export class GBVMService extends GBService {
               return await step.replaceDialog('/ask', { isReturning: true });
             }
           } else {
-            GBLog.warn(`BASIC callback dialog called with no map for cbId: ${cbId}`);
+            await step.replaceDialog('/ask', { isReturning: true });
           }
-        }
+         }
       ])
     );
   }

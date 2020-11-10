@@ -123,10 +123,10 @@ class SysClass {
         .get();
 
       let document = res.value.filter(m => {
-        return m.name === file;
+        return m.name.toLowerCase() === file.toLowerCase();
       });
 
-      if (document === undefined) {
+      if (!document || document.length === 0) {
         throw `File '${file}' specified on save GBasic command SET not found. Check the .gbdata or the .gbdialog associated.`;
       }
 
@@ -165,7 +165,7 @@ class SysClass {
         .get();
 
       let document = res.value.filter(m => {
-        return m.name === file;
+        return m.name.toLowerCase() === file.toLowerCase();
       });
 
       await client
@@ -174,7 +174,7 @@ class SysClass {
         )
         .post({});
 
-      if (document === undefined) {
+      if (!document || document.length === 0) {
         throw `File '${file}' specified on save GBasic command SAVE not found. Check the .gbdata or the .gbdialog associated.`;
       }
       if (args.length > 27) {
@@ -219,7 +219,7 @@ class SysClass {
       // Performs validation.
 
       let document = res.value.filter(m => {
-        return m.name === file;
+        return m.name.toLowerCase() === file.toLowerCase();
       });
 
       if (!document || document.length === 0) {
@@ -237,7 +237,6 @@ class SysClass {
       let val = results.text[0][0];
       GBLog.info(`BASIC: Getting '${file}' (GET). Value= ${val}.`);
       return val;
-
     } catch (error) {
       GBLog.error(error);
     }
@@ -264,10 +263,10 @@ class SysClass {
       // Performs validation.
 
       let document = res.value.filter(m => {
-        return m.name === file;
+        return m.name.toLowerCase() === file.toLowerCase();
       });
 
-      if (document === undefined) {
+      if (!document || document.length === 0) {
         throw `File '${file}' specified on save GBasic command FIND not found. Check the .gbdata or the .gbdialog associated.`;
       }
       if (args.length > 1) {
@@ -336,10 +335,10 @@ class SysClass {
       // Performs validation.
 
       let document = res.value.filter(m => {
-        return m.name === file;
+        return m.name.toLowerCase() === file.toLowerCase();
       });
 
-      if (document === undefined) {
+      if (!document || document.length === 0) {
         throw `File '${file}' specified on save GBasic command FIND not found. Check the .gbdata or the .gbdialog associated.`;
       }
       if (args.length > 1) {
@@ -360,7 +359,7 @@ class SysClass {
       let columnIndex = 0;
       const header = results.text[0];
       for (; columnIndex < header.length; columnIndex++) {
-        if (header[columnIndex] === columnName) {
+        if (header[columnIndex].toLowerCase() === columnName.toLowerCase()) {
           break;
         }
       }
@@ -368,7 +367,7 @@ class SysClass {
       let array = [];
       let foundIndex = 0;
       for (; foundIndex < results.text.length; foundIndex++) {
-        if (results.text[foundIndex][columnIndex] === value) {
+        if (results.text[foundIndex][columnIndex].toLowerCase() === value.toLowerCase()) {
           let output = {};
           const row = results.text[foundIndex];
           for (let colIndex = 0; colIndex < row.length; colIndex++) {
@@ -538,7 +537,6 @@ export class DialogClass {
 
     // TODO: Choose Fuse with country code or consent IP.
   }
-
 
   public async sendFile(step, filename, caption) {
     if (filename.indexOf('.md') > -1) {
