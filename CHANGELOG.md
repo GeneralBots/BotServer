@@ -1,3 +1,10 @@
+## [2.0.39](https://github.com/pragmatismo-io/BotServer/compare/2.0.38...2.0.39) (2020-11-11)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fix in SEND TO FILE defect. ([ea895c1](https://github.com/pragmatismo-io/BotServer/commit/ea895c142c9982cf8ac34d54f9fadca207070687))
+
 ## [2.0.38](https://github.com/pragmatismo-io/BotServer/compare/2.0.37...2.0.38) (2020-11-11)
 
 
