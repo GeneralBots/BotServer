@@ -1,3 +1,10 @@
+## [2.0.38](https://github.com/pragmatismo-io/BotServer/compare/2.0.37...2.0.38) (2020-11-11)
+
+
+### Bug Fixes
+
+* **core.gbapp:** SEND FILE TO order of VM call prioritized. ([a4c03b8](https://github.com/pragmatismo-io/BotServer/commit/a4c03b834cc693d9bba8bb2cc13fdf2c14c53528))
+
 ## [2.0.37](https://github.com/pragmatismo-io/BotServer/compare/2.0.36...2.0.37) (2020-11-11)
 
 
