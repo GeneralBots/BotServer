@@ -45,7 +45,7 @@ import { Messages } from '../strings';
 import { GBConversationalService } from './GBConversationalService';
 //tslint:disable-next-line:no-submodule-imports
 const vm = require('vm');
-const vb2ts = require('vbscript-to-typescript/dist/converter');
+const vb2ts = require('../../../../vbscript-to-typescript');
 const beautify = require('js-beautify').js;
 var textract = require('textract');
 
@@ -160,7 +160,7 @@ export class GBVMService extends GBService {
     id = sys().getRandomId()
     username = this.getUserName(step);
     mobile = this.getUserMobile(step);
-    ubound = (list) => list.length;
+    ubound = function(list){return list.length};
 
     ${code}
     `;
@@ -369,7 +369,8 @@ export class GBVMService extends GBService {
 
     code = code.replace(/this\./gm, 'await this.');
     code = code.replace(/function/gm, 'async function');
-
+    code = code.replace('ubound = async', 'ubound =');  // TODO: Improve this.
+    
     return code;
   }
 

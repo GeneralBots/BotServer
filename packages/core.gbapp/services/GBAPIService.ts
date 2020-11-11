@@ -242,78 +242,6 @@ class SysClass {
     }
   }
 
-  public async findV1(file: string, ...args): Promise<any> {
-    let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
-
-    let client = MicrosoftGraph.Client.init({
-      authProvider: done => {
-        done(null, token);
-      }
-    });
-    let siteId = process.env.STORAGE_SITE_ID;
-    let libraryId = process.env.STORAGE_LIBRARY;
-    const botId = this.min.instance.botId;
-    const path = `/${botId}.gbai/${botId}.gbdata`;
-
-    try {
-      let res = await client
-        .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
-        .get();
-
-      // Performs validation.
-
-      let document = res.value.filter(m => {
-        return m.name.toLowerCase() === file.toLowerCase();
-      });
-
-      if (!document || document.length === 0) {
-        throw `File '${file}' specified on save GBasic command FIND not found. Check the .gbdata or the .gbdialog associated.`;
-      }
-      if (args.length > 1) {
-        throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
-      }
-
-      // Creates workbook session that will be discarded.
-
-      const filter = args[0].split('=');
-      const columnName = filter[0];
-      const value = filter[1];
-      let results = await client
-        .api(
-          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z100')`
-        )
-        .get();
-
-      let columnIndex = 0;
-      const header = results.text[0];
-      for (; columnIndex < header.length; columnIndex++) {
-        if (header[columnIndex] === columnName) {
-          break;
-        }
-      }
-
-      let foundIndex = 0;
-      for (; foundIndex < results.text.length; foundIndex++) {
-        if (results.text[foundIndex][columnIndex] === value) {
-          break;
-        }
-      }
-      if (foundIndex === results.text.length) {
-        return null;
-      } else {
-        let output = {};
-        const row = results.text[foundIndex];
-        for (let colIndex = 0; colIndex < row.length; colIndex++) {
-          output[header[colIndex]] = row[colIndex];
-        }
-        output['line'] = foundIndex + 1;
-        return output;
-      }
-    } catch (error) {
-      GBLog.error(error);
-    }
-  }
-
   public async find(file: string, ...args): Promise<any> {
     let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
@@ -365,9 +293,14 @@ class SysClass {
       }
 
       let array = [];
+      array.push({});
       let foundIndex = 0;
       for (; foundIndex < results.text.length; foundIndex++) {
+
+        // Filter results action.
+
         if (results.text[foundIndex][columnIndex].toLowerCase() === value.toLowerCase()) {
+          
           let output = {};
           const row = results.text[foundIndex];
           for (let colIndex = 0; colIndex < row.length; colIndex++) {
