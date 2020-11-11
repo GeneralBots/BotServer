@@ -1,3 +1,10 @@
+## [2.0.36](https://github.com/pragmatismo-io/BotServer/compare/2.0.35...2.0.36) (2020-11-10)
+
+
+### Bug Fixes
+
+* **core.gbapp:** End of dialog is now OK. ([8e668c2](https://github.com/pragmatismo-io/BotServer/commit/8e668c28cd811addb5032e29b23cd0674ef6bcd9))
+
 ## [2.0.35](https://github.com/pragmatismo-io/BotServer/compare/2.0.34...2.0.35) (2020-11-09)
 
 
