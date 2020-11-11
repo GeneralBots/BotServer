@@ -1,3 +1,10 @@
+## [2.0.40](https://github.com/pragmatismo-io/BotServer/compare/2.0.39...2.0.40) (2020-11-11)
+
+
+### Bug Fixes
+
+* **core.gbapp:** SEND FILE TO now is priority over SEND FILE when converting tokens in regexp translator. ([9021ac8](https://github.com/pragmatismo-io/BotServer/commit/9021ac89b258d532f32ac21fe8ca61a5e7fcef24))
+
 ## [2.0.39](https://github.com/pragmatismo-io/BotServer/compare/2.0.38...2.0.39) (2020-11-11)
 
 
