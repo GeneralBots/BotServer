@@ -631,8 +631,6 @@ export class KBService implements IGBKBService {
       where: { instanceId: instance.instanceId, packageId: packageId }
     });
     await this.undeployPackageFromStorage(instance, packageId);
-
-    GBLog.info('Remember to call rebuild index manually after package removal.');
   }
 
   private async undeployPackageFromStorage(instance: any, packageId: number) {

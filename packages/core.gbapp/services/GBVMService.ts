@@ -219,6 +219,9 @@ export class GBVMService extends GBService {
     code = code.replace(/(send file)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `sendFile (step, ${$3})\n`;
     });
+    code = code.replace(/(send file to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `sendFileTo (step, ${$3})\n`;
+    });
 
     code = code.replace(/(save)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().save(${$3})\n`;

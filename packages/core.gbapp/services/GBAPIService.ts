@@ -537,12 +537,20 @@ export class DialogClass {
 
     // TODO: Choose Fuse with country code or consent IP.
   }
+  
+  public async sendFileTo(step, mobile, filename, caption) {
+    return await this.internalSendFile(null, mobile, filename, caption);
+  }
 
   public async sendFile(step, filename, caption) {
+    return await this.internalSendFile(step, null, filename, caption);
+  }
+
+  private async internalSendFile(step, mobile, filename, caption) {
     if (filename.indexOf('.md') > -1) {
       GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile.`);
       let md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
-      await this.min.conversationalService.sendMarkdownToMobile(this.min, step, null, md);
+      await this.min.conversationalService.sendMarkdownToMobile(this.min, step, mobile, md);
     } else {
       GBLog.info(`BASIC: Sending the file ${filename} to mobile.`);
       let url = urlJoin(
@@ -554,7 +562,7 @@ export class DialogClass {
         filename
       );
 
-      await this.min.conversationalService.sendFile(this.min, step, null, url, caption);
+      await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
     }
   }
 
