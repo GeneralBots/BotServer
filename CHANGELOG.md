@@ -1,3 +1,10 @@
+## [2.0.37](https://github.com/pragmatismo-io/BotServer/compare/2.0.36...2.0.37) (2020-11-11)
+
+
+### Bug Fixes
+
+* **core.gbapp:** New key word SEND FILE TO added. ([b736f04](https://github.com/pragmatismo-io/BotServer/commit/b736f04103efb37370a040a77c9a5ed523a2703d))
+
 ## [2.0.36](https://github.com/pragmatismo-io/BotServer/compare/2.0.35...2.0.36) (2020-11-10)
 
 
