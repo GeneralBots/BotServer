@@ -355,11 +355,11 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\baskEmail\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.askEmail' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.sendFile' : $1;
-    });
     code = code.replace(/("[^"]*"|'[^']*')|\bsendFileTo\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendFileTo' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.sendFile' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\btransfer\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.transfer' : $1;
