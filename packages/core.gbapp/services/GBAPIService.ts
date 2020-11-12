@@ -292,15 +292,16 @@ class SysClass {
         }
       }
 
+      // As BASIC uses arrays starting with 1 (one) as index, 
+      // a ghost element is added at 0 (zero) position.
+
       let array = [];
-      array.push({});
+      array.push({ 'this is a base 1': 'array' });
       let foundIndex = 0;
       for (; foundIndex < results.text.length; foundIndex++) {
-
         // Filter results action.
 
         if (results.text[foundIndex][columnIndex].toLowerCase() === value.toLowerCase()) {
-          
           let output = {};
           const row = results.text[foundIndex];
           for (let colIndex = 0; colIndex < row.length; colIndex++) {
@@ -311,12 +312,12 @@ class SysClass {
         }
       }
 
-      if (array.length === 0) {
+      if (array.length === 1) {
         GBLog.info(`BASIC: FIND the data set is empty.`);
         return null;
-      } else if (array.length === 1) {
+      } else if (array.length === 2) {
         GBLog.info(`BASIC: FIND single result: ${array[0]}.`);
-        return array[0];
+        return array[1];
       } else {
         GBLog.info(`BASIC: FIND multiple result count: ${array.length}.`);
         return array;
@@ -470,7 +471,7 @@ export class DialogClass {
 
     // TODO: Choose Fuse with country code or consent IP.
   }
-  
+
   public async sendFileTo(step, mobile, filename, caption) {
     return await this.internalSendFile(null, mobile, filename, caption);
   }
