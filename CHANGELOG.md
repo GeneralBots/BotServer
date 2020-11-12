@@ -1,3 +1,10 @@
+## [2.0.41](https://github.com/pragmatismo-io/BotServer/compare/2.0.40...2.0.41) (2020-11-11)
+
+
+### Bug Fixes
+
+* **core.gbapp:** DO WHILE now working. ([785b924](https://github.com/pragmatismo-io/BotServer/commit/785b9243790c4efb9fc0de0cd7b31cbac88ac26f))
+
 ## [2.0.40](https://github.com/pragmatismo-io/BotServer/compare/2.0.39...2.0.40) (2020-11-11)
 
 
