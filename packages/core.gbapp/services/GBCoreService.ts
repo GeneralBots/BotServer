@@ -36,7 +36,7 @@
 
 'use strict';
 
-import { GBLog, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
+import { GBLog, GBMinInstance, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
 import * as fs from 'fs';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Op, Dialect } from 'sequelize';
@@ -50,13 +50,15 @@ import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp
 import { GBKBPackage } from '../../kb.gbapp';
 import { GBSecurityPackage } from '../../security.gbapp';
 import { GBWhatsappPackage } from '../../whatsapp.gblib/index';
-import { GuaribasInstance } from '../models/GBModel';
+import { GuaribasInstance, GuaribasSchedule } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
 import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp';
 import { GBSharePointPackage } from '../../sharepoint.gblib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GBVMService } from './GBVMService';
 
 const opn = require('opn');
+const cron = require('node-cron');
 
 /**
  *  Core service layer.
@@ -98,9 +100,7 @@ export class GBCoreService implements IGBCoreService {
   constructor() {
     this.adminService = new GBAdminService(this);
   }
-  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {
-    
-  }
+  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {}
   /**
    * Gets database config and connect to storage.
    */
@@ -599,5 +599,41 @@ STORAGE_SYNC=true
     }
 
     return value;
+  }
+
+  public async loadSchedules() {
+    GBLog.info(`Loading instances from storage...`);
+    let schedules;
+    try {
+      const options = { where: { state: 'active' } };
+      schedules = await GuaribasSchedule.findAll(options);
+      if (process.env.ENDPOINT_UPDATE === 'true') {
+        await CollectionUtil.asyncForEach(schedules, async item => {
+          GBLog.info(`Updating bot endpoint for ${item.botId}...`);
+          try {
+            const options = {
+              scheduled: true,
+              timezone: 'America/Sao_Paulo'
+            };
+
+            cron.schedule(
+              item.schedule,
+              async () => {
+                let script = item.name;
+                let min: GBMinInstance = GBServer.globals.minInstances.filter(
+                  p => p.instance.instanceId === item.instanceId
+                )[0];
+                GBVMService.callVM(script, min, null, null);
+              },
+              options
+            );
+            GBLog.info(`Running .gbdialog word ${item.name} on:${item.schedule}...`);
+          } catch (error) {}
+        });
+      }
+    } catch (error) {
+      throw new Error(`Cannot schedule: ${error.message}.`);
+    }
+    return schedules;
   }
 }

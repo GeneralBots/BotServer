@@ -352,3 +352,30 @@ export class GuaribasApplications extends Model<GuaribasApplications> {
   @UpdatedAt
   public updatedAt: Date;
 }
+
+
+@Table
+//tslint:disable-next-line:max-classes-per-file
+export class GuaribasSchedule extends Model<GuaribasSchedule> {
+  
+  @Column
+  public name: string;
+
+  @Column
+  public schedule: string;
+
+  @ForeignKey(() => GuaribasInstance)
+  @Column
+  public instanceId: number;
+
+  @BelongsTo(() => GuaribasInstance)
+  public instance: GuaribasInstance;
+
+  @Column
+  @CreatedAt
+  public createdAt: Date;
+
+  @Column
+  @UpdatedAt
+  public updatedAt: Date;
+}
