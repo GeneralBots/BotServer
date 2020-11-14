@@ -1,3 +1,10 @@
+## [2.0.42](https://github.com/pragmatismo-io/BotServer/compare/2.0.41...2.0.42) (2020-11-12)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fixing array base in BASIC. ([91002d1](https://github.com/pragmatismo-io/BotServer/commit/91002d1bac0e10a345cfffa7e8006eed52f56824))
+
 ## [2.0.41](https://github.com/pragmatismo-io/BotServer/compare/2.0.40...2.0.41) (2020-11-11)
 
 
