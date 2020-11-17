@@ -439,7 +439,7 @@ export class KBService implements IGBKBService {
       min,
       answer.content,
       user.systemUser.locale
-        ? user.locale
+        ? user.systemUser.locale
         : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
     );
     GBLog.info(`Translated text(playMarkdown): ${text}.`);

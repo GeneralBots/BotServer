@@ -538,8 +538,7 @@ export class GBConversationalService {
   public async getLanguage(min: GBMinInstance, text: string): Promise<string> {
     return await AzureText.getLocale(
       min.instance.textAnalyticsKey ? min.instance.textAnalyticsKey : min.instance.textAnalyticsKey,
-      min.instance.textAnalyticsEndpoint ? min.instance.textAnalyticsEndpoint : 
-        min.instance.textAnalyticsEndpoint,
+      min.instance.textAnalyticsEndpoint ? min.instance.textAnalyticsEndpoint : min.instance.textAnalyticsEndpoint,
       text
     );
   }
@@ -612,14 +611,16 @@ export class GBConversationalService {
   }
 
   public async prompt(min: GBMinInstance, step: GBDialogStep, text: string) {
-    let sec = new SecService();
-    const member = step.context.activity.from;
-    const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
+    const user = await min.userProfile.get(step.context, {});
+    const systemUser = user.systemUser;
+
     if (text !== null) {
       text = await min.conversationalService.translate(
         min,
         text,
-        user.locale ? user.locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
+        systemUser.locale
+          ? systemUser.locale
+          : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
       GBLog.info(`Translated text(prompt): ${text}.`);
     }
@@ -628,27 +629,27 @@ export class GBConversationalService {
   }
 
   public async sendText(min: GBMinInstance, step, text) {
-    let sec = new SecService();
     const member = step.context.activity.from;
-    const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
+    const user = await min.userProfile.get(step.context, {});
+    const systemUser = user.systemUser;
 
-    if (user) {
-      text = await min.conversationalService.translate(
-        min,
-        text,
-        user.locale ? user.locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
-      );
-      GBLog.info(`Translated text(sendText): ${text}.`);
+    text = await min.conversationalService.translate(
+      min,
+      text,
+      systemUser.locale
+        ? systemUser.locale
+        : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
+    );
+    GBLog.info(`Translated text(sendText): ${text}.`);
 
-      const analytics = new AnalyticsService();
-      const userProfile = await min.userProfile.get(step.context, {});
-      analytics.createMessage(min.instance.instanceId, userProfile.conversation, null, text);
+    const analytics = new AnalyticsService();
+    
+    analytics.createMessage(min.instance.instanceId, user.conversation, null, text);
 
-      if (!isNaN(member.id)) {
-        await min.whatsAppDirectLine.sendToDevice(member.id, text);
-      } else {
-        await step.context.sendActivity(text);
-      }
+    if (!isNaN(member.id)) {
+      await min.whatsAppDirectLine.sendToDevice(member.id, text);
+    } else {
+      await step.context.sendActivity(text);
     }
   }
 

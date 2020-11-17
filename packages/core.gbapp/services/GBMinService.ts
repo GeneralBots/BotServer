@@ -787,14 +787,20 @@ export class GBMinService {
         const systemUser = user.systemUser;
         if (systemUser.locale != locale) {
           let sec = new SecService();
-          await sec.updateUserLocale(systemUser.userSystemId, locale);
+          await sec.updateUserLocale(systemUser.userId, locale);
         }
       }
 
       // Translates the input text if is turned on instance params.
 
       const originalText = context.text;
-      text = await min.conversationalService.translate(min, text, locale);
+      let contentLocale = min.core.getParam<string>(
+        min.instance,
+        'Default Content Language',
+        GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+      );
+
+      text = await min.conversationalService.translate(min, text, contentLocale);
       GBLog.info(`Translated text (processMessageActivity): ${text}.`);
       context.activity.text = text;
       context.activity.originalText = originalText;
