@@ -70,7 +70,7 @@
     "botbuilder-ai": "4.7.0",
     "botbuilder-dialogs": "4.7.0",
     "botframework-connector": "4.7.0",
-    "botlib": "1.6.5",
+    "botlib": "1.6.7",
     "cli-spinner": "0.2.10",
     "core-js": "^3.6.5",
     "dotenv-extended": "2.8.0",

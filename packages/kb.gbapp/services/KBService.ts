@@ -205,8 +205,6 @@ export class KBService implements IGBKBService {
 
       const values = results.result.value;
 
-
-
       if (values && values.length > 0 && values[0]['@search.score'] >= searchScore) {
         const value = await this.getAnswerById(instance.instanceId, values[0].answerId);
         if (value !== null) {
@@ -216,7 +214,6 @@ export class KBService implements IGBKBService {
         }
       }
     } else {
-
       const data = await this.getAnswerByText(instance.instanceId, query);
       if (data) {
         return { answer: data.answer, questionId: data.question.questionId };
@@ -288,12 +285,11 @@ export class KBService implements IGBKBService {
 
     // Finds a valid worksheet because Excel returns empty slots
     // when loading worksheets collection.
-    
+
     let worksheet: any;
     for (let t = 0; t < data._worksheets.length; t++) {
       worksheet = data._worksheets[t];
-      if (worksheet)
-      {
+      if (worksheet) {
         break;
       }
     }
@@ -302,7 +298,6 @@ export class KBService implements IGBKBService {
 
     GBLog.info(`Now importing ${rows.length} rows from tabular file ${filePath}...`);
     return asyncPromise.eachSeries(rows, async line => {
-      
       // Skips the first line.
 
       if (
@@ -313,7 +308,6 @@ export class KBService implements IGBKBService {
         line._cells[3] !== undefined &&
         line._cells[4] !== undefined
       ) {
-      
         // Extracts values from columns in the current line.
 
         const subjectsText = line._cells[0].text;
@@ -437,20 +431,18 @@ export class KBService implements IGBKBService {
     step: GBDialogStep,
     conversationalService: IGBConversationalService
   ) {
-    let sec = new SecService();
-    const member = step.context.activity.from;
-    const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
-    const minBoot = GBServer.globals.minBoot as any;
+    const user = await min.userProfile.get(step.context, {});
 
     // Calls language translator.
 
     let text = await min.conversationalService.translate(
       min,
-      min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
-      min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
       answer.content,
-      user.locale ? user.locale : 'en'
+      user.systemUser.locale
+        ? user.locale
+        : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
     );
+    GBLog.info(`Translated text(playMarkdown): ${text}.`);
 
     // Converts from Markdown to HTML.
 
@@ -492,18 +484,6 @@ export class KBService implements IGBKBService {
     html: string,
     answer: GuaribasAnswer
   ) {
-    let sec = new SecService();
-    const member = step.context.activity.from;
-    const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
-    const minBoot = GBServer.globals.minBoot as any;
-    html = await min.conversationalService.translate(
-      min,
-      min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
-      min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-      html,
-      user.locale ? user.locale : 'pt'
-    );
-
     const locale = step.context.activity.locale;
     await min.conversationalService.sendText(min, step, Messages[locale].will_answer_projector);
     html = html.replace(/src\=\"kb\//gi, `src=\"../kb/`);

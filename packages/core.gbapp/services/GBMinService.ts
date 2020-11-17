@@ -76,8 +76,6 @@ import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsServic
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import fs = require('fs');
 import { GuaribasConversationMessage } from '../../analytics.gblib/models';
-import { GBCoreService } from './GBCoreService';
-import { DialogClass } from './GBAPIService';
 import { GBVMService } from './GBVMService';
 
 /**
@@ -163,7 +161,6 @@ export class GBMinService {
           activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
 
           let sec = new SecService();
-
           let user = await sec.getUserFromSystemId(id);
 
           if (user === null) {
@@ -705,13 +702,13 @@ export class GBMinService {
   }
 
   private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
-    let message: GuaribasConversationMessage;
+    const user = await min.userProfile.get(context, {});
 
+    let message: GuaribasConversationMessage;
     if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
+      const analytics = new AnalyticsService();
       // Adds message to the analytics layer.
 
-      const analytics = new AnalyticsService();
-      const user = await min.userProfile.get(context, {});
       if (user) {
         message = await analytics.createMessage(
           min.instance.instanceId,
@@ -744,10 +741,9 @@ export class GBMinService {
       parts.splice(0, 1);
       let args = parts.join(' ');
 
-      if (cmdOrDialogName === '/call'){
+      if (cmdOrDialogName === '/call') {
         await GBVMService.callVM(args, min, step, this.deployer);
-      }
-      else{
+      } else {
         await step.beginDialog(cmdOrDialogName, { args: args });
       }
     } else if (globalQuit(step.context.activity.locale, context.activity.text)) {
@@ -767,57 +763,48 @@ export class GBMinService {
       );
       await step.beginDialog('/publish', { confirm: true, firstTime: true });
     } else {
+      let text = context.activity.text;
+      text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
+
+      // Spells check the input text before translating.
+
+      text = await min.conversationalService.spellCheck(min, text);
+
+      // Detects user typed language and updates their locale profile if applies.
+
+      let locale = min.core.getParam<string>(
+        min.instance,
+        'Default User Language',
+        GBConfigService.get('DEFAULT_USER_LANGUAGE')
+      );
+      let detectLanguage = min.core.getParam<boolean>(
+        min.instance,
+        'Language Detector',
+        GBConfigService.get('LANGUAGE_DETECTOR') as any
+      );
+      if (detectLanguage) {
+        locale = await min.conversationalService.getLanguage(min, text);
+        const systemUser = user.systemUser;
+        if (systemUser.locale != locale) {
+          let sec = new SecService();
+          await sec.updateUserLocale(systemUser.userSystemId, locale);
+        }
+      }
+
+      // Translates the input text if is turned on instance params.
+
+      const originalText = context.text;
+      text = await min.conversationalService.translate(min, text, locale);
+      GBLog.info(`Translated text (processMessageActivity): ${text}.`);
+      context.activity.text = text;
+      context.activity.originalText = originalText;
+
+      // If there is a dialog in course, continue to the next step.
+
       if (step.activeDialog !== undefined) {
         await step.continueDialog();
       } else {
-        let text = context.activity.text;
-        text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/ig, "");
-
-        // Spells check the input text before translating.
-
-        const key = min.instance.spellcheckerKey ? min.instance.spellcheckerKey : min.instance.spellcheckerKey;
-        if (key) {
-          text = text.charAt(0).toUpperCase() + text.slice(1);
-          const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
-          if (data !== text) {
-            GBLog.info(`Spelling corrected: ${data}`);
-            text = data;
-          }
-        }
-
-        let locale = 'en';
-        if (
-          process.env.TRANSLATOR_DISABLED !== 'true' ||
-          min.core.getParam<boolean>(min.instance, 'Enable Worldwide Translator')
-        ) {
-          const minBoot = GBServer.globals.minBoot as any; // TODO: Switch keys automatically to master/per bot.
-          locale = await AzureText.getLocale(
-            minBoot.instance.textAnalyticsKey ? minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
-            minBoot.instance.textAnalyticsEndpoint
-              ? minBoot.instance.textAnalyticsEndpoint
-              : minBoot.instance.textAnalyticsEndpoint,
-            text
-          );
-        }
-
-        let sec = new SecService();
-        const member = step.context.activity.from;
-
-        const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
-        user.locale = locale;
-        await user.save();
-        const minBoot = GBServer.globals.minBoot as any;
-        const notTranslatedQuery = text;
-        text = await min.conversationalService.translate(
-          min,
-          min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
-          min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-          text,
-          'en'
-        );
-        GBLog.info(`Translated text (1): ${text}.`);
-
-        // Checks if any .gbapp will handle this answer, if not goes to kb.gbapp.
+        // Checks if any .gbapp will handle this answer, if not goes to standard kb.gbapp.
 
         let handled = false;
         await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
@@ -825,7 +812,7 @@ export class GBMinService {
             await e.onExchangeData(min, 'handleAnswer', {
               query: text,
               step: step,
-              notTranslatedQuery: notTranslatedQuery,
+              notTranslatedQuery: originalText,
               message: message ? message['dataValues'] : null,
               user: user ? user['dataValues'] : null
             })
@@ -833,7 +820,6 @@ export class GBMinService {
             handled = true;
           }
         });
-
         if (!handled) {
           await step.beginDialog('/answer', {
             query: text,

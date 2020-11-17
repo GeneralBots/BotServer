@@ -134,10 +134,25 @@ export class GBConfigService {
           value = undefined;
           break;
         case 'DISABLE_WEB':
-          value = "false";
+          value = 'false';
           break;
         case 'STORAGE_ACQUIRE_TIMEOUT':
           value = 40000;
+          break;
+        case 'LOCALE':
+          value = 'en';
+          break;
+        case 'LANGUAGE_DETECTOR':
+          value = false;
+          break;
+        case 'DEFAULT_USER_LANGUAGE':
+          value = 'en';
+          break;
+        case 'DEFAULT_CONTENT_LANGUAGE':
+          value = 'en';
+          break;
+        case 'ENABLE_SPELLING_CHECKER':
+          value = false;
           break;
         default:
           GBLog.warn(`Invalid key on .env file: '${key}'`);

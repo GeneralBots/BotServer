@@ -10,6 +10,7 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
  * Security service layer.
  */
 export class SecService extends GBService {
+  
   public async importSecurityFile(localPath: string, instance: IGBInstance) {
     const security = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'security.json'), 'utf8'));
     await CollectionUtil.asyncForEach(security.groups, async group => {
@@ -79,6 +80,17 @@ export class SecService extends GBService {
 
     user.conversationReference = conversationReference;
     await user.save();
+  }
+
+  public async updateUserLocale(userSystemId: number, locale: any) : Promise<GuaribasUser> {
+    let user = await GuaribasUser.findOne({
+      where: {
+        userSystemId: userSystemId
+      }
+    });
+    user.locale = locale;
+
+    return await user.save();
   }
 
   public async updateUserInstance(userSystemId: string, instanceId: number): Promise<GuaribasUser> {
@@ -171,6 +183,8 @@ export class SecService extends GBService {
     return agentSystemId;
   }
 
+
+  
   public async getUserFromSystemId(systemId: string): Promise<GuaribasUser> {
     return await GuaribasUser.findOne({
       where: {

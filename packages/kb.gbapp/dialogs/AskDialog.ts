@@ -106,56 +106,12 @@ export class AskDialog extends IGBDialog {
       },
       async step => {
         if (step.result) {
-          const translatorEnabled = () => {
-            if (min.instance.params) {
-              const params = JSON.parse(min.instance.params);
-              return params ? params['Enable Worldwide Translator'] === 'TRUE' : false;
-            }
-            return false;
-          }; // TODO: Encapsulate.
-
           let text = step.result;
-          text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/ig, "");
-
-          let locale = 'en';
-          const minBoot = GBServer.globals.minBoot as any;
-          if (process.env.TRANSLATOR_DISABLED !== 'true' && translatorEnabled()) {
-            locale = await AzureText.getLocale(
-              minBoot.instance.textAnalyticsKey ? minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
-              minBoot.instance.textAnalyticsEndpoint
-                ? minBoot.instance.textAnalyticsEndpoint
-                : minBoot.instance.textAnalyticsEndpoint,
-              text
-            );
-          }
+          text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
 
           let sec = new SecService();
           const member = step.context.activity.from;
-
-          // Spells check the input text before translating.
-          text = text.charAt(0).toUpperCase() + text.slice(1);
-          const key = min.instance.spellcheckerKey ? min.instance.spellcheckerKey : min.instance.spellcheckerKey;
-          if (key) {
-            
-            const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
-            if (data !== text) {
-              GBLog.info(`Spelling corrected (3): ${data}`);
-              text = data;
-            }
-          }
-
           const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
-          user.locale = locale;
-          await user.save();
-          const notTranslatedQuery = text;
-          text = await min.conversationalService.translate(
-            min,
-            min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
-            min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-            text,
-            'en'
-          );
-          GBLog.info(`Translated text (3): ${text}.`);
 
           let handled = false;
           await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
@@ -163,7 +119,6 @@ export class AskDialog extends IGBDialog {
               await e.onExchangeData(min, 'handleAnswer', {
                 query: text,
                 step: step,
-                notTranslatedQuery: notTranslatedQuery,
                 message: text,
                 user: user ? user['dataValues'] : null
               })
@@ -189,106 +144,92 @@ export class AskDialog extends IGBDialog {
   private static getAnswerDialog(min: GBMinInstance, service: KBService) {
     return [
       async step => {
+        let answer: GuaribasAnswer = null;
         const user = await min.userProfile.get(step.context, {});
-        let text = step.options.query;
-        text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/ig, "");
 
-        let sec = new SecService();
-        const member = step.context.activity.from;
-        const userDb = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
         const minBoot = GBServer.globals.minBoot as any;
 
-        // Spells check the input text before translating.
-
-        const key = min.instance.spellcheckerKey ? minBoot.instance.spellcheckerKey : min.instance.spellcheckerKey;
-        if (key) {
-          text = text.charAt(0).toUpperCase() + text.slice(1);
-          const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
-          if (data !== text) {
-            GBLog.info(`Spelling corrected: ${data}`);
-            text = data;
-          }
-        }
-
-        // Translates text before sending Search or NLP.
-
-        text = await min.conversationalService.translate(
-          min,
-          min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
-          min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-          text,
-          userDb.locale ? userDb.locale : 'en'
-        );
-
-        GBLog.info(`Translated text (2): ${text}`);
-
+        let text = step.options.query;
+        text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
         if (!text) {
           throw new Error(`/answer being called with no args query text.`);
         }
         const locale = step.context.activity.locale;
+
         // Stops any content on projector.
+
         await min.conversationalService.sendEvent(min, step, 'stop', undefined);
+
         // Handle extra text from FAQ.
+
         if (step.options && step.options.query) {
           text = step.options.query;
         } else if (step.options && step.options.fromFaq) {
           await min.conversationalService.sendText(min, step, Messages[locale].going_answer);
         }
 
-        const searchScore = min.instance.searchScore ? min.instance.searchScore : minBoot.instance.searchScore;
         // Searches KB for the first time.
+
+        const searchScore = min.instance.searchScore ? min.instance.searchScore : minBoot.instance.searchScore;
         user.lastQuestion = text;
         await min.userProfile.set(step.context, user);
 
         const resultsA = await service.ask(min.instance, text, searchScore, user.subjects);
 
         // If there is some result, answer immediately.
+
         if (resultsA !== undefined && resultsA.answer !== undefined) {
           // Saves some context info.
+
           user.isAsking = false;
           user.lastQuestionId = resultsA.questionId;
           await min.userProfile.set(step.context, user);
 
           // Sends the answer to all outputs, including projector.
 
-          return await AskDialog.handleAnswer(service, min, step, resultsA.answer);
-        } else {
-          // Second time running Search, now with no filter.
+          answer = resultsA.answer;
+
+          // If this search was restricted to some subjects...
+        } else if (user.subjects) {
+          // ...second time running Search, now with no filter.
+
           const resultsB = await service.ask(min.instance, text, searchScore, undefined);
+
           // If there is some result, answer immediately.
 
-          if (resultsB !== undefined && resultsB.answer !== undefined) {
+          if (resultsB !== undefined && resultsB.answer !== undefined) 
+          {
             // Saves some context info.
+
             const user2 = await min.userProfile.get(step.context, {});
             user2.isAsking = false;
             user2.lastQuestionId = resultsB.questionId;
             await min.userProfile.set(step.context, user2);
 
             // Informs user that a broader search will be used.
+
             if (user2.subjects.length > 0) {
               await min.conversationalService.sendText(min, step, Messages[locale].wider_answer);
             }
 
-            // TODO: Put braces in this IF statment.
-
-            if (resultsB.answer)
-              // Sends the answer to all outputs, including projector.
-
-              return await AskDialog.handleAnswer(service, min, step, resultsA.answer);
-          } else {
-            if (!(await min.conversationalService.routeNLP(step, min, text))) {
-              await min.conversationalService.sendText(min, step, Messages[locale].did_not_find);
-
-              return await step.replaceDialog('/ask', { isReturning: true });
-            }
+            answer = resultsB.answer;
           }
+        }
+
+        // Answers using Search or NLP responses.
+
+        if (answer) {
+          return await AskDialog.handleAnswer(service, min, step, answer);
+        } else if (!(await min.conversationalService.routeNLP(step, min, text))) {
+          await min.conversationalService.sendText(min, step, Messages[locale].did_not_find);
+          return await step.replaceDialog('/ask', { isReturning: true });
         }
       }
     ];
   }
 
   private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, answer: GuaribasAnswer) {
-    const text = answer.content
+    const text = answer.content;
     if (text.endsWith('.docx')) {
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
       return await GBVMService.callVM(mainName, min, step, this.deployer);

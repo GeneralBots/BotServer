@@ -419,13 +419,12 @@ export class WhatsappDirectLine extends GBService {
     await this.sendFileToDevice(to, url, 'Audio', msg);
   }
 
-  public async sendToDeviceEx(to, msg, locale) {
+  private async sendToDeviceEx(to, text, locale) {
     const minBoot = GBServer.globals.minBoot as any;
 
-    const text = await this.min.conversationalService.translate(this.min,
-      this.min.instance.translatorKey ? this.min.instance.translatorKey : minBoot.instance.translatorKey,
-      this.min.instance.translatorEndpoint ? this.min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
-      msg,
+    text = await minBoot.conversationalService.translate(
+      minBoot,
+      text,
       locale
     );
     await this.sendToDevice(to, text);

@@ -44,12 +44,12 @@ import { Readable } from 'stream';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
-import { CollectionUtil } from 'pragmatismo-io-framework';
-import { WaterfallStep, WaterfallStepContext } from 'botbuilder-dialogs';
 import { MicrosoftAppCredentials } from 'botframework-connector';
+import { GBConfigService } from './GBConfigService';
 const urlJoin = require('url-join');
 const PasswordGenerator = require('strict-password-generator').default;
 const Nexmo = require('nexmo');
+import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
 const { join } = require('path');
 const shell = require('any-shell-escape');
 const { exec } = require('child_process');
@@ -477,7 +477,7 @@ export class GBConversationalService {
 
     let nlp: RecognizerResult;
     try {
-      const saved = step.context.activity.text
+      const saved = step.context.activity.text;
       step.context.activity.text = text;
       nlp = await model.recognize(step.context);
       step.context.activity.text = saved;
@@ -516,7 +516,9 @@ export class GBConversationalService {
         return false;
       }
 
-      GBLog.info(`NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${min.instance.nlpScore}`);
+      GBLog.info(
+        `NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${min.instance.nlpScore}`
+      );
 
       try {
         step.activeDialog.state.options.entities = nlp.entities;
@@ -533,14 +535,39 @@ export class GBConversationalService {
     return false;
   }
 
-  async translate(min: GBMinInstance, key: string, endPoint: string, text: string, language: string): Promise<string> {
+  public async getLanguage(min: GBMinInstance, text: string): Promise<string> {
+    return await AzureText.getLocale(
+      min.instance.textAnalyticsKey ? min.instance.textAnalyticsKey : min.instance.textAnalyticsKey,
+      min.instance.textAnalyticsEndpoint ? min.instance.textAnalyticsEndpoint : 
+        min.instance.textAnalyticsEndpoint,
+      text
+    );
+  }
+
+  public async spellCheck(min: GBMinInstance, text: string): Promise<string> {
+    const key = min.instance.spellcheckerKey ? min.instance.spellcheckerKey : min.instance.spellcheckerKey;
+    if (key) {
+      text = text.charAt(0).toUpperCase() + text.slice(1);
+      const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
+      if (data !== text) {
+        GBLog.info(`Spelling corrected (processMessageActivity): ${data}`);
+        text = data;
+      }
+    }
+
+    return text;
+  }
+
+  public async translate(min: GBMinInstance, text: string, language: string): Promise<string> {
     const translatorEnabled = () => {
       if (min.instance.params) {
         const params = JSON.parse(min.instance.params);
         return params ? params['Enable Worldwide Translator'] === 'TRUE' : false;
       }
       return false;
-    }; // TODO: Encapsulate.
+    };
+    const endPoint = min.instance.translatorEndpoint;
+    const key = min.instance.translatorKey;
 
     if (endPoint === null || !translatorEnabled() || process.env.TRANSLATOR_DISABLED === 'true') {
       return text;
@@ -585,41 +612,34 @@ export class GBConversationalService {
   }
 
   public async prompt(min: GBMinInstance, step: GBDialogStep, text: string) {
-    const minBoot = GBServer.globals.minBoot as any;
-
     let sec = new SecService();
     const member = step.context.activity.from;
     const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
     if (text !== null) {
       text = await min.conversationalService.translate(
         min,
-        min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
-        min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
         text,
-        user.locale ? user.locale : 'en'
+        user.locale ? user.locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
-      GBLog.info(`Translated text(4): ${text}.`);
+      GBLog.info(`Translated text(prompt): ${text}.`);
     }
 
     return await step.prompt('textPrompt', text ? text : {});
   }
 
-  public async sendText(min, step, text) {
+  public async sendText(min: GBMinInstance, step, text) {
     let sec = new SecService();
     const member = step.context.activity.from;
     const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
 
     if (user) {
-      const minBoot = GBServer.globals.minBoot as any;
       text = await min.conversationalService.translate(
         min,
-        min.instance.translatorKey ? min.instance.translatorKey : minBoot.instance.translatorKey,
-        min.instance.translatorEndpoint ? min.instance.translatorEndpoint : minBoot.instance.translatorEndpoint,
         text,
-        user.locale ? user.locale : 'en'
+        user.locale ? user.locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
-      GBLog.info(`Translated text(5): ${text}.`);
-      
+      GBLog.info(`Translated text(sendText): ${text}.`);
+
       const analytics = new AnalyticsService();
       const userProfile = await min.userProfile.get(step.context, {});
       analytics.createMessage(min.instance.instanceId, userProfile.conversation, null, text);
