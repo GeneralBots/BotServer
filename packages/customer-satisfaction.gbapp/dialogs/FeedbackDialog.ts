@@ -138,21 +138,24 @@ export class FeedbackDialog extends IGBDialog {
         },
         async step => {
           const minBoot = GBServer.globals.minBoot as any;
+          const user = await min.userProfile.get(step.context, {});
 
-          const locale = step.context.activity.locale;
           const rate = await AzureText.getSentiment(
-            minBoot.instance.textAnalyticsKey ?
-              minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
-            minBoot.instance.textAnalyticsEndpoint ?
-              minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint,
-            min.conversationalService.getCurrentLanguage(step),
+            minBoot.instance.textAnalyticsKey ?   minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
+            minBoot.instance.textAnalyticsEndpoint ?              minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint,
+            user.systemUser.locale,
             step.result
           );
 
+          const fixedLocale= 'en-US';
           if (rate > 0.5) {
-            await min.conversationalService.sendText(min, step, Messages[locale].glad_you_liked);
+              await min.conversationalService.sendText(min, step, Messages[fixedLocale].glad_you_liked);
           } else {
-            await min.conversationalService.sendText(min, step, Messages[locale].we_will_improve);
+
+            const message = min.core.getParam<string>(min.instance, "Feedback Improve Message",
+              Messages[fixedLocale].we_will_improve); // TODO: Improve to be multi-language.
+            
+            await min.conversationalService.sendText(min, step, message);
           }
 
           return await step.replaceDialog('/ask', { isReturning: true });
