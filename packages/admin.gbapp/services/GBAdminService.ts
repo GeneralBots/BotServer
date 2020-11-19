@@ -218,7 +218,8 @@ export class GBAdminService implements IGBAdminService {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
-    await deployer.undeployPackageFromLocalPath(min.instance, urlJoin(GBDeployer.workFolder, packageName));
+    let localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(packageName));
+    await deployer.undeployPackageFromLocalPath(min.instance, localFolder);
   }
 
   public static isSharePointPath(path: string) {

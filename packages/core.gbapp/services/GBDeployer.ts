@@ -346,7 +346,6 @@ export class GBDeployer implements IGBDeployer {
     }
     GBServer.globals.minService.unmountBot(botId);
     await this.core.deleteInstance(botId);
-    const packageFolder = Path.join(process.env.PWD, 'work', `${botId}.gbai`, packageName);
   }
   public async deployPackageToStorage(instanceId: number, packageName: string): Promise<GuaribasPackage> {
     return GuaribasPackage.create({

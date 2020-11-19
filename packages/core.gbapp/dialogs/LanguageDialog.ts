@@ -59,25 +59,30 @@ export class LanguageDialog extends IGBDialog {
 
       async step => {
         const locale = step.context.activity.locale;
-        
+
         return await min.conversationalService.prompt(min, step,
           Messages[locale].which_language);
-        },
-        async step => {
-          
+      },
+      async step => {
+
         const locale = step.context.activity.locale;
         const user = await min.userProfile.get(step.context, {});
-        
+
         const list = [
           { name: 'english', code: 'en' },
+          { name: 'inglês', code: 'en' },
           { name: 'portuguese', code: 'pt' },
+          { name: 'português', code: 'pt' },
           { name: 'spanish', code: 'es' },
+          { name: 'espanõl', code: 'es' },
           { name: 'german', code: 'de' },
           { name: 'deutsch', code: 'de' }
         ];
         let translatorLocale = null;
+        const text = step.context.activity['originalText'];
+
         await CollectionUtil.asyncForEach(list, async item => {
-          if (GBConversationalService.kmpSearch(step.result, item.name) != -1) {
+          if (GBConversationalService.kmpSearch(text, item.name) != -1) {
             translatorLocale = item.code;
           }
         });
@@ -87,9 +92,9 @@ export class LanguageDialog extends IGBDialog {
 
         await min.userProfile.set(step.context, user);
         await min.conversationalService.sendText(min, step,
-           Messages[locale].language_chosen );
+          Messages[locale].language_chosen);
 
-        return await step.next();
+        await step.replaceDialog('/ask', { firstTime: true });
       }
     ]));
   }

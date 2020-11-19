@@ -353,9 +353,8 @@ export class GBMinService {
         min.instance.authenticatorTenant,
         '/oauth2/authorize'
       );
-      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
-        min.instance.marketplaceId
-      }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.marketplaceId
+        }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
       res.redirect(authorizationUrl);
     });
   }
@@ -728,11 +727,7 @@ export class GBMinService {
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
 
     const simpleLocale = context.activity.locale.substring(0, 2);
-    const hasBadWord = wash.check(simpleLocale, context.activity.text);
-
-    if (hasBadWord) {
-      await step.beginDialog('/pleaseNoBadWords');
-    } else if (isVMCall) {
+    if (isVMCall) {
       await GBVMService.callVM(context.activity.text, min, step, this.deployer);
     } else if (context.activity.text.charAt(0) === '/') {
       let text = context.activity.text;
@@ -758,7 +753,7 @@ export class GBMinService {
       await step.beginDialog('/menu', JSON.parse(context.activity.text));
       // Otherwise, continue to the active dialog in the stack.
     } else if (!(await this.deployer.getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`))) {
-      await step.context.sendActivity(
+      await min.conversationalService.sendText(min, step,
         `Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`
       );
       await step.beginDialog('/publish', { confirm: true, firstTime: true });
@@ -766,7 +761,7 @@ export class GBMinService {
       let text = context.activity.text;
       const originalText = text;
       text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
-      
+
       // Spells check the input text before translating.
 
       text = await min.conversationalService.spellCheck(min, text);
@@ -781,11 +776,12 @@ export class GBMinService {
       let detectLanguage = min.core.getParam<boolean>(
         min.instance,
         'Language Detector',
-        GBConfigService.get('LANGUAGE_DETECTOR') as any
-      );
-      if (detectLanguage) {
+        GBConfigService.getBoolean('LANGUAGE_DETECTOR')
+      ) === 'true';
+      const systemUser = user.systemUser;
+      locale = systemUser.locale;
+      if (detectLanguage || !locale) {
         locale = await min.conversationalService.getLanguage(min, text);
-        const systemUser = user.systemUser;
         if (systemUser.locale != locale) {
           let sec = new SecService();
           user.systemUser = await sec.updateUserLocale(systemUser.userId, locale);
@@ -793,9 +789,15 @@ export class GBMinService {
         }
       }
 
+      const hasBadWord = wash.check(locale, context.activity.text);
+
+      if (hasBadWord) {
+        return await step.beginDialog('/pleaseNoBadWords');
+      }
+  
       // Translates the input text if is turned on instance params.
 
-      
+
       let contentLocale = min.core.getParam<string>(
         min.instance,
         'Default Content Language',

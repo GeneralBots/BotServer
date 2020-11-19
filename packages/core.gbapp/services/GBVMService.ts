@@ -396,7 +396,7 @@ export class GBVMService extends GBService {
             } catch (error) {
               GBLog.error(`Error running BASIC code: ${error}`);
               const locale = step.context.activity.locale;
-              step.context.sendActivity(Messages[locale].very_sorry_about_error);
+              min.conversationalService.sendText(min, step, Messages[locale].very_sorry_about_error);
               return await step.replaceDialog('/ask', { isReturning: true });
             }
           } else {
