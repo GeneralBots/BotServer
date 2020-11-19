@@ -764,8 +764,9 @@ export class GBMinService {
       await step.beginDialog('/publish', { confirm: true, firstTime: true });
     } else {
       let text = context.activity.text;
+      const originalText = text;
       text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
-
+      
       // Spells check the input text before translating.
 
       text = await min.conversationalService.spellCheck(min, text);
@@ -787,13 +788,14 @@ export class GBMinService {
         const systemUser = user.systemUser;
         if (systemUser.locale != locale) {
           let sec = new SecService();
-          await sec.updateUserLocale(systemUser.userId, locale);
+          user.systemUser = await sec.updateUserLocale(systemUser.userId, locale);
+          await min.userProfile.set(step.context, user);
         }
       }
 
       // Translates the input text if is turned on instance params.
 
-      const originalText = context.text;
+      
       let contentLocale = min.core.getParam<string>(
         min.instance,
         'Default Content Language',

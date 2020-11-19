@@ -43,6 +43,7 @@ import { Messages } from '../strings';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { GBServer } from '../../../src/app';
 import { GBConversationalService } from '../services/GBConversationalService';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 /**
  * Dialog for the bot explains about itself.
  */
@@ -58,18 +59,36 @@ export class LanguageDialog extends IGBDialog {
 
       async step => {
         const locale = step.context.activity.locale;
-
-        return await min.conversationalService.prompt (min, step,  
+        
+        return await min.conversationalService.prompt(min, step,
           Messages[locale].which_language);
-      },
-      async step => {
+        },
+        async step => {
+          
+        const locale = step.context.activity.locale;
+        const user = await min.userProfile.get(step.context, {});
+        
+        const list = [
+          { name: 'english', code: 'en' },
+          { name: 'portuguese', code: 'pt' },
+          { name: 'spanish', code: 'es' },
+          { name: 'german', code: 'de' },
+          { name: 'deutsch', code: 'de' }
+        ];
+        let translatorLocale = null;
+        await CollectionUtil.asyncForEach(list, async item => {
+          if (GBConversationalService.kmpSearch(step.result, item.name) != -1) {
+            translatorLocale = item.code;
+          }
+        });
+
         let sec = new SecService();
-        let from = step.context.activity.from.id;
-        const botId = step.result;
-        const instance = await min.core.loadInstanceByBotId(botId);
-        await sec.updateUserInstance(from, instance.instanceId);
-        await min.conversationalService.sendText(min, step, `Opa, vamos lá!`);
-                
+        user.systemUser = await sec.updateUserLocale(user.systemUser.userId, translatorLocale);
+
+        await min.userProfile.set(step.context, user);
+        await min.conversationalService.sendText(min, step,
+           Messages[locale].language_chosen );
+
         return await step.next();
       }
     ]));

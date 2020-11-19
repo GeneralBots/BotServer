@@ -39,6 +39,7 @@
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 import { BroadcastDialog } from './dialogs/BroadcastDialog';
+import { LanguageDialog } from './dialogs/LanguageDialog';
 import { SwitchBotDialog } from './dialogs/SwitchBot';
 import { WelcomeDialog } from './dialogs/WelcomeDialog';
 import { WhoAmIDialog } from './dialogs/WhoAmIDialog';
@@ -78,5 +79,6 @@ export class GBCorePackage implements IGBPackage {
     SwitchBotDialog.setup(min.bot, min);
     DialogClass.setup(min.bot, min);
     BroadcastDialog.setup(min.bot, min);
+    LanguageDialog.setup(min.bot, min);
   }
 }
