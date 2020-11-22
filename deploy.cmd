@@ -111,6 +111,7 @@ IF EXIST "%DEPLOYMENT_TARGET%\deploy\default.gbui\package.json" (
   echo [General Bots Deployer]  Building default.gbui...
   call :ExecuteCmd !NPM_CMD! run build
   IF !ERRORLEVEL! NEQ 0 goto error
+  RMDIR /s /q "%DEPLOYMENT_TARGET%\deploy\default.gbui\node_modules"
   popd
 )
 

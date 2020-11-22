@@ -152,11 +152,10 @@ export class GBVMService extends GBService {
   public convertGBASICToVBS(code: string) {
     // Start and End of VB2TS tags of processing.
 
+
     code = `<%\n
     
     from = this.getFrom(step)
-    today = this.getToday(step)
-    now = this.getNow(step)
     id = sys().getRandomId()
     username = this.getUserName(step);
     mobile = this.getUserMobile(step);
@@ -323,11 +322,14 @@ export class GBVMService extends GBService {
 
       parsedCode = this.handleThisAndAwait(parsedCode);
 
+      parsedCode = parsedCode.replace(/(now)(?=(?:[^"]|"[^"]*")*$)/, 'await this.getNow(step)');
+      parsedCode = parsedCode.replace(/(today)(?=(?:[^"]|"[^"]*")*$)/, 'await this.getToday(step)');
+
       parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true });
       fs.writeFileSync(jsfile, parsedCode);
 
       this.executeJS(min, deployer, parsedCode, mainName);
-      GBLog.info(`[GBVMService] Finished loading of ${filename}`);
+      GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: ${parsedCode}`);
     }
   }
 
@@ -370,7 +372,7 @@ export class GBVMService extends GBService {
     code = code.replace(/this\./gm, 'await this.');
     code = code.replace(/function/gm, 'async function');
     code = code.replace('ubound = async', 'ubound =');  // TODO: Improve this.
-    
+
     return code;
   }
 
@@ -394,15 +396,13 @@ export class GBVMService extends GBService {
               const opts = await promise(step, step.result);
               return await step.replaceDialog('/hear', opts);
             } catch (error) {
-              GBLog.error(`Error running BASIC code: ${error}`);
+              GBLog.error(`Error in BASIC code: ${error}`);
               const locale = step.context.activity.locale;
               min.conversationalService.sendText(min, step, Messages[locale].very_sorry_about_error);
-              return await step.replaceDialog('/ask', { isReturning: true });
             }
-          } else {
-            await step.replaceDialog('/ask', { isReturning: true });
           }
-         }
+          return await step.endDialog();
+        }
       ])
     );
   }

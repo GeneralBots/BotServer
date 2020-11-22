@@ -208,9 +208,6 @@ export class GBConversationalService {
   public static async getTextFromAudioBuffer(speechKey, cloudRegion, buffer, locale): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       try {
-        let subscriptionKey = speechKey;
-        let serviceRegion = cloudRegion;
-
         const oggFile = new Readable();
         oggFile._read = () => {}; // _read is required but you can noop it
         oggFile.push(buffer);

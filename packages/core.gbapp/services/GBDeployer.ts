@@ -541,12 +541,16 @@ export class GBDeployer implements IGBDeployer {
   public setupDefaultGBUI() {
     const root = 'packages/default.gbui';
     const npm = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
-    if (!Fs.existsSync(`${root}/build`)) {
-      GBLog.info(`Preparing default.gbui (it may take some additional time for the first time)...`);
+    if (!Fs.existsSync(`${root}/build`) && process.env.DISABLE_WEB !== 'true'){
+      GBLog.info(`Installing modules default.gbui (It may take a few minutes)...`);
       Fs.writeFileSync(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
       child_process.execSync(`${npm} install`, { cwd: root });
+      GBLog.info(`Transpiling default.gbui...`);
       child_process.execSync(`${npm} run build`, { cwd: root });
+      GBLog.info(`Cleaning default.gbui node_modules...`);
     }
+    const nodeModules = urlJoin(root, 'node_modules');
+    rimraf.sync(nodeModules);
   }
 
   private async deployDataPackages(
@@ -565,7 +569,7 @@ export class GBDeployer implements IGBDeployer {
 
     const instances = await core.loadInstances();
     await CollectionUtil.asyncForEach(instances, async instance => {
-      this.mountGBKBAssets(`${instance.botId}.gbkb`, 
+      this.mountGBKBAssets(`${instance.botId}.gbkb`,
         instance.botId, `${instance.botId}.gbkb`);
     });
 

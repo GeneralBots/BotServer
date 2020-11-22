@@ -169,7 +169,16 @@ export class GBMinService {
               id,
               `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`
             );
-            res.end();
+
+            let startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
+            GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
+            if (startDialog) {
+              req.body.messages[0].body = `/${startDialog}`;
+              await (activeMin as any).whatsAppDirectLine.received(req, res);
+            }
+            else {
+              res.end();
+            }
           } else {
             // User wants to switch bots.
             if (toSwitchMin !== undefined) {
@@ -181,7 +190,14 @@ export class GBMinService {
                 id,
                 `Agora falando com ${activeMin.instance.title}...`
               );
-              res.end();
+              let startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
+              if (startDialog) {
+                GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);                req.body.messages[0].body = `/${startDialog}`;
+                await (activeMin as any).whatsAppDirectLine.received(req, res);
+              }
+              else {
+                res.end();
+              }
             } else {
               activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
               if (activeMin === undefined) {
@@ -794,7 +810,7 @@ export class GBMinService {
       if (hasBadWord) {
         return await step.beginDialog('/pleaseNoBadWords');
       }
-  
+
       // Translates the input text if is turned on instance params.
 
 
