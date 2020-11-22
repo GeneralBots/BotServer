@@ -173,7 +173,7 @@ export class GBMinService {
             let startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
             GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
             if (startDialog) {
-              req.body.messages[0].body = `/${startDialog}`;
+              req.body.messages[0].body = `${startDialog}`;
               await (activeMin as any).whatsAppDirectLine.received(req, res);
             }
             else {
@@ -191,14 +191,15 @@ export class GBMinService {
                 `Agora falando com ${activeMin.instance.title}...`
               );
               let startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
+              GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
               if (startDialog) {
-                GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);                req.body.messages[0].body = `/${startDialog}`;
+                req.body.messages[0].body = `${startDialog}`;
                 await (activeMin as any).whatsAppDirectLine.received(req, res);
               }
               else {
                 res.end();
               }
-            } else {
+              } else {
               activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
               if (activeMin === undefined) {
                 activeMin = GBServer.globals.minBoot;
