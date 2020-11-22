@@ -1,3 +1,10 @@
+## [2.0.46](https://github.com/pragmatismo-io/BotServer/compare/2.0.45...2.0.46) (2020-11-19)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Language improvements tested. ([a618c71](https://github.com/pragmatismo-io/BotServer/commit/a618c7100bd7b2fda7fdeb33a09a66b9c515546e))
+
 ## [2.0.45](https://github.com/pragmatismo-io/BotServer/compare/2.0.44...2.0.45) (2020-11-19)
 
 
