@@ -53,22 +53,22 @@ export class AnalyticsService {
   }
 
   public async updateConversationRate(
-    instanceId: number, 
+    instanceId: number,
     conversationId: number,
     rate: number
   ): Promise<GuaribasConversation> {
-    const options = { where: {} };
-    // TODO: Filter by instanceId: instanceId
-    options.where = {  conversationId: conversationId };
+    const options = { where: { } };
+
+    options.where = { conversationId: conversationId,  instanceId: instanceId };
     const item = await GuaribasConversation.findOne(options);
     item.rate = rate;
-    item.rateDate = new Date();    
+    item.rateDate = new Date();
     return item.save();
   }
 
 
   public async createMessage(
-    instanceId: number, 
+    instanceId: number,
     conversation: GuaribasConversation,
     userId: number,
     content: string

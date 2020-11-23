@@ -44,6 +44,7 @@ import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { GBServer } from '../../../src/app';
+import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 
 /**
  * Dialog for feedback collecting.
@@ -141,20 +142,25 @@ export class FeedbackDialog extends IGBDialog {
           const user = await min.userProfile.get(step.context, {});
 
           const rate = await AzureText.getSentiment(
-            minBoot.instance.textAnalyticsKey ?   minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
-            minBoot.instance.textAnalyticsEndpoint ?              minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint,
+            minBoot.instance.textAnalyticsKey ? minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
+            minBoot.instance.textAnalyticsEndpoint ? minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint,
             user.systemUser.locale,
             step.result
           );
 
-          const fixedLocale= 'en-US';
+          // Updates values to perform Bot Analytics.
+
+          // const analytics = new AnalyticsService();
+          // analytics.updateConversationRate(min.instance.instanceId, user.conversation, rate);
+
+          const fixedLocale = 'en-US';
           if (rate > 0.5) {
-              await min.conversationalService.sendText(min, step, Messages[fixedLocale].glad_you_liked);
+            await min.conversationalService.sendText(min, step, Messages[fixedLocale].glad_you_liked);
           } else {
 
             const message = min.core.getParam<string>(min.instance, "Feedback Improve Message",
               Messages[fixedLocale].we_will_improve); // TODO: Improve to be multi-language.
-            
+
             await min.conversationalService.sendText(min, step, message);
           }
 
