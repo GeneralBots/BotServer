@@ -1,3 +1,12 @@
+## [2.0.47](https://github.com/pragmatismo-io/BotServer/compare/2.0.46...2.0.47) (2020-11-22)
+
+
+### Bug Fixes
+
+* **all:** Now keyword, autostart dialog, prod size optimization. ([a17f21e](https://github.com/pragmatismo-io/BotServer/commit/a17f21e073353f13f1aef18d576298587534bc58))
+* **core.gbapp:** Fixing script name in call. ([6343313](https://github.com/pragmatismo-io/BotServer/commit/634331357916fe69ee65862aee6ff3fed71e59d3))
+* **customer-satisfaction.gbapp:** New param Feedback Improve Message added. ([ec1ec20](https://github.com/pragmatismo-io/BotServer/commit/ec1ec201753e6cf391bb4524e4483bbc42ea01e1))
+
 ## [2.0.46](https://github.com/pragmatismo-io/BotServer/compare/2.0.45...2.0.46) (2020-11-19)
 
 
