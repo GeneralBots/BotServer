@@ -1,3 +1,10 @@
+## [2.0.51](https://github.com/pragmatismo-io/BotServer/compare/2.0.50...2.0.51) (2020-11-26)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Language instance acquisition fixed. ([387b340](https://github.com/pragmatismo-io/BotServer/commit/387b3407f3d646b3435b3d59a551a443bfb7e0bb))
+
 ## [2.0.50](https://github.com/pragmatismo-io/BotServer/compare/2.0.49...2.0.50) (2020-11-26)
 
 
