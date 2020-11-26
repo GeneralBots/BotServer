@@ -1,3 +1,10 @@
+## [2.0.48](https://github.com/pragmatismo-io/BotServer/compare/2.0.47...2.0.48) (2020-11-23)
+
+
+### Bug Fixes
+
+* **analytics.gblib:** Improvements in customer feedback. ([d5f4298](https://github.com/pragmatismo-io/BotServer/commit/d5f42982f61e10e3e6150f71a8fc23cc6c6abf6c))
+
 ## [2.0.47](https://github.com/pragmatismo-io/BotServer/compare/2.0.46...2.0.47) (2020-11-22)
 
 
