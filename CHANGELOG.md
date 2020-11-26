@@ -1,3 +1,10 @@
+## [2.0.49](https://github.com/pragmatismo-io/BotServer/compare/2.0.48...2.0.49) (2020-11-26)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Now and Today are now OK. ([13f9bb3](https://github.com/pragmatismo-io/BotServer/commit/13f9bb3e764e9535e1ac75e94ad17151fe6ecb51))
+
 ## [2.0.48](https://github.com/pragmatismo-io/BotServer/compare/2.0.47...2.0.48) (2020-11-23)
 
 
