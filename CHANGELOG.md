@@ -1,3 +1,10 @@
+## [2.0.50](https://github.com/pragmatismo-io/BotServer/compare/2.0.49...2.0.50) (2020-11-26)
+
+
+### Bug Fixes
+
+* **all:** Language and Spellchecker are now modern. ([3eb8d0a](https://github.com/pragmatismo-io/BotServer/commit/3eb8d0a53f28b81556dd849690298f59b7759c8f))
+
 ## [2.0.49](https://github.com/pragmatismo-io/BotServer/compare/2.0.48...2.0.49) (2020-11-26)
 
 
