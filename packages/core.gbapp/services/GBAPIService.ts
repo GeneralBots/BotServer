@@ -102,6 +102,10 @@ class SysClass {
     await this.min.conversationalService.sendMarkdownToMobile(this.min, null, mobile, message);
   }
 
+  public async sendSmsTo(mobile, message) {
+    await this.min.conversationalService.sendSms(this.min, mobile, message);
+  }
+
   public async set(file: string, address: string, value: any): Promise<any> {
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
     try {

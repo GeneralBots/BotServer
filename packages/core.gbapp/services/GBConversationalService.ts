@@ -145,8 +145,9 @@ export class GBConversationalService {
       });
       // tslint:disable-next-line:no-unsafe-any
       nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, (err, data) => {
-        if (err) {
-          reject(err);
+        if (data.messages[0]['error-text']) {
+          GBLog.error(`BASIC: error sending SMS to ${mobile}: ${data.messages[0]['error-text']}`);
+          reject(data.messages[0]['error-text']);
         } else {
           resolve(data);
         }

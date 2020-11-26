@@ -216,6 +216,10 @@ export class GBVMService extends GBService {
       return `talk (step, ${$3})\n`;
     });
 
+    code = code.replace(/(send sms to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `sys().sendSmsTo (${$3})\n`;
+    });
+
     code = code.replace(/(send file to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `sendFileTo (step, ${$3})\n`;
     });
