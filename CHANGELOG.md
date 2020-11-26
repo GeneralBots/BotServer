@@ -1,3 +1,10 @@
+## [2.0.53](https://github.com/pragmatismo-io/BotServer/compare/2.0.52...2.0.53) (2020-11-26)
+
+
+### Bug Fixes
+
+* **core.gbapp:** SEND SMS fixed. ([508fe9f](https://github.com/pragmatismo-io/BotServer/commit/508fe9fc312512b71503bb8c34c430dfa2361505))
+
 ## [2.0.52](https://github.com/pragmatismo-io/BotServer/compare/2.0.51...2.0.52) (2020-11-26)
 
 
