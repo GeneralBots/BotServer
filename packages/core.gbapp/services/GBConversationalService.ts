@@ -532,8 +532,12 @@ export class GBConversationalService {
   }
 
   public async getLanguage(min: GBMinInstance, text: string): Promise<string> {
+    const key = min.core.getParam<string>(min.instance, 'textAnalyticsKey', null);
+    if (!key) {
+      return process.env.DEFAULT_USER_LANGUAGE;
+    }
     return await AzureText.getLocale(
-      min.core.getParam<string>(min.instance, 'textAnalyticsKey', null),
+      key,
       min.core.getParam<string>(min.instance, 'textAnalyticsEndpoint', null),
       text
     );

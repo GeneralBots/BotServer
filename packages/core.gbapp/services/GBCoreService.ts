@@ -594,7 +594,9 @@ STORAGE_SYNC=true
       value = instance['dataValues'][name];
       if (value === null) {
         const minBoot = GBServer.globals.minBoot as any;
-        value = minBoot.instance.datavalues[name];
+        if (minBoot.instance && minBoot.instance.datavalues){
+          value = minBoot.instance.datavalues[name];
+        }        
       }
     }
 
