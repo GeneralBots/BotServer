@@ -209,7 +209,7 @@ export class GBConversationalService {
     return new Promise<string>(async (resolve, reject) => {
       try {
         const oggFile = new Readable();
-        oggFile._read = () => {}; // _read is required but you can noop it
+        oggFile._read = () => { }; // _read is required but you can noop it
         oggFile.push(buffer);
         oggFile.push(null);
 
@@ -485,9 +485,8 @@ export class GBConversationalService {
 
         return false;
       } else {
-        const msg = `Error calling NLP, check if you have a published model and assigned keys. Error: ${
-          error.statusCode ? error.statusCode : ''
-        } {error.message; }`;
+        const msg = `Error calling NLP, check if you have a published model and assigned keys. Error: ${error.statusCode ? error.statusCode : ''
+          } {error.message; }`;
 
         throw new Error(msg);
       }
@@ -534,17 +533,19 @@ export class GBConversationalService {
 
   public async getLanguage(min: GBMinInstance, text: string): Promise<string> {
     return await AzureText.getLocale(
-      min.instance.textAnalyticsKey ? min.instance.textAnalyticsKey : min.instance.textAnalyticsKey,
-      min.instance.textAnalyticsEndpoint ? min.instance.textAnalyticsEndpoint : min.instance.textAnalyticsEndpoint,
+      min.core.getParam<string>(min.instance, 'textAnalyticsKey', null),
+      min.core.getParam<string>(min.instance, 'textAnalyticsEndpoint', null),
       text
     );
   }
 
   public async spellCheck(min: GBMinInstance, text: string): Promise<string> {
-    const key = min.instance.spellcheckerKey ? min.instance.spellcheckerKey : min.instance.spellcheckerKey;
+    const key =
+      min.core.getParam<string>(min.instance, 'spellcheckerKey', null);
+
     if (key) {
       text = text.charAt(0).toUpperCase() + text.slice(1);
-      const data = await AzureText.getSpelledText(min.instance.spellcheckerKey, text);
+      const data = await AzureText.getSpelledText(key, text);
       if (data !== text) {
         GBLog.info(`Spelling corrected (processMessageActivity): ${data}`);
         text = data;
@@ -640,7 +641,7 @@ export class GBConversationalService {
     GBLog.info(`Translated text(sendText): ${text}.`);
 
     const analytics = new AnalyticsService();
-    
+
     analytics.createMessage(min.instance.instanceId, user.conversation, null, text);
 
     if (!isNaN(member.id)) {
