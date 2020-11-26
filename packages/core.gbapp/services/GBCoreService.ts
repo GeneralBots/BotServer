@@ -590,7 +590,7 @@ STORAGE_SYNC=true
       return new Number(value ? defaultValue : defaultValue ? defaultValue : 0);
     }
 
-    if (instance['dataValues']) {
+    if (instance['dataValues'] && !value) {
       value = instance['dataValues'][name];
       if (value === null) {
         const minBoot = GBServer.globals.minBoot as any;

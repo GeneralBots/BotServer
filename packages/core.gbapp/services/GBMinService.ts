@@ -190,6 +190,7 @@ export class GBMinService {
                 id,
                 `Agora falando com ${activeMin.instance.title}...`
               );
+              
               let startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
               GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
               if (startDialog) {
@@ -199,7 +200,7 @@ export class GBMinService {
               else {
                 res.end();
               }
-              } else {
+            } else {
               activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
               if (activeMin === undefined) {
                 activeMin = GBServer.globals.minBoot;
