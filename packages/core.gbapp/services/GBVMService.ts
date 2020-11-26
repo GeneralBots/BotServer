@@ -320,10 +320,12 @@ export class GBVMService extends GBService {
         code = parsedCode;
       }
 
+     
+     
       parsedCode = this.handleThisAndAwait(parsedCode);
 
-      parsedCode = parsedCode.replace(/(now)(?=(?:[^"]|"[^"]*")*$)/, 'await this.getNow(step)');
-      parsedCode = parsedCode.replace(/(today)(?=(?:[^"]|"[^"]*")*$)/, 'await this.getToday(step)');
+      parsedCode = parsedCode.replace(/(now)(?=(?:[^"]|"[^"]*")*$)/gi, 'await this.getNow(step)');
+      parsedCode = parsedCode.replace(/(today)(?=(?:[^"]|"[^"]*")*$)/gi, 'await this.getToday(step)');
 
       parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true });
       fs.writeFileSync(jsfile, parsedCode);
