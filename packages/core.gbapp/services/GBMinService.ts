@@ -190,7 +190,7 @@ export class GBMinService {
                 id,
                 `Agora falando com ${activeMin.instance.title}...`
               );
-              
+
               let startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
               GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
               if (startDialog) {
@@ -782,8 +782,21 @@ export class GBMinService {
 
       // Spells check the input text before translating.
 
-      text = await min.conversationalService.spellCheck(min, text);
+      const keepText: string = min.core.getParam<string>(
+        min.instance,
+        'Keep Text',
+        null
+      );
 
+      if (keepText) {
+        const list = keepText.split(';');
+        let i = 0;
+        await CollectionUtil.asyncForEach(list, item => {
+          i++;
+          text = text.replace(new RegExp(item.trim(), 'gi'), `KEEPTEXT${i}`);
+        });
+      }
+      text = await min.conversationalService.spellCheck(min, text);
       // Detects user typed language and updates their locale profile if applies.
 
       let locale = min.core.getParam<string>(
@@ -823,6 +836,14 @@ export class GBMinService {
       );
 
       text = await min.conversationalService.translate(min, text, contentLocale);
+      if (keepText) {
+        const list = keepText.split(';');
+        let i = 0;
+        await CollectionUtil.asyncForEach(list, item => {
+          i++;
+          text = text.replace(`KEEPTEXT${i}`, item.trim());
+        });
+      }
       GBLog.info(`Translated text (processMessageActivity): ${text}.`);
       context.activity.text = text;
       context.activity.originalText = originalText;

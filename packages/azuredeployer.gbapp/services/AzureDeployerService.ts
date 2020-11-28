@@ -694,7 +694,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     location: string,
     nlpAppId: string, 
     clEntityId: string,
-    nlpAuthoringKey: string,
+    nlpKey: string,
     data: any,
   ) {
     
@@ -703,7 +703,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     req.url = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/apps/${nlpAppId}/versions/0.1/closedlists/${clEntityId}`;
     req.headers.set('Content-Type', 'application/json');
     req.headers.set('accept-language', '*');
-    req.headers.set('Ocp-Apim-Subscription-Key', nlpAuthoringKey);
+    req.headers.set('Ocp-Apim-Subscription-Key', nlpKey);
     req.body = JSON.stringify(data);
     const httpClient = new ServiceClient();
 

@@ -269,7 +269,7 @@ export class GBDeployer implements IGBDeployer {
       instance.cloudLocation,
       instance.nlpAppId,
       listName,
-      instance.nlpAuthoringKey,
+      instance.nlpKey,
       listData
     );
     if (res.status !== 200) throw res.bodyAsText;
