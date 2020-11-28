@@ -1,3 +1,10 @@
+## [2.0.54](https://github.com/pragmatismo-io/BotServer/compare/2.0.53...2.0.54) (2020-11-28)
+
+
+### Bug Fixes
+
+* **core.gbapp:** NLP key bug fixed after MSFT change of NLP service. ([b901d6b](https://github.com/pragmatismo-io/BotServer/commit/b901d6bd50453b98bfb608d4e9779f96c7ea2034))
+
 ## [2.0.53](https://github.com/pragmatismo-io/BotServer/compare/2.0.52...2.0.53) (2020-11-26)
 
 
