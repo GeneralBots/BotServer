@@ -13,7 +13,7 @@ export const Messages = {
     which_language: "Please, type the language name you would like to talk through.",
     validation_enter_valid_email: "Please enter a valid e-mail."   ,
     language_chosen: "Very good, so let's go..."   ,
-    affirmative_sentences: /^(sim|s|positivo|afirmativo|claro|evidente|sem dúvida|confirmo|confirmar|confirmado|uhum)/i,
+    affirmative_sentences: /^(sim|s|positivo|afirmativo|claro|evidente|sem dúvida|confirmo|confirmar|confirmado|uhum|si|y|yes|sure)/i,
     
   },
   'pt-BR': {
@@ -28,7 +28,7 @@ export const Messages = {
     which_language: "Por favor, digite o idioma que você gostaria de usar para conversarmos.",
     validation_enter_valid_email: "Por favor digite um email válido.",
     language_chosen: "Muito bem, então vamos lá..."   ,
-    affirmative_sentences: /^(sim|s|positivo|afirmativo|claro|evidente|sem dúvida|confirmo|confirmar|confirmado|uhum)/i,
+    affirmative_sentences: /^(sim|s|positivo|afirmativo|claro|evidente|sem dúvida|confirmo|confirmar|confirmado|uhum|si|y|yes|sure)/i,
 
   }
 };

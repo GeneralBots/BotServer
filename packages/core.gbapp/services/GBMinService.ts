@@ -186,18 +186,18 @@ export class GBMinService {
               await sec.updateUserInstance(id, instance.instanceId);
 
               await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
-              await (activeMin as any).whatsAppDirectLine.sendToDevice(
-                id,
-                `Agora falando com ${activeMin.instance.title}...`
-              );
-
               let startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
               GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
+
               if (startDialog) {
                 req.body.messages[0].body = `${startDialog}`;
                 await (activeMin as any).whatsAppDirectLine.received(req, res);
               }
               else {
+                await (activeMin as any).whatsAppDirectLine.sendToDevice(
+                  id,
+                  `Agora falando com ${activeMin.instance.title}...`
+                );
                 res.end();
               }
             } else {
@@ -797,6 +797,14 @@ export class GBMinService {
         });
       }
       text = await min.conversationalService.spellCheck(min, text);
+      if (keepText) {
+        const list = keepText.split(';');
+        let i = 0;
+        await CollectionUtil.asyncForEach(list, item => {
+          i++;
+          text = text.replace(`KEEPTEXT${i}`, item.trim());
+        });
+      }
       // Detects user typed language and updates their locale profile if applies.
 
       let locale = min.core.getParam<string>(
@@ -828,12 +836,28 @@ export class GBMinService {
 
       // Translates the input text if is turned on instance params.
 
+      if (keepText) {
+        const list = keepText.split(';');
+        let i = 0;
+        await CollectionUtil.asyncForEach(list, item => {
+          i++;
+          text = text.replace(new RegExp(item.trim(), 'gi'), `KEEPTEXT${i}`);
+        });
+      }
 
       let contentLocale = min.core.getParam<string>(
         min.instance,
         'Default Content Language',
         GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
       );
+      if (keepText) {
+        const list = keepText.split(';');
+        let i = 0;
+        await CollectionUtil.asyncForEach(list, item => {
+          i++;
+          text = text.replace(new RegExp(item.trim(), 'gi'), `KEEPTEXT${i}`);
+        });
+      }
 
       text = await min.conversationalService.translate(min, text, contentLocale);
       if (keepText) {

@@ -145,9 +145,10 @@ export class GBConversationalService {
       });
       // tslint:disable-next-line:no-unsafe-any
       nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, (err, data) => {
-        if (data.messages[0]['error-text']) {
-          GBLog.error(`BASIC: error sending SMS to ${mobile}: ${data.messages[0]['error-text']}`);
-          reject(data.messages[0]['error-text']);
+        const message = data.messages ? data.messages[0] : {};
+        if (err || message['error-text']) {
+          GBLog.error(`BASIC: error sending SMS to ${mobile}: ${message['error-text']}`);
+          reject(message['error-text']);
         } else {
           resolve(data);
         }
@@ -467,6 +468,9 @@ export class GBConversationalService {
       return false;
     }
 
+    text = text.toLowerCase().replace('who\'s', 'who is');
+    text = text.toLowerCase().replace('what\'s', 'what is');
+    
     const model = new LuisRecognizer({
       applicationId: min.instance.nlpAppId,
       endpointKey: min.instance.nlpKey,

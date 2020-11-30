@@ -468,12 +468,17 @@ export class DialogClass {
         return [year, month, day].join('/');
     }
   }
-
+  public async isAffirmative(step, text) {
+    return text.toLowerCase().match(Messages[step.context.activity.locale].affirmative_sentences);    
+  }
+  
   public async getNow(step) {
-    var d = new Date();
-    return d.getHours() + ':' + d.getMinutes();
+    const nowUTC = new Date();
+    const now = new Date((typeof nowUTC === "string" ?
+      new Date(nowUTC) : 
+      nowUTC).toLocaleString("en-US", {timeZone: process.env.DEFAULT_TIMEZONE}));  
 
-    // TODO: Choose Fuse with country code or consent IP.
+    return now.getHours() + ':' + now.getMinutes();
   }
 
   public async sendFileTo(step, mobile, filename, caption) {
