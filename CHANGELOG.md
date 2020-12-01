@@ -1,3 +1,10 @@
+## [2.0.56](https://github.com/pragmatismo-io/BotServer/compare/2.0.55...2.0.56) (2020-12-01)
+
+
+### Bug Fixes
+
+* **all:** fixed case-insensitivity for BASIC commands. ([b6aba26](https://github.com/pragmatismo-io/BotServer/commit/b6aba266f6e596151dbc573a37ec4f7573dc1710))
+
 ## [2.0.55](https://github.com/pragmatismo-io/BotServer/compare/2.0.54...2.0.55) (2020-11-30)
 
 
