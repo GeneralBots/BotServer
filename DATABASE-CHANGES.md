@@ -60,3 +60,10 @@ ALTER TABLE dbo.GuaribasPackage ADD
 GO
 
 ```
+
+
+# 2.0.56
+
+ALTER TABLE dbo.GuaribasUser ADD
+	hearOnDialog nvarchar(64) NULL
+GO

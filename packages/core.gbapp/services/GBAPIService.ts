@@ -43,7 +43,7 @@ import { GBDeployer } from './GBDeployer';
 const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
 import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+import { SecService } from '../../security.gbapp/services/SecService';
 const request = require('request-promise-native');
 
 /**
@@ -88,6 +88,15 @@ class SysClass {
 
     let data = await request.get(options);
     return data;
+  }
+
+  public async gotoDialog(from: string, dialogName: string) {
+    let sec = new SecService();
+    let user = await sec.getUserFromSystemId(from);
+    if (!user) {
+      user = await sec.ensureUser(this.min.instance.instanceId, from, from, null, 'whatsapp', 'from');
+    }
+    await sec.updateUserHearOnDialog(user.userId, dialogName);
   }
 
   public async wait(seconds: number) {
@@ -246,6 +255,7 @@ class SysClass {
     }
   }
 
+
   public async find(file: string, ...args): Promise<any> {
     let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
@@ -358,6 +368,7 @@ class SysClass {
     );
   }
 
+
   /**
    * Generic function to call any REST API.
    */
@@ -469,14 +480,14 @@ export class DialogClass {
     }
   }
   public async isAffirmative(step, text) {
-    return text.toLowerCase().match(Messages[step.context.activity.locale].affirmative_sentences);    
+    return text.toLowerCase().match(Messages[step.context.activity.locale].affirmative_sentences);
   }
-  
+
   public async getNow(step) {
     const nowUTC = new Date();
     const now = new Date((typeof nowUTC === "string" ?
-      new Date(nowUTC) : 
-      nowUTC).toLocaleString("en-US", {timeZone: process.env.DEFAULT_TIMEZONE}));  
+      new Date(nowUTC) :
+      nowUTC).toLocaleString("en-US", { timeZone: process.env.DEFAULT_TIMEZONE }));
 
     return now.getHours() + ':' + now.getMinutes();
   }
@@ -533,7 +544,7 @@ export class DialogClass {
     return await step.beginDialog('/t');
   }
 
-  public async hear(step, promise, previousResolve) {
+  public async hear(step, promise, previousResolve, kind) {
     function random(low, high) {
       return Math.random() * (high - low) + low;
     }
@@ -541,7 +552,7 @@ export class DialogClass {
     this.min.cbMap[idPromise] = {};
     this.min.cbMap[idPromise].promise = promise;
 
-    const opts = { id: idPromise, previousResolve: previousResolve };
+    const opts = { id: idPromise, previousResolve: previousResolve, kind: kind };
     if (previousResolve !== undefined) {
       previousResolve(opts);
     } else {

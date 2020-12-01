@@ -163,13 +163,21 @@ export class GBMinService {
           let sec = new SecService();
           let user = await sec.getUserFromSystemId(id);
 
-          if (user === null) {
+          if (user === null || user.hearOnDialog) {
             user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, '', 'whatsapp', senderName);
 
-            let startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
+            let startDialog = user.hearOnDialog ?
+              user.hearOnDialog :
+              activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
+
             GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
             if (startDialog) {
               req.body.messages[0].body = `${startDialog}`;
+
+              // Resets HEAR ON DIALOG value to none and passes
+              // current dialog to the direct line.
+
+              await sec.updateUserHearOnDialog(user.userId, null);
               await (activeMin as any).whatsAppDirectLine.received(req, res);
             }
             else {
@@ -759,6 +767,7 @@ export class GBMinService {
         await step.beginDialog(cmdOrDialogName, { args: args });
       }
     } else if (globalQuit(step.context.activity.locale, context.activity.text)) {
+
       // TODO: Hard-code additional languages.
       await step.cancelAllDialogs();
       await min.conversationalService.sendText(min, step, Messages[step.context.activity.locale].canceled);
@@ -768,6 +777,7 @@ export class GBMinService {
       // Checks for /menu JSON signature.
     } else if (context.activity.text.startsWith('{"title"')) {
       await step.beginDialog('/menu', JSON.parse(context.activity.text));
+
       // Otherwise, continue to the active dialog in the stack.
     } else if (
       !(await this.deployer.getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`)) &&
@@ -782,14 +792,14 @@ export class GBMinService {
       const originalText = text;
       text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
 
-      // Spells check the input text before translating.
+      // Spells check the input text before translating,
+      // keeping fixed tokens as specified in Config.
 
       const keepText: string = min.core.getParam<string>(
         min.instance,
         'Keep Text',
         null
       );
-
       if (keepText) {
         const list = keepText.split(';');
         let i = 0;
@@ -807,6 +817,7 @@ export class GBMinService {
           text = text.replace(`KEEPTEXT${i}`, item.trim());
         });
       }
+
       // Detects user typed language and updates their locale profile if applies.
 
       let locale = min.core.getParam<string>(
@@ -830,13 +841,15 @@ export class GBMinService {
         }
       }
 
-      const hasBadWord = wash.check(locale, context.activity.text);
+      // Checks for bad words on input text.
 
+      const hasBadWord = wash.check(locale, context.activity.text);
       if (hasBadWord) {
         return await step.beginDialog('/pleaseNoBadWords');
       }
 
-      // Translates the input text if is turned on instance params.
+      // Translates text into content language, keeping
+      // reserved tokens specified in Config.
 
       if (keepText) {
         const list = keepText.split(';');
@@ -860,7 +873,6 @@ export class GBMinService {
           text = text.replace(new RegExp(item.trim(), 'gi'), `KEEPTEXT${i}`);
         });
       }
-
       text = await min.conversationalService.translate(min, text, contentLocale);
       if (keepText) {
         const list = keepText.split(';');

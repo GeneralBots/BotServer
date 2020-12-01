@@ -91,6 +91,9 @@ export class GuaribasUser extends Model<GuaribasUser> {
   @Column(DataType.TEXT)
   @Column
   conversationReference: string
+
+  @Column(DataType.STRING(64))
+  hearOnDialog: string;
 }
 
 /**

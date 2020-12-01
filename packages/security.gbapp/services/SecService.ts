@@ -91,6 +91,16 @@ export class SecService extends GBService {
     return await user.save();
   }
 
+  public async updateUserHearOnDialog(userId: number, dialogName: string): Promise<GuaribasUser> {
+    let user = await GuaribasUser.findOne({
+      where: {
+        userId: userId
+      }
+    });
+    user.hearOnDialog = dialogName;
+    return await user.save();
+  }
+
   public async updateUserInstance(userSystemId: string, instanceId: number): Promise<GuaribasUser> {
     let user = await GuaribasUser.findOne({
       where: {

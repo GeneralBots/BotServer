@@ -168,6 +168,10 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(hear email)/gi, `email = askEmail()`);
 
+    code = code.replace(/(hear on)(\s)(.*)/gi, ($0, $1, $2, $3) => {
+      return `sys().gotoDialog(${$3})\n`;
+    });
+
     code = code.replace(/(hear)\s*(\w+)/gi, ($0, $1, $2) => {
       return `${$2} = hear()`;
     });
@@ -316,7 +320,15 @@ export class GBVMService extends GBService {
         parsedCode += code.substring(start + match1[0].length + 1, pos + match1[0].length);
         parsedCode += '});\n';
         parsedCode += '}\n';
-        parsedCode += `hear (step, ${promiseName}, resolve);\n`;
+
+
+        let kind = 'general';
+        if (variable === "YES OR NO") {
+          kind = 'yesOrNo';
+        }
+
+
+        parsedCode += `hear (step, ${promiseName}, resolve, '${kind}');\n`;
         parsedCode += code.substring(pos + match1[0].length);
 
         // A interaction will be made for each hear.
@@ -324,8 +336,6 @@ export class GBVMService extends GBService {
         code = parsedCode;
       }
 
-     
-     
       parsedCode = this.handleThisAndAwait(parsedCode);
 
       parsedCode = parsedCode.replace(/(now)(?=(?:[^"]|"[^"]*")*$)/gi, 'await this.getNow(step)');
@@ -335,7 +345,7 @@ export class GBVMService extends GBService {
       fs.writeFileSync(jsfile, parsedCode);
 
       this.executeJS(min, deployer, parsedCode, mainName);
-      GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: ${parsedCode}`);
+      GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${parsedCode}`);
     }
   }
 
@@ -386,20 +396,69 @@ export class GBVMService extends GBService {
     min.dialogs.add(
       new WaterfallDialog('/hear', [
         async step => {
-          step.activeDialog.state.options = {};
-          step.activeDialog.state.options.cbId = (step.options as any).id;
+          step.activeDialog.state.options = step.options;
+          step.activeDialog.state.options.id = (step.options as any).id;
           step.activeDialog.state.options.previousResolve = (step.options as any).previousResolve;
-          GBLog.info('BASIC: Asking for input (HEAR).');
+
+          if (step.options['kind'] === "yesOrNo") {
+
+            GBLog.info('BASIC: Asking for input (HEAR YES OR NO).');
+          }
+          else {
+
+            GBLog.info('BASIC: Asking for input (HEAR).');
+          }
+
           return await min.conversationalService.prompt(min, step, null);
         },
         async step => {
-          const cbId = step.activeDialog.state.options.cbId;
 
-          if (min.cbMap[cbId]) {
-            const promise = min.cbMap[cbId].promise;
-            delete min.cbMap[cbId];
+          const isIntentYes = (locale, utterance) => {
+            return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
+          }
+        
+          let result = step.result;
+          if (step.activeDialog.state.options['boolean']) {
+
+            if (isIntentYes(step.context.locale, step.result)) {
+              result = true;
+            }
+            else {
+              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+            }
+
+          }
+          else if (step.activeDialog.state.options['email']) {
+              // e@e.com
+          }
+          else if (step.activeDialog.state.options['number']) {
+            // MAX and MIN.
+          }
+          else if (step.activeDialog.state.options['date']) {
+            // 12/12/2020 OK
+          }
+          else if (step.activeDialog.state.options['hour']) {
+            // 12:12
+          }
+          else if (step.activeDialog.state.options['money']) {
+            // 23,12
+          }
+          else if (step.activeDialog.state.options['phone']) {
+            // +55 21
+          }
+          else if (step.activeDialog.state.options['zipcode']) {
+            // 12333-222
+          }
+          else if (step.activeDialog.state.options['menu']){
+            // ['drums', 'guitar', 'bass']; kpmSearch
+          }
+
+          const id = step.activeDialog.state.options.id;
+          if (min.cbMap[id]) {
+            const promise = min.cbMap[id].promise;
+            delete min.cbMap[id];
             try {
-              const opts = await promise(step, step.result);
+              const opts = await promise(step, result);
               return await step.replaceDialog('/hear', opts);
             } catch (error) {
               GBLog.error(`Error in BASIC code: ${error}`);
