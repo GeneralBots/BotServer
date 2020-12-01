@@ -1,3 +1,10 @@
+## [2.0.55](https://github.com/pragmatismo-io/BotServer/compare/2.0.54...2.0.55) (2020-11-30)
+
+
+### Bug Fixes
+
+* **core.gbapp:** SMS fix, Timezone on BASIC NOW, Order of welcome msg. fixed. ([18b8bd9](https://github.com/pragmatismo-io/BotServer/commit/18b8bd9bdfded9ada27111f881620cacda4e8ece))
+
 ## [2.0.54](https://github.com/pragmatismo-io/BotServer/compare/2.0.53...2.0.54) (2020-11-28)
 
 
