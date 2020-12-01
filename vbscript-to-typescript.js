@@ -20,7 +20,7 @@ function convert(input, name) {
 exports.convert = convert;
 function convertImports(input, name) {
     var items = [];
-    var result = input.replace(/<!-- #include file="(.*?\/)?(.*?).asp" -->/g, function (input, group1, group2) {
+    var result = input.replace(/<!-- #include file="(.*?\/)?(.*?).asp" -->/gi, function (input, group1, group2) {
         var path = group1 || './';
         var file = "" + path + group2;
         items.push({ name: group2, path: file });
@@ -38,7 +38,7 @@ function convertImports(input, name) {
 }
 exports.convertImports = convertImports;
 function convertCode(input) {
-    var result = input.replace(/<%([^=][\s\S]*?)%>/g, function (input, group1) {
+    var result = input.replace(/<%([^=][\s\S]*?)%>/gi, function (input, group1) {
         var code = group1;
         code = convertComments(code);
         code = convertIfStatements(code);
@@ -54,7 +54,7 @@ function convertCode(input) {
 }
 exports.convertCode = convertCode;
 function convertExpressions(input) {
-    var result = input.replace(/<%=([\s\S]*?)%>/g, function (input, group1) {
+    var result = input.replace(/<%=([\s\S]*?)%>/gi, function (input, group1) {
         var content = convertPRec(group1);
         content = convertPLan(content);
         return "${" + content + "}";
@@ -63,7 +63,7 @@ function convertExpressions(input) {
 }
 exports.convertExpressions = convertExpressions;
 function convertStrings(input) {
-    var result = input.replace(/%>([\s\S]+?)<%/g, "\nResponse.Write(`$1`);\n");
+    var result = input.replace(/%>([\s\S]+?)<%/gi, "\nResponse.Write(`$1`);\n");
     // Entire document is a string
     if (result.indexOf("<%") === -1) {
         result = "Response.Write(`" + result + "`);";
@@ -85,72 +85,72 @@ function convertStrings(input) {
 exports.convertStrings = convertStrings;
 function convertComments(input) {
     var result = '';
-    var splitted = input.split(/(".*")/gm);
+    var splitted = input.split(/(".*")/gim);
     for (var _i = 0, splitted_1 = splitted; _i < splitted_1.length; _i++) {
         var part = splitted_1[_i];
         if (part.indexOf("\"") === 0) {
             result += part;
         }
         else {
-            result += part.replace(/'/g, "//");
+            result += part.replace(/'/gi, "//");
         }
     }
     return result;
 }
 exports.convertComments = convertComments;
 function convertIfStatements(input) {
-    var result = input.replace(/if +(.*?) +then/g, function (input, group1) {
+    var result = input.replace(/if +(.*?) +then/gi, function (input, group1) {
         var condition = convertConditions(group1);
         return "\nif (" + condition + ") {\n";
     });
-    result = result.replace(/end if/g, "\n}\n");
-    result = result.replace(/else(?!{)/g, "\n}\nelse {\n");
+    result = result.replace(/end if/gi, "\n}\n");
+    result = result.replace(/else(?!{)/gi, "\n}\nelse {\n");
     return result;
 }
 exports.convertIfStatements = convertIfStatements;
 function convertSwitchStatements(input) {
-    var result = input.replace(/select case +(.*)/g, "\nswitch ($1) {\n");
-    result = result.replace(/end select/g, "\n}\n");
+    var result = input.replace(/select case +(.*)/gi, "\nswitch ($1) {\n");
+    result = result.replace(/end select/gi, "\n}\n");
     return result;
 }
 exports.convertSwitchStatements = convertSwitchStatements;
 function convertFunctions(input) {
-    var result = input.replace(/function +(.*)\((.*)\)/g, "\n$1 = ($2) => {\n");
-    result = result.replace(/end function/g, "\n}\n");
+    var result = input.replace(/function +(.*)\((.*)\)/gi, "\n$1 = ($2) => {\n");
+    result = result.replace(/end function/gi, "\n}\n");
     return result;
 }
 exports.convertFunctions = convertFunctions;
 function convertForStatements(input) {
-    var result = input.replace(/for +(.*to.*)/g, "\nfor ($1) {\n");
-    result = result.replace(/^ *next *$/gm, "}\n");
+    var result = input.replace(/for +(.*to.*)/gi, "\nfor ($1) {\n");
+    result = result.replace(/^ *next *$/gim, "}\n");
     return result;
 }
 exports.convertForStatements = convertForStatements;
 function convertConditions(input) {
-    var result = input.replace(/ +and +/g, " && ");
-    result = result.replace(/ +or +/g, " || ");
-    result = result.replace(/ +<> +/g, " !== ");
-    result = result.replace(/ += +/g, " === ");
+    var result = input.replace(/ +and +/gi, " && ");
+    result = result.replace(/ +or +/gi, " || ");
+    result = result.replace(/ +<> +/gi, " !== ");
+    result = result.replace(/ += +/gi, " === ");
     return result;
 }
 exports.convertConditions = convertConditions;
 function convertLoops(input) {
-    var result = input.replace(/do while +(.*)/g, function (input, group1) {
+    var result = input.replace(/do while +(.*)/gi, function (input, group1) {
         var condition = convertConditions(group1);
         return "\nwhile (" + condition + ") {\n";
     });
     
-    result = result.replace(/^ *loop *$/gm, "}\n");
+    result = result.replace(/^ *loop *$/gim, "}\n");
     return result;
 }
 exports.convertLoops = convertLoops;
 function convertPRec(input) {
-    var result = input.replace(/(p_rec\("\S+?"\))/g, "$1.Value");
+    var result = input.replace(/(p_rec\("\S+?"\))/gi, "$1.Value");
     return result;
 }
 exports.convertPRec = convertPRec;
 function convertPLan(input) {
-    var result = input.replace(/(l_\S+?)\(p_lan\)/g, "$1[p_lan]");
+    var result = input.replace(/(l_\S+?)\(p_lan\)/gi, "$1[p_lan]");
     return result;
 }
 exports.convertPLan = convertPLan;

@@ -388,7 +388,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     GBLog.info(`Deploying Bot Storage...`);
     const administratorLogin = `sa${GBAdminService.getRndReadableIdentifier()}`;
     const administratorPassword = GBAdminService.getRndPassword();
-    const storageServer = `${name.toLowerCase()}-storage-server`;
+    const storageServer = `${name.toLowerCase()}-storage-server.database.windows.net`;
     const storageName = `${name}-storage`;
     await this.createStorageServer(name, storageServer, administratorLogin,
       administratorPassword, storageServer, instance.cloudLocation
@@ -416,11 +416,12 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.speechEndpoint = speech.endpoint;
     instance.speechKey = keys.key1;
 
-    GBLog.info(`Deploying SpellChecker...`);
-    const spellChecker = await this.createSpellChecker(name, `${name}-spellchecker`);
-    keys = await this.cognitiveClient.accounts.listKeys(name, spellChecker.name);
-    instance.spellcheckerKey = keys.key1;
-    instance.spellcheckerEndpoint = spellChecker.endpoint;
+    // TODO: https://github.com/Azure/azure-rest-api-specs/issues/11460
+    // GBLog.info(`Deploying SpellChecker...`);
+    // const spellChecker = await this.createSpellChecker(name, `${name}-spellchecker`);
+    // keys = await this.cognitiveClient.accounts.listKeys(name, spellChecker.name);
+    // instance.spellcheckerKey = keys.key1;
+    // instance.spellcheckerEndpoint = spellChecker.endpoint;
 
     GBLog.info(`Deploying Text Analytics...`);
     const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);

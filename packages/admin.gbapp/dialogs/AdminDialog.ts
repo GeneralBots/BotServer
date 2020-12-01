@@ -172,7 +172,7 @@ export class AdminDialog extends IGBDialog {
               await min.conversationalService.sendText(min, step, Messages[locale].finished_working);
             }
           } catch (error) {
-            await min.conversationalService.sendText(min, step, error.message?error.message: error);
+            await min.conversationalService.sendText(min, step, error.message ? error.message : error);
           }
           await step.replaceDialog('/ask', { isReturning: true });
         }
@@ -346,6 +346,11 @@ export class AdminDialog extends IGBDialog {
         async step => {
           step.activeDialog.state.authenticatorAuthorityHostUrl = step.result;
 
+          min.instance.authenticatorTenant =
+            step.activeDialog.state.authenticatorTenant;
+          min.instance.authenticatorAuthorityHostUrl =
+            step.activeDialog.state.authenticatorAuthorityHostUrl;
+
           await min.adminService.updateSecurityInfo(
             min.instance.instanceId,
             step.activeDialog.state.authenticatorTenant,
@@ -358,13 +363,12 @@ export class AdminDialog extends IGBDialog {
 
           min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
 
-          const url = `https://login.microsoftonline.com/${
-            step.activeDialog.state.authenticatorTenant
-          }/oauth2/authorize?client_id=${min.instance.marketplaceId}&response_type=code&redirect_uri=${urlJoin(
-            min.instance.botEndpoint,
-            min.instance.botId,
-            '/token'
-          )}&state=${state}&response_mode=query`;
+          const url = `https://login.microsoftonline.com/${step.activeDialog.state.authenticatorTenant
+            }/oauth2/authorize?client_id=${min.instance.marketplaceId}&response_type=code&redirect_uri=${urlJoin(
+              min.instance.botEndpoint,
+              min.instance.botId,
+              '/token'
+            )}&state=${state}&response_mode=query`;
 
           await min.conversationalService.sendText(min, step, Messages[locale].consent(url));
 

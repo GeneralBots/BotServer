@@ -165,10 +165,6 @@ export class GBMinService {
 
           if (user === null) {
             user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, '', 'whatsapp', senderName);
-            await (activeMin as any).whatsAppDirectLine.sendToDevice(
-              id,
-              `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`
-            );
 
             let startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
             GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
@@ -177,6 +173,10 @@ export class GBMinService {
               await (activeMin as any).whatsAppDirectLine.received(req, res);
             }
             else {
+              await (activeMin as any).whatsAppDirectLine.sendToDevice(
+                id,
+                `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`
+              );
               res.end();
             }
           } else {
@@ -744,7 +744,6 @@ export class GBMinService {
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
 
-    const simpleLocale = context.activity.locale.substring(0, 2);
     if (isVMCall) {
       await GBVMService.callVM(context.activity.text, min, step, this.deployer);
     } else if (context.activity.text.charAt(0) === '/') {
@@ -770,7 +769,10 @@ export class GBMinService {
     } else if (context.activity.text.startsWith('{"title"')) {
       await step.beginDialog('/menu', JSON.parse(context.activity.text));
       // Otherwise, continue to the active dialog in the stack.
-    } else if (!(await this.deployer.getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`))) {
+    } else if (
+      !(await this.deployer.getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`)) &&
+      process.env.GBKB_ENABLE_AUTO_PUBLISH === "true"
+    ) {
       await min.conversationalService.sendText(min, step,
         `Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`
       );

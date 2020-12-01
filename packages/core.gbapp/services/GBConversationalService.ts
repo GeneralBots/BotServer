@@ -533,6 +533,10 @@ export class GBConversationalService {
       }
     }
 
+    GBLog.info(
+      `NLP NOT called: score: ${score} > required (nlpScore): ${min.instance.nlpScore}`
+    );
+
     return false;
   }
 
