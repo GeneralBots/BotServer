@@ -1,3 +1,10 @@
+## [2.0.57](https://github.com/pragmatismo-io/BotServer/compare/2.0.56...2.0.57) (2020-12-01)
+
+
+### Bug Fixes
+
+* **core.gbapp:** New HEAR possibilities coded. ([797af37](https://github.com/pragmatismo-io/BotServer/commit/797af37b816ae31610e5aa32bbd055f61c899258))
+
 ## [2.0.56](https://github.com/pragmatismo-io/BotServer/compare/2.0.55...2.0.56) (2020-12-01)
 
 
