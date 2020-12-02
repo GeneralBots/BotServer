@@ -482,6 +482,9 @@ export class DialogClass {
   public async isAffirmative(step, text) {
     return text.toLowerCase().match(Messages[step.context.activity.locale].affirmative_sentences);
   }
+  public async exit(step) {
+    await step.endDialog();
+  }
 
   public async getNow(step) {
     const nowUTC = new Date();

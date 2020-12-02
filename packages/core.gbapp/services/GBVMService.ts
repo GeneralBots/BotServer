@@ -212,6 +212,10 @@ export class GBVMService extends GBService {
       return `transfer (step)\n`;
     });
 
+    code = code.replace(/(exit)/gi, () => {
+      return `exit (step)\n`;
+    });
+
     code = code.replace(/(talk to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().talkTo(${$3})\n`;
     });
@@ -381,6 +385,9 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\btransfer\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.transfer' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bexit\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.exit' : $1;
     });
 
     // await insertion.

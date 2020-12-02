@@ -93,6 +93,8 @@ export class AskDialog extends IGBDialog {
           text = Messages[locale].ask_first_time;
         } else if (step.options && step.options.isReturning) {
           text = Messages[locale].anything_else;
+        } else if (step.options && step.options.emptyPrompt) {
+          text = "";
         } else if (user.subjects.length > 0) {
           text = Messages[locale].which_question;
         } else {
