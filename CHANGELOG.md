@@ -1,3 +1,10 @@
+## [2.0.58](https://github.com/pragmatismo-io/BotServer/compare/2.0.57...2.0.58) (2020-12-02)
+
+
+### Bug Fixes
+
+* **core.gbapp:** EXIT keyword. ([3906c3d](https://github.com/pragmatismo-io/BotServer/commit/3906c3de53cda54cc7630bc0372cc12bfcdb5f03))
+
 ## [2.0.57](https://github.com/pragmatismo-io/BotServer/compare/2.0.56...2.0.57) (2020-12-01)
 
 
