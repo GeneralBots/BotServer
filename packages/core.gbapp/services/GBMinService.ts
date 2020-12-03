@@ -800,24 +800,29 @@ export class GBMinService {
         'Keep Text',
         null
       );
-      if (keepText) {
-        const list = keepText.split(';');
+
+      let keepTextList = [];
+      
+      if (keepTextList) {
+        keepTextList = keepTextList.concat(keepText.split(';'));
+      }
+
+      await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+        const result = await e.onExchangeData(min, 'getKeepText', {});
+        if (result) {
+          keepTextList = keepTextList.concat(result);
+        }
+      });
+
+      if (keepTextList) {
         let i = 0;
-        await CollectionUtil.asyncForEach(list, item => {
+        await CollectionUtil.asyncForEach(keepTextList, item => {
           i++;
           text = text.replace(new RegExp(item.trim(), 'gi'), `KEEPTEXT${i}`);
         });
       }
       text = await min.conversationalService.spellCheck(min, text);
-      if (keepText) {
-        const list = keepText.split(';');
-        let i = 0;
-        await CollectionUtil.asyncForEach(list, item => {
-          i++;
-          text = text.replace(`KEEPTEXT${i}`, item.trim());
-        });
-      }
-
+   
       // Detects user typed language and updates their locale profile if applies.
 
       let locale = min.core.getParam<string>(
@@ -851,38 +856,24 @@ export class GBMinService {
       // Translates text into content language, keeping
       // reserved tokens specified in Config.
 
-      if (keepText) {
-        const list = keepText.split(';');
-        let i = 0;
-        await CollectionUtil.asyncForEach(list, item => {
-          i++;
-          text = text.replace(new RegExp(item.trim(), 'gi'), `KEEPTEXT${i}`);
-        });
-      }
-
       let contentLocale = min.core.getParam<string>(
         min.instance,
         'Default Content Language',
         GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
       );
-      if (keepText) {
-        const list = keepText.split(';');
-        let i = 0;
-        await CollectionUtil.asyncForEach(list, item => {
-          i++;
-          text = text.replace(new RegExp(item.trim(), 'gi'), `KEEPTEXT${i}`);
-        });
-      }
       text = await min.conversationalService.translate(min, text, contentLocale);
-      if (keepText) {
-        const list = keepText.split(';');
+      GBLog.info(`Translated text (processMessageActivity): ${text}.`);
+
+      if (keepTextList) {
         let i = 0;
-        await CollectionUtil.asyncForEach(list, item => {
+        await CollectionUtil.asyncForEach(keepTextList, item => {
           i++;
-          text = text.replace(`KEEPTEXT${i}`, item.trim());
+          text = text.replace(new RegExp(`\\bKEEPTEXT${i}\\b`, 'gi'), item.trim());
         });
       }
-      GBLog.info(`Translated text (processMessageActivity): ${text}.`);
+
+      GBLog.info(`Final text ready for NLP/Search/.gbapp: ${text}.`);
+
       context.activity.text = text;
       context.activity.originalText = originalText;
 
