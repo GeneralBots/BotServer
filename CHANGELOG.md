@@ -1,3 +1,10 @@
+## [2.0.59](https://github.com/pragmatismo-io/BotServer/compare/2.0.58...2.0.59) (2020-12-03)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Calls to Spellchecker and Translator fixed. ([0f39343](https://github.com/pragmatismo-io/BotServer/commit/0f393431ec422e6066ea1185fb5fe9c6aee53c61))
+
 ## [2.0.58](https://github.com/pragmatismo-io/BotServer/compare/2.0.57...2.0.58) (2020-12-02)
 
 
