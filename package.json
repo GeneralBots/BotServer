@@ -1,6 +1,6 @@
 {
   "name": "botserver",
-  "version": "2.0.58",
+  "version": "2.0.59",
   "description": "General Bot Community Edition open-core server.",
   "main": "./boot.js",
   "bugs": "https://github.com/pragmatismo-io/BotServer/issues",
