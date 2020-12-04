@@ -77,6 +77,7 @@ import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirect
 import fs = require('fs');
 import { GuaribasConversationMessage } from '../../analytics.gblib/models';
 import { GBVMService } from './GBVMService';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 
 /**
  * Minimal service layer for a bot.
@@ -802,7 +803,7 @@ export class GBMinService {
       );
 
       let keepTextList = [];
-      
+      const replacementToken = GBAdminService['getNumberIdentifier']();
       if (keepTextList) {
         keepTextList = keepTextList.concat(keepText.split(';'));
       }
@@ -818,7 +819,7 @@ export class GBMinService {
         let i = 0;
         await CollectionUtil.asyncForEach(keepTextList, item => {
           i++;
-          text = text.replace(new RegExp(item.trim(), 'gi'), `KEEPTEXT${i}`);
+          text = text.replace(new RegExp(item.trim(), 'gi'), `${replacementToken}${i}`);
         });
       }
       text = await min.conversationalService.spellCheck(min, text);
@@ -868,7 +869,7 @@ export class GBMinService {
         let i = 0;
         await CollectionUtil.asyncForEach(keepTextList, item => {
           i++;
-          text = text.replace(new RegExp(`\\bKEEPTEXT${i}\\b`, 'gi'), item.trim());
+          text = text.replace(new RegExp(`\\b${replacementToken}${i}\\b`, 'gi'), item.trim());
         });
       }
 

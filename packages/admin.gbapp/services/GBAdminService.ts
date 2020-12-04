@@ -108,7 +108,7 @@ export class GBAdminService implements IGBAdminService {
       lowerCaseAlpha: true,
       number: true,
       specialCharacter: true,
-      minimumLength: 12,
+      minimumLength: 14,
       maximumLength: 14
     };
     let password = passwordGenerator.generatePassword(options);
@@ -124,7 +124,21 @@ export class GBAdminService implements IGBAdminService {
       lowerCaseAlpha: true,
       number: false,
       specialCharacter: false,
-      minimumLength: 12,
+      minimumLength: 14,
+      maximumLength: 14
+    };
+
+    return passwordGenerator.generatePassword(options);
+  }
+
+  public static getNumberIdentifier() {
+    const passwordGenerator = new PasswordGenerator();
+    const options = {
+      upperCaseAlpha: false,
+      lowerCaseAlpha: false,
+      number: true,
+      specialCharacter: false,
+      minimumLength: 14,
       maximumLength: 14
     };
 
@@ -226,7 +240,7 @@ export class GBAdminService implements IGBAdminService {
     return path.indexOf('sharepoint.com') > 0;
   }
 
-  public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void> {}
+  public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void> { }
   public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: IGBDeployer) {
     const packageName = text.split(' ')[1];
 

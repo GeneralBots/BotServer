@@ -470,7 +470,7 @@ export class GBConversationalService {
 
     text = text.toLowerCase().replace('who\'s', 'who is');
     text = text.toLowerCase().replace('what\'s', 'what is');
-    
+
     const model = new LuisRecognizer({
       applicationId: min.instance.nlpAppId,
       endpointKey: min.instance.nlpKey,
@@ -640,21 +640,26 @@ export class GBConversationalService {
   }
 
   public async sendText(min: GBMinInstance, step, text) {
+    await this['sendTextWithOptions'](min, step, text, true);
+  }
+
+  public async sendTextWithOptions(min: GBMinInstance, step, text, translate) {
     const member = step.context.activity.from;
     const user = await min.userProfile.get(step.context, {});
     const systemUser = user.systemUser;
 
-    text = await min.conversationalService.translate(
-      min,
-      text,
-      systemUser.locale
-        ? systemUser.locale
-        : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
-    );
-    GBLog.info(`Translated text(sendText): ${text}.`);
+    if (translate) {
+      text = await min.conversationalService.translate(
+        min,
+        text,
+        systemUser.locale
+          ? systemUser.locale
+          : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
+      );
+      GBLog.info(`Translated text(sendText): ${text}.`);
+    }
 
     const analytics = new AnalyticsService();
-
     analytics.createMessage(min.instance.instanceId, user.conversation, null, text);
 
     if (!isNaN(member.id)) {
