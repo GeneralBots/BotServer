@@ -1,3 +1,10 @@
+## [2.0.61](https://github.com/pragmatismo-io/BotServer/compare/2.0.60...2.0.61) (2020-12-05)
+
+
+### Bug Fixes
+
+* **core.gbapp:** NLP automation is fully tested. ([2873c5c](https://github.com/pragmatismo-io/BotServer/commit/2873c5c07833bc32446af97504cde71efbac6795))
+
 ## [2.0.60](https://github.com/pragmatismo-io/BotServer/compare/2.0.59...2.0.60) (2020-12-04)
 
 
