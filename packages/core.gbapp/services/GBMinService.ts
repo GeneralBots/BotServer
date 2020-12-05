@@ -803,10 +803,12 @@ export class GBMinService {
       );
 
       let keepTextList = [];
-      const replacementToken = GBAdminService['getNumberIdentifier']();
+
       if (keepTextList) {
         keepTextList = keepTextList.concat(keepText.split(';'));
       }
+
+      let replacements = [];
 
       await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
         const result = await e.onExchangeData(min, 'getKeepText', {});
@@ -818,12 +820,16 @@ export class GBMinService {
       if (keepTextList) {
         let i = 0;
         await CollectionUtil.asyncForEach(keepTextList, item => {
-          i++;
-          text = text.replace(new RegExp(item.trim(), 'gi'), `${replacementToken}${i}`);
+          if (text.indexOf(item) != -1) {
+            const replacementToken = GBAdminService['getNumberIdentifier']();
+            replacements[i] = { text: item, replacementToken: replacementToken };
+            i++;
+            text = text.replace(new RegExp(item.trim(), 'gi'), `${replacementToken}`);
+          }
         });
       }
       text = await min.conversationalService.spellCheck(min, text);
-   
+
       // Detects user typed language and updates their locale profile if applies.
 
       let locale = min.core.getParam<string>(
@@ -867,9 +873,9 @@ export class GBMinService {
 
       if (keepTextList) {
         let i = 0;
-        await CollectionUtil.asyncForEach(keepTextList, item => {
+        await CollectionUtil.asyncForEach(replacements, item => {
           i++;
-          text = text.replace(new RegExp(`\\b${replacementToken}${i}\\b`, 'gi'), item.trim());
+          text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
         });
       }
 

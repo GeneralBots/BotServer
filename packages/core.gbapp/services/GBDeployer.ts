@@ -349,7 +349,7 @@ export class GBDeployer implements IGBDeployer {
     await this.core.deleteInstance(botId);
   }
   public async deployPackageToStorage(instanceId: number, packageName: string): Promise<GuaribasPackage> {
-    return GuaribasPackage.create({
+    return await GuaribasPackage.create({
       packageName: packageName,
       instanceId: instanceId
     });
@@ -389,7 +389,12 @@ export class GBDeployer implements IGBDeployer {
             },
             updatePackage: async (p: GuaribasPackage) => {
               p.save();
+            },
+            existsPackage: async (packageName: string) => {
+              return await _this.getStoragePackageByName(min.instance.instanceId, packageName);
             }
+            
+            
           }))
         ) {
           handled = true;
