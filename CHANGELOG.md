@@ -1,3 +1,10 @@
+## [2.0.60](https://github.com/pragmatismo-io/BotServer/compare/2.0.59...2.0.60) (2020-12-04)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Keep text fixed. ([50564c6](https://github.com/pragmatismo-io/BotServer/commit/50564c64d246c721e8536641668e4a7855e39205))
+
 ## [2.0.59](https://github.com/pragmatismo-io/BotServer/compare/2.0.58...2.0.59) (2020-12-03)
 
 
