@@ -247,7 +247,8 @@ export class GBDeployer implements IGBDeployer {
 
   public async publishNLP(instance: IGBInstance): Promise<void> {
     const service = new AzureDeployerService(this);
-    const res = await service.publishNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
+    const res = await service.publishNLP(instance.cloudLocation, instance.nlpAppId,
+       instance.nlpAuthoringKey);
     if (res.status !== 200 && res.status !== 201) throw res.bodyAsText;
   }
 
@@ -269,7 +270,7 @@ export class GBDeployer implements IGBDeployer {
       instance.cloudLocation,
       instance.nlpAppId,
       listName,
-      instance.nlpKey,
+      instance.nlpAuthoringKey,
       listData
     );
     if (res.status !== 200) throw res.bodyAsText;

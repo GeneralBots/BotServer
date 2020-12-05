@@ -736,7 +736,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const body = {
       versionId: "0.1",
       isStaging: false,
-      directVersionPublish: true
+      directVersionPublish: false
    }
     const req = new WebResource();
     req.method = 'POST';
