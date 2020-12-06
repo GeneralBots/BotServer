@@ -1,3 +1,10 @@
+## [2.0.64](https://github.com/pragmatismo-io/BotServer/compare/2.0.63...2.0.64) (2020-12-06)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Start dialog done and  log improvements. ([1ff2429](https://github.com/pragmatismo-io/BotServer/commit/1ff24290f0fb482493fd8106247443233f117b87))
+
 ## [2.0.63](https://github.com/pragmatismo-io/BotServer/compare/2.0.62...2.0.63) (2020-12-06)
 
 
