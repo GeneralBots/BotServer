@@ -523,6 +523,20 @@ export class GBConversationalService {
 
       try {
         step.activeDialog.state.options.entities = nlp.entities;
+
+        // FIX MSFT NLP issue.
+
+        if (nlp.entities) {
+          await CollectionUtil.asyncForEach(Object.keys(nlp.entities), async key => {
+            if (key !== "$instance") {
+              let entity = nlp.entities[key];
+              if (Array.isArray(entity[0])) {
+                nlp.entities[key] = entity.slice(1);
+              }
+            }
+          });
+        }
+
         await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
 
         return true;
