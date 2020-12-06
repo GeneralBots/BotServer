@@ -78,6 +78,7 @@ import fs = require('fs');
 import { GuaribasConversationMessage } from '../../analytics.gblib/models';
 import { GBVMService } from './GBVMService';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
+import { GBConversationalService } from './GBConversationalService';
 
 /**
  * Minimal service layer for a bot.
@@ -827,11 +828,14 @@ export class GBMinService {
           keepTextList = keepTextList.concat(result);
         }
       });
-
+      
       if (keepTextList) {
         let i = 0;
         await CollectionUtil.asyncForEach(keepTextList, item => {
-          if (text.indexOf(item) != -1) {
+
+          let it = GBConversationalService.removeDiacriticsAndPunctuation(item);
+
+          if (text.toLowerCase().indexOf(item.toLowerCase()) != -1) {
             const replacementToken = GBAdminService['getNumberIdentifier']();
             replacements[i] = { text: item, replacementToken: replacementToken };
             i++;
