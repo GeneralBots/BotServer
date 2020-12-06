@@ -671,19 +671,16 @@ export class GBMinService {
               await e.onNewSession(min, step);
             });
    
+            await step.beginDialog('/');
+
+          } else {
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
             if (startDialog)
             {
               GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
-              await GBVMService.callVM(context.activity.text, min, step, this.deployer);
+              await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
             }
-            else
-            {
-              await step.beginDialog('/');
 
-            }            
-
-          } else {
             GBLog.info(`Member added to conversation: ${member.name}`);
           }
 
