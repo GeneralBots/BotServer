@@ -1,3 +1,10 @@
+## [2.0.63](https://github.com/pragmatismo-io/BotServer/compare/2.0.62...2.0.63) (2020-12-06)
+
+
+### Bug Fixes
+
+* **core.gbapp:** MSFT NLP issue fixed. ([149c821](https://github.com/pragmatismo-io/BotServer/commit/149c821e41dc0febb8873df2b5e9c57e8aa8ad21))
+
 ## [2.0.62](https://github.com/pragmatismo-io/BotServer/compare/2.0.61...2.0.62) (2020-12-05)
 
 
