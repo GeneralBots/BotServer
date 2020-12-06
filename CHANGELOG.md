@@ -1,3 +1,10 @@
+## [2.0.62](https://github.com/pragmatismo-io/BotServer/compare/2.0.61...2.0.62) (2020-12-05)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fix in deployer. ([ec40fd8](https://github.com/pragmatismo-io/BotServer/commit/ec40fd8b62dc4248c74a33141cccabd558b80e17))
+
 ## [2.0.61](https://github.com/pragmatismo-io/BotServer/compare/2.0.60...2.0.61) (2020-12-05)
 
 
