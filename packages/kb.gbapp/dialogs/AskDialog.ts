@@ -172,7 +172,9 @@ export class AskDialog extends IGBDialog {
 
         // Searches KB for the first time.
 
-        const searchScore = min.instance.searchScore ? min.instance.searchScore : minBoot.instance.searchScore;
+        const searchScore = min.core.getParam(min.instance, 'Search Score',
+          min.instance.searchScore ? min.instance.searchScore : minBoot.instance.searchScore);
+
         user.lastQuestion = text;
         await min.userProfile.set(step.context, user);
 
@@ -192,15 +194,14 @@ export class AskDialog extends IGBDialog {
           answer = resultsA.answer;
 
           // If this search was restricted to some subjects...
-        } else if (user.subjects) {
+        } else if (user.subjects && user.subjects.length > 0) {
           // ...second time running Search, now with no filter.
 
           const resultsB = await service.ask(min.instance, text, searchScore, undefined);
 
           // If there is some result, answer immediately.
 
-          if (resultsB !== undefined && resultsB.answer !== undefined) 
-          {
+          if (resultsB !== undefined && resultsB.answer !== undefined) {
             // Saves some context info.
 
             const user2 = await min.userProfile.get(step.context, {});

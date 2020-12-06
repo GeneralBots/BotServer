@@ -177,6 +177,8 @@ export class KBService implements IGBKBService {
   ): Promise<KBServiceSearchResults> {
     // Builds search query.
 
+
+
     query = query.toLowerCase();
     query = query.replace('?', ' ');
     query = query.replace('!', ' ');
@@ -192,6 +194,8 @@ export class KBService implements IGBKBService {
       }
     }
 
+    let notSearched = true;
+
     // tslint:disable:no-unsafe-any
     if (instance.searchKey !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
       const client = new SearchService(instance.searchHost.split('.')[0], instance.searchKey);
@@ -205,22 +209,61 @@ export class KBService implements IGBKBService {
 
       const values = results.result.value;
 
-      if (values && values.length > 0 && values[0]['@search.score'] >= searchScore) {
-        const value = await this.getAnswerById(instance.instanceId, values[0].answerId);
-        if (value !== null) {
-          return { answer: value, questionId: values[0].questionId };
+      let returnedScore = 0;
+
+      // Searches via Search (Azure Search).
+
+      if (values && values.length > 0) {
+        returnedScore = values[0]['@search.score'];
+        if (returnedScore >= searchScore) {
+          const value = await this.getAnswerById(instance.instanceId, values[0].answerId);
+          if (value !== null) {
+            GBLog.info(
+              `SEARCH WILL BE USED with score: ${returnedScore} > required (searchScore): ${searchScore}`
+            );
+            notSearched = false;
+            return { answer: value, questionId: values[0].questionId };
+          } else {
+            GBLog.info(
+              `SEARCH WILL NOT be used as answerId ${values[0].answerId} was not found in database,
+                returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
+            );
+
+            return { answer: undefined, questionId: 0 };
+          }
         } else {
+          GBLog.info(
+            `SEARCH called but returned LOW level score,
+              returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
+          );
+
           return { answer: undefined, questionId: 0 };
         }
-      }
-    } else {
-      const data = await this.getAnswerByText(instance.instanceId, query);
-      if (data) {
-        return { answer: data.answer, questionId: data.question.questionId };
       } else {
+        GBLog.info(
+          `SEARCH called but NO answer could be found (zero results).`
+        );
         return { answer: undefined, questionId: 0 };
       }
-    }
+  }
+
+    // DISABLED: Searches via Database "WHERE" command.
+
+    // if (notSearched) {
+    //   const data = await this.getAnswerByText(instance.instanceId, query);
+    //   if (data) {
+    //     GBLog.info(
+    //       `SEARCH called.`
+    //     );
+    //     return { answer: data.answer, questionId: data.question.questionId };
+    //   } else {
+    //     GBLog.info(`SEARCH NOT called getAnswerByText not found answers in database.`);
+    //     return { answer: undefined, questionId: 0 };
+    //   }
+    // }
+
+    // TODO: Add more sources....
+
   }
 
   public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {

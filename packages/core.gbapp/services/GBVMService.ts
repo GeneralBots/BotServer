@@ -423,7 +423,7 @@ export class GBVMService extends GBService {
           const isIntentYes = (locale, utterance) => {
             return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
           }
-        
+
           let result = step.result;
           if (step.activeDialog.state.options['boolean']) {
 
@@ -436,7 +436,7 @@ export class GBVMService extends GBService {
 
           }
           else if (step.activeDialog.state.options['email']) {
-              // e@e.com
+            // e@e.com
           }
           else if (step.activeDialog.state.options['number']) {
             // MAX and MIN.
@@ -456,7 +456,7 @@ export class GBVMService extends GBService {
           else if (step.activeDialog.state.options['zipcode']) {
             // 12333-222
           }
-          else if (step.activeDialog.state.options['menu']){
+          else if (step.activeDialog.state.options['menu']) {
             // ['drums', 'guitar', 'bass']; kpmSearch
           }
 
@@ -487,6 +487,15 @@ export class GBVMService extends GBService {
 
     const mainMethod = text.toLowerCase();
     sandbox[mainMethod].bind(sandbox);
-    return await sandbox[mainMethod](step);
+
+    let ret = null;
+    try {
+      ret = await sandbox[mainMethod](step);
+
+    } catch (error) {
+      GBLog.error(`BASIC ERROR: ${error.message} ${error.stack}`);
+    }
+
+    return ret;
   }
 }

@@ -481,7 +481,7 @@ export class GBConversationalService {
     try {
       const saved = step.context.activity.text;
       step.context.activity.text = text;
-      nlp = await model.recognize(step.context);
+      nlp = await model.recognize(step.context,{},{},{IncludeAllIntents:false, IncludeInstanceData: false, includeAPIResults: true});
       step.context.activity.text = saved;
     } catch (error) {
       // tslint:disable:no-unsafe-any
@@ -498,12 +498,15 @@ export class GBConversationalService {
       // tslint:enable:no-unsafe-any
     }
 
+    const minBoot = GBServer.globals.minBoot as any;
     let nlpActive = false;
     let score = 0;
+    const instanceScore = min.core.getParam(min.instance, 'NLP Score',
+      min.instance.nlpScore ? min.instance.nlpScore : minBoot.instance.nlpScore);
 
     Object.keys(nlp.intents).forEach(name => {
       score = nlp.intents[name].score;
-      if (score > min.instance.nlpScore) {
+      if (score > instanceScore) {
         nlpActive = true;
       }
     });
@@ -518,7 +521,7 @@ export class GBConversationalService {
       }
 
       GBLog.info(
-        `NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${min.instance.nlpScore}`
+        `NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${instanceScore}`
       );
 
       try {
@@ -548,7 +551,7 @@ export class GBConversationalService {
     }
 
     GBLog.info(
-      `NLP NOT called: score: ${score} > required (nlpScore): ${min.instance.nlpScore}`
+      `NLP NOT called: score: ${score} > required (nlpScore): ${instanceScore}`
     );
 
     return false;

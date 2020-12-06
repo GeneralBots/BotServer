@@ -614,6 +614,7 @@ export class GBMinService {
       // Get loaded user state
       const step = await min.dialogs.createContext(context);
       step.context.activity.locale = 'pt-BR';
+      let firstTime = false;
 
       try {
         const user = await min.userProfile.get(context, {});
@@ -622,6 +623,7 @@ export class GBMinService {
 
         const sec = new SecService();
         if (!user.loaded) {
+          firstTime = true;
           await min.conversationalService.sendEvent(min, step, 'loadInstance', {
             instanceId: instance.instanceId,
             botId: instance.botId,
@@ -668,7 +670,19 @@ export class GBMinService {
             await CollectionUtil.asyncForEach(appPackages, async e => {
               await e.onNewSession(min, step);
             });
-            await step.beginDialog('/');
+   
+            const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
+            if (startDialog)
+            {
+              GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
+              await GBVMService.callVM(context.activity.text, min, step, this.deployer);
+            }
+            else
+            {
+              await step.beginDialog('/');
+
+            }            
+
           } else {
             GBLog.info(`Member added to conversation: ${member.name}`);
           }

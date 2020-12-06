@@ -587,7 +587,7 @@ STORAGE_SYNC=true
       return value ? value : defaultValue;
     }
     if (typeof defaultValue === 'number') {
-      return new Number(value ? defaultValue : defaultValue ? defaultValue : 0);
+      return new Number(value ? value : defaultValue ? defaultValue : 0);
     }
 
     if (instance['dataValues'] && !value) {
