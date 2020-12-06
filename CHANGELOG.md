@@ -1,3 +1,10 @@
+## [2.0.66](https://github.com/pragmatismo-io/BotServer/compare/2.0.65...2.0.66) (2020-12-06)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Ignoring case for keep text. ([5139817](https://github.com/pragmatismo-io/BotServer/commit/513981746648db4466301ad5a69373d48ed3be1a))
+
 ## [2.0.65](https://github.com/pragmatismo-io/BotServer/compare/2.0.64...2.0.65) (2020-12-06)
 
 
