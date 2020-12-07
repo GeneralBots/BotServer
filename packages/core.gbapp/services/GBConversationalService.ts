@@ -580,7 +580,9 @@ export class GBConversationalService {
     }
 
     text = text.toLowerCase();
+    text = text.replace('who´s', 'who is');
     text = text.replace('who\'s', 'who is');
+    text = text.replace('what´s', 'what is');
     text = text.replace('what\'s', 'what is');
     text = text.replace('?', ' ');
     text = text.replace('!', ' ');
