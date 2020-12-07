@@ -245,7 +245,7 @@ export class KBService implements IGBKBService {
         );
         return { answer: undefined, questionId: 0 };
       }
-  }
+    }
 
     // DISABLED: Searches via Database "WHERE" command.
 
@@ -338,9 +338,11 @@ export class KBService implements IGBKBService {
     }
 
     let rows = worksheet._rows;
+    let answers = [];
+    let questions = [];
 
-    GBLog.info(`Now importing ${rows.length} rows from tabular file ${filePath}...`);
-    return asyncPromise.eachSeries(rows, async line => {
+    GBLog.info(`Processing ${rows.length} rows from tabular file ${filePath}...`);
+    await asyncPromise.eachSeries(rows, async line => {
       // Skips the first line.
 
       if (
@@ -406,16 +408,18 @@ export class KBService implements IGBKBService {
 
           // Now with all the data ready, creates entities in the store.
 
-          const answer1 = await GuaribasAnswer.create({
+          const answer1 = {
             instanceId: instanceId,
             content: answer,
             format: format,
             media: media,
             packageId: packageId,
             prevId: lastQuestionId !== null ? lastQuestionId : 0
-          });
+          };
 
-          const question1 = await GuaribasQuestion.create({
+          answers.push(answer1);
+
+          const question1 = {
             from: from,
             to: to,
             subject1: subject1,
@@ -424,17 +428,18 @@ export class KBService implements IGBKBService {
             subject4: subject4,
             content: question,
             instanceId: instanceId,
-            answerId: answer1.answerId,
+
             packageId: packageId
-          });
+          };
+          questions.push(question1);
 
-          if (lastAnswer !== undefined && lastQuestionId !== 0) {
-            await lastAnswer.update({ nextId: lastQuestionId });
-          }
-          lastAnswer = answer1;
-          lastQuestionId = question1.questionId;
+          // TODO: Tutorial. if (lastAnswer !== undefined && lastQuestionId !== 0) {
+          //   await lastAnswer.update({ nextId: lastQuestionId });
+          // }
+          // lastAnswer = answer1;
+          // lastQuestionId = question1.questionId;
 
-          return question1.questionId;
+          return true;
         } else {
           // Skips the header.
 
@@ -442,6 +447,14 @@ export class KBService implements IGBKBService {
         }
       }
     });
+
+    const answersCreated = await GuaribasAnswer.bulkCreate(answers);
+
+    let i = 0;
+    await CollectionUtil.asyncForEach(questions, async question => {
+      question.answerId = answersCreated[i++].answerId;
+    });
+    return await GuaribasQuestion.bulkCreate(questions);
   }
 
   public async sendAnswer(min: GBMinInstance, channel: string, step: GBDialogStep, answer: GuaribasAnswer) {
