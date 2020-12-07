@@ -36,6 +36,8 @@
 
 import { GuaribasUser } from '../../security.gbapp/models';
 import { GuaribasConversation, GuaribasConversationMessage } from '../models';
+import { GBServer } from '../../../src/app';
+import { AzureText } from 'pragmatismo-io-framework';
 
 /**
  * Base services for Bot Analytics.
@@ -48,22 +50,32 @@ export class AnalyticsService {
     const conversation = new GuaribasConversation();
     conversation.startedBy = user;
     conversation.startedByUserId = user.userId;
+    conversation.instanceId = user.instanceId;
 
     return await conversation.save();
   }
 
-  public async updateConversationRate(
-    instanceId: number,
-    conversationId: number,
-    rate: number
-  ): Promise<GuaribasConversation> {
+  public async updateConversationSuggestion(instanceId: number, conversationId: string,  feedback: string, locale: string): Promise<number> {
+    
+    const minBoot = GBServer.globals.minBoot as any;
+    const rate = await AzureText.getSentiment(
+      minBoot.instance.textAnalyticsKey ? minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
+      minBoot.instance.textAnalyticsEndpoint ? minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint,
+      locale,
+      feedback
+    );
+    
     const options = { where: { } };
-
     options.where = { conversationId: conversationId,  instanceId: instanceId };
     const item = await GuaribasConversation.findOne(options);
+
+    item.feedback = feedback;
     item.rate = rate;
     item.rateDate = new Date();
-    return item.save();
+    await item.save();
+
+    return rate;
+
   }
 
 

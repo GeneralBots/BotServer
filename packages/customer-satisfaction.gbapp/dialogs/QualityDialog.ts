@@ -84,7 +84,8 @@ export class QualityDialog extends IGBDialog {
           // Updates values to perform Bot Analytics.
           
           const analytics = new AnalyticsService();
-          analytics.updateConversationRate(min.instance.instanceId, user.conversation, score);
+          analytics.updateConversationSuggestion(
+            min.instance.instanceId, user.conversation,step.result, user.systemUser.locale);
 
           // Goes to the ask loop.
 

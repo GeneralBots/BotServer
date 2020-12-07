@@ -39,11 +39,9 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import { AzureText } from 'pragmatismo-io-framework';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
 import { SecService } from '../../security.gbapp/services/SecService';
-import { GBServer } from '../../../src/app';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 
 /**
@@ -138,22 +136,15 @@ export class FeedbackDialog extends IGBDialog {
           return await min.conversationalService.prompt(min, step, Messages[locale].what_about_service);
         },
         async step => {
-          const minBoot = GBServer.globals.minBoot as any;
+          const fixedLocale = 'en-US';
           const user = await min.userProfile.get(step.context, {});
-
-          const rate = await AzureText.getSentiment(
-            minBoot.instance.textAnalyticsKey ? minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
-            minBoot.instance.textAnalyticsEndpoint ? minBoot.instance.textAnalyticsEndpoint : minBoot.instance.textAnalyticsEndpoint,
-            user.systemUser.locale,
-            step.result
-          );
 
           // Updates values to perform Bot Analytics.
 
-          // const analytics = new AnalyticsService();
-          // analytics.updateConversationRate(min.instance.instanceId, user.conversation, rate);
-
-          const fixedLocale = 'en-US';
+          const analytics = new AnalyticsService();
+          const rate = await analytics.updateConversationSuggestion(
+            min.instance.instanceId, user.conversation.conversationId, step.result, user.systemUser.locale);
+          
           if (rate > 0.5) {
             await min.conversationalService.sendText(min, step, Messages[fixedLocale].glad_you_liked);
           } else {

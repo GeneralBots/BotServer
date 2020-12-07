@@ -579,8 +579,15 @@ export class GBConversationalService {
       return false;
     }
 
-    text = text.toLowerCase().replace('who\'s', 'who is');
-    text = text.toLowerCase().replace('what\'s', 'what is');
+    text = text.toLowerCase();
+    text = text.replace('who\'s', 'who is');
+    text = text.replace('what\'s', 'what is');
+    text = text.replace('?', ' ');
+    text = text.replace('!', ' ');
+    text = text.replace('.', ' ');
+    text = text.replace('/', ' ');
+    text = text.replace('\\', ' ');
+    text = text.replace('\r\n', ' ');
 
     const model = new LuisRecognizer({
       applicationId: min.instance.nlpAppId,

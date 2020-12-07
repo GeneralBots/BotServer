@@ -70,6 +70,11 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
   @Column
   public conversationId: number;
 
+  @ForeignKey(() => GuaribasInstance)
+  @Column
+  public instanceId: number;
+
+
   @ForeignKey(() => GuaribasSubject)
   @Column
   public startSubjectId: number;
@@ -86,6 +91,10 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
   @Column(DataType.FLOAT)
   @Column
   public rate: number;
+
+  @Column(DataType.STRING(512))
+  @Column
+  public feedback: string;
 
   @Column
   @CreatedAt

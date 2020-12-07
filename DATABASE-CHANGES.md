@@ -67,3 +67,9 @@ GO
 ALTER TABLE dbo.GuaribasUser ADD
 	hearOnDialog nvarchar(64) NULL
 GO
+
+
+ALTER TABLE dbo.GuaribasConversation ADD
+	instanceId int,
+	feedback nvarchar(512) NULL
+GO
