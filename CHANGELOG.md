@@ -1,3 +1,10 @@
+## [2.0.67](https://github.com/pragmatismo-io/BotServer/compare/2.0.66...2.0.67) (2020-12-07)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** Faster loaded from tabular using bulk insert. ([1604006](https://github.com/pragmatismo-io/BotServer/commit/1604006266523f93a67eae4b01a260de011b2422))
+
 ## [2.0.66](https://github.com/pragmatismo-io/BotServer/compare/2.0.65...2.0.66) (2020-12-06)
 
 
