@@ -183,26 +183,26 @@ class SysClass {
 
       await client
         .api(
-          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z1')/insert`
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:Z2')/insert`
         )
         .post({});
 
       if (!document || document.length === 0) {
         throw `File '${file}' specified on save GBasic command SAVE not found. Check the .gbdata or the .gbdialog associated.`;
       }
-      if (args.length > 27) {
-        throw `File '${file}' has a SAVE call with more than 27 arguments. Check the .gbdialog associated.`;
+      if (args.length > 128) {
+        throw `File '${file}' has a SAVE call with more than 128 arguments. Check the .gbdialog associated.`;
       }
 
       let body = { values: [[]] };
 
-      for (let index = 0; index < 26; index++) {
+      for (let index = 0; index < 128; index++) {
         body.values[0][index] = args[index];
       }
 
       let res2 = await client
         .api(
-          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:Z2')`
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:DX2')`
         )
         .patch(body);
     } catch (error) {
@@ -547,7 +547,7 @@ export class DialogClass {
     return await step.beginDialog('/t');
   }
 
-  public async hear(step, promise, previousResolve, kind) {
+  public async hear(step, promise, previousResolve, kind, ...args) {
     function random(low, high) {
       return Math.random() * (high - low) + low;
     }
@@ -555,7 +555,7 @@ export class DialogClass {
     this.min.cbMap[idPromise] = {};
     this.min.cbMap[idPromise].promise = promise;
 
-    const opts = { id: idPromise, previousResolve: previousResolve, kind: kind };
+    const opts = { id: idPromise, previousResolve: previousResolve, kind: kind, args };
     if (previousResolve !== undefined) {
       previousResolve(opts);
     } else {

@@ -160,13 +160,48 @@ export class GBVMService extends GBService {
     username = this.getUserName(step);
     mobile = this.getUserMobile(step);
     ubound = function(list){return list.length};
+    
 
     ${code}
     `;
 
     // Keywords from General Bots BASIC.
 
-    code = code.replace(/(hear email)/gi, `email = askEmail()`);
+    code = code.replace(/hear email/gi, ($0) => {
+      return `email = hear("email")`;
+    });
+
+    code = code.replace(/hear (.*) as (\w+)/gi, ($0, $1, $2) => {
+      return `${$2} = hear("menu", ${$1})`;
+    });
+
+    code = code.replace(/hear number as (\w+)/gi, ($0, $1, $2) => {
+      return `${$1} = hear("number")`;
+    });
+
+    code = code.replace(/hear name as (\w+)/gi, ($0, $1, $2) => {
+      return `${$1} = hear("name")`;
+    });
+
+    code = code.replace(/hear date as (\w+)/gi, ($0, $1, $2) => {
+      return `${$1} = hear("date")`;
+    });
+
+    code = code.replace(/hear date as (\w+)/gi, ($0, $1, $2) => {
+      return `${$1} = hear("hour")`;
+    });
+
+    code = code.replace(/hear date as (\w+)/gi, ($0, $1, $2) => {
+      return `${$1} = hear("phone")`;
+    });
+
+    code = code.replace(/hear date as (\w+)/gi, ($0, $1, $2) => {
+      return `${$1} = hear("money")`;
+    });
+
+    code = code.replace(/hear date as (\w+)/gi, ($0, $1, $2) => {
+      return `${$1} = hear("zip")`;
+    });
 
     code = code.replace(/(hear on)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().gotoDialog(${$3})\n`;
@@ -276,7 +311,7 @@ export class GBVMService extends GBService {
       // Finds all hear calls.
 
       let parsedCode = code;
-      const hearExp = /(\w+).*hear.*\(\)/;
+      const hearExp = /(\w+).*hear.*\((.*)\)/;
 
       let match1;
 
@@ -286,6 +321,7 @@ export class GBVMService extends GBService {
         // Writes async body.
 
         const variable = match1[1]; // Construct variable = hear ().
+        const args = match1[2]; // Construct variable = hear ("A", "B").
         const promiseName = `promiseFor${variable}`;
 
         parsedCode = code.substring(pos, pos + match1.index);
@@ -326,13 +362,7 @@ export class GBVMService extends GBService {
         parsedCode += '}\n';
 
 
-        let kind = 'general';
-        if (variable === "YES OR NO") {
-          kind = 'yesOrNo';
-        }
-
-
-        parsedCode += `hear (step, ${promiseName}, resolve, '${kind}');\n`;
+        parsedCode += `hear (step, ${promiseName}, resolve, ${args});\n`;
         parsedCode += code.substring(pos + match1[0].length);
 
         // A interaction will be made for each hear.
@@ -407,9 +437,9 @@ export class GBVMService extends GBService {
           step.activeDialog.state.options.id = (step.options as any).id;
           step.activeDialog.state.options.previousResolve = (step.options as any).previousResolve;
 
-          if (step.options['kind'] === "yesOrNo") {
+          if (step.options['args']) {
 
-            GBLog.info('BASIC: Asking for input (HEAR YES OR NO).');
+            GBLog.info(`BASIC: Asking for input (HEAR with ${step.options['args'][0]}).`);
           }
           else {
 
@@ -425,7 +455,7 @@ export class GBVMService extends GBService {
           }
 
           let result = step.result;
-          if (step.activeDialog.state.options['boolean']) {
+          if (step.activeDialog.state.options['kind'] === "boolean") {
 
             if (isIntentYes(step.context.locale, step.result)) {
               result = true;
@@ -435,29 +465,78 @@ export class GBVMService extends GBService {
             }
 
           }
-          else if (step.activeDialog.state.options['email']) {
+          else if (step.activeDialog.state.options['kind'] === "email") {
             // e@e.com
           }
-          else if (step.activeDialog.state.options['number']) {
-            // MAX and MIN.
+          else if (step.activeDialog.state.options['kind'] === "name") {
+            const extractEntity = text => {
+              return text.match(/[_a-zA-Z][_a-zA-Z0-9]{0,16}/gi);
+            };
+
+            const value = extractEntity(step.result);
+
+            if (value === null || value.length != 1) {
+              await step.context.sendActivity("Por favor, digite um nome válido.");
+              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+            }
+
+            result = value;
+
           }
-          else if (step.activeDialog.state.options['date']) {
-            // 12/12/2020 OK
+          else if (step.activeDialog.state.options['kind'] === "number") {
+            const extractEntity = text => {
+              return text.match(/\d+/gi);
+            };
+
+            const value = extractEntity(step.result);
+
+            if (value === null || value.length != 1) {
+              await step.context.sendActivity("Por favor, digite um número válido.");
+              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+            }
+
+            result = value;
           }
-          else if (step.activeDialog.state.options['hour']) {
+          else if (step.activeDialog.state.options['kind'] === "date") {
+            const extractEntity = text => {
+              return text.match(/(^(((0[1-9]|1[0-9]|2[0-8])[\/](0[1-9]|1[012]))|((29|30|31)[\/](0[13578]|1[02]))|((29|30)[\/](0[4,6,9]|11)))[\/](19|[2-9][0-9])\d\d$)|(^29[\/]02[\/](19|[2-9][0-9])(00|04|08|12|16|20|24|28|32|36|40|44|48|52|56|60|64|68|72|76|80|84|88|92|96)$)/gi);
+            };
+
+            const value = extractEntity(step.result);
+
+            if (value === null || value.length != 1) {
+              await step.context.sendActivity("Por favor, digite uma data no formato 12/12/2020.");
+              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+            }
+
+            result = value;
+          }
+          else if (step.activeDialog.state.options['kind'] === "hour") {
             // 12:12
           }
-          else if (step.activeDialog.state.options['money']) {
+          else if (step.activeDialog.state.options['kind'] === "money") {
             // 23,12
           }
-          else if (step.activeDialog.state.options['phone']) {
+          else if (step.activeDialog.state.options['kind'] === "phone") {
             // +55 21
           }
-          else if (step.activeDialog.state.options['zipcode']) {
+          else if (step.activeDialog.state.options['kind'] === "zipcode") {
             // 12333-222
           }
-          else if (step.activeDialog.state.options['menu']) {
-            // ['drums', 'guitar', 'bass']; kpmSearch
+          else if (step.activeDialog.state.options['kind'] === "menu") {
+
+            const list = step.activeDialog.state.options['args'];
+            result = null;
+            await CollectionUtil.asyncForEach(list, async item => {
+              if (GBConversationalService.kmpSearch(step.result, item) != -1) {
+                result = item;
+              }
+            });
+
+            if (result === null) {
+              await step.context.sendActivity(`Escolha, por favor, um destes modelos  listados.`);
+              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+            }
           }
 
           const id = step.activeDialog.state.options.id;

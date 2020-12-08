@@ -213,7 +213,7 @@ export class AdminDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/publish', [
         async step => {
-          if (step.activeDialog.state.options.confirm) {
+          if (step.activeDialog.state.options.confirm || process.env.ADMIN_OPEN_PUBLISH === "true") {
             return await step.next('sim');
           } else {
             const locale = step.context.activity.locale;
@@ -232,7 +232,7 @@ export class AdminDialog extends IGBDialog {
             if (step.activeDialog.state.options.firstTime) {
               canPublish = true;
             } else {
-              canPublish = AdminDialog.canPublish(min, from);
+              canPublish = AdminDialog.canPublish(min, from) || process.env.ADMIN_OPEN_PUBLISH === "true";
             }
 
             if (!canPublish) {

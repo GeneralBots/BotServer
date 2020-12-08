@@ -748,6 +748,11 @@ export class GBMinService {
       // Adds message to the analytics layer.
 
       if (user) {
+
+        if (!user.conversation){
+          user.conversation = await analytics.createConversation(user.systemUser);
+        }
+
         message = await analytics.createMessage(
           min.instance.instanceId,
           user.conversation,
