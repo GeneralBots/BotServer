@@ -48,6 +48,8 @@ const vm = require('vm');
 const vb2ts = require('../../../../vbscript-to-typescript');
 const beautify = require('js-beautify').js;
 var textract = require('textract');
+const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
+const phone = require('phone');
 
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
@@ -167,40 +169,40 @@ export class GBVMService extends GBService {
 
     // Keywords from General Bots BASIC.
 
-    code = code.replace(/hear email/gi, ($0) => {
-      return `email = hear("email")`;
+    code = code.replace(/hear (\w+) as email/gi, ($0, $1) => {
+      return `${$1} = hear("email")`;
     });
 
-    code = code.replace(/hear (.*) as (\w+)/gi, ($0, $1, $2) => {
-      return `${$2} = hear("menu", ${$1})`;
+    code = code.replace(/hear (\w+) as integer/gi, ($0, $1, $2) => {
+      return `${$1} = hear("integer")`;
     });
 
-    code = code.replace(/hear number as (\w+)/gi, ($0, $1, $2) => {
-      return `${$1} = hear("number")`;
-    });
-
-    code = code.replace(/hear name as (\w+)/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as name/gi, ($0, $1, $2) => {
       return `${$1} = hear("name")`;
     });
 
-    code = code.replace(/hear date as (\w+)/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as date/gi, ($0, $1, $2) => {
       return `${$1} = hear("date")`;
     });
 
-    code = code.replace(/hear date as (\w+)/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as hour/gi, ($0, $1, $2) => {
       return `${$1} = hear("hour")`;
     });
 
-    code = code.replace(/hear date as (\w+)/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as phone/gi, ($0, $1, $2) => {
       return `${$1} = hear("phone")`;
     });
 
-    code = code.replace(/hear date as (\w+)/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as money/gi, ($0, $1, $2) => {
       return `${$1} = hear("money")`;
     });
 
-    code = code.replace(/hear date as (\w+)/gi, ($0, $1, $2) => {
-      return `${$1} = hear("zip")`;
+    code = code.replace(/hear (\w+) as zipcode/gi, ($0, $1, $2) => {
+      return `${$1} = hear("zipcode")`;
+    });
+
+    code = code.replace(/hear (\w+) as (.*)/gi, ($0, $1, $2) => {
+      return `${$1} = hear("menu", ${$2})`;
     });
 
     code = code.replace(/(hear on)(\s)(.*)/gi, ($0, $1, $2, $3) => {
@@ -362,7 +364,7 @@ export class GBVMService extends GBService {
         parsedCode += '}\n';
 
 
-        parsedCode += `hear (step, ${promiseName}, resolve, ${args});\n`;
+        parsedCode += `hear (step, ${promiseName}, resolve, ${args === '' ? null : args});\n`;
         parsedCode += code.substring(pos + match1[0].length);
 
         // A interaction will be made for each hear.
@@ -466,7 +468,21 @@ export class GBVMService extends GBService {
 
           }
           else if (step.activeDialog.state.options['kind'] === "email") {
-            // e@e.com
+            const locale = step.context.activity.locale;
+
+            const extractEntity = (text) => {
+              return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi);
+            }
+
+            const value = extractEntity(step.result);
+
+            if (value === null) {
+              await step.context.sendActivity("Por favor, digite um e-mail válido.");
+              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+            }
+
+            result = value;
+
           }
           else if (step.activeDialog.state.options['kind'] === "name") {
             const extractEntity = text => {
@@ -483,7 +499,7 @@ export class GBVMService extends GBService {
             result = value;
 
           }
-          else if (step.activeDialog.state.options['kind'] === "number") {
+          else if (step.activeDialog.state.options['kind'] === "integer") {
             const extractEntity = text => {
               return text.match(/\d+/gi);
             };
@@ -512,16 +528,82 @@ export class GBVMService extends GBService {
             result = value;
           }
           else if (step.activeDialog.state.options['kind'] === "hour") {
-            // 12:12
+
+            const extractEntity = text => {
+              return text.match(/^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])?$/gi);
+            };
+
+            const value = extractEntity(step.result);
+
+            if (value === null || value.length != 1) {
+              await step.context.sendActivity("Por favor, digite um horário no formato hh:ss.");
+              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+            }
+
+            result = value;
           }
           else if (step.activeDialog.state.options['kind'] === "money") {
-            // 23,12
+            const extractEntity = text => {
+
+              if (step.context.locale === 'en') { // TODO: Change to user.
+                return text.match(/(?:\d{1,3},)*\d{1,3}(?:\.\d+)?/gi);
+              }
+              else {
+                return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
+              }
+            };
+
+            const value = extractEntity(step.result);
+
+            if (value === null || value.length != 1) {
+              await step.context.sendActivity("Por favor, digite um valor monetário.");
+              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+            }
+
+            result = value;
           }
-          else if (step.activeDialog.state.options['kind'] === "phone") {
-            // +55 21
+          else if (step.activeDialog.state.options['kind'] === "mobile") {
+            const locale = step.context.activity.locale;
+            let phoneNumber;
+            try {
+              phoneNumber = phone(step.result, 'BRA')[0]; // TODO: Use accordingly to the person.
+              phoneNumber = phoneUtil.parse(phoneNumber);
+            } catch (error) {
+              await step.context.sendActivity(Messages[locale].validation_enter_valid_mobile);
+
+              return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);
+            }
+            if (!phoneUtil.isPossibleNumber(phoneNumber)) {
+              await step.context.sendActivity("Por favor, digite um número de telefone válido.");
+              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+            }
+
+            result = phoneNumber;
+
           }
           else if (step.activeDialog.state.options['kind'] === "zipcode") {
-            // 12333-222
+            const extractEntity = text => {
+
+              text = text.replace(/\-/gi, '');
+
+              if (step.context.locale === 'en') { // TODO: Change to user.
+                return text.match(/\d{8}/gi);
+              }
+              else {
+                return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
+
+              }
+            };
+
+            const value = extractEntity(step.result);
+
+            if (value === null || value.length != 1) {
+              await step.context.sendActivity("Por favor, digite um valor monetário.");
+              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+            }
+
+            result = value[0];
+
           }
           else if (step.activeDialog.state.options['kind'] === "menu") {
 
@@ -534,7 +616,7 @@ export class GBVMService extends GBService {
             });
 
             if (result === null) {
-              await step.context.sendActivity(`Escolha, por favor, um destes modelos  listados.`);
+              await step.context.sendActivity(`Escolha por favor um dos itens sugeridos.`);
               return await step.replaceDialog('/hear', step.activeDialog.state.options);
             }
           }
