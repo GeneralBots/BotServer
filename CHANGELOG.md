@@ -1,3 +1,10 @@
+## [2.0.68](https://github.com/pragmatismo-io/BotServer/compare/2.0.67...2.0.68) (2020-12-07)
+
+
+### Bug Fixes
+
+* **customer-satisfaction.gbapp:** Fix rate and suggestion text store. ([55bb46d](https://github.com/pragmatismo-io/BotServer/commit/55bb46d8823d4640e297177634252e6dc06e9a28))
+
 ## [2.0.67](https://github.com/pragmatismo-io/BotServer/compare/2.0.66...2.0.67) (2020-12-07)
 
 
