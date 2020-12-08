@@ -480,7 +480,7 @@ export class DialogClass {
     }
   }
   public async isAffirmative(step, text) {
-    return text.toLowerCase().match(Messages[step.context.activity.locale].affirmative_sentences);
+    return text.toLowerCase().match(Messages['pt-BR'].affirmative_sentences); // TODO: Dynamitize.
   }
   public async exit(step) {
     await step.endDialog();

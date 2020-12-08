@@ -177,6 +177,10 @@ export class GBVMService extends GBService {
       return `${$1} = hear("integer")`;
     });
 
+    code = code.replace(/hear (\w+) as boolean/gi, ($0, $1, $2) => {
+      return `${$1} = hear("boolean")`;
+    });
+
     code = code.replace(/hear (\w+) as name/gi, ($0, $1, $2) => {
       return `${$1} = hear("name")`;
     });
@@ -458,17 +462,14 @@ export class GBVMService extends GBService {
 
           let result = step.result;
           if (step.activeDialog.state.options['kind'] === "boolean") {
-
-            if (isIntentYes(step.context.locale, step.result)) {
+            if (isIntentYes('pt-BR', step.result)) {
               result = true;
             }
             else {
-              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+              result = false;
             }
-
           }
           else if (step.activeDialog.state.options['kind'] === "email") {
-            const locale = step.context.activity.locale;
 
             const extractEntity = (text) => {
               return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi);
