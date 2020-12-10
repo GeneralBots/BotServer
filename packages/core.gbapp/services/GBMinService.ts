@@ -741,6 +741,11 @@ export class GBMinService {
 
   private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
     const user = await min.userProfile.get(context, {});
+    
+    // Removes <at>Bot Id</at> from MS Teams.
+
+    context.activity.text = context.activity.text.trim();
+    context.activity.text = context.activity.text.replace(/\<at\>.*\<\/at\>\s/gi, '')
 
     let message: GuaribasConversationMessage;
     if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
@@ -769,6 +774,7 @@ export class GBMinService {
     };
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
+    
 
     if (isVMCall) {
       await GBVMService.callVM(context.activity.text, min, step, this.deployer);
@@ -908,6 +914,9 @@ export class GBMinService {
 
       if (step.activeDialog !== undefined) {
         await step.continueDialog();
+
+
+        
       } else {
         // Checks if any .gbapp will handle this answer, if not goes to standard kb.gbapp.
 

@@ -72,20 +72,24 @@ export class LanguageDialog extends IGBDialog {
           { name: 'english', code: 'en' },
           { name: 'inglês', code: 'en' },
           { name: 'portuguese', code: 'pt' },
+          { name: 'português', code: 'pt' },
           { name: 'français', code: 'fr' },
           { name: 'francês', code: 'fr' },
           { name: 'french', code: 'fr' },
           { name: 'português', code: 'pt' },
           { name: 'spanish', code: 'es' },
           { name: 'espanõl', code: 'es' },
+          { name: 'espanhol', code: 'es' },
           { name: 'german', code: 'de' },
-          { name: 'deutsch', code: 'de' }
+          { name: 'deutsch', code: 'de' },
+          { name: 'alemão', code: 'de' }
         ];
         let translatorLocale = null;
         const text = step.context.activity['originalText'];
 
         await CollectionUtil.asyncForEach(list, async item => {
-          if (GBConversationalService.kmpSearch(text, item.name) != -1) {
+          if (GBConversationalService.kmpSearch(text.toLowerCase(), item.name.toLowerCase()) != -1 ||
+            GBConversationalService.kmpSearch(text.toLowerCase(), item.code.toLowerCase()) != -1) {
             translatorLocale = item.code;
           }
         });
