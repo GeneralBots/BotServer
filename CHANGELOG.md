@@ -1,3 +1,10 @@
+## [2.0.70](https://github.com/pragmatismo-io/BotServer/compare/2.0.69...2.0.70) (2020-12-10)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Improvements in language selection and MSTEAMS integration. ([23b89e5](https://github.com/pragmatismo-io/BotServer/commit/23b89e5c79b341da42e214acc7c5a4de81e9ad6a))
+
 ## [2.0.69](https://github.com/pragmatismo-io/BotServer/compare/2.0.68...2.0.69) (2020-12-08)
 
 
