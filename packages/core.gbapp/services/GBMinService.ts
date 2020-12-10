@@ -819,10 +819,10 @@ export class GBMinService {
       // Spells check the input text before translating,
       // keeping fixed tokens as specified in Config.
 
-      const keepText: string = min.core.getParam<string>(
+      const keepText: string = min.core.getParam(
         min.instance,
         'Keep Text',
-        null
+        ''
       );
 
       let keepTextList = [];
@@ -841,6 +841,7 @@ export class GBMinService {
       });
       
       if (keepTextList) {
+        keepTextList = keepTextList.filter(p => p.trim() !== '');
         let i = 0;
         await CollectionUtil.asyncForEach(keepTextList, item => {
 
