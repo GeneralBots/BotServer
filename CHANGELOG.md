@@ -1,3 +1,12 @@
+## [2.0.69](https://github.com/pragmatismo-io/BotServer/compare/2.0.68...2.0.69) (2020-12-08)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Boolean added to BASIC. ([bf91d74](https://github.com/pragmatismo-io/BotServer/commit/bf91d741623f4f3ef6e71181ebf63efea9f7853b))
+* **core.gbapp:** Improvements on BASIC with built-in validators. ([af10172](https://github.com/pragmatismo-io/BotServer/commit/af10172dd4ea5aaaff4122c8226283f1ef955337))
+* **core.gbapp:** New validators in BASIC. ([eb15dd0](https://github.com/pragmatismo-io/BotServer/commit/eb15dd083b25c5144f9918a5a94f16afd788406f))
+
 ## [2.0.68](https://github.com/pragmatismo-io/BotServer/compare/2.0.67...2.0.68) (2020-12-07)
 
 
