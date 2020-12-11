@@ -1,3 +1,10 @@
+## [2.0.71](https://github.com/pragmatismo-io/BotServer/compare/2.0.70...2.0.71) (2020-12-10)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fix KeepText bug. ([8a82ead](https://github.com/pragmatismo-io/BotServer/commit/8a82eade5a3d5ba5e151ee9b38176a0703adcd60))
+
 ## [2.0.70](https://github.com/pragmatismo-io/BotServer/compare/2.0.69...2.0.70) (2020-12-10)
 
 
