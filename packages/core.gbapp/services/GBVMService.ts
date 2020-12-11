@@ -257,6 +257,10 @@ export class GBVMService extends GBService {
       return `exit (step)\n`;
     });
 
+    code = code.replace(/(show menu)/gi, () => {
+      return `showMenu (step)\n`;
+    });
+
     code = code.replace(/(talk to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().talkTo(${$3})\n`;
     });
@@ -424,6 +428,9 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bexit\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.exit' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bmenu\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.menu' : $1;
     });
 
     // await insertion.

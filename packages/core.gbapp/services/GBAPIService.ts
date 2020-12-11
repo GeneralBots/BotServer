@@ -479,9 +479,11 @@ export class DialogClass {
         return [year, month, day].join('/');
     }
   }
+
   public async isAffirmative(step, text) {
     return text.toLowerCase().match(Messages['pt-BR'].affirmative_sentences); // TODO: Dynamitize.
   }
+  
   public async exit(step) {
     await step.endDialog();
   }
@@ -539,8 +541,8 @@ export class DialogClass {
     }
   }
 
-  public async askEmail(step) {
-    return await step.beginDialog('/gbasic-email');
+  public async showMenu(step) {
+    return await step.beginDialog('/menu');
   }
 
   public async transfer(step) {
