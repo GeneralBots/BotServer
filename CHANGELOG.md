@@ -1,3 +1,10 @@
+## [2.0.72](https://github.com/pragmatismo-io/BotServer/compare/2.0.71...2.0.72) (2020-12-13)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Improvements in BASIC error handling. ([46f4cac](https://github.com/pragmatismo-io/BotServer/commit/46f4cac29b1d6dbeeb22417444e462346e4cf28f))
+
 ## [2.0.71](https://github.com/pragmatismo-io/BotServer/compare/2.0.70...2.0.71) (2020-12-10)
 
 
