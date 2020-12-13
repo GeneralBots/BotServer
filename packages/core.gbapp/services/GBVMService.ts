@@ -337,7 +337,7 @@ export class GBVMService extends GBService {
         parsedCode = code.substring(pos, pos + match1.index);
         parsedCode += ``;
         parsedCode += `const ${promiseName}= async (step, ${variable}) => {`;
-        parsedCode += `   return new Promise(async (resolve) => {`;
+        parsedCode += `   return new Promise(async (resolve, reject) => { try {`;
 
         // Skips old construction and point to the async block.
 
@@ -368,7 +368,8 @@ export class GBVMService extends GBService {
         }
 
         parsedCode += code.substring(start + match1[0].length + 1, pos + match1[0].length);
-        parsedCode += '});\n';
+        
+        parsedCode += '}catch(error){reject(error);}});\n';
         parsedCode += '}\n';
 
 
@@ -639,7 +640,7 @@ export class GBVMService extends GBService {
             } catch (error) {
               GBLog.error(`Error in BASIC code: ${error}`);
               const locale = step.context.activity.locale;
-              min.conversationalService.sendText(min, step, Messages[locale].very_sorry_about_error);
+              await min.conversationalService.sendText(min, step, Messages[locale].very_sorry_about_error);
             }
           }
           return await step.endDialog();

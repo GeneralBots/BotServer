@@ -40,11 +40,12 @@ import urlJoin = require('url-join');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GBDeployer } from './GBDeployer';
-const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
+import { CollectionUtil } from 'pragmatismo-io-framework';
 import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
 import { SecService } from '../../security.gbapp/services/SecService';
 const request = require('request-promise-native');
+const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
 
 /**
  * @fileoverview General Bots server core.
@@ -69,12 +70,9 @@ class SysClass {
       encoding: 'binary'
     };
 
-    try {
       const res = await request(options);
       return Buffer.from(res, 'binary').toString();
-    } catch (error) {
-      throw new Error(error);
-    }
+    
   }
 
   public async getRandomId() {
@@ -117,7 +115,6 @@ class SysClass {
 
   public async set(file: string, address: string, value: any): Promise<any> {
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
-    try {
       let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
       let siteId = process.env.STORAGE_SITE_ID;
@@ -140,7 +137,7 @@ class SysClass {
       });
 
       if (!document || document.length === 0) {
-        throw `File '${file}' specified on save GBasic command SET not found. Check the .gbdata or the .gbdialog associated.`;
+        throw `File '${file}' specified on save GBasic command SET not found. Check the file extension (.xlsx) and the associated .gbdata/.gbdialog.`;
       }
 
       let body = { values: [[]] };
@@ -151,15 +148,10 @@ class SysClass {
           `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='${address}')`
         )
         .patch(body);
-    } catch (error) {
-      GBLog.error(`SET BASIC error: ${error.message}`);
-      throw error;
-    }
   }
 
   public async save(file: string, ...args): Promise<any> {
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
-    try {
       let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
       let siteId = process.env.STORAGE_SITE_ID;
@@ -205,10 +197,6 @@ class SysClass {
           `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:DX2')`
         )
         .patch(body);
-    } catch (error) {
-      GBLog.error(`SAVE BASIC error: ${error.message}`);
-      throw error;
-    }
   }
 
   public async get(file: string, address: string): Promise<any> {
@@ -224,7 +212,6 @@ class SysClass {
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
-    try {
       let res = await client
         .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
         .get();
@@ -250,9 +237,6 @@ class SysClass {
       let val = results.text[0][0];
       GBLog.info(`BASIC: Getting '${file}' (GET). Value= ${val}.`);
       return val;
-    } catch (error) {
-      GBLog.error(error);
-    }
   }
 
 
@@ -269,7 +253,6 @@ class SysClass {
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
-    try {
       let res = await client
         .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
         .get();
@@ -336,9 +319,151 @@ class SysClass {
         GBLog.info(`BASIC: FIND multiple result count: ${array.length}.`);
         return array;
       }
-    } catch (error) {
-      GBLog.error(error);
-    }
+  }
+
+  /**
+   * 
+   * folder = CREATE FOLDER "notes\01"
+   * 
+   * 
+   * @param name Folder name containing tree separated by slash.
+   * 
+   * 
+   */
+  public async createFolder(name: string) {
+
+    let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+    let siteId = process.env.STORAGE_SITE_ID;
+    let libraryId = process.env.STORAGE_LIBRARY;
+    const botId = this.min.instance.botId;
+    const path = urlJoin(`/${botId}.gbai/${botId}.gbdata`, name);
+
+    return new Promise<any>((resolve, reject) => {
+        let client = MicrosoftGraph.Client.init({
+          authProvider: done => {
+            done(null, token);
+          }
+        });
+        const body = {
+          "name": name,
+          "folder": {},
+          "@microsoft.graph.conflictBehavior": "rename"
+        }
+        client.api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${path}:/children`)
+          .post(body, (err, res) => {
+            if (err) {
+              reject(err)
+            }
+            else {
+              resolve(res);
+            }
+          });
+      });
+  }
+
+  /**
+   * 
+   * folder = CREATE FOLDER "notes\10"
+   * SHARE FOLDER folder, "nome@domain.com", "E-mail message"
+   * 
+   */
+  public async shareFolder(folderReference, email: string, message: string) {
+    let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+    const driveId = folderReference.parentReference.driveId;
+    const itemId = folderReference.id;
+
+    return new Promise<string>((resolve, reject) => {
+      let client = MicrosoftGraph.Client.init({
+        authProvider: done => {
+          done(null, token);
+        }
+      });
+
+      const body =
+      {
+        "recipients": [
+          {
+            "email": email
+          }
+        ],
+        "message": message,
+        "requireSignIn": true,
+        "sendInvitation": true,
+        "roles": ["write"]
+      };
+
+      client.api(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/invite`)
+        .post(body, (err, res) => {
+          if (err) {
+            reject(err)
+          }
+          else {
+            resolve(res);
+          }
+        });
+    });
+  }
+
+  public async copyFile(src, dst) {
+
+    // let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+    // let siteId = process.env.STORAGE_SITE_ID;
+    // let libraryId = process.env.STORAGE_LIBRARY;
+    // const botId = this.min.instance.botId;
+    // const path = urlJoin(`/${botId}.gbai/${botId}.gbdata`, name);
+
+    // let client = MicrosoftGraph.Client.init({
+    //   authProvider: done => {
+    //     done(null, token);
+    //   }
+    // });
+
+    // const body =
+    // {
+    //   "parentReference": { driveId: gbaiDest.parentReference.driveId, id: gbaiDest.id },
+    //   "name": `${botName}.${kind}`
+    // }
+
+    // const packageName = `${templateName.split('.')[0]}.${kind}`;
+
+    // try {
+    //   const src = await client.api(
+    //     `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${source}`)
+    //     .get();
+
+    //   return await client.api(
+    //     `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${src.id}/copy`)
+    //     .post(body);
+
+    // } catch (error) {
+
+    //   if (error.code === "itemNotFound") {
+
+    //   } else if (error.code === "nameAlreadyExists") {
+
+    //     let src = await client.api(
+    //       `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${templateName}/${packageName}:/children`)
+    //       .get();
+    //     const dstName = `${botName}.gbai/${botName}.${kind}`;
+    //     let dst = await client.api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${dstName}`)
+    //       .get();
+
+    //     await CollectionUtil.asyncForEach(src.value, async item => {
+
+    //       const body =
+    //       {
+    //         "parentReference": { driveId: dst.parentReference.driveId, id: dst.id }
+    //       }
+    //       await client.api(
+    //         `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateId}/drive/items/${item.id}/copy`)
+    //         .post(body);
+    //     });
+    //   }
+    //   else {
+    //     GBLog.error(error);
+    //     throw error;
+    //   }
+    // }
   }
 
   public generatePassword() {
@@ -367,7 +492,6 @@ class SysClass {
       subscriptionId
     );
   }
-
 
   /**
    * Generic function to call any REST API.
@@ -483,7 +607,7 @@ export class DialogClass {
   public async isAffirmative(step, text) {
     return text.toLowerCase().match(Messages['pt-BR'].affirmative_sentences); // TODO: Dynamitize.
   }
-  
+
   public async exit(step) {
     await step.endDialog();
   }
