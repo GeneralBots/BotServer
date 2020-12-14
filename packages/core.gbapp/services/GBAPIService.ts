@@ -70,9 +70,9 @@ class SysClass {
       encoding: 'binary'
     };
 
-      const res = await request(options);
-      return Buffer.from(res, 'binary').toString();
-    
+    const res = await request(options);
+    return Buffer.from(res, 'binary').toString();
+
   }
 
   public async getRandomId() {
@@ -115,88 +115,96 @@ class SysClass {
 
   public async set(file: string, address: string, value: any): Promise<any> {
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
-      let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+    let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
-      let siteId = process.env.STORAGE_SITE_ID;
-      let libraryId = process.env.STORAGE_LIBRARY;
+    let siteId = process.env.STORAGE_SITE_ID;
+    let libraryId = process.env.STORAGE_LIBRARY;
 
-      let client = MicrosoftGraph.Client.init({
-        authProvider: done => {
-          done(null, token);
-        }
-      });
-      const botId = this.min.instance.botId;
-      const path = `/${botId}.gbai/${botId}.gbdata`;
-
-      let res = await client
-        .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
-        .get();
-
-      let document = res.value.filter(m => {
-        return m.name.toLowerCase() === file.toLowerCase();
-      });
-
-      if (!document || document.length === 0) {
-        throw `File '${file}' specified on save GBasic command SET not found. Check the file extension (.xlsx) and the associated .gbdata/.gbdialog.`;
+    let client = MicrosoftGraph.Client.init({
+      authProvider: done => {
+        done(null, token);
       }
+    });
+    const botId = this.min.instance.botId;
+    const path = `/${botId}.gbai/${botId}.gbdata`;
 
-      let body = { values: [[]] };
-      body.values[0][0] = value;
+    address = address.indexOf(':') !== -1 ? address : address + ":" + address;
 
-      await client
-        .api(
-          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='${address}')`
-        )
-        .patch(body);
+    let res = await client
+      .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+      .get();
+
+    let document = res.value.filter(m => {
+      return m.name.toLowerCase() === file.toLowerCase();
+    });
+
+    if (!document || document.length === 0) {
+      throw `File '${file}' specified on save GBasic command SET not found. Check the file extension (.xlsx) and the associated .gbdata/.gbdialog.`;
+    }
+
+    let body = { values: [[]] };
+    body.values[0][0] = value;
+
+    let sheets = await client
+      .api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets`
+      )
+      .get();
+
+    await client
+      .api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
+      )
+      .patch(body);
   }
 
   public async save(file: string, ...args): Promise<any> {
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
-      let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
+    let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
 
-      let siteId = process.env.STORAGE_SITE_ID;
-      let libraryId = process.env.STORAGE_LIBRARY;
+    let siteId = process.env.STORAGE_SITE_ID;
+    let libraryId = process.env.STORAGE_LIBRARY;
 
-      let client = MicrosoftGraph.Client.init({
-        authProvider: done => {
-          done(null, token);
-        }
-      });
-      const botId = this.min.instance.botId;
-      const path = `/${botId}.gbai/${botId}.gbdata`;
-
-      let res = await client
-        .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
-        .get();
-
-      let document = res.value.filter(m => {
-        return m.name.toLowerCase() === file.toLowerCase();
-      });
-
-      await client
-        .api(
-          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:Z2')/insert`
-        )
-        .post({});
-
-      if (!document || document.length === 0) {
-        throw `File '${file}' specified on save GBasic command SAVE not found. Check the .gbdata or the .gbdialog associated.`;
+    let client = MicrosoftGraph.Client.init({
+      authProvider: done => {
+        done(null, token);
       }
-      if (args.length > 128) {
-        throw `File '${file}' has a SAVE call with more than 128 arguments. Check the .gbdialog associated.`;
-      }
+    });
+    const botId = this.min.instance.botId;
+    const path = `/${botId}.gbai/${botId}.gbdata`;
 
-      let body = { values: [[]] };
+    let res = await client
+      .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+      .get();
 
-      for (let index = 0; index < 128; index++) {
-        body.values[0][index] = args[index];
-      }
+    let document = res.value.filter(m => {
+      return m.name.toLowerCase() === file.toLowerCase();
+    });
 
-      let res2 = await client
-        .api(
-          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:DX2')`
-        )
-        .patch(body);
+    await client
+      .api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:Z2')/insert`
+      )
+      .post({});
+
+    if (!document || document.length === 0) {
+      throw `File '${file}' specified on save GBasic command SAVE not found. Check the .gbdata or the .gbdialog associated.`;
+    }
+    if (args.length > 128) {
+      throw `File '${file}' has a SAVE call with more than 128 arguments. Check the .gbdialog associated.`;
+    }
+
+    let body = { values: [[]] };
+
+    for (let index = 0; index < 128; index++) {
+      body.values[0][index] = args[index];
+    }
+
+    let res2 = await client
+      .api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A2:DX2')`
+      )
+      .patch(body);
   }
 
   public async get(file: string, address: string): Promise<any> {
@@ -212,31 +220,31 @@ class SysClass {
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
-      let res = await client
-        .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
-        .get();
+    let res = await client
+      .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+      .get();
 
-      // Performs validation.
+    // Performs validation.
 
-      let document = res.value.filter(m => {
-        return m.name.toLowerCase() === file.toLowerCase();
-      });
+    let document = res.value.filter(m => {
+      return m.name.toLowerCase() === file.toLowerCase();
+    });
 
-      if (!document || document.length === 0) {
-        throw `File '${file}' specified on save GBasic command GET not found. Check the .gbdata or the .gbdialog associated.`;
-      }
+    if (!document || document.length === 0) {
+      throw `File '${file}' specified on save GBasic command GET not found. Check the .gbdata or the .gbdialog associated.`;
+    }
 
-      // Creates workbook session that will be discarded.
+    // Creates workbook session that will be discarded.
 
-      let results = await client
-        .api(
-          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='${address}')`
-        )
-        .get();
+    let results = await client
+      .api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='${address}')`
+      )
+      .get();
 
-      let val = results.text[0][0];
-      GBLog.info(`BASIC: Getting '${file}' (GET). Value= ${val}.`);
-      return val;
+    let val = results.text[0][0];
+    GBLog.info(`BASIC: Getting '${file}' (GET). Value= ${val}.`);
+    return val;
   }
 
 
@@ -253,72 +261,72 @@ class SysClass {
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
-      let res = await client
-        .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
-        .get();
+    let res = await client
+      .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+      .get();
 
-      // Performs validation.
+    // Performs validation.
 
-      let document = res.value.filter(m => {
-        return m.name.toLowerCase() === file.toLowerCase();
-      });
+    let document = res.value.filter(m => {
+      return m.name.toLowerCase() === file.toLowerCase();
+    });
 
-      if (!document || document.length === 0) {
-        throw `File '${file}' specified on save GBasic command FIND not found. Check the .gbdata or the .gbdialog associated.`;
+    if (!document || document.length === 0) {
+      throw `File '${file}' specified on save GBasic command FIND not found. Check the .gbdata or the .gbdialog associated.`;
+    }
+    if (args.length > 1) {
+      throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
+    }
+
+    // Creates workbook session that will be discarded.
+
+    const filter = args[0].split('=');
+    const columnName = filter[0];
+    const value = filter[1];
+    let results = await client
+      .api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z100')`
+      )
+      .get();
+
+    let columnIndex = 0;
+    const header = results.text[0];
+    for (; columnIndex < header.length; columnIndex++) {
+      if (header[columnIndex].toLowerCase() === columnName.toLowerCase()) {
+        break;
       }
-      if (args.length > 1) {
-        throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
-      }
+    }
 
-      // Creates workbook session that will be discarded.
+    // As BASIC uses arrays starting with 1 (one) as index, 
+    // a ghost element is added at 0 (zero) position.
 
-      const filter = args[0].split('=');
-      const columnName = filter[0];
-      const value = filter[1];
-      let results = await client
-        .api(
-          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Sheet1')/range(address='A1:Z100')`
-        )
-        .get();
+    let array = [];
+    array.push({ 'this is a base 1': 'array' });
+    let foundIndex = 0;
+    for (; foundIndex < results.text.length; foundIndex++) {
+      // Filter results action.
 
-      let columnIndex = 0;
-      const header = results.text[0];
-      for (; columnIndex < header.length; columnIndex++) {
-        if (header[columnIndex].toLowerCase() === columnName.toLowerCase()) {
-          break;
+      if (results.text[foundIndex][columnIndex].toLowerCase() === value.toLowerCase()) {
+        let output = {};
+        const row = results.text[foundIndex];
+        for (let colIndex = 0; colIndex < row.length; colIndex++) {
+          output[header[colIndex]] = row[colIndex];
         }
+        output['line'] = foundIndex + 1;
+        array.push(output);
       }
+    }
 
-      // As BASIC uses arrays starting with 1 (one) as index, 
-      // a ghost element is added at 0 (zero) position.
-
-      let array = [];
-      array.push({ 'this is a base 1': 'array' });
-      let foundIndex = 0;
-      for (; foundIndex < results.text.length; foundIndex++) {
-        // Filter results action.
-
-        if (results.text[foundIndex][columnIndex].toLowerCase() === value.toLowerCase()) {
-          let output = {};
-          const row = results.text[foundIndex];
-          for (let colIndex = 0; colIndex < row.length; colIndex++) {
-            output[header[colIndex]] = row[colIndex];
-          }
-          output['line'] = foundIndex + 1;
-          array.push(output);
-        }
-      }
-
-      if (array.length === 1) {
-        GBLog.info(`BASIC: FIND the data set is empty.`);
-        return null;
-      } else if (array.length === 2) {
-        GBLog.info(`BASIC: FIND single result: ${array[0]}.`);
-        return array[1];
-      } else {
-        GBLog.info(`BASIC: FIND multiple result count: ${array.length}.`);
-        return array;
-      }
+    if (array.length === 1) {
+      GBLog.info(`BASIC: FIND the data set is empty.`);
+      return null;
+    } else if (array.length === 2) {
+      GBLog.info(`BASIC: FIND single result: ${array[0]}.`);
+      return array[1];
+    } else {
+      GBLog.info(`BASIC: FIND multiple result count: ${array.length}.`);
+      return array;
+    }
   }
 
   /**
@@ -339,26 +347,26 @@ class SysClass {
     const path = urlJoin(`/${botId}.gbai/${botId}.gbdata`, name);
 
     return new Promise<any>((resolve, reject) => {
-        let client = MicrosoftGraph.Client.init({
-          authProvider: done => {
-            done(null, token);
+      let client = MicrosoftGraph.Client.init({
+        authProvider: done => {
+          done(null, token);
+        }
+      });
+      const body = {
+        "name": name,
+        "folder": {},
+        "@microsoft.graph.conflictBehavior": "rename"
+      }
+      client.api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${path}:/children`)
+        .post(body, (err, res) => {
+          if (err) {
+            reject(err)
+          }
+          else {
+            resolve(res);
           }
         });
-        const body = {
-          "name": name,
-          "folder": {},
-          "@microsoft.graph.conflictBehavior": "rename"
-        }
-        client.api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${path}:/children`)
-          .post(body, (err, res) => {
-            if (err) {
-              reject(err)
-            }
-            else {
-              resolve(res);
-            }
-          });
-      });
+    });
   }
 
   /**

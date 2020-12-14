@@ -21,7 +21,7 @@ export const Messages = {
     wider_answer: subjectText =>
       `Vou te responder de modo mais abrangente... Não apenas sobre ${subjectText}`,
     which_question: 'Qual a pergunta?',
-    anything_else: 'Então, posso ajudar em algo mais?',
+    anything_else: 'Posso ajudar em algo mais?',
     here_is_subjects: 'Aqui estão algumas categorias de assuntos...',
     menu_select: 'Selecionar',
     lets_search: query =>

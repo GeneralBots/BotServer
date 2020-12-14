@@ -166,10 +166,10 @@ export class WhatsappDirectLine extends GBService {
     }
     GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
 
-    await CollectionUtil.asyncForEach(this.min.appPackages, async (e:IGBPackage) => {
+    await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
       await e.onExchangeData(this.min, "whatsappMessage", message);
     });
-    
+
     const id = req.body.messages[0].chatId.split('@')[0];
     const senderName = req.body.messages[0].senderName;
     let sec = new SecService();
@@ -252,7 +252,7 @@ export class WhatsappDirectLine extends GBService {
       }
 
     }
-    else if (user.agentMode === "bot" || user.agentMode === null) {
+    else if (user.agentMode === "bot" || user.agentMode === null || user.agentMode === undefined) {
 
       if (WhatsappDirectLine.conversationIds[from] === undefined) {
         GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
