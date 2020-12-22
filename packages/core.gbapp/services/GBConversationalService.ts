@@ -601,7 +601,7 @@ export class GBConversationalService {
     try {
       const saved = step.context.activity.text;
       step.context.activity.text = text;
-      nlp = await model.recognize(step.context,{},{},{IncludeAllIntents:false, IncludeInstanceData: false, includeAPIResults: true});
+      nlp = await model.recognize(step.context, {}, {}, { IncludeAllIntents: false, IncludeInstanceData: false, includeAPIResults: true });
       step.context.activity.text = saved;
     } catch (error) {
       // tslint:disable:no-unsafe-any
@@ -644,30 +644,24 @@ export class GBConversationalService {
         `NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${instanceScore}`
       );
 
-      try {
-        step.activeDialog.state.options.entities = nlp.entities;
+      step.activeDialog.state.options.entities = nlp.entities;
 
-        // FIX MSFT NLP issue.
+      // FIX MSFT NLP issue.
 
-        if (nlp.entities) {
-          await CollectionUtil.asyncForEach(Object.keys(nlp.entities), async key => {
-            if (key !== "$instance") {
-              let entity = nlp.entities[key];
-              if (Array.isArray(entity[0])) {
-                nlp.entities[key] = entity.slice(1);
-              }
+      if (nlp.entities) {
+        await CollectionUtil.asyncForEach(Object.keys(nlp.entities), async key => {
+          if (key !== "$instance") {
+            let entity = nlp.entities[key];
+            if (Array.isArray(entity[0])) {
+              nlp.entities[key] = entity.slice(1);
             }
-          });
-        }
-
-        await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
-
-        return true;
-      } catch (error) {
-        const msg = `Error finding dialog associated to NLP event: ${intent}: ${error.message}`;
-
-        throw new Error(msg);
+          }
+        });
       }
+
+      await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
+
+      return true;
     }
 
     GBLog.info(
@@ -777,15 +771,30 @@ export class GBConversationalService {
   }
 
   public async sendText(min: GBMinInstance, step, text) {
-    await this['sendTextWithOptions'](min, step, text, true);
+    await this['sendTextWithOptions'](min, step, text, true, null);
   }
 
-  public async sendTextWithOptions(min: GBMinInstance, step, text, translate) {
+  public async sendTextWithOptions(min: GBMinInstance, step, text, translate, keepTextList) {
     const member = step.context.activity.from;
     const user = await min.userProfile.get(step.context, {});
     const systemUser = user.systemUser;
 
     if (translate) {
+      let replacements = [];
+
+      if (keepTextList) {
+        keepTextList = keepTextList.filter(p => p.trim() !== '');
+        let i = 0;
+        await CollectionUtil.asyncForEach(keepTextList, item => {
+          if (text.toLowerCase().indexOf(item.toLowerCase()) != -1) {
+            const replacementToken = GBAdminService['getNumberIdentifier']();
+            replacements[i] = { text: item, replacementToken: replacementToken };
+            i++;
+            text = text.replace(new RegExp(item.trim(), 'gi'), `${replacementToken}`);
+          }
+        });
+      }
+
       text = await min.conversationalService.translate(
         min,
         text,
@@ -793,6 +802,15 @@ export class GBConversationalService {
           ? systemUser.locale
           : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
+
+      if (keepTextList) {
+        let i = 0;
+        await CollectionUtil.asyncForEach(replacements, item => {
+          i++;
+          text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
+        });
+      }
+
       GBLog.info(`Translated text(sendText): ${text}.`);
     }
 
@@ -804,6 +822,8 @@ export class GBConversationalService {
     } else {
       await step.context.sendActivity(text);
     }
+
+
   }
 
   public async broadcast(min: GBMinInstance, message: string) {
