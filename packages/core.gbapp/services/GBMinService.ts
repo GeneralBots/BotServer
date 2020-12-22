@@ -841,23 +841,22 @@ export class GBMinService {
           keepTextList = keepTextList.concat(result);
         }
       });
-
+      let textProcessed = GBConversationalService.removeDiacriticsAndPunctuation(text);
       if (keepTextList) {
         keepTextList = keepTextList.filter(p => p.trim() !== '');
         let i = 0;
         await CollectionUtil.asyncForEach(keepTextList, item => {
-
           let it = GBConversationalService.removeDiacriticsAndPunctuation(item);
-
-          if (text.toLowerCase().indexOf(item.toLowerCase()) != -1) {
-            const replacementToken = GBAdminService['getNumberIdentifier']();
+          
+          if (textProcessed.toLowerCase().indexOf(it.toLowerCase()) != -1) {
+            const replacementToken = 'X' + GBAdminService['getNumberIdentifier']().substr(0,4);
             replacements[i] = { text: item, replacementToken: replacementToken };
             i++;
-            text = text.replace(new RegExp(item.trim(), 'gi'), `${replacementToken}`);
+            textProcessed = textProcessed.replace(new RegExp(it.trim(), 'gi'), `${replacementToken}`);
           }
         });
       }
-      text = await min.conversationalService.spellCheck(min, text);
+      text = await min.conversationalService.spellCheck(min, textProcessed);
 
       // Detects user typed language and updates their locale profile if applies.
 
