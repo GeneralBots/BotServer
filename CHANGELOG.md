@@ -1,3 +1,10 @@
+## [2.0.75](https://github.com/pragmatismo-io/BotServer/compare/2.0.74...2.0.75) (2020-12-22)
+
+
+### Bug Fixes
+
+* **core.gbapp:** MSFT translator fixes and auto-start twice fixed. ([81a0fdd](https://github.com/pragmatismo-io/BotServer/commit/81a0fdd5d01d28ce16d04198c8487931f89a203a))
+
 ## [2.0.74](https://github.com/pragmatismo-io/BotServer/compare/2.0.73...2.0.74) (2020-12-22)
 
 
