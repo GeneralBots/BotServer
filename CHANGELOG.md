@@ -1,3 +1,10 @@
+## [2.0.73](https://github.com/pragmatismo-io/BotServer/compare/2.0.72...2.0.73) (2020-12-14)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Text improvements in messages. ([f739c15](https://github.com/pragmatismo-io/BotServer/commit/f739c1543105d4495085eb9e10522d12eebe27b6))
+
 ## [2.0.72](https://github.com/pragmatismo-io/BotServer/compare/2.0.71...2.0.72) (2020-12-13)
 
 
