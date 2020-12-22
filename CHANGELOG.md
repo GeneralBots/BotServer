@@ -1,3 +1,10 @@
+## [2.0.74](https://github.com/pragmatismo-io/BotServer/compare/2.0.73...2.0.74) (2020-12-22)
+
+
+### Bug Fixes
+
+* **all:** NLP error handling improved. ([6ed7380](https://github.com/pragmatismo-io/BotServer/commit/6ed7380b76a20c982f5e9bfa54b21d12a74374c2))
+
 ## [2.0.73](https://github.com/pragmatismo-io/BotServer/compare/2.0.72...2.0.73) (2020-12-14)
 
 
