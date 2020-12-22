@@ -676,11 +676,13 @@ export class GBConversationalService {
     if (!key) {
       return process.env.DEFAULT_USER_LANGUAGE;
     }
-    return await AzureText.getLocale(
+    let language = await AzureText.getLocale(
       key,
       min.core.getParam<string>(min.instance, 'textAnalyticsEndpoint', null),
       text
     );
+
+    return language === '(Unknown)' ? 'en' : language;
   }
 
   public async spellCheck(min: GBMinInstance, text: string): Promise<string> {

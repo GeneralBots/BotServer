@@ -197,6 +197,7 @@ export class GBMinService {
 
               await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
               let startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
+
               GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
 
               if (startDialog) {
@@ -634,6 +635,7 @@ export class GBMinService {
           user.loaded = true;
           user.subjects = [];
           user.cb = undefined;
+          user.welcomed = false;
 
           if (context.activity.from.id !== min.botId) {
             const member = context.activity.from;
@@ -671,13 +673,13 @@ export class GBMinService {
             await CollectionUtil.asyncForEach(appPackages, async e => {
               await e.onNewSession(min, step);
             });
-   
+
             await step.beginDialog('/');
 
           } else {
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
-            if (startDialog)
-            {
+            if (startDialog && !user.welcomed) {
+              user.welcomed = true;
               GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
             }
@@ -741,7 +743,7 @@ export class GBMinService {
 
   private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
     const user = await min.userProfile.get(context, {});
-    
+
     // Removes <at>Bot Id</at> from MS Teams.
 
     context.activity.text = context.activity.text.trim();
@@ -754,7 +756,7 @@ export class GBMinService {
 
       if (user) {
 
-        if (!user.conversation){
+        if (!user.conversation) {
           user.conversation = await analytics.createConversation(user.systemUser);
         }
 
@@ -774,7 +776,7 @@ export class GBMinService {
     };
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
-    
+
 
     if (isVMCall) {
       await GBVMService.callVM(context.activity.text, min, step, this.deployer);
@@ -839,7 +841,7 @@ export class GBMinService {
           keepTextList = keepTextList.concat(result);
         }
       });
-      
+
       if (keepTextList) {
         keepTextList = keepTextList.filter(p => p.trim() !== '');
         let i = 0;
@@ -917,31 +919,30 @@ export class GBMinService {
         await step.continueDialog();
 
 
-        
+
       } else {
         // Checks if any .gbapp will handle this answer, if not goes to standard kb.gbapp.
 
-        let handled = false;
+        let nextDialog = null;
         await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-          if (
-            await e.onExchangeData(min, 'handleAnswer', {
-              query: text,
-              step: step,
-              notTranslatedQuery: originalText,
-              message: message ? message['dataValues'] : null,
-              user: user ? user['dataValues'] : null
-            })
-          ) {
-            handled = true;
-          }
-        });
-        if (!handled) {
-          await step.beginDialog('/answer', {
+
+          nextDialog = await e.onExchangeData(min, 'handleAnswer', {
             query: text,
-            user: user ? user['dataValues'] : null,
-            message: message
+            step: step,
+            notTranslatedQuery: originalText,
+            message: message ? message['dataValues'] : null,
+            user: user ? user['dataValues'] : null
           });
-        }
+
+
+        });
+
+        await step.beginDialog(nextDialog ? nextDialog : '/answer', {
+          query: text,
+          user: user ? user['dataValues'] : null,
+          message: message
+        });
+
       }
     }
   }
