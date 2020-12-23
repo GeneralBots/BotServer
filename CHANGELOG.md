@@ -1,3 +1,10 @@
+## [2.0.77](https://github.com/pragmatismo-io/BotServer/compare/2.0.76...2.0.77) (2020-12-23)
+
+
+### Bug Fixes
+
+* **core.gbapp:** resolve is being called correctly in /hear. ([9804deb](https://github.com/pragmatismo-io/BotServer/commit/9804debfccd268796b5a789d2da7ebdb44dfa2e0))
+
 ## [2.0.76](https://github.com/pragmatismo-io/BotServer/compare/2.0.75...2.0.76) (2020-12-22)
 
 
