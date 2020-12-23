@@ -1,3 +1,10 @@
+## [2.0.78](https://github.com/pragmatismo-io/BotServer/compare/2.0.77...2.0.78) (2020-12-23)
+
+
+### Bug Fixes
+
+* **core.gbapp:** result is now OK from hear. ([c900103](https://github.com/pragmatismo-io/BotServer/commit/c900103fb06bc4848519f9104d8c1e7c5c5066b0))
+
 ## [2.0.77](https://github.com/pragmatismo-io/BotServer/compare/2.0.76...2.0.77) (2020-12-23)
 
 
