@@ -679,7 +679,7 @@ export class GBVMService extends GBService {
             delete min.cbMap[id];
             try {
              
-              await promise(step, step.result);
+              await promise(step, result);
               if (step.activeDialog.state.options.previousResolve != undefined) {
                 step.activeDialog.state.options.previousResolve();
               }
