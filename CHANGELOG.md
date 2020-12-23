@@ -1,3 +1,10 @@
+## [2.0.76](https://github.com/pragmatismo-io/BotServer/compare/2.0.75...2.0.76) (2020-12-22)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fix in MSFT spellchecker. ([eaaae13](https://github.com/pragmatismo-io/BotServer/commit/eaaae133cbb8a16bb37d260057a24d434893570c))
+
 ## [2.0.75](https://github.com/pragmatismo-io/BotServer/compare/2.0.74...2.0.75) (2020-12-22)
 
 
