@@ -668,21 +668,24 @@ export class GBMinService {
         );
         if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {
           const member = context.activity.membersAdded[0];
-          if (member.name === min.instance.title) {
+          if (context.activity.membersAdded[0].id === context.activity.recipient.id) {
             GBLog.info(`Bot added to conversation, starting chat...`);
             await CollectionUtil.asyncForEach(appPackages, async e => {
               await e.onNewSession(min, step);
             });
 
-            await step.beginDialog('/');
-
-          } else {
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
             if (startDialog && !user.welcomed) {
               user.welcomed = true;
               GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
             }
+            else
+            {
+              await step.beginDialog('/');
+            }           
+
+          } else {
 
             GBLog.info(`Member added to conversation: ${member.name}`);
           }
@@ -841,18 +844,18 @@ export class GBMinService {
           keepTextList = keepTextList.concat(result);
         }
       });
-      let textProcessed = GBConversationalService.removeDiacriticsAndPunctuation(text);
+      let textProcessed = GBConversationalService.removeDiacritics(text);
       if (keepTextList) {
         keepTextList = keepTextList.filter(p => p.trim() !== '');
         let i = 0;
         await CollectionUtil.asyncForEach(keepTextList, item => {
-          let it = GBConversationalService.removeDiacriticsAndPunctuation(item);
+          let it = GBConversationalService.removeDiacritics(item);
           
           if (textProcessed.toLowerCase().indexOf(it.toLowerCase()) != -1) {
             const replacementToken = 'X' + GBAdminService['getNumberIdentifier']().substr(0,4);
             replacements[i] = { text: item, replacementToken: replacementToken };
             i++;
-            textProcessed = textProcessed.replace(new RegExp(it.trim(), 'gi'), `${replacementToken}`);
+            textProcessed = textProcessed.replace(new RegExp(`\\b${it.trim()}\\b`, 'gi'), `${replacementToken}`);
           }
         });
       }
@@ -916,8 +919,6 @@ export class GBMinService {
 
       if (step.activeDialog !== undefined) {
         await step.continueDialog();
-
-
 
       } else {
         // Checks if any .gbapp will handle this answer, if not goes to standard kb.gbapp.

@@ -201,6 +201,10 @@ export class GBVMService extends GBService {
       return `${$1} = hear("money")`;
     });
 
+    code = code.replace(/hear (\w+) as language/gi, ($0, $1, $2) => {
+      return `${$1} = hear("language")`;
+    });
+
     code = code.replace(/hear (\w+) as zipcode/gi, ($0, $1, $2) => {
       return `${$1} = hear("zipcode")`;
     });
@@ -237,6 +241,10 @@ export class GBVMService extends GBService {
       }
     });
 
+    code = code.replace(/(set language)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `setLanguage (step, ${$3})\n`;
+    });
+
     code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
       return `sys().set (${$1})`;
     });
@@ -254,7 +262,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(exit)/gi, () => {
-      return `exit (step)\n`;
+      return `resolve();\n`;
     });
 
     code = code.replace(/(show menu)/gi, () => {
@@ -368,7 +376,7 @@ export class GBVMService extends GBService {
         }
 
         parsedCode += code.substring(start + match1[0].length + 1, pos + match1[0].length);
-        
+
         parsedCode += '}catch(error){reject(error);}});\n';
         parsedCode += '}\n';
 
@@ -424,11 +432,11 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendFile' : $1;
     });
+    code = code.replace(/("[^"]*"|'[^']*')|\bsetLanguage\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.setLanguage' : $1;
+    });
     code = code.replace(/("[^"]*"|'[^']*')|\btransfer\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.transfer' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bexit\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.exit' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bmenu\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.menu' : $1;
@@ -629,21 +637,61 @@ export class GBVMService extends GBService {
               return await step.replaceDialog('/hear', step.activeDialog.state.options);
             }
           }
+          else if (step.activeDialog.state.options['kind'] === "language") {
+
+            result = null;
+
+            const list = [
+              { name: 'english', code: 'en' },
+              { name: 'inglês', code: 'en' },
+              { name: 'portuguese', code: 'pt' },
+              { name: 'português', code: 'pt' },
+              { name: 'français', code: 'fr' },
+              { name: 'francês', code: 'fr' },
+              { name: 'french', code: 'fr' },
+              { name: 'spanish', code: 'es' },
+              { name: 'espanõl', code: 'es' },
+              { name: 'espanhol', code: 'es' },
+              { name: 'german', code: 'de' },
+              { name: 'deutsch', code: 'de' },
+              { name: 'alemão', code: 'de' }
+            ];
+
+            const text = step.context.activity['originalText'];
+
+            await CollectionUtil.asyncForEach(list, async item => {
+              if (GBConversationalService.kmpSearch(text.toLowerCase(), item.name.toLowerCase()) != -1 ||
+                GBConversationalService.kmpSearch(text.toLowerCase(), item.code.toLowerCase()) != -1) {
+                result = item.code;
+              }
+            });
+
+            if (result === null) {
+              await min.conversationalService.sendText(min, step, `Escolha por favor um dos idiomas sugeridos.`);
+              return await step.replaceDialog('/hear', step.activeDialog.state.options);
+            }
+
+          }
 
           const id = step.activeDialog.state.options.id;
           if (min.cbMap[id]) {
             const promise = min.cbMap[id].promise;
             delete min.cbMap[id];
             try {
-              const opts = await promise(step, result);
-              return await step.replaceDialog('/hear', opts);
+             
+              await promise(step, step.result);
+              if (step.activeDialog.state.options.previousResolve != undefined) {
+                step.activeDialog.state.options.previousResolve();
+              }
+
+              return await step.next();
             } catch (error) {
               GBLog.error(`Error in BASIC code: ${error}`);
               const locale = step.context.activity.locale;
               await min.conversationalService.sendText(min, step, Messages[locale].very_sorry_about_error);
             }
           }
-          return await step.endDialog();
+
         }
       ])
     );

@@ -170,6 +170,12 @@ export class GBConversationalService {
   // "what?" version ... http://jsperf.com/diacritics/12
   public static removeDiacriticsAndPunctuation(str) {
 
+    str = GBConversationalService.removeDiacritics(str);
+    return str.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+
+  }
+  public static removeDiacritics(str) {
+
     var diacriticsMap = {};
     for (var i = 0; i < GBConversationalService.defaultDiacriticsRemovalMap.length; i++) {
       var letters = GBConversationalService.defaultDiacriticsRemovalMap[i].letters;
@@ -180,9 +186,7 @@ export class GBConversationalService {
     str = str.replace(/[^\u0000-\u007E]/g, function (a) {
       return diacriticsMap[a] || a;
     });
-
-    return str.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-
+    return str;
   }
 
 

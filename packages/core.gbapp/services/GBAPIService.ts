@@ -657,6 +657,17 @@ export class DialogClass {
     }
   }
 
+  public async setLanguage(step, language)
+  {
+    const locale = step.context.activity.locale;
+    const user = await this.min.userProfile.get(step.context, {});
+
+    let sec = new SecService();
+    user.systemUser = await sec.updateUserLocale(user.systemUser.userId, language);
+
+    await this.min.userProfile.set(step.context, user);
+  }
+
   public async getFrom(step) {
     return step.context.activity.from.id;
   }
