@@ -61,7 +61,11 @@ const opn = require('opn');
 const cron = require('node-cron');
 
 /**
- *  Core service layer.
+ * GBCoreService contains main logic for handling storage services related
+ * to instance handling. When the server starts a instance is needed and
+ * if no instance is found a boot instance is created. After that high-level
+ * instance management methods can be created.
+ * Core scheduling, base network services are also handled in this service.
  */
 export class GBCoreService implements IGBCoreService {
   /**
@@ -101,10 +105,11 @@ export class GBCoreService implements IGBCoreService {
     this.adminService = new GBAdminService(this);
   }
   public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {}
+  
   /**
-   * Gets database config and connect to storage.
+   * Gets database config and connect to storage. Currently two databases
+   * are available: SQL Server and SQLite.
    */
-
   public async initStorage(): Promise<any> {
     this.dialect = GBConfigService.get('STORAGE_DIALECT');
 
@@ -174,6 +179,10 @@ export class GBCoreService implements IGBCoreService {
     }
   }
 
+  /**
+   * Checks wheather storage is acessible or not and opens firewall
+   * in case of any connection block.
+   */
   public async checkStorage(installationDeployer: IGBInstallationDeployer) {
     try {
       await this.sequelize.authenticate();
@@ -189,6 +198,9 @@ export class GBCoreService implements IGBCoreService {
     }
   }
 
+  /**
+   * Syncronize structure between model and tables in storage.
+   */
   public async syncDatabaseStructure() {
     if (GBConfigService.get('STORAGE_SYNC') === 'true') {
       const alter = GBConfigService.get('STORAGE_SYNC_ALTER') === 'true';
@@ -227,16 +239,6 @@ export class GBCoreService implements IGBCoreService {
     }
   }
 
-  // public async getPackagesByInstanceId(instanceId: number): Promise<IGBPackage[]> {
-
-  //     const options = {
-  //       where: {
-  //         instanceId: instanceId
-  //       }
-  //     };
-  //     return GuaribasApplications.findAll(options);
-  // }
-
   /**
    * Loads just one Bot instance by its internal Id.
    */
@@ -263,6 +265,11 @@ export class GBCoreService implements IGBCoreService {
     return await GuaribasInstance.findOne(options);
   }
 
+  /**
+   * Writes .env required to start the full server. Used during 
+   * first startup, when user is asked some questions to create the 
+   * full base environment.
+   */
   public async writeEnv(instance: IGBInstance) {
     const env = `ADDITIONAL_DEPLOY_PATH=
 ADMIN_PASS=${instance.adminPass}
@@ -286,6 +293,12 @@ STORAGE_SYNC=true
     fs.writeFileSync('.env', env);
   }
 
+
+  /** 
+   * Certifies that network servers will reach back the development machine
+   * when calling back from web services. This ensures that reverse proxy is
+   * established.
+   */
   public async ensureProxy(port): Promise<string> {
     try {
       if (fs.existsSync('node_modules/ngrok/bin/ngrok.exe') || fs.existsSync('node_modules/ngrok/bin/ngrok')) {
@@ -305,6 +318,10 @@ STORAGE_SYNC=true
     }
   }
 
+  /**
+   * Setup generic web hooks so .gbapps can expose application logic
+   * and get called on demand.
+   */
   public installWebHook(isGet: boolean, url: string, callback: any) {
     if (isGet) {
       GBServer.globals.server.get(url, (req, res) => {
@@ -317,20 +334,35 @@ STORAGE_SYNC=true
     }
   }
 
+  /**
+   * Defines the entry point dialog to be called whenever a user 
+   * starts talking to the bot.
+   */
   public setEntryPointDialog(dialogName: string) {
     GBServer.globals.entryPointDialog = dialogName;
   }
 
+  /**
+   * Replaces the default web application root path used to start the GB
+   * with a custom home page.
+   */
   public setWWWRoot(localPath: string) {
     GBServer.globals.wwwroot = localPath;
   }
 
+  /**
+   * Removes a bot instance from storage.
+   */
   public async deleteInstance(botId: string) {
     const options = { where: {} };
     options.where = { botId: botId };
     await GuaribasInstance.destroy(options);
   }
 
+  /**
+   * Saves a bot instance object to the storage handling
+   * multi-column JSON based store 'params' field.
+   */
   public async saveInstance(fullInstance: any) {
     const options = { where: {} };
     options.where = { botId: fullInstance.botId };
@@ -351,10 +383,6 @@ STORAGE_SYNC=true
 
   /**
    * Loads all bot instances from object storage, if it's formatted.
-   *
-   * @param core
-   * @param azureDeployer
-   * @param proxyAddress
    */
   public async loadAllInstances(
     core: IGBCoreService,
@@ -407,6 +435,9 @@ STORAGE_SYNC=true
     return instances;
   }
 
+  /**
+   * Loads all system packages from 'packages' folder. 
+   */
   public async loadSysPackages(core: GBCoreService): Promise<IGBPackage[]> {
     // NOTE: if there is any code before this line a semicolon
     // will be necessary before this line.
@@ -438,6 +469,10 @@ STORAGE_SYNC=true
     return sysPackages;
   }
 
+  /**
+   * Verifies that an complex global password has been specified 
+   * before starting the server.
+   */
   public ensureAdminIsSecured() {
     const password = GBConfigService.get('ADMIN_PASS');
     if (!GBAdminService.StrongRegex.test(password)) {
@@ -447,6 +482,12 @@ STORAGE_SYNC=true
     }
   }
 
+  /**
+   * Creates the first bot instance (boot instance) used to "boot" the server.
+   * At least one bot is required to perform conversational administrative tasks.
+   * So a base main bot is always deployed and will act as root bot for 
+   * configuration tree with three levels: .env > root bot > all other bots. 
+   */
   public async createBootInstance(
     core: GBCoreService,
     installationDeployer: IGBInstallationDeployer,
@@ -475,6 +516,9 @@ STORAGE_SYNC=true
     }
   }
 
+  /**
+   * Helper to get the web browser onpened in UI interfaces.
+   */
   public openBrowserInDevelopment() {
     if (process.env.NODE_ENV === 'development') {
       opn('http://localhost:4242');
@@ -557,9 +601,7 @@ STORAGE_SYNC=true
   }
 
   /**
-   * Opens storage firewall.
-   *
-   * @param azureDeployer Infrastructure Deployer instance.
+   * Opens storage firewall used by the server when starting to get root bot instance.
    */
   private async openStorageFrontier(installationDeployer: IGBInstallationDeployer) {
     const group = GBConfigService.get('CLOUD_GROUP');
@@ -603,6 +645,9 @@ STORAGE_SYNC=true
     return value;
   }
 
+  /**
+   * Load all cached schedule from BASIC SET SCHEDULE keyword.
+   */
   public async loadSchedules() {
     GBLog.info(`Loading instances from storage...`);
     let schedules;
