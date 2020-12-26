@@ -1,3 +1,10 @@
+## [2.0.79](https://github.com/pragmatismo-io/BotServer/compare/2.0.78...2.0.79) (2020-12-25)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Comments improving. ([dcb5961](https://github.com/pragmatismo-io/BotServer/commit/dcb5961a8049c273af66e3c955cce13b80a6ff74))
+
 ## [2.0.78](https://github.com/pragmatismo-io/BotServer/compare/2.0.77...2.0.78) (2020-12-23)
 
 
