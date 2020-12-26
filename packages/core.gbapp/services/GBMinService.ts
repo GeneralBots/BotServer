@@ -81,7 +81,7 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBConversationalService } from './GBConversationalService';
 
 /**
- * Minimal service layer for a bot and encapsulation of BOT Framework.
+ * Minimal service layer for a bot and encapsulation of BOT Framework calls.
  */
 export class GBMinService {
 
