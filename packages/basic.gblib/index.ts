@@ -37,22 +37,18 @@
 'use strict';
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GuaribasSchedule } from 'packages/core.gbapp/models/GBModel';
 import { Sequelize } from 'sequelize-typescript';
-import { BroadcastDialog } from './dialogs/BroadcastDialog';
-import { LanguageDialog } from './dialogs/LanguageDialog';
-import { SwitchBotDialog } from './dialogs/SwitchBot';
-import { WelcomeDialog } from './dialogs/WelcomeDialog';
-import { WhoAmIDialog } from './dialogs/WhoAmIDialog';
-import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage } from './models/GBModel';
+
 
 /**
  * Package for core.gbapp.
  */
-export class GBCorePackage implements IGBPackage {
+export class GBBasicPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
   public CurrentEngineName = "guaribas-1.0.0";
   public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
-    core.sequelize.addModels([GuaribasInstance, GuaribasPackage, GuaribasChannel, GuaribasException]);
+    core.sequelize.addModels([GuaribasSchedule]);
   }
 
   public async getDialogs(min: GBMinInstance) {
@@ -70,13 +66,7 @@ export class GBCorePackage implements IGBPackage {
   public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
     GBLog.verbose(`onExchangeData called.`);
   }
-
-
   public async loadBot(min: GBMinInstance): Promise<void> {
-    WelcomeDialog.setup(min.bot, min);
-    WhoAmIDialog.setup(min.bot, min);
-    SwitchBotDialog.setup(min.bot, min);
-    BroadcastDialog.setup(min.bot, min);
-    LanguageDialog.setup(min.bot, min);
+    
   }
 }

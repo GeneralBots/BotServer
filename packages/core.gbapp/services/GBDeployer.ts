@@ -53,7 +53,7 @@ import { AzureDeployerService } from './../../azuredeployer.gbapp/services/Azure
 import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBConfigService } from './GBConfigService';
 import { GBImporter } from './GBImporterService';
-import { GBVMService } from './GBVMService';
+import { GBVMService } from '../../basic.gblib/services/GBVMService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
 

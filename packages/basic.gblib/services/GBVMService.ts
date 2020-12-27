@@ -35,17 +35,17 @@
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBLog, GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
 import * as fs from 'fs';
-import { GBDeployer } from './GBDeployer';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { TSCompiler } from './TSCompiler';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 const walkPromise = require('walk-promise');
 import urlJoin = require('url-join');
-import { DialogClass } from './GBAPIService';
+import { DialogKeywords } from './DialogKeywords';
 import { Messages } from '../strings';
-import { GBConversationalService } from './GBConversationalService';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 //tslint:disable-next-line:no-submodule-imports
 const vm = require('vm');
-const vb2ts = require('../../../../vbscript-to-typescript');
+const vb2ts = require('./vbscript-to-typescript');
 const beautify = require('js-beautify').js;
 var textract = require('textract');
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
@@ -698,7 +698,7 @@ export class GBVMService extends GBService {
   }
 
   public static async callVM(text: string, min: GBMinInstance, step: GBDialogStep, deployer: GBDeployer) {
-    const sandbox: DialogClass = new DialogClass(min, deployer);
+    const sandbox: DialogKeywords = new DialogKeywords(min, deployer);
     const context = vm.createContext(sandbox);
     const code = min.sandBoxMap[text];
     vm.runInContext(code, context);

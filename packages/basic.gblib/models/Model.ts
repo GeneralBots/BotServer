@@ -36,47 +36,43 @@
 
 'use strict';
 
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
-import { Sequelize } from 'sequelize-typescript';
-import { BroadcastDialog } from './dialogs/BroadcastDialog';
-import { LanguageDialog } from './dialogs/LanguageDialog';
-import { SwitchBotDialog } from './dialogs/SwitchBot';
-import { WelcomeDialog } from './dialogs/WelcomeDialog';
-import { WhoAmIDialog } from './dialogs/WhoAmIDialog';
-import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage } from './models/GBModel';
+import {
+  AutoIncrement,
+  BelongsTo,
+  Column,
+  CreatedAt,
+  DataType,
+  ForeignKey,
+  Model,
+  PrimaryKey,
+  Table,
+  UpdatedAt
+} from 'sequelize-typescript';
 
-/**
- * Package for core.gbapp.
- */
-export class GBCorePackage implements IGBPackage {
-  public sysPackages: IGBPackage[];
-  public CurrentEngineName = "guaribas-1.0.0";
-  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
-    core.sequelize.addModels([GuaribasInstance, GuaribasPackage, GuaribasChannel, GuaribasException]);
-  }
+import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 
-  public async getDialogs(min: GBMinInstance) {
-    GBLog.verbose(`getDialogs called.`);
-  }
-  public async unloadPackage(core: IGBCoreService): Promise<void> {
-    GBLog.verbose(`unloadPackage called.`);
-  }
-  public async unloadBot(min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`unloadBot called.`);
-  }
-  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
-    GBLog.verbose(`onNewSession called.`);
-  }
-  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
-    GBLog.verbose(`onExchangeData called.`);
-  }
+@Table
+//tslint:disable-next-line:max-classes-per-file
+export class GuaribasSchedule extends Model<GuaribasSchedule> {
+  
+  @Column
+  public name: string;
 
+  @Column
+  public schedule: string;
 
-  public async loadBot(min: GBMinInstance): Promise<void> {
-    WelcomeDialog.setup(min.bot, min);
-    WhoAmIDialog.setup(min.bot, min);
-    SwitchBotDialog.setup(min.bot, min);
-    BroadcastDialog.setup(min.bot, min);
-    LanguageDialog.setup(min.bot, min);
-  }
+  @ForeignKey(() => GuaribasInstance)
+  @Column
+  public instanceId: number;
+
+  @BelongsTo(() => GuaribasInstance)
+  public instance: GuaribasInstance;
+
+  @Column
+  @CreatedAt
+  public createdAt: Date;
+
+  @Column
+  @UpdatedAt
+  public updatedAt: Date;
 }

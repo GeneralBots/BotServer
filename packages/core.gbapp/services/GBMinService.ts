@@ -76,7 +76,7 @@ import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsServic
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import fs = require('fs');
 import { GuaribasConversationMessage } from '../../analytics.gblib/models';
-import { GBVMService } from './GBVMService';
+import { GBVMService } from '../../basic.gblib/services/GBVMService';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBConversationalService } from './GBConversationalService';
 

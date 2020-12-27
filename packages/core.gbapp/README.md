@@ -1,1 +1,1 @@
-*This is a General Bots open core package, more information can be found on the [BotServer](https://github.com/pragmatismo-io/BotServer) repository.*
+*This is a General Bots BASIC ackage, more information can be found on the [BotServer](https://github.com/GeneralBots/BotServer) repository.*

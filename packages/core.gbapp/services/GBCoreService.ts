@@ -55,7 +55,8 @@ import { GBConfigService } from './GBConfigService';
 import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp';
 import { GBSharePointPackage } from '../../sharepoint.gblib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GBVMService } from './GBVMService';
+import { GBVMService } from '../../basic.gblib/services/GBVMService';
+import { GBBasicPackage } from '../../basic.gblib';
 
 const opn = require('opn');
 const cron = require('node-cron');
@@ -166,6 +167,8 @@ export class GBCoreService implements IGBCoreService {
 
     this.sequelize = new Sequelize(database, username, password, sequelizeOptions);
 
+    // Specifies custom setup for MSFT...
+    
     if (this.dialect === 'mssql') {
       this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
       // tslint:disable:no-unsafe-any
@@ -199,7 +202,7 @@ export class GBCoreService implements IGBCoreService {
   }
 
   /**
-   * Syncronize structure between model and tables in storage.
+   * Syncronizes structure between model and tables in storage.
    */
   public async syncDatabaseStructure() {
     if (GBConfigService.get('STORAGE_SYNC') === 'true') {
@@ -454,7 +457,8 @@ STORAGE_SYNC=true
         GBAnalyticsPackage,
         GBWhatsappPackage,
         GBAzureDeployerPackage,
-        GBSharePointPackage
+        GBSharePointPackage,
+        GBBasicPackage
       ],
       async e => {
         GBLog.info(`Loading sys package: ${e.name}...`);

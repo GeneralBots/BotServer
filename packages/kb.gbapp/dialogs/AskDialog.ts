@@ -45,7 +45,7 @@ import { KBService } from './../services/KBService';
 import { GuaribasAnswer } from '../models';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
-import { GBVMService } from '../../core.gbapp/services/GBVMService';
+import { GBVMService } from '../../basic.gblib/services/GBVMService';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 
