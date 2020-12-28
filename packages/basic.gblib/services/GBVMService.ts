@@ -157,10 +157,10 @@ export class GBVMService extends GBService {
 
     code = `<%\n
     
-    from = this.getFrom(step)
     id = sys().getRandomId()
     username = this.getUserName(step);
     mobile = this.getUserMobile(step);
+    from = mobile;
     ubound = function(list){return list.length};
     
 

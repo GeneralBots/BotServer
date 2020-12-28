@@ -43,23 +43,43 @@ import { SecService } from '../../security.gbapp/services/SecService';
 import { SystemKeywords } from './SystemKeywords';
 
 /**
- * Base services of conversation to be called by BASIC.
+ * Base services of conversation to be called by BASIC which
+ * requries step variable to work.
  */
 export class DialogKeywords {
+
+  /** 
+  * Reference to minimal bot instance. 
+  */
   public min: GBMinInstance;
-  public context: TurnContext;
-  public step: WaterfallStepContext;
+
+  /**
+   * Reference to the base system keywords functions to be called.
+   */
   public internalSys: SystemKeywords;
 
+  /**
+   * When creating this keyword facade, a bot instance is
+   * specified among the deployer service.
+   */
   constructor(min: GBMinInstance, deployer: GBDeployer) {
     this.min = min;
     this.internalSys = new SystemKeywords(min, deployer);
   }
 
+  /**
+   * Base reference of system keyword facade, called directly
+   * by the script.
+   */
   public sys(): SystemKeywords {
     return this.internalSys;
   }
 
+  /**
+   * Returns the today data filled in dd/mm/yyyy or mm/dd/yyyy.
+   * 
+   * @example x = TODAY
+   */
   public async getToday(step) {
     var d = new Date(),
       month = '' + (d.getMonth() + 1),
@@ -82,14 +102,21 @@ export class DialogKeywords {
     }
   }
 
-  public async isAffirmative(text) {
-    return text.toLowerCase().match(Messages['pt-BR'].affirmative_sentences); // TODO: Dynamitize.
-  }
-
+  /**
+   * Quits the dialog, currently required to get out of VM context.
+   * 
+   * @example EXIT
+   */
   public async exit(step) {
     await step.endDialog();
   }
 
+  /**
+   * Returns current time in format hh:dd.
+   * 
+   * @example SAVE "file.xlsx", name, email, NOW
+   * 
+   */
   public async getNow() {
     const nowUTC = new Date();
     const now = new Date((typeof nowUTC === "string" ?
@@ -99,14 +126,29 @@ export class DialogKeywords {
     return now.getHours() + ':' + now.getMinutes();
   }
 
+  /**
+   * Sends a file to a given mobile.
+   * 
+   * @example SEND FILE TO "+199988887777", "image.jpg"
+   * 
+   */
   public async sendFileTo(mobile, filename, caption) {
     return await this.internalSendFile(null, mobile, filename, caption);
   }
 
+  /**
+   * Sends a file to the current user.
+   * 
+   * @example SEND FILE "image.jpg"
+   * 
+   */
   public async sendFile(step, filename, caption) {
     return await this.internalSendFile(step, null, filename, caption);
   }
 
+  /**
+   * Processes the sending of the file.
+   */
   private async internalSendFile(step, mobile, filename, caption) {
     if (filename.indexOf('.md') > -1) {
       GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile.`);
@@ -127,6 +169,12 @@ export class DialogKeywords {
     }
   }
 
+  /**
+   * Defines the current language of the bot conversation.
+   * 
+   * @example SET LANGUAGE "pt"
+   * 
+   */
   public async setLanguage(step, language) {
     const user = await this.min.userProfile.get(step.context, {});
 
@@ -136,14 +184,19 @@ export class DialogKeywords {
     await this.min.userProfile.set(step.context, user);
   }
 
-  public async from(step) {
-    return step.context.activity.from.id;
-  }
-
+  /**
+   * Returns the name of the user acquired by WhatsApp API.
+   */
   public async userName(step) {
     return step.context.activity.from.name;
   }
-
+  
+  /**
+   * Returns current mobile number from user in conversation.
+   * 
+   * @example SAVE "file.xlsx", name, email, MOBILE
+   * 
+   */
   public async userMobile(step) {
     if (isNaN(step.context.activity.from.id)) {
       return 'No mobile available.';
@@ -152,14 +205,32 @@ export class DialogKeywords {
     }
   }
 
+  /**
+   * Shows the subject menu to the user
+   * 
+   * @example MENU
+   * 
+   */
   public async showMenu(step) {
     return await step.beginDialog('/menu');
   }
 
+  /**
+   * Performs the transfer of the conversation to a human agent.
+   * 
+   * @example TRANSFER
+   * 
+   */
   public async transfer(step) {
     return await step.beginDialog('/t');
   }
 
+  /**
+   * Hears something from user and put it in a variable
+   * 
+   * @example HEAR name
+   *  
+   */
   public async hear(step, promise, previousResolve, kind, ...args) {
     function random(low, high) {
       return Math.random() * (high - low) + low;
@@ -176,6 +247,9 @@ export class DialogKeywords {
     }
   }
 
+  /**
+   * Talks to the user by using the specified text.
+   */
   public async talk(step, text: string) {
     return await this.min.conversationalService.sendText(this.min, step, text);
   }

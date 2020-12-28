@@ -42,7 +42,8 @@ const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
 /**
  * @fileoverview General Bots server core.
  */
-/**
+
+ /**
  * BASIC system class for extra manipulation of bot behaviour.
  */
 export class SystemKeywords {
