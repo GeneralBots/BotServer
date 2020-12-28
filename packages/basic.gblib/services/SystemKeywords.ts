@@ -34,7 +34,6 @@ import { GBLog, GBMinInstance } from 'botlib';
 import * as request from 'request-promise-native';
 import urlJoin = require('url-join');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { SecService } from '../../security.gbapp/services/SecService';
 const request = require('request-promise-native');
@@ -48,17 +47,28 @@ const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
  */
 export class SystemKeywords {
 
-
-
+  /** 
+   * Reference to minimal bot instance. 
+   */
   public min: GBMinInstance;
 
+  /**
+   * Reference to the deployer service.
+   */
   private readonly deployer: GBDeployer;
 
+  /**
+   * When creating this keyword facade, a bot instance is
+   * specified among the deployer service.
+   */
   constructor(min: GBMinInstance, deployer: GBDeployer) {
     this.min = min;
     this.deployer = deployer;
   }
 
+  /**
+   * Retrives token and initialize drive client API.
+   */
   private async internalGetDriveClient() {
     let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
     let siteId = process.env.STORAGE_SITE_ID;
@@ -73,22 +83,29 @@ export class SystemKeywords {
     return [client, baseUrl];
   }
 
+  /**
+   * Retrives the content of a given URL.
+   */
   public async getFileContents(url) {
     const options = {
       url: url,
       method: 'GET',
       encoding: 'binary'
     };
-
     const res = await request(options);
     Buffer.from(res, 'binary').toString();
-
   }
 
+  /**
+   * Retrives a random id with a length of five, every time it is called.
+   */
   public async getRandomId() {
     return GBAdminService.getRndReadableIdentifier().substr(5);
   }
 
+  /**
+   * Retrives stock inforation for a given symbol.
+   */
   public async getStock(symbol) {
     var options = {
       uri: `http://live-nse.herokuapp.com/?symbol=${symbol}`
@@ -98,6 +115,9 @@ export class SystemKeywords {
     return data;
   }
 
+  /**
+   * Prepares the next dialog to be shown to the specified user.
+   */
   public async gotoDialog(from: string, dialogName: string) {
     let sec = new SecService();
     let user = await sec.getUserFromSystemId(from);
@@ -107,6 +127,12 @@ export class SystemKeywords {
     await sec.updateUserHearOnDialog(user.userId, dialogName);
   }
 
+  /**
+   * Holds script execution for the number of seconds specified.
+   * 
+   * @example WAIT 5 ' This will wait five seconds.
+   *  
+   */
   public async wait(seconds: number) {
     // tslint:disable-next-line no-string-based-set-timeout
     GBLog.info(`BASIC: Talking to a specific user (TALK TO).`);
@@ -114,15 +140,33 @@ export class SystemKeywords {
     await timeout(seconds * 1000);
   }
 
+  /**
+   * Sends a text message to the mobile number specified.
+   * 
+   * @example TALK TO "+199988887777", "Message text here"
+   * 
+   */
   public async talkTo(mobile: any, message: string) {
     GBLog.info(`BASIC: Talking '${message}' to a specific user (${mobile}) (TALK TO). `);
     await this.min.conversationalService.sendMarkdownToMobile(this.min, null, mobile, message);
   }
 
+  /**
+   * Sends a SMS message to the mobile number specified.
+   * 
+   * @example SEND SMS TO "+199988887777", "Message text here"
+   * 
+   */
   public async sendSmsTo(mobile, message) {
     await this.min.conversationalService.sendSms(this.min, mobile, message);
   }
 
+  /**
+   * Defines a cell value in the tabular file.
+   * 
+   * @example SET "file.xlsx", "A2", 4500
+   * 
+   */
   public async set(file: string, address: string, value: any): Promise<any> {
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
 
@@ -147,6 +191,9 @@ export class SystemKeywords {
       .patch(body);
   }
 
+  /**
+   * Retrives a document from the drive, given a path and filename.
+   */
   private async internalGetDocument(client: any, baseUrl: any, path: string, file: string) {
     let res = await client
       .api(`${baseUrl}/drive/root:${path}:/children`)
@@ -163,6 +210,12 @@ export class SystemKeywords {
     return documents[0];
   }
 
+  /**
+   * Saves the content of several variables to a new row in a tabular file.
+   * 
+   * @exaple SAVE "customers.xlsx", name, email, phone, address, city, state, country
+   * 
+   */
   public async save(file: string, ...args): Promise<any> {
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let [baseUrl, client] = await this.internalGetDriveClient();
@@ -191,6 +244,12 @@ export class SystemKeywords {
       .patch(body);
   }
 
+  /**
+   * Retrives the content of a cell in a tabular file.
+   * 
+   * @example value = GET "file.xlsx", "A2"
+   * 
+   */
   public async get(file: string, address: string): Promise<any> {
     let [baseUrl, client] = await this.internalGetDriveClient();
     const botId = this.min.instance.botId;
@@ -212,7 +271,19 @@ export class SystemKeywords {
     return val;
   }
 
-
+  /**
+   * Finds a value or multi-value results in a tabular file.
+   * 
+   * @example 
+   * 
+   *  rows = FIND "file.xlsx", "A2=active"
+   *  i = 1
+   *  do while i < ubound(row)
+   *    row = rows[i]
+   *    send sms to "+" + row.mobile, "Hello " + row.namee + "! "
+   *  loop
+   * 
+   */
   public async find(file: string, ...args): Promise<any> {
     let [baseUrl, client] = await this.internalGetDriveClient();
     const botId = this.min.instance.botId;
@@ -263,7 +334,7 @@ export class SystemKeywords {
     }
 
     if (array.length === 1) {
-      GBLog.info(`BASIC: FIND the data set is empty.`);
+      GBLog.info(`BASIC: FIND the data set is EMPTY (zero results).`);
       return null;
     } else if (array.length === 2) {
       GBLog.info(`BASIC: FIND single result: ${array[0]}.`);
@@ -275,12 +346,9 @@ export class SystemKeywords {
   }
 
   /**
+   * Creates a folder in the bot instance drive.
    *
-   * folder = CREATE FOLDER "notes\01"
-   *
-   *
-   * @param name Folder name containing tree separated by slash.
-   *
+   * @example folder = CREATE FOLDER "notes\01"
    *
    */
   public async createFolder(name: string) {
@@ -309,7 +377,10 @@ export class SystemKeywords {
   }
 
   /**
-   *
+   * Shares a folder from the drive to a e-mail recipient.
+   * 
+   * @example
+   * 
    * folder = CREATE FOLDER "notes\10"
    * SHARE FOLDER folder, "nome@domain.com", "E-mail message"
    *
@@ -346,6 +417,14 @@ export class SystemKeywords {
     });
   }
 
+  /**
+   * Copies a drive file from a place to another .
+   * 
+   * @example
+   * 
+   * COPY "template.xlsx", "reports\" + customerName + "\final.xlsx"
+   * 
+   */
   public async copyFile() {
     let [] = await this.internalGetDriveClient();
 
@@ -386,35 +465,20 @@ export class SystemKeywords {
     // }
   }
 
+  /** 
+   * Generate a secure and unique password.
+   * 
+   * @example pass = PASSWORD
+   * 
+   */
   public generatePassword() {
     return GBAdminService.getRndPassword();
   }
 
-  public async createABotFarmUsing(
-    botId: string,
-    username: string,
-    password: string,
-    location: string,
-    nlpAuthoringKey: string,
-    appId: string,
-    appPassword: string,
-    subscriptionId: string
-  ) {
-    const service = new AzureDeployerService(this.deployer);
-    await service.deployToCloud(
-      botId,
-      username,
-      password,
-      location,
-      nlpAuthoringKey,
-      appId,
-      appPassword,
-      subscriptionId
-    );
-  }
-
   /**
-   * Generic function to call any REST API.
+   * Sends an e-mail.
+   * 
+   * @example 
    */
   public async sendEmail(to, subject, body) {
     // tslint:disable-next-line:no-console
@@ -422,7 +486,10 @@ export class SystemKeywords {
   }
 
   /**
-   * Generic function to call any REST API.
+   * Calls any REST API by using GET HTTP method.
+   * 
+   * @example user = get "http://server/users/1"
+   * 
    */
   public async getByHttp(url: string) {
     const options = {
@@ -435,7 +502,13 @@ export class SystemKeywords {
   }
 
   /**
-   * Generic function to call any REST API by POST.
+   * Calls any REST API by using POST HTTP method.
+   * 
+   * @example 
+   * 
+   * user = post "http://server/path", "data"
+   * talk "The updated user area is" + user.area
+   * 
    */
   public async postByHttp(url: string, data) {
     const options = {
