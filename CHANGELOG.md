@@ -1,3 +1,14 @@
+## [2.0.80](https://github.com/pragmatismo-io/BotServer/compare/2.0.79...2.0.80) (2020-12-31)
+
+
+### Bug Fixes
+
+* **all:** More coments on GBDeployer. ([5dae314](https://github.com/pragmatismo-io/BotServer/commit/5dae31448025abd0010cddcc73e3346e309f918d))
+* **all:** TS Lint and minor fixes. ([e7d7a1a](https://github.com/pragmatismo-io/BotServer/commit/e7d7a1a4b2a8808eb372cfe3f532be308c896890))
+* **basic.gblib:** Commenting blocks. ([7672540](https://github.com/pragmatismo-io/BotServer/commit/76725400530ac65ab7c06ecb7bdae1b4f692582e))
+* **basic.gblib:** Comments to the keyword facade. ([b33a8b5](https://github.com/pragmatismo-io/BotServer/commit/b33a8b53410405feeff2f78ddda09c79153378cc))
+* **core.gbapp:** More comments in GBMinService. ([9bc82ab](https://github.com/pragmatismo-io/BotServer/commit/9bc82abf11fb7ad8aed8e53315ba250cbbcbc15a))
+
 ## [2.0.79](https://github.com/pragmatismo-io/BotServer/compare/2.0.78...2.0.79) (2020-12-25)
 
 
