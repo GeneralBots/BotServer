@@ -22,7 +22,7 @@ export const Messages = {
     publish_must_be_admin: 'Seu telefone precisa estar com privilégios administrativos para realizar publicação.',
     publish_success: 'Publicação realizada.',
     publish_type_yes: 'Por favor, digite *Sim* para continuar com a publicação.',
-    publish_canceled: 'Publicação cancelada.',
+    publish_canceled: 'Publicação cancelada.'
   },
   'pt-BR': {
     authenticate: 'Please, authenticate:',
@@ -47,6 +47,6 @@ export const Messages = {
     publish_must_be_admin: 'Seu telefone precisa estar com privilégios administrativos para realizar publicação.',
     publish_success: 'Publicação realizada.',
     publish_type_yes: 'Por favor, digite *Sim* para continuar com a publicação.',
-    publish_canceled: 'Publicação cancelada.',    
+    publish_canceled: 'Publicação cancelada.'
   }
 };

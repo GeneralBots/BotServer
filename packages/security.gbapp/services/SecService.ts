@@ -1,10 +1,10 @@
 const Fs = require('fs');
 import urlJoin = require('url-join');
 
-import { GBService, IGBInstance } from 'botlib';
-import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models';
 import { ConversationReference } from 'botbuilder';
+import { GBService, IGBInstance } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models';
 
 /**
  * Security service layer.
@@ -57,6 +57,7 @@ export class SecService extends GBService {
     user.displayName = displayName;
     user.email = userName;
     user.defaultChannel = channelName;
+
     return await user.save();
   }
 
@@ -82,27 +83,29 @@ export class SecService extends GBService {
   }
 
   public async updateUserLocale(userId: number, locale: any): Promise<GuaribasUser> {
-    let user = await GuaribasUser.findOne({
+    const user = await GuaribasUser.findOne({
       where: {
         userId: userId
       }
     });
     user.locale = locale;
+
     return await user.save();
   }
 
   public async updateUserHearOnDialog(userId: number, dialogName: string): Promise<GuaribasUser> {
-    let user = await GuaribasUser.findOne({
+    const user = await GuaribasUser.findOne({
       where: {
         userId: userId
       }
     });
     user.hearOnDialog = dialogName;
+
     return await user.save();
   }
 
   public async updateUserInstance(userSystemId: string, instanceId: number): Promise<GuaribasUser> {
-    let user = await GuaribasUser.findOne({
+    const user = await GuaribasUser.findOne({
       where: {
         userSystemId: userSystemId
       }
@@ -154,18 +157,19 @@ export class SecService extends GBService {
     }
 
     await user.save();
+
     return user;
   }
 
   public async isAgentSystemId(systemId: string): Promise<Boolean> {
-    let user = await GuaribasUser.findOne({
+    const user = await GuaribasUser.findOne({
       where: {
         userSystemId: systemId
       }
     });
 
     if (user === null) {
-      throw `TRANSFER_TO phones must talk first to the bot before becoming an agent.`;
+      throw new Error(`TRANSFER_TO phones must talk first to the bot before becoming an agent.`);
     }
 
     return user.agentMode === 'self';

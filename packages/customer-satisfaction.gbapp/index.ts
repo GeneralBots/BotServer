@@ -65,7 +65,6 @@ export class GBCustomerSatisfactionPackage implements IGBPackage {
     GBLog.verbose(`onExchangeData called.`);
   }
 
-
   public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasQuestionAlternate]);
   }

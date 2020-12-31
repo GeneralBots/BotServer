@@ -40,10 +40,10 @@ import { GBMinInstance, IGBDialog } from 'botlib';
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { CSService } from '../services/CSService';
-import { Messages } from '../strings';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
+import { CSService } from '../services/CSService';
+import { Messages } from '../strings';
 
 /**
  * Dialog for collecting quality of answer.
@@ -82,10 +82,10 @@ export class QualityDialog extends IGBDialog {
           );
 
           // Updates values to perform Bot Analytics.
-          
+
           const analytics = new AnalyticsService();
           analytics.updateConversationSuggestion(
-            min.instance.instanceId, user.conversation,step.result, user.systemUser.locale);
+            min.instance.instanceId, user.conversation, step.result, user.systemUser.locale);
 
           // Goes to the ask loop.
 

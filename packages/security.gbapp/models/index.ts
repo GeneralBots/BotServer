@@ -79,21 +79,21 @@ export class GuaribasUser extends Model<GuaribasUser> {
   public instance: GuaribasInstance;
 
   @Column(DataType.STRING(16))
-  agentSystemId: string
-  
+  public agentSystemId: string;
+
   @Column(DataType.DATE)
   @Column
-  agentContacted: Date;
+  public agentContacted: Date;
 
   @Column(DataType.STRING(16))
-  agentMode: string;
+  public agentMode: string;
 
   @Column(DataType.TEXT)
   @Column
-  conversationReference: string
+  public conversationReference: string;
 
   @Column(DataType.STRING(64))
-  hearOnDialog: string;
+  public hearOnDialog: string;
 }
 
 /**

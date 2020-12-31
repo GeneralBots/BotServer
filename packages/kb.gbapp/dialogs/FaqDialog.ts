@@ -39,9 +39,9 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 import { Messages } from '../strings';
 import { KBService } from './../services/KBService';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 
 /**
  * Handle display of FAQ allowing direct access to KB.

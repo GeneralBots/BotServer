@@ -39,10 +39,10 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import { Messages } from '../strings';
-import { SecService } from '../../security.gbapp/services/SecService';
 import { GBServer } from '../../../src/app';
+import { SecService } from '../../security.gbapp/services/SecService';
 import { GBConversationalService } from '../services/GBConversationalService';
+import { Messages } from '../strings';
 /**
  * Dialog for the bot explains about itself.
  */
@@ -59,16 +59,16 @@ export class SwitchBotDialog extends IGBDialog {
       async step => {
         const locale = step.context.activity.locale;
 
-        return await min.conversationalService.prompt (min, step,  "Qual seria o código de ativação?");
+        return await min.conversationalService.prompt (min, step,  'Qual seria o código de ativação?');
       },
       async step => {
-        let sec = new SecService();
-        let from = step.context.activity.from.id;
+        const sec = new SecService();
+        const from = step.context.activity.from.id;
         const botId = step.result;
         const instance = await min.core.loadInstanceByBotId(botId);
         await sec.updateUserInstance(from, instance.instanceId);
         await min.conversationalService.sendText(min, step, `Opa, vamos lá!`);
-                
+
         return await step.next();
       }
     ]));

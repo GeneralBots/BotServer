@@ -43,28 +43,28 @@ const asyncPromise = require('async-promises');
 const walkPromise = require('walk-promise');
 // tslint:disable-next-line:newline-per-chained-call
 const { SearchService } = require('azure-search-client');
-var Excel = require('exceljs');
-import { GBServer } from '../../../src/app';
+const Excel = require('exceljs');
 import {
-  IGBKBService,
   GBDialogStep,
   GBLog,
+  GBMinInstance,
   IGBConversationalService,
   IGBCoreService,
   IGBInstance,
-  GBMinInstance
+  IGBKBService
 } from 'botlib';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
+import { GBServer } from '../../../src/app';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasPackage } from '../../core.gbapp/models/GBModel';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
+import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
+import { SecService } from '../../security.gbapp/services/SecService';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
 import { Messages } from '../strings';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
-import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { CollectionUtil } from 'pragmatismo-io-framework';
 
 /**
  * Result for quey on KB data.
@@ -116,7 +116,7 @@ export class KBService implements IGBKBService {
       }
     });
 
-    return answer != null ? answer.content : null;
+    return answer != undefined ? answer.content : null;
   }
 
   public async getQuestionById(instanceId: number, questionId: number): Promise<GuaribasQuestion> {
@@ -177,8 +177,6 @@ export class KBService implements IGBKBService {
   ): Promise<KBServiceSearchResults> {
     // Builds search query.
 
-
-
     query = query.toLowerCase();
     query = query.replace('?', ' ');
     query = query.replace('!', ' ');
@@ -222,6 +220,7 @@ export class KBService implements IGBKBService {
               `SEARCH WILL BE USED with score: ${returnedScore} > required (searchScore): ${searchScore}`
             );
             notSearched = false;
+
             return { answer: value, questionId: values[0].questionId };
           } else {
             GBLog.info(
@@ -243,6 +242,7 @@ export class KBService implements IGBKBService {
         GBLog.info(
           `SEARCH called but NO answer could be found (zero results).`
         );
+
         return { answer: undefined, questionId: 0 };
       }
     }
@@ -320,8 +320,8 @@ export class KBService implements IGBKBService {
     packageId: number
   ): Promise<GuaribasQuestion[]> {
     GBLog.info(`Now reading file ${filePath}...`);
-    var workbook = new Excel.Workbook();
-    let data = await workbook.xlsx.readFile(filePath);
+    const workbook = new Excel.Workbook();
+    const data = await workbook.xlsx.readFile(filePath);
 
     let lastQuestionId: number;
     let lastAnswer: GuaribasAnswer;
@@ -337,9 +337,9 @@ export class KBService implements IGBKBService {
       }
     }
 
-    let rows = worksheet._rows;
-    let answers = [];
-    let questions = [];
+    const rows = worksheet._rows;
+    const answers = [];
+    const questions = [];
 
     GBLog.info(`Processing ${rows.length} rows from tabular file ${filePath}...`);
     await asyncPromise.eachSeries(rows, async line => {
@@ -454,6 +454,7 @@ export class KBService implements IGBKBService {
     await CollectionUtil.asyncForEach(questions, async question => {
       question.answerId = answersCreated[i++].answerId;
     });
+
     return await GuaribasQuestion.bulkCreate(questions);
   }
 
@@ -468,6 +469,123 @@ export class KBService implements IGBKBService {
       await min.conversationalService.sendText(min, step, answer.content);
       await min.conversationalService.sendEvent(min, step, 'stop', undefined);
     }
+  }
+
+  public async importKbPackage(
+    localPath: string,
+    packageStorage: GuaribasPackage,
+    instance: IGBInstance
+  ): Promise<any> {
+    // Imports subjects tree into database and return it.
+
+    const subjectFile = urlJoin(localPath, 'subjects.json');
+
+    if (Fs.existsSync(subjectFile)) {
+      await this.importSubjectFile(packageStorage.packageId, subjectFile, instance);
+    }
+
+    // Import tabular files in the tabular directory.
+
+    await this.importKbTabularDirectory(localPath, instance, packageStorage.packageId);
+
+    // Import remaining .md files in articles directory.
+
+    return await this.importRemainingArticles(localPath, instance, packageStorage.packageId);
+  }
+
+  /**
+   * Import all .md files in artcles folder that has not been referenced by tabular files.
+   */
+  public async importRemainingArticles(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
+    const files = await walkPromise(urlJoin(localPath, 'articles'));
+
+    await CollectionUtil.asyncForEach(files, async file => {
+      if (file !== null && file.name.endsWith('.md')) {
+        let content = await this.getAnswerTextByMediaName(instance.instanceId, file.name);
+
+        if (content === null) {
+          const fullFilename = urlJoin(file.root, file.name);
+          content = Fs.readFileSync(fullFilename, 'utf-8');
+
+          await GuaribasAnswer.create({
+            instanceId: instance.instanceId,
+            content: content,
+            format: '.md',
+            media: file.name,
+            packageId: packageId,
+            prevId: 0 // TODO: Calculate total rows and increment.
+          });
+        }
+      }
+    });
+  }
+  public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
+    const files = await walkPromise(localPath);
+
+    await CollectionUtil.asyncForEach(files, async file => {
+      if (file !== null && file.name.endsWith('.xlsx')) {
+        return await this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
+      }
+    });
+  }
+
+  public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise<any> {
+    const subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
+
+    const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
+      return asyncPromise.eachSeries(subjects, async item => {
+        const value = await GuaribasSubject.create({
+          internalId: item.id,
+          parentSubjectId: parentSubjectId,
+          instanceId: instance.instanceId,
+          from: item.from,
+          to: item.to,
+          title: item.title,
+          description: item.description,
+          packageId: packageId
+        });
+
+        if (item.children) {
+          return doIt(item.children, value.subjectId);
+        } else {
+          return item;
+        }
+      });
+    };
+
+    return doIt(subjectsLoaded.children, undefined);
+  }
+
+  public async undeployKbFromStorage(instance: IGBInstance, deployer: GBDeployer, packageId: number) {
+    await GuaribasQuestion.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
+    });
+    await GuaribasAnswer.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
+    });
+    await GuaribasSubject.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
+    });
+    await this.undeployPackageFromStorage(instance, packageId);
+  }
+
+  /**
+   * Deploys a knowledge base to the storage using the .gbkb format.
+   *
+   * @param localPath Path to the .gbkb folder.
+   */
+  public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
+    const packageName = Path.basename(localPath);
+    GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
+
+    const instance = await core.loadInstanceByBotId(min.botId);
+    GBLog.info(`[GBDeployer] Importing: ${localPath}`);
+    const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
+    await this.importKbPackage(localPath, p, instance);
+    deployer.mountGBKBAssets(packageName, min.botId, localPath);
+
+    await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
+    GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
   }
 
   private async playAudio(
@@ -571,126 +689,9 @@ export class KBService implements IGBKBService {
     }
   }
 
-  public async importKbPackage(
-    localPath: string,
-    packageStorage: GuaribasPackage,
-    instance: IGBInstance
-  ): Promise<any> {
-    // Imports subjects tree into database and return it.
-
-    const subjectFile = urlJoin(localPath, 'subjects.json');
-
-    if (Fs.existsSync(subjectFile)) {
-      await this.importSubjectFile(packageStorage.packageId, subjectFile, instance);
-    }
-
-    // Import tabular files in the tabular directory.
-
-    await this.importKbTabularDirectory(localPath, instance, packageStorage.packageId);
-
-    // Import remaining .md files in articles directory.
-
-    return await this.importRemainingArticles(localPath, instance, packageStorage.packageId);
-  }
-
-  /**
-   * Import all .md files in artcles folder that has not been referenced by tabular files.
-   */
-  public async importRemainingArticles(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
-    const files = await walkPromise(urlJoin(localPath, 'articles'));
-
-    await CollectionUtil.asyncForEach(files, async file => {
-      if (file !== null && file.name.endsWith('.md')) {
-        let content = await this.getAnswerTextByMediaName(instance.instanceId, file.name);
-
-        if (content === null) {
-          const fullFilename = urlJoin(file.root, file.name);
-          content = Fs.readFileSync(fullFilename, 'utf-8');
-
-          await GuaribasAnswer.create({
-            instanceId: instance.instanceId,
-            content: content,
-            format: '.md',
-            media: file.name,
-            packageId: packageId,
-            prevId: 0 // TODO: Calculate total rows and increment.
-          });
-        }
-      }
-    });
-  }
-  public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
-    let files = await walkPromise(localPath);
-
-    await CollectionUtil.asyncForEach(files, async file => {
-      if (file !== null && file.name.endsWith('.xlsx')) {
-        return await this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
-      }
-    });
-  }
-
-  public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise<any> {
-    const subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
-
-    const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
-      return asyncPromise.eachSeries(subjects, async item => {
-        const value = await GuaribasSubject.create({
-          internalId: item.id,
-          parentSubjectId: parentSubjectId,
-          instanceId: instance.instanceId,
-          from: item.from,
-          to: item.to,
-          title: item.title,
-          description: item.description,
-          packageId: packageId
-        });
-
-        if (item.children) {
-          return doIt(item.children, value.subjectId);
-        } else {
-          return item;
-        }
-      });
-    };
-
-    return doIt(subjectsLoaded.children, undefined);
-  }
-
-  public async undeployKbFromStorage(instance: IGBInstance, deployer: GBDeployer, packageId: number) {
-    await GuaribasQuestion.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
-    await GuaribasAnswer.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
-    await GuaribasSubject.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
-    await this.undeployPackageFromStorage(instance, packageId);
-  }
-
   private async undeployPackageFromStorage(instance: any, packageId: number) {
     await GuaribasPackage.destroy({
       where: { instanceId: instance.instanceId, packageId: packageId }
     });
-  }
-
-  /**
-   * Deploys a knowledge base to the storage using the .gbkb format.
-   *
-   * @param localPath Path to the .gbkb folder.
-   */
-  public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
-    const packageName = Path.basename(localPath);
-    GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
-
-    const instance = await core.loadInstanceByBotId(min.botId);
-    GBLog.info(`[GBDeployer] Importing: ${localPath}`);
-    const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
-    await this.importKbPackage(localPath, p, instance);
-    deployer.mountGBKBAssets(packageName, min.botId, localPath);
-
-    await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
-    GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
   }
 }

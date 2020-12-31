@@ -35,18 +35,20 @@ import urlJoin = require('url-join');
 const Swagger = require('swagger-client');
 const rp = require('request-promise');
 const fs = require('fs');
-import { GBLog, GBService, GBMinInstance, IGBPackage } from 'botlib';
+import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
 import { GBServer } from '../../../src/app';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { Messages } from '../strings';
-import { CollectionUtil } from 'pragmatismo-io-framework';
 
 /**
  * Support for Whatsapp.
  */
 export class WhatsappDirectLine extends GBService {
+
+  public static conversationIds = {};
   public pollInterval = 5000;
   public directLineClientName = 'DirectLineClient';
 
@@ -55,11 +57,9 @@ export class WhatsappDirectLine extends GBService {
   public whatsappServiceNumber: string;
   public whatsappServiceUrl: string;
   public botId: string;
+  public min: GBMinInstance;
   private directLineSecret: string;
   private locale: string = 'pt-BR';
-
-  static conversationIds = {};
-  min: GBMinInstance;
 
   constructor(
     min: GBMinInstance,
@@ -80,13 +80,19 @@ export class WhatsappDirectLine extends GBService {
 
   }
 
+  public static async asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
+    }
+  }
+
   public async setup(setUrl) {
     this.directLineClient =
       new Swagger({
         spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
         usePromise: true
       });
-    let client = await this.directLineClient;
+    const client = await this.directLineClient;
 
     client.clientAuthorizations.add(
       'AuthorizationBotConnector',
@@ -111,9 +117,9 @@ export class WhatsappDirectLine extends GBService {
       const express = require('express');
       GBServer.globals.server.use(`/audios`, express.static('work'));
 
-      if (process.env.ENDPOINT_UPDATE === "true") {
+      if (process.env.ENDPOINT_UPDATE === 'true') {
         try {
-          let res = await request.post(options);
+          const res = await request.post(options);
           GBLog.info(res);
         } catch (error) {
           GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
@@ -121,12 +127,6 @@ export class WhatsappDirectLine extends GBService {
       }
     }
 
-  }
-
-  public static async asyncForEach(array, callback) {
-    for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
-    }
   }
 
   public async resetConversationId(number) {
@@ -139,19 +139,21 @@ export class WhatsappDirectLine extends GBService {
 
     const options = {
       url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`,
-      method: 'GET',
+      method: 'GET'
 
     };
 
     const res = await request(options);
     const json = JSON.parse(res);
-    return json.accountStatus === "authenticated";
+
+    return json.accountStatus === 'authenticated';
 
   }
 
   public async received(req, res) {
     if (req.body.messages === undefined) {
       res.end();
+
       return;  // Exit here.
     }
 
@@ -162,25 +164,26 @@ export class WhatsappDirectLine extends GBService {
 
     if (req.body.messages[0].fromMe) {
       res.end();
+
       return; // Exit here.
     }
     GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
 
     await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
-      await e.onExchangeData(this.min, "whatsappMessage", message);
+      await e.onExchangeData(this.min, 'whatsappMessage', message);
     });
 
     const id = req.body.messages[0].chatId.split('@')[0];
     const senderName = req.body.messages[0].senderName;
-    let sec = new SecService();
+    const sec = new SecService();
 
     const user = await sec.ensureUser(this.min.instance.instanceId, id,
-      senderName, "", "whatsapp", senderName);
+                                      senderName, '', 'whatsapp', senderName);
 
     const locale = user.locale ? user.locale : 'pt';
-    if (message.type === "ptt") {
+    if (message.type === 'ptt') {
 
-      if (process.env.AUDIO_DISABLED !== "true") {
+      if (process.env.AUDIO_DISABLED !== 'true') {
         const options = {
           url: message.body,
           method: 'GET',
@@ -188,71 +191,67 @@ export class WhatsappDirectLine extends GBService {
         };
 
         const res = await request(options);
-        let buf = Buffer.from(res, 'binary');
+        const buf = Buffer.from(res, 'binary');
         text = await GBConversationalService.getTextFromAudioBuffer(
           this.min.instance.speechKey,
           this.min.instance.cloudLocation,
           buf, locale
         );
-      }
-      else {
+      } else {
         await this.sendToDevice(user.userSystemId, `No momento estou apenas conseguindo ler mensagens de texto.`);
       }
     }
 
     const conversationId = WhatsappDirectLine.conversationIds[from];
 
-    let client = await this.directLineClient;
-    if (user.agentMode === "self") {
-      let manualUser = await sec.getUserFromAgentSystemId(id);
+    const client = await this.directLineClient;
+    if (user.agentMode === 'self') {
+      const manualUser = await sec.getUserFromAgentSystemId(id);
 
       if (manualUser === null) {
         await sec.updateCurrentAgent(id, this.min.instance.instanceId, null);
-      }
-      else {
+      } else {
         const cmd = '/reply ';
         if (text.startsWith(cmd)) {
-          let filename = text.substr(cmd.length);
-          let message = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
+          const filename = text.substr(cmd.length);
+          const message = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
 
           if (message === null) {
             await this.sendToDeviceEx(user.userSystemId, `File ${filename} not found in any .gbkb published. Check the name or publish again the associated .gbkb.`,
-              locale);
+                                      locale);
           } else {
             await this.min.conversationalService.sendMarkdownToMobile(this.min, null, user.userSystemId, message);
           }
         } else if (text === '/qt') {
           // TODO: Transfers only in pt-br for now.
-          await this.sendToDeviceEx(manualUser.userSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
-          await this.sendToDeviceEx(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+          await this.sendToDeviceEx(manualUser.userSystemId,
+                                    Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+          await this.sendToDeviceEx(user.agentSystemId,
+                                    Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
 
           await sec.updateCurrentAgent(manualUser.userSystemId, this.min.instance.instanceId, null);
-        }
-        else {
+        } else {
           GBLog.info(`HUMAN AGENT (${id}) TO USER ${manualUser.userSystemId}: ${text}`);
           this.sendToDeviceEx(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`, locale);
         }
       }
-    }
-    else if (user.agentMode === "human") {
-      let agent = await sec.getUserFromSystemId(user.agentSystemId);
+    } else if (user.agentMode === 'human') {
+      const agent = await sec.getUserFromSystemId(user.agentSystemId);
       if (text === '/t') {
         await this.sendToDeviceEx(user.userSystemId, `Você já está sendo atendido por ${agent.userSystemId}.`, locale);
-      }
-      else if (text === '/qt' || text === "Sair" || text === "Fechar") {
+      } else if (text === '/qt' || text === 'Sair' || text === 'Fechar') {
         // TODO: Transfers only in pt-br for now.
-        await this.sendToDeviceEx(id, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+        await this.sendToDeviceEx(id,
+                                  Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
         await this.sendToDeviceEx(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
 
         await sec.updateCurrentAgent(id, this.min.instance.instanceId, null);
-      }
-      else {
+      } else {
         GBLog.info(`USER (${id}) TO AGENT ${user.userSystemId}: ${text}`);
         this.sendToDeviceEx(user.agentSystemId, `Bot: ${this.min.instance.botId}\n${id}: ${text}`, locale);
       }
 
-    }
-    else if (user.agentMode === "bot" || user.agentMode === null || user.agentMode === undefined) {
+    } else if (user.agentMode === 'bot' || user.agentMode === null || user.agentMode === undefined) {
 
       if (WhatsappDirectLine.conversationIds[from] === undefined) {
         GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
@@ -267,8 +266,7 @@ export class WhatsappDirectLine extends GBService {
 
         this.inputMessage(client, conversationId, text, from, fromName);
       }
-    }
-    else {
+    } else {
       GBLog.warn(`Inconsistencty found: Invalid agentMode on User Table: ${user.agentMode}`);
     }
 
@@ -410,25 +408,13 @@ export class WhatsappDirectLine extends GBService {
 
   public async sendTextAsAudioToDevice(to, msg) {
 
-    let url = await GBConversationalService.getAudioBufferFromText(
+    const url = await GBConversationalService.getAudioBufferFromText(
       this.min.instance.speechKey,
       this.min.instance.cloudLocation,
       msg, this.locale
     );
 
     await this.sendFileToDevice(to, url, 'Audio', msg);
-  }
-
-  private async sendToDeviceEx(to, text, locale) {
-    const minBoot = GBServer.globals.minBoot as any;
-
-    text = await minBoot.conversationalService.translate(
-      minBoot,
-      text,
-      locale
-    );
-    await this.sendToDevice(to, text);
-
   }
 
   public async sendToDevice(to: string, msg: string) {
@@ -463,5 +449,17 @@ export class WhatsappDirectLine extends GBService {
         // TODO: Handle Error: socket hang up and retry.
       }
     }
+  }
+
+  private async sendToDeviceEx(to, text, locale) {
+    const minBoot = GBServer.globals.minBoot as any;
+
+    text = await minBoot.conversationalService.translate(
+      minBoot,
+      text,
+      locale
+    );
+    await this.sendToDevice(to, text);
+
   }
 }

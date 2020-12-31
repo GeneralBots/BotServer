@@ -1,6 +1,9 @@
 {
   "defaultSeverity": "warning",
-  "extends": ["tslint:recommended", "tslint-microsoft-contrib"],
+  "extends": [
+    "tslint:recommended",
+    "tslint-microsoft-contrib"
+  ],
   "linterOptions": {
     "exclude": [
       "libraries/botframework-connector/src/generated/**/*",
@@ -9,7 +12,9 @@
       "./packages/**/*.gbdialog"
     ]
   },
-  "rulesDirectory": ["node_modules/tslint-microsoft-contrib"],
+  "rulesDirectory": [
+    "node_modules/tslint-microsoft-contrib"
+  ],
   "jsRules": {},
   "rules": {
     "newline-per-chained-call": false,
@@ -19,10 +24,20 @@
     "typedef": false,
     "variable-name": false,
     "no-parameter-properties": false,
-    "max-line-length": [true, { "limit": 120, "ignore-pattern": "^\\s+\\*" }],
-    "await-promise": [true, "Bluebird"],
+    "max-line-length": [
+      true,
+      {
+        "limit": 120,
+        "ignore-pattern": "^\\s+\\*"
+      }
+    ],
+    "await-promise": [
+      true,
+      "Bluebird"
+    ],
     "no-reserved-keywords": false,
     "no-unnecessary-class": false,
+    "no-string-literal": false,
     "no-require-imports": false,
     "function-name": false,
     "no-relative-imports": false,
@@ -38,6 +53,6 @@
     "switch-final-break": false,
     "no-parameter-reassignment": false,
     "export-name": false,
-     "no-backbone-get-set-outside-model": false
+    "no-backbone-get-set-outside-model": false
   }
 }

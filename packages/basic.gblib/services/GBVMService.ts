@@ -38,7 +38,6 @@ import * as fs from 'fs';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { TSCompiler } from './TSCompiler';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-const walkPromise = require('walk-promise');
 import urlJoin = require('url-join');
 import { DialogKeywords } from './DialogKeywords';
 import { Messages } from '../strings';
@@ -47,7 +46,8 @@ import { GBConversationalService } from '../../core.gbapp/services/GBConversatio
 const vm = require('vm');
 const vb2ts = require('./vbscript-to-typescript');
 const beautify = require('js-beautify').js;
-var textract = require('textract');
+const textract = require('textract');
+const walkPromise = require('walk-promise');
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 const phone = require('phone');
 
@@ -678,7 +678,7 @@ export class GBVMService extends GBService {
             const promise = min.cbMap[id].promise;
             delete min.cbMap[id];
             try {
-             
+
               await promise(step, result);
               if (step.activeDialog.state.options.previousResolve != undefined) {
                 step.activeDialog.state.options.previousResolve();

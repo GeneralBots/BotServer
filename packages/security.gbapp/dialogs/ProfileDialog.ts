@@ -40,10 +40,10 @@ import urlJoin = require('url-join');
 
 import { BotAdapter, CardFactory, MessageFactory } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog, GBLog } from 'botlib';
-import { Messages } from '../strings';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
+import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
+import { Messages } from '../strings';
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 const phone = require('phone');
 
@@ -52,47 +52,45 @@ const phone = require('phone');
  */
 export class ProfileDialog extends IGBDialog {
 
-  static getNameDialog(min: GBMinInstance) {
+  public static getNameDialog(min: GBMinInstance) {
 
     return {
       id: '/profile_name', waterfall: [
         async step => {
           step.activeDialog.state.options = step.options;
           const locale = step.context.activity.locale;
-          await step.prompt("textPrompt", Messages[locale].whats_name);
+          await step.prompt('textPrompt', Messages[locale].whats_name);
         },
         async step => {
           const locale = step.context.activity.locale;
 
           const fullName = (text) => {
             return text.match(/^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/gi);
-          }
+          };
 
           const value = fullName(step.result);
 
           if (value === null) {
             await step.context.sendActivity(Messages[locale].validation_enter_name);
             await step.replaceDialog('/profile_name', step.activeDialog.state.options);
-          }
-          else {
+          } else {
             step.activeDialog.state.options.name = value[0];
 
             return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);
 
           }
         }]
-    }
+    };
   }
 
-
-  static getMobileDialog(min: GBMinInstance) {
+  public static getMobileDialog(min: GBMinInstance) {
 
     return {
       id: '/profile_mobile', waterfall: [
         async step => {
           step.activeDialog.state.options = step.options;
           const locale = step.context.activity.locale;
-          await step.prompt("textPrompt", Messages[locale].whats_mobile);
+          await step.prompt('textPrompt', Messages[locale].whats_mobile);
         },
         async step => {
           const locale = step.context.activity.locale;
@@ -109,25 +107,24 @@ export class ProfileDialog extends IGBDialog {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_mobile);
 
             return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);
-          }
-          else {
+          } else {
             step.activeDialog.state.options.mobile = `${phoneNumber.values_['1']}${phoneNumber.values_['2']}`;
             step.activeDialog.state.options.mobileCode = GBAdminService.getMobileCode();
 
             return await step.replaceDialog('/profile_mobile_confirm', step.activeDialog.state.options);
           }
         }]
-    }
+    };
   }
 
-  static getMobileConfirmDialog(min: GBMinInstance) {
+  public static getMobileConfirmDialog(min: GBMinInstance) {
 
     return {
       id: '/profile_mobile_confirm', waterfall: [
         async step => {
           step.activeDialog.state.options = step.options;
           const locale = step.context.activity.locale;
-          let from = step.activeDialog.state.options.mobile;
+          const from = step.activeDialog.state.options.mobile;
           if (min.whatsAppDirectLine) {
 
             await min.whatsAppDirectLine.sendToDevice(from, `${step.activeDialog.state.options.mobileCode} is your General Bots creation code.`);
@@ -135,7 +132,7 @@ export class ProfileDialog extends IGBDialog {
             GBLog.info(`WhatsApp not configured. Here is the code: ${step.activeDialog.state.options.mobileCode}.`);
           }
 
-          await step.prompt("textPrompt", Messages[locale].confirm_mobile);
+          await step.prompt('textPrompt', Messages[locale].confirm_mobile);
         },
         async step => {
           const locale = step.context.activity.locale;
@@ -144,40 +141,37 @@ export class ProfileDialog extends IGBDialog {
             await step.context.sendActivity(Messages[locale].confirm_mobile_again);
 
             return await step.replaceDialog('/profile_mobile_confirm', step.activeDialog.state.options);
-          }
-          else {
+          } else {
             await step.replaceDialog('/profile_email', step.activeDialog.state.options);
           }
         }]
-    }
+    };
   }
 
-
-  static getEmailDialog(min: GBMinInstance) {
+  public static getEmailDialog(min: GBMinInstance) {
     return {
       id: '/profile_email', waterfall: [
         async step => {
           const locale = step.context.activity.locale;
-          await step.prompt("textPrompt", Messages[locale].whats_email);
+          await step.prompt('textPrompt', Messages[locale].whats_email);
         },
         async step => {
           const locale = step.context.activity.locale;
 
           const extractEntity = (text) => {
             return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi);
-          }
+          };
 
           const value = extractEntity(step.result);
 
           if (value === null) {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_email);
             await step.replaceDialog('/profile_email', step.activeDialog.state.options);
-          }
-          else {
+          } else {
             step.activeDialog.state.options.email = value[0];
             await step.replaceDialog(`/${step.activeDialog.state.options.nextDialog}`, step.activeDialog.state.options);
           }
         }]
-    }
+    };
   }
 }

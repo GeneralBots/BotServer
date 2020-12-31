@@ -37,7 +37,7 @@
 'use strict';
 
 import { TokenResponse } from 'botbuilder';
-import { IGBDialog, GBLog, GBMinInstance } from 'botlib';
+import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings';
 
 /**
@@ -50,6 +50,7 @@ export class OAuthDialog extends IGBDialog {
       waterfall: [
         async step => {
           step.activeDialog.state.options = step.options;
+
           return await step.beginDialog('oAuthPrompt');
         },
         async step => {
@@ -60,6 +61,7 @@ export class OAuthDialog extends IGBDialog {
             return await step.endDialog(tokenResponse);
           } else {
             await step.context.sendActivity('Please sign in so I can show you your profile.');
+
             return await step.replaceDialog('/auth');
           }
         }

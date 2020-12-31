@@ -39,8 +39,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 import * as fs from 'fs';
-let mkdirp = require('mkdirp');
-let Path = require('path');
+const mkdirp = require('mkdirp');
+const Path = require('path');
 
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService';
@@ -137,7 +137,7 @@ export class GBServer {
             await core.initStorage();
           } catch (error) {
             GBLog.verbose(`Error initializing storage: ${error}`);
-            GBServer.globals.bootInstance = 
+            GBServer.globals.bootInstance =
               await core.createBootInstance(core, azureDeployer, GBServer.globals.publicAddress);
             await core.initStorage();
           }
@@ -150,9 +150,9 @@ export class GBServer {
           GBServer.globals.sysPackages = await core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
-          
+
           GBLog.info(`Publishing instances...`);
-          let instances: IGBInstance[] = await core.loadAllInstances(
+          const instances: IGBInstance[] = await core.loadAllInstances(
             core,
             azureDeployer,
             GBServer.globals.publicAddress

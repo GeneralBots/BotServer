@@ -30,9 +30,9 @@
 |                                                                             |
 \*****************************************************************************/
 
+import { GuaribasQuestion } from '../../../packages/kb.gbapp/models';
 import { GuaribasConversation } from '../../analytics.gblib/models';
 import { GuaribasQuestionAlternate } from '../models';
-import { GuaribasQuestion } from '../../../packages/kb.gbapp/models';
 
 /**
  * Customer Satisfaction Service Layer.
@@ -43,7 +43,7 @@ export class CSService {
     instanceId: number,
     text: string): Promise<GuaribasQuestion> {
 
-    let questionAlternate = await GuaribasQuestionAlternate.findOne({
+    const questionAlternate = await GuaribasQuestionAlternate.findOne({
       where: {
         instanceId: instanceId,
         questionTyped: text
@@ -61,6 +61,7 @@ export class CSService {
         }
       });
     }
+
     return question;
   }
 

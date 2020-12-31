@@ -36,7 +36,7 @@
 
 'use strict';
 
-const { sppull } = require("sppull");
+const { sppull } = require('sppull');
 
 /**
  * Service facade for SharePoint Online.
@@ -60,6 +60,5 @@ export class GBSharePointService {
 
         return await sppull(context, options);
     }
-
 
 }

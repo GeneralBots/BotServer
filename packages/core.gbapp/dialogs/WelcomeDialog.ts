@@ -39,9 +39,9 @@
 import { BotAdapter } from 'botbuilder';
 import {WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
 import { GBConversationalService } from '../services/GBConversationalService';
+import { Messages } from '../strings';
 
 /**
  *  Dialog for Welcoming people.
@@ -59,16 +59,15 @@ export class WelcomeDialog extends IGBDialog {
       async step => {
 
         if (GBServer.globals.entryPointDialog !== null &&
-          min.instance.botId === process.env.BOT_ID && 
-          step.context.activity.channelId === "webchat")
-        {
+          min.instance.botId === process.env.BOT_ID &&
+          step.context.activity.channelId === 'webchat') {
           return step.replaceDialog(GBServer.globals.entryPointDialog);
         }
 
         const user = await min.userProfile.get(step.context, {});
         const locale = step.context.activity.locale;
 
-        if (!user.once && step.context.activity.channelId === "webchat") {
+        if (!user.once && step.context.activity.channelId === 'webchat') {
           user.once = true;
           await min.userProfile.set(step.context, user);
           const a = new Date();
@@ -81,7 +80,7 @@ export class WelcomeDialog extends IGBDialog {
                 : Messages[locale].good_night;
 
           await min.conversationalService.sendText(min, step, Messages[locale].hi(msg));
-          
+
           await step.replaceDialog('/ask', { firstTime: true });
 
           if (

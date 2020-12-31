@@ -102,7 +102,6 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   @Column
   public textAnalyticsEndpoint: string;
 
-  
   @Column({ type: DataType.STRING(64) })
   public translatorKey: string;
 
@@ -333,7 +332,7 @@ export class GuaribasException extends Model<GuaribasException> {
 @Table
 //tslint:disable-next-line:max-classes-per-file
 export class GuaribasApplications extends Model<GuaribasApplications> {
-  
+
   @Column
   public name: string;
 
@@ -353,11 +352,10 @@ export class GuaribasApplications extends Model<GuaribasApplications> {
   public updatedAt: Date;
 }
 
-
 @Table
 //tslint:disable-next-line:max-classes-per-file
 export class GuaribasSchedule extends Model<GuaribasSchedule> {
-  
+
   @Column
   public name: string;
 

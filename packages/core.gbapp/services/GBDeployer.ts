@@ -44,21 +44,21 @@ const child_process = require('child_process');
 const graph = require('@microsoft/microsoft-graph-client');
 const rimraf = require('rimraf');
 
-import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage, IGBDeployer } from 'botlib';
+import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app';
+import { GBVMService } from '../../basic.gblib/services/GBVMService';
 import { GuaribasPackage } from '../models/GBModel';
 import { GBAdminService } from './../../admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService';
 import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBConfigService } from './GBConfigService';
 import { GBImporter } from './GBImporterService';
-import { GBVMService } from '../../basic.gblib/services/GBVMService';
-import { CollectionUtil } from 'pragmatismo-io-framework';
 const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
 
 /**
- * Deployer service for bots, themes, ai and more. 
+ * Deployer service for bots, themes, ai and more.
  */
 export class GBDeployer implements IGBDeployer {
 
@@ -77,7 +77,7 @@ export class GBDeployer implements IGBDeployer {
    */
   public core: IGBCoreService;
 
-  /** 
+  /**
    * Reference to the importer service.
    */
   public importer: GBImporter;
@@ -112,7 +112,7 @@ export class GBDeployer implements IGBDeployer {
     }
     const botPackages: string[] = [];
     const gbappPackages: string[] = [];
-    let generalPackages: string[] = [];
+    const generalPackages: string[] = [];
 
     async function scanPackageDirectory(path) {
 
@@ -125,7 +125,6 @@ export class GBDeployer implements IGBDeployer {
           .filter(isDirectory);
       const dirs = getDirectories(path);
       await CollectionUtil.asyncForEach(dirs, async element => {
-
 
         // For each folder, checks its extensions looking for valid packages.
 
@@ -166,7 +165,7 @@ export class GBDeployer implements IGBDeployer {
 
     // Deploys all .gblib files first.
 
-    let list = [];
+    const list = [];
     for (let index = 0; index < gbappPackages.length; index++) {
       const element = gbappPackages[index];
       if (element.endsWith('.gblib')) {
@@ -187,7 +186,7 @@ export class GBDeployer implements IGBDeployer {
     const instances = await core.loadInstances();
     await CollectionUtil.asyncForEach(instances, async instance => {
       this.mountGBKBAssets(`${instance.botId}.gbkb`,
-        instance.botId, `${instance.botId}.gbkb`);
+                           instance.botId, `${instance.botId}.gbkb`);
     });
 
     GBLog.info(`Package deployment done.`);
@@ -200,7 +199,7 @@ export class GBDeployer implements IGBDeployer {
 
     // Creates a new row on the GuaribasInstance table.
 
-    let instance = await this.importer.createBotInstance(botId);
+    const instance = await this.importer.createBotInstance(botId);
     const bootInstance = GBServer.globals.bootInstance;
 
     // Gets the access token to perform service operations.
@@ -210,7 +209,7 @@ export class GBDeployer implements IGBDeployer {
     // Creates the MSFT application that will be associated to the bot.
 
     const service = new AzureDeployerService(this);
-    let application = await service.createApplication(accessToken, botId);
+    const application = await service.createApplication(accessToken, botId);
 
     // Fills new instance base information and get App secret.
 
@@ -240,6 +239,7 @@ export class GBDeployer implements IGBDeployer {
    */
   public async botExists(botId: string): Promise<boolean> {
     const service = new AzureDeployerService(this);
+
     return await service.botExists(botId);
   }
 
@@ -267,13 +267,9 @@ export class GBDeployer implements IGBDeployer {
         instance.description,
         `${publicAddress}/api/messages/${instance.botId}`
       );
-    }
-
-    // Otherwise, perform the bot creation.
-
-    else {
-      let botId = GBConfigService.get('BOT_ID');
-      let bootInstance = await this.core.loadInstanceByBotId(botId);
+    } else {
+      const botId = GBConfigService.get('BOT_ID');
+      const bootInstance = await this.core.loadInstanceByBotId(botId);
 
       instance.searchHost = bootInstance.searchHost;
       instance.searchIndex = bootInstance.searchIndex;
@@ -324,8 +320,8 @@ export class GBDeployer implements IGBDeployer {
   public async publishNLP(instance: IGBInstance): Promise<void> {
     const service = new AzureDeployerService(this);
     const res = await service.publishNLP(instance.cloudLocation, instance.nlpAppId,
-      instance.nlpAuthoringKey);
-    if (res.status !== 200 && res.status !== 201) throw res.bodyAsText;
+                                         instance.nlpAuthoringKey);
+    if (res.status !== 200 && res.status !== 201) { throw res.bodyAsText; }
   }
 
   /**
@@ -334,8 +330,8 @@ export class GBDeployer implements IGBDeployer {
   public async trainNLP(instance: IGBInstance): Promise<void> {
     const service = new AzureDeployerService(this);
     const res = await service.trainNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
-    if (res.status !== 200 && res.status !== 202) throw res.bodyAsText;
-    let sleep = ms => {
+    if (res.status !== 200 && res.status !== 202) { throw res.bodyAsText; }
+    const sleep = ms => {
       return new Promise(resolve => {
         setTimeout(resolve, ms);
       });
@@ -355,7 +351,7 @@ export class GBDeployer implements IGBDeployer {
       instance.nlpAuthoringKey,
       listData
     );
-    if (res.status !== 200) throw res.bodyAsText;
+    if (res.status !== 200) { throw res.bodyAsText; }
   }
 
   /**
@@ -363,7 +359,7 @@ export class GBDeployer implements IGBDeployer {
    */
   public async deployBotFromLocalPath(localPath: string, publicAddress: string): Promise<void> {
     const packageName = Path.basename(localPath);
-    let instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
+    const instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
     await this.deployBotFull(instance, publicAddress);
   }
 
@@ -374,10 +370,10 @@ export class GBDeployer implements IGBDeployer {
 
     // Connects to MSFT storage.
 
-    let token = await min.adminService.acquireElevatedToken(min.instance.instanceId);
-    let siteId = process.env.STORAGE_SITE_ID;
-    let libraryId = process.env.STORAGE_LIBRARY;
-    let client = MicrosoftGraph.Client.init({
+    const token = await min.adminService.acquireElevatedToken(min.instance.instanceId);
+    const siteId = process.env.STORAGE_SITE_ID;
+    const libraryId = process.env.STORAGE_LIBRARY;
+    const client = MicrosoftGraph.Client.init({
       authProvider: done => {
         done(null, token);
       }
@@ -387,24 +383,25 @@ export class GBDeployer implements IGBDeployer {
 
     const botId = min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbot`;
-    let res = await client
+    const res = await client
       .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
       .get();
 
     // Finds Config.xlsx.
 
-    let document = res.value.filter(m => {
+    const document = res.value.filter(m => {
       return m.name === 'Config.xlsx';
     });
     if (document === undefined || document.length === 0) {
       GBLog.info(`Config.xlsx not found on .bot folder, check the package.`);
+
       return null;
     }
 
     // Reads all rows in Config.xlsx that contains a pair of name/value
     // and fills an object that is returned to be saved in params instance field.
 
-    let results = await client
+    const results = await client
       .api(
         `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('General')/range(address='A7:B100')`
       )
@@ -416,6 +413,7 @@ export class GBDeployer implements IGBDeployer {
       }
       obj[results.text[index][0]] = results.text[index][1];
     }
+
     return obj;
   }
 
@@ -494,7 +492,7 @@ export class GBDeployer implements IGBDeployer {
       return pck;
     }
 
-    // Deploy platform packages here accordingly to their extension. 
+    // Deploy platform packages here accordingly to their extension.
 
     switch (packageType) {
       case '.gbot':
@@ -585,6 +583,7 @@ export class GBDeployer implements IGBDeployer {
       case '.gbkb':
         const service = new KBService(this.core.sequelize);
         rimraf.sync(localPath);
+
         return await service.undeployKbFromStorage(instance, this, p.packageId);
 
       case '.gbui':
@@ -712,7 +711,7 @@ export class GBDeployer implements IGBDeployer {
    * Servers bot storage assets to be used by web, WhatsApp and other channels.
    */
   public mountGBKBAssets(packageName: any, botId: string, filename: string) {
-    
+
     // Servers menu assets.
 
     GBServer.globals.server.use(
@@ -723,53 +722,16 @@ export class GBDeployer implements IGBDeployer {
     // Servers all other assets in .gbkb folders.
 
     const gbaiName = `${botId}.gbai`;
-    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/assets`, express.static(urlJoin('work', gbaiName, filename, 'assets')));
-    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/images`, express.static(urlJoin('work', gbaiName, filename, 'images')));
-    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/audios`, express.static(urlJoin('work', gbaiName, filename, 'audios')));
-    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/videos`, express.static(urlJoin('work', gbaiName, filename, 'videos')));
+    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/assets`,
+                                express.static(urlJoin('work', gbaiName, filename, 'assets')));
+    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/images`,
+                                express.static(urlJoin('work', gbaiName, filename, 'images')));
+    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/audios`,
+                                express.static(urlJoin('work', gbaiName, filename, 'audios')));
+    GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/videos`,
+                                express.static(urlJoin('work', gbaiName, filename, 'videos')));
 
     GBLog.info(`KB (.gbkb) assets accessible at: /kb/${botId}.gbai/${packageName}.`);
-  }
-
-  /**
-   * Determines if a given package is of system kind.
-   */
-  private isSystemPackage(name: string): Boolean {
-    const names = [
-      'analytics.gblib',
-      'console.gblib',
-      'security.gbapp',
-      'whatsapp.gblib',
-      'sharepoint.gblib',
-      'core.gbapp',
-      'admin.gbapp',
-      'azuredeployer.gbapp',
-      'customer-satisfaction.gbapp',
-      'kb.gbapp'
-    ];
-
-    return names.indexOf(name) > -1;
-  }
-
-  /**
-   * Performs the process of compiling all .gbapp folders.
-   */
-  private async deployAppPackages(gbappPackages: string[], core: any, appPackages: any[]) {
-    
-    // Loops through all ready to load .gbapp packages. 
-
-    let appPackagesProcessed = 0;
-    await CollectionUtil.asyncForEach(gbappPackages, async e => {
-      const filenameOnly = Path.basename(e);
-
-      // Skips .gbapp inside deploy folder.
-
-      if (this.isSystemPackage(filenameOnly) === false) {
-        appPackagesProcessed = await this.callGBAppCompiler(e, core, appPackages, appPackagesProcessed);
-      }
-    });
-
-    return appPackagesProcessed;
   }
 
   /**
@@ -792,7 +754,7 @@ export class GBDeployer implements IGBDeployer {
         child_process.execSync('npm install', { cwd: gbappPath });
       }
     }
-    
+
     folder = Path.join(gbappPath, 'dist');
     try {
 
@@ -823,6 +785,48 @@ export class GBDeployer implements IGBDeployer {
       }
       appPackagesProcessed++;
     }
+
+    return appPackagesProcessed;
+  }
+
+  /**
+   * Determines if a given package is of system kind.
+   */
+  private isSystemPackage(name: string): Boolean {
+    const names = [
+      'analytics.gblib',
+      'console.gblib',
+      'security.gbapp',
+      'whatsapp.gblib',
+      'sharepoint.gblib',
+      'core.gbapp',
+      'admin.gbapp',
+      'azuredeployer.gbapp',
+      'customer-satisfaction.gbapp',
+      'kb.gbapp'
+    ];
+
+    return names.indexOf(name) > -1;
+  }
+
+  /**
+   * Performs the process of compiling all .gbapp folders.
+   */
+  private async deployAppPackages(gbappPackages: string[], core: any, appPackages: any[]) {
+
+    // Loops through all ready to load .gbapp packages.
+
+    let appPackagesProcessed = 0;
+    await CollectionUtil.asyncForEach(gbappPackages, async e => {
+      const filenameOnly = Path.basename(e);
+
+      // Skips .gbapp inside deploy folder.
+
+      if (this.isSystemPackage(filenameOnly) === false) {
+        appPackagesProcessed = await this.callGBAppCompiler(e, core, appPackages, appPackagesProcessed);
+      }
+    });
+
     return appPackagesProcessed;
   }
 }

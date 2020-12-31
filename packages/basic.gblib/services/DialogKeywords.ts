@@ -32,14 +32,14 @@
 
 'use strict';
 
-import { TurnContext, BotAdapter } from 'botbuilder';
-import { WaterfallStepContext, WaterfallDialog } from 'botbuilder-dialogs';
+import { BotAdapter, TurnContext } from 'botbuilder';
+import { WaterfallDialog, WaterfallStepContext } from 'botbuilder-dialogs';
 import { GBLog, GBMinInstance } from 'botlib';
 import urlJoin = require('url-join');
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { Messages } from '../strings';
 import { GBServer } from '../../../src/app';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { SecService } from '../../security.gbapp/services/SecService';
+import { Messages } from '../strings';
 import { SystemKeywords } from './SystemKeywords';
 
 /**
@@ -48,8 +48,8 @@ import { SystemKeywords } from './SystemKeywords';
  */
 export class DialogKeywords {
 
-  /** 
-  * Reference to minimal bot instance. 
+  /**
+  * Reference to minimal bot instance.
   */
   public min: GBMinInstance;
 
@@ -77,17 +77,17 @@ export class DialogKeywords {
 
   /**
    * Returns the today data filled in dd/mm/yyyy or mm/dd/yyyy.
-   * 
+   *
    * @example x = TODAY
    */
   public async getToday(step) {
-    var d = new Date(),
+    let d = new Date(),
       month = '' + (d.getMonth() + 1),
       day = '' + d.getDate(),
       year = d.getFullYear();
 
-    if (month.length < 2) month = '0' + month;
-    if (day.length < 2) day = '0' + day;
+    if (month.length < 2) { month = '0' + month; }
+    if (day.length < 2) { day = '0' + day; }
 
     const locale = step.context.activity.locale;
     switch (locale) {
@@ -104,7 +104,7 @@ export class DialogKeywords {
 
   /**
    * Quits the dialog, currently required to get out of VM context.
-   * 
+   *
    * @example EXIT
    */
   public async exit(step) {
@@ -113,24 +113,24 @@ export class DialogKeywords {
 
   /**
    * Returns current time in format hh:dd.
-   * 
+   *
    * @example SAVE "file.xlsx", name, email, NOW
-   * 
+   *
    */
   public async getNow() {
     const nowUTC = new Date();
-    const now = new Date((typeof nowUTC === "string" ?
+    const now = new Date((typeof nowUTC === 'string' ?
       new Date(nowUTC) :
-      nowUTC).toLocaleString("en-US", { timeZone: process.env.DEFAULT_TIMEZONE }));
+      nowUTC).toLocaleString('en-US', { timeZone: process.env.DEFAULT_TIMEZONE }));
 
     return now.getHours() + ':' + now.getMinutes();
   }
 
   /**
    * Sends a file to a given mobile.
-   * 
+   *
    * @example SEND FILE TO "+199988887777", "image.jpg"
-   * 
+   *
    */
   public async sendFileTo(mobile, filename, caption) {
     return await this.internalSendFile(null, mobile, filename, caption);
@@ -138,47 +138,24 @@ export class DialogKeywords {
 
   /**
    * Sends a file to the current user.
-   * 
+   *
    * @example SEND FILE "image.jpg"
-   * 
+   *
    */
   public async sendFile(step, filename, caption) {
     return await this.internalSendFile(step, null, filename, caption);
   }
 
   /**
-   * Processes the sending of the file.
-   */
-  private async internalSendFile(step, mobile, filename, caption) {
-    if (filename.indexOf('.md') > -1) {
-      GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile.`);
-      let md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
-      await this.min.conversationalService.sendMarkdownToMobile(this.min, step, mobile, md);
-    } else {
-      GBLog.info(`BASIC: Sending the file ${filename} to mobile.`);
-      let url = urlJoin(
-        GBServer.globals.publicAddress,
-        'kb',
-        `${this.min.botId}.gbai`,
-        `${this.min.botId}.gbkb`,
-        'assets',
-        filename
-      );
-
-      await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
-    }
-  }
-
-  /**
    * Defines the current language of the bot conversation.
-   * 
+   *
    * @example SET LANGUAGE "pt"
-   * 
+   *
    */
   public async setLanguage(step, language) {
     const user = await this.min.userProfile.get(step.context, {});
 
-    let sec = new SecService();
+    const sec = new SecService();
     user.systemUser = await sec.updateUserLocale(user.systemUser.userId, language);
 
     await this.min.userProfile.set(step.context, user);
@@ -190,12 +167,20 @@ export class DialogKeywords {
   public async userName(step) {
     return step.context.activity.from.name;
   }
-  
+
+  /**
+   * OBSOLETE. 
+   */
+  public async getFrom(step) {
+    return await this.userMobile(step);
+  }
+
+
   /**
    * Returns current mobile number from user in conversation.
-   * 
+   *
    * @example SAVE "file.xlsx", name, email, MOBILE
-   * 
+   *
    */
   public async userMobile(step) {
     if (isNaN(step.context.activity.from.id)) {
@@ -207,9 +192,9 @@ export class DialogKeywords {
 
   /**
    * Shows the subject menu to the user
-   * 
+   *
    * @example MENU
-   * 
+   *
    */
   public async showMenu(step) {
     return await step.beginDialog('/menu');
@@ -217,9 +202,9 @@ export class DialogKeywords {
 
   /**
    * Performs the transfer of the conversation to a human agent.
-   * 
+   *
    * @example TRANSFER
-   * 
+   *
    */
   public async transfer(step) {
     return await step.beginDialog('/t');
@@ -227,9 +212,9 @@ export class DialogKeywords {
 
   /**
    * Hears something from user and put it in a variable
-   * 
+   *
    * @example HEAR name
-   *  
+   *
    */
   public async hear(step, promise, previousResolve, kind, ...args) {
     function random(low, high) {
@@ -252,5 +237,28 @@ export class DialogKeywords {
    */
   public async talk(step, text: string) {
     return await this.min.conversationalService.sendText(this.min, step, text);
+  }
+
+  /**
+   * Processes the sending of the file.
+   */
+  private async internalSendFile(step, mobile, filename, caption) {
+    if (filename.indexOf('.md') > -1) {
+      GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile.`);
+      const md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
+      await this.min.conversationalService.sendMarkdownToMobile(this.min, step, mobile, md);
+    } else {
+      GBLog.info(`BASIC: Sending the file ${filename} to mobile.`);
+      const url = urlJoin(
+        GBServer.globals.publicAddress,
+        'kb',
+        `${this.min.botId}.gbai`,
+        `${this.min.botId}.gbkb`,
+        'assets',
+        filename
+      );
+
+      await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
+    }
   }
 }

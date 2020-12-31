@@ -36,12 +36,12 @@
 
 'use strict';
 
-import { IGBCoreService, IGBInstance, GBMinInstance } from 'botlib';
+import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
 import fs = require('fs');
 import urlJoin = require('url-join');
+import { GBServer } from '../../../src/app';
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
-import { GBServer } from '../../../src/app';
 
 /**
  * Handles the importing of packages.
@@ -53,8 +53,8 @@ export class GBImporter {
     this.core = core;
   }
 
-  public async importIfNotExistsBotPackage(botId: string, 
-    packageName: string, localPath: string, additionalInstance: IGBInstance = null) {
+  public async importIfNotExistsBotPackage(botId: string,
+                                           packageName: string, localPath: string, additionalInstance: IGBInstance = null) {
     const settingsJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'settings.json'), 'utf8'));
     if (botId === undefined) {
       botId = settingsJson.botId;
@@ -84,10 +84,9 @@ export class GBImporter {
       instance = await this.core.loadInstanceByBotId(botId);
     }
 
-    if (instance != null && instance.botId === null) {
+    if (instance != undefined && instance.botId === null) {
       console.log(`Null BotId after load instance with botId: ${botId}.`);
-    }
-    else{
+    } else {
       instance = additionalInstance;
     }
 
@@ -95,8 +94,9 @@ export class GBImporter {
   }
 
   public async createBotInstance(botId: string) {
-    let fullSettingsJson = { ...GBServer.globals.bootInstance };
+    const fullSettingsJson = { ...GBServer.globals.bootInstance };
     fullSettingsJson.botId = botId;
+
     return await GuaribasInstance.create(fullSettingsJson);
   }
 
@@ -106,10 +106,10 @@ export class GBImporter {
     localPath: string,
     settingsJson: any
   ) {
-    let packageJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
+    const packageJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
     const servicesJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'services.json'), 'utf8'));
 
-    let fullSettingsJson = { ...GBServer.globals.bootInstance, ...packageJson, ...settingsJson, ...servicesJson };
+    const fullSettingsJson = { ...GBServer.globals.bootInstance, ...packageJson, ...settingsJson, ...servicesJson };
 
     if (botId !== undefined) {
       fullSettingsJson.botId = botId;

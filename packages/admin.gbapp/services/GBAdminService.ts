@@ -37,15 +37,15 @@
 'use strict';
 
 import { AuthenticationContext, TokenResponse } from 'adal-node';
-import { IGBAdminService, IGBCoreService, IGBInstance, GBMinInstance, GBLog, IGBDeployer } from 'botlib';
+import { GBLog, GBMinInstance, IGBAdminService, IGBCoreService, IGBDeployer, IGBInstance } from 'botlib';
 import urlJoin = require('url-join');
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
-import { GuaribasAdmin } from '../models/AdminModel';
-import { GBSharePointService } from '../../sharepoint.gblib/services/SharePointService';
-import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
+import { GBImporter } from '../../core.gbapp/services/GBImporterService';
+import { GBSharePointService } from '../../sharepoint.gblib/services/SharePointService';
+import { GuaribasAdmin } from '../models/AdminModel';
 const Path = require('path');
 const msRestAzure = require('ms-rest-azure');
 const PasswordGenerator = require('strict-password-generator').default;
@@ -145,6 +145,57 @@ export class GBAdminService implements IGBAdminService {
     return passwordGenerator.generatePassword(options);
   }
 
+  public static async undeployPackageCommand(text: any, min: GBMinInstance) {
+    const packageName = text.split(' ')[1];
+    const importer = new GBImporter(min.core);
+    const deployer = new GBDeployer(min.core, importer);
+    const localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(packageName));
+    await deployer.undeployPackageFromLocalPath(min.instance, localFolder);
+  }
+
+  public static isSharePointPath(path: string) {
+    return path.indexOf('sharepoint.com') > 0;
+  }
+  public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: IGBDeployer) {
+    const packageName = text.split(' ')[1];
+
+    if (!this.isSharePointPath(packageName)) {
+      const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
+      if (additionalPath === undefined) {
+        throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
+      }
+      await deployer.deployPackage(min, urlJoin(additionalPath, packageName));
+    } else {
+      const siteName = text.split(' ')[1];
+      const folderName = text.split(' ')[2];
+
+      const s = new GBSharePointService();
+
+      const localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(folderName));
+      GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
+      await s.downloadFolder(
+        localFolder,
+        siteName,
+        folderName,
+        GBConfigService.get('CLOUD_USERNAME'),
+        GBConfigService.get('CLOUD_PASSWORD')
+      );
+      await deployer.deployPackage(min, localFolder);
+    }
+  }
+  public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: IGBDeployer) {
+    await deployer.rebuildIndex(
+      min.instance,
+      new AzureDeployerService(deployer).getKBSearchSchema(min.instance.searchIndex)
+    );
+  }
+
+  public static async syncBotServerCommand(min: GBMinInstance, deployer: GBDeployer) {
+    const serverName = `${min.instance.botId}-server`;
+    const service = await AzureDeployerService.createInstance(deployer);
+    service.syncBotServerRepository(min.instance.botId, serverName);
+  }
+
   public async setValue(instanceId: number, key: string, value: string) {
     const options = { where: {} };
     options.where = { key: key };
@@ -183,7 +234,7 @@ export class GBAdminService implements IGBAdminService {
   public async acquireElevatedToken(instanceId: number): Promise<string> {
     // TODO: Use boot bot as base for authentication.
 
-    let botId = GBConfigService.get('BOT_ID');
+    const botId = GBConfigService.get('BOT_ID');
     instanceId = (await this.core.loadInstanceByBotId(botId)).instanceId;
 
     return new Promise<string>(async (resolve, reject) => {
@@ -228,56 +279,5 @@ export class GBAdminService implements IGBAdminService {
     });
   }
 
-  public static async undeployPackageCommand(text: any, min: GBMinInstance) {
-    const packageName = text.split(' ')[1];
-    const importer = new GBImporter(min.core);
-    const deployer = new GBDeployer(min.core, importer);
-    let localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(packageName));
-    await deployer.undeployPackageFromLocalPath(min.instance, localFolder);
-  }
-
-  public static isSharePointPath(path: string) {
-    return path.indexOf('sharepoint.com') > 0;
-  }
-
   public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void> { }
-  public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: IGBDeployer) {
-    const packageName = text.split(' ')[1];
-
-    if (!this.isSharePointPath(packageName)) {
-      const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
-      if (additionalPath === undefined) {
-        throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
-      }
-      await deployer.deployPackage(min, urlJoin(additionalPath, packageName));
-    } else {
-      let siteName = text.split(' ')[1];
-      let folderName = text.split(' ')[2];
-
-      let s = new GBSharePointService();
-
-      let localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(folderName));
-      GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
-      await s.downloadFolder(
-        localFolder,
-        siteName,
-        folderName,
-        GBConfigService.get('CLOUD_USERNAME'),
-        GBConfigService.get('CLOUD_PASSWORD')
-      );
-      await deployer.deployPackage(min, localFolder);
-    }
-  }
-  public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: IGBDeployer) {
-    await deployer.rebuildIndex(
-      min.instance,
-      new AzureDeployerService(deployer).getKBSearchSchema(min.instance.searchIndex)
-    );
-  }
-
-  public static async syncBotServerCommand(min: GBMinInstance, deployer: GBDeployer) {
-    const serverName = `${min.instance.botId}-server`;
-    const service = await AzureDeployerService.createInstance(deployer);
-    service.syncBotServerRepository(min.instance.botId, serverName);
-  }
 }

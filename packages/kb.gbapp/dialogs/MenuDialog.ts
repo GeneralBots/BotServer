@@ -41,10 +41,10 @@ import urlJoin = require('url-join');
 import { BotAdapter, CardFactory, MessageFactory } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 import { GuaribasSubject } from '../models';
 import { KBService } from '../services/KBService';
 import { Messages } from '../strings';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 
 /**
  * Dialog arguments.
@@ -134,8 +134,8 @@ export class MenuDialog extends IGBDialog {
         if (attachments.length === 0) {
 
           if (user.subjects && user.subjects.length > 0) {
-            await min.conversationalService.sendText(min, step, 
-              Messages[locale].lets_search(KBService.getFormattedSubjectItems(user.subjects))
+            await min.conversationalService.sendText(min, step,
+                                                     Messages[locale].lets_search(KBService.getFormattedSubjectItems(user.subjects))
             );
           }
         } else {

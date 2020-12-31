@@ -39,10 +39,10 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
+import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
+import { SecService } from '../../security.gbapp/services/SecService';
 import { CSService } from '../services/CSService';
 import { Messages } from '../strings';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 
 /**
  * Dialog for feedback collecting.
@@ -74,14 +74,14 @@ export class FeedbackDialog extends IGBDialog {
 
           const locale = step.context.activity.locale;
 
-          let sec = new SecService();
-          let from = step.context.activity.from.id;
+          const sec = new SecService();
+          const from = step.context.activity.from.id;
 
           await min.conversationalService.sendText(min, step, Messages[locale].please_wait_transfering);
-          let agentSystemId = await sec.assignHumanAgent(from, min.instance.instanceId);
+          const agentSystemId = await sec.assignHumanAgent(from, min.instance.instanceId);
 
           await min.whatsAppDirectLine.sendToDevice(agentSystemId,
-            Messages[locale].notify_agent(step.context.activity.from.name));
+                                                    Messages[locale].notify_agent(step.context.activity.from.name));
 
           return await step.next();
         }
@@ -94,8 +94,8 @@ export class FeedbackDialog extends IGBDialog {
 
           const locale = step.context.activity.locale;
 
-          let sec = new SecService();
-          let from = step.context.activity.from.id;
+          const sec = new SecService();
+          const from = step.context.activity.from.id;
 
           await sec.updateCurrentAgent(from, min.instance.instanceId, null);
           await min.conversationalService.sendText(min, step, Messages[locale].notify_end_transfer(min.instance.botId));
@@ -104,7 +104,6 @@ export class FeedbackDialog extends IGBDialog {
         }
       ])
     );
-
 
     min.dialogs.add(
       new WaterfallDialog('/feedbackNumber', [
@@ -144,13 +143,13 @@ export class FeedbackDialog extends IGBDialog {
           const analytics = new AnalyticsService();
           const rate = await analytics.updateConversationSuggestion(
             min.instance.instanceId, user.conversation.conversationId, step.result, user.systemUser.locale);
-          
+
           if (rate > 0.5) {
             await min.conversationalService.sendText(min, step, Messages[fixedLocale].glad_you_liked);
           } else {
 
-            const message = min.core.getParam<string>(min.instance, "Feedback Improve Message",
-              Messages[fixedLocale].we_will_improve); // TODO: Improve to be multi-language.
+            const message = min.core.getParam<string>(min.instance, 'Feedback Improve Message',
+                                                      Messages[fixedLocale].we_will_improve); // TODO: Improve to be multi-language.
 
             await min.conversationalService.sendText(min, step, message);
           }

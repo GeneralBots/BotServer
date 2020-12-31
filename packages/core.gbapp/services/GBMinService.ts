@@ -51,7 +51,6 @@ import {
   TurnContext,
   UserState
 } from 'botbuilder';
-import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
 import { ConfirmPrompt, OAuthPrompt, WaterfallDialog } from 'botbuilder-dialogs';
 import {
   GBDialogStep,
@@ -63,27 +62,33 @@ import {
   IGBInstance,
   IGBPackage
 } from 'botlib';
+import { AzureText, CollectionUtil } from 'pragmatismo-io-framework';
 
 import { MicrosoftAppCredentials } from 'botframework-connector';
+import fs = require('fs');
 import { GBServer } from '../../../src/app';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
+import { GuaribasConversationMessage } from '../../analytics.gblib/models';
+import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
+import { GBVMService } from '../../basic.gblib/services/GBVMService';
 import { AskDialogArgs } from '../../kb.gbapp/dialogs/AskDialog';
 import { KBService } from '../../kb.gbapp/services/KBService';
+import { SecService } from '../../security.gbapp/services/SecService';
+import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import { Messages } from '../strings';
 import { GBConfigService } from './GBConfigService';
-import { GBDeployer } from './GBDeployer';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
-import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
-import fs = require('fs');
-import { GuaribasConversationMessage } from '../../analytics.gblib/models';
-import { GBVMService } from '../../basic.gblib/services/GBVMService';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBConversationalService } from './GBConversationalService';
+import { GBDeployer } from './GBDeployer';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
  */
 export class GBMinService {
+
+  /**
+   * Default General Bots User Interface package.
+   */
+  private static uiPackage = 'default.gbui';
 
   /**
    * Main core service attached to this bot service.
@@ -106,11 +111,6 @@ export class GBMinService {
   public deployer: GBDeployer;
 
   /**
-   * Default General Bots User Interface package.
-   */
-  private static uiPackage = 'default.gbui';
-
-  /**
    * Static initialization of minimal instance.
    *
    * @param core Basic database services to identify instance, for example.
@@ -127,118 +127,6 @@ export class GBMinService {
     this.deployer = deployer;
   }
 
-
-  private async WhatsAppCallback(req, res) {
-    try {
-
-      // Detects if the message is echo fro itself.
-
-      const id = req.body.messages[0].chatId.split('@')[0];
-      const senderName = req.body.messages[0].senderName;
-      const text = req.body.messages[0].body;
-      if (req.body.messages[0].fromMe) {
-        res.end();
-        return; // Exit here.
-      }
-
-      // Detects if the welcome message is enabled.
-
-      let activeMin;
-      if (process.env.WHATSAPP_WELCOME_DISABLED !== 'true') {
-
-        // Tries to find if user wants to switch bots.
-
-        let toSwitchMin = GBServer.globals.minInstances.filter(
-          p => p.instance.botId.toLowerCase() === text.toLowerCase()
-        )[0];
-        if (!toSwitchMin) {
-          toSwitchMin = GBServer.globals.minInstances.filter(p =>
-            p.instance.activationCode ? p.instance.activationCode.toLowerCase() === text.toLowerCase() : false
-          )[0];
-        }
-
-        // Find active bot instance.
-
-        activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
-
-        // If it is the first time for the user, tries to auto-execute
-        // start dialog if any is specified in Config.xlsx.
-
-        let sec = new SecService();
-        let user = await sec.getUserFromSystemId(id);
-        if (user === null || user.hearOnDialog) {
-          user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, '', 'whatsapp', senderName);
-
-          let startDialog = user.hearOnDialog ?
-            user.hearOnDialog :
-            activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
-
-          GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
-          if (startDialog) {
-            req.body.messages[0].body = `${startDialog}`;
-
-            // Resets HEAR ON DIALOG value to none and passes
-            // current dialog to the direct line.
-
-            await sec.updateUserHearOnDialog(user.userId, null);
-            await (activeMin as any).whatsAppDirectLine.received(req, res);
-          }
-          else {
-            await (activeMin as any).whatsAppDirectLine.sendToDevice(
-              id,
-              `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`
-            );
-            res.end();
-          }
-        } else {
-
-          // User wants to switch bots.
-
-          if (toSwitchMin !== undefined) {
-
-            // So gets the new bot instance information and prepares to 
-            // auto start dialog if any is specified.
-
-            const instance = await this.core.loadInstanceByBotId(activeMin.botId);
-            await sec.updateUserInstance(id, instance.instanceId);
-            await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
-            let startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
-            GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
-
-            if (startDialog) {
-              req.body.messages[0].body = `${startDialog}`;
-              await (activeMin as any).whatsAppDirectLine.received(req, res);
-            }
-            else {
-              await (activeMin as any).whatsAppDirectLine.sendToDevice(
-                id,
-                `Agora falando com ${activeMin.instance.title}...`
-              );
-              res.end();
-            }
-          } else {
-            activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
-            if (activeMin === undefined) {
-              activeMin = GBServer.globals.minBoot;
-              await (activeMin as any).whatsAppDirectLine.sendToDevice(
-                id,
-                `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`
-              );
-            }
-            await (activeMin as any).whatsAppDirectLine.received(req, res);
-          }
-        }
-      } else {
-
-        // Just pass the message to the receiver.
-
-        await (GBServer.globals.minBoot as any).whatsAppDirectLine.received(req, res);
-      }
-    } catch (error) {
-      GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error}`);
-    }
-  }
-
   /**
    * Constructs a new minimal instance for each bot.
    */
@@ -246,7 +134,7 @@ export class GBMinService {
 
     // Servers default UI on root address '/' if web enabled.
     if (process.env.DISABLE_WEB !== 'true') {
-      let url = GBServer.globals.wwwroot
+      const url = GBServer.globals.wwwroot
         ? GBServer.globals.wwwroot
         : urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build');
 
@@ -257,12 +145,12 @@ export class GBMinService {
     // instance information stored on server.
 
     if (process.env.DISABLE_WEB !== 'true') {
-      GBServer.globals.server.get('/instances/:botId', this.handleGetInstanceForClient);
+      GBServer.globals.server.get('/instances/:botId', this.handleGetInstanceForClient.bind(this));
     }
 
     // Servers the WhatsApp callback.
 
-    GBServer.globals.server.post('/webhooks/whatsapp', this.WhatsAppCallback);
+    GBServer.globals.server.post('/webhooks/whatsapp', this.WhatsAppCallback.bind(this));
 
     // Call mountBot event to all bots.
 
@@ -370,6 +258,116 @@ export class GBMinService {
     // Provides checking of instance health.
 
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
+  }
+
+  private async WhatsAppCallback(req, res) {
+    try {
+
+      // Detects if the message is echo fro itself.
+
+      const id = req.body.messages[0].chatId.split('@')[0];
+      const senderName = req.body.messages[0].senderName;
+      const text = req.body.messages[0].body;
+      if (req.body.messages[0].fromMe) {
+        res.end();
+
+        return; // Exit here.
+      }
+
+      // Detects if the welcome message is enabled.
+
+      let activeMin;
+      if (process.env.WHATSAPP_WELCOME_DISABLED !== 'true') {
+
+        // Tries to find if user wants to switch bots.
+
+        let toSwitchMin = GBServer.globals.minInstances.filter(
+          p => p.instance.botId.toLowerCase() === text.toLowerCase()
+        )[0];
+        if (!toSwitchMin) {
+          toSwitchMin = GBServer.globals.minInstances.filter(p =>
+            p.instance.activationCode ? p.instance.activationCode.toLowerCase() === text.toLowerCase() : false
+          )[0];
+        }
+
+        // Find active bot instance.
+
+        activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
+
+        // If it is the first time for the user, tries to auto-execute
+        // start dialog if any is specified in Config.xlsx.
+
+        const sec = new SecService();
+        let user = await sec.getUserFromSystemId(id);
+        if (user === null || user.hearOnDialog) {
+          user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, '', 'whatsapp', senderName);
+
+          const startDialog = user.hearOnDialog ?
+            user.hearOnDialog :
+            activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
+
+          GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
+          if (startDialog) {
+            req.body.messages[0].body = `${startDialog}`;
+
+            // Resets HEAR ON DIALOG value to none and passes
+            // current dialog to the direct line.
+
+            await sec.updateUserHearOnDialog(user.userId, null);
+            await (activeMin as any).whatsAppDirectLine.received(req, res);
+          } else {
+            await (activeMin as any).whatsAppDirectLine.sendToDevice(
+              id,
+              `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`
+            );
+            res.end();
+          }
+        } else {
+
+          // User wants to switch bots.
+
+          if (toSwitchMin !== undefined) {
+
+            // So gets the new bot instance information and prepares to
+            // auto start dialog if any is specified.
+
+            const instance = await this.core.loadInstanceByBotId(activeMin.botId);
+            await sec.updateUserInstance(id, instance.instanceId);
+            await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
+            const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
+            GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
+
+            if (startDialog) {
+              req.body.messages[0].body = `${startDialog}`;
+              await (activeMin as any).whatsAppDirectLine.received(req, res);
+            } else {
+              await (activeMin as any).whatsAppDirectLine.sendToDevice(
+                id,
+                `Agora falando com ${activeMin.instance.title}...`
+              );
+              res.end();
+            }
+          } else {
+            activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
+            if (activeMin === undefined) {
+              activeMin = GBServer.globals.minBoot;
+              await (activeMin as any).whatsAppDirectLine.sendToDevice(
+                id,
+                `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`
+              );
+            }
+            await (activeMin as any).whatsAppDirectLine.received(req, res);
+          }
+        }
+      } else {
+
+        // Just pass the message to the receiver.
+
+        await (GBServer.globals.minBoot as any).whatsAppDirectLine.received(req, res);
+      }
+    } catch (error) {
+      GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error}`);
+    }
   }
 
   /**
@@ -499,7 +497,7 @@ export class GBMinService {
       // Gets the webchat token, speech token and theme.
 
       const webchatTokenContainer = await this.getWebchatToken(instance);
-      const speechToken = instance.speechKey != null ? await this.getSTSToken(instance) : null;
+      const speechToken = instance.speechKey != undefined ? await this.getSTSToken(instance) : null;
       let theme = instance.theme;
 
       // Sends all information to the .gbui web client.
@@ -540,9 +538,11 @@ export class GBMinService {
 
     try {
       const json = await request(options);
+
       return JSON.parse(json);
     } catch (error) {
       const msg = `[botId:${instance.botId}] Error calling Direct Line to generate a token for Web control: ${error}.`;
+
       return Promise.reject(new Error(msg));
     }
   }
@@ -575,13 +575,14 @@ export class GBMinService {
 
     // MSFT stuff.
 
-    const adapter = new BotFrameworkAdapter({ appId: instance.marketplaceId, appPassword: instance.marketplacePassword });
+    const adapter = new BotFrameworkAdapter(
+      { appId: instance.marketplaceId, appPassword: instance.marketplacePassword });
     const storage = new MemoryStorage();
     const conversationState = new ConversationState(storage);
     const userState = new UserState(storage);
     adapter.use(new AutoSaveStateMiddleware(conversationState, userState));
     MicrosoftAppCredentials.trustServiceUrl('https://directline.botframework.com',
-      new Date(new Date().setFullYear(new Date().getFullYear() + 10))
+                                            new Date(new Date().setFullYear(new Date().getFullYear() + 10))
     );
 
     // The minimal bot is built here.
@@ -611,7 +612,7 @@ export class GBMinService {
     await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
       let services: ConcatArray<never>;
       if ((services = await e.onExchangeData(min, 'getServices', null))) {
-        min.gbappServices = Object.assign(min.gbappServices, services);
+        min.gbappServices = {...min.gbappServices, ...services};
       }
     });
 
@@ -736,7 +737,7 @@ export class GBMinService {
           user.welcomed = false;
           firstTime = true;
 
-          // Sends loadInstance event to .gbui clients.          
+          // Sends loadInstance event to .gbui clients.
 
           await min.conversationalService.sendEvent(min, step, 'loadInstance', {
             instanceId: instance.instanceId,
@@ -746,7 +747,7 @@ export class GBMinService {
           });
 
           // This same event is dispatched either to all participants
-          // including the bot, that is filtered bellow.          
+          // including the bot, that is filtered bellow.
 
           if (context.activity.from.id !== min.botId) {
 
@@ -762,7 +763,7 @@ export class GBMinService {
               member.name
             );
 
-            // Required for MSTEAMS handling of persisted conversations.             
+            // Required for MSTEAMS handling of persisted conversations.
 
             if (step.context.activity.channelId === 'msteams') {
               persistedUser.conversationReference = JSON.stringify(
@@ -809,8 +810,7 @@ export class GBMinService {
               user.welcomed = true;
               GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
-            }
-            else {
+            } else {
 
               // Otherwise, calls / (root) to default welcome users.
 
@@ -821,7 +821,6 @@ export class GBMinService {
 
             GBLog.info(`Member added to conversation: ${member.name}`);
           }
-
 
         } else if (context.activity.type === 'message') {
 
@@ -896,7 +895,7 @@ export class GBMinService {
     // Removes <at>Bot Id</at> from MS Teams.
 
     context.activity.text = context.activity.text.trim();
-    context.activity.text = context.activity.text.replace(/\<at\>.*\<\/at\>\s/gi, '')
+    context.activity.text = context.activity.text.replace(/\<at\>.*\<\/at\>\s/gi, '');
 
     const user = await min.userProfile.get(context, {});
     let message: GuaribasConversationMessage;
@@ -931,64 +930,38 @@ export class GBMinService {
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
     if (isVMCall) {
       await GBVMService.callVM(context.activity.text, min, step, this.deployer);
-    }
+    } else if (context.activity.text.charAt(0) === '/') {
 
-    // When user starts text by typing a slash, it can call either a dialog directly
-    // or /call <script> will invoke VM for a given .gbdialog script.
-
-    else if (context.activity.text.charAt(0) === '/') {
-
-      let text = context.activity.text;
-      let parts = text.split(' ');
-      let cmdOrDialogName = parts[0];
+      const text = context.activity.text;
+      const parts = text.split(' ');
+      const cmdOrDialogName = parts[0];
       parts.splice(0, 1);
-      let args = parts.join(' ');
+      const args = parts.join(' ');
 
       if (cmdOrDialogName === '/call') {
         await GBVMService.callVM(args, min, step, this.deployer);
       } else {
         await step.beginDialog(cmdOrDialogName, { args: args });
       }
-    }
-
-    // Processes global escape keywords like 'quit'.
-
-    else if (globalQuit(step.context.activity.locale, context.activity.text)) {
+    } else if (globalQuit(step.context.activity.locale, context.activity.text)) {
       await step.cancelAllDialogs();
       await min.conversationalService.sendText(min, step, Messages[step.context.activity.locale].canceled);
 
-    }
-
-    // Handles the admin conversational keyword.
-
-    else if (context.activity.text === 'admin') {
+    } else if (context.activity.text === 'admin') {
       await step.beginDialog('/admin');
 
-    }
-
-    // Checks for /menu JSON signature.
-
-    else if (context.activity.text.startsWith('{"title"')) {
+    } else if (context.activity.text.startsWith('{"title"')) {
       await step.beginDialog('/menu', JSON.parse(context.activity.text));
 
-
-    }
-
-    // Checks if it is the first time the bot are talking and auto-publish default packages.
-
-    else if (
+    } else if (
       !(await this.deployer.getStoragePackageByName(min.instance.instanceId, `${min.instance.botId}.gbkb`)) &&
-      process.env.GBKB_ENABLE_AUTO_PUBLISH === "true"
+      process.env.GBKB_ENABLE_AUTO_PUBLISH === 'true'
     ) {
       await min.conversationalService.sendText(min, step,
-        `Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`
+                                               `Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`
       );
       await step.beginDialog('/publish', { confirm: true, firstTime: true });
-    }
-
-    // Otherwise, continue to the default dialog processing of the input message.
-
-    else {
+    } else {
 
       // Removes unwanted chars in input text.
 
@@ -997,14 +970,14 @@ export class GBMinService {
       text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
 
       // Saves special words (keep text) in tokens to prevent it from
-      // spell checking and translation. 
+      // spell checking and translation.
 
       const keepText: string = min.core.getParam(min.instance, 'Keep Text', '');
       let keepTextList = [];
       if (keepTextList) {
         keepTextList = keepTextList.concat(keepText.split(';'));
       }
-      let replacements = [];
+      const replacements = [];
       await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
         const result = await e.onExchangeData(min, 'getKeepText', {});
         if (result) {
@@ -1016,10 +989,10 @@ export class GBMinService {
         keepTextList = keepTextList.filter(p => p.trim() !== '');
         let i = 0;
         await CollectionUtil.asyncForEach(keepTextList, item => {
-          let it = GBConversationalService.removeDiacritics(item);
+          const it = GBConversationalService.removeDiacritics(item);
 
           if (textProcessed.toLowerCase().indexOf(it.toLowerCase()) != -1) {
-            const replacementToken = 'X' + GBAdminService['getNumberIdentifier']().substr(0, 4);
+            const replacementToken = 'X' + GBAdminService.getNumberIdentifier().substr(0, 4);
             replacements[i] = { text: item, replacementToken: replacementToken };
             i++;
             textProcessed = textProcessed.replace(new RegExp(`\\b${it.trim()}\\b`, 'gi'), `${replacementToken}`);
@@ -1035,17 +1008,17 @@ export class GBMinService {
       // Detects user typed language and updates their locale profile if applies.
 
       let locale = min.core.getParam<string>(min.instance, 'Default User Language',
-        GBConfigService.get('DEFAULT_USER_LANGUAGE')
+                                             GBConfigService.get('DEFAULT_USER_LANGUAGE')
       );
-      let detectLanguage = min.core.getParam<boolean>(min.instance, 'Language Detector',
-        GBConfigService.getBoolean('LANGUAGE_DETECTOR')
+      const detectLanguage = min.core.getParam<boolean>(min.instance, 'Language Detector',
+                                                        GBConfigService.getBoolean('LANGUAGE_DETECTOR')
       ) === 'true';
       const systemUser = user.systemUser;
       locale = systemUser.locale;
       if (detectLanguage || !locale) {
         locale = await min.conversationalService.getLanguage(min, text);
         if (systemUser.locale != locale) {
-          let sec = new SecService();
+          const sec = new SecService();
           user.systemUser = await sec.updateUserLocale(systemUser.userId, locale);
           await min.userProfile.set(step.context, user);
         }
@@ -1061,7 +1034,7 @@ export class GBMinService {
       // Translates text into content language, keeping
       // reserved tokens specified in Config.
 
-      let contentLocale = min.core.getParam<string>(
+      const contentLocale = min.core.getParam<string>(
         min.instance,
         'Default Content Language',
         GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
@@ -1082,17 +1055,12 @@ export class GBMinService {
       context.activity.originalText = originalText;
       GBLog.info(`Final text ready for NLP/Search/.gbapp: ${text}.`);
 
-
       // If there is a dialog in course, continue to the next step.
 
       if (step.activeDialog !== undefined) {
         await step.continueDialog();
 
-      }
-
-      // Checks if any .gbapp will handle this answer, if not goes to standard kb.gbapp.
-
-      else {
+      } else {
 
         let nextDialog = null;
         await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
@@ -1101,12 +1069,12 @@ export class GBMinService {
             step: step,
             notTranslatedQuery: originalText,
             message: message ? message['dataValues'] : null,
-            user: user ? user['dataValues'] : null
+            user: user ? user.dataValues : null
           });
         });
         await step.beginDialog(nextDialog ? nextDialog : '/answer', {
           query: text,
-          user: user ? user['dataValues'] : null,
+          user: user ? user.dataValues : null,
           message: message
         });
       }

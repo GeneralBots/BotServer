@@ -11,7 +11,7 @@ export const Messages = {
     please_no_bad_words: 'Please, no bad words.',
     please_wait_transfering: 'Please, wait while I find an agent to answer you.',
     notify_agent: (name) => `New call available for *${name}*, you can answer right here when you are finished, type /qt.`,
-    notify_end_transfer: (botName) => `Now talking to ${botName} again.`,
+    notify_end_transfer: (botName) => `Now talking to ${botName} again.`
   },
   'pt-BR': {
     about_suggestions: 'Sugestões melhoram muito minha qualidade...',

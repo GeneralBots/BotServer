@@ -54,7 +54,7 @@ import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 @Table
 //tslint:disable-next-line:max-classes-per-file
 export class GuaribasSchedule extends Model<GuaribasSchedule> {
-  
+
   @Column
   public name: string;
 

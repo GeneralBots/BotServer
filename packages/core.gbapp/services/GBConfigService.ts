@@ -42,7 +42,7 @@ import { GBLog } from 'botlib';
  * Base configuration for the server like storage.
  */
 export class GBConfigService {
-  static getBoolean(value: string): boolean {
+  public static getBoolean(value: string): boolean {
     return this.get(value) as unknown as boolean;
   }
   public static getServerPort(): string {

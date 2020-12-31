@@ -58,7 +58,6 @@ import { GuaribasChannel, GuaribasInstance } from '../../core.gbapp/models/GBMod
 import { GuaribasSubject } from '../../kb.gbapp/models';
 import { GuaribasUser } from '../../security.gbapp/models';
 
-
 /**
  * A conversation that groups many messages.
  */
@@ -73,7 +72,6 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
   @ForeignKey(() => GuaribasInstance)
   @Column
   public instanceId: number;
-
 
   @ForeignKey(() => GuaribasSubject)
   @Column
@@ -109,7 +107,6 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
   @BelongsTo(() => GuaribasUser)
   public startedBy: GuaribasUser;
 }
-
 
 /**
  * A single message in a conversation.
