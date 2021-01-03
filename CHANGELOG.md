@@ -1,3 +1,10 @@
+## [2.0.81](https://github.com/pragmatismo-io/BotServer/compare/2.0.80...2.0.81) (2021-01-03)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fix in NLP handling of acents. ([2a5ecd4](https://github.com/pragmatismo-io/BotServer/commit/2a5ecd487f78743dd0faaa5d70d0baa24f659a9e))
+
 ## [2.0.80](https://github.com/pragmatismo-io/BotServer/compare/2.0.79...2.0.80) (2020-12-31)
 
 
