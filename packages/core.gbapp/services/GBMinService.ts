@@ -62,7 +62,7 @@ import {
   IGBInstance,
   IGBPackage
 } from 'botlib';
-import { AzureText, CollectionUtil } from 'pragmatismo-io-framework';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 
 import { MicrosoftAppCredentials } from 'botframework-connector';
 import fs = require('fs');
@@ -112,8 +112,6 @@ export class GBMinService {
 
   /**
    * Static initialization of minimal instance.
-   *
-   * @param core Basic database services to identify instance, for example.
    */
   constructor(
     core: IGBCoreService,
@@ -582,7 +580,7 @@ export class GBMinService {
     const userState = new UserState(storage);
     adapter.use(new AutoSaveStateMiddleware(conversationState, userState));
     MicrosoftAppCredentials.trustServiceUrl('https://directline.botframework.com',
-                                            new Date(new Date().setFullYear(new Date().getFullYear() + 10))
+      new Date(new Date().setFullYear(new Date().getFullYear() + 10))
     );
 
     // The minimal bot is built here.
@@ -612,7 +610,7 @@ export class GBMinService {
     await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
       let services: ConcatArray<never>;
       if ((services = await e.onExchangeData(min, 'getServices', null))) {
-        min.gbappServices = {...min.gbappServices, ...services};
+        min.gbappServices = { ...min.gbappServices, ...services };
       }
     });
 
@@ -958,7 +956,7 @@ export class GBMinService {
       process.env.GBKB_ENABLE_AUTO_PUBLISH === 'true'
     ) {
       await min.conversationalService.sendText(min, step,
-                                               `Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`
+        `Oi, ainda não possuo pacotes de conhecimento publicados. Por favor, aguarde alguns segundos enquanto eu auto-publico alguns pacotes.`
       );
       await step.beginDialog('/publish', { confirm: true, firstTime: true });
     } else {
@@ -984,18 +982,36 @@ export class GBMinService {
           keepTextList = keepTextList.concat(result);
         }
       });
-      let textProcessed = GBConversationalService.removeDiacritics(text);
+
+      const getNormalizedRegExp = (value) => {
+        var chars = [
+          { letter: 'a', reg: '[aáàãäâ]' },
+          { letter: 'e', reg: '[eéèëê]' },
+          { letter: 'i', reg: '[iíìïî]' },
+          { letter: 'o', reg: '[oóòõöô]' },
+          { letter: 'u', reg: '[uúùüû]' },
+          { letter: 'c', reg: '[cç]' }
+        ];
+
+        for (var i in chars) {
+          value = value.replace(new RegExp(chars[i].letter, 'gi'), chars[i].reg);
+        };
+        return value;
+      };
+
+      let textProcessed = text;
       if (keepTextList) {
         keepTextList = keepTextList.filter(p => p.trim() !== '');
         let i = 0;
         await CollectionUtil.asyncForEach(keepTextList, item => {
           const it = GBConversationalService.removeDiacritics(item);
+          const noAccentText = GBConversationalService.removeDiacritics(textProcessed);
 
-          if (textProcessed.toLowerCase().indexOf(it.toLowerCase()) != -1) {
+          if (noAccentText.toLowerCase().indexOf(it.toLowerCase()) != -1) {
             const replacementToken = 'X' + GBAdminService.getNumberIdentifier().substr(0, 4);
             replacements[i] = { text: item, replacementToken: replacementToken };
             i++;
-            textProcessed = textProcessed.replace(new RegExp(`\\b${it.trim()}\\b`, 'gi'), `${replacementToken}`);
+            textProcessed = textProcessed.replace(new RegExp(`\\b${getNormalizedRegExp(it.trim())}\\b`, 'gi'), `${replacementToken}`);
           }
         });
       }
@@ -1008,10 +1024,10 @@ export class GBMinService {
       // Detects user typed language and updates their locale profile if applies.
 
       let locale = min.core.getParam<string>(min.instance, 'Default User Language',
-                                             GBConfigService.get('DEFAULT_USER_LANGUAGE')
+        GBConfigService.get('DEFAULT_USER_LANGUAGE')
       );
       const detectLanguage = min.core.getParam<boolean>(min.instance, 'Language Detector',
-                                                        GBConfigService.getBoolean('LANGUAGE_DETECTOR')
+        GBConfigService.getBoolean('LANGUAGE_DETECTOR')
       ) === 'true';
       const systemUser = user.systemUser;
       locale = systemUser.locale;

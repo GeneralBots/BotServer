@@ -800,6 +800,7 @@ export class GBDeployer implements IGBDeployer {
       'whatsapp.gblib',
       'sharepoint.gblib',
       'core.gbapp',
+      'basic.gblib',
       'admin.gbapp',
       'azuredeployer.gbapp',
       'customer-satisfaction.gbapp',

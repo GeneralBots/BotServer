@@ -116,9 +116,11 @@ export class AskDialog extends IGBDialog {
           const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
 
           let handled = false;
+          let nextDialog = null;
+
           await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
             if (
-              await e.onExchangeData(min, 'handleAnswer', {
+              nextDialog = await e.onExchangeData(min, 'handleAnswer', {
                 query: text,
                 step: step,
                 message: text,
@@ -129,13 +131,11 @@ export class AskDialog extends IGBDialog {
             }
           });
 
-          if (!handled) {
-            return await step.beginDialog('/answer', {
-              query: text
-            });
-          } else {
-            return await step.next();
-          }
+          await step.beginDialog(nextDialog ? nextDialog : '/answer', {
+            query: text,
+            user: user ? user['dataValues'] : null,
+            message: text
+          });
         } else {
           return await step.next();
         }

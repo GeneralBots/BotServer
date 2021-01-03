@@ -100,7 +100,7 @@ export class GBCoreService implements IGBCoreService {
   private dialect: string;
 
   /**
-   * Constructor retrieves default values.
+   * 
    */
   constructor() {
     this.adminService = new GBAdminService(this);
