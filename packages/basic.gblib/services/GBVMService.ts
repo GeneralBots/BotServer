@@ -158,8 +158,8 @@ export class GBVMService extends GBService {
     code = `<%\n
     
     id = sys().getRandomId()
-    username = this.getUserName(step);
-    mobile = this.getUserMobile(step);
+    username = this.userName(step);
+    mobile = this.userMobile(step);
     from = mobile;
     ubound = function(list){return list.length};
     
