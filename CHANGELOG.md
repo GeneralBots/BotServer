@@ -1,3 +1,10 @@
+## [2.0.82](https://github.com/pragmatismo-io/BotServer/compare/2.0.81...2.0.82) (2021-01-03)
+
+
+### Bug Fixes
+
+* **basic.gblib:** New names for basic functions on hidden code header. ([dba22d5](https://github.com/pragmatismo-io/BotServer/commit/dba22d518d344539d42e4fededbc7d7fbe26f29a))
+
 ## [2.0.81](https://github.com/pragmatismo-io/BotServer/compare/2.0.80...2.0.81) (2021-01-03)
 
 
