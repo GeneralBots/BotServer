@@ -1,3 +1,10 @@
+## [2.0.83](https://github.com/pragmatismo-io/BotServer/compare/2.0.82...2.0.83) (2021-01-05)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Improving error handling in BASIC. ([2a199c3](https://github.com/pragmatismo-io/BotServer/commit/2a199c39a36cff580067b37b537c31e0862d3703))
+
 ## [2.0.82](https://github.com/pragmatismo-io/BotServer/compare/2.0.81...2.0.82) (2021-01-03)
 
 
