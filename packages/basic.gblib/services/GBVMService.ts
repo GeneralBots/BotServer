@@ -697,14 +697,33 @@ export class GBVMService extends GBService {
     );
   }
 
+  /**
+   * Executes the converted JavaScript from BASIC code inside execution context.
+   */
   public static async callVM(text: string, min: GBMinInstance, step: GBDialogStep, deployer: GBDeployer) {
+    
+    // Creates a class DialogKeywords which is the *this* pointer
+    // in BASIC.
+
     const sandbox: DialogKeywords = new DialogKeywords(min, deployer);
+    
+    // Injects the .gbdialog generated code into the VM.
+    
     const context = vm.createContext(sandbox);
     const code = min.sandBoxMap[text];
     vm.runInContext(code, context);
 
+    // Tries to find the method related to this call.
+
     const mainMethod = text.toLowerCase();
+    if (!sandbox[mainMethod]) {
+      GBLog.error(`BASIC: Associated '${mainMethod}' dialog not found. Verify if .gbdialog is correctly published.`);
+
+      return null;
+    }
     sandbox[mainMethod].bind(sandbox);
+
+    // Calls the function.
 
     let ret = null;
     try {
@@ -713,7 +732,6 @@ export class GBVMService extends GBService {
     } catch (error) {
       GBLog.error(`BASIC ERROR: ${error.message} ${error.stack}`);
     }
-
     return ret;
   }
 }

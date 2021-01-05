@@ -79,6 +79,7 @@ export class GBServer {
    */
 
   public static run() {
+
     GBLog.info(`The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
     GBConfigService.init();
