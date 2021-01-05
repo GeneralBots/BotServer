@@ -37,7 +37,7 @@
 'use strict';
 
 import { BotAdapter } from 'botbuilder';
-import {WaterfallDialog } from 'botbuilder-dialogs';
+import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
 import { GBServer } from '../../../src/app';
 import { GBConversationalService } from '../services/GBConversationalService';
@@ -67,7 +67,8 @@ export class WelcomeDialog extends IGBDialog {
         const user = await min.userProfile.get(step.context, {});
         const locale = step.context.activity.locale;
 
-        if (!user.once && step.context.activity.channelId === 'webchat') {
+        if (!user.once && step.context.activity.channelId === 'webchat'
+          && min.core.getParam<boolean>(min.instance, 'HelloGoodX', true) === "true") {
           user.once = true;
           await min.userProfile.set(step.context, user);
           const a = new Date();
