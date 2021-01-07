@@ -172,14 +172,20 @@ export class GBAdminService implements IGBAdminService {
       const s = new GBSharePointService();
 
       const localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(folderName));
-      GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
-      await s.downloadFolder(
-        localFolder,
-        siteName,
-        folderName,
-        GBConfigService.get('CLOUD_USERNAME'),
-        GBConfigService.get('CLOUD_PASSWORD')
-      );
+
+      // .gbot packages are handled using storage API, so no download
+      // of local resources is required.
+
+      if (!localFolder.endsWith('.gbot')) {
+        GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
+        await s.downloadFolder(
+          localFolder,
+          siteName,
+          folderName,
+          GBConfigService.get('CLOUD_USERNAME'),
+          GBConfigService.get('CLOUD_PASSWORD')
+        );
+      }
       await deployer.deployPackage(min, localFolder);
     }
   }
