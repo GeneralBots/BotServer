@@ -1,3 +1,10 @@
+## [2.0.84](https://github.com/pragmatismo-io/BotServer/compare/2.0.83...2.0.84) (2021-01-05)
+
+
+### Bug Fixes
+
+* **core.gbapp:** New .gbot param HelloGoodX is added. ([3aed757](https://github.com/pragmatismo-io/BotServer/commit/3aed75731e8aeb52236da9c5ce977ead3d5966b3))
+
 ## [2.0.83](https://github.com/pragmatismo-io/BotServer/compare/2.0.82...2.0.83) (2021-01-05)
 
 
