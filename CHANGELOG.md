@@ -1,3 +1,10 @@
+## [2.0.85](https://github.com/pragmatismo-io/BotServer/compare/2.0.84...2.0.85) (2021-01-07)
+
+
+### Bug Fixes
+
+* **admin.gbapp:** Removal of download during deployment of .gbot packages. ([f4d5cf9](https://github.com/pragmatismo-io/BotServer/commit/f4d5cf92d2663eeba712c2b2083ca0e219e73d9c))
+
 ## [2.0.84](https://github.com/pragmatismo-io/BotServer/compare/2.0.83...2.0.84) (2021-01-05)
 
 
