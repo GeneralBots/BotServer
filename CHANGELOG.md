@@ -1,3 +1,10 @@
+## [2.0.87](https://github.com/pragmatismo-io/BotServer/compare/2.0.86...2.0.87) (2021-01-08)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Trying to fix Config.xlsx access from customer. ([c2a51ff](https://github.com/pragmatismo-io/BotServer/commit/c2a51ff832341f1d83f2fada9df719f4e3e28846))
+
 ## [2.0.86](https://github.com/pragmatismo-io/BotServer/compare/2.0.85...2.0.86) (2021-01-08)
 
 
