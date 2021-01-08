@@ -1,3 +1,10 @@
+## [2.0.86](https://github.com/pragmatismo-io/BotServer/compare/2.0.85...2.0.86) (2021-01-08)
+
+
+### Bug Fixes
+
+* **admin.gbapp:** Trying to fix .gbot deployment error. ([63b2a57](https://github.com/pragmatismo-io/BotServer/commit/63b2a577b23dd35d1335eaa1f66f5b689c775da1))
+
 ## [2.0.85](https://github.com/pragmatismo-io/BotServer/compare/2.0.84...2.0.85) (2021-01-07)
 
 
