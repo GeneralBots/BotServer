@@ -3,16 +3,21 @@
 const Fs = require('fs');
 const Path = require('path');
 const { exec } = require('child_process');
+var pjson = require('./package.json');
 
 // Displays version of Node JS being used at runtime and others attributes.
 
-console.log(`[GB Runtime] NodeJS        = ${process.version}`);
-console.log(`[GB Runtime] platform      = ${process.platform}`);
-console.log(`[GB Runtime] architecture  = ${process.arch}`);
-console.log(`[GB Runtime] argv          = ${process.argv}`);
-console.log(`[GB Runtime] debugPort     = ${process.debugPort}`);
 
-var now = () => { 
+console.log(`[GB Runtime] BotServer        = v${pjson.version}`);
+console.log(`[GB Runtime] BotLib           = v${pjson.dependencies.botlib}`);
+console.log(`[GB Runtime] BotBuilder (MS)  = v${pjson.dependencies.botbuilder}`);
+console.log(`[GB Runtime] NodeJS           = ${process.version}`);
+console.log(`[GB Runtime] platform         = ${process.platform}`);
+console.log(`[GB Runtime] architecture     = ${process.arch}`);
+console.log(`[GB Runtime] argv             = ${process.argv}`);
+console.log(`[GB Runtime] debugPort        = ${process.debugPort}`);
+
+var now = () => {
     return (new Date()).toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC';
 }
 
