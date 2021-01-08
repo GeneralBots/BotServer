@@ -1,3 +1,10 @@
+## [2.0.88](https://github.com/GeneralBots/BotServer/compare/2.0.87...2.0.88) (2021-01-08)
+
+
+### Bug Fixes
+
+* **all:** Improvements on debugging output. ([eb194f6](https://github.com/GeneralBots/BotServer/commit/eb194f688562cf764e0fd5435c356f6724bac4e9))
+
 ## [2.0.87](https://github.com/pragmatismo-io/BotServer/compare/2.0.86...2.0.87) (2021-01-08)
 
 
