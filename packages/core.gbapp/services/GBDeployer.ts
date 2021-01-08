@@ -367,22 +367,27 @@ export class GBDeployer implements IGBDeployer {
    * Loads all para from tabular file Config.xlsx.
    */
   public async loadParamsFromTabular(min: GBMinInstance): Promise<any> {
+    const siteId = process.env.STORAGE_SITE_ID;
+    const libraryId = process.env.STORAGE_LIBRARY;
+
+    GBLog.info(`Connecting to Config.xslx (siteId: ${siteId}, libraryId: ${libraryId})...`);
 
     // Connects to MSFT storage.
 
     const token = await min.adminService.acquireElevatedToken(min.instance.instanceId);
-    const siteId = process.env.STORAGE_SITE_ID;
-    const libraryId = process.env.STORAGE_LIBRARY;
     const client = MicrosoftGraph.Client.init({
       authProvider: done => {
         done(null, token);
       }
     });
-
+    
+    
     // Retrives all files in .bot folder.
-
+    
     const botId = min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbot`;
+    GBLog.info(`Loading .gbot from ${path}.`);
+
     const res = await client
       .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
       .get();
@@ -491,24 +496,25 @@ export class GBDeployer implements IGBDeployer {
     if (handled) {
       return pck;
     }
-
+    
     // Deploy platform packages here accordingly to their extension.
-
+    
     switch (packageType) {
       case '.gbot':
-
+        
         // Extracts configuration information from .gbot files.
-
+        
         if (process.env.ENABLE_PARAMS_ONLINE === 'false') {
           if (Fs.existsSync(localPath)) {
+            GBLog.info(`Loading .gbot from ${localPath}.`);
             await this.deployBotFromLocalPath(localPath, GBServer.globals.publicAddress);
           }
         } else {
           min.instance.params = await this.loadParamsFromTabular(min);
         }
-
+        
         // Updates instance object.
-
+        
         await this.core.saveInstance(min.instance);
 
         break;
