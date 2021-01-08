@@ -176,8 +176,9 @@ export class GBAdminService implements IGBAdminService {
       // .gbot packages are handled using storage API, so no download
       // of local resources is required.
 
+      
       if (!localFolder.endsWith('.gbot')) {
-        GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site`);
+        GBLog.warn(`${GBConfigService.get('CLOUD_USERNAME')} must be authorized on SharePoint related site to download to: ${localFolder}`);
         await s.downloadFolder(
           localFolder,
           siteName,
