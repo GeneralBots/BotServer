@@ -73,3 +73,10 @@ ALTER TABLE dbo.GuaribasConversation ADD
 	instanceId int,
 	feedback nvarchar(512) NULL
 GO
+
+
+ALTER TABLE [dbo].[GuaribasInstance] DROP COLUMN [translatorendpoint]
+GO
+ALTER TABLE dbo.GuaribasInstance ADD
+	translatorEndpoint nvarchar(128) NULL
+GO

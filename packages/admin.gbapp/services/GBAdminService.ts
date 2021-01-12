@@ -261,6 +261,7 @@ export class GBAdminService implements IGBAdminService {
         const refreshToken = await this.getValue(instanceId, 'refreshToken');
         const resource = 'https://graph.microsoft.com';
         const authenticationContext = new AuthenticationContext(authorizationUrl);
+        
         authenticationContext.acquireTokenWithRefreshToken(
           refreshToken,
           instance.marketplaceId,

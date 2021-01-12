@@ -371,9 +371,9 @@ export class GBDeployer implements IGBDeployer {
     const libraryId = process.env.STORAGE_LIBRARY;
 
     GBLog.info(`Connecting to Config.xslx (siteId: ${siteId}, libraryId: ${libraryId})...`);
-
+    
     // Connects to MSFT storage.
-
+    
     const token = await min.adminService.acquireElevatedToken(min.instance.instanceId);
     const client = MicrosoftGraph.Client.init({
       authProvider: done => {
@@ -381,19 +381,19 @@ export class GBDeployer implements IGBDeployer {
       }
     });
     
-    
-    // Retrives all files in .bot folder.
+    // Retrieves all files in .bot folder.
     
     const botId = min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbot`;
-    GBLog.info(`Loading .gbot from ${path}.`);
+    let url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`;
 
+    GBLog.info(`Loading .gbot from Excel: ${url}`);
     const res = await client
-      .api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
-      .get();
-
+    .api(url)
+    .get();
+    
     // Finds Config.xlsx.
-
+    
     const document = res.value.filter(m => {
       return m.name === 'Config.xlsx';
     });

@@ -81,7 +81,7 @@ export class SystemKeywords {
       }
     });
     const baseUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}`;
-    return [client, baseUrl];
+    return [baseUrl, client];
   }
 
   /**
@@ -259,6 +259,7 @@ export class SystemKeywords {
     let document = await this.internalGetDocument(client, baseUrl, path, file);
 
     // Creates workbook session that will be discarded.
+    
     let sheets = await client
       .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
       .get();
