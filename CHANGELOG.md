@@ -1,3 +1,10 @@
+## [2.0.89](https://github.com/GeneralBots/BotServer/compare/2.0.88...2.0.89) (2021-01-12)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Fixed get token from BASIC methods. ([6399c2d](https://github.com/GeneralBots/BotServer/commit/6399c2dd0f45617c591f69156241bd13788fee89))
+
 ## [2.0.88](https://github.com/GeneralBots/BotServer/compare/2.0.87...2.0.88) (2021-01-08)
 
 
