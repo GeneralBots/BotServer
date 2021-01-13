@@ -679,19 +679,20 @@ export class GBVMService extends GBService {
             delete min.cbMap[id];
             try {
 
-              await promise(step, result);
-              if (step.activeDialog.state.options.previousResolve != undefined) {
-                step.activeDialog.state.options.previousResolve();
-              }
 
-              return await step.next();
+              // if (step.activeDialog.state.options.previousResolve != undefined) {
+              //   step.activeDialog.state.options.previousResolve();
+              // }
+
+              const opts = await promise(step, result);
+              return await step.replaceDialog('/hear', opts);
             } catch (error) {
               GBLog.error(`Error in BASIC code: ${error}`);
               const locale = step.context.activity.locale;
               await min.conversationalService.sendText(min, step, Messages[locale].very_sorry_about_error);
             }
           }
-
+          return await step.endDialog();
         }
       ])
     );
@@ -701,14 +702,14 @@ export class GBVMService extends GBService {
    * Executes the converted JavaScript from BASIC code inside execution context.
    */
   public static async callVM(text: string, min: GBMinInstance, step: GBDialogStep, deployer: GBDeployer) {
-    
+
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 
     const sandbox: DialogKeywords = new DialogKeywords(min, deployer);
-    
+
     // Injects the .gbdialog generated code into the VM.
-    
+
     const context = vm.createContext(sandbox);
     const code = min.sandBoxMap[text];
     vm.runInContext(code, context);
