@@ -349,6 +349,9 @@ export class SystemKeywords {
     }
   }
 
+
+
+
   /**
    * Creates a folder in the bot instance drive.
    *
@@ -489,6 +492,82 @@ export class SystemKeywords {
         GBLog.info(`BASIC: COPY source file not found: ${srcPath}.`);
       } else if (error.code === "nameAlreadyExists") {
         GBLog.info(`BASIC: COPY destination file already exists: ${dstPath}.`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Converts a drive file from a place to another .
+   * 
+   * Supported sources csv, doc, docx, odp, ods, odt, pot, potm, potx, pps, 
+   * ppsx, ppsxm, ppt, pptm, pptx, rtf, xls, xlsx
+   * 
+   * @example
+   * 
+   * CONVERT "customers.xlsx" TO "reports\" + today + ".pdf"
+   * 
+   */
+  public async convert(src, dest) {
+
+    let [baseUrl, client] = await this.internalGetDriveClient();
+    const botId = this.min.instance.botId;
+
+    // Normalizes all slashes.
+
+    src = src.replace(/\\/gi, '/');
+    dest = dest.replace(/\\/gi, '/');
+
+    // Determines full path at source and destination.
+
+    const root = urlJoin(`/${botId}.gbai/${botId}.gbdata`);
+    const srcPath = urlJoin(root, src);
+    const dstPath = urlJoin(`/${botId}.gbai/${botId}.gbdata`, dest);
+
+    // Checks if the destination contains subfolders that
+    // need to be created.
+
+    let folder;
+    if (dest.indexOf('/') !== -1) {
+      const pathOnly = path.dirname(dest);
+      folder = await this.createFolder(pathOnly);
+    }
+    else {
+      folder = await client.api(
+        `${baseUrl}/drive/root:/${root}`)
+        .get();
+    }
+
+    // Performs the conversion operation getting a reference
+    // to the source and calling /content on drive API.
+
+    try {
+
+      const res = await client
+        .api(`${baseUrl}/drive/root:/${srcPath}:/content?format=pdf`)
+        .get();
+
+      const streamToString = (stream) => {
+        const chunks = []
+        return new Promise((resolve, reject) => {
+          stream.on('data', chunk => chunks.push(chunk))
+          stream.on('error', reject)
+          stream.on('end', () => resolve(Buffer.concat(chunks)))
+        })
+      }
+
+      const result = await streamToString(res);
+
+      await client
+        .api(`${baseUrl}/drive/root:/${dstPath}:/content`)
+        .put(result);
+
+    } catch (error) {
+
+      if (error.code === "itemNotFound") {
+        GBLog.info(`BASIC: CONVERT source file not found: ${srcPath}.`);
+      } else if (error.code === "nameAlreadyExists") {
+        GBLog.info(`BASIC: CONVERT destination file already exists: ${dstPath}.`);
       }
       throw error;
     }
