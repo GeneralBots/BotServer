@@ -368,18 +368,37 @@ export class SystemKeywords {
     const parts = name.split('/');
     let lastFolder = null;
 
+    // Creates each subfolder.
+
     await CollectionUtil.asyncForEach(parts, async item => {
 
-      path = urlJoin(path, item);
+      // Calls drive API.
 
       const body = {
-        "name": name,
+        "name": item,
         "folder": {},
-        "@microsoft.graph.conflictBehavior": "rename"
+        "@microsoft.graph.conflictBehavior": "fail"
       };
-      lastFolder = await client
-        .api(`${baseUrl}/drive/root:/${path}:/children`)
-        .post(body);
+
+      try {
+        lastFolder = await client
+          .api(`${baseUrl}/drive/root:/${path}:/children`)
+          .post(body);
+
+      } catch (error) {
+        if (error.code !== "nameAlreadyExists") {
+          throw error;
+        }
+        else {
+          lastFolder = await client
+            .api(`${baseUrl}/drive/root:/${urlJoin(path, item)}`)
+            .get();
+        }
+      }
+
+      // Increments path to the next child be created.
+
+      path = urlJoin(path, item);
     });
     return lastFolder;
   }
@@ -397,32 +416,17 @@ export class SystemKeywords {
     let [, client] = await this.internalGetDriveClient();
     const driveId = folderReference.parentReference.driveId;
     const itemId = folderReference.id;
+    const body = {
+      "recipients": [{ "email": email }],
+      "message": message,
+      "requireSignIn": true,
+      "sendInvitation": true,
+      "roles": ["write"]
+    };
 
-    return new Promise<string>((resolve, reject) => {
-
-      const body = {
-        "recipients": [
-          {
-            "email": email
-          }
-        ],
-        "message": message,
-        "requireSignIn": true,
-        "sendInvitation": true,
-        "roles": ["write"]
-      };
-
-      client
-        .api(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/invite`)
-        .post(body, (err, res) => {
-          if (err) {
-            reject(err);
-          }
-          else {
-            resolve(res);
-          }
-        });
-    });
+    await client
+      .api(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/invite`)
+      .post(body);
   }
 
   /**
@@ -437,32 +441,42 @@ export class SystemKeywords {
 
     let [baseUrl, client] = await this.internalGetDriveClient();
     const botId = this.min.instance.botId;
+
+    // Normalizes all slashes.
+
+    src = src.replace(/\\/gi, '/');
+    dest = dest.replace(/\\/gi, '/');
+
+    // Determines full path at source and destination.
+
     const root = urlJoin(`/${botId}.gbai/${botId}.gbdata`);
     const srcPath = urlJoin(root, src);
     const dstPath = urlJoin(`/${botId}.gbai/${botId}.gbdata`, dest);
-    
+
+    // Checks if the destination contains subfolders that
+    // need to be created.
+
     let folder;
-    if (dest.indexOf('/') !== -1)
-    {
+    if (dest.indexOf('/') !== -1) {
       const pathOnly = path.dirname(dest);
       folder = await this.createFolder(pathOnly);
     }
-    else
-    {
+    else {
       folder = await client.api(
         `${baseUrl}/drive/root:/${root}`)
         .get();
     }
 
+    // Performs the copy operation getting a reference
+    // to the source and calling /copy on drive API.
+
     try {
       const srcFile = await client.api(
         `${baseUrl}/drive/root:/${srcPath}`)
         .get();
-
-      const destFile =
-      {
+      const destFile = {
         "parentReference": { driveId: folder.parentReference.driveId, id: folder.id },
-        "name": `${dest}`
+        "name": `${path.basename(dest)}`
       }
 
       return await client.api(
