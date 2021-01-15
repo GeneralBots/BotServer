@@ -1,3 +1,11 @@
+## [2.0.91](https://github.com/GeneralBots/BotServer/compare/2.0.90...2.0.91) (2021-01-15)
+
+
+### Bug Fixes
+
+* **basic.gblib:** COPY is now target recursive. ([4048e72](https://github.com/GeneralBots/BotServer/commit/4048e724d152f08815b8d2ff2eedb28293cd3dd2))
+* **basic.gblib:** Extraction of copy command in regexp. ([e4be160](https://github.com/GeneralBots/BotServer/commit/e4be1600f0c3db5caab2feccb5f60737d38e7721))
+
 ## [2.0.90](https://github.com/GeneralBots/BotServer/compare/2.0.89...2.0.90) (2021-01-13)
 
 
