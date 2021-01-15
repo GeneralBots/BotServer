@@ -1,3 +1,10 @@
+## [2.0.90](https://github.com/GeneralBots/BotServer/compare/2.0.89...2.0.90) (2021-01-13)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Fix in Hear call to endDialog. ([c91d5f0](https://github.com/GeneralBots/BotServer/commit/c91d5f0453fa6eb40426ae736ce893a851282834))
+
 ## [2.0.89](https://github.com/GeneralBots/BotServer/compare/2.0.88...2.0.89) (2021-01-12)
 
 
