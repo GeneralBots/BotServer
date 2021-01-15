@@ -31,6 +31,7 @@
 \*****************************************************************************/
 'use strict';
 import { GBLog, GBMinInstance } from 'botlib';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
 import urlJoin = require('url-join');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
@@ -38,14 +39,15 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { SecService } from '../../security.gbapp/services/SecService';
 const request = require('request-promise-native');
 const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
+const path = require('path');
 
 /**
  * @fileoverview General Bots server core.
  */
 
- /**
- * BASIC system class for extra manipulation of bot behaviour.
- */
+/**
+* BASIC system class for extra manipulation of bot behaviour.
+*/
 export class SystemKeywords {
 
   /** 
@@ -259,7 +261,7 @@ export class SystemKeywords {
     let document = await this.internalGetDocument(client, baseUrl, path, file);
 
     // Creates workbook session that will be discarded.
-    
+
     let sheets = await client
       .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
       .get();
@@ -357,25 +359,29 @@ export class SystemKeywords {
 
     let [baseUrl, client] = await this.internalGetDriveClient();
     const botId = this.min.instance.botId;
-    const path = urlJoin(`/${botId}.gbai/${botId}.gbdata`, name);
+    let path = `/${botId}.gbai/${botId}.gbdata`;
 
-    return new Promise<any>((resolve, reject) => {
+    // Extracts each part of path to call create folder to each
+    // one of them.
+
+    name = name.replace(/\\/gi, '/');
+    const parts = name.split('/');
+    let lastFolder = null;
+
+    await CollectionUtil.asyncForEach(parts, async item => {
+
+      path = urlJoin(path, item);
+
       const body = {
         "name": name,
         "folder": {},
         "@microsoft.graph.conflictBehavior": "rename"
       };
-      client
+      lastFolder = await client
         .api(`${baseUrl}/drive/root:/${path}:/children`)
-        .post(body, (err, res) => {
-          if (err) {
-            reject(err);
-          }
-          else {
-            resolve(res);
-          }
-        });
+        .post(body);
     });
+    return lastFolder;
   }
 
   /**
@@ -427,44 +433,51 @@ export class SystemKeywords {
    * COPY "template.xlsx", "reports\" + customerName + "\final.xlsx"
    * 
    */
-  public async copyFile() {
-    let [] = await this.internalGetDriveClient();
+  public async copyFile(src, dest) {
 
-    // const botId = this.min.instance.botId;
-    // const path = urlJoin(`/${botId}.gbai/${botId}.gbdata`, name);
-    // const body =
-    // {
-    //   "parentReference": { driveId: gbaiDest.parentReference.driveId, id: gbaiDest.id },
-    //   "name": `${botName}.${kind}`
-    // }
-    // const packageName = `${templateName.split('.')[0]}.${kind}`;
-    // try {
-    //   const src = await client.api(    //     `${baseUrl}/drive/root:/${source}`)
-    //     .get();
-    //   return await client.api(    //     `${baseUrl}/drive/items/${src.id}/copy`)
-    //     .post(body);
-    // } catch (error) {
-    //   if (error.code === "itemNotFound") {
-    //   } else if (error.code === "nameAlreadyExists") {
-    //     let src = await client.api(    //       `${baseUrl}/drive/root:/${templateName}/${packageName}:/children`)
-    //       .get();
-    //     const dstName = `${botName}.gbai/${botName}.${kind}`;
-    //     let dst = await client.api(`${baseUrl}/drive/root:/${dstName}`)
-    //       .get();
-    //     await CollectionUtil.asyncForEach(src.value, async item => {
-    //       const body =
-    //       {
-    //         "parentReference": { driveId: dst.parentReference.driveId, id: dst.id }
-    //       }
-    //       await client.api(    //         `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateId}/drive/items/${item.id}/copy`)
-    //         .post(body);
-    //     });
-    //   }
-    //   else {
-    //     GBLog.error(error);
-    //     throw error;
-    //   }
-    // }
+    let [baseUrl, client] = await this.internalGetDriveClient();
+    const botId = this.min.instance.botId;
+    const root = urlJoin(`/${botId}.gbai/${botId}.gbdata`);
+    const srcPath = urlJoin(root, src);
+    const dstPath = urlJoin(`/${botId}.gbai/${botId}.gbdata`, dest);
+    
+    let folder;
+    if (dest.indexOf('/') !== -1)
+    {
+      const pathOnly = path.dirname(dest);
+      folder = await this.createFolder(pathOnly);
+    }
+    else
+    {
+      folder = await client.api(
+        `${baseUrl}/drive/root:/${root}`)
+        .get();
+    }
+
+    try {
+      const srcFile = await client.api(
+        `${baseUrl}/drive/root:/${srcPath}`)
+        .get();
+
+      const destFile =
+      {
+        "parentReference": { driveId: folder.parentReference.driveId, id: folder.id },
+        "name": `${dest}`
+      }
+
+      return await client.api(
+        `${baseUrl}/drive/items/${srcFile.id}/copy`)
+        .post(destFile);
+
+    } catch (error) {
+
+      if (error.code === "itemNotFound") {
+        GBLog.info(`BASIC: COPY source file not found: ${srcPath}.`);
+      } else if (error.code === "nameAlreadyExists") {
+        GBLog.info(`BASIC: COPY destination file already exists: ${dstPath}.`);
+      }
+      throw error;
+    }
   }
 
   /** 
