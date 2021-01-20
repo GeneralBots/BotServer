@@ -1,3 +1,10 @@
+## [2.0.92](https://github.com/GeneralBots/BotServer/compare/2.0.91...2.0.92) (2021-01-15)
+
+
+### Bug Fixes
+
+* **basic.gblib:** CONVERT keyword coded. ([9b1eae2](https://github.com/GeneralBots/BotServer/commit/9b1eae2972559dc6e7ee82478ab104ce88cbaa5b))
+
 ## [2.0.91](https://github.com/GeneralBots/BotServer/compare/2.0.90...2.0.91) (2021-01-15)
 
 
