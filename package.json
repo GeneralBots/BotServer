@@ -100,6 +100,7 @@
     "sequelize": "5.21.5",
     "sequelize-typescript": "1.1.0",
     "simple-git": "2.23.0",
+    "speakingurl": "^14.0.1",
     "sppull": "2.6.7",
     "strict-password-generator": "1.1.2",
     "swagger-client": "2.1.18",

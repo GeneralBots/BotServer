@@ -62,8 +62,8 @@ export class RootData {
   public appPackages: any[]; // Loaded .gbapp package list
   public minService: GBMinService; // Minimalist service core
   public bootInstance: IGBInstance; // General Bot Interface Instance
-  public minInstances: any[]; //
-  public minBoot: GBMinInstance;
+  public minInstances: any[]; // List of bot instances.
+  public minBoot: GBMinInstance; // Reference to boot bot.
   public wwwroot: string; // .gbui or a static webapp.
   public entryPointDialog: string; // To replace default welcome dialog.
 }

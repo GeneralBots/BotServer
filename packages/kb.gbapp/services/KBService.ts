@@ -44,6 +44,7 @@ const walkPromise = require('walk-promise');
 // tslint:disable-next-line:newline-per-chained-call
 const { SearchService } = require('azure-search-client');
 const Excel = require('exceljs');
+const getSlug = require('speakingurl');
 import {
   GBDialogStep,
   GBLog,
@@ -53,15 +54,14 @@ import {
   IGBInstance,
   IGBKBService
 } from 'botlib';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
-import { GBServer } from '../../../src/app';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasPackage } from '../../core.gbapp/models/GBModel';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
-import { SecService } from '../../security.gbapp/services/SecService';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
 import { Messages } from '../strings';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
@@ -135,6 +135,54 @@ export class KBService implements IGBKBService {
         answerId: answerId
       }
     });
+  }
+
+  /**
+   * Returns a question object given a SEO friendly URL.
+   */
+  public async getQuestionIdFromURL(core: IGBCoreService, url: string) {
+
+    // Extracts questionId from URL.
+
+    const id = url.substr(url.lastIndexOf('-') + 1);
+    
+    // Extracts botId from URL.
+    
+    let path = /(http[s]?:\/\/)?([^\/\s]+\/)(.*)/gi;
+    const botId = url.replace(path, ($0, $1, $2, $3) => {
+      return $3.substr($3.indexOf('/'));
+    });
+
+    // Finds the associated question.
+
+    const instance = await core.loadInstanceByBotId(botId);
+    const question = await GuaribasQuestion.findAll({
+      where: {
+        instanceId: instance.instanceId,
+        questionId: id
+      }
+    });
+
+    return question;
+  }
+
+  public async getQuestionsSEO(instanceId: number) {
+
+    const questions = await GuaribasQuestion.findAll({
+      where: {
+        instanceId: instanceId
+      }
+    });
+
+    let output = [];
+    for (let i = 0; i < questions.length; i++) {
+      const answer = questions[i];
+      const text = getSlug(answer.content);
+      let url = `${text}-${i}`;
+      output.push(url);
+    }
+
+    return output;
   }
 
   public async getAnswerByText(instanceId: number, text: string): Promise<any> {
@@ -519,6 +567,7 @@ export class KBService implements IGBKBService {
       }
     });
   }
+
   public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
     const files = await walkPromise(localPath);
 

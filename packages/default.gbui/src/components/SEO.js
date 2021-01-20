@@ -30,63 +30,29 @@
 |                                                                             |
 \*****************************************************************************/
 
-import React from "react";
+import React from "react"
+import { SuperSEO } from 'react-super-seo';
 
-class SideBarMenu extends React.Component {
-  send(command) {
-    window.botConnection
-      .postActivity({
-        type: "event",
-        name: command,
-        locale: "en-us",
-        textFormat: "plain",
-        timestamp: new Date().toISOString(),
-        from: window.user
-      })
-      .subscribe(console.log("success"));
-  }
-
-  render() {
-    return (
-      <div>
-        <div className="tittleSideBarMenu">
-          <img
-            className="pragmatismoLogo"
-            src={"/themes/" + this.props.instance.theme + "/images/logo.png"}
-            alt="General Bots Logo" />
-
-        </div>
-        <div className="SidebarMenu">
-          <div className="IconsMenu">
-            <div className="iconMenu">
-              <span className="iconText" onClick={() => this.send("showFAQ")}>
-                FAQ
-              </span>
-            </div>
-            <div className="iconMenu">
-              <span className="iconText" onClick={() => this.send("whoAmI")}>
-                Who are You?
-              </span>
-            </div>
-            <div className="iconMenu">
-              <span
-                className="iconText"
-                onClick={() => this.send("showSubjects")}>
-                Subjects
-              </span>
-            </div>
-            <div className="iconMenu">
-              <span
-                className="iconText"
-                onClick={() => this.send("giveFeedback")}>
-                Suggestions
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-}
-
-export default SideBarMenu;
+const footer = () => (
+  <SuperSEO
+    title={this.props.instance.title}
+    description={this.props.instance.description}
+    lang="en"
+    openGraph={{
+      ogImage: {
+        ogImage: this.props.instance.paramLogoImageUrl,
+        ogImageAlt: this.props.instance.paramLogoImageAlt,
+        ogImageWidth: this.props.instance.paramLogoImageWidth,
+        ogImageHeight: this.props.instance.paramLogoImageHeight,
+        ogImageType: this.props.instance.paramLogoImageType,
+      },
+    }}
+    twitter={{
+      twitterSummaryCard: {
+        summaryCardImage: this.props.instance.paramLogoImageUrl,
+        summaryCardImageAlt: this.props.instance.paramLogoImageAlt,
+        summaryCardSiteUsername: this.props.instance.paramTwitterUsername,
+      },
+    }}
+  />);
+export default footer

@@ -7,6 +7,7 @@
   "license": "AGPL-3.0",
   "homepage": ".",
   "dependencies": {
+    "@midudev/react-static-content": "^1.0.4",
     "ajv": "^6.10.2",
     "botframework-directlinejs": "0.11.6",
     "botframework-webchat": "^4.7.1",
@@ -20,6 +21,7 @@
     "react-player": "^1.14.2",
     "react-powerbi": "0.5.2",
     "react-scripts": "^3.3.0",
+    "react-super-seo": "^1.0.5",
     "react-transition-group": "^4.3.0",
     "rxjs": "^6.5.4",
     "url-join": "4.0.1"

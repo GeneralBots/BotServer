@@ -186,7 +186,7 @@ export class GBDeployer implements IGBDeployer {
     const instances = await core.loadInstances();
     await CollectionUtil.asyncForEach(instances, async instance => {
       this.mountGBKBAssets(`${instance.botId}.gbkb`,
-                           instance.botId, `${instance.botId}.gbkb`);
+        instance.botId, `${instance.botId}.gbkb`);
     });
 
     GBLog.info(`Package deployment done.`);
@@ -320,7 +320,7 @@ export class GBDeployer implements IGBDeployer {
   public async publishNLP(instance: IGBInstance): Promise<void> {
     const service = new AzureDeployerService(this);
     const res = await service.publishNLP(instance.cloudLocation, instance.nlpAppId,
-                                         instance.nlpAuthoringKey);
+      instance.nlpAuthoringKey);
     if (res.status !== 200 && res.status !== 201) { throw res.bodyAsText; }
   }
 
@@ -371,29 +371,29 @@ export class GBDeployer implements IGBDeployer {
     const libraryId = process.env.STORAGE_LIBRARY;
 
     GBLog.info(`Connecting to Config.xslx (siteId: ${siteId}, libraryId: ${libraryId})...`);
-    
+
     // Connects to MSFT storage.
-    
+
     const token = await min.adminService.acquireElevatedToken(min.instance.instanceId);
     const client = MicrosoftGraph.Client.init({
       authProvider: done => {
         done(null, token);
       }
     });
-    
+
     // Retrieves all files in .bot folder.
-    
+
     const botId = min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbot`;
     let url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`;
 
     GBLog.info(`Loading .gbot from Excel: ${url}`);
     const res = await client
-    .api(url)
-    .get();
-    
+      .api(url)
+      .get();
+
     // Finds Config.xlsx.
-    
+
     const document = res.value.filter(m => {
       return m.name === 'Config.xlsx';
     });
@@ -496,14 +496,14 @@ export class GBDeployer implements IGBDeployer {
     if (handled) {
       return pck;
     }
-    
+
     // Deploy platform packages here accordingly to their extension.
-    
+
     switch (packageType) {
       case '.gbot':
-        
+
         // Extracts configuration information from .gbot files.
-        
+
         if (process.env.ENABLE_PARAMS_ONLINE === 'false') {
           if (Fs.existsSync(localPath)) {
             GBLog.info(`Loading .gbot from ${localPath}.`);
@@ -512,9 +512,9 @@ export class GBDeployer implements IGBDeployer {
         } else {
           min.instance.params = await this.loadParamsFromTabular(min);
         }
-        
+
         // Updates instance object.
-        
+
         await this.core.saveInstance(min.instance);
 
         break;
@@ -561,6 +561,7 @@ export class GBDeployer implements IGBDeployer {
         break;
 
       default:
+        
         const err = GBError.create(`Unhandled package type: ${packageType}.`);
         Promise.reject(err);
         break;
@@ -581,6 +582,7 @@ export class GBDeployer implements IGBDeployer {
     // Removes objects from storage, cloud resources and local files if any.
 
     switch (packageType) {
+
       case '.gbot':
         const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
         await this.undeployBot(packageObject.botId, packageName);
@@ -596,17 +598,17 @@ export class GBDeployer implements IGBDeployer {
         break;
 
       case '.gbtheme':
-        rimraf.sync(localPath);
         break;
 
       case '.gbdialog':
-        rimraf.sync(localPath);
         break;
 
       case '.gblib':
         break;
+
       case '.gbapp':
         break;
+
       default:
         const err = GBError.create(`Unhandled package type: ${packageType}.`);
         Promise.reject(err);
@@ -647,6 +649,7 @@ export class GBDeployer implements IGBDeployer {
     }
 
     // Removes the index.
+
     try {
       await search.deleteIndex();
     } catch (err) {
@@ -659,6 +662,7 @@ export class GBDeployer implements IGBDeployer {
     }
 
     // Creates the data source and index on the cloud.
+
     try {
       await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
     } catch (err) {
@@ -694,7 +698,7 @@ export class GBDeployer implements IGBDeployer {
 
     if (!Fs.existsSync(`${root}/build`) && process.env.DISABLE_WEB !== 'true') {
 
-      // Write a .env required to fix some bungs in create-react-app facility.
+      // Write a .env required to fix some bungs in create-react-app tool.
 
       Fs.writeFileSync(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
 
@@ -702,15 +706,18 @@ export class GBDeployer implements IGBDeployer {
 
       GBLog.info(`Installing modules default.gbui (It may take a few minutes)...`);
       child_process.execSync(`${npm} install`, { cwd: root });
+
       GBLog.info(`Transpiling default.gbui...`);
       child_process.execSync(`${npm} run build`, { cwd: root });
     }
 
     // Clean up node_modules folder as it is only needed during compile time.
 
-    GBLog.info(`Cleaning default.gbui node_modules...`);
     const nodeModules = urlJoin(root, 'node_modules');
-    rimraf.sync(nodeModules);
+    if (Fs.existsSync(nodeModules)) {
+      rimraf.sync(nodeModules);
+      GBLog.info(`Cleaning default.gbui node_modules...`);
+    }
   }
 
   /**
@@ -729,13 +736,13 @@ export class GBDeployer implements IGBDeployer {
 
     const gbaiName = `${botId}.gbai`;
     GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/assets`,
-                                express.static(urlJoin('work', gbaiName, filename, 'assets')));
+      express.static(urlJoin('work', gbaiName, filename, 'assets')));
     GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/images`,
-                                express.static(urlJoin('work', gbaiName, filename, 'images')));
+      express.static(urlJoin('work', gbaiName, filename, 'images')));
     GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/audios`,
-                                express.static(urlJoin('work', gbaiName, filename, 'audios')));
+      express.static(urlJoin('work', gbaiName, filename, 'audios')));
     GBServer.globals.server.use(`/kb/${gbaiName}/${packageName}/videos`,
-                                express.static(urlJoin('work', gbaiName, filename, 'videos')));
+      express.static(urlJoin('work', gbaiName, filename, 'videos')));
 
     GBLog.info(`KB (.gbkb) assets accessible at: /kb/${botId}.gbai/${packageName}.`);
   }

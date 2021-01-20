@@ -37,12 +37,13 @@ import GBVideoPlayer from './players/GBVideoPlayer.js';
 import GBLoginPlayer from './players/GBLoginPlayer.js';
 import GBBulletPlayer from './players/GBBulletPlayer.js';
 import SidebarMenu from './components/SidebarMenu.js';
+import SEO from './components/SEO.js';
 import GBCss from './components/GBCss.js';
 import { DirectLine } from 'botframework-directlinejs';
 import { ConnectionStatus } from 'botframework-directlinejs';
 import ReactWebChat from 'botframework-webchat';
 import { UserAgentApplication } from 'msal';
-
+import StaticContent from '@midudev/react-static-content'
 
 class GBUIApp extends React.Component {
   constructor() {
@@ -138,7 +139,7 @@ class GBUIApp extends React.Component {
   }
 
   authenticate() {
-    
+
     if (this.state.instanceClient.authenticatorClientId === null) {
       return;
     }
@@ -343,14 +344,17 @@ class GBUIApp extends React.Component {
     }
 
     return (
-      <div>
-        {gbCss}
-        {sideBar}
-        <div className="player">{playerComponent}</div>
-        <div className="webchat">
-          {chat}
+      <StaticContent>
+        <SEO></SEO>
+        <div>
+          {gbCss}
+          {sideBar}
+          <div className="player">{playerComponent}</div>
+          <div className="webchat">
+            {chat}
+          </div>
         </div>
-      </div>
+      </StaticContent>
     );
   }
 }

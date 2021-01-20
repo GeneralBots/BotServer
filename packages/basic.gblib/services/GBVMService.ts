@@ -289,8 +289,12 @@ export class GBVMService extends GBService {
       return `sendFile (step, ${$3})\n`;
     });
 
-    code = code.replace(/(COPY)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().copyFile (step, ${$3})\n`;
+    code = code.replace(/(copy)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `sys().copyFile(step, ${$3})\n`;
+    });
+
+    code = code.replace(/(convert)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `sys().convert(step, ${$3})\n`;
     });
 
     code = code.replace(/(save)(\s)(.*)/gi, ($0, $1, $2, $3) => {
@@ -433,9 +437,6 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\bsendFileTo\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendFileTo' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\bcopyFile\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.copyFile' : $1;
-    });
     code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendFile' : $1;
     });
@@ -448,7 +449,7 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\bmenu\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.menu' : $1;
     });
-
+    
     // await insertion.
 
     code = code.replace(/this\./gm, 'await this.');

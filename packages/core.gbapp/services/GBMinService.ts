@@ -131,6 +131,7 @@ export class GBMinService {
   public async buildMin(instances: IGBInstance[]) {
 
     // Servers default UI on root address '/' if web enabled.
+
     if (process.env.DISABLE_WEB !== 'true') {
       const url = GBServer.globals.wwwroot
         ? GBServer.globals.wwwroot
@@ -138,6 +139,8 @@ export class GBMinService {
 
       GBServer.globals.server.use('/', express.static(url));
     }
+
+
 
     // Servers the bot information object via HTTP so clients can get
     // instance information stored on server.
@@ -216,12 +219,13 @@ export class GBMinService {
 
     await this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min);
 
-    // Serves individual URL for each bot conversational interface...
+    // Serves individual URL for each bot conversational interface.
 
-    const url = `/api/messages/${instance.botId}`;
-    GBServer.globals.server.post(url, async (req, res) => {
+    const receiver = async (req, res) => {
       await this.receiver(adapter, req, res, conversationState, min, instance, GBServer.globals.appPackages);
-    });
+    };
+    const url = `/api/messages/${instance.botId}`;
+    GBServer.globals.server.post(url, receiver);
     GBLog.info(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
 
     // Serves individual URL for each bot user interface.
@@ -237,7 +241,14 @@ export class GBMinService {
         uiUrlAlt,
         express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
       );
-
+      const domain = min.core.getParam(min.instance, 'Domain', null);
+      if (domain) {
+        GBServer.globals.server.use(
+          domain,
+          express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
+        );
+        GBLog.info(`Bot UI ${GBMinService.uiPackage} accessible at custom domain: ${domain}.`);
+      }
       GBLog.info(`Bot UI ${GBMinService.uiPackage} accessible at: ${uiUrl} and ${uiUrlAlt}.`);
     }
 
@@ -512,7 +523,12 @@ export class GBMinService {
           speechToken: speechToken,
           conversationId: webchatTokenContainer.conversationId,
           authenticatorTenant: instance.authenticatorTenant,
-          authenticatorClientId: instance.marketplaceId
+          authenticatorClientId: instance.marketplaceId,
+          paramLogoImageUrl: this.core.getParam(instance, 'Logo Image Url', null),
+          paramLogoImageAlt: this.core.getParam(instance, 'Logo Image Alt', null),
+          paramLogoImageWidth: this.core.getParam(instance, 'Logo Image Width', null),
+          paramLogoImageHeight: this.core.getParam(instance, 'Logo Image Height', null),
+          paramLogoImageType: this.core.getParam(instance, 'Logo Image Type', null)
         })
       );
     } else {
@@ -603,6 +619,7 @@ export class GBMinService {
     if (GBServer.globals.minBoot === undefined) {
       GBServer.globals.minBoot = min;
     }
+
     // TODO: min.appPackages =  core.getPackagesByInstanceId(min.instance.instanceId);
 
     // Creates a hub of services available in .gbapps.
@@ -735,7 +752,7 @@ export class GBMinService {
           user.welcomed = false;
           firstTime = true;
 
-          // Sends loadInstance event to .gbui clients.
+          // Sends loadInstance event to .gbui clients and loads FAQ.
 
           await min.conversationalService.sendEvent(min, step, 'loadInstance', {
             instanceId: instance.instanceId,
@@ -743,6 +760,12 @@ export class GBMinService {
             theme: instance.theme ? instance.theme : 'default.gbtheme',
             secret: instance.webchatKey
           });
+          const service = new KBService(min.core.sequelize);
+          const data = await service.getFaqBySubjectArray('faq', undefined);
+            await min.conversationalService.sendEvent(min, step, 'play', {
+              playerType: 'bullet',
+              data: data.slice(0, 10)
+            });      
 
           // This same event is dispatched either to all participants
           // including the bot, that is filtered bellow.
