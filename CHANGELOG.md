@@ -1,3 +1,10 @@
+## [2.0.93](https://github.com/GeneralBots/BotServer/compare/2.0.92...2.0.93) (2021-01-20)
+
+
+### Bug Fixes
+
+* **basic.gblib:** COPY and CONVERT is now generating good JS. ([3f13609](https://github.com/GeneralBots/BotServer/commit/3f13609d5981163b86cca9bd817c954d1e70412e))
+
 ## [2.0.92](https://github.com/GeneralBots/BotServer/compare/2.0.91...2.0.92) (2021-01-15)
 
 
