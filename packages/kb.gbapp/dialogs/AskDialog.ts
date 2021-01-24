@@ -153,9 +153,19 @@ export class AskDialog extends IGBDialog {
 
         let text = step.options.query;
         text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
+        
+        // When no text is typed, the start dialog is invoked again
+        // when people type just the @botName in MSTEAMS for example.
+
         if (!text) {
-          throw new Error(`/answer being called with no args query text.`);
+          const startDialog =
+            min.core.getParam(min.instance, 'Start Dialog', null);
+          await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+
+          return step.endDialog();
         }
+        
+        
         const locale = step.context.activity.locale;
 
         // Stops any content on projector.
