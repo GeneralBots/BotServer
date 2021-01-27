@@ -1,3 +1,10 @@
+## [2.0.95](https://github.com/GeneralBots/BotServer/compare/2.0.94...2.0.95) (2021-01-27)
+
+
+### Bug Fixes
+
+* **core.gbapp:** More logging on sendToMobile from MD. ([c8bf760](https://github.com/GeneralBots/BotServer/commit/c8bf7606b12e8adf992c0b7abc749fab9f8b4873))
+
 ## [2.0.94](https://github.com/GeneralBots/BotServer/compare/2.0.93...2.0.94) (2021-01-27)
 
 
