@@ -1,3 +1,10 @@
+## [2.0.94](https://github.com/GeneralBots/BotServer/compare/2.0.93...2.0.94) (2021-01-27)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Missing await inserted on sendToMobile. ([43e70bb](https://github.com/GeneralBots/BotServer/commit/43e70bbe41a5148ab63e99e8c86c3d858f288d04))
+
 ## [2.0.93](https://github.com/GeneralBots/BotServer/compare/2.0.92...2.0.93) (2021-01-20)
 
 
