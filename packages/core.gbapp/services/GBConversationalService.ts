@@ -274,6 +274,7 @@ export class GBConversationalService {
   }
 
   public async sendToMobile(min: GBMinInstance, mobile: string, message: string) {
+    GBLog.info(`Sending message ${message} to ${mobile}...`);
     await min.whatsAppDirectLine.sendToDevice(mobile, message);
   }
 
