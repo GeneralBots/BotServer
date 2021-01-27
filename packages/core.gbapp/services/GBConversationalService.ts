@@ -274,7 +274,7 @@ export class GBConversationalService {
   }
 
   public async sendToMobile(min: GBMinInstance, mobile: string, message: string) {
-    min.whatsAppDirectLine.sendToDevice(mobile, message);
+    await min.whatsAppDirectLine.sendToDevice(mobile, message);
   }
 
   public static async getAudioBufferFromText(speechKey, cloudRegion, text, locale): Promise<string> {
