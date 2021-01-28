@@ -441,7 +441,7 @@ export class SystemKeywords {
    * 
    */
   public async copyFile(src, dest) {
-
+    GBLog.info(`BASIC: COPY '${src}' to '${dest}'`);
     let [baseUrl, client] = await this.internalGetDriveClient();
     const botId = this.min.instance.botId;
 
@@ -509,7 +509,7 @@ export class SystemKeywords {
    * 
    */
   public async convert(src, dest) {
-
+    GBLog.info(`BASIC: CONVERT '${src}' to '${dest}'`);
     let [baseUrl, client] = await this.internalGetDriveClient();
     const botId = this.min.instance.botId;
 
