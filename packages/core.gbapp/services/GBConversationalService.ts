@@ -477,7 +477,7 @@ export class GBConversationalService {
           break;
         case State.InLineBreak1:
           if (c === '\n') {
-            if (mobile === null) {
+            if (!mobile) {
               await step.context.sendActivity(currentText);
             } else {
               await this.sendToMobile(min, mobile, currentText);
@@ -497,7 +497,7 @@ export class GBConversationalService {
         case State.InEmbedBegin:
           if (c === '=') {
             if (currentText !== '') {
-              if (mobile === null) {
+              if (!mobile) {
                 await step.context.sendActivity(currentText);
               } else {
                 await this.sendToMobile(min, mobile, currentText);
@@ -530,7 +530,7 @@ export class GBConversationalService {
         case State.InImageBegin:
           if (c === '[') {
             if (currentText !== '') {
-              if (mobile === null) {
+              if (!mobile) {
                 await step.context.sendActivity(currentText);
               } else {
                 await this.sendToMobile(min, mobile, currentText);
@@ -573,7 +573,7 @@ export class GBConversationalService {
       }
     }
     if (currentText !== '') {
-      if (mobile === null) {
+      if (!mobile) {
         await step.context.sendActivity(currentText);
       } else {
         await this.sendToMobile(min, mobile, currentText);
