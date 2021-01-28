@@ -1,3 +1,10 @@
+## [2.0.96](https://github.com/GeneralBots/BotServer/compare/2.0.95...2.0.96) (2021-01-28)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Sending text in .md is back again. ([119c069](https://github.com/GeneralBots/BotServer/commit/119c06949aa446fe4971563f86fa7f32475674f4))
+
 ## [2.0.95](https://github.com/GeneralBots/BotServer/compare/2.0.94...2.0.95) (2021-01-27)
 
 
