@@ -1,3 +1,11 @@
+## [2.0.97](https://github.com/GeneralBots/BotServer/compare/2.0.96...2.0.97) (2021-01-28)
+
+
+### Bug Fixes
+
+* **basic.gblib:** COPY and CONVERT fixed. ([30f3b36](https://github.com/GeneralBots/BotServer/commit/30f3b3646979d347fd4639be872b5480a515840d))
+* **basic.gblib:** More code instrumentation. ([fbd50f5](https://github.com/GeneralBots/BotServer/commit/fbd50f50bcd4e8ab4eb982d7da505faa5fcea6e6))
+
 ## [2.0.96](https://github.com/GeneralBots/BotServer/compare/2.0.95...2.0.96) (2021-01-28)
 
 
