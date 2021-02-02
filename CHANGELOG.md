@@ -1,3 +1,10 @@
+## [2.0.98](https://github.com/GeneralBots/BotServer/compare/2.0.97...2.0.98) (2021-02-02)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Spanish chars handling for NLP. ([62ef28d](https://github.com/GeneralBots/BotServer/commit/62ef28d8ff7b4e528d6d43969e03e20eb01b99cb))
+
 ## [2.0.97](https://github.com/GeneralBots/BotServer/compare/2.0.96...2.0.97) (2021-01-28)
 
 
