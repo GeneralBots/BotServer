@@ -592,6 +592,7 @@ export class GBConversationalService {
     text = text.replace('what´s', 'what is');
     text = text.replace('what\'s', 'what is');
     text = text.replace('?', ' ');
+    text = text.replace('¿', ' ');
     text = text.replace('!', ' ');
     text = text.replace('.', ' ');
     text = text.replace('/', ' ');
