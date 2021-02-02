@@ -728,6 +728,7 @@ export class GBConversationalService {
       text = text.substr(0, 4999);
       GBLog.warn(`Text that bot will translate will be truncated due to MSFT service limitations.`);
     }
+    text = text.replace('¿', '');
 
     let options = {
       method: 'POST',
@@ -752,6 +753,7 @@ export class GBConversationalService {
     };
 
     try {
+
       const results = await request(options);
 
       return results[0].translations[0].text;
