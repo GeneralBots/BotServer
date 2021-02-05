@@ -1,3 +1,10 @@
+## [2.0.99](https://github.com/GeneralBots/BotServer/compare/2.0.98...2.0.99) (2021-02-02)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fix in Spanish NLP. ([a9a2bf8](https://github.com/GeneralBots/BotServer/commit/a9a2bf8fd038bcc1ddd5d99d43cb07ce393c0d18))
+
 ## [2.0.98](https://github.com/GeneralBots/BotServer/compare/2.0.97...2.0.98) (2021-02-02)
 
 
