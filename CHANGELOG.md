@@ -1,3 +1,10 @@
+## [2.0.100](https://github.com/GeneralBots/BotServer/compare/2.0.99...2.0.100) (2021-02-05)
+
+
+### Bug Fixes
+
+* **admin.gbapp:** Fix in DONT_DOWNLOAD. ([3ed733e](https://github.com/GeneralBots/BotServer/commit/3ed733e4f852e52785c3ba32eee28969efd07779))
+
 ## [2.0.99](https://github.com/GeneralBots/BotServer/compare/2.0.98...2.0.99) (2021-02-02)
 
 
