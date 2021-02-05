@@ -5,7 +5,7 @@ export const Messages = {
     wider_answer: subjectText =>
       `Answering to you in a broader way... Not just about  ${subjectText}.`,
     which_question: 'What\'s your question?',
-    anything_else: 'So, may I help with anything else?',
+    anything_else: 'Can I help you with anything else?',
     here_is_subjects: 'Here are some subjects to choose from...',
     menu_select: 'Select',
     lets_search: query =>

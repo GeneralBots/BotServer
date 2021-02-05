@@ -1,5 +1,6 @@
 export const Messages = {
   'en-US': {
+    
     about_suggestions: 'Suggestions are welcomed and improve my quality...',
     what_about_service: 'What about my service?',
     glad_you_liked: 'I\'m glad you liked. I\'m here for you.',
