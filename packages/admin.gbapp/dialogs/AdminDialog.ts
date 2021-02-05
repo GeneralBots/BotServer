@@ -283,7 +283,9 @@ export class AdminDialog extends IGBDialog {
               } else {
                 cmd1 = `deployPackage ${packageName}`;
               }
-              if ((await (deployer as any).getStoragePackageByName(min.instance.instanceId, packageName)) !== null) {
+              if ((await (deployer as any).getStoragePackageByName(min.instance.instanceId, packageName)) !== null &&
+                !process.env.DONT_DOWNLOAD
+              ) {
                 const cmd2 = `undeployPackage ${packageName}`;
                 await GBAdminService.undeployPackageCommand(cmd2, min);
               }

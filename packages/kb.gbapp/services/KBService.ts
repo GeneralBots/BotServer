@@ -367,7 +367,7 @@ export class KBService implements IGBKBService {
     instanceId: number,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
-    GBLog.info(`Now reading file ${filePath}...`);
+    GBLog.info(`Now reading file ${filePath}...`); 
     const workbook = new Excel.Workbook();
     const data = await workbook.xlsx.readFile(filePath);
 
