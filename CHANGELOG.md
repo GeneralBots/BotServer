@@ -1,3 +1,10 @@
+## [2.0.102](https://github.com/GeneralBots/BotServer/compare/2.0.101...2.0.102) (2021-02-07)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Fixing bad regexp. ([5d6d147](https://github.com/GeneralBots/BotServer/commit/5d6d147ad4b24f51824d7f4c6a8ff0f6f0494932))
+
 ## [2.0.101](https://github.com/GeneralBots/BotServer/compare/2.0.100...2.0.101) (2021-02-07)
 
 
