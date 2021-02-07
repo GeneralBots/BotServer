@@ -1,3 +1,10 @@
+## [2.0.101](https://github.com/GeneralBots/BotServer/compare/2.0.100...2.0.101) (2021-02-07)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Fix in BASIC regexp to catch only keywords outsite quotes. ([0681fe4](https://github.com/GeneralBots/BotServer/commit/0681fe4d31a6534e3ac7b28aa6a114408162a997))
+
 ## [2.0.100](https://github.com/GeneralBots/BotServer/compare/2.0.99...2.0.100) (2021-02-05)
 
 
