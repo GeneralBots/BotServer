@@ -162,7 +162,6 @@ export class GBVMService extends GBService {
     mobile = this.userMobile(step);
     from = mobile;
     ubound = function(list){return list.length};
-    
 
     ${code}
     `;
@@ -257,15 +256,15 @@ export class GBVMService extends GBService {
       return `sys().createABotFarmUsing (${$3})`;
     });
 
-    code = code.replace(/(transfer)/gi, () => {
+    code = code.replace(/(transfer)(?=(?:[^"]|"[^"]*")*$)/gi, () => {
       return `transfer (step)\n`;
     });
 
-    code = code.replace(/(exit)/gi, () => {
+    code = code.replace(/(exit)(?=(?:[^"]|"[^"]*")*$)/gi, () => {
       return `resolve();\n`;
     });
 
-    code = code.replace(/(show menu)/gi, () => {
+    code = code.replace(/(show menu)(?=(?:[^"]|"[^"]*")*$)/gi, () => {
       return `showMenu (step)\n`;
     });
 
@@ -425,25 +424,25 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\btalk\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.talk' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\bhear\b/gi, ($0, $1) => {
+    code = code.replace(/\bhear\b(?=(?:[^"]|"[^"]*")*$)/gi, ($0, $1) => {
       return $1 === undefined ? 'this.hear' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/gi, ($0, $1) => {
+    code = code.replace(/\bsendEmail\b(?=(?:[^"]|"[^"]*")*$)/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendEmail' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\baskEmail\b/gi, ($0, $1) => {
+    code = code.replace(/\baskEmail\b(?=(?:[^"]|"[^"]*")*$)/gi, ($0, $1) => {
       return $1 === undefined ? 'this.askEmail' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsendFileTo\b/gi, ($0, $1) => {
+    code = code.replace(/\bsendFileTo\b(?=(?:[^"]|"[^"]*")*$)/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendFileTo' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/gi, ($0, $1) => {
+    code = code.replace(/\bsendFile\b(?=(?:[^"]|"[^"]*")*$)/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendFile' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsetLanguage\b/gi, ($0, $1) => {
+    code = code.replace(/\bsetLanguage\b(?=(?:[^"]|"[^"]*")*$)/gi, ($0, $1) => {
       return $1 === undefined ? 'this.setLanguage' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\btransfer\b/gi, ($0, $1) => {
+    code = code.replace(/\btransfer\b(?=(?:[^"]|"[^"]*")*$)/gi, ($0, $1) => {
       return $1 === undefined ? 'this.transfer' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bmenu\b/gi, ($0, $1) => {
