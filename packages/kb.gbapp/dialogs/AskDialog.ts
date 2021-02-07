@@ -153,7 +153,7 @@ export class AskDialog extends IGBDialog {
 
         let text = step.options.query;
         text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
-        
+
         // When no text is typed, the start dialog is invoked again
         // when people type just the @botName in MSTEAMS for example.
 
@@ -164,8 +164,8 @@ export class AskDialog extends IGBDialog {
 
           return step.endDialog();
         }
-        
-        
+
+
         const locale = step.context.activity.locale;
 
         // Stops any content on projector.
@@ -234,7 +234,10 @@ export class AskDialog extends IGBDialog {
         if (answer) {
           return await AskDialog.handleAnswer(service, min, step, answer);
         } else if (!(await min.conversationalService.routeNLP(step, min, text))) {
-          await min.conversationalService.sendText(min, step, Messages[locale].did_not_find);
+          const message = min.core.getParam<string>(min.instance, 'Not Found Message',
+            Messages[locale].did_not_find);
+
+          await min.conversationalService.sendText(min, step, message);
           return await step.replaceDialog('/ask', { isReturning: true });
         }
       }
