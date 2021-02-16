@@ -370,7 +370,7 @@ export class AdminDialog extends IGBDialog {
               min.instance.botEndpoint,
               min.instance.botId,
               '/token'
-            )}&state=${state}&response_mode=query`;
+            )}&scope=https://graph.microsoft.com/.default&state=${state}&response_mode=query`;
 
           await min.conversationalService.sendText(min, step, Messages[locale].consent(url));
 
