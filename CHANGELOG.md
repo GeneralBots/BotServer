@@ -1,3 +1,10 @@
+## [2.0.104](https://github.com/GeneralBots/BotServer/compare/2.0.103...2.0.104) (2021-02-23)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Error handling improved. ([a4c3f42](https://github.com/GeneralBots/BotServer/commit/a4c3f429119fecf256b3494bc633531e0335f36a))
+
 ## [2.0.103](https://github.com/GeneralBots/BotServer/compare/2.0.102...2.0.103) (2021-02-16)
 
 
