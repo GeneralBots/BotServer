@@ -719,7 +719,11 @@ export class GBVMService extends GBService {
 
     const context = vm.createContext(sandbox);
     const code = min.sandBoxMap[text];
-    vm.runInContext(code, context);
+    try {
+      vm.runInContext(code, context);
+    } catch (error) {
+      throw new Error(`INVALID BASIC CODE: ${error.message} ${error.stack}`);
+    }
 
     // Tries to find the method related to this call.
 
@@ -738,7 +742,7 @@ export class GBVMService extends GBService {
       ret = await sandbox[mainMethod](step);
 
     } catch (error) {
-      GBLog.error(`BASIC ERROR: ${error.message} ${error.stack}`);
+      throw new Error(`BASIC ERROR: ${error.message} ${error.stack}`);
     }
     return ret;
   }
