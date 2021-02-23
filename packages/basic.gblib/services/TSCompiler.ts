@@ -50,6 +50,8 @@ export class TSCompiler {
     if (message.indexOf('Cannot find name') >= 0 
     || message.indexOf('Cannot find module') >= 0
     || message.indexOf('implicitly has an') >= 0
+    || message.indexOf('Cannot invoke an') >= 0
+    || message.indexOf('Cannot use imports, exports, or module') >= 0
     ) {
       return true;
     }
