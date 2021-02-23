@@ -47,7 +47,10 @@ export class TSCompiler {
   private static shouldIgnoreError(diagnostic) {
     const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
 
-    if (message.indexOf('Cannot find name') >= 0 || message.indexOf('Cannot use imports') >= 0) {
+    if (message.indexOf('Cannot find name') >= 0 
+    || message.indexOf('Cannot find module') >= 0
+    || message.indexOf('implicitly has an') >= 0
+    ) {
       return true;
     }
 
@@ -84,10 +87,10 @@ export class TSCompiler {
             diagnostic.file.fileName.indexOf('request-promise') == -1
           ) {
             const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-            GBLog.warn(`BASIC error: ${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+            GBLog.error(`BASIC error: ${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
           }
         } else {
-          GBLog.warn(`BASIC error: ${message}`);
+          GBLog.error(`BASIC error: ${message}`);
         }
       }
     });
