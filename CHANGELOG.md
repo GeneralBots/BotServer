@@ -1,3 +1,10 @@
+## [2.0.103](https://github.com/GeneralBots/BotServer/compare/2.0.102...2.0.103) (2021-02-16)
+
+
+### Bug Fixes
+
+* **all:** Added scope variable as requested by a customer. ([875043b](https://github.com/GeneralBots/BotServer/commit/875043b86ef46fc642599efdec4e14b80d5a4fd7))
+
 ## [2.0.102](https://github.com/GeneralBots/BotServer/compare/2.0.101...2.0.102) (2021-02-07)
 
 
