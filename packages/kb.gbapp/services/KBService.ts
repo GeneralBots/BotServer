@@ -359,7 +359,7 @@ export class KBService implements IGBKBService {
       });
     } else {
       return await GuaribasQuestion.findAll({
-        where: { from: from }
+        where: { from: from, instanceId: instanceId }
       });
     }
   }
