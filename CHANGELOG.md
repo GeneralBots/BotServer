@@ -1,3 +1,10 @@
+## [2.0.106](https://github.com/GeneralBots/BotServer/compare/2.0.105...2.0.106) (2021-02-28)
+
+
+### Bug Fixes
+
+* **all:** FAQ Menu fixed. ([7c93328](https://github.com/GeneralBots/BotServer/commit/7c93328134f6a2611ea13749182eb4fc8061a0d3))
+
 ## [2.0.105](https://github.com/GeneralBots/BotServer/compare/2.0.104...2.0.105) (2021-02-23)
 
 
