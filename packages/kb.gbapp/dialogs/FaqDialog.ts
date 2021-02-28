@@ -59,7 +59,7 @@ export class FaqDialog extends IGBDialog {
 
     min.dialogs.add(new WaterfallDialog('/faq', [
       async step => {
-        const data = await service.getFaqBySubjectArray('faq', undefined);
+        const data = await service.getFaqBySubjectArray(min.instance.instanceId, 'faq', undefined);
         const locale = step.context.activity.locale;
         if (data !== undefined) {
           await min.conversationalService.sendEvent(min, step, 'play', {

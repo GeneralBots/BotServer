@@ -322,7 +322,7 @@ export class KBService implements IGBKBService {
     });
   }
 
-  public async getFaqBySubjectArray(from: string, subjects: any): Promise<GuaribasQuestion[]> {
+  public async getFaqBySubjectArray(instanceId: number, from: string, subjects: any): Promise<GuaribasQuestion[]> {
     if (subjects) {
       const where = {
         from: from,
@@ -333,7 +333,9 @@ export class KBService implements IGBKBService {
         // tslint:disable-next-line: no-null-keyword
         subject3: null,
         // tslint:disable-next-line: no-null-keyword
-        subject4: null
+        subject4: null, 
+        // tslint:disable-next-line: no-null-keyword
+        instanceId: instanceId
       };
 
       if (subjects[0] && subjects[0].internalId) {

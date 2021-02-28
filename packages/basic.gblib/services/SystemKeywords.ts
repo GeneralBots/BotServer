@@ -254,6 +254,7 @@ export class SystemKeywords {
    * 
    */
   public async get(file: string, address: string): Promise<any> {
+    GBLog.info(`BASIC: GET '${address}' in '${file}'.`);
     let [baseUrl, client] = await this.internalGetDriveClient();
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
@@ -288,7 +289,8 @@ export class SystemKeywords {
    *  loop
    * 
    */
-  public async find(file: string, ...args): Promise<any> {
+  public async find(file: string, ...args ): Promise<any> {
+    GBLog.info(`BASIC: FIND running on ${file}...`);
     let [baseUrl, client] = await this.internalGetDriveClient();
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
@@ -441,7 +443,7 @@ export class SystemKeywords {
    * 
    */
   public async copyFile(src, dest) {
-    GBLog.info(`BASIC: COPY '${src}' to '${dest}'`);
+    GBLog.info(`BASIC: BEGINING COPY '${src}' to '${dest}'`);
     let [baseUrl, client] = await this.internalGetDriveClient();
     const botId = this.min.instance.botId;
 
@@ -495,6 +497,7 @@ export class SystemKeywords {
       }
       throw error;
     }
+    GBLog.info(`BASIC: FINISHED COPY '${src}' to '${dest}'`);
   }
 
   /**

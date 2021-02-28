@@ -94,7 +94,8 @@ export class MenuDialog extends IGBDialog {
 
           // Whenever a subject is selected, shows a faq about it.
           if (user.subjects.length > 0) {
-            const list = await service.getFaqBySubjectArray('menu', user.subjects);
+            const list = await service.getFaqBySubjectArray(min.instance.instanceId,
+               'menu', user.subjects);
             await min.conversationalService.sendEvent(min, step, 'play', {
               playerType: 'bullet',
               data: list.slice(0, 10)

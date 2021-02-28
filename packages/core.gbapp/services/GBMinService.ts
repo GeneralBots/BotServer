@@ -759,7 +759,7 @@ export class GBMinService {
             secret: instance.webchatKey
           });
           const service = new KBService(min.core.sequelize);
-          const data = await service.getFaqBySubjectArray('faq', undefined);
+          const data = await service.getFaqBySubjectArray(instance.instanceId, 'faq', undefined);
             await min.conversationalService.sendEvent(min, step, 'play', {
               playerType: 'bullet',
               data: data.slice(0, 10)
