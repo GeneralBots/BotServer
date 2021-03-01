@@ -530,9 +530,18 @@ export class SystemKeywords {
     // Checks if the destination contains subfolders that
     // need to be created.
 
+    // Checks if the destination contains subfolders that
+    // need to be created.
+
+    let folder;
     if (dest.indexOf('/') !== -1) {
       const pathOnly = path.dirname(dest);
-      await this.createFolder(pathOnly);
+      folder = await this.createFolder(pathOnly);
+    }
+    else {
+      folder = await client.api(
+        `${baseUrl}/drive/root:/${root}`)
+        .get();
     }
     
     // Performs the conversion operation getting a reference
