@@ -1,3 +1,10 @@
+## [2.0.109](https://github.com/GeneralBots/BotServer/compare/2.0.108...2.0.109) (2021-03-02)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Start of script error removed. ([2820eac](https://github.com/GeneralBots/BotServer/commit/2820eacc5995daf6839405fd459934556172894b))
+
 ## [2.0.108](https://github.com/GeneralBots/BotServer/compare/2.0.107...2.0.108) (2021-03-01)
 
 
