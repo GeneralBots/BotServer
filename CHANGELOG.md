@@ -1,3 +1,10 @@
+## [2.0.108](https://github.com/GeneralBots/BotServer/compare/2.0.107...2.0.108) (2021-03-01)
+
+
+### Bug Fixes
+
+* **all:** Convert is OK. ([da582b0](https://github.com/GeneralBots/BotServer/commit/da582b0a59d4dbf097110080952a88159d260e0d))
+
 ## [2.0.107](https://github.com/GeneralBots/BotServer/compare/2.0.106...2.0.107) (2021-02-28)
 
 
