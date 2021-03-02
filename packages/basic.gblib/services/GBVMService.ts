@@ -261,7 +261,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(exit)/gi, () => {
-      return `resolve();\n`;
+      return `if(resolve) {resolve();}\n`;
     });
 
     code = code.replace(/(show menu)/gi, () => {
