@@ -307,7 +307,7 @@ export class GBMinService {
         const sec = new SecService();
         let user = await sec.getUserFromSystemId(id);
         if (user === null || user.hearOnDialog) {
-          user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, '', 'whatsapp', senderName);
+          user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, '', 'whatsapp', senderName, null);
 
           const startDialog = user.hearOnDialog ?
             user.hearOnDialog :
@@ -760,10 +760,10 @@ export class GBMinService {
           });
           const service = new KBService(min.core.sequelize);
           const data = await service.getFaqBySubjectArray(instance.instanceId, 'faq', undefined);
-            await min.conversationalService.sendEvent(min, step, 'play', {
-              playerType: 'bullet',
-              data: data.slice(0, 10)
-            });      
+          await min.conversationalService.sendEvent(min, step, 'play', {
+            playerType: 'bullet',
+            data: data.slice(0, 10)
+          });
 
           // This same event is dispatched either to all participants
           // including the bot, that is filtered bellow.
@@ -779,17 +779,10 @@ export class GBMinService {
               member.name,
               '',
               'web',
-              member.name
+              member.name,
+              null
             );
 
-            // Required for MSTEAMS handling of persisted conversations.
-
-            if (step.context.activity.channelId === 'msteams') {
-              persistedUser.conversationReference = JSON.stringify(
-                TurnContext.getConversationReference(context.activity)
-              );
-              await persistedUser.save();
-            }
 
             // Stores conversation associated to the user to group each message.
 
@@ -802,6 +795,18 @@ export class GBMinService {
           // Saves session user (persisted GuaribasUser is inside).
 
           await min.userProfile.set(step.context, user);
+        }
+
+        user.systemUser = await sec.getUserFromSystemId( user.systemUser.userSystemId);
+        await min.userProfile.set(step.context, user);
+
+        // Required for MSTEAMS handling of persisted conversations.
+
+        if (step.context.activity.channelId === 'msteams') {
+          const conversationReference = JSON.stringify(
+            TurnContext.getConversationReference(context.activity)
+          );
+          await sec.updateConversationReferenceById(user.systemUser.userId, conversationReference);
         }
 
         GBLog.info(`User>: text:${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId}, value: ${context.activity.value})`);
@@ -910,6 +915,8 @@ export class GBMinService {
    * Called to handle all text messages sent and received by the bot.
    */
   private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
+
+    const sec = new SecService();
 
     // Removes <at>Bot Id</at> from MS Teams.
 
@@ -1055,7 +1062,7 @@ export class GBMinService {
       if (detectLanguage || !locale) {
         locale = await min.conversationalService.getLanguage(min, text);
         if (systemUser.locale != locale) {
-          const sec = new SecService();
+          
           user.systemUser = await sec.updateUserLocale(systemUser.userId, locale);
           await min.userProfile.set(step.context, user);
         }
@@ -1092,28 +1099,39 @@ export class GBMinService {
       context.activity.originalText = originalText;
       GBLog.info(`Final text ready for NLP/Search/.gbapp: ${text}.`);
 
-      // If there is a dialog in course, continue to the next step.
 
-      if (step.activeDialog !== undefined) {
-        await step.continueDialog();
+      if (user.systemUser.agentMode === 'self') {
+        const manualUser = await sec.getUserFromAgentSystemId(user.systemUser.userSystemId);
 
-      } else {
+        GBLog.info(`HUMAN AGENT (${user.systemUser.userSystemId}) TO USER ${manualUser.userSystemId}: ${text}`);
+        await min.whatsAppDirectLine.sendToDeviceEx(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`, locale);
 
-        let nextDialog = null;
-        await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-          nextDialog = await e.onExchangeData(min, 'handleAnswer', {
-            query: text,
-            step: step,
-            notTranslatedQuery: originalText,
-            message: message ? message['dataValues'] : null,
-            user: user ? user.dataValues : null
+      }
+      else {
+
+        // If there is a dialog in course, continue to the next step.
+
+        if (step.activeDialog !== undefined) {
+          await step.continueDialog();
+
+        } else {
+
+          let nextDialog = null;
+          await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+            nextDialog = await e.onExchangeData(min, 'handleAnswer', {
+              query: text,
+              step: step,
+              notTranslatedQuery: originalText,
+              message: message ? message['dataValues'] : null,
+              user: user ? user.dataValues : null
+            });
           });
-        });
-        await step.beginDialog(nextDialog ? nextDialog : '/answer', {
-          query: text,
-          user: user ? user.dataValues : null,
-          message: message
-        });
+          await step.beginDialog(nextDialog ? nextDialog : '/answer', {
+            query: text,
+            user: user ? user.dataValues : null,
+            message: message
+          });
+        }
       }
     }
   }

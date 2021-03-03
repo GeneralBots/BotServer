@@ -39,7 +39,8 @@ export class SecService extends GBService {
     userName: string,
     address: string,
     channelName: string,
-    displayName: string
+    displayName: string,
+    email: string
   ): Promise<GuaribasUser> {
     let user = await GuaribasUser.findOne({
       where: {
@@ -55,7 +56,7 @@ export class SecService extends GBService {
     user.userSystemId = userSystemId;
     user.userName = userName;
     user.displayName = displayName;
-    user.email = userName;
+    user.email = email;
     user.defaultChannel = channelName;
 
     return await user.save();
@@ -76,6 +77,14 @@ export class SecService extends GBService {
    */
   public async updateConversationReference(phone: string, conversationReference: string) {
     const options = { where: { phone: phone } };
+    const user = await GuaribasUser.findOne(options);
+
+    user.conversationReference = conversationReference;
+    await user.save();
+  }
+
+  public async updateConversationReferenceById(userId: number, conversationReference: string) {
+    const options = { where: { userId: userId } };
     const user = await GuaribasUser.findOne(options);
 
     user.conversationReference = conversationReference;
@@ -115,14 +124,18 @@ export class SecService extends GBService {
     return await user.save();
   }
 
-  public async updateCurrentAgent(
+  /**
+   * Finds and update user agent information to a next available person.
+   */
+  public async updateHumanAgent(
     userSystemId: string,
     instanceId: number,
     agentSystemId: string
   ): Promise<GuaribasUser> {
     const user = await GuaribasUser.findOne({
       where: {
-        userSystemId: userSystemId
+        userSystemId: userSystemId,
+        instanceId: instanceId
       }
     });
 
@@ -190,7 +203,7 @@ export class SecService extends GBService {
       }
     });
 
-    await this.updateCurrentAgent(userSystemId, instanceId, agentSystemId);
+    await this.updateHumanAgent(userSystemId, instanceId, agentSystemId);
 
     return agentSystemId;
   }

@@ -125,7 +125,7 @@ export class SystemKeywords {
     let sec = new SecService();
     let user = await sec.getUserFromSystemId(from);
     if (!user) {
-      user = await sec.ensureUser(this.min.instance.instanceId, from, from, null, 'whatsapp', 'from');
+      user = await sec.ensureUser(this.min.instance.instanceId, from, from, null, 'whatsapp', 'from', null);
     }
     await sec.updateUserHearOnDialog(user.userId, dialogName);
   }

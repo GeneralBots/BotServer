@@ -78,7 +78,7 @@ export class GuaribasUser extends Model<GuaribasUser> {
   @BelongsTo(() => GuaribasInstance)
   public instance: GuaribasInstance;
 
-  @Column(DataType.STRING(16))
+  @Column(DataType.STRING(255))
   public agentSystemId: string;
 
   @Column(DataType.DATE)

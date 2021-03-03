@@ -25,7 +25,8 @@ export const Messages = {
     great_thanks: 'Ótimo, obrigado por contribuir com sua resposta.',
     please_no_bad_words: 'Por favor, sem palavrões!',
     please_wait_transfering: 'Por favor, aguarde enquanto eu localizo alguém para te atender.',
-    notify_agent: (name) => `Existe um novo atendimento para *${name}*, por favor, responda aqui mesmo para a pessoa. Para finalizar, digite /qt.`
+    notify_agent: (name) => `Existe um novo atendimento para *${name}*, por favor, responda aqui mesmo para a pessoa. Para finalizar, digite /qt.`,
+    notify_end_transfer: (botName) => `Falando novamente com  o bot ${botName}.`
 
   }
 };

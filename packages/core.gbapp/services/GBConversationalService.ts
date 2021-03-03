@@ -47,6 +47,7 @@ import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsServic
 import { MicrosoftAppCredentials } from 'botframework-connector';
 import { GBConfigService } from './GBConfigService';
 import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
+import { GuaribasUser } from '../../security.gbapp/models';
 const urlJoin = require('url-join');
 const PasswordGenerator = require('strict-password-generator').default;
 const Nexmo = require('nexmo');
@@ -851,17 +852,25 @@ export class GBConversationalService {
     const users = await service.getAllUsers(min.instance.instanceId);
     await CollectionUtil.asyncForEach(users, async user => {
       if (user.conversationReference) {
-        const ref = JSON.parse(user.conversationReference);
-        MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
-        await min.bot['createConversation'](ref, async t1 => {
-          const ref2 = TurnContext.getConversationReference(t1.activity);
-          await min.bot.continueConversation(ref2, async t2 => {
-            await t2.sendActivity(message);
-          });
-        });
+        await this.sendOnConversation(min, user, message);
       } else {
         GBLog.info(`User: ${user.systemUserId} with no conversation ID while broadcasting.`);
       }
+    });
+  }
+  
+  /**
+   * 
+   * Sends a message in a user with an already started conversation (got ConversationReference set)
+   */
+  public async sendOnConversation(min: GBMinInstance, user: GuaribasUser, message: string) {
+    const ref = JSON.parse(user.conversationReference);
+    MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
+    await min.bot['createConversation'](ref, async (t1) => {
+      const ref2 = TurnContext.getConversationReference(t1.activity);
+      await min.bot.continueConversation(ref2, async (t2) => {
+        await t2.sendActivity(message);
+      });
     });
   }
 

@@ -75,14 +75,25 @@ export class FeedbackDialog extends IGBDialog {
           const locale = step.context.activity.locale;
 
           const sec = new SecService();
-          const from = step.context.activity.from.id;
+          let from = step.context.activity.from.id;
 
           await min.conversationalService.sendText(min, step, Messages[locale].please_wait_transfering);
           const agentSystemId = await sec.assignHumanAgent(from, min.instance.instanceId);
 
-          await min.whatsAppDirectLine.sendToDevice(agentSystemId,
-                                                    Messages[locale].notify_agent(step.context.activity.from.name));
+          const user = await min.userProfile.get(step.context, {});
+          user.systemUser = await sec.getUserFromAgentSystemId(agentSystemId);
+          await min.userProfile.set(step.context, user);
 
+          if (agentSystemId.charAt(2) === ":") { // Agent is from Teams.
+            const agent = await sec.getUserFromSystemId(agentSystemId);
+            await min.conversationalService['sendOnConversation'](min, agent,
+              Messages[locale].notify_agent(step.context.activity.from.name));
+
+          }
+          else {
+            await min.whatsAppDirectLine.sendToDevice(agentSystemId, Messages[locale].notify_agent(step.context.activity.from.name));
+
+          }
           return await step.next();
         }
       ])
@@ -95,10 +106,65 @@ export class FeedbackDialog extends IGBDialog {
           const locale = step.context.activity.locale;
 
           const sec = new SecService();
-          const from = step.context.activity.from.id;
+          const userSystemId = step.context.activity.from.id;
+          const user = await min.userProfile.get(step.context, {});
 
-          await sec.updateCurrentAgent(from, min.instance.instanceId, null);
-          await min.conversationalService.sendText(min, step, Messages[locale].notify_end_transfer(min.instance.botId));
+          if (user.systemUser.agentMode === 'self') {
+            const manualUser = await sec.getUserFromAgentSystemId(userSystemId);
+
+            await min.whatsAppDirectLine.sendToDeviceEx(manualUser.userSystemId,
+              Messages[locale].notify_end_transfer(min.instance.botId), locale);
+
+            if (userSystemId.charAt(2) === ":") { // Agent is from Teams.
+              await min.conversationalService.sendText(min, step, Messages[locale].notify_end_transfer(min.instance.botId));
+            }
+            else {
+              await min.whatsAppDirectLine.sendToDeviceEx(userSystemId,
+                Messages[locale].notify_end_transfer(min.instance.botId), locale);
+            }
+
+            await sec.updateHumanAgent(userSystemId, min.instance.instanceId, null);
+            await sec.updateHumanAgent(manualUser.userSystemId, min.instance.instanceId, null);
+
+            user.systemUser = await sec.getUserFromSystemId(userSystemId);
+            await min.userProfile.set(step.context, user);
+ 
+          }
+
+          else if (user.systemUser.agentMode === 'human') {
+            const agent = await sec.getUserFromSystemId(user.systemUser.agentSystemId);
+
+            await min.whatsAppDirectLine.sendToDeviceEx(user.systemUser.userSystemId,
+              Messages[locale].notify_end_transfer(min.instance.botId), locale);
+
+
+            if (user.systemUser.agentSystemId.charAt(2) === ":") { // Agent is from Teams.
+              await min.conversationalService.sendText(min, step, Messages[locale].notify_end_transfer(min.instance.botId));
+            }
+            else {
+              await min.whatsAppDirectLine.sendToDeviceEx(user.systemUser.agentSystemId,
+                Messages[locale].notify_end_transfer(min.instance.botId), locale);
+            }
+
+            await sec.updateHumanAgent(user.systemUser.userSystemId, min.instance.instanceId, null);
+            await sec.updateHumanAgent(agent.userSystemId, min.instance.instanceId, null);
+
+            user.systemUser = await sec.getUserFromSystemId(userSystemId);
+            await min.userProfile.set(step.context, user);
+
+          }
+          else
+          {
+            if (user.systemUser.userSystemId.charAt(2) === ":") { // Agent is from Teams.
+              await min.conversationalService.sendText(min, step, 'Nenhum atendimento em andamento.');
+            }
+            else {
+              await min.whatsAppDirectLine.sendToDeviceEx(user.systemUser.userSystemId,
+                'Nenhum atendimento em andamento.');
+            }
+
+          }
+
 
           return await step.next();
         }
@@ -149,7 +215,7 @@ export class FeedbackDialog extends IGBDialog {
           } else {
 
             const message = min.core.getParam<string>(min.instance, 'Feedback Improve Message',
-                                                      Messages[fixedLocale].we_will_improve); // TODO: Improve to be multi-language.
+              Messages[fixedLocale].we_will_improve); // TODO: Improve to be multi-language.
 
             await min.conversationalService.sendText(min, step, message);
           }

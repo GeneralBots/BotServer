@@ -113,7 +113,7 @@ export class AskDialog extends IGBDialog {
 
           let sec = new SecService();
           const member = step.context.activity.from;
-          const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name);
+          const user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name, null);
 
           let handled = false;
           let nextDialog = null;

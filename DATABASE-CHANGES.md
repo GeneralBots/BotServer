@@ -80,3 +80,13 @@ GO
 ALTER TABLE dbo.GuaribasInstance ADD
 	translatorEndpoint nvarchar(128) NULL
 GO
+
+
+# 2.0.108
+
+ALTER TABLE [dbo].[GuaribasInstance] DROP COLUMN [agentSystemId]
+GO
+
+ALTER TABLE dbo.GuaribasUser ADD
+	agentSystemId nvarchar(255) NULL,
+GO

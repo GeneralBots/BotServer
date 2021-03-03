@@ -178,7 +178,7 @@ export class WhatsappDirectLine extends GBService {
     const sec = new SecService();
 
     const user = await sec.ensureUser(this.min.instance.instanceId, id,
-                                      senderName, '', 'whatsapp', senderName);
+      senderName, '', 'whatsapp', senderName, null);
 
     const locale = user.locale ? user.locale : 'pt';
     if (message.type === 'ptt') {
@@ -205,12 +205,22 @@ export class WhatsappDirectLine extends GBService {
     const conversationId = WhatsappDirectLine.conversationIds[from];
 
     const client = await this.directLineClient;
-    if (user.agentMode === 'self') {
-      const manualUser = await sec.getUserFromAgentSystemId(id);
 
+
+    // Check if this message is from a Human Agent itself.
+
+    if (user.agentMode === 'self') {
+
+      // Check if there is someone being handled by this Human Agent.
+
+      const manualUser = await sec.getUserFromAgentSystemId(id);
       if (manualUser === null) {
-        await sec.updateCurrentAgent(id, this.min.instance.instanceId, null);
+
+        await sec.updateHumanAgent(id, this.min.instance.instanceId, null);
+    
       } else {
+        const agent = await sec.getUserFromSystemId(user.agentSystemId);
+
         const cmd = '/reply ';
         if (text.startsWith(cmd)) {
           const filename = text.substr(cmd.length);
@@ -218,37 +228,60 @@ export class WhatsappDirectLine extends GBService {
 
           if (message === null) {
             await this.sendToDeviceEx(user.userSystemId, `File ${filename} not found in any .gbkb published. Check the name or publish again the associated .gbkb.`,
-                                      locale);
+              locale);
           } else {
             await this.min.conversationalService.sendMarkdownToMobile(this.min, null, user.userSystemId, message);
           }
         } else if (text === '/qt') {
           // TODO: Transfers only in pt-br for now.
           await this.sendToDeviceEx(manualUser.userSystemId,
-                                    Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
-          await this.sendToDeviceEx(user.agentSystemId,
-                                    Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+            Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
 
-          await sec.updateCurrentAgent(manualUser.userSystemId, this.min.instance.instanceId, null);
+          if (user.agentSystemId.charAt(2) === ":") { // Agent is from Teams.
+            await this.min.conversationalService['sendOnConversation'](this.min, agent, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
+          }
+          else {
+            await this.sendToDeviceEx(user.agentSystemId,
+              Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+
+          }
+          await sec.updateHumanAgent(manualUser.userSystemId, this.min.instance.instanceId, null);
+          await sec.updateHumanAgent(user.agentSystemId, this.min.instance.instanceId, null);
         } else {
           GBLog.info(`HUMAN AGENT (${id}) TO USER ${manualUser.userSystemId}: ${text}`);
-          this.sendToDeviceEx(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`, locale);
+          await this.sendToDeviceEx(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`, locale);
         }
       }
+
+
     } else if (user.agentMode === 'human') {
+
       const agent = await sec.getUserFromSystemId(user.agentSystemId);
       if (text === '/t') {
         await this.sendToDeviceEx(user.userSystemId, `Você já está sendo atendido por ${agent.userSystemId}.`, locale);
       } else if (text === '/qt' || text === 'Sair' || text === 'Fechar') {
         // TODO: Transfers only in pt-br for now.
         await this.sendToDeviceEx(id,
-                                  Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
-        await this.sendToDeviceEx(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+          Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
 
-        await sec.updateCurrentAgent(id, this.min.instance.instanceId, null);
+          if (user.agentSystemId.charAt(2) === ":") { // Agent is from Teams.
+            await this.min.conversationalService['sendOnConversation'](this.min, agent, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
+          }
+          else {
+            await this.sendToDeviceEx(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+          }
+
+        await sec.updateHumanAgent(id, this.min.instance.instanceId, null);
       } else {
-        GBLog.info(`USER (${id}) TO AGENT ${user.userSystemId}: ${text}`);
-        this.sendToDeviceEx(user.agentSystemId, `Bot: ${this.min.instance.botId}\n${id}: ${text}`, locale);
+        GBLog.info(`USER (${id}) TO AGENT ${agent.userSystemId}: ${text}`);
+
+        if (user.agentSystemId.charAt(2) === ":") { // Agent is from Teams.
+          await this.min.conversationalService['sendOnConversation'](this.min, agent, text);
+        }
+        else {
+          await this.sendToDeviceEx(user.agentSystemId, `Bot: ${this.min.instance.botId}\n${id}: ${text}`, locale);
+        }
+
       }
 
     } else if (user.agentMode === 'bot' || user.agentMode === null || user.agentMode === undefined) {
@@ -451,7 +484,7 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  private async sendToDeviceEx(to, text, locale) {
+  public async sendToDeviceEx(to, text, locale) {
     const minBoot = GBServer.globals.minBoot as any;
 
     text = await minBoot.conversationalService.translate(
