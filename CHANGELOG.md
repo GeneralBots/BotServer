@@ -1,3 +1,10 @@
+## [2.0.112](https://github.com/GeneralBots/BotServer/compare/2.0.111...2.0.112) (2021-03-08)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Using mobile instead of step on SEND FILE TO. ([51a6d55](https://github.com/GeneralBots/BotServer/commit/51a6d557aead10152da6a63675c68262ff48e521))
+
 ## [2.0.111](https://github.com/GeneralBots/BotServer/compare/2.0.110...2.0.111) (2021-03-08)
 
 
