@@ -1,3 +1,11 @@
+## [2.0.111](https://github.com/GeneralBots/BotServer/compare/2.0.110...2.0.111) (2021-03-08)
+
+
+### Bug Fixes
+
+* **basic.gblib:** More loggin on BASIC keywords. ([d0e42f0](https://github.com/GeneralBots/BotServer/commit/d0e42f0ae16c0432245dc547e569a23714c36185))
+* **basic.gblib:** More logging in BASIC keywords. ([e016052](https://github.com/GeneralBots/BotServer/commit/e01605230983d5e567ebddf9c76efde277e3e7dd))
+
 ## [2.0.110](https://github.com/GeneralBots/BotServer/compare/2.0.109...2.0.110) (2021-03-08)
 
 
