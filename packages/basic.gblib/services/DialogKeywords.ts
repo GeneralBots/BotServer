@@ -134,7 +134,7 @@ export class DialogKeywords {
    */
   public async sendFileTo(step, mobile, filename, caption) {
     GBLog.info(`BASIC: SEND FILE TO '${mobile}', filename '${filename}'.`);
-    return await this.internalSendFile(step, mobile, filename, caption);
+    return await this.internalSendFile(null, mobile, filename, caption);
   }
 
   /**
