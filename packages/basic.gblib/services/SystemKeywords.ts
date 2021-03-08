@@ -161,6 +161,7 @@ export class SystemKeywords {
    * 
    */
   public async sendSmsTo(mobile, message) {
+    GBLog.info(`BASIC: SEND SMS TO '${mobile}', message '${message}'.`);
     await this.min.conversationalService.sendSms(this.min, mobile, message);
   }
 

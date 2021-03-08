@@ -129,10 +129,11 @@ export class DialogKeywords {
   /**
    * Sends a file to a given mobile.
    *
-   * @example SEND FILE TO "+199988887777", "image.jpg"
+   * @example SEND FILE TO "+199988887777", "image.jpg", caption
    *
    */
   public async sendFileTo(step, mobile, filename, caption) {
+    GBLog.info(`BASIC: SEND FILE TO '${mobile}', filename '${filename}'.`);
     return await this.internalSendFile(step, mobile, filename, caption);
   }
 
@@ -244,11 +245,11 @@ export class DialogKeywords {
    */
   private async internalSendFile(step, mobile, filename, caption) {
     if (filename.indexOf('.md') > -1) {
-      GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile.`);
+      GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
       const md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
       await this.min.conversationalService.sendMarkdownToMobile(this.min, step, mobile, md);
     } else {
-      GBLog.info(`BASIC: Sending the file ${filename} to mobile.`);
+      GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
       const url = urlJoin(
         GBServer.globals.publicAddress,
         'kb',
