@@ -132,8 +132,8 @@ export class DialogKeywords {
    * @example SEND FILE TO "+199988887777", "image.jpg"
    *
    */
-  public async sendFileTo(mobile, filename, caption) {
-    return await this.internalSendFile(null, mobile, filename, caption);
+  public async sendFileTo(step, mobile, filename, caption) {
+    return await this.internalSendFile(step, mobile, filename, caption);
   }
 
   /**
