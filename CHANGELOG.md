@@ -1,3 +1,11 @@
+## [2.0.110](https://github.com/GeneralBots/BotServer/compare/2.0.109...2.0.110) (2021-03-08)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Step added to SEND FILE TO. ([f40eae7](https://github.com/GeneralBots/BotServer/commit/f40eae7b5918ca3f8b4a3910a37c2d7dbb98b210))
+* **basic.gblib:** Step added to SendFileTo. ([85e9602](https://github.com/GeneralBots/BotServer/commit/85e96023c3af16051a271e123004173d9fe9cecf))
+
 ## [2.0.109](https://github.com/GeneralBots/BotServer/compare/2.0.108...2.0.109) (2021-03-02)
 
 
