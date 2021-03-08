@@ -797,7 +797,7 @@ export class GBMinService {
           await min.userProfile.set(step.context, user);
         }
 
-        user.systemUser = await sec.getUserFromSystemId( user.systemUser.userSystemId);
+        user.systemUser = await sec.getUserFromSystemId(user.systemUser.userSystemId);
         await min.userProfile.set(step.context, user);
 
         // Required for MSTEAMS handling of persisted conversations.
@@ -1062,7 +1062,7 @@ export class GBMinService {
       if (detectLanguage || !locale) {
         locale = await min.conversationalService.getLanguage(min, text);
         if (systemUser.locale != locale) {
-          
+
           user.systemUser = await sec.updateUserLocale(systemUser.userId, locale);
           await min.userProfile.set(step.context, user);
         }
@@ -1099,13 +1099,25 @@ export class GBMinService {
       context.activity.originalText = originalText;
       GBLog.info(`Final text ready for NLP/Search/.gbapp: ${text}.`);
 
-
       if (user.systemUser.agentMode === 'self') {
         const manualUser = await sec.getUserFromAgentSystemId(user.systemUser.userSystemId);
 
         GBLog.info(`HUMAN AGENT (${user.systemUser.userSystemId}) TO USER ${manualUser.userSystemId}: ${text}`);
-        await min.whatsAppDirectLine.sendToDeviceEx(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`, locale);
 
+        const cmd = 'SEND FILE ';
+        if (text.startsWith(cmd)) {
+          const filename = text.substr(cmd.length);
+          const message = await min.kbService.getAnswerTextByMediaName(min.instance.instanceId, filename);
+
+          if (message === null) {
+            GBLog.error(`File ${filename} not found in any .gbkb published. Check the name or publish again the associated .gbkb.`);
+          } else {
+            await min.conversationalService.sendMarkdownToMobile(min, null, manualUser.userSystemId, message);
+          }
+        }
+        else {
+          await min.whatsAppDirectLine.sendToDeviceEx(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`, locale);
+        }
       }
       else {
 

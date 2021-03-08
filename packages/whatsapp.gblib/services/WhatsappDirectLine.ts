@@ -248,8 +248,8 @@ export class WhatsappDirectLine extends GBService {
           await sec.updateHumanAgent(manualUser.userSystemId, this.min.instance.instanceId, null);
           await sec.updateHumanAgent(user.agentSystemId, this.min.instance.instanceId, null);
         } else {
-          GBLog.info(`HUMAN AGENT (${id}) TO USER ${manualUser.userSystemId}: ${text}`);
-          await this.sendToDeviceEx(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`, locale);
+          GBLog.info(`HUMAN AGENT (${manualUser.agentSystemId}) TO USER ${manualUser.userSystemId}: ${text}`);
+          await this.sendToDeviceEx(manualUser.userSystemId, `AGENTE: *${text}*`, locale);
         }
       }
 
