@@ -290,14 +290,14 @@ export class SystemKeywords {
    *  loop
    * 
    */
-  public async find(file: string, ...args ): Promise<any> {
-    GBLog.info(`BASIC: FIND running on ${file}...`);
+  public async find(file: string, ...args): Promise<any> {
+    GBLog.info(`BASIC: FIND running on ${file} and args: ${JSON.stringify(args)}...`);
     let [baseUrl, client] = await this.internalGetDriveClient();
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
-    
+
     let document = await this.internalGetDocument(client, baseUrl, path, file);
-    
+
     if (args.length > 1) {
       throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
     }
@@ -308,18 +308,21 @@ export class SystemKeywords {
     const columnName = filter[0];
     const value = filter[1];
     let sheets = await client
-    .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
+      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
       .get();
 
-      let results = await client
+    let results = await client
       .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:Z100')`)
       .get();
 
-      // Increments columnIndex by looping until find a column match.
+    // Increments columnIndex by looping until find a column match.
 
-      let columnIndex = 0;
+    let columnIndex = 0;
     const header = results.text[0];
     for (; columnIndex < header.length; columnIndex++) {
+
+      GBLog.info(`FIND DEBUG header: ${header[columnIndex]} columnName: ${columnName}`);
+
       if (header[columnIndex].toLowerCase() === columnName.toLowerCase()) {
         break;
       }
@@ -327,19 +330,19 @@ export class SystemKeywords {
 
     // As BASIC uses arrays starting with 1 (one) as index, 
     // a ghost element is added at 0 (zero) position.
-    
+
     let table = [];
     table.push({ 'this is a hidden base 0': 'element' });
     let foundIndex = 0;
-    
+
     // Fills the row variable.
-    
+
     for (; foundIndex < results.text.length; foundIndex++) {
-      
+
       let result = results.text[foundIndex][columnIndex];
-      
+
       GBLog.info(`FIND DEBUG result on foundIndex: ${foundIndex} columnIndex: ${columnIndex}: ${result}`);
-            
+
       // Filter results action.
 
       if (result && result.toLowerCase() === value.toLowerCase()) {
@@ -557,7 +560,7 @@ export class SystemKeywords {
         `${baseUrl}/drive/root:/${root}`)
         .get();
     }
-    
+
     // Performs the conversion operation getting a reference
     // to the source and calling /content on drive API.
 
