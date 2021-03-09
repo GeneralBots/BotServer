@@ -1,3 +1,10 @@
+## [2.0.113](https://github.com/GeneralBots/BotServer/compare/2.0.112...2.0.113) (2021-03-09)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Trying to fix FIND error on filtering. ([5422e69](https://github.com/GeneralBots/BotServer/commit/5422e69841820368ae08183a212c98d064f18dc1))
+
 ## [2.0.112](https://github.com/GeneralBots/BotServer/compare/2.0.111...2.0.112) (2021-03-08)
 
 
