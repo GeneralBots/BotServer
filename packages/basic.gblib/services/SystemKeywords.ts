@@ -295,26 +295,29 @@ export class SystemKeywords {
     let [baseUrl, client] = await this.internalGetDriveClient();
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
-
+    
     let document = await this.internalGetDocument(client, baseUrl, path, file);
-
+    
     if (args.length > 1) {
       throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
     }
 
     // Creates workbook session that will be discarded.
+
     const filter = args[0].split('=');
     const columnName = filter[0];
     const value = filter[1];
     let sheets = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
+    .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
       .get();
 
-    let results = await client
+      let results = await client
       .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:Z100')`)
       .get();
 
-    let columnIndex = 0;
+      // Increments columnIndex by looping until find a column match.
+
+      let columnIndex = 0;
     const header = results.text[0];
     for (; columnIndex < header.length; columnIndex++) {
       if (header[columnIndex].toLowerCase() === columnName.toLowerCase()) {
@@ -324,31 +327,41 @@ export class SystemKeywords {
 
     // As BASIC uses arrays starting with 1 (one) as index, 
     // a ghost element is added at 0 (zero) position.
-    let array = [];
-    array.push({ 'this is a base 1': 'array' });
+    
+    let table = [];
+    table.push({ 'this is a hidden base 0': 'element' });
     let foundIndex = 0;
+    
+    // Fills the row variable.
+    
     for (; foundIndex < results.text.length; foundIndex++) {
+      
+      let result = results.text[foundIndex][columnIndex];
+      
+      GBLog.info(`FIND DEBUG result on foundIndex: ${foundIndex} columnIndex: ${columnIndex}: ${result}`);
+            
       // Filter results action.
-      if (results.text[foundIndex][columnIndex].toLowerCase() === value.toLowerCase()) {
-        let output = {};
-        const row = results.text[foundIndex];
-        for (let colIndex = 0; colIndex < row.length; colIndex++) {
-          output[header[colIndex]] = row[colIndex];
+
+      if (result && result.toLowerCase() === value.toLowerCase()) {
+        let row = {};
+        const xlRow = results.text[foundIndex];
+        for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
+          row[header[colIndex]] = xlRow[colIndex];
         }
-        output['line'] = foundIndex + 1;
-        array.push(output);
+        row['line'] = foundIndex + 1;
+        table.push(row);
       }
     }
 
-    if (array.length === 1) {
-      GBLog.info(`BASIC: FIND the data set is EMPTY (zero results).`);
+    if (table.length === 1) {
+      GBLog.info(`BASIC: FIND returned no results (zero rows).`);
       return null;
-    } else if (array.length === 2) {
-      GBLog.info(`BASIC: FIND single result: ${array[0]}.`);
-      return array[1];
+    } else if (table.length === 2) {
+      GBLog.info(`BASIC: FIND returned single result: ${table[0]}.`);
+      return table[1];
     } else {
-      GBLog.info(`BASIC: FIND multiple result count: ${array.length}.`);
-      return array;
+      GBLog.info(`BASIC: FIND returned multiple results (Count): ${table.length}.`);
+      return table;
     }
   }
 
