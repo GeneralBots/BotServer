@@ -40,6 +40,7 @@ import { SecService } from '../../security.gbapp/services/SecService';
 const request = require('request-promise-native');
 const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
 const path = require('path');
+const sgMail = require('@sendgrid/mail');
 
 /**
  * @fileoverview General Bots server core.
@@ -610,11 +611,38 @@ export class SystemKeywords {
    * Sends an e-mail.
    * 
    * @example 
+   * 
+   * SEND MAIL "email@domain.com", "Subject",  "Message text."
+   * 
    */
   public async sendEmail(to, subject, body) {
+    
     // tslint:disable-next-line:no-console
+    
     GBLog.info(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
+    const emailToken = process.env.EMAIL_API_KEY;
+
+    return new Promise<any>((resolve, reject) => {
+      sgMail.setApiKey(emailToken);
+      const msg = {
+        to: to,
+        from:  process.env.EMAIL_FROM,
+        subject: subject,
+        text: body,
+        html: body
+      };
+      sgMail.send(msg, false, (err, res) => {
+        if (err) {
+          reject(err)
+        }
+        else {
+          resolve(res);
+        }
+      });
+    });
   }
+
+}
 
   /**
    * Calls any REST API by using GET HTTP method.
@@ -623,14 +651,14 @@ export class SystemKeywords {
    * 
    */
   public async getByHttp(url: string) {
-    const options = {
-      uri: url
-    };
+  const options = {
+    uri: url
+  };
 
-    let result = await request.get(options);
-    GBLog.info(`[GET]: ${url} : ${result}`);
-    return JSON.parse(result);
-  }
+  let result = await request.get(options);
+  GBLog.info(`[GET]: ${url} : ${result}`);
+  return JSON.parse(result);
+}
 
   /**
    * Calls any REST API by using POST HTTP method.
@@ -642,18 +670,18 @@ export class SystemKeywords {
    * 
    */
   public async postByHttp(url: string, data) {
-    const options = {
-      uri: url,
-      json: true,
-      body: data
-    };
+  const options = {
+    uri: url,
+    json: true,
+    body: data
+  };
 
-    let result = await request.post(options);
-    GBLog.info(`[POST]: ${url} (${data}): ${result}`);
-    return JSON.parse(result);
-  }
+  let result = await request.post(options);
+  GBLog.info(`[POST]: ${url} (${data}): ${result}`);
+  return JSON.parse(result);
+}
 
   public async numberOnly(text: string) {
-    return text.replace(/\D/gi, '');
-  }
+  return text.replace(/\D/gi, '');
+}
 }
