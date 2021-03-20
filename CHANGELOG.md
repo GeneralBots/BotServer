@@ -1,3 +1,10 @@
+## [2.0.114](https://github.com/GeneralBots/BotServer/compare/2.0.113...2.0.114) (2021-03-09)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Trying to find invalid cell value on .xlsx being filtered. ([3f0b020](https://github.com/GeneralBots/BotServer/commit/3f0b0201559261cc2069e6cf400eecdb76dbe492))
+
 ## [2.0.113](https://github.com/GeneralBots/BotServer/compare/2.0.112...2.0.113) (2021-03-09)
 
 
