@@ -186,7 +186,7 @@ export class GBServer {
           }
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
-
+          
           // Opens Navigator.
 
           // TODO: Config: core.openBrowserInDevelopment();

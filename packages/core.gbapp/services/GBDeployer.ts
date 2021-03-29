@@ -41,8 +41,8 @@ import urlJoin = require('url-join');
 const Fs = require('fs');
 const express = require('express');
 const child_process = require('child_process');
-const graph = require('@microsoft/microsoft-graph-client');
 const rimraf = require('rimraf');
+const request = require('request-promise-native');
 
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
@@ -96,6 +96,23 @@ export class GBDeployer implements IGBDeployer {
    */
   public static getConnectionStringFromInstance(instance: IGBInstance) {
     return `Server=tcp:${instance.storageServer},1433;Database=${instance.storageName};User ID=${instance.storageUsername};Password=${instance.storagePassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
+  }
+
+  /**
+   * Retrives token and initialize drive client API.
+   */
+  public static async internalGetDriveClient(min: GBMinInstance) {
+    let token = await min.adminService.acquireElevatedToken(min.instance.instanceId);
+    let siteId = process.env.STORAGE_SITE_ID;
+    let libraryId = process.env.STORAGE_LIBRARY;
+
+    let client = MicrosoftGraph.Client.init({
+      authProvider: done => {
+        done(null, token);
+      }
+    });
+    const baseUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}`;
+    return [baseUrl, client];
   }
 
   /**
@@ -423,6 +440,71 @@ export class GBDeployer implements IGBDeployer {
   }
 
   /**
+   * Loads all para from tabular file Config.xlsx.
+   */
+  public async downloadFolder(min: GBMinInstance, localPath: string, remotePath: string,
+    baseUrl: string = null, client = null): Promise<any> {
+    if (!baseUrl) {
+      [baseUrl, client] = await GBDeployer.internalGetDriveClient(min);
+
+      remotePath = remotePath.replace(/\\/gi, '/');
+      const parts = remotePath.split('/');
+
+      // Creates each subfolder.
+
+      let pathBase = localPath;
+      if (!Fs.existsSync(pathBase)) {
+        Fs.mkdirSync(pathBase);
+      }
+
+      await CollectionUtil.asyncForEach(parts, async item => {
+        pathBase = Path.join(pathBase, item);
+        if (!Fs.existsSync(pathBase)) {
+          Fs.mkdirSync(pathBase);
+        }
+      });
+
+      // Retrieves all files in remote folder.
+
+      const botId = min.instance.botId;
+      const path = urlJoin(`/${botId}.gbai`, remotePath);
+      let url = `${baseUrl}/drive/root:${path}:/children`;
+
+      const res = await client
+        .api(url)
+        .get();
+      const documents = res.value;
+      if (documents === undefined || documents.length === 0) {
+        GBLog.info(`${remotePath} is an empty folder.`);
+        return null;
+      }
+
+      // Download files or navigate to directory to recurse.
+
+      await CollectionUtil.asyncForEach(documents, async item => {
+
+        const itemPath = Path.join(localPath, remotePath, item.name);
+
+        if (item.folder) {
+          if (!Fs.existsSync(itemPath)) {
+            Fs.mkdirSync(itemPath);
+          }
+          const nextFolder = urlJoin(remotePath, item.name);
+          await this.downloadFolder(min, localPath, nextFolder);
+        } else {
+          GBLog.info(`Downloading ${itemPath}...`);
+          const url = item['@microsoft.graph.downloadUrl'];
+          const options = {
+            uri: url,
+            encoding: null
+          };
+          const response = await request({ uri: url, encoding: null });
+          Fs.writeFileSync(itemPath, response, { encoding: null });
+        }
+      });
+    }
+  }
+  /**
    * UndDeploys a bot to the storage.
    */
   public async undeployBot(botId: string, packageName: string): Promise<void> {
@@ -561,7 +643,7 @@ export class GBDeployer implements IGBDeployer {
         break;
 
       default:
-        
+
         const err = GBError.create(`Unhandled package type: ${packageType}.`);
         Promise.reject(err);
         break;

@@ -285,7 +285,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     const parameters = {
       properties: {
-        description: description,
+        description: `${description}`,
         displayName: name,
         endpoint: endpoint,
         iconUrl: iconUrl

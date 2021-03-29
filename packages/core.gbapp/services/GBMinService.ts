@@ -157,7 +157,7 @@ export class GBMinService {
       try {
         await this.mountBot(instance);
       } catch (error) {
-        GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}`);
+        GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
       }
     });
   }

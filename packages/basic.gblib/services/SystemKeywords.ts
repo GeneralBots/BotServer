@@ -71,23 +71,6 @@ export class SystemKeywords {
   }
 
   /**
-   * Retrives token and initialize drive client API.
-   */
-  private async internalGetDriveClient() {
-    let token = await this.min.adminService.acquireElevatedToken(this.min.instance.instanceId);
-    let siteId = process.env.STORAGE_SITE_ID;
-    let libraryId = process.env.STORAGE_LIBRARY;
-
-    let client = MicrosoftGraph.Client.init({
-      authProvider: done => {
-        done(null, token);
-      }
-    });
-    const baseUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}`;
-    return [baseUrl, client];
-  }
-
-  /**
    * Retrives the content of a given URL.
    */
   public async getFileContents(url) {
@@ -175,7 +158,7 @@ export class SystemKeywords {
   public async set(file: string, address: string, value: any): Promise<any> {
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
 
-    let [baseUrl, client] = await this.internalGetDriveClient();
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
 
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
@@ -223,7 +206,7 @@ export class SystemKeywords {
    */
   public async save(file: string, ...args): Promise<any> {
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
-    let [baseUrl, client] = await this.internalGetDriveClient();
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
@@ -257,7 +240,7 @@ export class SystemKeywords {
    */
   public async get(file: string, address: string): Promise<any> {
     GBLog.info(`BASIC: GET '${address}' in '${file}'.`);
-    let [baseUrl, client] = await this.internalGetDriveClient();
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
@@ -293,7 +276,7 @@ export class SystemKeywords {
    */
   public async find(file: string, ...args): Promise<any> {
     GBLog.info(`BASIC: FIND running on ${file} and args: ${JSON.stringify(args)}...`);
-    let [baseUrl, client] = await this.internalGetDriveClient();
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
@@ -313,7 +296,7 @@ export class SystemKeywords {
       .get();
 
     let results = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:Z100')`)
+      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:Z2000')`)
       .get();
 
     // Increments columnIndex by looping until find a column match.
@@ -380,7 +363,7 @@ export class SystemKeywords {
    */
   public async createFolder(name: string) {
 
-    let [baseUrl, client] = await this.internalGetDriveClient();
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
     let path = `/${botId}.gbai/${botId}.gbdata`;
 
@@ -436,7 +419,7 @@ export class SystemKeywords {
    *
    */
   public async shareFolder(folderReference, email: string, message: string) {
-    let [, client] = await this.internalGetDriveClient();
+    let [, client] = await GBDeployer.internalGetDriveClient(this.min);
     const driveId = folderReference.parentReference.driveId;
     const itemId = folderReference.id;
     const body = {
@@ -462,7 +445,7 @@ export class SystemKeywords {
    */
   public async copyFile(src, dest) {
     GBLog.info(`BASIC: BEGINING COPY '${src}' to '${dest}'`);
-    let [baseUrl, client] = await this.internalGetDriveClient();
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
 
     // Normalizes all slashes.
@@ -531,7 +514,7 @@ export class SystemKeywords {
    */
   public async convert(src, dest) {
     GBLog.info(`BASIC: CONVERT '${src}' to '${dest}'`);
-    let [baseUrl, client] = await this.internalGetDriveClient();
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
 
     // Normalizes all slashes.
@@ -616,9 +599,9 @@ export class SystemKeywords {
    * 
    */
   public async sendEmail(to, subject, body) {
-    
+
     // tslint:disable-next-line:no-console
-    
+
     GBLog.info(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
     const emailToken = process.env.EMAIL_API_KEY;
 
@@ -626,7 +609,7 @@ export class SystemKeywords {
       sgMail.setApiKey(emailToken);
       const msg = {
         to: to,
-        from:  process.env.EMAIL_FROM,
+        from: process.env.EMAIL_FROM,
         subject: subject,
         text: body,
         html: body
@@ -642,8 +625,6 @@ export class SystemKeywords {
     });
   }
 
-}
-
   /**
    * Calls any REST API by using GET HTTP method.
    * 
@@ -651,14 +632,14 @@ export class SystemKeywords {
    * 
    */
   public async getByHttp(url: string) {
-  const options = {
-    uri: url
-  };
+    const options = {
+      uri: url
+    };
 
-  let result = await request.get(options);
-  GBLog.info(`[GET]: ${url} : ${result}`);
-  return JSON.parse(result);
-}
+    let result = await request.get(options);
+    GBLog.info(`[GET]: ${url} : ${result}`);
+    return JSON.parse(result);
+  }
 
   /**
    * Calls any REST API by using POST HTTP method.
@@ -670,18 +651,18 @@ export class SystemKeywords {
    * 
    */
   public async postByHttp(url: string, data) {
-  const options = {
-    uri: url,
-    json: true,
-    body: data
-  };
+    const options = {
+      uri: url,
+      json: true,
+      body: data
+    };
 
-  let result = await request.post(options);
-  GBLog.info(`[POST]: ${url} (${data}): ${result}`);
-  return JSON.parse(result);
-}
+    let result = await request.post(options);
+    GBLog.info(`[POST]: ${url} (${data}): ${result}`);
+    return JSON.parse(result);
+  }
 
   public async numberOnly(text: string) {
-  return text.replace(/\D/gi, '');
-}
+    return text.replace(/\D/gi, '');
+  }
 }
