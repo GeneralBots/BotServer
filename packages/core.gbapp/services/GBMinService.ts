@@ -1128,21 +1128,28 @@ export class GBMinService {
 
         } else {
 
-          let nextDialog = null;
-          await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-            nextDialog = await e.onExchangeData(min, 'handleAnswer', {
-              query: text,
-              step: step,
-              notTranslatedQuery: originalText,
-              message: message ? message['dataValues'] : null,
-              user: user ? user.dataValues : null
+          const startDialog = user.hearOnDialog ?
+            user.hearOnDialog :
+            min.core.getParam(min.instance, 'Start Dialog', null);
+
+          if (text !== startDialog) {
+            let nextDialog = null;
+            await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+              nextDialog = await e.onExchangeData(min, 'handleAnswer', {
+                query: text,
+                step: step,
+                notTranslatedQuery: originalText,
+                message: message ? message['dataValues'] : null,
+                user: user ? user.dataValues : null
+              });
             });
-          });
-          await step.beginDialog(nextDialog ? nextDialog : '/answer', {
-            query: text,
-            user: user ? user.dataValues : null,
-            message: message
-          });
+            await step.beginDialog(nextDialog ? nextDialog : '/answer', {
+              query: text,
+              user: user ? user.dataValues : null,
+              message: message
+            });
+
+          }
         }
       }
     }
