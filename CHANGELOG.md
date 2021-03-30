@@ -1,3 +1,10 @@
+## [2.0.115](https://github.com/GeneralBots/BotServer/compare/2.0.114...2.0.115) (2021-03-30)
+
+
+### Bug Fixes
+
+* **all:** End of dialog now OK. ([9b78594](https://github.com/GeneralBots/BotServer/commit/9b785948cc6041c2cba2525b53bf8cb64cca795c))
+
 ## [2.0.114](https://github.com/GeneralBots/BotServer/compare/2.0.113...2.0.114) (2021-03-09)
 
 
