@@ -1,3 +1,10 @@
+## [2.0.116](https://github.com/GeneralBots/BotServer/compare/2.0.115...2.0.116) (2021-03-30)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Start dialog now is called with no interruptions. ([f66bbb8](https://github.com/GeneralBots/BotServer/commit/f66bbb8fcef351262fea8baf532ce191ef7344ec))
+
 ## [2.0.115](https://github.com/GeneralBots/BotServer/compare/2.0.114...2.0.115) (2021-03-30)
 
 
