@@ -145,9 +145,9 @@ export class KBService implements IGBKBService {
     // Extracts questionId from URL.
 
     const id = url.substr(url.lastIndexOf('-') + 1);
-    
+
     // Extracts botId from URL.
-    
+
     let path = /(http[s]?:\/\/)?([^\/\s]+\/)(.*)/gi;
     const botId = url.replace(path, ($0, $1, $2, $3) => {
       return $3.substr($3.indexOf('/'));
@@ -190,7 +190,7 @@ export class KBService implements IGBKBService {
     const service = new CSService();
     let question = await service.getQuestionFromAlternateText(instanceId, text);
 
-    if (question !== null) {
+    if (!question) {
       question = await GuaribasQuestion.findOne({
         where: {
           instanceId: instanceId,
@@ -223,6 +223,15 @@ export class KBService implements IGBKBService {
     searchScore: number,
     subjects: GuaribasSubject[]
   ): Promise<KBServiceSearchResults> {
+
+    // Try simple search first.
+
+    const data = await this.getAnswerByText(instance.instanceId, query);
+    if (data) {
+      GBLog.info(`Simple SEARCH called.`);
+      return { answer: data.answer, questionId: data.question.questionId };
+    }
+
     // Builds search query.
 
     query = query.toLowerCase();
@@ -240,9 +249,9 @@ export class KBService implements IGBKBService {
       }
     }
 
-    let notSearched = true;
 
-    // tslint:disable:no-unsafe-any
+    // No direct match found, so Search is used.
+
     if (instance.searchKey !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
       const client = new SearchService(instance.searchHost.split('.')[0], instance.searchKey);
       const results = await client.indexes
@@ -267,7 +276,7 @@ export class KBService implements IGBKBService {
             GBLog.info(
               `SEARCH WILL BE USED with score: ${returnedScore} > required (searchScore): ${searchScore}`
             );
-            notSearched = false;
+            
 
             return { answer: value, questionId: values[0].questionId };
           } else {
@@ -294,24 +303,6 @@ export class KBService implements IGBKBService {
         return { answer: undefined, questionId: 0 };
       }
     }
-
-    // DISABLED: Searches via Database "WHERE" command.
-
-    // if (notSearched) {
-    //   const data = await this.getAnswerByText(instance.instanceId, query);
-    //   if (data) {
-    //     GBLog.info(
-    //       `SEARCH called.`
-    //     );
-    //     return { answer: data.answer, questionId: data.question.questionId };
-    //   } else {
-    //     GBLog.info(`SEARCH NOT called getAnswerByText not found answers in database.`);
-    //     return { answer: undefined, questionId: 0 };
-    //   }
-    // }
-
-    // TODO: Add more sources....
-
   }
 
   public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {
@@ -333,7 +324,7 @@ export class KBService implements IGBKBService {
         // tslint:disable-next-line: no-null-keyword
         subject3: null,
         // tslint:disable-next-line: no-null-keyword
-        subject4: null, 
+        subject4: null,
         // tslint:disable-next-line: no-null-keyword
         instanceId: instanceId
       };
@@ -369,7 +360,7 @@ export class KBService implements IGBKBService {
     instanceId: number,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
-    GBLog.info(`Now reading file ${filePath}...`); 
+    GBLog.info(`Now reading file ${filePath}...`);
     const workbook = new Excel.Workbook();
     const data = await workbook.xlsx.readFile(filePath);
 

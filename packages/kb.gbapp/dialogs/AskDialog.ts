@@ -165,7 +165,6 @@ export class AskDialog extends IGBDialog {
           return step.endDialog();
         }
 
-
         const locale = step.context.activity.locale;
 
         // Stops any content on projector.
