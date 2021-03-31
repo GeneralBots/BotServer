@@ -258,6 +258,7 @@ export class KBService implements IGBKBService {
         .use(instance.searchIndex)
         .buildQuery()
         .filter(f => f.eq('instanceId', instance.instanceId))
+        .filter(f => f.eq('skipIndex', false))
         .search(query)
         .top(1)
         .executeQuery();
@@ -276,7 +277,7 @@ export class KBService implements IGBKBService {
             GBLog.info(
               `SEARCH WILL BE USED with score: ${returnedScore} > required (searchScore): ${searchScore}`
             );
-            
+
 
             return { answer: value, questionId: values[0].questionId };
           } else {
@@ -467,9 +468,9 @@ export class KBService implements IGBKBService {
             subject2: subject2,
             subject3: subject3,
             subject4: subject4,
-            content: question,
+            content: question.replace(/['"]+/g, ''),
             instanceId: instanceId,
-
+            skipIndex: (question.charAt(0) === "\""),
             packageId: packageId
           };
           questions.push(question1);

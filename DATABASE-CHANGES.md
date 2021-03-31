@@ -90,3 +90,10 @@ GO
 ALTER TABLE dbo.GuaribasUser ADD
 	agentSystemId nvarchar(255) NULL,
 GO
+
+# 2.0.115
+
+ALTER TABLE dbo.GuaribasQuestion ADD
+	skipIndex bit NULL
+GO
+

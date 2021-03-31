@@ -144,6 +144,9 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
   @Column
   public keywords: string;
 
+  @Column
+  public skipIndex: boolean;
+
   @Column(DataType.STRING(512))
   public from: string;
 

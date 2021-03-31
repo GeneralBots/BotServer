@@ -203,6 +203,16 @@ export class AzureDeployerService implements IGBInstallationDeployer {
           key: false
         },
         {
+          name: 'skipIndex',
+          type: 'Edm.Boolean',
+          searchable: false,
+          filterable: true,
+          retrievable: true,
+          sortable: false,
+          facetable: false,
+          key: false
+        },
+        {
           name: 'packageId',
           type: 'Edm.Int32',
           searchable: false,
