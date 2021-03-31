@@ -923,6 +923,16 @@ export class GBMinService {
     context.activity.text = context.activity.text.trim();
     context.activity.text = context.activity.text.replace(/\<at\>.*\<\/at\>\s/gi, '');
 
+    // Syn. temporary replacement (to be migrated to Synonyms.xlsx)
+
+    context.activity.text = context.activity.text.replace(/\busuario\b/gi, 'usuário');
+    context.activity.text = context.activity.text.replace(/\busuaria\b/gi, 'usuária');
+    context.activity.text = context.activity.text.replace(/\busuarios\b/gi, 'usuários');
+    context.activity.text = context.activity.text.replace(/\busuarias\b/gi, 'usuárias');
+    context.activity.text = context.activity.text.replace(/\bfuncionario\b/gi, 'funcionário');
+    context.activity.text = context.activity.text.replace(/\bfuncionarios\b/gi, 'funcionários');
+
+
     const user = await min.userProfile.get(context, {});
     let message: GuaribasConversationMessage;
     if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
