@@ -1,3 +1,10 @@
+## [2.0.117](https://github.com/GeneralBots/BotServer/compare/2.0.116...2.0.117) (2021-03-31)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** Simple search prioritized correctly. ([8136e34](https://github.com/GeneralBots/BotServer/commit/8136e34f1ef8b389663566ad78c0a3f649aef8ea))
+
 ## [2.0.116](https://github.com/GeneralBots/BotServer/compare/2.0.115...2.0.116) (2021-03-30)
 
 
