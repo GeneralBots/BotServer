@@ -1,3 +1,10 @@
+## [2.0.118](https://github.com/GeneralBots/BotServer/compare/2.0.117...2.0.118) (2021-03-31)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** Quotes to prevent question indexing. ([e9a9a47](https://github.com/GeneralBots/BotServer/commit/e9a9a478db7df558b6d76abace045aab7b1ae699))
+
 ## [2.0.117](https://github.com/GeneralBots/BotServer/compare/2.0.116...2.0.117) (2021-03-31)
 
 
