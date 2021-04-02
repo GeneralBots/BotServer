@@ -59,22 +59,30 @@ export class QualityDialog extends IGBDialog {
     const service = new CSService();
 
     min.dialogs.add(new WaterfallDialog('/quality', [
-      async step =>  {
+      async step => {
         const locale = step.context.activity.locale;
         const user = await min.userProfile.get(step.context, {});
 
         const score = step.result;
 
-        setTimeout(
-          () => min.conversationalService.sendEvent(min, step, 'stop', undefined),
-          400
-        );
-
         if (score === 0) {
           await min.conversationalService.sendText(min, step, Messages[locale].im_sorry_lets_try);
+
+          return await step.next();
         } else {
           await min.conversationalService.sendText(min, step, Messages[locale].great_thanks);
-
+          await min.conversationalService.sendEvent(min, step, 'play', {
+            playerType: 'markdown',
+            data: {
+              content: Messages[locale].great_thanks,
+            }
+          });
+          let sleep = ms => {
+            return new Promise(resolve => {
+              setTimeout(resolve, ms);
+            });
+          };
+      
           await service.insertQuestionAlternate(
             min.instance.instanceId,
             user.lastQuestion,
@@ -89,10 +97,8 @@ export class QualityDialog extends IGBDialog {
 
           // Goes to the ask loop.
 
-          await step.replaceDialog('/ask', { isReturning: true });
+          return await step.replaceDialog('/ask', { emptyPrompt: true });
         }
-
-        return await step.next();
       }
     ]));
   }

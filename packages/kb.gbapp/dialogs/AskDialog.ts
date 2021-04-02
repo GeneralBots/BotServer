@@ -100,11 +100,9 @@ export class AskDialog extends IGBDialog {
         } else {
           throw new Error('Invalid use of /ask');
         }
-        if (text.length > 0) {
-          return await min.conversationalService.prompt(min, step, text);
-        }
-
-        return await step.next();
+        
+        return await min.conversationalService.prompt(min, step, text);
+        
       },
       async step => {
         if (step.result) {

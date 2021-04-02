@@ -66,7 +66,7 @@ const { IamAuthenticator } = require('ibm-watson/auth');
  * services like NLP or Search.
  */
 export class GBConversationalService {
-  
+
   /**
    * Reference to the core service.
    */
@@ -769,7 +769,7 @@ export class GBConversationalService {
     const user = await min.userProfile.get(step.context, {});
     const systemUser = user.systemUser;
 
-    if (text !== null) {
+    if (text && text !== "") {
       text = await min.conversationalService.translate(
         min,
         text,
@@ -858,7 +858,7 @@ export class GBConversationalService {
       }
     });
   }
-  
+
   /**
    * 
    * Sends a message in a user with an already started conversation (got ConversationReference set)

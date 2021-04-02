@@ -38,7 +38,6 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { SecService } from '../../security.gbapp/services/SecService';
 const request = require('request-promise-native');
-const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
 const path = require('path');
 const sgMail = require('@sendgrid/mail');
 
