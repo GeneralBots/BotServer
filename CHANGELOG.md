@@ -1,3 +1,10 @@
+## [2.0.119](https://github.com/GeneralBots/BotServer/compare/2.0.118...2.0.119) (2021-03-31)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Pt synonyms added. ([5a3eb2f](https://github.com/GeneralBots/BotServer/commit/5a3eb2f690ef9699536369b7152dfcb6b3cd237f))
+
 ## [2.0.118](https://github.com/GeneralBots/BotServer/compare/2.0.117...2.0.118) (2021-03-31)
 
 
