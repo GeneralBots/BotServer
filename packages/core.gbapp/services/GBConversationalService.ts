@@ -240,11 +240,13 @@ export class GBConversationalService {
 
   public async sendAudio(min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
     const mobile = step.context.activity.from.id;
+    GBLog.info(`Sending audio to ${mobile} in URL: ${url}.`);
     await min.whatsAppDirectLine.sendAudioToDevice(mobile, url);
   }
 
   public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
     if (step.context.activity.channelId === 'webchat') {
+      GBLog.info(`Sending event ${name}:${typeof value === 'object' ? JSON.stringify(value) : value} to client...`);
       const msg = MessageFactory.text('');
       msg.value = value;
       msg.type = 'event';
@@ -256,6 +258,7 @@ export class GBConversationalService {
 
   // tslint:disable:no-unsafe-any due to Nexmo.
   public async sendSms(min: GBMinInstance, mobile: string, text: string): Promise<any> {
+    GBLog.info(`Sending SMS to ${mobile} with text: '${text}'.`);
     return new Promise((resolve: any, reject: any): any => {
       const nexmo = new Nexmo({
         apiKey: min.instance.smsKey,
@@ -575,8 +578,10 @@ export class GBConversationalService {
     }
     if (currentText !== '') {
       if (!mobile) {
+        GBLog.info(`Sending .MD file to Web.`);
         await step.context.sendActivity(currentText);
       } else {
+        GBLog.info(`Sending .MD file to mobile: ${mobile}.`);
         await this.sendToMobile(min, mobile, currentText);
       }
     }

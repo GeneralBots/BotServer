@@ -442,7 +442,7 @@ export class GBMinService {
         instance.marketplacePassword,
         async (err, token) => {
           if (err) {
-            const msg = `Error acquiring token: ${err}`;
+            const msg = `handleOAuthTokenRequests: Error acquiring token: ${err}`;
             GBLog.error(msg);
             res.send(msg);
           } else {
@@ -476,6 +476,7 @@ export class GBMinService {
       );
       authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.marketplaceId
         }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+      GBLog.info(`HandleOAuthRequests: ${authorizationUrl}.`);
       res.redirect(authorizationUrl);
     });
   }
@@ -487,16 +488,18 @@ export class GBMinService {
 
     // Translates the requested botId.
 
-    let id = req.params.botId;
-    if (id === '[default]' || id === undefined) {
-      id = GBConfigService.get('BOT_ID');
+    let botId = req.params.botId;
+    if (botId === '[default]' || botId === undefined) {
+      botId = GBConfigService.get('BOT_ID');
     }
+
+    GBLog.info(`Client requested instance for: ${botId}.`);
 
     // Loads by the botId itself or by the activationCode field.
 
-    let instance = await this.core.loadInstanceByBotId(id);
+    let instance = await this.core.loadInstanceByBotId(botId);
     if (instance === null) {
-      instance = await this.core.loadInstanceByActivationCode(id);
+      instance = await this.core.loadInstanceByActivationCode(botId);
     }
 
     if (instance !== null) {
@@ -515,7 +518,7 @@ export class GBMinService {
       res.send(
         JSON.stringify({
           instanceId: instance.instanceId,
-          botId: id,
+          botId: botId,
           theme: theme,
           webchatToken: webchatTokenContainer.token,
           speechToken: speechToken,
@@ -530,7 +533,7 @@ export class GBMinService {
         })
       );
     } else {
-      const error = `Instance not found while retrieving from .gbui web client: ${id}.`;
+      const error = `Instance not found while retrieving from .gbui web client: ${botId}.`;
       res.sendStatus(error);
       GBLog.error(error);
     }
@@ -668,7 +671,7 @@ export class GBMinService {
     min.dialogs.add(
       new OAuthPrompt('oAuthPrompt', {
         connectionName: 'OAuth2',
-        text: 'Please sign in.',
+        text: 'Please sign in to General Bots.',
         title: 'Sign in',
         timeout: 300000
       })

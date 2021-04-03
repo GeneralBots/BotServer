@@ -1,4 +1,4 @@
-/*****************************************************************************\
+﻿/*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' v `\ /'_`\   |
@@ -30,40 +30,35 @@
 |                                                                             |
 \*****************************************************************************/
 
-import React from "react"
-import { SuperSEO } from 'react-super-seo';
+import React, { Component } from "react";
 
-class SEO extends React.Component {
+class GBUrlPlayer extends Component {
+  constructor() {
+    super();
+    this.state = {
+      src: ""
+    };
+  }
+
+  play(url) {
+    this.setState({ src: url });
+  }
+
+  stop() {
+    this.setState({ src: "" });
+  }
   render() {
-    let output = "";
-    if (this.props.instance) {
-      output = (
-        <SuperSEO
-          title={this.props.instance.title}
-          description={this.props.instance.description}
-          lang="en"
-          openGraph={{
-            ogImage: {
-              ogImage: this.props.instance.paramLogoImageUrl,
-              ogImageAlt: this.props.instance.paramLogoImageAlt,
-              ogImageWidth: this.props.instance.paramLogoImageWidth,
-              ogImageHeight: this.props.instance.paramLogoImageHeight,
-              ogImageType: this.props.instance.paramLogoImageType,
-            },
-          }}
-          twitter={{
-            twitterSummaryCard: {
-              summaryCardImage: this.props.instance.paramLogoImageUrl,
-              summaryCardImageAlt: this.props.instance.paramLogoImageAlt,
-              summaryCardSiteUsername: this.props.instance.paramTwitterUsername,
-            },
-          }}
-        />);
-    } else {
-      output = <div />;
-    }
-    return output;
+    return (
+      <div className="gb-video-player-wrapper">
+        <iframe ref="video"
+          className="gb-video-react-player"
+          src={this.state.src}
+          width="100%"
+          height="100%"
+        />
+      </div>
+    );
   }
 }
 
-export default SEO
+export default GBUrlPlayer;

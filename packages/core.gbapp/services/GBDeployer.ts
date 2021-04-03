@@ -795,11 +795,11 @@ export class GBDeployer implements IGBDeployer {
 
     // Clean up node_modules folder as it is only needed during compile time.
 
-    const nodeModules = urlJoin(root, 'node_modules');
-    if (Fs.existsSync(nodeModules)) {
-      rimraf.sync(nodeModules);
-      GBLog.info(`Cleaning default.gbui node_modules...`);
-    }
+    // const nodeModules = urlJoin(root, 'node_modules');
+    // if (Fs.existsSync(nodeModules)) {
+    //   rimraf.sync(nodeModules);
+    //   GBLog.info(`Cleaning default.gbui node_modules...`);
+    // }
   }
 
   /**

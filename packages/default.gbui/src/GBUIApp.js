@@ -34,6 +34,7 @@ import React from 'react';
 import GBMarkdownPlayer from './players/GBMarkdownPlayer.js';
 import GBImagePlayer from './players/GBImagePlayer.js';
 import GBVideoPlayer from './players/GBVideoPlayer.js';
+import GBUrlPlayer from './players/GBUrlPlayer.js';
 import GBLoginPlayer from './players/GBLoginPlayer.js';
 import GBBulletPlayer from './players/GBBulletPlayer.js';
 import SidebarMenu from './components/SidebarMenu.js';
@@ -261,6 +262,16 @@ class GBUIApp extends React.Component {
             />
           );
           break;
+        case 'url':
+          playerComponent = (
+            <GBUrlPlayer
+              app={this}
+              ref={player => {
+                this.player = player;
+              }}
+            />
+          );
+          break;
         case 'image':
           playerComponent = (
             <GBImagePlayer
@@ -299,6 +310,7 @@ class GBUIApp extends React.Component {
 
     let chat = <div />;
     let gbCss = <div />;
+    let seo= <div />;
 
     let sideBar = (
       <div className="sidebar">
@@ -308,6 +320,7 @@ class GBUIApp extends React.Component {
 
     if (this.state.line && this.state.instance) {
       gbCss = <GBCss instance={this.state.instance} />;
+      seo = <SEO  instance={this.state.instance}/>;
 
       // let speechOptions;
       // let token = this.state.instanceClient.speechToken;
@@ -345,7 +358,7 @@ class GBUIApp extends React.Component {
 
     return (
       <StaticContent>
-        <SEO></SEO>
+        {seo}
         <div>
           {gbCss}
           {sideBar}

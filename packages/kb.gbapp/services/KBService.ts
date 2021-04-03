@@ -503,6 +503,8 @@ export class KBService implements IGBKBService {
   public async sendAnswer(min: GBMinInstance, channel: string, step: GBDialogStep, answer: GuaribasAnswer) {
     if (answer.content.endsWith('.mp4')) {
       await this.playVideo(min, min.conversationalService, step, answer, channel);
+    } else if (answer.content.endsWith('.pdf')) {
+      await this.playUrl(min, min.conversationalService, step, answer, channel);
     } else if (answer.format === '.md') {
       await this.playMarkdown(min, answer, channel, step, min.conversationalService);
     } else if (answer.content.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
@@ -715,6 +717,24 @@ export class KBService implements IGBKBService {
     });
   }
 
+  private async playUrl(
+    min,
+    conversationalService: IGBConversationalService,
+    step: GBDialogStep,
+    answer: GuaribasAnswer,
+    channel: string
+  ) {
+    if (channel === 'whatsapp') {
+      await min.conversationalService.sendFile(min, step, null, answer.content, '');
+    } else {
+      await conversationalService.sendEvent(min, step, 'play', {
+        playerType: 'url',
+        data: urlJoin('kb',`${min.instance.botId}.gbai`, 
+          `${min.instance.botId}.gbkb`, 'assets', answer.content)
+      });
+    }
+  }
+
   private async playVideo(
     min,
     conversationalService: IGBConversationalService,
@@ -727,7 +747,7 @@ export class KBService implements IGBKBService {
     } else {
       await conversationalService.sendEvent(min, step, 'play', {
         playerType: 'video',
-        data: answer.content
+        data: urlJoin(`${min.instance.botId}.gbai`, `${min.instance.botId}.gbkb`, 'videos', answer.content)
       });
     }
   }
