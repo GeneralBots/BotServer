@@ -45,6 +45,7 @@ const walkPromise = require('walk-promise');
 const { SearchService } = require('azure-search-client');
 const Excel = require('exceljs');
 const getSlug = require('speakingurl');
+import { GBServer } from '../../../src/app';
 import {
   GBDialogStep,
   GBLog,
@@ -503,8 +504,24 @@ export class KBService implements IGBKBService {
   public async sendAnswer(min: GBMinInstance, channel: string, step: GBDialogStep, answer: GuaribasAnswer) {
     if (answer.content.endsWith('.mp4')) {
       await this.playVideo(min, min.conversationalService, step, answer, channel);
+    } else if (
+      answer.content.endsWith('.ppt') ||
+      answer.content.endsWith('.pptx') ||
+      answer.content.endsWith('.doc') ||
+      answer.content.endsWith('.docx') ||
+      answer.content.endsWith('.xls') ||
+      answer.content.endsWith('.xlsx')
+
+    ) {
+      const doc = urlJoin(GBServer.globals.publicAddress, 'kb', `${min.instance.botId}.gbai`,
+        `${min.instance.botId}.gbkb`, 'assets', answer.content)
+      const url = `http://view.officeapps.live.com/op/view.aspx?src=${doc}`;
+      await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.content.endsWith('.pdf')) {
-      await this.playUrl(min, min.conversationalService, step, answer, channel);
+
+      const url = urlJoin('kb', `${min.instance.botId}.gbai`,
+        `${min.instance.botId}.gbkb`, 'assets', answer.content);
+      await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
       await this.playMarkdown(min, answer, channel, step, min.conversationalService);
     } else if (answer.content.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
@@ -721,16 +738,15 @@ export class KBService implements IGBKBService {
     min,
     conversationalService: IGBConversationalService,
     step: GBDialogStep,
-    answer: GuaribasAnswer,
+    url: string,
     channel: string
   ) {
     if (channel === 'whatsapp') {
-      await min.conversationalService.sendFile(min, step, null, answer.content, '');
+      await min.conversationalService.sendFile(min, step, null, url, '');
     } else {
       await conversationalService.sendEvent(min, step, 'play', {
         playerType: 'url',
-        data: urlJoin('kb',`${min.instance.botId}.gbai`, 
-          `${min.instance.botId}.gbkb`, 'assets', answer.content)
+        data: url
       });
     }
   }
