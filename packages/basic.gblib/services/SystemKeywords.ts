@@ -30,7 +30,7 @@
 |                                                                             |
 \*****************************************************************************/
 'use strict';
-import { GBLog, GBMinInstance } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
 import urlJoin = require('url-join');
@@ -61,10 +61,16 @@ export class SystemKeywords {
   private readonly deployer: GBDeployer;
 
   /**
+   * Reference to the deployer service.
+   */
+  private readonly step: GBDialogStep;
+
+  /**
    * When creating this keyword facade, a bot instance is
    * specified among the deployer service.
    */
-  constructor(min: GBMinInstance, deployer: GBDeployer) {
+  constructor(min: GBMinInstance, deployer: GBDeployer, step: GBDialogStep) {
+    this.step = step;
     this.min = min;
     this.deployer = deployer;
   }
@@ -285,6 +291,14 @@ export class SystemKeywords {
       throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
     }
 
+    const user = await this.min.userProfile.get(this.step.context, {});
+    let maxLines = 100;
+    if (user.basicOptions && user.basicOptions.maxLines) {
+      if (user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
+        maxLines = Number.parseInt(user.basicOptions.maxLines).valueOf();
+      }
+    }
+
     // Creates workbook session that will be discarded.
 
     const filter = args[0].split('=');
@@ -295,7 +309,7 @@ export class SystemKeywords {
       .get();
 
     let results = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:Z2000')`)
+      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:Z${maxLines}')`)
       .get();
 
     // Increments columnIndex by looping until find a column match.
@@ -303,8 +317,6 @@ export class SystemKeywords {
     let columnIndex = 0;
     const header = results.text[0];
     for (; columnIndex < header.length; columnIndex++) {
-
-      GBLog.info(`FIND DEBUG header: ${header[columnIndex]} columnName: ${columnName}`);
 
       if (header[columnIndex].toLowerCase() === columnName.toLowerCase()) {
         break;
@@ -324,15 +336,15 @@ export class SystemKeywords {
 
       let result = results.text[foundIndex][columnIndex];
 
-      GBLog.info(`FIND DEBUG result on foundIndex: ${foundIndex} columnIndex: ${columnIndex}: ${result}`);
-
       // Filter results action.
 
       if (result && result.toLowerCase() === value.toLowerCase()) {
         let row = {};
         const xlRow = results.text[foundIndex];
         for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
-          row[header[colIndex]] = xlRow[colIndex];
+          const propertyName = header[colIndex];
+          GBLog.info(`xxxxxxxxxx ${propertyName}`);    
+          row[propertyName] = xlRow[colIndex];
         }
         row['line'] = foundIndex + 1;
         table.push(row);

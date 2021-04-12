@@ -513,7 +513,7 @@ export class GBMinService {
       // Sends all information to the .gbui web client.
 
       if (theme === undefined) {
-        theme = 'default.gbtheme';
+        theme = `${instance.botId}.gbtheme`;
       }
       res.send(
         JSON.stringify({
@@ -751,6 +751,8 @@ export class GBMinService {
           user.subjects = [];
           user.cb = undefined;
           user.welcomed = false;
+          user.basicOptions = { maxLines: 100 };
+
           firstTime = true;
 
           // Sends loadInstance event to .gbui clients and loads FAQ.

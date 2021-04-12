@@ -34,7 +34,7 @@
 
 import { BotAdapter, TurnContext } from 'botbuilder';
 import { WaterfallDialog, WaterfallStepContext } from 'botbuilder-dialogs';
-import { GBLog, GBMinInstance } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
 import urlJoin = require('url-join');
 import { GBServer } from '../../../src/app';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
@@ -62,9 +62,9 @@ export class DialogKeywords {
    * When creating this keyword facade, a bot instance is
    * specified among the deployer service.
    */
-  constructor(min: GBMinInstance, deployer: GBDeployer) {
+  constructor(min: GBMinInstance, deployer: GBDeployer, step: GBDialogStep) {
     this.min = min;
-    this.internalSys = new SystemKeywords(min, deployer);
+    this.internalSys = new SystemKeywords(min, deployer, step);
   }
 
   /**
@@ -159,6 +159,18 @@ export class DialogKeywords {
     const sec = new SecService();
     user.systemUser = await sec.updateUserLocale(user.systemUser.userId, language);
 
+    await this.min.userProfile.set(step.context, user);
+  }
+
+  /**
+   * Defines the maximum lines to scan in spreedsheets.
+   *
+   * @example SET MAX LINES 5000
+   *
+   */
+  public async setMaxLines(step, count) {
+    const user = await this.min.userProfile.get(step.context, {});
+    user.basicOptions.maxLines = count;
     await this.min.userProfile.set(step.context, user);
   }
 
