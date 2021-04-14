@@ -284,9 +284,8 @@ CLOUD_USERNAME=${instance.cloudUsername}
 CLOUD_PASSWORD=${instance.cloudPassword}
 MARKETPLACE_ID=${instance.marketplaceId}
 MARKETPLACE_SECRET=${instance.marketplacePassword}
-NLP_AUTHORING_KEY=${instance.nlpAuthoringKey}
 STORAGE_DIALECT=${instance.storageDialect}
-STORAGE_SERVER=${instance.storageServer}.database.windows.net
+STORAGE_SERVER=${instance.storageServer}
 STORAGE_NAME=${instance.storageName}
 STORAGE_USERNAME=${instance.storageUsername}
 STORAGE_PASSWORD=${instance.storagePassword}
@@ -513,7 +512,7 @@ STORAGE_SYNC=true
       return changedInstance;
     } catch (error) {
       GBLog.warn(
-        `In case of error, please cleanup any infrastructure objects
+        `There is an error being thrown, so please cleanup any infrastructure objects
             created during this procedure and .env before running again.`
       );
       throw error;

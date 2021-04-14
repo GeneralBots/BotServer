@@ -103,9 +103,6 @@ export class GBConfigService {
         case 'MARKETPLACE_SECRET':
           value = undefined;
           break;
-        case 'NLP_AUTHORING_KEY':
-          value = undefined;
-          break;
         case 'STORAGE_DIALECT':
           value = undefined;
           break;

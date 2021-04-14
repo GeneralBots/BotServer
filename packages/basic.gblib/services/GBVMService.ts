@@ -692,8 +692,13 @@ export class GBVMService extends GBService {
             const promise = min.cbMap[id].promise;
             delete min.cbMap[id];
             try {
+
+              // if (step.activeDialog.state.options.previousResolve != undefined) {
+              //   step.activeDialog.state.options.previousResolve();
+              // }
+
               const opts = await promise(step, result);
-              return await step.endDialog();
+              return await step.replaceDialog('/hear', opts);
             } catch (error) {
               GBLog.error(`Error in BASIC code: ${error}`);
               const locale = step.context.activity.locale;

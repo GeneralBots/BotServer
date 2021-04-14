@@ -82,9 +82,11 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   public subscriptionId: string;
   public farmName: any;
   public deployer: IGBDeployer;
+  private freeTier: boolean;
 
-  constructor(deployer: IGBDeployer) {
+  constructor(deployer: IGBDeployer, freeTier: boolean = true) {
     this.deployer = deployer;
+    this.freeTier = freeTier;
   }
 
   public static async createInstance(deployer: GBDeployer): Promise<AzureDeployerService> {
@@ -239,8 +241,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
     const httpClient = new ServiceClient();
 
-    const query = `providers/${
-      this.provider
+    const query = `providers/${this.provider
       }/checkNameAvailability/Action?api-version=${this.apiVersion}`;
 
     const url = urlJoin(baseUrl, query);
@@ -270,8 +271,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       }
     };
 
-    const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
-      this.provider
+    const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${this.provider
       }/botServices/${botId}?api-version=${this.apiVersion}`;
     const url = urlJoin(baseUrl, query);
     const req = AzureDeployerService.createRequestObject(url, accessToken, 'PATCH', JSON.stringify(parameters));
@@ -302,8 +302,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       }
     };
 
-    const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
-      this.provider
+    const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${this.provider
       }/botServices/${botId}?api-version=${this.apiVersion}`;
     const url = urlJoin(baseUrl, query);
     const req = AzureDeployerService.createRequestObject(url, accessToken, 'PATCH', JSON.stringify(parameters));
@@ -324,8 +323,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
     const httpClient = new ServiceClient();
 
-    const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
-      this.provider
+    const query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${this.provider
       }/botServices/${botId}?api-version=${this.apiVersion}`;
     const url = urlJoin(baseUrl, query);
     const req = AzureDeployerService.createRequestObject(url, accessToken, 'DELETE', undefined);
@@ -378,17 +376,9 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     let keys: any;
     const name = instance.botId;
 
+
     GBLog.info(`Deploying Deploy Group (It may take a few minutes)...`);
     await this.createDeployGroup(name, instance.cloudLocation);
-
-    GBLog.info(`Deploying NLP...`);
-    const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
-    keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
-    const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
-
-    instance.nlpEndpoint = nlp.endpoint;
-    instance.nlpKey = keys.key1;
-    instance.nlpAppId = nlpAppId;
 
     GBLog.info(`Deploying Bot Server...`);
     const serverFarm = await this.createHostingPlan(name, `${name}-server-plan`, instance.cloudLocation);
@@ -398,7 +388,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     GBLog.info(`Deploying Bot Storage...`);
     const administratorLogin = `sa${GBAdminService.getRndReadableIdentifier()}`;
     const administratorPassword = GBAdminService.getRndPassword();
-    const storageServer = `${name.toLowerCase()}-storage-server.database.windows.net`;
+    const storageServer = `${name.toLowerCase()}-storage-server`;
     const storageName = `${name}-storage`;
     await this.createStorageServer(name, storageServer, administratorLogin,
       administratorPassword, storageServer, instance.cloudLocation
@@ -406,9 +396,29 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await this.createStorage(name, storageServer, storageName, instance.cloudLocation);
     instance.storageUsername = administratorLogin;
     instance.storagePassword = administratorPassword;
-    instance.storageName = storageName;
+    instance.storageName = storageServer;
     instance.storageDialect = 'mssql';
-    instance.storageServer = storageServer;
+    instance.storageServer = `${storageServer}.database.windows.net`;
+
+    GBLog.info(`Deploying Speech...`);
+    const speech = await this.createSpeech(name, `${name}-speech`, instance.cloudLocation);
+    keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
+    instance.speechEndpoint = speech.endpoint;
+    instance.speechKey = keys.key1;
+
+    GBLog.info(`Deploying Text Analytics...`);
+    const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);
+    keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
+
+    instance.textAnalyticsEndpoint = textAnalytics.endpoint.replace(`/text/analytics/v2.0`, '');
+    instance.textAnalyticsKey = keys.key1;
+
+    GBLog.info(`Deploying SpellChecker...`);
+    const spellChecker = await this.createSpellChecker(name, `${name}-spellchecker`);
+    keys = await this.cognitiveClient.accounts.listKeys(name, spellChecker.name);
+    instance.spellcheckerKey = keys.key1;
+    instance.spellcheckerEndpoint = spellChecker.endpoint;
+
 
     GBLog.info(`Deploying Search...`);
     const searchName = `${name}-search`.toLowerCase();
@@ -418,29 +428,19 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.searchIndex = 'azuresql-index';
     instance.searchIndexer = 'azuresql-indexer';
     instance.searchKey = searchKeys.primaryKey;
-    this.deployer.rebuildIndex(instance, this.getKBSearchSchema(instance.searchIndex));
+    await this.deployer.rebuildIndex(instance, this.getKBSearchSchema(instance.searchIndex));
 
-    GBLog.info(`Deploying Speech...`);
-    const speech = await this.createSpeech(name, `${name}-speech`, instance.cloudLocation);
-    keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
-    instance.speechEndpoint = speech.endpoint;
-    instance.speechKey = keys.key1;
+    GBLog.info(`Deploying NLP...`);
+    const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
+    const nlpa = await this.createNLPAuthoring(name, `${name}-nlpa`, instance.cloudLocation);
+    keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
+    let authoringKeys = await this.cognitiveClient.accounts.listKeys(name, nlpa.name);
+    instance.nlpAuthoringKey = authoringKeys.key1;
+    const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
 
-    // TODO: https://github.com/Azure/azure-rest-api-specs/issues/11460
-    // GBLog.info(`Deploying SpellChecker...`);
-    // const spellChecker = await this.createSpellChecker(name, `${name}-spellchecker`);
-    // keys = await this.cognitiveClient.accounts.listKeys(name, spellChecker.name);
-    // instance.spellcheckerKey = keys.key1;
-    // instance.spellcheckerEndpoint = spellChecker.endpoint;
-
-    GBLog.info(`Deploying Text Analytics...`);
-    const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);
-    keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
-
-    instance.textAnalyticsEndpoint = textAnalytics.endpoint.replace(`/text/analytics/v2.0`, '');
-    instance.textAnalyticsKey = keys.key1;
-
-    // NLP
+    instance.nlpEndpoint = nlp.endpoint;
+    instance.nlpKey = keys.key1;
+    instance.nlpAppId = nlpAppId;
 
     GBLog.info(`Deploying Bot...`);
     instance.botEndpoint = this.defaultEndPoint;
@@ -521,7 +521,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       const parameters = {
         location: location,
         sku: {
-          name: 'F0'
+          name: this.freeTier ? 'F0' : 'S1'
         },
         name: botId,
         kind: 'bot',
@@ -540,8 +540,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       };
 
       const httpClient = new ServiceClient();
-      let query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${
-        this.provider
+      let query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/${this.provider
         }/botServices/${botId}?api-version=${this.apiVersion}`;
       let url = urlJoin(baseUrl, query);
       let req = AzureDeployerService.createRequestObject(url, accessToken, 'PUT', JSON.stringify(parameters));
@@ -555,8 +554,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
       try {
         //tslint:disable-next-line:max-line-length
-        query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${
-          this.apiVersion
+        query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${this.apiVersion
           }`;
         url = urlJoin(baseUrl, query);
         req = AzureDeployerService.createRequestObject(url, accessToken, 'POST', JSON.stringify(parameters));
@@ -590,7 +588,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       location: location,
       administratorLogin: administratorLogin,
       administratorLoginPassword: administratorPassword,
-      fullyQualifiedDomainName: `${serverName}.database.windows.net`
+      fullyQualifiedDomainName: serverName
     };
 
     return await this.storageClient.servers.createOrUpdate(group, name, params);
@@ -703,12 +701,12 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   public async refreshEntityList(
     location: string,
-    nlpAppId: string, 
+    nlpAppId: string,
     clEntityId: string,
     nlpKey: string,
     data: any,
   ) {
-    
+
     const req = new WebResource();
     req.method = 'PUT';
     req.url = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/apps/${nlpAppId}/versions/0.1/closedlists/${clEntityId}`;
@@ -723,10 +721,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   public async trainNLP(
     location: string,
-    nlpAppId: string, 
+    nlpAppId: string,
     nlpAuthoringKey: string,
   ) {
-    
+
     const req = new WebResource();
     req.method = 'POST';
     req.url = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/apps/${nlpAppId}/versions/0.1/train`;
@@ -740,14 +738,14 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   public async publishNLP(
     location: string,
-    nlpAppId: string, 
+    nlpAppId: string,
     nlpAuthoringKey: string,
   ) {
     const body = {
       versionId: "0.1",
       isStaging: false,
       directVersionPublish: false
-   }
+    }
     const req = new WebResource();
     req.method = 'POST';
     req.url = `https://${location}.api.cognitive.microsoft.com/luis/api/v2.0/apps/${nlpAppId}/publish`;
@@ -762,7 +760,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   private async createSearch(group, name, location) {
     const params = {
-      sku: { name: 'free' },
+      sku: {
+        name:
+          this.freeTier ? 'free' : 'standard'
+      },
       location: location
     };
 
@@ -771,7 +772,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   private async createStorage(group, serverName, name, location) {
     const params = {
-      sku: { name: 'Free' },
+      sku: { name: this.freeTier ? 'Free' : 'Basic' },
       createMode: 'Default',
       location: location
     };
@@ -781,7 +782,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   private async createCognitiveServices(group, name, location, kind): Promise<CognitiveServicesAccount> {
     const params = {
-      sku: { name: 'F0' },
+      sku: {
+        name: this.freeTier || kind === 'LUIS.Authoring' || kind === 'TextAnalytics' ? 'F0' :
+          kind === 'Bing.SpellCheck.v7' ? 'S1' : 'S0'
+      },
       createMode: 'Default',
       location: location,
       kind: kind,
@@ -799,8 +803,12 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     return await this.createCognitiveServices(group, name, location, 'LUIS');
   }
 
+  private async createNLPAuthoring(group, name, location): Promise<CognitiveServicesAccount> {
+    return await this.createCognitiveServices(group, name, location, 'LUIS.Authoring');
+  }
+
   private async createSpellChecker(group, name): Promise<CognitiveServicesAccount> {
-    return await this.createCognitiveServices(group, name, 'global', 'Bing.SpellCheck.v7');
+    return await this.createCognitiveServices(group, name, 'westus', 'CognitiveServices');
   }
 
   private async createTextAnalytics(group, name, location): Promise<CognitiveServicesAccount> {
@@ -818,9 +826,9 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       serverFarmWithRichSkuName: name,
       location: location,
       sku: {
-        name: 'F1',
+        name: this.freeTier ? 'F1' : 'S1',
         capacity: 1,
-        tier: 'Free'
+        tier: this.freeTier ? 'Free' : 'Standard'
       }
     };
 
@@ -879,7 +887,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
           { name: 'CLOUD_PASSWORD', value: `${instance.cloudPassword}` },
           { name: 'MARKETPLACE_ID', value: `${instance.marketplaceId}` },
           { name: 'MARKETPLACE_SECRET', value: `${instance.marketplacePassword}` },
-          { name: 'NLP_AUTHORING_KEY', value: `${instance.nlpAuthoringKey}` },
           { name: 'STORAGE_DIALECT', value: `${instance.storageDialect}` },
           { name: 'STORAGE_SERVER', value: `${instance.storageServer}.database.windows.net` },
           { name: 'STORAGE_NAME', value: `${instance.storageName}` },

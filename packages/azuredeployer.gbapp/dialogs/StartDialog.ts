@@ -95,11 +95,6 @@ export class StartDialog {
       appPassword = this.retrieveAppPassword();
     }
 
-    let authoringKey: string;
-    while (authoringKey === undefined) {
-      authoringKey = this.retrieveAuthoringKey();
-    }
-
     // Prepares the first instance on bot farm.
     const instance = <IGBInstance>{};
 
@@ -109,7 +104,6 @@ export class StartDialog {
     instance.cloudPassword = password;
     instance.cloudSubscriptionId = subscriptionId;
     instance.cloudLocation = location;
-    instance.nlpAuthoringKey = authoringKey;
     instance.marketplaceId = appId;
     instance.marketplacePassword = appPassword;
     instance.adminPass = GBAdminService.getRndPassword();
@@ -150,25 +144,6 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
     }
 
     return botId;
-  }
-
-  private static retrieveAuthoringKey() {
-    let authoringKey = GBConfigService.get('NLP_AUTHORING_KEY');
-    if (authoringKey === undefined) {
-      process.stdout.write(
-        `${
-        GBAdminService.GB_PROMPT
-        }Due to this opened issue: https://github.com/Microsoft/botbuilder-tools/issues/550\n`
-      );
-      process.stdout.write(
-        `${
-        GBAdminService.GB_PROMPT
-        }Please enter your LUIS Authoring Key, get it here: https://www.luis.ai/user/settings and paste it to me:`
-      );
-      authoringKey = scanf('%s').replace(/(\n|\r)+$/, '');
-    }
-
-    return authoringKey;
   }
 
   private static retrieveAppId() {
