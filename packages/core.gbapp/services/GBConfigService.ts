@@ -116,7 +116,7 @@ export class GBConfigService {
           value = undefined;
           break;
         case 'STORAGE_SYNC':
-          value = 'false';
+          value = 'true';
           break;
         case 'STORAGE_SYNC_ALTER':
           value = 'false';

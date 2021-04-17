@@ -635,7 +635,7 @@ export class GBMinService {
     // If there is WhatsApp configuration specified, initialize
     // infrastructure objects.
 
-    if (min.instance.whatsappServiceKey !== null) {
+    if (min.instance.whatsappServiceUrl !== null) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
         min,
         min.botId,
@@ -647,7 +647,7 @@ export class GBMinService {
       await min.whatsAppDirectLine.setup(true);
     } else {
       const minBoot = GBServer.globals.minBoot as any;
-      if (minBoot.instance.whatsappServiceKey) {
+      if (minBoot.instance.whatsappServiceUrl) {
         min.whatsAppDirectLine = new WhatsappDirectLine(
           min,
           min.botId,

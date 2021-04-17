@@ -140,7 +140,7 @@ export class GBServer {
             GBLog.verbose(`Error initializing storage: ${error}`);
             GBServer.globals.bootInstance =
               await core.createBootInstance(core, azureDeployer, GBServer.globals.publicAddress);
-            await core.initStorage();
+            
           }
 
           core.ensureAdminIsSecured();
@@ -150,6 +150,7 @@ export class GBServer {
           GBLog.info(`Deploying packages...`);
           GBServer.globals.sysPackages = await core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
+          await core.syncDatabaseStructure();
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
 
           GBLog.info(`Publishing instances...`);
@@ -160,6 +161,7 @@ export class GBServer {
           );
 
           if (instances.length === 0) {
+      
             const instance = await importer.importIfNotExistsBotPackage(
               GBConfigService.get('BOT_ID'),
               'boot.gbot',
@@ -168,6 +170,8 @@ export class GBServer {
             );
             await deployer.deployBotFull(instance, GBServer.globals.publicAddress);
             instances.push(instance);
+
+            await azureDeployer['runSearch'](instance);
           }
 
           GBServer.globals.bootInstance = instances[0];
@@ -186,7 +190,7 @@ export class GBServer {
           }
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
-          
+
           // Opens Navigator.
 
           // TODO: Config: core.openBrowserInDevelopment();

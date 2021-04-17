@@ -105,8 +105,8 @@ export class GBCoreService implements IGBCoreService {
   constructor() {
     this.adminService = new GBAdminService(this);
   }
-  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {}
-  
+  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) { }
+
   /**
    * Gets database config and connect to storage. Currently two databases
    * are available: SQL Server and SQLite.
@@ -134,8 +134,8 @@ export class GBCoreService implements IGBCoreService {
     const logging: boolean | Function =
       GBConfigService.get('STORAGE_LOGGING') === 'true'
         ? (str: string): void => {
-            GBLog.info(str);
-          }
+          GBLog.info(str);
+        }
         : false;
 
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
@@ -168,7 +168,7 @@ export class GBCoreService implements IGBCoreService {
     this.sequelize = new Sequelize(database, username, password, sequelizeOptions);
 
     // Specifies custom setup for MSFT...
-    
+
     if (this.dialect === 'mssql') {
       this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
       // tslint:disable:no-unsafe-any
@@ -201,15 +201,16 @@ export class GBCoreService implements IGBCoreService {
     }
   }
 
+
   /**
-   * Syncronizes structure between model and tables in storage.
-   */
+ * Syncronizes structure between model and tables in storage.
+ */
   public async syncDatabaseStructure() {
     if (GBConfigService.get('STORAGE_SYNC') === 'true') {
       const alter = GBConfigService.get('STORAGE_SYNC_ALTER') === 'true';
       GBLog.info('Syncing database...');
 
-      return this.sequelize.sync({
+      return await this.sequelize.sync({
         alter: alter,
         force: false // Keep it false this due to data loss danger.
       });
@@ -274,7 +275,8 @@ export class GBCoreService implements IGBCoreService {
    * full base environment.
    */
   public async writeEnv(instance: IGBInstance) {
-    const env = `ADDITIONAL_DEPLOY_PATH=
+    const env = `
+ADDITIONAL_DEPLOY_PATH=
 ADMIN_PASS=${instance.adminPass}
 BOT_ID=${instance.botId}
 CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}
@@ -290,6 +292,7 @@ STORAGE_NAME=${instance.storageName}
 STORAGE_USERNAME=${instance.storageUsername}
 STORAGE_PASSWORD=${instance.storagePassword}
 STORAGE_SYNC=true
+ENDPOINT_UPDATE=true
 `;
 
     fs.writeFileSync('.env', env);
@@ -499,15 +502,19 @@ STORAGE_SYNC=true
     GBLog.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
     try {
       const { instance, credentials, subscriptionId } = await StartDialog.createBaseInstance(installationDeployer);
+      installationDeployer['core'] = this;
       const changedInstance = await installationDeployer.deployFarm(
         proxyAddress,
         instance,
         credentials,
         subscriptionId
       );
-      core.writeEnv(changedInstance);
-      GBLog.info(`File .env written, starting General Bots...`);
+      await this.writeEnv(changedInstance);
       GBConfigService.init();
+      
+      GBLog.info(`File .env written. Preparing storage and search for the first time...`);
+      await this.openStorageFrontier(installationDeployer);
+      await this.initStorage();
 
       return changedInstance;
     } catch (error) {
@@ -639,9 +646,9 @@ STORAGE_SYNC=true
       value = instance['dataValues'][name];
       if (value === null) {
         const minBoot = GBServer.globals.minBoot as any;
-        if (minBoot.instance && minBoot.instance.datavalues){
+        if (minBoot.instance && minBoot.instance.datavalues) {
           value = minBoot.instance.datavalues[name];
-        }        
+        }
       }
     }
 
@@ -678,7 +685,7 @@ STORAGE_SYNC=true
               options
             );
             GBLog.info(`Running .gbdialog word ${item.name} on:${item.schedule}...`);
-          } catch (error) {}
+          } catch (error) { }
         });
       }
     } catch (error) {

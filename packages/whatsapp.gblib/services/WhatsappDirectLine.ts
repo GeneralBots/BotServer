@@ -87,6 +87,7 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async setup(setUrl) {
+    
     this.directLineClient =
       new Swagger({
         spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),

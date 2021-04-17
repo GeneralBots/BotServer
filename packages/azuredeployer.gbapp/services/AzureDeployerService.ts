@@ -44,7 +44,7 @@ import { SqlManagementClient } from 'azure-arm-sql';
 import { WebSiteManagementClient } from 'azure-arm-website';
 //tslint:disable-next-line:no-submodule-imports
 import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
-import { GBLog, IGBInstallationDeployer, IGBInstance, IGBDeployer } from 'botlib';
+import { GBLog, IGBInstallationDeployer, IGBInstance, IGBDeployer, IGBCoreService } from 'botlib';
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService';
 import { GBCorePackage } from '../../../packages/core.gbapp';
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService';
@@ -82,11 +82,16 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   public subscriptionId: string;
   public farmName: any;
   public deployer: IGBDeployer;
+  public core: IGBCoreService;
   private freeTier: boolean;
 
-  constructor(deployer: IGBDeployer, freeTier: boolean = true) {
+  constructor(deployer: IGBDeployer, freeTier: boolean = false) {
     this.deployer = deployer;
     this.freeTier = freeTier;
+  }
+
+  public async runSearch(instance: IGBInstance) {
+    await this.deployer.rebuildIndex(instance, this.getKBSearchSchema(instance.searchIndex));
   }
 
   public static async createInstance(deployer: GBDeployer): Promise<AzureDeployerService> {
@@ -97,6 +102,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
 
     const service = new AzureDeployerService(deployer);
+    service.core = deployer.core;
     service.initServices(credentials, subscriptionId);
 
     return service;
@@ -350,15 +356,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     };
     await storageClient.firewallRules.createOrUpdate(groupName, serverName, 'gb', params);
 
-    // AllowAllWindowsAzureIps must be created that way, so the Azure Search can 
-    // access SQL Database to index its contents.
-
-    params = {
-      startIpAddress: '0.0.0.0',
-      endIpAddress: '0.0.0.0'
-    };
-    await storageClient.firewallRules.createOrUpdate(groupName, serverName, 'AllowAllWindowsAzureIps', params);
-
   }
 
   public async deployFarm(
@@ -396,9 +393,18 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await this.createStorage(name, storageServer, storageName, instance.cloudLocation);
     instance.storageUsername = administratorLogin;
     instance.storagePassword = administratorPassword;
-    instance.storageName = storageServer;
+    instance.storageName = storageName;
     instance.storageDialect = 'mssql';
     instance.storageServer = `${storageServer}.database.windows.net`;
+
+    GBLog.info(`Deploying Search...`);
+    const searchName = `${name}-search`.toLowerCase();
+    await this.createSearch(name, searchName, instance.cloudLocation);
+    const searchKeys = await this.searchClient.adminKeys.get(name, searchName);
+    instance.searchHost = `${searchName}.search.windows.net`;
+    instance.searchIndex = 'azuresql-index';
+    instance.searchIndexer = 'azuresql-indexer';
+    instance.searchKey = searchKeys.primaryKey;
 
     GBLog.info(`Deploying Speech...`);
     const speech = await this.createSpeech(name, `${name}-speech`, instance.cloudLocation);
@@ -409,7 +415,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     GBLog.info(`Deploying Text Analytics...`);
     const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);
     keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
-
     instance.textAnalyticsEndpoint = textAnalytics.endpoint.replace(`/text/analytics/v2.0`, '');
     instance.textAnalyticsKey = keys.key1;
 
@@ -418,17 +423,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     keys = await this.cognitiveClient.accounts.listKeys(name, spellChecker.name);
     instance.spellcheckerKey = keys.key1;
     instance.spellcheckerEndpoint = spellChecker.endpoint;
-
-
-    GBLog.info(`Deploying Search...`);
-    const searchName = `${name}-search`.toLowerCase();
-    await this.createSearch(name, searchName, instance.cloudLocation);
-    const searchKeys = await this.searchClient.adminKeys.get(name, searchName);
-    instance.searchHost = `${searchName}.search.windows.net`;
-    instance.searchIndex = 'azuresql-index';
-    instance.searchIndexer = 'azuresql-indexer';
-    instance.searchKey = searchKeys.primaryKey;
-    await this.deployer.rebuildIndex(instance, this.getKBSearchSchema(instance.searchIndex));
 
     GBLog.info(`Deploying NLP...`);
     const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
@@ -441,7 +435,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.nlpEndpoint = nlp.endpoint;
     instance.nlpKey = keys.key1;
     instance.nlpAppId = nlpAppId;
-
+    
     GBLog.info(`Deploying Bot...`);
     instance.botEndpoint = this.defaultEndPoint;
 
@@ -459,7 +453,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     GBLog.info('Opening your browser with default.gbui...');
     const opn = require('opn');
-    opn(`https://${serverName}.azurewebsites.net`);
+    opn(`http://localhost:4242`);
 
     return instance;
   }
@@ -591,7 +585,18 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       fullyQualifiedDomainName: serverName
     };
 
-    return await this.storageClient.servers.createOrUpdate(group, name, params);
+    const database = await this.storageClient.servers.createOrUpdate(group, name, params);
+
+    // AllowAllWindowsAzureIps must be created that way, so the Azure Search can 
+    // access SQL Database to index its contents.
+
+    const paramsFirewall = {
+      startIpAddress: '0.0.0.0',
+      endIpAddress: '0.0.0.0'
+    };
+    await this.storageClient.firewallRules.createOrUpdate(group, name, 'AllowAllWindowsAzureIps', paramsFirewall);
+
+    return database;
   }
 
   public async createApplication(token: string, name: string) {
@@ -668,7 +673,19 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     const body = JSON.stringify(parameters);
     const apps = await this.makeNlpRequest(location, authoringKey, undefined, 'GET', 'apps');
-    const app = JSON.parse(apps.bodyAsText).filter(x => x.name === name)[0];
+
+    let app = null;
+    if (apps.bodyAsText && apps.bodyAsText !== '[]') {
+      const result = JSON.parse(apps.bodyAsText)
+      if (result.error) {
+        if (result.error.code !== "401") {
+          throw new Error(result.error);
+        }
+      }
+      else {
+        app = result.filter(x => x.name === name)[0];
+      }
+    }
     let id: string;
     if (!app) {
       const res = await this.makeNlpRequest(location, authoringKey, body, 'POST', 'apps');
@@ -847,7 +864,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       }
     };
     const server = await this.webSiteClient.webApps.createOrUpdate(group, name, parameters);
-
+    
     const siteLogsConfig: SiteLogsConfig = {
       applicationLogs: {
         fileSystem: { level: 'Error' }

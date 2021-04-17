@@ -738,7 +738,7 @@ export class GBDeployer implements IGBDeployer {
 
       // If it is a 404 there is nothing to delete as it is the first creation.
 
-      if (err.code !== 404 || err.code !== "OperationNotAllowed") {
+      if (err.code !== 404 && err.code !== "OperationNotAllowed") {
         throw err;
       }
     }

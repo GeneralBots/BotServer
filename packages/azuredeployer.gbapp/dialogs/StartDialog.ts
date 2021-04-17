@@ -146,6 +146,11 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
     return botId;
   }
 
+
+  /**
+   * 
+   * Update Manifest in Azure: "signInAudience": "AzureADandPersonalMicrosoftAccount" and "accessTokenAcceptedVersion": 2.
+   */
   private static retrieveAppId() {
     let appId = GBConfigService.get('MARKETPLACE_ID');
     if (appId === undefined) {
@@ -154,6 +159,7 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
 please go to https://apps.dev.microsoft.com/portal/register-app to
 generate manually an App ID and App Secret.\n`
       );
+
       process.stdout.write('Generated Application Id (MARKETPLACE_ID):');
       appId = scanf('%s').replace(/(\n|\r)+$/, '');
     }
