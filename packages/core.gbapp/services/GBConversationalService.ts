@@ -618,14 +618,15 @@ export class GBConversationalService {
       nlp = await model.recognize(step.context, {}, {}, { IncludeAllIntents: false, IncludeInstanceData: false, includeAPIResults: true });
       step.context.activity.text = saved;
     } catch (error) {
+
       // tslint:disable:no-unsafe-any
-      if (error.statusCode === 404) {
+      if (error.statusCode === 404 || error.statusCode === 400) {
         GBLog.warn('NLP application still not publish and there are no other options for answering.');
 
         return false;
       } else {
-        const msg = `Error calling NLP, check if you have a published model and assigned keys. Error: ${error.statusCode ? error.statusCode : ''
-          } {error.message; }`;
+        const msg = `Error calling NLP, check if you have a published model and assigned keys.
+        Error: ${error.statusCode ? error.statusCode : ''} ${error.message}`;
 
         throw new Error(msg);
       }
