@@ -225,13 +225,6 @@ export class KBService implements IGBKBService {
     subjects: GuaribasSubject[]
   ): Promise<KBServiceSearchResults> {
 
-    // Try simple search first.
-
-    const data = await this.getAnswerByText(instance.instanceId, query);
-    if (data) {
-      GBLog.info(`Simple SEARCH called.`);
-      return { answer: data.answer, questionId: data.question.questionId };
-    }
 
     // Builds search query.
 
@@ -242,6 +235,14 @@ export class KBService implements IGBKBService {
     query = query.replace('/', ' ');
     query = query.replace('\\', ' ');
     query = query.replace('\r\n', ' ');
+
+    // Try simple search first.
+
+    const data = await this.getAnswerByText(instance.instanceId, query.trim());
+    if (data) {
+      GBLog.info(`Simple SEARCH called.`);
+      return { answer: data.answer, questionId: data.question.questionId };
+    }
 
     if (subjects !== null) {
       const text = KBService.getSubjectItemsSeparatedBySpaces(subjects);
