@@ -435,7 +435,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.nlpEndpoint = nlp.endpoint;
     instance.nlpKey = keys.key1;
     instance.nlpAppId = nlpAppId;
-    
+
     GBLog.info(`Deploying Bot...`);
     instance.botEndpoint = this.defaultEndPoint;
 
@@ -853,36 +853,55 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   }
 
   private async createServer(farmId, group, name, location) {
-    const parameters: Site = {
-      location: location,
-      serverFarmId: farmId,
 
-      siteConfig: {
-        nodeVersion: GBAdminService.getNodeVersion(),
-        detailedErrorLoggingEnabled: true,
-        requestTracingEnabled: true
+    let tryed = false;
+    const create = async () => {
+
+      const parameters: Site = {
+        location: location,
+        serverFarmId: farmId,
+
+        siteConfig: {
+          nodeVersion: GBAdminService.getNodeVersion(),
+          detailedErrorLoggingEnabled: true,
+          requestTracingEnabled: true
+        }
+      };
+      const server = await this.webSiteClient.webApps.createOrUpdate(group, name, parameters);
+
+      const siteLogsConfig: SiteLogsConfig = {
+        applicationLogs: {
+          fileSystem: { level: 'Error' }
+        }
+      };
+      await this.webSiteClient.webApps.updateDiagnosticLogsConfig(group, name, siteLogsConfig);
+
+      const souceControlConfig: SiteSourceControl = {
+        repoUrl: 'https://github.com/GeneralBots/BotServer.git',
+        branch: 'master',
+        isManualIntegration: true,
+        isMercurial: false,
+        deploymentRollbackEnabled: false
+      };
+
+      await this.webSiteClient.webApps.createOrUpdateSourceControl(group, name, souceControlConfig);
+      return server;
+    };
+
+    try {
+      return await create();
+    } catch (e) {
+      if (!tryed) {
+        tryed = true;
+        GBLog.info('Retrying Deploying Bot Server...');
+        try {
+          return await create();
+        } catch (error) {
+          GBLog.info('Server creation failed at all on MSAzure, stopping...');
+          throw error;
+        }
       }
-    };
-    const server = await this.webSiteClient.webApps.createOrUpdate(group, name, parameters);
-    
-    const siteLogsConfig: SiteLogsConfig = {
-      applicationLogs: {
-        fileSystem: { level: 'Error' }
-      }
-    };
-    await this.webSiteClient.webApps.updateDiagnosticLogsConfig(group, name, siteLogsConfig);
-
-    const souceControlConfig: SiteSourceControl = {
-      repoUrl: 'https://github.com/GeneralBots/BotServer.git',
-      branch: 'master',
-      isManualIntegration: true,
-      isMercurial: false,
-      deploymentRollbackEnabled: false
-    };
-
-    await this.webSiteClient.webApps.createOrUpdateSourceControl(group, name, souceControlConfig);
-
-    return server;
+    }
   }
 
   private async updateWebisteConfig(group, name, serverFarmId, instance: IGBInstance) {

@@ -170,7 +170,7 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static isSharePointPath(path: string) {
-    return path.indexOf('sharepoint.com') > 0;
+    return path.indexOf('sharepoint.com') !== -1;
   }
   public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: IGBDeployer) {
     const packageName = text.split(' ')[1];
@@ -192,7 +192,7 @@ export class GBAdminService implements IGBAdminService {
       // .gbot packages are handled using storage API, so no download
       // of local resources is required.
 
-      await deployer['downloadFolder'](min, 
+      await deployer['downloadFolder'](min,
         Path.join('work', `${min.instance.botId}.gbai`),
         Path.basename(folderName));
       await deployer.deployPackage(min, localFolder);

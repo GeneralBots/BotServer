@@ -635,7 +635,7 @@ export class GBMinService {
     // If there is WhatsApp configuration specified, initialize
     // infrastructure objects.
 
-    if (min.instance.whatsappServiceUrl !== null) {
+    if (min.instance.whatsappServiceUrl) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
         min,
         min.botId,
