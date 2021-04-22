@@ -247,6 +247,10 @@ export class GBVMService extends GBService {
     code = code.replace(/(set max lines)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `setMaxLines (step, ${$3})\n`;
     });
+    
+    code = code.replace(/(set translator)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `setTranslatorOn (step, "${$3.toLowerCase()}")\n`;
+    });
 
     code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
       return `sys().set (${$1})`;
@@ -448,6 +452,9 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsetMaxLines\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.setMaxLines' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bsetTranslatorOn\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.setTranslatorOn' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\btransfer\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.transfer' : $1;
@@ -692,11 +699,6 @@ export class GBVMService extends GBService {
             const promise = min.cbMap[id].promise;
             delete min.cbMap[id];
             try {
-
-              // if (step.activeDialog.state.options.previousResolve != undefined) {
-              //   step.activeDialog.state.options.previousResolve();
-              // }
-
               const opts = await promise(step, result);
               if (Object.keys(min.cbMap).length) {
                 return await step.replaceDialog('/hear', opts);

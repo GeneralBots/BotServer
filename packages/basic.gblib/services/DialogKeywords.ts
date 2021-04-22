@@ -178,6 +178,18 @@ export class DialogKeywords {
   }
 
   /**
+   * Defines translator behaviour.
+   *
+   * @example SET TRANSLATOR ON | OFF
+   *
+   */
+  public async setTranslatorOn(step, on) {
+    const user = await this.min.userProfile.get(step.context, {});
+    user.basicOptions.translatorOn = (on.trim() === "on");
+    await this.min.userProfile.set(step.context, user);
+  }
+
+  /**
    * Returns the name of the user acquired by WhatsApp API.
    */
   public async userName(step) {
@@ -252,7 +264,8 @@ export class DialogKeywords {
    * Talks to the user by using the specified text.
    */
   public async talk(step, text: string) {
-    return await this.min.conversationalService.sendText(this.min, step, text);
+    await this.min.conversationalService['sendTextWithOptions'](this.min, step, text,
+      this.user.basicOptions.translatorOn, null);
   }
 
   /**
