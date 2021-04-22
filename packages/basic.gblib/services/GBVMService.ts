@@ -698,7 +698,9 @@ export class GBVMService extends GBService {
               // }
 
               const opts = await promise(step, result);
-              return await step.replaceDialog('/hear', opts);
+              if (Object.keys(min.cbMap).length) {
+                return await step.replaceDialog('/hear', opts);
+              }
             } catch (error) {
               GBLog.error(`Error in BASIC code: ${error}`);
               const locale = step.context.activity.locale;
@@ -718,13 +720,14 @@ export class GBVMService extends GBService {
 
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
-
-    const sandbox: DialogKeywords = new DialogKeywords(min, deployer, step);
+    const user = await min.userProfile.get(step.context, {});
+    const sandbox: DialogKeywords = new DialogKeywords(min, deployer, step, user);
 
     // Injects the .gbdialog generated code into the VM.
 
     const context = vm.createContext(sandbox);
     const code = min.sandBoxMap[text];
+
     try {
       vm.runInContext(code, context);
     } catch (error) {

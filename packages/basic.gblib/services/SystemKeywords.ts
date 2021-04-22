@@ -60,17 +60,14 @@ export class SystemKeywords {
    */
   private readonly deployer: GBDeployer;
 
-  /**
-   * Reference to the deployer service.
-   */
-  private readonly step: GBDialogStep;
+  private user;
 
   /**
    * When creating this keyword facade, a bot instance is
    * specified among the deployer service.
    */
-  constructor(min: GBMinInstance, deployer: GBDeployer, step: GBDialogStep) {
-    this.step = step;
+  constructor(min: GBMinInstance, deployer: GBDeployer, user) {
+    this.user = user;
     this.min = min;
     this.deployer = deployer;
   }
@@ -291,11 +288,11 @@ export class SystemKeywords {
       throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
     }
 
-    const user = await this.min.userProfile.get(this.step.context, {});
+    
     let maxLines = 100;
-    if (user.basicOptions && user.basicOptions.maxLines) {
-      if (user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
-        maxLines = Number.parseInt(user.basicOptions.maxLines).valueOf();
+    if (this.user.basicOptions && this.user.basicOptions.maxLines) {
+      if (this.user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
+        maxLines = Number.parseInt(this.user.basicOptions.maxLines).valueOf();
       }
     }
 

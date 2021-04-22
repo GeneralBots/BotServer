@@ -58,13 +58,16 @@ export class DialogKeywords {
    */
   public internalSys: SystemKeywords;
 
+  private user;
+
   /**
    * When creating this keyword facade, a bot instance is
    * specified among the deployer service.
    */
-  constructor(min: GBMinInstance, deployer: GBDeployer, step: GBDialogStep) {
+  constructor(min: GBMinInstance, deployer: GBDeployer, step: GBDialogStep, user) {
     this.min = min;
-    this.internalSys = new SystemKeywords(min, deployer, step);
+    this.internalSys = new SystemKeywords(min, deployer, user);
+    this.user = user;
   }
 
   /**
