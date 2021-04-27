@@ -188,6 +188,7 @@ export class KBService implements IGBKBService {
 
   public async getAnswerByText(instanceId: number, text: string): Promise<any> {
     text = text.trim();
+    
     const service = new CSService();
     let question = await service.getQuestionFromAlternateText(instanceId, text);
 
@@ -196,6 +197,14 @@ export class KBService implements IGBKBService {
         where: {
           instanceId: instanceId,
           content: { [Op.like]: `%${text}%` }
+        }
+      });
+    }
+    if (!question) {
+      question = await GuaribasQuestion.findOne({
+        where: {
+          instanceId: instanceId,
+          content: { [Op.eq]: `${text}` }
         }
       });
     }
@@ -470,7 +479,7 @@ export class KBService implements IGBKBService {
             subject2: subject2,
             subject3: subject3,
             subject4: subject4,
-            content: question.replace(/['"]+/g, ''),
+            content: question.replace(/["]+/g, ''),
             instanceId: instanceId,
             skipIndex: (question.charAt(0) === "\""),
             packageId: packageId
