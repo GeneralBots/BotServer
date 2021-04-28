@@ -708,17 +708,18 @@ export class KBService implements IGBKBService {
 
     text = text.replace('! [', '![').replace('] (', '](');
 
-    let html = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', ''); // TODO: Improve it.
+    text = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', ''); // TODO: Improve it.
+    text = text.replace(`](kb`, "]("+ process.env.BOT_URL + '/kb'); // TODO: Improve it.
 
     // According to the channel, formats the output optimized to it.
 
     if (channel === 'webchat' && GBConfigService.get('DISABLE_WEB') !== 'true') {
-      html = marked(text);
+      const html = marked(text);
       await this.sendMarkdownToWeb(min, step, conversationalService, html, answer);
     } else if (channel === 'whatsapp') {
       await conversationalService.sendMarkdownToMobile(min, step, user.userSystemId, text);
     } else {
-      html = marked(text);
+      const html = marked(text);
       await min.conversationalService.sendText(min, step, html);
     }
   }
