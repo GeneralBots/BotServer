@@ -57,8 +57,11 @@ export class DialogKeywords {
    * Reference to the base system keywords functions to be called.
    */
   public internalSys: SystemKeywords;
-
-  private user;
+  
+  /**
+   * Current user object to get BASIC properties read.
+   */
+  public user;
 
   /**
    * When creating this keyword facade, a bot instance is
@@ -66,8 +69,8 @@ export class DialogKeywords {
    */
   constructor(min: GBMinInstance, deployer: GBDeployer, step: GBDialogStep, user) {
     this.min = min;
-    this.internalSys = new SystemKeywords(min, deployer, user);
     this.user = user;
+    this.internalSys = new SystemKeywords(min, deployer, this);
   }
 
   /**
@@ -163,6 +166,7 @@ export class DialogKeywords {
     user.systemUser = await sec.updateUserLocale(user.systemUser.userId, language);
 
     await this.min.userProfile.set(step.context, user);
+    this.user = user;    
   }
 
   /**
@@ -175,8 +179,9 @@ export class DialogKeywords {
     const user = await this.min.userProfile.get(step.context, {});
     user.basicOptions.maxLines = count;
     await this.min.userProfile.set(step.context, user);
+    this.user = user;
   }
-
+  
   /**
    * Defines translator behaviour.
    *
@@ -187,6 +192,7 @@ export class DialogKeywords {
     const user = await this.min.userProfile.get(step.context, {});
     user.basicOptions.translatorOn = (on.trim() === "on");
     await this.min.userProfile.set(step.context, user);
+    this.user = user;
   }
 
   /**

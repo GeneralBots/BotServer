@@ -37,6 +37,7 @@ import urlJoin = require('url-join');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { SecService } from '../../security.gbapp/services/SecService';
+import { DialogKeywords } from './DialogKeywords';
 const request = require('request-promise-native');
 const path = require('path');
 const sgMail = require('@sendgrid/mail');
@@ -59,17 +60,18 @@ export class SystemKeywords {
    * Reference to the deployer service.
    */
   private readonly deployer: GBDeployer;
+  
+  dk: DialogKeywords;
 
-  private user;
 
   /**
    * When creating this keyword facade, a bot instance is
    * specified among the deployer service.
    */
-  constructor(min: GBMinInstance, deployer: GBDeployer, user) {
-    this.user = user;
+  constructor(min: GBMinInstance, deployer: GBDeployer, dk: DialogKeywords) {
     this.min = min;
     this.deployer = deployer;
+    this.dk = dk;
   }
 
   /**
@@ -290,9 +292,9 @@ export class SystemKeywords {
 
     
     let maxLines = 100;
-    if (this.user.basicOptions && this.user.basicOptions.maxLines) {
-      if (this.user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
-        maxLines = Number.parseInt(this.user.basicOptions.maxLines).valueOf();
+    if (this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
+      if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
+        maxLines = Number.parseInt(this.dk.user.basicOptions.maxLines).valueOf();
       }
     }
 
