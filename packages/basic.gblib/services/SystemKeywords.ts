@@ -290,7 +290,6 @@ export class SystemKeywords {
       throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
     }
 
-    
     let maxLines = 100;
     if (this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
       if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
@@ -342,7 +341,6 @@ export class SystemKeywords {
         const xlRow = results.text[foundIndex];
         for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
           const propertyName = header[colIndex];
-          GBLog.info(`xxxxxxxxxx ${propertyName}`);    
           row[propertyName] = xlRow[colIndex];
         }
         row['line'] = foundIndex + 1;

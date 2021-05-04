@@ -1110,8 +1110,9 @@ export class GBMinService {
           text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
         });
       }
-      context.activity.text = text;
-      context.activity.originalText = originalText;
+      step.context.activity['text'] = text;
+      step.context.activity['originalText']= 'pt-BR';
+      
       GBLog.info(`Final text ready for NLP/Search/.gbapp: ${text}.`);
 
       if (user.systemUser.agentMode === 'self') {

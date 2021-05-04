@@ -85,7 +85,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   public core: IGBCoreService;
   private freeTier: boolean;
 
-  constructor(deployer: IGBDeployer, freeTier: boolean = false) {
+  constructor(deployer: IGBDeployer, freeTier: boolean = true) {
     this.deployer = deployer;
     this.freeTier = freeTier;
   }
