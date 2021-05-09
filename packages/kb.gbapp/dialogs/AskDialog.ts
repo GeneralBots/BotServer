@@ -253,7 +253,7 @@ export class AskDialog extends IGBDialog {
   }
 
   private static getChannel(step): string {
-    return !isNaN(step.context.activity.from.id) ? 'whatsapp' : step.context.activity.channelId;
+    return !isNaN(step.context.activity['mobile']) ? 'whatsapp' : step.context.activity.channelId;
   }
 
   private static getAnswerEventDialog(service: KBService, min: GBMinInstance) {

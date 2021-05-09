@@ -217,10 +217,10 @@ export class DialogKeywords {
    *
    */
   public async userMobile(step) {
-    if (isNaN(step.context.activity.from.id)) {
+    if (isNaN(step.context.activity['mobile'])) {
       return 'No mobile available.';
     } else {
-      return step.context.activity.from.id;
+      return step.context.activity['mobile'];
     }
   }
 

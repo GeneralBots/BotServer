@@ -315,6 +315,7 @@ export class WhatsappDirectLine extends GBService {
         textFormat: 'plain',
         text: text,
         type: 'message',
+        mobile: from,
         from: {
           id: from,
           name: fromName

@@ -220,14 +220,14 @@ export class GBConversationalService {
     caption: string
   ): Promise<any> {
     if (step !== null) {
-      if (!isNaN(step.context.activity.from.id as any)) {
-        mobile = step.context.activity.from.id;
+      if (!isNaN(step.context.activity['mobile'] as any)) {
+        mobile = step.context.activity['mobile'];
         GBLog.info(`Sending file ${url} to ${mobile}...`);
         const filename = url.substring(url.lastIndexOf('/') + 1);
         await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
       } else {
         GBLog.info(
-          `Sending ${url} as file attachment not available in this channel ${step.context.activity.from.id}...`
+          `Sending ${url} as file attachment not available in this channel ${step.context.activity['mobile']}...`
         );
         await min.conversationalService.sendText(min, step, url);
       }
@@ -239,7 +239,7 @@ export class GBConversationalService {
   }
 
   public async sendAudio(min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
-    const mobile = step.context.activity.from.id;
+    const mobile = step.context.activity['mobile'];
     GBLog.info(`Sending audio to ${mobile} in URL: ${url}.`);
     await min.whatsAppDirectLine.sendAudioToDevice(mobile, url);
   }
