@@ -695,7 +695,7 @@ export class KBService implements IGBKBService {
     renderer.oldImage = renderer.image;
     renderer.image = function (href, title, text) {
       var videos = ['webm', 'mp4', 'mov'];
-      var filetype = href.split('.')[1];
+      var filetype = href.split('.').pop();
       if (videos.indexOf(filetype) > -1) {
         var out = '<video autoplay loop alt="' + text + '">'
                 + '  <source src="' + href + '" type="video/' + filetype + '">'
