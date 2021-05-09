@@ -174,7 +174,7 @@ export class WhatsappDirectLine extends GBService {
       await e.onExchangeData(this.min, 'whatsappMessage', message);
     });
 
-    const id = req.body.messages[0].chatId.split('@')[0];
+    const id = req.body.messages[0].chatId.split('@')[0].replace('true_','').replace('false_','');
     const senderName = req.body.messages[0].senderName;
     const sec = new SecService();
 
