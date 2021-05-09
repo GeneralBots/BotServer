@@ -690,10 +690,26 @@ export class KBService implements IGBKBService {
     );
     GBLog.info(`Translated text(playMarkdown): ${text}.`);
 
+
+    var renderer = new marked.Renderer();
+    renderer.oldImage = renderer.image;
+    renderer.image = function (href, title, text) {
+      var videos = ['webm', 'mp4', 'mov'];
+      var filetype = href.split('.')[1];
+      if (videos.indexOf(filetype) > -1) {
+        var out = '<video autoplay loop alt="' + text + '">'
+                + '  <source src="' + href + '" type="video/' + filetype + '">'
+                + '</video>'
+        return out;
+      } else {
+        return renderer.oldImage(href, title, text);
+      }
+    };
+
     // Converts from Markdown to HTML.
 
     marked.setOptions({
-      renderer: new marked.Renderer(),
+      renderer: renderer,
       gfm: true,
       tables: true,
       breaks: false,
