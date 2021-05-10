@@ -57,6 +57,14 @@ export class WelcomeDialog extends IGBDialog {
 
     min.dialogs.add(new WaterfallDialog('/', [
       async step => {
+        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+          return await step.beginDialog('/auth');
+        }
+        else{
+          return await step.next(step.options);
+        }
+      },
+    async step => {
 
         if (GBServer.globals.entryPointDialog !== null &&
           min.instance.botId === process.env.BOT_ID &&

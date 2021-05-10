@@ -73,6 +73,15 @@ export class MenuDialog extends IGBDialog {
   private static getMenuDialog(min: GBMinInstance, service: KBService) {
     return [
       async step => {
+        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+          return await step.beginDialog('/auth');
+        }
+        else{
+          return await step.next(step.options);
+        }
+      },
+
+      async step => {
         const locale = step.context.activity.locale;
         const user = await min.userProfile.get(step.context, {});
         const args: MenuDialogArgs = step.options;

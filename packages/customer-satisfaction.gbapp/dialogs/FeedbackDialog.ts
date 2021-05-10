@@ -71,6 +71,14 @@ export class FeedbackDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/t', [
         async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
+        async step => {
 
           const locale = step.context.activity.locale;
 
@@ -101,6 +109,14 @@ export class FeedbackDialog extends IGBDialog {
 
     min.dialogs.add(
       new WaterfallDialog('/qt', [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
         async step => {
 
           const locale = step.context.activity.locale;
@@ -174,6 +190,14 @@ export class FeedbackDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/feedbackNumber', [
         async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
+        async step => {
           const locale = step.context.activity.locale;
 
           return await step.next();
@@ -192,6 +216,14 @@ export class FeedbackDialog extends IGBDialog {
 
     min.dialogs.add(
       new WaterfallDialog('/feedback', [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
         async step => {
           const locale = step.context.activity.locale;
 

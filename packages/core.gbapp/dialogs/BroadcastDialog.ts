@@ -57,12 +57,21 @@ export class BroadcastDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/gb-broadcast', [
         async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
+
+        async step => {
           const locale = step.context.activity.locale;
 
           return await min.conversationalService.prompt(min, step, 'Type the message and the broadcast will start.');
         },
         async step => {
-          await min.conversationalService['broadcast'](min, step.result);
+          // DISABLED: await min.conversationalService['broadcast'](min, step.result);
           return await step.next();
         }
       ])

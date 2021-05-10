@@ -55,6 +55,14 @@ export class SwitchBotDialog extends IGBDialog {
    */
   public static setup(bot: BotAdapter, min: GBMinInstance) {
     min.dialogs.add(new WaterfallDialog('/bot', [
+      async step => {
+        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+          return await step.beginDialog('/auth');
+        }
+        else{
+          return await step.next(step.options);
+        }
+      },
 
       async step => {
         const locale = step.context.activity.locale;

@@ -57,6 +57,14 @@ export class ProfileDialog extends IGBDialog {
     return {
       id: '/profile_name', waterfall: [
         async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
+        async step => {
           step.activeDialog.state.options = step.options;
           const locale = step.context.activity.locale;
           await step.prompt('textPrompt', Messages[locale].whats_name);
@@ -87,6 +95,14 @@ export class ProfileDialog extends IGBDialog {
 
     return {
       id: '/profile_mobile', waterfall: [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
         async step => {
           step.activeDialog.state.options = step.options;
           const locale = step.context.activity.locale;
@@ -122,6 +138,14 @@ export class ProfileDialog extends IGBDialog {
     return {
       id: '/profile_mobile_confirm', waterfall: [
         async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
+        async step => {
           step.activeDialog.state.options = step.options;
           const locale = step.context.activity.locale;
           const from = step.activeDialog.state.options.mobile;
@@ -151,6 +175,14 @@ export class ProfileDialog extends IGBDialog {
   public static getEmailDialog(min: GBMinInstance) {
     return {
       id: '/profile_email', waterfall: [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
         async step => {
           const locale = step.context.activity.locale;
           await step.prompt('textPrompt', Messages[locale].whats_email);

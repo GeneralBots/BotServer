@@ -75,6 +75,14 @@ export class AdminDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/admin-auth', [
         async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
+        async step => {
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].authenticate;
 
@@ -98,6 +106,14 @@ export class AdminDialog extends IGBDialog {
 
     min.dialogs.add(
       new WaterfallDialog('/admin', [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
         async step => {
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].authenticate;
@@ -182,6 +198,14 @@ export class AdminDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/install', [
         async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
+        async step => {
           step.activeDialog.state.options.args = (step.options as any).args;
           if (step.activeDialog.state.options.confirm) {
             return await step.next('sim');
@@ -212,6 +236,15 @@ export class AdminDialog extends IGBDialog {
 
     min.dialogs.add(
       new WaterfallDialog('/publish', [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
+
         async step => {
           if (step.activeDialog.state.options.confirm || process.env.ADMIN_OPEN_PUBLISH === "true") {
             return await step.next('sim');
@@ -332,6 +365,15 @@ export class AdminDialog extends IGBDialog {
   private static setupSecurityDialogs(min: GBMinInstance) {
     min.dialogs.add(
       new WaterfallDialog('/setupSecurity', [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          }
+          else{
+            return await step.next(step.options);
+          }
+        },
+
         async step => {
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].enter_authenticator_tenant;

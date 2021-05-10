@@ -81,6 +81,14 @@ export class AskDialog extends IGBDialog {
   private static getAskDialog(min: GBMinInstance) {
     return [
       async step => {
+        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+          return await step.beginDialog('/auth');
+        }
+        else{
+          return await step.next(step.options);
+        }
+      },
+    async step => {
         const locale = step.context.activity.locale;
         const user = await min.userProfile.get(step.context, {});
         user.isAsking = true;
@@ -144,6 +152,14 @@ export class AskDialog extends IGBDialog {
   private static getAnswerDialog(min: GBMinInstance, service: KBService) {
     return [
       async step => {
+        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+          return await step.beginDialog('/auth');
+        }
+        else{
+          return await step.next(step.options);
+        }
+      },
+    async step => {
         let answer: GuaribasAnswer = null;
         const user = await min.userProfile.get(step.context, {});
 
@@ -258,6 +274,15 @@ export class AskDialog extends IGBDialog {
 
   private static getAnswerEventDialog(service: KBService, min: GBMinInstance) {
     return [
+      async step => {
+        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+          return await step.beginDialog('/auth');
+        }
+        else{
+          return await step.next(step.options);
+        }
+      },
+
       async step => {
         const data = step.options as AskDialogArgs;
         if (data !== undefined && data.questionId !== undefined) {

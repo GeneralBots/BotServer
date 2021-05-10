@@ -59,6 +59,15 @@ export class FaqDialog extends IGBDialog {
 
     min.dialogs.add(new WaterfallDialog('/faq', [
       async step => {
+        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+          return await step.beginDialog('/auth');
+        }
+        else{
+          return await step.next(step.options);
+        }
+      },
+
+      async step => {
         const data = await service.getFaqBySubjectArray(min.instance.instanceId, 'faq', undefined);
         const locale = step.context.activity.locale;
         if (data !== undefined) {
