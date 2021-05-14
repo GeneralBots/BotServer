@@ -1111,7 +1111,7 @@ export class GBMinService {
         });
       }
       step.context.activity['text'] = text;
-      step.context.activity['originalText']= 'pt-BR';
+      step.context.activity['originalText']= originalText;
       
       GBLog.info(`Final text ready for NLP/Search/.gbapp: ${text}.`);
 
