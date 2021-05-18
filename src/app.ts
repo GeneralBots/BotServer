@@ -150,8 +150,8 @@ export class GBServer {
           GBLog.info(`Deploying packages...`);
           GBServer.globals.sysPackages = await core.loadSysPackages(core);
           await core.checkStorage(azureDeployer);
-          await core.syncDatabaseStructure();
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
+          await core.syncDatabaseStructure();
 
           GBLog.info(`Publishing instances...`);
           const instances: IGBInstance[] = await core.loadAllInstances(

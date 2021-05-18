@@ -862,12 +862,14 @@ export class GBDeployer implements IGBDeployer {
 
       // After compiled, adds the .gbapp to the current server VM context.
 
-      if (gbappPath.endsWith('.gbapp')) {
+      if (gbappPath.endsWith('.gbapp') || gbappPath.endsWith('.gblib')) {
         const m = await import(gbappPath);
-        const p = new m.Package();
-        await p.loadPackage(core, core.sequelize);
-        if (appPackages !== undefined) {
-          appPackages.push(p);
+        if (m.Package) {
+          const p = new m.Package();
+          await p.loadPackage(core, core.sequelize);
+          if (appPackages !== undefined) {
+            appPackages.push(p);
+          }
         }
       }
       GBLog.info(`.gbapp or .gblib deployed: ${gbappPath}.`);
