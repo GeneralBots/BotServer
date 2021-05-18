@@ -265,6 +265,24 @@ export class SystemKeywords {
     return val;
   }
 
+   /**
+   * Finds a value or multi-value results in a tabular file.
+   * 
+   * @example 
+   * 
+   *  rows = FIND "file.xlsx", "A2=active" WHEN NOT FOUND TALK ""
+   *  i = 1
+   *  do while i < ubound(row)
+   *    row = rows[i]
+   *    send sms to "+" + row.mobile, "Hello " + row.namee + "! "
+   *  loop
+   * 
+   */
+     public async findWithExit(file: string, talk,  ...args): Promise<any> {
+       this.find(file, args);
+     }
+
+
   /**
    * Finds a value or multi-value results in a tabular file.
    * 
