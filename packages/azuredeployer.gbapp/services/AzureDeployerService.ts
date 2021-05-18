@@ -238,11 +238,11 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   }
 
   public async botExists(botId) {
-    
+
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
-    
+
 
     const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
     const httpClient = new ServiceClient();
@@ -800,14 +800,23 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   private async createCognitiveServices(group, name, location, kind): Promise<CognitiveServicesAccount> {
     const params = {
       sku: {
-        name: this.freeTier || kind === 'LUIS.Authoring' || kind === 'TextAnalytics' ? 'F0' :
-          kind === 'Bing.SpellCheck.v7' ? 'S1' : 'S0'
+        name: ""
       },
       createMode: 'Default',
       location: location,
       kind: kind,
       properties: {}
     };
+
+    if (kind === 'LUIS.Authoring') {
+      params.sku.name = this.freeTier ? 'F0' : 'S0';
+    } else if (kind === 'TextAnalytics') {
+      params.sku.name = this.freeTier ? 'F0' : 'S0';
+    } else if (kind === 'Bing.SpellCheck.v7') {
+      params.sku.name = this.freeTier ? 'S0' : 'S1';
+    } else if (kind === 'CognitiveServices') {
+      params.sku.name = 'S0';
+    }
 
     return await this.cognitiveClient.accounts.create(group, name, params);
   }
