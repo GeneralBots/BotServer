@@ -194,7 +194,7 @@ export class ProfileDialog extends IGBDialog {
             return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi);
           };
 
-          const value = extractEntity(step.result);
+          const value = extractEntity(step.context.activity.originalText);
 
           if (value === null) {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_email);
