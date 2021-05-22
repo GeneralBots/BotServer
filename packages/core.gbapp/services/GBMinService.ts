@@ -817,8 +817,11 @@ export class GBMinService {
         GBLog.info(`User>: text:${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId}, value: ${context.activity.value})`);
 
         // Answer to specific BOT Framework event conversationUpdate to auto start dialogs.
+        // Skips if the bot is talking.
 
-        if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {
+        if (context.activity.type === 'conversationUpdate' &&
+          context.activity.membersAdded.length > 0 &&
+          context.activity.membersAdded[0].id.indexOf(min.botId) == -1) {
 
           // Check if a bot or a human participant is being added to the conversation.
 
@@ -1111,8 +1114,8 @@ export class GBMinService {
         });
       }
       step.context.activity['text'] = text;
-      step.context.activity['originalText']= originalText;
-      
+      step.context.activity['originalText'] = originalText;
+
       GBLog.info(`Final text ready for NLP/Search/.gbapp: ${text}.`);
 
       if (user.systemUser.agentMode === 'self') {

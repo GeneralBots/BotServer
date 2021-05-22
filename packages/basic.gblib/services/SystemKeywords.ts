@@ -265,24 +265,6 @@ export class SystemKeywords {
     return val;
   }
 
-   /**
-   * Finds a value or multi-value results in a tabular file.
-   * 
-   * @example 
-   * 
-   *  rows = FIND "file.xlsx", "A2=active" WHEN NOT FOUND TALK ""
-   *  i = 1
-   *  do while i < ubound(row)
-   *    row = rows[i]
-   *    send sms to "+" + row.mobile, "Hello " + row.namee + "! "
-   *  loop
-   * 
-   */
-     public async findWithExit(file: string, talk,  ...args): Promise<any> {
-       this.find(file, args);
-     }
-
-
   /**
    * Finds a value or multi-value results in a tabular file.
    * 
@@ -354,7 +336,7 @@ export class SystemKeywords {
 
       // Filter results action.
 
-      if (result && result.toLowerCase() === value.toLowerCase()) {
+      if (result && result.toLowerCase().trim() === value.toLowerCase().trim()) {
         let row = {};
         const xlRow = results.text[foundIndex];
         for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
