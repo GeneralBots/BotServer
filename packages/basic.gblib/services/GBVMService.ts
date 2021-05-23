@@ -752,7 +752,7 @@ export class GBVMService extends GBService {
 
     const mainMethod = text.toLowerCase();
     if (!sandbox[mainMethod]) {
-      GBLog.error(`BASIC: Associated '${mainMethod}' dialog not found. Verify if .gbdialog is correctly published.`);
+      GBLog.error(`BASIC: Associated '${mainMethod}' dialog not found for: ${min.instance.botId}. Verify if .gbdialog is correctly published.`);
 
       return null;
     }

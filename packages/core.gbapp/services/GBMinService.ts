@@ -342,7 +342,7 @@ export class GBMinService {
             await sec.updateUserInstance(id, instance.instanceId);
             await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
             const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
-            GBLog.info(`Auto start (2) dialog is now being called: ${startDialog} for ${activeMin.instance.instanceId}...`);
+            GBLog.info(`Auto start (2) dialog is now being called: ${startDialog} for ${activeMin.instance.botId}...`);
 
             if (startDialog) {
               req.body.messages[0].body = `/call ${startDialog}`;
