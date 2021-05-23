@@ -315,7 +315,7 @@ export class GBMinService {
 
           GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
           if (startDialog) {
-            req.body.messages[0].body = `${startDialog}`;
+            req.body.messages[0].body = `/call ${startDialog}`;
 
             // Resets HEAR ON DIALOG value to none and passes
             // current dialog to the direct line.
