@@ -313,7 +313,7 @@ export class GBMinService {
             user.hearOnDialog :
             activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
 
-          GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
+          GBLog.info(`Auto start (1) dialog is now being called: ${startDialog} for ${activeMin.instance.instanceId}...`);
           if (startDialog) {
             req.body.messages[0].body = `/call ${startDialog}`;
 
@@ -342,7 +342,7 @@ export class GBMinService {
             await sec.updateUserInstance(id, instance.instanceId);
             await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
             const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
-            GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
+            GBLog.info(`Auto start (2) dialog is now being called: ${startDialog} for ${activeMin.instance.instanceId}...`);
 
             if (startDialog) {
               req.body.messages[0].body = `/call ${startDialog}`;
@@ -840,7 +840,7 @@ export class GBMinService {
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
             if (startDialog && !user.welcomed) {
               user.welcomed = true;
-              GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
+              GBLog.info(`Auto start (3) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
             } else {
 

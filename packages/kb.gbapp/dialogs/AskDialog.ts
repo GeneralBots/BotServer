@@ -84,11 +84,11 @@ export class AskDialog extends IGBDialog {
         if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
           return await step.beginDialog('/auth');
         }
-        else{
+        else {
           return await step.next(step.options);
         }
       },
-    async step => {
+      async step => {
         const locale = step.context.activity.locale;
         const user = await min.userProfile.get(step.context, {});
         user.isAsking = true;
@@ -108,9 +108,9 @@ export class AskDialog extends IGBDialog {
         } else {
           throw new Error('Invalid use of /ask');
         }
-        
+
         return await min.conversationalService.prompt(min, step, text);
-        
+
       },
       async step => {
         if (step.result) {
@@ -155,11 +155,11 @@ export class AskDialog extends IGBDialog {
         if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
           return await step.beginDialog('/auth');
         }
-        else{
+        else {
           return await step.next(step.options);
         }
       },
-    async step => {
+      async step => {
         let answer: GuaribasAnswer = null;
         const user = await min.userProfile.get(step.context, {});
 
@@ -174,7 +174,9 @@ export class AskDialog extends IGBDialog {
         if (!text) {
           const startDialog =
             min.core.getParam(min.instance, 'Start Dialog', null);
-          await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+          if (startDialog) {
+            await GBVMService.callVM(startDialog.toLowerCase().trim(), min, step, this.deployer);
+          }
 
           return step.endDialog();
         }
@@ -278,7 +280,7 @@ export class AskDialog extends IGBDialog {
         if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
           return await step.beginDialog('/auth');
         }
-        else{
+        else {
           return await step.next(step.options);
         }
       },
