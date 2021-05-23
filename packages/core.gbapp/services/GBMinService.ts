@@ -345,7 +345,7 @@ export class GBMinService {
             GBLog.info(`Auto start dialog is now being called: ${startDialog}...`);
 
             if (startDialog) {
-              req.body.messages[0].body = `${startDialog}`;
+              req.body.messages[0].body = `/call ${startDialog}`;
               await (activeMin as any).whatsAppDirectLine.received(req, res);
             } else {
               await (activeMin as any).whatsAppDirectLine.sendToDevice(

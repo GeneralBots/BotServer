@@ -95,12 +95,12 @@ export class AskDialog extends IGBDialog {
         if (!user.subjects) {
           user.subjects = [];
         }
-        let text;
+        let text: string;
         // Three forms of asking.
         if (step.options && step.options.firstTime) {
           text = Messages[locale].ask_first_time;
         } else if (step.options && step.options.isReturning) {
-          text = Messages[locale].anything_else;
+          text = ""; // REMOVED: Messages[locale].anything_else;
         } else if (step.options && step.options.emptyPrompt) {
           text = "";
         } else if (user.subjects.length > 0) {
