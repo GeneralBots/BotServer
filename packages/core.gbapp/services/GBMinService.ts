@@ -341,10 +341,18 @@ export class GBMinService {
             const instance = await this.core.loadInstanceByBotId(activeMin.botId);
             await sec.updateUserInstance(id, instance.instanceId);
             await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
-            await (activeMin as any).whatsAppDirectLine.sendToDevice(
-              id,
-              `Agora falando com ${activeMin.instance.title}...`
-            );
+            const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
+            GBLog.info(`Auto start (2) dialog is now beGing called: ${startDialog} for ${activeMin.instance.botId}...`);
+
+            if (startDialog) {
+              req.body.messages[0].body = `/call ${startDialog}`;
+              await (activeMin as any).whatsAppDirectLine.received(req, res);
+            } else {
+              await (activeMin as any).whatsAppDirectLine.sendToDevice(
+                id,
+                `Agora falando com ${activeMin.instance.title}...`
+              );
+            }
             res.end();
           } else {
             activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
@@ -812,7 +820,8 @@ export class GBMinService {
         // Skips if the bot is talking.
 
         if (context.activity.type === 'conversationUpdate' &&
-          context.activity.membersAdded.length > 0) {
+          context.activity.membersAdded.length > 0&&
+          context.activity.membersAdded[0].id.indexOf(min.botId) == -1) {
 
           // Check if a bot or a human participant is being added to the conversation.
 
