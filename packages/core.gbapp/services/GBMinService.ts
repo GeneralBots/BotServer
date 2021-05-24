@@ -342,7 +342,7 @@ export class GBMinService {
             await sec.updateUserInstance(id, instance.instanceId);
             await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
             const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
-            GBLog.info(`Auto start (2) dialog is now beGing called: ${startDialog} for ${activeMin.instance.botId}...`);
+            GBLog.info(`Auto start (2) dialog is now being called: ${startDialog} for ${activeMin.instance.botId}...`);
 
             if (startDialog) {
               req.body.messages[0].body = `/call ${startDialog}`;
@@ -838,12 +838,8 @@ export class GBMinService {
             // Auto starts dialogs if any is specified.
 
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
-            if (startDialog && !user.welcomed) {
-              user.welcomed = true;
-              GBLog.info(`Auto start (3) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
-              await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
-            } else {
-
+            if (!startDialog && user.welcomed) {
+              
               // Otherwise, calls / (root) to default welcome users.
 
               await step.beginDialog('/');
@@ -852,6 +848,15 @@ export class GBMinService {
           } else {
 
             GBLog.info(`Member added to conversation: ${member.name}`);
+
+            const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
+            if (startDialog && !user.welcomed) {
+              user.welcomed = true;
+              GBLog.info(`Auto start (3) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
+              await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+            }
+
+
           }
 
         } else if (context.activity.type === 'message') {
