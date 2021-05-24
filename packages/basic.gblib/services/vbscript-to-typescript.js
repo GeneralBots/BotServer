@@ -1,3 +1,4 @@
+// Source: https://github.com/uweg/vbscript-to-typescript
 "use strict";
 exports.__esModule = true;
 var fs_1 = require("fs");

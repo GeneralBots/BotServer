@@ -1,4 +1,5 @@
 ' General Bots Copyright (c) Pragmatismo.io. All rights reserved. Licensed under the AGPL-3.0. 
+' Rules from http://jsfiddle.net/roderick/dym05hsy
 
 talk "How many installments do you want to pay your Credit?"
 hear installments 

@@ -388,30 +388,6 @@ export class GBConversationalService {
                 GBLog.error(error);
                 return Promise.reject(error);
               });
-
-            // let pushStream = sdk.AudioInputStream.createPushStream();
-            // pushStream.write(data);
-            // pushStream.close();
-
-            // let audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
-            // let speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
-            // speechConfig.speechRecognitionLanguage = locale;
-            // let recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
-
-            // recognizer.recognizeOnceAsync(
-            //   (result) => {
-
-            //     resolve(result.text ? result.text : 'Speech to Text failed: Audio not converted');
-
-            //     recognizer.close();
-            //     recognizer = undefined;
-            //   },
-            //   (err) => {
-            //     reject(err);
-
-            //     recognizer.close();
-            //     recognizer = undefined;
-            //   });
           }
         });
       } catch (error) {

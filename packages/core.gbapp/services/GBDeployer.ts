@@ -616,6 +616,7 @@ export class GBDeployer implements IGBDeployer {
 
         const vm = new GBVMService();
         await vm.loadDialogPackage(localPath, min, this.core, this);
+        GBLog.info(`Dialogs (.gbdialog) for ${min.botId} loaded.`);
         break;
 
       case '.gbtheme':

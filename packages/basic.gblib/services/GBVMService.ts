@@ -55,7 +55,7 @@ const phone = require('phone');
  * @fileoverview Virtualization services for emulation of BASIC.
  * This alpha version is using a hack in form of converter to
  * translate BASIC to TS and string replacements to emulate await code.
- * See http://jsfiddle.net/roderick/dym05hsy for more info on vb2ts, so
+ * See https://github.com/uweg/vbscript-to-typescript for more info on vb2ts, so
  * http://stevehanov.ca/blog/index.php?id=92 should be used to run it without
  * translation and enhance classic BASIC experience.
  */
@@ -326,6 +326,7 @@ export class GBVMService extends GBService {
   }
 
   public async executeBASIC(filename: any, min: GBMinInstance, deployer: GBDeployer, mainName: string) {
+    
     // Converts General Bots BASIC into regular VBS
 
     const basicCode: string = fs.readFileSync(filename, 'utf8');
@@ -334,18 +335,20 @@ export class GBVMService extends GBService {
     fs.writeFileSync(vbsFile, vbsCode, 'utf8');
 
     // Converts VBS into TS.
+    
     vb2ts.convertFile(vbsFile);
 
     // Convert TS into JS.
+    
     const tsfile: string = `${filename}.ts`;
     let tsCode: string = fs.readFileSync(tsfile, 'utf8');
     tsCode = tsCode.replace(/export.*\n/gi, `export function ${mainName}(step:any) { let resolve;`);
     fs.writeFileSync(tsfile, tsCode);
-
     const tsc = new TSCompiler();
     tsc.compile([tsfile]);
 
     // Run JS into the GB context.
+    
     const jsfile = `${tsfile}.js`.replace('.ts', '');
 
     if (fs.existsSync(jsfile)) {
@@ -431,7 +434,7 @@ export class GBVMService extends GBService {
 
   private executeJS(min: GBMinInstance, deployer: GBDeployer, parsedCode: string, mainName: string) {
     try {
-      min.sandBoxMap[mainName.toLowerCase()] = parsedCode;
+      min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
     } catch (error) {
       GBLog.error(`[GBVMService] ERROR loading ${error}`);
     }
