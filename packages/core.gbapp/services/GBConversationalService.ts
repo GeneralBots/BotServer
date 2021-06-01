@@ -46,6 +46,7 @@ import { SecService } from '../../security.gbapp/services/SecService';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 import { MicrosoftAppCredentials } from 'botframework-connector';
 import { GBConfigService } from './GBConfigService';
+import { Messages } from '../strings';
 import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
 import { GuaribasUser } from '../../security.gbapp/models';
 const urlJoin = require('url-join');
@@ -60,6 +61,7 @@ const request = require('request-promise-native');
 const fs = require('fs');
 const SpeechToTextV1 = require('ibm-watson/speech-to-text/v1');
 const { IamAuthenticator } = require('ibm-watson/auth');
+const marked = require('marked');
 
 /**
  * Provides basic services for handling messages and dispatching to back-end
@@ -212,6 +214,18 @@ export class GBConversationalService {
     return step.context.activity.locale;
   }
 
+  public userMobile(step) {
+    if (isNaN(step.context.activity['mobile'])) {
+      if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
+        return step.context.activity.from.id;
+      }
+      return null;
+    } else {
+      return step.context.activity['mobile'];
+    }
+  }
+
+
   public async sendFile(
     min: GBMinInstance,
     step: GBDialogStep,
@@ -220,8 +234,10 @@ export class GBConversationalService {
     caption: string
   ): Promise<any> {
     if (step !== null) {
-      if (!isNaN(step.context.activity['mobile'] as any)) {
-        mobile = step.context.activity['mobile'];
+
+      mobile = this.userMobile(step);
+
+      if (mobile) {
         GBLog.info(`Sending file ${url} to ${mobile}...`);
         const filename = url.substring(url.lastIndexOf('/') + 1);
         await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
@@ -396,6 +412,96 @@ export class GBConversationalService {
       }
     });
   }
+
+  public async playMarkdown(
+    min: GBMinInstance,
+    answer: string,
+    channel: string,
+    step: GBDialogStep
+  ) {
+    const user = await min.userProfile.get(step.context, {});
+
+    // Calls language translator.
+
+    let text = await min.conversationalService.translate(
+      min,
+      answer,
+      user.systemUser.locale
+        ? user.systemUser.locale
+        : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
+    );
+    GBLog.info(`Translated text(playMarkdown): ${text}.`);
+
+
+    var renderer = new marked.Renderer();
+    renderer.oldImage = renderer.image;
+    renderer.image = function (href, title, text) {
+      var videos = ['webm', 'mp4', 'mov'];
+      var filetype = href.split('.').pop();
+      if (videos.indexOf(filetype) > -1) {
+        var out = '<video autoplay loop alt="' + text + '">'
+                + '  <source src="' + href + '" type="video/' + filetype + '">'
+                + '</video>'
+        return out;
+      } else {
+        return renderer.oldImage(href, title, text);
+      }
+    };
+
+    // Converts from Markdown to HTML.
+
+    marked.setOptions({
+      renderer: renderer,
+      gfm: true,
+      tables: true,
+      breaks: false,
+      pedantic: false,
+      sanitize: false,
+      smartLists: true,
+      smartypants: false,
+      xhtml: false
+    });
+
+    // MSFT Translator breaks markdown, so we need to fix it:
+
+    text = text.replace('! [', '![').replace('] (', '](');
+
+    text = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', ''); // TODO: Improve it.
+    text = text.replace(`](kb`, "]("+ process.env.BOT_URL + '/kb'); // TODO: Improve it.
+
+    // According to the channel, formats the output optimized to it.
+
+    if (channel === 'webchat' && GBConfigService.get('DISABLE_WEB') !== 'true') {
+      const html = marked(text);
+      await this.sendMarkdownToWeb(min, step, html, answer);
+    } else if (channel === 'whatsapp') {
+      await this.sendMarkdownToMobile(min, step, user.userSystemId, text);
+    } else {
+      const html = marked(text);
+      await min.conversationalService.sendText(min, step, html);
+    }
+  }
+
+  private async sendMarkdownToWeb(
+    min,
+    step: GBDialogStep,
+    html: string,
+    answer: string
+  ) {
+    const locale = step.context.activity.locale;
+    await this.sendText(min, step, Messages[locale].will_answer_projector);
+    html = html.replace(/src\=\"kb\//gi, `src=\"../kb/`);
+    await this.sendEvent(min, step, 'play', {
+      playerType: 'markdown',
+      data: {
+        content: html,
+        answer: answer,
+        prevId: 0, // TODO: answer.prevId,
+        nextId: 0, // TODO: answer.nextId
+      }
+    });
+  }
+
 
   // tslint:enable:no-unsafe-any
 

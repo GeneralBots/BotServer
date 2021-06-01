@@ -57,7 +57,7 @@ export class DialogKeywords {
    * Reference to the base system keywords functions to be called.
    */
   public internalSys: SystemKeywords;
-  
+
   /**
    * Current user object to get BASIC properties read.
    */
@@ -166,7 +166,7 @@ export class DialogKeywords {
     user.systemUser = await sec.updateUserLocale(user.systemUser.userId, language);
 
     await this.min.userProfile.set(step.context, user);
-    this.user = user;    
+    this.user = user;
   }
 
   /**
@@ -181,7 +181,7 @@ export class DialogKeywords {
     await this.min.userProfile.set(step.context, user);
     this.user = user;
   }
-  
+
   /**
    * Defines translator behaviour.
    *
@@ -218,6 +218,9 @@ export class DialogKeywords {
    */
   public async userMobile(step) {
     if (isNaN(step.context.activity['mobile'])) {
+      if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
+        return step.context.activity.from.id;
+      }
       return 'No mobile available.';
     } else {
       return step.context.activity['mobile'];
@@ -274,6 +277,18 @@ export class DialogKeywords {
       this.user.basicOptions.translatorOn, null);
   }
 
+  private static getChannel(step): string {
+    if (!isNaN(step.context.activity['mobile'])) {
+      return 'webchat';
+    } else {
+      if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
+        return 'whatsapp';
+      }
+      return 'webchat';
+    }    
+  }
+
+
   /**
    * Processes the sending of the file.
    */
@@ -281,7 +296,9 @@ export class DialogKeywords {
     if (filename.indexOf('.md') > -1) {
       GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
       const md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
-      await this.min.conversationalService.sendMarkdownToMobile(this.min, step, mobile, md);
+
+      await this.min.conversationalService['playMarkdown'](this.min, md,
+        DialogKeywords.getChannel(step), step);
     } else {
       GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
       const url = urlJoin(

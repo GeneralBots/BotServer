@@ -37,7 +37,6 @@
 const Path = require('path');
 const Fs = require('fs');
 const urlJoin = require('url-join');
-const marked = require('marked');
 const path = require('path');
 const asyncPromise = require('async-promises');
 const walkPromise = require('walk-promise');
@@ -55,7 +54,6 @@ import {
   IGBInstance,
   IGBKBService
 } from 'botlib';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
@@ -64,7 +62,6 @@ import { GuaribasPackage } from '../../core.gbapp/models/GBModel';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
-import { Messages } from '../strings';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 
 /**
@@ -533,7 +530,7 @@ export class KBService implements IGBKBService {
         `${min.instance.botId}.gbkb`, 'assets', answer.content);
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
-      await this.playMarkdown(min, answer, channel, step, min.conversationalService);
+      await min.conversationalService['playMarkdown'](min, answer, channel, step, min.conversationalService);
     } else if (answer.content.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else {
@@ -668,97 +665,6 @@ export class KBService implements IGBKBService {
     conversationalService: IGBConversationalService
   ) {
     conversationalService.sendAudio(min, step, answer.content);
-  }
-
-  private async playMarkdown(
-    min: GBMinInstance,
-    answer: GuaribasAnswer,
-    channel: string,
-    step: GBDialogStep,
-    conversationalService: IGBConversationalService
-  ) {
-    const user = await min.userProfile.get(step.context, {});
-
-    // Calls language translator.
-
-    let text = await min.conversationalService.translate(
-      min,
-      answer.content,
-      user.systemUser.locale
-        ? user.systemUser.locale
-        : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
-    );
-    GBLog.info(`Translated text(playMarkdown): ${text}.`);
-
-
-    var renderer = new marked.Renderer();
-    renderer.oldImage = renderer.image;
-    renderer.image = function (href, title, text) {
-      var videos = ['webm', 'mp4', 'mov'];
-      var filetype = href.split('.').pop();
-      if (videos.indexOf(filetype) > -1) {
-        var out = '<video autoplay loop alt="' + text + '">'
-                + '  <source src="' + href + '" type="video/' + filetype + '">'
-                + '</video>'
-        return out;
-      } else {
-        return renderer.oldImage(href, title, text);
-      }
-    };
-
-    // Converts from Markdown to HTML.
-
-    marked.setOptions({
-      renderer: renderer,
-      gfm: true,
-      tables: true,
-      breaks: false,
-      pedantic: false,
-      sanitize: false,
-      smartLists: true,
-      smartypants: false,
-      xhtml: false
-    });
-
-    // MSFT Translator breaks markdown, so we need to fix it:
-
-    text = text.replace('! [', '![').replace('] (', '](');
-
-    text = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', ''); // TODO: Improve it.
-    text = text.replace(`](kb`, "]("+ process.env.BOT_URL + '/kb'); // TODO: Improve it.
-
-    // According to the channel, formats the output optimized to it.
-
-    if (channel === 'webchat' && GBConfigService.get('DISABLE_WEB') !== 'true') {
-      const html = marked(text);
-      await this.sendMarkdownToWeb(min, step, conversationalService, html, answer);
-    } else if (channel === 'whatsapp') {
-      await conversationalService.sendMarkdownToMobile(min, step, user.userSystemId, text);
-    } else {
-      const html = marked(text);
-      await min.conversationalService.sendText(min, step, html);
-    }
-  }
-
-  private async sendMarkdownToWeb(
-    min,
-    step: GBDialogStep,
-    conversationalService: IGBConversationalService,
-    html: string,
-    answer: GuaribasAnswer
-  ) {
-    const locale = step.context.activity.locale;
-    await min.conversationalService.sendText(min, step, Messages[locale].will_answer_projector);
-    html = html.replace(/src\=\"kb\//gi, `src=\"../kb/`);
-    await conversationalService.sendEvent(min, step, 'play', {
-      playerType: 'markdown',
-      data: {
-        content: html,
-        answer: answer,
-        prevId: answer.prevId,
-        nextId: answer.nextId
-      }
-    });
   }
 
   private async playUrl(
