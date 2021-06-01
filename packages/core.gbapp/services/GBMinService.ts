@@ -855,8 +855,6 @@ export class GBMinService {
               GBLog.info(`Auto start (3) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
             }
-
-
           }
 
         } else if (context.activity.type === 'message') {

@@ -512,7 +512,7 @@ export class GBVMService extends GBService {
             return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
           }
 
-          let result = step.result;
+          let result = step.context.activity['originalText'];
           if (step.activeDialog.state.options['kind'] === "boolean") {
             if (isIntentYes('pt-BR', step.result)) {
               result = true;
