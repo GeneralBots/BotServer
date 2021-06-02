@@ -530,7 +530,7 @@ export class KBService implements IGBKBService {
         `${min.instance.botId}.gbkb`, 'assets', answer.content);
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
-      await min.conversationalService['playMarkdown'](min, answer, channel, step, min.conversationalService);
+      await min.conversationalService['playMarkdown'](min, answer.content, channel, step, min.conversationalService);
     } else if (answer.content.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else {
