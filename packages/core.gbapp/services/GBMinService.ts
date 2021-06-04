@@ -314,8 +314,8 @@ export class GBMinService {
             activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
 
           if (startDialog) {
-            GBLog.info(`Calling /call to Auto start ${startDialog} for ${activeMin.instance.instanceId}...`);
-            req.body.messages[0].body = `/call ${startDialog}`;
+            GBLog.info(`Calling /start to Auto start ${startDialog} for ${activeMin.instance.instanceId}...`);
+            req.body.messages[0].body = `/start`;
 
             // Resets HEAR ON DIALOG value to none and passes
             // current dialog to the direct line.
@@ -345,8 +345,8 @@ export class GBMinService {
 
 
             if (startDialog) {
-              GBLog.info(`Calling /call for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
-              req.body.messages[0].body = `/call ${startDialog}`;
+              GBLog.info(`Calling /start for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
+              req.body.messages[0].body = `/start`;
               await (activeMin as any).whatsAppDirectLine.received(req, res);
             } else {
               await (activeMin as any).whatsAppDirectLine.sendToDevice(
@@ -866,10 +866,18 @@ export class GBMinService {
 
               await step.beginDialog('/');
             }
-            else {
 
-              GBLog.info(`Member added to conversation: ${member.name}`);
-          }
+          } else {
+            GBLog.info(`Person added to conversation: ${member.name}`);
+
+            if (this.userMobile(step)) {
+              const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
+              if (startDialog && !user.welcomed) {
+                user.welcomed = true;
+                GBLog.info(`Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
+                await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+              }
+            }
           }
 
         } else if (context.activity.type === 'message') {
@@ -1006,8 +1014,9 @@ export class GBMinService {
       const cmdOrDialogName = parts[0];
       parts.splice(0, 1);
       const args = parts.join(' ');
-
-      if (cmdOrDialogName === '/call') {
+      if (cmdOrDialogName === '/start') {
+        // TODO: Args to BASIC.
+      } else  if (cmdOrDialogName === '/call') {
         await GBVMService.callVM(args, min, step, this.deployer);
       } else {
         await step.beginDialog(cmdOrDialogName, { args: args });
