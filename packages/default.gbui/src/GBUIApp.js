@@ -97,8 +97,8 @@ class GBUIApp extends React.Component {
   }
 
   postEvent(name, item) {
-    setTimeout(()=>{
-    window['botConnection'].postActivity({
+    setTimeout(() => {
+      window['botConnection'].postActivity({
         type: "event",
         name: name,
         data: item,
@@ -107,8 +107,8 @@ class GBUIApp extends React.Component {
         timestamp: new Date().toISOString(),
         from: window.user
       })
-      .subscribe(console.log("success"));
-    },400);
+        .subscribe(console.log("success"));
+    }, 400);
   }
   postMessage(value) {
     window.line.postActivity({
@@ -193,21 +193,15 @@ class GBUIApp extends React.Component {
       if (connectionStatus === ConnectionStatus.Online) {
         _this_.setState({ line: line });
         window['botConnection'] = line;
-        line.postActivity({
-          type: 'event',
-          value: 'startGB',
-          from: this.getUser(),
-          name: 'startGB'
-        });
       }
     });
 
     window.line = line;
-    this.postEvent('startGB', true);
 
     line.activity$
       .filter(activity => activity.type === 'event' && activity.name === 'loadInstance')
       .subscribe(activity => {
+        this.postEvent('startGB', true);
         _this_.setState({ instance: activity.value });
         _this_.authenticate();
       });
@@ -315,7 +309,7 @@ class GBUIApp extends React.Component {
 
     let chat = <div />;
     let gbCss = <div />;
-    let seo= <div />;
+    let seo = <div />;
 
     let sideBar = (
       <div className="sidebar">
@@ -324,9 +318,9 @@ class GBUIApp extends React.Component {
     );
 
     if (this.state.line && this.state.instance) {
-      this.postEvent('startGB', true);
+      
       gbCss = <GBCss instance={this.state.instance} />;
-      seo = <SEO  instance={this.state.instance}/>;
+      seo = <SEO instance={this.state.instance} />;
 
       // let speechOptions;
       // let token = this.state.instanceClient.speechToken;

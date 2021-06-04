@@ -805,8 +805,8 @@ export class GBConversationalService {
       }
       return false;
     };
-    const endPoint = min.instance.translatorEndpoint;
-    const key = min.instance.translatorKey;
+    const endPoint = min.core.getParam<string>(min.instance, 'translatorEndpoint', null);
+    const key = min.core.getParam<string>(min.instance, 'translatorKey', null);
 
     if (endPoint === null || !translatorEnabled() || process.env.TRANSLATOR_DISABLED === 'true') {
       return text;
