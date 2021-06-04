@@ -96,15 +96,20 @@ class GBUIApp extends React.Component {
     return { id: 'web@gb', name: 'You' };
   }
 
-  postEvent(name, value) {
-    window.line.postActivity({
-      type: 'event',
-      value: value,
-      from: this.getUser(),
-      name: name
-    });
+  postEvent(name, item) {
+    setTimeout(()=>{
+    window['botConnection'].postActivity({
+        type: "event",
+        name: name,
+        data: item,
+        locale: "en-us",
+        textFormat: "plain",
+        timestamp: new Date().toISOString(),
+        from: window.user
+      })
+      .subscribe(console.log("success"));
+    },400);
   }
-
   postMessage(value) {
     window.line.postActivity({
       type: 'message',
@@ -319,6 +324,7 @@ class GBUIApp extends React.Component {
     );
 
     if (this.state.line && this.state.instance) {
+      this.postEvent('startGB', true);
       gbCss = <GBCss instance={this.state.instance} />;
       seo = <SEO  instance={this.state.instance}/>;
 

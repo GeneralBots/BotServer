@@ -313,8 +313,8 @@ export class GBMinService {
             user.hearOnDialog :
             activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
 
-          GBLog.info(`Auto start (1) dialog is now being called: ${startDialog} for ${activeMin.instance.instanceId}...`);
           if (startDialog) {
+            GBLog.info(`Calling /call to Auto start ${startDialog} for ${activeMin.instance.instanceId}...`);
             req.body.messages[0].body = `/call ${startDialog}`;
 
             // Resets HEAR ON DIALOG value to none and passes
@@ -342,9 +342,10 @@ export class GBMinService {
             await sec.updateUserInstance(id, instance.instanceId);
             await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
             const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
-            GBLog.info(`Auto start (2) dialog is now being called: ${startDialog} for ${activeMin.instance.botId}...`);
+
 
             if (startDialog) {
+              GBLog.info(`Calling /call for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
               req.body.messages[0].body = `/call ${startDialog}`;
               await (activeMin as any).whatsAppDirectLine.received(req, res);
             } else {
@@ -717,6 +718,19 @@ export class GBMinService {
     });
   }
 
+  // TODO: Unify in util.
+  public userMobile(step) {
+    if (isNaN(step.context.activity['mobile'])) {
+      if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
+        return step.context.activity.from.id;
+      }
+      return null;
+    } else {
+      return step.context.activity['mobile'];
+    }
+  }
+
+
   /**
    * BOT Framework web service hook method.
    */
@@ -812,6 +826,15 @@ export class GBMinService {
             TurnContext.getConversationReference(context.activity)
           );
           await sec.updateConversationReferenceById(user.systemUser.userId, conversationReference);
+
+          if (!user.welcomed) {
+            const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
+            if (startDialog && !user.welcomed) {
+              user.welcomed = true;
+              GBLog.info(`Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
+              await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+            }
+          }
         }
 
         GBLog.info(`User>: text:${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId}, value: ${context.activity.value})`);
@@ -820,8 +843,7 @@ export class GBMinService {
         // Skips if the bot is talking.
 
         if (context.activity.type === 'conversationUpdate' &&
-          context.activity.membersAdded.length > 0&&
-          context.activity.membersAdded[0].id.indexOf(min.botId) == -1) {
+          context.activity.membersAdded.length > 0) {
 
           // Check if a bot or a human participant is being added to the conversation.
 
@@ -839,22 +861,15 @@ export class GBMinService {
 
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
             if (!startDialog && user.welcomed) {
-              
+
               // Otherwise, calls / (root) to default welcome users.
 
               await step.beginDialog('/');
             }
+            else {
 
-          } else {
-
-            GBLog.info(`Member added to conversation: ${member.name}`);
-
-            const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
-            if (startDialog && !user.welcomed) {
-              user.welcomed = true;
-              GBLog.info(`Auto start (3) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
-              await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
-            }
+              GBLog.info(`Member added to conversation: ${member.name}`);
+          }
           }
 
         } else if (context.activity.type === 'message') {
@@ -867,7 +882,7 @@ export class GBMinService {
 
           // Processes events activies.
 
-          await this.processEventActivity(context, step);
+          await this.processEventActivity(min, user, context, step);
         }
 
         // Saves conversation state for later use.
@@ -893,7 +908,7 @@ export class GBMinService {
   /**
    * Called to handle all event sent by .gbui clients.
    */
-  private async processEventActivity(context, step: GBDialogStep) {
+  private async processEventActivity(min, user, context, step: GBDialogStep) {
 
     if (context.activity.name === 'whoAmI') {
       await step.beginDialog('/whoAmI');
@@ -914,6 +929,13 @@ export class GBMinService {
       await step.beginDialog('/quality', {
         score: context.activity.data
       });
+    } else if (context.activity.name === 'startGB') {
+      const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
+      if (startDialog && !user.welcomed) {
+        user.welcomed = true;
+        GBLog.info(`Auto start (web) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
+        await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+      }
     } else if (context.activity.name === 'updateToken') {
       const token = context.activity.data;
       await step.beginDialog('/adminUpdateToken', { token: token });

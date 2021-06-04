@@ -715,7 +715,7 @@ export class GBVMService extends GBService {
             delete min.cbMap[id];
             try {
               const opts = await promise(step, result);
-              if (Object.keys(min.cbMap).length) {
+              if (Object.keys(min.cbMap).length > 0) {
                 return await step.replaceDialog('/hear', opts);
               }
             } catch (error) {

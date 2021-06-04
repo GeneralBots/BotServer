@@ -225,7 +225,6 @@ export class GBConversationalService {
     }
   }
 
-
   public async sendFile(
     min: GBMinInstance,
     step: GBDialogStep,
