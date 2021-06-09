@@ -35,14 +35,14 @@
  */
 
 'use strict';
-
-import urlJoin = require('url-join');
 const { DialogSet, TextPrompt } = require('botbuilder-dialogs');
 const express = require('express');
 const request = require('request-promise-native');
 const removeRoute = require('express-remove-route');
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 const wash = require('washyourmouthoutwithsoap');
+const { FacebookAdapter } = require('botbuilder-adapter-facebook');
+const { HangoutsAdapter } = require('botbuilder-adapter-hangouts');
 import {
   AutoSaveStateMiddleware,
   BotFrameworkAdapter,
@@ -63,9 +63,7 @@ import {
   IGBPackage
 } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-
 import { MicrosoftAppCredentials } from 'botframework-connector';
-import fs = require('fs');
 import { GBServer } from '../../../src/app';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GuaribasConversationMessage } from '../../analytics.gblib/models';
@@ -79,6 +77,8 @@ import { Messages } from '../strings';
 import { GBConfigService } from './GBConfigService';
 import { GBConversationalService } from './GBConversationalService';
 import { GBDeployer } from './GBDeployer';
+import urlJoin = require('url-join');
+import fs = require('fs');
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -162,6 +162,8 @@ export class GBMinService {
     });
   }
 
+
+
   /**
    * Removes bot endpoint from web listeners and remove bot instance
    * from list of global server bot instances.
@@ -220,10 +222,22 @@ export class GBMinService {
     // Serves individual URL for each bot conversational interface.
 
     const receiver = async (req, res) => {
-      await this.receiver(adapter, req, res, conversationState, min, instance, GBServer.globals.appPackages);
+      await this.receiver(req, res, conversationState, min, instance, GBServer.globals.appPackages);
     };
     const url = `/api/messages/${instance.botId}`;
     GBServer.globals.server.post(url, receiver);
+    GBServer.globals.server.get(url, (req, res) => {
+        if (req.query['hub.mode'] === 'subscribe') {
+        if (req.query['hub.verify_token'] === process.env.FACEBOOK_VERIFY_TOKEN) {
+          const val = req.query['hub.challenge'];
+          res.send(val);
+        } else {
+          GBLog.error('Failed to verify endpoint.');
+          res.send('OK');
+        }
+      }
+      res.end();
+    });
     GBLog.info(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
 
     // Serves individual URL for each bot user interface.
@@ -601,6 +615,8 @@ export class GBMinService {
       new Date(new Date().setFullYear(new Date().getFullYear() + 10))
     );
 
+    
+
     // The minimal bot is built here.
 
     const min = new GBMinInstance();
@@ -618,6 +634,15 @@ export class GBMinService {
     min.sandBoxMap = {};
     min.packages = sysPackages;
     min.appPackages = appPackages;
+    
+    min['fbAdapter'] = new FacebookAdapter({
+      verify_token: process.env.FACEBOOK_VERIFY_TOKEN,
+      app_secret: process.env.FACEBOOK_APP_SECRET,
+      access_token: process.env.FACEBOOK_ACCESS_TOKEN
+    });
+    min['ggAdapter'] = new HangoutsAdapter({
+      token: process.env.GOOGLE_TOKEN
+    });        
     if (GBServer.globals.minBoot === undefined) {
       GBServer.globals.minBoot = min;
     }
@@ -734,8 +759,7 @@ export class GBMinService {
   /**
    * BOT Framework web service hook method.
    */
-  private async receiver(
-    adapter: BotFrameworkAdapter,
+  private async receiver(   
     req: any,
     res: any,
     conversationState: ConversationState,
@@ -744,15 +768,24 @@ export class GBMinService {
     appPackages: any[]
   ) {
 
+    let adapter = min.bot;
+
+    if (req.body.object)
+    {
+      req['rawBody']=JSON.stringify(req.body);
+      adapter = min['fbAdapter'];
+    }
+
     // Default activity processing and handler.
 
-    await adapter.processActivity(req, res, async context => {
+    await adapter['processActivity'](req, res, async context => {
 
       // Get loaded user state
 
       const step = await min.dialogs.createContext(context);
       step.context.activity.locale = 'pt-BR';
       let firstTime = false;
+
 
       try {
         const user = await min.userProfile.get(context, {});
@@ -836,6 +869,8 @@ export class GBMinService {
             }
           }
         }
+
+        // Required for F0 handling of persisted conversations.
 
         GBLog.info(`User>: text:${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId}, value: ${context.activity.value})`);
 
@@ -1016,7 +1051,7 @@ export class GBMinService {
       const args = parts.join(' ');
       if (cmdOrDialogName === '/start') {
         // TODO: Args to BASIC.
-      } else  if (cmdOrDialogName === '/call') {
+      } else if (cmdOrDialogName === '/call') {
         await GBVMService.callVM(args, min, step, this.deployer);
       } else {
         await step.beginDialog(cmdOrDialogName, { args: args });

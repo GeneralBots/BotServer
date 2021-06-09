@@ -917,7 +917,7 @@ export class GBConversationalService {
     const analytics = new AnalyticsService();
     analytics.createMessage(min.instance.instanceId, user.conversation, null, text);
 
-    if (!isNaN(member.id)) {
+    if (!isNaN(member.id) && !member.id.startsWith('1000')) {
       await min.whatsAppDirectLine.sendToDevice(member.id, text);
     } else {
       await step.context.sendActivity(text);

@@ -67,6 +67,8 @@
     "bluebird": "3.7.2",
     "body-parser": "1.19.0",
     "botbuilder": "4.11.0",
+    "botbuilder-adapter-facebook": "^1.0.11",
+    "botbuilder-adapter-hangouts": "^1.0.8",
     "botbuilder-ai": "4.11.0",
     "botbuilder-dialogs": "4.11.0",
     "botframework-connector": "4.11.0",
