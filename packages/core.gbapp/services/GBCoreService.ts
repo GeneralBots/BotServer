@@ -57,6 +57,7 @@ import { GBSharePointPackage } from '../../sharepoint.gblib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBVMService } from '../../basic.gblib/services/GBVMService';
 import { GBBasicPackage } from '../../basic.gblib';
+import { GBGoogleChatPackage } from '../../google-chat.gblib';
 
 const opn = require('opn');
 const cron = require('node-cron');
@@ -460,6 +461,7 @@ ENDPOINT_UPDATE=true
         GBWhatsappPackage,
         GBAzureDeployerPackage,
         GBSharePointPackage,
+        GBGoogleChatPackage,
         GBBasicPackage
       ],
       async e => {

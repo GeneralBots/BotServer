@@ -49,6 +49,7 @@
   },
   "dependencies": {
     "@azure/ms-rest-js": "2.1.0",
+    "@google-cloud/pubsub": "^2.13.0",
     "@microsoft/microsoft-graph-client": "2.1.1",
     "@semantic-release/changelog": "5.0.1",
     "@semantic-release/exec": "5.0.0",
@@ -81,6 +82,7 @@
     "express-remove-route": "1.0.0",
     "ffmpeg-static": "4.2.7",
     "google-libphonenumber": "3.2.15",
+    "googleapis": "^76.0.0",
     "ibm-watson": "5.7.1",
     "js-beautify": "1.13.0",
     "marked": "1.2.5",

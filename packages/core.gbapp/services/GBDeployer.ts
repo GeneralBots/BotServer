@@ -902,7 +902,8 @@ export class GBDeployer implements IGBDeployer {
       'admin.gbapp',
       'azuredeployer.gbapp',
       'customer-satisfaction.gbapp',
-      'kb.gbapp'
+      'kb.gbapp',
+      'google-chat.gblib'
     ];
 
     return names.indexOf(name) > -1;

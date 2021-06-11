@@ -79,6 +79,7 @@ import { GBConversationalService } from './GBConversationalService';
 import { GBDeployer } from './GBDeployer';
 import urlJoin = require('url-join');
 import fs = require('fs');
+import { GoogleChatDirectLine } from '../../google-chat.gblib/services/GoogleChatDirectLine';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -640,13 +641,6 @@ export class GBMinService {
       app_secret: process.env.FACEBOOK_APP_SECRET,
       access_token: process.env.FACEBOOK_ACCESS_TOKEN
     });
-    min['ggAdapter'] = new HangoutsAdapter({
-      token: process.env.GOOGLE_TOKEN
-    });        
-    if (GBServer.globals.minBoot === undefined) {
-      GBServer.globals.minBoot = min;
-    }
-
     // TODO: min.appPackages =  core.getPackagesByInstanceId(min.instance.instanceId);
 
     // Creates a hub of services available in .gbapps.
@@ -657,6 +651,17 @@ export class GBMinService {
         min.gbappServices = { ...min.gbappServices, ...services };
       }
     });
+                               
+    let GoogleChatSubscriptionName = '';
+    let GoogleWebChatKey = '';
+
+    min['googleDirectLine'] = new GoogleChatDirectLine(
+      min,
+      min.botId,
+      GoogleWebChatKey,
+      GoogleChatSubscriptionName
+    );
+    await min['googleDirectLine'].setup(true);
 
     // If there is WhatsApp configuration specified, initialize
     // infrastructure objects.
