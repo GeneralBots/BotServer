@@ -85,7 +85,7 @@
     "googleapis": "^76.0.0",
     "ibm-watson": "5.7.1",
     "js-beautify": "1.13.0",
-    "marked": "1.2.5",
+    "marked": "2.0.0",
     "microsoft-cognitiveservices-speech-sdk": "1.14.1",
     "ms-rest-azure": "3.0.0",
     "nexmo": "2.9.1",
