@@ -43,6 +43,9 @@ import { GBConversationalService } from '../../core.gbapp/services/GBConversatio
 import { SecService } from '../../security.gbapp/services/SecService';
 import { Messages } from '../strings';
 const { google } = require('googleapis')
+const chat = google.chat('v1');
+const { promisify } = require('util');
+chat.spaces.messages.createAsync = promisify(chat.spaces.messages.create);
 const { PubSub } = require('@google-cloud/pubsub');
 
 // Creates a client; cache this for further use
@@ -64,12 +67,14 @@ export class GoogleChatDirectLine extends GBService {
   public min: GBMinInstance;
   private directLineSecret: string;
   pubSubClient: any;
+  GoogleChatApiKey: any;
 
   constructor(
     min: GBMinInstance,
     botId,
     directLineSecret,
-    GoogleChatSubscriptionName
+    GoogleChatSubscriptionName,
+    GoogleChatApiKey,
   ) {
     super();
 
@@ -78,6 +83,7 @@ export class GoogleChatDirectLine extends GBService {
     this.directLineSecret = directLineSecret;
     this.GoogleChatSubscriptionName = GoogleChatSubscriptionName;
     this.pubSubClient = new PubSub();
+    this.GoogleChatApiKey = GoogleChatApiKey;
 
   }
 
@@ -107,7 +113,7 @@ export class GoogleChatDirectLine extends GBService {
       try {
 
         const subscription = this.pubSubClient.subscription(this.GoogleChatSubscriptionName);
-        subscription.on('message', this.receiver);
+        subscription.on('message', this.receiver.bind(this));
 
       } catch (error) {
         GBLog.error(`Error initializing 3rd party GoogleChat provider(1) ${error.message}`);
@@ -116,8 +122,8 @@ export class GoogleChatDirectLine extends GBService {
 
   }
 
-  public async resetConversationId(number) {
-    GoogleChatDirectLine.conversationIds[number] = undefined;
+  public async resetConversationId(key) {
+    GoogleChatDirectLine.conversationIds[key] = undefined;
   }
 
   public async check() {
@@ -127,30 +133,36 @@ export class GoogleChatDirectLine extends GBService {
 
   public async receiver(message) {
 
-    GBLog.info(`Received message ${message.id}:`);
-    GBLog.info(`\tData: ${message.data}`);
-    GBLog.info(`\tAttributes: ${message.attributes}`);
+    const event = JSON.parse(Buffer.from(message.data, 'binary').toString());
+    
+    let from = '';
+    let fromName='';
+    let text;
+    const threadName = event.message.thread.name;
+       
+    if (event['type'] === 'ADDED_TO_SPACE' && event['space']['singleUserBotDm'])
+    {
+      
+    }else if(event['type'] === 'MESSAGE')
+    {
+      text = event.message.text;
+      fromName = event.message.sender.displayName;
+      from = event.message.sender.email;
+      GBLog.info(`Received message from ${from} (${fromName}): ${text}.`);
+    }
     message.ack();
-
-    let from = message.id; // TODO: update.
-    let text = message.data;
-    let fromName = 'GB';
 
     GBLog.info(`GBGoogleChat: RCV ${from}: ${text})`);
 
-    await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
-      await e.onExchangeData(this.min, 'GoogleChatMessage', message);
-    });
-
     const client = await this.directLineClient;
-    const conversationId = GoogleChatDirectLine.conversationIds[from];
+    const conversationId = GoogleChatDirectLine.conversationIds[threadName];
 
-    if (GoogleChatDirectLine.conversationIds[from] === undefined) {
+    if (GoogleChatDirectLine.conversationIds[threadName] === undefined) {
       GBLog.info(`GBGoogleChat: Starting new conversation on Bot.`);
       const response = await client.Conversations.Conversations_StartConversation();
       const generatedConversationId = response.obj.conversationId;
 
-      GoogleChatDirectLine.conversationIds[from] = generatedConversationId;
+      GoogleChatDirectLine.conversationIds[threadName] = generatedConversationId;
 
       this.pollMessages(client, generatedConversationId, from, fromName);
       this.inputMessage(client, generatedConversationId, text, from, fromName);
@@ -237,29 +249,26 @@ export class GoogleChatDirectLine extends GBService {
     await this.sendToDevice(from, output);
   }
 
-  public async sendToDevice(to: string, msg: string) {
-
-    const privatekey = require('./a.json')
-    const scopes = ['https://www.googleapis.com/auth/chat.bot'];
+  public async sendToDevice(threadName: string, msg: string) {
 
     try {
-      const jwtClient = new google.auth.JWT(
-        privatekey.client_email,
-        null,
-        privatekey.private_key,
-        scopes,
-        'adminEmail@org.com'
-      );
-      await jwtClient.authorize();
-      const chat = google.chat({ version: 'v1', auth: jwtClient });
-      const res = await chat.spaces.messages.get({ name: 'spaces/XXX/messages/XX.XX' })
-      GBLog.info(res)
-
-      GBLog.info(`Message [${msg}] sent to ${to}: `);
+      
+      let threadParts = threadName.split('/');
+      let spaces = threadParts[1];
+      let threadKey = threadParts[3];
+      
+      const res = await chat.spaces.messages.createAsync({
+        auth: this.GoogleChatApiKey,
+        parent: `spaces/${spaces}`,
+        threadKey: threadKey,
+        body: {
+          text: msg
+        }
+      });
+      GBLog.info(res);
+      GBLog.info(`Message [${msg}] sent to ${threadName}: `);
     } catch (error) {
       GBLog.error(`Error sending message to GoogleChat provider ${error.message}`);
-
-      // TODO: Handle Error: socket hang up and retry.
     }
   }
 

@@ -52,7 +52,6 @@ class GBUIApp extends React.Component {
 
     this.state = {
       line: null,
-      instance: null,
       token: null,
       instanceClient: null
     };
@@ -132,8 +131,7 @@ class GBUIApp extends React.Component {
       .then(res => res.json())
       .then(
         result => {
-          this.setState({ instanceClient: result });
-          this.setupBotConnection();
+          this.setupBotConnection(result);
         },
         error => {
           this.setState({
@@ -166,7 +164,8 @@ class GBUIApp extends React.Component {
     );
     window.userAgentApplication = userAgentApplication;
 
-    if (!userAgentApplication.isCallback(window.location.hash) && window.parent === window && !window.opener) {
+    if (!userAgentApplication.isCallback(window.location.hash) && window.parent === window 
+    && !window.opener && userAgentApplication.getUser) {
       var user = userAgentApplication.getUser();
       if (user) {
         userAgentApplication.acquireTokenSilent(graphScopes).then(
@@ -181,32 +180,32 @@ class GBUIApp extends React.Component {
     }
   }
 
-  setupBotConnection() {
+  setupBotConnection(instanceClient) {
     let _this_ = this;
     window['botchatDebug'] = true;
 
     const line = new DirectLine({
-      token: this.state.instanceClient.webchatToken
+      token: instanceClient.webchatToken
     });
+    _this_.setState({ line: line});
 
     line.connectionStatus$.subscribe(connectionStatus => {
       if (connectionStatus === ConnectionStatus.Online) {
-        _this_.setState({ line: line });
-        window['botConnection'] = line;
+        _this_.setState({ instanceClient: instanceClient});
+         window['botConnection'] = line;
       }
     });
 
     window.line = line;
 
     line.activity$
-      .filter(activity => activity.type === 'event' && activity.name === 'loadInstance')
-      .subscribe(activity => {
-        this.postEvent('startGB', true);
-        _this_.setState({ instance: activity.value });
-        _this_.authenticate();
-      });
+    .filter(activity => activity.type === 'event' && activity.name === 'loadInstance')
+    .subscribe(activity => {
+      this.postEvent('startGB', true);
+      _this_.authenticate();
+    });
 
-    line.activity$
+  line.activity$
       .filter(activity => activity.type === 'event' && activity.name === 'stop')
       .subscribe(activity => {
         if (_this_.player) {
@@ -313,16 +312,17 @@ class GBUIApp extends React.Component {
 
     let sideBar = (
       <div className="sidebar">
-        <SidebarMenu chat={this.chat} instance={this.state.instance} />
+        <SidebarMenu chat={this.chat} instance={this.state.instanceClient} />
       </div>
     );
 
-    if (this.state.line && this.state.instance) {
+    if (this.state.instanceClient) {
       
-      gbCss = <GBCss instance={this.state.instance} />;
-      seo = <SEO instance={this.state.instance} />;
-
-      // let speechOptions;
+      gbCss = <GBCss instance={this.state.instanceClient} />;
+      seo = <SEO instance={this.state.instanceClient} />;
+    }
+    if (this.state.line) {
+        // let speechOptions;
       // let token = this.state.instanceClient.speechToken;
 
       // speechOptions = {
@@ -352,7 +352,7 @@ class GBUIApp extends React.Component {
       );
     }
 
-    if (!this.state.instance) {
+    if (!this.state.instanceClient) {
       sideBar = '';
     }
 

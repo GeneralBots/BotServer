@@ -134,6 +134,15 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   public cloudLocation: string;
 
   @Column
+  public googleBotKey: string;
+
+  @Column
+  public googleChatApiKey: string;
+
+  @Column
+  public googleChatSubscriptionName: string;
+
+  @Column
   public whatsappBotKey: string;
 
   @Column

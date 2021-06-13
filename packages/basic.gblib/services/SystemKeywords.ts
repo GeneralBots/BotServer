@@ -83,8 +83,7 @@ export class SystemKeywords {
       method: 'GET',
       encoding: 'binary'
     };
-    const res = await request(options);
-    Buffer.from(res, 'binary').toString();
+    return await request(options); // TODO: Check this.
   }
 
   /**

@@ -50,7 +50,7 @@ class GBUrlPlayer extends Component {
   render() {
     return (
       <div className="gb-video-player-wrapper">
-        <iframe ref="video"
+        <iframe title="Video" ref="video"
           className="gb-video-react-player"
           src={this.state.src}
           width="100%"

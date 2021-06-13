@@ -42,7 +42,6 @@ const removeRoute = require('express-remove-route');
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 const wash = require('washyourmouthoutwithsoap');
 const { FacebookAdapter } = require('botbuilder-adapter-facebook');
-const { HangoutsAdapter } = require('botbuilder-adapter-hangouts');
 import {
   AutoSaveStateMiddleware,
   BotFrameworkAdapter,
@@ -652,14 +651,13 @@ export class GBMinService {
       }
     });
                                
-    let GoogleChatSubscriptionName = '';
-    let GoogleWebChatKey = '';
 
     min['googleDirectLine'] = new GoogleChatDirectLine(
       min,
       min.botId,
-      GoogleWebChatKey,
-      GoogleChatSubscriptionName
+      min.instance.googleBotKey,
+      min.instance.googleChatSubscriptionName,
+      min.instance.googleChatApiKey
     );
     await min['googleDirectLine'].setup(true);
 
@@ -807,14 +805,6 @@ export class GBMinService {
 
           firstTime = true;
 
-          // Sends loadInstance event to .gbui clients and loads FAQ.
-
-          await min.conversationalService.sendEvent(min, step, 'loadInstance', {
-            instanceId: instance.instanceId,
-            botId: instance.botId,
-            theme: instance.theme ? instance.theme : 'default.gbtheme',
-            secret: instance.webchatKey
-          });
           const service = new KBService(min.core.sequelize);
           const data = await service.getFaqBySubjectArray(instance.instanceId, 'faq', undefined);
           await min.conversationalService.sendEvent(min, step, 'play', {

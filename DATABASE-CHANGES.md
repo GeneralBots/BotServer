@@ -97,3 +97,11 @@ ALTER TABLE dbo.GuaribasQuestion ADD
 	skipIndex bit NULL
 GO
 
+# 2.0.116 >
+
+
+ALTER TABLE dbo.GuaribasInstance ADD
+	googleBotKey nvarchar(255) NULL,
+	googleChatApiKey nvarchar(255) NULL,
+	googleChatSubscriptionName nvarchar(255) NULL,
+GO
