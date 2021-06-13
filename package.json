@@ -110,7 +110,7 @@
     "swagger-client": "^3.13.5",
     "tedious": "9.2.1",
     "textract": "2.5.0",
-    "typescript": "4.3.2",
+    "typescript": "3.9.4",
     "url-join": "4.0.1",
     "vbscript-to-typescript": "1.0.8",
     "walk-promise": "0.2.0",
