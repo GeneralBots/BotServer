@@ -70,9 +70,9 @@ export class GuaribasSchedule extends Model<GuaribasSchedule> {
 
   @Column
   @CreatedAt
-  public createdAt: Date;
+  declare public createdAt: Date;
 
   @Column
   @UpdatedAt
-  public updatedAt: Date;
+  declare public updatedAt: Date;
 }

@@ -244,11 +244,11 @@ export class GuaribasInstance extends Model<GuaribasInstance>
 
   @Column
   @CreatedAt
-  public createdAt: Date;
+  declare public createdAt: Date;
 
   @Column
   @UpdatedAt
-  public updatedAt: Date;
+  declare public updatedAt: Date;
 
   @Column(DataType.STRING(4000))
   public params: string;
@@ -276,11 +276,11 @@ export class GuaribasPackage extends Model<GuaribasPackage> {
 
   @Column
   @CreatedAt
-  public createdAt: Date;
+  declare public createdAt: Date;
 
   @Column
   @UpdatedAt
-  public updatedAt: Date;
+  declare public updatedAt: Date;
 
   @Column({ type: DataType.STRING(512) })
   public custom: string;
@@ -301,11 +301,11 @@ export class GuaribasChannel extends Model<GuaribasChannel> {
 
   @Column
   @CreatedAt
-  public createdAt: Date;
+  declare public createdAt: Date;
 
   @Column
   @UpdatedAt
-  public updatedAt: Date;
+  declare public updatedAt: Date;
 }
 
 /**
@@ -331,11 +331,11 @@ export class GuaribasException extends Model<GuaribasException> {
 
   @Column
   @CreatedAt
-  public createdAt: Date;
+  declare public createdAt: Date;
 
   @Column
   @UpdatedAt
-  public updatedAt: Date;
+  declare public updatedAt: Date;
 }
 
 @Table
@@ -354,11 +354,11 @@ export class GuaribasApplications extends Model<GuaribasApplications> {
 
   @Column
   @CreatedAt
-  public createdAt: Date;
+  declare public createdAt: Date;
 
   @Column
   @UpdatedAt
-  public updatedAt: Date;
+  declare public updatedAt: Date;
 }
 
 @Table
@@ -380,9 +380,9 @@ export class GuaribasSchedule extends Model<GuaribasSchedule> {
 
   @Column
   @CreatedAt
-  public createdAt: Date;
+  declare public createdAt: Date;
 
   @Column
   @UpdatedAt
-  public updatedAt: Date;
+  declare public updatedAt: Date;
 }
