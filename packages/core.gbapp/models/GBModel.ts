@@ -85,7 +85,7 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   public state: string;
 
   @Column
-  public version: string;
+  declare public version: string;
 
   @Column
   public enabledAdmin: boolean;
