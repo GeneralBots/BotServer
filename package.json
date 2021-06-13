@@ -107,7 +107,7 @@
     "speakingurl": "^14.0.1",
     "sppull": "2.7.0",
     "strict-password-generator": "1.1.2",
-    "swagger-client": "2.1.18",
+    "swagger-client": "^3.13.5",
     "tedious": "9.2.1",
     "textract": "2.5.0",
     "typescript": "4.3.2",

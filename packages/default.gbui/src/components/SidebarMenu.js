@@ -42,8 +42,7 @@ class SideBarMenu extends React.Component {
         textFormat: "plain",
         timestamp: new Date().toISOString(),
         from: window.user
-      })
-      .subscribe(console.log("success"));
+      });
   }
 
   render() {

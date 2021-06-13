@@ -46,7 +46,6 @@ class GBMarkdownPlayer extends Component {
           timestamp: new Date().toISOString(),
           from: { id: "webUser", name: "You" }
         })
-        .subscribe(console.log("success"));
     }, 400);
   }
 
@@ -62,7 +61,6 @@ class GBMarkdownPlayer extends Component {
           timestamp: new Date().toISOString(),
           from: window.user
         })
-        .subscribe(console.log("success"));
     }, 400);
 
   }

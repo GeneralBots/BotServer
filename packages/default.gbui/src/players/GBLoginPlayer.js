@@ -41,7 +41,7 @@ class GBLoginPlayer extends React.Component {
     };
   }
 
-  doLogin(info) {
+  doLogin() {
     let authority =
       "https://login.microsoftonline.com/" +
       this.state.login.authenticatorTenant;
@@ -51,9 +51,9 @@ class GBLoginPlayer extends React.Component {
     let userAgentApplication = new UserAgentApplication(
       this.state.login.authenticatorClientId,
       authority,
-      function (errorDesc, token, error, tokenType) {
+      function (errorDesc, token, error) {
         if (error) {
-          console.log(error);
+          this.setState({ login: error});
         }
       })
 

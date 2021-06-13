@@ -72,7 +72,6 @@ class GBUIApp extends React.Component {
         })
         .subscribe(() => {
           window.userAgentApplication.logout();
-          console.log('updateToken done');
         });
     }, 400);
   }
@@ -86,8 +85,7 @@ class GBUIApp extends React.Component {
         textFormat: 'plain',
         timestamp: new Date().toISOString(),
         from: this.getUser()
-      })
-      .subscribe(console.log('EVENT SENT TO Guaribas.'));
+      });
   }
 
   getUser() {
@@ -106,7 +104,6 @@ class GBUIApp extends React.Component {
         timestamp: new Date().toISOString(),
         from: window.user
       })
-        .subscribe(console.log("success"));
     }, 400);
   }
   postMessage(value) {
@@ -156,9 +153,9 @@ class GBUIApp extends React.Component {
     let userAgentApplication = new UserAgentApplication(
       this.state.instanceClient.authenticatorClientId,
       authority,
-      function (errorDesc, token, error, tokenType) {
+      function (errorDesc, token, error) {
         if (error) {
-          console.log(error);
+          _this_.sendToken(error);
         }
       }
     );
@@ -173,7 +170,7 @@ class GBUIApp extends React.Component {
             _this_.sendToken(accessToken);
           },
           function (error) {
-            console.log(error);
+            _this_.sendToken(error);
           }
         );
       }
@@ -200,14 +197,14 @@ class GBUIApp extends React.Component {
 
     line.activity$
     .filter(activity => activity.type === 'event' && activity.name === 'loadInstance')
-    .subscribe(activity => {
+    .subscribe(() => {
       this.postEvent('startGB', true);
       _this_.authenticate();
     });
 
   line.activity$
       .filter(activity => activity.type === 'event' && activity.name === 'stop')
-      .subscribe(activity => {
+      .subscribe(() => {
         if (_this_.player) {
           _this_.player.stop();
         }
@@ -301,7 +298,7 @@ class GBUIApp extends React.Component {
           );
           break;
         default:
-          console.log('GBERROR: Unknow player type specified on message from server.');
+          playerComponent = <div>GBERROR: Unknow player type specified on message from server.</div>;
           break;
       }
     }

@@ -46,7 +46,7 @@ class GBImagePlayer extends Component {
   stop(){
     this.playerImage.src = "";
   }
-  componentDidUpdate(prevProps, prevState) {}
+  
 
   render() {
     return (

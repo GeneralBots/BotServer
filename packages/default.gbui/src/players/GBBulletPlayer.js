@@ -46,14 +46,13 @@ class RenderItem extends Component {
         timestamp: new Date().toISOString(),
         from: window.user
       })
-      .subscribe(console.log("success"));
     },400);
   }
 
   render() {
     return (
       <ul>
-        {this.props.list.map((item, i) => (
+        {this.props.list.map((item) => (
           <li key={item.questionId}>
             <label className="gb-bullet-player-item" onClick={this.send.bind(this, item)}>{item.content}</label>
           </li>
