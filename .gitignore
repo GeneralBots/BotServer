@@ -18,4 +18,3 @@
 .env
 *.env
 .vscode/launch.json
-/google-chat.json

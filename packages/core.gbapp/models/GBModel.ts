@@ -143,6 +143,15 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   public googleChatSubscriptionName: string;
 
   @Column
+  public googleClientEmail: string;
+
+  @Column({ type: DataType.STRING(4000) })
+  public googlePrivateKey: string;
+
+  @Column
+  public googleProjectId: string;
+
+  @Column
   public whatsappBotKey: string;
 
   @Column

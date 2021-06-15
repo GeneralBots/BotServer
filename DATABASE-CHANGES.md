@@ -104,4 +104,7 @@ ALTER TABLE dbo.GuaribasInstance ADD
 	googleBotKey nvarchar(255) NULL,
 	googleChatApiKey nvarchar(255) NULL,
 	googleChatSubscriptionName nvarchar(255) NULL,
+	googleClientEmail  nvarchar(255) NULL,
+	googlePrivateKey  nvarchar(4000) NULL,
+	googleProjectId  nvarchar(255) NULL
 GO

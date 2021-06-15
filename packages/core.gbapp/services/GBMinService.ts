@@ -227,7 +227,7 @@ export class GBMinService {
     const url = `/api/messages/${instance.botId}`;
     GBServer.globals.server.post(url, receiver);
     GBServer.globals.server.get(url, (req, res) => {
-        if (req.query['hub.mode'] === 'subscribe') {
+      if (req.query['hub.mode'] === 'subscribe') {
         if (req.query['hub.verify_token'] === process.env.FACEBOOK_VERIFY_TOKEN) {
           const val = req.query['hub.challenge'];
           res.send(val);
@@ -615,7 +615,7 @@ export class GBMinService {
       new Date(new Date().setFullYear(new Date().getFullYear() + 10))
     );
 
-    
+
 
     // The minimal bot is built here.
 
@@ -634,7 +634,7 @@ export class GBMinService {
     min.sandBoxMap = {};
     min.packages = sysPackages;
     min.appPackages = appPackages;
-    
+
     min['fbAdapter'] = new FacebookAdapter({
       verify_token: process.env.FACEBOOK_VERIFY_TOKEN,
       app_secret: process.env.FACEBOOK_APP_SECRET,
@@ -650,17 +650,20 @@ export class GBMinService {
         min.gbappServices = { ...min.gbappServices, ...services };
       }
     });
-                               
 
-    min['googleDirectLine'] = new GoogleChatDirectLine(
-      min,
-      min.botId,
-      min.instance.googleBotKey,
-      min.instance.googleChatSubscriptionName,
-      min.instance.googleChatApiKey
-    );
-    await min['googleDirectLine'].setup(true);
-
+    if (min.instance.googlePrivateKey) {
+      min['googleDirectLine'] = new GoogleChatDirectLine(
+        min,
+        min.botId,
+        min.instance.googleBotKey,
+        min.instance.googleChatSubscriptionName,
+        min.instance.googleChatApiKey,
+        min.instance.googleClientEmail,
+        min.instance.googlePrivateKey.replace(/\\n/gm, '\n'),
+        min.instance.googleProjectId
+      );
+      await min['googleDirectLine'].setup(true);
+    }
     // If there is WhatsApp configuration specified, initialize
     // infrastructure objects.
 
@@ -762,7 +765,7 @@ export class GBMinService {
   /**
    * BOT Framework web service hook method.
    */
-  private async receiver(   
+  private async receiver(
     req: any,
     res: any,
     conversationState: ConversationState,
@@ -773,9 +776,8 @@ export class GBMinService {
 
     let adapter = min.bot;
 
-    if (req.body.object)
-    {
-      req['rawBody']=JSON.stringify(req.body);
+    if (req.body.object) {
+      req['rawBody'] = JSON.stringify(req.body);
       adapter = min['fbAdapter'];
     }
 
