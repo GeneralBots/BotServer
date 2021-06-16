@@ -439,8 +439,8 @@ export class GBConversationalService {
       var filetype = href.split('.').pop();
       if (videos.indexOf(filetype) > -1) {
         var out = '<video autoplay loop alt="' + text + '">'
-                + '  <source src="' + href + '" type="video/' + filetype + '">'
-                + '</video>'
+          + '  <source src="' + href + '" type="video/' + filetype + '">'
+          + '</video>'
         return out;
       } else {
         return renderer.oldImage(href, title, text);
@@ -466,7 +466,7 @@ export class GBConversationalService {
     text = text.replace('! [', '![').replace('] (', '](');
 
     text = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', ''); // TODO: Improve it.
-    text = text.replace(`](kb`, "]("+ process.env.BOT_URL + '/kb'); // TODO: Improve it.
+    text = text.replace(`](kb`, "](" + process.env.BOT_URL + '/kb'); // TODO: Improve it.
 
     // According to the channel, formats the output optimized to it.
 
@@ -951,14 +951,20 @@ export class GBConversationalService {
    * Sends a message in a user with an already started conversation (got ConversationReference set)
    */
   public async sendOnConversation(min: GBMinInstance, user: GuaribasUser, message: string) {
-    const ref = JSON.parse(user.conversationReference);
-    MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
-    await min.bot['createConversation'](ref, async (t1) => {
-      const ref2 = TurnContext.getConversationReference(t1.activity);
-      await min.bot.continueConversation(ref2, async (t2) => {
-        await t2.sendActivity(message);
+
+    if (user.conversationReference.startsWith('spaces')) {
+      await min['googleDirectLine'].sendToDevice(user.userSystemId, null, user.conversationReference, message);
+    }
+    else {
+      const ref = JSON.parse(user.conversationReference);
+      MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
+      await min.bot['createConversation'](ref, async (t1) => {
+        const ref2 = TurnContext.getConversationReference(t1.activity);
+        await min.bot.continueConversation(ref2, async (t2) => {
+          await t2.sendActivity(message);
+        });
       });
-    });
+    }
   }
 
   public static kmpSearch(pattern, text) {

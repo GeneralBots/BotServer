@@ -276,7 +276,7 @@ export class WhatsappDirectLine extends GBService {
       } else {
         GBLog.info(`USER (${id}) TO AGENT ${agent.userSystemId}: ${text}`);
 
-        if (user.agentSystemId.charAt(2) === ":") { // Agent is from Teams.
+        if (user.agentSystemId.charAt(2) === ":" || agent.userSystemId.indexOf("@") > -1) { // Agent is from Teams or Google Chat.
           await this.min.conversationalService['sendOnConversation'](this.min, agent, text);
         }
         else {
@@ -487,10 +487,8 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async sendToDeviceEx(to, text, locale) {
-    const minBoot = GBServer.globals.minBoot as any;
-
-    text = await minBoot.conversationalService.translate(
-      minBoot,
+    text = await this.min.conversationalService.translate(
+      this.min,
       text,
       locale
     );

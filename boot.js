@@ -7,7 +7,6 @@ var pjson = require('./package.json');
 
 // Displays version of Node JS being used at runtime and others attributes.
 
-
 console.log(`[GB Runtime] BotServer        = v${pjson.version}`);
 console.log(`[GB Runtime] BotLib           = v${pjson.dependencies.botlib}`);
 console.log(`[GB Runtime] BotBuilder (MS)  = v${pjson.dependencies.botbuilder}`);
