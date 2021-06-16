@@ -81,7 +81,7 @@
     "express-remove-route": "1.0.0",
     "ffmpeg-static": "4.3.0",
     "google-libphonenumber": "3.2.21",
-    "googleapis": "^76.0.0",
+    "googleapis": "75.0.0",
     "ibm-watson": "6.1.1",
     "js-beautify": "1.13.13",
     "marked": "2.0.7",

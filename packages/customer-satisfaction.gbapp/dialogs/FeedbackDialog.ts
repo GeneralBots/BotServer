@@ -131,7 +131,7 @@ export class FeedbackDialog extends IGBDialog {
             await min.whatsAppDirectLine.sendToDeviceEx(manualUser.userSystemId,
               Messages[locale].notify_end_transfer(min.instance.botId), locale);
 
-            if (userSystemId.charAt(2) === ":") { // Agent is from Teams.
+            if (userSystemId.charAt(2) === ":" || userSystemId.indexOf('@') > -1) { // Agent is from Teams or Google Chat.
               await min.conversationalService.sendText(min, step, Messages[locale].notify_end_transfer(min.instance.botId));
             }
             else {
@@ -154,7 +154,7 @@ export class FeedbackDialog extends IGBDialog {
               Messages[locale].notify_end_transfer(min.instance.botId), locale);
 
 
-            if (user.systemUser.agentSystemId.charAt(2) === ":") { // Agent is from Teams.
+            if (user.systemUser.agentSystemId.charAt(2) === ":" || userSystemId.indexOf('@') > -1) { // Agent is from Teams or Google Chat.
               await min.conversationalService.sendText(min, step, Messages[locale].notify_end_transfer(min.instance.botId));
             }
             else {
@@ -171,7 +171,7 @@ export class FeedbackDialog extends IGBDialog {
           }
           else
           {
-            if (user.systemUser.userSystemId.charAt(2) === ":") { // Agent is from Teams.
+            if (user.systemUser.userSystemId.charAt(2) === ":" || userSystemId.indexOf('@') > -1) { // Agent is from Teams or Google Chat.
               await min.conversationalService.sendText(min, step, 'Nenhum atendimento em andamento.');
             }
             else {
