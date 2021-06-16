@@ -1,3 +1,10 @@
+## [2.0.122](https://github.com/GeneralBots/BotServer/compare/2.0.121...2.0.122) (2021-06-16)
+
+
+### Bug Fixes
+
+* **all:** Removal of MSFT cog. services. ([7f970ee](https://github.com/GeneralBots/BotServer/commit/7f970ee77fc40466510037fa1949bd7ef2892b8f))
+
 ## [2.0.121](https://github.com/GeneralBots/BotServer/compare/2.0.120...2.0.121) (2021-06-16)
 
 
