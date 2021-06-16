@@ -85,7 +85,6 @@
     "ibm-watson": "6.1.1",
     "js-beautify": "1.13.13",
     "marked": "2.0.7",
-    "microsoft-cognitiveservices-speech-sdk": "1.14.1",
     "ms-rest-azure": "3.0.0",
     "nexmo": "2.9.1",
     "node-cron": "3.0.0",

@@ -443,12 +443,13 @@ export class WhatsappDirectLine extends GBService {
 
   public async sendTextAsAudioToDevice(to, msg) {
 
-    const url = await GBConversationalService.getAudioBufferFromText(
-      this.min.instance.speechKey,
-      this.min.instance.cloudLocation,
-      msg, this.locale
-    );
-
+    // DISABLED:
+    // const url = await GBConversationalService.getAudioBufferFromText(
+    //   this.min.instance.speechKey,
+    //   this.min.instance.cloudLocation,
+    //   msg, this.locale
+    // );
+    const url = 'https://';
     await this.sendFileToDevice(to, url, 'Audio', msg);
   }
 
