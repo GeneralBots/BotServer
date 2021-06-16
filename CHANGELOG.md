@@ -1,3 +1,12 @@
+## [2.0.121](https://github.com/GeneralBots/BotServer/compare/2.0.120...2.0.121) (2021-06-16)
+
+
+### Bug Fixes
+
+* **all:** MSFT mistake again being fixed rolling back version of non-tested on Azure packages. ([cdd1a99](https://github.com/GeneralBots/BotServer/commit/cdd1a9968c21315f23e1434f1af1d1726928225d))
+* **all:** Trying to get Google packages on AZ. ([9c53791](https://github.com/GeneralBots/BotServer/commit/9c53791e7288b358af5c3ca0adb94f8076287506))
+* **whatsapp.gblib:** Adding Google to WhatsApp. ([dc9286f](https://github.com/GeneralBots/BotServer/commit/dc9286ffe88145fc9b119e3430ca904bea86fbe4))
+
 ## [2.0.120](https://github.com/GeneralBots/BotServer/compare/2.0.119...2.0.120) (2021-06-13)
 
 
