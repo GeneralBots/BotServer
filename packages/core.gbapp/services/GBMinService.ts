@@ -615,8 +615,6 @@ export class GBMinService {
       new Date(new Date().setFullYear(new Date().getFullYear() + 10))
     );
 
-
-
     // The minimal bot is built here.
 
     const min = new GBMinInstance();
@@ -634,6 +632,10 @@ export class GBMinService {
     min.sandBoxMap = {};
     min.packages = sysPackages;
     min.appPackages = appPackages;
+
+    if (GBServer.globals.minBoot === undefined) {
+      GBServer.globals.minBoot = min;
+    }
 
     if (process.env.FACEBOOK_VERIFY_TOKEN) {
       min['fbAdapter'] = new FacebookAdapter({
