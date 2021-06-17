@@ -635,11 +635,13 @@ export class GBMinService {
     min.packages = sysPackages;
     min.appPackages = appPackages;
 
-    min['fbAdapter'] = new FacebookAdapter({
-      verify_token: process.env.FACEBOOK_VERIFY_TOKEN,
-      app_secret: process.env.FACEBOOK_APP_SECRET,
-      access_token: process.env.FACEBOOK_ACCESS_TOKEN
-    });
+    if (process.env.FACEBOOK_VERIFY_TOKEN) {
+      min['fbAdapter'] = new FacebookAdapter({
+        verify_token: process.env.FACEBOOK_VERIFY_TOKEN,
+        app_secret: process.env.FACEBOOK_APP_SECRET,
+        access_token: process.env.FACEBOOK_ACCESS_TOKEN
+      });
+    }
     // TODO: min.appPackages =  core.getPackagesByInstanceId(min.instance.instanceId);
 
     // Creates a hub of services available in .gbapps.
