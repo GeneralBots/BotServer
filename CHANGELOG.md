@@ -1,3 +1,10 @@
+## [2.0.123](https://github.com/GeneralBots/BotServer/compare/2.0.122...2.0.123) (2021-06-17)
+
+
+### Bug Fixes
+
+* **core.gbapp:** FB channel is optional. ([64ce414](https://github.com/GeneralBots/BotServer/commit/64ce41434a5dddbac83125dec576f5c8979925ba))
+
 ## [2.0.122](https://github.com/GeneralBots/BotServer/compare/2.0.121...2.0.122) (2021-06-16)
 
 
