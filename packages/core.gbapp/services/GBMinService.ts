@@ -896,7 +896,7 @@ export class GBMinService {
             // Auto starts dialogs if any is specified.
 
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
-            if (!startDialog && user.welcomed) {
+            if (!startDialog && !user.welcomed) {
 
               // Otherwise, calls / (root) to default welcome users.
 
