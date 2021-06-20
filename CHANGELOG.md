@@ -1,3 +1,10 @@
+## [2.0.124](https://github.com/GeneralBots/BotServer/compare/2.0.123...2.0.124) (2021-06-17)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Min Boot bot now is defined again. ([f65b3ea](https://github.com/GeneralBots/BotServer/commit/f65b3ea9c4efa38c15484a92b70f6eae3baa8321))
+
 ## [2.0.123](https://github.com/GeneralBots/BotServer/compare/2.0.122...2.0.123) (2021-06-17)
 
 
