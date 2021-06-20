@@ -1,3 +1,10 @@
+## [2.0.125](https://github.com/GeneralBots/BotServer/compare/2.0.124...2.0.125) (2021-06-20)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Auto-start is optional again. ([74956e8](https://github.com/GeneralBots/BotServer/commit/74956e8fd98374700bd8a544928cd529da9dd975))
+
 ## [2.0.124](https://github.com/GeneralBots/BotServer/compare/2.0.123...2.0.124) (2021-06-17)
 
 
