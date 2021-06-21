@@ -527,7 +527,7 @@ export class GBMinService {
 
       // Sends all information to the .gbui web client.
 
-      if (theme === undefined) {
+      if (!theme) {
         theme = `${instance.botId}.gbtheme`;
       }
       res.send(
