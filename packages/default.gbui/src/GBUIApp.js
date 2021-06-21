@@ -313,12 +313,15 @@ class GBUIApp extends React.Component {
       </div>
     );
 
-    if (this.state.instanceClient) {
-      
-      gbCss = <GBCss instance={this.state.instanceClient} />;
-      seo = <SEO instance={this.state.instanceClient} />;
-    }
+
     if (this.state.line) {
+
+      if (this.state.instanceClient) {
+      
+        gbCss = <GBCss instance={this.state.instanceClient} />;
+        seo = <SEO instance={this.state.instanceClient} />;
+      }
+
         // let speechOptions;
       // let token = this.state.instanceClient.speechToken;
 
