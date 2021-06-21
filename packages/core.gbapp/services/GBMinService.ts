@@ -528,8 +528,10 @@ export class GBMinService {
       // Sends all information to the .gbui web client.
 
       if (!theme) {
-        theme = `${instance.botId}.gbtheme`;
+        theme = `default.gbtheme`;
       }
+
+
       res.send(
         JSON.stringify({
           instanceId: instance.instanceId,
