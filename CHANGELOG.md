@@ -1,3 +1,11 @@
+## [2.0.126](https://github.com/GeneralBots/BotServer/compare/2.0.125...2.0.126) (2021-06-21)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fix default theme information. ([e2fee04](https://github.com/GeneralBots/BotServer/commit/e2fee04cfcd40d85bcfb963825e924f0b66b271f))
+* **core.gbapp:** Fix default theme information. ([e1f0176](https://github.com/GeneralBots/BotServer/commit/e1f0176409f2c2a87b8f3aee349b9c6b27c145e0))
+
 ## [2.0.125](https://github.com/GeneralBots/BotServer/compare/2.0.124...2.0.125) (2021-06-20)
 
 
