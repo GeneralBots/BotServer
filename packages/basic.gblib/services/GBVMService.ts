@@ -246,7 +246,7 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2) => {
       if ($2.indexOf('http') !== -1) {
-        return `let ${$1} = sys().httpGet (${$2})`;
+        return `let ${$1} = sys().getByHttp (${$2})`;
       } else {
         return `let ${$1} = sys().get (${$2})`;
       }

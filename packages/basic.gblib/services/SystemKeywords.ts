@@ -60,7 +60,7 @@ export class SystemKeywords {
    * Reference to the deployer service.
    */
   private readonly deployer: GBDeployer;
-  
+
   dk: DialogKeywords;
 
 
@@ -77,11 +77,12 @@ export class SystemKeywords {
   /**
    * Retrives the content of a given URL.
    */
-  public async getFileContents(url) {
+  public async getFileContents(url, headers) {
     const options = {
       url: url,
       method: 'GET',
-      encoding: 'binary'
+      encoding: 'binary',
+      headers: headers
     };
     return await request(options); // TODO: Check this.
   }
@@ -638,9 +639,10 @@ export class SystemKeywords {
    * @example user = get "http://server/users/1"
    * 
    */
-  public async getByHttp(url: string) {
+  public async getByHttp(url: string, headers: any) {
     const options = {
-      uri: url
+      uri: url,
+      headers: headers
     };
 
     let result = await request.get(options);

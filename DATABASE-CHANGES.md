@@ -108,3 +108,11 @@ ALTER TABLE dbo.GuaribasInstance ADD
 	googlePrivateKey  nvarchar(4000) NULL,
 	googleProjectId  nvarchar(255) NULL
 GO
+
+# 2.0.119
+
+ALTER TABLE dbo.GuaribasInstance ADD
+	facebookWorkplaceVerifyToken nvarchar(255) NULL,
+	facebookWorkplaceAppSecret nvarchar(255) NULL,
+	facebookWorkplaceAccessToken nvarchar(512) NULL
+GO

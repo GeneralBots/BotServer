@@ -638,12 +638,12 @@ export class GBMinService {
     if (GBServer.globals.minBoot === undefined) {
       GBServer.globals.minBoot = min;
     }
-
-    if (process.env.FACEBOOK_VERIFY_TOKEN) {
+      
+    if (min.instance.facebookWorkplaceVerifyToken) {
       min['fbAdapter'] = new FacebookAdapter({
-        verify_token: process.env.FACEBOOK_VERIFY_TOKEN,
-        app_secret: process.env.FACEBOOK_APP_SECRET,
-        access_token: process.env.FACEBOOK_ACCESS_TOKEN
+        verify_token: min.instance.facebookWorkplaceVerifyToken,
+        app_secret: min.instance.facebookWorkplaceAppSecret,
+        access_token: min.instance.facebookWorkplaceAccessToken
       });
     }
     // TODO: min.appPackages =  core.getPackagesByInstanceId(min.instance.instanceId);
@@ -869,6 +869,8 @@ export class GBMinService {
               user.welcomed = true;
               GBLog.info(`Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+
+              
             }
           }
         }

@@ -147,10 +147,19 @@ export class GuaribasInstance extends Model<GuaribasInstance>
 
   @Column({ type: DataType.STRING(4000) })
   public googlePrivateKey: string;
-
+  
   @Column
   public googleProjectId: string;
+  
+  @Column({ type: DataType.STRING(255) })
+  facebookWorkplaceVerifyToken: string;
 
+  @Column({ type: DataType.STRING(255) })
+  facebookWorkplaceAppSecret: string;
+
+  @Column({ type: DataType.STRING(512) })
+  facebookWorkplaceAccessToken: string;
+  
   @Column
   public whatsappBotKey: string;
 
