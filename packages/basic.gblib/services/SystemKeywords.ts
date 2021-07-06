@@ -639,10 +639,11 @@ export class SystemKeywords {
    * @example user = get "http://server/users/1"
    * 
    */
-  public async getByHttp(url: string, headers: any) {
+  public async getByHttp(url: string, headers: any, qs: any) {
     const options = {
-      uri: url,
-      headers: headers
+      url: url,
+      headers: headers,
+      qs:qs,
     };
 
     let result = await request.get(options);
