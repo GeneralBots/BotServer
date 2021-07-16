@@ -63,6 +63,8 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
+const request = require('request-promise-native');
+const textract = require('textract');
 
 /**
  * Result for quey on KB data.
@@ -183,9 +185,20 @@ export class KBService implements IGBKBService {
     return output;
   }
 
+  public async getDocs(instanceId: number) {
+
+    return await GuaribasAnswer.findAll({
+      where: {
+        instanceId: instanceId,
+        format: '.docx'
+      }
+    });
+
+  }
+
   public async getAnswerByText(instanceId: number, text: string): Promise<any> {
     text = text.trim();
-    
+
     const service = new CSService();
     let question = await service.getQuestionFromAlternateText(instanceId, text);
 
@@ -540,6 +553,7 @@ export class KBService implements IGBKBService {
   }
 
   public async importKbPackage(
+    min: GBMinInstance,
     localPath: string,
     packageStorage: GuaribasPackage,
     instance: IGBInstance
@@ -558,11 +572,15 @@ export class KBService implements IGBKBService {
 
     // Import remaining .md files in articles directory.
 
-    return await this.importRemainingArticles(localPath, instance, packageStorage.packageId);
+    await this.importRemainingArticles(localPath, instance, packageStorage.packageId);
+
+    // Import docs files in .docx directory.
+
+    return await this.importDocs(min, localPath, instance, packageStorage.packageId);
   }
 
   /**
-   * Import all .md files in artcles folder that has not been referenced by tabular files.
+   * Import all .md files in articles folder that has not been referenced by tabular files.
    */
   public async importRemainingArticles(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
     const files = await walkPromise(urlJoin(localPath, 'articles'));
@@ -582,6 +600,31 @@ export class KBService implements IGBKBService {
             media: file.name,
             packageId: packageId,
             prevId: 0 // TODO: Calculate total rows and increment.
+          });
+        }
+      }
+    });
+  }
+
+  /**
+   * Import all .docx files in reading comprehension folder.
+   */
+  public async importDocs(min: GBMinInstance, localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
+    const files = await walkPromise(urlJoin(localPath, 'docs'));
+
+    await CollectionUtil.asyncForEach(files, async file => {
+      if (file !== null && file.name.endsWith('.docx')) {
+        let content = await this.getTextFromWord(Path.join(file.root, file.name));
+
+        content = await min.conversationalService.translate(min, content, 'en');
+
+        if (content) {
+          await GuaribasAnswer.create({
+            instanceId: instance.instanceId,
+            content: content,
+            format: '.docx',
+            media: file.name,
+            packageId: packageId
           });
         }
       }
@@ -650,7 +693,7 @@ export class KBService implements IGBKBService {
     const instance = await core.loadInstanceByBotId(min.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
-    await this.importKbPackage(localPath, p, instance);
+    await this.importKbPackage(min, localPath, p, instance);
     deployer.mountGBKBAssets(packageName, min.botId, localPath);
 
     await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
@@ -706,4 +749,30 @@ export class KBService implements IGBKBService {
       where: { instanceId: instance.instanceId, packageId: packageId }
     });
   }
+
+  public async readComprehension(instanceId: number, doc: string, question: string) {
+    const options = {
+      timeout: 60000 * 5,
+      uri: `http://${process.env.GBMODELS_SERVER}/reading-comprehension`,
+      form: { content: doc },
+      qs: { question: question, key: process.env.GBMODELS_KEY }
+    };
+
+    GBLog.info(`[General Bots Models]: ReadComprehension for ${question}.`);
+    return await request.post(options);
+  }
+
+  private async getTextFromWord(filename: string) {
+    return new Promise<string>(async (resolve, reject) => {
+      textract.fromFileWithPath(filename, { preserveLineBreaks: true }, (error, text) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(text);
+        }
+      });
+    });
+  }
 }
+
+

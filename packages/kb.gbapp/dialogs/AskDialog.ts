@@ -48,6 +48,7 @@ import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
 import { GBVMService } from '../../basic.gblib/services/GBVMService';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 
 /**
  * Dialog arguments.
@@ -249,6 +250,32 @@ export class AskDialog extends IGBDialog {
         if (answer) {
           return await AskDialog.handleAnswer(service, min, step, answer);
         } else if (!(await min.conversationalService.routeNLP(step, min, text))) {
+
+          if (process.env.GBMODELS_SERVER) {
+            text = await min.conversationalService.translate(min, text, 'en');
+            let answered = false;
+
+            const docs = await min.kbService['getDocs'](min.instance.instanceId);
+
+            await CollectionUtil.asyncForEach(docs, async (doc: GuaribasAnswer) => {
+
+              if (!answered) {
+
+                const answerText = await min.kbService['readComprehension'](min.instance.instanceId, doc.content, text);
+                answered = true;
+                text = await min.conversationalService.translate(min, text, user.systemUser.locale
+                  ? user.systemUser.locale
+                  : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE')));
+                await min.conversationalService.sendText(min, step, answerText);
+                await min.conversationalService.sendEvent(min, step, 'stop', undefined);
+              }
+
+            });
+            return await step.replaceDialog('/ask', { isReturning: true });
+          }
+
+
+        } else {
           const message = min.core.getParam<string>(min.instance, 'Not Found Message',
             Messages[locale].did_not_find);
 

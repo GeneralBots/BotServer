@@ -95,12 +95,15 @@ export class DialogKeywords {
     if (month.length < 2) { month = '0' + month; }
     if (day.length < 2) { day = '0' + day; }
 
-    const locale = step.context.activity.locale;
-    switch (locale) {
-      case 'pt-BR':
+    const user = await this.min.userProfile.get(step.context, {});
+    const sec = new SecService();
+    const userFull = await sec.getUserFromSystemId(user.systemUser.userId);
+  
+    switch (userFull.locale) {
+      case 'pt':
         return [day, month, year].join('/');
 
-      case 'en-US':
+      case 'en':
         return [month, day, year].join('/');
 
       default:
