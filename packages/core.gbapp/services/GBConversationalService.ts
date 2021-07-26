@@ -62,6 +62,7 @@ const fs = require('fs');
 const SpeechToTextV1 = require('ibm-watson/speech-to-text/v1');
 const { IamAuthenticator } = require('ibm-watson/auth');
 const marked = require('marked');
+const { Translate } = require('@google-cloud/translate').v2;
 
 /**
  * Provides basic services for handling messages and dispatching to back-end
@@ -771,37 +772,60 @@ export class GBConversationalService {
     }
     text = text.replace('¿', '');
 
-    let options = {
-      method: 'POST',
-      baseUrl: endPoint,
-      url: 'translate',
-      qs: {
-        'api-version': '3.0',
-        to: [language]
-      },
-      headers: {
-        'Ocp-Apim-Subscription-Key': key,
-        'Ocp-Apim-Subscription-Region': 'westeurope',
-        'Content-type': 'application/json',
-        'X-ClientTraceId': uuidv4().toString()
-      },
-      body: [
-        {
-          text: text
-        }
-      ],
-      json: true
-    };
+    if (min.instance.googleProjectId) {
+      // Instantiates a client
 
-    try {
+      const translate = new Translate({
+        projectId: min.instance.googleProjectId,
+        credentials: { client_email: min.instance.googleClientEmail, private_key: min.instance.googlePrivateKey.replace(/\\n/gm, '\n') }
+      });
 
-      const results = await request(options);
+      try {
 
-      return results[0].translations[0].text;
-    } catch (error) {
-      const msg = `Error calling Translator service layer. Error is: ${error}.`;
+        const [translation] = await translate.translate(text, language);
 
-      return Promise.reject(new Error(msg));
+        return translation;
+      } catch (error) {
+        const msg = `Error calling Google Translator service layer. Error is: ${error}.`;
+
+        return Promise.reject(new Error(msg));
+      }
+
+    }
+    else {
+
+      let options = {
+        method: 'POST',
+        baseUrl: endPoint,
+        url: 'translate',
+        qs: {
+          'api-version': '3.0',
+          to: [language]
+        },
+        headers: {
+          'Ocp-Apim-Subscription-Key': key,
+          'Ocp-Apim-Subscription-Region': 'westeurope',
+          'Content-type': 'application/json',
+          'X-ClientTraceId': uuidv4().toString()
+        },
+        body: [
+          {
+            text: text
+          }
+        ],
+        json: true
+      };
+
+      try {
+
+        const results = await request(options);
+
+        return results[0].translations[0].text;
+      } catch (error) {
+        const msg = `Error calling MSFT Translator service layer. Error is: ${error}.`;
+
+        return Promise.reject(new Error(msg));
+      }
     }
   }
 

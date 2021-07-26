@@ -65,6 +65,7 @@ import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
 const request = require('request-promise-native');
 const textract = require('textract');
+const pdf = require("pdf-extraction");
 
 /**
  * Result for quey on KB data.
@@ -613,21 +614,28 @@ export class KBService implements IGBKBService {
     const files = await walkPromise(urlJoin(localPath, 'docs'));
 
     await CollectionUtil.asyncForEach(files, async file => {
-      if (file !== null && file.name.endsWith('.docx')) {
-        let content = await this.getTextFromWord(Path.join(file.root, file.name));
-
-        content = await min.conversationalService.translate(min, content, 'en');
-
-        if (content) {
-          await GuaribasAnswer.create({
-            instanceId: instance.instanceId,
-            content: content,
-            format: '.docx',
-            media: file.name,
-            packageId: packageId
-          });
+      let content = null;
+      let filePath = Path.join(file.root, file.name);
+      if (file !== null) {
+        if (file.name.endsWith('.docx')) {
+          content = await this.getTextFromFile(filePath);
+        } else if (file.name.endsWith('.pdf')) {
+          const read = await pdf(Fs.readFileSync(filePath));
+          content = read.text;  
         }
       }
+
+      if (content) {
+        content = await min.conversationalService.translate(min, content, 'en');
+        await GuaribasAnswer.create({
+          instanceId: instance.instanceId,
+          content: content,
+          format: '.docx',
+          media: file.name,
+          packageId: packageId
+        });
+      }
+
     });
   }
 
@@ -762,7 +770,7 @@ export class KBService implements IGBKBService {
     return await request.post(options);
   }
 
-  private async getTextFromWord(filename: string) {
+  private async getTextFromFile(filename: string) {
     return new Promise<string>(async (resolve, reject) => {
       textract.fromFileWithPath(filename, { preserveLineBreaks: true }, (error, text) => {
         if (error) {

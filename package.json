@@ -50,6 +50,7 @@
   "dependencies": {
     "@azure/ms-rest-js": "2.5.1",
     "@google-cloud/pubsub": "^2.13.0",
+    "@google-cloud/translate": "^6.2.6",
     "@microsoft/microsoft-graph-client": "2.2.1",
     "@semantic-release/changelog": "5.0.1",
     "@semantic-release/exec": "5.0.0",
@@ -89,6 +90,7 @@
     "nexmo": "2.9.1",
     "node-cron": "3.0.0",
     "opn": "6.0.0",
+    "pdf-extraction": "^1.0.2",
     "phone": "2.4.21",
     "pragmatismo-io-framework": "1.0.20",
     "prism-media": "1.3.1",
