@@ -41,7 +41,7 @@ import urlJoin = require('url-join');
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
 import { OAuthDialog } from './dialogs/OAuthDialog';
-import {ProfileDialog} from './dialogs/ProfileDialog';
+import { ProfileDialog } from './dialogs/ProfileDialog';
 import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models';
 
 /**
@@ -50,13 +50,18 @@ import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models';
 export class GBSecurityPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
   public async getDialogs(min: GBMinInstance) {
-    return [
+
+    let out = [
       ProfileDialog.getNameDialog(min),
       ProfileDialog.getEmailDialog(min),
       ProfileDialog.getMobileDialog(min),
-      ProfileDialog.getMobileConfirmDialog(min),
-      OAuthDialog.getOAuthDialog(min)
+      ProfileDialog.getMobileConfirmDialog(min)
     ];
+
+    if (process.env.ENABLE_AUTH) {
+      out.push(OAuthDialog.getOAuthDialog(min));
+    }
+    return out;
 
   }
   public async unloadPackage(core: IGBCoreService): Promise<void> {

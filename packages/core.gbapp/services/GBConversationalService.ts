@@ -762,7 +762,7 @@ export class GBConversationalService {
     const endPoint = min.core.getParam<string>(min.instance, 'translatorEndpoint', null);
     const key = min.core.getParam<string>(min.instance, 'translatorKey', null);
 
-    if (endPoint === null || !translatorEnabled() || process.env.TRANSLATOR_DISABLED === 'true') {
+    if ((endPoint === null && !min.instance.googleProjectId) || !translatorEnabled() || process.env.TRANSLATOR_DISABLED === 'true') {
       return text;
     }
 

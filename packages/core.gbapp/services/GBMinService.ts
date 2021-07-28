@@ -638,7 +638,7 @@ export class GBMinService {
     if (GBServer.globals.minBoot === undefined) {
       GBServer.globals.minBoot = min;
     }
-      
+
     if (min.instance.facebookWorkplaceVerifyToken) {
       min['fbAdapter'] = new FacebookAdapter({
         verify_token: min.instance.facebookWorkplaceVerifyToken,
@@ -706,15 +706,16 @@ export class GBMinService {
     min.dialogs = new DialogSet(dialogState);
     min.dialogs.add(new TextPrompt('textPrompt'));
     min.dialogs.add(new ConfirmPrompt('confirmPrompt'));
-    min.dialogs.add(
-      new OAuthPrompt('oAuthPrompt', {
-        connectionName: 'OAuth2',
-        text: 'Please sign in to General Bots.',
-        title: 'Sign in',
-        timeout: 300000
-      })
-    );
-
+    if (process.env.ENABLE_AUTH) {
+      min.dialogs.add(
+        new OAuthPrompt('oAuthPrompt', {
+          connectionName: 'OAuth2',
+          text: 'Please sign in to General Bots.',
+          title: 'Sign in',
+          timeout: 300000
+        })
+      );
+    }
     return { min, adapter, conversationState };
   }
 
@@ -870,7 +871,7 @@ export class GBMinService {
               GBLog.info(`Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
 
-              
+
             }
           }
         }
@@ -1227,16 +1228,19 @@ export class GBMinService {
 
           if (text !== startDialog) {
             let nextDialog = null;
+            let data = {
+              query: text,
+              step: step,
+              notTranslatedQuery: originalText,
+              message: message ? message['dataValues'] : null,
+              user: user ? user.dataValues : null
+            };
             await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-              nextDialog = await e.onExchangeData(min, 'handleAnswer', {
-                query: text,
-                step: step,
-                notTranslatedQuery: originalText,
-                message: message ? message['dataValues'] : null,
-                user: user ? user.dataValues : null
-              });
+              nextDialog = await e.onExchangeData(min, 'handleAnswer', data);
             });
+
             await step.beginDialog(nextDialog ? nextDialog : '/answer', {
+              data: data,
               query: text,
               user: user ? user.dataValues : null,
               message: message
