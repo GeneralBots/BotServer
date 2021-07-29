@@ -1238,7 +1238,7 @@ export class GBMinService {
             await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
               nextDialog = await e.onExchangeData(min, 'handleAnswer', data);
             });
-
+            data.step = null;
             await step.beginDialog(nextDialog ? nextDialog : '/answer', {
               data: data,
               query: text,
