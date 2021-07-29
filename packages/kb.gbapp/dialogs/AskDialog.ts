@@ -138,7 +138,7 @@ export class AskDialog extends IGBDialog {
               handled = true;
             }
           });
-
+          data.step = null;
           await step.beginDialog(nextDialog ? nextDialog : '/answer', {
             data: data,
             query: text,
