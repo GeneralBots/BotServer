@@ -612,31 +612,35 @@ export class KBService implements IGBKBService {
    */
   public async importDocs(min: GBMinInstance, localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
     const files = await walkPromise(urlJoin(localPath, 'docs'));
-
-    await CollectionUtil.asyncForEach(files, async file => {
-      let content = null;
-      let filePath = Path.join(file.root, file.name);
-      if (file !== null) {
-        if (file.name.endsWith('.docx')) {
-          content = await this.getTextFromFile(filePath);
-        } else if (file.name.endsWith('.pdf')) {
-          const read = await pdf(Fs.readFileSync(filePath));
-          content = read.text;  
+    if (!files[0]) {
+      GBLog.info(`[GBDeployer] docs folder not created yet in .gbkb. To use Reading Comprehension, create this folder at root and put a document to get read by the.`);
+    }
+    else {
+      await CollectionUtil.asyncForEach(files, async file => {
+        let content = null;
+        let filePath = Path.join(file.root, file.name);
+        if (file !== null) {
+          if (file.name.endsWith('.docx')) {
+            content = await this.getTextFromFile(filePath);
+          } else if (file.name.endsWith('.pdf')) {
+            const read = await pdf(Fs.readFileSync(filePath));
+            content = read.text;
+          }
         }
-      }
 
-      if (content) {
-        content = await min.conversationalService.translate(min, content, 'en');
-        await GuaribasAnswer.create({
-          instanceId: instance.instanceId,
-          content: content,
-          format: '.docx',
-          media: file.name,
-          packageId: packageId
-        });
-      }
+        if (content) {
+          content = await min.conversationalService.translate(min, content, 'en');
+          await GuaribasAnswer.create({
+            instanceId: instance.instanceId,
+            content: content,
+            format: '.docx',
+            media: file.name,
+            packageId: packageId
+          });
+        }
 
-    });
+      });
+    }
   }
 
   public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {

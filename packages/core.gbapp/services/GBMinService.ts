@@ -1002,18 +1002,18 @@ export class GBMinService {
 
     // Removes <at>Bot Id</at> from MS Teams.
 
-    context.activity.text = context.activity.text.trim();
     context.activity.text = context.activity.text.replace(/\<at\>.*\<\/at\>\s/gi, '');
 
-    // Syn. temporary replacement (to be migrated to Synonyms.xlsx)
+    let data = { query: context.activity.text };
+    await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+      await e.onExchangeData(min, 'handleRawInput', data);
+      // TODO: Handle priority over .gbapp, today most common case is just one item per server.
+    });
+    context.activity.text = data.query;
 
-    context.activity.text = context.activity.text.replace(/\busuario\b/gi, 'usuário');
-    context.activity.text = context.activity.text.replace(/\busuaria\b/gi, 'usuária');
-    context.activity.text = context.activity.text.replace(/\busuarios\b/gi, 'usuários');
-    context.activity.text = context.activity.text.replace(/\busuarias\b/gi, 'usuárias');
-    context.activity.text = context.activity.text.replace(/\bfuncionario\b/gi, 'funcionário');
-    context.activity.text = context.activity.text.replace(/\bfuncionarios\b/gi, 'funcionários');
+    // Additional clean up.
 
+    context.activity.text = context.activity.text.trim();
 
     const user = await min.userProfile.get(context, {});
     let message: GuaribasConversationMessage;
