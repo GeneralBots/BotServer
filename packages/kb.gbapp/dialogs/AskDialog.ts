@@ -125,20 +125,22 @@ export class AskDialog extends IGBDialog {
           let handled = false;
           let nextDialog = null;
 
+          let data = {
+            query: text,
+            step: step,
+            message: text,
+            user: user ? user['dataValues'] : null
+          };
           await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
             if (
-              nextDialog = await e.onExchangeData(min, 'handleAnswer', {
-                query: text,
-                step: step,
-                message: text,
-                user: user ? user['dataValues'] : null
-              })
+              nextDialog = await e.onExchangeData(min, 'handleAnswer', data)
             ) {
               handled = true;
             }
           });
 
           await step.beginDialog(nextDialog ? nextDialog : '/answer', {
+            data: data,
             query: text,
             user: user ? user['dataValues'] : null,
             message: text
