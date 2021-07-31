@@ -162,6 +162,7 @@ export class GBVMService extends GBService {
     mobile = this.userMobile(step);
     from = mobile;
     ubound = function(list){return list.length};
+    isArray = function(list){return Array.isArray(list) };
     headers = {};
 
     ${code}
