@@ -485,6 +485,7 @@ export class GBVMService extends GBService {
     code = code.replace(/this\./gm, 'await this.');
     code = code.replace(/function/gm, 'async function');
     code = code.replace('ubound = async', 'ubound =');  // TODO: Improve this.
+    code = code.replace('isArray = async', 'isArray =');  // TODO: Waiting for a real compiler.
 
     return code;
   }
