@@ -165,7 +165,7 @@ export class GBVMService extends GBService {
     isarray = function(array){return Array.isArray(array) };
     weekday = this.getWeekFromDate;
     hour = this.getHourFromDate;
-    tolist = this.toList;
+    tolist = this.getToLst;
     headers = {};
 
     ${code}

@@ -139,8 +139,8 @@ export class DialogKeywords {
    * @example TALK TOLIST (array, member) 
    *
    */
-  public toList(array, member) {
-    return Array.prototype.map.call(array, (item)=> { return item[member]; }).join(",");
+  public getToLst(array, member) {
+    return Array.prototype.map.call(array, (item) => { return item[member]; }).join(",");
   }
 
   /**
@@ -153,7 +153,13 @@ export class DialogKeywords {
     if (!(date instanceof Date)) {
       date = new Date(date);
     }
-    return date.getHours() + ':' + date.getMinutes();
+    function addZero(i) {
+      if (i < 10) {
+        i = "0" + i;
+      }
+      return i;
+    }
+    return addZero(date.getHours()) + ':' + addZero(date.getMinutes());
   }
 
   /**

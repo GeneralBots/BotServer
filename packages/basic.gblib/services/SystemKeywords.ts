@@ -74,9 +74,6 @@ export class SystemKeywords {
     this.dk = dk;
   }
 
-  /**
-   * Retrives the content of a given URL.
-   */
   public async append(...args) {
     return [].concat(...args);
   }
@@ -792,4 +789,5 @@ export class SystemKeywords {
   public async numberOnly(text: string) {
     return text.replace(/\D/gi, '');
   }
+  
 }
