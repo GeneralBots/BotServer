@@ -77,6 +77,17 @@ export class SystemKeywords {
   /**
    * Retrives the content of a given URL.
    */
+  public async append(...args) {
+    return [].concat(...args);
+  }
+
+  public async sortBy(array, memberName) {
+    return array ? [].sort(p => p[memberName]) : null;
+  }
+
+  /**
+   * Retrives the content of a given URL.
+   */
   public async getFileContents(url, headers) {
     const options = {
       url: url,
@@ -316,6 +327,15 @@ export class SystemKeywords {
             operator: op.toString().replace(/\//g, '').replace(/\\/g, '').replace(/\b/g, ''),
             value: parts[1].trim()
           };
+
+          // Swaps values and names in case of IN operators.
+
+          if (filter.operator === 'not in' || filter.operator === 'in') {
+            const columnName = filter.columnName;
+            filter.columnName = filter.value;
+            filter.value = columnName;
+          }
+
           done = true;
         }
       });
@@ -371,8 +391,7 @@ export class SystemKeywords {
 
     let table = [];
     table.push({ 'this is a hidden base 0': 'element' });
-    let foundIndex = 0;
-
+    let foundIndex = 1;
 
     // Fills the row variable.
 
@@ -387,6 +406,16 @@ export class SystemKeywords {
             switch (filter.operator) {
               case '=':
                 if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
+                  filterAcceptCount++;
+                }
+                break;
+              case 'not in':
+                if (filter.value.indexOf(result)) {
+                  filterAcceptCount++;
+                }
+                break;
+              case 'in':
+                if (!filter.value.indexOf(result)) {
                   filterAcceptCount++;
                 }
                 break;
@@ -450,9 +479,6 @@ export class SystemKeywords {
       return table;
     }
   }
-
-
-
 
   /**
    * Creates a folder in the bot instance drive.

@@ -161,10 +161,11 @@ export class GBVMService extends GBService {
     username = this.userName(step);
     mobile = this.userMobile(step);
     from = mobile;
-    ubound = function(list){return list.length};
-    isarray = function(list){return Array.isArray(list) };
+    ubound = function(array){return array.length};
+    isarray = function(array){return Array.isArray(array) };
     weekday = this.getWeekFromDate;
     hour = this.getHourFromDate;
+    tolist = this.toList;
     headers = {};
 
     ${code}
@@ -238,6 +239,14 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(\w)\s*\=\s*find\s*(.*)/gi, ($0, $1, $2, $3) => {
       return `${$1} = sys().find(${$2})\n`;
+    });
+
+    code = code.replace(/(\w)\s*\=\s*append\s*(.*)/gi, ($0, $1, $2, $3) => {
+      return `${$1} = sys().append(${$2})\n`;
+    });
+
+    code = code.replace(/(\w+)\s*\=\s*sort\s*(\w+)\s*by(.*)/gi, ($0, $1, $2, $3) => {
+      return `${$1} = sys().sortBy(${$2}, ${$3})\n`;
     });
 
     code = code.replace(/(wait)\s*(\d+)/gi, ($0, $1, $2) => {
@@ -429,6 +438,7 @@ export class GBVMService extends GBService {
       parsedCode = parsedCode.replace(/(\btoday\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'await this.getToday(step)');
       parsedCode = parsedCode.replace(/(\bweekday\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'weekday');
       parsedCode = parsedCode.replace(/(\bhour\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'hour');
+      parsedCode = parsedCode.replace(/(\btolist\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'tolist');
 
       parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true });
       fs.writeFileSync(jsfile, parsedCode);
@@ -491,6 +501,7 @@ export class GBVMService extends GBService {
     code = code.replace('ubound = async', 'ubound =');  // TODO: Improve this.
     code = code.replace('hour = await', 'hour =');  // TODO: Improve this.
     code = code.replace('weekday = await', 'weekday =');  // TODO: Improve this.
+    code = code.replace('tolist = await', 'tolist =');  // TODO: Improve this.
     code = code.replace('isArray = async', 'isArray =');  // TODO: Waiting for a compiler.
 
     return code;

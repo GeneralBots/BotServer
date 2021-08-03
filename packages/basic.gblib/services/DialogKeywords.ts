@@ -134,6 +134,16 @@ export class DialogKeywords {
   }
 
   /**
+   * Returns specified list member separated by comma.
+   *
+   * @example TALK TOLIST (array, member) 
+   *
+   */
+  public toList(array, member) {
+    return Array.prototype.map.call(array, (item)=> { return item[member]; }).join(",");
+  }
+
+  /**
    * Returns the specified time in format hh:dd.
    *
    * @example hour = HOUR (date)
