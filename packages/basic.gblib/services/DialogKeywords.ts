@@ -97,7 +97,7 @@ export class DialogKeywords {
 
     const user = await this.min.userProfile.get(step.context, {});
     const sec = new SecService();
-    const userFull = await sec.getUserFromSystemId(user.systemUser.userId);
+    const userFull = await sec.getUserFromSystemId(user.systemUser.userSystemId);
 
     switch (userFull.locale) {
       case 'pt':
