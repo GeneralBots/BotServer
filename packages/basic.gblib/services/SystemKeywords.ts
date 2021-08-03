@@ -421,7 +421,7 @@ export class SystemKeywords {
           case 'number':
             switch (filter.operator) {
               case '=':
-                if (result && result.trim() === filter.value.trim()) {
+                if (Number.parseInt(result) === filter.value) {
                   filterAcceptCount++;
                 }
                 break;
