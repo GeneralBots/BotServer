@@ -98,7 +98,7 @@ export class DialogKeywords {
     const user = await this.min.userProfile.get(step.context, {});
     const sec = new SecService();
     const userFull = await sec.getUserFromSystemId(user.systemUser.userId);
-  
+
     switch (userFull.locale) {
       case 'pt':
         return [day, month, year].join('/');
@@ -118,6 +118,32 @@ export class DialogKeywords {
    */
   public async exit(step) {
     await step.endDialog();
+  }
+
+  /**
+   * Returns specified date week day in format 'Mon'.
+   *
+   * @example day = WEEKDAY (date) 
+   *
+   */
+  public getWeekFromDate(date) {
+    if (!(date instanceof Date)) {
+      date = new Date(date);
+    }
+    return date.toLocaleString('en-us', { weekday: 'short' });
+  }
+
+  /**
+   * Returns the specified time in format hh:dd.
+   *
+   * @example hour = HOUR (date)
+   *
+   */
+  public getHourFromDate(date) {
+    if (!(date instanceof Date)) {
+      date = new Date(date);
+    }
+    return date.getHours() + ':' + date.getMinutes();
   }
 
   /**
@@ -288,7 +314,7 @@ export class DialogKeywords {
         return 'whatsapp';
       }
       return 'webchat';
-    }    
+    }
   }
 
 

@@ -162,7 +162,9 @@ export class GBVMService extends GBService {
     mobile = this.userMobile(step);
     from = mobile;
     ubound = function(list){return list.length};
-    isArray = function(list){return Array.isArray(list) };
+    isarray = function(list){return Array.isArray(list) };
+    weekday = this.getWeekFromDate;
+    hour = this.getHourFromDate;
     headers = {};
 
     ${code}
@@ -423,8 +425,10 @@ export class GBVMService extends GBService {
 
       parsedCode = this.handleThisAndAwait(parsedCode);
 
-      parsedCode = parsedCode.replace(/(now)(?=(?:[^"]|"[^"]*")*$)/gi, 'await this.getNow(step)');
-      parsedCode = parsedCode.replace(/(today)(?=(?:[^"]|"[^"]*")*$)/gi, 'await this.getToday(step)');
+      parsedCode = parsedCode.replace(/(\bnow\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'await this.getNow()');
+      parsedCode = parsedCode.replace(/(\btoday\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'await this.getToday(step)');
+      parsedCode = parsedCode.replace(/(\bweekday\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'weekday');
+      parsedCode = parsedCode.replace(/(\bhour\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'hour');
 
       parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true });
       fs.writeFileSync(jsfile, parsedCode);
@@ -485,7 +489,9 @@ export class GBVMService extends GBService {
     code = code.replace(/this\./gm, 'await this.');
     code = code.replace(/function/gm, 'async function');
     code = code.replace('ubound = async', 'ubound =');  // TODO: Improve this.
-    code = code.replace('isArray = async', 'isArray =');  // TODO: Waiting for a real compiler.
+    code = code.replace('hour = await', 'hour =');  // TODO: Improve this.
+    code = code.replace('weekday = await', 'weekday =');  // TODO: Improve this.
+    code = code.replace('isArray = async', 'isArray =');  // TODO: Waiting for a compiler.
 
     return code;
   }

@@ -270,11 +270,11 @@ export class SystemKeywords {
    * 
    * @example 
    * 
-   *  rows = FIND "file.xlsx", "A2=active"
+   *  rows = FIND "file.xlsx", "A2=active", "A2 < 12/06/2010 15:00"
    *  i = 1
    *  do while i < ubound(row)
    *    row = rows[i]
-   *    send sms to "+" + row.mobile, "Hello " + row.namee + "! "
+   *    send sms to "+" + row.mobile, "Hello " + row.name + "! "
    *  loop
    * 
    */
@@ -285,11 +285,6 @@ export class SystemKeywords {
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
     let document = await this.internalGetDocument(client, baseUrl, path, file);
-
-    if (args.length > 1) {
-      throw `File '${file}' has a FIND call with more than 1 arguments. Check the .gbdialog associated.`;
-    }
-
     let maxLines = 100;
     if (this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
       if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
@@ -299,9 +294,6 @@ export class SystemKeywords {
 
     // Creates workbook session that will be discarded.
 
-    const filter = args[0].split('=');
-    const columnName = filter[0];
-    const value = filter[1];
     let sheets = await client
       .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
       .get();
@@ -310,16 +302,69 @@ export class SystemKeywords {
       .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:Z${maxLines}')`)
       .get();
 
+    let getFilter = async (text) => {
+      let filter;
+      const operators = [/\<\=/, /\>\=/, /\</, /\>/, /\bin\b/, /\bnot in\b/, /\=/];
+      let done = false;
+      await CollectionUtil.asyncForEach(operators, async op => {
+        var re = new RegExp(op, "g");
+        const parts = text.split(re);
+
+        if (parts.length === 2 && !done) {
+          filter = {
+            columnName: parts[0].trim(),
+            operator: op.toString().replace(/\//g, '').replace(/\\/g, '').replace(/\b/g, ''),
+            value: parts[1].trim()
+          };
+          done = true;
+        }
+      });
+
+      return filter;
+    };
+
+    function isValidDate(date) {
+      if (!(date instanceof Date)) {
+        date = new Date(date);
+      }
+      return !isNaN(date.valueOf());
+    }
+    function isValidNumber(number) {
+      return !isNaN(number);
+    }
+
     // Increments columnIndex by looping until find a column match.
 
-    let columnIndex = 0;
+    const filters = [];
     const header = results.text[0];
-    for (; columnIndex < header.length; columnIndex++) {
-
-      if (header[columnIndex].toLowerCase() === columnName.toLowerCase()) {
-        break;
+    await CollectionUtil.asyncForEach(args, async arg => {
+      const filter = await getFilter(arg);
+      if (!filter) {
+        throw new Error(`BASIC: FIND filter has an error: ${arg} check this and publish .gbdialog again.`);
       }
-    }
+
+      let columnIndex = 0;
+      for (; columnIndex < header.length; columnIndex++) {
+        if (header[columnIndex].toLowerCase() === filter.columnName.toLowerCase()) {
+          break;
+        }
+      }
+      filter.columnIndex = columnIndex;
+
+      if (isValidDate(filter.value)) {
+        filter.value = new Date(filter.value);
+        filter.dataType = 'date';
+      }
+      else if (isValidNumber(filter.value)) {
+        filter.value = Number.parseInt(filter.value);
+        filter.dataType = 'number';
+      } else {
+        filter.value = filter.value;
+        filter.dataType = 'string';
+      }
+
+      filters.push(filter);
+    });
 
     // As BASIC uses arrays starting with 1 (one) as index, 
     // a ghost element is added at 0 (zero) position.
@@ -328,15 +373,60 @@ export class SystemKeywords {
     table.push({ 'this is a hidden base 0': 'element' });
     let foundIndex = 0;
 
+
     // Fills the row variable.
 
     for (; foundIndex < results.text.length; foundIndex++) {
+      let filterAcceptCount = 0;
+      await CollectionUtil.asyncForEach(filters, async filter => {
 
-      let result = results.text[foundIndex][columnIndex];
+        let result = results.text[foundIndex][filter.columnIndex];
 
-      // Filter results action.
+        switch (filter.dataType) {
+          case 'string':
+            switch (filter.operator) {
+              case '=':
+                if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
+                  filterAcceptCount++;
+                }
+                break;
+            }
+            break;
+          case 'number':
+            switch (filter.operator) {
+              case '=':
+                if (result && result.trim() === filter.value.trim()) {
+                  filterAcceptCount++;
+                }
+                break;
+            }
+            break;
 
-      if (result && result.toLowerCase().trim() === value.toLowerCase().trim()) {
+          case 'date':
+            const resultDate = new Date(result);
+            switch (filter.operator) {
+              case '<':
+                if (resultDate.getTime() < filter.value.getTime())
+                  filterAcceptCount++;
+                break;
+              case '>':
+                if (resultDate.getTime() > filter.value.getTime())
+                  filterAcceptCount++;
+                break;
+              case '<=':
+                if (resultDate.getTime() <= filter.value.getTime())
+                  filterAcceptCount++;
+                break;
+              case '>=':
+                if (resultDate.getTime() >= filter.value.getTime())
+                  filterAcceptCount++;
+                break;
+            }
+            break;
+        }
+      });
+
+      if (filterAcceptCount === filters.length) {
         let row = {};
         const xlRow = results.text[foundIndex];
         for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
@@ -346,6 +436,7 @@ export class SystemKeywords {
         row['line'] = foundIndex + 1;
         table.push(row);
       }
+
     }
 
     if (table.length === 1) {
@@ -643,7 +734,7 @@ export class SystemKeywords {
     const options = {
       url: url,
       headers: headers,
-      qs:qs,
+      qs: qs,
     };
 
     let result = await request.get(options);
