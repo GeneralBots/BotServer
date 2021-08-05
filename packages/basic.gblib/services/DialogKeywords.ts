@@ -140,7 +140,16 @@ export class DialogKeywords {
    *
    */
   public getToLst(array, member) {
-    return Array.prototype.map.call(array, (item) => { return item[member]; }).join(",");
+    if (array[0] && array[0]['gbarray'])
+    {
+      array = array.slice(1);
+    }
+    array = array.filter((v, i, a) => a.findIndex(t => (t[member] === v[member])) === i);
+    array = array.filter(function (item, pos) { return item != undefined; });
+    array = array.map((item) => { return item[member]; })
+    array = array.join(",");
+
+    return array;
   }
 
   /**
@@ -341,6 +350,9 @@ export class DialogKeywords {
     if (filename.indexOf('.md') > -1) {
       GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
       const md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
+      if (!md) {
+        GBLog.info(`BASIC: Markdown file ${filename} not found on database for ${this.min.instance.botId}.`);
+      }
 
       await this.min.conversationalService['playMarkdown'](this.min, md,
         DialogKeywords.getChannel(step), step);

@@ -312,16 +312,16 @@ export class SystemKeywords {
 
     let getFilter = async (text) => {
       let filter;
-      const operators = [/\<\=/, /\>\=/, /\</, /\>/, /\bin\b/, /\bnot in\b/, /\=/];
+      const operators = [/\<\=/, /\>\=/, /\</, /\>/, /\bnot in\b/,/\bin\b/, /\=/];
       let done = false;
       await CollectionUtil.asyncForEach(operators, async op => {
-        var re = new RegExp(op, "g");
+        var re = new RegExp(op, "gi");
         const parts = text.split(re);
 
         if (parts.length === 2 && !done) {
           filter = {
             columnName: parts[0].trim(),
-            operator: op.toString().replace(/\//g, '').replace(/\\/g, '').replace(/\b/g, ''),
+            operator: op.toString().replace(/\\b/g, '').replace(/\//g, '').replace(/\\/g, '').replace(/\b/g, ''),
             value: parts[1].trim()
           };
 
@@ -346,10 +346,14 @@ export class SystemKeywords {
       }
       return !isNaN(date.valueOf());
     }
+
     function isValidNumber(number) {
       return !isNaN(number);
     }
-
+   
+    function isValidHour(value) {
+      return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value);
+    }
     // Increments columnIndex by looping until find a column match.
 
     const filters = [];
@@ -368,18 +372,18 @@ export class SystemKeywords {
       }
       filter.columnIndex = columnIndex;
 
-      if (isValidDate(filter.value)) {
+      if (isValidHour(filter.value)) {
+        filter.dataType = 'hourInterval';
+      } else if (isValidDate(filter.value)) {
         filter.value = new Date(filter.value);
         filter.dataType = 'date';
-      }
-      else if (isValidNumber(filter.value)) {
+      } else if (isValidNumber(filter.value)) {
         filter.value = Number.parseInt(filter.value);
         filter.dataType = 'number';
       } else {
         filter.value = filter.value;
         filter.dataType = 'string';
       }
-
       filters.push(filter);
     });
 
@@ -387,7 +391,7 @@ export class SystemKeywords {
     // a ghost element is added at 0 (zero) position.
 
     let table = [];
-    table.push({ 'this is a hidden base 0': 'element' });
+    table.push({ 'gbarray': '0' });
     let foundIndex = 1;
 
     // Fills the row variable.
@@ -424,6 +428,22 @@ export class SystemKeywords {
                 if (Number.parseInt(result) === filter.value) {
                   filterAcceptCount++;
                 }
+                break;
+            }
+            break;
+
+          case 'hourInterval':
+            switch (filter.operator) {
+              case 'in':
+                const e = result.split(';');
+                const hr = Number.parseInt(filter.value.split(':')[0]);
+                let lastHour = Number.parseInt(e[0]);
+                await CollectionUtil.asyncForEach(e, async hour => {
+                  if (lastHour <= hr && hr <= hour) {
+                    filterAcceptCount++;
+                  }
+                  lastHour = hour;
+                });
                 break;
             }
             break;
@@ -789,5 +809,5 @@ export class SystemKeywords {
   public async numberOnly(text: string) {
     return text.replace(/\D/gi, '');
   }
-  
+
 }
