@@ -411,12 +411,12 @@ export class SystemKeywords {
                 }
                 break;
               case 'not in':
-                if (filter.value.indexOf(result)) {
+                if (filter.value.indexOf(result) === -1) {
                   filterAcceptCount++;
                 }
                 break;
               case 'in':
-                if (!filter.value.indexOf(result)) {
+                if (filter.value.indexOf(result) !== -1) {
                   filterAcceptCount++;
                 }
                 break;
