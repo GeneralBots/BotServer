@@ -80,7 +80,7 @@ export class GBVMService extends GBService {
         const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
         const fullVbsFile = urlJoin(folder, vbsFile);
         const docxStat = fs.statSync(urlJoin(folder, wordFile));
-        const interval = 30000; // If compiled is older 30 seconds, then recompile.
+        const interval = 1000; // If compiled is older 30 seconds, then recompile.
         let writeVBS = true;
         if (fs.existsSync(fullVbsFile)) {
           const vbsStat = fs.statSync(fullVbsFile);
@@ -502,7 +502,8 @@ export class GBVMService extends GBService {
     code = code.replace('hour = await', 'hour =');  // TODO: Improve this.
     code = code.replace('weekday = await', 'weekday =');  // TODO: Improve this.
     code = code.replace('tolist = await', 'tolist =');  // TODO: Improve this.
-    code = code.replace('isArray = async', 'isArray =');  // TODO: Waiting for a compiler.
+    code = code.replace('isarray = async', 'isarray =');  // TODO: Waiting for a compiler.
+    code = code.replace('isArray = async', 'isarray =');  // TODO: Waiting for a compiler.
 
     return code;
   }
@@ -788,7 +789,7 @@ export class GBVMService extends GBService {
       ret = await sandbox[mainMethod](step);
 
     } catch (error) {
-      throw new Error(`BASIC ERROR: ${error.message} ${error.stack}`);
+      throw new Error(`BASIC ERROR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
     }
     return ret;
   }

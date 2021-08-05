@@ -75,11 +75,14 @@ export class SystemKeywords {
   }
 
   public async append(...args) {
-    return [].concat(...args);
+    let array = [].concat(...args);
+    return array.filter(function (item, pos) { return item; });
   }
 
   public async sortBy(array, memberName) {
-    return array ? [].sort(p => p[memberName]) : null;
+    return array ? array.sort(p => 
+      { if (p) { return p[memberName]; } }) :
+       null;
   }
 
   /**
@@ -312,7 +315,7 @@ export class SystemKeywords {
 
     let getFilter = async (text) => {
       let filter;
-      const operators = [/\<\=/, /\>\=/, /\</, /\>/, /\bnot in\b/,/\bin\b/, /\=/];
+      const operators = [/\<\=/, /\>\=/, /\</, /\>/, /\bnot in\b/, /\bin\b/, /\=/];
       let done = false;
       await CollectionUtil.asyncForEach(operators, async op => {
         var re = new RegExp(op, "gi");
@@ -350,7 +353,7 @@ export class SystemKeywords {
     function isValidNumber(number) {
       return !isNaN(number);
     }
-   
+
     function isValidHour(value) {
       return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value);
     }
