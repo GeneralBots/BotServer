@@ -657,42 +657,4 @@ ENDPOINT_UPDATE=true
     return value;
   }
 
-  /**
-   * Load all cached schedule from BASIC SET SCHEDULE keyword.
-   */
-  public async loadSchedules() {
-    GBLog.info(`Loading instances from storage...`);
-    let schedules;
-    try {
-      const options = { where: { state: 'active' } };
-      schedules = await GuaribasSchedule.findAll(options);
-      if (process.env.ENDPOINT_UPDATE === 'true') {
-        await CollectionUtil.asyncForEach(schedules, async item => {
-          GBLog.info(`Updating bot endpoint for ${item.botId}...`);
-          try {
-            const options = {
-              scheduled: true,
-              timezone: 'America/Sao_Paulo'
-            };
-
-            cron.schedule(
-              item.schedule,
-              async () => {
-                let script = item.name;
-                let min: GBMinInstance = GBServer.globals.minInstances.filter(
-                  p => p.instance.instanceId === item.instanceId
-                )[0];
-                GBVMService.callVM(script, min, null, null);
-              },
-              options
-            );
-            GBLog.info(`Running .gbdialog word ${item.name} on:${item.schedule}...`);
-          } catch (error) { }
-        });
-      }
-    } catch (error) {
-      throw new Error(`Cannot schedule: ${error.message}.`);
-    }
-    return schedules;
-  }
 }

@@ -42,6 +42,7 @@ import urlJoin = require('url-join');
 import { DialogKeywords } from './DialogKeywords';
 import { Messages } from '../strings';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
+import { ScheduleServices } from './ScheduleServices';
 //tslint:disable-next-line:no-submodule-imports
 const vm = require('vm');
 const vb2ts = require('./vbscript-to-typescript');
@@ -88,15 +89,26 @@ export class GBVMService extends GBService {
             writeVBS = false;
           }
         }
-        if (writeVBS) {
-          let text = await this.getTextFromWord(folder, wordFile);
-          fs.writeFileSync(urlJoin(folder, vbsFile), text);
-        }
-
         filename = vbsFile;
-
         let mainName = GBVMService.getMethodNameFromVBSFilename(filename);
         min.scriptMap[filename] = mainName;
+
+        if (writeVBS) {
+          let text = await this.getTextFromWord(folder, wordFile);
+
+
+          const schedule = GBVMService.getSetScheduleKeywordArgs(text);
+          const s = new ScheduleServices();
+          if (schedule) {
+            await s.createOrUpdateSchedule(min, schedule, mainName);
+          }
+          else {
+            await s.deleteScheduleIfAny(min, mainName);
+          } 
+          
+          text = text.replace(/SET SCHEDULE (.*)/gi, '');
+          fs.writeFileSync(urlJoin(folder, vbsFile), text);
+        }
 
         const fullFilename = urlJoin(folder, filename);
         // TODO: Implement in development mode, how swap for .vbs files
@@ -114,6 +126,7 @@ export class GBVMService extends GBService {
             await this.executeBASIC(fullFilename, min, deployer, mainName);
           } else {
             const parsedCode: string = fs.readFileSync(jsfile, 'utf8');
+
             this.executeJS(min, deployer, parsedCode, mainName);
           }
         } else {
@@ -126,6 +139,14 @@ export class GBVMService extends GBService {
   public static getMethodNameFromVBSFilename(filename: string) {
     let mainName = filename.replace(/\s|\-/gi, '').split('.')[0];
     return mainName.toLowerCase();
+  }
+
+  public static getSetScheduleKeywordArgs(code: string) {
+    if (!code)
+      return null;
+    const keyword = /SET SCHEDULE (.*)/gi;
+    const result = keyword.exec(code);
+    return result ? result[1] : null;
   }
 
   private async getTextFromWord(folder: string, filename: string) {
@@ -272,7 +293,7 @@ export class GBVMService extends GBService {
     code = code.replace(/(set max lines)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `setMaxLines (step, ${$3})\n`;
     });
-    
+
     code = code.replace(/(set translator)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `setTranslatorOn (step, "${$3.toLowerCase()}")\n`;
     });
@@ -339,7 +360,7 @@ export class GBVMService extends GBService {
   }
 
   public async executeBASIC(filename: any, min: GBMinInstance, deployer: GBDeployer, mainName: string) {
-    
+
     // Converts General Bots BASIC into regular VBS
 
     const basicCode: string = fs.readFileSync(filename, 'utf8');
@@ -348,11 +369,11 @@ export class GBVMService extends GBService {
     fs.writeFileSync(vbsFile, vbsCode, 'utf8');
 
     // Converts VBS into TS.
-    
+
     vb2ts.convertFile(vbsFile);
 
     // Convert TS into JS.
-    
+
     const tsfile: string = `${filename}.ts`;
     let tsCode: string = fs.readFileSync(tsfile, 'utf8');
     tsCode = tsCode.replace(/export.*\n/gi, `export function ${mainName}(step:any) { let resolve;`);
@@ -361,7 +382,7 @@ export class GBVMService extends GBService {
     tsc.compile([tsfile]);
 
     // Run JS into the GB context.
-    
+
     const jsfile = `${tsfile}.js`.replace('.ts', '');
 
     if (fs.existsSync(jsfile)) {

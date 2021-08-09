@@ -632,6 +632,7 @@ export class GBMinService {
     min.cbMap = {};
     min.scriptMap = {};
     min.sandBoxMap = {};
+    min["scheduleMap"] = {};
     min.packages = sysPackages;
     min.appPackages = appPackages;
 
