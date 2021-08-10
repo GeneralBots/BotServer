@@ -146,7 +146,7 @@ export class DialogKeywords {
     array = array.filter((v, i, a) => a.findIndex(t => (t[member] === v[member])) === i);
     array = array.filter(function (item, pos) { return item != undefined; });
     array = array.map((item) => { return item[member]; })
-    array = array.join(",");
+    array = array.join(", ");
 
     return array;
   }
