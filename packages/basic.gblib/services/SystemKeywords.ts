@@ -296,8 +296,8 @@ export class SystemKeywords {
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
     let document = await this.internalGetDocument(client, baseUrl, path, file);
-    let maxLines = 100;
-    if (this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
+    let maxLines = 1000;
+    if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
       if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
         maxLines = Number.parseInt(this.dk.user.basicOptions.maxLines).valueOf();
       }
