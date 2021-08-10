@@ -13,8 +13,9 @@ export const Messages = {
     which_language: 'Please, type the language name you would like to talk through.',
     validation_enter_valid_email: 'Please enter a valid e-mail.',
     language_chosen: 'Very good, so let\'s go...',
-    affirmative_sentences: /^(\bsim\b|\bs\b|\bpositivo\b|\bafirmativo\b|\bclaro\b|\bevidente\b|\bsem dúvida\b|\bconfirmo\b|\bconfirmar\b|\bconfirmado\b|\buhum\b|\bsi\b|\by\b|\byes\b|\bsure\b)/i
-
+    affirmative_sentences: /^(\bsim\b|\bs\b|\bpositivo\b|\bafirmativo\b|\bclaro\b|\bevidente\b|\bsem dúvida\b|\bconfirmo\b|\bconfirmar\b|\bconfirmado\b|\buhum\b|\bsi\b|\by\b|\byes\b|\bsure\b)/i,
+    will_answer_projector:
+      'I\'ll answer on the projector to a better experience...',
   },
   'pt-BR': {
     show_video: 'Vou te mostrar um vídeo. Por favor, aguarde...',
@@ -28,7 +29,9 @@ export const Messages = {
     which_language: 'Por favor, digite o idioma que você gostaria de usar para conversarmos.',
     validation_enter_valid_email: 'Por favor digite um email válido.',
     language_chosen: 'Muito bem, então vamos lá...',
-    affirmative_sentences: /^(\bsim\b|\bs\b|\bpositivo\b|\bafirmativo\b|\bclaro\b|\bevidente\b|\bsem dúvida\b|\bconfirmo\b|\bconfirmar\b|\bconfirmado\b|\buhum\b|\bsi\b|\by\b|\byes\b|\bsure\b)/i
+    affirmative_sentences: /^(\bsim\b|\bs\b|\bpositivo\b|\bafirmativo\b|\bclaro\b|\bevidente\b|\bsem dúvida\b|\bconfirmo\b|\bconfirmar\b|\bconfirmado\b|\buhum\b|\bsi\b|\by\b|\byes\b|\bsure\b)/i,
+    will_answer_projector:
+      'Vou te responder na tela para melhor visualização...',
 
   }
 };

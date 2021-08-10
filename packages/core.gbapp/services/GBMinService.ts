@@ -929,13 +929,13 @@ export class GBMinService {
 
         } else if (context.activity.type === 'message') {
 
-          // Process messages activities.
+          // Processes messages activities.
 
           await this.processMessageActivity(context, min, step);
 
         } else if (context.activity.type === 'event') {
 
-          // Processes events activies.
+          // Processes events activities.
 
           await this.processEventActivity(min, user, context, step);
         }

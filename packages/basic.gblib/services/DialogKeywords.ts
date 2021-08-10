@@ -140,6 +140,10 @@ export class DialogKeywords {
    *
    */
   public getToLst(array, member) {
+    if (!array)
+    {
+      return "<Empty>"
+    }
     if (array[0] && array[0]['gbarray']) {
       array = array.slice(1);
     }
