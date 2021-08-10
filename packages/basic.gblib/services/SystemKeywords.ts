@@ -441,9 +441,11 @@ export class SystemKeywords {
                 const e = result.split(';');
                 const hr = Number.parseInt(filter.value.split(':')[0]);
                 let lastHour = Number.parseInt(e[0]);
+                let found = false;
                 await CollectionUtil.asyncForEach(e, async hour => {
-                  if (lastHour <= hr && hr <= hour) {
+                  if (!found && lastHour <= hr && hr <= hour) {
                     filterAcceptCount++;
+                    found = true;
                   }
                   lastHour = hour;
                 });
