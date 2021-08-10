@@ -109,7 +109,7 @@ export class ScheduleServices extends GBService {
     GBLog.info(`Loading instances from storage...`);
     let schedules;
     try {
-      const options = { where: { state: 'active' } };
+      const options = { where: { instanceId: min.instance.instanceId } };
       schedules = await GuaribasSchedule.findAll(options);
       if (process.env.ENDPOINT_UPDATE === 'true') {
         await CollectionUtil.asyncForEach(schedules, async item => {
@@ -124,7 +124,7 @@ export class ScheduleServices extends GBService {
 
 
   private ScheduleItem(item: GuaribasSchedule, min: GBMinInstance) {
-    GBLog.info(`Scheduling ${item.name} ${min.botId}...`);
+    GBLog.info(`Scheduling ${item.name} on ${min.botId}...`);
     try {
       const options = {
         scheduled: true,
@@ -133,21 +133,24 @@ export class ScheduleServices extends GBService {
 
       const task = min["scheduleMap"][item.name];
       if (task) {
-        task.destroy();
-        delete min["scheduleMap"][name];
-
+        task.stop();
+        min["scheduleMap"][item.name] = null;
       }
 
       min["scheduleMap"][item.name] = cron.schedule(
         item.schedule,
-        async () => {
-          let script = item.name;
-          let min: GBMinInstance = GBServer.globals.minInstances.filter(
-            p => p.instance.instanceId === item.instanceId
-          )[0];
-          await GBVMService.callVM(script, min, null, null);
-        },
-        options
+        function () {
+          const finalData = async () => {
+            let script = item.name;
+            let min: GBMinInstance = GBServer.globals.minInstances.filter(
+              p => p.instance.instanceId === item.instanceId
+            )[0];
+            await GBVMService.callVM(script, min, null, null);
+          };
+          (async () => {
+            await finalData();
+          })();
+        }, options
       );
       GBLog.info(`Running .gbdialog word ${item.name} on:${item.schedule}...`);
     } catch (error) { }

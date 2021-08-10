@@ -140,8 +140,7 @@ export class DialogKeywords {
    *
    */
   public getToLst(array, member) {
-    if (array[0] && array[0]['gbarray'])
-    {
+    if (array[0] && array[0]['gbarray']) {
       array = array.slice(1);
     }
     array = array.filter((v, i, a) => a.findIndex(t => (t[member] === v[member])) === i);
@@ -253,14 +252,14 @@ export class DialogKeywords {
    * Returns the name of the user acquired by WhatsApp API.
    */
   public async userName(step) {
-    return step.context.activity.from.name;
+    return step ? step.context.activity.from.name : 'N/A';
   }
 
   /**
    * OBSOLETE. 
    */
   public async getFrom(step) {
-    return await this.userMobile(step);
+    return step ? await this.userMobile(step) : 'N/A';
   }
 
 
@@ -271,6 +270,9 @@ export class DialogKeywords {
    *
    */
   public async userMobile(step) {
+    if (!step) {
+      return 'N/A';
+    }
     if (isNaN(step.context.activity['mobile'])) {
       if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
         return step.context.activity.from.id;

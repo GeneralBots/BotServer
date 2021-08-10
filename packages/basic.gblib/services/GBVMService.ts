@@ -779,7 +779,8 @@ export class GBVMService extends GBService {
 
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
-    const user = await min.userProfile.get(step.context, {});
+
+    const user =step?  await min.userProfile.get(step.context, {}): null;
     const sandbox: DialogKeywords = new DialogKeywords(min, deployer, step, user);
 
     // Injects the .gbdialog generated code into the VM.

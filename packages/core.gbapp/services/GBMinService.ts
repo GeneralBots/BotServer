@@ -79,6 +79,7 @@ import { GBDeployer } from './GBDeployer';
 import urlJoin = require('url-join');
 import fs = require('fs');
 import { GoogleChatDirectLine } from '../../google-chat.gblib/services/GoogleChatDirectLine';
+import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -160,6 +161,7 @@ export class GBMinService {
         GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
       }
     });
+
   }
 
 
@@ -214,6 +216,9 @@ export class GBMinService {
     if (fs.existsSync(packagePath)) {
       await this.deployer.deployPackage(min, packagePath);
     }
+
+    const service = new ScheduleServices();
+    await service.loadSchedules(min);
 
     // Calls the loadBot context.activity for all packages.
 

@@ -216,6 +216,10 @@ export class GBConversationalService {
   }
 
   public userMobile(step) {
+    if (!step)
+    {
+      return 'N/A';
+    }
     if (isNaN(step.context.activity['mobile'])) {
       if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
         return step.context.activity.from.id;
