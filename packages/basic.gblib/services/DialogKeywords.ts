@@ -32,14 +32,12 @@
 
 'use strict';
 
-import { BotAdapter, TurnContext } from 'botbuilder';
-import { WaterfallDialog, WaterfallStepContext } from 'botbuilder-dialogs';
 import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import urlJoin = require('url-join');
 import { GBServer } from '../../../src/app';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { SecService } from '../../security.gbapp/services/SecService';
-import { Messages } from '../strings';
 import { SystemKeywords } from './SystemKeywords';
 
 /**
@@ -95,11 +93,13 @@ export class DialogKeywords {
     if (month.length < 2) { month = '0' + month; }
     if (day.length < 2) { day = '0' + day; }
 
-    const user = await this.min.userProfile.get(step.context, {});
-    const sec = new SecService();
-    const userFull = await sec.getUserFromSystemId(user.systemUser.userSystemId);
+    const contentLocale = this.min.core.getParam<string>(
+      this.min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
 
-    switch (userFull.locale) {
+    switch (contentLocale) {
       case 'pt':
         return [day, month, year].join('/');
 
@@ -120,6 +120,20 @@ export class DialogKeywords {
     await step.endDialog();
   }
 
+  public getContentLocaleWithCulture(contentLocale) {
+    switch (contentLocale) {
+      case 'pt':
+        return 'pt-br';
+
+      case 'en':
+        return 'en-us';
+
+      default:
+        return 'en-us';
+    }
+
+  }
+
   /**
    * Returns specified date week day in format 'Mon'.
    *
@@ -130,7 +144,14 @@ export class DialogKeywords {
     if (!(date instanceof Date)) {
       date = new Date(date);
     }
-    return date.toLocaleString('en-us', { weekday: 'short' });
+
+    const contentLocale = this.min.core.getParam<string>(
+      this.min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+    return date.toLocaleString(this.getContentLocaleWithCulture(contentLocale), { weekday: 'short' });
   }
 
   /**
@@ -140,8 +161,7 @@ export class DialogKeywords {
    *
    */
   public getToLst(array, member) {
-    if (!array)
-    {
+    if (!array) {
       return "<Empty>"
     }
     if (array[0] && array[0]['gbarray']) {
@@ -181,10 +201,17 @@ export class DialogKeywords {
    *
    */
   public async getNow() {
+    const contentLocale = this.min.core.getParam<string>(
+      this.min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
     const nowUTC = new Date();
     const now = new Date((typeof nowUTC === 'string' ?
       new Date(nowUTC) :
-      nowUTC).toLocaleString('en-US', { timeZone: process.env.DEFAULT_TIMEZONE }));
+      nowUTC).toLocaleString(this.getContentLocaleWithCulture(contentLocale),
+        { timeZone: process.env.DEFAULT_TIMEZONE }));
 
     return now.getHours() + ':' + now.getMinutes();
   }
