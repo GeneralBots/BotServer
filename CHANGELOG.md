@@ -1,3 +1,10 @@
+## [2.0.129](https://github.com/GeneralBots/BotServer/compare/2.0.128...2.0.129) (2021-08-11)
+
+
+### Bug Fixes
+
+* **all:** FIND OR TALK fixed. ([a8e517d](https://github.com/GeneralBots/BotServer/commit/a8e517d1f405dc743f4ee398ecd298f8b9b3952f))
+
 ## [2.0.128](https://github.com/GeneralBots/BotServer/compare/2.0.127...2.0.128) (2021-08-11)
 
 
