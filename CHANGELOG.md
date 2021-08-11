@@ -1,3 +1,10 @@
+## [2.0.128](https://github.com/GeneralBots/BotServer/compare/2.0.127...2.0.128) (2021-08-11)
+
+
+### Bug Fixes
+
+* **all:** HEAR call back errors removed. ([375d107](https://github.com/GeneralBots/BotServer/commit/375d107dd247acdfed2584bc3a295b7099c6db31))
+
 ## [2.0.127](https://github.com/GeneralBots/BotServer/compare/2.0.126...2.0.127) (2021-06-21)
 
 
