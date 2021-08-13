@@ -207,7 +207,7 @@ export class KBService implements IGBKBService {
       question = await GuaribasQuestion.findOne({
         where: {
           instanceId: instanceId,
-          content: { [Op.like]: `%${text}%` }
+          content: { [Op.like]: `%[^a-z]${text}[^a-z]%` }
         }
       });
     }
