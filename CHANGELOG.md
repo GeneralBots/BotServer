@@ -1,3 +1,10 @@
+## [2.0.130](https://github.com/GeneralBots/BotServer/compare/2.0.129...2.0.130) (2021-08-13)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** Fixing WHOLE WORD in Simple Search. ([3ad3459](https://github.com/GeneralBots/BotServer/commit/3ad3459e4b74263cdba4142f2c42452ad9d2cdbc))
+
 ## [2.0.129](https://github.com/GeneralBots/BotServer/compare/2.0.128...2.0.129) (2021-08-11)
 
 
