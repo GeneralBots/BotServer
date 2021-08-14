@@ -81,7 +81,7 @@ export class GBVMService extends GBService {
         const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
         const fullVbsFile = urlJoin(folder, vbsFile);
         const docxStat = fs.statSync(urlJoin(folder, wordFile));
-        const interval = 1000; // If compiled is older 30 seconds, then recompile.
+        const interval = 30000; // If compiled is older 30 seconds, then recompile.
         let writeVBS = true;
         if (fs.existsSync(fullVbsFile)) {
           const vbsStat = fs.statSync(fullVbsFile);
@@ -96,7 +96,6 @@ export class GBVMService extends GBService {
         if (writeVBS) {
           let text = await this.getTextFromWord(folder, wordFile);
 
-
           const schedule = GBVMService.getSetScheduleKeywordArgs(text);
           const s = new ScheduleServices();
           if (schedule) {
@@ -105,7 +104,6 @@ export class GBVMService extends GBService {
           else {
             await s.deleteScheduleIfAny(min, mainName);
           } 
-          
           text = text.replace(/SET SCHEDULE (.*)/gi, '');
           fs.writeFileSync(urlJoin(folder, vbsFile), text);
         }
@@ -184,8 +182,8 @@ export class GBVMService extends GBService {
     from = mobile;
     ubound = function(array){return array.length};
     isarray = function(array){return Array.isArray(array) };
-    weekday = this.getWeekFromDate;
-    hour = this.getHourFromDate;
+    weekday = this.getWeekFromDate.bind(this);
+    hour = this.getHourFromDate.bind(this);
     tolist = this.getToLst;
     headers = {};
 

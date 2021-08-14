@@ -80,9 +80,8 @@ export class SystemKeywords {
   }
 
   public async sortBy(array, memberName) {
-    return array ? array.sort(p => 
-      { if (p) { return p[memberName]; } }) :
-       null;
+    return array ? array.sort(p => { if (p) { return p[memberName]; } }) :
+      null;
   }
 
   /**
@@ -351,6 +350,7 @@ export class SystemKeywords {
     }
 
     function isValidNumber(number) {
+      if (number === '') { return false }
       return !isNaN(number);
     }
 
@@ -456,6 +456,10 @@ export class SystemKeywords {
           case 'date':
             const resultDate = new Date(result);
             switch (filter.operator) {
+              case '=':
+                if (resultDate.getTime() == filter.value.getTime())
+                  filterAcceptCount++;
+                break;
               case '<':
                 if (resultDate.getTime() < filter.value.getTime())
                   filterAcceptCount++;
