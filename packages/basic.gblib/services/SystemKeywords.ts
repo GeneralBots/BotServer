@@ -31,7 +31,7 @@
 \*****************************************************************************/
 'use strict';
 import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
-import { GBConfigService } from 'packages/core.gbapp/services/GBConfigService';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
 import urlJoin = require('url-join');
