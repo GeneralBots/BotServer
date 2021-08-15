@@ -31,6 +31,7 @@
 \*****************************************************************************/
 'use strict';
 import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
+import { GBConfigService } from 'packages/core.gbapp/services/GBConfigService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
 import urlJoin = require('url-join');
@@ -342,7 +343,15 @@ export class SystemKeywords {
       return filter;
     };
 
-    function isValidDate(date) {
+    const contentLocale = this.min.core.getParam<string>(
+      this.min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+    function isValidDate(dt) {
+      let date = SystemKeywords.getDateFromLocaleString(dt, contentLocale);
+
       if (!(date instanceof Date)) {
         date = new Date(date);
       }
@@ -378,7 +387,7 @@ export class SystemKeywords {
       if (isValidHour(filter.value)) {
         filter.dataType = 'hourInterval';
       } else if (isValidDate(filter.value)) {
-        filter.value = new Date(filter.value);
+        filter.value = SystemKeywords.getDateFromLocaleString(filter.value, contentLocale);
         filter.dataType = 'date';
       } else if (isValidNumber(filter.value)) {
         filter.value = Number.parseInt(filter.value);
@@ -454,7 +463,7 @@ export class SystemKeywords {
             break;
 
           case 'date':
-            const resultDate = new Date(result);
+            const resultDate = SystemKeywords.getDateFromLocaleString(result, contentLocale);
             switch (filter.operator) {
               case '=':
                 if (resultDate.getTime() == filter.value.getTime())
@@ -504,6 +513,19 @@ export class SystemKeywords {
       GBLog.info(`BASIC: FIND returned multiple results (Count): ${table.length}.`);
       return table;
     }
+  }
+
+  private static getDateFromLocaleString(date: any, contentLocale: any) {
+    const parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})$/gi.exec(date);
+    switch (contentLocale) {
+      case 'pt':
+        date = new Date(Number.parseInt(parts[2]), Number.parseInt(parts[1]), Number.parseInt(parts[3]), 0, 0, 0, 0);
+        break;
+      case 'en':
+        date = new Date(Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseInt(parts[3]), 0, 0, 0, 0);
+        break;
+    }
+    return date;
   }
 
   /**

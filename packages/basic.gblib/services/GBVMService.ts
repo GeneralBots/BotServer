@@ -288,6 +288,14 @@ export class GBVMService extends GBService {
       return `setLanguage (step, ${$3})\n`;
     });
 
+    code = code.replace(/(datediff)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `dateDiff (step, ${$3})\n`;
+    });
+
+    code = code.replace(/(dateadd)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `dateAdd (step, ${$3})\n`;
+    });
+
     code = code.replace(/(set max lines)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `setMaxLines (step, ${$3})\n`;
     });
@@ -499,6 +507,12 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsetLanguage\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.setLanguage' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bdateAdd\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.dateAdd' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bdateDiff\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.dateDiff' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsetMaxLines\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.setMaxLines' : $1;

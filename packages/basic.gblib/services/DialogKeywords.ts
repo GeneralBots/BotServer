@@ -160,10 +160,10 @@ export class DialogKeywords {
    * Returns an object ready to get information about difference in several ways
    * like years, months or days.
    *
-   * @example days = DATEDIFF date1, date2
+   * @example days = DATEDIFF date1, date2, mode
    *
    */
-  public dateDiff(date1, date2) {
+  public dateDiff(date1, date2, mode) {
     let dt1 = date1;
     let dt2 = date2;
     if (!(dt1 instanceof Date)) {
@@ -172,17 +172,25 @@ export class DialogKeywords {
     if (!(dt2 instanceof Date)) {
       dt2 = new Date(dt2);
     }
-    return new DateDiff(date1, date2);
+    const diff = new DateDiff(date1, date2);
+    switch (mode) {
+      case 'year': return diff.years();
+      case 'month': return diff.months();
+      case 'week': return diff.weeks();
+      case 'day': return diff.days();
+      case 'hour': return diff.hours();
+      case 'minute': return diff.minutes();
+    }
   }
 
   /**
    * Returns specified date week day in format 'Mon'.
    *
-   * @example DATEADD date1, date2, mode, value
+   * @example DATEADD date, "minute", 60 
    * 
    * https://stackoverflow.com/a/1214753/18511
    */
-  public dateAdd(date, units, mode) {
+  public dateAdd(date, mode, units) {
     let dateCopy = date;
     if (!(dateCopy instanceof Date)) {
       dateCopy = new Date(dateCopy);
@@ -212,19 +220,19 @@ export class DialogKeywords {
    *
    */
   public getToLst(array, member) {
-  if (!array) {
-    return "<Empty>"
-  }
-  if (array[0] && array[0]['gbarray']) {
-    array = array.slice(1);
-  }
-  array = array.filter((v, i, a) => a.findIndex(t => (t[member] === v[member])) === i);
-  array = array.filter(function (item, pos) { return item != undefined; });
-  array = array.map((item) => { return item[member]; })
-  array = array.join(", ");
+    if (!array) {
+      return "<Empty>"
+    }
+    if (array[0] && array[0]['gbarray']) {
+      array = array.slice(1);
+    }
+    array = array.filter((v, i, a) => a.findIndex(t => (t[member] === v[member])) === i);
+    array = array.filter(function (item, pos) { return item != undefined; });
+    array = array.map((item) => { return item[member]; })
+    array = array.join(", ");
 
-  return array;
-}
+    return array;
+  }
 
   /**
    * Returns the specified time in format hh:dd.
@@ -233,17 +241,17 @@ export class DialogKeywords {
    *
    */
   public getHourFromDate(date) {
-  if (!(date instanceof Date)) {
-    date = new Date(date);
-  }
-  function addZero(i) {
-    if (i < 10) {
-      i = "0" + i;
+    if (!(date instanceof Date)) {
+      date = new Date(date);
     }
-    return i;
+    function addZero(i) {
+      if (i < 10) {
+        i = "0" + i;
+      }
+      return i;
+    }
+    return addZero(date.getHours()) + ':' + addZero(date.getMinutes());
   }
-  return addZero(date.getHours()) + ':' + addZero(date.getMinutes());
-}
 
   /**
    * Returns current time in format hh:dd.
@@ -252,20 +260,20 @@ export class DialogKeywords {
    *
    */
   public async getNow() {
-  const contentLocale = this.min.core.getParam<string>(
-    this.min.instance,
-    'Default Content Language',
-    GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
-  );
+    const contentLocale = this.min.core.getParam<string>(
+      this.min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
 
-  const nowUTC = new Date();
-  const now = new Date((typeof nowUTC === 'string' ?
-    new Date(nowUTC) :
-    nowUTC).toLocaleString(this.getContentLocaleWithCulture(contentLocale),
-      { timeZone: process.env.DEFAULT_TIMEZONE }));
+    const nowUTC = new Date();
+    const now = new Date((typeof nowUTC === 'string' ?
+      new Date(nowUTC) :
+      nowUTC).toLocaleString(this.getContentLocaleWithCulture(contentLocale),
+        { timeZone: process.env.DEFAULT_TIMEZONE }));
 
-  return now.getHours() + ':' + now.getMinutes();
-}
+    return now.getHours() + ':' + now.getMinutes();
+  }
 
   /**
    * Sends a file to a given mobile.
@@ -274,9 +282,9 @@ export class DialogKeywords {
    *
    */
   public async sendFileTo(step, mobile, filename, caption) {
-  GBLog.info(`BASIC: SEND FILE TO '${mobile}', filename '${filename}'.`);
-  return await this.internalSendFile(null, mobile, filename, caption);
-}
+    GBLog.info(`BASIC: SEND FILE TO '${mobile}', filename '${filename}'.`);
+    return await this.internalSendFile(null, mobile, filename, caption);
+  }
 
   /**
    * Sends a file to the current user.
@@ -285,8 +293,8 @@ export class DialogKeywords {
    *
    */
   public async sendFile(step, filename, caption) {
-  return await this.internalSendFile(step, null, filename, caption);
-}
+    return await this.internalSendFile(step, null, filename, caption);
+  }
 
   /**
    * Defines the current language of the bot conversation.
@@ -295,14 +303,14 @@ export class DialogKeywords {
    *
    */
   public async setLanguage(step, language) {
-  const user = await this.min.userProfile.get(step.context, {});
+    const user = await this.min.userProfile.get(step.context, {});
 
-  const sec = new SecService();
-  user.systemUser = await sec.updateUserLocale(user.systemUser.userId, language);
+    const sec = new SecService();
+    user.systemUser = await sec.updateUserLocale(user.systemUser.userId, language);
 
-  await this.min.userProfile.set(step.context, user);
-  this.user = user;
-}
+    await this.min.userProfile.set(step.context, user);
+    this.user = user;
+  }
 
   /**
    * Defines the maximum lines to scan in spreedsheets.
@@ -311,11 +319,11 @@ export class DialogKeywords {
    *
    */
   public async setMaxLines(step, count) {
-  const user = await this.min.userProfile.get(step.context, {});
-  user.basicOptions.maxLines = count;
-  await this.min.userProfile.set(step.context, user);
-  this.user = user;
-}
+    const user = await this.min.userProfile.get(step.context, {});
+    user.basicOptions.maxLines = count;
+    await this.min.userProfile.set(step.context, user);
+    this.user = user;
+  }
 
   /**
    * Defines translator behaviour.
@@ -324,25 +332,25 @@ export class DialogKeywords {
    *
    */
   public async setTranslatorOn(step, on) {
-  const user = await this.min.userProfile.get(step.context, {});
-  user.basicOptions.translatorOn = (on.trim() === "on");
-  await this.min.userProfile.set(step.context, user);
-  this.user = user;
-}
+    const user = await this.min.userProfile.get(step.context, {});
+    user.basicOptions.translatorOn = (on.trim() === "on");
+    await this.min.userProfile.set(step.context, user);
+    this.user = user;
+  }
 
   /**
    * Returns the name of the user acquired by WhatsApp API.
    */
   public async userName(step) {
-  return step ? step.context.activity.from.name : 'N/A';
-}
+    return step ? step.context.activity.from.name : 'N/A';
+  }
 
   /**
    * OBSOLETE. 
    */
   public async getFrom(step) {
-  return step ? await this.userMobile(step) : 'N/A';
-}
+    return step ? await this.userMobile(step) : 'N/A';
+  }
 
 
   /**
@@ -352,18 +360,18 @@ export class DialogKeywords {
    *
    */
   public async userMobile(step) {
-  if (!step) {
-    return 'N/A';
-  }
-  if (isNaN(step.context.activity['mobile'])) {
-    if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
-      return step.context.activity.from.id;
+    if (!step) {
+      return 'N/A';
     }
-    return 'No mobile available.';
-  } else {
-    return step.context.activity['mobile'];
+    if (isNaN(step.context.activity['mobile'])) {
+      if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
+        return step.context.activity.from.id;
+      }
+      return 'No mobile available.';
+    } else {
+      return step.context.activity['mobile'];
+    }
   }
-}
 
   /**
    * Shows the subject menu to the user
@@ -372,8 +380,8 @@ export class DialogKeywords {
    *
    */
   public async showMenu(step) {
-  return await step.beginDialog('/menu');
-}
+    return await step.beginDialog('/menu');
+  }
 
   /**
    * Performs the transfer of the conversation to a human agent.
@@ -382,8 +390,8 @@ export class DialogKeywords {
    *
    */
   public async transfer(step) {
-  return await step.beginDialog('/t');
-}
+    return await step.beginDialog('/t');
+  }
 
   /**
    * Hears something from user and put it in a variable
@@ -392,66 +400,66 @@ export class DialogKeywords {
    *
    */
   public async hear(step, promise, previousResolve, kind, ...args) {
-  function random(low, high) {
-    return Math.random() * (high - low) + low;
-  }
-  const idPromise = random(0, 120000000);
-  this.min.cbMap[idPromise] = {};
-  this.min.cbMap[idPromise].promise = promise;
+    function random(low, high) {
+      return Math.random() * (high - low) + low;
+    }
+    const idPromise = random(0, 120000000);
+    this.min.cbMap[idPromise] = {};
+    this.min.cbMap[idPromise].promise = promise;
 
-  const opts = { id: idPromise, previousResolve: previousResolve, kind: kind, args };
-  if (previousResolve !== undefined) {
-    previousResolve(opts);
-  } else {
-    await step.beginDialog('/hear', opts);
+    const opts = { id: idPromise, previousResolve: previousResolve, kind: kind, args };
+    if (previousResolve !== undefined) {
+      previousResolve(opts);
+    } else {
+      await step.beginDialog('/hear', opts);
+    }
   }
-}
 
   /**
    * Talks to the user by using the specified text.
    */
   public async talk(step, text: string) {
-  await this.min.conversationalService['sendTextWithOptions'](this.min, step, text,
-    this.user.basicOptions.translatorOn, null);
-}
+    await this.min.conversationalService['sendTextWithOptions'](this.min, step, text,
+      this.user.basicOptions.translatorOn, null);
+  }
 
   private static getChannel(step): string {
-  if (!isNaN(step.context.activity['mobile'])) {
-    return 'webchat';
-  } else {
-    if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
-      return 'whatsapp';
+    if (!isNaN(step.context.activity['mobile'])) {
+      return 'webchat';
+    } else {
+      if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
+        return 'whatsapp';
+      }
+      return 'webchat';
     }
-    return 'webchat';
   }
-}
 
 
   /**
    * Processes the sending of the file.
    */
   private async internalSendFile(step, mobile, filename, caption) {
-  if (filename.indexOf('.md') > -1) {
-    GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
-    const md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
-    if (!md) {
-      GBLog.info(`BASIC: Markdown file ${filename} not found on database for ${this.min.instance.botId}.`);
+    if (filename.indexOf('.md') > -1) {
+      GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
+      const md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
+      if (!md) {
+        GBLog.info(`BASIC: Markdown file ${filename} not found on database for ${this.min.instance.botId}.`);
+      }
+
+      await this.min.conversationalService['playMarkdown'](this.min, md,
+        DialogKeywords.getChannel(step), step);
+    } else {
+      GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
+      const url = urlJoin(
+        GBServer.globals.publicAddress,
+        'kb',
+        `${this.min.botId}.gbai`,
+        `${this.min.botId}.gbkb`,
+        'assets',
+        filename
+      );
+
+      await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
     }
-
-    await this.min.conversationalService['playMarkdown'](this.min, md,
-      DialogKeywords.getChannel(step), step);
-  } else {
-    GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
-    const url = urlJoin(
-      GBServer.globals.publicAddress,
-      'kb',
-      `${this.min.botId}.gbai`,
-      `${this.min.botId}.gbkb`,
-      'assets',
-      filename
-    );
-
-    await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
   }
-}
 }
