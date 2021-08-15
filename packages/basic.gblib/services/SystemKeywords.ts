@@ -351,10 +351,15 @@ export class SystemKeywords {
 
     function isValidDate(dt) {
       let date = SystemKeywords.getDateFromLocaleString(dt, contentLocale);
+      if (!date) {
+
+        return false;
+      }
 
       if (!(date instanceof Date)) {
         date = new Date(date);
       }
+
       return !isNaN(date.valueOf());
     }
 
@@ -488,8 +493,6 @@ export class SystemKeywords {
                   break;
               }
               break;
-            } else {
-              GBLog.info(`BASIC: FIND with NULL date in filter.`);
             }
         }
       });
