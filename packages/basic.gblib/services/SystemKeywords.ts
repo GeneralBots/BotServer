@@ -464,29 +464,33 @@ export class SystemKeywords {
 
           case 'date':
             const resultDate = SystemKeywords.getDateFromLocaleString(result, contentLocale);
-            switch (filter.operator) {
-              case '=':
-                if (resultDate.getTime() == filter.value.getTime())
-                  filterAcceptCount++;
-                break;
-              case '<':
-                if (resultDate.getTime() < filter.value.getTime())
-                  filterAcceptCount++;
-                break;
-              case '>':
-                if (resultDate.getTime() > filter.value.getTime())
-                  filterAcceptCount++;
-                break;
-              case '<=':
-                if (resultDate.getTime() <= filter.value.getTime())
-                  filterAcceptCount++;
-                break;
-              case '>=':
-                if (resultDate.getTime() >= filter.value.getTime())
-                  filterAcceptCount++;
-                break;
+            if (resultDate) {
+              switch (filter.operator) {
+                case '=':
+                  if (resultDate.getTime() == filter.value.getTime())
+                    filterAcceptCount++;
+                  break;
+                case '<':
+                  if (resultDate.getTime() < filter.value.getTime())
+                    filterAcceptCount++;
+                  break;
+                case '>':
+                  if (resultDate.getTime() > filter.value.getTime())
+                    filterAcceptCount++;
+                  break;
+                case '<=':
+                  if (resultDate.getTime() <= filter.value.getTime())
+                    filterAcceptCount++;
+                  break;
+                case '>=':
+                  if (resultDate.getTime() >= filter.value.getTime())
+                    filterAcceptCount++;
+                  break;
+              }
+              break;
+            } else {
+              GBLog.info(`BASIC: FIND with NULL date in filter.`);
             }
-            break;
         }
       });
 
@@ -517,15 +521,20 @@ export class SystemKeywords {
 
   private static getDateFromLocaleString(date: any, contentLocale: any) {
     const parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})$/gi.exec(date);
-    switch (contentLocale) {
-      case 'pt':
-        date = new Date(Number.parseInt(parts[2]), Number.parseInt(parts[1]), Number.parseInt(parts[3]), 0, 0, 0, 0);
-        break;
-      case 'en':
-        date = new Date(Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseInt(parts[3]), 0, 0, 0, 0);
-        break;
+    if (parts[3]) {
+      switch (contentLocale) {
+        case 'pt':
+          date = new Date(Number.parseInt(parts[2]), Number.parseInt(parts[1]), Number.parseInt(parts[3]), 0, 0, 0, 0);
+          break;
+        case 'en':
+          date = new Date(Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseInt(parts[3]), 0, 0, 0, 0);
+          break;
+      }
+      return date;
     }
-    return date;
+    else {
+      return null;
+    }
   }
 
   /**
