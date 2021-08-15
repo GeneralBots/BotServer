@@ -272,7 +272,7 @@ export class DialogKeywords {
       nowUTC).toLocaleString(this.getContentLocaleWithCulture(contentLocale),
         { timeZone: process.env.DEFAULT_TIMEZONE }));
 
-    return now.getHours() + ':' + now.getMinutes();
+    return now.getHours().toString().padStart(2, "0") + ':' + now.getMinutes().toString().padStart(2, "0");
   }
 
   /**
