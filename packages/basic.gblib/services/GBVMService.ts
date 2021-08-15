@@ -244,9 +244,9 @@ export class GBVMService extends GBService {
       return `${$2} = hear()`;
     });
 
-    code = code.replace(/.*(\w+)\s*\=\s*find\s*(.*)\s*or talk\s*(.*)/gi, ($0, $1, $2, $3) => {
+    code = code.replace(/(\w+)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gi, ($0, $1, $2, $3) => {
       return `${$1} = sys().find(${$2})\n
-      if (!${$1}) {
+      if (!${$1}) {=
         if (resolve){
           resolve();
         }
