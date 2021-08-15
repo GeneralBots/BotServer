@@ -1,3 +1,10 @@
+## [2.0.132](https://github.com/GeneralBots/BotServer/compare/2.0.131...2.0.132) (2021-08-15)
+
+
+### Bug Fixes
+
+* **basic.gblib:** TOLIST fixed for empty values. ([66c0c4b](https://github.com/GeneralBots/BotServer/commit/66c0c4b90d2389c2b3af43741d181b6d5764173b))
+
 ## [2.0.131](https://github.com/GeneralBots/BotServer/compare/2.0.130...2.0.131) (2021-08-14)
 
 
