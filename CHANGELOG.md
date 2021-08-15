@@ -1,3 +1,11 @@
+## [2.0.133](https://github.com/GeneralBots/BotServer/compare/2.0.132...2.0.133) (2021-08-15)
+
+
+### Bug Fixes
+
+* **basic.gblib:** NOW keyword is now formatting values with two zeros. ([b99c917](https://github.com/GeneralBots/BotServer/commit/b99c917754f6aaa0516011a25b1e219b2084156d))
+* **basic.gblib:** NOW keyword is now formatting values with two zeros. ([9c1787b](https://github.com/GeneralBots/BotServer/commit/9c1787b632c0d66861165e3e522b05b1b713e6c7))
+
 ## [2.0.132](https://github.com/GeneralBots/BotServer/compare/2.0.131...2.0.132) (2021-08-15)
 
 
