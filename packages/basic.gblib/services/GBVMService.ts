@@ -103,7 +103,7 @@ export class GBVMService extends GBService {
           }
           else {
             await s.deleteScheduleIfAny(min, mainName);
-          } 
+          }
           text = text.replace(/SET SCHEDULE (.*)/gi, '');
           fs.writeFileSync(urlJoin(folder, vbsFile), text);
         }
@@ -246,12 +246,12 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(\w+)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gi, ($0, $1, $2, $3) => {
       return `${$1} = sys().find(${$2})\n
-      if (!${$1}) {=
+      if (!${$1}) {
         if (resolve){
           resolve();
         }
         talk (${$3})\n;
-        return;      
+        return -1;
       }
       `;
     });
@@ -792,7 +792,7 @@ export class GBVMService extends GBService {
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 
-    const user =step?  await min.userProfile.get(step.context, {}): null;
+    const user = step ? await min.userProfile.get(step.context, {}) : null;
     const sandbox: DialogKeywords = new DialogKeywords(min, deployer, step, user);
 
     // Injects the .gbdialog generated code into the VM.
@@ -821,7 +821,9 @@ export class GBVMService extends GBService {
     let ret = null;
     try {
       ret = await sandbox[mainMethod](step);
-
+      if (ret == -1) {
+        await step.endDialog();
+      }
     } catch (error) {
       throw new Error(`BASIC ERROR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
     }

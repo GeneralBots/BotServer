@@ -81,8 +81,18 @@ export class SystemKeywords {
   }
 
   public async sortBy(array, memberName) {
-    return array ? array.sort(p => { if (p) { return p[memberName]; } }) :
-      null;
+    return array;
+    //   return array ? array.sort(p => {
+
+    //     var c = new Date(a.date);
+    //     var d = new Date(b.date);
+    //     return c - d;
+    //   });
+
+    //   if (p) {
+    //     return ;
+    //   }
+    // }): null;
   }
 
   /**
@@ -276,6 +286,35 @@ export class SystemKeywords {
     return val;
   }
 
+  public isValidDate(dt) {
+    const contentLocale = this.min.core.getParam<string>(
+      this.min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+    let date = SystemKeywords.getDateFromLocaleString(dt, contentLocale);
+    if (!date) {
+      return false;
+    }
+
+    if (!(date instanceof Date)) {
+      date = new Date(date);
+    }
+
+    return !isNaN(date.valueOf());
+  }
+
+  public isValidNumber(number) {
+    if (number === '') { return false }
+    return !isNaN(number);
+  }
+
+  public isValidHour(value) {
+    return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value);
+  }
+
+
   /**
    * Finds a value or multi-value results in a tabular file.
    * 
@@ -349,28 +388,6 @@ export class SystemKeywords {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    function isValidDate(dt) {
-      let date = SystemKeywords.getDateFromLocaleString(dt, contentLocale);
-      if (!date) {
-
-        return false;
-      }
-
-      if (!(date instanceof Date)) {
-        date = new Date(date);
-      }
-
-      return !isNaN(date.valueOf());
-    }
-
-    function isValidNumber(number) {
-      if (number === '') { return false }
-      return !isNaN(number);
-    }
-
-    function isValidHour(value) {
-      return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value);
-    }
     // Increments columnIndex by looping until find a column match.
 
     const filters = [];
@@ -389,12 +406,12 @@ export class SystemKeywords {
       }
       filter.columnIndex = columnIndex;
 
-      if (isValidHour(filter.value)) {
+      if (this.isValidHour(filter.value)) {
         filter.dataType = 'hourInterval';
-      } else if (isValidDate(filter.value)) {
+      } else if (this.isValidDate(filter.value)) {
         filter.value = SystemKeywords.getDateFromLocaleString(filter.value, contentLocale);
         filter.dataType = 'date';
-      } else if (isValidNumber(filter.value)) {
+      } else if (this.isValidNumber(filter.value)) {
         filter.value = Number.parseInt(filter.value);
         filter.dataType = 'number';
       } else {
@@ -451,6 +468,11 @@ export class SystemKeywords {
 
           case 'hourInterval':
             switch (filter.operator) {
+              case '=':
+                if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
+                  filterAcceptCount++;
+                }
+                break;
               case 'in':
                 const e = result.split(';');
                 const hr = Number.parseInt(filter.value.split(':')[0]);
@@ -522,22 +544,29 @@ export class SystemKeywords {
     }
   }
 
-  private static getDateFromLocaleString(date: any, contentLocale: any) {
-    const parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})$/gi.exec(date);
+  public static getDateFromLocaleString(date: any, contentLocale: any) {
+    let parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})\s*(10|11|12|[1-9]):([0-5][0-9])/gi.exec(date);
+    if (parts && parts[5]) {
+      switch (contentLocale) {
+        case 'pt':
+          return new Date(Number.parseInt(parts[3]), Number.parseInt(parts[2]) - 1, Number.parseInt(parts[1]),
+            Number.parseInt(parts[4]), Number.parseInt(parts[5]), 0, 0);
+        case 'en':
+          return new Date(Number.parseInt(parts[3]), Number.parseInt(parts[1]) - 1, Number.parseInt(parts[2]),
+            Number.parseInt(parts[4]), Number.parseInt(parts[5]), 0, 0);
+      }
+    }
+
+    parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})$/gi.exec(date);
     if (parts && parts[3]) {
       switch (contentLocale) {
         case 'pt':
-          date = new Date(Number.parseInt(parts[2]), Number.parseInt(parts[1]), Number.parseInt(parts[3]), 0, 0, 0, 0);
-          break;
+          return new Date(Number.parseInt(parts[2]), Number.parseInt(parts[1]) - 1, Number.parseInt(parts[3]), 0, 0, 0, 0);
         case 'en':
-          date = new Date(Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseInt(parts[3]), 0, 0, 0, 0);
-          break;
+          return new Date(Number.parseInt(parts[1]), Number.parseInt(parts[2]) - 1, Number.parseInt(parts[3]), 0, 0, 0, 0);
       }
-      return date;
     }
-    else {
-      return null;
-    }
+    return null;
   }
 
   /**

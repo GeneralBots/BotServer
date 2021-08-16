@@ -143,9 +143,6 @@ export class DialogKeywords {
    *
    */
   public getWeekFromDate(date) {
-    if (!(date instanceof Date)) {
-      date = new Date(date);
-    }
 
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
@@ -153,7 +150,16 @@ export class DialogKeywords {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    return date.toLocaleString(this.getContentLocaleWithCulture(contentLocale), { weekday: 'short' });
+    let dt = SystemKeywords.getDateFromLocaleString(date, contentLocale);
+
+    if (dt) {
+      if (!(dt instanceof Date)) {
+        dt = new Date(dt);
+      }
+      let week = dt.toLocaleString(this.getContentLocaleWithCulture(contentLocale), { weekday: 'short' });
+      return week.substr(0,3);
+    }
+    return 'NULL';
   }
 
   /**
@@ -241,16 +247,28 @@ export class DialogKeywords {
    *
    */
   public getHourFromDate(date) {
-    if (!(date instanceof Date)) {
-      date = new Date(date);
-    }
     function addZero(i) {
       if (i < 10) {
         i = "0" + i;
       }
       return i;
     }
-    return addZero(date.getHours()) + ':' + addZero(date.getMinutes());
+
+    const contentLocale = this.min.core.getParam<string>(
+      this.min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+    let dt = SystemKeywords.getDateFromLocaleString(date, contentLocale);
+
+    if (dt) {
+      if (!(dt instanceof Date)) {
+        dt = new Date(dt);
+      }
+      return addZero(dt.getHours()) + ':' + addZero(dt.getMinutes());
+    }
+    return 'NULL';
   }
 
   /**
