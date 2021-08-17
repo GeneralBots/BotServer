@@ -81,18 +81,35 @@ export class SystemKeywords {
   }
 
   public async sortBy(array, memberName) {
-    return array;
-    //   return array ? array.sort(p => {
+    memberName = memberName.trim();
+    const contentLocale = this.min.core.getParam<string>(
+      this.min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
 
-    //     var c = new Date(a.date);
-    //     var d = new Date(b.date);
-    //     return c - d;
-    //   });
+    // Detects data type from the first element of array.
 
-    //   if (p) {
-    //     return ;
-    //   }
-    // }): null;
+    let dt = array[0] ? array[0][memberName] : null;
+    let date = SystemKeywords.getDateFromLocaleString(dt, contentLocale);
+    if (date) {
+      return array ? array.sort((a, b) => {
+        const c = new Date(a[memberName]);
+        const d = new Date(b[memberName]);
+        return c.getTime() - d.getTime();
+      }) : null;
+    }
+    else {
+      return array ? array.sort((a, b) => {
+        if (a[memberName] < b[memberName]) {
+          return -1;
+        }
+        if (a[memberName] > b[memberName]) {
+          return 1;
+        }
+        return 0;
+      }) : array;
+    }
   }
 
   /**

@@ -265,7 +265,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*sort\s*(\w+)\s*by(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = sys().sortBy(${$2}, ${$3})\n`;
+      return `${$1} = sys().sortBy(${$2}, "${$3}")\n`;
     });
 
     code = code.replace(/(wait)\s*(\d+)/gi, ($0, $1, $2) => {
