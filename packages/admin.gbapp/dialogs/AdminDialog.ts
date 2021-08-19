@@ -78,7 +78,7 @@ export class AdminDialog extends IGBDialog {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
           }
-          else{
+          else {
             return await step.next(step.options);
           }
         },
@@ -110,7 +110,7 @@ export class AdminDialog extends IGBDialog {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
           }
-          else{
+          else {
             return await step.next(step.options);
           }
         },
@@ -201,7 +201,7 @@ export class AdminDialog extends IGBDialog {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
           }
-          else{
+          else {
             return await step.next(step.options);
           }
         },
@@ -237,10 +237,11 @@ export class AdminDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/publish', [
         async step => {
+
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
           }
-          else{
+          else {
             return await step.next(step.options);
           }
         },
@@ -351,7 +352,14 @@ export class AdminDialog extends IGBDialog {
    */
   public static canPublish(min: GBMinInstance, phone: string): Boolean {
     if (process.env.SECURITY_CAN_PUBLISH !== undefined) {
-      const list = process.env.SECURITY_CAN_PUBLISH.split(';');
+      let list = process.env.SECURITY_CAN_PUBLISH.split(';');
+
+      const canPublish =
+        min.core.getParam(min.instance, 'Can Publish', null);
+      if (canPublish) {
+        list = list.concat(canPublish.split(';'));
+      }
+
       let result = list.includes(phone);
 
       if (!result && min.instance.params) {
@@ -369,7 +377,7 @@ export class AdminDialog extends IGBDialog {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
           }
-          else{
+          else {
             return await step.next(step.options);
           }
         },
