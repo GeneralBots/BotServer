@@ -216,8 +216,7 @@ export class GBConversationalService {
   }
 
   public userMobile(step) {
-    if (!step)
-    {
+    if (!step) {
       return 'N/A';
     }
     if (isNaN(step.context.activity['mobile'])) {
@@ -427,12 +426,13 @@ export class GBConversationalService {
     text = text.replace(`](kb`, "](" + process.env.BOT_URL + '/kb'); // TODO: Improve it.
 
     // According to the channel, formats the output optimized to it.
+    const mobile = this.userMobile(step);
 
-    if (channel === 'webchat' && GBConfigService.get('DISABLE_WEB') !== 'true') {
+    if (mobile) {
+      await this.sendMarkdownToMobile(min, step, user.systemUser.userSystemId, text);
+    } else if (GBConfigService.get('DISABLE_WEB') !== 'true') {
       const html = marked(text);
       await this.sendMarkdownToWeb(min, step, html, answer);
-    } else if (channel === 'whatsapp') {
-      await this.sendMarkdownToMobile(min, step, user.userSystemId, text);
     } else {
       const html = marked(text);
       await min.conversationalService.sendText(min, step, html);
