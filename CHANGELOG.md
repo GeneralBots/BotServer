@@ -1,3 +1,10 @@
+## [2.0.138](https://github.com/GeneralBots/BotServer/compare/2.0.137...2.0.138) (2021-08-19)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Images now working in WhatsApp. ([525f465](https://github.com/GeneralBots/BotServer/commit/525f465be4fd63d3d3612212adb60f844e044ed8))
+
 ## [2.0.137](https://github.com/GeneralBots/BotServer/compare/2.0.136...2.0.137) (2021-08-16)
 
 
