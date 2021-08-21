@@ -304,6 +304,10 @@ export class GBVMService extends GBService {
       return `setTranslatorOn (step, "${$3.toLowerCase()}")\n`;
     });
 
+    code = code.replace(/(set whole word)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `setWholeWord (step, "${$3.toLowerCase()}")\n`;
+    });
+
     code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
       return `sys().set (${$1})`;
     });
@@ -519,6 +523,9 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsetTranslatorOn\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.setTranslatorOn' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bsetWholeWord\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.setWholeWord' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\btransfer\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.transfer' : $1;
