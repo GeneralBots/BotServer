@@ -812,11 +812,14 @@ export class GBMinService {
 
         const sec = new SecService();
         if (!user.loaded) {
+
+          await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
+
           user.loaded = true;
           user.subjects = [];
           user.cb = undefined;
           user.welcomed = false;
-          user.basicOptions = { maxLines: 100, translatorOn: true };
+          user.basicOptions = { maxLines: 100, translatorOn: true , wholeWord: true};
 
           firstTime = true;
 
@@ -888,6 +891,7 @@ export class GBMinService {
 
         // Answer to specific BOT Framework event conversationUpdate to auto start dialogs.
         // Skips if the bot is talking.
+        const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
 
         if (context.activity.type === 'conversationUpdate' &&
           context.activity.membersAdded.length > 0) {
@@ -906,19 +910,22 @@ export class GBMinService {
 
             // Auto starts dialogs if any is specified.
 
-            const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
             if (!startDialog && !user.welcomed) {
 
               // Otherwise, calls / (root) to default welcome users.
 
               await step.beginDialog('/');
             }
+            else {
+               user.welcomed = true;
+               GBLog.info(`Auto start (web) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
+               await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+            }
 
           } else {
             GBLog.info(`Person added to conversation: ${member.name}`);
 
-            if (this.userMobile(step)) {
-              const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
+            if (this.userMobile(step) ) {
               if (startDialog && !user.welcomed) {
                 user.welcomed = true;
                 GBLog.info(`Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);

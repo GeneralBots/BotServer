@@ -77,15 +77,17 @@ class GBUIApp extends React.Component {
   }
 
   send(command) {
-    window.line
-      .postActivity({
-        type: 'event',
-        name: command,
-        locale: 'en-us',
-        textFormat: 'plain',
-        timestamp: new Date().toISOString(),
-        from: this.getUser()
-      });
+    
+      window.line
+        .postActivity({
+          type: 'event',
+          name: command,
+          locale: 'en-us',
+          textFormat: 'plain',
+          timestamp: new Date().toISOString(),
+          from: this.getUser()
+        });
+    
   }
 
   getUser() {
@@ -93,19 +95,6 @@ class GBUIApp extends React.Component {
     return { id: 'web@gb', name: 'You' };
   }
 
-  postEvent(name, item) {
-    setTimeout(() => {
-      window['botConnection'].postActivity({
-        type: "event",
-        name: name,
-        data: item,
-        locale: "en-us",
-        textFormat: "plain",
-        timestamp: new Date().toISOString(),
-        from: window.user
-      })
-    }, 400);
-  }
   postMessage(value) {
     window.line.postActivity({
       type: 'message',
@@ -161,8 +150,8 @@ class GBUIApp extends React.Component {
     );
     window.userAgentApplication = userAgentApplication;
 
-    if (!userAgentApplication.isCallback(window.location.hash) && window.parent === window 
-    && !window.opener && userAgentApplication.getUser) {
+    if (!userAgentApplication.isCallback(window.location.hash) && window.parent === window
+      && !window.opener && userAgentApplication.getUser) {
       var user = userAgentApplication.getUser();
       if (user) {
         userAgentApplication.acquireTokenSilent(graphScopes).then(
@@ -184,25 +173,25 @@ class GBUIApp extends React.Component {
     const line = new DirectLine({
       token: instanceClient.webchatToken
     });
-    _this_.setState({ line: line});
+    _this_.setState({ line: line });
 
     line.connectionStatus$.subscribe(connectionStatus => {
       if (connectionStatus === ConnectionStatus.Online) {
-        _this_.setState({ instanceClient: instanceClient});
-         window['botConnection'] = line;
+        _this_.setState({ instanceClient: instanceClient });
+        window['botConnection'] = line;
       }
     });
 
     window.line = line;
 
     line.activity$
-    .filter(activity => activity.type === 'event' && activity.name === 'loadInstance')
-    .subscribe(() => {
-      this.postEvent('startGB', true);
-      _this_.authenticate();
-    });
+      .filter(activity => activity.type === 'event' && activity.name === 'loadInstance')
+      .subscribe(() => {
+        _this_.send('startGB');
+        _this_.authenticate();
+      });
 
-  line.activity$
+    line.activity$
       .filter(activity => activity.type === 'event' && activity.name === 'stop')
       .subscribe(() => {
         if (_this_.player) {
@@ -317,12 +306,12 @@ class GBUIApp extends React.Component {
     if (this.state.line) {
 
       if (this.state.instanceClient) {
-      
+
         gbCss = <GBCss instance={this.state.instanceClient} />;
         seo = <SEO instance={this.state.instanceClient} />;
       }
 
-        // let speechOptions;
+      // let speechOptions;
       // let token = this.state.instanceClient.speechToken;
 
       // speechOptions = {

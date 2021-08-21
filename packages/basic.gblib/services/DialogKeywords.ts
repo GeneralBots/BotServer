@@ -344,6 +344,19 @@ export class DialogKeywords {
   }
 
   /**
+   * Defines the FIND behaviour to consider whole words while searching.
+   *
+   * @example SET WHOLE WORD ON
+   *
+   */
+  public async setWholeWord(step, on) {
+    const user = await this.min.userProfile.get(step.context, {});
+    user.basicOptions.wholeWord = (on.trim() === "on");
+    await this.min.userProfile.set(step.context, user);
+    this.user = user;
+  }
+
+  /**
    * Defines translator behaviour.
    *
    * @example SET TRANSLATOR ON | OFF

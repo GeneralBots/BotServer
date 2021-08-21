@@ -457,8 +457,19 @@ export class SystemKeywords {
           case 'string':
             switch (filter.operator) {
               case '=':
-                if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
-                  filterAcceptCount++;
+                let wholeWord = true;
+                if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.wholeWord) {
+                  wholeWord = this.dk.user.basicOptions.wholeWord;
+                }
+                if (wholeWord) {
+                  if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
+                    filterAcceptCount++;
+                  }
+                }
+                else {
+                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) > -1) {
+                    filterAcceptCount++;
+                  }
                 }
                 break;
               case 'not in':
