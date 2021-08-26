@@ -91,6 +91,7 @@
     "ms-rest-azure": "3.0.0",
     "nexmo": "2.9.1",
     "node-cron": "3.0.0",
+    "npm": "7.21.0",
     "opn": "6.0.0",
     "pdf-extraction": "^1.0.2",
     "phone": "2.4.21",

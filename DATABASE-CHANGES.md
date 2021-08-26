@@ -116,3 +116,23 @@ ALTER TABLE dbo.GuaribasInstance ADD
 	facebookWorkplaceAppSecret nvarchar(255) NULL,
 	facebookWorkplaceAccessToken nvarchar(512) NULL
 GO
+
+
+# 2.0.140
+
+/****** Object:  Table [dbo].[GuaribasSchedule]    Script Date: 25/08/2021 03:53:15  ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[GuaribasSchedule]
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[name] [nvarchar](255) NULL,
+	[schedule] [nvarchar](255) NULL,
+	[instanceId] [int] NULL,
+	[createdAt] [datetimeoffset](7) NULL,
+	[updatedAt] [datetimeoffset](7) NULL
+
+GO
