@@ -638,6 +638,7 @@ export class GBMinService {
     min.scriptMap = {};
     min.sandBoxMap = {};
     min["scheduleMap"] = {};
+    min["conversationWelcomed"] = {};
     min.packages = sysPackages;
     min.appPackages = appPackages;
 
@@ -819,7 +820,7 @@ export class GBMinService {
           user.subjects = [];
           user.cb = undefined;
           user.welcomed = false;
-          user.basicOptions = { maxLines: 100, translatorOn: true , wholeWord: true};
+          user.basicOptions = { maxLines: 100, translatorOn: true, wholeWord: true };
 
           firstTime = true;
 
@@ -917,17 +918,22 @@ export class GBMinService {
               await step.beginDialog('/');
             }
             else {
-               user.welcomed = true;
-               GBLog.info(`Auto start (web) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
-               await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+              if (!min["conversationWelcomed"][step.context.activity.conversation.id]) {
+
+                min["conversationWelcomed"][step.context.activity.conversation.id] = true;
+                                
+                GBLog.info(`Auto start (web) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
+                await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+              }
             }
 
           } else {
             GBLog.info(`Person added to conversation: ${member.name}`);
 
-            if (this.userMobile(step) ) {
-              if (startDialog && !user.welcomed) {
+            if (this.userMobile(step)) {
+              if (startDialog && !min["conversationWelcomed"][step.context.activity.conversation.id]) {
                 user.welcomed = true;
+                await min.userProfile.set(step.context, user);
                 GBLog.info(`Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
                 await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
               }
@@ -993,7 +999,7 @@ export class GBMinService {
       });
     } else if (context.activity.name === 'startGB') {
       const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
-      if (startDialog && !user.welcomed) {
+      if (startDialog && !min["conversationWelcomed"][step.context.activity.conversation.id]) {
         user.welcomed = true;
         GBLog.info(`Auto start (web) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
