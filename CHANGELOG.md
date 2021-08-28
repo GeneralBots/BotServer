@@ -1,3 +1,10 @@
+## [2.0.139](https://github.com/GeneralBots/BotServer/compare/2.0.138...2.0.139) (2021-08-26)
+
+
+### Bug Fixes
+
+* **all:** npm is now included to build internal packages. ([5aa5f1e](https://github.com/GeneralBots/BotServer/commit/5aa5f1ee3a42ec90cc70a1901a095a9d23120c9e))
+
 ## [2.0.138](https://github.com/GeneralBots/BotServer/compare/2.0.137...2.0.138) (2021-08-19)
 
 
