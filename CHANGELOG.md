@@ -1,3 +1,10 @@
+## [2.0.140](https://github.com/GeneralBots/BotServer/compare/2.0.139...2.0.140) (2021-08-28)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Autostart twice fixed. ([2304876](https://github.com/GeneralBots/BotServer/commit/23048760b69e784b23629ac3dbe88f7f08da8b7d))
+
 ## [2.0.139](https://github.com/GeneralBots/BotServer/compare/2.0.138...2.0.139) (2021-08-26)
 
 
