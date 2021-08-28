@@ -1,3 +1,10 @@
+## [2.0.141](https://github.com/GeneralBots/BotServer/compare/2.0.140...2.0.141) (2021-08-28)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Fix in WEEKDAY culture always in English. ([45d0bf3](https://github.com/GeneralBots/BotServer/commit/45d0bf3a8513c927c16788204c9cd4604ad21691))
+
 ## [2.0.140](https://github.com/GeneralBots/BotServer/compare/2.0.139...2.0.140) (2021-08-28)
 
 
