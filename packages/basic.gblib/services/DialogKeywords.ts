@@ -125,10 +125,10 @@ export class DialogKeywords {
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
       case 'pt':
-        return 'pt-br';
+        return 'pt-BR';
 
       case 'en':
-        return 'en-us';
+        return 'en-US';
 
       default:
         return 'en-us';
@@ -151,7 +151,7 @@ export class DialogKeywords {
     );
 
     let dt = SystemKeywords.getDateFromLocaleString(date, contentLocale);
-
+      GBLog.info(`BASIC WEEKDAY contentLocale: ${contentLocale}`);
     if (dt) {
       if (!(dt instanceof Date)) {
         dt = new Date(dt);
