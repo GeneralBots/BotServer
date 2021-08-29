@@ -151,13 +151,16 @@ export class DialogKeywords {
     );
 
     let dt = SystemKeywords.getDateFromLocaleString(date, contentLocale);
-      GBLog.info(`BASIC WEEKDAY contentLocale: ${contentLocale}`);
+    GBLog.info(`BASIC WEEKDAY contentLocale: ${this.getContentLocaleWithCulture(contentLocale)}`);
+    GBLog.info(`BASIC WEEKDAY date: ${dt}`);
+    GBLog.info(dt.toLocaleString(this.getContentLocaleWithCulture(contentLocale), { weekday: 'short' }));
+
     if (dt) {
       if (!(dt instanceof Date)) {
         dt = new Date(dt);
       }
       let week = dt.toLocaleString(this.getContentLocaleWithCulture(contentLocale), { weekday: 'short' });
-      return week.substr(0,3);
+      return week.substr(0, 3);
     }
     return 'NULL';
   }
