@@ -1,3 +1,10 @@
+## [2.0.144](https://github.com/GeneralBots/BotServer/compare/2.0.143...2.0.144) (2021-08-30)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Now BASIC only runs after auth. ([dfb869e](https://github.com/GeneralBots/BotServer/commit/dfb869e7967c304ecf9cb042e5ff3ddc9cc99603))
+
 ## [2.0.143](https://github.com/GeneralBots/BotServer/compare/2.0.142...2.0.143) (2021-08-30)
 
 
