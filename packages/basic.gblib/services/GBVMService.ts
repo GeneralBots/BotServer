@@ -187,11 +187,16 @@ export class GBVMService extends GBService {
     tolist = this.getToLst;
     headers = {};
 
+    hear gbLogin as login
+
     ${code}
     `;
 
     // Keywords from General Bots BASIC.
 
+    code = code.replace(/hear (\w+) as login/gi, ($0, $1) => {
+      return `${$1} = hear("login")`;
+    });
     code = code.replace(/hear (\w+) as email/gi, ($0, $1) => {
       return `${$1} = hear("email")`;
     });
@@ -547,7 +552,6 @@ export class GBVMService extends GBService {
 
     return code;
   }
-
   private addHearDialog(min) {
     min.dialogs.add(
       new WaterfallDialog('/hear', [
@@ -565,7 +569,22 @@ export class GBVMService extends GBService {
             GBLog.info('BASIC: Asking for input (HEAR).');
           }
 
-          return await min.conversationalService.prompt(min, step, null);
+          step.activeDialog.state.options = step.options;
+          if (step.activeDialog.state.options['kind'] === "login") {
+            if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+              GBLog.info('BASIC: Authenticating beforing running General Bots BASIC code.');
+              return await step.beginDialog('/auth');
+          }
+          }
+          return await step.next(step.options);
+        },
+        async step => {
+          if (step.activeDialog.state.options['kind'] === "login") {
+            return await step.next(step.options);
+          } else {
+            return await min.conversationalService.prompt(min, step, null);
+          }
+
         },
         async step => {
 
