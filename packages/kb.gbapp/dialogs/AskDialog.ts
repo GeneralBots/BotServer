@@ -139,6 +139,7 @@ export class AskDialog extends IGBDialog {
             }
           });
           data.step = null;
+          GBLog.info(`/answer being called from getAskDialog.`);
           await step.beginDialog(nextDialog ? nextDialog : '/answer', {
             data: data,
             query: text,

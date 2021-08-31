@@ -1258,6 +1258,7 @@ export class GBMinService {
               nextDialog = await e.onExchangeData(min, 'handleAnswer', data);
             });
             data.step = null;
+            GBLog.info(`/answer being called from processMessageActivity.`);
             await step.beginDialog(nextDialog ? nextDialog : '/answer', {
               data: data,
               query: text,

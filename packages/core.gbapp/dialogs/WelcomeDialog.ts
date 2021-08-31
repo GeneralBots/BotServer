@@ -38,7 +38,7 @@
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { GBServer } from '../../../src/app';
 import { GBConversationalService } from '../services/GBConversationalService';
 import { Messages } from '../strings';
@@ -97,6 +97,7 @@ export class WelcomeDialog extends IGBDialog {
             step.context.activity.type === 'message' &&
             step.context.activity.text !== ''
           ) {
+            GBLog.info(`/answer being called from WelcomeDialog.`);
             await step.replaceDialog('/answer', { query: step.context.activity.text });
           }
         }
