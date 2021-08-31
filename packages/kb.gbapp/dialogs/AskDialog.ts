@@ -248,43 +248,51 @@ export class AskDialog extends IGBDialog {
           }
         }
 
-        // Answers using Search or NLP responses.
+        // Try to answer by search.
 
         if (answer) {
           return await AskDialog.handleAnswer(service, min, step, answer);
-        } else if (!(await min.conversationalService.routeNLP(step, min, text))) {
+        }
 
-          if (process.env.GBMODELS_SERVER) {
-            text = await min.conversationalService.translate(min, text, 'en');
-            let answered = false;
+        // Tries to answer by NLP.
 
-            const docs = await min.kbService['getDocs'](min.instance.instanceId);
-
-            await CollectionUtil.asyncForEach(docs, async (doc: GuaribasAnswer) => {
-
-              if (!answered) {
-
-                const answerText = await min.kbService['readComprehension'](min.instance.instanceId, doc.content, text);
-                answered = true;
-                text = await min.conversationalService.translate(min, text, user.systemUser.locale
-                  ? user.systemUser.locale
-                  : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE')));
-                await min.conversationalService.sendText(min, step, answerText);
-                await min.conversationalService.sendEvent(min, step, 'stop', undefined);
-              }
-
-            });
-            return await step.replaceDialog('/ask', { isReturning: true });
-          }
-
-
-        } else {
-          const message = min.core.getParam<string>(min.instance, 'Not Found Message',
-            Messages[locale].did_not_find);
-
-          await min.conversationalService.sendText(min, step, message);
+        if (await min.conversationalService.routeNLP(step, min, text)) {
           return await step.replaceDialog('/ask', { isReturning: true });
         }
+
+        // Tries to answer by Reading Comprehension.
+
+        if (process.env.GBMODELS_SERVER) {
+          text = await min.conversationalService.translate(min, text, 'en');
+          let answered = false;
+
+          const docs = await min.kbService['getDocs'](min.instance.instanceId);
+
+          await CollectionUtil.asyncForEach(docs, async (doc: GuaribasAnswer) => {
+
+            if (!answered) {
+
+              const answerText = await min.kbService['readComprehension'](min.instance.instanceId, doc.content, text);
+              answered = true;
+              text = await min.conversationalService.translate(min, text, user.systemUser.locale
+                ? user.systemUser.locale
+                : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE')));
+              await min.conversationalService.sendText(min, step, answerText);
+              await min.conversationalService.sendEvent(min, step, 'stop', undefined);
+            }
+
+          });
+          return await step.replaceDialog('/ask', { isReturning: true });
+        }
+
+        // Not found.
+
+        const message = min.core.getParam<string>(min.instance, 'Not Found Message',
+          Messages[locale].did_not_find);
+
+        await min.conversationalService.sendText(min, step, message);
+        return await step.replaceDialog('/ask', { isReturning: true });
+
       }
     ];
   }

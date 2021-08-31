@@ -921,7 +921,7 @@ export class GBMinService {
               if (!min["conversationWelcomed"][step.context.activity.conversation.id]) {
 
                 min["conversationWelcomed"][step.context.activity.conversation.id] = true;
-                                
+
                 GBLog.info(`Auto start (web) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
                 await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
               }
@@ -1255,10 +1255,12 @@ export class GBMinService {
               user: user ? user.dataValues : null
             };
             await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-              nextDialog = await e.onExchangeData(min, 'handleAnswer', data);
+              if (!nextDialog) {
+                nextDialog = await e.onExchangeData(min, 'handleAnswer', data);
+              }
             });
             data.step = null;
-            GBLog.info(`/answer being called from processMessageActivity.`);
+            GBLog.info(`/answer being called from processMessageActivity (nextDialog=${nextDialog}).`);
             await step.beginDialog(nextDialog ? nextDialog : '/answer', {
               data: data,
               query: text,
