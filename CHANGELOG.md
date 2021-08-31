@@ -1,3 +1,10 @@
+## [2.0.145](https://github.com/GeneralBots/BotServer/compare/2.0.144...2.0.145) (2021-08-31)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Traces to solve /answer bug. ([db07689](https://github.com/GeneralBots/BotServer/commit/db07689520364ec1c5d2d7b64156ce35bbd08390))
+
 ## [2.0.144](https://github.com/GeneralBots/BotServer/compare/2.0.143...2.0.144) (2021-08-30)
 
 
