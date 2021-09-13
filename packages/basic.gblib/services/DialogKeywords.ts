@@ -451,6 +451,25 @@ export class DialogKeywords {
   }
 
   /**
+   * Prepares the next dialog to be shown to the specified user.
+   */
+   public async gotoDialog(step, fromOrDialogName: string, dialogName: string) {
+    if (dialogName) {
+      let sec = new SecService();
+      let user = await sec.getUserFromSystemId(fromOrDialogName);
+      if (!user) {
+        user = await sec.ensureUser(this.min.instance.instanceId, fromOrDialogName,
+          fromOrDialogName, null, 'whatsapp', 'from', null);
+      }
+      await sec.updateUserHearOnDialog(user.userId, dialogName);
+    }
+    else {
+      await step.beginDialog(dialogName);
+    }
+  }
+
+
+  /**
    * Talks to the user by using the specified text.
    */
   public async talk(step, text: string) {

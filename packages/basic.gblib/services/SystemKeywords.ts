@@ -144,17 +144,6 @@ export class SystemKeywords {
     return data;
   }
 
-  /**
-   * Prepares the next dialog to be shown to the specified user.
-   */
-  public async gotoDialog(from: string, dialogName: string) {
-    let sec = new SecService();
-    let user = await sec.getUserFromSystemId(from);
-    if (!user) {
-      user = await sec.ensureUser(this.min.instance.instanceId, from, from, null, 'whatsapp', 'from', null);
-    }
-    await sec.updateUserHearOnDialog(user.userId, dialogName);
-  }
 
   /**
    * Holds script execution for the number of seconds specified.

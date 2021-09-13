@@ -444,6 +444,10 @@ export class GBDeployer implements IGBDeployer {
    */
   public async downloadFolder(min: GBMinInstance, localPath: string, remotePath: string,
     baseUrl: string = null, client = null): Promise<any> {
+
+
+      GBLog.info(`downloadFolder: localPath=${localPath}, remotePath=${remotePath}, baseUrl=${baseUrl}`);
+
     if (!baseUrl) {
       [baseUrl, client] = await GBDeployer.internalGetDriveClient(min);
 
@@ -469,6 +473,8 @@ export class GBDeployer implements IGBDeployer {
       const botId = min.instance.botId;
       const path = urlJoin(`/${botId}.gbai`, remotePath);
       let url = `${baseUrl}/drive/root:${path}:/children`;
+  
+      GBLog.info(`Download URL: ${url}`);
 
       const res = await client
         .api(url)

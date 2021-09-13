@@ -242,7 +242,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(go to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().gotoDialog(${$3})\n`;
+      return `sys().gotoDialog(step, ${$3})\n`;
     });
 
     code = code.replace(/(hear)\s*(\w+)/gi, ($0, $1, $2) => {
