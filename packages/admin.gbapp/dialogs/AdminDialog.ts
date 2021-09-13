@@ -137,7 +137,7 @@ export class AdminDialog extends IGBDialog {
         async step => {
           const locale: string = step.context.activity.locale;
           // tslint:disable-next-line:no-unsafe-any
-          const text: string = step.result;
+          const text: string = step.context.activity['originalText'];
           const cmdName = text.split(' ')[0];
 
           await min.conversationalService.sendText(min, step, Messages[locale].working(cmdName));
