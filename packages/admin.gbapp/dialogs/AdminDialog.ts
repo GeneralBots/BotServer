@@ -168,7 +168,7 @@ export class AdminDialog extends IGBDialog {
               await GBAdminService.undeployPackageCommand(text, min);
               await min.conversationalService.sendText(min, step, 'Package *undeployed*.');
               return await step.replaceDialog('/admin', { firstRun: false });
-            } else if (cmdName === 'rebuildIndex' || cmdName === 'ri') {
+            } else if (cmdName === 'rebuildIndex' || cmdName === 'ri' || cmdName === 'Ri') {
               await GBAdminService.rebuildIndexPackageCommand(min, deployer);
 
               return await step.replaceDialog('/admin', { firstRun: false });
