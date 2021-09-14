@@ -626,7 +626,11 @@ export class GBConversationalService {
     }
   }
 
-  public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string): Promise<boolean> {
+  // TODO: Update botlib.
+  public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string): Promise<Boolean> {
+    return false;
+  }
+  public async routeNLP2(step: GBDialogStep, min: GBMinInstance, text: string) {
     if (min.instance.nlpAppId === null || min.instance.nlpAppId === undefined) {
       return false;
     }
@@ -713,16 +717,14 @@ export class GBConversationalService {
         });
       }
 
-      await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
-
-      return true;
+      return await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
     }
 
     GBLog.info(
       `NLP NOT called: score: ${score} > required (nlpScore): ${instanceScore}`
     );
 
-    return false;
+    return null;
   }
 
   public async getLanguage(min: GBMinInstance, text: string): Promise<string> {

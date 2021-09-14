@@ -256,8 +256,9 @@ export class AskDialog extends IGBDialog {
 
         // Tries to answer by NLP.
 
-        if (await min.conversationalService.routeNLP(step, min, text)) {
-          return await step.replaceDialog('/ask', { isReturning: true });
+        let nextDialog = await min.conversationalService["routeNLP2"](step, min, text);
+        if (nextDialog) {
+          return nextDialog;
         }
 
         // Tries to answer by Reading Comprehension.

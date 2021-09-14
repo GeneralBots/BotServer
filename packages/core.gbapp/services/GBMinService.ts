@@ -1242,7 +1242,6 @@ export class GBMinService {
 
         if (step.activeDialog !== undefined) {
           await step.continueDialog();
-
         } else {
 
           const startDialog = user.hearOnDialog ?
