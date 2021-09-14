@@ -1,3 +1,10 @@
+## [2.0.149](https://github.com/GeneralBots/BotServer/compare/2.0.148...2.0.149) (2021-09-13)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Goto dialog within web. ([7abc079](https://github.com/GeneralBots/BotServer/commit/7abc079e84c15d52a852a0653eb274bfa65b407a))
+
 ## [2.0.148](https://github.com/GeneralBots/BotServer/compare/2.0.147...2.0.148) (2021-09-13)
 
 
