@@ -627,7 +627,7 @@ export class GBConversationalService {
   }
 
   // TODO: Update botlib.
-  public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string): Promise<Boolean> {
+  public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string): Promise<boolean> {
     return false;
   }
   public async routeNLP2(step: GBDialogStep, min: GBMinInstance, text: string) {

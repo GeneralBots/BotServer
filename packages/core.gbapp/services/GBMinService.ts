@@ -894,11 +894,9 @@ export class GBMinService {
         // Skips if the bot is talking.
         const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
 
-        if (context.activity.type === 'conversationUpdate')
-        {
-            GBLog.info(`Bot installed on Teams.`);
-        }
-        else if (context.activity.type === 'conversationUpdate' &&
+        if (context.activity.type === 'installationUpdate') {
+          GBLog.info(`Bot installed on Teams.`);
+        } else if (context.activity.type === 'conversationUpdate' &&
           context.activity.membersAdded.length > 0) {
 
           // Check if a bot or a human participant is being added to the conversation.
