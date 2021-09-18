@@ -1,3 +1,11 @@
+## [2.0.150](https://github.com/GeneralBots/BotServer/compare/2.0.149...2.0.150) (2021-09-16)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Fix bug in Teams handling. ([7c44669](https://github.com/GeneralBots/BotServer/commit/7c446699eb47042bad076cf8d532bc51f5d54b1f))
+* **core.gbapp:** Fix main NLP problem in Y calls. ([c600a91](https://github.com/GeneralBots/BotServer/commit/c600a91cde10acbe553197df167d7181f681f7bf))
+
 ## [2.0.149](https://github.com/GeneralBots/BotServer/compare/2.0.148...2.0.149) (2021-09-13)
 
 
