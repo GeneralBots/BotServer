@@ -446,7 +446,7 @@ export class GBConversationalService {
     answer: string
   ) {
     const locale = step.context.activity.locale;
-    await this.sendText(min, step, Messages[locale].will_answer_projector);
+    
     html = html.replace(/src\=\"kb\//gi, `src=\"../kb/`);
     await this.sendEvent(min, step, 'play', {
       playerType: 'markdown',
