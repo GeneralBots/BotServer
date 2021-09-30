@@ -1,3 +1,10 @@
+## [2.0.152](https://github.com/GeneralBots/BotServer/compare/2.0.151...2.0.152) (2021-09-24)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Remove web message about projector content. ([3edcea9](https://github.com/GeneralBots/BotServer/commit/3edcea9887ddc228645b3ff8e35000112f3a2cd4))
+
 ## [2.0.151](https://github.com/GeneralBots/BotServer/compare/2.0.150...2.0.151) (2021-09-18)
 
 
