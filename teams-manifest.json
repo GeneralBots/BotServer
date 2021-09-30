@@ -1,0 +1,56 @@
+{
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.9",
+    "version": "1.0.0",
+    "id": "@@id",
+    "packageName": "@@packageName",
+    "developer": {
+        "name": "@@yourName",
+        "websiteUrl": "https://pragmatismo.io",
+        "privacyUrl": "https://generalbots.ai/privacy.html",
+        "termsOfUseUrl": "https://generalbots.ai/terms.html"
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "name": {
+        "short": "@@botName",
+        "full": "@@botName"
+    },
+    "description": {
+        "short": "@@botName for Microsoft Teams",
+        "full": "@@botName for Microsoft Teams."
+    },
+    "accentColor": "#7B7B7B",
+    "staticTabs": [
+        {
+            "entityId": "conversations",
+            "scopes": [
+                "personal"
+            ]
+        },
+        {
+            "entityId": "about",
+            "scopes": [
+                "personal"
+            ]
+        }
+    ],
+    "bots": [
+        {
+            "botId": "@@marketplaceId",
+            "scopes": [
+                "personal",
+                "team"
+            ],
+            "supportsFiles": false,
+            "isNotificationOnly": false
+        }
+    ],
+    "permissions": [
+        "identity",
+        "messageTeamMembers"
+    ],
+    "validDomains": []
+}

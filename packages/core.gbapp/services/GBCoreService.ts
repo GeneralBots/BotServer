@@ -36,7 +36,7 @@
 
 'use strict';
 
-import { GBLog, GBMinInstance, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
+import { GBLog, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
 import * as fs from 'fs';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Op, Dialect } from 'sequelize';
@@ -50,12 +50,11 @@ import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp
 import { GBKBPackage } from '../../kb.gbapp';
 import { GBSecurityPackage } from '../../security.gbapp';
 import { GBWhatsappPackage } from '../../whatsapp.gblib/index';
-import { GuaribasInstance, GuaribasSchedule } from '../models/GBModel';
+import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
 import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp';
 import { GBSharePointPackage } from '../../sharepoint.gblib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GBVMService } from '../../basic.gblib/services/GBVMService';
 import { GBBasicPackage } from '../../basic.gblib';
 import { GBGoogleChatPackage } from '../../google-chat.gblib';
 

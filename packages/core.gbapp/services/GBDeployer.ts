@@ -43,7 +43,7 @@ const express = require('express');
 const child_process = require('child_process');
 const rimraf = require('rimraf');
 const request = require('request-promise-native');
-
+const uuidv4 = require('uuid/v4');
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -55,6 +55,7 @@ import { AzureDeployerService } from './../../azuredeployer.gbapp/services/Azure
 import { KBService } from './../../kb.gbapp/services/KBService';
 import { GBConfigService } from './GBConfigService';
 import { GBImporter } from './GBImporterService';
+import { TeamsService } from '../../teams.gblib/services/TeamsService';
 const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
 
 /**
@@ -357,6 +358,16 @@ export class GBDeployer implements IGBDeployer {
   }
 
   /**
+   * Return a zip file for importing bot in apps, currently MS Teams.
+   */
+  public async getBotManifest(instance: IGBInstance): Promise<Buffer> {
+    const s = new TeamsService();
+    const manifest = await s.getManifest(instance.marketplaceId, instance.title, instance.description,
+      uuidv4().toString(), instance.botId, "General Bots");
+    return await s.getAppFile(manifest);
+  }
+
+  /**
    * Refreshes NLP entities on the remote service.
    */
   public async refreshNLPEntity(instance: IGBInstance, listName, listData): Promise<void> {
@@ -446,7 +457,7 @@ export class GBDeployer implements IGBDeployer {
     baseUrl: string = null, client = null): Promise<any> {
 
 
-      GBLog.info(`downloadFolder: localPath=${localPath}, remotePath=${remotePath}, baseUrl=${baseUrl}`);
+    GBLog.info(`downloadFolder: localPath=${localPath}, remotePath=${remotePath}, baseUrl=${baseUrl}`);
 
     if (!baseUrl) {
       [baseUrl, client] = await GBDeployer.internalGetDriveClient(min);
@@ -473,7 +484,7 @@ export class GBDeployer implements IGBDeployer {
       const botId = min.instance.botId;
       const path = urlJoin(`/${botId}.gbai`, remotePath);
       let url = `${baseUrl}/drive/root:${path}:/children`;
-  
+
       GBLog.info(`Download URL: ${url}`);
 
       const res = await client
@@ -500,10 +511,7 @@ export class GBDeployer implements IGBDeployer {
         } else {
           GBLog.info(`Downloading ${itemPath}...`);
           const url = item['@microsoft.graph.downloadUrl'];
-          const options = {
-            uri: url,
-            encoding: null
-          };
+         
           const response = await request({ uri: url, encoding: null });
           Fs.writeFileSync(itemPath, response, { encoding: null });
         }
@@ -909,7 +917,8 @@ export class GBDeployer implements IGBDeployer {
       'azuredeployer.gbapp',
       'customer-satisfaction.gbapp',
       'kb.gbapp',
-      'google-chat.gblib'
+      'google-chat.gblib',
+      'teams.gblib'
     ];
 
     return names.indexOf(name) > -1;

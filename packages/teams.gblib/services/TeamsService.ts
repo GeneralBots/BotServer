@@ -1,0 +1,65 @@
+/*****************************************************************************\
+|                                               ( )_  _                       |
+|    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
+|   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' v `\ /'_`\   |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
+|   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
+|   | |                ( )_) |                                                |
+|   (_)                 \___/'                                                |
+|                                                                             |
+| General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
+| Licensed under the AGPL-3.0.                                                |
+|                                                                             |
+| According to our dual licensing model, this program can be used either      |
+| under the terms of the GNU Affero General Public License, version 3,        |
+| or under a proprietary license.                                             |
+|                                                                             |
+| The texts of the GNU Affero General Public License with an additional       |
+| permission and of our proprietary license can be found at and               |
+| in the LICENSE file you have received along with this program.              |
+|                                                                             |
+| This program is distributed in the hope that it will be useful,             |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
+| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
+| GNU Affero General Public License for more details.                         |
+|                                                                             |
+| "General Bots" is a registered trademark of Pragmatismo.io.                 |
+| The licensing of the program under the AGPLv3 does not imply a              |
+| trademark license. Therefore any rights, title and interest in              |
+| our trademarks remain entirely with us.                                     |
+|                                                                             |
+\*****************************************************************************/
+
+import urlJoin = require('url-join');
+import { GBService } from 'botlib';
+const fs = require('fs');
+var AdmZip = require("adm-zip");
+
+
+/**
+ * Support for Whatsapp.
+ */
+export class TeamsService extends GBService {
+ 
+  public async getAppFile(manifest)
+  {
+    var zip = new AdmZip();
+    zip.addFile("manifest.json", Buffer.from(manifest, "utf8"), "Built with General Bots™.");
+    zip.addLocalFile("teams-color.png", null, "color.png");
+    zip.addLocalFile("teams-outline.png", null, "outline.png");
+    return zip.toBuffer();
+  }
+
+  public async getManifest(marketplaceId, botName, botDescription, id, packageName, yourName) {
+    let content = fs.readFileSync('teams-manifest.json', 'utf8');
+
+    content = content.replace(/\@\@marketplaceId/gi, marketplaceId);
+    content = content.replace(/\@\@botName/gi, botName);
+    content = content.replace(/\@\@botDescription/gi, botDescription);
+    content = content.replace(/\@\@id/gi, id);
+    content = content.replace(/\@\@packageName/gi, packageName);
+    content = content.replace(/\@\@yourName/gi, yourName);
+
+    return content;
+  }
+}
