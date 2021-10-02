@@ -1,3 +1,11 @@
+## [2.0.153](https://github.com/GeneralBots/BotServer/compare/2.0.152...2.0.153) (2021-10-02)
+
+
+### Bug Fixes
+
+* **all:** Compilation error in MS AZURE (again). ([5fc6c58](https://github.com/GeneralBots/BotServer/commit/5fc6c580887ba298783b70c4b429d38e78e69140))
+* **all:** Compilation error in MS AZURE (again). ([8c14913](https://github.com/GeneralBots/BotServer/commit/8c14913c1f2179ba1df02f05df2e061ffc03bf29))
+
 ## [2.0.152](https://github.com/GeneralBots/BotServer/compare/2.0.151...2.0.152) (2021-09-24)
 
 
