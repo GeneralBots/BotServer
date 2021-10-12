@@ -276,14 +276,17 @@ export class KBService implements IGBKBService {
 
     if (instance.searchKey !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
       const client = new SearchService(instance.searchHost.split('.')[0], instance.searchKey);
-      const results = await client.indexes
-        .use(instance.searchIndex)
-        .buildQuery()
-        .filter(f => f.eq('instanceId', instance.instanceId))
-        .filter(f => f.eq('skipIndex', false))
-        .search(query)
-        .top(1)
-        .executeQuery();
+
+      const results = await client.indexes.use('azuresql-index').search({
+        count: true,
+        filter: `instanceId eq ${instance.instanceId} and skipIndex eq false`,
+        search: query,
+        searchFields: 'content, subject1, subject2, subject3, subject4',
+        select: 'instanceId, questionId, answerId',
+        skip: 0,
+        top: 1,
+      });
+
 
       const values = results.result.value;
 
