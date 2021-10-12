@@ -316,8 +316,8 @@ export class DialogKeywords {
    */
   public async sendFile(step, filename, caption) {
     const mobile = await this.userMobile(step);
-    GBLog.info(`BASIC: SEND FILE (current: ${mobile}', filename '${filename}'.`);
-    return await this.internalSendFile(step, null, filename, caption);
+    GBLog.info(`BASIC: SEND FILE (current: ${mobile}, filename '${filename}'.`);
+    return await this.internalSendFile(step, mobile, filename, caption);
   }
 
   /**
