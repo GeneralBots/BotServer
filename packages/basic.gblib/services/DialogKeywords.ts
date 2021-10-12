@@ -315,6 +315,8 @@ export class DialogKeywords {
    *
    */
   public async sendFile(step, filename, caption) {
+    const mobile = this.userMobile(step);
+    GBLog.info(`BASIC: SEND FILE (current: ${mobile}', filename '${filename}'.`);
     return await this.internalSendFile(step, null, filename, caption);
   }
 
@@ -505,7 +507,7 @@ export class DialogKeywords {
       }
 
       await this.min.conversationalService['playMarkdown'](this.min, md,
-        DialogKeywords.getChannel(step), step);
+        DialogKeywords.getChannel(step), step, mobile);
     } else {
       GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
       const url = urlJoin(

@@ -373,7 +373,8 @@ export class GBConversationalService {
     min: GBMinInstance,
     answer: string,
     channel: string,
-    step: GBDialogStep
+    step: GBDialogStep,
+    mobile: string
   ) {
     const user = await min.userProfile.get(step.context, {});
 
@@ -420,12 +421,9 @@ export class GBConversationalService {
     // MSFT Translator breaks markdown, so we need to fix it:
 
     text = text.replace('! [', '![').replace('] (', '](');
-
     text = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', ''); // TODO: Improve it.
     text = text.replace(`](kb`, "](" + process.env.BOT_URL + '/kb'); // TODO: Improve it.
 
-    // According to the channel, formats the output optimized to it.
-    const mobile = this.userMobile(step);
 
     if (mobile) {
       await this.sendMarkdownToMobile(min, step, mobile, text);
