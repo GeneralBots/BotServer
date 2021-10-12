@@ -388,7 +388,6 @@ export class GBConversationalService {
     );
     GBLog.info(`Translated text(playMarkdown): ${text}.`);
 
-
     var renderer = new marked.Renderer();
     renderer.oldImage = renderer.image;
     renderer.image = function (href, title, text) {
@@ -429,7 +428,7 @@ export class GBConversationalService {
     const mobile = this.userMobile(step);
 
     if (mobile) {
-      await this.sendMarkdownToMobile(min, step, user.systemUser.userSystemId, text);
+      await this.sendMarkdownToMobile(min, step, mobile, text);
     } else if (GBConfigService.get('DISABLE_WEB') !== 'true') {
       const html = marked(text);
       await this.sendMarkdownToWeb(min, step, html, answer);
