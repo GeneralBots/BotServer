@@ -33,7 +33,6 @@
 import urlJoin = require('url-join');
 
 const Swagger = require('swagger-client');
-const rp = require('request-promise');
 const fs = require('fs');
 import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -49,6 +48,7 @@ import { Messages } from '../strings';
 export class WhatsappDirectLine extends GBService {
 
   public static conversationIds = {};
+  public static mobiles = {};
   public pollInterval = 5000;
   public directLineClientName = 'DirectLineClient';
 
@@ -293,6 +293,7 @@ export class WhatsappDirectLine extends GBService {
         const generatedConversationId = response.obj.conversationId;
 
         WhatsappDirectLine.conversationIds[from] = generatedConversationId;
+        WhatsappDirectLine.mobiles[generatedConversationId] = from;
 
         this.pollMessages(client, generatedConversationId, from, fromName);
         this.inputMessage(client, generatedConversationId, text, from, fromName);

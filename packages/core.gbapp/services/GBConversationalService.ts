@@ -49,6 +49,7 @@ import { GBConfigService } from './GBConfigService';
 import { Messages } from '../strings';
 import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
 import { GuaribasUser } from '../../security.gbapp/models';
+import { GBMinService } from './GBMinService';
 const urlJoin = require('url-join');
 const PasswordGenerator = require('strict-password-generator').default;
 const Nexmo = require('nexmo');
@@ -216,17 +217,7 @@ export class GBConversationalService {
   }
 
   public userMobile(step) {
-    if (!step) {
-      return 'N/A';
-    }
-    if (isNaN(step.context.activity['mobile'])) {
-      if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
-        return step.context.activity.from.id;
-      }
-      return null;
-    } else {
-      return step.context.activity['mobile'];
-    }
+    return GBMinService.userMobile(step);
   }
 
   public async sendFile(

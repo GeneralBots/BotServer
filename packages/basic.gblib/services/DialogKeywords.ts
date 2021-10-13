@@ -39,8 +39,8 @@ import { GBServer } from '../../../src/app';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { SystemKeywords } from './SystemKeywords';
+import { GBMinService } from '../../core.gbapp/services/GBMinService';
 var DateDiff = require('date-diff');
-const { DateTime } = require("luxon");
 
 
 /**
@@ -397,17 +397,7 @@ export class DialogKeywords {
    *
    */
   public async userMobile(step) {
-    if (!step) {
-      return 'N/A';
-    }
-    if (isNaN(step.context.activity['mobile'])) {
-      if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
-        return step.context.activity.from.id;
-      }
-      return 'No mobile available.';
-    } else {
-      return step.context.activity['mobile'];
-    }
+    return GBMinService.userMobile(step);
   }
 
   /**

@@ -764,7 +764,10 @@ export class GBMinService {
   }
 
   // TODO: Unify in util.
-  public userMobile(step) {
+  public static userMobile(step) {
+    let mobile = WhatsappDirectLine.mobiles[step.context.activity.conversation.id]
+    return mobile;
+
     if (isNaN(step.context.activity['mobile'])) {
       if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
         return step.context.activity.from.id;
@@ -932,7 +935,7 @@ export class GBMinService {
           } else {
             GBLog.info(`Person added to conversation: ${member.name}`);
 
-            if (this.userMobile(step)) {
+            if (GBMinService.userMobile(step)) {
               if (startDialog && !min["conversationWelcomed"][step.context.activity.conversation.id]) {
                 user.welcomed = true;
                 await min.userProfile.set(step.context, user);
