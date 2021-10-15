@@ -256,7 +256,11 @@ export class SystemKeywords {
 
     let body = { values: [[]] };
     for (let index = 0; index < 128; index++) {
-      body.values[0][index] = args[index];
+      let value = args[index];
+      if (value && this.isValidDate(value)) {
+        value = `'${value}`;
+      }
+      body.values[0][index] = value;
     }
     await client
       .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A2:DX2')`)
@@ -507,6 +511,9 @@ export class SystemKeywords {
             break;
 
           case 'date':
+            if (result.charAt(0) === "'") {
+              result = result.substr(1);
+            }
             const resultDate = SystemKeywords.getDateFromLocaleString(result, contentLocale);
             if (resultDate) {
               switch (filter.operator) {
@@ -541,7 +548,13 @@ export class SystemKeywords {
         const xlRow = results.text[foundIndex];
         for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
           const propertyName = header[colIndex];
-          row[propertyName] = xlRow[colIndex];
+          let value = xlRow[colIndex];
+          if (value && value.charAt(0) === "'") {
+            if (this.isValidDate(value.substr(1))) {
+              value = value.substr(1);
+            }
+          }
+          row[propertyName] = value;
         }
         row['line'] = foundIndex + 1;
         table.push(row);
@@ -562,7 +575,7 @@ export class SystemKeywords {
   }
 
   public static getDateFromLocaleString(date: any, contentLocale: any) {
-    let parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})\s*(10|11|12|[1-9]):([0-5][0-9])/gi.exec(date);
+    let parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})\s*(10|11|12|0?[1-9]):([0-5][0-9])/gi.exec(date);
     if (parts && parts[5]) {
       switch (contentLocale) {
         case 'pt':
