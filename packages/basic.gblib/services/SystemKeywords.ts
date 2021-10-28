@@ -445,15 +445,15 @@ export class SystemKeywords {
       await CollectionUtil.asyncForEach(filters, async filter => {
 
         let result = results.text[foundIndex][filter.columnIndex];
+        let wholeWord = true;
+        if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.wholeWord) {
+          wholeWord = this.dk.user.basicOptions.wholeWord;
+        }
 
         switch (filter.dataType) {
           case 'string':
             switch (filter.operator) {
               case '=':
-                let wholeWord = true;
-                if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.wholeWord) {
-                  wholeWord = this.dk.user.basicOptions.wholeWord;
-                }
                 if (wholeWord) {
                   if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
                     filterAcceptCount++;
@@ -466,13 +466,27 @@ export class SystemKeywords {
                 }
                 break;
               case 'not in':
-                if (filter.value.indexOf(result) === -1) {
-                  filterAcceptCount++;
+                if (wholeWord) {
+                  if (result && result.toLowerCase().trim() !== filter.value.toLowerCase().trim()) {
+                    filterAcceptCount++;
+                  }
+                }
+                else {
+                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) === -1) {
+                    filterAcceptCount++;
+                  }
                 }
                 break;
               case 'in':
-                if (filter.value.indexOf(result) !== -1) {
-                  filterAcceptCount++;
+                if (wholeWord) {
+                  if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
+                    filterAcceptCount++;
+                  }
+                }
+                else {
+                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) > -1) {
+                    filterAcceptCount++;
+                  }
                 }
                 break;
             }
