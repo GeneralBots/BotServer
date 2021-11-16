@@ -57,7 +57,6 @@ const { join } = require('path');
 const shell = require('any-shell-escape');
 const { exec } = require('child_process');
 const prism = require('prism-media');
-const uuidv4 = require('uuid/v4');
 const request = require('request-promise-native');
 const fs = require('fs');
 const SpeechToTextV1 = require('ibm-watson/speech-to-text/v1');
@@ -800,7 +799,7 @@ export class GBConversationalService {
           'Ocp-Apim-Subscription-Key': key,
           'Ocp-Apim-Subscription-Region': 'westeurope',
           'Content-type': 'application/json',
-          'X-ClientTraceId': uuidv4().toString()
+          'X-ClientTraceId': GBAdminService.generateUuid()
         },
         body: [
           {

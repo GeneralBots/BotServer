@@ -43,7 +43,6 @@ const express = require('express');
 const child_process = require('child_process');
 const rimraf = require('rimraf');
 const request = require('request-promise-native');
-const uuidv4 = require('uuid/v4');
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -57,6 +56,7 @@ import { GBConfigService } from './GBConfigService';
 import { GBImporter } from './GBImporterService';
 import { TeamsService } from '../../teams.gblib/services/TeamsService';
 const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
+
 
 /**
  * Deployer service for bots, themes, ai and more.
@@ -363,7 +363,8 @@ export class GBDeployer implements IGBDeployer {
   public async getBotManifest(instance: IGBInstance): Promise<Buffer> {
     const s = new TeamsService();
     const manifest = await s.getManifest(instance.marketplaceId, instance.title, instance.description,
-      uuidv4().toString(), instance.botId, "General Bots");
+      GBAdminService.generateUuid(), instance.botId, "General Bots");
+
     return await s.getAppFile(manifest);
   }
 

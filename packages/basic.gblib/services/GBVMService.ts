@@ -273,6 +273,14 @@ export class GBVMService extends GBService {
       return `${$1} = sys().sortBy(${$2}, "${$3}")\n`;
     });
 
+    code = code.replace(/see\s*text\s*of\s*(\w+)\s*as\s*(\w+)\s*/gi, ($0, $1, $2, $3) => {
+      return `${$2} = sys().seeText(${$1})\n`;
+    });
+
+    code = code.replace(/see\s*caption\s*of\s*(\w+)\s*as(.*)/gi, ($0, $1, $2, $3) => {
+      return `${$2} = sys().seeCaption(${$1})\n`;
+    });
+
     code = code.replace(/(wait)\s*(\d+)/gi, ($0, $1, $2) => {
       return `sys().wait(${$2})`;
     });

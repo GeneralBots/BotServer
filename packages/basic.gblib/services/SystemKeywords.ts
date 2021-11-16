@@ -37,11 +37,12 @@ import * as request from 'request-promise-native';
 import urlJoin = require('url-join');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { SecService } from '../../security.gbapp/services/SecService';
 import { DialogKeywords } from './DialogKeywords';
 const request = require('request-promise-native');
 const path = require('path');
 const sgMail = require('@sendgrid/mail');
+const ComputerVisionClient = require('@azure/cognitiveservices-computervision').ComputerVisionClient;
+const ApiKeyCredentials = require('@azure/ms-rest-js').ApiKeyCredentials;
 
 /**
  * @fileoverview General Bots server core.
@@ -78,6 +79,39 @@ export class SystemKeywords {
   public async append(...args) {
     let array = [].concat(...args);
     return array.filter(function (item, pos) { return item; });
+  }
+
+
+  /**
+   * 
+   * @example SEE CAPTION OF url AS variable
+   *  
+   */
+   public async seeCaption(url) {
+    const computerVisionClient = new ComputerVisionClient(
+      new ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
+      process.env.VISION_ENDPOINT);
+
+    const caption = (await computerVisionClient.describeImage(url)).captions[0];
+    GBLog.info(`GBVision (caption): '${caption.text}' (Confidence: ${caption.confidence.toFixed(2)})`);
+    return caption.text;
+  }
+
+  /**
+   * 
+   * @example SEE TEXT OF url AS variable
+   *  
+   */
+   public async seeText(url) {
+    const computerVisionClient = new ComputerVisionClient(
+      new ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
+      process.env.VISION_ENDPOINT);
+
+    const result = (await computerVisionClient.recognizePrintedText(true, url));
+    const text = result.regions[0].lines[0].words[0].text;
+    // TODO: Create loop to get entire text.
+    GBLog.info(`GBVision (text): '${text}'`);
+    return text;
   }
 
   public async sortBy(array, memberName) {

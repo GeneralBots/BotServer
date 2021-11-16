@@ -1,8 +1,7 @@
 {
   "defaultSeverity": "warning",
   "extends": [
-    "tslint:recommended",
-    "tslint-microsoft-contrib"
+    "tslint:recommended"
   ],
   "linterOptions": {
     "exclude": [
@@ -13,7 +12,6 @@
     ]
   },
   "rulesDirectory": [
-    "node_modules/tslint-microsoft-contrib"
   ],
   "jsRules": {},
   "rules": {
