@@ -158,11 +158,11 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
 
   @Column
   @CreatedAt
-  declare public createdAt: Date;
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  declare public updatedAt: Date;
+  public updatedAt: Date;
 
   //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasAnswer)
@@ -207,11 +207,11 @@ export class GuaribasAnswer extends Model<GuaribasAnswer> {
 
   @Column
   @CreatedAt
-  declare public createdAt: Date;
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  declare public updatedAt: Date;
+  public updatedAt: Date;
 
   @HasMany(() => GuaribasQuestion)
   public questions: GuaribasQuestion[];

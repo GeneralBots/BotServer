@@ -62,9 +62,9 @@ export class GuaribasAdmin extends Model<GuaribasAdmin> {
 
   @Column
   @CreatedAt
-  declare public createdAt: Date;
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  declare public updatedAt: Date;
+  public updatedAt: Date;
 }

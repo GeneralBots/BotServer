@@ -96,7 +96,7 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
 
   @Column
   @CreatedAt
-  declare public createdAt: Date;
+  public createdAt: Date;
 
   @Column public text: string;
 
@@ -128,11 +128,11 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
 
   @Column
   @CreatedAt
-  declare public createdAt: Date;
+  public createdAt: Date;
 
   @Column
   @UpdatedAt
-  declare public updatedAt: Date;
+  public updatedAt: Date;
 
   //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasConversation)
