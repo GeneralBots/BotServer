@@ -187,7 +187,7 @@ export class GBVMService extends GBService {
     tolist = this.getToLst;
     headers = {};
 
-    hear gbLogin as login
+    ${process.env.ENABLE_AUTH? `hear gbLogin as login`:``}
 
     ${code}
     `;
@@ -241,9 +241,6 @@ export class GBVMService extends GBService {
       return `${$1} = hear("menu", ${$2})`;
     });
 
-    code = code.replace(/(go to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `gotoDialog(step, ${$3})\n`;
-    });
 
     code = code.replace(/(hear)\s*(\w+)/gi, ($0, $1, $2) => {
       return `${$2} = hear()`;
@@ -295,6 +292,10 @@ export class GBVMService extends GBService {
       } else {
         return `let ${$1} = sys().get (${$2})`;
       }
+    });
+
+    code = code.replace(/(go to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
+      return `gotoDialog(step, ${$3})\n`;
     });
 
     code = code.replace(/(set language)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -530,6 +531,9 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bdateDiff\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.dateDiff' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bgotoDialog\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.gotoDialog' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsetMaxLines\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.setMaxLines' : $1;
