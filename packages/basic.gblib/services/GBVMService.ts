@@ -186,6 +186,8 @@ export class GBVMService extends GBService {
     hour = this.getHourFromDate.bind(this);
     tolist = this.getToLst;
     headers = {};
+    httpUsername = "";
+    httpPassword = "";
 
     ${process.env.ENABLE_AUTH? `hear gbLogin as login`:``}
 
@@ -288,7 +290,7 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2) => {
       if ($2.indexOf('http') !== -1) {
-        return `let ${$1} = sys().getByHttp (${$2})`;
+        return `let ${$1} = sys().getByHttp (${$2}, headers, httpUsername, httpPassword)`;
       } else {
         return `let ${$1} = sys().get (${$2})`;
       }
@@ -300,6 +302,14 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(set language)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `setLanguage (step, ${$3})\n`;
+    });
+
+    code = code.replace(/set http username\=\s*(.*)/gi, ($0, $1) => {
+      return `httpUsername = ${$1}`;
+    });
+
+    code = code.replace(/set http password\=\s*(.*)/gi, ($0, $1) => {
+      return `httpUsername = ${$1}`;
     });
 
     code = code.replace(/(datediff)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
