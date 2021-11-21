@@ -87,7 +87,7 @@ export class SystemKeywords {
    * @example SEE CAPTION OF url AS variable
    *  
    */
-   public async seeCaption(url) {
+  public async seeCaption(url) {
     const computerVisionClient = new ComputerVisionClient(
       new ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
       process.env.VISION_ENDPOINT);
@@ -102,7 +102,7 @@ export class SystemKeywords {
    * @example SEE TEXT OF url AS variable
    *  
    */
-   public async seeText(url) {
+  public async seeText(url) {
     const computerVisionClient = new ComputerVisionClient(
       new ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
       process.env.VISION_ENDPOINT);
@@ -261,6 +261,30 @@ export class SystemKeywords {
     }
 
     return documents[0];
+  }
+
+
+  public async saveFile(file: string, data: any): Promise<any> {
+    GBLog.info(`BASIC: Saving '${file}' (SAVE file).`);
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    const botId = this.min.instance.botId;
+    const path = `/${botId}.gbai/${botId}.gbdata`;
+
+    try {
+      await client
+        .api(`${baseUrl}/drive/root:/${path}/${file}:/content`)
+        .put(data);
+
+    } catch (error) {
+
+      if (error.code === "itemNotFound") {
+        GBLog.info(`BASIC: CONVERT source file not found: ${file}.`);
+      } else if (error.code === "nameAlreadyExists") {
+        GBLog.info(`BASIC: CONVERT destination file already exists: ${file}.`);
+      }
+      throw error;
+    }
+
   }
 
   /**
@@ -923,16 +947,32 @@ export class SystemKeywords {
    * @example user = get "http://server/users/1"
    * 
    */
-  public async getByHttp(url: string, headers: any, qs: any) {
+  public async getByHttp(url: string, headers: any, username: string, ps: string, qs: any) {
     const options = {
+      auth: {
+        user: username,
+        pass: ps
+      },
+      encoding: "binary",
       url: url,
       headers: headers,
       qs: qs,
     };
-
+    const isAO = (val) => {
+      return val instanceof Array || val instanceof Object ? true : false;
+    }
     let result = await request.get(options);
-    GBLog.info(`[GET]: ${url} : ${result}`);
-    return JSON.parse(result);
+    
+
+    if (isAO(result)) {
+      GBLog.info(`[GET]: ${url} : ${result}`);
+      return JSON.parse(result);
+    }
+    else {
+      GBLog.info(`[GET]: OK.`);
+      return result;
+    }
+
   }
 
   /**

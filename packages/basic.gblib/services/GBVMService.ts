@@ -187,7 +187,7 @@ export class GBVMService extends GBService {
     tolist = this.getToLst;
     headers = {};
     httpUsername = "";
-    httpPassword = "";
+    httpPs = "";
 
     ${process.env.ENABLE_AUTH? `hear gbLogin as login`:``}
 
@@ -290,7 +290,7 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2) => {
       if ($2.indexOf('http') !== -1) {
-        return `let ${$1} = sys().getByHttp (${$2}, headers, httpUsername, httpPassword)`;
+        return `let ${$1} = sys().getByHttp (${$2}, headers, httpUsername, httpPs)`;
       } else {
         return `let ${$1} = sys().get (${$2})`;
       }
@@ -304,12 +304,16 @@ export class GBVMService extends GBService {
       return `setLanguage (step, ${$3})\n`;
     });
 
-    code = code.replace(/set http username\=\s*(.*)/gi, ($0, $1) => {
+    code = code.replace(/set header\s*(.*)\sas\s(.*)/gi, ($0, $1, $2) => {
+      return `headers[${$1}]=${$2})`;
+    });
+
+    code = code.replace(/set http username\s*\=\s*(.*)/gi, ($0, $1) => {
       return `httpUsername = ${$1}`;
     });
 
-    code = code.replace(/set http password\=\s*(.*)/gi, ($0, $1) => {
-      return `httpUsername = ${$1}`;
+    code = code.replace(/set http password\s*\=\s*(.*)/gi, ($0, $1) => {
+      return `httpPs = ${$1}`;
     });
 
     code = code.replace(/(datediff)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -330,10 +334,6 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(set whole word)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `setWholeWord (step, "${$3.toLowerCase()}")\n`;
-    });
-
-    code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
-      return `sys().set (${$1})`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
@@ -384,9 +384,17 @@ export class GBVMService extends GBService {
       return `sys().convert(${$3})\n`;
     });
 
+    code = code.replace(/save\s(.*)\sas\s(.*)/gi, ($0, $1, $2, $3) => {
+      return `sys().saveFile(${$2}, ${$1})\n`;
+    });
     code = code.replace(/(save)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().save(${$3})\n`;
     });
+
+    code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
+      return `sys().set (${$1})`;
+    });
+
 
     code = `${code}\n%>`;
 
