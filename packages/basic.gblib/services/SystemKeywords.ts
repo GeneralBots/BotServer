@@ -263,7 +263,12 @@ export class SystemKeywords {
     return documents[0];
   }
 
-
+  /**
+   * Saves the content of variable into the file in .gbdata default folder.
+   * 
+   * @exaple SAVE variable as "my.txt"
+   * 
+   */
   public async saveFile(file: string, data: any): Promise<any> {
     GBLog.info(`BASIC: Saving '${file}' (SAVE file).`);
     let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
@@ -948,21 +953,27 @@ export class SystemKeywords {
    * 
    */
   public async getByHttp(url: string, headers: any, username: string, ps: string, qs: any) {
-    const options = {
-      auth: {
-        user: username,
-        pass: ps
-      },
+    let options = {
+
       encoding: "binary",
       url: url,
-      headers: headers,
-      qs: qs,
+      headers: headers
+
     };
+    if (username) {
+      options['auth'] = {
+        user: username,
+        pass: ps
+      }
+    }
+    if (qs) {
+      options['qs'] = qs;
+    }
     const isAO = (val) => {
       return val instanceof Array || val instanceof Object ? true : false;
     }
     let result = await request.get(options);
-    
+
 
     if (isAO(result)) {
       GBLog.info(`[GET]: ${url} : ${result}`);

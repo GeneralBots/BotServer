@@ -37,11 +37,13 @@
 'use strict';
 const { DialogSet, TextPrompt } = require('botbuilder-dialogs');
 const express = require('express');
+const Fs = require('fs');
 const request = require('request-promise-native');
 const removeRoute = require('express-remove-route');
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 const wash = require('washyourmouthoutwithsoap');
 const { FacebookAdapter } = require('botbuilder-adapter-facebook');
+const path = require('path');
 import {
   AutoSaveStateMiddleware,
   BotFrameworkAdapter,
@@ -80,6 +82,7 @@ import urlJoin = require('url-join');
 import fs = require('fs');
 import { GoogleChatDirectLine } from '../../google-chat.gblib/services/GoogleChatDirectLine';
 import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices';
+import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -872,6 +875,27 @@ export class GBMinService {
         // Required for MSTEAMS handling of persisted conversations.
 
         if (step.context.activity.channelId === 'msteams') {
+
+          if (step.context.activity.attachments && step.context.activity.attachments.length > 1) {
+            
+            const file = context.activity.attachments[0];
+            const credentials = new MicrosoftAppCredentials(min.instance.marketplaceId, min.instance.marketplacePassword);
+            const botToken = await credentials.getToken();
+            const headers = { Authorization: `Bearer ${botToken}` };
+            const t = new SystemKeywords(null, null, null);
+            const data = await t.getByHttp(file.contentUrl, headers, null, null, null);
+            const folder = `work/${min.instance.botId}.gbai/cache`;
+            const filename =`${GBAdminService.generateUuid()}.png`;
+
+            if (!Fs.existsSync(folder))
+            {
+              Fs.mkdirSync(folder);
+            }
+
+            Fs.writeFileSync(path.join(folder, filename), data);
+            step.context.activity.text = urlJoin(GBServer.globals.publicAddress, `${min.instance.botId}`, 'cache', filename);
+          }
+
           const conversationReference = JSON.stringify(
             TurnContext.getConversationReference(context.activity)
           );
