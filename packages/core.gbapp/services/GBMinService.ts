@@ -883,7 +883,7 @@ export class GBMinService {
             const botToken = await credentials.getToken();
             const headers = { Authorization: `Bearer ${botToken}` };
             const t = new SystemKeywords(null, null, null);
-            const data = await t.getByHttp(file.contentUrl, headers, null, null, null);
+            const data = await t.getByHttp(file.contentUrl, headers, null, null, null, true);
             const folder = `work/${min.instance.botId}.gbai/cache`;
             const filename =`${GBAdminService.generateUuid()}.png`;
 

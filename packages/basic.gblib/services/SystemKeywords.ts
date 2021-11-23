@@ -952,13 +952,11 @@ export class SystemKeywords {
    * @example user = get "http://server/users/1"
    * 
    */
-  public async getByHttp(url: string, headers: any, username: string, ps: string, qs: any) {
+  public async getByHttp(url: string, headers: any, username: string, ps: string, qs: any, streaming = false) {
     let options = {
-
       encoding: "binary",
       url: url,
       headers: headers
-
     };
     if (username) {
       options['auth'] = {
@@ -969,13 +967,17 @@ export class SystemKeywords {
     if (qs) {
       options['qs'] = qs;
     }
+    if (streaming) {
+      options['responseType'] = 'stream';
+      options['encoding'] = null;
+    }
     const isAO = (val) => {
       return val instanceof Array || val instanceof Object ? true : false;
     }
     let result = await request.get(options);
 
 
-    if (isAO(result)) {
+    if (isAO(result) && !streaming) {
       GBLog.info(`[GET]: ${url} : ${result}`);
       return JSON.parse(result);
     }
