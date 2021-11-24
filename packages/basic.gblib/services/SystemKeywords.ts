@@ -92,8 +92,21 @@ export class SystemKeywords {
       new ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
       process.env.VISION_ENDPOINT);
 
-    const caption = (await computerVisionClient.describeImage(url)).captions[0];
+    let caption = (await computerVisionClient.describeImage(url)).captions[0];
+
+    const contentLocale = this.min.core.getParam<string>(
+      this.min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
     GBLog.info(`GBVision (caption): '${caption.text}' (Confidence: ${caption.confidence.toFixed(2)})`);
+
+    caption = await this.min.conversationalService.translate(
+      this.min,
+      caption,
+      contentLocale
+    );
+
     return caption.text;
   }
 
