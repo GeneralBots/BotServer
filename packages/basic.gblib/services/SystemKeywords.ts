@@ -122,9 +122,22 @@ export class SystemKeywords {
 
     const result = (await computerVisionClient.recognizePrintedText(true, url));
     const text = result.regions[0].lines[0].words[0].text;
-    // TODO: Create loop to get entire text.
-    GBLog.info(`GBVision (text): '${text}'`);
-    return text;
+    let final = '';
+
+    for (let i = 0; i < result.regions.length; i++) {
+      const region = result.regions[i];
+
+      for (let j = 0; j < region.lines.length; j++) {
+        const line = region.lines.words[j];
+  
+        for (let k = 0; k < line.words.length; k++) {
+          final += line.words[k].text;
+        }
+      }
+    }
+
+    GBLog.info(`GBVision (text): '${final}'`);
+    return final;
   }
 
   public async sortBy(array, memberName) {
