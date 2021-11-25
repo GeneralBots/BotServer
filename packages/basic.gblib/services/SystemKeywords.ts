@@ -127,11 +127,11 @@ export class SystemKeywords {
     for (let i = 0; i < result.regions.length; i++) {
       const region = result.regions[i];
 
-      for (let j = 0; j < region.lines.length; j++) {
-        const line = region.lines.words[j];
+      for (let j = 0; j < region.lines.length; j++)  {
+        const line = region.lines[j];
   
         for (let k = 0; k < line.words.length; k++) {
-          final += line.words[k].text;
+          final += `${line.words[k].text} `;
         }
       }
     }
