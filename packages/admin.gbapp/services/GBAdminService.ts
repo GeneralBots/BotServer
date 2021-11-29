@@ -113,7 +113,7 @@ export class GBAdminService implements IGBAdminService {
       maximumLength: 14
     };
     let password = passwordGenerator.generatePassword(options);
-    password = password.replace(/[\@\[\=\:\;\?\"\'\#]/gi, '1');
+    password = password.replace(/[\@\[\=\:\;\?\"\'\#]/gi, '*');
 
     return password;
   }

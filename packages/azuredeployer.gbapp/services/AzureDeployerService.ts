@@ -429,8 +429,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const nlpa = await this.createNLPAuthoring(name, `${name}-nlpa`, instance.cloudLocation);
     instance.nlpEndpoint = nlp.endpoint;
 
-
-    GBLog.info(`Waiting for Cognitive objects stack...`);
     const sleep = ms => {
       return new Promise(resolve => {
         setTimeout(resolve, ms);
@@ -449,7 +447,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     );
     
 
-    GBLog.info(`Waiting to finishing NLP service and keys creation...`);
+    GBLog.info(`Waiting one minute to finishing NLP service and keys creation...`);
     await sleep(60000);
     keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
     instance.textAnalyticsKey = keys.key1;

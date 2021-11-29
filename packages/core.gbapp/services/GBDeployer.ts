@@ -198,16 +198,6 @@ export class GBDeployer implements IGBDeployer {
     await this.deployAppPackages(list, core, appPackages);
 
     GBLog.info(`App Package deployment done.`);
-
-    // Then all remaining general packages are loaded.
-
-    const instances = await core.loadInstances();
-    await CollectionUtil.asyncForEach(instances, async instance => {
-      this.mountGBKBAssets(`${instance.botId}.gbkb`,
-        instance.botId, `${instance.botId}.gbkb`);
-    });
-
-    GBLog.info(`Package deployment done.`);
   }
 
   /**
@@ -821,7 +811,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Servers bot storage assets to be used by web, WhatsApp and other channels.
    */
-  public mountGBKBAssets(packageName: any, botId: string, filename: string) {
+   public static  mountGBKBAssets(packageName: any, botId: string, filename: string) {
 
     // Servers menu assets.
 

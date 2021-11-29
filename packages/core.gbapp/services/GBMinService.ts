@@ -165,6 +165,16 @@ export class GBMinService {
       }
     });
 
+    // Then all remaining general packages are loaded.
+
+    await CollectionUtil.asyncForEach(instances, async instance => {
+      GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
+        instance.botId, `${instance.botId}.gbkb`);
+    });
+
+    GBLog.info(`Package deployment done.`);
+    
+
   }
 
 

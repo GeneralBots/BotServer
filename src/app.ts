@@ -155,6 +155,7 @@ export class GBServer {
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
           await core.syncDatabaseStructure();
 
+          
           GBLog.info(`Publishing instances...`);
           const instances: IGBInstance[] = await core.loadAllInstances(
             core,
@@ -172,6 +173,8 @@ export class GBServer {
             );
             await deployer.deployBotFull(instance, GBServer.globals.publicAddress);
             instances.push(instance);
+
+            // Runs the search even with empty content to create structure.
 
             await azureDeployer['runSearch'](instance);
           }

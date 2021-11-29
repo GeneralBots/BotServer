@@ -710,7 +710,7 @@ export class KBService implements IGBKBService {
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(min, localPath, p, instance);
-    deployer.mountGBKBAssets(packageName, min.botId, localPath);
+    GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
 
     await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
     GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
