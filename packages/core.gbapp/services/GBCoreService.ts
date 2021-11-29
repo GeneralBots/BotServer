@@ -292,6 +292,7 @@ STORAGE_NAME=${instance.storageName}
 STORAGE_USERNAME=${instance.storageUsername}
 STORAGE_PASSWORD=${instance.storagePassword}
 STORAGE_SYNC=true
+STORAGE_SYNC_ALTER=true
 ENDPOINT_UPDATE=true
 `;
 

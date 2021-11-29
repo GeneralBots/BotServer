@@ -70,7 +70,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   public apiVersion = '2017-12-01';
   public defaultEndPoint = 'http://localhost:4242';
   public instance: IGBInstance;
-  public resourceClient: ResourceManagementClient.ResourceManagementClient;
+  public cloud: ResourceManagementClient.ResourceManagementClient;
   public webSiteClient: WebSiteManagementClient;
   public storageClient: SqlManagementClient;
   public cognitiveClient: CognitiveServicesManagementClient;
@@ -374,6 +374,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const name = instance.botId;
 
 
+    GBLog.info(`Enabling resource providers...`);
+    await this.enableResourceProviders('Microsoft.BotService');
+
+
     GBLog.info(`Deploying Deploy Group (It may take a few minutes)...`);
     await this.createDeployGroup(name, instance.cloudLocation);
 
@@ -407,34 +411,32 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.searchKey = searchKeys.primaryKey;
 
     GBLog.info(`Deploying Speech...`);
-    const speech = await this.createSpeech(name, `${name}-speech`, instance.cloudLocation);
+    const speech = await this.createSpeech(name, `${name}speech`, instance.cloudLocation);
     keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
     instance.speechEndpoint = speech.endpoint;
     instance.speechKey = keys.key1;
 
     GBLog.info(`Deploying Text Analytics...`);
     const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);
-    keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
     instance.textAnalyticsEndpoint = textAnalytics.endpoint.replace(`/text/analytics/v2.0`, '');
-    instance.textAnalyticsKey = keys.key1;
 
     GBLog.info(`Deploying SpellChecker...`);
     const spellChecker = await this.createSpellChecker(name, `${name}-spellchecker`);
-    keys = await this.cognitiveClient.accounts.listKeys(name, spellChecker.name);
-    instance.spellcheckerKey = keys.key1;
     instance.spellcheckerEndpoint = spellChecker.endpoint;
 
     GBLog.info(`Deploying NLP...`);
     const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
     const nlpa = await this.createNLPAuthoring(name, `${name}-nlpa`, instance.cloudLocation);
-    keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
-    let authoringKeys = await this.cognitiveClient.accounts.listKeys(name, nlpa.name);
-    instance.nlpAuthoringKey = authoringKeys.key1;
-    const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
-
     instance.nlpEndpoint = nlp.endpoint;
-    instance.nlpKey = keys.key1;
-    instance.nlpAppId = nlpAppId;
+
+
+    GBLog.info(`Waiting for Cognitive objects stack...`);
+    const sleep = ms => {
+      return new Promise(resolve => {
+        setTimeout(resolve, ms);
+      });
+    };
+    
 
     GBLog.info(`Deploying Bot...`);
     instance.botEndpoint = this.defaultEndPoint;
@@ -445,15 +447,27 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       instance.nlpAppId, instance.nlpKey, instance.marketplaceId, instance.marketplacePassword,
       instance.cloudSubscriptionId
     );
+    
+
+    GBLog.info(`Waiting to finishing NLP service and keys creation...`);
+    await sleep(60000);
+    keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
+    instance.textAnalyticsKey = keys.key1;
+    keys = await this.cognitiveClient.accounts.listKeys(name, spellChecker.name);
+    instance.spellcheckerKey = keys.key1;
+    let authoringKeys = await this.cognitiveClient.accounts.listKeys(name, nlpa.name);
+    keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
+    instance.nlpKey = keys.key1;
+
+    instance.nlpAuthoringKey = authoringKeys.key1;
+    const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
+    instance.nlpAppId = nlpAppId;
+
 
     GBLog.info('Updating server environment variables...');
     await this.updateWebisteConfig(name, serverName, serverFarm.id, instance);
 
     spinner.stop();
-
-    GBLog.info('Opening your browser with default.gbui...');
-    const opn = require('opn');
-    opn(`http://localhost:4242`);
 
     return instance;
   }
@@ -569,7 +583,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   }
 
   public initServices(credentials: any, subscriptionId: string) {
-    this.resourceClient = new ResourceManagementClient.default(credentials, subscriptionId);
+    this.cloud = new ResourceManagementClient.default(credentials, subscriptionId);
     this.webSiteClient = new WebSiteManagementClient(credentials, subscriptionId);
     this.storageClient = new SqlManagementClient(credentials, subscriptionId);
     this.cognitiveClient = new CognitiveServicesManagementClient(credentials, subscriptionId);
@@ -800,7 +814,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   private async createCognitiveServices(group, name, location, kind): Promise<CognitiveServicesAccount> {
     const params = {
       sku: {
-        name: ""
+        name: name
       },
       createMode: 'Default',
       location: location,
@@ -808,7 +822,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       properties: {}
     };
 
-    if (kind === 'LUIS.Authoring') {
+    if (kind === 'LUIS.Authoring' || kind === 'LUIS') {
       params.sku.name = this.freeTier ? 'F0' : 'S0';
     } else if (kind === 'TextAnalytics') {
       params.sku.name = this.freeTier ? 'F0' : 'S0';
@@ -816,6 +830,8 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       params.sku.name = this.freeTier ? 'S0' : 'S1';
     } else if (kind === 'CognitiveServices') {
       params.sku.name = 'S0';
+    } else if (kind === 'SpeechServices') {
+      params.sku.name = this.freeTier ? 'F0' : 'S0';
     }
 
     return await this.cognitiveClient.accounts.create(group, name, params);
@@ -844,7 +860,14 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   private async createDeployGroup(name, location) {
     const params = { location: location };
 
-    return await this.resourceClient.resourceGroups.createOrUpdate(name, params);
+    return await this.cloud.resourceGroups.createOrUpdate(name, params);
+  }
+
+  private async enableResourceProviders(name) {
+    const ret = await this.cloud.providers.get(name);
+    if (ret.registrationState === "NotRegistered") {
+      await this.cloud.providers.register(name);
+    }
   }
 
   private async createHostingPlan(group, name, location): Promise<AppServicePlan> {
