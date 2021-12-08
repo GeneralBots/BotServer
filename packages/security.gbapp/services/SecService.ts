@@ -2,7 +2,7 @@ const Fs = require('fs');
 import urlJoin = require('url-join');
 
 import { ConversationReference } from 'botbuilder';
-import { GBService, IGBInstance } from 'botlib';
+import { GBLog, GBService, IGBInstance } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models';
 
@@ -139,7 +139,7 @@ export class SecService extends GBService {
       }
     });
 
-    if (agentSystemId === null  && user.agentSystemId ) {
+    if (agentSystemId === null  && user.agentSystemId !== undefined ) {
       const agent = await GuaribasUser.findOne({
         where: {
           userSystemId: user.agentSystemId
@@ -201,9 +201,10 @@ export class SecService extends GBService {
         agentSystemId = item;
       }
     });
-    
+    GBLog.info(`Selected agentId: ${agentSystemId}`);
     await this.updateHumanAgent(userSystemId, instanceId, agentSystemId);
-
+    GBLog.info(`Updated agentId to: ${agentSystemId}`);
+    
     return agentSystemId;
   }
 

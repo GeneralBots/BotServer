@@ -39,6 +39,7 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinService } from '../../core.gbapp/services/GBMinService';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { CSService } from '../services/CSService';
@@ -83,7 +84,7 @@ export class FeedbackDialog extends IGBDialog {
           const locale = step.context.activity.locale;
 
           const sec = new SecService();
-          let from = step.context.activity.from.id;
+          let from = GBMinService.userMobile(step);
 
           await min.conversationalService.sendText(min, step, Messages[locale].please_wait_transfering);
           const agentSystemId = await sec.assignHumanAgent(from, min.instance.instanceId);
@@ -122,7 +123,7 @@ export class FeedbackDialog extends IGBDialog {
           const locale = step.context.activity.locale;
 
           const sec = new SecService();
-          const userSystemId = step.context.activity.from.id;
+          const userSystemId =  GBMinService.userMobile(step);
           const user = await min.userProfile.get(step.context, {});
 
           if (user.systemUser.agentMode === 'self') {
