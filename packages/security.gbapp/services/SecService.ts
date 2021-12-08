@@ -139,7 +139,7 @@ export class SecService extends GBService {
       }
     });
 
-    if (agentSystemId === null) {
+    if (agentSystemId === null  && user.agentSystemId ) {
       const agent = await GuaribasUser.findOne({
         where: {
           userSystemId: user.agentSystemId
