@@ -193,16 +193,15 @@ export class SecService extends GBService {
     const list = process.env.TRANSFER_TO.split(';');
     await CollectionUtil.asyncForEach(list, async item => {
       if (
-        !(await this.isAgentSystemId(item)) &&
-        item !== undefined &&
-        agentSystemId === undefined &&
-        item !== userSystemId
+        !(item !== undefined &&
+          agentSystemId === undefined &&
+          item !== userSystemId && await this.isAgentSystemId(item))
       ) {
         // TODO: Optimize loop.
         agentSystemId = item;
       }
     });
-
+    
     await this.updateHumanAgent(userSystemId, instanceId, agentSystemId);
 
     return agentSystemId;
