@@ -52,6 +52,7 @@
     "@azure/ms-rest-js": "2.5.1",
     "@google-cloud/pubsub": "2.13.0",
     "@google-cloud/translate": "6.2.6",
+    "@hubspot/api-client": "5.0.0",
     "@microsoft/microsoft-graph-client": "2.2.1",
     "@semantic-release/changelog": "5.0.1",
     "@semantic-release/exec": "5.0.0",

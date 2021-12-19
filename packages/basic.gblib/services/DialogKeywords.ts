@@ -40,6 +40,7 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { SystemKeywords } from './SystemKeywords';
 import { GBMinService } from '../../core.gbapp/services/GBMinService';
+import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices';
 var DateDiff = require('date-diff');
 
 
@@ -121,6 +122,16 @@ export class DialogKeywords {
    */
   public async exit(step) {
     await step.endDialog();
+  }
+
+  /**
+   * Quits the dialog, currently required to get out of VM context.
+   *
+   * @example list = ACTIVE TASKS
+   */
+   public async getActiveTasks (){
+    let s = new HubSpotServices(null, null, 'ddcc3f4e-edfe-4dc5-a337-3d39bcc2d833');
+    return await s.getActiveTasks();
   }
 
   public getContentLocaleWithCulture(contentLocale) {

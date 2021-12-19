@@ -264,6 +264,10 @@ export class GBVMService extends GBService {
       return `${$1} = sys().find(${$2})\n`;
     });
 
+    code = code.replace(/(\w)\s*\=\s*active tasks/gi, ($0, $1) => {
+      return `${$1} = getActiveTasks()\n`;
+    });
+
     code = code.replace(/(\w)\s*\=\s*append\s*(.*)/gi, ($0, $1, $2, $3) => {
       return `${$1} = sys().append(${$2})\n`;
     });
@@ -564,6 +568,9 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\btransfer\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.transfer' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bgetActiveTasks\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.getActiveTasks' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bmenu\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.menu' : $1;

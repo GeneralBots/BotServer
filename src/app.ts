@@ -67,7 +67,6 @@ export class RootData {
   public wwwroot: string; // .gbui or a static webapp.
   public entryPointDialog: string; // To replace default welcome dialog.
 }
-
 /**
  * General Bots open-core entry point.
  */
@@ -106,6 +105,7 @@ export class GBServer {
 
     server.listen(port, () => {
       (async () => {
+
         try {
           GBLog.info(`Now accepting connections on ${port}...`);
 

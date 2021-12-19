@@ -57,6 +57,7 @@ import { GBSharePointPackage } from '../../sharepoint.gblib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBBasicPackage } from '../../basic.gblib';
 import { GBGoogleChatPackage } from '../../google-chat.gblib';
+import { GBHubSpotPackage } from '../../hubspot.gblib';
 
 const opn = require('opn');
 const cron = require('node-cron');
@@ -462,7 +463,8 @@ ENDPOINT_UPDATE=true
         GBAzureDeployerPackage,
         GBSharePointPackage,
         GBGoogleChatPackage,
-        GBBasicPackage
+        GBBasicPackage,
+        GBHubSpotPackage
       ],
       async e => {
         GBLog.info(`Loading sys package: ${e.name}...`);
