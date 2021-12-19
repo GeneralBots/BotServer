@@ -286,9 +286,9 @@ export class GBConversationalService {
     });
   }
 
-  public async sendToMobile(min: GBMinInstance, mobile: string, message: string) {
+  public async sendToMobile(min: GBMinInstance, mobile: string, message: string, conversationId ) {
     GBLog.info(`Sending message ${message} to ${mobile}...`);
-    await min.whatsAppDirectLine.sendToDevice(mobile, message);
+    await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId);
   }
 
   public static async getTextFromAudioBuffer(speechKey, cloudRegion, buffer, locale): Promise<string> {
@@ -510,7 +510,7 @@ export class GBConversationalService {
             if (!mobile) {
               await step.context.sendActivity(currentText);
             } else {
-              await this.sendToMobile(min, mobile, currentText);
+              await this.sendToMobile(min, mobile, currentText, step.context.activity.conversation.id);
             }
             await sleep(3000);
             currentText = '';
@@ -530,7 +530,7 @@ export class GBConversationalService {
               if (!mobile) {
                 await step.context.sendActivity(currentText);
               } else {
-                await this.sendToMobile(min, mobile, currentText);
+                await this.sendToMobile(min, mobile, currentText, step.context.activity.conversation.id);
               }
               await sleep(3000);
             }
@@ -563,7 +563,7 @@ export class GBConversationalService {
               if (!mobile) {
                 await step.context.sendActivity(currentText);
               } else {
-                await this.sendToMobile(min, mobile, currentText);
+                await this.sendToMobile(min, mobile, currentText, step.context.activity.conversation.id);
               }
               await sleep(2900);
             }
@@ -608,7 +608,7 @@ export class GBConversationalService {
         await step.context.sendActivity(currentText);
       } else {
         GBLog.info(`Sending .MD file to mobile: ${mobile}.`);
-        await this.sendToMobile(min, mobile, currentText);
+        await this.sendToMobile(min, mobile, currentText, step.context.activity.conversation.id);
       }
     }
   }
@@ -888,7 +888,7 @@ export class GBConversationalService {
     analytics.createMessage(min.instance.instanceId, user.conversation, null, text);
 
     if (!isNaN(member.id) && !member.id.startsWith('1000')) {
-      await min.whatsAppDirectLine.sendToDevice(member.id, text);
+      await min.whatsAppDirectLine.sendToDevice(member.id, text, step.context.activity.conversation.id);
     } else {
       await step.context.sendActivity(text);
     }

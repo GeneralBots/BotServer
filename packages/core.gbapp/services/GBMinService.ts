@@ -173,7 +173,7 @@ export class GBMinService {
     });
 
     GBLog.info(`Package deployment done.`);
-    
+
 
   }
 
@@ -302,16 +302,21 @@ export class GBMinService {
   private async WhatsAppCallback(req, res) {
     try {
 
-      // Detects if the message is echo fro itself.
+      // Detects if the message is echo from itself.
 
-      const id = req.body.messages[0].chatId.split('@')[0];
+      const id = req.body.messages[0].author.split('@')[0];
       const senderName = req.body.messages[0].senderName;
-      const text = req.body.messages[0].body;
+
       if (req.body.messages[0].fromMe) {
         res.end();
 
         return; // Exit here.
       }
+
+      // Processes group behaviour.
+
+      let text = req.body.messages[0].body;
+      text = text.replace(/\@\d+ /gi, '');
 
       // Detects if the welcome message is enabled.
 
@@ -358,7 +363,7 @@ export class GBMinService {
             await (activeMin as any).whatsAppDirectLine.sendToDevice(
               id,
               `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`
-            );
+              , null);
             res.end();
           }
         } else {
@@ -383,8 +388,11 @@ export class GBMinService {
             } else {
               await (activeMin as any).whatsAppDirectLine.sendToDevice(
                 id,
-                `Agora falando com ${activeMin.instance.title}...`
+                `Agora falando com ${activeMin.instance.title}...`,
+                null
               );
+
+
             }
             res.end();
           } else {
@@ -815,6 +823,9 @@ export class GBMinService {
 
     await adapter['processActivity'](req, res, async context => {
 
+      context.activity.text = context.activity.text.replace(/\@General Bots Online /gi, '');
+
+
       // Get loaded user state
 
       const step = await min.dialogs.createContext(context);
@@ -887,7 +898,7 @@ export class GBMinService {
         if (step.context.activity.channelId === 'msteams') {
 
           if (step.context.activity.attachments && step.context.activity.attachments.length > 1) {
-            
+
             const file = context.activity.attachments[0];
             const credentials = new MicrosoftAppCredentials(min.instance.marketplaceId, min.instance.marketplacePassword);
             const botToken = await credentials.getToken();
@@ -895,10 +906,9 @@ export class GBMinService {
             const t = new SystemKeywords(null, null, null);
             const data = await t.getByHttp(file.contentUrl, headers, null, null, null, true);
             const folder = `work/${min.instance.botId}.gbai/cache`;
-            const filename =`${GBAdminService.generateUuid()}.png`;
+            const filename = `${GBAdminService.generateUuid()}.png`;
 
-            if (!Fs.existsSync(folder))
-            {
+            if (!Fs.existsSync(folder)) {
               Fs.mkdirSync(folder);
             }
 
@@ -1268,7 +1278,8 @@ export class GBMinService {
           }
         }
         else {
-          await min.whatsAppDirectLine.sendToDeviceEx(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`, locale);
+          await min.whatsAppDirectLine.sendToDeviceEx(manualUser.userSystemId, `${manualUser.agentSystemId}: ${text}`, locale,
+            step.context.activity.conversation.id);
         }
       }
       else {

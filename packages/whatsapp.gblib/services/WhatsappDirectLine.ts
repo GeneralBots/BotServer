@@ -49,6 +49,8 @@ export class WhatsappDirectLine extends GBService {
 
   public static conversationIds = {};
   public static mobiles = {};
+  public static chatIds = {};
+
   public pollInterval = 5000;
   public directLineClientName = 'DirectLineClient';
 
@@ -87,7 +89,7 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async setup(setUrl) {
-    
+
     this.directLineClient =
       new Swagger({
         spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
@@ -130,8 +132,8 @@ export class WhatsappDirectLine extends GBService {
 
   }
 
-  public async resetConversationId(number) {
-    WhatsappDirectLine.conversationIds[number] = undefined;
+  public async resetConversationId(number, group) {
+    WhatsappDirectLine.conversationIds[number+group] = undefined;
   }
 
   public async check() {
@@ -159,7 +161,27 @@ export class WhatsappDirectLine extends GBService {
     }
 
     const message = req.body.messages[0];
+    let group = "";
+
+
+    // Ignore group messages without the mention to Bot.
+
+    if (message.chatName.charAt(0) !== '+') {
+      group = message.chatName;
+
+      let smsServiceNumber = this.min.core.getParam<string>(this.min.instance, 'whatsappServiceNumber', null);;
+      if (smsServiceNumber) {
+        smsServiceNumber = smsServiceNumber.replace('+', '');
+        if (!message.body.startsWith('@' + smsServiceNumber)) {
+          return;
+        }
+      }
+    }
+
+
     let text = message.body;
+    text = text.replace(/\@\d+ /gi, '');
+
     const from = message.author.split('@')[0];
     const fromName = message.senderName;
 
@@ -174,7 +196,7 @@ export class WhatsappDirectLine extends GBService {
       await e.onExchangeData(this.min, 'whatsappMessage', message);
     });
 
-    const id = req.body.messages[0].chatId.split('@')[0].replace('true_','').replace('false_','');
+    const id = req.body.messages[0].chatId.split('@')[0].replace('true_', '').replace('false_', '');
     const senderName = req.body.messages[0].senderName;
     const sec = new SecService();
 
@@ -199,11 +221,12 @@ export class WhatsappDirectLine extends GBService {
           buf, locale
         );
       } else {
-        await this.sendToDevice(user.userSystemId, `No momento estou apenas conseguindo ler mensagens de texto.`);
+        await this.sendToDevice(user.userSystemId, 
+          `No momento estou apenas conseguindo ler mensagens de texto.`, null);
       }
     }
 
-    const conversationId = WhatsappDirectLine.conversationIds[from];
+    const conversationId = WhatsappDirectLine.conversationIds[from + group];
 
     const client = await this.directLineClient;
 
@@ -218,7 +241,7 @@ export class WhatsappDirectLine extends GBService {
       if (manualUser === null) {
 
         await sec.updateHumanAgent(id, this.min.instance.instanceId, null);
-    
+
       } else {
         const agent = await sec.getUserFromSystemId(user.agentSystemId);
 
@@ -229,28 +252,28 @@ export class WhatsappDirectLine extends GBService {
 
           if (message === null) {
             await this.sendToDeviceEx(user.userSystemId, `File ${filename} not found in any .gbkb published. Check the name or publish again the associated .gbkb.`,
-              locale);
+              locale, null);
           } else {
             await this.min.conversationalService.sendMarkdownToMobile(this.min, null, user.userSystemId, message);
           }
         } else if (text === '/qt') {
           // TODO: Transfers only in pt-br for now.
           await this.sendToDeviceEx(manualUser.userSystemId,
-            Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+            Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale, null);
 
           if (user.agentSystemId.charAt(2) === ":") { // Agent is from Teams.
             await this.min.conversationalService['sendOnConversation'](this.min, agent, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
           }
           else {
             await this.sendToDeviceEx(user.agentSystemId,
-              Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+              Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale, null);
 
           }
           await sec.updateHumanAgent(manualUser.userSystemId, this.min.instance.instanceId, null);
           await sec.updateHumanAgent(user.agentSystemId, this.min.instance.instanceId, null);
         } else {
           GBLog.info(`HUMAN AGENT (${manualUser.agentSystemId}) TO USER ${manualUser.userSystemId}: ${text}`);
-          await this.sendToDeviceEx(manualUser.userSystemId, `AGENTE: *${text}*`, locale);
+          await this.sendToDeviceEx(manualUser.userSystemId, `AGENTE: *${text}*`, locale, null);
         }
       }
 
@@ -259,18 +282,18 @@ export class WhatsappDirectLine extends GBService {
 
       const agent = await sec.getUserFromSystemId(user.agentSystemId);
       if (text === '/t') {
-        await this.sendToDeviceEx(user.userSystemId, `Você já está sendo atendido por ${agent.userSystemId}.`, locale);
+        await this.sendToDeviceEx(user.userSystemId, `Você já está sendo atendido por ${agent.userSystemId}.`, locale, null);
       } else if (text === '/qt' || text === 'Sair' || text === 'Fechar') {
         // TODO: Transfers only in pt-br for now.
         await this.sendToDeviceEx(id,
-          Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
+          Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale, null);
 
-          if (user.agentSystemId.charAt(2) === ":") { // Agent is from Teams.
-            await this.min.conversationalService['sendOnConversation'](this.min, agent, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
-          }
-          else {
-            await this.sendToDeviceEx(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale);
-          }
+        if (user.agentSystemId.charAt(2) === ":") { // Agent is from Teams.
+          await this.min.conversationalService['sendOnConversation'](this.min, agent, Messages[this.locale].notify_end_transfer(this.min.instance.botId));
+        }
+        else {
+          await this.sendToDeviceEx(user.agentSystemId, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale, null);
+        }
 
         await sec.updateHumanAgent(id, this.min.instance.instanceId, null);
       } else {
@@ -280,20 +303,21 @@ export class WhatsappDirectLine extends GBService {
           await this.min.conversationalService['sendOnConversation'](this.min, agent, text);
         }
         else {
-          await this.sendToDeviceEx(user.agentSystemId, `Bot: ${this.min.instance.botId}\n${id}: ${text}`, locale);
+          await this.sendToDeviceEx(user.agentSystemId, `Bot: ${this.min.instance.botId}\n${id}: ${text}`, locale, null);
         }
 
       }
 
     } else if (user.agentMode === 'bot' || user.agentMode === null || user.agentMode === undefined) {
 
-      if (WhatsappDirectLine.conversationIds[from] === undefined) {
+      if (WhatsappDirectLine.conversationIds[from + group] === undefined) {
         GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
         const response = await client.Conversations.Conversations_StartConversation();
         const generatedConversationId = response.obj.conversationId;
 
-        WhatsappDirectLine.conversationIds[from] = generatedConversationId;
+        WhatsappDirectLine.conversationIds[from + group] = generatedConversationId;
         WhatsappDirectLine.mobiles[generatedConversationId] = from;
+        WhatsappDirectLine.chatIds[generatedConversationId] = message.chatId;
 
         this.pollMessages(client, generatedConversationId, from, fromName);
         this.inputMessage(client, generatedConversationId, text, from, fromName);
@@ -387,7 +411,7 @@ export class WhatsappDirectLine extends GBService {
       });
     }
 
-    await this.sendToDevice(from, output);
+    await this.sendToDevice(from, output, conversationId);
   }
 
   public renderHeroCard(attachment) {
@@ -454,7 +478,7 @@ export class WhatsappDirectLine extends GBService {
     await this.sendFileToDevice(to, url, 'Audio', msg);
   }
 
-  public async sendToDevice(to: string, msg: string) {
+  public async sendToDevice(to: string, msg: string, conversationId ) {
 
     const cmd = '/audio ';
     if (msg.startsWith(cmd)) {
@@ -463,12 +487,15 @@ export class WhatsappDirectLine extends GBService {
       return await this.sendTextAsAudioToDevice(to, msg);
     } else {
 
+      let chatId = WhatsappDirectLine.chatIds[conversationId];
+
       const options = {
         method: 'POST',
         url: urlJoin(this.whatsappServiceUrl, 'message'),
         qs: {
           token: this.whatsappServiceKey,
-          phone: to,
+          phone: chatId ? null : to,
+          chatId: chatId,
           body: msg
         },
         headers: {
@@ -488,13 +515,13 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async sendToDeviceEx(to, text, locale) {
+  public async sendToDeviceEx(to, text, locale, conversationId) {
     text = await this.min.conversationalService.translate(
       this.min,
       text,
       locale
     );
-    await this.sendToDevice(to, text);
+    await this.sendToDevice(to, text, conversationId);
 
   }
 }
