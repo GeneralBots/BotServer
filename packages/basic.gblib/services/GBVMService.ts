@@ -248,6 +248,10 @@ export class GBVMService extends GBService {
       return `${$2} = hear()`;
     });
 
+    code = code.replace(/(\w)\s*\=\s*find contact\s*(.*)/gi, ($0, $1, $2, $3) => {
+      return `${$1} = fndContact(${$2})\n`;
+    });
+
     code = code.replace(/(\w+)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gi, ($0, $1, $2, $3) => {
       return `${$1} = sys().find(${$2})\n
       if (!${$1}) {
@@ -575,6 +579,9 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bcreateDeal\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.createDeal' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bfndContact\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.fndContact' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bgetActiveTasks\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.getActiveTasks' : $1;

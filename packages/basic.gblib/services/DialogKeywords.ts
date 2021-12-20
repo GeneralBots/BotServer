@@ -145,6 +145,16 @@ export class DialogKeywords {
     return deal;
   }
 
+  /**
+   * Finds contacts in XRM.
+   *
+   * @example list = FIND CONTACT "Sandra"
+   */
+   public async fndContact(name) {
+    let s = new HubSpotServices(null, null, process.env.HUBSPOT_KEY);
+    return await s.searchContact(name);
+  }
+
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {

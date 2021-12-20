@@ -142,7 +142,7 @@ export class GBServer {
             GBLog.verbose(`Error initializing storage: ${error}`);
             GBServer.globals.bootInstance =
               await core.createBootInstance(core, azureDeployer, GBServer.globals.publicAddress);
-            
+
           }
 
           core.ensureAdminIsSecured();
@@ -155,7 +155,7 @@ export class GBServer {
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
           await core.syncDatabaseStructure();
 
-          
+
           GBLog.info(`Publishing instances...`);
           const instances: IGBInstance[] = await core.loadAllInstances(
             core,
@@ -164,7 +164,7 @@ export class GBServer {
           );
 
           if (instances.length === 0) {
-      
+
             const instance = await importer.importIfNotExistsBotPackage(
               GBConfigService.get('BOT_ID'),
               'boot.gbot',

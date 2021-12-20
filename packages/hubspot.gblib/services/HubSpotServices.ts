@@ -146,16 +146,13 @@ export class HubSpotServices extends GBService {
 
   public async searchContact(query) {
     const client = new hubspot.Client({ apiKey: this.key });
-    const filter = { propertyName: 'createdate', operator: 'GTE', value: Date.now() - 30 * 60000 }
-    const filterGroup = { filters: [filter] }
     const sort = JSON.stringify({ propertyName: 'createdate', direction: 'DESCENDING' })
 
-    const properties = ['createdate', 'firstname', 'lastname']
+    const properties = ['createdate', 'firstname', 'lastname', 'phone', 'email']
     const limit = 100
     const after = 0
 
     const publicObjectSearchRequest = {
-      filterGroups: [filterGroup],
       sorts: [sort],
       query,
       properties,
@@ -164,8 +161,7 @@ export class HubSpotServices extends GBService {
     }
 
     const result = await client.crm.contacts.searchApi.doSearch(publicObjectSearchRequest)
-    console.log(JSON.stringify(result.body))
-    return result.body;
+    return result.body.results;
   }
 
 
