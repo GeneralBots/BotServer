@@ -69,6 +69,106 @@ export class HubSpotServices extends GBService {
     }
   }
 
+  public async addDealNote(name, note)
+  {
+
+  }
+
+  public async createDeal(dealName, contact, company, amount) {
+    const dealObj = {
+      properties: {
+        dealname: dealName,
+        dealstage: 'appointmentscheduled',
+        pipeline: 'default',
+        amount: amount
+      },
+    }
+    const contactObj = {
+      properties: {
+        firstname: contact
+      },
+    }
+    const companyObj = {
+      properties: {
+        name: company,
+      },
+    }
+
+    const hubspotClient = new hubspot.Client({ apiKey: this.key });
+    const createDealResponse = await hubspotClient.crm.deals.basicApi.create(dealObj);
+    const createContactResponse = await hubspotClient.crm.contacts.basicApi.create(contactObj);
+    const createCompanyResponse = await hubspotClient.crm.companies.basicApi.create(companyObj);
+
+    await hubspotClient.crm.deals.associationsApi.create(
+      createDealResponse.body.id,
+      'contacts',
+      createContactResponse.body.id,
+      'deal_to_contact'
+    )
+
+    await hubspotClient.crm.deals.associationsApi.create(
+      createDealResponse.body.id,
+      'companies',
+      createCompanyResponse.body.id,
+      'deal_to_company'
+    )
+
+    return createDealResponse.body;
+
+  }
+
+
+  public async createContact(firstName, lastName, domain, companyName) {
+    const contactObj = {
+      properties: {
+        firstname: firstName,
+        lastname: lastName,
+      },
+    }
+    const companyObj = {
+      properties: {
+        domain: domain,
+        name: companyName,
+      },
+    }
+
+    const hubspotClient = new hubspot.Client({ apiKey: this.key })
+    const createContactResponse = await hubspotClient.crm.contacts.basicApi.create(contactObj)
+    const createCompanyResponse = await hubspotClient.crm.companies.basicApi.create(companyObj)
+
+    return await hubspotClient.crm.companies.associationsApi.create(
+      createCompanyResponse.body.id,
+      'contacts',
+      createContactResponse.body.id,
+      'company_to_contact'
+    )
+  }
+
+  public async searchContact(query) {
+    const client = new hubspot.Client({ apiKey: this.key });
+    const filter = { propertyName: 'createdate', operator: 'GTE', value: Date.now() - 30 * 60000 }
+    const filterGroup = { filters: [filter] }
+    const sort = JSON.stringify({ propertyName: 'createdate', direction: 'DESCENDING' })
+
+    const properties = ['createdate', 'firstname', 'lastname']
+    const limit = 100
+    const after = 0
+
+    const publicObjectSearchRequest = {
+      filterGroups: [filterGroup],
+      sorts: [sort],
+      query,
+      properties,
+      limit,
+      after,
+    }
+
+    const result = await client.crm.contacts.searchApi.doSearch(publicObjectSearchRequest)
+    console.log(JSON.stringify(result.body))
+    return result.body;
+  }
+
+
   public async getActiveTasks(): Promise<[]> {
 
     const client = new hubspot.Client({ apiKey: this.key });

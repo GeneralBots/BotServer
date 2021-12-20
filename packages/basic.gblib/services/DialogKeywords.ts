@@ -125,14 +125,26 @@ export class DialogKeywords {
   }
 
   /**
-   * Quits the dialog, currently required to get out of VM context.
+   * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-   public async getActiveTasks (){
-    let s = new HubSpotServices(null, null, 'ddcc3f4e-edfe-4dc5-a337-3d39bcc2d833');
+  public async getActiveTasks() {
+    let s = new HubSpotServices(null, null, process.env.HUBSPOT_KEY);
     return await s.getActiveTasks();
   }
+
+  /**
+   * Creates a new deal.
+   *
+   * @example CREATE DEAL dealname, contato, empresa, amount
+   */
+  public async createDeal(dealName, contact, company, amount) {
+    let s = new HubSpotServices(null, null, process.env.HUBSPOT_KEY);
+    let deal = await s.createDeal(dealName, contact, company, amount);
+    return deal;
+  }
+
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
