@@ -58,6 +58,15 @@ export class QualityDialog extends IGBDialog {
   public static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new CSService();
 
+    min.dialogs.add(new WaterfallDialog('/check', [
+      async step => {
+        const locale = step.context.activity.locale;
+        await min.conversationalService.sendText(min, step, Messages[locale].check_whatsapp_ok);
+        return await step.replaceDialog('/ask', { isReturning: true });
+      }
+    ]
+    ));
+
     min.dialogs.add(new WaterfallDialog('/quality', [
       async step => {
         const locale = step.context.activity.locale;
@@ -82,7 +91,7 @@ export class QualityDialog extends IGBDialog {
               setTimeout(resolve, ms);
             });
           };
-      
+
           await service.insertQuestionAlternate(
             min.instance.instanceId,
             user.lastQuestion,

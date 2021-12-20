@@ -36,6 +36,8 @@ const { promisify } = require('util');
 import { GBLog, GBMinInstance, GBService } from 'botlib';
 import { GBServer } from '../../../src/app';
 import { SecService } from '../../security.gbapp/services/SecService';
+const hubspot = require('@hubspot/api-client');
+
 
 /**
  * Support for Hub Spot XRM.
@@ -69,7 +71,6 @@ export class HubSpotServices extends GBService {
 
   public async getActiveTasks(): Promise<[]> {
 
-    const hubspot = require('@hubspot/api-client');
     const client = new hubspot.Client({ apiKey: this.key });
     let properties = ['hs_task_subject', 'hubspot_owner_id', 'hs_task_status', 'hs_task_priority'];
     const pageSize = 100;
@@ -87,8 +88,12 @@ export class HubSpotServices extends GBService {
     let final;
     final = [];
     list.forEach(e => {
-      if (e.properties.hs_task_status === "NOT_STARTED")
-      {
+      if (e.properties.hs_task_status === "NOT_STARTED") {
+        e['status'] = e.properties.hs_task_status;
+        e['title'] = e.properties.hs_task_subject;
+        e['ownerId'] = e.properties.hubspot_owner_id;
+        e['priority'] = e.properties.hs_task_priority;
+
         final.push(e);
       }
     });
