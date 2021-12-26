@@ -500,11 +500,27 @@ export class GBDeployer implements IGBDeployer {
           const nextFolder = urlJoin(remotePath, item.name);
           await this.downloadFolder(min, localPath, nextFolder);
         } else {
-          GBLog.info(`Downloading ${itemPath}...`);
-          const url = item['@microsoft.graph.downloadUrl'];
-         
-          const response = await request({ uri: url, encoding: null });
-          Fs.writeFileSync(itemPath, response, { encoding: null });
+          let download = false;
+
+          if (Fs.existsSync(itemPath)) {
+            const dt = Fs.statSync(itemPath);
+            if (new Date(dt.mtime) < new Date(item.lastModifiedDateTime)) {
+              download = true;
+            }
+          }
+
+          if (download) {
+            GBLog.info(`Downloading ${itemPath}...`);
+            const url = item['@microsoft.graph.downloadUrl'];
+
+            const response = await request({ uri: url, encoding: null });
+            Fs.writeFileSync(itemPath, response, { encoding: null });
+            Fs.utimesSync(itemPath,
+              new Date(), new Date(item.lastModifiedDateTime));
+          }
+          else{
+            GBLog.info(`Local is up to date: ${itemPath}...`);
+          }
         }
       });
     }
@@ -811,7 +827,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Servers bot storage assets to be used by web, WhatsApp and other channels.
    */
-   public static  mountGBKBAssets(packageName: any, botId: string, filename: string) {
+  public static mountGBKBAssets(packageName: any, botId: string, filename: string) {
 
     // Servers menu assets.
 
@@ -833,7 +849,7 @@ export class GBDeployer implements IGBDeployer {
       express.static(urlJoin('work', gbaiName, filename, 'videos')));
     GBServer.globals.server.use(`/${botId}/cache`,
       express.static(urlJoin('work', gbaiName, 'cache')));
-   GBServer.globals.server.use(`/${gbaiName}/${botId}.gbdata/public`,
+    GBServer.globals.server.use(`/${gbaiName}/${botId}.gbdata/public`,
       express.static(urlJoin('work', gbaiName, `${botId}.gbdata`, 'public')));
 
 

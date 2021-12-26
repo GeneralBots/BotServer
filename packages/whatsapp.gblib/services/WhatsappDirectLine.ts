@@ -180,7 +180,7 @@ export class WhatsappDirectLine extends GBService {
       return; // Exit here.
     }
 
-    if (message.chatName.charAt(0) !== '+') {
+if (message.chatName.charAt(0) !== '+') {
       group = message.chatName;
 
       let botGroupName = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Name', null);
@@ -205,6 +205,7 @@ export class WhatsappDirectLine extends GBService {
           botShortcuts.forEach(e2 => {
             if (e1 === e2 && !found) {
               found = true;
+             text = text.replace (e2, '');
             }
           });
 

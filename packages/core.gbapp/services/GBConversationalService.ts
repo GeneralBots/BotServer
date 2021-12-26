@@ -254,8 +254,9 @@ export class GBConversationalService {
   }
 
   public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
-    if (step.context.activity.channelId === 'webchat') {
-      GBLog.info(`Sending event ${name}:${typeof value === 'object' ? JSON.stringify(value) : value} to client...`);
+    if (!this.userMobile(step)) {
+      GBLog.info(`Sending event ${name}:${typeof value === 'object' ? JSON.stringify(value) :
+         value?value:''} to client...`);
       const msg = MessageFactory.text('');
       msg.value = value;
       msg.type = 'event';
