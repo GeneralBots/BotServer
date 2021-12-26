@@ -322,12 +322,14 @@ export class DialogKeywords {
     );
 
     const nowUTC = new Date();
-    const now = new Date((typeof nowUTC === 'string' ?
+    const now= typeof nowUTC === 'string' ?
       new Date(nowUTC) :
-      nowUTC).toLocaleString(this.getContentLocaleWithCulture(contentLocale),
-        { timeZone: process.env.DEFAULT_TIMEZONE }));
-
-    return now.getHours().toString().padStart(2, "0") + ':' + now.getMinutes().toString().padStart(2, "0");
+      nowUTC;
+      
+   const nowText = now.toLocaleString(this.getContentLocaleWithCulture(contentLocale),
+        { timeZone: process.env.DEFAULT_TIMEZONE });
+    
+    return /\b([0-9]|0[0-9]|1?[0-9]|2[0-3]):[0-5]?[0-9]/.exec(nowText)[0];
   }
 
   /**

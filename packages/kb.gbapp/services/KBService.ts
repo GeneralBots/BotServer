@@ -197,18 +197,24 @@ export class KBService implements IGBKBService {
 
   }
 
-  public async getAnswerByText(instanceId: number, text: string): Promise<any> {
+  public async getAnswerByText(instanceId: number, text: string, from: string = null): Promise<any> {
     text = text.trim();
 
     const service = new CSService();
     let question = await service.getQuestionFromAlternateText(instanceId, text);
 
     if (!question) {
+      const where={
+        instanceId: instanceId,
+        content: { [Op.like]: `%[^a-z]${text}[^a-z]%` }
+      };
+
+      if (from)
+      {
+        where['from']= from;
+      }
       question = await GuaribasQuestion.findOne({
-        where: {
-          instanceId: instanceId,
-          content: { [Op.like]: `%[^a-z]${text}[^a-z]%` }
-        }
+        where: where
       });
     }
     if (!question) {
@@ -234,6 +240,9 @@ export class KBService implements IGBKBService {
 
     return undefined;
   }
+
+  
+
 
   public async addAnswer(obj: GuaribasAnswer): Promise<GuaribasAnswer> {
     return await GuaribasAnswer.create(obj);
@@ -380,6 +389,12 @@ export class KBService implements IGBKBService {
         where: { from: from, instanceId: instanceId }
       });
     }
+  }
+
+  public static async getGroupReplies(instanceId: number): Promise<GuaribasQuestion[]> {
+      return await GuaribasQuestion.findAll({
+        where: { from: 'group', instanceId: instanceId }
+      });
   }
 
   public async importKbTabularFile(
@@ -713,6 +728,9 @@ export class KBService implements IGBKBService {
     GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
 
     await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
+
+    min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
+
     GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
   }
 

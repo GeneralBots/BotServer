@@ -191,6 +191,7 @@ export class GBMinService {
     removeRoute(GBServer.globals.server, uiUrl);
 
     GBServer.globals.minInstances = GBServer.globals.minInstances.filter(p => p.instance.botId !== botId);
+
   }
 
   /**
@@ -207,6 +208,7 @@ export class GBMinService {
       GBServer.globals.sysPackages,
       GBServer.globals.appPackages
     );
+    min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
     GBServer.globals.minInstances.push(min);
 
     await this.deployer.deployPackage(min, 'packages/default.gbtheme');
@@ -789,14 +791,6 @@ export class GBMinService {
     let mobile = WhatsappDirectLine.mobiles[step.context.activity.conversation.id]
     return mobile;
 
-    if (isNaN(step.context.activity['mobile'])) {
-      if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
-        return step.context.activity.from.id;
-      }
-      return null;
-    } else {
-      return step.context.activity['mobile'];
-    }
   }
 
 
@@ -823,7 +817,9 @@ export class GBMinService {
 
     await adapter['processActivity'](req, res, async context => {
 
-      context.activity.text = context.activity.text.replace(/\@General Bots Online /gi, '');
+      if (context.activity.text){
+        context.activity.text = context.activity.text.replace(/\@General Bots Online /gi, '');
+      }    
 
 
       // Get loaded user state

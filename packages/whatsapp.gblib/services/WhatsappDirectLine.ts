@@ -41,6 +41,7 @@ import { GBServer } from '../../../src/app';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 import { SecService } from '../../security.gbapp/services/SecService';
 import { Messages } from '../strings';
+import { KBService } from '../../kb.gbapp/services/KBService';
 
 /**
  * Support for Whatsapp.
@@ -51,7 +52,7 @@ export class WhatsappDirectLine extends GBService {
   public static mobiles = {};
   public static chatIds = {};
 
-  public pollInterval = 5000;
+  public pollInterval = 3000;
   public directLineClientName = 'DirectLineClient';
 
   public directLineClient: any;
@@ -133,7 +134,7 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async resetConversationId(number, group) {
-    WhatsappDirectLine.conversationIds[number+group] = undefined;
+    WhatsappDirectLine.conversationIds[number + group] = undefined;
   }
 
   public async check() {
@@ -162,21 +163,7 @@ export class WhatsappDirectLine extends GBService {
 
     const message = req.body.messages[0];
     let group = "";
-
-
-    // Ignore group messages without the mention to Bot.
-
-    if (message.chatName.charAt(0) !== '+') {
-      group = message.chatName;
-
-      let smsServiceNumber = this.min.core.getParam<string>(this.min.instance, 'whatsappServiceNumber', null);;
-      if (smsServiceNumber) {
-        smsServiceNumber = smsServiceNumber.replace('+', '');
-        if (!message.body.startsWith('@' + smsServiceNumber)) {
-          return;
-        }
-      }
-    }
+    let answerText = null;
 
 
     let text = message.body;
@@ -184,13 +171,72 @@ export class WhatsappDirectLine extends GBService {
 
     const from = message.author.split('@')[0];
     const fromName = message.senderName;
+    GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
+
 
     if (req.body.messages[0].fromMe) {
       res.end();
 
       return; // Exit here.
     }
-    GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
+
+    if (message.chatName.charAt(0) !== '+') {
+      group = message.chatName;
+
+      let botGroupName = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Name', null);
+      let botShortcuts = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Shortcuts', null);
+      if (!botShortcuts) {
+        botShortcuts = new Array()
+      }
+      else {
+        botShortcuts = botShortcuts.split(' ');
+      }
+
+      const parts = text.split(' ');
+
+      // Bot name must be specified on config.
+
+      if (botGroupName === group) {
+
+        // Shortcut has been mentioned?
+
+        let found = false;
+        parts.forEach(e1 => {
+          botShortcuts.forEach(e2 => {
+            if (e1 === e2 && !found) {
+              found = true;
+            }
+          });
+
+
+          // Verify if it is a group cache answer.
+
+          const questions = this.min['groupCache'];
+          if (questions && questions.length > 0) {
+            questions.forEach(q => {
+              if (q.content === e1 && !found) {
+                const answer = this.min.kbService['getAnswerById'](this.min.instance.instanceId,
+                  q.answerId);
+                answerText = answer.content;
+              }
+            });
+          }
+
+
+          // Ignore group messages without the mention to Bot.
+
+          let smsServiceNumber = this.min.core.getParam<string>(this.min.instance, 'whatsappServiceNumber', null);
+          if (smsServiceNumber && !answerText) {
+            smsServiceNumber = smsServiceNumber.replace('+', '');
+            if (!message.body.startsWith('@' + smsServiceNumber)) {
+              return;
+            }
+          }
+
+        });
+      }
+    }
+
 
     await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
       await e.onExchangeData(this.min, 'whatsappMessage', message);
@@ -204,6 +250,13 @@ export class WhatsappDirectLine extends GBService {
       senderName, '', 'whatsapp', senderName, null);
 
     const locale = user.locale ? user.locale : 'pt';
+
+    if (answerText) {
+      await this.sendToDeviceEx(user.userSystemId, answerText, locale, null);
+      return; // Exit here.
+    }
+
+
     if (message.type === 'ptt') {
 
       if (process.env.AUDIO_DISABLED !== 'true') {
@@ -221,7 +274,7 @@ export class WhatsappDirectLine extends GBService {
           buf, locale
         );
       } else {
-        await this.sendToDevice(user.userSystemId, 
+        await this.sendToDevice(user.userSystemId,
           `No momento estou apenas conseguindo ler mensagens de texto.`, null);
       }
     }
@@ -478,7 +531,7 @@ export class WhatsappDirectLine extends GBService {
     await this.sendFileToDevice(to, url, 'Audio', msg);
   }
 
-  public async sendToDevice(to: string, msg: string, conversationId ) {
+  public async sendToDevice(to: string, msg: string, conversationId) {
 
     const cmd = '/audio ';
     if (msg.startsWith(cmd)) {
