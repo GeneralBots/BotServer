@@ -133,7 +133,7 @@ export class WhatsappDirectLine extends GBService {
 
   }
 
-  public async resetConversationId(number, group) {
+  public async resetConversationId(number, group = '') {
     WhatsappDirectLine.conversationIds[number + group] = undefined;
   }
 
@@ -180,7 +180,7 @@ export class WhatsappDirectLine extends GBService {
       return; // Exit here.
     }
 
-if (message.chatName.charAt(0) !== '+') {
+    if (message.chatName.charAt(0) !== '+') {
       group = message.chatName;
 
       let botGroupName = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Name', null);
@@ -205,7 +205,7 @@ if (message.chatName.charAt(0) !== '+') {
           botShortcuts.forEach(e2 => {
             if (e1 === e2 && !found) {
               found = true;
-             text = text.replace (e2, '');
+              text = text.replace(e2, '');
             }
           });
 
@@ -374,10 +374,10 @@ if (message.chatName.charAt(0) !== '+') {
         WhatsappDirectLine.chatIds[generatedConversationId] = message.chatId;
 
         this.pollMessages(client, generatedConversationId, from, fromName);
-        this.inputMessage(client, generatedConversationId, text, from, fromName);
+        this.inputMessage(client, generatedConversationId, text, from, fromName, group);
       } else {
 
-        this.inputMessage(client, conversationId, text, from, fromName);
+        this.inputMessage(client, conversationId, text, from, fromName, group);
       }
     } else {
       GBLog.warn(`Inconsistencty found: Invalid agentMode on User Table: ${user.agentMode}`);
@@ -387,7 +387,7 @@ if (message.chatName.charAt(0) !== '+') {
 
   }
 
-  public inputMessage(client, conversationId, text, from, fromName) {
+  public inputMessage(client, conversationId, text, from, fromName, group) {
     return client.Conversations.Conversations_PostActivity({
       conversationId: conversationId,
       activity: {
@@ -395,6 +395,7 @@ if (message.chatName.charAt(0) !== '+') {
         text: text,
         type: 'message',
         mobile: from,
+        group: group,
         from: {
           id: from,
           name: fromName

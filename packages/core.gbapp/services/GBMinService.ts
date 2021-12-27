@@ -308,6 +308,8 @@ export class GBMinService {
 
       const id = req.body.messages[0].author.split('@')[0];
       const senderName = req.body.messages[0].senderName;
+      const sec = new SecService();
+      let user = await sec.getUserFromSystemId(id);
 
       if (req.body.messages[0].fromMe) {
         res.end();
@@ -315,14 +317,32 @@ export class GBMinService {
         return; // Exit here.
       }
 
+      let activeMin;
+
       // Processes group behaviour.
 
       let text = req.body.messages[0].body;
       text = text.replace(/\@\d+ /gi, '');
 
+      // Ensures that the bot group is the active bot for the user (like switching).
+
+      const message = req.body.messages[0];
+      if (message.chatName.charAt(0) !== '+') {
+        const group = message.chatName;
+
+        const botGroup = await this.core.loadInstanceByBotId(group);
+        if (user.instanceId !== botGroup.instanceId) {
+          await sec.updateUserInstance(id, botGroup.instanceId);
+        }
+        activeMin = GBServer.globals.minInstances.filter
+          (p => p.instance.instanceId === botGroup.instanceId)[0];
+        await (activeMin as any).whatsAppDirectLine.received(req, res);
+        return; // EXIT HERE.
+      }
+
+
       // Detects if the welcome message is enabled.
 
-      let activeMin;
       if (process.env.WHATSAPP_WELCOME_DISABLED !== 'true') {
 
         // Tries to find if user wants to switch bots.
@@ -343,8 +363,6 @@ export class GBMinService {
         // If it is the first time for the user, tries to auto-execute
         // start dialog if any is specified in Config.xlsx.
 
-        const sec = new SecService();
-        let user = await sec.getUserFromSystemId(id);
         if (user === null || user.hearOnDialog) {
           user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, '', 'whatsapp', senderName, null);
 
@@ -379,7 +397,7 @@ export class GBMinService {
 
             const instance = await this.core.loadInstanceByBotId(activeMin.botId);
             await sec.updateUserInstance(id, instance.instanceId);
-            await (activeMin as any).whatsAppDirectLine.resetConversationId(id);
+            await (activeMin as any).whatsAppDirectLine.resetConversationId(id, '');
             const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
 
 
@@ -817,10 +835,9 @@ export class GBMinService {
 
     await adapter['processActivity'](req, res, async context => {
 
-      if (context.activity.text){
+      if (context.activity.text) {
         context.activity.text = context.activity.text.replace(/\@General Bots Online /gi, '');
-      }    
-
+      }
 
       // Get loaded user state
 
@@ -847,13 +864,6 @@ export class GBMinService {
 
           firstTime = true;
 
-          const service = new KBService(min.core.sequelize);
-          const data = await service.getFaqBySubjectArray(instance.instanceId, 'faq', undefined);
-          await min.conversationalService.sendEvent(min, step, 'play', {
-            playerType: 'bullet',
-            data: data.slice(0, 10)
-          });
-
           // This same event is dispatched either to all participants
           // including the bot, that is filtered bellow.
 
@@ -871,8 +881,6 @@ export class GBMinService {
               member.name,
               null
             );
-
-
             // Stores conversation associated to the user to group each message.
 
             const analytics = new AnalyticsService();
@@ -880,6 +888,13 @@ export class GBMinService {
             user.conversation = await analytics.createConversation(persistedUser);
 
           }
+
+          const service = new KBService(min.core.sequelize);
+          const data = await service.getFaqBySubjectArray(instance.instanceId, 'faq', undefined);
+          await min.conversationalService.sendEvent(min, step, 'play', {
+            playerType: 'bullet',
+            data: data.slice(0, 10)
+          });
 
           // Saves session user (persisted GuaribasUser is inside).
 
@@ -923,8 +938,6 @@ export class GBMinService {
               user.welcomed = true;
               GBLog.info(`Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
-
-
             }
           }
         }
@@ -963,11 +976,12 @@ export class GBMinService {
               await step.beginDialog('/');
             }
             else {
-              if (!min["conversationWelcomed"][step.context.activity.conversation.id]) {
+              if (!GBMinService.userMobile(step) &&
+                !min["conversationWelcomed"][step.context.activity.conversation.id]) {
 
                 min["conversationWelcomed"][step.context.activity.conversation.id] = true;
 
-                GBLog.info(`Auto start (web) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
+                GBLog.info(`Auto start (web 1) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
                 await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
               }
             }
@@ -976,8 +990,10 @@ export class GBMinService {
             GBLog.info(`Person added to conversation: ${member.name}`);
 
             if (GBMinService.userMobile(step)) {
-              if (startDialog && !min["conversationWelcomed"][step.context.activity.conversation.id]) {
+              if (startDialog && !min["conversationWelcomed"][step.context.activity.conversation.id] &&
+              !step.context.activity['group']) {
                 user.welcomed = true;
+                min["conversationWelcomed"][step.context.activity.conversation.id] = true;
                 await min.userProfile.set(step.context, user);
                 GBLog.info(`Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
                 await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
@@ -1046,7 +1062,7 @@ export class GBMinService {
       const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
       if (startDialog && !min["conversationWelcomed"][step.context.activity.conversation.id]) {
         user.welcomed = true;
-        GBLog.info(`Auto start (web) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
+        GBLog.info(`Auto start (web 2) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
       }
     } else if (context.activity.name === 'updateToken') {
@@ -1120,7 +1136,15 @@ export class GBMinService {
       parts.splice(0, 1);
       const args = parts.join(' ');
       if (cmdOrDialogName === '/start') {
-        // TODO: Args to BASIC.
+
+
+        // Reset user.
+
+        const user = await min.userProfile.get(context, {});
+        await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
+        user.loaded = false;
+        await min.userProfile.set(step.context, user);
+        
       } else if (cmdOrDialogName === '/call') {
         await GBVMService.callVM(args, min, step, this.deployer);
       } else {
