@@ -523,13 +523,12 @@ export class WhatsappDirectLine extends GBService {
 
   public async sendTextAsAudioToDevice(to, msg) {
 
-    // DISABLED:
-    // const url = await GBConversationalService.getAudioBufferFromText(
-    //   this.min.instance.speechKey,
-    //   this.min.instance.cloudLocation,
-    //   msg, this.locale
-    // );
-    const url = 'https://';
+     const url = await GBConversationalService.getAudioBufferFromText(
+       this.min.instance.speechKey,
+       this.min.instance.cloudLocation,
+       msg, this.locale
+     );
+    
     await this.sendFileToDevice(to, url, 'Audio', msg);
   }
 

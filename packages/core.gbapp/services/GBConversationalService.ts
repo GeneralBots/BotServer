@@ -292,6 +292,53 @@ export class GBConversationalService {
     await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId);
   }
 
+  public static async getAudioBufferFromText(speechKey, cloudRegion, text, locale): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+      const name = GBAdminService.getRndReadableIdentifier();
+
+      const waveFilename = `work/tmp${name}.pcm`;
+      const sdk = require('microsoft-cognitiveservices-speech-sdk');
+      sdk.Recognizer.enableTelemetry(false);
+
+      var audioConfig = sdk.AudioConfig.fromAudioFileOutput(waveFilename);
+      var speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, cloudRegion);
+
+      var synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
+
+      try {
+        speechConfig.speechSynthesisLanguage = locale;
+        speechConfig.speechSynthesisVoiceName = 'pt-BR-FranciscaNeural';
+
+        synthesizer.speakTextAsync(text, result => {
+          if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
+            let raw = Buffer.from(result.audioData);
+            fs.writeFileSync(waveFilename, raw);
+            GBLog.info(`Audio data byte size: ${result.audioData.byteLength}.`);
+            const oggFilenameOnly = `tmp${name}.ogg`;
+            const oggFilename = `work/${oggFilenameOnly}`;
+
+            const output = fs.createWriteStream(oggFilename);
+            const transcoder = new prism.FFmpeg({
+              args: ['-analyzeduration', '0', '-loglevel', '0', '-f', 'opus', '-ar', '16000', '-ac', '1']
+            });
+
+            fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
+
+            let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
+            resolve(url);
+          } else {
+            const error = 'Speech synthesis canceled, ' + result.errorDetails;
+            reject(error);
+          }
+          synthesizer.close();
+          synthesizer = undefined;
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
   public static async getTextFromAudioBuffer(speechKey, cloudRegion, buffer, locale): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       try {
