@@ -500,12 +500,12 @@ export class GBDeployer implements IGBDeployer {
           const nextFolder = urlJoin(remotePath, item.name);
           await this.downloadFolder(min, localPath, nextFolder);
         } else {
-          let download = false;
+          let download = true;
 
           if (Fs.existsSync(itemPath)) {
             const dt = Fs.statSync(itemPath);
-            if (new Date(dt.mtime) < new Date(item.lastModifiedDateTime)) {
-              download = true;
+            if (new Date(dt.mtime) > new Date(item.lastModifiedDateTime)) {
+              download = false;
             }
           }
 
