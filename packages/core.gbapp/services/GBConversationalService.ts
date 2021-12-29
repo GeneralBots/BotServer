@@ -302,7 +302,7 @@ export class GBConversationalService {
 
         const textToSpeech = new TextToSpeechV1({
           authenticator: new IamAuthenticator({ apikey: process.env.WATSON_TTS_KEY }),
-          url: process.env.WATSON_STT_URL
+          url: process.env.WATSON_TTS_URL
         });
 
         const params = {
