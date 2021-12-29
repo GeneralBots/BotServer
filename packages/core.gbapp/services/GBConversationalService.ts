@@ -60,6 +60,7 @@ const prism = require('prism-media');
 const request = require('request-promise-native');
 const fs = require('fs');
 const SpeechToTextV1 = require('ibm-watson/speech-to-text/v1');
+const TextToSpeechV1 = require('ibm-watson/text-to-speech/v1');
 const { IamAuthenticator } = require('ibm-watson/auth');
 const marked = require('marked');
 const { Translate } = require('@google-cloud/translate').v2;
@@ -256,7 +257,7 @@ export class GBConversationalService {
   public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
     if (!this.userMobile(step)) {
       GBLog.info(`Sending event ${name}:${typeof value === 'object' ? JSON.stringify(value) :
-         value?value:''} to client...`);
+        value ? value : ''} to client...`);
       const msg = MessageFactory.text('');
       msg.value = value;
       msg.type = 'event';
@@ -287,7 +288,7 @@ export class GBConversationalService {
     });
   }
 
-  public async sendToMobile(min: GBMinInstance, mobile: string, message: string, conversationId ) {
+  public async sendToMobile(min: GBMinInstance, mobile: string, message: string, conversationId) {
     GBLog.info(`Sending message ${message} to ${mobile}...`);
     await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId);
   }
@@ -297,42 +298,39 @@ export class GBConversationalService {
       const name = GBAdminService.getRndReadableIdentifier();
 
       const waveFilename = `work/tmp${name}.pcm`;
-      const sdk = require('microsoft-cognitiveservices-speech-sdk');
-      sdk.Recognizer.enableTelemetry(false);
-
-      var audioConfig = sdk.AudioConfig.fromAudioFileOutput(waveFilename);
-      var speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, cloudRegion);
-
-      var synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
-
       try {
-        speechConfig.speechSynthesisLanguage = locale;
-        speechConfig.speechSynthesisVoiceName = 'pt-BR-FranciscaNeural';
 
-        synthesizer.speakTextAsync(text, result => {
-          if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
-            let raw = Buffer.from(result.audioData);
-            fs.writeFileSync(waveFilename, raw);
-            GBLog.info(`Audio data byte size: ${result.audioData.byteLength}.`);
-            const oggFilenameOnly = `tmp${name}.ogg`;
-            const oggFilename = `work/${oggFilenameOnly}`;
-
-            const output = fs.createWriteStream(oggFilename);
-            const transcoder = new prism.FFmpeg({
-              args: ['-analyzeduration', '0', '-loglevel', '0', '-f', 'opus', '-ar', '16000', '-ac', '1']
-            });
-
-            fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
-
-            let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
-            resolve(url);
-          } else {
-            const error = 'Speech synthesis canceled, ' + result.errorDetails;
-            reject(error);
-          }
-          synthesizer.close();
-          synthesizer = undefined;
+        const textToSpeech = new TextToSpeechV1({
+          authenticator: new IamAuthenticator({ apikey: process.env.WATSON_TTS_KEY }),
+          url: process.env.WATSON_STT_URL
         });
+
+        const params = {
+          text: text,
+          accept: 'audio/l16; rate=44100',
+          voice: 'pt-BR_IsabelaV3Voice'
+        };
+
+        // Migrated to IBM from MSFT, as it own package do not compile on Azure Web App.
+
+        let buffer = await textToSpeech.synthesize(params);
+        fs.writeFileSync(waveFilename, buffer);
+        GBLog.info(`Audio data byte size: ${buffer.byteLength}.`);
+
+        // Converts to OGG.
+
+        const oggFilenameOnly = `tmp${name}.ogg`;
+        const oggFilename = `work/${oggFilenameOnly}`;
+        const output = fs.createWriteStream(oggFilename);
+        const transcoder = new prism.FFmpeg({
+          args: ['-analyzeduration', '0', '-loglevel', '0', '-f', 'opus', '-ar', '16000', '-ac', '1']
+        });
+
+        fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
+
+        let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
+        resolve(url);
+
       } catch (error) {
         reject(error);
       }
@@ -481,7 +479,7 @@ export class GBConversationalService {
     answer: string
   ) {
     const locale = step.context.activity.locale;
-    
+
     html = html.replace(/src\=\"kb\//gi, `src=\"../kb/`);
     await this.sendEvent(min, step, 'play', {
       playerType: 'markdown',
