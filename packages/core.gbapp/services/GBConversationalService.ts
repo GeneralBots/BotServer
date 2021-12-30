@@ -293,11 +293,10 @@ export class GBConversationalService {
     await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId);
   }
 
-  public static async getAudioBufferFromText(speechKey, cloudRegion, text, locale): Promise<string> {
+  public static async getAudioBufferFromText( text): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const name = GBAdminService.getRndReadableIdentifier();
 
-      const waveFilename = `work/tmp${name}.pcm`;
       try {
 
         const textToSpeech = new TextToSpeechV1({
@@ -307,27 +306,26 @@ export class GBConversationalService {
 
         const params = {
           text: text,
-          accept: 'audio/l16; rate=44100',
-          voice: 'pt-BR_IsabelaV3Voice'
+          accept: 'audio/ogg;codecs=vorbis', // ; rate=44100
+          voice: 'pt-BR_IsabelaVoice'
         };
 
         // Migrated to IBM from MSFT, as it own package do not compile on Azure Web App.
 
-        let buffer = await textToSpeech.synthesize(params);
-        fs.writeFileSync(waveFilename, buffer);
-        GBLog.info(`Audio data byte size: ${buffer.byteLength}.`);
-
-        // Converts to OGG.
-
+        let res = await textToSpeech.synthesize(params);
         const oggFilenameOnly = `tmp${name}.ogg`;
         const oggFilename = `work/${oggFilenameOnly}`;
-        const output = fs.createWriteStream(oggFilename);
-        const transcoder = new prism.FFmpeg({
-          args: ['-analyzeduration', '0', '-loglevel', '0', '-f', 'opus', '-ar', '16000', '-ac', '1']
+
+        let body = '';
+        res.result.on('data',(chunck) => {
+          body += chunck;
         });
 
-        fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
-
+        res.result.on('end', () => {
+          fs.writeFileSync(oggFilename, body);  
+          res.statusCode = 200;
+        });        
+                
         let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
         resolve(url);
 

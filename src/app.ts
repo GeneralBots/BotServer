@@ -117,6 +117,8 @@ export class GBServer {
           const azureDeployer: AzureDeployerService = new AzureDeployerService(deployer);
           const adminService: GBAdminService = new GBAdminService(core);
 
+
+
           if (process.env.NODE_ENV === 'development') {
             const proxy = GBConfigService.get('REVERSE_PROXY');
             if (proxy !== undefined) {
