@@ -306,29 +306,30 @@ export class GBConversationalService {
 
         const params = {
           text: text,
-          accept: 'audio/ogg;codecs=vorbis', // ; rate=44100
+          accept: 'audio/wav; rate=44100',
           voice: 'pt-BR_IsabelaVoice'
         };
 
         // Migrated to IBM from MSFT, as it own package do not compile on Azure Web App.
 
         let res = await textToSpeech.synthesize(params);
+        const waveFilename = `work/tmp${name}.pcm`;
+
+        let audio = '';
+        audio = await textToSpeech.repairWavHeaderStream(res.result);
+        fs.writeFileSync(waveFilename, audio);  
+
         const oggFilenameOnly = `tmp${name}.ogg`;
         const oggFilename = `work/${oggFilenameOnly}`;
-
-        let body = '';
-        res.result.on('data',(chunck) => {
-          body += chunck;
+        const output = fs.createWriteStream(oggFilename);
+        const transcoder = new prism.FFmpeg({
+          args: ['-analyzeduration', '0', '-loglevel', '0', '-f', 'opus', '-ar', '16000', '-ac', '1']
         });
+        fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
 
-        res.result.on('end', () => {
-          fs.writeFileSync(oggFilename, body);  
-          res.statusCode = 200;
-        });        
-                
         let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
         resolve(url);
-
+                
       } catch (error) {
         reject(error);
       }
