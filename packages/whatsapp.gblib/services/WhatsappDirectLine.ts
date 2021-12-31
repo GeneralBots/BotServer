@@ -51,6 +51,7 @@ export class WhatsappDirectLine extends GBService {
   public static conversationIds = {};
   public static mobiles = {};
   public static chatIds = {};
+  public static usernames = {};
 
   public pollInterval = 3000;
   public directLineClientName = 'DirectLineClient';
@@ -371,7 +372,9 @@ export class WhatsappDirectLine extends GBService {
 
         WhatsappDirectLine.conversationIds[from + group] = generatedConversationId;
         WhatsappDirectLine.mobiles[generatedConversationId] = from;
+        WhatsappDirectLine.usernames[from] = fromName;
         WhatsappDirectLine.chatIds[generatedConversationId] = message.chatId;
+        
 
         this.pollMessages(client, generatedConversationId, from, fromName);
         this.inputMessage(client, generatedConversationId, text, from, fromName, group);

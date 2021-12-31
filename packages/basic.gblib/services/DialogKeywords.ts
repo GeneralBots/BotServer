@@ -41,6 +41,7 @@ import { SecService } from '../../security.gbapp/services/SecService';
 import { SystemKeywords } from './SystemKeywords';
 import { GBMinService } from '../../core.gbapp/services/GBMinService';
 import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices';
+import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 var DateDiff = require('date-diff');
 
 
@@ -414,7 +415,7 @@ export class DialogKeywords {
    * Returns the name of the user acquired by WhatsApp API.
    */
   public async userName(step) {
-    return step ? step.context.activity.from.name : 'N/A';
+    return step ? WhatsappDirectLine.usernames[await this.userMobile(step)] : 'N/A';
   }
 
   /**
