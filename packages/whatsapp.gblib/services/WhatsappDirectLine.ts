@@ -473,13 +473,14 @@ export class WhatsappDirectLine extends GBService {
     return `${attachment.content.title} - ${attachment.content.text}`;
   }
 
-  public async sendFileToDevice(to, url, filename, caption) {
+  public async sendFileToDevice(to, url, filename, caption, chatId) {
     const options = {
       method: 'POST',
       url: urlJoin(this.whatsappServiceUrl, 'sendFile'),
       qs: {
         token: this.whatsappServiceKey,
-        phone: to,
+        phone: chatId ? null : to,
+        chatId: chatId,
         body: url,
         filename: filename,
         caption: caption
@@ -498,13 +499,14 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async sendAudioToDevice(to, url) {
+  public async sendAudioToDevice(to, url, chatId) {
     const options = {
       method: 'POST',
       url: urlJoin(this.whatsappServiceUrl, 'sendPTT'),
       qs: {
         token: this.whatsappServiceKey,
-        phone: to,
+        phone: chatId ? null : to,
+        chatId: chatId,
         body: url
       },
       headers: {
@@ -521,25 +523,28 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async sendTextAsAudioToDevice(to, msg) {
+  public async sendTextAsAudioToDevice(to, msg, chatId) {
 
      const url = await GBConversationalService.getAudioBufferFromText(
        msg
      );
     
-    await this.sendFileToDevice(to, url, 'Audio', msg);
+    await this.sendFileToDevice(to, url, 'Audio', msg, chatId);
   }
 
   public async sendToDevice(to: string, msg: string, conversationId) {
 
     const cmd = '/audio ';
+
+    let chatId = WhatsappDirectLine.chatIds[conversationId];
+
     if (msg.startsWith(cmd)) {
       msg = msg.substr(cmd.length);
 
-      return await this.sendTextAsAudioToDevice(to, msg);
+      return await this.sendTextAsAudioToDevice(to, msg, chatId);
     } else {
 
-      let chatId = WhatsappDirectLine.chatIds[conversationId];
+      
 
       const options = {
         method: 'POST',
