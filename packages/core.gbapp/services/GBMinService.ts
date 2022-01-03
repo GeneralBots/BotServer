@@ -40,6 +40,7 @@ const express = require('express');
 const Fs = require('fs');
 const request = require('request-promise-native');
 const removeRoute = require('express-remove-route');
+const ssrForBots = require("ssr-for-bots").default;
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 const wash = require('washyourmouthoutwithsoap');
 const { FacebookAdapter } = require('botbuilder-adapter-facebook');
@@ -137,9 +138,22 @@ export class GBMinService {
     // Servers default UI on root address '/' if web enabled.
 
     if (process.env.DISABLE_WEB !== 'true') {
+
+      // SSR processing.
+
+      const defaultOptions = {
+        prerender: [], 
+        exclude: ["/api/", "/instances/", "/webhooks/"], 
+        useCache: true, 
+        cacheRefreshRate: 86400
+      };
+      GBServer.globals.server.use(ssrForBots(defaultOptions));
+
       const url = GBServer.globals.wwwroot
         ? GBServer.globals.wwwroot
         : urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build');
+
+      // default.gbui access definition.
 
       GBServer.globals.server.use('/', express.static(url));
     }
@@ -155,7 +169,7 @@ export class GBMinService {
 
     GBServer.globals.server.post('/webhooks/whatsapp', this.WhatsAppCallback.bind(this));
 
-    // Call mountBot event to all bots.
+    // Calls mountBot event to all bots.
 
     await CollectionUtil.asyncForEach(instances, async instance => {
       try {
@@ -991,7 +1005,7 @@ export class GBMinService {
 
             if (GBMinService.userMobile(step)) {
               if (startDialog && !min["conversationWelcomed"][step.context.activity.conversation.id] &&
-              !step.context.activity['group']) {
+                !step.context.activity['group']) {
                 user.welcomed = true;
                 min["conversationWelcomed"][step.context.activity.conversation.id] = true;
                 await min.userProfile.set(step.context, user);
@@ -1144,7 +1158,7 @@ export class GBMinService {
         await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
         user.loaded = false;
         await min.userProfile.set(step.context, user);
-        
+
       } else if (cmdOrDialogName === '/call') {
         await GBVMService.callVM(args, min, step, this.deployer);
       } else {

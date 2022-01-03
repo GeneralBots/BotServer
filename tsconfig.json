@@ -33,7 +33,8 @@
     "test/**/*",
     "src/**/*",
     "packages/*.gbapp/**/*",
-    "packages/*.gblib/**/*"
+    "packages/*.gblib/**/*",
+    "packages/*.gbtheme/**/*",
   ],
   "exclude": [
     "dist",
