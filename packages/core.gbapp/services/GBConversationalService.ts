@@ -930,6 +930,10 @@ export class GBConversationalService {
     }
 
     const analytics = new AnalyticsService();
+    if (!user.conversation)
+    {
+      user.conversation = await analytics.createConversation(user);
+    }    
     analytics.createMessage(min.instance.instanceId, user.conversation, null, text);
 
     if (!isNaN(member.id) && !member.id.startsWith('1000')) {

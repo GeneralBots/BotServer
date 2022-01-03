@@ -40,6 +40,7 @@ import {
   AutoIncrement,
   BelongsTo,
   Column,
+  DataType,
   ForeignKey,
   Model,
   PrimaryKey,
@@ -55,15 +56,17 @@ export class GuaribasQuestionAlternate extends Model<GuaribasQuestionAlternate> 
 
   @PrimaryKey
   @AutoIncrement
-  @Column
+  @Column (DataType.STRING(255)) 
   public quickAnswerId: number;
 
-  @Column public questionTyped: string;
+  @Column (DataType.STRING(255)) 
+public questionTyped: string;
 
-  @Column public questionText: string;
+  @Column (DataType.STRING(255)) 
+public questionText: string;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column
+  @Column (DataType.STRING(255)) 
   public instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)

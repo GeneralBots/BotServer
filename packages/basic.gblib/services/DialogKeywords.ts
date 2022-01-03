@@ -34,7 +34,7 @@
 
 import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
-import urlJoin = require('url-join');
+const urlJoin = require('url-join');
 import { GBServer } from '../../../src/app';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { SecService } from '../../security.gbapp/services/SecService';

@@ -38,7 +38,7 @@ import * as fs from 'fs';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { TSCompiler } from './TSCompiler';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import urlJoin = require('url-join');
+const urlJoin = require('url-join');
 import { DialogKeywords } from './DialogKeywords';
 import { Messages } from '../strings';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';

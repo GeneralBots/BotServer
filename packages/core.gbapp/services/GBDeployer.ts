@@ -37,7 +37,7 @@
 'use strict';
 
 const Path = require('path');
-import urlJoin = require('url-join');
+const urlJoin = require('url-join');
 const Fs = require('fs');
 const express = require('express');
 const child_process = require('child_process');
@@ -551,7 +551,7 @@ export class GBDeployer implements IGBDeployer {
    * Deploys a new package to the database storage (just a group).
    */
   public async deployPackageToStorage(instanceId: number, packageName: string): Promise<GuaribasPackage> {
-    return await GuaribasPackage.create({
+    return await GuaribasPackage.create(<GuaribasPackage>{
       packageName: packageName,
       instanceId: instanceId
     });
@@ -814,14 +814,6 @@ export class GBDeployer implements IGBDeployer {
       GBLog.info(`Transpiling default.gbui...`);
       child_process.execSync(`${npm} run build`, { cwd: root });
     }
-
-    // Clean up node_modules folder as it is only needed during compile time.
-
-    // const nodeModules = urlJoin(root, 'node_modules');
-    // if (Fs.existsSync(nodeModules)) {
-    //   rimraf.sync(nodeModules);
-    //   GBLog.info(`Cleaning default.gbui node_modules...`);
-    // }
   }
 
   /**

@@ -37,6 +37,7 @@ import { GBServer } from '../../../src/app';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBVMService } from '../../basic.gblib/services/GBVMService';
 import { GuaribasSchedule } from '../../core.gbapp/models/GBModel';
+import { FindOptions } from 'sequelize/types';
 
 const cron = require('node-cron');
 
@@ -86,7 +87,7 @@ export class ScheduleServices extends GBService {
     });
 
     if (record === null) {
-      record = await GuaribasSchedule.create({
+      record = await GuaribasSchedule.create(<GuaribasSchedule>{
         instanceId: min.instance.instanceId,
         name: name,
         schedule: schedule
@@ -109,7 +110,7 @@ export class ScheduleServices extends GBService {
     GBLog.info(`Loading instances from storage...`);
     let schedules;
     try {
-      const options = { where: { instanceId: min.instance.instanceId } };
+      const options = <FindOptions>{ where: { instanceId: min.instance.instanceId } };
       schedules = await GuaribasSchedule.findAll(options);
       if (process.env.ENDPOINT_UPDATE === 'true') {
         await CollectionUtil.asyncForEach(schedules, async item => {

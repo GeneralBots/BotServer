@@ -36,7 +36,7 @@
 
 'use strict';
 
-import urlJoin = require('url-join');
+const urlJoin = require('url-join');
 
 import { BotAdapter, CardFactory, MessageFactory } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';

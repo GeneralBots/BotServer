@@ -38,7 +38,8 @@
 
 import { AuthenticationContext, TokenResponse } from 'adal-node';
 import { GBLog, GBMinInstance, IGBAdminService, IGBCoreService, IGBDeployer, IGBInstance } from 'botlib';
-import urlJoin = require('url-join');
+import { FindOptions } from 'sequelize/types';
+const urlJoin = require('url-join');
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
@@ -212,7 +213,7 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public async setValue(instanceId: number, key: string, value: string) {
-    const options = { where: {} };
+    const options = <FindOptions>{ where: {} };
     options.where = { key: key };
     let admin = await GuaribasAdmin.findOne(options);
     if (admin === null) {
@@ -229,7 +230,7 @@ export class GBAdminService implements IGBAdminService {
     authenticatorTenant: string,
     authenticatorAuthorityHostUrl: string
   ): Promise<IGBInstance> {
-    const options = { where: {} };
+    const options = <FindOptions>{ where: {} };
     options.where = { instanceId: instanceId };
     const item = await GuaribasInstance.findOne(options);
     item.authenticatorTenant = authenticatorTenant;
@@ -239,7 +240,7 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public async getValue(instanceId: number, key: string): Promise<string> {
-    const options = { where: {} };
+    const options = <FindOptions>{ where: {} };
     options.where = { key: key, instanceId: instanceId };
     const obj = await GuaribasAdmin.findOne(options);
 

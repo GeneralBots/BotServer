@@ -37,7 +37,7 @@
 'use strict';
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
-import urlJoin = require('url-join');
+const urlJoin = require('url-join');
 import { FeedbackDialog } from './dialogs/FeedbackDialog';
 import { QualityDialog } from './dialogs/QualityDialog';
 import { GuaribasQuestionAlternate } from './models/index';

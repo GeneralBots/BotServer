@@ -66,42 +66,43 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
 
   @PrimaryKey
   @AutoIncrement
-  @Column
+  @Column(DataType.STRING(255))
   public conversationId: number;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column
+  @Column(DataType.STRING(255))
   public instanceId: number;
 
   @ForeignKey(() => GuaribasSubject)
-  @Column
+  @Column(DataType.STRING(255))
   public startSubjectId: number;
 
   @BelongsTo(() => GuaribasSubject)
   public startSubject: GuaribasSubject;
 
   @ForeignKey(() => GuaribasChannel)
-  @Column
+  @Column(DataType.STRING(255))
   public channelId: string;
 
-  @Column public rateDate: Date;
+  @Column(DataType.DATE)
+  public rateDate: Date;
 
   @Column(DataType.FLOAT)
-  @Column
+
   public rate: number;
 
   @Column(DataType.STRING(512))
-  @Column
   public feedback: string;
 
-  @Column
   @CreatedAt
+  @Column(DataType.DATE)
   public createdAt: Date;
 
-  @Column public text: string;
+  @Column(DataType.STRING(255))
+  public text: string;
 
   @ForeignKey(() => GuaribasUser)
-  @Column
+  @Column(DataType.STRING(255))
   public startedByUserId: number;
 
   @BelongsTo(() => GuaribasUser)
@@ -116,27 +117,28 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
 
   @PrimaryKey
   @AutoIncrement
-  @Column
+  @Column(DataType.STRING(255))
   public conversationMessageId: number;
 
   @ForeignKey(() => GuaribasSubject)
-  @Column
+  @Column(DataType.STRING(255))
   public subjectId: number;
 
   @Column(DataType.TEXT)
   public content: string;
 
-  @Column
+  @Column(DataType.DATE)
   @CreatedAt
   public createdAt: Date;
 
-  @Column
+  @Column(DataType.DATE)
   @UpdatedAt
   public updatedAt: Date;
 
+
   //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasConversation)
-  @Column
+  @Column(DataType.STRING(255))
   public conversationId: number;
 
   //tslint:disable-next-line:no-use-before-declare
@@ -144,11 +146,11 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
   public conversation: GuaribasConversation;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column
+  @Column(DataType.STRING(255))
   public instanceId: number;
 
   @ForeignKey(() => GuaribasUser)
-  @Column
+  @Column(DataType.STRING(255))
   public userId: number;
 
   @BelongsTo(() => GuaribasUser)

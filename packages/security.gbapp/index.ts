@@ -36,7 +36,7 @@
 
 'use strict';
 
-import urlJoin = require('url-join');
+const urlJoin = require('url-join');
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';

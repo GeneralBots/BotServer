@@ -35,6 +35,7 @@
  */
 
 import { AzureText } from 'pragmatismo-io-framework';
+import { FindOptions } from 'sequelize/types';
 import { GBServer } from '../../../src/app';
 import { GuaribasUser } from '../../security.gbapp/models';
 import { GuaribasConversation, GuaribasConversationMessage } from '../models';
@@ -68,7 +69,7 @@ export class AnalyticsService {
       feedback
     );
 
-    const options = { where: { } };
+    const options = <FindOptions>{ where: { } };
     options.where = { conversationId: conversationId,  instanceId: instanceId };
     const item = await GuaribasConversation.findOne(options);
 

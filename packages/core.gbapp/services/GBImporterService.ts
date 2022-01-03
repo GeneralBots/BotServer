@@ -37,8 +37,9 @@
 'use strict';
 
 import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
-import fs = require('fs');
-import urlJoin = require('url-join');
+import { CreateOptions } from 'sequelize/types';
+const fs = require('fs');
+const urlJoin = require('url-join');
 import { GBServer } from '../../../src/app';
 import { GuaribasInstance } from '../models/GBModel';
 import { GBConfigService } from './GBConfigService';
@@ -94,8 +95,8 @@ export class GBImporter {
   }
 
   public async createBotInstance(botId: string) {
-    const fullSettingsJson = { ...GBServer.globals.bootInstance };
-    fullSettingsJson.botId = botId;
+    const fullSettingsJson=<GuaribasInstance> { ...GBServer.globals.bootInstance };
+    fullSettingsJson['botId'] = botId;
 
     return await GuaribasInstance.create(fullSettingsJson);
   }

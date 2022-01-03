@@ -30,7 +30,7 @@
 |                                                                             |
 \*****************************************************************************/
 
-import urlJoin = require('url-join');
+const urlJoin = require('url-join');
 
 const Swagger = require('swagger-client');
 const fs = require('fs');

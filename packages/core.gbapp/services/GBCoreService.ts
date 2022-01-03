@@ -171,15 +171,6 @@ export class GBCoreService implements IGBCoreService {
     // Specifies custom setup for MSFT...
 
     if (this.dialect === 'mssql') {
-      this.queryGenerator = this.sequelize.getQueryInterface().QueryGenerator;
-      // tslint:disable:no-unsafe-any
-      this.createTableQuery = this.queryGenerator.createTableQuery;
-      this.queryGenerator.createTableQuery = (tableName, attributes, options) =>
-        this.createTableQueryOverride(tableName, attributes, options);
-      this.changeColumnQuery = this.queryGenerator.changeColumnQuery;
-      this.queryGenerator.changeColumnQuery = (tableName, attributes) =>
-        this.changeColumnQueryOverride(tableName, attributes);
-      // tslint:enable:no-unsafe-any
     }
   }
 
@@ -203,7 +194,7 @@ export class GBCoreService implements IGBCoreService {
   }
 
 
-  /**
+/**
  * Syncronizes structure between model and tables in storage.
  */
   public async syncDatabaseStructure() {
@@ -213,7 +204,7 @@ export class GBCoreService implements IGBCoreService {
 
       return await this.sequelize.sync({
         alter: alter,
-        force: false // Keep it false this due to data loss danger.
+        force: false // Keep it false due to data loss danger.
       });
     } else {
       const msg = `Database synchronization is disabled.`;

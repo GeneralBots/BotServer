@@ -29,7 +29,7 @@
       "node_modules/@types"
     ]
   },
-  "include": [
+  "include": [    
     "test/**/*",
     "src/**/*",
     "packages/*.gbapp/**/*",

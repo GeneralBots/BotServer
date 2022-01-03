@@ -58,7 +58,7 @@ const git = simplegit();
 
 // tslint:disable-next-line:no-submodule-imports
 import { CognitiveServicesAccount } from 'azure-arm-cognitiveservices/lib/models';
-import urlJoin = require('url-join');
+const urlJoin = require('url-join');
 const iconUrl = 'https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png';
 const publicIp = require('public-ip');
 const WebSiteResponseTimeout = 900;

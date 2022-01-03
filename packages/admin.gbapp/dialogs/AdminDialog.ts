@@ -39,7 +39,7 @@
 const crypto = require('crypto');
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog, GBLog, IGBPackage } from 'botlib';
-import urlJoin = require('url-join');
+const urlJoin = require('url-join');
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService';
 import { Messages } from '../strings';

@@ -55,24 +55,25 @@ import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 //tslint:disable-next-line:max-classes-per-file
 export class GuaribasSchedule extends Model<GuaribasSchedule> {
 
-  @Column
+  @Column (DataType.STRING(255)) 
   public name: string;
 
-  @Column
+  @Column (DataType.STRING(255)) 
   public schedule: string;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column
+  @Column (DataType.STRING(255)) 
   public instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
   public instance: GuaribasInstance;
 
-  @Column
+    @Column(DataType.DATE)
   @CreatedAt
   public createdAt: Date;
 
-  @Column
+  @Column(DataType.DATE)
   @UpdatedAt
   public updatedAt: Date;
+
 }

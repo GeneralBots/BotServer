@@ -30,6 +30,7 @@
 |                                                                             |
 \*****************************************************************************/
 
+import { FindOptions, NonNullFindOptions } from 'sequelize/types';
 import { GuaribasQuestion } from '../../../packages/kb.gbapp/models';
 import { GuaribasConversation } from '../../analytics.gblib/models';
 import { GuaribasQuestionAlternate } from '../models';
@@ -69,7 +70,7 @@ export class CSService {
     instanceId: number,
     questionTyped: string,
     questionText: string): Promise<GuaribasQuestionAlternate> {
-    return await GuaribasQuestionAlternate.create({
+    return await GuaribasQuestionAlternate.create(<GuaribasQuestionAlternate>{
       questionTyped: questionTyped,
       questionText: questionText
     });

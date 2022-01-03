@@ -30,7 +30,7 @@
 |                                                                             |
 \*****************************************************************************/
 
-import urlJoin = require('url-join');
+const urlJoin = require('url-join');
 import { GBService } from 'botlib';
 const fs = require('fs');
 var AdmZip = require("adm-zip");

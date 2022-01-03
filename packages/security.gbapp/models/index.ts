@@ -56,23 +56,28 @@ import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
 export class GuaribasUser extends Model<GuaribasUser> {
   @PrimaryKey
   @AutoIncrement
-  @Column
+  @Column(DataType.INTEGER)
   public userId: number;
 
-  @Column public displayName: string;
+  @Column (DataType.STRING(255)) 
+public displayName: string;
 
-  @Column public userSystemId: string;
-  @Column public userName: string;
+  @Column (DataType.STRING(255)) 
+public userSystemId: string;
+  @Column (DataType.STRING(255)) 
+public userName: string;
 
-  @Column public defaultChannel: string;
+  @Column (DataType.STRING(255)) 
+public defaultChannel: string;
 
-  @Column public email: string;
+  @Column (DataType.STRING(255)) 
+public email: string;
 
   @Column(DataType.STRING(5))
   public locale: string;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column
+  @Column (DataType.STRING(255)) 
   public instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
@@ -82,14 +87,14 @@ export class GuaribasUser extends Model<GuaribasUser> {
   public agentSystemId: string;
 
   @Column(DataType.DATE)
-  @Column
+  @Column (DataType.STRING(255)) 
   public agentContacted: Date;
 
   @Column(DataType.STRING(16))
   public agentMode: string;
 
   @Column(DataType.TEXT)
-  @Column
+  @Column (DataType.STRING(255)) 
   public conversationReference: string;
 
   @Column(DataType.STRING(64))
@@ -103,15 +108,15 @@ export class GuaribasUser extends Model<GuaribasUser> {
 export class GuaribasGroup extends Model<GuaribasGroup> {
   @PrimaryKey
   @AutoIncrement
-  @Column
+  @Column (DataType.STRING(255)) 
   public groupId: number;
 
   @Length({ min: 0, max: 512 })
-  @Column
+  @Column (DataType.STRING(255)) 
   public displayName: string;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column
+  @Column (DataType.STRING(255)) 
   public instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
@@ -124,15 +129,15 @@ export class GuaribasGroup extends Model<GuaribasGroup> {
 @Table
 export class GuaribasUserGroup extends Model<GuaribasUserGroup> {
   @ForeignKey(() => GuaribasUser)
-  @Column
+  @Column (DataType.STRING(255)) 
   public userId: number;
 
   @ForeignKey(() => GuaribasGroup)
-  @Column
+  @Column (DataType.STRING(255)) 
   public groupId: number;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column
+  @Column (DataType.STRING(255)) 
   public instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)

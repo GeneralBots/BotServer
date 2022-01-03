@@ -613,7 +613,7 @@ export class KBService implements IGBKBService {
           const fullFilename = urlJoin(file.root, file.name);
           content = Fs.readFileSync(fullFilename, 'utf-8');
 
-          await GuaribasAnswer.create({
+          await GuaribasAnswer.create(<GuaribasAnswer>{
             instanceId: instance.instanceId,
             content: content,
             format: '.md',
@@ -649,7 +649,7 @@ export class KBService implements IGBKBService {
 
         if (content) {
           content = await min.conversationalService.translate(min, content, 'en');
-          await GuaribasAnswer.create({
+          await GuaribasAnswer.create(<GuaribasAnswer>{
             instanceId: instance.instanceId,
             content: content,
             format: '.docx',
@@ -677,7 +677,7 @@ export class KBService implements IGBKBService {
 
     const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
       return asyncPromise.eachSeries(subjects, async item => {
-        const value = await GuaribasSubject.create({
+        const value = await GuaribasSubject.create(<GuaribasSubject>{
           internalId: item.id,
           parentSubjectId: parentSubjectId,
           instanceId: instance.instanceId,

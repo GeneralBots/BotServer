@@ -96,6 +96,7 @@ export class GBServer {
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 
+   
     // Creates working directory.
 
     const workDir = Path.join(process.env.PWD, 'work');
@@ -153,6 +154,7 @@ export class GBServer {
 
           GBLog.info(`Deploying packages...`);
           GBServer.globals.sysPackages = await core.loadSysPackages(core);
+          GBLog.info(`Connecting to Bot Storage...`);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
           await core.syncDatabaseStructure();

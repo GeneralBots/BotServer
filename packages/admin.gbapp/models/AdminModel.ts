@@ -51,20 +51,21 @@ import {
 @Table
 export class GuaribasAdmin extends Model<GuaribasAdmin> {
 
-  @Column
+  @Column(DataType.INTEGER)
   public instanceId: number;
 
-  @Column
+  @Column(DataType.STRING(255))
   public key: string;
 
   @Column(DataType.STRING(4000))
   public value: string;
 
-  @Column
+  @Column(DataType.DATE)
   @CreatedAt
   public createdAt: Date;
 
-  @Column
+  @Column(DataType.DATE)
   @UpdatedAt
   public updatedAt: Date;
+
 }
