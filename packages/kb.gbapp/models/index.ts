@@ -67,27 +67,26 @@ import { GuaribasUser } from '../../security.gbapp/models';
 export class GuaribasSubject extends Model<GuaribasSubject> {
   @PrimaryKey
   @AutoIncrement
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public subjectId: number;
 
-  @Column (DataType.STRING(255)) 
-public internalId: string;
+  @Column(DataType.INTEGER)
+  public internalId: string;
 
-  @Column (DataType.STRING(255)) 
-public title: string;
+  @Column(DataType.STRING(255))
+  public title: string;
 
   @Column(DataType.STRING(512))
-  @Column (DataType.STRING(255)) 
   public description: string;
 
-  @Column (DataType.STRING(255)) 
-public from: string;
+  @Column(DataType.STRING(255))
+  public from: string;
 
-  @Column (DataType.STRING(255)) 
-public to: string;
+  @Column(DataType.STRING(255))
+  public to: string;
 
   @ForeignKey(() => GuaribasSubject)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public parentSubjectId: number;
 
   @BelongsTo(() => GuaribasSubject, 'parentSubjectId')
@@ -97,21 +96,21 @@ public to: string;
   public childrenSubjects: GuaribasSubject[];
 
   @ForeignKey(() => GuaribasInstance)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
   public instance: GuaribasInstance;
 
   @ForeignKey(() => GuaribasUser)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public responsibleUserId: number;
 
   @BelongsTo(() => GuaribasUser)
   public responsibleUser: GuaribasUser;
 
   @ForeignKey(() => GuaribasPackage)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public packageId: number;
 
   @BelongsTo(() => GuaribasPackage)
@@ -125,30 +124,25 @@ public to: string;
 export class GuaribasQuestion extends Model<GuaribasQuestion> {
   @PrimaryKey
   @AutoIncrement
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public questionId: number;
 
   @Column(DataType.STRING(64))
-  @Column (DataType.STRING(255)) 
   public subject1: string;
 
   @Column(DataType.STRING(64))
-  @Column (DataType.STRING(255)) 
   public subject2: string;
 
   @Column(DataType.STRING(64))
-  @Column (DataType.STRING(255)) 
   public subject3: string;
 
   @Column(DataType.STRING(64))
-  @Column (DataType.STRING(255)) 
   public subject4: string;
 
   @Column(DataType.STRING(1024))
-  @Column (DataType.STRING(255)) 
   public keywords: string;
 
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.BOOLEAN)
   public skipIndex: boolean;
 
   @Column(DataType.STRING(512))
@@ -160,7 +154,7 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
   @Column(DataType.TEXT)
   public content: string;
 
-    @Column(DataType.DATE)
+  @Column(DataType.DATE)
   @CreatedAt
   public createdAt: Date;
 
@@ -171,18 +165,18 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
 
   //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasAnswer)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public answerId: number;
 
   @BelongsTo(() => GuaribasInstance)
   public instance: GuaribasInstance;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public instanceId: number;
 
   @ForeignKey(() => GuaribasPackage)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public packageId: number;
 
   @BelongsTo(() => GuaribasPackage)
@@ -196,21 +190,21 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
 export class GuaribasAnswer extends Model<GuaribasAnswer> {
   @PrimaryKey
   @AutoIncrement
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public answerId: number;
 
   @Length({ min: 0, max: 512 })
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.STRING(512))
   public media: string;
 
   @Length({ min: 0, max: 12 })
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.STRING(12))
   public format: string;
 
   @Column(DataType.TEXT)
   public content: string;
 
-    @Column(DataType.DATE)
+  @Column(DataType.DATE)
   @CreatedAt
   public createdAt: Date;
 
@@ -229,19 +223,19 @@ export class GuaribasAnswer extends Model<GuaribasAnswer> {
   public next: GuaribasQuestion;
 
   @ForeignKey(() => GuaribasQuestion)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public nextId: number;
 
   @ForeignKey(() => GuaribasQuestion)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public prevId: number;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public instanceId: number;
 
   @ForeignKey(() => GuaribasPackage)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public packageId: number;
 
   @BelongsTo(() => GuaribasPackage)

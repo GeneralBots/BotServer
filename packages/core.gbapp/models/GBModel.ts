@@ -278,7 +278,7 @@ export class GuaribasInstance extends Model<GuaribasInstance>
 export class GuaribasPackage extends Model<GuaribasPackage> {
   @PrimaryKey
   @AutoIncrement
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public packageId: number;
 
   @Column(DataType.STRING(255))
@@ -310,7 +310,7 @@ export class GuaribasPackage extends Model<GuaribasPackage> {
 export class GuaribasChannel extends Model<GuaribasChannel> {
   @PrimaryKey
   @AutoIncrement
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public channelId: number;
 
   @Column(DataType.STRING(255))

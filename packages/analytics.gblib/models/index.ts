@@ -66,29 +66,28 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
 
   @PrimaryKey
   @AutoIncrement
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public conversationId: number;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public instanceId: number;
 
   @ForeignKey(() => GuaribasSubject)
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public startSubjectId: number;
 
   @BelongsTo(() => GuaribasSubject)
   public startSubject: GuaribasSubject;
 
   @ForeignKey(() => GuaribasChannel)
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public channelId: string;
 
   @Column(DataType.DATE)
   public rateDate: Date;
 
   @Column(DataType.FLOAT)
-
   public rate: number;
 
   @Column(DataType.STRING(512))
@@ -117,11 +116,11 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
 
   @PrimaryKey
   @AutoIncrement
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public conversationMessageId: number;
 
   @ForeignKey(() => GuaribasSubject)
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public subjectId: number;
 
   @Column(DataType.TEXT)
@@ -138,7 +137,7 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
 
   //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasConversation)
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public conversationId: number;
 
   //tslint:disable-next-line:no-use-before-declare
@@ -146,11 +145,11 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
   public conversation: GuaribasConversation;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public instanceId: number;
 
   @ForeignKey(() => GuaribasUser)
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public userId: number;
 
   @BelongsTo(() => GuaribasUser)

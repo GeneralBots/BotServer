@@ -62,7 +62,7 @@ export class GuaribasSchedule extends Model<GuaribasSchedule> {
   public schedule: string;
 
   @ForeignKey(() => GuaribasInstance)
-  @Column (DataType.STRING(255)) 
+  @Column(DataType.INTEGER)
   public instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
