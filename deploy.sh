@@ -77,23 +77,23 @@ if [ -e "$DEPLOYMENT_SOURCE/package.json" ]; then
  cd - > /dev/null
 fi
 
-# # 1.1 Install default.gbui npm packages
-# if [ -e "$DEPLOYMENT_SOURCE/packages/default.gbui/package.json" ]; then
-#   echo "[General Bots Deployer] Running npm install for default.gbui..."
-#   cd "$DEPLOYMENT_SOURCE/packages/default.gbui"
-#   eval npm install
-#   exitWithMessageOnError "npm failed"
-#   echo "[General Bots Deployer] Building react app..."
-#   eval npm run build
-#   echo "[General Bots Deployer] OK."
-#   exitWithMessageOnError "react build failed"
-#  cd - > /dev/null
-# fi
+#  1.1 Install default.gbui npm packages
+if [ -e "$DEPLOYMENT_SOURCE/packages/default.gbui/package.json" ]; then
+  echo "[General Bots Deployer] Running npm install for default.gbui..."
+  cd "$DEPLOYMENT_SOURCE/packages/default.gbui"
+  eval npm install
+  exitWithMessageOnError "npm failed"
+  echo "[General Bots Deployer] Building react app..."
+  eval npm run build
+  echo "[General Bots Deployer] OK."
+  exitWithMessageOnError "react build failed"
+ cd - > /dev/null
+fi
 
-#  1.2 Install typescript
+#  1.2 Install TypeScript
 echo "[General Bots Deployer] Transpiling..."
 eval ./node_modules/typescript/bin/tsc -v
-eval ./node_modules/typescript/bin/tsc -p "%DEPLOYMENT_TARGET%"
+eval ./node_modules/typescript/bin/tsc -p "$DEPLOYMENT_TARGET"
 
 echo "[General Bots Deployer] Deployment Finished."
 

@@ -115,7 +115,7 @@ IF EXIST "%DEPLOYMENT_TARGET%\deploy\default.gbui\package.json" (
   popd
 )
 
-::  4. Install typescript
+::  4. Install TypeScript
 echo [General Bots Deployer] Transpiling...
 call :ExecuteCmd node %DEPLOYMENT_TARGET%\node_modules\typescript\bin\tsc -v
 call :ExecuteCmd node %DEPLOYMENT_TARGET%\node_modules\typescript\bin\tsc -p "%DEPLOYMENT_TARGET%"
