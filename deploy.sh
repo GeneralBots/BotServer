@@ -77,7 +77,12 @@ if [ -e "$DEPLOYMENT_SOURCE/package.json" ]; then
  cd - > /dev/null
 fi
 
-#  1.1 Install default.gbui npm packages
+# 2. Install TypeScript
+echo "[General Bots Deployer] Transpiling..."
+eval ./node_modules/typescript/bin/tsc -v
+eval ./node_modules/typescript/bin/tsc -p "$DEPLOYMENT_TARGET"
+
+# 3. Install default.gbui npm packages
 if [ -e "$DEPLOYMENT_SOURCE/packages/default.gbui/package.json" ]; then
   echo "[General Bots Deployer] Running npm install for default.gbui..."
   cd "$DEPLOYMENT_SOURCE/packages/default.gbui"
@@ -90,15 +95,9 @@ if [ -e "$DEPLOYMENT_SOURCE/packages/default.gbui/package.json" ]; then
  cd - > /dev/null
 fi
 
-#  1.2 Install TypeScript
-echo "[General Bots Deployer] Transpiling..."
-eval ./node_modules/typescript/bin/tsc -v
-eval ./node_modules/typescript/bin/tsc -p "$DEPLOYMENT_TARGET"
-
 echo "[General Bots Deployer] Deployment Finished."
 
-
-# 2. KuduSync
+# 4. KuduSync
 if [[ "$IN_PLACE_DEPLOYMENT" -ne "1" ]]; then
   "$KUDU_SYNC_CMD" -v 50 -f "$DEPLOYMENT_SOURCE/build" -t "$DEPLOYMENT_TARGET" -n "$NEXT_MANIFEST_PATH" -p "$PREVIOUS_MANIFEST_PATH" -i ".git;.hg;.deployment;deploy.sh"
   exitWithMessageOnError "Kudu Sync failed"
