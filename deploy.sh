@@ -72,7 +72,7 @@ echo Handling react app deployment.
 # 1. Install npm packages
 if [ -e "$DEPLOYMENT_SOURCE/package.json" ]; then
   cd "$DEPLOYMENT_SOURCE"
-  echo "[General Bots Deployer]Running npm install"
+  echo "[General Bots Deployer] Running npm install"
   eval npm install
   exitWithMessageOnError "npm failed"
  cd - > /dev/null
@@ -81,10 +81,10 @@ fi
 # 1.1 Install default.gbui npm packages
 if [ -e "$DEPLOYMENT_SOURCE/packages/default.gbui/package.json" ]; then
   cd "$DEPLOYMENT_SOURCE/packages/default.gbui"
-  echo "[General Bots Deployer]Running npm install"
+  echo "[General Bots Deployer] Running npm install"
   eval npm install
   exitWithMessageOnError "npm failed"
-  echo "[General Bots Deployer]Building react app"
+  echo "[General Bots Deployer] Building react app"
   eval npm run build
   exitWithMessageOnError "react build failed"
  cd - > /dev/null
