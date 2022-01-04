@@ -67,28 +67,28 @@ fi
 # Deployment
 # ----------
 
-echo Handling react app deployment.
-
 # 1. Install npm packages
 if [ -e "$DEPLOYMENT_SOURCE/package.json" ]; then
+  echo "[General Bots Deployer] Running npm install..."
   cd "$DEPLOYMENT_SOURCE"
-  echo "[General Bots Deployer] Running npm install"
   eval npm install
+  echo "[General Bots Deployer] OK."
   exitWithMessageOnError "npm failed"
  cd - > /dev/null
 fi
 
-# 1.1 Install default.gbui npm packages
-if [ -e "$DEPLOYMENT_SOURCE/packages/default.gbui/package.json" ]; then
-  cd "$DEPLOYMENT_SOURCE/packages/default.gbui"
-  echo "[General Bots Deployer] Running npm install"
-  eval npm install
-  exitWithMessageOnError "npm failed"
-  echo "[General Bots Deployer] Building react app"
-  eval npm run build
-  exitWithMessageOnError "react build failed"
- cd - > /dev/null
-fi
+# # 1.1 Install default.gbui npm packages
+# if [ -e "$DEPLOYMENT_SOURCE/packages/default.gbui/package.json" ]; then
+#   echo "[General Bots Deployer] Running npm install for default.gbui..."
+#   cd "$DEPLOYMENT_SOURCE/packages/default.gbui"
+#   eval npm install
+#   exitWithMessageOnError "npm failed"
+#   echo "[General Bots Deployer] Building react app..."
+#   eval npm run build
+#   echo "[General Bots Deployer] OK."
+#   exitWithMessageOnError "react build failed"
+#  cd - > /dev/null
+# fi
 
 #  1.2 Install typescript
 echo "[General Bots Deployer] Transpiling..."
