@@ -808,12 +808,12 @@ export class GBDeployer implements IGBDeployer {
 
       // Install modules and compiles the web app.
 
-      GBLog.info(`Installing modules default.gbui (It may take a few minutes)...`);
+      // GBLog.info(`Installing modules default.gbui (It may take a few minutes)...`);
       
-      child_process.execSync(`${npm} install`, { cwd: root });
+      // child_process.execSync(`${npm} install`, { cwd: root });
 
-      GBLog.info(`Transpiling default.gbui...`);
-      child_process.execSync(`${npm} run build`, { cwd: root });
+      // GBLog.info(`Transpiling default.gbui...`);
+      // child_process.execSync(`${npm} run build`, { cwd: root });
     }
   }
 
