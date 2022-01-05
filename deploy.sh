@@ -91,8 +91,6 @@ if [ -e "$DEPLOYMENT_SOURCE/packages/default.gbui/package.json" ]; then
   echo "[General Bots Deployer] Building react app..."
   eval npm run build
   cd ..
-  echo "[General Bots Deployer] Copying default.gbui."
-  eval cp default.gbui "$DEPLOYMENT_TARGET/dist/packages"
   echo "[General Bots Deployer] OK."
   exitWithMessageOnError "react build failed"
  cd - > /dev/null
@@ -102,7 +100,7 @@ echo "[General Bots Deployer] Deployment Finished."
 
 # 4. KuduSync
 if [[ "$IN_PLACE_DEPLOYMENT" -ne "1" ]]; then
-  "$KUDU_SYNC_CMD" -v 50 -f "$DEPLOYMENT_SOURCE/dist" -t "$DEPLOYMENT_TARGET" -n "$NEXT_MANIFEST_PATH" -p "$PREVIOUS_MANIFEST_PATH" -i ".git;.hg;.deployment;deploy.sh"
+  "$KUDU_SYNC_CMD" -v 50 -f "$DEPLOYMENT_SOURCE" -t "$DEPLOYMENT_TARGET" -n "$NEXT_MANIFEST_PATH" -p "$PREVIOUS_MANIFEST_PATH" -i ".git;.hg;.deployment;deploy.sh"
   exitWithMessageOnError "Kudu Sync failed"
 fi
 

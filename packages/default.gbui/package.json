@@ -25,7 +25,8 @@
     "react-transition-group": "^4.4.2",
     "rxjs": "^7.1.0",
     "url-join": "4.0.1",
-    "webpack": "4.44.2"
+    "webpack": "4.44.2",
+    "eslint": "7.11.0"
   },
   "scripts": {
     "start": "react-scripts start",
