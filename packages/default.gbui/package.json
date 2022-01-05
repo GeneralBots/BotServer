@@ -24,7 +24,8 @@
     "react-super-seo": "^1.0.6",
     "react-transition-group": "^4.4.2",
     "rxjs": "^7.1.0",
-    "url-join": "4.0.1"
+    "url-join": "4.0.1",
+    "webpack": "4.44.2"
   },
   "scripts": {
     "start": "react-scripts start",
