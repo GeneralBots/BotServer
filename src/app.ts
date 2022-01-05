@@ -159,6 +159,11 @@ export class GBServer {
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
           await core.syncDatabaseStructure();
 
+          // Deployment of local applications for the first time.
+
+          if (GBConfigService.get('DISABLE_WEB') !== 'true') {
+            deployer.setupDefaultGBUI();
+          }
 
           GBLog.info(`Publishing instances...`);
           const instances: IGBInstance[] = await core.loadAllInstances(
@@ -192,11 +197,6 @@ export class GBServer {
           GBServer.globals.minService = minService;
           await minService.buildMin(instances);
 
-          // Deployment of local applications for the first time.
-
-          if (GBConfigService.get('DISABLE_WEB') !== 'true') {
-            deployer.setupDefaultGBUI();
-          }
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
 
