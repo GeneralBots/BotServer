@@ -82,21 +82,7 @@ echo "[General Bots Deployer] Transpiling..."
 eval ./node_modules/typescript/bin/tsc -v
 eval ./node_modules/typescript/bin/tsc -p "$DEPLOYMENT_SOURCE"
 
-# 3. Install default.gbui npm packages
-if [ -e "$DEPLOYMENT_SOURCE/packages/default.gbui/package.json" ]; then
-  echo "[General Bots Deployer] Running npm install for default.gbui..."
-  cd "$DEPLOYMENT_SOURCE/packages/default.gbui"
-  eval npm install
-  exitWithMessageOnError "npm failed"
-  echo "[General Bots Deployer] Building react app..."
-  eval npm run build
-  cd ..
-  echo "[General Bots Deployer] OK."
-  exitWithMessageOnError "react build failed"
- cd - > /dev/null
-fi
-
-echo "[General Bots Deployer] Deployment Finished."
+echo "[General Bots Deployer] OK."
 
 # 4. KuduSync
 if [[ "$IN_PLACE_DEPLOYMENT" -ne "1" ]]; then
