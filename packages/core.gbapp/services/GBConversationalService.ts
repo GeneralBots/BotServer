@@ -653,7 +653,7 @@ export class GBConversationalService {
         await step.context.sendActivity(currentText);
       } else {
         GBLog.info(`Sending .MD file to mobile: ${mobile}.`);
-        await this.sendToMobile(min, mobile, currentText, step.context.activity.conversation.id);
+        await this.sendToMobile(min, mobile, currentText, null);
       }
     }
   }
