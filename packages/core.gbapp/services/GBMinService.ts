@@ -40,7 +40,7 @@ const express = require('express');
 const Fs = require('fs');
 const request = require('request-promise-native');
 const removeRoute = require('express-remove-route');
-const ssrForBots = require("ssr-for-bots").default;
+// const ssrForBots = require("ssr-for-bots").default;
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 const wash = require('washyourmouthoutwithsoap');
 const { FacebookAdapter } = require('botbuilder-adapter-facebook');
@@ -147,7 +147,7 @@ export class GBMinService {
         useCache: true, 
         cacheRefreshRate: 86400
       };
-      GBServer.globals.server.use(ssrForBots(defaultOptions));
+      // SSR: GBServer.globals.server.use(ssrForBots(defaultOptions));
 
       const url = GBServer.globals.wwwroot
         ? GBServer.globals.wwwroot
