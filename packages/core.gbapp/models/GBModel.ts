@@ -333,7 +333,7 @@ export class GuaribasChannel extends Model<GuaribasChannel> {
 export class GuaribasException extends Model<GuaribasException> {
   @PrimaryKey
   @AutoIncrement
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public exceptionId: number;
 
   @Column(DataType.STRING(255))

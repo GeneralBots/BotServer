@@ -110,7 +110,7 @@ export class WhatsappDirectLine extends GBService {
       timeout: 10000,
       qs: {
         token: this.whatsappServiceKey,
-        webhookUrl: `${GBServer.globals.publicAddress}/webhooks/whatsapp`,
+        webhookUrl: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`,
         set: true
       },
       headers: {

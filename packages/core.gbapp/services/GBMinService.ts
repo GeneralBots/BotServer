@@ -167,7 +167,7 @@ export class GBMinService {
 
     // Servers the WhatsApp callback.
 
-    GBServer.globals.server.post('/webhooks/whatsapp', this.WhatsAppCallback.bind(this));
+    GBServer.globals.server.post('/webhooks/whatsapp/:botId', this.WhatsAppCallback.bind(this));
 
     // Calls mountBot event to all bots.
 
@@ -332,6 +332,13 @@ export class GBMinService {
       }
 
       let activeMin;
+      let botId = req.params.botId;
+      if (botId === '[default]' || botId === undefined) {
+        botId = GBConfigService.get('BOT_ID');
+      }
+  
+      GBLog.info(`Client requested instance for: ${botId}.`);
+  
 
       // Processes group behaviour.
 
@@ -442,10 +449,14 @@ export class GBMinService {
           }
         }
       } else {
+        let minInstance = GBServer.globals.minInstances.filter(
+          p => p.instance.botId.toLowerCase() === botId
+        )[0];
+
 
         // Just pass the message to the receiver.
 
-        await (GBServer.globals.minBoot as any).whatsAppDirectLine.received(req, res);
+        await minInstance.whatsAppDirectLine.received(req, res);
       }
     } catch (error) {
       GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error}`);
