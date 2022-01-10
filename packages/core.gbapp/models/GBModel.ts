@@ -104,7 +104,6 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   @Column({ type: DataType.STRING(64) })
   public translatorKey: string;
 
-  @Column(DataType.STRING(255))
   @Column({ type: DataType.STRING(128) })
   public translatorEndpoint: string;
 
@@ -207,7 +206,6 @@ export class GuaribasInstance extends Model<GuaribasInstance>
   @Column(DataType.STRING(255))
   public nlpKey: string;
 
-  @Column(DataType.STRING(255))
   @Column({ type: DataType.STRING(512) })
   public nlpEndpoint: string;
 

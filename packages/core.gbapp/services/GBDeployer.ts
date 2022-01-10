@@ -126,7 +126,7 @@ export class GBDeployer implements IGBDeployer {
     let paths = [urlJoin(process.env.PWD, GBDeployer.deployFolder), urlJoin(process.env.PWD, GBDeployer.workFolder)];
     const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
     if (additionalPath !== undefined && additionalPath !== '') {
-      paths = paths.concat(additionalPath.toLowerCase().split(';'));
+      paths = paths.concat(additionalPath.split(';'));
     }
     const botPackages: string[] = [];
     const gbappPackages: string[] = [];
@@ -146,11 +146,10 @@ export class GBDeployer implements IGBDeployer {
 
         // For each folder, checks its extensions looking for valid packages.
 
-        element = element.toLowerCase();
         if (element === '.') {
           GBLog.info(`Ignoring ${element}...`);
         } else {
-          const name = Path.basename(element).toLowerCase();
+          const name = Path.basename(element);
 
           // Skips what does not need to be loaded.
 
