@@ -38,10 +38,11 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
-import * as fs from 'fs';
+const https = require('https');
 const mkdirp = require('mkdirp');
 const Path = require('path');
 
+import * as fs from 'fs';
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService';
 import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService';
@@ -51,6 +52,7 @@ import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService';
 import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
+
 
 /**
  * Global shared server data;
@@ -83,7 +85,6 @@ export class GBServer {
     GBLog.info(`The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
     GBConfigService.init();
-
     const port = GBConfigService.getServerPort();
     const server = express();
     GBServer.globals.server = server;
@@ -96,7 +97,7 @@ export class GBServer {
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 
-   
+
     // Creates working directory.
 
     const workDir = Path.join(process.env.PWD, 'work');
@@ -104,7 +105,7 @@ export class GBServer {
       mkdirp.sync(workDir);
     }
 
-    server.listen(port, () => {
+    const mainCallback = () => {
       (async () => {
 
         try {
@@ -208,6 +209,18 @@ export class GBServer {
           process.exit(1);
         }
       })();
-    });
+    };
+    if (process.env.ENABLE_HTTPS) {
+      const sslOptions = {
+        key: fs.readFileSync('certificates/gb.key', 'utf8'),
+        cert: fs.readFileSync('certificates/gb.crt', 'utf8'),
+        ca: fs.readFileSync('certificates/gb-ca.crt', 'utf8'),
+      };
+
+      https.createServer(sslOptions, server).listen(port);
+    }
+    else {
+      server.listen(port, mainCallback);
+    }
   }
 }

@@ -87,9 +87,9 @@ eval ./node_modules/typescript/bin/tsc -p "$DEPLOYMENT_SOURCE"
 if [ -e "$DEPLOYMENT_SOURCE/packages/default.gbui/package.json" ]; then
   echo "[General Bots Deployer] Running npm install for default.gbui..."
   cd "$DEPLOYMENT_SOURCE/packages/default.gbui"
-  eval npm install
+  eval yarn install
   exitWithMessageOnError "npm failed"
-  echo "[General Bots Deployer] Building react app..."
+  echo "[Genseral Bots Deployer] Building react app..."
   eval npm run build
   echo "[General Bots Deployer] OK."
   cd "$DEPLOYMENT_SOURCE"
