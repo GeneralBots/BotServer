@@ -210,14 +210,12 @@ export class GBServer {
         }
       })();
     };
-    if (process.env.ENABLE_HTTPS) {
-      const sslOptions = {
-        key: fs.readFileSync('certificates/gb.key', 'utf8'),
-        cert: fs.readFileSync('certificates/gb.crt', 'utf8'),
-        ca: fs.readFileSync('certificates/gb-ca.crt', 'utf8'),
+    if (process.env.CERTIFICATE_PFX) {
+      var options = {
+        pfx: fs.readFileSync(process.env.CERTIFICATE_PFX),
+        passphrase: process.env.CERTIFICATE_PASSPHRASE
       };
-
-      https.createServer(sslOptions, server).listen(port);
+      https.createServer(options, server).listen(port, mainCallback);
     }
     else {
       server.listen(port, mainCallback);
