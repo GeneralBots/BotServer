@@ -809,7 +809,7 @@ export class GBDeployer implements IGBDeployer {
 
       GBLog.info(`Installing modules default.gbui (It may take a few minutes)...`);
       
-      child_process.execSync(`yarn install`, { cwd: root });
+      child_process.execSync(`${npm} install`, { cwd: root });
 
       GBLog.info(`Transpiling default.gbui...`);
       child_process.execSync(`${npm} run build`, { cwd: root });
