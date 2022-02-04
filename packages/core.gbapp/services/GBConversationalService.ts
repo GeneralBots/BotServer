@@ -910,11 +910,12 @@ export class GBConversationalService {
         });
       }
 
+      const locale = systemUser?systemUser.locale:null;
       text = await min.conversationalService.translate(
         min,
         text,
-        systemUser.locale
-          ? systemUser.locale
+        locale
+          ? locale
           : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
 
