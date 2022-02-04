@@ -121,7 +121,7 @@ export class GBServer {
 
 
 
-          if (process.env.NODE_ENV === 'development') {
+          if (process.env.NODE_ENV === 'development' && !process.env.BOT_URL) {
             const proxy = GBConfigService.get('REVERSE_PROXY');
             if (proxy !== undefined) {
               GBServer.globals.publicAddress = proxy;

@@ -107,16 +107,15 @@ export class ScheduleServices extends GBService {
  * Load all cached schedule from BASIC SET SCHEDULE keyword.
  */
   public async loadSchedules(min: GBMinInstance) {
-    GBLog.info(`Loading instances from storage...`);
+   
     let schedules;
     try {
       const options = <FindOptions>{ where: { instanceId: min.instance.instanceId } };
       schedules = await GuaribasSchedule.findAll(options);
-      if (process.env.ENDPOINT_UPDATE === 'true') {
-        await CollectionUtil.asyncForEach(schedules, async item => {
-          this.ScheduleItem(item, min);
-        });
-      }
+      GBLog.info(`Loading schedules for ${min.instance.botId}...`);
+      await CollectionUtil.asyncForEach(schedules, async item => {
+        this.ScheduleItem(item, min);
+      });
     } catch (error) {
       throw new Error(`Cannot schedule: ${error.message}.`);
     }

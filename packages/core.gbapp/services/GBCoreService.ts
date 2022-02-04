@@ -628,7 +628,7 @@ ENDPOINT_UPDATE=true
       value = params ? params[name] : defaultValue;
     }
     if (typeof defaultValue === 'boolean') {
-      return new Boolean(value ? value.toLowerCase() === 'true' : defaultValue);
+      return new Boolean(value ? value.toString().toLowerCase() === 'true' : defaultValue);
     }
     if (typeof defaultValue === 'string') {
       return value ? value : defaultValue;
