@@ -216,6 +216,15 @@ export class GBServer {
         pfx: fs.readFileSync(process.env.CERTIFICATE_PFX)
       };
       https.createServer(options, server).listen(port, mainCallback);
+
+      if (process.env.CERTIFICATE2_PFX) {
+        var options = {
+          passphrase: process.env.CERTIFICATE2_PASSPHRASE ,
+          pfx: fs.readFileSync(process.env.CERTIFICATE2_PFX)
+        };
+        https.createServer(options, server).listen(port, mainCallback);
+      }
+
     }
     else {
       server.listen(port, mainCallback);
