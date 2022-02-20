@@ -115,6 +115,7 @@
     "simple-git": "2.39.1",
     "speakingurl": "14.0.1",
     "sppull": "2.7.0",
+    "ssr-for-bots": "^1.0.1-c",
     "strict-password-generator": "1.1.2",
     "swagger-client": "2.1.18",
     "tedious": "14.0.0",
