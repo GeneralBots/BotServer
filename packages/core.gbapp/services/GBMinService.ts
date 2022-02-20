@@ -142,9 +142,9 @@ export class GBMinService {
       // SSR processing.
 
       const defaultOptions = {
-        prerender: [], 
-        exclude: ["/api/", "/instances/", "/webhooks/"], 
-        useCache: true, 
+        prerender: [],
+        exclude: ["/api/", "/instances/", "/webhooks/"],
+        useCache: true,
         cacheRefreshRate: 86400
       };
       GBServer.globals.server.use(ssrForBots(defaultOptions));
@@ -156,6 +156,17 @@ export class GBMinService {
       // default.gbui access definition.
 
       GBServer.globals.server.use('/', express.static(url));
+      GBServer.globals.server.use('/ssr-delay', async (req,res) => {
+
+        const sleep = async ms =>  {
+          return new Promise(resolve => {
+            setTimeout(resolve, ms);
+          });
+        };
+        await sleep(10000);
+        res.status(200);
+        res.end();
+      });
     }
 
     // Servers the bot information object via HTTP so clients can get
@@ -336,9 +347,9 @@ export class GBMinService {
       if (botId === '[default]' || botId === undefined) {
         botId = GBConfigService.get('BOT_ID');
       }
-  
+
       GBLog.info(`Client requested instance for: ${botId}.`);
-  
+
 
       // Processes group behaviour.
 

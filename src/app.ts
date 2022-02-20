@@ -212,19 +212,19 @@ export class GBServer {
     };
     if (process.env.CERTIFICATE_PFX) {
       var options = {
-        passphrase: process.env.CERTIFICATE_PASSPHRASE ,
+        passphrase: process.env.CERTIFICATE_PASSPHRASE,
         pfx: fs.readFileSync(process.env.CERTIFICATE_PFX)
       };
-    };
-    const httpsServer = https.createServer(options, server).listen(port, mainCallback);
+      const httpsServer = https.createServer(options, server).listen(port, mainCallback);
 
-    if (process.env.CERTIFICATE2_PFX) {
-      var options = {
-        passphrase: process.env.CERTIFICATE2_PASSPHRASE ,
-        pfx: fs.readFileSync(process.env.CERTIFICATE2_PFX)
-      };
-      httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options);
-   
+      if (process.env.CERTIFICATE2_PFX) {
+        var options = {
+          passphrase: process.env.CERTIFICATE2_PASSPHRASE,
+          pfx: fs.readFileSync(process.env.CERTIFICATE2_PFX)
+        };
+        httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options);
+
+      }
     }
     else {
       server.listen(port, mainCallback);
