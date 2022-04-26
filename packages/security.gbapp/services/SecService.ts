@@ -182,9 +182,9 @@ export class SecService extends GBService {
 
     await CollectionUtil.asyncForEach(list, async item => {
       if (
-        !(item !== undefined &&
+        item !== undefined &&
           agentSystemId === undefined &&
-          item !== userSystemId && await this.isAgentSystemId(item))
+          item !== userSystemId && !await this.isAgentSystemId(item)
       ) {
         // TODO: Optimize loop.
         agentSystemId = item;
