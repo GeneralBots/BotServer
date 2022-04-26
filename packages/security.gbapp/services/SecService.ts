@@ -2,7 +2,7 @@ const Fs = require('fs');
 const urlJoin = require('url-join');
 
 import { ConversationReference } from 'botbuilder';
-import { GBLog, GBService, IGBInstance } from 'botlib';
+import { GBLog, GBMinInstance, GBService, IGBInstance } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models';
 import {FindOptions} from 'sequelize';
@@ -167,21 +167,31 @@ export class SecService extends GBService {
     return user.agentMode === 'self';
   }
 
-  public async assignHumanAgent(userSystemId: string, instanceId: number): Promise<string> {
+  public async assignHumanAgent(min: GBMinInstance, userSystemId: string): Promise<string> {
     let agentSystemId;
-    const list = process.env.TRANSFER_TO.split(';');
+    
+    let list = min.core.getParam<string>(
+      min.instance,
+      'Transfer To',
+      process.env.TRANSFER_TO
+    );
+
+    if (list){
+      list = list.split(';')
+    }   
+
     await CollectionUtil.asyncForEach(list, async item => {
       if (
-        !(item !== undefined &&
+        item !== undefined &&
           agentSystemId === undefined &&
-          item !== userSystemId && await this.isAgentSystemId(item))
+          item !== userSystemId && !await this.isAgentSystemId(item)
       ) {
         // TODO: Optimize loop.
         agentSystemId = item;
       }
     });
     GBLog.info(`Selected agentId: ${agentSystemId}`);
-    await this.updateHumanAgent(userSystemId, instanceId, agentSystemId);
+    await this.updateHumanAgent(userSystemId, min.instance.instanceId, agentSystemId);
     GBLog.info(`Updated agentId to: ${agentSystemId}`);
     
     return agentSystemId;

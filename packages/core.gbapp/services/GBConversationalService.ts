@@ -255,7 +255,8 @@ export class GBConversationalService {
   }
 
   public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
-    if (!this.userMobile(step)) {
+    if (!this.userMobile(step) &&
+    step.context.activity.channelId !== 'msteams')  {
       GBLog.info(`Sending event ${name}:${typeof value === 'object' ? JSON.stringify(value) :
         value ? value : ''} to client...`);
       const msg = MessageFactory.text('');

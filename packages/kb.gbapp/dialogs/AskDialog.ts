@@ -188,9 +188,9 @@ export class AskDialog extends IGBDialog {
         const locale = step.context.activity.locale;
 
         // Stops any content on projector.
-
-        await min.conversationalService.sendEvent(min, step, 'stop', undefined);
-
+        if (step.context.activity.channelId !== 'msteams') {
+            await min.conversationalService.sendEvent(min, step, 'stop', undefined);
+        }
         // Handle extra text from FAQ.
 
         if (step.options && step.options.query) {

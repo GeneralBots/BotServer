@@ -163,7 +163,7 @@ export class GBMinService {
             setTimeout(resolve, ms);
           });
         };
-        await sleep(10000);
+        await sleep(20000);
         res.status(200);
         res.end();
       });
@@ -889,8 +889,9 @@ export class GBMinService {
 
         const sec = new SecService();
         if (!user.loaded) {
-
-          await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
+          if (step.context.activity.channelId !== 'msteams') {
+            await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
+          }
 
           user.loaded = true;
           user.subjects = [];
@@ -925,12 +926,14 @@ export class GBMinService {
 
           }
 
+          if (step.context.activity.channelId !== 'msteams') {
           const service = new KBService(min.core.sequelize);
           const data = await service.getFaqBySubjectArray(instance.instanceId, 'faq', undefined);
           await min.conversationalService.sendEvent(min, step, 'play', {
             playerType: 'bullet',
             data: data.slice(0, 10)
           });
+         }
 
           // Saves session user (persisted GuaribasUser is inside).
 
