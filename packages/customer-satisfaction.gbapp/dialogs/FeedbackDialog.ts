@@ -87,7 +87,7 @@ export class FeedbackDialog extends IGBDialog {
           let from = GBMinService.userMobile(step);
 
           await min.conversationalService.sendText(min, step, Messages[locale].please_wait_transfering);
-          const agentSystemId = await sec.assignHumanAgent(from, min.instance.instanceId);
+          const agentSystemId = await sec.assignHumanAgent(min, from);
 
           const user = await min.userProfile.get(step.context, {});
           user.systemUser = await sec.getUserFromAgentSystemId(agentSystemId);
