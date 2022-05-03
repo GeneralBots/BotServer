@@ -52,6 +52,8 @@ export class WhatsappDirectLine extends GBService {
   public static mobiles = {};
   public static chatIds = {};
   public static usernames = {};
+  public static state = {}; // 2: Waiting, 3: MessageArrived.
+  public static lastMessage = {}; // 2: Waiting, 3: MessageArrived.
 
   public pollInterval = 3000;
   public directLineClientName = 'DirectLineClient';
@@ -239,6 +241,7 @@ export class WhatsappDirectLine extends GBService {
       }
     }
 
+    
 
     await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
       await e.onExchangeData(this.min, 'whatsappMessage', message);
@@ -284,6 +287,8 @@ export class WhatsappDirectLine extends GBService {
     const conversationId = WhatsappDirectLine.conversationIds[from + group];
 
     const client = await this.directLineClient;
+
+    WhatsappDirectLine.lastMessage[from] = message;
 
 
     // Check if this message is from a Human Agent itself.

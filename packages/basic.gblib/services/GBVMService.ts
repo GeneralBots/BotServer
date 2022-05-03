@@ -189,12 +189,19 @@ export class GBVMService extends GBService {
     httpUsername = "";
     httpPs = "";
 
-    ${process.env.ENABLE_AUTH? `hear gbLogin as login`:``}
+    ${process.env.ENABLE_AUTH ? `hear gbLogin as login` : ``}
 
     ${code}
     `;
 
     // Keywords from General Bots BASIC.
+    
+    code = code.replace(/(\w+)\s*\=\s*get html\s*(.*)/gi, ($0, $1, $2, $3) => {
+      return `${$1} = sys().getPage ("${$2}")\n`;
+    });
+    code = code.replace(/(set hear on)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `hrOn = ${$3}\n`;
+    });
 
     code = code.replace(/hear (\w+) as login/gi, ($0, $1) => {
       return `${$1} = hear("login")`;
@@ -275,7 +282,7 @@ export class GBVMService extends GBService {
     code = code.replace(/(\w)\s*\=\s*active tasks/gi, ($0, $1) => {
       return `${$1} = getActiveTasks()\n`;
     });
-    
+
     code = code.replace(/(\w)\s*\=\s*append\s*(.*)/gi, ($0, $1, $2, $3) => {
       return `${$1} = sys().append(${$2})\n`;
     });
@@ -297,14 +304,20 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(get stock for )(.*)/gi, ($0, $1, $2) => {
-      return `let stock = sys().getStock(${$2})`;
+      return `stock = sys().getStock(${$2})`;
     });
 
-    code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2) => {
+    code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2, $3) => {
       if ($2.indexOf('http') !== -1) {
-        return `let ${$1} = sys().getByHttp (${$2}, headers, httpUsername, httpPs)`;
+        return `${$1} = sys().getByHttp (${$2}, headers, httpUsername, httpPs)`;
       } else {
-        return `let ${$1} = sys().get (${$2})`;
+        if ($2.indexOf(',') !== -1) {
+          const values = $2.split(',');
+          return `${$1} = getByIDOrName(${values[0]}, ${values[1]} )`;
+        }
+        else {
+          return `${$1} = sys().get (${$2})`;
+        }
       }
     });
 
@@ -349,7 +362,11 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `let ${$1} = sys().httpPost (${$2}, ${$3})`;
+      return `${$1} = sys().httpPost (${$2}, ${$3})`;
+    });
+
+    code = code.replace(/(\w+)\s*\=\s*download\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
+      return `${$1} = sys().download (${$2}, ${$3})`;
     });
 
     code = code.replace(/(create a bot farm using)(\s)(.*)/gi, ($0, $1, $2, $3) => {
@@ -382,6 +399,10 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(send file to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `sendFileTo (step, ${$3})\n`;
+    });
+
+    code = code.replace(/(click)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `click (step, ${$3})\n`;
     });
 
     code = code.replace(/(send file)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -625,7 +646,7 @@ export class GBVMService extends GBService {
             if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
               GBLog.info('BASIC: Authenticating beforing running General Bots BASIC code.');
               return await step.beginDialog('/auth');
-          }
+            }
           }
           return await step.next(step.options);
         },

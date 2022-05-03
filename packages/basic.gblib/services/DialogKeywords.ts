@@ -42,8 +42,8 @@ import { SystemKeywords } from './SystemKeywords';
 import { GBMinService } from '../../core.gbapp/services/GBMinService';
 import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
-var DateDiff = require('date-diff');
-
+const DateDiff = require('date-diff');
+const puppeteer = require('puppeteer');
 
 /**
  * Base services of conversation to be called by BASIC which
@@ -67,6 +67,16 @@ export class DialogKeywords {
   public user;
 
   /**
+   * HTML browser for conversation over page interaction.
+   */
+  browser: any;
+
+  /**
+   * The number used in this execution for HEAR calls (useful for SET SCHEDULE).
+   */
+   hrOn: string;
+
+  /**
    * When creating this keyword facade, a bot instance is
    * specified among the deployer service.
    */
@@ -74,6 +84,9 @@ export class DialogKeywords {
     this.min = min;
     this.user = user;
     this.internalSys = new SystemKeywords(min, deployer, this);
+    (async () => {
+      this.browser = await puppeteer.launch();
+    });
   }
 
   /**
@@ -82,6 +95,115 @@ export class DialogKeywords {
    */
   public sys(): SystemKeywords {
     return this.internalSys;
+  }
+
+  /**
+   * Returns the page object.
+   *
+   * @example x = GET PAGE
+   */
+  public async getPage(step, url) {
+    const page = await this.browser.newPage();
+    await page.goto(url);
+    return page;
+  }
+
+  /**
+   * Find element on page DOM.
+   *
+   * @example GET page, "elementName", "text"
+   */
+  private async getByIDOrName(page, elementName) {
+    return await page.$(`[name="${elementName}"]`);
+  }
+
+  /**
+   * Returns the today data filled in dd/mm/yyyy or mm/dd/yyyy.
+   *
+   * @example x = TODAY
+   */
+  public async click(step, page, idOrName) {
+    const e = await this.getByIDOrName(page, idOrName);
+
+    await Promise.all([
+      page.waitForNavigation(),
+      page.click(e.name)
+    ]);
+  }
+
+
+  /**
+   * Returns the screenshot of page or element
+   *
+   * @example file = SCREENSHOT page
+   */
+  public async screenshot(step, page, idOrName, localName) {
+    const e = await this.getByIDOrName(page, idOrName);
+    await e.screenshot({ path: localName });
+  }
+
+  /**
+   * Returns the screenshot of page or element
+   *
+   * @example file = SCREENSHOT page
+   */
+  public async captcha(step, page, idOrName) {
+    const e = await this.getByIDOrName(page, idOrName);
+
+
+
+  }
+
+  /**
+   * Performs the download to the .gbdrive Download folder.
+   *
+   * @example file = DOWNLOAD page, "tableName", row
+   */
+  public async download(step, page, idOrName, localName) {
+
+    const e = await this.getByIDOrName(page, idOrName);
+    const context = await this.browser.newContext({ acceptDownloads: true });
+
+    var cells = e.rows[0].cells;
+
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.click(cells[0])
+    ]);
+
+    const path = await download.path();
+
+    console.log(path);
+
+  }
+
+
+
+  /**
+   * Types the text into the text field.
+   *
+   * @example TYPE page, "elementName", "text"
+   */
+  public async type(step, page, idOrName, text) {
+    const e = await this.getByIDOrName(page, idOrName);
+    await e.type(text);
+  }
+
+  /**
+   * Returns the today data filled in dd/mm/yyyy or mm/dd/yyyy.
+   *
+   * @example x = TODAY
+   */
+  public async getOCR(step, localFile) {
+    const tesseract = require("node-tesseract-ocr")
+
+    const config = {
+      lang: "eng",
+      oem: 1,
+      psm: 3,
+    }
+
+    return await tesseract.recognize(localFile, config);
   }
 
   /**
@@ -122,6 +244,9 @@ export class DialogKeywords {
    * @example EXIT
    */
   public async exit(step) {
+    if (this.browser) {
+      await this.browser.close();
+    }
     await step.endDialog();
   }
 
@@ -151,7 +276,7 @@ export class DialogKeywords {
    *
    * @example list = FIND CONTACT "Sandra"
    */
-   public async fndContact(name) {
+  public async fndContact(name) {
     let s = new HubSpotServices(null, null, process.env.HUBSPOT_KEY);
     return await s.searchContact(name);
   }
@@ -323,13 +448,13 @@ export class DialogKeywords {
     );
 
     const nowUTC = new Date();
-    const now= typeof nowUTC === 'string' ?
+    const now = typeof nowUTC === 'string' ?
       new Date(nowUTC) :
       nowUTC;
-      
-   const nowText = now.toLocaleString(this.getContentLocaleWithCulture(contentLocale),
-        { timeZone: process.env.DEFAULT_TIMEZONE });
-    
+
+    const nowText = now.toLocaleString(this.getContentLocaleWithCulture(contentLocale),
+      { timeZone: process.env.DEFAULT_TIMEZONE });
+
     return /\b([0-9]|0[0-9]|1?[0-9]|2[0-3]):[0-5]?[0-9]/.exec(nowText)[0];
   }
 
@@ -411,6 +536,7 @@ export class DialogKeywords {
     this.user = user;
   }
 
+
   /**
    * Returns the name of the user acquired by WhatsApp API.
    */
@@ -470,11 +596,40 @@ export class DialogKeywords {
     this.min.cbMap[idPromise] = {};
     this.min.cbMap[idPromise].promise = promise;
 
-    const opts = { id: idPromise, previousResolve: previousResolve, kind: kind, args };
-    if (previousResolve !== undefined) {
-      previousResolve(opts);
-    } else {
-      await step.beginDialog('/hear', opts);
+    let opts = { id: idPromise, previousResolve: previousResolve, kind: kind, args };
+
+    if (this.hrOn) {
+
+      let sleep = ms => {
+        return new Promise(resolve => {
+          setTimeout(resolve, ms);
+        });
+      };
+
+      // Waits for next message in HEAR delegated context.
+      
+      const mobile = await this.userMobile(step);
+      while (true){
+        if (WhatsappDirectLine.state[mobile] === 3)
+        {
+          break;
+        }
+        sleep (5000);
+      }
+      const result = WhatsappDirectLine.lastMessage[mobile];
+      opts = await promise(step, result);
+
+      if (previousResolve !== undefined) {
+        previousResolve(opts);
+      }
+    }
+    else {
+
+      if (previousResolve !== undefined) {
+        previousResolve(opts);
+      } else {
+        await step.beginDialog('/hear', opts);
+      }
     }
   }
 

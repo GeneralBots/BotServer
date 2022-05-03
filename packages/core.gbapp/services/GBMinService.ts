@@ -163,7 +163,7 @@ export class GBMinService {
             setTimeout(resolve, ms);
           });
         };
-        await sleep(20000);
+        await sleep(1);
         res.status(200);
         res.end();
       });

@@ -432,6 +432,8 @@ export class SystemKeywords {
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
+    // TODO: if (typeof(file) === 
+
     let document = await this.internalGetDocument(client, baseUrl, path, file);
     let maxLines = 1000;
     if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
