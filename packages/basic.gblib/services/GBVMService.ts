@@ -374,11 +374,11 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(transfer to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `transfer (step, ${$3})\n`;
+      return `transferTo (step, ${$3})\n`;
     });
 
-    code = code.replace(/(transfer)(?=(?:[^"]|"[^"]*")*$)/gi, () => {
-      return `transfer (step)\n`;
+    code = code.replace(/(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gi, () => {
+      return `transferTo (step)\n`;
     });
 
     code = code.replace(/(exit)/gi, () => {
@@ -599,8 +599,8 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\bsetWholeWord\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.setWholeWord' : $1;
     });
-    code = code.replace(/("[^"]*"|'[^']*')|\btransfer\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.transfer' : $1;
+    code = code.replace(/("[^"]*"|'[^']*')|\btransferTo\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.transferTo' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bcreateDeal\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.createDeal' : $1;

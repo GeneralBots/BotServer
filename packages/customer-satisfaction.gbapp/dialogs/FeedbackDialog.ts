@@ -84,18 +84,19 @@ export class FeedbackDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const sec = new SecService();
           let from = GBMinService.userMobile(step);
-          const user = await min.userProfile.get(step.context, {});
-
-          const args = step.activeDialog.state.options.args;
+          const profile = await min.userProfile.get(step.context, {});
+          const args = step.activeDialog.state.options;
 
           // Transfer to...
 
           if (args && args.to) {
 
-
             // An user from Teams willing to transfer to a WhatsApp user.
+            
+            await sec.ensureUser(min.instance.instanceId, args.to,
+              'Name', '', 'whatsapp', 'Name', null);
 
-            await sec.assignHumanAgent(min, args.to, user.userSystemId);
+            await sec.assignHumanAgent(min, args.to, profile.systemUser.userSystemId);
             await min.conversationalService.sendText(min, step, 
               Messages[locale].notify_agent_transfer_done(min.instance.botId));
 
@@ -105,8 +106,8 @@ export class FeedbackDialog extends IGBDialog {
 
             await min.conversationalService.sendText(min, step, Messages[locale].please_wait_transfering);
             const agentSystemId = await sec.assignHumanAgent(min, from);
-            user.systemUser = await sec.getUserFromAgentSystemId(agentSystemId);
-            await min.userProfile.set(step.context, user);
+            profile.systemUser = await sec.getUserFromAgentSystemId(agentSystemId);
+            await min.userProfile.set(step.context, profile);
 
             if (agentSystemId.charAt(2) === ":" || agentSystemId.indexOf("@") > -1) { // Agent is from Teams or Google Chat.
 

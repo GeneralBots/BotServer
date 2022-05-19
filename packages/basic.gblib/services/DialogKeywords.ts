@@ -578,7 +578,7 @@ export class DialogKeywords {
    * @example TRANSFER
    *
    */
-  public async transfer(step, to: string = null) {
+  public async transferTo(step, to: string = null) {
     return await step.beginDialog('/t', {to: to});
   }
 
