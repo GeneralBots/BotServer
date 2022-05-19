@@ -84,9 +84,6 @@ export class DialogKeywords {
     this.min = min;
     this.user = user;
     this.internalSys = new SystemKeywords(min, deployer, this);
-    (async () => {
-      this.browser = await puppeteer.launch();
-    });
   }
 
   /**
@@ -103,6 +100,21 @@ export class DialogKeywords {
    * @example x = GET PAGE
    */
   public async getPage(step, url) {
+
+    if (!this.browser)
+    {
+      this.browser = await puppeteer.launch({
+        args: [
+        '--ignore-certificate-errors',
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--window-size=1920,1080',
+        "--disable-accelerated-2d-canvas",
+        "--disable-gpu"],
+        ignoreHTTPSErrors: true,
+        headless: false,
+      });
+    }
     const page = await this.browser.newPage();
     await page.goto(url);
     return page;
@@ -114,11 +126,14 @@ export class DialogKeywords {
    * @example GET page, "elementName", "text"
    */
   private async getByIDOrName(page, elementName) {
-    return await page.$(`[name="${elementName}"]`);
+    
+    await page.waitForSelector(elementName)
+    let element = await page.$(elementName);
+    return element;
   }
 
   /**
-   * Returns the today data filled in dd/mm/yyyy or mm/dd/yyyy.
+   * Returns the today data filled in dd/mm/yyyy or mm/dd/yyyy. 
    *
    * @example x = TODAY
    */
@@ -143,18 +158,6 @@ export class DialogKeywords {
   }
 
   /**
-   * Returns the screenshot of page or element
-   *
-   * @example file = SCREENSHOT page
-   */
-  public async captcha(step, page, idOrName) {
-    const e = await this.getByIDOrName(page, idOrName);
-
-
-
-  }
-
-  /**
    * Performs the download to the .gbdrive Download folder.
    *
    * @example file = DOWNLOAD page, "tableName", row
@@ -174,17 +177,14 @@ export class DialogKeywords {
     const path = await download.path();
 
     console.log(path);
-
   }
-
-
 
   /**
    * Types the text into the text field.
    *
    * @example TYPE page, "elementName", "text"
    */
-  public async type(step, page, idOrName, text) {
+  public async type( step, page, idOrName, text) {
     const e = await this.getByIDOrName(page, idOrName);
     await e.type(text);
   }
@@ -578,8 +578,8 @@ export class DialogKeywords {
    * @example TRANSFER
    *
    */
-  public async transfer(step) {
-    return await step.beginDialog('/t');
+  public async transfer(step, to: string = null) {
+    return await step.beginDialog('/t', {to: to});
   }
 
   /**
@@ -665,6 +665,7 @@ export class DialogKeywords {
   }
 
   private static getChannel(step): string {
+    if(!step) return 'whatsapp';
     if (!isNaN(step.context.activity['mobile'])) {
       return 'webchat';
     } else {

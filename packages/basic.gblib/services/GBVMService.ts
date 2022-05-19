@@ -197,7 +197,7 @@ export class GBVMService extends GBService {
     // Keywords from General Bots BASIC.
     
     code = code.replace(/(\w+)\s*\=\s*get html\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = sys().getPage ("${$2}")\n`;
+      return `${$1} = getPage(step, ${$2})\n`;
     });
     code = code.replace(/(set hear on)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `hrOn = ${$3}\n`;
@@ -313,7 +313,7 @@ export class GBVMService extends GBService {
       } else {
         if ($2.indexOf(',') !== -1) {
           const values = $2.split(',');
-          return `${$1} = getByIDOrName(${values[0]}, ${values[1]} )`;
+          return `${$1} = this.getByIDOrName(${values[0]}, ${values[1]} )`;
         }
         else {
           return `${$1} = sys().get (${$2})`;
@@ -366,11 +366,15 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*download\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = sys().download (${$2}, ${$3})`;
+      return `${$1} = download (${$2}, ${$3})`;
     });
 
     code = code.replace(/(create a bot farm using)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().createABotFarmUsing (${$3})`;
+    });
+
+    code = code.replace(/(transfer to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
+      return `transfer (step, ${$3})\n`;
     });
 
     code = code.replace(/(transfer)(?=(?:[^"]|"[^"]*")*$)/gi, () => {
@@ -610,7 +614,15 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\bmenu\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.menu' : $1;
     });
-
+    code = code.replace(/("[^"]*"|'[^']*')|\bgetPage\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.getPage' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bclick\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.click' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bdownload\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.download' : $1;
+    });
     // await insertion.
 
     code = code.replace(/this\./gm, 'await this.');

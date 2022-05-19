@@ -89,7 +89,7 @@ export class GuaribasUser extends Model<GuaribasUser> {
 
   @Column(DataType.DATE)
   public agentContacted: Date;
-
+  
   @Column(DataType.STRING(16))
   public agentMode: string;
 

@@ -461,7 +461,7 @@ export class GBMinService {
         }
       } else {
         let minInstance = GBServer.globals.minInstances.filter(
-          p => p.instance.botId.toLowerCase() === botId
+          p => p.instance.botId.toLowerCase() === botId.toLowerCase()
         )[0];
 
 

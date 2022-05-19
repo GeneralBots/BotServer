@@ -412,18 +412,21 @@ export class GBConversationalService {
     step: GBDialogStep,
     mobile: string
   ) {
-    const user = await min.userProfile.get(step.context, {});
+    const user = step ? await min.userProfile.get(step.context, {}) : null;
+    let text = answer;
 
     // Calls language translator.
-
-    let text = await min.conversationalService.translate(
-      min,
-      answer,
-      user.systemUser.locale
-        ? user.systemUser.locale
-        : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
-    );
-    GBLog.info(`Translated text(playMarkdown): ${text}.`);
+    if (user)
+    {
+      text = await min.conversationalService.translate(
+        min,
+        answer,
+        user.systemUser.locale
+          ? user.systemUser.locale
+          : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
+      );
+      GBLog.info(`Translated text(playMarkdown): ${text}.`);
+    }
 
     var renderer = new marked.Renderer();
     renderer.oldImage = renderer.image;

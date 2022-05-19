@@ -240,12 +240,28 @@ export class SystemKeywords {
   }
 
   /**
-   * Defines a cell value in the tabular file.
+   * 1. Defines a cell value in the tabular file.
+   * 2. Defines an element text on HTML page.
    * 
    * @example SET "file.xlsx", "A2", 4500
    * 
+   * @example SET page, "elementHTMLSelector", "text"
+   * 
    */
-  public async set(file: string, address: string, value: any): Promise<any> {
+  public async set(file: any, address: string, value: any): Promise<any> {
+    
+    // Handles calls for HTML stuff
+
+    if (file._javascriptEnabled)
+    {
+      GBLog.info(`BASIC: Web automation setting ${file}' to '${value}' (SET). `);
+
+      await this.dk.type(null, file, address, value );
+      return;
+    }
+
+    // Handles calls for BASIC persistence on sheet files.
+
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
 
     let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);

@@ -5,7 +5,7 @@ import { ConversationReference } from 'botbuilder';
 import { GBLog, GBMinInstance, GBService, IGBInstance } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models';
-import {FindOptions} from 'sequelize';
+import { FindOptions } from 'sequelize';
 
 /**
  * Security service layer.
@@ -45,7 +45,7 @@ export class SecService extends GBService {
    * Retrives a conversation reference from contact phone.
    */
   public async getConversationReference(phone: string): Promise<ConversationReference> {
-    const options = <FindOptions>{ rejectOnEmpty:true, where: { phone: phone } };
+    const options = <FindOptions>{ rejectOnEmpty: true, where: { phone: phone } };
     const user = await GuaribasUser.findOne(options);
 
     return JSON.parse(user.conversationReference);
@@ -118,7 +118,7 @@ export class SecService extends GBService {
       }
     });
 
-    if (agentSystemId === null  && user.agentSystemId !== undefined ) {
+    if (agentSystemId === null && user.agentSystemId !== undefined) {
       const agent = await GuaribasUser.findOne({
         where: {
           userSystemId: user.agentSystemId
@@ -167,33 +167,34 @@ export class SecService extends GBService {
     return user.agentMode === 'self';
   }
 
-  public async assignHumanAgent(min: GBMinInstance, userSystemId: string): Promise<string> {
-    let agentSystemId;
-    
-    let list = min.core.getParam<string>(
-      min.instance,
-      'Transfer To',
-      process.env.TRANSFER_TO
-    );
+  public async assignHumanAgent(min: GBMinInstance, userSystemId: string, agentSystemId: string = null): Promise<string> {
 
-    if (list){
-      list = list.split(';')
-    }   
+    if (!agentSystemId) {
+      let list = min.core.getParam<string>(
+        min.instance,
+        'Transfer To',
+        process.env.TRANSFER_TO
+      );
 
-    await CollectionUtil.asyncForEach(list, async item => {
-      if (
-        item !== undefined &&
+      if (list) {
+        list = list.split(';')
+      }
+
+      await CollectionUtil.asyncForEach(list, async item => {
+        if (
+          item !== undefined &&
           agentSystemId === undefined &&
           item !== userSystemId && !await this.isAgentSystemId(item)
-      ) {
-        // TODO: Optimize loop.
-        agentSystemId = item;
-      }
-    });
+        ) {
+          // TODO: Optimize loop.
+          agentSystemId = item;
+        }
+      });
+    }
     GBLog.info(`Selected agentId: ${agentSystemId}`);
     await this.updateHumanAgent(userSystemId, min.instance.instanceId, agentSystemId);
     GBLog.info(`Updated agentId to: ${agentSystemId}`);
-    
+
     return agentSystemId;
   }
 
