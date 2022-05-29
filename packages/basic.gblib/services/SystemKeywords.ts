@@ -895,9 +895,6 @@ export class SystemKeywords {
     // Checks if the destination contains subfolders that
     // need to be created.
 
-    // Checks if the destination contains subfolders that
-    // need to be created.
-
     let folder;
     if (dest.indexOf('/') !== -1) {
       const pathOnly = path.dirname(dest);

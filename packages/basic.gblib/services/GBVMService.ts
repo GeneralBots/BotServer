@@ -311,11 +311,27 @@ export class GBVMService extends GBService {
       if ($2.indexOf('http') !== -1) {
         return `${$1} = sys().getByHttp (${$2}, headers, httpUsername, httpPs)`;
       } else {
-        if ($2.indexOf(',') !== -1) {
-          const values = $2.split(',');
+        const count=($2.match(/\,/g) || []).length;
+        const values = $2.split(',');
+
+        // Handles GET page, "selector".
+
+        if (count == 1) { 
+          
           return `${$1} = this.getByIDOrName(${values[0]}, ${values[1]} )`;
         }
+
+        // Handles GET page, "frameSelector", "selector"
+
+        else if (count == 2) {
+        
+          return `${$1} = this.getByFrame(${values[0]}, ${values[1]}, ${values[2]} )`;
+        }
+
+        // Handles the GET http version.
+
         else {
+
           return `${$1} = sys().get (${$2})`;
         }
       }

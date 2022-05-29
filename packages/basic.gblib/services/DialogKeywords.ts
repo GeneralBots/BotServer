@@ -42,8 +42,11 @@ import { SystemKeywords } from './SystemKeywords';
 import { GBMinService } from '../../core.gbapp/services/GBMinService';
 import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
+import * as fs from 'fs';
 const DateDiff = require('date-diff');
 const puppeteer = require('puppeteer');
+const Path = require('path');
 
 /**
  * Base services of conversation to be called by BASIC which
@@ -74,7 +77,7 @@ export class DialogKeywords {
   /**
    * The number used in this execution for HEAR calls (useful for SET SCHEDULE).
    */
-   hrOn: string;
+  hrOn: string;
 
   /**
    * When creating this keyword facade, a bot instance is
@@ -101,16 +104,15 @@ export class DialogKeywords {
    */
   public async getPage(step, url) {
 
-    if (!this.browser)
-    {
+    if (!this.browser) {
       this.browser = await puppeteer.launch({
         args: [
-        '--ignore-certificate-errors',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--window-size=1920,1080',
-        "--disable-accelerated-2d-canvas",
-        "--disable-gpu"],
+          '--ignore-certificate-errors',
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--window-size=1920,1080',
+          "--disable-accelerated-2d-canvas",
+          "--disable-gpu"],
         ignoreHTTPSErrors: true,
         headless: false,
       });
@@ -125,10 +127,23 @@ export class DialogKeywords {
    *
    * @example GET page, "elementName", "text"
    */
-  private async getByIDOrName(page, elementName) {
-    
+  public async getBySelector(page, elementName) {
     await page.waitForSelector(elementName)
     let element = await page.$(elementName);
+    return element;
+  }
+
+  /**
+   * Find element on page DOM.
+   *
+   * @example GET page, "frameSelector, "elementSelector"
+   */
+   public async getByFrame(page, frame, selector) {
+    await page.waitForSelector(frame)
+    let frameHandle = await page.$(frame);
+    const f = await frameHandle.contentFrame();
+    await f.waitForSelector(selector);
+    const element = await f.$(selector);
     return element;
   }
 
@@ -138,7 +153,7 @@ export class DialogKeywords {
    * @example x = TODAY
    */
   public async click(step, page, idOrName) {
-    const e = await this.getByIDOrName(page, idOrName);
+    const e = await this.getBySelector(page, idOrName);
 
     await Promise.all([
       page.waitForNavigation(),
@@ -153,7 +168,7 @@ export class DialogKeywords {
    * @example file = SCREENSHOT page
    */
   public async screenshot(step, page, idOrName, localName) {
-    const e = await this.getByIDOrName(page, idOrName);
+    const e = await this.getBySelector(page, idOrName);
     await e.screenshot({ path: localName });
   }
 
@@ -164,7 +179,7 @@ export class DialogKeywords {
    */
   public async download(step, page, idOrName, localName) {
 
-    const e = await this.getByIDOrName(page, idOrName);
+    const e = await this.getBySelector(page, idOrName);
     const context = await this.browser.newContext({ acceptDownloads: true });
 
     var cells = e.rows[0].cells;
@@ -184,8 +199,8 @@ export class DialogKeywords {
    *
    * @example TYPE page, "elementName", "text"
    */
-  public async type( step, page, idOrName, text) {
-    const e = await this.getByIDOrName(page, idOrName);
+  public async type(step, page, idOrName, text) {
+    const e = await this.getBySelector(page, idOrName);
     await e.type(text);
   }
 
@@ -579,7 +594,7 @@ export class DialogKeywords {
    *
    */
   public async transferTo(step, to: string = null) {
-    return await step.beginDialog('/t', {to: to});
+    return await step.beginDialog('/t', { to: to });
   }
 
   /**
@@ -607,14 +622,13 @@ export class DialogKeywords {
       };
 
       // Waits for next message in HEAR delegated context.
-      
+
       const mobile = await this.userMobile(step);
-      while (true){
-        if (WhatsappDirectLine.state[mobile] === 3)
-        {
+      while (true) {
+        if (WhatsappDirectLine.state[mobile] === 3) {
           break;
         }
-        sleep (5000);
+        sleep(5000);
       }
       const result = WhatsappDirectLine.lastMessage[mobile];
       opts = await promise(step, result);
@@ -665,7 +679,7 @@ export class DialogKeywords {
   }
 
   private static getChannel(step): string {
-    if(!step) return 'whatsapp';
+    if (!step) return 'whatsapp';
     if (!isNaN(step.context.activity['mobile'])) {
       return 'webchat';
     } else {
@@ -681,7 +695,30 @@ export class DialogKeywords {
    * Processes the sending of the file.
    */
   private async internalSendFile(step, mobile, filename, caption) {
-    if (filename.indexOf('.md') > -1) {
+
+    // Handles SEND FILE TO mobile, element in Web Automation.
+
+
+    const page = filename._page;
+    if (page) {
+      const gbaiName = `${this.min.botId}.gbai`;
+      const localName = Path.join( 'work', gbaiName,'cache',  `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
+      await filename.screenshot({ path: localName });
+            
+      const url = urlJoin(
+        GBServer.globals.publicAddress,
+        this.min.botId,
+        'cache',
+        Path.basename(localName)
+      );
+
+      GBLog.info(`BASIC: WebAutomation: Sending the file ${url} to mobile ${mobile}.`);
+      await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
+    }
+
+    // Handles Markdown.
+
+    else  if (filename.indexOf('.md') > -1) {
       GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
       const md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
       if (!md) {
@@ -690,6 +727,7 @@ export class DialogKeywords {
 
       await this.min.conversationalService['playMarkdown'](this.min, md,
         DialogKeywords.getChannel(step), step, mobile);
+
     } else {
       GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
       const url = urlJoin(
