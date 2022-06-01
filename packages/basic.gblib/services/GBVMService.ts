@@ -51,7 +51,7 @@ const textract = require('textract');
 const walkPromise = require('walk-promise');
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 const phone = require('phone');
-
+const Path = require('path');
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
  * This alpha version is using a hack in form of converter to
@@ -195,7 +195,7 @@ export class GBVMService extends GBService {
     `;
 
     // Keywords from General Bots BASIC.
-    
+
     code = code.replace(/(\w+)\s*\=\s*get html\s*(.*)/gi, ($0, $1, $2, $3) => {
       return `${$1} = getPage(step, ${$2})\n`;
     });
@@ -311,20 +311,20 @@ export class GBVMService extends GBService {
       if ($2.indexOf('http') !== -1) {
         return `${$1} = sys().getByHttp (${$2}, headers, httpUsername, httpPs)`;
       } else {
-        const count=($2.match(/\,/g) || []).length;
+        const count = ($2.match(/\,/g) || []).length;
         const values = $2.split(',');
 
         // Handles GET page, "selector".
 
-        if (count == 1) { 
-          
+        if (count == 1) {
+
           return `${$1} = this.getByIDOrName(${values[0]}, ${values[1]} )`;
         }
 
         // Handles GET page, "frameSelector", "selector"
 
         else if (count == 2) {
-        
+
           return `${$1} = this.getByFrame(${values[0]}, ${values[1]}, ${values[2]} )`;
         }
 
@@ -458,7 +458,35 @@ export class GBVMService extends GBService {
 
     // Converts General Bots BASIC into regular VBS
 
-    const basicCode: string = fs.readFileSync(filename, 'utf8');
+    let basicCode: string = fs.readFileSync(filename, 'utf8');
+
+    // Processes EXIT keyword, removing extracode, useful
+    // for development.
+
+    let exit = /(\nexit\n)/gi.exec(basicCode);
+    if (exit) {
+      basicCode = basicCode.substring(0, exit.index);
+    }
+
+    // Process INCLUDE keyword to include another
+    // dialog inside the dialog.
+    let include = null;
+    do {
+      include = /^include\b(.*)$/gmi.exec(basicCode);
+      
+      if (include) {
+        let includeName = include[1].trim();
+        includeName = Path.join(Path.dirname(filename), includeName);
+        includeName = includeName.substr(0, includeName.lastIndexOf(".")) + ".vbs";
+        
+        // To use include, two /publish will be necessary (for now)
+        // because of alphabet order may raise not found errors.
+
+        let includeCode: string = fs.readFileSync(includeName, 'utf8');
+        basicCode = basicCode.replace(/^include\b.*$/gmi, includeCode);
+      }
+    } while (include);
+
     const vbsCode = this.convertGBASICToVBS(basicCode);
     const vbsFile = `${filename}.compiled`;
     fs.writeFileSync(vbsFile, vbsCode, 'utf8');

@@ -138,7 +138,7 @@ export class DialogKeywords {
    *
    * @example GET page, "frameSelector, "elementSelector"
    */
-   public async getByFrame(page, frame, selector) {
+  public async getByFrame(page, frame, selector) {
     await page.waitForSelector(frame)
     let frameHandle = await page.$(frame);
     const f = await frameHandle.contentFrame();
@@ -698,13 +698,12 @@ export class DialogKeywords {
 
     // Handles SEND FILE TO mobile, element in Web Automation.
 
-
     const page = filename._page;
     if (page) {
       const gbaiName = `${this.min.botId}.gbai`;
-      const localName = Path.join( 'work', gbaiName,'cache',  `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
+      const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
       await filename.screenshot({ path: localName });
-            
+
       const url = urlJoin(
         GBServer.globals.publicAddress,
         this.min.botId,
@@ -718,7 +717,7 @@ export class DialogKeywords {
 
     // Handles Markdown.
 
-    else  if (filename.indexOf('.md') > -1) {
+    else if (filename.indexOf('.md') > -1) {
       GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
       const md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
       if (!md) {
