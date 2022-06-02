@@ -40,7 +40,6 @@ const express = require('express');
 const Fs = require('fs');
 const request = require('request-promise-native');
 const removeRoute = require('express-remove-route');
-const ssrForBots = require("ssr-for-bots").default;
 const AuthenticationContext = require('adal-node').AuthenticationContext;
 const wash = require('washyourmouthoutwithsoap');
 const { FacebookAdapter } = require('botbuilder-adapter-facebook');
@@ -84,6 +83,7 @@ import fs = require('fs');
 import { GoogleChatDirectLine } from '../../google-chat.gblib/services/GoogleChatDirectLine';
 import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices';
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords';
+import { ssrForBots } from './GBSSR';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -156,23 +156,12 @@ export class GBMinService {
       // default.gbui access definition.
 
       GBServer.globals.server.use('/', express.static(url));
-      GBServer.globals.server.use('/ssr-delay', async (req,res) => {
 
-        const sleep = async ms =>  {
-          return new Promise(resolve => {
-            setTimeout(resolve, ms);
-          });
-        };
-        await sleep(1);
-        res.status(200);
-        res.end();
-      });
-    }
 
-    // Servers the bot information object via HTTP so clients can get
-    // instance information stored on server.
+      // Servers the bot information object via HTTP so clients can get
+      // instance information stored on server.
 
-    if (process.env.DISABLE_WEB !== 'true') {
+
       GBServer.globals.server.get('/instances/:botId', this.handleGetInstanceForClient.bind(this));
     }
 
@@ -927,13 +916,13 @@ export class GBMinService {
           }
 
           if (step.context.activity.channelId !== 'msteams') {
-          const service = new KBService(min.core.sequelize);
-          const data = await service.getFaqBySubjectArray(instance.instanceId, 'faq', undefined);
-          await min.conversationalService.sendEvent(min, step, 'play', {
-            playerType: 'bullet',
-            data: data.slice(0, 10)
-          });
-         }
+            const service = new KBService(min.core.sequelize);
+            const data = await service.getFaqBySubjectArray(instance.instanceId, 'faq', undefined);
+            await min.conversationalService.sendEvent(min, step, 'play', {
+              playerType: 'bullet',
+              data: data.slice(0, 10)
+            });
+          }
 
           // Saves session user (persisted GuaribasUser is inside).
 
