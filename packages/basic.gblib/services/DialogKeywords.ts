@@ -34,6 +34,7 @@
 
 import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
+import { ChartServices } from './ChartServices';
 const urlJoin = require('url-join');
 import { GBServer } from '../../../src/app';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
@@ -47,7 +48,7 @@ import * as fs from 'fs';
 const DateDiff = require('date-diff');
 const puppeteer = require('puppeteer');
 const Path = require('path');
-const c3ChartMaker = require('c3-chart-maker');
+import bb, {area, bar, zoom} from "billboard.js";
 
 /**
  * Base services of conversation to be called by BASIC which
@@ -126,62 +127,56 @@ export class DialogKeywords {
 
   /**
    * 
+   * 
+   * Data = [10, 20, 30] 
+   * Legends = "Steve;Yui;Carlos"   
+   * img = CHART "pie", data, legends 
+   * 
    * https://c3js.org/examples.html
    * 
    * @param data 
    * @param legends 
    * @see https://www.npmjs.com/package/plot
    */
-  public async getChart(data, legends)
-  {
-    const chartDefinition = {
-      "size": {
-          "height": 600,
-          "width": 1200
-      },        
-      "series": {
-          "x": "Date",
-          "Close": "Close",
-          "Volume": "Volume"
+  public async chart(step, type, data, legends) {
+
+    const columns = [[]];
+    const legends_ = legends.split(';');
+
+    for (let i = 0; i < legends_.length; i++) {
+        columns[i] = [legends_[i]];
+        columns[i] = columns[i].concat(data);
+    }
+
+    const definition = {
+      size: {
+        "height": 600,
+        "width": 1200
       },
-      "data": {
-          "x": "x",
-          "type": "line",
-          "axes": {
-              "Volume": "y2"
-          },
-          "types": {
-              "Volume": "bar"
-          }
+      data: {
+        columns: columns,
+        type: type
       },
-      "axis": {
-          "x": {
-              "type": "timeseries",
-              "tick": {
-                  "format": "%Y-%m-%d"
-              }
-          },
-          "y": {
-              "label": {
-                  "text": "Close",
-                  "position": "outer-middle"
-              }
-          },
-          "y2": {
-              "show": true,
-              "label": {
-                  "text": "Signal",
-                  "position": "outer-middle"
-              }
-          }
-      },
-      "transition": {
-          "duration": 0
+      bar: {
+        width: 200
       }
-  };
-    const outputFilePath = "output.png";
+    };
     
-    await c3ChartMaker(data, chartDefinition, outputFilePath);
+    const gbaiName = `${this.min.botId}.gbai`;
+    const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
+
+    await ChartServices.screenshot(definition, localName);
+
+    const url = urlJoin(
+      GBServer.globals.publicAddress,
+      this.min.botId,
+      'cache',
+      Path.basename(localName)
+    );
+
+    GBLog.info(`BASIC: Visualization: Chart generated at ${url}.`);
+    
+    return url;
   }
 
   /**

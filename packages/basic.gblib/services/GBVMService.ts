@@ -389,6 +389,10 @@ export class GBVMService extends GBService {
       return `sys().createABotFarmUsing (${$3})`;
     });
 
+    code = code.replace(/(chart)(\s)(.*)/gi, ($0, $1, $2, $3) => {
+      return `chart (step, ${$3})\n`;
+    });
+
     code = code.replace(/(transfer to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `transferTo (step, ${$3})\n`;
     });
@@ -645,6 +649,9 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\btransferTo\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.transferTo' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bchart\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.chart' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bcreateDeal\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.createDeal' : $1;
