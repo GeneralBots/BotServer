@@ -47,6 +47,7 @@ import * as fs from 'fs';
 const DateDiff = require('date-diff');
 const puppeteer = require('puppeteer');
 const Path = require('path');
+const c3ChartMaker = require('c3-chart-maker');
 
 /**
  * Base services of conversation to be called by BASIC which
@@ -120,6 +121,67 @@ export class DialogKeywords {
     const page = await this.browser.newPage();
     await page.goto(url);
     return page;
+  }
+
+
+  /**
+   * 
+   * https://c3js.org/examples.html
+   * 
+   * @param data 
+   * @param legends 
+   * @see https://www.npmjs.com/package/plot
+   */
+  public async getChart(data, legends)
+  {
+    const chartDefinition = {
+      "size": {
+          "height": 600,
+          "width": 1200
+      },        
+      "series": {
+          "x": "Date",
+          "Close": "Close",
+          "Volume": "Volume"
+      },
+      "data": {
+          "x": "x",
+          "type": "line",
+          "axes": {
+              "Volume": "y2"
+          },
+          "types": {
+              "Volume": "bar"
+          }
+      },
+      "axis": {
+          "x": {
+              "type": "timeseries",
+              "tick": {
+                  "format": "%Y-%m-%d"
+              }
+          },
+          "y": {
+              "label": {
+                  "text": "Close",
+                  "position": "outer-middle"
+              }
+          },
+          "y2": {
+              "show": true,
+              "label": {
+                  "text": "Signal",
+                  "position": "outer-middle"
+              }
+          }
+      },
+      "transition": {
+          "duration": 0
+      }
+  };
+    const outputFilePath = "output.png";
+    
+    await c3ChartMaker(data, chartDefinition, outputFilePath);
   }
 
   /**
