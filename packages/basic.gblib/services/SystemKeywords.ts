@@ -188,7 +188,9 @@ export class SystemKeywords {
    * @see puppeteer.
    */
   private async renderTable(data, renderPDF, renderImage) {
-
+    if (!data[1]){
+      return null;
+    }
     const gbaiName = `${this.min.botId}.gbai`;
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
@@ -210,37 +212,46 @@ export class SystemKeywords {
         break;
     }
 
+    await page.addScriptTag({path: 'node_modules/tabulator-tables/dist/js/tabulator.min.js'});
+
+    // Removes internal hidden element used to hold one-based index arrays.
+
+    data.shift();
+
+    // Guess fields from data variable into Tabulator fields collection.
 
     let fields = [];
-    for (let i = 0; i < data.length; i++) {
-      fields.push({field:data[i]});
+    let keys = Object.keys(data[1]);
+    for (let i = 0; i < keys.length; i++) {
+      fields.push({field: keys[i], title: keys[i]});
     }
-
-    
+  
+    // Adds DIV for Tabulator.
 
     await page.evaluate(() => {
       const el = document.createElement("div");
-      el.id = "table";
-      document.body.prepend(el);
+      el.setAttribute("id", "table");
+      document.body.appendChild(el);
     });
 
-    await page.evaluate(`
-        new Tabulator("#example-table", {
+    const code = `
+        var table = new Tabulator("#table", {
         height:"311px",
+        layout:"fitColumns",
         data: ${JSON.stringify(data)},
-        columns:[ ${JSON.stringify(fields)}]
+        columns: ${JSON.stringify(fields)}
     });
-    `);
+    `;
+    await page.evaluate(code);
+    await page.waitForSelector('#table');
+
+    // Handles image generation.
 
     let url;
     let localName;
-
     if (renderImage) {
-
       localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
-
       await page.screenshot({ path: localName });
-
       url = urlJoin(
         GBServer.globals.publicAddress,
         this.min.botId,
@@ -250,16 +261,16 @@ export class SystemKeywords {
       GBLog.info(`BASIC: Table image generated at ${url} .`);
     }
 
+    // Handles PDF generation.
+
     if (renderPDF) {
       localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.pdf`);
-
       url = urlJoin(
         GBServer.globals.publicAddress,
         this.min.botId,
         'cache',
         Path.basename(localName)
       );
-
       let pdf = await page.pdf({ format: 'A4' });
       GBLog.info(`BASIC: Table PDF generated at ${url} .`);
     }
@@ -280,10 +291,10 @@ export class SystemKeywords {
   }
 
   public async executeSQL(data, sql, tableName) {
-
-    sql = `SELECT ${sql}`.replaceAll(tableName, '?');
-
-    return alasql(sql, [data]);
+    const first = data.shift();
+    data = alasql(sql, [data]);
+    data.unshift(first); 
+    return data;
   }
 
   /**

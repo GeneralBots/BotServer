@@ -195,9 +195,9 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(\w+)\s*\=\s*SELECT\s*(.*)/gi, ($0, $1, $2) => {
 
-      let tableName = /\sFROM\s(\w+)/.exec($1)[0];
-
-      return `sys().executeSQL(${$2}, ${$1}, ${tableName})\n`;
+      let tableName = /\sFROM\s(\w+)/.exec($2)[1];
+      let sql = `SELECT ${$2}`.replace(tableName, '?');
+      return `${$1} = sys().executeSQL(${$1}, "${sql}", "${tableName}")\n`;
     });
 
 
@@ -454,7 +454,11 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*(.*)\s*as image/gi, ($0, $1, $2) => {
-      return `sys().asImage(${$2}, ${$1})\n`;
+      return `${$1} = sys().asImage(${$2})\n`;
+    });
+
+    code = code.replace(/(\w+)\s*\=\s*(.*)\s*as pdf/gi, ($0, $1, $2) => {
+      return `${$1} = sys().asPdf(${$2})\n`;
     });
 
     code = code.replace(/save\s(.*)\sas\s(.*)/gi, ($0, $1, $2, $3) => {
