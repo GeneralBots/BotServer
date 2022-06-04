@@ -32,7 +32,6 @@
 
 'use strict';
 
-import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBLog, GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
 import * as fs from 'fs';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
@@ -40,17 +39,15 @@ import { TSCompiler } from './TSCompiler';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 const urlJoin = require('url-join');
 import { DialogKeywords } from './DialogKeywords';
-import { Messages } from '../strings';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
 import { ScheduleServices } from './ScheduleServices';
+import { HearDialog } from '../dialogs/HearDialog';
 //tslint:disable-next-line:no-submodule-imports
 const vm = require('vm');
 const vb2ts = require('./vbscript-to-typescript');
 const beautify = require('js-beautify').js;
 const textract = require('textract');
 const walkPromise = require('walk-promise');
-const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
-const phone = require('phone');
+
 const Path = require('path');
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
@@ -67,7 +64,7 @@ const Path = require('path');
 export class GBVMService extends GBService {
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
     const files = await walkPromise(folder);
-    this.addHearDialog(min);
+    HearDialog.addHearDialog(min);
 
     await CollectionUtil.asyncForEach(files, async file => {
       if (!file) {
@@ -212,6 +209,10 @@ export class GBVMService extends GBService {
 
     code = code.replace(/hear (\w+) as integer/gi, ($0, $1, $2) => {
       return `${$1} = hear("integer")`;
+    });
+
+    code = code.replace(/hear (\w+) as file/gi, ($0, $1, $2) => {
+      return `${$1} = hear("file")`;
     });
 
     code = code.replace(/hear (\w+) as boolean/gi, ($0, $1, $2) => {
@@ -686,263 +687,6 @@ export class GBVMService extends GBService {
     code = code.replace('isArray = async', 'isarray =');  // TODO: Waiting for a compiler.
 
     return code;
-  }
-  private addHearDialog(min) {
-    min.dialogs.add(
-      new WaterfallDialog('/hear', [
-        async step => {
-          step.activeDialog.state.options = step.options;
-          step.activeDialog.state.options.id = (step.options as any).id;
-          step.activeDialog.state.options.previousResolve = (step.options as any).previousResolve;
-
-          if (step.options['args']) {
-
-            GBLog.info(`BASIC: Asking for input (HEAR with ${step.options['args'][0]}).`);
-          }
-          else {
-
-            GBLog.info('BASIC: Asking for input (HEAR).');
-          }
-
-          step.activeDialog.state.options = step.options;
-          if (step.activeDialog.state.options['kind'] === "login") {
-            if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
-              GBLog.info('BASIC: Authenticating beforing running General Bots BASIC code.');
-              return await step.beginDialog('/auth');
-            }
-          }
-          return await step.next(step.options);
-        },
-        async step => {
-          if (step.activeDialog.state.options['kind'] === "login") {
-            return await step.next(step.options);
-          } else {
-            return await min.conversationalService.prompt(min, step, null);
-          }
-
-        },
-        async step => {
-
-          const isIntentYes = (locale, utterance) => {
-            return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
-          }
-
-          let result = step.context.activity['originalText'];
-          if (step.activeDialog.state.options['kind'] === "boolean") {
-            if (isIntentYes('pt-BR', step.result)) {
-              result = true;
-            }
-            else {
-              result = false;
-            }
-          }
-          else if (step.activeDialog.state.options['kind'] === "email") {
-
-            const extractEntity = (text) => {
-              return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi);
-            }
-
-            const value = extractEntity(step.result);
-
-            if (value === null) {
-              await step.context.sendActivity("Por favor, digite um e-mail válido.");
-              return await step.replaceDialog('/hear', step.activeDialog.state.options);
-            }
-
-            result = value;
-
-          }
-          else if (step.activeDialog.state.options['kind'] === "name") {
-            const extractEntity = text => {
-              return text.match(/[_a-zA-Z][_a-zA-Z0-9]{0,16}/gi);
-            };
-
-            const value = extractEntity(step.result);
-
-            if (value === null || value.length != 1) {
-              await step.context.sendActivity("Por favor, digite um nome válido.");
-              return await step.replaceDialog('/hear', step.activeDialog.state.options);
-            }
-
-            result = value;
-
-          }
-          else if (step.activeDialog.state.options['kind'] === "integer") {
-            const extractEntity = text => {
-              return text.match(/\d+/gi);
-            };
-
-            const value = extractEntity(step.result);
-
-            if (value === null || value.length != 1) {
-              await step.context.sendActivity("Por favor, digite um número válido.");
-              return await step.replaceDialog('/hear', step.activeDialog.state.options);
-            }
-
-            result = value;
-          }
-          else if (step.activeDialog.state.options['kind'] === "date") {
-            const extractEntity = text => {
-              return text.match(/(^(((0[1-9]|1[0-9]|2[0-8])[\/](0[1-9]|1[012]))|((29|30|31)[\/](0[13578]|1[02]))|((29|30)[\/](0[4,6,9]|11)))[\/](19|[2-9][0-9])\d\d$)|(^29[\/]02[\/](19|[2-9][0-9])(00|04|08|12|16|20|24|28|32|36|40|44|48|52|56|60|64|68|72|76|80|84|88|92|96)$)/gi);
-            };
-
-            const value = extractEntity(step.result);
-
-            if (value === null || value.length != 1) {
-              await step.context.sendActivity("Por favor, digite uma data no formato 12/12/2020.");
-              return await step.replaceDialog('/hear', step.activeDialog.state.options);
-            }
-
-            result = value;
-          }
-          else if (step.activeDialog.state.options['kind'] === "hour") {
-
-            const extractEntity = text => {
-              return text.match(/^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])?$/gi);
-            };
-
-            const value = extractEntity(step.result);
-
-            if (value === null || value.length != 1) {
-              await step.context.sendActivity("Por favor, digite um horário no formato hh:ss.");
-              return await step.replaceDialog('/hear', step.activeDialog.state.options);
-            }
-
-            result = value;
-          }
-          else if (step.activeDialog.state.options['kind'] === "money") {
-            const extractEntity = text => {
-
-              if (step.context.locale === 'en') { // TODO: Change to user.
-                return text.match(/(?:\d{1,3},)*\d{1,3}(?:\.\d+)?/gi);
-              }
-              else {
-                return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
-              }
-            };
-
-            const value = extractEntity(step.result);
-
-            if (value === null || value.length != 1) {
-              await step.context.sendActivity("Por favor, digite um valor monetário.");
-              return await step.replaceDialog('/hear', step.activeDialog.state.options);
-            }
-
-            result = value;
-          }
-          else if (step.activeDialog.state.options['kind'] === "mobile") {
-            const locale = step.context.activity.locale;
-            let phoneNumber;
-            try {
-              phoneNumber = phone(step.result, 'BRA')[0]; // TODO: Use accordingly to the person.
-              phoneNumber = phoneUtil.parse(phoneNumber);
-            } catch (error) {
-              await step.context.sendActivity(Messages[locale].validation_enter_valid_mobile);
-
-              return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);
-            }
-            if (!phoneUtil.isPossibleNumber(phoneNumber)) {
-              await step.context.sendActivity("Por favor, digite um número de telefone válido.");
-              return await step.replaceDialog('/hear', step.activeDialog.state.options);
-            }
-
-            result = phoneNumber;
-
-          }
-          else if (step.activeDialog.state.options['kind'] === "zipcode") {
-            const extractEntity = text => {
-
-              text = text.replace(/\-/gi, '');
-
-              if (step.context.locale === 'en') { // TODO: Change to user.
-                return text.match(/\d{8}/gi);
-              }
-              else {
-                return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
-
-              }
-            };
-
-            const value = extractEntity(step.result);
-
-            if (value === null || value.length != 1) {
-              await step.context.sendActivity("Por favor, digite um valor monetário.");
-              return await step.replaceDialog('/hear', step.activeDialog.state.options);
-            }
-
-            result = value[0];
-
-          }
-          else if (step.activeDialog.state.options['kind'] === "menu") {
-
-            const list = step.activeDialog.state.options['args'];
-            result = null;
-            await CollectionUtil.asyncForEach(list, async item => {
-              if (GBConversationalService.kmpSearch(step.result, item) != -1) {
-                result = item;
-              }
-            });
-
-            if (result === null) {
-              await step.context.sendActivity(`Escolha por favor um dos itens sugeridos.`);
-              return await step.replaceDialog('/hear', step.activeDialog.state.options);
-            }
-          }
-          else if (step.activeDialog.state.options['kind'] === "language") {
-
-            result = null;
-
-            const list = [
-              { name: 'english', code: 'en' },
-              { name: 'inglês', code: 'en' },
-              { name: 'portuguese', code: 'pt' },
-              { name: 'português', code: 'pt' },
-              { name: 'français', code: 'fr' },
-              { name: 'francês', code: 'fr' },
-              { name: 'french', code: 'fr' },
-              { name: 'spanish', code: 'es' },
-              { name: 'espanõl', code: 'es' },
-              { name: 'espanhol', code: 'es' },
-              { name: 'german', code: 'de' },
-              { name: 'deutsch', code: 'de' },
-              { name: 'alemão', code: 'de' }
-            ];
-
-            const text = step.context.activity['originalText'];
-
-            await CollectionUtil.asyncForEach(list, async item => {
-              if (GBConversationalService.kmpSearch(text.toLowerCase(), item.name.toLowerCase()) != -1 ||
-                GBConversationalService.kmpSearch(text.toLowerCase(), item.code.toLowerCase()) != -1) {
-                result = item.code;
-              }
-            });
-
-            if (result === null) {
-              await min.conversationalService.sendText(min, step, `Escolha por favor um dos idiomas sugeridos.`);
-              return await step.replaceDialog('/hear', step.activeDialog.state.options);
-            }
-
-          }
-
-          const id = step.activeDialog.state.options.id;
-          if (min.cbMap[id]) {
-            const promise = min.cbMap[id].promise;
-            delete min.cbMap[id];
-            try {
-              const opts = await promise(step, result);
-              if (opts) {
-                return await step.replaceDialog('/hear', opts);
-              }
-            } catch (error) {
-              GBLog.error(`Error in BASIC code: ${error}`);
-              const locale = step.context.activity.locale;
-              await min.conversationalService.sendText(min, step, Messages[locale].very_sorry_about_error);
-            }
-          }
-          return await step.endDialog();
-        }
-      ])
-    );
   }
 
   /**

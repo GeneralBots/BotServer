@@ -885,8 +885,14 @@ export class GBConversationalService {
       );
       GBLog.info(`Translated text(prompt): ${text}.`);
     }
+    if (step.activeDialog.state.options['kind'] === "file") {
+      return await step.prompt('attachmentPrompt', {});
+    }
+    else{
+      return await step.prompt('textPrompt', text ? text : {});
+    }
 
-    return await step.prompt('textPrompt', text ? text : {});
+    
   }
 
   public async sendText(min: GBMinInstance, step, text) {

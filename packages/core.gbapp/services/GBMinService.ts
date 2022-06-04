@@ -52,7 +52,7 @@ import {
   TurnContext,
   UserState
 } from 'botbuilder';
-import { ConfirmPrompt, OAuthPrompt, WaterfallDialog } from 'botbuilder-dialogs';
+import { AttachmentPrompt, ConfirmPrompt, OAuthPrompt, WaterfallDialog } from 'botbuilder-dialogs';
 import {
   GBDialogStep,
   GBLog,
@@ -778,6 +778,8 @@ export class GBMinService {
 
     min.dialogs = new DialogSet(dialogState);
     min.dialogs.add(new TextPrompt('textPrompt'));
+    min.dialogs.add(new AttachmentPrompt('attachmentPrompt'));
+    
     min.dialogs.add(new ConfirmPrompt('confirmPrompt'));
     if (process.env.ENABLE_AUTH) {
       min.dialogs.add(
@@ -859,10 +861,10 @@ export class GBMinService {
     // Default activity processing and handler.
 
     await adapter['processActivity'](req, res, async context => {
-
-      if (context.activity.text) {
-        context.activity.text = context.activity.text.replace(/\@General Bots Online /gi, '');
+      if (!context.activity.text) {
+        context.activity.text = '';
       }
+      context.activity.text = context.activity.text.replace(/\@General Bots Online /gi, '');
 
       // Get loaded user state
 
@@ -1108,6 +1110,10 @@ export class GBMinService {
 
     const sec = new SecService();
 
+    if (!context.activity.text) {
+      context.activity.text = '';
+    }
+
     // Removes <at>Bot Id</at> from MS Teams.
 
     context.activity.text = context.activity.text.replace(/\<at\>.*\<\/at\>\s/gi, '');
@@ -1268,7 +1274,7 @@ export class GBMinService {
       ) === 'true';
       const systemUser = user.systemUser;
       locale = systemUser.locale;
-      if (detectLanguage || !locale) {
+      if (text != '' && detectLanguage && !locale) {
         locale = await min.conversationalService.getLanguage(min, text);
         if (systemUser.locale != locale) {
 
