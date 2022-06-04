@@ -802,7 +802,13 @@ export class DialogKeywords {
       const url = urlJoin(
         GBServer.globals.publicAddress,
         'kb',
-        `${this.min.botId}.gbaiurlonalService.sendFile(this.min, step, mobile, url, caption);
+        `${this.min.botId}.gbai`,
+        `${this.min.botId}.gbkb`,
+        'assets',
+        filename
+      );
+
+      await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
     }
   }
 }
