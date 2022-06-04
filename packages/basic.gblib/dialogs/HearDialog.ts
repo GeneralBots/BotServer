@@ -138,8 +138,6 @@ export class HearDialog {
             const promises = step.context.activity.attachments.map(HearDialog.downloadAttachmentAndWrite);
             const successfulSaves = await Promise.all(promises);
 
-            // Replies back to the user with information about where the attachment is stored on the bot's server,
-            // and what the name of the saved file is.
             async function replyForReceivedAttachments(localAttachmentData) {
               if (localAttachmentData) {
                 // Because the TurnContext was bound to this function, the bot can call

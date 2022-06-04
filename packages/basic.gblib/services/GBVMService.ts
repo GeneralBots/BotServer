@@ -193,6 +193,14 @@ export class GBVMService extends GBService {
 
     // Keywords from General Bots BASIC.
 
+    code = code.replace(/(\w+)\s*\=\s*SELECT\s*(.*)/gi, ($0, $1, $2) => {
+
+      let tableName = /\sFROM\s(\w+)/.exec($1)[0];
+
+      return `sys().executeSQL(${$2}, ${$1}, ${tableName})\n`;
+    });
+
+
     code = code.replace(/(\w+)\s*\=\s*get html\s*(.*)/gi, ($0, $1, $2, $3) => {
       return `${$1} = getPage(step, ${$2})\n`;
     });
@@ -250,7 +258,6 @@ export class GBVMService extends GBService {
     code = code.replace(/hear (\w+) as (.*)/gi, ($0, $1, $2) => {
       return `${$1} = hear("menu", ${$2})`;
     });
-
 
     code = code.replace(/(hear)\s*(\w+)/gi, ($0, $1, $2) => {
       return `${$2} = hear()`;
@@ -374,6 +381,10 @@ export class GBVMService extends GBService {
       return `setTranslatorOn (step, "${$3.toLowerCase()}")\n`;
     });
 
+    code = code.replace(/(set theme)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `setTheme (step, "${$3.toLowerCase()}")\n`;
+    });
+
     code = code.replace(/(set whole word)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `setWholeWord (step, "${$3.toLowerCase()}")\n`;
     });
@@ -440,6 +451,10 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(convert)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().convert(${$3})\n`;
+    });
+
+    code = code.replace(/(\w+)\s*\=\s*(.*)\s*as image/gi, ($0, $1, $2) => {
+      return `sys().asImage(${$2}, ${$1})\n`;
     });
 
     code = code.replace(/save\s(.*)\sas\s(.*)/gi, ($0, $1, $2, $3) => {
@@ -645,6 +660,10 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\bsetTranslatorOn\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.setTranslatorOn' : $1;
     });
+    code = code.replace(/("[^"]*"|'[^']*')|\bsetTheme\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.setTheme' : $1;
+    });
+
     code = code.replace(/("[^"]*"|'[^']*')|\bsetWholeWord\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.setWholeWord' : $1;
     });

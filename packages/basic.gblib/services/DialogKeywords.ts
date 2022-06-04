@@ -595,6 +595,19 @@ export class DialogKeywords {
     this.user = user;
   }
 
+    /**
+   * Defines the theme for assets generation.
+   *
+   * @example SET THEME "themename"
+   *
+   */
+     public async setTheme(step, theme) {
+      const user = await this.min.userProfile.get(step.context, {});
+      user.basicOptions.theme = theme.trim();
+      await this.min.userProfile.set(step.context, user);
+      this.user = user;
+    }
+
   /**
    * Defines translator behaviour.
    *
@@ -789,13 +802,7 @@ export class DialogKeywords {
       const url = urlJoin(
         GBServer.globals.publicAddress,
         'kb',
-        `${this.min.botId}.gbai`,
-        `${this.min.botId}.gbkb`,
-        'assets',
-        filename
-      );
-
-      await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
+        `${this.min.botId}.gbaiurlonalService.sendFile(this.min, step, mobile, url, caption);
     }
   }
 }

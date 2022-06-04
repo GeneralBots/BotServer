@@ -34,15 +34,20 @@ import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
-
-const urlJoin = require('url-join');
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { DialogKeywords } from './DialogKeywords';
-const path = require('path');
+import { Tabulator } from 'tabulator-tables';
+import { GBServer } from '../../../src/app';
+
+const urlJoin = require('url-join');
+const puppeteer = require('puppeteer')
+const Path = require('path');
 const sgMail = require('@sendgrid/mail');
 const ComputerVisionClient = require('@azure/cognitiveservices-computervision').ComputerVisionClient;
 const ApiKeyCredentials = require('@azure/ms-rest-js').ApiKeyCredentials;
+const alasql = require('alasql');
+
 
 /**
  * @fileoverview General Bots server core.
@@ -127,9 +132,9 @@ export class SystemKeywords {
     for (let i = 0; i < result.regions.length; i++) {
       const region = result.regions[i];
 
-      for (let j = 0; j < region.lines.length; j++)  {
+      for (let j = 0; j < region.lines.length; j++) {
         const line = region.lines[j];
-  
+
         for (let k = 0; k < line.words.length; k++) {
           final += `${line.words[k].text} `;
         }
@@ -170,6 +175,115 @@ export class SystemKeywords {
         return 0;
       }) : array;
     }
+  }
+
+  /**
+   * 
+   * @param data 
+   * @param renderPDF 
+   * @param renderImage 
+   * @returns 
+   * 
+   * @see http://tabulator.info/examples/5.2
+   * @see puppeteer.
+   */
+  private async renderTable(data, renderPDF, renderImage) {
+
+    const gbaiName = `${this.min.botId}.gbai`;
+    const browser = await puppeteer.launch({ headless: false });
+    const page = await browser.newPage();
+
+    // Includes the associated CSS related to current theme.
+
+    const theme = this.dk.user.basicOptions.theme;
+    switch (theme) {
+      case "white":
+        await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_simple.min.css' })
+        break;
+      case "dark":
+        await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_midnight.min.css' })
+        break;
+      case "blue":
+          await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_modern.min.css' })
+          break;
+        default:
+        break;
+    }
+
+
+    let fields = [];
+    for (let i = 0; i < data.length; i++) {
+      fields.push({field:data[i]});
+    }
+
+    
+
+    await page.evaluate(() => {
+      const el = document.createElement("div");
+      el.id = "table";
+      document.body.prepend(el);
+    });
+
+    await page.evaluate(`
+        new Tabulator("#example-table", {
+        height:"311px",
+        data: ${JSON.stringify(data)},
+        columns:[ ${JSON.stringify(fields)}]
+    });
+    `);
+
+    let url;
+    let localName;
+
+    if (renderImage) {
+
+      localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
+
+      await page.screenshot({ path: localName });
+
+      url = urlJoin(
+        GBServer.globals.publicAddress,
+        this.min.botId,
+        'cache',
+        Path.basename(localName)
+      );
+      GBLog.info(`BASIC: Table image generated at ${url} .`);
+    }
+
+    if (renderPDF) {
+      localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.pdf`);
+
+      url = urlJoin(
+        GBServer.globals.publicAddress,
+        this.min.botId,
+        'cache',
+        Path.basename(localName)
+      );
+
+      let pdf = await page.pdf({ format: 'A4' });
+      GBLog.info(`BASIC: Table PDF generated at ${url} .`);
+    }
+
+    await browser.close();
+    return [url, localName];
+  }
+
+  public async asPDF(data, filename) {
+    let file = await this.renderTable(data, true, false);
+    return file['url'];
+  }
+
+  public async asImage(data, filename) {
+    let file = await this.renderTable(data, false, true);
+    return file['url'];
+
+  }
+
+  public async executeSQL(data, sql, tableName) {
+
+    sql = `SELECT ${sql}`.replaceAll(tableName, '?');
+
+    return alasql(sql, [data]);
   }
 
   /**
@@ -250,14 +364,13 @@ export class SystemKeywords {
    * 
    */
   public async set(file: any, address: string, value: any): Promise<any> {
-    
+
     // Handles calls for HTML stuff
 
-    if (file._javascriptEnabled)
-    {
+    if (file._javascriptEnabled) {
       GBLog.info(`BASIC: Web automation setting ${file}' to '${value}' (SET). `);
 
-      await this.dk.type(null, file, address, value );
+      await this.dk.type(null, file, address, value);
       return;
     }
 
