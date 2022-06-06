@@ -44,6 +44,7 @@ const AuthenticationContext = require('adal-node').AuthenticationContext;
 const wash = require('washyourmouthoutwithsoap');
 const { FacebookAdapter } = require('botbuilder-adapter-facebook');
 const path = require('path');
+const { NerManager } = require('node-nlp');
 import {
   AutoSaveStateMiddleware,
   BotFrameworkAdapter,
@@ -245,6 +246,12 @@ export class GBMinService {
     if (fs.existsSync(packagePath)) {
       await this.deployer.deployPackage(min, packagePath);
     }
+
+    // Loads Named Entity data for this bot.
+
+    await KBService.RefreshNER(min);
+
+    // Loads schedules.
 
     const service = new ScheduleServices();
     await service.loadSchedules(min);
@@ -705,6 +712,7 @@ export class GBMinService {
     min.sandBoxMap = {};
     min["scheduleMap"] = {};
     min["conversationWelcomed"] = {};
+    min["nerEngine"] = new NerManager();;
     min.packages = sysPackages;
     min.appPackages = appPackages;
 
@@ -730,6 +738,8 @@ export class GBMinService {
       }
     });
 
+    
+    
     if (min.instance.googlePrivateKey) {
       min['googleDirectLine'] = new GoogleChatDirectLine(
         min,

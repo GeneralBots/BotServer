@@ -41,6 +41,7 @@ const urlJoin = require('url-join');
 import { DialogKeywords } from './DialogKeywords';
 import { ScheduleServices } from './ScheduleServices';
 import { HearDialog } from '../dialogs/HearDialog';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 //tslint:disable-next-line:no-submodule-imports
 const vm = require('vm');
 const vb2ts = require('./vbscript-to-typescript');
@@ -497,12 +498,12 @@ export class GBVMService extends GBService {
     let include = null;
     do {
       include = /^include\b(.*)$/gmi.exec(basicCode);
-      
+
       if (include) {
         let includeName = include[1].trim();
         includeName = Path.join(Path.dirname(filename), includeName);
         includeName = includeName.substr(0, includeName.lastIndexOf(".")) + ".vbs";
-        
+
         // To use include, two /publish will be necessary (for now)
         // because of alphabet order may raise not found errors.
 
@@ -721,7 +722,24 @@ export class GBVMService extends GBService {
     // in BASIC.
 
     const user = step ? await min.userProfile.get(step.context, {}) : null;
+
     const sandbox: DialogKeywords = new DialogKeywords(min, deployer, step, user);
+
+    const contentLocale = min.core.getParam<string>(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+    const entities = await min["nerEngine"].findEntities(
+      step.context.activity['originalText'],
+      contentLocale);
+
+    for (let i = 0; i < entities.length; i++) {
+      const v = entities[i];
+      const variableName = `${v.entity}`;
+      sandbox[variableName] = v.option;
+    }
 
     // Injects the .gbdialog generated code into the VM.
 

@@ -166,6 +166,19 @@ export class KBService implements IGBKBService {
 
     return question;
   }
+  public static async getQuestionsNER(instanceId: number) {
+    const where = {
+      instanceId: instanceId,
+      content: { [Op.like]: `%(%` }
+    };
+
+    const questions = await GuaribasQuestion.findAll({
+      where: where
+    });
+
+    return questions;
+
+  }
 
   public async getQuestionsSEO(instanceId: number) {
 
@@ -204,14 +217,13 @@ export class KBService implements IGBKBService {
     let question = await service.getQuestionFromAlternateText(instanceId, text);
 
     if (!question) {
-      const where={
+      const where = {
         instanceId: instanceId,
         content: { [Op.like]: `%[^a-z]${text}[^a-z]%` }
       };
 
-      if (from)
-      {
-        where['from']= from;
+      if (from) {
+        where['from'] = from;
       }
       question = await GuaribasQuestion.findOne({
         where: where
@@ -241,7 +253,7 @@ export class KBService implements IGBKBService {
     return undefined;
   }
 
-  
+
 
 
   public async addAnswer(obj: GuaribasAnswer): Promise<GuaribasAnswer> {
@@ -392,9 +404,9 @@ export class KBService implements IGBKBService {
   }
 
   public static async getGroupReplies(instanceId: number): Promise<GuaribasQuestion[]> {
-      return await GuaribasQuestion.findAll({
-        where: { from: 'group', instanceId: instanceId }
-      });
+    return await GuaribasQuestion.findAll({
+      where: { from: 'group', instanceId: instanceId }
+    });
   }
 
   public async importKbTabularFile(
@@ -712,6 +724,28 @@ export class KBService implements IGBKBService {
     await this.undeployPackageFromStorage(instance, packageId);
   }
 
+  public static  async RefreshNER(min: GBMinInstance) {
+    const questions = await KBService.getQuestionsNER(min.instance.instanceId);
+    const contentLocale = min.core.getParam<string>(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+    await CollectionUtil.asyncForEach(questions, async question => {
+      const text = question.content;
+
+      let category = /.*\((.*)\).*/gi.exec(text)[1];
+      let name =/(\w+)\(.*\).*/gi.exec(text)[1];
+
+      min["nerEngine"].addNamedEntityText(category, name,
+        [contentLocale], [name]);
+
+    });
+
+
+  }
+
   /**
    * Deploys a knowledge base to the storage using the .gbkb format.
    *
@@ -730,6 +764,7 @@ export class KBService implements IGBKBService {
     await deployer.rebuildIndex(instance, new AzureDeployerService(deployer).getKBSearchSchema(instance.searchIndex));
 
     min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
+    await KBService.RefreshNER(min);
 
     GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
   }

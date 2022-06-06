@@ -301,6 +301,8 @@ export class AskDialog extends IGBDialog {
   private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, answer: GuaribasAnswer) {
     const text = answer.content;
     if (text.endsWith('.docx')) {
+
+
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
       return await GBVMService.callVM(mainName, min, step, this.deployer);
     } else {
@@ -328,7 +330,7 @@ export class AskDialog extends IGBDialog {
         const data = step.options as AskDialogArgs;
         if (data !== undefined && data.questionId !== undefined) {
           const question = await service.getQuestionById(min.instance.instanceId, data.questionId);
-          const answer = await service.getAnswerById(min.instance.instanceId, question.answerId);
+          const answer = await service.getAnswerById(min.instance.instanceId, question.answerId );
           // Sends the answer to all outputs, including projector.
           await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
           await step.replaceDialog('/ask', { isReturning: true });
