@@ -731,14 +731,16 @@ export class GBVMService extends GBService {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    const entities = await min["nerEngine"].findEntities(
-      step.context.activity['originalText'],
-      contentLocale);
+    if (step.context.activity['originalText']) {
+      const entities = await min["nerEngine"].findEntities(
+        step.context.activity['originalText'],
+        contentLocale);
 
-    for (let i = 0; i < entities.length; i++) {
-      const v = entities[i];
-      const variableName = `${v.entity}`;
-      sandbox[variableName] = v.option;
+      for (let i = 0; i < entities.length; i++) {
+        const v = entities[i];
+        const variableName = `${v.entity}`;
+        sandbox[variableName] = v.option;
+      }
     }
 
     // Injects the .gbdialog generated code into the VM.

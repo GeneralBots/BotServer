@@ -333,9 +333,19 @@ export class GBMinService {
       }
 
       let chatapi = false;
+
+      if (!chatapi) {
+        if (req.body.type !== 'message') {
+          res.status(200);
+          res.end();
+
+          return;
+        }
+      }
+
       // Detects if the message is echo from itself.
 
-      const id = chatapi ? req.body.messages[0].author.split('@')[0] : req.body.receiver;
+      const id = chatapi ? req.body.messages[0].author.split('@')[0] : req.body.user.phone;
       const senderName = chatapi ? req.body.messages[0].senderName : req.body.user.name;
       const sec = new SecService();
       let user = await sec.getUserFromSystemId(id);
@@ -480,7 +490,7 @@ export class GBMinService {
               await (activeMin as any).whatsAppDirectLine.sendToDevice(
                 id,
                 `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`
-              ); 
+              );
             }
             await (activeMin as any).whatsAppDirectLine.received(req, res);
           }

@@ -189,94 +189,101 @@ export class WhatsappDirectLine extends GBService {
 
     const message = this.chatapi ? req.body.messages[0] : req.body.message;
     let group = "";
-    const to = req.body.to;
+
     let answerText = null;
 
 
-    let text = message.body;
+    let text = this.chatapi? message.body : message.text;
     text = text.replace(/\@\d+ /gi, '');
 
-    const from = message.author.split('@')[0];
-    const fromName = message.senderName;
+    const from = this.chatapi ? req.body.messages[0].author.split('@')[0] : req.body.user.phone;
+    const fromName = this.chatapi ? req.body.messages[0].senderName : req.body.user.name;
+
     GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
 
 
-    if (req.body.messages[0].fromMe) {
-      res.end();
+    if (this.chatapi) {
+      if (req.body.messages[0].fromMe) {
+        res.end();
 
-      return; // Exit here.
+        return; // Exit here.
+      }
+    } else {
+      if (req.body.message.fromMe) {
+        res.end();
+
+        return; // Exit here.
+      }
     }
 
-    if (message.chatName.charAt(0) !== '+') {
-      group = message.chatName;
+    if (this.chatapi) {
+      if (message.chatName.charAt(0) !== '+') {
+        group = message.chatName;
 
-      let botGroupName = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Name', null);
-      let botShortcuts = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Shortcuts', null);
-      if (!botShortcuts) {
-        botShortcuts = new Array()
-      }
-      else {
-        botShortcuts = botShortcuts.split(' ');
-      }
+        let botGroupName = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Name', null);
+        let botShortcuts = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Shortcuts', null);
+        if (!botShortcuts) {
+          botShortcuts = new Array()
+        }
+        else {
+          botShortcuts = botShortcuts.split(' ');
+        }
 
-      const parts = text.split(' ');
+        const parts = text.split(' ');
 
-      // Bot name must be specified on config.
+        // Bot name must be specified on config.
 
-      if (botGroupName === group) {
+        if (botGroupName === group) {
 
-        // Shortcut has been mentioned?
+          // Shortcut has been mentioned?
 
-        let found = false;
-        parts.forEach(e1 => {
-          botShortcuts.forEach(e2 => {
-            if (e1 === e2 && !found) {
-              found = true;
-              text = text.replace(e2, '');
-            }
-          });
-
-
-          // Verify if it is a group cache answer.
-
-          const questions = this.min['groupCache'];
-          if (questions && questions.length > 0) {
-            questions.forEach(q => {
-              if (q.content === e1 && !found) {
-                const answer = this.min.kbService['getAnswerById'](this.min.instance.instanceId,
-                  q.answerId);
-                answerText = answer.content;
+          let found = false;
+          parts.forEach(e1 => {
+            botShortcuts.forEach(e2 => {
+              if (e1 === e2 && !found) {
+                found = true;
+                text = text.replace(e2, '');
               }
             });
-          }
 
 
-          // Ignore group messages without the mention to Bot.
+            // Verify if it is a group cache answer.
 
-          let smsServiceNumber = this.min.core.getParam<string>(this.min.instance, 'whatsappServiceNumber', null);
-          if (smsServiceNumber && !answerText) {
-            smsServiceNumber = smsServiceNumber.replace('+', '');
-            if (!message.body.startsWith('@' + smsServiceNumber)) {
-              return;
+            const questions = this.min['groupCache'];
+            if (questions && questions.length > 0) {
+              questions.forEach(q => {
+                if (q.content === e1 && !found) {
+                  const answer = this.min.kbService['getAnswerById'](this.min.instance.instanceId,
+                    q.answerId);
+                  answerText = answer.content;
+                }
+              });
             }
-          }
 
-        });
+
+            // Ignore group messages without the mention to Bot.
+
+            let smsServiceNumber = this.min.core.getParam<string>(this.min.instance, 'whatsappServiceNumber', null);
+            if (smsServiceNumber && !answerText) {
+              smsServiceNumber = smsServiceNumber.replace('+', '');
+              if (!message.body.startsWith('@' + smsServiceNumber)) {
+                return;
+              }
+            }
+
+          });
+        }
       }
     }
-
 
 
     await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
       await e.onExchangeData(this.min, 'whatsappMessage', message);
     });
-
-    const id = req.body.messages[0].chatId.split('@')[0].replace('true_', '').replace('false_', '');
-    const senderName = req.body.messages[0].senderName;
     const sec = new SecService();
 
-    const user = await sec.ensureUser(this.min.instance.instanceId, id,
-      senderName, '', 'whatsapp', senderName, null);
+    const user = await sec.ensureUser(this.min.instance.instanceId, from,
+      fromName, '', 'whatsapp', fromName, null);
 
     const locale = user.locale ? user.locale : 'pt';
 
@@ -285,12 +292,11 @@ export class WhatsappDirectLine extends GBService {
       return; // Exit here.
     }
 
-
     if (message.type === 'ptt') {
 
       if (process.env.AUDIO_DISABLED !== 'true') {
         const options = {
-          url: message.body,
+          url: this.chatapi?message.body : message.text,
           method: 'GET',
           encoding: 'binary'
         };
@@ -321,10 +327,10 @@ export class WhatsappDirectLine extends GBService {
 
       // Check if there is someone being handled by this Human Agent.
 
-      const manualUser = await sec.getUserFromAgentSystemId(id);
+      const manualUser = await sec.getUserFromAgentSystemId(from);
       if (manualUser === null) {
 
-        await sec.updateHumanAgent(id, this.min.instance.instanceId, null);
+        await sec.updateHumanAgent(from, this.min.instance.instanceId, null);
 
       } else {
         const agent = await sec.getUserFromSystemId(user.agentSystemId);
@@ -369,15 +375,15 @@ export class WhatsappDirectLine extends GBService {
         await this.sendToDeviceEx(user.userSystemId, `Você já está sendo atendido por ${agent.userSystemId}.`, locale, null);
       } else if (text === '/qt' || text === 'Sair' || text === 'Fechar') {
         // TODO: Transfers only in pt-br for now.
-        await this.endTransfer(id, locale, user, agent, sec);
+        await this.endTransfer(from, locale, user, agent, sec);
       } else {
-        GBLog.info(`USER (${id}) TO AGENT ${agent.userSystemId}: ${text}`);
+        GBLog.info(`USER (${from}) TO AGENT ${agent.userSystemId}: ${text}`);
 
         if (user.agentSystemId.charAt(2) === ":" || agent.userSystemId.indexOf("@") > -1) { // Agent is from Teams or Google Chat.
           await this.min.conversationalService['sendOnConversation'](this.min, agent, text);
         }
         else {
-          await this.sendToDeviceEx(user.agentSystemId, `Bot: ${this.min.instance.botId}\n${id}: ${text}`, locale, null);
+          await this.sendToDeviceEx(user.agentSystemId, `Bot: ${this.min.instance.botId}\n${from}: ${text}`, locale, null);
         }
 
       }
@@ -638,9 +644,10 @@ export class WhatsappDirectLine extends GBService {
 
 
         options = {
+          url: url,
           method: 'post',
           json: true,
-          body: msg,
+          body: { type: 'text', message: msg, to_number: to },
           headers: {
             'Content-Type': 'application/json',
             'x-maytapi-key': this.whatsappServiceKey,
