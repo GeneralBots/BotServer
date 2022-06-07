@@ -325,17 +325,33 @@ export class GBMinService {
   private async WhatsAppCallback(req, res) {
     try {
 
+      if (req.body && req.body.webhook) {
+        res.status(200);
+        res.end();
+
+        return;
+      }
+
+      let chatapi = false;
       // Detects if the message is echo from itself.
 
-      const id = req.body.messages[0].author.split('@')[0];
-      const senderName = req.body.messages[0].senderName;
+      const id = chatapi ? req.body.messages[0].author.split('@')[0] : req.body.receiver;
+      const senderName = chatapi ? req.body.messages[0].senderName : req.body.user.name;
       const sec = new SecService();
       let user = await sec.getUserFromSystemId(id);
 
-      if (req.body.messages[0].fromMe) {
-        res.end();
+      if (chatapi) {
+        if (req.body.messages[0].fromMe) {
+          res.end();
 
-        return; // Exit here.
+          return; // Exit here.
+        }
+      } else {
+        if (req.body.message.fromMe) {
+          res.end();
+
+          return; // Exit here.
+        }
       }
 
       let activeMin;
@@ -349,23 +365,25 @@ export class GBMinService {
 
       // Processes group behaviour.
 
-      let text = req.body.messages[0].body;
+      let text = chatapi ? req.body.messages[0].body : req.body.message.text;
       text = text.replace(/\@\d+ /gi, '');
 
-      // Ensures that the bot group is the active bot for the user (like switching).
+      if (chatapi) {
+        // Ensures that the bot group is the active bot for the user (like switching).
 
-      const message = req.body.messages[0];
-      if (message.chatName.charAt(0) !== '+') {
-        const group = message.chatName;
+        const message = req.body.messages[0];
+        if (message.chatName.charAt(0) !== '+') {
+          const group = message.chatName;
 
-        const botGroup = await this.core.loadInstanceByBotId(group);
-        if (user.instanceId !== botGroup.instanceId) {
-          await sec.updateUserInstance(id, botGroup.instanceId);
+          const botGroup = await this.core.loadInstanceByBotId(group);
+          if (user.instanceId !== botGroup.instanceId) {
+            await sec.updateUserInstance(id, botGroup.instanceId);
+          }
+          activeMin = GBServer.globals.minInstances.filter
+            (p => p.instance.instanceId === botGroup.instanceId)[0];
+          await (activeMin as any).whatsAppDirectLine.received(req, res);
+          return; // EXIT HERE.
         }
-        activeMin = GBServer.globals.minInstances.filter
-          (p => p.instance.instanceId === botGroup.instanceId)[0];
-        await (activeMin as any).whatsAppDirectLine.received(req, res);
-        return; // EXIT HERE.
       }
 
 
@@ -400,7 +418,12 @@ export class GBMinService {
 
           if (startDialog) {
             GBLog.info(`Calling /start to Auto start ${startDialog} for ${activeMin.instance.instanceId}...`);
-            req.body.messages[0].body = `/start`;
+            if (chatapi) {
+              req.body.messages[0].body = `/start`;
+            }
+            else {
+              req.body.message = `/start`;
+            }
 
             // Resets HEAR ON DIALOG value to none and passes
             // current dialog to the direct line.
@@ -431,7 +454,14 @@ export class GBMinService {
 
             if (startDialog) {
               GBLog.info(`Calling /start for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
-              req.body.messages[0].body = `/start`;
+              if (chatapi) {
+                req.body.messages[0].body = `/start`;
+              }
+              else {
+                req.body.message = `/start`;
+              }
+
+
               await (activeMin as any).whatsAppDirectLine.received(req, res);
             } else {
               await (activeMin as any).whatsAppDirectLine.sendToDevice(
@@ -450,7 +480,7 @@ export class GBMinService {
               await (activeMin as any).whatsAppDirectLine.sendToDevice(
                 id,
                 `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`
-              );
+              ); 
             }
             await (activeMin as any).whatsAppDirectLine.received(req, res);
           }
@@ -738,8 +768,8 @@ export class GBMinService {
       }
     });
 
-    
-    
+
+
     if (min.instance.googlePrivateKey) {
       min['googleDirectLine'] = new GoogleChatDirectLine(
         min,
@@ -789,7 +819,7 @@ export class GBMinService {
     min.dialogs = new DialogSet(dialogState);
     min.dialogs.add(new TextPrompt('textPrompt'));
     min.dialogs.add(new AttachmentPrompt('attachmentPrompt'));
-    
+
     min.dialogs.add(new ConfirmPrompt('confirmPrompt'));
     if (process.env.ENABLE_AUTH) {
       min.dialogs.add(

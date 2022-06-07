@@ -301,8 +301,7 @@ ENDPOINT_UPDATE=true
     try {
       if (fs.existsSync('node_modules/ngrok/bin/ngrok.exe') || fs.existsSync('node_modules/ngrok/bin/ngrok')) {
         const ngrok = require('ngrok');
-
-        return await ngrok.connect({ port: port }, 10);
+          return await ngrok.connect({ port: port }, 10);
       } else {
         GBLog.warn('ngrok executable not found (only tested on Windows). Check installation or node_modules folder.');
 

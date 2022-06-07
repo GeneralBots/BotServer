@@ -66,6 +66,8 @@ export class WhatsappDirectLine extends GBService {
   public min: GBMinInstance;
   private directLineSecret: string;
   private locale: string = 'pt-BR';
+  chatapi: any;
+  INSTANCE_URL = 'https://api.maytapi.com/api';
 
   constructor(
     min: GBMinInstance,
@@ -105,21 +107,43 @@ export class WhatsappDirectLine extends GBService {
       'AuthorizationBotConnector',
       new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${this.directLineSecret}`, 'header')
     );
+    let options;
 
-    const options = {
-      method: 'POST',
-      url: urlJoin(this.whatsappServiceUrl, 'webhook'),
-      timeout: 10000,
-      qs: {
-        token: this.whatsappServiceKey,
-        webhookUrl: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`,
-        set: true
-      },
-      headers: {
-        'cache-control': 'no-cache'
-      }
-    };
+    if (this.chatapi) {
+      options = {
+        method: 'POST',
+        url: urlJoin(this.whatsappServiceUrl, 'webhook'),
+        timeout: 10000,
+        qs: {
+          token: this.whatsappServiceKey,
+          webhookUrl: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`,
+          set: true
+        },
+        headers: {
+          'cache-control': 'no-cache'
+        }
+      };
 
+    }
+    else {
+
+      let phoneId = this.whatsappServiceNumber.split(';')[0];
+      let productId = this.whatsappServiceNumber.split(';')[1]
+
+      let url = `${this.INSTANCE_URL}/${productId}/setWebhook`;
+      let webhook = `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`;
+
+      options = {
+        url: url,
+        method: 'POST',
+        body: { webhook: webhook, },
+        headers: {
+          'x-maytapi-key': this.whatsappServiceKey,
+          'Content-Type': 'application/json',
+        },
+        json: true,
+      };
+    }
     if (setUrl) {
       const express = require('express');
       GBServer.globals.server.use(`/audios`, express.static('work'));
@@ -127,7 +151,6 @@ export class WhatsappDirectLine extends GBService {
       if (process.env.ENDPOINT_UPDATE === 'true') {
         try {
           const res = await request.post(options);
-          GBLog.info(res);
         } catch (error) {
           GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
         }
@@ -158,13 +181,13 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async received(req, res) {
-    if (req.body.messages === undefined) {
+    if (this.chatapi && req.body.messages === undefined) {
       res.end();
 
       return;  // Exit here.
     }
 
-    const message = req.body.messages[0];
+    const message = this.chatapi ? req.body.messages[0] : req.body.message;
     let group = "";
     const to = req.body.to;
     let answerText = null;
@@ -242,7 +265,7 @@ export class WhatsappDirectLine extends GBService {
       }
     }
 
-    
+
 
     await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
       await e.onExchangeData(this.min, 'whatsappMessage', message);
@@ -370,7 +393,7 @@ export class WhatsappDirectLine extends GBService {
         WhatsappDirectLine.mobiles[generatedConversationId] = from;
         WhatsappDirectLine.usernames[from] = fromName;
         WhatsappDirectLine.chatIds[generatedConversationId] = message.chatId;
-        
+
 
         this.pollMessages(client, generatedConversationId, from, fromName);
         this.inputMessage(client, generatedConversationId, text, from, fromName, group);
@@ -487,21 +510,52 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async sendFileToDevice(to, url, filename, caption, chatId) {
-    const options = {
-      method: 'POST',
-      url: urlJoin(this.whatsappServiceUrl, 'sendFile'),
-      qs: {
-        token: this.whatsappServiceKey,
-        phone: chatId ? null : to,
-        chatId: chatId,
-        body: url,
-        filename: filename,
-        caption: caption
-      },
-      headers: {
-        'cache-control': 'no-cache'
-      }
-    };
+
+    let options;
+    if (this.chatapi) {
+
+      options = {
+        method: 'POST',
+        url: urlJoin(this.whatsappServiceUrl, 'sendFile'),
+        qs: {
+          token: this.whatsappServiceKey,
+          phone: chatId ? null : to,
+          chatId: chatId,
+          body: url,
+          filename: filename,
+          caption: caption
+        },
+        headers: {
+          'cache-control': 'no-cache'
+        }
+      };
+
+    }
+    else {
+      // TODO: Attach.
+      let contents = 0;
+      let body = {
+        type: 'image',
+        text: 'Base64 Image Response',
+        message: `data:image/jpeg;base64,${contents}`,
+      };
+
+      let phoneId = this.whatsappServiceNumber.split(';')[0];
+      let productId = this.whatsappServiceNumber.split(';')[1]
+
+
+      let url = `${this.INSTANCE_URL}/${productId}/${phoneId}/sendMessage`;
+      options = {
+        method: 'post',
+        json: true,
+        body,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-maytapi-key': this.whatsappServiceKey,
+        },
+      };
+
+    }
 
     try {
       // tslint:disable-next-line: await-promise
@@ -538,10 +592,10 @@ export class WhatsappDirectLine extends GBService {
 
   public async sendTextAsAudioToDevice(to, msg, chatId) {
 
-     const url = await GBConversationalService.getAudioBufferFromText(
-       msg
-     );
-    
+    const url = await GBConversationalService.getAudioBufferFromText(
+      msg
+    );
+
     await this.sendFileToDevice(to, url, 'Audio', msg, chatId);
   }
 
@@ -557,21 +611,43 @@ export class WhatsappDirectLine extends GBService {
       return await this.sendTextAsAudioToDevice(to, msg, chatId);
     } else {
 
-      
+      let options;
+      if (this.chatapi) {
 
-      const options = {
-        method: 'POST',
-        url: urlJoin(this.whatsappServiceUrl, 'message'),
-        qs: {
-          token: this.whatsappServiceKey,
-          phone: chatId ? null : to,
-          chatId: chatId,
-          body: msg
-        },
-        headers: {
-          'cache-control': 'no-cache'
-        }
-      };
+        options = {
+          method: 'POST',
+          url: urlJoin(this.whatsappServiceUrl, 'message'),
+          qs: {
+            token: this.whatsappServiceKey,
+            phone: chatId ? null : to,
+            chatId: chatId,
+            body: msg
+          },
+          headers: {
+            'cache-control': 'no-cache'
+          }
+        };
+      }
+      else {
+
+        let phoneId = this.whatsappServiceNumber.split(';')[0];
+        let productId = this.whatsappServiceNumber.split(';')[1]
+
+
+        let url = `${this.INSTANCE_URL}/${productId}/${phoneId}/sendMessage`;
+
+
+        options = {
+          method: 'post',
+          json: true,
+          body: msg,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-maytapi-key': this.whatsappServiceKey,
+          },
+        };
+      }
+
 
       try {
         // tslint:disable-next-line: await-promise
