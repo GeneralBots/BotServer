@@ -42,6 +42,7 @@ import { GBConversationalService } from '../../core.gbapp/services/GBConversatio
 import { SecService } from '../../security.gbapp/services/SecService';
 import { Messages } from '../strings';
 import { GuaribasUser } from '../../security.gbapp/models';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 
 /**
  * Support for Whatsapp.
@@ -85,7 +86,7 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceKey = whatsappServiceKey;
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
-
+    this.chatapi = GBConfigService.get('CHATAPI');
   }
 
   public static async asyncForEach(array, callback) {

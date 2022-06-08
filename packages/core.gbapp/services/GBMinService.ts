@@ -332,7 +332,7 @@ export class GBMinService {
         return;
       }
 
-      let chatapi = false;
+      let chatapi = GBConfigService.get('CHATAPI');
 
       if (!chatapi) {
         if (req.body.type !== 'message') {
@@ -386,13 +386,15 @@ export class GBMinService {
           const group = message.chatName;
 
           const botGroup = await this.core.loadInstanceByBotId(group);
-          if (user.instanceId !== botGroup.instanceId) {
+          if (botGroup && user.instanceId !== botGroup.instanceId) {
             await sec.updateUserInstance(id, botGroup.instanceId);
           }
-          activeMin = GBServer.globals.minInstances.filter
-            (p => p.instance.instanceId === botGroup.instanceId)[0];
-          await (activeMin as any).whatsAppDirectLine.received(req, res);
-          return; // EXIT HERE.
+          if (botGroup) {
+            activeMin = GBServer.globals.minInstances.filter
+              (p => p.instance.instanceId === botGroup.instanceId)[0];
+            await (activeMin as any).whatsAppDirectLine.received(req, res);
+            return; // EXIT HERE.
+          }
         }
       }
 
@@ -506,6 +508,7 @@ export class GBMinService {
         await minInstance.whatsAppDirectLine.received(req, res);
       }
     } catch (error) {
+      
       GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error}`);
     }
   }
