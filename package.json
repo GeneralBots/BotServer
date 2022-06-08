@@ -28,7 +28,7 @@
   "scripts": {
     "clean": "shx rm -rf node_modules/ dist/ docs/reference",
     "tslint": "tslint --fix ./src/*.ts ./packages/**/*.ts -t verbose -e ./packages/default.gbui/**/* -e ./packages/**/*.gbdialog/**/*",
-    "build": "npm install && npm run build-server && npm run build-gbui && npm run build-docs",
+    "build": "npm install && npm run build-server && npm run build-gbui",
     "build-server": "tsc",
     "build-gbui": "cd packages/default.gbui && echo SKIP_PREFLIGHT_CHECK=true >.env &&  npm install && npm run build",
     "build-docs": "typedoc --options typedoc.json src/",
@@ -73,7 +73,7 @@
     "billboard.js": "^3.4.1",
     "bluebird": "3.7.2",
     "body-parser": "1.19.0",
-    "botbuilder": "4.11.0",
+    "botbuilder": "^4.16.0",
     "botbuilder-adapter-facebook": "1.0.11",
     "botbuilder-ai": "4.11.0",
     "botbuilder-dialogs": "4.11.0",
@@ -117,8 +117,8 @@
     "rimraf": "3.0.2",
     "safe-buffer": "5.2.1",
     "scanf": "1.1.2",
-    "sequelize": "6.5.0",
-    "sequelize-cli": "6.2.0",
+    "sequelize": "^6.20.1",
+    "sequelize-cli": "^6.4.1",
     "sequelize-typescript": "2.1.0",
     "simple-git": "2.39.1",
     "speakingurl": "14.0.1",
@@ -154,7 +154,7 @@
     "ts-node": "10.0.0",
     "tslint": "6.1.2",
     "tslint-microsoft-contrib": "6.2.0",
-    "typedoc": "0.16.11"
+    "typedoc": "^0.22.17"
   },
   "eslintConfig": {
     "env": {
