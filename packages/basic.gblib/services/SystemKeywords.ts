@@ -953,7 +953,7 @@ export class SystemKeywords {
 
     let folder;
     if (dest.indexOf('/') !== -1) {
-      const pathOnly = path.dirname(dest);
+      const pathOnly = Path.dirname(dest);
       folder = await this.createFolder(pathOnly);
     }
     else {
@@ -971,7 +971,7 @@ export class SystemKeywords {
         .get();
       const destFile = {
         "parentReference": { driveId: folder.parentReference.driveId, id: folder.id },
-        "name": `${path.basename(dest)}`
+        "name": `${Path.basename(dest)}`
       }
 
       return await client.api(
@@ -1022,7 +1022,7 @@ export class SystemKeywords {
 
     let folder;
     if (dest.indexOf('/') !== -1) {
-      const pathOnly = path.dirname(dest);
+      const pathOnly = Path.dirname(dest);
       folder = await this.createFolder(pathOnly);
     }
     else {
