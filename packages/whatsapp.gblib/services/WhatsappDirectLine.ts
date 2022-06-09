@@ -51,6 +51,7 @@ export class WhatsappDirectLine extends GBService {
 
   public static conversationIds = {};
   public static mobiles = {};
+  public static phones = {};
   public static chatIds = {};
   public static usernames = {};
   public static state = {}; // 2: Waiting, 3: MessageArrived.
@@ -133,6 +134,7 @@ export class WhatsappDirectLine extends GBService {
 
       let url = `${this.INSTANCE_URL}/${productId}/setWebhook`;
       let webhook = `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`;
+      WhatsappDirectLine.phones[phoneId] = this.botId;
 
       options = {
         url: url,

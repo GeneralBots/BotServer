@@ -365,9 +365,17 @@ export class GBMinService {
       }
 
       let activeMin;
-      let botId = req.params.botId;
-      if (botId === '[default]' || botId === undefined) {
-        botId = GBConfigService.get('BOT_ID');
+
+      let botId;
+
+      if (chatapi) {
+        botId = req.params.botId;
+        if (botId === '[default]' || botId === undefined) {
+          botId = GBConfigService.get('BOT_ID');
+        }
+      }
+      else      {
+        botId = WhatsappDirectLine.phones[req.body.phoneId];
       }
 
       GBLog.info(`Client requested instance for: ${botId}.`);
@@ -508,7 +516,7 @@ export class GBMinService {
         await minInstance.whatsAppDirectLine.received(req, res);
       }
     } catch (error) {
-      
+
       GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error}`);
     }
   }
