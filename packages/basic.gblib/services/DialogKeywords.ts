@@ -700,7 +700,7 @@ export class DialogKeywords {
         }
         sleep(5000);
       }
-      const result = WhatsappDirectLine.lastMessage[mobile];
+      const result = WhatsappDirectLine.lastMessage[this.min.instance.botId + mobile];
       opts = await promise(step, result);
 
       if (previousResolve !== undefined) {

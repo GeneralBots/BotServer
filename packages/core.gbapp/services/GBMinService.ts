@@ -468,7 +468,7 @@ export class GBMinService {
 
             const instance = await this.core.loadInstanceByBotId(activeMin.botId);
             await sec.updateUserInstance(id, instance.instanceId);
-            await (activeMin as any).whatsAppDirectLine.resetConversationId(id, '');
+            await (activeMin as any).whatsAppDirectLine.resetConversationId(activeMin.botId, id, '');
             const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
 
 

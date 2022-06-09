@@ -133,7 +133,7 @@ export class WhatsappDirectLine extends GBService {
       let productId = this.whatsappServiceNumber.split(';')[1]
 
       let url = `${this.INSTANCE_URL}/${productId}/setWebhook`;
-      let webhook = `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`;
+      let webhook = `${GBServer.globals.publicAddress}/webhooks/whatsapp`;
       WhatsappDirectLine.phones[phoneId] = this.botId;
 
       options = {
@@ -162,8 +162,8 @@ export class WhatsappDirectLine extends GBService {
 
   }
 
-  public async resetConversationId(number, group = '') {
-    WhatsappDirectLine.conversationIds[number + group] = undefined;
+  public async resetConversationId(botId, number, group = '') {
+    WhatsappDirectLine.conversationIds[botId + number + group] = undefined;
   }
 
   public async check() {
@@ -316,12 +316,12 @@ export class WhatsappDirectLine extends GBService {
           `No momento estou apenas conseguindo ler mensagens de texto.`, null);
       }
     }
-
-    const conversationId = WhatsappDirectLine.conversationIds[from + group];
+    const botId  = this.min.instance.botId;
+    const conversationId = WhatsappDirectLine.conversationIds[botId + from + group];
 
     const client = await this.directLineClient;
 
-    WhatsappDirectLine.lastMessage[from] = message;
+    WhatsappDirectLine.lastMessage[botId + from] = message;
 
 
     // Check if this message is from a Human Agent itself.
@@ -393,12 +393,12 @@ export class WhatsappDirectLine extends GBService {
 
     } else if (user.agentMode === 'bot' || user.agentMode === null || user.agentMode === undefined) {
 
-      if (WhatsappDirectLine.conversationIds[from + group] === undefined) {
+      if (WhatsappDirectLine.conversationIds[botId + from + group] === undefined) {
         GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
         const response = await client.Conversations.Conversations_StartConversation();
         const generatedConversationId = response.obj.conversationId;
 
-        WhatsappDirectLine.conversationIds[from + group] = generatedConversationId;
+        WhatsappDirectLine.conversationIds[botId + from + group] = generatedConversationId;
         WhatsappDirectLine.mobiles[generatedConversationId] = from;
         WhatsappDirectLine.usernames[from] = fromName;
         WhatsappDirectLine.chatIds[generatedConversationId] = message.chatId;
