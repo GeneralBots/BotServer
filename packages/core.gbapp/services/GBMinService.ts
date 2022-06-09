@@ -332,7 +332,7 @@ export class GBMinService {
         return;
       }
 
-      let chatapi = GBConfigService.get('CHATAPI');
+      let chatapi = GBConfigService.get('CHATAPI') === 'true';
 
       if (!chatapi) {
         if (req.body.type !== 'message') {
