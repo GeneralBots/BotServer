@@ -139,7 +139,7 @@ export class WhatsappDirectLine extends GBService {
       options = {
         url: url,
         method: 'POST',
-        body: { webhook: webhook, },
+        body: { webhook: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}` },
         headers: {
           'x-maytapi-key': this.whatsappServiceKey,
           'Content-Type': 'application/json',
@@ -196,7 +196,7 @@ export class WhatsappDirectLine extends GBService {
     let answerText = null;
 
 
-    let text = this.chatapi? message.body : message.text;
+    let text = this.chatapi ? message.body : message.text;
     text = text.replace(/\@\d+ /gi, '');
 
     const from = this.chatapi ? req.body.messages[0].author.split('@')[0] : req.body.user.phone;
@@ -299,7 +299,7 @@ export class WhatsappDirectLine extends GBService {
 
       if (process.env.AUDIO_DISABLED !== 'true') {
         const options = {
-          url: this.chatapi?message.body : message.text,
+          url: this.chatapi ? message.body : message.text,
           method: 'GET',
           encoding: 'binary'
         };
@@ -316,7 +316,7 @@ export class WhatsappDirectLine extends GBService {
           `No momento estou apenas conseguindo ler mensagens de texto.`, null);
       }
     }
-    const botId  = this.min.instance.botId;
+    const botId = this.min.instance.botId;
     const conversationId = WhatsappDirectLine.conversationIds[botId + from + group];
 
     const client = await this.directLineClient;
@@ -541,39 +541,39 @@ export class WhatsappDirectLine extends GBService {
 
     }
     else {
-      // TODO: Attach.
+
       let contents = 0;
       let body = {
-        type: 'image',
-        text: 'Base64 Image Response',
-        message: `data:image/jpeg;base64,${contents}`,
-      };
+          to_number: to,
+          type: "media",
+          message: url,
+          text: caption
+        };
 
-      let phoneId = this.whatsappServiceNumber.split(';')[0];
-      let productId = this.whatsappServiceNumber.split(';')[1]
+        let phoneId = this.whatsappServiceNumber.split(';')[0];
+        let productId = this.whatsappServiceNumber.split(';')[1]
 
-
-      let url = `${this.INSTANCE_URL}/${productId}/${phoneId}/sendMessage`;
       options = {
-        method: 'post',
-        json: true,
-        body,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-maytapi-key': this.whatsappServiceKey,
-        },
-      };
+          url: `${this.INSTANCE_URL}/${productId}/${phoneId}/sendMessage`,
+          method: 'post',
+          json: true,
+          body,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-maytapi-key': this.whatsappServiceKey,
+          },
+        };
 
-    }
+      }
 
-    try {
-      // tslint:disable-next-line: await-promise
-      const result = await request.post(options);
-      GBLog.info(`File ${url} sent to ${to}: ${result}`);
-    } catch (error) {
-      GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
+      try {
+        // tslint:disable-next-line: await-promise
+        const result = await request.post(options);
+        GBLog.info(`File ${url} sent to ${to}: ${result}`);
+      } catch (error) {
+        GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
+      }
     }
-  }
 
   public async sendAudioToDevice(to, url, chatId) {
     const options = {
