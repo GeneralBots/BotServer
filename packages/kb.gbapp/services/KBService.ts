@@ -724,7 +724,7 @@ export class KBService implements IGBKBService {
     await this.undeployPackageFromStorage(instance, packageId);
   }
 
-  public static  async RefreshNER(min: GBMinInstance) {
+  public static async RefreshNER(min: GBMinInstance) {
     const questions = await KBService.getQuestionsNER(min.instance.instanceId);
     const contentLocale = min.core.getParam<string>(
       min.instance,
@@ -735,12 +735,15 @@ export class KBService implements IGBKBService {
     await CollectionUtil.asyncForEach(questions, async question => {
       const text = question.content;
 
-      let category = /.*\((.*)\).*/gi.exec(text)[1];
-      let name =/(\w+)\(.*\).*/gi.exec(text)[1];
+      const categoryReg = /.*\((.*)\).*/gi.exec(text);
+      const nameReg = /(\w+)\(.*\).*/gi.exec(text);
 
-      min["nerEngine"].addNamedEntityText(category, name,
-        [contentLocale], [name]);
-
+      if (categoryReg && nameReg) {
+        let category = [1];
+        let name = [1];
+        min["nerEngine"].addNamedEntityText(category, name,
+          [contentLocale], [name]);
+      }
     });
 
 
