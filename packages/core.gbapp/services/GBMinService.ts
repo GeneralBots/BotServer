@@ -334,7 +334,14 @@ export class GBMinService {
 
       let chatapi = GBConfigService.get('CHATAPI') === 'true';
 
-      if (!chatapi) {
+      if (chatapi) {
+        if (req.body.ack){
+          res.status(200);
+          res.end();
+
+          return;
+        }
+      }else{
         if (req.body.type !== 'message') {
           res.status(200);
           res.end();
