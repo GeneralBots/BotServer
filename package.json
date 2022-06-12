@@ -120,7 +120,7 @@
     "sequelize": "6.5.0",
     "sequelize-cli": "6.2.0",
     "sequelize-typescript": "2.1.0",
-    "simple-git": "2.39.1",
+    "simple-git": "3.5.0",
     "speakingurl": "14.0.1",
     "sppull": "2.7.0",
     "ssr-for-bots": "1.0.1-c",
