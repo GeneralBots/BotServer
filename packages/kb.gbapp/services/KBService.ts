@@ -739,8 +739,8 @@ export class KBService implements IGBKBService {
       const nameReg = /(\w+)\(.*\).*/gi.exec(text);
 
       if (categoryReg && nameReg) {
-        let category = [1];
-        let name = [1];
+        let category = categoryReg[1];
+        let name = nameReg[1];
         min["nerEngine"].addNamedEntityText(category, name,
           [contentLocale], [name]);
       }
