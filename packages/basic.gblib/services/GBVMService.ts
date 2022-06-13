@@ -485,12 +485,12 @@ export class GBVMService extends GBService {
 
     let basicCode: string = fs.readFileSync(filename, 'utf8');
 
-    // Processes EXIT keyword, removing extracode, useful
+    // Processes END keyword, removing extracode, useful
     // for development.
 
-    let exit = /(\nexit\n)/gi.exec(basicCode);
-    if (exit) {
-      basicCode = basicCode.substring(0, exit.index);
+    let end = /(\nend\n)/gi.exec(basicCode);
+    if (end) {
+      basicCode = basicCode.substring(0, end.index);
     }
 
     // Process INCLUDE keyword to include another
