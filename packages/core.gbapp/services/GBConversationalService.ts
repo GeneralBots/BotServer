@@ -525,6 +525,12 @@ export class GBConversationalService {
     let currentCaption = '';
     let currentEmbedUrl = '';
 
+    let conversationId = null;
+
+    if(step ){
+      conversationId = step.context.activity.conversation.id;
+    }       
+
     //![General Bots](/instance/images/gb.png)
     for (let i = 0; i < text.length; i++) {
       const c = text.charAt(i);
@@ -559,7 +565,7 @@ export class GBConversationalService {
             if (!mobile) {
               await step.context.sendActivity(currentText);
             } else {
-              await this.sendToMobile(min, mobile, currentText, step.context.activity.conversation.id);
+              await this.sendToMobile(min, mobile, currentText, conversationId);
             }
             await sleep(3000);
             currentText = '';
@@ -579,7 +585,7 @@ export class GBConversationalService {
               if (!mobile) {
                 await step.context.sendActivity(currentText);
               } else {
-                await this.sendToMobile(min, mobile, currentText, step.context.activity.conversation.id);
+                await this.sendToMobile(min, mobile, currentText, conversationId);
               }
               await sleep(3000);
             }
@@ -612,7 +618,7 @@ export class GBConversationalService {
               if (!mobile) {
                 await step.context.sendActivity(currentText);
               } else {
-                await this.sendToMobile(min, mobile, currentText, step.context.activity.conversation.id);
+                await this.sendToMobile(min, mobile, currentText, conversationId);
               }
               await sleep(2900);
             }

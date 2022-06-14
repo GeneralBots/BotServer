@@ -218,6 +218,27 @@ export class DialogKeywords {
     ]);
   }
 
+  /**
+   * Returns the screenshot of page or element
+   *
+   * @example file = SCREENSHOT page
+   */
+   public async getTableData(step, page, selector) {
+
+    const data = await page.evaluate(() => {
+      const rows = document.querySelectorAll(`${selector} tr`);
+      return Array.from(rows, row => {
+        const columns = row.querySelectorAll('td');
+        return Array.from(columns, column => column.innerText);
+      });
+    });
+
+    //You will now have an array of strings
+    //[ 'One', 'Two', 'Three', 'Four' ]
+    console.log(data);
+        
+
+  }
 
   /**
    * Returns the screenshot of page or element
