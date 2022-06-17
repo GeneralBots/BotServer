@@ -395,7 +395,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*download\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = download (${$2}, ${$3})`;
+      return `${$1} = sys().download (${$2}, ${$3})`;
     });
 
     code = code.replace(/(create a bot farm using)(\s)(.*)/gi, ($0, $1, $2, $3) => {
@@ -695,9 +695,6 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bclick\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.click' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bdownload\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.download' : $1;
     });
     // await insertion.
 
