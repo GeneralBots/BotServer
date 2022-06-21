@@ -278,6 +278,18 @@ export class WhatsappDirectLine extends GBService {
       }
     }
 
+    const botId = this.min.instance.botId;
+
+    const state = WhatsappDirectLine.state[botId + from];
+    if ( state) {
+      WhatsappDirectLine.state[botId + from] = null;
+      await state.promise(null, message.text);
+      
+      return; // Exit here.
+    };
+
+
+    // Processes .gbapp message interception.
 
     await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
       await e.onExchangeData(this.min, 'whatsappMessage', message);
@@ -291,7 +303,9 @@ export class WhatsappDirectLine extends GBService {
 
     if (answerText) {
       await this.sendToDeviceEx(user.userSystemId, answerText, locale, null);
+      
       return; // Exit here.
+
     }
 
     if (message.type === 'ptt') {
@@ -315,13 +329,11 @@ export class WhatsappDirectLine extends GBService {
           `No momento estou apenas conseguindo ler mensagens de texto.`, null);
       }
     }
-    const botId = this.min.instance.botId;
     const conversationId = WhatsappDirectLine.conversationIds[botId + from + group];
 
     const client = await this.directLineClient;
 
     WhatsappDirectLine.lastMessage[botId + from] = message;
-
 
     // Check if this message is from a Human Agent itself.
 
@@ -543,36 +555,36 @@ export class WhatsappDirectLine extends GBService {
 
       let contents = 0;
       let body = {
-          to_number: to,
-          type: "media",
-          message: url,
-          text: caption
-        };
+        to_number: to,
+        type: "media",
+        message: url,
+        text: caption
+      };
 
-        let phoneId = this.whatsappServiceNumber.split(';')[0];
-        let productId = this.whatsappServiceNumber.split(';')[1]
+      let phoneId = this.whatsappServiceNumber.split(';')[0];
+      let productId = this.whatsappServiceNumber.split(';')[1]
 
       options = {
-          url: `${this.INSTANCE_URL}/${productId}/${phoneId}/sendMessage`,
-          method: 'post',
-          json: true,
-          body,
-          headers: {
-            'Content-Type': 'application/json',
-            'x-maytapi-key': this.whatsappServiceKey,
-          },
-        };
+        url: `${this.INSTANCE_URL}/${productId}/${phoneId}/sendMessage`,
+        method: 'post',
+        json: true,
+        body,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-maytapi-key': this.whatsappServiceKey,
+        },
+      };
 
-      }
-
-      try {
-        // tslint:disable-next-line: await-promise
-        const result = await request.post(options);
-        GBLog.info(`File ${url} sent to ${to}: ${result}`);
-      } catch (error) {
-        GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
-      }
     }
+
+    try {
+      // tslint:disable-next-line: await-promise
+      const result = await request.post(options);
+      GBLog.info(`File ${url} sent to ${to}: ${result}`);
+    } catch (error) {
+      GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
+    }
+  }
 
   public async sendAudioToDevice(to, url, chatId) {
     const options = {

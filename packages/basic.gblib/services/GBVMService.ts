@@ -175,8 +175,8 @@ export class GBVMService extends GBService {
     code = `<%\n
     
     id = sys().getRandomId()
-    username = this.userName(step);
-    mobile = this.userMobile(step);
+    username = step ? this.userName(step) : sys().getRandomId();
+    mobile = step ? this.userMobile(step) : sys().getRandomId();
     from = mobile;
     ubound = function(array){return array.length};
     isarray = function(array){return Array.isArray(array) };
@@ -728,7 +728,7 @@ export class GBVMService extends GBService {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    if (step.context.activity['originalText']) {
+    if (step && step.context.activity['originalText']) {
       const entities = await min["nerEngine"].findEntities(
         step.context.activity['originalText'],
         contentLocale);

@@ -188,8 +188,6 @@ export class GBMinService {
     });
 
     GBLog.info(`Package deployment done.`);
-
-
   }
 
 
@@ -524,7 +522,7 @@ export class GBMinService {
       }
     } catch (error) {
 
-      GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error}`);
+      GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error} ${error.stack}`);
     }
   }
 
@@ -1249,6 +1247,8 @@ export class GBMinService {
 
       } else if (cmdOrDialogName === '/call') {
         await GBVMService.callVM(args, min, step, this.deployer);
+      } else if (cmdOrDialogName === '/callsch') {
+        await GBVMService.callVM(args, min, null, null);
       } else {
         await step.beginDialog(cmdOrDialogName, { args: args });
       }
