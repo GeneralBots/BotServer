@@ -434,6 +434,10 @@ export class GBVMService extends GBService {
       return `sys().sendSmsTo (${$3})\n`;
     });
 
+    code = code.replace(/(send mail)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `sys().sendEmail (${$3})\n`;
+    });
+
     code = code.replace(/(send file to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `sendFileTo (step, ${$3})\n`;
     });
