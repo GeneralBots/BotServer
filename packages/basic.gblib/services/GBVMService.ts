@@ -434,10 +434,14 @@ export class GBVMService extends GBService {
       return `sys().sendSmsTo (${$3})\n`;
     });
 
-    code = code.replace(/(send mail)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+    code = code.replace(/(send email)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().sendEmail (${$3})\n`;
     });
 
+    code = code.replace(/(send mail)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `sys().sendEmail (${$3})\n`;
+    });
+   
     code = code.replace(/(send file to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `sendFileTo (step, ${$3})\n`;
     });
@@ -638,9 +642,6 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bhear\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.hear' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.sendEmail' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\baskEmail\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.askEmail' : $1;
