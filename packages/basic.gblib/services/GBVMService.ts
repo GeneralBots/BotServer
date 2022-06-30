@@ -435,11 +435,11 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(send email)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().sendEmail (${$3})\n`;
+      return `sendEmail (${$3})\n`;
     });
 
     code = code.replace(/(send mail)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().sendEmail (${$3})\n`;
+      return `sendEmail (${$3})\n`;
     });
    
     code = code.replace(/(send file to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -701,7 +701,10 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\bclick\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.click' : $1;
     });
-    // await insertion.
+    code = code.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.sendEmail' : $1;
+    });
+        // await insertion.
 
     code = code.replace(/this\./gm, 'await this.');
     code = code.replace(/function/gm, 'async function');

@@ -47,7 +47,6 @@ const urlJoin = require('url-join');
 const url = require('url');
 const puppeteer = require('puppeteer')
 const Path = require('path');
-const sgMail = require('@sendgrid/mail');
 const ComputerVisionClient = require('@azure/cognitiveservices-computervision').ComputerVisionClient;
 const ApiKeyCredentials = require('@azure/ms-rest-js').ApiKeyCredentials;
 const alasql = require('alasql');
@@ -888,7 +887,7 @@ export class SystemKeywords {
           }
           row[propertyName] = value;
         }
-        row['line'] = rowCount + 1;
+        row['line'] = rowCount;
         row['originalLine'] = foundIndex + 1;
         table.push(row);
       }
@@ -1265,40 +1264,6 @@ export class SystemKeywords {
     return GBAdminService.getRndPassword();
   }
 
-  /**
-   * Sends an e-mail.
-   * 
-   * @example 
-   * 
-   * SEND MAIL "email@domain.com", "Subject",  "Message text."
-   * 
-   */
-  public async sendEmail(to, subject, body) {
-
-    // tslint:disable-next-line:no-console
-
-    GBLog.info(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
-    const emailToken = process.env.EMAIL_API_KEY;
-
-    return new Promise<any>((resolve, reject) => {
-      sgMail.setApiKey(emailToken);
-      const msg = {
-        to: to,
-        from: process.env.EMAIL_FROM,
-        subject: subject,
-        text: body,
-        html: body
-      };
-      sgMail.send(msg, false, (err, res) => {
-        if (err) {
-          reject(err)
-        }
-        else {
-          resolve(res);
-        }
-      });
-    });
-  }
 
   /**
    * Calls any REST API by using GET HTTP method.

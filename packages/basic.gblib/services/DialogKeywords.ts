@@ -44,12 +44,10 @@ import { GBMinService } from '../../core.gbapp/services/GBMinService';
 import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import * as fs from 'fs';
 const DateDiff = require('date-diff');
 const puppeteer = require('puppeteer');
 const Path = require('path');
-import bb, { area, bar, zoom } from "billboard.js";
-import * as request from 'request-promise-native';
+const sgMail = require('@sendgrid/mail');
 
 /**
  * Base services of conversation to be called by BASIC which
@@ -513,6 +511,42 @@ export class DialogKeywords {
       { timeZone: process.env.DEFAULT_TIMEZONE });
 
     return /\b([0-9]|0[0-9]|1?[0-9]|2[0-3]):[0-5]?[0-9]/.exec(nowText)[0];
+  }
+
+
+  /**
+   * Sends an e-mail.
+   * 
+   * @example 
+   * 
+   * SEND MAIL "email@domain.com", "Subject",  "Message text."
+   * 
+   */
+  public async sendEmail(to, subject, body) {
+
+    // tslint:disable-next-line:no-console
+
+    GBLog.info(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
+    const emailToken = process.env.EMAIL_API_KEY;
+
+    return new Promise<any>((resolve, reject) => {
+      sgMail.setApiKey(emailToken);
+      const msg = {
+        to: to,
+        from: process.env.EMAIL_FROM,
+        subject: subject,
+        text: body,
+        html: body
+      };
+      sgMail.send(msg, false, (err, res) => {
+        if (err) {
+          reject(err)
+        }
+        else {
+          resolve(res);
+        }
+      });
+    });
   }
 
   /**
