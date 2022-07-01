@@ -51,7 +51,7 @@ export class GBSecurityPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
   public async getDialogs(min: GBMinInstance) {
 
-    let out = [
+    const out = [
       ProfileDialog.getNameDialog(min),
       ProfileDialog.getEmailDialog(min),
       ProfileDialog.getMobileDialog(min),

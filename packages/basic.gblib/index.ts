@@ -67,6 +67,6 @@ export class GBBasicPackage implements IGBPackage {
     GBLog.verbose(`onExchangeData called.`);
   }
   public async loadBot(min: GBMinInstance): Promise<void> {
-    
+
   }
 }

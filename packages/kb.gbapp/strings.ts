@@ -11,7 +11,7 @@ export const Messages = {
     lets_search: query =>
       `Lets search for ${query}... What do you want to know?`,
     see_faq: 'Please take a look at the FAQ I\'ve prepared for you. You can click on them to get the answer.',
-    
+
     ask_first_time: 'What are you looking for?'
   },
   'pt-BR': {
@@ -27,7 +27,7 @@ export const Messages = {
       `Let's search about ${query}... What do you want to know?`,
     see_faq:
       'Veja algumas perguntas mais frequentes logo na tela. Clique numa delas para eu responder.',
-    
+
     ask_first_time: 'Como eu posso ajudar?'
   }
 };
