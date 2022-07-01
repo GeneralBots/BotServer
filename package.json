@@ -25,6 +25,7 @@
     "type": "git",
     "url": "https://github.com/GeneralBots/BotServer.git"
   },
+  
   "scripts": {
     "clean": "shx rm -rf node_modules/ dist/ docs/reference",
     "tslint": "tslint --fix ./src/*.ts ./packages/**/*.ts -t verbose -e ./packages/default.gbui/**/* -e ./packages/**/*.gbdialog/**/*",
@@ -32,6 +33,7 @@
     "build-server": "tsc",
     "build-gbui": "cd packages/default.gbui && echo SKIP_PREFLIGHT_CHECK=true >.env &&  npm install && npm run build",
     "build-docs": "typedoc --options typedoc.json src/",
+    "test": "node test.js",
     "start": "node ./boot.js",
     "reverse-proxy": "node_modules/.bin/ngrok http 4242",
     "watch:build": "tsc --watch",
