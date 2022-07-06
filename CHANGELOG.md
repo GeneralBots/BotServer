@@ -1,3 +1,10 @@
+## [2.0.155](https://github.com/GeneralBots/BotServer/compare/2.0.154...2.0.155) (2022-07-06)
+
+
+### Bug Fixes
+
+* **all:** CHART and IMAGE from GET HTTP calls. ([cf62b10](https://github.com/GeneralBots/BotServer/commit/cf62b101969bdb7dc9c816b45b43e8e55b8287ee))
+
 ## [2.0.154](https://github.com/GeneralBots/BotServer/compare/2.0.153...2.0.154) (2022-07-01)
 
 
