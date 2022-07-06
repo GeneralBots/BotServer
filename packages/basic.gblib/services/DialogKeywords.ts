@@ -839,14 +839,20 @@ export class DialogKeywords {
 
     } else {
       GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
-      const url = urlJoin(
-        GBServer.globals.publicAddress,
-        'kb',
-        `${this.min.botId}.gbai`,
-        `${this.min.botId}.gbkb`,
-        'assets',
-        filename
-      );
+      let url;
+      if (!filename.startsWith("https://")) {
+        url = urlJoin(
+          GBServer.globals.publicAddress,
+          'kb',
+          `${this.min.botId}.gbai`,
+          `${this.min.botId}.gbkb`,
+          'assets',
+          filename
+        );
+      }
+      else {
+        url = filename;
+      }
 
       await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
     }
