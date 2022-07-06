@@ -115,7 +115,7 @@ export class DialogKeywords {
           "--disable-accelerated-2d-canvas",
           "--disable-gpu"],
         ignoreHTTPSErrors: true,
-        headless: false,
+        headless: true,
       });
     }
     const page = await this.browser.newPage();
@@ -137,29 +137,64 @@ export class DialogKeywords {
    * @param legends 
    * @see https://www.npmjs.com/package/plot
    */
-  public async chart(step, type, data, legends) {
+  public async chart(step, type, data, legends, transpose) {
 
-    const columns = [[]];
-    const legends_ = legends.split(';');
+    let table = [[]];
 
-    for (let i = 0; i < legends_.length; i++) {
-      columns[i] = [legends_[i]];
-      columns[i] = columns[i].concat(data);
+    if (legends) {
+
+      const legends_ = legends.split(';');
+
+      // Columns and data are merged like:
+      //     columns: [
+      //       ['data1', 30, 200, 100, 400, 150, 250],
+      //       ['data2', 50, 20, 10, 40, 15, 25]
+      //     ]
+
+      for (let i = 0; i < legends_.length; i++) {
+        table[i] = [legends_[i]];
+        table[i] = table[i].concat(data);
+      }
+    }
+    else {
+      table = SystemKeywords.JSONAsGBTable(data, false);
+      table.shift();
     }
 
-    const definition = {
+    if (transpose) {
+      const transpose = (array) => {
+        return array.reduce((prev, next) => next.map((item, i) =>
+          (prev[i] || []).concat(next[i])
+        ), []);
+      }
+      table = transpose(table);
+    }
+
+
+    let definition = {
       size: {
-        "height": 600,
-        "width": 1200
+        "height": 420,
+        "width": 680
       },
       data: {
-        columns: columns,
+        columns: table,
         type: type
       },
       bar: {
-        width: 200
+        ratio: 0.5
       }
     };
+
+    // TODO: https://c3js.org/samples/timeseries.html
+
+    if (type === 'timeseries') {
+      definition['axis'][table[0]] = {
+        type: 'timeseries',
+        tick: {
+          format: '%Y-%m-%d'
+        }
+      }
+    }
 
     const gbaiName = `${this.min.botId}.gbai`;
     const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);

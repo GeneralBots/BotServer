@@ -101,7 +101,7 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
   public text: string;
 
   @ForeignKey(() => GuaribasUser)
-  @Column(DataType.STRING(255))
+  @Column(DataType.INTEGER)
   public startedByUserId: number;
 
   @BelongsTo(() => GuaribasUser)

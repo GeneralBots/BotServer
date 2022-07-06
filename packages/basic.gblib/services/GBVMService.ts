@@ -462,6 +462,11 @@ export class GBVMService extends GBService {
       return `sys().convert(${$3})\n`;
     });
 
+    // TODO: AS CHART.
+    // code = code.replace(/(\w+)\s*\=\s*(.*)\s*as chart/gi, ($0, $1, $2) => {
+    //   return `${$1} = sys().asImage(${$2})\n`;
+    // });
+
     code = code.replace(/(\w+)\s*\=\s*(.*)\s*as image/gi, ($0, $1, $2) => {
       return `${$1} = sys().asImage(${$2})\n`;
     });

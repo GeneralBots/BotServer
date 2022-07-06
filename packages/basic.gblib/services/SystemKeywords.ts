@@ -40,6 +40,7 @@ import { DialogKeywords } from './DialogKeywords';
 import { Tabulator } from 'tabulator-tables';
 import { GBServer } from '../../../src/app';
 import * as fs from 'fs';
+import { jar } from 'request-promise';
 const Fs = require('fs');
 const Excel = require('exceljs');
 
@@ -181,6 +182,51 @@ export class SystemKeywords {
     }
   }
 
+  public static JSONAsGBTable(data, headers) {
+    try {
+      let output = [];
+      let isObject = false;
+
+      if (Array.isArray(data)) {
+        isObject = Object.keys(data[0]) !== null;
+      }
+
+      if (isObject || JSON.parse(data) !== null) {
+
+        let keys = Object.keys(data[0]);
+        
+
+        if (headers) {
+          output[0] = [];
+          // Copies headers as the first element.
+
+          for (let i = 0; i < keys.length; i++) {
+            
+            output[0][i] = keys[i];
+          }
+        }
+        else
+        {
+          output.push({ 'gbarray': '0' }); ; 
+        }
+
+        // Copies data from JSON format into simple array.
+
+        for (let i = 0; i < data.length; i++) {
+          output[i + 1] = [];
+          for (let j = 0; j < keys.length; j++) {
+            output[i + 1][j] = data[i][keys[j]];
+          }
+        }
+
+        return output;
+      }
+    } catch (error) {
+      GBLog.error(error);
+      return data;
+    }
+  }
+
   /**
    * 
    * @param data 
@@ -192,11 +238,19 @@ export class SystemKeywords {
    * @see puppeteer.
    */
   private async renderTable(data, renderPDF, renderImage) {
+
     if (!data[1]) {
       return null;
     }
+
+    data = SystemKeywords.JSONAsGBTable(data, true);
+
+    // Detects if it is a collection with repeated
+    // headers.
+
+
     const gbaiName = `${this.min.botId}.gbai`;
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
 
     // Includes the associated CSS related to current theme.
@@ -285,19 +339,30 @@ export class SystemKeywords {
 
   public async asPDF(data, filename) {
     let file = await this.renderTable(data, true, false);
-    return file['url'];
+    return file[0];
   }
 
   public async asImage(data, filename) {
     let file = await this.renderTable(data, false, true);
-    return file['url'];
+    return file[0];
 
   }
 
   public async executeSQL(data, sql, tableName) {
-    const first = data.shift();
+
+    let objectMode = false;
+    if (Object.keys(data[0])) {
+      objectMode = true;
+    }
+
+    let first;
+    if (!objectMode) {
+      first = data.shift();
+    }
     data = alasql(sql, [data]);
-    data.unshift(first);
+    if (!objectMode) {
+      data.unshift(first);
+    }
     return data;
   }
 
@@ -1290,21 +1355,17 @@ export class SystemKeywords {
       options['responseType'] = 'stream';
       options['encoding'] = null;
     }
-    const isAO = (val) => {
-      return val instanceof Array || val instanceof Object ? true : false;
-    }
     let result = await request.get(options);
 
+    try {
 
-    if (isAO(result) && !streaming) {
-      GBLog.info(`[GET]: ${url} : ${result}`);
       return JSON.parse(result);
-    }
-    else {
+
+    } catch (error) {
       GBLog.info(`[GET]: OK.`);
+
       return result;
     }
-
   }
 
   /**

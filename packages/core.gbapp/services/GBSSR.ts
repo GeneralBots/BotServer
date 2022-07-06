@@ -134,7 +134,7 @@ async function ssr(url: string, useCache: boolean, cacheRefreshRate: number) {
         }
     }
     const browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         args: ["--single-process", "--no-zygote", "--no-sandbox", "--disable-features=site-per-process"]
     });
     // browserWSEndpoint = await browserT.wsEndpoint();

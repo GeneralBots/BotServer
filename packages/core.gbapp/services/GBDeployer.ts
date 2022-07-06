@@ -521,7 +521,7 @@ export class GBDeployer implements IGBDeployer {
             GBLog.info(`Local is up to date: ${itemPath}...`);
           }
         }
-      });
+       });
     }
   }
   /**

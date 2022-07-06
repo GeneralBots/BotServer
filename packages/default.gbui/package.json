@@ -12,6 +12,7 @@
     "botframework-directlinejs": "0.14.1",
     "botframework-webchat": "^4.13.0",
     "deep-extend": "0.6.0",
+    "eslint": "7.11.0",
     "fetch": "1.1.0",
     "msal": "^1.4.11",
     "powerbi-client": "2.18.0",
@@ -25,8 +26,7 @@
     "react-transition-group": "^4.4.2",
     "rxjs": "^7.1.0",
     "url-join": "4.0.1",
-    "webpack": "4.44.2",
-    "eslint": "7.11.0"
+    "webpack": "4.44.2"
   },
   "scripts": {
     "start": "react-scripts start",
