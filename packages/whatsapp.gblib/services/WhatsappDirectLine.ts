@@ -87,7 +87,7 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceKey = whatsappServiceKey;
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
-    this.chatapi = GBConfigService.get('CHATAPI') === 'true';
+    this.chatapi = whatsappServiceNumber.indexOf(':') > -1 ? true : false;
   }
 
   public static async asyncForEach(array, callback) {
@@ -281,10 +281,10 @@ export class WhatsappDirectLine extends GBService {
     const botId = this.min.instance.botId;
 
     const state = WhatsappDirectLine.state[botId + from];
-    if ( state) {
+    if (state) {
       WhatsappDirectLine.state[botId + from] = null;
       await state.promise(null, message.text);
-      
+
       return; // Exit here.
     };
 
@@ -303,9 +303,8 @@ export class WhatsappDirectLine extends GBService {
 
     if (answerText) {
       await this.sendToDeviceEx(user.userSystemId, answerText, locale, null);
-      
-      return; // Exit here.
 
+      return; // Exit here.
     }
 
     if (message.type === 'ptt') {

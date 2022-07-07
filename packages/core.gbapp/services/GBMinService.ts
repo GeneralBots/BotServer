@@ -320,6 +320,10 @@ export class GBMinService {
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
   }
 
+  public static isChatAPI(req) {
+    return req.body.phone_id ? false : true;
+  }
+
   private async WhatsAppCallback(req, res) {
     try {
 
@@ -330,16 +334,16 @@ export class GBMinService {
         return;
       }
 
-      let chatapi = GBConfigService.get('CHATAPI') === 'true';
+      let chatapi = GBMinService.isChatAPI(req);
 
       if (chatapi) {
-        if (req.body.ack){
+        if (req.body.ack) {
           res.status(200);
           res.end();
 
           return;
         }
-      }else{
+      } else {
         if (req.body.type !== 'message') {
           res.status(200);
           res.end();
@@ -379,7 +383,7 @@ export class GBMinService {
           botId = GBConfigService.get('BOT_ID');
         }
       }
-      else      {
+      else {
         botId = WhatsappDirectLine.phones[req.body.phoneId];
       }
 
