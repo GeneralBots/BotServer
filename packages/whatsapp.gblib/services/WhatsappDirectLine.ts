@@ -87,7 +87,7 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceKey = whatsappServiceKey;
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
-    this.chatapi = whatsappServiceNumber.indexOf(':') > -1 ? true : false;
+    this.chatapi = whatsappServiceNumber.indexOf(';') > -1 ? true : false;
   }
 
   public static async asyncForEach(array, callback) {
