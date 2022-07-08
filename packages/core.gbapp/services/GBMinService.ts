@@ -373,8 +373,6 @@ export class GBMinService {
         }
       }
 
-      let activeMin;
-
       let botId;
 
       if (chatapi) {
@@ -387,8 +385,14 @@ export class GBMinService {
         botId = WhatsappDirectLine.phones[req.body.phoneId];
       }
 
-      GBLog.info(`Client requested instance for: ${botId}.`);
+      GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
 
+      let urlMin: any = GBServer.globals.minInstances.filter
+        (p => p.instance.botId === botId);
+
+      const botNumber = urlMin.core.getParam(urlMin.instance, 'Bot Number', null);
+
+      let activeMin;
 
       // Processes group behaviour.
 
@@ -396,6 +400,7 @@ export class GBMinService {
       text = text.replace(/\@\d+ /gi, '');
 
       if (chatapi) {
+
         // Ensures that the bot group is the active bot for the user (like switching).
 
         const message = req.body.messages[0];
@@ -415,7 +420,6 @@ export class GBMinService {
         }
       }
 
-
       // Detects if the welcome message is enabled.
 
       if (process.env.WHATSAPP_WELCOME_DISABLED !== 'true') {
@@ -431,9 +435,10 @@ export class GBMinService {
           )[0];
         }
 
-        // Find active bot instance.
+        // If bot has a fixed Find active bot instance.
 
-        activeMin = toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
+        activeMin = botNumber ? urlMin :
+          toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
 
         // If it is the first time for the user, tries to auto-execute
         // start dialog if any is specified in Config.xlsx.
