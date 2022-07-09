@@ -150,13 +150,13 @@ export class WhatsappDirectLine extends GBService {
       const express = require('express');
       GBServer.globals.server.use(`/audios`, express.static('work'));
 
-      if (process.env.ENDPOINT_UPDATE === 'true') {
-        try {
-          const res = await request.post(options);
-        } catch (error) {
-          GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
-        }
+
+      try {
+        const res = await request.post(options);
+      } catch (error) {
+        GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
       }
+
     }
 
   }
@@ -188,6 +188,7 @@ export class WhatsappDirectLine extends GBService {
 
       return;  // Exit here.
     }
+
 
     const message = this.chatapi ? req.body.messages[0] : req.body.message;
     let group = "";
