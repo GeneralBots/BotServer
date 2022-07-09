@@ -390,7 +390,7 @@ export class GBMinService {
       let urlMin: any = GBServer.globals.minInstances.filter
         (p => p.instance.botId === botId)[0];
 
-      const botNumber = urlMin.core.getParam(urlMin.instance, 'Bot Number', null);
+      const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
 
       let activeMin;
 
