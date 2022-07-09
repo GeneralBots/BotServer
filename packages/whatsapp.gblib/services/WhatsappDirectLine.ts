@@ -132,7 +132,7 @@ export class WhatsappDirectLine extends GBService {
       let phoneId = this.whatsappServiceNumber.split(';')[0];
       let productId = this.whatsappServiceNumber.split(';')[1]
 
-      let url = `${this.INSTANCE_URL}/${phoneId}/config`;
+      let url = `${this.INSTANCE_URL}/${productId}/${phoneId}/config`;
       WhatsappDirectLine.phones[phoneId] = this.botId;
 
       options = {
