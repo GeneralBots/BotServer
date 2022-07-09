@@ -388,7 +388,7 @@ export class GBMinService {
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
 
       let urlMin: any = GBServer.globals.minInstances.filter
-        (p => p.instance.botId === botId);
+        (p => p.instance.botId === botId)[0];
 
       const botNumber = urlMin.core.getParam(urlMin.instance, 'Bot Number', null);
 
