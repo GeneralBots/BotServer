@@ -132,13 +132,16 @@ export class WhatsappDirectLine extends GBService {
       let phoneId = this.whatsappServiceNumber.split(';')[0];
       let productId = this.whatsappServiceNumber.split(';')[1]
 
-      let url = `${this.INSTANCE_URL}/${productId}/setWebhook`;
+      let url = `${this.INSTANCE_URL}/${phoneId}/config`;
       WhatsappDirectLine.phones[phoneId] = this.botId;
 
       options = {
         url: url,
         method: 'POST',
-        body: { webhook: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}` },
+        body: {
+          webhook: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`,
+          "ack_delivery": false
+        },
         headers: {
           'x-maytapi-key': this.whatsappServiceKey,
           'Content-Type': 'application/json',
