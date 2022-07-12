@@ -45,6 +45,7 @@ const wash = require('washyourmouthoutwithsoap');
 const { FacebookAdapter } = require('botbuilder-adapter-facebook');
 const path = require('path');
 const { NerManager } = require('node-nlp');
+const mkdirp = require('mkdirp');
 import {
   AutoSaveStateMiddleware,
   BotFrameworkAdapter,
@@ -245,6 +246,16 @@ export class GBMinService {
       await this.deployer.deployPackage(min, packagePath);
     }
 
+    let dir = `work/${min.botId}.gbai/cache`;
+
+    if (!fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
+    dir = `work/${min.botId}.gbai/profile`;
+    if (!fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
+
     // Loads Named Entity data for this bot.
 
     await KBService.RefreshNER(min);
@@ -320,8 +331,11 @@ export class GBMinService {
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
   }
 
-  public static isChatAPI(req) {
-    return req.body.phone_id ? false : true;
+  public static isChatAPI(req, res) {
+    if (!res) {
+      return "GeneralBots";
+    }
+    return req.body.phone_id ? "maytapi" : "chatapi";
   }
 
   private async WhatsAppCallback(req, res) {
@@ -334,56 +348,66 @@ export class GBMinService {
         return;
       }
 
-      let chatapi = GBMinService.isChatAPI(req);
+      let provider = GBMinService.isChatAPI(req, res);
+      let id = provider ? req.body.messages[0].author.split('@')[0] : req.body.user.phone;
+      let senderName = provider ? req.body.messages[0].senderName : req.body.user.name;
+      let botId;
+      let text;
 
-      if (chatapi) {
-        if (req.body.ack) {
-          res.status(200);
-          res.end();
+      switch (provider) {
+        case "GeneralBots":
 
-          return;
-        }
-      } else {
-        if (req.body.type !== 'message') {
-          res.status(200);
-          res.end();
+          id = req.body.messages[0].author.split('@')[0];
+          senderName = req.body.messages[0].senderName;
+          text = req.body;
 
-          return;
-        }
+          break;
+
+        case "chatapi":
+
+          id = req.body.messages[0].author.split('@')[0];
+          senderName = req.body.messages[0].senderName;
+          text = req.body.messages[0].body;
+
+          if (req.body.ack) {
+            res.status(200);
+            res.end();
+
+            return;
+          }
+          if (req.body.messages[0].fromMe) {
+            res.end();
+
+            return; // Exit here.
+          }
+          botId = req.params.botId;
+          if (botId === '[default]' || botId === undefined) {
+            botId = GBConfigService.get('BOT_ID');
+          }
+          break;
+        case "maytapi":
+
+          id = req.body.user.phone;
+          senderName = req.body.user.name;
+          text = req.body.message.text;
+
+          if (req.body.type !== 'message') {
+            res.status(200);
+            res.end();
+
+            return;
+          }
+          if (req.body.message.fromMe) {
+            res.end();
+
+            return; // Exit here.
+          }
+          botId = WhatsappDirectLine.phones[req.body.phoneId];
+          break;
       }
 
-      // Detects if the message is echo from itself.
-
-      const id = chatapi ? req.body.messages[0].author.split('@')[0] : req.body.user.phone;
-      const senderName = chatapi ? req.body.messages[0].senderName : req.body.user.name;
       const sec = new SecService();
       let user = await sec.getUserFromSystemId(id);
-
-      if (chatapi) {
-        if (req.body.messages[0].fromMe) {
-          res.end();
-
-          return; // Exit here.
-        }
-      } else {
-        if (req.body.message.fromMe) {
-          res.end();
-
-          return; // Exit here.
-        }
-      }
-
-      let botId;
-
-      if (chatapi) {
-        botId = req.params.botId;
-        if (botId === '[default]' || botId === undefined) {
-          botId = GBConfigService.get('BOT_ID');
-        }
-      }
-      else {
-        botId = WhatsappDirectLine.phones[req.body.phoneId];
-      }
 
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
 
@@ -391,15 +415,13 @@ export class GBMinService {
         (p => p.instance.botId === botId)[0];
 
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
-
       let activeMin;
 
       // Processes group behaviour.
 
-      let text = chatapi ? req.body.messages[0].body : req.body.message.text;
       text = text.replace(/\@\d+ /gi, '');
 
-      if (chatapi) {
+      if (provider === "chatapi") {
 
         // Ensures that the bot group is the active bot for the user (like switching).
 
@@ -452,10 +474,10 @@ export class GBMinService {
 
           if (startDialog) {
             GBLog.info(`Calling /start to Auto start ${startDialog} for ${activeMin.instance.instanceId}...`);
-            if (chatapi) {
+            if (provider === "chatapi") {
               req.body.messages[0].body = `/start`;
             }
-            else {
+            else if (provider === "maytapi") {
               req.body.message = `/start`;
             }
 
@@ -488,10 +510,10 @@ export class GBMinService {
 
             if (startDialog) {
               GBLog.info(`Calling /start for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
-              if (chatapi) {
+              if (provider === "chatapi") {
                 req.body.messages[0].body = `/start`;
               }
-              else {
+              else if (provider === "maytapi") {
                 req.body.message = `/start`;
               }
 
@@ -821,7 +843,7 @@ export class GBMinService {
     // If there is WhatsApp configuration specified, initialize
     // infrastructure objects.
 
-    if (min.instance.whatsappServiceUrl) {
+    if (min.instance.whatsappServiceKey) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
         min,
         min.botId,
@@ -1023,10 +1045,6 @@ export class GBMinService {
             const data = await t.getByHttp(file.contentUrl, headers, null, null, null, true);
             const folder = `work/${min.instance.botId}.gbai/cache`;
             const filename = `${GBAdminService.generateUuid()}.png`;
-
-            if (!Fs.existsSync(folder)) {
-              Fs.mkdirSync(folder);
-            }
 
             Fs.writeFileSync(path.join(folder, filename), data);
             step.context.activity.text = urlJoin(GBServer.globals.publicAddress, `${min.instance.botId}`, 'cache', filename);

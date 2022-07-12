@@ -475,6 +475,10 @@ export class GBVMService extends GBService {
       return `${$1} = sys().asPdf(${$2})\n`;
     });
 
+    code = code.replace(/(\w+)\s*\=\s*FILL\s(.*)\sWITH\s(.*)/gi, ($0, $1, $2, $3) => {
+      return `${1} = sys().fill(${$2}, ${$1})\n`;
+    });
+
     code = code.replace(/save\s(.*)\sas\s(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().saveFile(${$2}, ${$1})\n`;
     });

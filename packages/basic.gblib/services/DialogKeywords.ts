@@ -48,6 +48,9 @@ const DateDiff = require('date-diff');
 const puppeteer = require('puppeteer');
 const Path = require('path');
 const sgMail = require('@sendgrid/mail');
+const PizZip = require("pizzip");
+const Docxtemplater = require("docxtemplater");
+var mammoth = require("mammoth");
 
 /**
  * Base services of conversation to be called by BASIC which
@@ -564,6 +567,14 @@ export class DialogKeywords {
     GBLog.info(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
     const emailToken = process.env.EMAIL_API_KEY;
 
+    // Inline word document used as e-mail body.
+
+    if (typeof (body) === "object" )
+    {
+      const result = await mammoth.convertToHtml({buffer: body});
+      body = result.value;
+    }
+    
     return new Promise<any>((resolve, reject) => {
       sgMail.setApiKey(emailToken);
       const msg = {

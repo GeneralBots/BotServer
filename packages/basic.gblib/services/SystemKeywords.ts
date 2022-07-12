@@ -30,17 +30,15 @@
 |                                                                             |
 \*****************************************************************************/
 'use strict';
-import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
+import { GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { DialogKeywords } from './DialogKeywords';
-import { Tabulator } from 'tabulator-tables';
 import { GBServer } from '../../../src/app';
 import * as fs from 'fs';
-import { jar } from 'request-promise';
 const Fs = require('fs');
 const Excel = require('exceljs');
 
@@ -51,7 +49,9 @@ const Path = require('path');
 const ComputerVisionClient = require('@azure/cognitiveservices-computervision').ComputerVisionClient;
 const ApiKeyCredentials = require('@azure/ms-rest-js').ApiKeyCredentials;
 const alasql = require('alasql');
-const DateDiff = require('date-diff');
+const PizZip = require("pizzip");
+const Docxtemplater = require("docxtemplater");
+const pptxTemplaterModule = require('pptxtemplater');
 
 
 /**
@@ -194,20 +194,19 @@ export class SystemKeywords {
       if (isObject || JSON.parse(data) !== null) {
 
         let keys = Object.keys(data[0]);
-        
+
 
         if (headers) {
           output[0] = [];
           // Copies headers as the first element.
 
           for (let i = 0; i < keys.length; i++) {
-            
+
             output[0][i] = keys[i];
           }
         }
-        else
-        {
-          output.push({ 'gbarray': '0' }); ; 
+        else {
+          output.push({ 'gbarray': '0' });;
         }
 
         // Copies data from JSON format into simple array.
@@ -504,7 +503,8 @@ export class SystemKeywords {
    * @exaple SAVE variable as "my.txt"
    * 
    */
-  public async saveFile(file: string, data: any): Promise<any> {
+  public async saveFile(file: any, data: any): Promise<any> {
+
     GBLog.info(`BASIC: Saving '${file}' (SAVE file).`);
     let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
@@ -816,6 +816,7 @@ export class SystemKeywords {
     let foundIndex = 1;
 
     // Fills the row variable.
+    
     let rowCount = 0;
     for (; foundIndex < rows.length; foundIndex++) {
       let filterAcceptCount = 0;
@@ -952,8 +953,8 @@ export class SystemKeywords {
           }
           row[propertyName] = value;
         }
-        row['line'] = rowCount;
-        row['originalLine'] = foundIndex + 1;
+        row['ordinal'] = rowCount;
+        row['line'] = foundIndex + 1;
         table.push(row);
       }
 
@@ -1393,4 +1394,45 @@ export class SystemKeywords {
     return text.replace(/\D/gi, '');
   }
 
+  /**
+ *
+ * Fills a .docx or .pptx with template data.
+ * 
+ * doc = FILL "templates/template.docx", data
+ *
+ */
+  public async fill(templateName, data) {
+
+    const botId = this.min.instance.botId;
+    const gbaiName = `${botId}.gbai`;
+    const path = `/${botId}.gbai/${botId}.gbdata`;
+
+    // Downloads template from .gbdrive.
+
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let template = await this.internalGetDocument(client, baseUrl, path, templateName);
+    const url = template['@microsoft.graph.downloadUrl'];
+    const localName = Path.join('work', gbaiName, 'cache', ``);
+    const response = await request({ uri: url, encoding: null });
+    Fs.writeFileSync(localName, response, { encoding: null });
+
+    // Loads the file as binary content.
+
+    const content = fs.readFileSync(localName, "binary");
+    const zip = new PizZip(content);
+    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true, });
+    if (localName.endsWith('.pptx')) {
+      doc.attachModule(pptxTemplaterModule);
+    }
+
+    // Renders the document (Replace {first_name} by John, {last_name} by Doe, ...)
+
+    doc.render(data);
+
+    // Returns the buffer to be used with SAVE AS for example.
+
+    const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE", });
+    
+    return buf;
+  }
 }
