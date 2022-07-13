@@ -34,6 +34,7 @@ const urlJoin = require('url-join');
 
 const Swagger = require('swagger-client');
 const fs = require('fs');
+const Path = require('path');
 import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
@@ -42,8 +43,6 @@ import { GBConversationalService } from '../../core.gbapp/services/GBConversatio
 import { SecService } from '../../security.gbapp/services/SecService';
 import { Messages } from '../strings';
 import { GuaribasUser } from '../../security.gbapp/models';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords';
 const { MessageMedia, Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
@@ -106,8 +105,7 @@ export class WhatsappDirectLine extends GBService {
 
     this.directLineClient =
       new Swagger({
-        spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
-        usePromise: true
+        spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')), usePromise: true
       });
     const client = await this.directLineClient;
 
@@ -120,11 +118,10 @@ export class WhatsappDirectLine extends GBService {
     switch (this.provider) {
       case 'GeneralBots':
 
-        const Path = require('path');
+        // Initialize the browser using a local profile for each bot.
 
         const gbaiName = `${this.min.botId}.gbai`;
         let localName = Path.join('work', gbaiName, 'profile');
-
         let client = this.customClient = new Client({
           authStrategy: new LocalAuth(),
           puppeteer: {
@@ -132,8 +129,9 @@ export class WhatsappDirectLine extends GBService {
               `--user-data-dir=${localName}`]
           }
         });
-
         client.initialize();
+
+        // Dispatches messages to the received method.
 
         client.on('message', (async message => {
           await this.received(message, null);
@@ -153,7 +151,7 @@ export class WhatsappDirectLine extends GBService {
 
 
           // While handling other bots uses boot instance of this class to send QR Codes.
-          
+
           if (this.botId !== GBServer.globals.minBoot.botId) {
             GBServer.globals.minBoot.whatsAppDirectLine.sendMessage(msg);
             GBServer.globals.minBoot.whatsAppDirectLine.sendMessage(adminNumber, qr);
@@ -192,7 +190,6 @@ export class WhatsappDirectLine extends GBService {
 
         let phoneId = this.whatsappServiceNumber.split(';')[0];
         let productId = this.whatsappServiceNumber.split(';')[1]
-
         let url = `${this.INSTANCE_URL}/${productId}/${phoneId}/config`;
         WhatsappDirectLine.phones[phoneId] = this.botId;
 
@@ -222,9 +219,7 @@ export class WhatsappDirectLine extends GBService {
       } catch (error) {
         GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
       }
-
     }
-
   }
 
   public async resetConversationId(botId, number, group = '') {
@@ -237,15 +232,12 @@ export class WhatsappDirectLine extends GBService {
 
     const options = {
       url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`,
-      method: 'GET'
-
-    };
+      method: 'GET'};
 
     const res = await request(options);
     const json = JSON.parse(res);
 
     return json.accountStatus === 'authenticated';
-
   }
 
   public async received(req, res) {
@@ -371,8 +363,8 @@ export class WhatsappDirectLine extends GBService {
     await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
       await e.onExchangeData(this.min, 'whatsappMessage', message);
     });
-    const sec = new SecService();
 
+    const sec = new SecService();
     const user = await sec.ensureUser(this.min.instance.instanceId, from,
       fromName, '', 'whatsapp', fromName, null);
     const locale = user.locale ? user.locale : 'pt';
@@ -404,10 +396,9 @@ export class WhatsappDirectLine extends GBService {
           `No momento estou apenas conseguindo ler mensagens de texto.`, null);
       }
     }
+
     const conversationId = WhatsappDirectLine.conversationIds[botId + from + group];
-
     const client = await this.directLineClient;
-
     WhatsappDirectLine.lastMessage[botId + from] = message;
 
     // Check if this message is from a Human Agent itself.
@@ -762,10 +753,7 @@ export class WhatsappDirectLine extends GBService {
         case 'maytapi':
           let phoneId = this.whatsappServiceNumber.split(';')[0];
           let productId = this.whatsappServiceNumber.split(';')[1]
-
-
           let url = `${this.INSTANCE_URL}/${productId}/${phoneId}/sendMessage`;
-
 
           options = {
             url: url,

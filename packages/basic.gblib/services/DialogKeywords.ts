@@ -635,6 +635,17 @@ export class DialogKeywords {
   }
 
   /**
+   * Defines the id generation policy.
+   *
+   * @example SET ID NUMBER 
+   *
+   */
+   public async setIdGeneration(mode) {
+    this['idGeneration'] = mode;
+    this['id'] = await this.sys().getRandomId();
+  }
+
+  /**
    * Defines the maximum lines to scan in spreedsheets.
    *
    * @example SET MAX LINES 5000

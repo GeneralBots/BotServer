@@ -467,10 +467,15 @@ export class KBService implements IGBKBService {
             GBLog.info(`[GBImporter] Answer is NULL related to Question '${question}'.`);
             answer =
               'Existe um problema na base de conhecimento. Fui treinado para entender sua pergunta, avise a quem me criou que a resposta não foi informada para esta pergunta.';
-          } else if (answer.indexOf('.md') > -1) {
+          } else if (answer.indexOf('.md') > -1 || answer.indexOf('.docx') > -1) {
+
             const mediaFilename = urlJoin(path.dirname(filePath), '..', 'articles', answer);
             if (Fs.existsSync(mediaFilename)) {
+
+              // TODO: Convert DOCX to MD.
+
               answer = Fs.readFileSync(mediaFilename, 'utf8');
+              
               format = '.md';
               media = path.basename(mediaFilename);
             } else {
