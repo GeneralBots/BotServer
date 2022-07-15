@@ -97,7 +97,7 @@
     "js-beautify": "1.13.13",
     "luxon": "2.0.2",
     "mammoth": "^1.4.21",
-    "marked": "2.0.7",
+    "marked": "4.0.10",
     "momentjs": "2.0.0",
     "ms-rest-azure": "3.0.0",
     "nexmo": "2.9.1",
