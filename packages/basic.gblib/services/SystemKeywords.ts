@@ -382,7 +382,17 @@ export class SystemKeywords {
    * Retrives a random id with a length of five, every time it is called.
    */
   public async getRandomId() {
-    return GBAdminService.getRndReadableIdentifier().substr(5);
+
+    const idGeneration = this.dk['idGeneration'];
+    if (idGeneration.toLowerCase() === 'number')
+    {
+      return GBAdminService.getNumberIdentifier();
+    }
+    else
+    {
+      return GBAdminService.getRndReadableIdentifier().substr(5);
+    }
+
   }
 
   /**

@@ -398,6 +398,14 @@ export class GBVMService extends GBService {
       return `${$1} = sys().download (${$2}, ${$3})`;
     });
 
+    code = code.replace(/(\w+)\s*\=\s*CREATE FOLDER\s*(.*)/gi, ($0, $1, $2) => {
+      return `${$1} = sys().createFolder (${$2})`;
+    });
+
+    code = code.replace(/SHARE FOLDER\s*(.*)/gi, ($0, $1) => {
+      return `sys().shareFolder (${$1})`;
+    });
+
     code = code.replace(/(create a bot farm using)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `sys().createABotFarmUsing (${$3})`;
     });
