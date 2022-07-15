@@ -349,8 +349,8 @@ export class GBMinService {
       }
 
       let provider = GBMinService.isChatAPI(req, res);
-      let id = provider ? req.body.messages[0].author.split('@')[0] : req.body.user.phone;
-      let senderName = provider ? req.body.messages[0].senderName : req.body.user.name;
+      let id;
+      let senderName;
       let botId;
       let text;
 
@@ -365,10 +365,6 @@ export class GBMinService {
 
         case "chatapi":
 
-          id = req.body.messages[0].author.split('@')[0];
-          senderName = req.body.messages[0].senderName;
-          text = req.body.messages[0].body;
-
           if (req.body.ack) {
             res.status(200);
             res.end();
@@ -380,16 +376,15 @@ export class GBMinService {
 
             return; // Exit here.
           }
+          id = req.body.messages[0].author.split('@')[0];
+          senderName = req.body.messages[0].senderName;
+          text = req.body.messages[0].body;
           botId = req.params.botId;
           if (botId === '[default]' || botId === undefined) {
             botId = GBConfigService.get('BOT_ID');
           }
           break;
         case "maytapi":
-
-          id = req.body.user.phone;
-          senderName = req.body.user.name;
-          text = req.body.message.text;
 
           if (req.body.type !== 'message') {
             res.status(200);
@@ -402,6 +397,10 @@ export class GBMinService {
 
             return; // Exit here.
           }
+          id = req.body.user.phone;
+          senderName = req.body.user.name;
+          text = req.body.message.text;
+
           botId = WhatsappDirectLine.phones[req.body.phoneId];
           break;
       }

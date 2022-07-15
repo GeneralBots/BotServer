@@ -51,6 +51,7 @@ const sgMail = require('@sendgrid/mail');
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 var mammoth = require("mammoth");
+const qrcode = require('qrcode');
 
 /**
  * Base services of conversation to be called by BASIC which
@@ -569,12 +570,11 @@ export class DialogKeywords {
 
     // Inline word document used as e-mail body.
 
-    if (typeof (body) === "object" )
-    {
-      const result = await mammoth.convertToHtml({buffer: body});
+    if (typeof (body) === "object") {
+      const result = await mammoth.convertToHtml({ buffer: body });
       body = result.value;
     }
-    
+
     return new Promise<any>((resolve, reject) => {
       sgMail.setApiKey(emailToken);
       const msg = {
@@ -867,5 +867,12 @@ export class DialogKeywords {
 
       await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
     }
+  }
+
+  public async getQRCode(text) {
+    const img = await qrcode.toDataURL(text);
+    const data = img.replace(/^data:image\/\w+;base64,/, "");
+    const buf = Buffer.from(data, "base64");
+    return buf;
   }
 }

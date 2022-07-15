@@ -92,7 +92,7 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceKey = whatsappServiceKey;
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
-    this.provider = whatsappServiceKey === "gbnative" ?
+    this.provider = whatsappServiceKey === "internal" ?
       'GeneralBots' : whatsappServiceNumber.indexOf(';') > -1 ? 'maytapi' : 'chatapi';
   }
 
@@ -139,26 +139,34 @@ export class WhatsappDirectLine extends GBService {
           await this.received(message, null);
         }).bind(this));
 
-        client.on('qr', ((qr) => {
+        client.on('qr', (async (qr) => {
 
           const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
           const adminEmail = this.min.core.getParam(this.min.instance, 'Bot Admin E-mail', null);
 
           // Sends QR Code to boot bot admin.
 
-          const info = this.customClient.info;
-          const msg = `Please, scan QR Code with ${info.wid.user}(${info.pushname}) for bot ${this.botId}: ${qr}.`;
+          const msg = `Please, scan QR Code with for bot ${this.botId}.`;
           GBLog.info(msg);
           qrcode.generate(qr, { small: true, scale: 0.5 });
 
 
           // While handling other bots uses boot instance of this class to send QR Codes.
-          
+
           if (this.botId !== GBServer.globals.minBoot.botId) {
-            GBServer.globals.minBoot.whatsAppDirectLine.sendMessage(msg);
-            GBServer.globals.minBoot.whatsAppDirectLine.sendMessage(adminNumber, qr);
 
             const s = new DialogKeywords(null, null, null, null);
+            const qrBuf = await s.getQRCode(qr);
+            const gbaiName = `${this.min.botId}.gbai`;
+            const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
+            fs.writeFileSync(localName, qrBuf);
+            const url = urlJoin(
+              GBServer.globals.publicAddress,
+              this.min.botId,
+              'cache',
+              Path.basename(localName)
+            );
+            GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
             s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, msg);
           }
 
@@ -263,6 +271,10 @@ export class WhatsappDirectLine extends GBService {
     switch (this.provider) {
       case 'GeneralBots':
         message = req;
+        text = message.body;
+        from = message.from.split('@')[0];
+        fromName = message._data.notifyName;
+
         break;
 
       case 'chatapi':
@@ -485,7 +497,10 @@ export class WhatsappDirectLine extends GBService {
         const generatedConversationId = response.obj.conversationId;
 
         WhatsappDirectLine.conversationIds[botId + from + group] = generatedConversationId;
-        WhatsappDirectLine.mobiles[generatedConversationId] = from;
+        if (this.provider === "GeneralBots") {
+          WhatsappDirectLine.chatIds[generatedConversationId] = message.from;
+        }
+          WhatsappDirectLine.mobiles[generatedConversationId] = from;
         WhatsappDirectLine.usernames[from] = fromName;
         WhatsappDirectLine.chatIds[generatedConversationId] = message.chatId;
 
@@ -496,7 +511,7 @@ export class WhatsappDirectLine extends GBService {
 
         this.inputMessage(client, conversationId, text, from, fromName, group);
       }
-    } else {
+      } else {
       GBLog.warn(`Inconsistencty found: Invalid agentMode on User Table: ${user.agentMode}`);
     }
 
@@ -738,7 +753,7 @@ export class WhatsappDirectLine extends GBService {
       switch (this.provider) {
         case 'GeneralBots':
 
-          this.customClient.sendMessage(to, msg);
+          this.customClient.sendMessage(to+'@c.us' , msg);
 
           break;
 

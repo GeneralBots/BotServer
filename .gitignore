@@ -18,3 +18,4 @@
 .env
 *.env
 .vscode/launch.json
+.wwebjs_auth
