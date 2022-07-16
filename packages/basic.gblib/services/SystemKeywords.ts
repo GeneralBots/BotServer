@@ -384,7 +384,7 @@ export class SystemKeywords {
   public async getRandomId() {
 
     const idGeneration = this.dk['idGeneration'];
-    if (idGeneration.toLowerCase() === 'number')
+    if (idGeneration && idGeneration.trim().toLowerCase() === 'number')
     {
       return GBAdminService.getNumberIdentifier();
     }

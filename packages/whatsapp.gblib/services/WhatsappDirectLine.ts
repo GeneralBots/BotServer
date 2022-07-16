@@ -44,6 +44,7 @@ import { SecService } from '../../security.gbapp/services/SecService';
 import { Messages } from '../strings';
 import { GuaribasUser } from '../../security.gbapp/models';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 const { MessageMedia, Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
