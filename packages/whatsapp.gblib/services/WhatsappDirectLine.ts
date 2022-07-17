@@ -241,7 +241,8 @@ export class WhatsappDirectLine extends GBService {
 
     const options = {
       url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`,
-      method: 'GET'};
+      method: 'GET'
+    };
 
     const res = await request(options);
     const json = JSON.parse(res);
@@ -249,19 +250,20 @@ export class WhatsappDirectLine extends GBService {
     return json.accountStatus === 'authenticated';
   }
 
+  public static providerFromRequest(req) {
+    return req.body.messages ? 'chatapi' :
+      req.body.message ? 'maytapi' : 'GeneralBots';
+  }
+
   public async received(req, res) {
 
-    if (this.provider === "chatapi" && req.body.messages === undefined) {
-      res.end();
-
-      return;  // Exit here.
-    }
+    const provider = WhatsappDirectLine.providerFromRequest(req);
 
     let message, from, fromName, text;
     let group = "";
     let answerText = null;
 
-    switch (this.provider) {
+    switch (provider) {
       case 'GeneralBots':
         message = req;
         text = message.body;
@@ -301,7 +303,7 @@ export class WhatsappDirectLine extends GBService {
     text = text.replace(/\@\d+ /gi, '');
     GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
 
-    if (this.provider === "chatapi") {
+    if (provider === "chatapi") {
       if (message.chatName.charAt(0) !== '+') {
         group = message.chatName;
 
@@ -392,7 +394,7 @@ export class WhatsappDirectLine extends GBService {
 
       if (process.env.AUDIO_DISABLED !== 'true') {
         const options = {
-          url: this.provider ? message.body : message.text,
+          url: provider ? message.body : message.text,
           method: 'GET',
           encoding: 'binary'
         };
@@ -489,10 +491,10 @@ export class WhatsappDirectLine extends GBService {
         const generatedConversationId = response.obj.conversationId;
 
         WhatsappDirectLine.conversationIds[botId + from + group] = generatedConversationId;
-        if (this.provider === "GeneralBots") {
+        if (provider === "GeneralBots") {
           WhatsappDirectLine.chatIds[generatedConversationId] = message.from;
         }
-          WhatsappDirectLine.mobiles[generatedConversationId] = from;
+        WhatsappDirectLine.mobiles[generatedConversationId] = from;
         WhatsappDirectLine.usernames[from] = fromName;
         WhatsappDirectLine.chatIds[generatedConversationId] = message.chatId;
 
@@ -503,7 +505,7 @@ export class WhatsappDirectLine extends GBService {
 
         this.inputMessage(client, conversationId, text, from, fromName, group);
       }
-      } else {
+    } else {
       GBLog.warn(`Inconsistencty found: Invalid agentMode on User Table: ${user.agentMode}`);
     }
 
@@ -745,7 +747,7 @@ export class WhatsappDirectLine extends GBService {
       switch (this.provider) {
         case 'GeneralBots':
 
-          this.customClient.sendMessage(to+'@c.us' , msg);
+          this.customClient.sendMessage(to + '@c.us', msg);
 
           break;
 
