@@ -629,8 +629,7 @@ export class WhatsappDirectLine extends GBService {
           url: urlJoin(this.whatsappServiceUrl, 'sendFile'),
           qs: {
             token: this.whatsappServiceKey,
-            phone: chatId ? null : to,
-            chatId: chatId,
+            phone: to,
             body: url,
             filename: filename,
             caption: caption
