@@ -509,8 +509,9 @@ export class WhatsappDirectLine extends GBService {
       GBLog.warn(`Inconsistencty found: Invalid agentMode on User Table: ${user.agentMode}`);
     }
 
-    res.end();
-
+    if (res){
+      res.end();
+    }
   }
 
   private async endTransfer(id: any, locale: string, user: GuaribasUser, agent: GuaribasUser, sec: SecService) {
