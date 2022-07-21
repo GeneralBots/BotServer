@@ -295,7 +295,7 @@ export class GBConversationalService {
       try {
         const results = await request(options);
 
-        return results[0].translations[0].text;
+        return results;
       } catch (error) {
         const msg = `Error calling SMS service. Error is: ${error}.`;
 
