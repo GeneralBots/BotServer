@@ -36,6 +36,30 @@ editor). BASIC can be used to build custom dialogs so Bot can be extended just l
 
 Several samples, including a Bot for AD Password Reset, are avaiable on the [repository list](https://github.com/GeneralBots).
 
+### Using complete General Bots Conversational Data Analytics
+
+![](https://user-images.githubusercontent.com/14840374/178154826-8188029e-b4f4-48aa-bc0d-126307ce5121.png)
+
+```
+TALK  "General Bots Labs presents FISCAL DATA SHOW BY BASIC" 
+
+TALK "Gift Contributions to Reduce the Public Debt API (https://fiscaldata.treasury.gov/datasets/gift-contributions-reduce-debt-held-by-public/gift-contributions-to-reduce-the-public-debt)" 
+ 
+result = GET "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/gift_contributions?page[size]=500" 
+data = result.data 
+data = SELECT YEAR(record_date) as Yr, SUM(CAST(contribution_amt AS NUMBER)) AS Amount FROM data GROUP BY YEAR(record_date) 
+
+TALK "Demonstration of Gift Contributions with AS IMAGE keyword" 
+SET THEME dark 
+png = data as IMAGE  
+SEND FILE png 
+
+DELAY 5 
+TALK " Demonstration of Gift Contributions CHART keyword" 
+ img = CHART "bar", data  
+SEND FILE img 
+```
+
 ## Guide
 
 [Read the General Bots BotBook Guide](https://github.com/GeneralBots/BotBook/tree/master/book).
