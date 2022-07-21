@@ -256,7 +256,7 @@ export class GBConversationalService {
 
   public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
     if (!this.userMobile(step) &&
-    step.context.activity.channelId !== 'msteams')  {
+      step.context.activity.channelId !== 'msteams') {
       GBLog.info(`Sending event ${name}:${typeof value === 'object' ? JSON.stringify(value) :
         value ? value : ''} to client...`);
       const msg = MessageFactory.text('');
@@ -271,22 +271,55 @@ export class GBConversationalService {
   // tslint:disable:no-unsafe-any due to Nexmo.
   public async sendSms(min: GBMinInstance, mobile: string, text: string): Promise<any> {
     GBLog.info(`Sending SMS to ${mobile} with text: '${text}'.`);
-    return new Promise((resolve: any, reject: any): any => {
-      const nexmo = new Nexmo({
-        apiKey: min.instance.smsKey,
-        apiSecret: min.instance.smsSecret
+
+    if (!min.instance.smsKey && min.instance.smsSecret) {
+      let options = {
+        method: 'POST',
+        url: 'http://sms-api.megaconecta.com.br/mt',
+        headers: {
+          "content-type": "application/json",
+          "authorization": `Bearer ${min.instance.smsSecret}`
+        },
+        body: [
+          {
+            "numero": `${mobile}`,
+            "servico": "short",
+            "mensagem": text,
+            "parceiro_id": "",
+            "codificacao": "0"
+          }
+        ],
+        json: true
+      };
+
+      try {
+        const results = await request(options);
+
+        return results[0].translations[0].text;
+      } catch (error) {
+        const msg = `Error calling SMS service. Error is: ${error}.`;
+
+        return Promise.reject(new Error(msg));
+      }
+    }
+    else {
+      return new Promise((resolve: any, reject: any): any => {
+        const nexmo = new Nexmo({
+          apiKey: min.instance.smsKey,
+          apiSecret: min.instance.smsSecret
+        });
+        // tslint:disable-next-line:no-unsafe-any
+        nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, (err, data) => {
+          const message = data.messages ? data.messages[0] : {};
+          if (err || message['error-text']) {
+            GBLog.error(`BASIC: error sending SMS to ${mobile}: ${message['error-text']}`);
+            reject(message['error-text']);
+          } else {
+            resolve(data);
+          }
+        });
       });
-      // tslint:disable-next-line:no-unsafe-any
-      nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, (err, data) => {
-        const message = data.messages ? data.messages[0] : {};
-        if (err || message['error-text']) {
-          GBLog.error(`BASIC: error sending SMS to ${mobile}: ${message['error-text']}`);
-          reject(message['error-text']);
-        } else {
-          resolve(data);
-        }
-      });
-    });
+    }
   }
 
   public async sendToMobile(min: GBMinInstance, mobile: string, message: string, conversationId) {
@@ -294,7 +327,8 @@ export class GBConversationalService {
     await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId);
   }
 
-  public static async getAudioBufferFromText( text): Promise<string> {
+  
+  public static async getAudioBufferFromText(text): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const name = GBAdminService.getRndReadableIdentifier();
 
@@ -318,7 +352,7 @@ export class GBConversationalService {
 
         let audio = '';
         audio = await textToSpeech.repairWavHeaderStream(res.result);
-        fs.writeFileSync(waveFilename, audio);  
+        fs.writeFileSync(waveFilename, audio);
 
         const oggFilenameOnly = `tmp${name}.ogg`;
         const oggFilename = `work/${oggFilenameOnly}`;
@@ -330,7 +364,7 @@ export class GBConversationalService {
 
         let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
         resolve(url);
-                
+
       } catch (error) {
         reject(error);
       }
@@ -416,8 +450,7 @@ export class GBConversationalService {
     let text = answer;
 
     // Calls language translator.
-    if (user)
-    {
+    if (user) {
       text = await min.conversationalService.translate(
         min,
         answer,
@@ -527,9 +560,9 @@ export class GBConversationalService {
 
     let conversationId = null;
 
-    if(step ){
+    if (step) {
       conversationId = step.context.activity.conversation.id;
-    }       
+    }
 
     //![General Bots](/instance/images/gb.png)
     for (let i = 0; i < text.length; i++) {
@@ -895,11 +928,11 @@ export class GBConversationalService {
     if (step.activeDialog.state.options['kind'] === "file") {
       return await step.prompt('attachmentPrompt', {});
     }
-    else{
+    else {
       return await step.prompt('textPrompt', text ? text : {});
     }
 
-    
+
   }
 
   public async sendText(min: GBMinInstance, step, text) {
@@ -927,7 +960,7 @@ export class GBConversationalService {
         });
       }
 
-      const locale = systemUser?systemUser.locale:null;
+      const locale = systemUser ? systemUser.locale : null;
       text = await min.conversationalService.translate(
         min,
         text,
@@ -948,10 +981,9 @@ export class GBConversationalService {
     }
 
     const analytics = new AnalyticsService();
-    if (!user.conversation)
-    {
+    if (!user.conversation) {
       user.conversation = await analytics.createConversation(user);
-    }    
+    }
     analytics.createMessage(min.instance.instanceId, user.conversation, null, text);
 
     if (!isNaN(member.id) && !member.id.startsWith('1000')) {

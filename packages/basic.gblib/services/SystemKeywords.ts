@@ -384,12 +384,10 @@ export class SystemKeywords {
   public async getRandomId() {
 
     const idGeneration = this.dk['idGeneration'];
-    if (idGeneration && idGeneration.trim().toLowerCase() === 'number')
-    {
+    if (idGeneration && idGeneration.trim().toLowerCase() === 'number') {
       return GBAdminService.getNumberIdentifier();
     }
-    else
-    {
+    else {
       return GBAdminService.getRndReadableIdentifier().substr(5);
     }
 
@@ -828,7 +826,7 @@ export class SystemKeywords {
     let foundIndex = 1;
 
     // Fills the row variable.
-    
+
     let rowCount = 0;
     for (; foundIndex < rows.length; foundIndex++) {
       let filterAcceptCount = 0;
@@ -1444,7 +1442,7 @@ export class SystemKeywords {
     // Returns the buffer to be used with SAVE AS for example.
 
     const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE", });
-    
+
     return buf;
   }
 }
