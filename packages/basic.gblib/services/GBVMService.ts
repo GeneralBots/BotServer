@@ -179,10 +179,10 @@ export class GBVMService extends GBService {
     mobile = step ? this.userMobile(step) : sys().getRandomId();
     from = mobile;
     ubound = function(array){return array.length};
-    base64 = function(text){return new Buffer(text).toString("base64");}
     isarray = function(array){return Array.isArray(array) };
     weekday = this.getWeekFromDate.bind(this);
     hour = this.getHourFromDate.bind(this);
+    base64 = this.getCoded;
     tolist = this.getToLst;
     headers = {};
     data = {};
@@ -398,7 +398,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = sys().httpPost (${$2}, ${$3})`;
+      return `${$1} = sys().postByHttp (${$2}, ${$3}, headers)`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*download\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
@@ -736,13 +736,14 @@ export class GBVMService extends GBService {
         // await insertion.
 
     code = code.replace(/this\./gm, 'await this.');
-    code = code.replace(/function/gm, 'async function');
+    code = code.replace(/\nfunction/i, 'async function');
     code = code.replace('ubound = async', 'ubound =');  // TODO: Improve this.
     code = code.replace('hour = await', 'hour =');  // TODO: Improve this.
     code = code.replace('weekday = await', 'weekday =');  // TODO: Improve this.
     code = code.replace('tolist = await', 'tolist =');  // TODO: Improve this.
     code = code.replace('isarray = async', 'isarray =');  // TODO: Waiting for a compiler.
     code = code.replace('isArray = async', 'isarray =');  // TODO: Waiting for a compiler.
+    code = code.replace('base64 = await', 'base64 =');  // TODO: Waiting for a compiler.
 
     return code;
   }
@@ -785,6 +786,7 @@ export class GBVMService extends GBService {
     const code = min.sandBoxMap[text];
 
     try {
+      // SEE https://github.com/patriksimek/vm2
       vm.runInContext(code, context);
     } catch (error) {
       throw new Error(`INVALID BASIC CODE: ${error.message} ${error.stack}`);

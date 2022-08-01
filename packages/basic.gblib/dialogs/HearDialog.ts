@@ -304,8 +304,9 @@ export class HearDialog {
 
             const list = step.activeDialog.state.options['args'];
             result = null;
+            const typed = step.context.activity['originalText'];
             await CollectionUtil.asyncForEach(list, async item => {
-              if (GBConversationalService.kmpSearch(step.result, item) != -1) {
+              if (GBConversationalService.kmpSearch(typed, item) != -1) {
                 result = item;
               }
             });

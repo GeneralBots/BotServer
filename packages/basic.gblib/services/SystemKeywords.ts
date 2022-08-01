@@ -1396,16 +1396,17 @@ export class SystemKeywords {
    * talk "The updated user area is" + user.area
    * 
    */
-  public async postByHttp(url: string, data) {
+  public async postByHttp(url: string, data, headers) {
     const options = {
       uri: url,
       json: true,
-      body: data
+      body: data,
+      headers: headers
     };
 
     let result = await request.post(options);
     GBLog.info(`[POST]: ${url} (${data}): ${result}`);
-    return JSON.parse(result);
+    return typeof (result) === 'object' ? result : JSON.parse(result);
   }
 
   public async numberOnly(text: string) {

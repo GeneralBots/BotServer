@@ -407,6 +407,10 @@ export class DialogKeywords {
 
   }
 
+  public getCoded(text){
+    return Buffer.from(text).toString("base64");
+  }
+
   /**
    * Returns specified date week day in format 'Mon'.
    *
