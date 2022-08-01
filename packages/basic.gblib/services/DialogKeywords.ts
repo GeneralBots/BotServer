@@ -44,6 +44,7 @@ import { GBMinService } from '../../core.gbapp/services/GBMinService';
 import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
+import { GBVMService } from './GBVMService';
 const DateDiff = require('date-diff');
 const puppeteer = require('puppeteer');
 const Path = require('path');
@@ -84,6 +85,21 @@ export class DialogKeywords {
    */
   hrOn: string;
 
+  step: GBDialogStep;
+ 
+  public async getDeployer() {
+    return this.min.deployService;
+  }
+
+  public async getMin() {
+    return this.min;
+  }
+
+  public async getStep() {
+    return this.step;
+  }
+
+
   /**
    * When creating this keyword facade, a bot instance is
    * specified among the deployer service.
@@ -92,6 +108,7 @@ export class DialogKeywords {
     this.min = min;
     this.user = user;
     this.internalSys = new SystemKeywords(min, deployer, this);
+    this.step = step;
   }
 
   /**
@@ -119,7 +136,7 @@ export class DialogKeywords {
           "--disable-accelerated-2d-canvas",
           "--disable-gpu"],
         ignoreHTTPSErrors: true,
-        headless: true,
+        headless: false,
       });
     }
     const page = await this.browser.newPage();
@@ -640,7 +657,7 @@ export class DialogKeywords {
    * @example SET ID NUMBER 
    *
    */
-   public async setIdGeneration(mode) {
+  public async setIdGeneration(mode) {
     this['idGeneration'] = mode;
     this['id'] = await this.sys().getRandomId();
   }

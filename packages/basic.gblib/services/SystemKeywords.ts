@@ -30,7 +30,7 @@
 |                                                                             |
 \*****************************************************************************/
 'use strict';
-import { GBLog, GBMinInstance } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
@@ -39,6 +39,7 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { DialogKeywords } from './DialogKeywords';
 import { GBServer } from '../../../src/app';
 import * as fs from 'fs';
+import { GBVMService } from './GBVMService';
 const Fs = require('fs');
 const Excel = require('exceljs');
 
@@ -52,6 +53,8 @@ const alasql = require('alasql');
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 const pptxTemplaterModule = require('pptxtemplater');
+const robot = require('robotjs')
+const Jimp = require('jimp')
 
 
 /**
@@ -84,6 +87,11 @@ export class SystemKeywords {
     this.min = min;
     this.deployer = deployer;
     this.dk = dk;
+  }
+
+
+  public async callVM(text: string, min: GBMinInstance, step: GBDialogStep, deployer: GBDeployer) {
+    return await GBVMService.callVM(text, min, step, deployer);
   }
 
   public async append(...args) {
@@ -1445,4 +1453,45 @@ export class SystemKeywords {
 
     return buf;
   }
+
+  public screenCapture() {
+    // scrcpy
+
+    const tesseract = require("node-tesseract-ocr")
+
+    function captureImage({ x, y, w, h }) {
+      const pic = robot.screen.capture(x, y, w, h)
+      const width = pic.byteWidth / pic.bytesPerPixel // pic.width is sometimes wrong!
+      const height = pic.height
+      const image = new Jimp(width, height)
+      let red, green, blue
+      pic.image.forEach((byte, i) => {
+        switch (i % 4) {
+          case 0: return blue = byte
+          case 1: return green = byte
+          case 2: return red = byte
+          case 3:
+            image.bitmap.data[i - 3] = red
+            image.bitmap.data[i - 2] = green
+            image.bitmap.data[i - 1] = blue
+            image.bitmap.data[i] = 255
+        }
+      })
+      return image
+    }
+    let file = 'out.png';
+    captureImage({ x: 60, y: 263, w: 250, h: 83 }).write(file)
+
+
+    const config = {
+      lang: "eng",
+      oem: 1,
+      psm: 3,
+    }
+
+    tesseract.recognize(file, config).then(value => {
+      console.log(value);
+    });
+  }
+
 }

@@ -179,11 +179,14 @@ export class GBVMService extends GBService {
     mobile = step ? this.userMobile(step) : sys().getRandomId();
     from = mobile;
     ubound = function(array){return array.length};
+    base64 = function(text){return new Buffer(text).toString("base64");}
     isarray = function(array){return Array.isArray(array) };
     weekday = this.getWeekFromDate.bind(this);
     hour = this.getHourFromDate.bind(this);
     tolist = this.getToLst;
     headers = {};
+    data = {};
+    list = [];
     httpUsername = "";
     httpPs = "";
 
@@ -278,6 +281,10 @@ export class GBVMService extends GBService {
         return -1;
       }
       `;
+    });
+
+    code = code.replace(/CALL\s*(.*)/gi, ($0, $1, $2, $3) => {
+      return `sys().callVM("${$1}", this.getMin(), this.getStep(), this.getDeployer())\n`;
     });
 
     code = code.replace(/(\w)\s*\=\s*find\s*(.*)/gi, ($0, $1, $2, $3) => {
@@ -518,8 +525,13 @@ export class GBVMService extends GBService {
       basicCode = basicCode.substring(0, end.index);
     }
 
+    // Removes comments.
+
+    basicCode = basicCode.replace(/(\n\s*REM.*\n)/gi, '');
+
     // Process INCLUDE keyword to include another
     // dialog inside the dialog.
+
     let include = null;
     do {
       include = /^include\b(.*)$/gmi.exec(basicCode);
@@ -752,6 +764,8 @@ export class GBVMService extends GBService {
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
+
+    // Auto-NLP generates BASIC variables related to entities.
 
     if (step && step.context.activity['originalText']) {
       const entities = await min["nerEngine"].findEntities(
