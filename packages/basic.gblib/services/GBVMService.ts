@@ -502,7 +502,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*FILL\s(.*)\sWITH\s(.*)/gi, ($0, $1, $2, $3) => {
-      return `${1} = sys().fill(${$2}, ${$1})\n`;
+      return `${1} = sys().fill(${$2}, ${$3})\n`;
     });
 
     code = code.replace(/save\s(.*)\sas\s(.*)/gi, ($0, $1, $2, $3) => {
