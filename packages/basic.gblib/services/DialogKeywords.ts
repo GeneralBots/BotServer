@@ -407,8 +407,16 @@ export class DialogKeywords {
 
   }
 
-  public getCoded(text){
-    return Buffer.from(text).toString("base64");
+  public getCoded(value){
+
+    // Checks if it is a GB FILE object.
+
+    if (value.data && value.filename)
+    {
+      value = value.data;
+    }
+
+    return Buffer.from(value).toString("base64");
   }
 
   /**

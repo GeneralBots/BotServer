@@ -79,7 +79,7 @@ export class GBVMService extends GBService {
         const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
         const fullVbsFile = urlJoin(folder, vbsFile);
         const docxStat = fs.statSync(urlJoin(folder, wordFile));
-        const interval = 30000; // If compiled is older 30 seconds, then recompile.
+        const interval = 3000; // If compiled is older 30 seconds, then recompile.
         let writeVBS = true;
         if (fs.existsSync(fullVbsFile)) {
           const vbsStat = fs.statSync(fullVbsFile);
@@ -324,9 +324,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2, $3) => {
-      if ($2.indexOf('http') !== -1) {
-        return `${$1} = sys().getByHttp (${$2}, headers, httpUsername, httpPs)`;
-      } else {
+      
         const count = ($2.match(/\,/g) || []).length;
         const values = $2.split(',');
 
@@ -348,10 +346,19 @@ export class GBVMService extends GBService {
 
         else {
 
-          return `${$1} = sys().get (${$2})`;
+          return `${$1} = sys().get (${$2}, headers)`;
         }
-      }
+      
     });
+
+    code = code.replace(/\= NEW OBJECT/gi, ($0, $1, $2, $3) => {
+      return ` = {}`;
+    });
+ 
+    code = code.replace(/\= NEW ARRAY/gi, ($0, $1, $2, $3) => {
+      return ` = []`;
+    });
+ 
 
     code = code.replace(/(go to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `gotoDialog(step, ${$3})\n`;
@@ -399,6 +406,10 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
       return `${$1} = sys().postByHttp (${$2}, ${$3}, headers)`;
+    });
+
+    code = code.replace(/(\w+)\s*\=\s*put\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
+      return `${$1} = sys().putByHttp (${$2}, ${$3}, headers)`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*download\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {

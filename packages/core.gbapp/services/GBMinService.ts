@@ -255,6 +255,10 @@ export class GBMinService {
     if (!fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
+    dir = `work/${min.botId}.gbai/uploads`;
+    if (!fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
 
     // Loads Named Entity data for this bot.
 

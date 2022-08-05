@@ -52,11 +52,10 @@ export class HearDialog {
 
   private static async downloadAttachmentAndWrite(attachment) {
 
-    // Retrieve the attachment via the attachment's contentUrl.
+    
     const url = attachment.contentUrl;
-
-    // Local file path for the bot to save the attachment.
-    const localFileName = Path.join(__dirname, attachment.name);
+    const localFolder = Path.join('work', 'dev-rodriguez.gbai', 'uploads');
+    const localFileName = Path.join(localFolder, attachment.name);
 
     try {
       // arraybuffer is necessary for images
@@ -135,17 +134,17 @@ export class HearDialog {
           if (step.activeDialog.state.options['kind'] === "file") {
 
             // Prepare Promises to download each attachment and then execute each Promise.
-            const promises = step.context.activity.attachments.map(HearDialog.downloadAttachmentAndWrite);
+            const promises = step.context.activity.attachments.map(
+              HearDialog.downloadAttachmentAndWrite);
             const successfulSaves = await Promise.all(promises);
 
             async function replyForReceivedAttachments(localAttachmentData) {
               if (localAttachmentData) {
                 // Because the TurnContext was bound to this function, the bot can call
                 // `TurnContext.sendActivity` via `this.sendActivity`;
-                await this.sendActivity(`Attachment "${localAttachmentData.fileName}" ` +
-                  `has been received and saved to "${localAttachmentData.localPath}".`);
+                await this.sendActivity(`Upload OK.`);
               } else {
-                await this.sendActivity('Attachment was not successfully saved to disk.');
+                await this.sendActivity('Error uploading file. Please, start again.');
               }
             }
 
@@ -153,6 +152,11 @@ export class HearDialog {
             // The current TurnContext is bound so `replyForReceivedAttachments` can also send replies.
             const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
             await Promise.all(replyPromises);
+           
+            result = {
+              data: fs.readFileSync(successfulSaves[0].localPath),
+              filename: successfulSaves[0].fileName
+            };
 
           }
           else if (step.activeDialog.state.options['kind'] === "boolean") {

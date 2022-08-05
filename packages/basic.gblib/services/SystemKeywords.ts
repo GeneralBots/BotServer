@@ -196,12 +196,12 @@ export class SystemKeywords {
       let isObject = false;
 
       if (Array.isArray(data)) {
-        isObject = Object.keys(data[0]) !== null;
+        isObject = Object.keys(data[1]) !== null;
       }
 
       if (isObject || JSON.parse(data) !== null) {
 
-        let keys = Object.keys(data[0]);
+        let keys = Object.keys(data[1]);
 
 
         if (headers) {
@@ -286,7 +286,7 @@ export class SystemKeywords {
     // Guess fields from data variable into Tabulator fields collection.
 
     let fields = [];
-    let keys = Object.keys(data[1]);
+    let keys = Object.keys(data[0]);
     for (let i = 0; i < keys.length; i++) {
       fields.push({ field: keys[i], title: keys[i] });
     }
@@ -526,6 +526,12 @@ export class SystemKeywords {
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
+    // Checks if it is a GB FILE object.
+
+    if (data.data && data.filename) {
+      data = data.data;
+    }
+
     try {
       await client
         .api(`${baseUrl}/drive/root:/${path}/${file}:/content`)
@@ -587,27 +593,34 @@ export class SystemKeywords {
    * @example value = GET "file.xlsx", "A2"
    * 
    */
-  public async get(file: string, address: string): Promise<any> {
-    GBLog.info(`BASIC: GET '${address}' in '${file}'.`);
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
-    const botId = this.min.instance.botId;
-    const path = `/${botId}.gbai/${botId}.gbdata`;
+  public async get(file: string, addressOrHeaders: string, httpUsername, httpPs, qs, streaming): Promise<any> {
 
-    let document = await this.internalGetDocument(client, baseUrl, path, file);
+    if (file.startsWith('http')) {
 
-    // Creates workbook session that will be discarded.
+      return await this.getByHttp(file, addressOrHeaders, httpUsername, httpPs, qs, streaming);
+    }
+    else {
+      GBLog.info(`BASIC: GET '${addressOrHeaders}' in '${file}'.`);
+      let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+      const botId = this.min.instance.botId;
+      const path = `/${botId}.gbai/${botId}.gbdata`;
 
-    let sheets = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
-      .get();
+      let document = await this.internalGetDocument(client, baseUrl, path, file);
 
-    let results = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
-      .get();
+      // Creates workbook session that will be discarded.
 
-    let val = results.text[0][0];
-    GBLog.info(`BASIC: Getting '${file}' (GET). Value= ${val}.`);
-    return val;
+      let sheets = await client
+        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
+        .get();
+
+      let results = await client
+        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${addressOrHeaders}')`)
+        .get();
+
+      let val = results.text[0][0];
+      GBLog.info(`BASIC: Getting '${file}' (GET). Value= ${val}.`);
+      return val;
+    }
   }
 
   public isValidDate(dt) {
@@ -1356,11 +1369,10 @@ export class SystemKeywords {
    * 
    */
   public async getByHttp(url: string, headers: any, username: string, ps: string, qs: any, streaming = false) {
-    let options = {
-      encoding: "binary",
-      url: url,
-      headers: headers
-    };
+    let options = { url: url };
+    if (headers) {
+      options['headers'] = headers;
+    }
     if (username) {
       options['auth'] = {
         user: username,
@@ -1385,6 +1397,28 @@ export class SystemKeywords {
 
       return result;
     }
+  }
+
+  /**
+   * Calls any REST API by using POST HTTP method.
+   * 
+   * @example 
+   * 
+   * user = post "http://server/path", "data"
+   * talk "The updated user area is" + user.area
+   * 
+   */
+   public async putByHttp(url: string, data, headers) {
+    const options = {
+      uri: url,
+      json: true,
+      body: data,
+      headers: headers
+    };
+
+    let result = await request.put(options);
+    GBLog.info(`[PUT]: ${url} (${data}): ${result}`);
+    return typeof (result) === 'object' ? result : JSON.parse(result);
   }
 
   /**
