@@ -1404,15 +1404,14 @@ export class SystemKeywords {
    * 
    * @example 
    * 
-   * user = post "http://server/path", "data"
+   * user = put "http://server/path", "data"
    * talk "The updated user area is" + user.area
    * 
    */
    public async putByHttp(url: string, data, headers) {
     const options = {
       uri: url,
-      json: true,
-      body: data,
+      json: data,
       headers: headers
     };
 
@@ -1433,14 +1432,14 @@ export class SystemKeywords {
   public async postByHttp(url: string, data, headers) {
     const options = {
       uri: url,
-      json: true,
-      body: data,
+      json: data,
       headers: headers
     };
 
     let result = await request.post(options);
     GBLog.info(`[POST]: ${url} (${data}): ${result}`);
-    return typeof (result) === 'object' ? result : JSON.parse(result);
+
+    return result? typeof (result) === 'object' ? result : JSON.parse(result): true;
   }
 
   public async numberOnly(text: string) {
