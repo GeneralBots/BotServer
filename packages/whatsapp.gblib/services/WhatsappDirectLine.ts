@@ -619,7 +619,7 @@ export class WhatsappDirectLine extends GBService {
     let options;
     switch (this.provider) {
       case 'GeneralBots':
-        const attachment = MessageMedia.fromurl(url);
+        const attachment = MessageMedia.fromUrl(url);
         await this.customClient.sendMessage(to, attachment, { caption: caption });
         break;
 
@@ -682,7 +682,7 @@ export class WhatsappDirectLine extends GBService {
     switch (this.provider) {
       case 'GeneralBots':
 
-        const attachment = MessageMedia.fromurl(url);
+        const attachment = MessageMedia.fromUrl(url);
         await this.customClient.sendMessage(to, attachment);
 
         break;
