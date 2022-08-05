@@ -53,8 +53,7 @@ const alasql = require('alasql');
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 const pptxTemplaterModule = require('pptxtemplater');
-const robot = require('robotjs')
-const Jimp = require('jimp')
+
 
 
 /**
@@ -1492,7 +1491,9 @@ export class SystemKeywords {
     // scrcpy
 
     const tesseract = require("node-tesseract-ocr")
-
+    const robot = require('robotjs')
+    const Jimp = require('jimp')
+    
     function captureImage({ x, y, w, h }) {
       const pic = robot.screen.capture(x, y, w, h)
       const width = pic.byteWidth / pic.bytesPerPixel // pic.width is sometimes wrong!
