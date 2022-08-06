@@ -278,7 +278,7 @@ export class WhatsappDirectLine extends GBService {
             {
               name: 'uploaded.png',
               contentType: base64Image.mimetype,
-              contentUrl: `data:image/png;base64,${base64Image.data}`
+              contentUrl: `data:${base64Image.mimetype};base64,${base64Image.data}`
             });
         }
 
