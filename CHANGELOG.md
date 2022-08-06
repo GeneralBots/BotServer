@@ -1,3 +1,10 @@
+## [2.0.161](https://github.com/GeneralBots/BotServer/compare/2.0.160...2.0.161) (2022-08-06)
+
+
+### Bug Fixes
+
+* **whatsapp.gblib:** SEND FILE sending bug. ([7eeadfa](https://github.com/GeneralBots/BotServer/commit/7eeadfa92deea7e61c277c7a75c1d0b49d7dca5c))
+
 ## [2.0.160](https://github.com/GeneralBots/BotServer/compare/2.0.159...2.0.160) (2022-08-06)
 
 
