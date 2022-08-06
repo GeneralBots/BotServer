@@ -19,3 +19,6 @@
 *.env
 .vscode/launch.json
 .wwebjs_auth
+GB.log
+gb.log
+GB.log.json

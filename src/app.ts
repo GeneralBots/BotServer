@@ -52,6 +52,7 @@ import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService';
 import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
+var auth = require('basic-auth');
 
 
 /**
@@ -109,6 +110,7 @@ export class GBServer {
       (async () => {
 
         try {
+
           GBLog.info(`Now accepting connections on ${port}...`);
 
           // Reads basic configuration, initialize minimal services.
@@ -195,6 +197,28 @@ export class GBServer {
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
           GBServer.globals.minService = minService;
           await minService.buildMin(instances);
+
+          if (process.env.ENABLE_WEBLOG) {
+            var admins = {
+              'admin': { password: process.env.ADMIN_PASS },
+            };
+
+           // ... some not authenticated middlewares
+
+            server.use((req, res, next) => {
+              var user = auth(req);
+              if (!user || !admins[user.name] || admins[user.name].password !== user.pass) {
+                res.set('WWW-Authenticate', 'Basic realm="example"');
+                return res.status(401).send();
+              }
+              return next();
+            });
+
+           // If global log enabled, reorders transports adding web logging.
+
+            const loggers = GBLog.getLogger();
+            require('winston-logs-display')(server, loggers[1]);
+          }
 
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
