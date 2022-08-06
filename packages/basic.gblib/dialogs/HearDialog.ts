@@ -54,18 +54,28 @@ export class HearDialog {
 
     
     const url = attachment.contentUrl;
-    const localFolder = Path.join('work', 'dev-rodriguez.gbai', 'uploads');
+    const localFolder = Path.join('work'); // TODO: , '${botId}', 'uploads');
     const localFileName = Path.join(localFolder, attachment.name);
 
     try {
+
+      let response;
+      if (url.startsWith('data:')){
+        var regex = /^data:.+\/(.+);base64,(.*)$/;
+        var matches = url.match(regex);
+        var ext = matches[1];
+        var data = matches[2];
+        response = Buffer.from(data, 'base64');
+      }
+      else{
       // arraybuffer is necessary for images
       const options = {
         url: url,
         method: 'GET',
         encoding: 'binary',
       };
-      let response = await request.get(options);
-
+      response = await request.get(options);
+    }
   
       fs.writeFile(localFileName, response, (fsError) => {
         if (fsError) {
