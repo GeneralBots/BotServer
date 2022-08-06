@@ -262,6 +262,7 @@ export class WhatsappDirectLine extends GBService {
     let message, from, fromName, text;
     let group = "";
     let answerText = null;
+    let attachments = null;
 
     switch (provider) {
       case 'GeneralBots':
@@ -269,6 +270,17 @@ export class WhatsappDirectLine extends GBService {
         text = message.body;
         from = message.from.split('@')[0];
         fromName = message._data.notifyName;
+
+        if (message.hasMedia) {
+          const base64Image = await message.downloadMedia();
+          attachments = [];
+          attachments.push(
+            {
+              name: 'uploaded.png',
+              contentType: 'image/png',
+              contentUrl: `data:image/png;base64,${base64Image}`
+            });
+        }
 
         break;
 
@@ -500,16 +512,16 @@ export class WhatsappDirectLine extends GBService {
 
 
         this.pollMessages(client, generatedConversationId, from, fromName);
-        this.inputMessage(client, generatedConversationId, text, from, fromName, group);
+        this.inputMessage(client, generatedConversationId, text, from, fromName, group, attachments);
       } else {
 
-        this.inputMessage(client, conversationId, text, from, fromName, group);
+        this.inputMessage(client, conversationId, text, from, fromName, group, attachments);
       }
     } else {
       GBLog.warn(`Inconsistencty found: Invalid agentMode on User Table: ${user.agentMode}`);
     }
 
-    if (res){
+    if (res) {
       res.end();
     }
   }
@@ -528,7 +540,7 @@ export class WhatsappDirectLine extends GBService {
     await sec.updateHumanAgent(id, this.min.instance.instanceId, null);
   }
 
-  public inputMessage(client, conversationId, text, from, fromName, group) {
+  public inputMessage(client, conversationId, text, from, fromName, group, attachments) {
     return client.Conversations.Conversations_PostActivity({
       conversationId: conversationId,
       activity: {
@@ -537,6 +549,7 @@ export class WhatsappDirectLine extends GBService {
         type: 'message',
         mobile: from,
         group: group,
+        attachments: attachments,
         from: {
           id: from,
           name: fromName
