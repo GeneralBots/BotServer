@@ -290,6 +290,16 @@ export class WhatsappDirectLine extends GBService {
         from = req.body.messages[0].author.split('@')[0];
         fromName = req.body.messages[0].senderName;
 
+        if (message.type !== 'chat') {
+          attachments = [];
+          attachments.push(
+            {
+              name: 'uploaded',
+              contentType: 'application/octet-stream',
+              contentUrl: message.body
+            });
+        }
+
         if (req.body.messages[0].fromMe) {
           res.end();
 
