@@ -96,6 +96,7 @@
     "googleapis": "75.0.0",
     "ibm-watson": "6.1.1",
     "js-beautify": "1.13.13",
+    "lodash": "^4.17.21",
     "luxon": "2.0.2",
     "mammoth": "^1.4.21",
     "marked": "2.0.7",

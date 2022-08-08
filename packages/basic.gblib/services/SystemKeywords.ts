@@ -40,6 +40,7 @@ import { DialogKeywords } from './DialogKeywords';
 import { GBServer } from '../../../src/app';
 import * as fs from 'fs';
 import { GBVMService } from './GBVMService';
+import { ThisPath } from 'botbuilder-dialogs';
 const Fs = require('fs');
 const Excel = require('exceljs');
 
@@ -54,7 +55,7 @@ const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 const pptxTemplaterModule = require('pptxtemplater');
 
-
+const _ = require('lodash');
 
 /**
  * @fileoverview General Bots server core.
@@ -1407,7 +1408,7 @@ export class SystemKeywords {
    * talk "The updated user area is" + user.area
    * 
    */
-   public async putByHttp(url: string, data, headers) {
+  public async putByHttp(url: string, data, headers) {
     const options = {
       uri: url,
       json: data,
@@ -1438,7 +1439,7 @@ export class SystemKeywords {
     let result = await request.post(options);
     GBLog.info(`[POST]: ${url} (${data}): ${result}`);
 
-    return result? typeof (result) === 'object' ? result : JSON.parse(result): true;
+    return result ? typeof (result) === 'object' ? result : JSON.parse(result) : true;
   }
 
   public async numberOnly(text: string) {
@@ -1493,7 +1494,7 @@ export class SystemKeywords {
     const tesseract = require("node-tesseract-ocr")
     const robot = require('robotjs')
     const Jimp = require('jimp')
-    
+
     function captureImage({ x, y, w, h }) {
       const pic = robot.screen.capture(x, y, w, h)
       const width = pic.byteWidth / pic.bytesPerPixel // pic.width is sometimes wrong!
@@ -1529,4 +1530,147 @@ export class SystemKeywords {
     });
   }
 
+  private numberToLetters(num) {
+    let letters = ''
+    while (num >= 0) {
+      letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[num % 26] + letters
+      num = Math.floor(num / 26) - 1
+    }
+    return letters
+  }
+
+  /**
+   * Merges a multi-value with a tabular file using BY field as key.
+   * 
+   * @example 
+   * 
+   *  data = FIND first.xlsx
+   *  MERGE "second.xlsx" WITH data BY customer_id
+   *
+   */
+  public async merge(file: string, data: [], key1, key2): Promise<any> {
+    GBLog.info(`BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
+
+    const botId = this.min.instance.botId;
+    const path = `/${botId}.gbai/${botId}.gbdata`;
+
+    // MAX LINES property.
+
+    let maxLines = 1000;
+    if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
+      if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
+        maxLines = Number.parseInt(this.dk.user.basicOptions.maxLines).valueOf();
+      }
+    }
+
+    // Choose data sources based on file type (HTML Table, data variable or sheet file)
+
+    let results;
+    let header, rows;
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+
+    let document
+    document = await this.internalGetDocument(client, baseUrl, path, file);
+
+    // Creates workbook session that will be discarded.
+
+    let sheets = await client
+      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
+      .get();
+
+    results = await client
+      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:Z${maxLines}')`)
+      .get();
+
+    header = results.text[0];
+    rows = results.text;
+
+    // As BASIC uses arrays starting with 1 (one) as index, 
+    // a ghost element is added at 0 (zero) position.
+
+    let table = [];
+    table.push({ 'gbarray': '0' });
+    let foundIndex = 1;
+
+    // Fills the row variable.
+
+    for (; foundIndex < rows.length; foundIndex++) {
+      let row = {};
+      const xlRow = rows[foundIndex];
+      for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
+        const propertyName = header[colIndex];
+        let value = xlRow[colIndex];
+        if (value && value.charAt(0) === "'") {
+          if (this.isValidDate(value.substr(1))) {
+            value = value.substr(1);
+          }
+        }
+        row[propertyName] = value;
+      }
+      row['line'] = foundIndex + 1;
+      table.push(row);
+    }
+
+
+    let key1Index, key2Index;
+
+    if (key1) {
+      key1Index = _.invertBy(table, key1);
+    }
+
+    if (key2) {
+      key2Index = _.invertBy(table, key2);
+    }
+
+    let merges = 0, adds = 0;
+
+    // Scans all items in incoming data.
+
+    for (let i = 1; i < data.length; i++) {
+
+      // Scans all sheet lines and compare keys.
+
+      const row = data[i];
+      let found;
+      if (key1Index) {
+        const key1Value = row[key1];
+        found = table[key1Index[key1Value][0]];
+      }
+
+      if (found) {
+        let keys = Object.keys(row);
+        for (let j = 0; j < keys.length; j++) {
+
+          const columnName = header[j];
+          const value = row[keys[j]];
+          const cell = `${this.numberToLetters(j)}${i + 1}`;
+          const address = `${cell}:${cell}`;
+
+
+          if (value !== found[columnName]) {
+            await this.set(file, address, value);
+            merges++;
+          }
+        }
+      }
+      else {
+        let args = [];
+        let keys = Object.keys(row);
+        for (let j = 0; j < keys.length; j++) {
+          args.push(row[keys[j]]);
+        }
+
+        await this.save(file, args);
+        adds++;
+      }
+    }
+
+    if (table.length === 1) {
+      GBLog.info(`BASIC: MERGE ran but updated zero rows.`);
+      return null;
+    } else {
+      GBLog.info(`BASIC: MERGE updated (merges:${merges}, additions:${adds}.`);
+      return table;
+    }
+  }
 }

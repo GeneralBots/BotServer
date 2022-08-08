@@ -493,6 +493,10 @@ export class GBVMService extends GBService {
     //   return `${$1} = sys().asImage(${$2})\n`;
     // });
 
+    code = code.replace(/MERGE\s(.*)\sWITH\s(.*)BY\s(.*)/gi, ($0, $1, $2, $3) => {
+      return `sys().merge(${$1}, ${$2}, ${$3})\n`;
+    });
+
     code = code.replace(/(\w+)\s*\=\s*(.*)\s*as image/gi, ($0, $1, $2) => {
       return `${$1} = sys().asImage(${$2})\n`;
     });
