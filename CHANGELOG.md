@@ -1,3 +1,10 @@
+## [2.0.162](https://github.com/GeneralBots/BotServer/compare/2.0.161...2.0.162) (2022-08-26)
+
+
+### Bug Fixes
+
+* **core.gbapp:** Translator off for two char phrases. ([bd20312](https://github.com/GeneralBots/BotServer/commit/bd20312bad29c10dbdb9ecebddd69fa845af1892))
+
 ## [2.0.161](https://github.com/GeneralBots/BotServer/compare/2.0.160...2.0.161) (2022-08-06)
 
 
