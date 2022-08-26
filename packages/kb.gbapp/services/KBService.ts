@@ -219,7 +219,7 @@ export class KBService implements IGBKBService {
     if (!question) {
       const where = {
         instanceId: instanceId,
-        content: { [Op.like]: `%[^a-z]${text}[^a-z]%` }
+        content: { [Op.like]: `%^[\w.]+${text}^[\w.]+%` }
       };
 
       if (from) {
