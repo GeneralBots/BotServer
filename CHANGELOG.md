@@ -1,3 +1,10 @@
+## [2.0.166](https://github.com/GeneralBots/BotServer/compare/2.0.165...2.0.166) (2022-08-26)
+
+
+### Bug Fixes
+
+* **kb.gbapp:** Skips blank answers lines. ([796a412](https://github.com/GeneralBots/BotServer/commit/796a412e326982cd463863319931621301358079))
+
 ## [2.0.165](https://github.com/GeneralBots/BotServer/compare/2.0.164...2.0.165) (2022-08-26)
 
 
