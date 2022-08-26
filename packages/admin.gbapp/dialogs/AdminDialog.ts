@@ -122,7 +122,7 @@ export class AdminDialog extends IGBDialog {
         },
         async step => {
           const locale = step.context.activity.locale;
-          const sensitive = step.result;
+          const sensitive = step.context.activity['originalText'];
 
           if (sensitive === min.instance.adminPass) {
             await min.conversationalService.sendText(min, step, Messages[locale].welcome);

@@ -327,7 +327,7 @@ export class GBConversationalService {
     await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId);
   }
 
-  
+
   public static async getAudioBufferFromText(text): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const name = GBAdminService.getRndReadableIdentifier();
@@ -851,6 +851,8 @@ export class GBConversationalService {
     if (text.length > 5000) {
       text = text.substr(0, 4999);
       GBLog.warn(`Text that bot will translate will be truncated due to MSFT service limitations.`);
+    } else if (text.length == 2) {
+      return text;
     }
     text = text.replace('¿', '');
 
