@@ -988,7 +988,7 @@ export class GBMinService {
           user.subjects = [];
           user.cb = undefined;
           user.welcomed = false;
-          user.basicOptions = { maxLines: 100, translatorOn: true, wholeWord: true, theme: "white" };
+          user.basicOptions = { maxLines: 100, translatorOn: true, wholeWord: true, theme: "white", maxColumns: 40 };
 
           firstTime = true;
 

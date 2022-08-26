@@ -422,7 +422,7 @@ export class SystemKeywords {
    */
   public async wait(seconds: number) {
     // tslint:disable-next-line no-string-based-set-timeout
-    GBLog.info(`BASIC: Talking to a specific user (TALK TO).`);
+    GBLog.info(`BASIC: WAIT for ${seconds} second(s).`);
     const timeout = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     await timeout(seconds * 1000);
   }
@@ -575,15 +575,18 @@ export class SystemKeywords {
     }
 
     let body = { values: [[]] };
-    for (let index = 0; index < 128; index++) {
+
+    const address = `A2:${this.numberToLetters(args.length - 1)}2`;
+    for (let index = 0; index < args.length; index++) {
       let value = args[index];
       if (value && this.isValidDate(value)) {
         value = `'${value}`;
       }
       body.values[0][index] = value;
     }
+
     await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A2:DX2')`)
+      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
       .patch(body);
   }
 

@@ -86,7 +86,7 @@ export class DialogKeywords {
   hrOn: string;
 
   step: GBDialogStep;
- 
+
   public async getDeployer() {
     return this.min.deployService;
   }
@@ -124,8 +124,8 @@ export class DialogKeywords {
    *
    * @example x = GET PAGE
    */
-  public async getPage(step, url) {
-
+  public async getPage(step, url, username, password) {
+    GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);
     if (!this.browser) {
       this.browser = await puppeteer.launch({
         args: [
@@ -138,8 +138,14 @@ export class DialogKeywords {
         ignoreHTTPSErrors: true,
         headless: false,
       });
+
+      // set the HTTP Basic Authentication credential
+
     }
     const page = await this.browser.newPage();
+    if (username || password) {
+      await page.authenticate({ 'username': username, 'password': password });
+    }
     await page.goto(url);
     return page;
   }
@@ -237,12 +243,24 @@ export class DialogKeywords {
   /**
    * Find element on page DOM.
    *
-   * @example GET page, "elementName", "text"
+   * @example GET page, "elementName"
    */
   public async getBySelector(page, elementName) {
+    GBLog.info(`BASIC: Web Automation GET element: ${elementName}.`);
     await page.waitForSelector(elementName)
-    let element = await page.$(elementName);
-    return element;
+    let elements = await page.$$(elementName);
+    if (elements && elements.length > 1) {
+      return elements;
+    }
+    else {
+      const el = elements[0];
+      el['originalSelector'] = elementName;
+      el['href'] = await page.evaluate(e => e.getAttribute('href'), el);
+      el['value'] = await page.evaluate(e => e.getAttribute('value'), el);
+      el['name'] = await page.evaluate(e => e.getAttribute('name'), el);
+      el['class'] = await page.evaluate(e => e.getAttribute('class'), el);
+      return el;
+    }
   }
 
   /**
@@ -251,31 +269,59 @@ export class DialogKeywords {
    * @example GET page, "frameSelector, "elementSelector"
    */
   public async getByFrame(page, frame, selector) {
+    GBLog.info(`BASIC: Web Automation GET element by frame: ${selector}.`);
     await page.waitForSelector(frame)
     let frameHandle = await page.$(frame);
     const f = await frameHandle.contentFrame();
     await f.waitForSelector(selector);
     const element = await f.$(selector);
     element['originalSelector'] = selector;
+    element['href'] = await f.evaluate(e => e.getAttribute('href'), element);
+    element['value'] = await f.evaluate(e => e.getAttribute('value'), element);
+    element['name'] = await f.evaluate(e => e.getAttribute('name'), element);
+    element['class'] = await f.evaluate(e => e.getAttribute('class'), element);
     element['frame'] = f;
     return element;
   }
 
   /**
-   * Returns the today data filled in dd/mm/yyyy or mm/dd/yyyy. 
+   * Simulates a mouse hover an web page element. 
+     */
+  public async hover(step, page, idOrName) {
+    GBLog.info(`BASIC: Web Automation HOVER element: ${idOrName}.`);
+    await this.getBySelector(page, idOrName);
+    await page.hover(idOrName);
+  }
+
+  /**
+   * Clicks on an element in a web page.
    *
    * @example x = TODAY
    */
-  public async click(step, page, idOrName) {
-    const e = await this.getBySelector(page, idOrName);
-
-    await Promise.all([
-      page.waitForNavigation(),
-      page.click(e.name)
-    ]);
+  public async click(step, page, frameOrSelector, selector) {
+    GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
+    if (selector) {
+      await page.waitForSelector(frameOrSelector)
+      let frameHandle = await page.$(frameOrSelector);
+      const f = await frameHandle.contentFrame();
+      await f.waitForSelector(selector);
+      await f.click(selector);
+    }
+    else {
+      await page.waitForSelector(frameOrSelector);
+      await page.click(frameOrSelector);
+    }
   }
 
 
+  public async linkByText(step, page, text, index) {
+    GBLog.info(`BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
+    if (!index) {
+      index = 1
+    }
+    const els = await page.$x(`//a[contains(., '${text}')]`);
+    await els[index - 1].click();
+  }
 
 
 
@@ -285,6 +331,7 @@ export class DialogKeywords {
    * @example file = SCREENSHOT page
    */
   public async screenshot(step, page, idOrName, localName) {
+    GBLog.info(`BASIC: Web Automation SCREENSHOT ${idOrName}.`);
     const e = await this.getBySelector(page, idOrName);
     await e.screenshot({ path: localName });
   }
@@ -296,8 +343,9 @@ export class DialogKeywords {
    * @example TYPE page, "elementName", "text"
    */
   public async type(step, page, idOrName, text) {
+    GBLog.info(`BASIC: Web Automation TYPE on ${idOrName}: ${text}.`);
     const e = await this.getBySelector(page, idOrName);
-    await e.type(text);
+    await e.type(text, { delay: 200 });
   }
 
   /**
@@ -306,6 +354,7 @@ export class DialogKeywords {
    * @example x = TODAY
    */
   public async getOCR(step, localFile) {
+    GBLog.info(`BASIC: OCR processing on ${localFile}.`);
     const tesseract = require("node-tesseract-ocr")
 
     const config = {
@@ -407,12 +456,11 @@ export class DialogKeywords {
 
   }
 
-  public getCoded(value){
+  public getCoded(value) {
 
     // Checks if it is a GB FILE object.
 
-    if (value.data && value.filename)
-    {
+    if (value.data && value.filename) {
       value = value.data;
     }
 
@@ -686,6 +734,21 @@ export class DialogKeywords {
     await this.min.userProfile.set(step.context, user);
     this.user = user;
   }
+
+
+  /**
+  * Defines the maximum lines to scan in spreedsheets.
+  *
+  * @example SET MAX COLUMNS 5000
+  *
+  */
+  public async setMaxColumns(step, count) {
+    const user = await this.min.userProfile.get(step.context, {});
+    user.basicOptions.maxColumns = count;
+    await this.min.userProfile.set(step.context, user);
+    this.user = user;
+  }
+
 
   /**
    * Defines the FIND behaviour to consider whole words while searching.

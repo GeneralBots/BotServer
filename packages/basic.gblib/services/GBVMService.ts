@@ -324,41 +324,41 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2, $3) => {
-      
-        const count = ($2.match(/\,/g) || []).length;
-        const values = $2.split(',');
 
-        // Handles GET page, "selector".
+      const count = ($2.match(/\,/g) || []).length;
+      const values = $2.split(',');
 
-        if (count == 1) {
+      // Handles GET page, "selector".
 
-          return `${$1} = this.getByIDOrName(${values[0]}, ${values[1]} )`;
-        }
+      if (count == 1) {
 
-        // Handles GET page, "frameSelector", "selector"
+        return `${$1} = this.getBySelector(${values[0]}, ${values[1]} )`;
+      }
 
-        else if (count == 2) {
+      // Handles GET page, "frameSelector", "selector"
 
-          return `${$1} = this.getByFrame(${values[0]}, ${values[1]}, ${values[2]} )`;
-        }
+      else if (count == 2) {
 
-        // Handles the GET http version.
+        return `${$1} = this.getByFrame(${values[0]}, ${values[1]}, ${values[2]} )`;
+      }
 
-        else {
+      // Handles the GET http version.
 
-          return `${$1} = sys().get (${$2}, headers)`;
-        }
-      
+      else {
+
+        return `${$1} = sys().get (${$2}, headers)`;
+      }
+
     });
 
     code = code.replace(/\= NEW OBJECT/gi, ($0, $1, $2, $3) => {
       return ` = {}`;
     });
- 
+
     code = code.replace(/\= NEW ARRAY/gi, ($0, $1, $2, $3) => {
       return ` = []`;
     });
- 
+
 
     code = code.replace(/(go to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `gotoDialog(step, ${$3})\n`;
@@ -390,6 +390,10 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(set max lines)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `setMaxLines (step, ${$3})\n`;
+    });
+
+    code = code.replace(/(set max columns)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `setMaxColumns (step, ${$3})\n`;
     });
 
     code = code.replace(/(set translator)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -467,9 +471,17 @@ export class GBVMService extends GBService {
     code = code.replace(/(send mail)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `sendEmail (${$3})\n`;
     });
-   
+
     code = code.replace(/(send file to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
       return `sendFileTo (step, ${$3})\n`;
+    });
+
+    code = code.replace(/(hover)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `hover (step, ${$3})\n`;
+    });
+
+    code = code.replace(/(click link text)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      return `linkByText (step, ${$3})\n`;
     });
 
     code = code.replace(/(click)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -745,10 +757,16 @@ export class GBVMService extends GBService {
     code = code.replace(/("[^"]*"|'[^']*')|\bclick\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.click' : $1;
     });
+    code = code.replace(/("[^"]*"|'[^']*')|\blinkByText\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.linkByText' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bhover\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.hover' : $1;
+    });
     code = code.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.sendEmail' : $1;
     });
-        // await insertion.
+    // await insertion.
 
     code = code.replace(/this\./gm, 'await this.');
     code = code.replace(/\nfunction/i, 'async function');
