@@ -473,15 +473,23 @@ export class KBService implements IGBKBService {
             const mediaFilename = urlJoin(path.dirname(filePath), '..', 'articles', answer);
             if (Fs.existsSync(mediaFilename)) {
 
-              // TODO: Convert DOCX to MD.
+              // Tries to load .docx file from Articles folder.
 
-              answer = Fs.readFileSync(mediaFilename, 'utf8');
+              if (answer.indexOf('.docx') > -1) {
+                answer = await this.getTextFromFile(filePath);
+              }
+              else {
+                // Loads normally markdown file.
 
+                answer = Fs.readFileSync(mediaFilename, 'utf8');
+              }
               format = '.md';
               media = path.basename(mediaFilename);
             } else {
-              GBLog.info(`[GBImporter] File not found: ${mediaFilename}.`);
-              answer = '';
+              if (answer.indexOf('.md') > -1) {
+                GBLog.info(`[GBImporter] File not found: ${mediaFilename}.`);
+                answer = '';
+              }
             }
           }
 
