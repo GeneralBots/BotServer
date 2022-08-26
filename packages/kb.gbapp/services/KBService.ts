@@ -230,13 +230,13 @@ export class KBService implements IGBKBService {
       });
     }
     if (!question) {
-      // TODO: Solve this compilation error.
-      // question = await GuaribasQuestion.findOne({
-      //   where: {
-      //     instanceId: instanceId,
-      //     content: { [Op.eq]: `${text}` }
-      //   }
-      // });
+      let where = {
+        instanceId: instanceId,
+        content: { [Op.eq]: `${text}` }
+      }
+      question = await GuaribasQuestion.findOne({
+        where: where
+      });
     }
 
     if (question !== null) {
