@@ -475,7 +475,7 @@ export class KBService implements IGBKBService {
               // TODO: Convert DOCX to MD.
 
               answer = Fs.readFileSync(mediaFilename, 'utf8');
-              
+
               format = '.md';
               media = path.basename(mediaFilename);
             } else {
@@ -505,6 +505,12 @@ export class KBService implements IGBKBService {
             }
             indexer++;
           });
+
+          // Skips blank answers.
+
+          if (answer && answer.length < 1) {
+            return false;
+          }
 
           // Now with all the data ready, creates entities in the store.
 
