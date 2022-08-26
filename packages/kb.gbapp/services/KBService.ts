@@ -453,10 +453,11 @@ export class KBService implements IGBKBService {
         const subjectsText = line._cells[0].text;
         const from = line._cells[1].text;
         const to = line._cells[2].text;
-        const question = line._cells[3].text;
-        let answer = line._cells[4].text;
+        const question = line._cells[3].text.trim();
+        let answer = line._cells[4].text.trim();
 
-        if (!(subjectsText === 'subjects' && from === 'from') && answer !== null && question !== null) {
+        if (!(subjectsText === 'subjects' && from === 'from') && answer !== null && question !== null &&
+          answer !== '' && question !== '') {
           let format = '.txt';
 
           // Extracts answer from external media if any.
@@ -508,7 +509,7 @@ export class KBService implements IGBKBService {
 
           // Skips blank answers.
 
-          if (answer && answer.length < 1) {
+          if (answer && answer.trim() === '') {
             return false;
           }
 
