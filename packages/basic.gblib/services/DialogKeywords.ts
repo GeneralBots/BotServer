@@ -87,6 +87,11 @@ export class DialogKeywords {
 
   step: GBDialogStep;
 
+  /**
+   * SYSTEM account maxLines, when used with impersonated contexts (eg. running in SET SCHEDULE).
+   */
+  maxLines: number = 2000;
+
   public async getDeployer() {
     return this.min.deployService;
   }
@@ -729,10 +734,15 @@ export class DialogKeywords {
    *
    */
   public async setMaxLines(step, count) {
-    const user = await this.min.userProfile.get(step.context, {});
-    user.basicOptions.maxLines = count;
-    await this.min.userProfile.set(step.context, user);
-    this.user = user;
+    if (step) {
+      const user = await this.min.userProfile.get(step.context, {});
+      user.basicOptions.maxLines = count;
+      await this.min.userProfile.set(step.context, user);
+      this.user = user;
+    }
+    else {
+      await this.maxLines = count;
+    }
   }
 
 

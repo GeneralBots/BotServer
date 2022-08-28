@@ -678,11 +678,14 @@ export class SystemKeywords {
 
     // MAX LINES property.
 
-    let maxLines = 1000;
+    let maxLines;
     if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
       if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
         maxLines = Number.parseInt(this.dk.user.basicOptions.maxLines).valueOf();
       }
+    }
+    else {
+      maxLines = this.dk.maxLines;
     }
 
     // Choose data sources based on file type (HTML Table, data variable or sheet file)

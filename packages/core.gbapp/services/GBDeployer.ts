@@ -202,7 +202,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Deploys a new blank bot to the database, cognitive services and other services.
    */
-  public async deployBlankBot(botId: string, mobile: string = null, email: string = null) {
+  public async deployBlankBot(botId: string, mobile: string, email: string) {
 
     // Creates a new row on the GuaribasInstance table.
 
