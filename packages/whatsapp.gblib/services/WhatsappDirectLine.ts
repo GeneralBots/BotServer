@@ -810,12 +810,11 @@ export class WhatsappDirectLine extends GBService {
       }
 
       try {
+        GBLog.info(`Message [${msg}] is being sent to ${to}...`);
         // tslint:disable-next-line: await-promise
         if (this.provider !== "GeneralBots") {
           await request.post(options);
         }
-        GBLog.info(`Message [${msg}] sent to ${to}.`);
-
       } catch (error) {
         GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
 
