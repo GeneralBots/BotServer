@@ -202,7 +202,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Deploys a new blank bot to the database, cognitive services and other services.
    */
-  public async deployBlankBot(botId: string) {
+  public async deployBlankBot(botId: string, mobile: string = null, email: string = null) {
 
     // Creates a new row on the GuaribasInstance table.
 
@@ -231,6 +231,7 @@ export class GBDeployer implements IGBDeployer {
     instance.whatsappServiceKey = bootInstance.whatsappServiceKey;
     instance.whatsappServiceNumber = bootInstance.whatsappServiceNumber;
     instance.whatsappServiceUrl = bootInstance.whatsappServiceUrl;
+    instance.params = JSON.stringify({ 'Can Publish': mobile, 'Admin Notify E-mail': email });
 
     // Saves bot information to the store.
 
@@ -517,11 +518,11 @@ export class GBDeployer implements IGBDeployer {
             Fs.utimesSync(itemPath,
               new Date(), new Date(item.lastModifiedDateTime));
           }
-          else{
+          else {
             GBLog.info(`Local is up to date: ${itemPath}...`);
           }
         }
-       });
+      });
     }
   }
   /**
@@ -808,7 +809,7 @@ export class GBDeployer implements IGBDeployer {
       // Install modules and compiles the web app.
 
       GBLog.info(`Installing modules default.gbui (It may take a few minutes)...`);
-      
+
       child_process.execSync(`${npm} install`, { cwd: root });
 
       GBLog.info(`Transpiling default.gbui...`);
