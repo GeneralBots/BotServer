@@ -652,7 +652,10 @@ export class WhatsappDirectLine extends GBService {
           method: 'POST',
           url: urlJoin(this.whatsappServiceUrl, 'sendFile'),
           qs: {
-            token: this.whatsappServiceKey,
+            token: this.whatsappServiceKey
+          },
+          json: true,
+          body: {
             phone: to,
             body: url,
             filename: filename,
