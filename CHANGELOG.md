@@ -1,3 +1,11 @@
+## [2.0.169](https://github.com/GeneralBots/BotServer/compare/2.0.168...2.0.169) (2022-08-28)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Impersonated SET MAX LINES. ([f058a4a](https://github.com/GeneralBots/BotServer/commit/f058a4a0c6cbdc63a6c1ba3b857ccd4c1f7db8a2))
+* **basic.gblib:** Impersonated SET MAX LINES. ([8f373f3](https://github.com/GeneralBots/BotServer/commit/8f373f3691e029e415f280b81aa780a50dfc5b91))
+
 ## [2.0.168](https://github.com/GeneralBots/BotServer/compare/2.0.167...2.0.168) (2022-08-28)
 
 
