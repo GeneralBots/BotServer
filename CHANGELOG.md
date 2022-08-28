@@ -1,3 +1,11 @@
+## [2.0.168](https://github.com/GeneralBots/BotServer/compare/2.0.167...2.0.168) (2022-08-28)
+
+
+### Bug Fixes
+
+* **core.gbapp:** More information on bot creation. ([7e7fb27](https://github.com/GeneralBots/BotServer/commit/7e7fb277d7d530026e1df9df78dfc02f3b43a418))
+* **core.gbapp:** More information on bot creation. ([e07152b](https://github.com/GeneralBots/BotServer/commit/e07152bc07beae48cc1217832951923fc6f0bc12))
+
 ## [2.0.167](https://github.com/GeneralBots/BotServer/compare/2.0.166...2.0.167) (2022-08-26)
 
 
