@@ -741,7 +741,7 @@ export class DialogKeywords {
       this.user = user;
     }
     else {
-      await this.maxLines = count;
+      this.maxLines = count;
     }
   }
 
