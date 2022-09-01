@@ -983,6 +983,9 @@ export class WhatsappDirectLine extends GBService {
             else if (provider === "maytapi") {
               req.body.message = `/start`;
             }
+            else {
+              req.body = `/start`;
+            }
 
             // Resets HEAR ON DIALOG value to none and passes
             // current dialog to the direct line.
