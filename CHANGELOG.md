@@ -1,3 +1,10 @@
+## [2.0.172](https://github.com/GeneralBots/BotServer/compare/2.0.171...2.0.172) (2022-09-01)
+
+
+### Bug Fixes
+
+* **whatsapp.gblib:** .gbapp message subprocessing. ([aeaaddc](https://github.com/GeneralBots/BotServer/commit/aeaaddc8ab53ae313c3aca687ada2fd5504398c5))
+
 ## [2.0.171](https://github.com/GeneralBots/BotServer/compare/2.0.170...2.0.171) (2022-09-01)
 
 
