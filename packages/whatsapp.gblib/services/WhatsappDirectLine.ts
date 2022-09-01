@@ -124,7 +124,10 @@ export class WhatsappDirectLine extends GBService {
         const gbaiName = `${this.min.botId}.gbai`;
         let localName = Path.join('work', gbaiName, 'profile');
         let client = this.customClient = new Client({
-          authStrategy: new LocalAuth(),
+          authStrategy: new LocalAuth({
+            clientId: this.min.botId,
+            dataPath: localName
+          }),
           puppeteer: {
             headless: false, args: ['--disable-features=site-per-process',
               `--user-data-dir=${localName}`]
@@ -398,7 +401,7 @@ export class WhatsappDirectLine extends GBService {
     // Processes .gbapp message interception.
 
     await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
-      await e.onExchangeData(this.min, 'whatsappMessage', req.body.messages ? req.body.messages[0] : message);
+      await e.onExchangeData(this.min, 'whatsappMessage', { from, fromName });
     });
 
     const sec = new SecService();
