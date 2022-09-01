@@ -398,7 +398,7 @@ export class WhatsappDirectLine extends GBService {
     // Processes .gbapp message interception.
 
     await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
-      await e.onExchangeData(this.min, 'whatsappMessage', message);
+      await e.onExchangeData(this.min, 'whatsappMessage', req.body.messages ? req.body.messages[0] : message);
     });
 
     const sec = new SecService();
