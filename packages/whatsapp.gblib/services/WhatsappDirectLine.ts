@@ -237,11 +237,12 @@ export class WhatsappDirectLine extends GBService {
       const express = require('express');
       GBServer.globals.server.use(`/audios`, express.static('work'));
 
-      
-      try {
-        const res = await request.post(options);
-      } catch (error) {
-        GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
+      if (options) {
+        try {
+          await request.post(options);
+        } catch (error) {
+          GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
+        }
       }
     }
   }
@@ -754,13 +755,13 @@ export class WhatsappDirectLine extends GBService {
         break;
     }
 
-    try {
-
-      // tslint:disable-next-line: await-promise
-      const result = await request.post(options);
-      GBLog.info(`Audio ${url} sent to ${to}: ${result}`);
-    } catch (error) {
-      GBLog.error(`Error sending audio message to Whatsapp provider ${error.message}`);
+    if (options) {
+      try {
+        const result = await request.post(options);
+        GBLog.info(`Audio ${url} sent to ${to}: ${result}`);
+      } catch (error) {
+        GBLog.error(`Error sending audio message to Whatsapp provider ${error.message}`);
+      }
     }
   }
 
@@ -829,16 +830,16 @@ export class WhatsappDirectLine extends GBService {
           break;
       }
 
-      try {
-        GBLog.info(`Message [${msg}] is being sent to ${to}...`);
-        // tslint:disable-next-line: await-promise
-        if (this.provider !== "GeneralBots") {
+      if (options) {
+        try {
+          GBLog.info(`Message [${msg}] is being sent to ${to}...`);
           await request.post(options);
         }
-      } catch (error) {
-        GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
+        catch (error) {
+          GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
 
-        // TODO: Handle Error: socket hang up and retry.
+          // TODO: Handle Error: socket hang up and retry.
+        }
       }
     }
   }
