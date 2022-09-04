@@ -81,7 +81,7 @@ export class GBServer {
    */
 
   public static run() {
-
+    
 
     GBLog.info(`The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
@@ -112,6 +112,7 @@ export class GBServer {
         try {
 
           GBLog.info(`Now accepting connections on ${port}...`);
+          process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
           // Reads basic configuration, initialize minimal services.
 

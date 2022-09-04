@@ -637,17 +637,15 @@ export class GBMinService {
       await min.whatsAppDirectLine.setup(true);
     } else {
       const minBoot = GBServer.globals.minBoot as any;
-      if (minBoot.instance.whatsappServiceUrl) {
-        min.whatsAppDirectLine = new WhatsappDirectLine(
-          min,
-          min.botId,
-          min.instance.whatsappBotKey,
-          minBoot.instance.whatsappServiceKey,
-          minBoot.instance.whatsappServiceNumber,
-          minBoot.instance.whatsappServiceUrl
-        );
-        await min.whatsAppDirectLine.setup(false);
-      }
+      min.whatsAppDirectLine = new WhatsappDirectLine(
+        min,
+        min.botId,
+        min.instance.whatsappBotKey,
+        minBoot.instance.whatsappServiceKey,
+        minBoot.instance.whatsappServiceNumber,
+        minBoot.instance.whatsappServiceUrl
+      );
+      await min.whatsAppDirectLine.setup(false);
     }
 
     // Setups default BOT Framework dialogs.

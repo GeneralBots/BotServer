@@ -121,66 +121,76 @@ export class WhatsappDirectLine extends GBService {
     switch (this.provider) {
       case 'GeneralBots':
 
-        // Initialize the browser using a local profile for each bot.
+        const minBoot = GBServer.globals.minBoot as any;
+        if (minBoot.botId !== this.botId) {
 
-        const gbaiName = `${this.min.botId}.gbai`;
-        let localName = Path.join('work', gbaiName, 'profile');
-        let client = this.customClient = new Client({
-          authStrategy: new LocalAuth({
-            clientId: this.min.botId,
-            dataPath: localName
-          }),
-          puppeteer: {
-            headless: false, args: ['--disable-features=site-per-process',
-              `--user-data-dir=${localName}`]
-          }
-        });
-        client.initialize();
+          this.customClient = minBoot.whatsAppDirectLine.customClient;
 
-        // Dispatches messages to the received method.
+        }
+        else {
 
-        client.on('message', (async message => {
-          await this.WhatsAppCallback(message, null);
-        }).bind(this));
+          // Initialize the browser using a local profile for each bot.
 
-        client.on('qr', (async (qr) => {
+          const gbaiName = `${this.min.botId}.gbai`;
+          let localName = Path.join('work', gbaiName, 'profile');
+          let client = this.customClient = new Client({
+            authStrategy: new LocalAuth({
+              clientId: this.min.botId,
+              dataPath: localName
+            }),
+            puppeteer: {
+              headless: false, args: ['--disable-features=site-per-process',
+                `--user-data-dir=${localName}`]
+            }
+          });
+          client.initialize();
 
-          const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
-          const adminEmail = this.min.core.getParam(this.min.instance, 'Bot Admin E-mail', null);
-
-          // Sends QR Code to boot bot admin.
-
-          const msg = `Please, scan QR Code with for bot ${this.botId}.`;
-          GBLog.info(msg);
-          qrcode.generate(qr, { small: true, scale: 0.5 });
+          // Dispatches messages to the received method.
 
 
-          // While handling other bots uses boot instance of this class to send QR Codes.
+          client.on('message', (async message => {
+            await this.WhatsAppCallback(message, null);
+          }).bind(this));
 
-          if (this.botId !== GBServer.globals.minBoot.botId) {
+          client.on('qr', (async (qr) => {
 
-            const s = new DialogKeywords(null, null, null, null);
-            const qrBuf = await s.getQRCode(qr);
-            const gbaiName = `${this.min.botId}.gbai`;
-            const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-            fs.writeFileSync(localName, qrBuf);
-            const url = urlJoin(
-              GBServer.globals.publicAddress,
-              this.min.botId,
-              'cache',
-              Path.basename(localName)
-            );
-            GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
-            s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, msg);
-          }
+            const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
+            const adminEmail = this.min.core.getParam(this.min.instance, 'Bot Admin E-mail', null);
 
-        }).bind(this));
+            // Sends QR Code to boot bot admin.
 
-        client.on('authenticated', () => {
-          GBLog.info(`WhatsApp QR Code authenticated for ${this.botId}.`);
-        });
+            const msg = `Please, scan QR Code with for bot ${this.botId}.`;
+            GBLog.info(msg);
+            qrcode.generate(qr, { small: true, scale: 0.5 });
 
-        setUrl = false;
+
+            // While handling other bots uses boot instance of this class to send QR Codes.
+
+            if (this.botId !== GBServer.globals.minBoot.botId) {
+
+              const s = new DialogKeywords(null, null, null, null);
+              const qrBuf = await s.getQRCode(qr);
+              const gbaiName = `${this.min.botId}.gbai`;
+              const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
+              fs.writeFileSync(localName, qrBuf);
+              const url = urlJoin(
+                GBServer.globals.publicAddress,
+                this.min.botId,
+                'cache',
+                Path.basename(localName)
+              );
+              GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
+              s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, msg);
+            }
+
+          }).bind(this));
+
+          client.on('authenticated', () => {
+            GBLog.info(`WhatsApp QR Code authenticated for ${this.botId}.`);
+          });
+
+          setUrl = false;
+        }
         break;
 
       case 'chatapi':
@@ -223,11 +233,11 @@ export class WhatsappDirectLine extends GBService {
         break;
     }
 
-    if (setUrl) {
+    if (setUrl && options) {
       const express = require('express');
       GBServer.globals.server.use(`/audios`, express.static('work'));
 
-
+      
       try {
         const res = await request.post(options);
       } catch (error) {
@@ -647,8 +657,8 @@ export class WhatsappDirectLine extends GBService {
     let options;
     switch (this.provider) {
       case 'GeneralBots':
-        const attachment = MessageMedia.fromUrl(url);
-        await this.customClient.sendMessage(to += '@c.us', attachment, { caption: caption });
+        const attachment = await MessageMedia.fromUrl(url);
+        await this.customClient.sendMessage(to + '@c.us', attachment, { caption: caption });
         break;
 
       case 'chatapi':
@@ -698,12 +708,14 @@ export class WhatsappDirectLine extends GBService {
 
         break;
     }
-    try {
-      // tslint:disable-next-line: await-promise
-      const result = await request.post(options);
-      GBLog.info(`File ${url} sent to ${to}: ${result}`);
-    } catch (error) {
-      GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
+    if (options) {
+      try {
+        // tslint:disable-next-line: await-promise
+        const result = await request.post(options);
+        GBLog.info(`File ${url} sent to ${to}: ${result}`);
+      } catch (error) {
+        GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
+      }
     }
   }
 
@@ -860,7 +872,7 @@ export class WhatsappDirectLine extends GBService {
       switch (provider) {
         case "GeneralBots":
 
-          id = req.author.split('@')[0];
+          id = req.from.split('@')[0];
           senderName = req._data.notifyName;
           text = req.body;
 
@@ -997,8 +1009,11 @@ export class WhatsappDirectLine extends GBService {
               id,
               `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`
               , null);
-            res.end();
+            if (res) {
+              res.end();
+            }
           }
+
         } else {
 
           // User wants to switch bots.
@@ -1034,7 +1049,10 @@ export class WhatsappDirectLine extends GBService {
                 null
               );
             }
-            res.end();
+            if (res) {
+              res.end();
+            }
+
           } else {
             activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
             if (activeMin === undefined) {
