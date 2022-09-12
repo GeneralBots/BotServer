@@ -47,6 +47,9 @@ const Excel = require('exceljs');
 const urlJoin = require('url-join');
 const url = require('url');
 const puppeteer = require('puppeteer')
+const pluginStealth = require('puppeteer-extra-plugin-stealth');
+
+
 const Path = require('path');
 const ComputerVisionClient = require('@azure/cognitiveservices-computervision').ComputerVisionClient;
 const ApiKeyCredentials = require('@azure/ms-rest-js').ApiKeyCredentials;
@@ -316,7 +319,7 @@ export class SystemKeywords {
     let localName;
     if (renderImage) {
       localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
-      await page.screenshot({ path: localName });
+      await page.screenshot({ path: localName, fullPage: true });
       url = urlJoin(
         GBServer.globals.publicAddress,
         this.min.botId,

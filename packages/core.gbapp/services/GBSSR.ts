@@ -36,16 +36,8 @@
 
 'use strict';
 
-const Path = require('path');
-const urlJoin = require('url-join');
-const Fs = require('fs');
-const express = require('express');
-const child_process = require('child_process');
-const rimraf = require('rimraf');
-const request = require('request-promise-native');
-import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
-import { CollectionUtil } from 'pragmatismo-io-framework';
 const puppeteer = require('puppeteer');
+const pluginStealth = require('puppeteer-extra-plugin-stealth');
 import { NextFunction, Request, Response } from "express";
 
 
@@ -102,15 +94,6 @@ async function recursiveFindInFrames(inputFrame, selector) {
     return results.find(Boolean);
 }
 
-async function findInFrames(page, selector) {
-    const result = await recursiveFindInFrames(page.mainFrame(), selector);
-    if (!result) {
-        throw new Error(
-            `The selector \`${selector}\` could not be found in any child frames.`
-        );
-    }
-    return result;
-}
 
 
 

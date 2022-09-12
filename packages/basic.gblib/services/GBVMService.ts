@@ -178,6 +178,7 @@ export class GBVMService extends GBService {
     username = step ? this.userName(step) : sys().getRandomId();
     mobile = step ? this.userMobile(step) : sys().getRandomId();
     from = mobile;
+    ENTER = String.fromCharCode(13);
     ubound = function(array){return array.length};
     isarray = function(array){return Array.isArray(array) };
     weekday = this.getWeekFromDate.bind(this);
@@ -509,6 +510,14 @@ export class GBVMService extends GBService {
       return `sys().merge(${$1}, ${$2}, ${$3})\n`;
     });
 
+    code = code.replace(/PRESS\s(.*)\sON\s(.*)/gi, ($0, $1, $2) => {
+      return `pressKey(step, ${$2}, ${$1})\n`;
+    });
+
+    code = code.replace(/SCREENSHOT\s(.*)/gi, ($0, $1, $2) => {
+      return `screenshot(step, ${$1})\n`;
+    });
+
     code = code.replace(/(\w+)\s*\=\s*(.*)\s*as image/gi, ($0, $1, $2) => {
       return `${$1} = sys().asImage(${$2})\n`;
     });
@@ -554,7 +563,7 @@ export class GBVMService extends GBService {
 
     // Removes comments.
 
-    basicCode = basicCode.replace(/(\n\s*REM.*\n)/gi, '');
+    basicCode = basicCode.replace(/((^|\W)REM.*\n)/gi, '');
 
     // Process INCLUDE keyword to include another
     // dialog inside the dialog.
@@ -759,6 +768,12 @@ export class GBVMService extends GBService {
     });
     code = code.replace(/("[^"]*"|'[^']*')|\blinkByText\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.linkByText' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bpressKey\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.pressKey' : $1;
+    });
+    code = code.replace(/("[^"]*"|'[^']*')|\bscreenshot\b/gi, ($0, $1) => {
+      return $1 === undefined ? 'this.screenshot' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bhover\b/gi, ($0, $1) => {
       return $1 === undefined ? 'this.hover' : $1;

@@ -32,11 +32,9 @@
 
 'use strict';
 
-const urlJoin = require('url-join');
-const DateDiff = require('date-diff');
 const puppeteer = require('puppeteer');
-const Path = require('path');
-import bb from "billboard.js";
+const pluginStealth = require('puppeteer-extra-plugin-stealth');
+
 
 export class ChartServices {
 
@@ -48,7 +46,7 @@ export class ChartServices {
     public static async screenshot(args, path) {
         const browser = await puppeteer.launch({ headless: false });
         const page = await browser.newPage();
- 
+
         // load billboard.js assets from CDN.
         await page.addStyleTag({ url: "https://cdn.jsdelivr.net/npm/billboard.js/dist/theme/datalab.min.css" });
         await page.addScriptTag({ url: "https://cdn.jsdelivr.net/npm/billboard.js/dist/billboard.pkgd.min.js" });

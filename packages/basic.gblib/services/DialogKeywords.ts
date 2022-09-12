@@ -44,13 +44,13 @@ import { GBMinService } from '../../core.gbapp/services/GBMinService';
 import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { GBVMService } from './GBVMService';
 const DateDiff = require('date-diff');
 const puppeteer = require('puppeteer');
+const pluginStealth = require('puppeteer-extra-plugin-stealth');
+
+
 const Path = require('path');
 const sgMail = require('@sendgrid/mail');
-const PizZip = require("pizzip");
-const Docxtemplater = require("docxtemplater");
 var mammoth = require("mammoth");
 const qrcode = require('qrcode');
 
@@ -318,6 +318,26 @@ export class DialogKeywords {
     }
   }
 
+  /**
+   * Press ENTER in a web page, useful for logins.
+   *
+   * @example PRESS ENTER ON page
+   */
+  public async pressKey(step, page, char, frame) {
+    GBLog.info(`BASIC: Web Automation PRESS ${char} ON element: ${frame}.`);
+    if (char.toLowerCase() === "enter") {
+      char = '\n';
+    }
+    if (frame) {
+      await page.waitForSelector(frame)
+      let frameHandle = await page.$(frame);
+      const f = await frameHandle.contentFrame();
+      await f.keyboard.press(char);
+    }
+    else {
+      await page.keyboard.press(char);
+    }
+  }
 
   public async linkByText(step, page, text, index) {
     GBLog.info(`BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
@@ -335,10 +355,23 @@ export class DialogKeywords {
    *
    * @example file = SCREENSHOT page
    */
-  public async screenshot(step, page, idOrName, localName) {
+  public async screenshot(step, page, idOrName) {
     GBLog.info(`BASIC: Web Automation SCREENSHOT ${idOrName}.`);
-    const e = await this.getBySelector(page, idOrName);
-    await e.screenshot({ path: localName });
+
+    const gbaiName = `${this.min.botId}.gbai`;
+    const localName = Path.join('work', gbaiName, 'cache', `screen-${GBAdminService.getRndReadableIdentifier()}.jpg`);
+
+    await page.screenshot({ path: localName });
+
+    const url = urlJoin(
+      GBServer.globals.publicAddress,
+      this.min.botId,
+      'cache',
+      Path.basename(localName)
+    );
+    GBLog.info(`BASIC: WebAutomation: Screenshot captured at ${url}.`);
+
+    return url;
   }
 
 
@@ -936,7 +969,7 @@ export class DialogKeywords {
     if (page) {
       const gbaiName = `${this.min.botId}.gbai`;
       const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
-      await filename.screenshot({ path: localName });
+      await filename.screenshot({ path: localName, fullPage: true });
 
       const url = urlJoin(
         GBServer.globals.publicAddress,
