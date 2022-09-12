@@ -1,3 +1,10 @@
+## [2.0.176](https://github.com/GeneralBots/BotServer/compare/2.0.175...2.0.176) (2022-09-12)
+
+
+### Bug Fixes
+
+* **basic.gblib:** SCREENSHOT keyword. ([0f1ee22](https://github.com/GeneralBots/BotServer/commit/0f1ee22467577c4237992d5d7bd3af8efd1ca300))
+
 ## [2.0.175](https://github.com/GeneralBots/BotServer/compare/2.0.174...2.0.175) (2022-09-04)
 
 
