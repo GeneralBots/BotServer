@@ -139,6 +139,7 @@
     "tabulator-tables": "^5.2.6",
     "tedious": "14.0.0",
     "textract": "2.5.0",
+    "twitter-api-v2": "1.12.7",
     "typescript": "3.6.4",
     "url-join": "4.0.1",
     "vbscript-to-typescript": "1.0.8",

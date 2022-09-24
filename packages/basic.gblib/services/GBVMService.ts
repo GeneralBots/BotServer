@@ -52,7 +52,7 @@ const walkPromise = require('walk-promise');
 const Path = require('path');
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
- * This alpha version is using a hack in form of converter to
+ * This alpha version is using a antipattern hack in form of converter to
  * translate BASIC to TS and string replacements to emulate await code.
  * See https://github.com/uweg/vbscript-to-typescript for more info on vb2ts, so
  * http://stevehanov.ca/blog/index.php?id=92 should be used to run it without
@@ -516,6 +516,10 @@ export class GBVMService extends GBService {
 
     code = code.replace(/SCREENSHOT\s(.*)/gi, ($0, $1, $2) => {
       return `screenshot(step, ${$1})\n`;
+    });
+
+    code = code.replace(/TWEET\s(.*)/gi, ($0, $1, $2) => {
+      return `sys().tweet(step, ${$1})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*(.*)\s*as image/gi, ($0, $1, $2) => {

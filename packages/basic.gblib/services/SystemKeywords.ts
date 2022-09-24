@@ -48,6 +48,7 @@ const urlJoin = require('url-join');
 const url = require('url');
 const puppeteer = require('puppeteer')
 const pluginStealth = require('puppeteer-extra-plugin-stealth');
+const { TwitterApi } = require('twitter-api-v2');
 
 
 const Path = require('path');
@@ -1682,4 +1683,28 @@ export class SystemKeywords {
       return table;
     }
   }
+
+  public async tweet(step, text: string) {
+
+    const consumer_key = this.min.core.getParam(this.min.instance, 'Twitter Consumer Key', null);
+    const consumer_secret = this.min.core.getParam(this.min.instance, 'Twitter Consumer Key Secret', null);
+    const access_token_key = this.min.core.getParam(this.min.instance, 'Twitter Access Token', null);
+    const access_token_secret = this.min.core.getParam(this.min.instance, 'Twitter Access Token Secret', null);
+
+    if (!consumer_key || !consumer_secret || !access_token_key || !access_token_secret) {
+      GBLog.info('Twitter not configured in .gbot.');
+    }
+
+    const client = new TwitterApi({
+      appKey: consumer_key,
+      appSecret: consumer_secret,
+      accessToken: access_token_key,
+      accessSecret: access_token_secret
+    });
+
+    await client.v2.tweet(text);
+    GBLog.info(`Twitter Automation: ${text}.`);
+
+  }
+
 }
