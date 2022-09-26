@@ -149,7 +149,7 @@ export class GBMinService {
         useCache: true,
         cacheRefreshRate: 86400
       };
-      GBServer.globals.server.use(ssrForBots(defaultOptions));
+      // GBServer.globals.server.use(ssrForBots(defaultOptions));
 
       const url = GBServer.globals.wwwroot
         ? GBServer.globals.wwwroot
