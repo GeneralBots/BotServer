@@ -347,7 +347,7 @@ export class GBVMService extends GBService {
 
       else {
 
-        return `${$1} = sys().get (${$2}, headers)`;
+        return `${$1} = sys().get (${$2}, headers, httpUsername, httpPs)`;
       }
 
     });

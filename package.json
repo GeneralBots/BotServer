@@ -95,6 +95,7 @@
     "google-libphonenumber": "3.2.21",
     "googleapis": "75.0.0",
     "ibm-watson": "6.1.1",
+    "isolated-vm": "^4.4.1",
     "js-beautify": "1.13.13",
     "lodash": "^4.17.21",
     "luxon": "2.0.2",

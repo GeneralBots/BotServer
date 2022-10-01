@@ -949,6 +949,8 @@ export class GBConversationalService {
     if (translate) {
       let replacements = [];
 
+      // To fix MSFT bug.
+
       if (keepTextList) {
         keepTextList = keepTextList.filter(p => p.trim() !== '');
         let i = 0;

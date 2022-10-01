@@ -1644,7 +1644,10 @@ export class SystemKeywords {
       let found;
       if (key1Index) {
         const key1Value = row[key1];
-        found = table[key1Index[key1Value][0]];
+        const foundRow = key1Index[key1Value];
+        if (foundRow) {
+          found = table[foundRow[0]];
+        }
       }
 
       if (found) {
@@ -1670,7 +1673,7 @@ export class SystemKeywords {
           args.push(row[keys[j]]);
         }
 
-        await this.save(file, args);
+        await this.save(file, ...args);
         adds++;
       }
     }
