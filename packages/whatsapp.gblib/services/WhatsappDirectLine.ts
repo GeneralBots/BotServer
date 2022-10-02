@@ -149,16 +149,15 @@ export class WhatsappDirectLine extends GBService {
           client.initialize();
           this.browserWSEndpoint = browser.wsEndpoint(); // store for later
           
-          var self = this;
-          client.on('disconnected', async () => {
-              client.browser = await puppeteer.connect({browserWSEndpoint: self.browserWSEndpoint});
-          }).bind(this);
+          browser.on('disconnected', (async () => {
+              client.browser = await puppeteer.connect({browserWSEndpoint: this.browserWSEndpoint});
+          }).bind(this));
           // Dispatches messages to the received method.
 
 
-          client.on('message', async message => {
+          client.on('message', (async message => {
             await this.WhatsAppCallback(message, null);
-          }).bind(this);
+          }).bind(this));
 
           client.on('qr', (async (qr) => {
 
