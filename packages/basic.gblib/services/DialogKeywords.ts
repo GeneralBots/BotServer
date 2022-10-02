@@ -45,7 +45,7 @@ import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 const DateDiff = require('date-diff');
-
+import { createBrowser } from '../../core.gbapp/services/GBSSR';
 
 const Path = require('path');
 const sgMail = require('@sendgrid/mail');
@@ -130,10 +130,7 @@ export class DialogKeywords {
   public async getPage(step, url, username, password) {
     GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);
     if (!this.browser) {
-      this.browser = 
-
-      // set the HTTP Basic Authentication credential
-
+      this.browser = await createBrowser(null);
     }
     const page = await this.browser.newPage();
     if (username || password) {

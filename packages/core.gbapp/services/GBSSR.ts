@@ -39,7 +39,6 @@
 const puppeteer = require('puppeteer');
 const pluginStealth = require('puppeteer-extra-plugin-stealth');
 import { NextFunction, Request, Response } from "express";
-import { Browser } from "puppeteer";
 const Path = require('path');
 
 // https://hackernoon.com/tips-and-tricks-for-web-scraping-with-puppeteer-ed391a63d952
@@ -82,7 +81,7 @@ const RENDER_CACHE = new Map();
 
 
 
-async function createBrowser(profile): Promise<Browser> {
+async function createBrowser(profile): Promise<any> {
     const gbaiName = `${this.min.botId}.gbai`;
     let localName = Path.join('work', gbaiName, 'profile');
 
@@ -141,7 +140,7 @@ async function ssr(url: string, useCache: boolean, cacheRefreshRate: number) {
             };
         }
     }
-    const browser = createBrowser(null);
+    const browser = await createBrowser(null);
     const stylesheetContents = {};
 
     try {
