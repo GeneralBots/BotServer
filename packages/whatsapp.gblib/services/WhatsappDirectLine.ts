@@ -140,38 +140,47 @@ export class WhatsappDirectLine extends GBService {
 
           const browser = await createBrowser(localName);
 
-          const createClient = (browserWSEndpoint)=>{
+          const createClient = (browserWSEndpoint) => {
+            let puppeteer: any = {
+              headless: false, args: ['--disable-features=site-per-process',
+                `--user-data-dir=${localName}`]
+            };
+            if (browserWSEndpoint) {
+              puppeteer = { browserWSEndpoint: browserWSEndpoint };
+            }
+
             const client = this.customClient = new Client({
               authStrategy: new LocalAuth({
                 clientId: this.min.botId,
                 dataPath: localName
               }),
-              puppeteer: {browserWSEndpoint:browserWSEndpoint  }
+              puppeteer: puppeteer
             });
-            
-          
+
+
             client.initialize();
+            this.browserWSEndpoint = client.browser.wsEndpoint();
 
             client.on('message', (async message => {
               await this.WhatsAppCallback(message, null);
             }).bind(this));
-  
+
             client.on('qr', (async (qr) => {
-  
+
               const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
               const adminEmail = this.min.core.getParam(this.min.instance, 'Bot Admin E-mail', null);
-  
+
               // Sends QR Code to boot bot admin.
-  
+
               const msg = `Please, scan QR Code with for bot ${this.botId}.`;
               GBLog.info(msg);
               qrcode.generate(qr, { small: true, scale: 0.5 });
-  
-  
+
+
               // While handling other bots uses boot instance of this class to send QR Codes.
-  
+
               if (this.botId !== GBServer.globals.minBoot.botId) {
-  
+
                 const s = new DialogKeywords(null, null, null, null);
                 const qrBuf = await s.getQRCode(qr);
                 const gbaiName = `${this.min.botId}.gbai`;
@@ -186,22 +195,20 @@ export class WhatsappDirectLine extends GBService {
                 GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
                 s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, msg);
               }
-  
+
             }).bind(this));
-  
+
             client.on('authenticated', () => {
               GBLog.info(`WhatsApp QR Code authenticated for ${this.botId}.`);
             });
-  
+
           };
 
-          this.browserWSEndpoint = browser.wsEndpoint(); // store for later
 
-          
           (createClient.bind(this))(this.browserWSEndpoint);
-                    
+
           browser.on('disconnected', (async () => {
-              (createClient.bind(this))(this.browserWSEndpoint);
+            (createClient.bind(this))(this.browserWSEndpoint);
           }).bind(this));
 
           setUrl = false;
