@@ -138,9 +138,7 @@ export class WhatsappDirectLine extends GBService {
           const gbaiName = `${this.min.botId}.gbai`;
           const localName = Path.join('work', gbaiName, 'profile');
 
-          const browser = await createBrowser(localName);
-
-          const createClient = (browserWSEndpoint) => {
+             const createClient = (browserWSEndpoint) => {
             let puppeteer: any = {
               headless: false, args: ['--disable-features=site-per-process',
                 `--user-data-dir=${localName}`]
@@ -202,14 +200,14 @@ export class WhatsappDirectLine extends GBService {
               GBLog.info(`WhatsApp QR Code authenticated for ${this.botId}.`);
             });
 
-          };
+            client.browser.on('disconnected', (async () => {
+              (createClient.bind(this))(this.browserWSEndpoint);
+            }).bind(this));
+  
+            };
 
 
           (createClient.bind(this))(this.browserWSEndpoint);
-
-          browser.on('disconnected', (async () => {
-            (createClient.bind(this))(this.browserWSEndpoint);
-          }).bind(this));
 
           setUrl = false;
         }
