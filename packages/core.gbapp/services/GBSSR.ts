@@ -94,7 +94,7 @@ async function createBrowser(profilePath): Promise<any> {
     ];
 
     if (profilePath){
-        args.push(`--user-data-dir=${profilePath}`);        
+         args.push(`--user-data-dir=${profilePath}`);        
     }
 
     const browser = await puppeteer.launch({
@@ -102,7 +102,7 @@ async function createBrowser(profilePath): Promise<any> {
         ignoreHTTPSErrors: true,
         headless: false,
     });
-    return browser
+    return browser;
 }
 
 async function recursiveFindInFrames(inputFrame, selector) {
