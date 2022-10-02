@@ -43,11 +43,9 @@ import { GBVMService } from './GBVMService';
 import { ThisPath } from 'botbuilder-dialogs';
 const Fs = require('fs');
 const Excel = require('exceljs');
-
+import { createBrowser } from '../../core.gbapp/services/GBSSR';
 const urlJoin = require('url-join');
 const url = require('url');
-const puppeteer = require('puppeteer')
-const pluginStealth = require('puppeteer-extra-plugin-stealth');
 const { TwitterApi } = require('twitter-api-v2');
 
 
@@ -246,7 +244,6 @@ export class SystemKeywords {
    * @returns 
    * 
    * @see http://tabulator.info/examples/5.2
-   * @see puppeteer.
    */
   private async renderTable(data, renderPDF, renderImage) {
 
@@ -261,7 +258,7 @@ export class SystemKeywords {
 
 
     const gbaiName = `${this.min.botId}.gbai`;
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await createBrowser(null);
     const page = await browser.newPage();
 
     // Includes the associated CSS related to current theme.

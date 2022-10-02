@@ -47,8 +47,12 @@ import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBMinService } from '../../core.gbapp/services/GBMinService';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
+import { createBrowser } from '../../core.gbapp/services/GBSSR';
+const puppeteer = require('puppeteer');
+
 const { MessageMedia, Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+
 
 /**
  * Support for Whatsapp.
@@ -77,6 +81,7 @@ export class WhatsappDirectLine extends GBService {
   provider: any;
   INSTANCE_URL = 'https://api.maytapi.com/api';
   private customClient;
+  private browserWSEndpoint;
 
   constructor(
     min: GBMinInstance,
@@ -130,27 +135,30 @@ export class WhatsappDirectLine extends GBService {
         else {
 
           // Initialize the browser using a local profile for each bot.
-
           const gbaiName = `${this.min.botId}.gbai`;
           let localName = Path.join('work', gbaiName, 'profile');
+
+          const browser = await createBrowser(null);
           let client = this.customClient = new Client({
             authStrategy: new LocalAuth({
               clientId: this.min.botId,
               dataPath: localName
             }),
-            puppeteer: {
-              headless: false, args: ['--disable-features=site-per-process',
-                `--user-data-dir=${localName}`]
-            }
+            puppeteer: browser
           });
           client.initialize();
-
+          this.browserWSEndpoint = browser.wsEndpoint(); // store for later
+          
+          var self = this;
+          client.on('disconnected', async () => {
+              client.browser = await puppeteer.connect({browserWSEndpoint: self.browserWSEndpoint});
+          }).bind(this);
           // Dispatches messages to the received method.
 
 
-          client.on('message', (async message => {
+          client.on('message', async message => {
             await this.WhatsAppCallback(message, null);
-          }).bind(this));
+          }).bind(this);
 
           client.on('qr', (async (qr) => {
 

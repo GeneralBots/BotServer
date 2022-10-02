@@ -144,6 +144,7 @@
     "typescript": "3.6.4",
     "url-join": "4.0.1",
     "vbscript-to-typescript": "1.0.8",
+    "vhost": "^3.0.2",
     "walk-promise": "0.2.0",
     "washyourmouthoutwithsoap": "1.0.2",
     "whatsapp-web.js": "1.17.0",

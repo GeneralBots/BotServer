@@ -45,8 +45,6 @@ import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 const DateDiff = require('date-diff');
-const puppeteer = require('puppeteer');
-const pluginStealth = require('puppeteer-extra-plugin-stealth');
 
 
 const Path = require('path');
@@ -132,17 +130,7 @@ export class DialogKeywords {
   public async getPage(step, url, username, password) {
     GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);
     if (!this.browser) {
-      this.browser = await puppeteer.launch({
-        args: [
-          '--ignore-certificate-errors',
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--window-size=1920,1080',
-          "--disable-accelerated-2d-canvas",
-          "--disable-gpu"],
-        ignoreHTTPSErrors: true,
-        headless: false,
-      });
+      this.browser = 
 
       // set the HTTP Basic Authentication credential
 

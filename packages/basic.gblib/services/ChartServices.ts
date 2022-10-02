@@ -32,9 +32,8 @@
 
 'use strict';
 
-const puppeteer = require('puppeteer');
-const pluginStealth = require('puppeteer-extra-plugin-stealth');
 
+import { createBrowser } from '../../core.gbapp/services/GBSSR';
 
 export class ChartServices {
 
@@ -44,7 +43,7 @@ export class ChartServices {
      * @param {string} path screenshot image full path with file name
      */
     public static async screenshot(args, path) {
-        const browser = await puppeteer.launch({ headless: false });
+        const browser = await createBrowser(null);
         const page = await browser.newPage();
 
         // load billboard.js assets from CDN.

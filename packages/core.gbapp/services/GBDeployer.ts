@@ -43,6 +43,7 @@ const express = require('express');
 const child_process = require('child_process');
 const rimraf = require('rimraf');
 const request = require('request-promise-native');
+const  vhost = require('vhost')
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { CollectionUtil } from 'pragmatismo-io-framework';

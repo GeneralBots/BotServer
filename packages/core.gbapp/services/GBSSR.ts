@@ -39,7 +39,8 @@
 const puppeteer = require('puppeteer');
 const pluginStealth = require('puppeteer-extra-plugin-stealth');
 import { NextFunction, Request, Response } from "express";
-
+import { Browser } from "puppeteer";
+const Path = require('path');
 
 // https://hackernoon.com/tips-and-tricks-for-web-scraping-with-puppeteer-ed391a63d952
 // Dont download all resources, we just need the HTML
@@ -79,6 +80,30 @@ const skippedResources = [
 
 const RENDER_CACHE = new Map();
 
+
+
+async function createBrowser(profile): Promise<Browser> {
+    const gbaiName = `${this.min.botId}.gbai`;
+    let localName = Path.join('work', gbaiName, 'profile');
+
+    const browser = await puppeteer.launch({
+        args: [
+            '--ignore-certificate-errors',
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--window-size=1920,1080',
+            "--disable-accelerated-2d-canvas",
+            "--disable-gpu",
+            "--disable-features=site-per-process",
+            `--user-data-dir=${localName}`
+        
+        ],
+        ignoreHTTPSErrors: true,
+        headless: false,
+    });
+    return browser
+}
+
 async function recursiveFindInFrames(inputFrame, selector) {
     const frames = inputFrame.childFrames();
     const results = await Promise.all(
@@ -116,12 +141,7 @@ async function ssr(url: string, useCache: boolean, cacheRefreshRate: number) {
             };
         }
     }
-    const browser = await puppeteer.launch({
-        headless: false,
-        args: ["--single-process", "--no-zygote", "--no-sandbox", "--disable-features=site-per-process"]
-    });
-    // browserWSEndpoint = await browserT.wsEndpoint();
-    // const browser = await puppeteer.connect({ browserWSEndpoint });
+    const browser = createBrowser(null);
     const stylesheetContents = {};
 
     try {
@@ -304,4 +324,4 @@ function ssrForBots(
 }
 
 
-export { ssr, clearCache, ssrForBots };
+export { createBrowser, ssr, clearCache, ssrForBots };
