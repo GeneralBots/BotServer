@@ -81,22 +81,24 @@ const RENDER_CACHE = new Map();
 
 
 
-async function createBrowser(profile): Promise<any> {
-    const gbaiName = `${this.min.botId}.gbai`;
-    let localName = Path.join('work', gbaiName, 'profile');
+async function createBrowser(profilePath): Promise<any> {
+
+    let args = [
+        '--ignore-certificate-errors',
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--window-size=1920,1080',
+        "--disable-accelerated-2d-canvas",
+        "--disable-gpu",
+        "--disable-features=site-per-process"        
+    ];
+
+    if (profilePath){
+        args.push(`--user-data-dir=${profilePath}`);        
+    }
 
     const browser = await puppeteer.launch({
-        args: [
-            '--ignore-certificate-errors',
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--window-size=1920,1080',
-            "--disable-accelerated-2d-canvas",
-            "--disable-gpu",
-            "--disable-features=site-per-process",
-            `--user-data-dir=${localName}`
-        
-        ],
+        args: args,
         ignoreHTTPSErrors: true,
         headless: false,
     });
