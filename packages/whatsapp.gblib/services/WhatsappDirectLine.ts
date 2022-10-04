@@ -208,13 +208,11 @@ export class WhatsappDirectLine extends GBService {
   
               GBLog.info(`WhatsApp QR Code authenticated for ${this.botId}.`);
             });
-
-            
           };
 
 
           await (createClient.bind(this))(this.browserWSEndpoint);
-          client.initialize();
+          await client.initialize();
 
           setUrl = false;
         }
