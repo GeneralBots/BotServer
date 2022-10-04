@@ -156,9 +156,6 @@ export class WhatsappDirectLine extends GBService {
             });
 
 
-            await client.initialize();
-            this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
-
             client.on('message', (async message => {
               await this.WhatsAppCallback(message, null);
             }).bind(this));
@@ -197,6 +194,7 @@ export class WhatsappDirectLine extends GBService {
             }).bind(this));
 
             client.on('authenticated', () => {
+              this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
               GBLog.info(`WhatsApp QR Code authenticated for ${this.botId}.`);
             });
 
@@ -215,7 +213,8 @@ export class WhatsappDirectLine extends GBService {
 
 
           await (createClient.bind(this))(this.browserWSEndpoint);
-
+          client.initialize();
+          
           setUrl = false;
         }
         break;
