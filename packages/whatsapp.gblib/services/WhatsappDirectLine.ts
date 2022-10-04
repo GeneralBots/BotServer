@@ -195,26 +195,27 @@ export class WhatsappDirectLine extends GBService {
 
             client.on('authenticated', () => {
               this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
+              client.pupBrowser.on('disconnected', (async () => {
+                GBLog.info(`Browser crashed. Restarting ${this.min.botId} WhatsApp native provider.`);
+                await (createClient.bind(this))(null);
+              }).bind(this));
+              client.pupPage.on('error', (async () => {
+                GBLog.info(`Page crashed. Restarting ${this.min.botId} WhatsApp native provider.`);
+                if (!client.pupPage.isClosed()){
+                  client.pupPage.close();
+                } await (createClient.bind(this))(null);
+              }).bind(this));
+  
               GBLog.info(`WhatsApp QR Code authenticated for ${this.botId}.`);
             });
 
-            client.pupBrowser.on('disconnected', (async () => {
-              GBLog.info(`555555`);
-              await (createClient.bind(this))(null);
-            }).bind(this));
-            client.pupPage.on('error', (async () => {
-              GBLog.info(`22222s`);
-              if (!client.pupPage.isClosed()){
-                client.pupPage.close();
-              } await (createClient.bind(this))(null);
-            }).bind(this));
-
+            
           };
 
 
           await (createClient.bind(this))(this.browserWSEndpoint);
           client.initialize();
-          
+
           setUrl = false;
         }
         break;
