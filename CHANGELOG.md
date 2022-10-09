@@ -1,3 +1,10 @@
+## [2.0.178](https://github.com/GeneralBots/BotServer/compare/2.0.177...2.0.178) (2022-10-09)
+
+
+### Bug Fixes
+
+* **whatsapp.gblib:** SEND FILE and WPP providers. ([3f7e024](https://github.com/GeneralBots/BotServer/commit/3f7e024b58660d0be0734dc5f3a3cd7884df3727))
+
 ## [2.0.177](https://github.com/GeneralBots/BotServer/compare/2.0.176...2.0.177) (2022-10-04)
 
 
