@@ -162,8 +162,6 @@ export class WhatsappDirectLine extends GBService {
               puppeteer: puppeteer
             });
 
-            await client.initialize();
-            this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
 
             client.on('message', (async message => {
               await this.WhatsAppCallback(message, null);
@@ -227,6 +225,8 @@ export class WhatsappDirectLine extends GBService {
               GBLog.info(`Browser terminated. Restarting ${this.min.botId} WhatsApp native provider.`);
               await (createClient.bind(this))(null);
             }).bind(this));
+
+            client.initialize();
           };
           await (createClient.bind(this))(this.browserWSEndpoint);
 
