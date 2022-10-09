@@ -212,7 +212,7 @@ export class WhatsappDirectLine extends GBService {
                 await (createClient.bind(this))(null);
               }).bind(this));
   
-              GBLog.info(`GBWhatsApp: Empty chat list for ${this.botId}GBWhatsApp:...`);
+              GBLog.info(`GBWhatsApp: Emptying chat list for ${this.botId}...`);
 
               // Keeps the chat list cleaned.
 
@@ -304,8 +304,9 @@ export class WhatsappDirectLine extends GBService {
     switch (this.provider) {
       case 'GeneralBots':
         const info = await this.customClient.getState();
-        GBLog.info(`GBWhatsapp: ${info.WAState}.`);
-        break;
+        
+        return info == "CONNECTED";
+        
       default:
         const options = {
           url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`,

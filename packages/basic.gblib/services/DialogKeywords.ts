@@ -85,6 +85,9 @@ export class DialogKeywords {
 
   step: GBDialogStep;
 
+  debugWeb: boolean;
+  lastDebugWeb: Date;
+
   /**
    * SYSTEM account maxLines, when used with impersonated contexts (eg. running in SET SCHEDULE).
    */
@@ -112,6 +115,13 @@ export class DialogKeywords {
     this.user = user;
     this.internalSys = new SystemKeywords(min, deployer, this);
     this.step = step;
+
+    this.debugWeb = this.min.core.getParam<boolean>(
+      this.min.instance,
+      'Debug Web Automation',
+      false
+    );
+
   }
 
   /**
@@ -276,17 +286,18 @@ export class DialogKeywords {
 
   /**
    * Simulates a mouse hover an web page element. 
-     */
+   */
   public async hover(step, page, idOrName) {
     GBLog.info(`BASIC: Web Automation HOVER element: ${idOrName}.`);
     await this.getBySelector(page, idOrName);
     await page.hover(idOrName);
+    await this.debugStepWeb(page);
   }
 
   /**
    * Clicks on an element in a web page.
    *
-   * @example x = TODAY
+   * @example CLICK page, "#idElement"
    */
   public async click(step, page, frameOrSelector, selector) {
     GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
@@ -300,6 +311,22 @@ export class DialogKeywords {
     else {
       await page.waitForSelector(frameOrSelector);
       await page.click(frameOrSelector);
+    }
+    await this.debugStepWeb(page);
+  }
+
+  private async debugStepWeb(page) {
+
+    let refresh = false;
+    if (this.lastDebugWeb)
+    {
+      refresh = (new Date().getTime() - this.lastDebugWeb.getTime()) > 5000;
+    }
+
+    if (this.debugWeb && refresh) {
+      const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
+      await this.sendFileTo(this.step, adminNumber, page, "General Bots Debugger");
+      this.lastDebugWeb = new Date();
     }
   }
 
@@ -331,6 +358,7 @@ export class DialogKeywords {
     }
     const els = await page.$x(`//a[contains(., '${text}')]`);
     await els[index - 1].click();
+    await this.debugStepWeb(page);
   }
 
 
@@ -369,6 +397,7 @@ export class DialogKeywords {
     GBLog.info(`BASIC: Web Automation TYPE on ${idOrName}: ${text}.`);
     const e = await this.getBySelector(page, idOrName);
     await e.type(text, { delay: 200 });
+    await this.debugStepWeb(page);
   }
 
   /**

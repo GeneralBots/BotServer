@@ -194,6 +194,9 @@ export class GBVMService extends GBService {
     ${process.env.ENABLE_AUTH ? `hear gbLogin as login` : ``}
 
     ${code}
+
+
+    
     `;
 
     // Keywords from General Bots BASIC.
