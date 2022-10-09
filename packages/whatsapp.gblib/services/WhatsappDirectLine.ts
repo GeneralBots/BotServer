@@ -202,6 +202,17 @@ export class WhatsappDirectLine extends GBService {
 
             client.on('authenticated', async () => {
               this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
+              GBLog.info(`GBWhatsApp: QR Code authenticated for ${this.botId}.`);
+            });
+
+            client.on('ready', async () => {
+              
+              client.pupBrowser.on('disconnected', (async () => {
+                GBLog.info(`Browser terminated. Restarting ${this.min.botId} WhatsApp native provider.`);
+                await (createClient.bind(this))(null);
+              }).bind(this));
+  
+              GBLog.info(`GBWhatsApp: Empty chat list for ${this.botId}GBWhatsApp:...`);
 
               // Keeps the chat list cleaned.
 
@@ -219,12 +230,7 @@ export class WhatsappDirectLine extends GBService {
 
               });
 
-              GBLog.info(`WhatsApp QR Code authenticated for ${this.botId}.`);
             });
-            client.pupBrowser.on('disconnected', (async () => {
-              GBLog.info(`Browser terminated. Restarting ${this.min.botId} WhatsApp native provider.`);
-              await (createClient.bind(this))(null);
-            }).bind(this));
 
             client.initialize();
           };
