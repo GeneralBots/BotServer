@@ -141,7 +141,8 @@ export class WhatsappDirectLine extends GBService {
           const gbaiName = `${this.min.botId}.gbai`;
           const localName = Path.join('work', gbaiName, 'profile');
 
-          const createClient = (browserWSEndpoint) => {
+
+          const createClient = async (browserWSEndpoint) => {
             let puppeteer: any = {
               headless: false, args: [
                 '--disable-setuid-sandbox',
@@ -161,7 +162,8 @@ export class WhatsappDirectLine extends GBService {
               puppeteer: puppeteer
             });
 
-            client.initialize();
+            await client.initialize();
+            this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
 
             client.on('message', (async message => {
               await this.WhatsAppCallback(message, null);
@@ -202,7 +204,6 @@ export class WhatsappDirectLine extends GBService {
 
             client.on('authenticated', async () => {
               this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
-
               const chats = await client.getChats();
               await CollectionUtil.asyncForEach(chats, async chat => {
 
@@ -219,21 +220,12 @@ export class WhatsappDirectLine extends GBService {
 
               GBLog.info(`WhatsApp QR Code authenticated for ${this.botId}.`);
             });
+            client.pupBrowser.on('disconnected', (async () => {
+              GBLog.info(`Browser terminated. Restarting ${this.min.botId} WhatsApp native provider.`);
+              await (createClient.bind(this))(null);
+            }).bind(this));
           };
-
-          client.pupBrowser.on('disconnected', (async () => {
-            GBLog.info(`Browser crashed. Restarting ${this.min.botId} WhatsApp native provider.`);
-            await (createClient.bind(this))(null);
-          }).bind(this));
-          client.pupPage.on('error', (async () => {
-            GBLog.info(`Page crashed. Restarting ${this.min.botId} WhatsApp native provider.`);
-            if (!client.pupPage.isClosed()) {
-              client.pupPage.close();
-            } await (createClient.bind(this))(null);
-          }).bind(this));
-
-          (createClient.bind(this))(this.browserWSEndpoint);
-
+          await (createClient.bind(this))(this.browserWSEndpoint);
 
           setUrl = false;
         }
@@ -300,16 +292,23 @@ export class WhatsappDirectLine extends GBService {
   public async check() {
 
     GBLog.info(`GBWhatsapp: Checking server...`);
+    switch (this.provider) {
+      case 'GeneralBots':
+        const info = await this.customClient.getState();
+        GBLog.info(`GBWhatsapp: ${info.WAState}.`);
+        break;
+      default:
+        const options = {
+          url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`,
+          method: 'GET'
+        };
 
-    const options = {
-      url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`,
-      method: 'GET'
-    };
+        const res = await request(options);
+        const json = JSON.parse(res);
 
-    const res = await request(options);
-    const json = JSON.parse(res);
-
-    return json.accountStatus === 'authenticated';
+        return json.accountStatus === 'authenticated';
+        break;
+    }
   }
 
   public static providerFromRequest(req) {
