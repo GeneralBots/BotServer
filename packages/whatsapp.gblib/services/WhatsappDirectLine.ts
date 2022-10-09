@@ -138,7 +138,8 @@ export class WhatsappDirectLine extends GBService {
           const gbaiName = `${this.min.botId}.gbai`;
           const localName = Path.join('work', gbaiName, 'profile');
 
-          const createClient = (browserWSEndpoint) => {
+
+          const createClient = async (browserWSEndpoint) => {
             let puppeteer: any = {
               headless: false, args: ['--disable-features=site-per-process',
                 `--user-data-dir=${localName}`]
@@ -155,7 +156,8 @@ export class WhatsappDirectLine extends GBService {
               puppeteer: puppeteer
             });
 
-            client.initialize();
+            await client.initialize();
+            this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
 
             client.on('message', (async message => {
               await this.WhatsAppCallback(message, null);
@@ -196,25 +198,22 @@ export class WhatsappDirectLine extends GBService {
 
             client.on('authenticated', () => {
               this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
-
+              client.pupPage.on('error', (async () => {
+                GBLog.info(`Page crashed. Restarting ${this.min.botId} WhatsApp native provider.`);
+                if (!client.pupPage.isClosed()){
+                  client.pupPage.close();
+                } await (createClient.bind(this))(null);
+              }).bind(this));
   
               GBLog.info(`WhatsApp QR Code authenticated for ${this.botId}.`);
             });
+            client.pupBrowser.on('disconnected', (async () => {
+              GBLog.info(`Browser crashed. Restarting ${this.min.botId} WhatsApp native provider.`);
+              await (createClient.bind(this))(null);
+            }).bind(this)); 
           };
+          await (createClient.bind(this))(this.browserWSEndpoint);
 
-          client.pupBrowser.on('disconnected', (async () => {
-            GBLog.info(`Browser crashed. Restarting ${this.min.botId} WhatsApp native provider.`);
-            await (createClient.bind(this))(null);
-          }).bind(this));
-          client.pupPage.on('error', (async () => {
-            GBLog.info(`Page crashed. Restarting ${this.min.botId} WhatsApp native provider.`);
-            if (!client.pupPage.isClosed()){
-              client.pupPage.close();
-            } await (createClient.bind(this))(null);
-          }).bind(this));
-
-          (createClient.bind(this))(this.browserWSEndpoint);
-        
 
           setUrl = false;
         }
