@@ -204,6 +204,9 @@ export class WhatsappDirectLine extends GBService {
 
             client.on('authenticated', async () => {
               this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
+
+              // Keeps the chat list cleaned.
+
               const chats = await client.getChats();
               await CollectionUtil.asyncForEach(chats, async chat => {
 
