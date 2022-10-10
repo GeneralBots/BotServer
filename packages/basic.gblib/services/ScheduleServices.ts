@@ -125,7 +125,7 @@ export class ScheduleServices extends GBService {
   }
 
   private ScheduleItem(item: GuaribasSchedule, min: GBMinInstance) {
-    GBLog.info(`\nScheduling ${item.name} on ${min.botId}...`);
+    GBLog.info(`Scheduling ${item.name} on ${min.botId}...`);
     try {
       const options = {
         scheduled: true,
