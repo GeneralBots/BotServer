@@ -173,10 +173,11 @@ export class GBMinService {
     // Calls mountBot event to all bots.
 
     this.bar1 = new cliProgress.SingleBar({
-      format: '[{bar}] Loading {botId} ({value}/{total})...', barsize: 60,
+      format: '[{bar}] Loading {botId} ({value}/{total})...', barsize: 30,
       forceRedraw: true
     }, cliProgress.Presets.rect);
-    let i = 0;
+    let i = 1;
+    GBLog.info('Starting bot instance load phase...');
     this.bar1.start(instances.length, i, { botId: "Boot" });
 
     const throttledPromiseAll = async (promises) => {
@@ -196,7 +197,6 @@ export class GBMinService {
 
       for (let iBlock = 0; iBlock < promises.length; iBlock += MAX_IN_PROCESS) {
         await doBlock(iBlock);
-        GBLog.info(`Block ${iBlock} loaded.`);
       }
       return results;
     };
@@ -204,8 +204,7 @@ export class GBMinService {
     await throttledPromiseAll(instances.map((async instance => {
       try {
         await this['mountBot'](instance);
-        GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
-          instance.botId, `${instance.botId}.gbkb`);
+        
         this.bar1.update(i++, { botId: instance.botId });
        
       } catch (error) {
@@ -362,6 +361,9 @@ export class GBMinService {
     // Provides checking of instance health.
 
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
+
+    GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
+          instance.botId, `${instance.botId}.gbkb`);
   }
 
   public static isChatAPI(req, res) {
