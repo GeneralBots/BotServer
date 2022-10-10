@@ -172,7 +172,7 @@ export class GBMinService {
     // Calls mountBot event to all bots.
     
     const bar1 = new cliProgress.SingleBar({
-      format: '[{bar}] Loading {botId} ({value}/{total})... .\n', barsize:60
+      format: '[{bar}] Loading {botId} ({value}/{total})...', barsize:60
     }, cliProgress.Presets.rect);
     let i = 0;
     bar1.start(100, i, {botId: "Boot"});
