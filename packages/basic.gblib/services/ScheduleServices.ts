@@ -112,7 +112,7 @@ export class ScheduleServices extends GBService {
     try {
       const options = <FindOptions>{ where: { instanceId: min.instance.instanceId } };
       schedules = await GuaribasSchedule.findAll(options);
-      GBLog.info(`Loading schedules for ${min.instance.botId}...`);
+      GBLog.verbose(`Loading schedules for ${min.instance.botId}...`);
       await CollectionUtil.asyncForEach(schedules, async item => {
         this.ScheduleItem(item, min);
       });

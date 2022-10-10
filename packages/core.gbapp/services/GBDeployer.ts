@@ -647,7 +647,7 @@ export class GBDeployer implements IGBDeployer {
 
         const packageName = Path.basename(localPath);
         GBServer.globals.server.use(`/themes/${packageName}`, express.static(localPath));
-        GBLog.info(`Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
+        GBLog.verbose(`Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
 
         break;
 
@@ -848,7 +848,7 @@ export class GBDeployer implements IGBDeployer {
 
 
 
-    GBLog.info(`KB (.gbkb) assets accessible at: /kb/${botId}.gbai/${packageName}.`);
+    GBLog.verbose(`KB (.gbkb) assets accessible at: /kb/${botId}.gbai/${packageName}.`);
   }
 
   /**

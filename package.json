@@ -82,6 +82,7 @@
     "botframework-connector": "4.11.0",
     "botlib": "1.10.9",
     "c3-chart-maker": "^0.2.8",
+    "cli-progress": "^3.11.2",
     "cli-spinner": "0.2.10",
     "core-js": "3.14.0",
     "data-forge": "^1.9.5",

@@ -35,6 +35,7 @@
  */
 
 'use strict';
+const cliProgress = require('cli-progress');
 const { DialogSet, TextPrompt } = require('botbuilder-dialogs');
 const express = require('express');
 const Fs = require('fs');
@@ -169,21 +170,24 @@ export class GBMinService {
 
 
     // Calls mountBot event to all bots.
-
+    
+    const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    let i = 0;
+    bar1.start(100, i);
+    
     await CollectionUtil.asyncForEach(instances, async instance => {
       try {
+        bar1.update(i);
+        
         await this.mountBot(instance);
+        GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
+        instance.botId, `${instance.botId}.gbkb`);
       } catch (error) {
         GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
       }
     });
+    bar1.stop();
 
-    // Then all remaining general packages are loaded.
-
-    await CollectionUtil.asyncForEach(instances, async instance => {
-      GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
-        instance.botId, `${instance.botId}.gbkb`);
-    });
 
     GBLog.info(`Package deployment done.`);
   }
@@ -310,9 +314,9 @@ export class GBMinService {
           domain,
           express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
         );
-        GBLog.info(`Bot UI ${GBMinService.uiPackage} accessible at custom domain: ${domain}.`);
+        GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at custom domain: ${domain}.`);
       }
-      GBLog.info(`Bot UI ${GBMinService.uiPackage} accessible at: ${uiUrl} and ${uiUrlAlt}.`);
+      GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at: ${uiUrl} and ${uiUrlAlt}.`);
     }
 
     // Clients get redirected here in order to create an OAuth authorize url and redirect them to AAD.
