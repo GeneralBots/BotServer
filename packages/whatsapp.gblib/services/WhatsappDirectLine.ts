@@ -144,7 +144,7 @@ export class WhatsappDirectLine extends GBService {
 
           const createClient = async (browserWSEndpoint) => {
             let puppeteer: any = {
-              headless: true, args: [
+              headless: false, args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
