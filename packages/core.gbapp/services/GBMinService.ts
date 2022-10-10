@@ -171,17 +171,20 @@ export class GBMinService {
 
     // Calls mountBot event to all bots.
     
-    const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    const bar1 = new cliProgress.SingleBar({
+      format: '[{bar}] {botId}  {value}/{total}'
+    }, cliProgress.Presets.shades_classic);
     let i = 0;
-    bar1.start(100, i);
+    bar1.start(100, i, {botId: "Boot"});
     
     await CollectionUtil.asyncForEach(instances, async instance => {
       try {
-        bar1.update(i);
+        bar1.update(i, {botId: instance.botId});
         
         await this.mountBot(instance);
         GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
         instance.botId, `${instance.botId}.gbkb`);
+        i++;
       } catch (error) {
         GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
       }
@@ -293,7 +296,7 @@ export class GBMinService {
       }
       res.end();
     });
-    GBLog.info(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
+    GBLog.verbose(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
 
     // Serves individual URL for each bot user interface.
 
