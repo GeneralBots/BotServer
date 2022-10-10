@@ -177,6 +177,27 @@ export class GBMinService {
     let i = 0;
     bar1.start(instances.length, i, { botId: "Boot" });
 
+    const throttledPromiseAll = async (promises) => {
+      const MAX_IN_PROCESS = 15;
+      const results = new Array(promises.length);
+    
+      async function doBlock(startIndex) {
+        // Shallow-copy a block of promises to work on
+        const currBlock = promises.slice(startIndex, startIndex + MAX_IN_PROCESS);
+        // Await the completion. If any fail, it will throw and that's good.
+        const blockResults = await Promise.all(currBlock);
+        // Assuming all succeeded, copy the results into the results array
+        for (let ix = 0; ix < blockResults.length; ix++) {
+          results[ix + startIndex] = blockResults[ix];
+        }
+      }
+    
+      for (let iBlock = 0; iBlock < promises.length; iBlock += MAX_IN_PROCESS) {
+        await doBlock(iBlock);
+      }
+      return results;
+    };
+
     const p = (async (instance) => {
       try {
         bar1.update(i, { botId: instance.botId });
@@ -189,8 +210,8 @@ export class GBMinService {
         GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
       }
     }).bind(this);
-
-    await Promise.all(instances.map(instance => p(instance)));
+    
+    await throttledPromiseAll(instances.map(instance => p(instance)));
 
     bar1.stop();
 
