@@ -170,18 +170,17 @@ export class GBMinService {
 
       GBServer.globals.server.get('/instances/:botId', this.handleGetInstanceForClient.bind(this));
     }
-
-
     // Calls mountBot event to all bots.
 
     this.bar1 = new cliProgress.SingleBar({
-      format: '[{bar}] Loading {botId} ({value}/{total})...', barsize: 60
+      format: '[{bar}] Loading {botId} ({value}/{total})...', barsize: 60,
+      forceRedraw: true
     }, cliProgress.Presets.rect);
     let i = 0;
     this.bar1.start(instances.length, i, { botId: "Boot" });
 
     const throttledPromiseAll = async (promises) => {
-      const MAX_IN_PROCESS = 5;
+      const MAX_IN_PROCESS = 7;
       const results = new Array(promises.length);
 
       async function doBlock(startIndex) {
@@ -208,7 +207,7 @@ export class GBMinService {
         await this['mountBot'](instance);
         GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
           instance.botId, `${instance.botId}.gbkb`);
-
+        GBLog.info(`Bot: ${instance.botId} loaded.`)
       } catch (error) {
         GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
       }
@@ -218,12 +217,12 @@ export class GBMinService {
     this.bar1.stop();
 
     // Loads schedules.
-    GBLog.info(`Scheduling SET SCHEDULE .gbdialog items...`);
+    GBLog.info(`Preparing SET SCHEDULE dialog calls...`);
 
     const service = new ScheduleServices();
     await service.scheduleAll();
 
-    GBLog.info(`Bot minimal instances loaded.`);
+    GBLog.info(`All Bot instances loaded.`);
   }
 
 
