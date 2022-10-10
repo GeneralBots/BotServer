@@ -175,11 +175,11 @@ export class GBMinService {
       format: '[{bar}] Loading {botId} ({value}/{total})...', barsize:60
     }, cliProgress.Presets.rect);
     let i = 0;
-    bar1.start(100, i, {botId: "Boot"});
+    bar1.start(instances.length, i, {botId: "Boot"});
     
     await CollectionUtil.asyncForEach(instances, async instance => {
       try {
-        bar1.update(i, {botId: instance.botId, value:i, total:instances.length});
+        bar1.update(i, {botId: instance.botId});
         
         await this.mountBot(instance);
         GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
@@ -191,8 +191,13 @@ export class GBMinService {
     });
     bar1.stop();
 
+    // Loads schedules.
+    GBLog.info(`Scheduling SET SCHEDULE .gbdialog items...`);
 
-    GBLog.info(`Package deployment done.`);
+    const service = new ScheduleServices();
+    await service.scheduleAll();
+
+    GBLog.info(`Bot minimal instances loaded.`);
   }
 
 
@@ -267,11 +272,6 @@ export class GBMinService {
     // Loads Named Entity data for this bot.
 
     await KBService.RefreshNER(min);
-
-    // Loads schedules.
-
-    const service = new ScheduleServices();
-    await service.loadSchedules(min);
 
     // Calls the loadBot context.activity for all packages.
 
