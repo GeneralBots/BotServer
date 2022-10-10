@@ -173,15 +173,14 @@ export class GBMinService {
     // Calls mountBot event to all bots.
 
     this.bar1 = new cliProgress.SingleBar({
-      format: '[{bar}] Loading {botId} ({value}/{total})...', barsize: 30,
+      format: '[{bar}] ({value}/{total}) Loading {botId} ...', barsize: 40,
       forceRedraw: true
     }, cliProgress.Presets.rect);
     let i = 1;
-    GBLog.info('Starting bot instance load phase...');
     this.bar1.start(instances.length, i, { botId: "Boot" });
 
     const throttledPromiseAll = async (promises) => {
-      const MAX_IN_PROCESS = 15;
+      const MAX_IN_PROCESS = 20;
       const results = new Array(promises.length);
 
       async function doBlock(startIndex) {
