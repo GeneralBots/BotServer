@@ -190,7 +190,7 @@ export class GBMinService {
       }
     }).bind(this);
 
-    Promise.all(instances.map(instance => p(instance)));
+    await Promise.all(instances.map(instance => p(instance)));
 
     bar1.stop();
 
