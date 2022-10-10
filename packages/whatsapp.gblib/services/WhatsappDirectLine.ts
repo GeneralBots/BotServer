@@ -202,7 +202,7 @@ export class WhatsappDirectLine extends GBService {
 
             client.on('authenticated', async () => {
               this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
-              GBLog.verbose(`\nGBWhatsApp: QR Code authenticated for ${this.botId}.`);
+              GBLog.verbose(`GBWhatsApp: QR Code authenticated for ${this.botId}.`);
             });
 
             client.on('ready', async () => {
@@ -212,7 +212,7 @@ export class WhatsappDirectLine extends GBService {
                 await (createClient.bind(this))(null);
               }).bind(this));
 
-              GBLog.verbose(`\nGBWhatsApp: Emptying chat list for ${this.botId}...`);
+              GBLog.verbose(`GBWhatsApp: Emptying chat list for ${this.botId}...`);
 
               // Keeps the chat list cleaned.
 

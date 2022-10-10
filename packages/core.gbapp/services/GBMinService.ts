@@ -170,25 +170,28 @@ export class GBMinService {
 
 
     // Calls mountBot event to all bots.
-    
+
     const bar1 = new cliProgress.SingleBar({
-      format: '[{bar}] Loading {botId} ({value}/{total})...', barsize:60
+      format: '[{bar}] Loading {botId} ({value}/{total})...', barsize: 60
     }, cliProgress.Presets.rect);
     let i = 0;
-    bar1.start(instances.length, i, {botId: "Boot"});
-    
-    await CollectionUtil.asyncForEach(instances, async instance => {
+    bar1.start(instances.length, i, { botId: "Boot" });
+
+    const p = (async (instance) => {
       try {
-        bar1.update(i, {botId: instance.botId});
-        
-        await this.mountBot(instance);
+        bar1.update(i, { botId: instance.botId });
+
+        await this['mountBot'](instance);
         GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
-        instance.botId, `${instance.botId}.gbkb`);
+          instance.botId, `${instance.botId}.gbkb`);
         i++;
       } catch (error) {
         GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
       }
-    });
+    }).bind(this);
+
+    Promise.all(instances.map(instance => p(instance)));
+
     bar1.stop();
 
     // Loads schedules.
