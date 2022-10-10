@@ -118,6 +118,9 @@ export class GBMinService {
    */
   public deployer: GBDeployer;
 
+
+  bar1;
+  
   /**
    * Static initialization of minimal instance.
    */
@@ -171,11 +174,11 @@ export class GBMinService {
 
     // Calls mountBot event to all bots.
 
-    const bar1 = new cliProgress.SingleBar({
+    this.bar1 = new cliProgress.SingleBar({
       format: '[{bar}] Loading {botId} ({value}/{total})...', barsize: 60
     }, cliProgress.Presets.rect);
     let i = 0;
-    bar1.start(instances.length, i, { botId: "Boot" });
+    this.bar1.start(instances.length, i, { botId: "Boot" });
 
     const throttledPromiseAll = async (promises) => {
       const MAX_IN_PROCESS = 5;
@@ -200,7 +203,7 @@ export class GBMinService {
 
     const p = (async (instance) => {
       try {
-        bar1.update(i, { botId: instance.botId });
+        this.bar1.update(i, { botId: instance.botId });
 
         await this['mountBot'](instance);
         GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
@@ -213,7 +216,7 @@ export class GBMinService {
     
     await throttledPromiseAll(instances.map(instance => p(instance)));
 
-    bar1.stop();
+    this.bar1.stop();
 
     // Loads schedules.
     GBLog.info(`Scheduling SET SCHEDULE .gbdialog items...`);
