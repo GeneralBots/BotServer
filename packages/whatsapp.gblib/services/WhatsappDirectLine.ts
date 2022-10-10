@@ -928,6 +928,13 @@ export class WhatsappDirectLine extends GBService {
       switch (provider) {
         case "GeneralBots":
 
+          if (req.type && req.type === 'e2e_notification')
+          {
+            
+            return;
+          }
+
+
           id = req.from.split('@')[0];
           senderName = req._data.notifyName;
           text = req.body;
