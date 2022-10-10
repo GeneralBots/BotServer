@@ -120,7 +120,7 @@ export class GBMinService {
 
 
   bar1;
-  
+
   /**
    * Static initialization of minimal instance.
    */
@@ -183,7 +183,7 @@ export class GBMinService {
     const throttledPromiseAll = async (promises) => {
       const MAX_IN_PROCESS = 5;
       const results = new Array(promises.length);
-    
+
       async function doBlock(startIndex) {
         // Shallow-copy a block of promises to work on
         const currBlock = promises.slice(startIndex, startIndex + MAX_IN_PROCESS);
@@ -194,27 +194,26 @@ export class GBMinService {
           results[ix + startIndex] = blockResults[ix];
         }
       }
-    
+
       for (let iBlock = 0; iBlock < promises.length; iBlock += MAX_IN_PROCESS) {
         await doBlock(iBlock);
       }
       return results;
     };
 
-    const p = (async (instance) => {
+    await throttledPromiseAll(instances.map((async instance => {
       try {
         this.bar1.update(i, { botId: instance.botId });
 
         await this['mountBot'](instance);
         GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
           instance.botId, `${instance.botId}.gbkb`);
-        i++;
+
       } catch (error) {
         GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
       }
-    }).bind(this);
-    
-    await throttledPromiseAll(instances.map(instance => p(instance)));
+
+    }).bind(this)));
 
     this.bar1.stop();
 
