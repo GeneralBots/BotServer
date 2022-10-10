@@ -172,14 +172,14 @@ export class GBMinService {
     // Calls mountBot event to all bots.
     
     const bar1 = new cliProgress.SingleBar({
-      format: '[{bar}] {botId}  {value}/{total}'
-    }, cliProgress.Presets.shades_classic);
+      format: '[{bar}] Loading {botId} ({value}/{total})... .\n', barsize:60
+    }, cliProgress.Presets.rect);
     let i = 0;
     bar1.start(100, i, {botId: "Boot"});
     
     await CollectionUtil.asyncForEach(instances, async instance => {
       try {
-        bar1.update(i, {botId: instance.botId});
+        bar1.update(i, {botId: instance.botId, value:i, total:instances.length});
         
         await this.mountBot(instance);
         GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
