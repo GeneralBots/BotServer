@@ -202,17 +202,17 @@ export class WhatsappDirectLine extends GBService {
 
             client.on('authenticated', async () => {
               this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
-              GBLog.info(`\nGBWhatsApp: QR Code authenticated for ${this.botId}.`);
+              GBLog.verbose(`\nGBWhatsApp: QR Code authenticated for ${this.botId}.`);
             });
 
             client.on('ready', async () => {
-              
+
               client.pupBrowser.on('disconnected', (async () => {
                 GBLog.info(`Browser terminated. Restarting ${this.min.botId} WhatsApp native provider.`);
                 await (createClient.bind(this))(null);
               }).bind(this));
-  
-              GBLog.info(`\nGBWhatsApp: Emptying chat list for ${this.botId}...`);
+
+              GBLog.verbose(`\nGBWhatsApp: Emptying chat list for ${this.botId}...`);
 
               // Keeps the chat list cleaned.
 
@@ -299,15 +299,11 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async check() {
-
-    GBLog.info(`GBWhatsapp: Checking server...`);
     switch (this.provider) {
       case 'GeneralBots':
-        const info = await this.customClient.getState();
-        
-        return info == "CONNECTED";
-        
+        return true;
       default:
+        GBLog.verbose(`GBWhatsapp: Checking server...`);
         const options = {
           url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`,
           method: 'GET'
@@ -317,7 +313,6 @@ export class WhatsappDirectLine extends GBService {
         const json = JSON.parse(res);
 
         return json.accountStatus === 'authenticated';
-        break;
     }
   }
 
@@ -928,9 +923,8 @@ export class WhatsappDirectLine extends GBService {
       switch (provider) {
         case "GeneralBots":
 
-          if (req.type && req.type === 'e2e_notification')
-          {
-            
+          if (req.type && req.type === 'e2e_notification') {
+
             return;
           }
 
