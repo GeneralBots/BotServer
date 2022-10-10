@@ -202,12 +202,12 @@ export class GBMinService {
 
     await throttledPromiseAll(instances.map((async instance => {
       try {
-        this.bar1.update(i, { botId: instance.botId });
+        this.bar1.update(i++, { botId: instance.botId });
 
         await this['mountBot'](instance);
         GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
           instance.botId, `${instance.botId}.gbkb`);
-        GBLog.info(`Bot: ${instance.botId} loaded.`)
+        
       } catch (error) {
         GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
       }
