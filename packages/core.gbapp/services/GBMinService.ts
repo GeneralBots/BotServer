@@ -178,7 +178,7 @@ export class GBMinService {
     bar1.start(instances.length, i, { botId: "Boot" });
 
     const throttledPromiseAll = async (promises) => {
-      const MAX_IN_PROCESS = 15;
+      const MAX_IN_PROCESS = 5;
       const results = new Array(promises.length);
     
       async function doBlock(startIndex) {
