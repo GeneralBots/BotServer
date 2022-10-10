@@ -196,6 +196,7 @@ export class GBMinService {
 
       for (let iBlock = 0; iBlock < promises.length; iBlock += MAX_IN_PROCESS) {
         await doBlock(iBlock);
+        GBLog.info(`Block ${iBlock} loaded.`);
       }
       return results;
     };
