@@ -116,7 +116,9 @@ export class ScheduleServices extends GBService {
           p => p.instance.instanceId === item.instanceId
         )[0];
 
-        this.ScheduleItem(item, min);
+        if (min){
+          this.ScheduleItem(item, min);
+        }
       });
     } catch (error) {
       throw new Error(`Cannot schedule: ${error.message}.`);

@@ -141,7 +141,6 @@ export class WhatsappDirectLine extends GBService {
           const gbaiName = `${this.min.botId}.gbai`;
           const localName = Path.join('work', gbaiName, 'profile');
 
-
           const createClient = async (browserWSEndpoint) => {
             let puppeteer: any = {
               headless: false, args: [
@@ -151,7 +150,7 @@ export class WhatsappDirectLine extends GBService {
                 '--disable-accelerated-2d-canvas',
                 '--no-first-run',
                 '--no-zygote',
-                '--single-process', // <- this one doesn't works in Windows
+                '--single-process',
                 '--disable-gpu',
                 '--disable-infobars',
                 '--disable-features=site-per-process',
@@ -185,25 +184,21 @@ export class WhatsappDirectLine extends GBService {
               GBLog.info(msg);
               qrcode.generate(qr, { small: true, scale: 0.5 });
 
-
               // While handling other bots uses boot instance of this class to send QR Codes.
 
-              if (this.botId !== GBServer.globals.minBoot.botId) {
-
-                const s = new DialogKeywords(null, null, null, null);
-                const qrBuf = await s.getQRCode(qr);
-                const gbaiName = `${this.min.botId}.gbai`;
-                const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-                fs.writeFileSync(localName, qrBuf);
-                const url = urlJoin(
-                  GBServer.globals.publicAddress,
-                  this.min.botId,
-                  'cache',
-                  Path.basename(localName)
-                );
-                GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
-                s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, msg);
-              }
+              const s = new DialogKeywords(null, null, null, null);
+              const qrBuf = await s.getQRCode(qr);
+              const gbaiName = `${this.min.botId}.gbai`;
+              const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
+              fs.writeFileSync(localName, qrBuf);
+              const url = urlJoin(
+                GBServer.globals.publicAddress,
+                this.min.botId,
+                'cache',
+                Path.basename(localName)
+              );
+              GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
+              s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, msg);
 
             }).bind(this));
 
@@ -930,11 +925,12 @@ export class WhatsappDirectLine extends GBService {
       switch (provider) {
         case "GeneralBots":
 
+          // Ignore E2E messages used during initialization.
+
           if (req.type && req.type === 'e2e_notification') {
 
             return;
           }
-
 
           id = req.from.split('@')[0];
           senderName = req._data.notifyName;
@@ -1000,24 +996,36 @@ export class WhatsappDirectLine extends GBService {
 
       text = text.replace(/\@\d+ /gi, '');
 
+      let group;
       if (provider === "chatapi") {
 
         // Ensures that the bot group is the active bot for the user (like switching).
 
         const message = req.body.messages[0];
         if (message.chatName.charAt(0) !== '+') {
-          const group = message.chatName;
+          group = message.chatName;
+        }
+      }
+      else if (provider === "GeneralBots") {
 
-          const botGroup = await this.min.core.loadInstanceByBotId(group);
-          if (botGroup && user.instanceId !== botGroup.instanceId) {
-            await sec.updateUserInstance(id, botGroup.instanceId);
-          }
-          if (botGroup) {
-            activeMin = GBServer.globals.minInstances.filter
-              (p => p.instance.instanceId === botGroup.instanceId)[0];
-            await (activeMin as any).whatsAppDirectLine.received(req, res);
-            return; // EXIT HERE.
-          }
+        // Ensures that the bot group is the active bot for the user (like switching).
+
+        const message = req.group;
+        if (message.chatName.charAt(0) !== '+') {
+          group = message.chatName;
+        }
+      }
+
+      if (group) {
+        const botGroup = await this.min.core.loadInstanceByBotId(group);
+        if (botGroup && user.instanceId !== botGroup.instanceId) {
+          await sec.updateUserInstance(id, botGroup.instanceId);
+        }
+        if (botGroup) {
+          activeMin = GBServer.globals.minInstances.filter
+            (p => p.instance.instanceId === botGroup.instanceId)[0];
+          await (activeMin as any).whatsAppDirectLine.received(req, res);
+          return; // EXIT HERE.
         }
       }
 
