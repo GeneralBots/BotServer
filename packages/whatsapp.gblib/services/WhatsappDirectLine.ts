@@ -344,7 +344,8 @@ export class WhatsappDirectLine extends GBService {
       case 'GeneralBots':
         message = req;
         text = message.body;
-        from = message.from.split('@')[0];
+        from = message.from.endsWith('@g.us') ?
+          message.author.split('@')[0] : message.from.split('@')[0];
         fromName = message._data.notifyName;
 
         if (message.hasMedia) {
@@ -402,7 +403,7 @@ export class WhatsappDirectLine extends GBService {
     GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
 
     let botGroupID = WhatsappDirectLine.botGroups[this.min.botId];
-    let botShortcuts = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Shortcuts', null);    
+    let botShortcuts = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Shortcuts', null);
     if (!botShortcuts) {
       botShortcuts = new Array()
     }
@@ -727,7 +728,16 @@ export class WhatsappDirectLine extends GBService {
     switch (this.provider) {
       case 'GeneralBots':
         const attachment = await MessageMedia.fromUrl(url);
-        await this.customClient.sendMessage(to + '@c.us', attachment, { caption: caption });
+        if (to.indexOf('@') == -1) {
+          if (to.length == 18) {
+            to = to + '@g.us';
+          }
+          else {
+            to = to + '@c.us';
+          }
+        }
+
+        await this.customClient.sendMessage(to, attachment, { caption: caption });
         break;
 
       case 'chatapi':
@@ -859,15 +869,15 @@ export class WhatsappDirectLine extends GBService {
       switch (this.provider) {
         case 'GeneralBots':
 
-          if (to.length == 18)
-          {
-            to  = to + '@g.us';
+          if (to.indexOf('@') == -1) {
+            if (to.length == 18) {
+              to = to + '@g.us';
+            }
+            else {
+              to = to + '@c.us';
+            }
           }
-          else
-          {
-            to  = to + '@c.us';
-          }
-          this.customClient.sendMessage(to, msg);
+          await this.customClient.sendMessage(to, msg);
 
           break;
 
@@ -945,7 +955,7 @@ export class WhatsappDirectLine extends GBService {
       let senderName;
       let botId;
       let text;
-      
+
 
       switch (provider) {
         case "GeneralBots":
@@ -1007,8 +1017,8 @@ export class WhatsappDirectLine extends GBService {
       }
 
       const sec = new SecService();
-      
-      let user = await sec.ensureUser(this.min.instance.instanceId, id,senderName,'', 'whatsApp', senderName, null);
+
+      let user = await sec.ensureUser(this.min.instance.instanceId, id, senderName, '', 'whatsApp', senderName, null);
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
 
       let urlMin: any = GBServer.globals.minInstances.filter
@@ -1045,7 +1055,7 @@ export class WhatsappDirectLine extends GBService {
         function getKeyByValue(object, value) {
           return Object.keys(object).find(key => object[key] === value);
         }
-        const botId = getKeyByValue(WhatsappDirectLine.botGroups, group) ;
+        const botId = getKeyByValue(WhatsappDirectLine.botGroups, group);
         if (botId && user.instanceId !== this.min.instance.instanceId) {
           await sec.updateUserInstance(id, this.min.instance.instanceId);
         }
