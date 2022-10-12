@@ -945,6 +945,7 @@ export class WhatsappDirectLine extends GBService {
       let senderName;
       let botId;
       let text;
+      
 
       switch (provider) {
         case "GeneralBots":
@@ -1006,8 +1007,8 @@ export class WhatsappDirectLine extends GBService {
       }
 
       const sec = new SecService();
-      let user = await sec.getUserFromSystemId(id);
-
+      
+      let user = await sec.ensureUser(this.min.instance.instanceId, id,senderName,'', 'whatsApp', senderName, null);
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
 
       let urlMin: any = GBServer.globals.minInstances.filter
