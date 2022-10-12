@@ -1052,6 +1052,7 @@ export class WhatsappDirectLine extends GBService {
       }
 
       if (group) {
+        GBLog.info(`Group: ${group}`);
         function getKeyByValue(object, value) {
           return Object.keys(object).find(key => object[key] === value);
         }
