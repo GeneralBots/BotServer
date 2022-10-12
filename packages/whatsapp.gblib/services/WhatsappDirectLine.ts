@@ -1018,7 +1018,7 @@ export class WhatsappDirectLine extends GBService {
 
       const sec = new SecService();
 
-      let user = await sec.ensureUser(this.min.instance.instanceId, id, senderName, '', 'whatsApp', senderName, null);
+      let user = await sec.getUserFromSystemId(id);
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
 
       let urlMin: any = GBServer.globals.minInstances.filter
@@ -1057,8 +1057,9 @@ export class WhatsappDirectLine extends GBService {
           return Object.keys(object).find(key => object[key] === value);
         }
         const botId = getKeyByValue(WhatsappDirectLine.botGroups, group);
-        if (botId && user.instanceId !== this.min.instance.instanceId) {
-          await sec.updateUserInstance(id, this.min.instance.instanceId);
+        if (botId && user.instanceId !== this.min.instance.instanceId || !user) {
+          user = await sec.ensureUser(this.min.instance.instanceId, id, senderName, '', 'whatsApp', senderName, null);
+          
         }
         if (botId) {
           activeMin = GBServer.globals.minInstances.filter
