@@ -102,10 +102,12 @@ async function createBrowser(profilePath): Promise<any> {
         args.push(`--user-data-dir=${profilePath}`);
         
         const preferences = urljoin(profilePath, "Default", "Preferences");
-        const file = Fs.readFileSync(preferences, "utf8")
-        const data = JSON.parse(file)
-        data["profile"]['exit_type'] = "none";
-        Fs.writeFileSync(preferences, JSON.stringify(data))
+        if (Fs.existsSync(preferences)) {
+            const file = Fs.readFileSync(preferences, "utf8")
+            const data = JSON.parse(file)
+            data["profile"]['exit_type'] = "none";
+            Fs.writeFileSync(preferences, JSON.stringify(data))
+        }
     }
         
     const browser = await puppeteer.launch({
