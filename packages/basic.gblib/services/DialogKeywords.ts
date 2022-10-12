@@ -142,7 +142,7 @@ export class DialogKeywords {
     if (!this.browser) {
       this.browser = await createBrowser(null);
     }
-    const page = await this.browser.newPage();
+    const page = (await this.browser.pages())[0];
     if (username || password) {
       await page.authenticate({ 'username': username, 'password': password });
     }
@@ -455,9 +455,6 @@ export class DialogKeywords {
    * @example EXIT
    */
   public async exit(step) {
-    if (this.browser) {
-      await this.browser.close();
-    }
     await step.endDialog();
   }
 

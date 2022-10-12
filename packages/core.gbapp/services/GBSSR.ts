@@ -36,9 +36,14 @@
 
 'use strict';
 
-const puppeteer = require('puppeteer');
-const pluginStealth = require('puppeteer-extra-plugin-stealth');
+const puppeteer = require('puppeteer-extra')
+const Fs = require('fs');
+
+// const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+// puppeteer.use(StealthPlugin());
+
 import { NextFunction, Request, Response } from "express";
+import urljoin = require("url-join");
 const Path = require('path');
 
 // https://hackernoon.com/tips-and-tricks-for-web-scraping-with-puppeteer-ed391a63d952
@@ -84,23 +89,32 @@ const RENDER_CACHE = new Map();
 async function createBrowser(profilePath): Promise<any> {
 
     let args = [
-        '--ignore-certificate-errors',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--window-size=1920,1080',
-        "--disable-accelerated-2d-canvas",
-        "--disable-gpu",
-        "--disable-features=site-per-process"        
+        '--check-for-update-interval=2592000',
+        '--disable-accelerated-2d-canvas',
+        '--disable-dev-shm-usage',
+        '--disable-features=site-per-process',
+        '--disable-gpu',
+        '--no-first-run',
+        '--no-default-browser-check'
     ];
 
-    if (profilePath){
-         args.push(`--user-data-dir=${profilePath}`);        
+    if (profilePath) {
+        args.push(`--user-data-dir=${profilePath}`);
+        
+        const preferences = urljoin(profilePath, "Default", "Preferences");
+        const file = Fs.readFileSync(preferences, "utf8")
+        const data = JSON.parse(file)
+        data["profile"]['exit_type'] = "none";
+        Fs.writeFileSync(preferences, JSON.stringify(data))
     }
-
+        
     const browser = await puppeteer.launch({
         args: args,
         ignoreHTTPSErrors: true,
         headless: false,
+        devTools: false,
+        defaultViewport: null,
+        ignoreDefaultArgs: ["--enable-automation", "--enable-blink-features=IdleDetection"]
     });
     return browser;
 }

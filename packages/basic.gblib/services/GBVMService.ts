@@ -865,6 +865,10 @@ export class GBVMService extends GBService {
       if (ret == -1) {
         await step.endDialog();
       }
+      if (sandbox.browser) {
+        await sandbox.browser.close();
+      }
+  
     } catch (error) {
       throw new Error(`BASIC ERROR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
     }

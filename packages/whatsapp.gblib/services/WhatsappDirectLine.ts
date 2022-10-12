@@ -47,8 +47,7 @@ import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBMinService } from '../../core.gbapp/services/GBMinService';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
-
-const puppeteer = require('puppeteer');
+import { createBrowser } from '../../core.gbapp/services/GBSSR';
 
 const { MessageMedia, Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
@@ -143,33 +142,24 @@ export class WhatsappDirectLine extends GBService {
           // Initialize the browser using a local profile for each bot.
 
           const gbaiName = `${this.min.botId}.gbai`;
-          const localName = Path.join('work', gbaiName, 'profile');
+          const profilePath = Path.join('work', gbaiName, 'profile');
 
           const createClient = async (browserWSEndpoint) => {
-            let puppeteer: any = {
-              headless: false, args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--no-first-run',
-                '--no-zygote',
-                '--single-process',
-                '--disable-gpu',
-                '--disable-infobars',
-                '--disable-features=site-per-process',
-                `--user-data-dir=${localName}`]
-            };
-            if (browserWSEndpoint) {
-              puppeteer = { browserWSEndpoint: browserWSEndpoint };
+
+            if (!browserWSEndpoint) {
+              const browser = await createBrowser(profilePath);
+              this.browserWSEndpoint = await browser.wsEndpoint();
+            }
+            else{
+              this.browserWSEndpoint = browserWSEndpoint;
             }
 
             const client = this.customClient = new Client({
               authStrategy: new LocalAuth({
                 clientId: this.min.botId,
-                dataPath: localName
+                dataPath: profilePath
               }),
-              puppeteer: puppeteer
+              puppeteer: { browserWSEndpoint: this.browserWSEndpoint }
             });
 
 
@@ -207,12 +197,13 @@ export class WhatsappDirectLine extends GBService {
             }).bind(this));
 
             client.on('authenticated', async () => {
-              this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
+
               GBLog.verbose(`GBWhatsApp: QR Code authenticated for ${this.botId}.`);
             });
 
             client.on('ready', async () => {
-
+              const page = (await client.pupBrowser.pages())[0];
+              await page.close();
               client.pupBrowser.on('disconnected', (async () => {
                 GBLog.info(`Browser terminated. Restarting ${this.min.botId} WhatsApp native provider.`);
                 await (createClient.bind(this))(null);
