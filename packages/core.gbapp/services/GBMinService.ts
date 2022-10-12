@@ -203,9 +203,9 @@ export class GBMinService {
     await throttledPromiseAll(instances.map((async instance => {
       try {
         await this['mountBot'](instance);
-        
+
         this.bar1.update(i++, { botId: instance.botId });
-       
+
       } catch (error) {
         GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
       }
@@ -362,7 +362,7 @@ export class GBMinService {
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
 
     GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`,
-          instance.botId, `${instance.botId}.gbkb`);
+      instance.botId, `${instance.botId}.gbkb`);
   }
 
   public static isChatAPI(req, res) {
@@ -655,6 +655,15 @@ export class GBMinService {
       );
       await min['googleDirectLine'].setup(true);
     }
+
+    const group = min.core.getParam<string>(
+      min.instance,
+      'WhatsApp Group ID',
+      null,
+    );
+
+    WhatsappDirectLine.botGroups[min.botId] = group;
+    
     // If there is WhatsApp configuration specified, initialize
     // infrastructure objects.
 
@@ -665,8 +674,10 @@ export class GBMinService {
         min.instance.whatsappBotKey,
         min.instance.whatsappServiceKey,
         min.instance.whatsappServiceNumber,
-        min.instance.whatsappServiceUrl
+        min.instance.whatsappServiceUrl,
+        group
       );
+      
       await min.whatsAppDirectLine.setup(true);
     } else {
       const minBoot = GBServer.globals.minBoot as any;
@@ -676,7 +687,8 @@ export class GBMinService {
         min.instance.whatsappBotKey,
         minBoot.instance.whatsappServiceKey,
         minBoot.instance.whatsappServiceNumber,
-        minBoot.instance.whatsappServiceUrl
+        minBoot.instance.whatsappServiceUrl, 
+        group
       );
       await min.whatsAppDirectLine.setup(false);
     }

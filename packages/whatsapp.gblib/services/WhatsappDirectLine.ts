@@ -47,7 +47,7 @@ import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBMinService } from '../../core.gbapp/services/GBMinService';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
-import { createBrowser } from '../../core.gbapp/services/GBSSR';
+
 const puppeteer = require('puppeteer');
 
 const { MessageMedia, Client, LocalAuth } = require('whatsapp-web.js');
@@ -66,6 +66,7 @@ export class WhatsappDirectLine extends GBService {
   public static usernames = {};
   public static state = {}; // 2: Waiting, 3: MessageArrived.
   public static lastMessage = {}; // 2: Waiting, 3: MessageArrived.
+  public static botGroups = {};
 
   public pollInterval = 3000;
   public directLineClientName = 'DirectLineClient';
@@ -82,6 +83,7 @@ export class WhatsappDirectLine extends GBService {
   INSTANCE_URL = 'https://api.maytapi.com/api';
   private customClient;
   private browserWSEndpoint;
+  private groupId;
 
   constructor(
     min: GBMinInstance,
@@ -89,7 +91,8 @@ export class WhatsappDirectLine extends GBService {
     directLineSecret,
     whatsappServiceKey,
     whatsappServiceNumber,
-    whatsappServiceUrl
+    whatsappServiceUrl,
+    groupId
   ) {
     super();
 
@@ -101,6 +104,7 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceUrl = whatsappServiceUrl;
     this.provider = whatsappServiceKey === "internal" ?
       'GeneralBots' : whatsappServiceNumber.indexOf(';') > -1 ? 'maytapi' : 'chatapi';
+    this.groupId = groupId;
   }
 
   public static async asyncForEach(array, callback) {
@@ -228,8 +232,12 @@ export class WhatsappDirectLine extends GBService {
                 };
                 const wait = Math.floor(Math.random() * 5000) + 1000;
                 await sleep(wait);
-                await chat.delete();
-
+                if (chat.isGroup) {
+                  await chat.clearMessages();
+                }
+                else if (!chat.pinned) {
+                  await chat.delete();
+                }
               });
 
             });
@@ -393,64 +401,72 @@ export class WhatsappDirectLine extends GBService {
     text = text.replace(/\@\d+ /gi, '');
     GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
 
+    let botGroupID = WhatsappDirectLine.botGroups[this.min.botId];
+    let botShortcuts = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Shortcuts', null);    
+    if (!botShortcuts) {
+      botShortcuts = new Array()
+    }
+    else {
+      botShortcuts = botShortcuts.split(' ');
+    }
+
     if (provider === "chatapi") {
       if (message.chatName.charAt(0) !== '+') {
         group = message.chatName;
+      }
+    }
+    else if (provider === "GeneralBots") {
+      if (message.from.endsWith('@g.us')) {
+        group = message.from;
+      }
+    }
 
-        let botGroupName = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Name', null);
-        let botShortcuts = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Shortcuts', null);
-        if (!botShortcuts) {
-          botShortcuts = new Array()
-        }
-        else {
-          botShortcuts = botShortcuts.split(' ');
-        }
+    if (group) {
+      const parts = text.split(' ');
 
-        const parts = text.split(' ');
+      // Bot name must be specified on config.
 
-        // Bot name must be specified on config.
+      if (botGroupID === group) {
 
-        if (botGroupName === group) {
+        // Shortcut has been mentioned?
 
-          // Shortcut has been mentioned?
+        let found = false;
+        parts.forEach(e1 => {
+          botShortcuts.forEach(e2 => {
+            if (e1 === e2 && !found) {
+              found = true;
+              text = text.replace(e2, '');
+            }
+          });
 
-          let found = false;
-          parts.forEach(e1 => {
-            botShortcuts.forEach(e2 => {
-              if (e1 === e2 && !found) {
-                found = true;
-                text = text.replace(e2, '');
+
+          // Verify if it is a group cache answer.
+
+          const questions = this.min['groupCache'];
+          if (questions && questions.length > 0) {
+            questions.forEach(q => {
+              if (q.content === e1 && !found) {
+                const answer = this.min.kbService['getAnswerById'](this.min.instance.instanceId,
+                  q.answerId);
+                answerText = answer.content;
               }
             });
+          }
 
 
-            // Verify if it is a group cache answer.
+          // Ignore group messages without the mention to Bot.
 
-            const questions = this.min['groupCache'];
-            if (questions && questions.length > 0) {
-              questions.forEach(q => {
-                if (q.content === e1 && !found) {
-                  const answer = this.min.kbService['getAnswerById'](this.min.instance.instanceId,
-                    q.answerId);
-                  answerText = answer.content;
-                }
-              });
+          let smsServiceNumber = this.min.core.getParam<string>(this.min.instance, 'whatsappServiceNumber', null);
+          if (smsServiceNumber && !answerText) {
+            smsServiceNumber = smsServiceNumber.replace('+', '');
+            if (!message.body.startsWith('@' + smsServiceNumber)) {
+              return;
             }
+          }
 
-
-            // Ignore group messages without the mention to Bot.
-
-            let smsServiceNumber = this.min.core.getParam<string>(this.min.instance, 'whatsappServiceNumber', null);
-            if (smsServiceNumber && !answerText) {
-              smsServiceNumber = smsServiceNumber.replace('+', '');
-              if (!message.body.startsWith('@' + smsServiceNumber)) {
-                return;
-              }
-            }
-
-          });
-        }
+        });
       }
+
     }
 
     const botId = this.min.instance.botId;
@@ -843,7 +859,15 @@ export class WhatsappDirectLine extends GBService {
       switch (this.provider) {
         case 'GeneralBots':
 
-          this.customClient.sendMessage(to + '@c.us', msg);
+          if (to.length == 18)
+          {
+            to  = to + '@g.us';
+          }
+          else
+          {
+            to  = to + '@c.us';
+          }
+          this.customClient.sendMessage(to, msg);
 
           break;
 
@@ -1010,20 +1034,23 @@ export class WhatsappDirectLine extends GBService {
 
         // Ensures that the bot group is the active bot for the user (like switching).
 
-        const message = req.group;
-        if (message.chatName.charAt(0) !== '+') {
-          group = message.chatName;
+        const message = req;
+        if (message.from.endsWith('@g.us')) {
+          group = message.from;
         }
       }
 
       if (group) {
-        const botGroup = await this.min.core.loadInstanceByBotId(group);
-        if (botGroup && user.instanceId !== botGroup.instanceId) {
-          await sec.updateUserInstance(id, botGroup.instanceId);
+        function getKeyByValue(object, value) {
+          return Object.keys(object).find(key => object[key] === value);
         }
-        if (botGroup) {
+        const botId = getKeyByValue(WhatsappDirectLine.botGroups, group) ;
+        if (botId && user.instanceId !== this.min.instance.instanceId) {
+          await sec.updateUserInstance(id, this.min.instance.instanceId);
+        }
+        if (botId) {
           activeMin = GBServer.globals.minInstances.filter
-            (p => p.instance.instanceId === botGroup.instanceId)[0];
+            (p => p.instance.botId === botId)[0];
           await (activeMin as any).whatsAppDirectLine.received(req, res);
           return; // EXIT HERE.
         }
