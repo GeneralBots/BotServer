@@ -39,10 +39,11 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
 import { Messages } from '../strings';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
+const { Buttons } = require('whatsapp-web.js');
 const Path = require('path');
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 const phone = require('phone');
-
 
 //tslint:disable-next-line:no-submodule-imports
 /**
@@ -52,7 +53,7 @@ export class HearDialog {
 
   private static async downloadAttachmentAndWrite(attachment) {
 
-    
+
     const url = attachment.contentUrl;
     const localFolder = Path.join('work'); // TODO: , '${botId}', 'uploads');
     const localFileName = Path.join(localFolder, attachment.name);
@@ -60,23 +61,23 @@ export class HearDialog {
     try {
 
       let response;
-      if (url.startsWith('data:')){
+      if (url.startsWith('data:')) {
         var regex = /^data:.+\/(.+);base64,(.*)$/;
         var matches = url.match(regex);
         var ext = matches[1];
         var data = matches[2];
         response = Buffer.from(data, 'base64');
       }
-      else{
-      // arraybuffer is necessary for images
-      const options = {
-        url: url,
-        method: 'GET',
-        encoding: 'binary',
-      };
-      response = await request.get(options);
-    }
-  
+      else {
+        // arraybuffer is necessary for images
+        const options = {
+          url: url,
+          method: 'GET',
+          encoding: 'binary',
+        };
+        response = await request.get(options);
+      }
+
       fs.writeFile(localFileName, response, (fsError) => {
         if (fsError) {
           throw fsError;
@@ -102,7 +103,21 @@ export class HearDialog {
           step.activeDialog.state.options.id = (step.options as any).id;
           step.activeDialog.state.options.previousResolve = (step.options as any).previousResolve;
 
-          if (step.options['args']) {
+
+          const args = step.options['args'];
+          if (args) {
+
+            let choices = [];
+            let i = 0;
+            args.forEach(arg => {
+              i++;
+              choices.push({ body: arg, id: `button${i}` });
+            });
+            
+            const locale = step.context.activity.locale;
+            const button = new Buttons(Messages[locale].choices, choices, ' ', ' ');
+
+            await min.conversationalService.sendText(min, step, button);
 
             GBLog.info(`BASIC: Asking for input (HEAR with ${step.options['args'][0]}).`);
           }
@@ -126,9 +141,9 @@ export class HearDialog {
           } else {
 
             if (step.activeDialog.state.options['kind'] === "file") {
-            return await step.prompt('attachmentPrompt', {});
+              return await step.prompt('attachmentPrompt', {});
             }
-            else{
+            else {
               return await min.conversationalService.prompt(min, step, null);
             }
           }
@@ -162,7 +177,7 @@ export class HearDialog {
             // The current TurnContext is bound so `replyForReceivedAttachments` can also send replies.
             const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
             await Promise.all(replyPromises);
-           
+
             result = {
               data: fs.readFileSync(successfulSaves[0].localPath),
               filename: successfulSaves[0].fileName

@@ -317,9 +317,8 @@ export class DialogKeywords {
 
   private async debugStepWeb(page) {
 
-    let refresh = false;
-    if (this.lastDebugWeb)
-    {
+    let refresh = true;
+    if (this.lastDebugWeb) {
       refresh = (new Date().getTime() - this.lastDebugWeb.getTime()) > 5000;
     }
 
@@ -979,11 +978,12 @@ export class DialogKeywords {
 
     // Handles SEND FILE TO mobile, element in Web Automation.
 
-    const page = filename._page;
-    if (page) {
+    const element = filename._page ? filename._page : (filename.screenshot ? filename : null);
+
+    if (element) {
       const gbaiName = `${this.min.botId}.gbai`;
       const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
-      await filename.screenshot({ path: localName, fullPage: true });
+      await element.screenshot({ path: localName, fullPage: true });
 
       const url = urlJoin(
         GBServer.globals.publicAddress,

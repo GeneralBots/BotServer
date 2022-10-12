@@ -57,20 +57,20 @@ export class AnalyticsService {
   }
 
   public async updateConversationSuggestion(instanceId: number,
-                                            conversationId: string,  feedback: string, locale: string): Promise<number> {
+    conversationId: string, feedback: string, locale: string): Promise<number> {
 
     const minBoot = GBServer.globals.minBoot as any;
     const rate = await AzureText.getSentiment(
       minBoot.instance.textAnalyticsKey ? minBoot.instance.textAnalyticsKey :
         minBoot.instance.textAnalyticsKey,
       minBoot.instance.textAnalyticsEndpoint ? minBoot.instance.textAnalyticsEndpoint :
-         minBoot.instance.textAnalyticsEndpoint,
+        minBoot.instance.textAnalyticsEndpoint,
       locale,
       feedback
     );
 
-    const options = <FindOptions>{ where: { } };
-    options.where = { conversationId: conversationId,  instanceId: instanceId };
+    const options = <FindOptions>{ where: {} };
+    options.where = { conversationId: conversationId, instanceId: instanceId };
     const item = await GuaribasConversation.findOne(options);
 
     item.feedback = feedback;
@@ -90,7 +90,7 @@ export class AnalyticsService {
   ): Promise<GuaribasConversationMessage> {
 
     const message = GuaribasConversationMessage.build();
-    message.content = content;
+    message.content = typeof (content) === 'object' ? JSON.stringify(content) : content;
     message.instanceId = instanceId;
     message.userId = userId;
     message.conversationId = conversation.conversationId;

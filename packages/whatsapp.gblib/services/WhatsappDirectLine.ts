@@ -668,7 +668,8 @@ export class WhatsappDirectLine extends GBService {
         watermark = response.obj.watermark;
         await this.printMessages(response.obj.activities, conversationId, from, fromName);
       } catch (err) {
-        GBLog.error(`Error calling printMessages on Whatsapp channel ${err.data === undefined ? err : err.data}`);
+        GBLog.error(`Error calling printMessages on Whatsapp channel ${err.data === undefined ?
+          err : err.data} ${err.errObj ? err.errObj.message : ''}`);
       }
     };
     setInterval(worker, this.pollInterval);
@@ -858,7 +859,7 @@ export class WhatsappDirectLine extends GBService {
 
     let chatId = WhatsappDirectLine.chatIds[conversationId];
 
-    if (msg.startsWith(cmd)) {
+    if (typeof (msg) !== 'object' && msg.startsWith(cmd)) {
       msg = msg.substr(cmd.length);
 
       return await this.sendTextAsAudioToDevice(to, msg, chatId);
@@ -1059,7 +1060,7 @@ export class WhatsappDirectLine extends GBService {
         const botId = getKeyByValue(WhatsappDirectLine.botGroups, group);
         if (botId && user.instanceId !== this.min.instance.instanceId || !user) {
           user = await sec.ensureUser(this.min.instance.instanceId, id, senderName, '', 'whatsApp', senderName, null);
-          
+
         }
         if (botId) {
           activeMin = GBServer.globals.minInstances.filter

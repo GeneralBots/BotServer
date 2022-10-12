@@ -83,7 +83,7 @@ export class GBVMService extends GBService {
         let writeVBS = true;
         if (fs.existsSync(fullVbsFile)) {
           const vbsStat = fs.statSync(fullVbsFile);
-          if (docxStat.mtimeMs < vbsStat.mtimeMs + interval) {
+          if (docxStat['mtimeMs'] < vbsStat['mtimeMs'] + interval) {
             writeVBS = false;
           }
         }
@@ -118,7 +118,7 @@ export class GBVMService extends GBService {
         if (fs.existsSync(jsfile)) {
           const jsStat = fs.statSync(jsfile);
           const interval = 30000; // If compiled is older 30 seconds, then recompile.
-          if (compiledAt.isFile() && compiledAt.mtimeMs > jsStat.mtimeMs + interval) {
+          if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
             await this.executeBASIC(fullFilename, min, deployer, mainName);
           } else {
             const parsedCode: string = fs.readFileSync(jsfile, 'utf8');
@@ -594,7 +594,7 @@ export class GBVMService extends GBService {
 
     const vbsCode = this.convertGBASICToVBS(basicCode);
     const vbsFile = `${filename}.compiled`;
-    fs.writeFileSync(vbsFile, vbsCode, 'utf8');
+    fs.writeFileSync(vbsFile, vbsCode);
 
     // Converts VBS into TS.
 
