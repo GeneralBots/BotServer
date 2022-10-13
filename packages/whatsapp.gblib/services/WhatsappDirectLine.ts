@@ -153,13 +153,30 @@ export class WhatsappDirectLine extends GBService {
             else {
               this.browserWSEndpoint = browserWSEndpoint;
             }
+            let puppeteer: any = {
+              headless: false, args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
+                '--single-process',
+                '--disable-gpu',
+                '--disable-infobars',
+                '--disable-features=site-per-process',
+                `--user-data-dir=${profilePath}`]
+            };
+            if (browserWSEndpoint) {
+              puppeteer = { browserWSEndpoint: browserWSEndpoint };
+            }
 
             const client = this.customClient = new Client({
               authStrategy: new LocalAuth({
                 clientId: this.min.botId,
                 dataPath: profilePath
               }),
-              puppeteer: { browserWSEndpoint: this.browserWSEndpoint }
+              puppeteer: puppeteer
             });
 
 
@@ -174,7 +191,7 @@ export class WhatsappDirectLine extends GBService {
 
               // Sends QR Code to boot bot admin.
 
-              const msg = `Please, scan QR Code with for bot ${this.botId}.`;
+              const msg = `Please, scan the QR Code to restore bot ${this.botId}.`;
               GBLog.info(msg);
               qrcode.generate(qr, { small: true, scale: 0.5 });
 
