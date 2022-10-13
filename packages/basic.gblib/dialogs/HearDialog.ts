@@ -105,7 +105,7 @@ export class HearDialog {
 
 
           const args = step.options['args'];
-          if (args) {
+          if (args && args.length >1) {
 
             let choices = [];
             let i = 0;
