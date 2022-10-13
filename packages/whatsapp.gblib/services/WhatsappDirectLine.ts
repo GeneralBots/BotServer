@@ -179,25 +179,25 @@ export class WhatsappDirectLine extends GBService {
               qrcode.generate(qr, { small: true, scale: 0.5 });
 
               // While handling other bots uses boot instance of this class to send QR Codes.
-              
+
               const s = new DialogKeywords(this.min, null, null, null);
+              const qrBuf = await s.getQRCode(qr);
+              const gbaiName = `${this.min.botId}.gbai`;
+              const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
+              fs.writeFileSync(localName, qrBuf);
+              const url = urlJoin(
+                GBServer.globals.publicAddress,
+                this.min.botId,
+                'cache',
+                Path.basename(localName)
+              );
               if (minBoot.botId !== this.botId) {
-                const qrBuf = await s.getQRCode(qr);
-                const gbaiName = `${this.min.botId}.gbai`;
-                const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-                fs.writeFileSync(localName, qrBuf);
-                const url = urlJoin(
-                  GBServer.globals.publicAddress,
-                  this.min.botId,
-                  'cache',
-                  Path.basename(localName)
-                );
                 GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
               }
 
               // The e-mail is sent to all bots.
 
-              const html = `<P>${url}</P><IMG src=${url}/>`
+              const html = `<P>${msg}</P><IMG src=${url}/>`
               await s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, html);
 
             }).bind(this));
