@@ -870,7 +870,7 @@ export class GBVMService extends GBService {
       }
   
     } catch (error) {
-      throw new Error(`BASIC ERROR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
+      throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
     }
     return ret;
   }

@@ -150,7 +150,7 @@ export class WhatsappDirectLine extends GBService {
               const browser = await createBrowser(profilePath);
               this.browserWSEndpoint = await browser.wsEndpoint();
             }
-            else{
+            else {
               this.browserWSEndpoint = browserWSEndpoint;
             }
 
@@ -179,19 +179,23 @@ export class WhatsappDirectLine extends GBService {
               qrcode.generate(qr, { small: true, scale: 0.5 });
 
               // While handling other bots uses boot instance of this class to send QR Codes.
-
+              
               const s = new DialogKeywords(this.min, null, null, null);
-              const qrBuf = await s.getQRCode(qr);
-              const gbaiName = `${this.min.botId}.gbai`;
-              const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-              fs.writeFileSync(localName, qrBuf);
-              const url = urlJoin(
-                GBServer.globals.publicAddress,
-                this.min.botId,
-                'cache',
-                Path.basename(localName)
-              );
-              GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
+              if (minBoot.botId !== this.botId) {
+                const qrBuf = await s.getQRCode(qr);
+                const gbaiName = `${this.min.botId}.gbai`;
+                const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
+                fs.writeFileSync(localName, qrBuf);
+                const url = urlJoin(
+                  GBServer.globals.publicAddress,
+                  this.min.botId,
+                  'cache',
+                  Path.basename(localName)
+                );
+                GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
+              }
+
+              // The e-mail is sent to all bots.
               s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, msg);
 
             }).bind(this));
