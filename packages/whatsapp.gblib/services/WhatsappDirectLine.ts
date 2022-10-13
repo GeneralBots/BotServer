@@ -197,7 +197,7 @@ export class WhatsappDirectLine extends GBService {
 
               // The e-mail is sent to all bots.
 
-              const html = `<P>${msg}</P><IMG src=${url}/>`
+              const html = `<P>${msg}</P><IMG src="${url}"/>`
               await s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, html);
 
             }).bind(this));
