@@ -180,7 +180,7 @@ export class WhatsappDirectLine extends GBService {
 
               // While handling other bots uses boot instance of this class to send QR Codes.
 
-              const s = new DialogKeywords(null, null, null, null);
+              const s = new DialogKeywords(this.min, null, null, null);
               const qrBuf = await s.getQRCode(qr);
               const gbaiName = `${this.min.botId}.gbai`;
               const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
