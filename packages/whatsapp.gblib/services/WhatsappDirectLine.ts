@@ -146,13 +146,6 @@ export class WhatsappDirectLine extends GBService {
 
           const createClient = async (browserWSEndpoint) => {
 
-            if (!browserWSEndpoint) {
-              const browser = await createBrowser(profilePath);
-              this.browserWSEndpoint = await browser.wsEndpoint();
-            }
-            else {
-              this.browserWSEndpoint = browserWSEndpoint;
-            }
             let puppeteer: any = {
               headless: false, args: [
                 '--no-sandbox',
@@ -212,7 +205,7 @@ export class WhatsappDirectLine extends GBService {
                 GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
               }
 
-              // The e-mail is sent to all bots.
+              // The e-mail is sent to all bot owners.
 
               const html = `<P>${msg}</P><IMG src="${url}"/>`
               await s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, html);
