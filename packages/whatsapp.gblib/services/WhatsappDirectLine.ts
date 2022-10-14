@@ -218,8 +218,7 @@ export class WhatsappDirectLine extends GBService {
             });
 
             client.on('ready', async () => {
-              const page = (await client.pupBrowser.pages())[0];
-              await page.close();
+
               client.pupBrowser.on('disconnected', (async () => {
                 GBLog.info(`Browser terminated. Restarting ${this.min.botId} WhatsApp native provider.`);
                 await (createClient.bind(this))(null);
