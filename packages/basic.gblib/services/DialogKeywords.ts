@@ -324,7 +324,9 @@ export class DialogKeywords {
 
     if (this.debugWeb && refresh) {
       const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
-      await this.sendFileTo(this.step, adminNumber, page, "General Bots Debugger");
+      if (adminNumber) {
+        await this.sendFileTo(this.step, adminNumber, page, "General Bots Debugger");
+      }
       this.lastDebugWeb = new Date();
     }
   }
