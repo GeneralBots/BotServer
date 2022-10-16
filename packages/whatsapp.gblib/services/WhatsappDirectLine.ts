@@ -473,8 +473,9 @@ export class WhatsappDirectLine extends GBService {
     const botId = this.min.instance.botId;
     const state = WhatsappDirectLine.state[botId + from];
     if (state) {
+      GBLog.verbose(`BASIC: Continuing HEAR from WhatsApp...`);
       WhatsappDirectLine.state[botId + from] = null;
-      await state.promise(null, message.text);
+      await state.promise(null, text);
 
       return; // Exit here.
     };
