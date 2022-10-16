@@ -392,11 +392,13 @@ export class DialogKeywords {
   /**
    * Types the text into the text field.
    *
-   * @example TYPE page, "elementName", "text"
+   * @example SET page, "elementName", "text"
    */
-  public async type(step, page, idOrName, text) {
+  public async setElementText(step, page, idOrName, text) {
     GBLog.info(`BASIC: Web Automation TYPE on ${idOrName}: ${text}.`);
     const e = await this.getBySelector(page, idOrName);
+    await e.click({ clickCount: 3 });
+    await page.keyboard.press('Backspace');
     await e.type(text, { delay: 200 });
     await this.debugStepWeb(page);
   }

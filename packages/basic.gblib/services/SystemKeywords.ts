@@ -466,7 +466,7 @@ export class SystemKeywords {
     if (file._javascriptEnabled) {
       GBLog.info(`BASIC: Web automation setting ${file}' to '${value}' (SET). `);
 
-      await this.dk.type(null, file, address, value);
+      await this.dk.setElementText(null, file, address, value);
       return;
     }
 
