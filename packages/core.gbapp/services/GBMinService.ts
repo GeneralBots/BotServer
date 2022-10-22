@@ -38,6 +38,7 @@
 const cliProgress = require('cli-progress');
 const { DialogSet, TextPrompt } = require('botbuilder-dialogs');
 const express = require('express');
+const Swagger = require('swagger-client');
 const Fs = require('fs');
 const request = require('request-promise-native');
 const removeRoute = require('express-remove-route');
@@ -171,13 +172,15 @@ export class GBMinService {
       GBServer.globals.server.get('/instances/:botId', this.handleGetInstanceForClient.bind(this));
     }
     // Calls mountBot event to all bots.
-
-    this.bar1 = new cliProgress.SingleBar({
-      format: '[{bar}] ({value}/{total}) Loading {botId} ...', barsize: 40,
-      forceRedraw: true
-    }, cliProgress.Presets.rect);
     let i = 1;
-    this.bar1.start(instances.length, i, { botId: "Boot" });
+
+    if (instances.length > 1) {
+      this.bar1 = new cliProgress.SingleBar({
+        format: '[{bar}] ({value}/{total}) Loading {botId} ...', barsize: 40,
+        forceRedraw: true
+      }, cliProgress.Presets.rect);
+      this.bar1.start(instances.length, i, { botId: "Boot" });
+    }
 
     const throttledPromiseAll = async (promises) => {
       const MAX_IN_PROCESS = 20;
@@ -204,15 +207,18 @@ export class GBMinService {
       try {
         await this['mountBot'](instance);
 
-        this.bar1.update(i++, { botId: instance.botId });
+        if (this.bar1) {
+          this.bar1.update(i++, { botId: instance.botId });
+        }
 
       } catch (error) {
         GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
       }
 
     }).bind(this)));
-
-    this.bar1.stop();
+    if (this.bar1) {
+      this.bar1.stop();
+    }
 
     // Loads schedules.
     GBLog.info(`Preparing SET SCHEDULE dialog calls...`);
@@ -320,6 +326,47 @@ export class GBMinService {
       res.end();
     });
     GBLog.verbose(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
+
+    // Test code.
+    if (process.env.TEST_MESSAGE) {
+      const client = await new Swagger({
+        spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')), usePromise: true
+      });
+      client.clientAuthorizations.add(
+        'AuthorizationBotConnector',
+        new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${min.instance.webchatKey}`, 'header')
+      );
+      const response = await client.Conversations.Conversations_StartConversation();
+      const conversationId = response.obj.conversationId;
+      GBServer.globals.debugConversationId = conversationId;
+
+      const steps = process.env.TEST_MESSAGE.split(';');
+      const sleep = ms => {
+        return new Promise(resolve => {
+          setTimeout(resolve, ms);
+        });
+      };
+
+      await CollectionUtil.asyncForEach(steps, async step => {
+
+        client.Conversations.Conversations_PostActivity({
+          conversationId: conversationId,
+          activity: {
+            textFormat: 'plain',
+            text: step,
+            type: 'message',
+            from: {
+              id: 'test',
+              name: 'test'
+            }
+          }
+        });
+
+        await sleep(15000);
+
+
+      });
+    }
 
     // Serves individual URL for each bot user interface.
 
@@ -663,7 +710,7 @@ export class GBMinService {
     );
 
     WhatsappDirectLine.botGroups[min.botId] = group;
-    
+
     // If there is WhatsApp configuration specified, initialize
     // infrastructure objects.
 
@@ -677,7 +724,7 @@ export class GBMinService {
         min.instance.whatsappServiceUrl,
         group
       );
-      
+
       await min.whatsAppDirectLine.setup(true);
     } else {
       const minBoot = GBServer.globals.minBoot as any;
@@ -687,7 +734,7 @@ export class GBMinService {
         min.instance.whatsappBotKey,
         minBoot.instance.whatsappServiceKey,
         minBoot.instance.whatsappServiceNumber,
-        minBoot.instance.whatsappServiceUrl, 
+        minBoot.instance.whatsappServiceUrl,
         group
       );
       await min.whatsAppDirectLine.setup(false);
@@ -796,11 +843,14 @@ export class GBMinService {
 
 
       try {
+        const sec = new SecService();
         const user = await min.userProfile.get(context, {});
+        const conversationReference = JSON.stringify(
+          TurnContext.getConversationReference(context.activity)
+        );
 
         // First time processing.
 
-        const sec = new SecService();
         if (!user.loaded) {
           if (step.context.activity.channelId !== 'msteams') {
             await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
@@ -839,6 +889,8 @@ export class GBMinService {
 
           }
 
+          await sec.updateConversationReferenceById(user.systemUser.userId, conversationReference);
+
           if (step.context.activity.channelId !== 'msteams') {
             const service = new KBService(min.core.sequelize);
             const data = await service.getFaqBySubjectArray(instance.instanceId, 'faq', undefined);
@@ -875,10 +927,7 @@ export class GBMinService {
             step.context.activity.text = urlJoin(GBServer.globals.publicAddress, `${min.instance.botId}`, 'cache', filename);
           }
 
-          const conversationReference = JSON.stringify(
-            TurnContext.getConversationReference(context.activity)
-          );
-          await sec.updateConversationReferenceById(user.systemUser.userId, conversationReference);
+
 
           if (!user.welcomed) {
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
@@ -892,7 +941,7 @@ export class GBMinService {
 
         // Required for F0 handling of persisted conversations.
 
-        GBLog.info(`User>: text:${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId}, value: ${context.activity.value})`);
+        GBLog.info(`Input> ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`);
 
         // Answer to specific BOT Framework event conversationUpdate to auto start dialogs.
         // Skips if the bot is talking.
@@ -1219,7 +1268,7 @@ export class GBMinService {
         GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
       );
       text = await min.conversationalService.translate(min, text, contentLocale);
-      GBLog.info(`Translated text (processMessageActivity): ${text}.`);
+      GBLog.verbose(`Translated text (processMessageActivity): ${text}.`);
 
       // Restores all token text back after spell checking and translation.
 
@@ -1233,7 +1282,7 @@ export class GBMinService {
       step.context.activity['text'] = text;
       step.context.activity['originalText'] = originalText;
 
-      GBLog.info(`Final text ready for NLP/Search/.gbapp: ${text}.`);
+      GBLog.info(`Text>: ${text}.`);
 
       if (user.systemUser.agentMode === 'self') {
         const manualUser = await sec.getUserFromAgentSystemId(user.systemUser.userSystemId);
@@ -1258,9 +1307,14 @@ export class GBMinService {
       }
       else {
 
+        if (min.cbMap[user.systemUser.userId] &&
+          min.cbMap[user.systemUser.userId].promise == '!GBHEAR') {
+          min.cbMap[user.systemUser.userId].promise = text;
+        }
+
         // If there is a dialog in course, continue to the next step.
 
-        if (step.activeDialog !== undefined) {
+        else if (step.activeDialog !== undefined) {
           await step.continueDialog();
         } else {
 

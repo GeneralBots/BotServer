@@ -44,8 +44,19 @@ import { GBMinService } from '../../core.gbapp/services/GBMinService';
 import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices';
 import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-const DateDiff = require('date-diff');
 import { createBrowser } from '../../core.gbapp/services/GBSSR';
+import * as request from 'request-promise-native';
+import { Messages } from '../strings';
+
+import * as fs from 'fs';
+import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
+
+
+const DateDiff = require('date-diff');
+const { Buttons } = require('whatsapp-web.js');
+const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
+const phone = require('phone');
 
 const Path = require('path');
 const sgMail = require('@sendgrid/mail');
@@ -881,6 +892,49 @@ export class DialogKeywords {
   public async showMenu(step) {
     return await step.beginDialog('/menu');
   }
+  private static async downloadAttachmentAndWrite(attachment) {
+
+
+    const url = attachment.contentUrl;
+    const localFolder = Path.join('work'); // TODO: , '${botId}', 'uploads');
+    const localFileName = Path.join(localFolder, attachment.name);
+
+    try {
+
+      let response;
+      if (url.startsWith('data:')) {
+        var regex = /^data:.+\/(.+);base64,(.*)$/;
+        var matches = url.match(regex);
+        var ext = matches[1];
+        var data = matches[2];
+        response = Buffer.from(data, 'base64');
+      }
+      else {
+        // arraybuffer is necessary for images
+        const options = {
+          url: url,
+          method: 'GET',
+          encoding: 'binary',
+        };
+        response = await request.get(options);
+      }
+
+      fs.writeFile(localFileName, response, (fsError) => {
+        if (fsError) {
+          throw fsError;
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      return undefined;
+    }
+    // If no error was thrown while writing to disk, return the attachment's name
+    // and localFilePath for the response back to the user.
+    return {
+      fileName: attachment.name,
+      localPath: localFileName
+    };
+  }
 
   /**
    * Performs the transfer of the conversation to a human agent.
@@ -898,32 +952,289 @@ export class DialogKeywords {
    * @example HEAR name
    *
    */
-  public async hear(step, promise, previousResolve, kind, ...args) {
-    function random(low, high) {
-      return Math.random() * (high - low) + low;
-    }
-    const idPromise = random(0, 120000000);
-    this.min.cbMap[idPromise] = {};
-    this.min.cbMap[idPromise].promise = promise;
+  public async hear(step, kind, ...args) {
 
-    let opts = { id: idPromise, previousResolve: previousResolve, kind: kind, args };
+    try {
 
-    if (this.hrOn) {
-
-      // Waits for next message in HEAR delegated context.
-
-      const botId = this.min.botId;
-      WhatsappDirectLine.state[botId + this.hrOn] = {
-        promise: promise, previousResolve: previousResolve
-      };
-    }
-    else {
-
-      if (previousResolve !== undefined) {
-        previousResolve(opts);
-      } else {
-        await step.beginDialog('/hear', opts);
+      let user;
+      const isIntentYes = (locale, utterance) => {
+        return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
       }
+
+      if (this.hrOn) {
+        const sec = new SecService();
+        user = await sec.getUserFromAgentSystemId(this.hrOn)
+      }
+      else {
+        user = this.user.systemUser;
+      }
+      const userId = user.userId;
+      let result;
+
+      const locale = user.locale ? user.locale : 'en-US';
+      // TODO: https://github.com/GeneralBots/BotServer/issues/266
+
+      if (args && args.length > 1) {
+
+        let choices = [];
+        let i = 0;
+        args.forEach(arg => {
+          i++;
+          choices.push({ body: arg, id: `button${i}` });
+        });
+
+        const button = new Buttons(Messages[locale].choices, choices, ' ', ' ');
+
+        await this.talk(button);
+        GBLog.info(`BASIC: HEAR with ${args.toString()} (Asking for input).`);
+      }
+      else {
+
+        GBLog.info('BASIC: HEAR (Asking for input).');
+      }
+      
+      // Wait for the user to answer.
+
+      let sleep = ms => {
+        return new Promise(resolve => {
+          setTimeout(resolve, ms);
+        });
+      };
+      this.min.cbMap[userId] = {}
+      this.min.cbMap[userId]['promise'] = '!GBHEAR';
+
+      while (this.min.cbMap[userId].promise === '!GBHEAR') {
+        await sleep(500);
+      }
+
+      const text = this.min.cbMap[userId].promise;
+
+      if (kind === "file") {
+        await step.prompt('attachmentPrompt', {});
+
+        // Prepare Promises to download each attachment and then execute each Promise.
+        const promises = step.context.activity.attachments.map(
+          DialogKeywords.downloadAttachmentAndWrite);
+        const successfulSaves = await Promise.all(promises);
+
+        async function replyForReceivedAttachments(localAttachmentData) {
+          if (localAttachmentData) {
+            // Because the TurnContext was bound to this function, the bot can call
+            // `TurnContext.sendActivity` via `this.sendActivity`;
+            await this.sendActivity(`Upload OK.`);
+          } else {
+            await this.sendActivity('Error uploading file. Please, start again.');
+          }
+        }
+
+        // Prepare Promises to reply to the user with information about saved attachments.
+        // The current TurnContext is bound so `replyForReceivedAttachments` can also send replies.
+        const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
+        await Promise.all(replyPromises);
+
+        result = {
+          data: fs.readFileSync(successfulSaves[0]['localPath']),
+          filename: successfulSaves[0]['fileName']
+        };
+
+      }
+      else if (kind === "boolean") {
+        if (isIntentYes('pt-BR', text)) {
+          result = true;
+        }
+        else {
+          result = false;
+        }
+      }
+      else if (kind === "email") {
+
+        const extractEntity = (text) => {
+          return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi);
+        }
+
+        const value = extractEntity(text);
+
+        if (value === null) {
+          await this.talk("Por favor, digite um e-mail válido.");
+          return await this.hear(step, kind, args);
+        }
+
+        result = value;
+
+      }
+      else if (kind === "name") {
+        const extractEntity = text => {
+          return text.match(/[_a-zA-Z][_a-zA-Z0-9]{0,16}/gi);
+        };
+
+        const value = extractEntity(text);
+
+        if (value === null || value.length != 1) {
+          await this.talk("Por favor, digite um nome válido.");
+          return await this.hear(step, kind, args);
+        }
+
+        result = value;
+
+      }
+      else if (kind === "integer") {
+        const extractEntity = text => {
+          return text.match(/\d+/gi);
+        };
+
+        const value = extractEntity(text);
+
+        if (value === null || value.length != 1) {
+          await this.talk("Por favor, digite um número válido.");
+          return await this.hear(step, kind, args);
+        }
+
+        result = value;
+      }
+      else if (kind === "date") {
+        const extractEntity = text => {
+          return text.match(/(^(((0[1-9]|1[0-9]|2[0-8])[\/](0[1-9]|1[012]))|((29|30|31)[\/](0[13578]|1[02]))|((29|30)[\/](0[4,6,9]|11)))[\/](19|[2-9][0-9])\d\d$)|(^29[\/]02[\/](19|[2-9][0-9])(00|04|08|12|16|20|24|28|32|36|40|44|48|52|56|60|64|68|72|76|80|84|88|92|96)$)/gi);
+        };
+
+        const value = extractEntity(text);
+
+        if (value === null || value.length != 1) {
+          await this.talk("Por favor, digite uma data no formato 12/12/2020.");
+          return await this.hear(step, kind, args);
+        }
+
+        result = value;
+      }
+      else if (kind === "hour") {
+
+        const extractEntity = text => {
+          return text.match(/^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])?$/gi);
+        };
+
+        const value = extractEntity(text);
+
+        if (value === null || value.length != 1) {
+          await this.talk("Por favor, digite um horário no formato hh:ss.");
+          return await this.hear(step, kind, args);
+        }
+
+        result = value;
+      }
+      else if (kind === "money") {
+        const extractEntity = text => {
+
+          if (step.context.locale === 'en') { // TODO: Change to user.
+            return text.match(/(?:\d{1,3},)*\d{1,3}(?:\.\d+)?/gi);
+          }
+          else {
+            return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
+          }
+        };
+
+        const value = extractEntity(text);
+
+        if (value === null || value.length != 1) {
+          await this.talk("Por favor, digite um valor monetário.");
+          return await this.hear(step, kind, args);
+        }
+
+        result = value;
+      }
+      else if (kind === "mobile") {
+        const locale = step.context.activity.locale;
+        let phoneNumber;
+        try {
+          phoneNumber = phone(text, 'BRA')[0]; // TODO: Use accordingly to the person.
+          phoneNumber = phoneUtil.parse(phoneNumber);
+        } catch (error) {
+          await this.talk(Messages[locale].validation_enter_valid_mobile);
+
+          return await this.hear(step, kind, args);
+        }
+        if (!phoneUtil.isPossibleNumber(phoneNumber)) {
+          await this.talk("Por favor, digite um número de telefone válido.");
+          return await this.hear(step, kind, args);
+        }
+
+        result = phoneNumber;
+
+      }
+      else if (kind === "zipcode") {
+        const extractEntity = text => {
+
+          text = text.replace(/\-/gi, '');
+
+          if (step.context.locale === 'en') { // TODO: Change to user.
+            return text.match(/\d{8}/gi);
+          }
+          else {
+            return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
+
+          }
+        };
+
+        const value = extractEntity(text);
+
+        if (value === null || value.length != 1) {
+          await this.talk("Por favor, digite um valor monetário.");
+          return await this.hear(step, kind, args);
+        }
+
+        result = value[0];
+
+      }
+      else if (kind === "menu") {
+
+        const list = args;
+        result = null;
+        await CollectionUtil.asyncForEach(list, async item => {
+          if (GBConversationalService.kmpSearch(text, item) != -1) {
+            result = item;
+          }
+        });
+
+        if (result === null) {
+          await this.talk(`Escolha por favor um dos itens sugeridos.`);
+          return await this.hear(step, kind, args);
+        }
+      }
+      else if (kind === "language") {
+
+        result = null;
+
+        const list = [
+          { name: 'english', code: 'en' },
+          { name: 'inglês', code: 'en' },
+          { name: 'portuguese', code: 'pt' },
+          { name: 'português', code: 'pt' },
+          { name: 'français', code: 'fr' },
+          { name: 'francês', code: 'fr' },
+          { name: 'french', code: 'fr' },
+          { name: 'spanish', code: 'es' },
+          { name: 'espanõl', code: 'es' },
+          { name: 'espanhol', code: 'es' },
+          { name: 'german', code: 'de' },
+          { name: 'deutsch', code: 'de' },
+          { name: 'alemão', code: 'de' }
+        ];
+
+        const text = step.context.activity['originalText'];
+
+        await CollectionUtil.asyncForEach(list, async item => {
+          if (GBConversationalService.kmpSearch(text.toLowerCase(), item.name.toLowerCase()) != -1 ||
+            GBConversationalService.kmpSearch(text.toLowerCase(), item.code.toLowerCase()) != -1) {
+            result = item.code;
+          }
+        });
+
+        if (result === null) {
+          await this.min.conversationalService.sendText(this.min, step, `Escolha por favor um dos idiomas sugeridos.`);
+          return await this.hear(step, kind, args);
+        }
+      }
+      return result;
+    } catch (error) {
+      GBLog.error(`BASIC RUNTIME ERR HEAR ${error.message ? error.message : error}\n Stack:${error.stack}`);
     }
   }
 
@@ -953,10 +1264,14 @@ export class DialogKeywords {
   /**
    * Talks to the user by using the specified text.
    */
-  public async talk(step, text: string) {
+  public async talk(text: string) {
+    GBLog.info(`BASIC: TALK '${text}'.`);
     const translate = this.user ? this.user.basicOptions.translatorOn : false;
-    await this.min.conversationalService['sendTextWithOptions'](this.min, step, text,
-      translate, null);
+    // TODO: Translate.
+
+
+    await this.min.conversationalService['sendOnConversation'](this.min,
+      this.user.systemUser, text);
   }
 
   private static getChannel(step): string {
@@ -965,7 +1280,7 @@ export class DialogKeywords {
       return 'webchat';
     } else {
       if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
-        return 'whatsapp';
+        return 'w}, 0);hatsapp';
       }
       return 'webchat';
     }

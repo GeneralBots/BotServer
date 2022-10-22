@@ -40,10 +40,11 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
 const urlJoin = require('url-join');
 import { DialogKeywords } from './DialogKeywords';
 import { ScheduleServices } from './ScheduleServices';
-import { HearDialog } from '../dialogs/HearDialog';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 //tslint:disable-next-line:no-submodule-imports
-const vm = require('vm');
+const { VM } = require('vm2');
+
+
 const vb2ts = require('./vbscript-to-typescript');
 const beautify = require('js-beautify').js;
 const textract = require('textract');
@@ -65,7 +66,6 @@ const Path = require('path');
 export class GBVMService extends GBService {
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
     const files = await walkPromise(folder);
-    HearDialog.addHearDialog(min);
 
     await CollectionUtil.asyncForEach(files, async file => {
       if (!file) {
@@ -173,18 +173,18 @@ export class GBVMService extends GBService {
 
 
     code = `<%\n
-    
+    step=dk.step
     id = sys().getRandomId()
-    username = step ? this.userName(step) : sys().getRandomId();
-    mobile = step ? this.userMobile(step) : sys().getRandomId();
+    username = step ? dk.userName(step) : sys().getRandomId();
+    mobile = step ? dk.userMobile(step) : sys().getRandomId();
     from = mobile;
     ENTER = String.fromCharCode(13);
     ubound = function(array){return array.length};
     isarray = function(array){return Array.isArray(array) };
-    weekday = this.getWeekFromDate.bind(this);
-    hour = this.getHourFromDate.bind(this);
-    base64 = this.getCoded;
-    tolist = this.getToLst;
+    weekday = dk.getWeekFromDate.bind(dk);
+    hour = dk.getHourFromDate.bind(dk);
+    base64 = dk.getCoded;
+    tolist = dk.getToLst;
     headers = {};
     data = {};
     list = [];
@@ -288,7 +288,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/CALL\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().callVM("${$1}", this.getMin(), this.getStep(), this.getDeployer())\n`;
+      return `sys().callVM("${$1}", dk.getMin(), dk.getStep(), dk.getDeployer())\n`;
     });
 
     code = code.replace(/(\w)\s*\=\s*find\s*(.*)/gi, ($0, $1, $2, $3) => {
@@ -604,7 +604,7 @@ export class GBVMService extends GBService {
 
     const tsfile: string = `${filename}.ts`;
     let tsCode: string = fs.readFileSync(tsfile, 'utf8');
-    tsCode = tsCode.replace(/export.*\n/gi, `export function ${mainName}(step:any) { let resolve;`);
+    tsCode = tsCode + `let resolve;`;
     fs.writeFileSync(tsfile, tsCode);
     const tsc = new TSCompiler();
     tsc.compile([tsfile]);
@@ -621,70 +621,11 @@ export class GBVMService extends GBService {
       // Finds all hear calls.
 
       let parsedCode = code;
-      const hearExp = /(\w+).*hear.*\((.*)\)/;
-
-      let match1;
-
-      while ((match1 = hearExp.exec(code))) {
-        let pos = 0;
-
-        // Writes async body.
-
-        const variable = match1[1]; // Construct variable = hear ().
-        const args = match1[2]; // Construct variable = hear ("A", "B").
-        const promiseName = `promiseFor${variable}`;
-
-        parsedCode = code.substring(pos, pos + match1.index);
-        parsedCode += ``;
-        parsedCode += `const ${promiseName}= async (step, ${variable}) => {`;
-        parsedCode += `   return new Promise(async (resolve, reject) => { try {`;
-
-        // Skips old construction and point to the async block.
-
-        pos = pos + match1.index;
-        let tempCode = code.substring(pos + match1[0].length + 1);
-        const start = pos;
-
-        // Balances code blocks and checks for exits.
-
-        let right = 0;
-        let left = 1;
-        let match2;
-        while ((match2 = /\{|\}/.exec(tempCode))) {
-          const c = tempCode.substring(match2.index, match2.index + 1);
-
-          if (c === '}') {
-            right++;
-          } else if (c === '{') {
-            left++;
-          }
-
-          tempCode = tempCode.substring(match2.index + 1);
-          pos += match2.index + 1;
-
-          if (left === right) {
-            break;
-          }
-        }
-
-        parsedCode += code.substring(start + match1[0].length + 1, pos + match1[0].length);
-
-        parsedCode += '}catch(error){reject(error);}});\n';
-        parsedCode += '}\n';
-
-
-        parsedCode += `hear (step, ${promiseName}, resolve, ${args === '' ? null : args});\n`;
-        parsedCode += code.substring(pos + match1[0].length);
-
-        // A interaction will be made for each hear.
-
-        code = parsedCode;
-      }
 
       parsedCode = this.handleThisAndAwait(parsedCode);
 
-      parsedCode = parsedCode.replace(/(\bnow\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'await this.getNow()');
-      parsedCode = parsedCode.replace(/(\btoday\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'await this.getToday(step)');
+      parsedCode = parsedCode.replace(/(\bnow\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'await dk.getNow()');
+      parsedCode = parsedCode.replace(/(\btoday\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'await dk.getToday(step)');
       parsedCode = parsedCode.replace(/(\bweekday\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'weekday');
       parsedCode = parsedCode.replace(/(\bhour\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'hour');
       parsedCode = parsedCode.replace(/(\btolist\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'tolist');
@@ -708,89 +649,89 @@ export class GBVMService extends GBService {
   private handleThisAndAwait(code: string) {
     // this insertion.
 
-    code = code.replace(/sys\(\)/gi, 'this.sys()');
+    code = code.replace(/sys\(\)/gi, 'dk.sys()');
     code = code.replace(/("[^"]*"|'[^']*')|\btalk\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.talk' : $1;
+      return $1 === undefined ? 'dk.talk' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bhear\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.hear' : $1;
+      return $1 === undefined ? 'dk.hear' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\baskEmail\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.askEmail' : $1;
+      return $1 === undefined ? 'dk.askEmail' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsendFileTo\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.sendFileTo' : $1;
+      return $1 === undefined ? 'dk.sendFileTo' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.sendFile' : $1;
+      return $1 === undefined ? 'dk.sendFile' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsetLanguage\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.setLanguage' : $1;
+      return $1 === undefined ? 'dk.setLanguage' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bdateAdd\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.dateAdd' : $1;
+      return $1 === undefined ? 'dk.dateAdd' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bdateDiff\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.dateDiff' : $1;
+      return $1 === undefined ? 'dk.dateDiff' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bgotoDialog\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.gotoDialog' : $1;
+      return $1 === undefined ? 'dk.gotoDialog' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsetMaxLines\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.setMaxLines' : $1;
+      return $1 === undefined ? 'dk.setMaxLines' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsetTranslatorOn\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.setTranslatorOn' : $1;
+      return $1 === undefined ? 'dk.setTranslatorOn' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsetTheme\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.setTheme' : $1;
+      return $1 === undefined ? 'dk.setTheme' : $1;
     });
 
     code = code.replace(/("[^"]*"|'[^']*')|\bsetWholeWord\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.setWholeWord' : $1;
+      return $1 === undefined ? 'dk.setWholeWord' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\btransferTo\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.transferTo' : $1;
+      return $1 === undefined ? 'dk.transferTo' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bchart\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.chart' : $1;
+      return $1 === undefined ? 'dk.chart' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bcreateDeal\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.createDeal' : $1;
+      return $1 === undefined ? 'dk.createDeal' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bfndContact\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.fndContact' : $1;
+      return $1 === undefined ? 'dk.fndContact' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bgetActiveTasks\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.getActiveTasks' : $1;
+      return $1 === undefined ? 'dk.getActiveTasks' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bmenu\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.menu' : $1;
+      return $1 === undefined ? 'dk.menu' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bgetPage\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.getPage' : $1;
+      return $1 === undefined ? 'dk.getPage' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bclick\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.click' : $1;
+      return $1 === undefined ? 'dk.click' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\blinkByText\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.linkByText' : $1;
+      return $1 === undefined ? 'dk.linkByText' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bpressKey\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.pressKey' : $1;
+      return $1 === undefined ? 'dk.pressKey' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bscreenshot\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.screenshot' : $1;
+      return $1 === undefined ? 'dk.screenshot' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bhover\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.hover' : $1;
+      return $1 === undefined ? 'dk.hover' : $1;
     });
     code = code.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'this.sendEmail' : $1;
+      return $1 === undefined ? 'dk.sendEmail' : $1;
     });
     // await insertion.
 
-    code = code.replace(/this\./gm, 'await this.');
+    code = code.replace(/dk\./gm, 'await dk.');
     code = code.replace(/\nfunction/i, 'async function');
     code = code.replace('ubound = async', 'ubound =');  // TODO: Improve this.
     code = code.replace('hour = await', 'hour =');  // TODO: Improve this.
@@ -837,38 +778,25 @@ export class GBVMService extends GBService {
 
     // Injects the .gbdialog generated code into the VM.
 
-    const context = vm.createContext(sandbox);
-    const code = min.sandBoxMap[text];
+    let code = min.sandBoxMap[text];
 
-    try {
-      // SEE https://github.com/patriksimek/vm2
-      vm.runInContext(code, context);
-    } catch (error) {
-      throw new Error(`INVALID BASIC CODE: ${error.message} ${error.stack}`);
-    }
-
-    // Tries to find the method related to this call.
-
-    const mainMethod = text.toLowerCase();
-    if (!sandbox[mainMethod]) {
-      GBLog.error(`BASIC: Associated '${mainMethod}' dialog not found for: ${min.instance.botId}. Verify if .gbdialog is correctly published.`);
-
-      return null;
-    }
-    sandbox[mainMethod].bind(sandbox);
+    code = `(async () => {${code}})();`;
+    sandbox['this'] = sandbox;
+    const vm = new VM({
+      timeout: 600000,
+      allowAsync: true,
+      sandbox: { dk: sandbox }
+    });
 
     // Calls the function.
 
     let ret = null;
     try {
-      ret = await sandbox[mainMethod](step);
-      if (ret == -1) {
-        await step.endDialog();
-      }
-  
+      vm.run(code)
     } catch (error) {
       throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
     }
+
     return ret;
   }
 }

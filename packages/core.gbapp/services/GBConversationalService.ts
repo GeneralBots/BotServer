@@ -458,7 +458,7 @@ export class GBConversationalService {
           ? user.systemUser.locale
           : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
-      GBLog.info(`Translated text(playMarkdown): ${text}.`);
+      GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
     }
 
     var renderer = new marked.Renderer();
@@ -925,7 +925,7 @@ export class GBConversationalService {
           ? systemUser.locale
           : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
-      GBLog.info(`Translated text(prompt): ${text}.`);
+      GBLog.verbose(`Translated text(prompt): ${text}.`);
     }
     if (step.activeDialog.state.options['kind'] === "file") {
       return await step.prompt('attachmentPrompt', {});
@@ -981,7 +981,7 @@ export class GBConversationalService {
         });
       }
 
-      GBLog.info(`Translated text(sendText): ${text}.`);
+      GBLog.verbose(`Translated text(sendText): ${text}.`);
     }
 
     const analytics = new AnalyticsService();
@@ -1034,12 +1034,17 @@ export class GBConversationalService {
     else {
       const ref = JSON.parse(user.conversationReference);
       MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
-      await min.bot['createConversation'](ref, async (t1) => {
-        const ref2 = TurnContext.getConversationReference(t1.activity);
-        await min.bot.continueConversation(ref2, async (t2) => {
-          await t2.sendActivity(message);
+      try {
+        await min.bot['continueConversation'](ref, async (t1) => {
+          const ref2 = TurnContext.getConversationReference(t1.activity);
+          await min.bot.continueConversation(ref2, async (t2) => {
+            await t2.sendActivity(message);
+          });
         });
-      });
+          
+      } catch (error) {
+      console.log(error)        ;
+      }
     }
   }
 

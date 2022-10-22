@@ -69,6 +69,7 @@ export class RootData {
   public minBoot: GBMinInstance; // Reference to boot bot.
   public wwwroot: string; // .gbui or a static webapp.
   public entryPointDialog: string; // To replace default welcome dialog.
+  public debugConversationId: any; // Used to self-message during debug.
 }
 /**
  * General Bots open-core entry point.
@@ -225,7 +226,7 @@ export class GBServer {
 
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
-
+          
           // Opens Navigator.
 
           // TODO: Config: core.openBrowserInDevelopment();
