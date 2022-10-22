@@ -1,3 +1,12 @@
+## [2.0.179](https://github.com/GeneralBots/BotServer/compare/2.0.178...2.0.179) (2022-10-22)
+
+
+### Bug Fixes
+
+* **whatsapp.gblib:** FIX on HEAR ON after provider change. ([c66f9bf](https://github.com/GeneralBots/BotServer/commit/c66f9bfe041875bd2a528aef8eae884616de2e6b))
+* **whatsapp.gblib:** FIX on HEAR ON after provider change. ([1d8e7e1](https://github.com/GeneralBots/BotServer/commit/1d8e7e1763c6fce6e7bad83f6ae036f17f3141f9))
+* **whatsapp.gblib:** FIX on HEAR ON after provider change. ([916794f](https://github.com/GeneralBots/BotServer/commit/916794fc154cc16e1dce2dd7d7c523b25699e8d8))
+
 ## [2.0.178](https://github.com/GeneralBots/BotServer/compare/2.0.177...2.0.178) (2022-10-09)
 
 
