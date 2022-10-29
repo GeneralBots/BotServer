@@ -290,7 +290,7 @@ export class WhatsappDirectLine extends GBService {
         break;
     }
 
-    if (setUrl && options) {
+    if (setUrl && options&& this.whatsappServiceUrl) {
       const express = require('express');
       GBServer.globals.server.use(`/audios`, express.static('work'));
 

@@ -39,16 +39,25 @@
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { GuaribasSchedule } from '../core.gbapp/models/GBModel';
 import { Sequelize } from 'sequelize-typescript';
-
+import { createServerRouter } from "typescript-rest-rpc/lib/server"
+import { DialogKeywords } from './services/DialogKeywords';
+const Koa = require('koa');
+import * as koaBody from "koa-body"
+const app = new Koa()
 
 /**
  * Package for core.gbapp.
  */
+ 
 export class GBBasicPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
   public CurrentEngineName = "guaribas-1.0.0";
+
+
   public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasSchedule]);
+    app.use(koaBody({ multipart: true }));
+    app.listen(1111);
   }
 
   public async getDialogs(min: GBMinInstance) {
@@ -67,6 +76,8 @@ export class GBBasicPackage implements IGBPackage {
     GBLog.verbose(`onExchangeData called.`);
   }
   public async loadBot(min: GBMinInstance): Promise<void> {
-
+    const backendRouter = createServerRouter(`/api/v2/${min.botId}/dialog`, new DialogKeywords(min, null, null, null));
+    app.use(backendRouter.routes());
+    
   }
 }

@@ -42,8 +42,8 @@ import { DialogKeywords } from './DialogKeywords';
 import { ScheduleServices } from './ScheduleServices';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 //tslint:disable-next-line:no-submodule-imports
-const { VM } = require('vm2');
-
+const { NodeVM, VMScript } = require('vm2');
+const { createVm2Pool } = require('./vm2-process/index');
 
 const vb2ts = require('./vbscript-to-typescript');
 const beautify = require('js-beautify').js;
@@ -776,27 +776,70 @@ export class GBVMService extends GBService {
       }
     }
 
-    // Injects the .gbdialog generated code into the VM.
+    const botId = min.botId;
+    const gbdialogPath = urlJoin(process.cwd(), 'work', `${botId}.gbai`, `${botId}.gbdialog`);
+    const scriptPath = urlJoin(gbdialogPath, `${text}.js`);
 
     let code = min.sandBoxMap[text];
 
-    code = `(async () => {${code}})();`;
-    sandbox['this'] = sandbox;
-    const vm = new VM({
-      timeout: 600000,
-      allowAsync: true,
-      sandbox: { dk: sandbox }
-    });
+    if (process.env.VM3) {
+      try {
 
-    // Calls the function.
+        const vm1 = new NodeVM({
+          allowAsync: true,
+          sandbox: {},
+          console: 'inherit',
+          wrapper: 'commonjs',
+          require: {
+            builtin: ['stream', 'http', 'https', 'url', 'zlib'],
+            root: ['./'],
+            external: true,
+            context: 'sandbox'
+          },
+        });
+        const s = new VMScript(code, { filename: scriptPath });
+        let x = vm1.run(s);
+        return x;
+      } catch (error) {
+        throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
+      }
 
-    let ret = null;
-    try {
-      vm.run(code)
-    } catch (error) {
-      throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
+    } else {
+
+      // {
+      //   "name": "dev-rodriguez.gbdialog",
+      //   "version": "1.0.0",
+      //   "description": "",
+      //    "author": "",
+      //   "license": "ISC",
+      //   "dependencies": {
+      //     "encoding": "^0.1.13",
+      //     "isomorphic-fetch": "^3.0.0",
+      //     "punycode": "^2.1.1",
+      //     "typescript-rest-rpc": "^1.0.10",
+      //     "vm2": "^3.9.11"
+      //   }
+      // }
+
+      const runnerPath = urlJoin(process.cwd(), 'dist', 'packages', 'basic.gblib', 'services', 'vm2-process', 'vm2ProcessRunner.js');
+
+      try {
+        const { run, drain } = createVm2Pool({
+          min: 1,
+          max: 1,
+          cpu: 100,
+          memory: 120000,
+          time: 5520000,
+          cwd: gbdialogPath,
+          script: runnerPath
+        });
+
+        const result = await run(code, { filename: scriptPath });
+
+        drain();
+      } catch (error) {
+        throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
+      }
     }
-
-    return ret;
   }
 }

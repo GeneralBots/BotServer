@@ -53,8 +53,6 @@ const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
 
 const Spinner = require('cli-spinner').Spinner;
 // tslint:disable-next-line: no-submodule-imports
-import * as simplegit from 'simple-git/promise';
-const git = simplegit();
 
 // tslint:disable-next-line:no-submodule-imports
 import { CognitiveServicesAccount } from 'azure-arm-cognitiveservices/lib/models';

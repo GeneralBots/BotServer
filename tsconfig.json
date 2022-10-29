@@ -8,9 +8,9 @@
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "mapRoot": "./dist/",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "resolveJsonModule": false,
     "outDir": "./dist",
     "paths": {
       "*": [

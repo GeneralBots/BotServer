@@ -82,13 +82,16 @@ export class GBServer {
    */
 
   public static run() {
-    
+
 
     GBLog.info(`The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
     GBConfigService.init();
     const port = GBConfigService.getServerPort();
+
+
     const server = express();
+
     GBServer.globals.server = server;
     GBServer.globals.appPackages = [];
     GBServer.globals.sysPackages = [];
@@ -207,15 +210,16 @@ export class GBServer {
 
             // ... some not authenticated middlewares
 
-            server.use((req, res, next) => {
+            server.use(async (req, res, next) => {
               if (req.originalUrl.startsWith('/logs')) {
                 var user = auth(req);
                 if (!user || !admins[user.name] || admins[user.name].password !== user.pass) {
                   res.set('WWW-Authenticate', 'Basic realm="example"');
                   return res.status(401).send();
                 }
+              } else {
+                return next();
               }
-              return next();
             });
 
             // If global log enabled, reorders transports adding web logging.
@@ -226,7 +230,7 @@ export class GBServer {
 
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
-          
+
           // Opens Navigator.
 
           // TODO: Config: core.openBrowserInDevelopment();

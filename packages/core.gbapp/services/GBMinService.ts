@@ -220,11 +220,11 @@ export class GBMinService {
       this.bar1.stop();
     }
 
-    // Loads schedules.
-    GBLog.info(`Preparing SET SCHEDULE dialog calls...`);
+    // // Loads schedules.
+    // GBLog.info(`Preparing SET SCHEDULE dialog calls...`);
 
-    const service = new ScheduleServices();
-    await service.scheduleAll();
+    // const service = new ScheduleServices();
+    // await service.scheduleAll();
 
     GBLog.info(`All Bot instances loaded.`);
   }
@@ -803,6 +803,12 @@ export class GBMinService {
   // TODO: Unify in util.
   public static userMobile(step) {
     let mobile = WhatsappDirectLine.mobiles[step.context.activity.conversation.id]
+
+    if (!mobile && step)
+    {
+      return step.context.activity.from.id;
+    }
+
     return mobile;
 
   }

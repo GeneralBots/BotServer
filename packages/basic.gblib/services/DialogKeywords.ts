@@ -437,7 +437,7 @@ export class DialogKeywords {
    *
    * @example x = TODAY
    */
-  public async getToday(step) {
+  public async getToday() {
     let d = new Date(),
       month = '' + (d.getMonth() + 1),
       day = '' + d.getDate(),
