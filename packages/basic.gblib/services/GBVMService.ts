@@ -754,7 +754,7 @@ export class GBVMService extends GBService {
 
     const user = step ? await min.userProfile.get(step.context, {}) : null;
 
-    const sandbox: DialogKeywords = new DialogKeywords(min, deployer, step, user);
+    const sandbox: DialogKeywords = new DialogKeywords(min, deployer, user.systemUser);
 
     const contentLocale = min.core.getParam<string>(
       min.instance,
@@ -782,7 +782,7 @@ export class GBVMService extends GBService {
 
     let code = min.sandBoxMap[text];
 
-    if (process.env.VM3) {
+    if (GBConfigService.get('VM3')==='true'){
       try {
 
         const vm1 = new NodeVM({

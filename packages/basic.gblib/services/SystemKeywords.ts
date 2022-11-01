@@ -92,7 +92,7 @@ export class SystemKeywords {
   }
 
 
-  public async callVM(text: string, min: GBMinInstance, step: GBDialogStep, deployer: GBDeployer) {
+  public async callVM(text: string, min: GBMinInstance, step, deployer: GBDeployer) {
     return await GBVMService.callVM(text, min, step, deployer);
   }
 
@@ -465,8 +465,8 @@ export class SystemKeywords {
 
     if (file._javascriptEnabled) {
       GBLog.info(`BASIC: Web automation setting ${file}' to '${value}' (SET). `);
-
-      await this.dk.setElementText(null, file, address, value);
+      await this.dk.setElementText(file, address, value);
+      
       return;
     }
 
@@ -1684,7 +1684,7 @@ export class SystemKeywords {
     }
   }
 
-  public async tweet(step, text: string) {
+  public async tweet(text: string) {
 
     const consumer_key = this.min.core.getParam(this.min.instance, 'Twitter Consumer Key', null);
     const consumer_secret = this.min.core.getParam(this.min.instance, 'Twitter Consumer Key Secret', null);

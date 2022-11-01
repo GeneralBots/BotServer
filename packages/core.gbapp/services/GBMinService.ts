@@ -329,6 +329,9 @@ export class GBMinService {
 
     // Test code.
     if (process.env.TEST_MESSAGE) {
+
+      GBLog.info(`Starting auto test with '${process.env.TEST_MESSAGE}'.`);
+
       const client = await new Swagger({
         spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')), usePromise: true
       });

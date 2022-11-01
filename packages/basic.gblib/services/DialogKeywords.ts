@@ -32,7 +32,7 @@
 
 'use strict';
 
-import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
+import { GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 import { ChartServices } from './ChartServices';
 const urlJoin = require('url-join');
@@ -51,6 +51,7 @@ import { Messages } from '../strings';
 import * as fs from 'fs';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
+import { GuaribasUser } from '../../security.gbapp/models';
 
 
 const DateDiff = require('date-diff');
@@ -64,8 +65,7 @@ var mammoth = require("mammoth");
 const qrcode = require('qrcode');
 
 /**
- * Base services of conversation to be called by BASIC which
- * requries step variable to work.
+ * Base services of conversation to be called by BASIC.
  */
 export class DialogKeywords {
 
@@ -94,8 +94,7 @@ export class DialogKeywords {
    */
   hrOn: string;
 
-  step: GBDialogStep;
-
+  userId: GuaribasUser;
   debugWeb: boolean;
   lastDebugWeb: Date;
 
@@ -112,20 +111,14 @@ export class DialogKeywords {
     return this.min;
   }
 
-  public async getStep() {
-    return this.step;
-  }
-
-
   /**
    * When creating this keyword facade, a bot instance is
    * specified among the deployer service.
    */
-  constructor(min: GBMinInstance, deployer: GBDeployer, step: GBDialogStep, user) {
+  constructor(min: GBMinInstance, deployer: GBDeployer, user) {
     this.min = min;
     this.user = user;
     this.internalSys = new SystemKeywords(min, deployer, this);
-    this.step = step;
 
     this.debugWeb = this.min.core.getParam<boolean>(
       this.min.instance,
@@ -148,7 +141,7 @@ export class DialogKeywords {
    *
    * @example x = GET PAGE
    */
-  public async getPage(step, url, username, password) {
+  public async getPage(url, username, password) {
     GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);
     if (!this.browser) {
       this.browser = await createBrowser(null);
@@ -160,7 +153,6 @@ export class DialogKeywords {
     await page.goto(url);
     return page;
   }
-
 
   /**
    * 
@@ -175,7 +167,7 @@ export class DialogKeywords {
    * @param legends 
    * @see https://www.npmjs.com/package/plot
    */
-  public async chart(step, type, data, legends, transpose) {
+  public async chart(type, data, legends, transpose) {
 
     let table = [[]];
 
@@ -298,7 +290,7 @@ export class DialogKeywords {
   /**
    * Simulates a mouse hover an web page element. 
    */
-  public async hover(step, page, idOrName) {
+  public async hover(page, idOrName) {
     GBLog.info(`BASIC: Web Automation HOVER element: ${idOrName}.`);
     await this.getBySelector(page, idOrName);
     await page.hover(idOrName);
@@ -310,7 +302,7 @@ export class DialogKeywords {
    *
    * @example CLICK page, "#idElement"
    */
-  public async click(step, page, frameOrSelector, selector) {
+  public async click(page, frameOrSelector, selector) {
     GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
     if (selector) {
       await page.waitForSelector(frameOrSelector)
@@ -336,7 +328,7 @@ export class DialogKeywords {
     if (this.debugWeb && refresh) {
       const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
       if (adminNumber) {
-        await this.sendFileTo(this.step, adminNumber, page, "General Bots Debugger");
+        await this.sendFileTo(adminNumber, page, "General Bots Debugger");
       }
       this.lastDebugWeb = new Date();
     }
@@ -347,7 +339,7 @@ export class DialogKeywords {
    *
    * @example PRESS ENTER ON page
    */
-  public async pressKey(step, page, char, frame) {
+  public async pressKey(page, char, frame) {
     GBLog.info(`BASIC: Web Automation PRESS ${char} ON element: ${frame}.`);
     if (char.toLowerCase() === "enter") {
       char = '\n';
@@ -363,7 +355,7 @@ export class DialogKeywords {
     }
   }
 
-  public async linkByText(step, page, text, index) {
+  public async linkByText(page, text, index) {
     GBLog.info(`BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
     if (!index) {
       index = 1
@@ -380,7 +372,7 @@ export class DialogKeywords {
    *
    * @example file = SCREENSHOT page
    */
-  public async screenshot(step, page, idOrName) {
+  public async screenshot(page, idOrName) {
     GBLog.info(`BASIC: Web Automation SCREENSHOT ${idOrName}.`);
 
     const gbaiName = `${this.min.botId}.gbai`;
@@ -405,7 +397,7 @@ export class DialogKeywords {
    *
    * @example SET page, "elementName", "text"
    */
-  public async setElementText(step, page, idOrName, text) {
+  public async setElementText(page, idOrName, text) {
     GBLog.info(`BASIC: Web Automation TYPE on ${idOrName}: ${text}.`);
     const e = await this.getBySelector(page, idOrName);
     await e.click({ clickCount: 3 });
@@ -419,7 +411,7 @@ export class DialogKeywords {
    *
    * @example x = TODAY
    */
-  public async getOCR(step, localFile) {
+  public async getOCR(localFile) {
     GBLog.info(`BASIC: OCR processing on ${localFile}.`);
     const tesseract = require("node-tesseract-ocr")
 
@@ -469,8 +461,8 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit(step) {
-    await step.endDialog();
+  public async exit() {
+
   }
 
   /**
@@ -741,9 +733,9 @@ export class DialogKeywords {
    * @example SEND FILE TO "+199988887777", "image.jpg", caption
    *
    */
-  public async sendFileTo(step, mobile, filename, caption) {
+  public async sendFileTo(mobile, filename, caption) {
     GBLog.info(`BASIC: SEND FILE TO '${mobile}', filename '${filename}'.`);
-    return await this.internalSendFile(null, mobile, filename, caption);
+    return await this.internalSendFile(mobile, filename, caption);
   }
 
   /**
@@ -752,10 +744,10 @@ export class DialogKeywords {
    * @example SEND FILE "image.jpg"
    *
    */
-  public async sendFile(step, filename, caption) {
-    const mobile = await this.userMobile(step);
+  public async sendFile(filename, caption) {
+    const mobile = await this.userMobile();
     GBLog.info(`BASIC: SEND FILE (current: ${mobile}, filename '${filename}'.`);
-    return await this.internalSendFile(step, mobile, filename, caption);
+    return await this.internalSendFile(mobile, filename, caption);
   }
 
   /**
@@ -764,14 +756,9 @@ export class DialogKeywords {
    * @example SET LANGUAGE "pt"
    *
    */
-  public async setLanguage(step, language) {
-    const user = await this.min.userProfile.get(step.context, {});
-
+  public async setLanguage(language) {
     const sec = new SecService();
-    user.systemUser = await sec.updateUserLocale(user.systemUser.userId, language);
-
-    await this.min.userProfile.set(step.context, user);
-    this.user = user;
+    await sec.updateUserLocale(this.user.userId, language);
   }
 
   /**
@@ -791,12 +778,9 @@ export class DialogKeywords {
    * @example SET MAX LINES 5000
    *
    */
-  public async setMaxLines(step, count) {
-    if (step) {
-      const user = await this.min.userProfile.get(step.context, {});
-      user.basicOptions.maxLines = count;
-      await this.min.userProfile.set(step.context, user);
-      this.user = user;
+  public async setMaxLines(count) {
+    if (this.user) {
+      // TODO: PARAM     user.basicOptions.maxLines = count;
     }
     else {
       this.maxLines = count;
@@ -810,11 +794,9 @@ export class DialogKeywords {
   * @example SET MAX COLUMNS 5000
   *
   */
-  public async setMaxColumns(step, count) {
-    const user = await this.min.userProfile.get(step.context, {});
-    user.basicOptions.maxColumns = count;
-    await this.min.userProfile.set(step.context, user);
-    this.user = user;
+  public async setMaxColumns(count) {
+    // TODO: user.basicOptions.maxColumns = count;
+
   }
 
 
@@ -824,11 +806,8 @@ export class DialogKeywords {
    * @example SET WHOLE WORD ON
    *
    */
-  public async setWholeWord(step, on) {
-    const user = await this.min.userProfile.get(step.context, {});
-    user.basicOptions.wholeWord = (on.trim() === "on");
-    await this.min.userProfile.set(step.context, user);
-    this.user = user;
+  public async setWholeWord(on) {
+    // TODO: user.basicOptions.wholeWord = (on.trim() === "on");
   }
 
   /**
@@ -837,11 +816,8 @@ export class DialogKeywords {
  * @example SET THEME "themename"
  *
  */
-  public async setTheme(step, theme) {
-    const user = await this.min.userProfile.get(step.context, {});
-    user.basicOptions.theme = theme.trim();
-    await this.min.userProfile.set(step.context, user);
-    this.user = user;
+  public async setTheme(theme) {
+    // TODO: user.basicOptions.theme = theme.trim();
   }
 
   /**
@@ -850,37 +826,24 @@ export class DialogKeywords {
    * @example SET TRANSLATOR ON | OFF
    *
    */
-  public async setTranslatorOn(step, on) {
-    const user = await this.min.userProfile.get(step.context, {});
-    user.basicOptions.translatorOn = (on.trim() === "on");
-    await this.min.userProfile.set(step.context, user);
-    this.user = user;
+  public async setTranslatorOn(on) {
+
+    // TODO: user.basicOptions.translatorOn = (on.trim() === "on");
   }
 
 
   /**
    * Returns the name of the user acquired by WhatsApp API.
    */
-  public async userName(step) {
-    return step ? WhatsappDirectLine.usernames[await this.userMobile(step)] : 'N/A';
+  public async userName() {
+    // TODO: WhatsappDirectLine.usernames[await this.userMobile()] : 'N/A';
   }
-
-  /**
-   * OBSOLETE. 
-   */
-  public async getFrom(step) {
-    return step ? await this.userMobile(step) : 'N/A';
-  }
-
 
   /**
    * Returns current mobile number from user in conversation.
-   *
-   * @example SAVE "file.xlsx", name, email, MOBILE
-   *
    */
-  public async userMobile(step) {
-    return GBMinService.userMobile(step);
+  public async userMobile() {
+    // TODO: return GBMinService.userMobile();
   }
 
   /**
@@ -889,8 +852,8 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu(step) {
-    return await step.beginDialog('/menu');
+  public async showMenu() {
+    // TODO: return await beginDialog('/menu');
   }
   private static async downloadAttachmentAndWrite(attachment) {
 
@@ -942,8 +905,8 @@ export class DialogKeywords {
    * @example TRANSFER
    *
    */
-  public async transferTo(step, to: string = null) {
-    return await step.beginDialog('/t', { to: to });
+  public async transferTo(to: string = null) {
+    // TODO: return await beginDialog('/t', { to: to });
   }
 
   /**
@@ -952,7 +915,7 @@ export class DialogKeywords {
    * @example HEAR name
    *
    */
-  public async hear(step, kind, ...args) {
+  public async hear(kind, ...args) {
 
     try {
 
@@ -992,7 +955,7 @@ export class DialogKeywords {
 
         GBLog.info('BASIC: HEAR (Asking for input).');
       }
-      
+
       // Wait for the user to answer.
 
       let sleep = ms => {
@@ -1010,32 +973,32 @@ export class DialogKeywords {
       const text = this.min.cbMap[userId].promise;
 
       if (kind === "file") {
-        await step.prompt('attachmentPrompt', {});
+        // await prompt('attachmentPrompt', {});
 
-        // Prepare Promises to download each attachment and then execute each Promise.
-        const promises = step.context.activity.attachments.map(
-          DialogKeywords.downloadAttachmentAndWrite);
-        const successfulSaves = await Promise.all(promises);
+        // // Prepare Promises to download each attachment and then execute each Promise.
+        // const promises = step.context.activity.attachments.map(
+        //   DialogKeywords.downloadAttachmentAndWrite);
+        // const successfulSaves = await Promise.all(promises);
 
-        async function replyForReceivedAttachments(localAttachmentData) {
-          if (localAttachmentData) {
-            // Because the TurnContext was bound to this function, the bot can call
-            // `TurnContext.sendActivity` via `this.sendActivity`;
-            await this.sendActivity(`Upload OK.`);
-          } else {
-            await this.sendActivity('Error uploading file. Please, start again.');
-          }
-        }
+        // async function replyForReceivedAttachments(localAttachmentData) {
+        //   if (localAttachmentData) {
+        //     // Because the TurnContext was bound to this function, the bot can call
+        //     // `TurnContext.sendActivity` via `this.sendActivity`;
+        //     await this.sendActivity(`Upload OK.`);
+        //   } else {
+        //     await this.sendActivity('Error uploading file. Please, start again.');
+        //   }
+        // }
 
-        // Prepare Promises to reply to the user with information about saved attachments.
-        // The current TurnContext is bound so `replyForReceivedAttachments` can also send replies.
-        const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
-        await Promise.all(replyPromises);
+        // // Prepare Promises to reply to the user with information about saved attachments.
+        // // The current TurnContext is bound so `replyForReceivedAttachments` can also send replies.
+        // const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
+        // await Promise.all(replyPromises);
 
-        result = {
-          data: fs.readFileSync(successfulSaves[0]['localPath']),
-          filename: successfulSaves[0]['fileName']
-        };
+        // result = {
+        //   data: fs.readFileSync(successfulSaves[0]['localPath']),
+        //   filename: successfulSaves[0]['fileName']
+        // };
 
       }
       else if (kind === "boolean") {
@@ -1056,7 +1019,7 @@ export class DialogKeywords {
 
         if (value === null) {
           await this.talk("Por favor, digite um e-mail válido.");
-          return await this.hear(step, kind, args);
+          return await this.hear(kind, args);
         }
 
         result = value;
@@ -1071,7 +1034,7 @@ export class DialogKeywords {
 
         if (value === null || value.length != 1) {
           await this.talk("Por favor, digite um nome válido.");
-          return await this.hear(step, kind, args);
+          return await this.hear(kind, args);
         }
 
         result = value;
@@ -1086,7 +1049,7 @@ export class DialogKeywords {
 
         if (value === null || value.length != 1) {
           await this.talk("Por favor, digite um número válido.");
-          return await this.hear(step, kind, args);
+          return await this.hear(kind, args);
         }
 
         result = value;
@@ -1100,7 +1063,7 @@ export class DialogKeywords {
 
         if (value === null || value.length != 1) {
           await this.talk("Por favor, digite uma data no formato 12/12/2020.");
-          return await this.hear(step, kind, args);
+          return await this.hear(kind, args);
         }
 
         result = value;
@@ -1115,7 +1078,7 @@ export class DialogKeywords {
 
         if (value === null || value.length != 1) {
           await this.talk("Por favor, digite um horário no formato hh:ss.");
-          return await this.hear(step, kind, args);
+          return await this.hear(kind, args);
         }
 
         result = value;
@@ -1123,25 +1086,26 @@ export class DialogKeywords {
       else if (kind === "money") {
         const extractEntity = text => {
 
-          if (step.context.locale === 'en') { // TODO: Change to user.
-            return text.match(/(?:\d{1,3},)*\d{1,3}(?:\.\d+)?/gi);
-          }
-          else {
-            return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
-          }
+          // if (user.locale === 'en') { // TODO: Change to user.
+          //   return text.match(/(?:\d{1,3},)*\d{1,3}(?:\.\d+)?/gi);
+          // }
+          // else {
+          //   return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
+          // }
+          return [];
         };
 
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
           await this.talk("Por favor, digite um valor monetário.");
-          return await this.hear(step, kind, args);
+          return await this.hear(kind, args);
         }
 
         result = value;
       }
       else if (kind === "mobile") {
-        const locale = step.context.activity.locale;
+
         let phoneNumber;
         try {
           phoneNumber = phone(text, 'BRA')[0]; // TODO: Use accordingly to the person.
@@ -1149,11 +1113,11 @@ export class DialogKeywords {
         } catch (error) {
           await this.talk(Messages[locale].validation_enter_valid_mobile);
 
-          return await this.hear(step, kind, args);
+          return await this.hear(kind, args);
         }
         if (!phoneUtil.isPossibleNumber(phoneNumber)) {
           await this.talk("Por favor, digite um número de telefone válido.");
-          return await this.hear(step, kind, args);
+          return await this.hear(kind, args);
         }
 
         result = phoneNumber;
@@ -1164,7 +1128,7 @@ export class DialogKeywords {
 
           text = text.replace(/\-/gi, '');
 
-          if (step.context.locale === 'en') { // TODO: Change to user.
+          if (user.locale === 'en') { // TODO: Change to user.
             return text.match(/\d{8}/gi);
           }
           else {
@@ -1177,7 +1141,7 @@ export class DialogKeywords {
 
         if (value === null || value.length != 1) {
           await this.talk("Por favor, digite um valor monetário.");
-          return await this.hear(step, kind, args);
+          return await this.hear(kind, args);
         }
 
         result = value[0];
@@ -1195,7 +1159,7 @@ export class DialogKeywords {
 
         if (result === null) {
           await this.talk(`Escolha por favor um dos itens sugeridos.`);
-          return await this.hear(step, kind, args);
+          return await this.hear(kind, args);
         }
       }
       else if (kind === "language") {
@@ -1218,7 +1182,8 @@ export class DialogKeywords {
           { name: 'alemão', code: 'de' }
         ];
 
-        const text = step.context.activity['originalText'];
+
+        // TODO: const text = step.context.activity['originalText'];
 
         await CollectionUtil.asyncForEach(list, async item => {
           if (GBConversationalService.kmpSearch(text.toLowerCase(), item.name.toLowerCase()) != -1 ||
@@ -1228,8 +1193,9 @@ export class DialogKeywords {
         });
 
         if (result === null) {
-          await this.min.conversationalService.sendText(this.min, step, `Escolha por favor um dos idiomas sugeridos.`);
-          return await this.hear(step, kind, args);
+          // TODO: 
+          await this.min.conversationalService.sendText(this.min, null, `Escolha por favor um dos idiomas sugeridos.`);
+          return await this.hear(kind, args);
         }
       }
       return result;
@@ -1241,10 +1207,10 @@ export class DialogKeywords {
   /**
    * Prepares the next dialog to be shown to the specified user.
    */
-  public async gotoDialog(step, fromOrDialogName: string, dialogName: string) {
+  public async gotoDialog(fromOrDialogName: string, dialogName: string) {
     if (dialogName) {
       if (dialogName.charAt(0) === '/') {
-        await step.beginDialog(fromOrDialogName);
+        // TODO: await step.beginDialog(fromOrDialogName);
       } else {
         let sec = new SecService();
         let user = await sec.getUserFromSystemId(fromOrDialogName);
@@ -1256,7 +1222,7 @@ export class DialogKeywords {
       }
     }
     else {
-      await step.beginDialog(fromOrDialogName);
+      // TODO: await step.beginDialog(fromOrDialogName);
     }
   }
 
@@ -1266,31 +1232,24 @@ export class DialogKeywords {
    */
   public async talk(text: string) {
     GBLog.info(`BASIC: TALK '${text}'.`);
-    const translate = this.user ? this.user.basicOptions.translatorOn : false;
-    // TODO: Translate.
+    if (this.user) {
+      const translate = this.user ? this.user.basicOptions.translatorOn : false;
 
-
-    await this.min.conversationalService['sendOnConversation'](this.min,
-      this.user.systemUser, text);
+      await this.min.conversationalService['sendOnConversation'](this.min,
+        this.user.systemUser, text);
+    }
   }
 
-  private static getChannel(step): string {
-    if (!step) return 'whatsapp';
-    if (!isNaN(step.context.activity['mobile'])) {
-      return 'webchat';
-    } else {
-      if (step.context.activity.from && !isNaN(step.context.activity.from.id)) {
-        return 'w}, 0);hatsapp';
-      }
-      return 'webchat';
-    }
+  private static getChannel(): string {
+    return 'whatsapp';
+    // TODO: 
   }
 
 
   /**
    * Processes the sending of the file.
    */
-  private async internalSendFile(step, mobile, filename, caption) {
+  private async internalSendFile(mobile, filename, caption) {
 
     // Handles SEND FILE TO mobile, element in Web Automation.
 
@@ -1309,7 +1268,7 @@ export class DialogKeywords {
       );
 
       GBLog.info(`BASIC: WebAutomation: Sending the file ${url} to mobile ${mobile}.`);
-      await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
+      await this.min.conversationalService.sendFile(this.min, null, mobile, url, caption);
     }
 
     // Handles Markdown.
@@ -1322,7 +1281,7 @@ export class DialogKeywords {
       }
 
       await this.min.conversationalService['playMarkdown'](this.min, md,
-        DialogKeywords.getChannel(step), step, mobile);
+        DialogKeywords.getChannel(), mobile);
 
     } else {
       GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
@@ -1341,7 +1300,7 @@ export class DialogKeywords {
         url = filename;
       }
 
-      await this.min.conversationalService.sendFile(this.min, step, mobile, url, caption);
+      await this.min.conversationalService.sendFile(this.min, null, mobile, url, caption);
     }
   }
 

@@ -76,7 +76,7 @@ export class GBBasicPackage implements IGBPackage {
     GBLog.verbose(`onExchangeData called.`);
   }
   public async loadBot(min: GBMinInstance): Promise<void> {
-    const backendRouter = createServerRouter(`/api/v2/${min.botId}/dialog`, new DialogKeywords(min, null, null, null));
+    const backendRouter = createServerRouter(`/api/v2/${min.botId}/dialog`, new DialogKeywords(min, null, null));
     app.use(backendRouter.routes());
     
   }
