@@ -407,9 +407,8 @@ export class DialogKeywords {
   }
 
   /**
-   * Returns the today data filled in dd/mm/yyyy or mm/dd/yyyy.
+   * Returns the OCR of image file.
    *
-   * @example x = TODAY
    */
   public async getOCR(localFile) {
     GBLog.info(`BASIC: OCR processing on ${localFile}.`);
@@ -511,7 +510,7 @@ export class DialogKeywords {
 
   }
 
-  public getCoded(value) {
+  public async getCoded(value) {
 
     // Checks if it is a GB FILE object.
 
@@ -837,6 +836,7 @@ export class DialogKeywords {
    */
   public async userName() {
     // TODO: WhatsappDirectLine.usernames[await this.userMobile()] : 'N/A';
+    return this.sys().getRandomId();
   }
 
   /**
@@ -844,6 +844,7 @@ export class DialogKeywords {
    */
   public async userMobile() {
     // TODO: return GBMinService.userMobile();
+    return this.sys().getRandomId();
   }
 
   /**
@@ -1226,6 +1227,20 @@ export class DialogKeywords {
     }
   }
 
+  public async getSingleton() {
+    return {
+      id: this.sys().getRandomId(),
+      username: this.userName(),
+      mobile: this.userMobile(),
+      from: this.userMobile(),
+      ENTER: String.fromCharCode(13),
+      headers: {},
+      data: {},
+      list: [],
+      httpUsername: "",
+      httpPs: ""
+    }
+  };
 
   /**
    * Talks to the user by using the specified text.

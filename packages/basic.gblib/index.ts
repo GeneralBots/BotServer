@@ -43,6 +43,7 @@ import { createServerRouter } from "typescript-rest-rpc/lib/server"
 import { DialogKeywords } from './services/DialogKeywords';
 const Koa = require('koa');
 import * as koaBody from "koa-body"
+import { SystemKeywords } from './services/SystemKeywords';
 const app = new Koa()
 
 /**
@@ -76,8 +77,11 @@ export class GBBasicPackage implements IGBPackage {
     GBLog.verbose(`onExchangeData called.`);
   }
   public async loadBot(min: GBMinInstance): Promise<void> {
-    const backendRouter = createServerRouter(`/api/v2/${min.botId}/dialog`, new DialogKeywords(min, null, null));
-    app.use(backendRouter.routes());
+    const dk = new DialogKeywords(min, null, null);
+    const dialogRouter = createServerRouter(`/api/v2/${min.botId}/dialog`, dk);
+    const sysRouter = createServerRouter(`/api/v2/${min.botId}/system`, new SystemKeywords(min, null, dk));
+    app.use(dialogRouter.routes());
+    app.use(sysRouter.routes());
     
   }
 }
