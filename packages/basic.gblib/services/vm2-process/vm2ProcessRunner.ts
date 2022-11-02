@@ -36,10 +36,10 @@ const server = net1.createServer((socket) => {
         });
 
         console.log(JSON.stringify({ result }));
-        debugger;
         socket.write(JSON.stringify({ result }) + '\n');
         socket.end();
       } catch (error) {
+        console.log(`BASIC: RUNTIME: ${error.message}, ${error.stack}`)
         socket.write(JSON.stringify({ error: error.message }) + '\n');
         socket.end();
       }

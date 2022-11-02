@@ -66,7 +66,7 @@ export class TSCompiler {
       noImplicitUseStrict: true,
       noEmitOnError: false,
       noImplicitAny: true,
-      target: ts.ScriptTarget.ES5,
+      target: ts.ScriptTarget.ESNext,
       module: ts.ModuleKind.None,
       moduleResolution: ts.ModuleResolutionKind.Classic,
       noEmitHelpers: true,

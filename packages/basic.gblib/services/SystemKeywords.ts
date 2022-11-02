@@ -92,11 +92,17 @@ export class SystemKeywords {
   }
 
 
-  public async callVM(text: string, min: GBMinInstance, step, deployer: GBDeployer) {
+  public async callVM({text}) {
+
+    // TODO: 
+    const min = null;
+    const step = null;
+    const deployer = null;
+
     return await GBVMService.callVM(text, min, step, deployer);
   }
 
-  public async append(...args) {
+  public async append({args}) {
     let array = [].concat(...args);
     return array.filter(function (item, pos) { return item; });
   }
@@ -107,7 +113,7 @@ export class SystemKeywords {
    * @example SEE CAPTION OF url AS variable
    *  
    */
-  public async seeCaption(url) {
+  public async seeCaption({url}) {
     const computerVisionClient = new ComputerVisionClient(
       new ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
       process.env.VISION_ENDPOINT);
@@ -135,7 +141,7 @@ export class SystemKeywords {
    * @example SEE TEXT OF url AS variable
    *  
    */
-  public async seeText(url) {
+  public async seeText({url}) {
     const computerVisionClient = new ComputerVisionClient(
       new ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
       process.env.VISION_ENDPOINT);
@@ -160,7 +166,7 @@ export class SystemKeywords {
     return final;
   }
 
-  public async sortBy(array, memberName) {
+  public async sortBy({array, memberName}) {
     memberName = memberName.trim();
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
@@ -345,18 +351,18 @@ export class SystemKeywords {
     return [url, localName];
   }
 
-  public async asPDF(data, filename) {
+  public async asPDF({data, filename}) {
     let file = await this.renderTable(data, true, false);
     return file[0];
   }
 
-  public async asImage(data, filename) {
+  public async asImage({data, filename}) {
     let file = await this.renderTable(data, false, true);
     return file[0];
 
   }
 
-  public async executeSQL(data, sql, tableName) {
+  public async executeSQL({data, sql, tableName}) {
 
     let objectMode = false;
     if (Object.keys(data[0])) {
@@ -377,7 +383,7 @@ export class SystemKeywords {
   /**
    * Retrives the content of a given URL.
    */
-  public async getFileContents(url, headers) {
+  public async getFileContents({url, headers}) {
     const options = {
       url: url,
       method: 'GET',
@@ -405,7 +411,7 @@ export class SystemKeywords {
   /**
    * Retrives stock inforation for a given symbol.
    */
-  public async getStock(symbol) {
+  public async getStock({symbol}) {
     var options = {
       uri: `http://live-nse.herokuapp.com/?symbol=${symbol}`
     };
@@ -421,7 +427,7 @@ export class SystemKeywords {
    * @example WAIT 5 ' This will wait five seconds.
    *  
    */
-  public async wait(seconds: number) {
+  public async wait({seconds}) {
     // tslint:disable-next-line no-string-based-set-timeout
     GBLog.info(`BASIC: WAIT for ${seconds} second(s).`);
     const timeout = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -434,7 +440,7 @@ export class SystemKeywords {
    * @example TALK TO "+199988887777", "Message text here"
    * 
    */
-  public async talkTo(mobile: any, message: string) {
+  public async talkTo({mobile, message}) {
     GBLog.info(`BASIC: Talking '${message}' to a specific user (${mobile}) (TALK TO). `);
     await this.min.conversationalService.sendMarkdownToMobile(this.min, null, mobile, message);
   }
@@ -445,7 +451,7 @@ export class SystemKeywords {
    * @example SEND SMS TO "+199988887777", "Message text here"
    * 
    */
-  public async sendSmsTo(mobile, message) {
+  public async sendSmsTo({mobile, message}) {
     GBLog.info(`BASIC: SEND SMS TO '${mobile}', message '${message}'.`);
     await this.min.conversationalService.sendSms(this.min, mobile, message);
   }
@@ -459,13 +465,14 @@ export class SystemKeywords {
    * @example SET page, "elementHTMLSelector", "text"
    * 
    */
-  public async set(file: any, address: string, value: any): Promise<any> {
+  public async set({file, address, value}): Promise<any> {
 
     // Handles calls for HTML stuff
 
     if (file._javascriptEnabled) {
-      GBLog.info(`BASIC: Web automation setting ${file}' to '${value}' (SET). `);
-      await this.dk.setElementText(file, address, value);
+      const page = file;
+      GBLog.info(`BASIC: Web automation setting ${page}' to '${value}' (SET). `);
+      await this.dk.setElementText({page, selector: address, text: value});
       
       return;
     }
@@ -520,7 +527,7 @@ export class SystemKeywords {
    * @exaple SAVE variable as "my.txt"
    * 
    */
-  public async saveFile(file: any, data: any): Promise<any> {
+  public async saveFile({file, data}): Promise<any> {
 
     GBLog.info(`BASIC: Saving '${file}' (SAVE file).`);
     let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
@@ -556,7 +563,9 @@ export class SystemKeywords {
    * @exaple SAVE "customers.xlsx", name, email, phone, address, city, state, country
    * 
    */
-  public async save(file: string, ...args): Promise<any> {
+  public async save({args}): Promise<any> {
+    const file = args[0];
+    args.shift();
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
@@ -597,11 +606,12 @@ export class SystemKeywords {
    * @example value = GET "file.xlsx", "A2"
    * 
    */
-  public async get(file: string, addressOrHeaders: string, httpUsername, httpPs, qs, streaming): Promise<any> {
+  public async get({file, addressOrHeaders, httpUsername, httpPs, qs, streaming}): Promise<any> {
 
     if (file.startsWith('http')) {
 
-      return await this.getByHttp(file, addressOrHeaders, httpUsername, httpPs, qs, streaming);
+      return await this.getByHttp({url:file, headers: addressOrHeaders, username: httpUsername, 
+        ps: httpPs, qs, streaming});
     }
     else {
       GBLog.info(`BASIC: GET '${addressOrHeaders}' in '${file}'.`);
@@ -627,7 +637,7 @@ export class SystemKeywords {
     }
   }
 
-  public isValidDate(dt) {
+  public isValidDate({dt}) {
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
       'Default Content Language',
@@ -646,12 +656,12 @@ export class SystemKeywords {
     return !isNaN(date.valueOf());
   }
 
-  public isValidNumber(number) {
+  public isValidNumber({number}) {
     if (number === '') { return false }
     return !isNaN(number);
   }
 
-  public isValidHour(value) {
+  public isValidHour({value}) {
     return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value);
   }
 
@@ -671,7 +681,9 @@ export class SystemKeywords {
    * 
    * // TODO: https://www.npmjs.com/package/parse-markdown-table
    */
-  public async find(file: string, ...args): Promise<any> {
+  public async find({args}): Promise<any> {
+    const file = args[0];
+    args.shift();
     GBLog.info(`BASIC: FIND running on ${file} and args: ${JSON.stringify(args)}...`);
 
     const botId = this.min.instance.botId;
@@ -1051,7 +1063,7 @@ export class SystemKeywords {
    *
    * @example file = DOWNLOAD element, folder
    */
-  public async download(element, folder) {
+  public async download({element, folder}) {
 
     const page = element['_page'];
     const container = element['_frame'] ? element['_frame'] : element['_page'];
@@ -1142,7 +1154,7 @@ export class SystemKeywords {
    * @example folder = CREATE FOLDER "notes\01"
    *
    */
-  public async createFolder(name: string) {
+  public async createFolder({name}) {
 
     let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
@@ -1199,7 +1211,7 @@ export class SystemKeywords {
    * SHARE FOLDER folder, "nome@domain.com", "E-mail message"
    *
    */
-  public async shareFolder(folderReference, email: string, message: string) {
+  public async shareFolder({folderReference, email, message}) {
     let [, client] = await GBDeployer.internalGetDriveClient(this.min);
     const driveId = folderReference.parentReference.driveId;
     const itemId = folderReference.id;
@@ -1224,7 +1236,7 @@ export class SystemKeywords {
    * COPY "template.xlsx", "reports\" + customerName + "\final.xlsx"
    * 
    */
-  public async copyFile(src, dest) {
+  public async copyFile({src, dest}) {
     GBLog.info(`BASIC: BEGINING COPY '${src}' to '${dest}'`);
     let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
@@ -1293,7 +1305,7 @@ export class SystemKeywords {
    * CONVERT "customers.xlsx" TO "reports\" + today + ".pdf"
    * 
    */
-  public async convert(src, dest) {
+  public async convert({src, dest}) {
     GBLog.info(`BASIC: CONVERT '${src}' to '${dest}'`);
     let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
@@ -1375,7 +1387,7 @@ export class SystemKeywords {
    * @example user = get "http://server/users/1"
    * 
    */
-  public async getByHttp(url: string, headers: any, username: string, ps: string, qs: any, streaming = false) {
+  public async getByHttp({url, headers, username, ps, qs, streaming}) {
     let options = { url: url };
     if (headers) {
       options['headers'] = headers;
@@ -1415,7 +1427,7 @@ export class SystemKeywords {
    * talk "The updated user area is" + user.area
    * 
    */
-  public async putByHttp(url: string, data, headers) {
+  public async putByHttp({url, data, headers}) {
     const options = {
       uri: url,
       json: data,
@@ -1436,7 +1448,7 @@ export class SystemKeywords {
    * talk "The updated user area is" + user.area
    * 
    */
-  public async postByHttp(url: string, data, headers) {
+  public async postByHttp({url, data, headers}) {
     const options = {
       uri: url,
       json: data,
@@ -1460,7 +1472,7 @@ export class SystemKeywords {
  * doc = FILL "templates/template.docx", data
  *
  */
-  public async fill(templateName, data) {
+  public async fill({templateName, data}) {
 
     const botId = this.min.instance.botId;
     const gbaiName = `${botId}.gbai`;
@@ -1555,7 +1567,7 @@ export class SystemKeywords {
    *  MERGE "second.xlsx" WITH data BY customer_id
    *
    */
-  public async merge(file: string, data: [], key1, key2): Promise<any> {
+  public async merge({file, data, key1, key2}): Promise<any> {
     GBLog.info(`BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
 
     const botId = this.min.instance.botId;
@@ -1658,19 +1670,19 @@ export class SystemKeywords {
 
 
           if (value !== found[columnName]) {
-            await this.set(file, address, value);
+            await this.set({file, address, value});
             merges++;
           }
         }
       }
       else {
-        let args = [];
+        let args = [file];
         let keys = Object.keys(row);
         for (let j = 0; j < keys.length; j++) {
           args.push(row[keys[j]]);
         }
 
-        await this.save(file, ...args);
+        await this.save({args});
         adds++;
       }
     }
@@ -1684,7 +1696,7 @@ export class SystemKeywords {
     }
   }
 
-  public async tweet(text: string) {
+  public async tweet({text}) {
 
     const consumer_key = this.min.core.getParam(this.min.instance, 'Twitter Consumer Key', null);
     const consumer_secret = this.min.core.getParam(this.min.instance, 'Twitter Consumer Key Secret', null);
@@ -1704,7 +1716,5 @@ export class SystemKeywords {
 
     await client.v2.tweet(text);
     GBLog.info(`Twitter Automation: ${text}.`);
-
   }
-
 }

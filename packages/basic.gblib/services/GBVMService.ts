@@ -161,6 +161,124 @@ export class GBVMService extends GBService {
     });
   }
 
+  public async translateBASIC(filename: any, min: GBMinInstance, deployer: GBDeployer, mainName: string) {
+
+    // Converts General Bots BASIC into regular VBS
+
+    let basicCode: string = fs.readFileSync(filename, 'utf8');
+
+    // Processes END keyword, removing extracode, useful
+    // for development.
+
+    let end = /(\nend\n)/gi.exec(basicCode);
+    if (end) {
+      basicCode = basicCode.substring(0, end.index);
+    }
+
+    // Removes comments.
+
+    basicCode = basicCode.replace(/((^|\W)REM.*\n)/gi, '');
+
+    // Process INCLUDE keyword to include another
+    // dialog inside the dialog.
+
+    let include = null;
+    do {
+      include = /^include\b(.*)$/gmi.exec(basicCode);
+
+      if (include) {
+        let includeName = include[1].trim();
+        includeName = Path.join(Path.dirname(filename), includeName);
+        includeName = includeName.substr(0, includeName.lastIndexOf(".")) + ".vbs";
+
+        // To use include, two /publish will be necessary (for now)
+        // because of alphabet order may raise not found errors.
+
+        let includeCode: string = fs.readFileSync(includeName, 'utf8');
+        basicCode = basicCode.replace(/^include\b.*$/gmi, includeCode);
+      }
+    } while (include);
+
+    const vbsCode = this.convertGBASICToVBS(min, basicCode);
+    const vbsFile = `${filename}.compiled`;
+    fs.writeFileSync(vbsFile, vbsCode);
+
+    // Converts VBS into TS.
+
+    vb2ts.convertFile(vbsFile);
+
+    // Convert TS into JS.
+
+    const tsfile: string = `${filename}.ts`;
+    let tsCode: string = fs.readFileSync(tsfile, 'utf8');
+    fs.writeFileSync(tsfile, tsCode);
+    const tsc = new TSCompiler();
+    tsc.compile([tsfile]);
+
+    // Run JS into the GB context.
+
+    const jsfile = `${tsfile}.js`.replace('.ts', '');
+
+    if (fs.existsSync(jsfile)) {
+      let code: string = fs.readFileSync(jsfile, 'utf8');
+
+      code = code.replace(/^.*exports.*$/gm, '');
+
+      code = `
+
+      return (async () => {
+        require('isomorphic-fetch');
+        const rest = require ('typescript-rest-rpc/lib/client');
+
+        // Interprocess communication from local HTTP to the BotServer.
+
+        const dk = rest.createClient('http://localhost:1111/api/v2/${min.botId}/dialog');
+        const sys = rest.createClient('http://localhost:1111/api/v2/${min.botId}/system');
+                
+        // Local variables.
+
+        const gb = await dk.getSingleton();
+        const id = gb.id;
+        const username = gb.username;
+        const mobile = gb.mobile;
+        const from = gb.from;
+        const ENTER = gb.ENTER;
+        const headers = gb.headers;
+        const data = gb.data;
+        const list = gb.list;
+        const httpUsername = gb.httpUsername;
+        const httpPs = gb.httpPs;
+    
+        // Local functions.
+
+        const ubound = (array) => {return array.length};
+        const isarray = (array) => {return Array.isArray(array) };
+    
+        // Remote functions.
+        
+        const weekday = (v) => { return (async () => { return await client.getWeekFromDate(v) })(); };
+        const hour = (v) => { return (async () => { return await client.getHourFromDate(v) })(); };
+        const base64 =  (v) => { return (async () => { return await client.getCoded(v) })(); };
+        const tolist =  (v) => { return (async () => { return await client.getToLst(v) })(); };
+        const now =  (v) => { return (async () => { return await client.getNow(v) })(); };
+        const today =  (v) => { return (async () => { return await client.getToday(v) })(); };
+
+        ${code}
+
+      })(); 
+    
+  `;
+      // Finds all hear calls.
+
+      const parsedCode = beautify(code, { indent_size: 2, space_in_empty_paren: true });
+      fs.writeFileSync(jsfile, parsedCode);
+
+      min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
+
+      GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${parsedCode}`);
+    }
+  }
+
   public static getMethodNameFromVBSFilename(filename: string) {
     let mainName = filename.replace(/\s|\-/gi, '').split('.')[0];
     return mainName.toLowerCase();
@@ -220,7 +338,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*get html\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await dk.getPage(step, ${$2})\n`;
+      return `${$1} = await dk.getPage(${$2})\n`;
     });
 
     code = code.replace(/(set hear on)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -228,59 +346,59 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/hear (\w+) as login/gi, ($0, $1) => {
-      return `${$1} = await dk.hear("login")`;
+      return `${$1} = await dk.getHear({{"login"})`;
     });
 
     code = code.replace(/hear (\w+) as email/gi, ($0, $1) => {
-      return `${$1} = await dk.hear("email")`;
+      return `${$1} = await dk.getHear({"email"})`;
     });
 
     code = code.replace(/hear (\w+) as integer/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.hear("integer")`;
+      return `${$1} = await dk.getHear({"integer"})`;
     });
 
     code = code.replace(/hear (\w+) as file/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.hear("file")`;
+      return `${$1} = await dk.getHear({"file"})`;
     });
 
     code = code.replace(/hear (\w+) as boolean/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.hear("boolean")`;
+      return `${$1} = await dk.getHear({"boolean"})`;
     });
 
     code = code.replace(/hear (\w+) as name/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.hear("name")`;
+      return `${$1} = await dk.getHear({"name"})`;
     });
 
     code = code.replace(/hear (\w+) as date/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.hear("date")`;
+      return `${$1} = await dk.getHear({"date"})`;
     });
 
     code = code.replace(/hear (\w+) as hour/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.hear("hour")`;
+      return `${$1} = await dk.getHear({"hour"})`;
     });
 
     code = code.replace(/hear (\w+) as phone/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.hear("phone")`;
+      return `${$1} = await dk.getHear({"phone"})`;
     });
 
     code = code.replace(/hear (\w+) as money/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.hear("money")`;
+      return `${$1} = await dk.getHear({"money")}`;
     });
 
     code = code.replace(/hear (\w+) as language/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.hear("language")`;
+      return `${$1} = await dk.getHear({"language")}`;
     });
 
     code = code.replace(/hear (\w+) as zipcode/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.hear("zipcode")`;
+      return `${$1} = await dk.getHear({"zipcode")}`;
     });
 
     code = code.replace(/hear (\w+) as (.*)/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.hear("menu", ${$2})`;
+      return `${$1} = await dk.getHear({"menu", [${$2}])}`;
     });
 
     code = code.replace(/(hear)\s*(\w+)/gi, ($0, $1, $2) => {
-      return `${$2} = await dk.hear()`;
+      return `${$2} = await dk.getHear({})`;
     });
 
     code = code.replace(/(\w)\s*\=\s*find contact\s*(.*)/gi, ($0, $1, $2, $3) => {
@@ -313,7 +431,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w)\s*\=\s*append\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.append(${$2})\n`;
+      return `${$1} = await sys.append([${$2}])\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*sort\s*(\w+)\s*by(.*)/gi, ($0, $1, $2, $3) => {
@@ -374,11 +492,11 @@ export class GBVMService extends GBService {
 
 
     code = code.replace(/(go to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.gotoDialog(step, ${$3})\n`;
+      return `await dk.gotoDialog(${$3})\n`;
     });
 
     code = code.replace(/(set language)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setLanguage (step, ${$3})\n`;
+      return `await dk.setLanguage (${$3})\n`;
     });
 
     code = code.replace(/set header\s*(.*)\sas\s(.*)/gi, ($0, $1, $2) => {
@@ -394,31 +512,31 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(datediff)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.dateDiff (step, ${$3})\n`;
+      return `await dk.dateDiff (${$3})\n`;
     });
 
     code = code.replace(/(dateadd)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.dateAdd (step, ${$3})\n`;
+      return `await dk.dateAdd (${$3})\n`;
     });
 
     code = code.replace(/(set max lines)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setMaxLines (step, ${$3})\n`;
+      return `await dk.setMaxLines (${$3})\n`;
     });
 
     code = code.replace(/(set max columns)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setMaxColumns (step, ${$3})\n`;
+      return `await dk.setMaxColumns (${$3})\n`;
     });
 
     code = code.replace(/(set translator)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setTranslatorOn (step, "${$3.toLowerCase()}")\n`;
+      return `await dk.setTranslatorOn ("${$3.toLowerCase()}")\n`;
     });
 
     code = code.replace(/(set theme)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setTheme (step, "${$3.toLowerCase()}")\n`;
+      return `await dk.setTheme ("${$3.toLowerCase()}")\n`;
     });
 
     code = code.replace(/(set whole word)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setWholeWord (step, "${$3.toLowerCase()}")\n`;
+      return `await dk.setWholeWord ("${$3.toLowerCase()}")\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
@@ -446,11 +564,11 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(chart)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.chart (step, ${$3})\n`;
+      return `await dk.chart (${$3})\n`;
     });
 
     code = code.replace(/(transfer to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.transferTo (step, ${$3})\n`;
+      return `await dk.transferTo (${$3})\n`;
     });
 
     code = code.replace(/(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gi, () => {
@@ -470,7 +588,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(talk)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.talk (step, ${$3})\n`;
+      return `await dk.talk (${$3})\n`;
     });
 
     code = code.replace(/(send sms to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -486,23 +604,23 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(send file to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.sendFileTo (step, ${$3})\n`;
+      return `await dk.sendFileTo (${$3})\n`;
     });
 
     code = code.replace(/(hover)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.hover (step, ${$3})\n`;
+      return `await dk.hover (${$3})\n`;
     });
 
     code = code.replace(/(click link text)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.linkByText (step, ${$3})\n`;
+      return `await dk.linkByText (${$3})\n`;
     });
 
     code = code.replace(/(click)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.click (step, ${$3})\n`;
+      return `await dk.click (${$3})\n`;
     });
 
     code = code.replace(/(send file)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.sendFile (step, ${$3})\n`;
+      return `await dk.sendFile (${$3})\n`;
     });
 
     code = code.replace(/(copy)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -523,15 +641,15 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/PRESS\s(.*)\sON\s(.*)/gi, ($0, $1, $2) => {
-      return `await dk.pressKey(step, ${$2}, ${$1})\n`;
+      return `await dk.pressKey(${$2}, ${$1})\n`;
     });
 
     code = code.replace(/SCREENSHOT\s(.*)/gi, ($0, $1, $2) => {
-      return `await dk.screenshot(step, ${$1})\n`;
+      return `await dk.screenshot(${$1})\n`;
     });
 
     code = code.replace(/TWEET\s(.*)/gi, ($0, $1, $2) => {
-      return `await sys.tweet(step, ${$1})\n`;
+      return `await sys.tweet(${$1})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*(.*)\s*as image/gi, ($0, $1, $2) => {
@@ -550,7 +668,7 @@ export class GBVMService extends GBService {
       return `await sys.saveFile(${$2}, ${$1})\n`;
     });
     code = code.replace(/(save)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.save(${$3})\n`;
+      return `await sys.save([${$3}])\n`;
     });
 
     code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
@@ -562,137 +680,17 @@ export class GBVMService extends GBService {
     return code;
   }
 
-  public async translateBASIC(filename: any, min: GBMinInstance, deployer: GBDeployer, mainName: string) {
-
-    // Converts General Bots BASIC into regular VBS
-
-    let basicCode: string = fs.readFileSync(filename, 'utf8');
-
-    // Processes END keyword, removing extracode, useful
-    // for development.
-
-    let end = /(\nend\n)/gi.exec(basicCode);
-    if (end) {
-      basicCode = basicCode.substring(0, end.index);
-    }
-
-    // Removes comments.
-
-    basicCode = basicCode.replace(/((^|\W)REM.*\n)/gi, '');
-
-    // Process INCLUDE keyword to include another
-    // dialog inside the dialog.
-
-    let include = null;
-    do {
-      include = /^include\b(.*)$/gmi.exec(basicCode);
-
-      if (include) {
-        let includeName = include[1].trim();
-        includeName = Path.join(Path.dirname(filename), includeName);
-        includeName = includeName.substr(0, includeName.lastIndexOf(".")) + ".vbs";
-
-        // To use include, two /publish will be necessary (for now)
-        // because of alphabet order may raise not found errors.
-
-        let includeCode: string = fs.readFileSync(includeName, 'utf8');
-        basicCode = basicCode.replace(/^include\b.*$/gmi, includeCode);
-      }
-    } while (include);
-
-    const vbsCode = this.convertGBASICToVBS(min, basicCode);
-    const vbsFile = `${filename}.compiled`;
-    fs.writeFileSync(vbsFile, vbsCode);
-
-    // Converts VBS into TS.
-
-    vb2ts.convertFile(vbsFile);
-
-    // Convert TS into JS.
-
-    const tsfile: string = `${filename}.ts`;
-    let tsCode: string = fs.readFileSync(tsfile, 'utf8');
-    tsCode = tsCode + `let resolve;`;
-    fs.writeFileSync(tsfile, tsCode);
-    const tsc = new TSCompiler();
-    tsc.compile([tsfile]);
-
-    // Run JS into the GB context.
-
-    const jsfile = `${tsfile}.js`.replace('.ts', '');
-
-    if (fs.existsSync(jsfile)) {
-      let code: string = fs.readFileSync(jsfile, 'utf8');
-
-      code = code.replace(/^.*exports.*$/gm, '');
-
-      code = `
-
-      return (async () => {
-        require('isomorphic-fetch);
-        const rest = require ('typescript-rest-rpc/lib/client');
-
-        // Interprocess communication from local HTTP to the BotServer.
-
-        dk = rest.createClient('http://localhost:1111/api/v2/${min.botId}/dialog');
-        sys = rest.createClient('http://localhost:1111/api/v2/${min.botId}/system');
-                
-        // Local variables.
-
-        gb = dk.getSingleton(url);
-        const id = gb.id;
-        const username = gb.username;
-        const mobile = gb.mobile;
-        const from = gb.from;
-        const ENTER = gb.ENTER;
-        const headers = gb.headers;
-        const data = gb.data;
-        const list = gb.list;
-        const httpUsername = gb.httpUsername;
-        const httpPs = gb.httpPs;
-    
-        // Local functions.
-
-        const ubound = (array) => {return array.length};
-        const isarray = (array) => {return Array.isArray(array) };
-    
-        // Remote functions.
-        
-        const weekday = (v) => { (async () => { await client.getWeekFromDate(v) })(); };
-        const hour = (v) => { (async () => { await client.getHourFromDate(v) })(); };
-        const base64 =  (v) => { (async () => { await client.getCoded(v) })(); };
-        const tolist =  (v) => { (async () => { await client.getToLst(v) })(); };
-        const now =  (v) => { (async () => { await client.getNow(v) })(); };
-        const today =  (v) => { (async () => { await client.getToday(v) })(); };
-
-        ${code}
-
-      })(); 
-    
-  `;
-      // Finds all hear calls.
-
-      const parsedCode = beautify(code, { indent_size: 2, space_in_empty_paren: true });
-      fs.writeFileSync(jsfile, parsedCode);
-
-      min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
-
-      GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${parsedCode}`);
-    }
-  }
-
-
   /**
    * Executes the converted JavaScript from BASIC code inside execution context.
    */
-  public static async callVM(text: string, min: GBMinInstance, step: GBDialogStep, deployer: GBDeployer) {
+  public static async callVM(text: string, min: GBMinInstance, step, GBDialogdeployer: GBDeployer) {
 
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 
     const user = step ? await min.userProfile.get(step.context, {}) : null;
 
-    const sandbox = { user: user.ssystemUser };
+    const sandbox = { user: user.systemUser };
 
     const contentLocale = min.core.getParam<string>(
       min.instance,

@@ -2,7 +2,7 @@
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' v `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__,\| (˅) |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -10,22 +10,22 @@
 | General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
-| According to our dual licensing model, this program can be used either      |
-| under the terms of the GNU Affero General Public License, version 3,        |
+| According to our dual licensing model,this program can be used either      |
+| under the terms of the GNU Affero General Public License,version 3,       |
 | or under a proprietary license.                                             |
 |                                                                             |
 | The texts of the GNU Affero General Public License with an additional       |
 | permission and of our proprietary license can be found at and               |
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
-| This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
+| This program is distributed in the hope that it will be useful,            |
+| but WITHOUT ANY WARRANTY,without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
 | "General Bots" is a registered trademark of Pragmatismo.io.                 |
 | The licensing of the program under the AGPLv3 does not imply a              |
-| trademark license. Therefore any rights, title and interest in              |
+| trademark license. Therefore any rights,title and interest in              |
 | our trademarks remain entirely with us.                                     |
 |                                                                             |
 \*****************************************************************************/
@@ -99,7 +99,7 @@ export class DialogKeywords {
   lastDebugWeb: Date;
 
   /**
-   * SYSTEM account maxLines, when used with impersonated contexts (eg. running in SET SCHEDULE).
+   * SYSTEM account maxLines,when used with impersonated contexts (eg. running in SET SCHEDULE).
    */
   maxLines: number = 2000;
 
@@ -112,7 +112,7 @@ export class DialogKeywords {
   }
 
   /**
-   * When creating this keyword facade, a bot instance is
+   * When creating this keyword facade,a bot instance is
    * specified among the deployer service.
    */
   constructor(min: GBMinInstance, deployer: GBDeployer, user) {
@@ -129,7 +129,7 @@ export class DialogKeywords {
   }
 
   /**
-   * Base reference of system keyword facade, called directly
+   * Base reference of system keyword facade,called directly
    * by the script.
    */
   public sys(): SystemKeywords {
@@ -141,7 +141,7 @@ export class DialogKeywords {
    *
    * @example x = GET PAGE
    */
-  public async getPage(url, username, password) {
+  public async getPage({url, username, password}) {
     GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);
     if (!this.browser) {
       this.browser = await createBrowser(null);
@@ -157,9 +157,9 @@ export class DialogKeywords {
   /**
    * 
    * 
-   * Data = [10, 20, 30] 
+   * Data = [10,20,30] 
    * Legends = "Steve;Yui;Carlos"   
-   * img = CHART "pie", data, legends 
+   * img = CHART "pie",data,legends 
    * 
    * https://c3js.org/examples.html
    * 
@@ -167,7 +167,7 @@ export class DialogKeywords {
    * @param legends 
    * @see https://www.npmjs.com/package/plot
    */
-  public async chart(type, data, legends, transpose) {
+  public async chart({type, data, legends, transpose}) {
 
     let table = [[]];
 
@@ -177,8 +177,8 @@ export class DialogKeywords {
 
       // Columns and data are merged like:
       //     columns: [
-      //       ['data1', 30, 200, 100, 400, 150, 250],
-      //       ['data2', 50, 20, 10, 40, 15, 25]
+      //       ['data1',30,200,100,400,150,250],
+      //       ['data2',50,20,10,40,15,25]
       //     ]
 
       for (let i = 0; i < legends_.length; i++) {
@@ -246,18 +246,18 @@ export class DialogKeywords {
   /**
    * Find element on page DOM.
    *
-   * @example GET page, "elementName"
+   * @example GET page,"selector"
    */
-  public async getBySelector(page, elementName) {
-    GBLog.info(`BASIC: Web Automation GET element: ${elementName}.`);
-    await page.waitForSelector(elementName)
-    let elements = await page.$$(elementName);
+  public async getBySelector({page, selector}) {
+    GBLog.info(`BASIC: Web Automation GET element: ${selector}.`);
+    await page.waitForSelector(selector)
+    let elements = await page.$$(selector);
     if (elements && elements.length > 1) {
       return elements;
     }
     else {
       const el = elements[0];
-      el['originalSelector'] = elementName;
+      el['originalSelector'] = selector;
       el['href'] = await page.evaluate(e => e.getAttribute('href'), el);
       el['value'] = await page.evaluate(e => e.getAttribute('value'), el);
       el['name'] = await page.evaluate(e => e.getAttribute('name'), el);
@@ -269,9 +269,9 @@ export class DialogKeywords {
   /**
    * Find element on page DOM.
    *
-   * @example GET page, "frameSelector, "elementSelector"
+   * @example GET page,"frameSelector,"elementSelector"
    */
-  public async getByFrame(page, frame, selector) {
+  public async getByFrame({page, frame, selector}) {
     GBLog.info(`BASIC: Web Automation GET element by frame: ${selector}.`);
     await page.waitForSelector(frame)
     let frameHandle = await page.$(frame);
@@ -290,19 +290,19 @@ export class DialogKeywords {
   /**
    * Simulates a mouse hover an web page element. 
    */
-  public async hover(page, idOrName) {
-    GBLog.info(`BASIC: Web Automation HOVER element: ${idOrName}.`);
-    await this.getBySelector(page, idOrName);
-    await page.hover(idOrName);
+  public async hover({page, selector}) {
+    GBLog.info(`BASIC: Web Automation HOVER element: ${selector}.`);
+    await this.getBySelector({page, selector: selector});
+    await page.hover(selector);
     await this.debugStepWeb(page);
   }
 
   /**
    * Clicks on an element in a web page.
    *
-   * @example CLICK page, "#idElement"
+   * @example CLICK page,"#idElement"
    */
-  public async click(page, frameOrSelector, selector) {
+  public async click({page, frameOrSelector, selector}) {
     GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
     if (selector) {
       await page.waitForSelector(frameOrSelector)
@@ -326,20 +326,21 @@ export class DialogKeywords {
     }
 
     if (this.debugWeb && refresh) {
-      const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
-      if (adminNumber) {
-        await this.sendFileTo(adminNumber, page, "General Bots Debugger");
+      const mobile = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
+      const filename = page;
+      if (mobile) {
+        await this.sendFileTo({mobile , filename, caption:"General Bots Debugger"});
       }
       this.lastDebugWeb = new Date();
     }
   }
 
   /**
-   * Press ENTER in a web page, useful for logins.
+   * Press ENTER in a web page,useful for logins.
    *
    * @example PRESS ENTER ON page
    */
-  public async pressKey(page, char, frame) {
+  public async pressKey({page, char, frame}) {
     GBLog.info(`BASIC: Web Automation PRESS ${char} ON element: ${frame}.`);
     if (char.toLowerCase() === "enter") {
       char = '\n';
@@ -355,12 +356,12 @@ export class DialogKeywords {
     }
   }
 
-  public async linkByText(page, text, index) {
+  public async linkByText({page, text, index}) {
     GBLog.info(`BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
     if (!index) {
       index = 1
     }
-    const els = await page.$x(`//a[contains(., '${text}')]`);
+    const els = await page.$x(`//a[contains(.,'${text}')]`);
     await els[index - 1].click();
     await this.debugStepWeb(page);
   }
@@ -372,8 +373,8 @@ export class DialogKeywords {
    *
    * @example file = SCREENSHOT page
    */
-  public async screenshot(page, idOrName) {
-    GBLog.info(`BASIC: Web Automation SCREENSHOT ${idOrName}.`);
+  public async screenshot({page, selector}) {
+    GBLog.info(`BASIC: Web Automation SCREENSHOT ${selector}.`);
 
     const gbaiName = `${this.min.botId}.gbai`;
     const localName = Path.join('work', gbaiName, 'cache', `screen-${GBAdminService.getRndReadableIdentifier()}.jpg`);
@@ -395,11 +396,11 @@ export class DialogKeywords {
   /**
    * Types the text into the text field.
    *
-   * @example SET page, "elementName", "text"
+   * @example SET page,"selector","text"
    */
-  public async setElementText(page, idOrName, text) {
-    GBLog.info(`BASIC: Web Automation TYPE on ${idOrName}: ${text}.`);
-    const e = await this.getBySelector(page, idOrName);
+  public async setElementText({page, selector, text}) {
+    GBLog.info(`BASIC: Web Automation TYPE on ${selector}: ${text}.`);
+    const e = await this.getBySelector({page, selector});
     await e.click({ clickCount: 3 });
     await page.keyboard.press('Backspace');
     await e.type(text, { delay: 200 });
@@ -410,7 +411,7 @@ export class DialogKeywords {
    * Returns the OCR of image file.
    *
    */
-  public async getOCR(localFile) {
+  public async getOCR({localFile}) {
     GBLog.info(`BASIC: OCR processing on ${localFile}.`);
     const tesseract = require("node-tesseract-ocr")
 
@@ -428,7 +429,7 @@ export class DialogKeywords {
    *
    * @example x = TODAY
    */
-  public async getToday() {
+  public async getToday({}) {
     let d = new Date(),
       month = '' + (d.getMonth() + 1),
       day = '' + d.getDate(),
@@ -456,11 +457,11 @@ export class DialogKeywords {
   }
 
   /**
-   * Quits the dialog, currently required to get out of VM context.
+   * Quits the dialog,currently required to get out of VM context.
    *
    * @example EXIT
    */
-  public async exit() {
+  public async exit({}) {
 
   }
 
@@ -469,7 +470,7 @@ export class DialogKeywords {
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks() {
+  public async getActiveTasks({}) {
     let s = new HubSpotServices(null, null, process.env.HUBSPOT_KEY);
     return await s.getActiveTasks();
   }
@@ -477,9 +478,9 @@ export class DialogKeywords {
   /**
    * Creates a new deal.
    *
-   * @example CREATE DEAL dealname, contato, empresa, amount
+   * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal(dealName, contact, company, amount) {
+  public async createDeal({dealName, contact, company, amount}) {
     let s = new HubSpotServices(null, null, process.env.HUBSPOT_KEY);
     let deal = await s.createDeal(dealName, contact, company, amount);
     return deal;
@@ -490,7 +491,7 @@ export class DialogKeywords {
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact(name) {
+  public async fndContact({name}) {
     let s = new HubSpotServices(null, null, process.env.HUBSPOT_KEY);
     return await s.searchContact(name);
   }
@@ -510,7 +511,7 @@ export class DialogKeywords {
 
   }
 
-  public async getCoded(value) {
+  public async getCoded({value}) {
 
     // Checks if it is a GB FILE object.
 
@@ -552,9 +553,9 @@ export class DialogKeywords {
 
   /**
    * Returns an object ready to get information about difference in several ways
-   * like years, months or days.
+   * like years,months or days.
    *
-   * @example days = DATEDIFF date1, date2, mode
+   * @example days = DATEDIFF date1,date2,mode
    *
    */
   public dateDiff(date1, date2, mode) {
@@ -580,7 +581,7 @@ export class DialogKeywords {
   /**
    * Returns specified date week day in format 'Mon'.
    *
-   * @example DATEADD date, "minute", 60 
+   * @example DATEADD date,"minute",60 
    * 
    * https://stackoverflow.com/a/1214753/18511
    */
@@ -610,7 +611,7 @@ export class DialogKeywords {
   /**
    * Returns specified list member separated by comma.
    *
-   * @example TALK TOLIST (array, member) 
+   * @example TALK TOLIST (array,member) 
    *
    */
   public getToLst(array, member) {
@@ -623,7 +624,7 @@ export class DialogKeywords {
     array = array.filter((v, i, a) => a.findIndex(t => (t[member] === v[member])) === i);
     array = array.filter(function (item, pos) { return item != undefined; });
     array = array.map((item) => { return item[member]; })
-    array = array.join(", ");
+    array = array.join(",");
 
     return array;
   }
@@ -662,10 +663,10 @@ export class DialogKeywords {
   /**
    * Returns current time in format hh:dd.
    *
-   * @example SAVE "file.xlsx", name, email, NOW
+   * @example SAVE "file.xlsx",name,email,NOW
    *
    */
-  public async getNow() {
+  public async getNow({}) {
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
       'Default Content Language',
@@ -689,14 +690,14 @@ export class DialogKeywords {
    * 
    * @example 
    * 
-   * SEND MAIL "email@domain.com", "Subject",  "Message text."
+   * SEND MAIL "email@domain.com","Subject", "Message text."
    * 
    */
-  public async sendEmail(to, subject, body) {
+  public async sendEmail({to, subject, body}) {
 
     // tslint:disable-next-line:no-console
 
-    GBLog.info(`[E-mail]: to:${to}, subject: ${subject}, body: ${body}.`);
+    GBLog.info(`[E-mail]: to:${to},subject: ${subject},body: ${body}.`);
     const emailToken = process.env.EMAIL_API_KEY;
 
     // Inline word document used as e-mail body.
@@ -729,12 +730,12 @@ export class DialogKeywords {
   /**
    * Sends a file to a given mobile.
    *
-   * @example SEND FILE TO "+199988887777", "image.jpg", caption
+   * @example SEND FILE TO "+199988887777","image.jpg",caption
    *
    */
-  public async sendFileTo(mobile, filename, caption) {
-    GBLog.info(`BASIC: SEND FILE TO '${mobile}', filename '${filename}'.`);
-    return await this.internalSendFile(mobile, filename, caption);
+  public async sendFileTo({mobile, filename, caption}) {
+    GBLog.info(`BASIC: SEND FILE TO '${mobile}',filename '${filename}'.`);
+    return await this.internalSendFile({mobile, filename, caption});
   }
 
   /**
@@ -743,10 +744,10 @@ export class DialogKeywords {
    * @example SEND FILE "image.jpg"
    *
    */
-  public async sendFile(filename, caption) {
+  public async sendFile({filename, caption}) {
     const mobile = await this.userMobile();
-    GBLog.info(`BASIC: SEND FILE (current: ${mobile}, filename '${filename}'.`);
-    return await this.internalSendFile(mobile, filename, caption);
+    GBLog.info(`BASIC: SEND FILE (current: ${mobile},filename '${filename}'.`);
+    return await this.internalSendFile({mobile, filename, caption});
   }
 
   /**
@@ -755,7 +756,7 @@ export class DialogKeywords {
    * @example SET LANGUAGE "pt"
    *
    */
-  public async setLanguage(language) {
+  public async setLanguage({language}) {
     const sec = new SecService();
     await sec.updateUserLocale(this.user.userId, language);
   }
@@ -766,7 +767,7 @@ export class DialogKeywords {
    * @example SET ID NUMBER 
    *
    */
-  public async setIdGeneration(mode) {
+  public async setIdGeneration({mode}) {
     this['idGeneration'] = mode;
     this['id'] = await this.sys().getRandomId();
   }
@@ -777,7 +778,7 @@ export class DialogKeywords {
    * @example SET MAX LINES 5000
    *
    */
-  public async setMaxLines(count) {
+  public async setMaxLines({count}) {
     if (this.user) {
       // TODO: PARAM     user.basicOptions.maxLines = count;
     }
@@ -793,7 +794,7 @@ export class DialogKeywords {
   * @example SET MAX COLUMNS 5000
   *
   */
-  public async setMaxColumns(count) {
+  public async setMaxColumns({count}) {
     // TODO: user.basicOptions.maxColumns = count;
 
   }
@@ -805,7 +806,7 @@ export class DialogKeywords {
    * @example SET WHOLE WORD ON
    *
    */
-  public async setWholeWord(on) {
+  public async setWholeWord({on}) {
     // TODO: user.basicOptions.wholeWord = (on.trim() === "on");
   }
 
@@ -815,7 +816,7 @@ export class DialogKeywords {
  * @example SET THEME "themename"
  *
  */
-  public async setTheme(theme) {
+  public async setTheme({theme}) {
     // TODO: user.basicOptions.theme = theme.trim();
   }
 
@@ -825,7 +826,7 @@ export class DialogKeywords {
    * @example SET TRANSLATOR ON | OFF
    *
    */
-  public async setTranslatorOn(on) {
+  public async setTranslatorOn({on}) {
 
     // TODO: user.basicOptions.translatorOn = (on.trim() === "on");
   }
@@ -853,14 +854,14 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu() {
+  public async showMenu({}) {
     // TODO: return await beginDialog('/menu');
   }
   private static async downloadAttachmentAndWrite(attachment) {
 
 
     const url = attachment.contentUrl;
-    const localFolder = Path.join('work'); // TODO: , '${botId}', 'uploads');
+    const localFolder = Path.join('work'); // TODO: ,'${botId}','uploads');
     const localFileName = Path.join(localFolder, attachment.name);
 
     try {
@@ -892,7 +893,7 @@ export class DialogKeywords {
       console.error(error);
       return undefined;
     }
-    // If no error was thrown while writing to disk, return the attachment's name
+    // If no error was thrown while writing to disk,return the attachment's name
     // and localFilePath for the response back to the user.
     return {
       fileName: attachment.name,
@@ -906,8 +907,8 @@ export class DialogKeywords {
    * @example TRANSFER
    *
    */
-  public async transferTo(to: string = null) {
-    // TODO: return await beginDialog('/t', { to: to });
+  public async transferTo({to}) {
+    // TODO: return await beginDialog('/t',{ to: to });
   }
 
   /**
@@ -916,7 +917,15 @@ export class DialogKeywords {
    * @example HEAR name
    *
    */
-  public async hear(kind, ...args) {
+  public async getHear({kind, arg}) {
+
+    // Handles first arg as an array of args.
+
+    let args = [];
+    if (arg && arg.length) {
+      args = arg;
+    }
+
 
     try {
 
@@ -942,15 +951,16 @@ export class DialogKeywords {
 
         let choices = [];
         let i = 0;
-        args.forEach(arg => {
+        await CollectionUtil.asyncForEach(args, async arg => {
           i++;
-          choices.push({ body: arg, id: `button${i}` });
+          // DISABLED: choices.push({ body: arg, id: `button${i}` });
+          await this.talk(arg);
         });
 
-        const button = new Buttons(Messages[locale].choices, choices, ' ', ' ');
+        // DISABLED const button = new Buttons(Messages[locale].choices, choices, ' ', ' ');
+        // await this.talk(button);
 
-        await this.talk(button);
-        GBLog.info(`BASIC: HEAR with ${args.toString()} (Asking for input).`);
+        GBLog.info(`BASIC: HEAR with [${args.toString()}] (Asking for input).`);
       }
       else {
 
@@ -974,7 +984,7 @@ export class DialogKeywords {
       const text = this.min.cbMap[userId].promise;
 
       if (kind === "file") {
-        // await prompt('attachmentPrompt', {});
+        // await prompt('attachmentPrompt',{});
 
         // // Prepare Promises to download each attachment and then execute each Promise.
         // const promises = step.context.activity.attachments.map(
@@ -983,11 +993,11 @@ export class DialogKeywords {
 
         // async function replyForReceivedAttachments(localAttachmentData) {
         //   if (localAttachmentData) {
-        //     // Because the TurnContext was bound to this function, the bot can call
+        //     // Because the TurnContext was bound to this function,the bot can call
         //     // `TurnContext.sendActivity` via `this.sendActivity`;
         //     await this.sendActivity(`Upload OK.`);
         //   } else {
-        //     await this.sendActivity('Error uploading file. Please, start again.');
+        //     await this.sendActivity('Error uploading file. Please,start again.');
         //   }
         // }
 
@@ -1019,8 +1029,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null) {
-          await this.talk("Por favor, digite um e-mail válido.");
-          return await this.hear(kind, args);
+          await this.talk({text: "Por favor,digite um e-mail válido."});
+          return await this.getHear({kind, arg});
         }
 
         result = value;
@@ -1034,8 +1044,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk("Por favor, digite um nome válido.");
-          return await this.hear(kind, args);
+          await this.talk({text:"Por favor,digite um nome válido."});
+          return await this.getHear({kind, arg});
         }
 
         result = value;
@@ -1049,8 +1059,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk("Por favor, digite um número válido.");
-          return await this.hear(kind, args);
+          await this.talk({text:"Por favor,digite um número válido."});
+          return await this.getHear({kind, arg});
         }
 
         result = value;
@@ -1063,8 +1073,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk("Por favor, digite uma data no formato 12/12/2020.");
-          return await this.hear(kind, args);
+          await this.talk({text:"Por favor,digite uma data no formato 12/12/2020."});
+          return await this.getHear({kind, arg});
         }
 
         result = value;
@@ -1078,8 +1088,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk("Por favor, digite um horário no formato hh:ss.");
-          return await this.hear(kind, args);
+          await this.talk({text:"Por favor,digite um horário no formato hh:ss."});
+          return await this.getHear({kind, arg});
         }
 
         result = value;
@@ -1099,8 +1109,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk("Por favor, digite um valor monetário.");
-          return await this.hear(kind, args);
+          await this.talk({text:"Por favor,digite um valor monetário."});
+          return await this.getHear({kind, arg});
         }
 
         result = value;
@@ -1114,11 +1124,11 @@ export class DialogKeywords {
         } catch (error) {
           await this.talk(Messages[locale].validation_enter_valid_mobile);
 
-          return await this.hear(kind, args);
+          return await this.getHear({kind, arg});
         }
         if (!phoneUtil.isPossibleNumber(phoneNumber)) {
-          await this.talk("Por favor, digite um número de telefone válido.");
-          return await this.hear(kind, args);
+          await this.talk({text:"Por favor,digite um número de telefone válido."});
+          return await this.getHear({kind, arg});
         }
 
         result = phoneNumber;
@@ -1141,8 +1151,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk("Por favor, digite um valor monetário.");
-          return await this.hear(kind, args);
+          await this.talk({text:"Por favor, digite um CEP válido."});
+          return await this.getHear({kind, arg});
         }
 
         result = value[0];
@@ -1159,8 +1169,8 @@ export class DialogKeywords {
         });
 
         if (result === null) {
-          await this.talk(`Escolha por favor um dos itens sugeridos.`);
-          return await this.hear(kind, args);
+          await this.talk({text:`Escolha por favor um dos itens sugeridos.`});
+          return await this.getHear({kind, arg});
         }
       }
       else if (kind === "language") {
@@ -1184,8 +1194,6 @@ export class DialogKeywords {
         ];
 
 
-        // TODO: const text = step.context.activity['originalText'];
-
         await CollectionUtil.asyncForEach(list, async item => {
           if (GBConversationalService.kmpSearch(text.toLowerCase(), item.name.toLowerCase()) != -1 ||
             GBConversationalService.kmpSearch(text.toLowerCase(), item.code.toLowerCase()) != -1) {
@@ -1194,9 +1202,8 @@ export class DialogKeywords {
         });
 
         if (result === null) {
-          // TODO: 
-          await this.min.conversationalService.sendText(this.min, null, `Escolha por favor um dos idiomas sugeridos.`);
-          return await this.hear(kind, args);
+          await this.talk({text:`Escolha por favor um dos itens sugeridos.`});
+          return await this.getHear({kind, arg});
         }
       }
       return result;
@@ -1208,7 +1215,7 @@ export class DialogKeywords {
   /**
    * Prepares the next dialog to be shown to the specified user.
    */
-  public async gotoDialog(fromOrDialogName: string, dialogName: string) {
+  public async gotoDialog({fromOrDialogName, dialogName}) {
     if (dialogName) {
       if (dialogName.charAt(0) === '/') {
         // TODO: await step.beginDialog(fromOrDialogName);
@@ -1227,7 +1234,7 @@ export class DialogKeywords {
     }
   }
 
-  public async getSingleton() {
+  public async getSingleton({}) {
     return {
       id: this.sys().getRandomId(),
       username: this.userName(),
@@ -1245,7 +1252,7 @@ export class DialogKeywords {
   /**
    * Talks to the user by using the specified text.
    */
-  public async talk(text: string) {
+  public async talk({text}) {
     GBLog.info(`BASIC: TALK '${text}'.`);
     if (this.user) {
       const translate = this.user ? this.user.basicOptions.translatorOn : false;
@@ -1264,9 +1271,9 @@ export class DialogKeywords {
   /**
    * Processes the sending of the file.
    */
-  private async internalSendFile(mobile, filename, caption) {
+  private async internalSendFile({mobile, filename, caption}) {
 
-    // Handles SEND FILE TO mobile, element in Web Automation.
+    // Handles SEND FILE TO mobile,element in Web Automation.
 
     const element = filename._page ? filename._page : (filename.screenshot ? filename : null);
 
@@ -1319,7 +1326,7 @@ export class DialogKeywords {
     }
   }
 
-  public async getQRCode(text) {
+  public async getQRCode({text}) {
     const img = await qrcode.toDataURL(text);
     const data = img.replace(/^data:image\/\w+;base64,/, "");
     const buf = Buffer.from(data, "base64");
