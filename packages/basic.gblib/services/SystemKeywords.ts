@@ -79,14 +79,15 @@ export class SystemKeywords {
   private readonly deployer: GBDeployer;
 
   dk: DialogKeywords;
-
+  wa;
 
   /**
    * When creating this keyword facade, a bot instance is
    * specified among the deployer service.
    */
-  constructor(min: GBMinInstance, deployer: GBDeployer, dk: DialogKeywords) {
+  constructor(min: GBMinInstance, deployer: GBDeployer, dk: DialogKeywords, wa) {
     this.min = min;
+    this.wa = wa;
     this.deployer = deployer;
     this.dk = dk;
   }
@@ -472,7 +473,7 @@ export class SystemKeywords {
     if (file._javascriptEnabled) {
       const page = file;
       GBLog.info(`BASIC: Web automation setting ${page}' to '${value}' (SET). `);
-      await this.dk.setElementText({page, selector: address, text: value});
+      await this.wa.setElementText({page, selector: address, text: value});
       
       return;
     }

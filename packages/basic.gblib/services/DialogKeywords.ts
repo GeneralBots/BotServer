@@ -97,6 +97,7 @@ export class DialogKeywords {
   userId: GuaribasUser;
   debugWeb: boolean;
   lastDebugWeb: Date;
+  public wa;
 
   /**
    * SYSTEM account maxLines,when used with impersonated contexts (eg. running in SET SCHEDULE).
@@ -118,7 +119,7 @@ export class DialogKeywords {
   constructor(min: GBMinInstance, deployer: GBDeployer, user) {
     this.min = min;
     this.user = user;
-    this.internalSys = new SystemKeywords(min, deployer, this);
+    this.internalSys = new SystemKeywords(min, deployer, this, null);
 
     this.debugWeb = this.min.core.getParam<boolean>(
       this.min.instance,
@@ -134,24 +135,6 @@ export class DialogKeywords {
    */
   public sys(): SystemKeywords {
     return this.internalSys;
-  }
-
-  /**
-   * Returns the page object.
-   *
-   * @example x = GET PAGE
-   */
-  public async getPage({url, username, password}) {
-    GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);
-    if (!this.browser) {
-      this.browser = await createBrowser(null);
-    }
-    const page = (await this.browser.pages())[0];
-    if (username || password) {
-      await page.authenticate({ 'username': username, 'password': password });
-    }
-    await page.goto(url);
-    return page;
   }
 
   /**
@@ -241,170 +224,6 @@ export class DialogKeywords {
     GBLog.info(`BASIC: Visualization: Chart generated at ${url}.`);
 
     return url;
-  }
-
-  /**
-   * Find element on page DOM.
-   *
-   * @example GET page,"selector"
-   */
-  public async getBySelector({page, selector}) {
-    GBLog.info(`BASIC: Web Automation GET element: ${selector}.`);
-    await page.waitForSelector(selector)
-    let elements = await page.$$(selector);
-    if (elements && elements.length > 1) {
-      return elements;
-    }
-    else {
-      const el = elements[0];
-      el['originalSelector'] = selector;
-      el['href'] = await page.evaluate(e => e.getAttribute('href'), el);
-      el['value'] = await page.evaluate(e => e.getAttribute('value'), el);
-      el['name'] = await page.evaluate(e => e.getAttribute('name'), el);
-      el['class'] = await page.evaluate(e => e.getAttribute('class'), el);
-      return el;
-    }
-  }
-
-  /**
-   * Find element on page DOM.
-   *
-   * @example GET page,"frameSelector,"elementSelector"
-   */
-  public async getByFrame({page, frame, selector}) {
-    GBLog.info(`BASIC: Web Automation GET element by frame: ${selector}.`);
-    await page.waitForSelector(frame)
-    let frameHandle = await page.$(frame);
-    const f = await frameHandle.contentFrame();
-    await f.waitForSelector(selector);
-    const element = await f.$(selector);
-    element['originalSelector'] = selector;
-    element['href'] = await f.evaluate(e => e.getAttribute('href'), element);
-    element['value'] = await f.evaluate(e => e.getAttribute('value'), element);
-    element['name'] = await f.evaluate(e => e.getAttribute('name'), element);
-    element['class'] = await f.evaluate(e => e.getAttribute('class'), element);
-    element['frame'] = f;
-    return element;
-  }
-
-  /**
-   * Simulates a mouse hover an web page element. 
-   */
-  public async hover({page, selector}) {
-    GBLog.info(`BASIC: Web Automation HOVER element: ${selector}.`);
-    await this.getBySelector({page, selector: selector});
-    await page.hover(selector);
-    await this.debugStepWeb(page);
-  }
-
-  /**
-   * Clicks on an element in a web page.
-   *
-   * @example CLICK page,"#idElement"
-   */
-  public async click({page, frameOrSelector, selector}) {
-    GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
-    if (selector) {
-      await page.waitForSelector(frameOrSelector)
-      let frameHandle = await page.$(frameOrSelector);
-      const f = await frameHandle.contentFrame();
-      await f.waitForSelector(selector);
-      await f.click(selector);
-    }
-    else {
-      await page.waitForSelector(frameOrSelector);
-      await page.click(frameOrSelector);
-    }
-    await this.debugStepWeb(page);
-  }
-
-  private async debugStepWeb(page) {
-
-    let refresh = true;
-    if (this.lastDebugWeb) {
-      refresh = (new Date().getTime() - this.lastDebugWeb.getTime()) > 5000;
-    }
-
-    if (this.debugWeb && refresh) {
-      const mobile = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
-      const filename = page;
-      if (mobile) {
-        await this.sendFileTo({mobile , filename, caption:"General Bots Debugger"});
-      }
-      this.lastDebugWeb = new Date();
-    }
-  }
-
-  /**
-   * Press ENTER in a web page,useful for logins.
-   *
-   * @example PRESS ENTER ON page
-   */
-  public async pressKey({page, char, frame}) {
-    GBLog.info(`BASIC: Web Automation PRESS ${char} ON element: ${frame}.`);
-    if (char.toLowerCase() === "enter") {
-      char = '\n';
-    }
-    if (frame) {
-      await page.waitForSelector(frame)
-      let frameHandle = await page.$(frame);
-      const f = await frameHandle.contentFrame();
-      await f.keyboard.press(char);
-    }
-    else {
-      await page.keyboard.press(char);
-    }
-  }
-
-  public async linkByText({page, text, index}) {
-    GBLog.info(`BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
-    if (!index) {
-      index = 1
-    }
-    const els = await page.$x(`//a[contains(.,'${text}')]`);
-    await els[index - 1].click();
-    await this.debugStepWeb(page);
-  }
-
-
-
-  /**
-   * Returns the screenshot of page or element
-   *
-   * @example file = SCREENSHOT page
-   */
-  public async screenshot({page, selector}) {
-    GBLog.info(`BASIC: Web Automation SCREENSHOT ${selector}.`);
-
-    const gbaiName = `${this.min.botId}.gbai`;
-    const localName = Path.join('work', gbaiName, 'cache', `screen-${GBAdminService.getRndReadableIdentifier()}.jpg`);
-
-    await page.screenshot({ path: localName });
-
-    const url = urlJoin(
-      GBServer.globals.publicAddress,
-      this.min.botId,
-      'cache',
-      Path.basename(localName)
-    );
-    GBLog.info(`BASIC: WebAutomation: Screenshot captured at ${url}.`);
-
-    return url;
-  }
-
-
-  /**
-   * Types the text into the text field.
-   *
-   * @example SET page,"selector","text"
-   */
-  public async setElementText({page, selector, text}) {
-    GBLog.info(`BASIC: Web Automation TYPE on ${selector}: ${text}.`);
-    const e = await this.getBySelector({page, selector});
-    await e.click({ clickCount: 3 });
-    await page.keyboard.press('Backspace');
-    await e.type(text, { delay: 200 });
-    await this.debugStepWeb(page);
   }
 
   /**

@@ -44,6 +44,7 @@ import { DialogKeywords } from './services/DialogKeywords';
 const Koa = require('koa');
 import * as koaBody from "koa-body"
 import { SystemKeywords } from './services/SystemKeywords';
+import { WebAutomationKeywords } from './services/WebAutomationKeywords';
 const app = new Koa()
 
 /**
@@ -78,10 +79,13 @@ export class GBBasicPackage implements IGBPackage {
   }
   public async loadBot(min: GBMinInstance): Promise<void> {
     const dk = new DialogKeywords(min, null, null);
+    const wa = new WebAutomationKeywords(min, null, dk);
+    dk.wa = wa;
     const dialogRouter = createServerRouter(`/api/v2/${min.botId}/dialog`, dk);
-    const sysRouter = createServerRouter(`/api/v2/${min.botId}/system`, new SystemKeywords(min, null, dk));
+    const waRouter = createServerRouter(`/api/v2/${min.botId}/webautomation`, wa );
+    const sysRouter = createServerRouter(`/api/v2/${min.botId}/system`, new SystemKeywords(min, null, dk, wa));
     app.use(dialogRouter.routes());
     app.use(sysRouter.routes());
-    
+    app.use(waRouter.routes());    
   }
 }

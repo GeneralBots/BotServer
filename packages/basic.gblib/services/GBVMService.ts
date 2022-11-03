@@ -170,14 +170,15 @@ export class GBVMService extends GBService {
     // Processes END keyword, removing extracode, useful
     // for development.
 
-    let end = /(\nend\n)/gi.exec(basicCode);
-    if (end) {
-      basicCode = basicCode.substring(0, end.index);
-    }
+    // TODO: let end = /(\nend\n)/gi.exec(basicCode);
+    // if (end) {
+    //   basicCode = basicCode.substring(0, end.index);
+    // }
 
     // Removes comments.
 
     basicCode = basicCode.replace(/((^|\W)REM.*\n)/gi, '');
+    basicCode = basicCode.replace(/((^|\W)\'.*\n)/gi, '');
 
     // Process INCLUDE keyword to include another
     // dialog inside the dialog.
@@ -234,6 +235,7 @@ export class GBVMService extends GBService {
 
         const dk = rest.createClient('http://localhost:1111/api/v2/${min.botId}/dialog');
         const sys = rest.createClient('http://localhost:1111/api/v2/${min.botId}/system');
+        const wa = rest.createClient('http://localhost:1111/api/v2/${min.botId}/webautomation');
                 
         // Local variables.
 
@@ -248,6 +250,8 @@ export class GBVMService extends GBService {
         const list = gb.list;
         const httpUsername = gb.httpUsername;
         const httpPs = gb.httpPs;
+        let page = null;
+
     
         // Local functions.
 
@@ -256,12 +260,12 @@ export class GBVMService extends GBService {
     
         // Remote functions.
         
-        const weekday = (v) => { return (async () => { return await client.getWeekFromDate(v) })(); };
-        const hour = (v) => { return (async () => { return await client.getHourFromDate(v) })(); };
-        const base64 =  (v) => { return (async () => { return await client.getCoded(v) })(); };
-        const tolist =  (v) => { return (async () => { return await client.getToLst(v) })(); };
-        const now =  (v) => { return (async () => { return await client.getNow(v) })(); };
-        const today =  (v) => { return (async () => { return await client.getToday(v) })(); };
+        const weekday = (v) => { return (async () => { return await dk.getWeekFromDate({v}) })(); };
+        const hour = (v) => { return (async () => { return await dk.getHourFromDate({v}) })(); };
+        const base64 =  (v) => { return (async () => { return await dk.getCoded({v}) })(); };
+        const tolist =  (v) => { return (async () => { return await dk.getToLst({v}) })(); };
+        const now =  (v) => { return (async () => { return await dk.getNow({v}) })(); };
+        const today =  (v) => { return (async () => { return await dk.getToday({v}) })(); };
 
         ${code}
 
@@ -334,11 +338,11 @@ export class GBVMService extends GBService {
 
       let tableName = /\sFROM\s(\w+)/.exec($2)[1];
       let sql = `SELECT ${$2}`.replace(tableName, '?');
-      return `${$1} = await sys.executeSQL(${$1}, "${sql}", "${tableName}")\n`;
+      return `${$1} = await sys.executeSQL({data:${$1}, sql:"${sql}", tableName:"${tableName}"})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*get html\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await dk.getPage(${$2})\n`;
+      return `page = await wa.getPage({${$2})\n`;
     });
 
     code = code.replace(/(set hear on)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -346,55 +350,55 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/hear (\w+) as login/gi, ($0, $1) => {
-      return `${$1} = await dk.getHear({{"login"})`;
+      return `${$1} = await dk.getHear({kind:"login"})`;
     });
 
     code = code.replace(/hear (\w+) as email/gi, ($0, $1) => {
-      return `${$1} = await dk.getHear({"email"})`;
+      return `${$1} = await dk.getHear({kind:"email"})`;
     });
 
     code = code.replace(/hear (\w+) as integer/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({"integer"})`;
+      return `${$1} = await dk.getHear({kind:"integer"})`;
     });
 
     code = code.replace(/hear (\w+) as file/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({"file"})`;
+      return `${$1} = await dk.getHear({kind:"file"})`;
     });
 
     code = code.replace(/hear (\w+) as boolean/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({"boolean"})`;
+      return `${$1} = await dk.getHear({kind:"boolean"})`;
     });
 
     code = code.replace(/hear (\w+) as name/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({"name"})`;
+      return `${$1} = await dk.getHear({kind:"name"})`;
     });
 
     code = code.replace(/hear (\w+) as date/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({"date"})`;
+      return `${$1} = await dk.getHear({kind:"date"})`;
     });
 
     code = code.replace(/hear (\w+) as hour/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({"hour"})`;
+      return `${$1} = await dk.getHear({kind:"hour"})`;
     });
 
     code = code.replace(/hear (\w+) as phone/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({"phone"})`;
+      return `${$1} = await dk.getHear({kind:"phone"})`;
     });
 
     code = code.replace(/hear (\w+) as money/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({"money")}`;
+      return `${$1} = await dk.getHear({kind:"money")}`;
     });
 
     code = code.replace(/hear (\w+) as language/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({"language")}`;
+      return `${$1} = await dk.getHear({kind:"language")}`;
     });
 
     code = code.replace(/hear (\w+) as zipcode/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({"zipcode")}`;
+      return `${$1} = await dk.getHear({kind:"zipcode")}`;
     });
 
     code = code.replace(/hear (\w+) as (.*)/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({"menu", [${$2}])}`;
+      return `${$1} = await dk.getHear({kind:"menu", [${$2}])}`;
     });
 
     code = code.replace(/(hear)\s*(\w+)/gi, ($0, $1, $2) => {
@@ -402,13 +406,13 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w)\s*\=\s*find contact\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await dk.fndContact(${$2})\n`;
+      return `${$1} = await dk.fndContact({${$2})\n`;
     });
 
     code = code.replace(/(\w+)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await await sys.find(${$2})\n
+      return `${$1} = await await sys.find({${$2})\n
       if (!${$1}) {
-        await dk.talk (${$3})\n;
+        await dk.talk ({${$3}})\n;
         return -1;
       }
       `;
@@ -419,11 +423,11 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w)\s*\=\s*find\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.find(${$2})\n`;
+      return `${$1} = await sys.find({${$2})\n`;
     });
 
     code = code.replace(/(\w)\s*\=\s*create deal(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await dk.createDeal(${$3})\n`;
+      return `${$1} = await dk.createDeal({${$3}})\n`;
     });
 
     code = code.replace(/(\w)\s*\=\s*active tasks/gi, ($0, $1) => {
@@ -435,23 +439,23 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*sort\s*(\w+)\s*by(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.sortBy(${$2}, "${$3}")\n`;
+      return `${$1} = await sys.sortBy({${$2}, "${$3}")\n`;
     });
 
     code = code.replace(/see\s*text\s*of\s*(\w+)\s*as\s*(\w+)\s*/gi, ($0, $1, $2, $3) => {
-      return `${$2} = await sys.seeText(${$1})\n`;
+      return `${$2} = await sys.seeText({${$1})\n`;
     });
 
     code = code.replace(/see\s*caption\s*of\s*(\w+)\s*as(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$2} = await sys.seeCaption(${$1})\n`;
+      return `${$2} = await sys.seeCaption({${$1})\n`;
     });
 
     code = code.replace(/(wait)\s*(\d+)/gi, ($0, $1, $2) => {
-      return `await sys.wait(${$2})`;
+      return `await sys.wait({${$2})`;
     });
 
     code = code.replace(/(get stock for )(.*)/gi, ($0, $1, $2) => {
-      return `stock = await sys.getStock(${$2})`;
+      return `stock = await sys.getStock({${$2})`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2, $3) => {
@@ -459,25 +463,25 @@ export class GBVMService extends GBService {
       const count = ($2.match(/\,/g) || []).length;
       const values = $2.split(',');
 
-      // Handles GET page, "selector".
+      // Handles GET "selector".
 
       if (count == 1) {
 
-        return `${$1} =  await dk.getBySelector(${values[0]}, ${values[1]} )`;
+        return `${$1} =  await wa.getBySelector({page, ${values[0]}, ${values[1]}})`;
       }
 
-      // Handles GET page, "frameSelector", "selector"
+      // Handles GET "frameSelector", "selector"
 
       else if (count == 2) {
 
-        return `${$1} =  await dk.getByFrame(${values[0]}, ${values[1]}, ${values[2]} )`;
+        return `${$1} =  await wa.getByFrame({page, ${values[0]}, ${values[1]}, ${values[2]}})`;
       }
 
       // Handles the GET http version.
 
       else {
 
-        return `${$1} = await sys.get (${$2}, headers, httpUsername, httpPs)`;
+        return `${$1} = await sys.get ({${$2}, headers, httpUsername, httpPs})`;
       }
 
     });
@@ -492,11 +496,11 @@ export class GBVMService extends GBService {
 
 
     code = code.replace(/(go to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.gotoDialog(${$3})\n`;
+      return `await dk.gotoDialog({${$3}})\n`;
     });
 
     code = code.replace(/(set language)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setLanguage (${$3})\n`;
+      return `await dk.setLanguage ({${$3}})\n`;
     });
 
     code = code.replace(/set header\s*(.*)\sas\s(.*)/gi, ($0, $1, $2) => {
@@ -512,67 +516,67 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(datediff)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.dateDiff (${$3})\n`;
+      return `await dk.dateDiff ({${$3}})\n`;
     });
 
     code = code.replace(/(dateadd)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.dateAdd (${$3})\n`;
+      return `await dk.dateAdd ({${$3}})\n`;
     });
 
     code = code.replace(/(set max lines)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setMaxLines (${$3})\n`;
+      return `await dk.setMaxLines ({${$3}})\n`;
     });
 
     code = code.replace(/(set max columns)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setMaxColumns (${$3})\n`;
+      return `await dk.setMaxColumns ({${$3}})\n`;
     });
 
     code = code.replace(/(set translator)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setTranslatorOn ("${$3.toLowerCase()}")\n`;
+      return `await dk.setTranslatorOn ({"${$3.toLowerCase()}"})\n`;
     });
 
     code = code.replace(/(set theme)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setTheme ("${$3.toLowerCase()}")\n`;
+      return `await dk.setTheme ({"${$3.toLowerCase()}"})\n`;
     });
 
     code = code.replace(/(set whole word)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setWholeWord ("${$3.toLowerCase()}")\n`;
+      return `await dk.setWholeWord ({"${$3.toLowerCase()}"})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.postByHttp (${$2}, ${$3}, headers)`;
+      return `${$1} = await sys.postByHttp ({${$2}, ${$3}, headers})`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*put\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.putByHttp (${$2}, ${$3}, headers)`;
+      return `${$1} = await sys.putByHttp ({${$2}, ${$3}, headers})`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*download\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.download (${$2}, ${$3})`;
+      return `${$1} = await sys.download ({${$2}, ${$3}})`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*CREATE FOLDER\s*(.*)/gi, ($0, $1, $2) => {
-      return `${$1} = await sys.createFolder (${$2})`;
+      return `${$1} = await sys.createFolder ({${$2}})`;
     });
 
     code = code.replace(/SHARE FOLDER\s*(.*)/gi, ($0, $1) => {
-      return `await sys.shareFolder (${$1})`;
+      return `await sys.shareFolder ({${$1}})`;
     });
 
     code = code.replace(/(create a bot farm using)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.createABotFarmUsing (${$3})`;
+      return `await sys.createABotFarmUsing ({${$3}})`;
     });
 
     code = code.replace(/(chart)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.chart (${$3})\n`;
+      return `await dk.chart ({${$3}})\n`;
     });
 
     code = code.replace(/(transfer to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.transferTo (${$3})\n`;
+      return `await dk.transferTo ({${$3}})\n`;
     });
 
     code = code.replace(/(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gi, () => {
-      return `await dk.transferTo (step)\n`;
+      return `await dk.transferTo ()\n`;
     });
 
     code = code.replace(/(exit)/gi, () => {
@@ -580,99 +584,99 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(show menu)/gi, () => {
-      return `await dk.showMenu (step)\n`;
+      return `await dk.showMenu ()\n`;
     });
 
     code = code.replace(/(talk to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.talkTo(${$3})\n`;
+      return `await sys.talkTo({${$3}})\n`;
     });
 
     code = code.replace(/(talk)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.talk (${$3})\n`;
+      return `await dk.talk ({${$3}})\n`;
     });
 
     code = code.replace(/(send sms to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.sendSmsTo (${$3})\n`;
+      return `await sys.sendSmsTo ({${$3}})\n`;
     });
 
     code = code.replace(/(send email)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.sendEmail (${$3})\n`;
+      return `await dk.sendEmail ({${$3}})\n`;
     });
 
     code = code.replace(/(send mail)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.sendEmail (${$3})\n`;
+      return `await dk.sendEmail ({${$3}})\n`;
     });
 
     code = code.replace(/(send file to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.sendFileTo (${$3})\n`;
+      return `await dk.sendFileTo ({${$3}})\n`;
     });
 
     code = code.replace(/(hover)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.hover (${$3})\n`;
+      return `await wa.hover ({page, ${$3}})\n`;
     });
 
     code = code.replace(/(click link text)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.linkByText (${$3})\n`;
+      return `await wa.linkByText ({page, ${$3}})\n`;
     });
 
     code = code.replace(/(click)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.click (${$3})\n`;
+      return `await wa.click (page, {${$3}})\n`;
     });
 
     code = code.replace(/(send file)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.sendFile (${$3})\n`;
+      return `await dk.sendFile ({${$3}})\n`;
     });
 
     code = code.replace(/(copy)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.copyFile(${$3})\n`;
+      return `await sys.copyFile({${$3}})\n`;
     });
 
     code = code.replace(/(convert)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.convert(${$3})\n`;
+      return `await sys.convert({${$3}})\n`;
     });
 
     // TODO: AS CHART.
     // code = code.replace(/(\w+)\s*\=\s*(.*)\s*as chart/gi, ($0, $1, $2) => {
-    //   return `${$1} = await sys.asImage(${$2})\n`;
+    //   return `${$1} = await sys.asImage({${$2})\n`;
     // });
 
     code = code.replace(/MERGE\s(.*)\sWITH\s(.*)BY\s(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.merge(${$1}, ${$2}, ${$3})\n`;
+      return `await sys.merge({${$1}, ${$2}, ${$3}})\n`;
     });
 
     code = code.replace(/PRESS\s(.*)\sON\s(.*)/gi, ($0, $1, $2) => {
-      return `await dk.pressKey(${$2}, ${$1})\n`;
+      return `await wa.pressKey({page, ${$2}, ${$1})\n`;
     });
 
     code = code.replace(/SCREENSHOT\s(.*)/gi, ($0, $1, $2) => {
-      return `await dk.screenshot(${$1})\n`;
+      return `await wa.screenshot({page, ${$1})\n`;
     });
 
     code = code.replace(/TWEET\s(.*)/gi, ($0, $1, $2) => {
-      return `await sys.tweet(${$1})\n`;
+      return `await sys.tweet({${$1})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*(.*)\s*as image/gi, ($0, $1, $2) => {
-      return `${$1} = await sys.asImage(${$2})\n`;
+      return `${$1} = await sys.asImage({${$2})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*(.*)\s*as pdf/gi, ($0, $1, $2) => {
-      return `${$1} = await sys.asPdf(${$2})\n`;
+      return `${$1} = await sys.asPdf({${$2})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*FILL\s(.*)\sWITH\s(.*)/gi, ($0, $1, $2, $3) => {
-      return `${1} = await sys.fill(${$2}, ${$3})\n`;
+      return `${1} = await sys.fill({${$2}, ${$3}})\n`;
     });
 
     code = code.replace(/save\s(.*)\sas\s(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.saveFile(${$2}, ${$1})\n`;
+      return `await sys.saveFile({${$2}, ${$1})\n`;
     });
     code = code.replace(/(save)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.save([${$3}])\n`;
+      return `await sys.save({[${$3}]})\n`;
     });
 
     code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
-      return `await sys.set (${$1})`;
+      return `await sys.set ({${$1})`;
     });
 
     code = `${code}\n%>`;

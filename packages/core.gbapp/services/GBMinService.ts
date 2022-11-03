@@ -807,8 +807,7 @@ export class GBMinService {
   public static userMobile(step) {
     let mobile = WhatsappDirectLine.mobiles[step.context.activity.conversation.id]
 
-    if (!mobile && step)
-    {
+    if (!mobile && step) {
       return step.context.activity.from.id;
     }
 
@@ -927,8 +926,11 @@ export class GBMinService {
             const credentials = new MicrosoftAppCredentials(min.instance.marketplaceId, min.instance.marketplacePassword);
             const botToken = await credentials.getToken();
             const headers = { Authorization: `Bearer ${botToken}` };
-            const t = new SystemKeywords(null, null, null);
-            const data = await t.getByHttp(file.contentUrl, headers, null, null, null, true);
+            const t = new SystemKeywords(null, null, null, null);
+            const data = await t.getByHttp({
+              url: file.contentUrl, headers, username: null,
+              ps: null, qs: null, streaming: true
+            });
             const folder = `work/${min.instance.botId}.gbai/cache`;
             const filename = `${GBAdminService.generateUuid()}.png`;
 
