@@ -200,7 +200,7 @@ export class GBVMService extends GBService {
       }
     } while (include);
 
-    const vbsCode = this.convertGBASICToVBS(min, basicCode);
+    const vbsCode = await this.convertGBASICToVBS(min, basicCode);
     const vbsFile = `${filename}.compiled`;
     fs.writeFileSync(vbsFile, vbsCode);
 
@@ -319,7 +319,7 @@ export class GBVMService extends GBService {
    *
    * @param code General Bots BASIC
    */
-  public convertGBASICToVBS(min: GBMinInstance, code: string) {
+  public async convertGBASICToVBS(min: GBMinInstance, code: string) {
 
     // Start and End of VB2TS tags of processing.
 
@@ -332,17 +332,29 @@ export class GBVMService extends GBService {
 
     `;
 
+    const getParams = async (text, names) => {
+
+        let ret = {};
+        const items = text.split(','); // TODO: NOT IN STRING.
+
+        await CollectionUtil.asyncForEach(names, async name => {
+          ret[name] = items[0];
+        });
+
+        return JSON.stringify(ret);
+    };
+
     // Keywords from General Bots BASIC.
 
     code = code.replace(/(\w+)\s*\=\s*SELECT\s*(.*)/gi, ($0, $1, $2) => {
-
       let tableName = /\sFROM\s(\w+)/.exec($2)[1];
       let sql = `SELECT ${$2}`.replace(tableName, '?');
       return `${$1} = await sys.executeSQL({data:${$1}, sql:"${sql}", tableName:"${tableName}"})\n`;
     });
 
-    code = code.replace(/(\w+)\s*\=\s*get html\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `page = await wa.getPage({${$2})\n`;
+    code = code.replace(/get html\s*(.*)/gi, ($0, $1, $2) => {
+      const params = getParams($2, ['url', 'username', 'password']);
+      return `page = await wa.getPage(${params})\n`;
     });
 
     code = code.replace(/(set hear on)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -357,43 +369,43 @@ export class GBVMService extends GBService {
       return `${$1} = await dk.getHear({kind:"email"})`;
     });
 
-    code = code.replace(/hear (\w+) as integer/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as integer/gi, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"integer"})`;
     });
 
-    code = code.replace(/hear (\w+) as file/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as file/gi, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"file"})`;
     });
 
-    code = code.replace(/hear (\w+) as boolean/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as boolean/gi, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"boolean"})`;
     });
 
-    code = code.replace(/hear (\w+) as name/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as name/gi, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"name"})`;
     });
 
-    code = code.replace(/hear (\w+) as date/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as date/gi, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"date"})`;
     });
 
-    code = code.replace(/hear (\w+) as hour/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as hour/gi, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"hour"})`;
     });
 
-    code = code.replace(/hear (\w+) as phone/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as phone/gi, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"phone"})`;
     });
 
-    code = code.replace(/hear (\w+) as money/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as money/gi, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"money")}`;
     });
 
-    code = code.replace(/hear (\w+) as language/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as language/gi, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"language")}`;
     });
 
-    code = code.replace(/hear (\w+) as zipcode/gi, ($0, $1, $2) => {
+    code = code.replace(/hear (\w+) as zipcode/gi, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"zipcode")}`;
     });
 
@@ -410,7 +422,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await await sys.find({${$2})\n
+      return `${$1} = await sys.find({args:[${$2}])\n
       if (!${$1}) {
         await dk.talk ({${$3}})\n;
         return -1;
@@ -423,39 +435,41 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w)\s*\=\s*find\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.find({${$2})\n`;
+      return `${$1} = await sys.find({args: [${$2}]})\n`;
     });
 
     code = code.replace(/(\w)\s*\=\s*create deal(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await dk.createDeal({${$3}})\n`;
+      const params = getParams($3, ['dealName', 'contact', 'company', 'amount']);
+      
+      return `${$1} = await dk.createDeal(${params})\n`;
     });
 
     code = code.replace(/(\w)\s*\=\s*active tasks/gi, ($0, $1) => {
-      return `${$1} = await dk.getActiveTasks()\n`;
+      return `${$1} = await dk.getActiveTasks({})\n`;
     });
 
     code = code.replace(/(\w)\s*\=\s*append\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.append([${$2}])\n`;
+      return `${$1} = await sys.append({args:[${$2}]})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*sort\s*(\w+)\s*by(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.sortBy({${$2}, "${$3}")\n`;
+      return `${$1} = await sys.sortBy({array: ${$2}, memberName: "${$3}"})\n`;
     });
 
     code = code.replace(/see\s*text\s*of\s*(\w+)\s*as\s*(\w+)\s*/gi, ($0, $1, $2, $3) => {
-      return `${$2} = await sys.seeText({${$1})\n`;
+      return `${$2} = await sys.seeText({url: ${$1})\n`;
     });
 
     code = code.replace(/see\s*caption\s*of\s*(\w+)\s*as(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$2} = await sys.seeCaption({${$1})\n`;
+      return `${$2} = await sys.seeCaption({url: ${$1})\n`;
     });
 
     code = code.replace(/(wait)\s*(\d+)/gi, ($0, $1, $2) => {
-      return `await sys.wait({${$2})`;
+      return `await sys.wait({seconds:${$2})`;
     });
 
     code = code.replace(/(get stock for )(.*)/gi, ($0, $1, $2) => {
-      return `stock = await sys.getStock({${$2})`;
+      return `stock = await sys.getStock({symbol: ${$2})`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2, $3) => {
@@ -467,21 +481,20 @@ export class GBVMService extends GBService {
 
       if (count == 1) {
 
-        return `${$1} =  await wa.getBySelector({page, ${values[0]}, ${values[1]}})`;
+        return `${$1} =  await wa.getBySelector({handle:page, selector: ${values[0]}})`;
       }
 
       // Handles GET "frameSelector", "selector"
 
       else if (count == 2) {
 
-        return `${$1} =  await wa.getByFrame({page, ${values[0]}, ${values[1]}, ${values[2]}})`;
+        return `${$1} =  await wa.getByFrame({handle: page, ${values[0]}, frameOrSelector: ${values[1]}, selector: ${values[2]}})`;
       }
 
       // Handles the GET http version.
 
       else {
-
-        return `${$1} = await sys.get ({${$2}, headers, httpUsername, httpPs})`;
+        return `${$1} = await sys.get ({file: ${$2}, addressOrHeaders: headers, httpUsername, httpPs})`;
       }
 
     });
@@ -496,6 +509,7 @@ export class GBVMService extends GBService {
 
 
     code = code.replace(/(go to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
+      // TODO: fromOrDialogName, dialogName
       return `await dk.gotoDialog({${$3}})\n`;
     });
 
