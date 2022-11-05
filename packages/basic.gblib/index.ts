@@ -80,10 +80,12 @@ export class GBBasicPackage implements IGBPackage {
   public async loadBot(min: GBMinInstance): Promise<void> {
     const dk = new DialogKeywords(min, null, null);
     const wa = new WebAutomationKeywords(min, null, dk);
+    const sys = new SystemKeywords(min, null, dk, wa)
     dk.wa = wa;
+    wa.sys = sys;
     const dialogRouter = createServerRouter(`/api/v2/${min.botId}/dialog`, dk);
     const waRouter = createServerRouter(`/api/v2/${min.botId}/webautomation`, wa );
-    const sysRouter = createServerRouter(`/api/v2/${min.botId}/system`, new SystemKeywords(min, null, dk, wa));
+    const sysRouter = createServerRouter(`/api/v2/${min.botId}/system`, sys);
     app.use(dialogRouter.routes());
     app.use(sysRouter.routes());
     app.use(waRouter.routes());    

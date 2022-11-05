@@ -38,9 +38,13 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { createBrowser } from '../../core.gbapp/services/GBSSR';
 import { GuaribasUser } from '../../security.gbapp/models';
 import { DialogKeywords } from './DialogKeywords';
+import * as request from 'request-promise-native';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 
 const urlJoin = require('url-join');
 const Path = require('path');
+const Fs = require('fs');
+const url = require('url');
 
 /**
  * Web Automation services of conversation to be called by BASIC.
@@ -67,6 +71,8 @@ export class WebAutomationKeywords {
    */
   browser: any;
 
+  sys: any;
+
   /**
    * The number used in this execution for HEAR calls (useful for SET SCHEDULE).
    */
@@ -91,10 +97,10 @@ export class WebAutomationKeywords {
       h1 = Math.imul(h1 ^ ch, 2654435761);
       h2 = Math.imul(h2 ^ ch, 1597334677);
     }
-    
+
     h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
     h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-    
+
     return 4294967296 * (2097151 & h2) + (h1 >>> 0);
   };
 
@@ -119,7 +125,7 @@ export class WebAutomationKeywords {
    *
    * @example x = GET PAGE
    */
-  public async getPage({url, username, password}) {
+  public async getPage({ url, username, password }) {
     GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);
     if (!this.browser) {
       this.browser = await createBrowser(null);
@@ -137,16 +143,16 @@ export class WebAutomationKeywords {
     return handle;
   }
 
-  public getPageByHandle(hash){
-    return this.pageMap[hash] ;
+  public getPageByHandle(hash) {
+    return this.pageMap[hash];
   }
- 
+
   /**
    * Find element on page DOM.
    *
    * @example GET page,"selector"
    */
-  public async getBySelector({handle, selector}) {
+  public async getBySelector({ handle, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation GET element: ${selector}.`);
     await page.waitForSelector(selector)
@@ -170,7 +176,7 @@ export class WebAutomationKeywords {
    *
    * @example GET page,"frameSelector,"elementSelector"
    */
-  public async getByFrame({handle, frame, selector}) {
+  public async getByFrame({ handle, frame, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation GET element by frame: ${selector}.`);
     await page.waitForSelector(frame)
@@ -190,10 +196,10 @@ export class WebAutomationKeywords {
   /**
    * Simulates a mouse hover an web page element. 
    */
-  public async hover({handle, selector}) {
+  public async hover({ handle, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation HOVER element: ${selector}.`);
-    await this.getBySelector({handle, selector: selector});
+    await this.getBySelector({ handle, selector: selector });
     await page.hover(selector);
     await this.debugStepWeb(page);
   }
@@ -203,7 +209,7 @@ export class WebAutomationKeywords {
    *
    * @example CLICK page,"#idElement"
    */
-  public async click({handle, frameOrSelector, selector}) {
+  public async click({ handle, frameOrSelector, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
     if (selector) {
@@ -231,7 +237,7 @@ export class WebAutomationKeywords {
       const mobile = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
       const filename = page;
       if (mobile) {
-        await this.dk.sendFileTo({mobile , filename, caption:"General Bots Debugger"});
+        await this.dk.sendFileTo({ mobile, filename, caption: "General Bots Debugger" });
       }
       this.lastDebugWeb = new Date();
     }
@@ -242,7 +248,7 @@ export class WebAutomationKeywords {
    *
    * @example PRESS ENTER ON page
    */
-  public async pressKey({handle, char, frame}) {
+  public async pressKey({ handle, char, frame }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation PRESS ${char} ON element: ${frame}.`);
     if (char.toLowerCase() === "enter") {
@@ -259,7 +265,7 @@ export class WebAutomationKeywords {
     }
   }
 
-  public async linkByText({handle, text, index}) {
+  public async linkByText({ handle, text, index }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
     if (!index) {
@@ -277,7 +283,7 @@ export class WebAutomationKeywords {
    *
    * @example file = SCREENSHOT page
    */
-  public async screenshot({handle, selector}) {
+  public async screenshot({ handle, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation SCREENSHOT ${selector}.`);
 
@@ -303,13 +309,104 @@ export class WebAutomationKeywords {
    *
    * @example SET page,"selector","text"
    */
-  public async setElementText({handle, selector, text}) {
+  public async setElementText({ handle, selector, text }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation TYPE on ${selector}: ${text}.`);
-    const e = await this.getBySelector({handle, selector});
+    const e = await this.getBySelector({ handle, selector });
     await e.click({ clickCount: 3 });
     await page.keyboard.press('Backspace');
     await e.type(text, { delay: 200 });
     await this.debugStepWeb(page);
   }
+
+
+  /**
+ * Performs the download to the .gbdrive Download folder.
+ *
+ * @example file = DOWNLOAD element, folder
+ */
+  public async download({ handle, selector, folder }) {
+    const page = this.getPageByHandle(handle);
+    const container = page; // TODO: element['_frame'] ? element['_frame'] : element['_page'];
+    const element = await this.getBySelector({ handle, selector });
+    await page.setRequestInterception(true);
+    await container.click(element.originalSelector);
+
+    const xRequest = await new Promise(resolve => {
+      page.on('request', interceptedRequest => {
+        interceptedRequest.abort();     //stop intercepting requests
+        resolve(interceptedRequest);
+      });
+    });
+
+    const options = {
+      encoding: null,
+      method: xRequest['._method'],
+      uri: xRequest['_url'],
+      body: xRequest['_postData'],
+      headers: xRequest['_headers']
+    }
+
+    const cookies = await page.cookies();
+    options.headers.Cookie = cookies.map(ck => ck.name + '=' + ck.value).join(';');
+    GBLog.info(`BASIC: DOWNLOADING '${options.uri}...'`);
+
+    let local;
+    let filename;
+    if (options.uri.indexOf('file://') != -1) {
+      local = url.fileURLToPath(options.uri);
+      filename = Path.basename(local);
+    }
+    else {
+      const getBasenameFormUrl = (urlStr) => {
+        const url = new URL(urlStr)
+        return Path.basename(url.pathname)
+      };
+      filename = getBasenameFormUrl(options.uri);
+    }
+
+    let result: Buffer;
+    if (local) {
+      result = Fs.readFileSync(local);
+    } else {
+      result = await request.get(options);
+    }
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    const botId = this.min.instance.botId;
+
+    // Normalizes all slashes.
+
+    folder = folder.replace(/\\/gi, '/');
+
+    // Determines full path at source and destination.
+
+    const root = urlJoin(`/${botId}.gbai/${botId}.gbdrive`);
+    const dstPath = urlJoin(root, folder, filename);
+
+    // Checks if the destination contains subfolders that
+    // need to be created.
+
+    folder = await this.sys.createFolder(folder);
+
+    // Performs the conversion operation getting a reference
+    // to the source and calling /content on drive API.
+    let file;
+    try {
+
+      file = await client
+        .api(`${baseUrl}/drive/root:/${dstPath}:/content`)
+        .put(result);
+
+    } catch (error) {
+
+      if (error.code === "nameAlreadyExists") {
+        GBLog.info(`BASIC: DOWNLOAD destination file already exists: ${dstPath}.`);
+      }
+      throw error;
+    }
+
+    return file;
+  }
+
+
 }

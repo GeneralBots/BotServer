@@ -334,14 +334,14 @@ export class GBVMService extends GBService {
 
     const getParams = async (text, names) => {
 
-        let ret = {};
-        const items = text.split(','); // TODO: NOT IN STRING.
+      let ret = {};
+      const items = text.split(','); // TODO: NOT IN STRING.
 
-        await CollectionUtil.asyncForEach(names, async name => {
-          ret[name] = items[0];
-        });
+      await CollectionUtil.asyncForEach(names, async name => {
+        ret[name] = items[0];
+      });
 
-        return JSON.stringify(ret);
+      return JSON.stringify(ret);
     };
 
     // Keywords from General Bots BASIC.
@@ -440,7 +440,7 @@ export class GBVMService extends GBService {
 
     code = code.replace(/(\w)\s*\=\s*create deal(\s)(.*)/gi, ($0, $1, $2, $3) => {
       const params = getParams($3, ['dealName', 'contact', 'company', 'amount']);
-      
+
       return `${$1} = await dk.createDeal(${params})\n`;
     });
 
@@ -509,8 +509,8 @@ export class GBVMService extends GBService {
 
 
     code = code.replace(/(go to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      // TODO: fromOrDialogName, dialogName
-      return `await dk.gotoDialog({${$3}})\n`;
+      const params = getParams($3, ['fromOrDialogName', 'dialogName']);
+      return `await dk.gotoDialog(${params})\n`;
     });
 
     code = code.replace(/(set language)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
@@ -530,51 +530,53 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(datediff)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.dateDiff ({${$3}})\n`;
+      const params = getParams($3, ['date1', 'date2', 'mode']);
+      return `await dk.dateDiff (${params}})\n`;
     });
 
     code = code.replace(/(dateadd)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.dateAdd ({${$3}})\n`;
+      const params = getParams($3, ['date', 'mode', 'units']);
+      return `await dk.dateAdd (${$3})\n`;
     });
 
     code = code.replace(/(set max lines)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setMaxLines ({${$3}})\n`;
+      return `await dk.setMaxLines ({count: ${$3}})\n`;
     });
 
     code = code.replace(/(set max columns)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setMaxColumns ({${$3}})\n`;
+      return `await dk.setMaxColumns ({count: ${$3}})\n`;
     });
 
     code = code.replace(/(set translator)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setTranslatorOn ({"${$3.toLowerCase()}"})\n`;
+      return `await dk.setTranslatorOn ({on: "${$3.toLowerCase()}"})\n`;
     });
 
     code = code.replace(/(set theme)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setTheme ({"${$3.toLowerCase()}"})\n`;
+      return `await dk.setTheme ({theme: "${$3.toLowerCase()}"})\n`;
     });
 
     code = code.replace(/(set whole word)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.setWholeWord ({"${$3.toLowerCase()}"})\n`;
+      return `await dk.setWholeWord ({on: "${$3.toLowerCase()}"})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.postByHttp ({${$2}, ${$3}, headers})`;
+      return `${$1} = await sys.postByHttp ({url:${$2}, data:${$3}, headers})`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*put\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.putByHttp ({${$2}, ${$3}, headers})`;
+      return `${$1} = await sys.putByHttp ({url:${$2}, data:${$3}, headers})`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*download\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.download ({${$2}, ${$3}})`;
+      return `${$1} = await sys.download ({handle:page, selector: ${$2}, folder:${$3}})`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*CREATE FOLDER\s*(.*)/gi, ($0, $1, $2) => {
-      return `${$1} = await sys.createFolder ({${$2}})`;
+      return `${$1} = await sys.createFolder ({name:${$2}})`;
     });
 
     code = code.replace(/SHARE FOLDER\s*(.*)/gi, ($0, $1) => {
-      return `await sys.shareFolder ({${$1}})`;
+      return `await sys.shareFolder ({name: ${$1}})`;
     });
 
     code = code.replace(/(create a bot farm using)(\s)(.*)/gi, ($0, $1, $2, $3) => {
@@ -582,15 +584,17 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(chart)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.chart ({${$3}})\n`;
+
+      const params = getParams($3, ['type', 'data', 'legends', 'transpose']);
+      return `await dk.chart (${params})\n`;
     });
 
     code = code.replace(/(transfer to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.transferTo ({${$3}})\n`;
+      return `await dk.transferTo ({to:${$3}})\n`;
     });
 
     code = code.replace(/(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gi, () => {
-      return `await dk.transferTo ()\n`;
+      return `await dk.transferTo ({})\n`;
     });
 
     code = code.replace(/(exit)/gi, () => {
@@ -598,55 +602,69 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(show menu)/gi, () => {
-      return `await dk.showMenu ()\n`;
+      return `await dk.showMenu ({})\n`;
     });
 
     code = code.replace(/(talk to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.talkTo({${$3}})\n`;
+      const params = getParams($3, ['mobile', 'message']);
+      return `await sys.talkTo(${params})\n`;
     });
 
     code = code.replace(/(talk)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.talk ({${$3}})\n`;
+      if ($3.substr(0, 1) !== "\"") {
+        $3 = `"${$3}"`;
+      }
+      return `await dk.talk ({text: ${$3}})\n`;
     });
 
     code = code.replace(/(send sms to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.sendSmsTo ({${$3}})\n`;
+      const params = getParams($3, ['mobile', 'message']);
+      return `await sys.sendSmsTo(${params})\n`;
     });
 
     code = code.replace(/(send email)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.sendEmail ({${$3}})\n`;
+      const params = getParams($3, ['to', 'subject', 'body']);
+      return `await dk.sendEmail(${params})\n`;
     });
 
     code = code.replace(/(send mail)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.sendEmail ({${$3}})\n`;
+      const params = getParams($3, ['to', 'subject', 'body']);
+      return `await dk.sendEmail(${params})\n`;
     });
 
     code = code.replace(/(send file to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.sendFileTo ({${$3}})\n`;
+      const params = getParams($3, ['mobile', 'filename', 'caption']);
+      return `await dk.sendFileTo(${params})\n`;
     });
 
     code = code.replace(/(hover)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await wa.hover ({page, ${$3}})\n`;
+      const params = getParams($3, ['handle', 'selector']);
+      return `await wa.hover (${params})\n`;
     });
 
     code = code.replace(/(click link text)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await wa.linkByText ({page, ${$3}})\n`;
+      const params = getParams('page,' + $3, ['handle', 'text', 'index']);
+      return `await wa.linkByText (${params})\n`;
     });
 
     code = code.replace(/(click)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await wa.click (page, {${$3}})\n`;
+      const params = getParams('page,' + $3, ['handle', 'frameOrSelector', 'selector']);
+      return `await wa.click (${params})\n`;
     });
 
     code = code.replace(/(send file)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await dk.sendFile ({${$3}})\n`;
+      const params = getParams($3, ['filename', 'caption']);
+      return `await dk.sendFile(${params})\n`;
     });
 
     code = code.replace(/(copy)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.copyFile({${$3}})\n`;
+      const params = getParams($3, ['src', 'dst']);
+      return `await sys.copyFile (${params})\n`;
     });
 
     code = code.replace(/(convert)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.convert({${$3}})\n`;
+      const params = getParams($3, ['src', 'dst']);
+      return `await sys.convert (${params})\n`;
     });
 
     // TODO: AS CHART.
@@ -655,42 +673,43 @@ export class GBVMService extends GBService {
     // });
 
     code = code.replace(/MERGE\s(.*)\sWITH\s(.*)BY\s(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.merge({${$1}, ${$2}, ${$3}})\n`;
+      return `await sys.merge({file: ${$1}, data: ${$2}, key1: ${$3}})\n`;
     });
 
-    code = code.replace(/PRESS\s(.*)\sON\s(.*)/gi, ($0, $1, $2) => {
-      return `await wa.pressKey({page, ${$2}, ${$1})\n`;
+    code = code.replace(/PRESS\s(.*)/gi, ($0, $1, $2) => {
+      return `await wa.pressKey({handle: page, char: ${$1})\n`;
     });
 
     code = code.replace(/SCREENSHOT\s(.*)/gi, ($0, $1, $2) => {
-      return `await wa.screenshot({page, ${$1})\n`;
+      return `await wa.screenshot({handle: page, selector: ${$1}})\n`;
     });
 
     code = code.replace(/TWEET\s(.*)/gi, ($0, $1, $2) => {
-      return `await sys.tweet({${$1})\n`;
+      return `await sys.tweet({text: ${$1})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*(.*)\s*as image/gi, ($0, $1, $2) => {
-      return `${$1} = await sys.asImage({${$2})\n`;
+      return `${$1} = await sys.asImage({data: ${$2}})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*(.*)\s*as pdf/gi, ($0, $1, $2) => {
-      return `${$1} = await sys.asPdf({${$2})\n`;
+      return `${$1} = await sys.asPdf({data: ${$2})\n`;
     });
 
     code = code.replace(/(\w+)\s*\=\s*FILL\s(.*)\sWITH\s(.*)/gi, ($0, $1, $2, $3) => {
-      return `${1} = await sys.fill({${$2}, ${$3}})\n`;
+      return `${1} = await sys.fill({templateName: ${$2}, data: ${$3}})\n`;
     });
 
     code = code.replace(/save\s(.*)\sas\s(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.saveFile({${$2}, ${$1})\n`;
+      return `await sys.saveFile({file: ${$2}, data: ${$1})\n`;
     });
     code = code.replace(/(save)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `await sys.save({[${$3}]})\n`;
     });
 
     code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
-      return `await sys.set ({${$1})`;
+      const params = getParams($1, ['file', 'address', 'value']);
+      return `await sys.set (${params})`;
     });
 
     code = `${code}\n%>`;

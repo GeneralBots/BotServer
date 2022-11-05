@@ -38,14 +38,13 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { DialogKeywords } from './DialogKeywords';
 import { GBServer } from '../../../src/app';
-import * as fs from 'fs';
 import { GBVMService } from './GBVMService';
 import { ThisPath } from 'botbuilder-dialogs';
 const Fs = require('fs');
 const Excel = require('exceljs');
 import { createBrowser } from '../../core.gbapp/services/GBSSR';
 const urlJoin = require('url-join');
-const url = require('url');
+
 const { TwitterApi } = require('twitter-api-v2');
 
 
@@ -1060,96 +1059,6 @@ export class SystemKeywords {
   }
 
   /**
-   * Performs the download to the .gbdrive Download folder.
-   *
-   * @example file = DOWNLOAD element, folder
-   */
-  public async download({element, folder}) {
-
-    const page = element['_page'];
-    const container = element['_frame'] ? element['_frame'] : element['_page'];
-
-    await page.setRequestInterception(true);
-    await container.click(element.originalSelector);
-
-    const xRequest = await new Promise(resolve => {
-      page.on('request', interceptedRequest => {
-        interceptedRequest.abort();     //stop intercepting requests
-        resolve(interceptedRequest);
-      });
-    });
-
-    const options = {
-      encoding: null,
-      method: xRequest['._method'],
-      uri: xRequest['_url'],
-      body: xRequest['_postData'],
-      headers: xRequest['_headers']
-    }
-
-    const cookies = await page.cookies();
-    options.headers.Cookie = cookies.map(ck => ck.name + '=' + ck.value).join(';');
-    GBLog.info(`BASIC: DOWNLOADING '${options.uri}...'`);
-
-    let local;
-    let filename;
-    if (options.uri.indexOf('file://') != -1) {
-      local = url.fileURLToPath(options.uri);
-      filename = Path.basename(local);
-    }
-    else {
-      const getBasenameFormUrl = (urlStr) => {
-        const url = new URL(urlStr)
-        return Path.basename(url.pathname)
-      };
-      filename = getBasenameFormUrl(options.uri);
-    }
-
-    let result: Buffer;
-    if (local) {
-      result = fs.readFileSync(local);
-    } else {
-      result = await request.get(options);
-    }
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
-    const botId = this.min.instance.botId;
-
-    // Normalizes all slashes.
-
-    folder = folder.replace(/\\/gi, '/');
-
-    // Determines full path at source and destination.
-
-    const root = urlJoin(`/${botId}.gbai/${botId}.gbdrive`);
-    const dstPath = urlJoin(root, folder, filename);
-
-    // Checks if the destination contains subfolders that
-    // need to be created.
-
-    folder = await this.createFolder(folder);
-
-    // Performs the conversion operation getting a reference
-    // to the source and calling /content on drive API.
-    let file;
-    try {
-
-      file = await client
-        .api(`${baseUrl}/drive/root:/${dstPath}:/content`)
-        .put(result);
-
-    } catch (error) {
-
-      if (error.code === "nameAlreadyExists") {
-        GBLog.info(`BASIC: DOWNLOAD destination file already exists: ${dstPath}.`);
-      }
-      throw error;
-    }
-
-    return file;
-  }
-
-
-  /**
    * Creates a folder in the bot instance drive.
    *
    * @example folder = CREATE FOLDER "notes\01"
@@ -1213,7 +1122,11 @@ export class SystemKeywords {
    *
    */
   public async shareFolder({folderReference, email, message}) {
-    let [, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    const srcFile = await client.api(
+      `${baseUrl}/drive/root:/${folder}`)
+      .get();
+
     const driveId = folderReference.parentReference.driveId;
     const itemId = folderReference.id;
     const body = {
@@ -1490,7 +1403,7 @@ export class SystemKeywords {
 
     // Loads the file as binary content.
 
-    const content = fs.readFileSync(localName, "binary");
+    const content = Fs.readFileSync(localName, "binary");
     const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true, });
     if (localName.endsWith('.pptx')) {
