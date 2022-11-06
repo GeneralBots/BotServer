@@ -51,6 +51,8 @@ const walkPromise = require('walk-promise');
 const child_process = require('child_process');
 const Path = require('path');
 
+
+
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
  * This alpha version is using a antipattern hack in form of converter to
@@ -168,12 +170,17 @@ export class GBVMService extends GBService {
     let basicCode: string = fs.readFileSync(filename, 'utf8');
 
     // Processes END keyword, removing extracode, useful
-    // for development.
+    // for development in .gbdialog. 
 
-    // TODO: let end = /(\nend\n)/gi.exec(basicCode);
-    // if (end) {
-    //   basicCode = basicCode.substring(0, end.index);
-    // }
+    if (process.env.GBDIALOG_NOEND === 'true') {
+      basicCode = basicCode.replace(/(^|\W)END(\W|\n)/gi, '');
+    }
+    else {
+      let end = /(^|\W)END(\W|\n)/gi.exec(basicCode);
+      if (end) {
+        basicCode = basicCode.substring(0, end.index);
+      }
+    }
 
     // Removes comments.
 
@@ -274,7 +281,7 @@ export class GBVMService extends GBService {
   `;
       // Finds all hear calls.
 
-      const parsedCode = beautify(code, { indent_size: 2, space_in_empty_paren: true });
+      const parsedCode = beautify(code, { indent_size: 2, space_in_empty_paren: true, preserve_newlines: true, wrap_line_length: 240 });
       fs.writeFileSync(jsfile, parsedCode);
 
       min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
@@ -332,13 +339,24 @@ export class GBVMService extends GBService {
 
     `;
 
-    const getParams = async (text, names) => {
+    // Split all params by comma, not inside strings.
+
+    const getParams = (text, names) => {
 
       let ret = {};
-      const items = text.split(','); // TODO: NOT IN STRING.
+      const items = text.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
 
-      await CollectionUtil.asyncForEach(names, async name => {
-        ret[name] = items[0];
+      let i = 0;
+      names.forEach(name => {
+        let value = items[i];
+
+        // Add string to JSON without quotes.
+
+        if (value && (value.charAt(0) === '"' || value.charAt(0) === '\'')) {
+          value = value.substr(1, value.length - 2);
+        }
+        ret[name] = value;
+        i++;
       });
 
       return JSON.stringify(ret);
@@ -352,8 +370,13 @@ export class GBVMService extends GBService {
       return `${$1} = await sys.executeSQL({data:${$1}, sql:"${sql}", tableName:"${tableName}"})\n`;
     });
 
-    code = code.replace(/get html\s*(.*)/gi, ($0, $1, $2) => {
-      const params = getParams($2, ['url', 'username', 'password']);
+    code = code.replace(/open\s*(.*)/gi, ($0, $1, $2) => {
+
+      if (!$1.startsWith("\"") && $1.startsWith("\'")) {
+        $1 = `"${$1}"`;
+      }
+      const params = getParams($1, ['url', 'username', 'password']);
+
       return `page = await wa.getPage(${params})\n`;
     });
 
@@ -410,7 +433,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/hear (\w+) as (.*)/gi, ($0, $1, $2) => {
-      return `${$1} = await dk.getHear({kind:"menu", [${$2}])}`;
+      return `${$1} = await dk.getHear({kind:"menu", args: [${$2}])}`;
     });
 
     code = code.replace(/(hear)\s*(\w+)/gi, ($0, $1, $2) => {
@@ -430,8 +453,8 @@ export class GBVMService extends GBService {
       `;
     });
 
-    code = code.replace(/CALL\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.callVM("${$1}", dk.getMin(), dk.getStep(), dk.getDeployer())\n`;
+    code = code.replace(/CALL\s*(.*)/gi, ($0, $1) => {
+      return `await ${$1}\n`;
     });
 
     code = code.replace(/(\w)\s*\=\s*find\s*(.*)/gi, ($0, $1, $2, $3) => {
@@ -583,12 +606,6 @@ export class GBVMService extends GBService {
       return `await sys.createABotFarmUsing ({${$3}})`;
     });
 
-    code = code.replace(/(chart)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-
-      const params = getParams($3, ['type', 'data', 'legends', 'transpose']);
-      return `await dk.chart (${params})\n`;
-    });
-
     code = code.replace(/(transfer to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
       return `await dk.transferTo ({to:${$3}})\n`;
     });
@@ -667,10 +684,14 @@ export class GBVMService extends GBService {
       return `await sys.convert (${params})\n`;
     });
 
-    // TODO: AS CHART.
-    // code = code.replace(/(\w+)\s*\=\s*(.*)\s*as chart/gi, ($0, $1, $2) => {
-    //   return `${$1} = await sys.asImage({${$2})\n`;
-    // });
+    code = code.replace(/(\w+)\s*\=\s*(.*)\s*as chart/gi, ($0, $1, $2) => {
+      return `await dk.chart ({type:'bar', data: ${2}, legends:null, transpose: false})\n`;
+    });
+
+    code = code.replace(/(chart)(\s)(.*)/gi, ($0, $1, $2, $3) => {
+      const params = getParams($3, ['type', 'data', 'legends', 'transpose']);
+      return `await dk.chart (${params})\n`;
+    });
 
     code = code.replace(/MERGE\s(.*)\sWITH\s(.*)BY\s(.*)/gi, ($0, $1, $2, $3) => {
       return `await sys.merge({file: ${$1}, data: ${$2}, key1: ${$3}})\n`;
@@ -697,14 +718,14 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(\w+)\s*\=\s*FILL\s(.*)\sWITH\s(.*)/gi, ($0, $1, $2, $3) => {
-      return `${1} = await sys.fill({templateName: ${$2}, data: ${$3}})\n`;
+      return `${$1} = await sys.fill({templateName: ${$2}, data: ${$3}})\n`;
     });
 
     code = code.replace(/save\s(.*)\sas\s(.*)/gi, ($0, $1, $2, $3) => {
       return `await sys.saveFile({file: ${$2}, data: ${$1})\n`;
     });
     code = code.replace(/(save)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `await sys.save({[${$3}]})\n`;
+      return `await sys.save({args: [${$3}]})\n`;
     });
 
     code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
@@ -784,6 +805,7 @@ export class GBVMService extends GBService {
         const { run, drain } = createVm2Pool({
           min: 1,
           max: 1,
+          debuggerPort: 9222,
           cpu: 100,
           memory: 50000,
           time: 60 * 60 * 24 * 14,
@@ -791,6 +813,7 @@ export class GBVMService extends GBService {
           script: runnerPath
         });
 
+        const port = run.port;
         const result = await run(code, { filename: scriptPath, sandbox: sandbox });
 
         drain();

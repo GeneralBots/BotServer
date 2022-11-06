@@ -2,7 +2,7 @@ const crypto2 = require('crypto');
 const Fs = require('fs');
 const Path = require('path');
 const { spawn } = require('child_process');
-
+const CDP = require('chrome-remote-interface');
 const {  } = require('child_process');
 const { dirname } = require('path');
 const { fileURLToPath } = require('url');
@@ -50,7 +50,7 @@ const createVm2Pool = ({ min, max, ...limits }) => {
       const runner = spawn('cpulimit', [
         '-ql', limits.cpu,
         '--',
-        'node', `--experimental-fetch`, `--max-old-space-size=${limits.memory}`, 
+        'node', `--inspect-brk=${limits.debuggerPort} --experimental-fetch`, `--max-old-space-size=${limits.memory}`, 
           limits.script
         , ref
       ], { cwd: limits.cwd, shell: false });
@@ -78,6 +78,25 @@ const createVm2Pool = ({ min, max, ...limits }) => {
 
   const run = async (code, scope) => {
     const childProcess = await pool.acquire();
+
+    CDP(async (client) => {
+      const { Debugger, Runtime } = client;
+      try {
+        client.Debugger.paused(() => {
+          client.Debugger.resume();
+          client.close();
+        });
+        await client.Runtime.runIfWaitingForDebugger();
+        await client.Debugger.enable();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        client.close();
+      }
+    }).on('error', (err) => {
+      console.error(err);
+    });
+
 
     await waitUntil(() => childProcess.socket);
 

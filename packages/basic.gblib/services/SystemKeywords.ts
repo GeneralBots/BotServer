@@ -554,7 +554,6 @@ export class SystemKeywords {
       }
       throw error;
     }
-
   }
 
   /**
@@ -1121,14 +1120,16 @@ export class SystemKeywords {
    * SHARE FOLDER folder, "nome@domain.com", "E-mail message"
    *
    */
-  public async shareFolder({folderReference, email, message}) {
+  public async shareFolder({folder, email, message}) {
     let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
-    const srcFile = await client.api(
-      `${baseUrl}/drive/root:/${folder}`)
+    const root = urlJoin(`/${this.min.botId}.gbai/${this.min.botId}.gbdrive`, folder);
+
+    const src = await client.api(
+      `${baseUrl}/drive/root:/${root}`)
       .get();
 
-    const driveId = folderReference.parentReference.driveId;
-    const itemId = folderReference.id;
+    const driveId = src.parentReference.driveId;
+    const itemId = src.id;
     const body = {
       "recipients": [{ "email": email }],
       "message": message,

@@ -482,7 +482,7 @@ export class DialogKeywords {
   /**
    * Returns current time in format hh:dd.
    *
-   * @example SAVE "file.xlsx",name,email,NOW
+   * @example SAVE "contacts.xlsx", name, email, NOW
    *
    */
   public async getNow({}) {

@@ -53,7 +53,7 @@ import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
 var auth = require('basic-auth');
-
+const child_process = require('child_process');
 
 /**
  * Global shared server data;
@@ -83,12 +83,21 @@ export class GBServer {
 
   public static run() {
 
-
+    
     GBLog.info(`The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
     GBConfigService.init();
     const port = GBConfigService.getServerPort();
 
+    if (process.env.TEST_SHELL)
+    {
+      GBLog.info(`Running TEST_SHELL: ${process.env.TEST_SHELL}...`);
+      try{
+      child_process.execSync(process.env.TEST_SHELL);
+      }catch(error){
+        GBLog.error(`Running TEST_SHELL ERROR: ${error}...`);  
+      }
+    }
 
     const server = express();
 
