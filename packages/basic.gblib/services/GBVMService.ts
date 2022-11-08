@@ -347,19 +347,15 @@ export class GBVMService extends GBService {
       const items = text.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
 
       let i = 0;
+      let json = '{';
       names.forEach(name => {
         let value = items[i];
-
-        // Add string to JSON without quotes.
-
-        if (value && (value.charAt(0) === '"' || value.charAt(0) === '\'')) {
-          value = value.substr(1, value.length - 2);
-        }
-        ret[name] = value;
         i++;
+        json = `${json} "${name}": ${value} ${names.length == i ? '' : ','}`;
       });
+      json = `${json}}`
 
-      return JSON.stringify(ret);
+      return json;
     };
 
     // Keywords from General Bots BASIC.
@@ -665,6 +661,7 @@ export class GBVMService extends GBService {
     });
 
     code = code.replace(/(click)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
+      // TODO: page is not string.
       const params = getParams('page,' + $3, ['handle', 'frameOrSelector', 'selector']);
       return `await wa.click (${params})\n`;
     });

@@ -781,7 +781,7 @@ export class SystemKeywords {
         .get();
 
       results = await client
-        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:Z${maxLines}')`)
+        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:CZ${maxLines}')`)
         .get();
 
       header = results.text[0];
@@ -1513,7 +1513,7 @@ export class SystemKeywords {
       .get();
 
     results = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:Z${maxLines}')`)
+      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:CZ${maxLines}')`)
       .get();
 
     header = results.text[0];
