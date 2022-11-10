@@ -55,11 +55,11 @@ const Path = require('path');
 
 /**
  * @fileoverview Virtualization services for emulation of BASIC.
- * This alpha version is using a antipattern hack in form of converter to
- * translate BASIC to TS and string replacements to emulate await code.
- * See https://github.com/uweg/vbscript-to-typescript for more info on vb2ts, so
- * http://stevehanov.ca/blog/index.php?id=92 should be used to run it without
- * translation and enhance classic BASIC experience.
+ * TODO: Upgrade from RegExp to http://www.rpatk.net/web/en/parsejavascript.php and 
+ * generate JS code directly. Even if an attacker inject code, it won´t succeed
+ * due to very limited Node JS VM that is created for each result of the conversion.
+ * All business layer is running behind a REST HTTP API that was introduced in this 3.0 version.
+ * Decision was to priorize security(isolation) over a beautiful BASIC transpiler (to be done).
  */
 
 /**
@@ -344,7 +344,21 @@ export class GBVMService extends GBService {
     const getParams = (text, names) => {
 
       let ret = {};
-      const items = text.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+      const splitParamsButIgnoreCommasInDoublequotes = (str) => {
+        return str.split(',').reduce((accum, curr) => {
+          if (accum.isConcatting) {
+            accum.soFar[accum.soFar.length - 1] += ',' + curr
+          } else {
+            accum.soFar.push(curr)
+          }
+          if (curr.split('"').length % 2 == 0) {
+            accum.isConcatting = !accum.isConcatting
+          }
+          return accum;
+        }, { soFar: [], isConcatting: false }).soFar
+      }
+
+      const items = splitParamsButIgnoreCommasInDoublequotes(text);
 
       let i = 0;
       let json = '{';
