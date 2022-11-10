@@ -37,7 +37,6 @@ import * as fs from 'fs';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 import { TSCompiler } from './TSCompiler';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { DialogKeywords } from './DialogKeywords';
 import { ScheduleServices } from './ScheduleServices';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
 //tslint:disable-next-line:no-submodule-imports
@@ -51,15 +50,9 @@ const walkPromise = require('walk-promise');
 const child_process = require('child_process');
 const Path = require('path');
 
-
-
 /**
- * @fileoverview Virtualization services for emulation of BASIC.
- * TODO: Upgrade from RegExp to http://www.rpatk.net/web/en/parsejavascript.php and 
- * generate JS code directly. Even if an attacker inject code, it won´t succeed
- * due to very limited Node JS VM that is created for each result of the conversion.
- * All business layer is running behind a REST HTTP API that was introduced in this 3.0 version.
- * Decision was to priorize security(isolation) over a beautiful BASIC transpiler (to be done).
+ * @fileoverview  Decision was to priorize security(isolation) and debugging, 
+ * over a beautiful BASIC transpiler (to be done).
  */
 
 /**
@@ -184,8 +177,8 @@ export class GBVMService extends GBService {
 
     // Removes comments.
 
-    basicCode = basicCode.replace(/((^|\W)REM.*\n)/gi, '');
-    basicCode = basicCode.replace(/((^|\W)\'.*\n)/gi, '');
+    basicCode = basicCode.replace(/^\s*REM.*/gim, '');
+    basicCode = basicCode.replace(/^\s*\'.*/gim, '');
 
     // Process INCLUDE keyword to include another
     // dialog inside the dialog.
@@ -380,9 +373,9 @@ export class GBVMService extends GBService {
       return `${$1} = await sys.executeSQL({data:${$1}, sql:"${sql}", tableName:"${tableName}"})\n`;
     });
 
-    code = code.replace(/open\s*(.*)/gi, ($0, $1, $2) => {
+    code = code.replace(/^\s*open\s*(.*)/gi, ($0, $1, $2) => {
 
-      if (!$1.startsWith("\"") && $1.startsWith("\'")) {
+      if (!$1.startsWith("\"") && !$1.startsWith("\'")) {
         $1 = `"${$1}"`;
       }
       const params = getParams($1, ['url', 'username', 'password']);

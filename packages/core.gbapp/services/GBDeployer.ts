@@ -229,9 +229,9 @@ export class GBDeployer implements IGBDeployer {
     instance.state = 'active';
     instance.nlpScore = 0.8;
     instance.searchScore = 0.45;
-    instance.whatsappServiceKey = bootInstance.whatsappServiceKey;
-    instance.whatsappServiceNumber = bootInstance.whatsappServiceNumber;
-    instance.whatsappServiceUrl = bootInstance.whatsappServiceUrl;
+    instance.whatsappServiceKey = null;
+    instance.whatsappServiceNumber = null;
+    instance.whatsappServiceUrl = null;
     instance.params = JSON.stringify({ 'Can Publish': mobile, 'Admin Notify E-mail': email });
 
     // Saves bot information to the store.
