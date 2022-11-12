@@ -89,7 +89,10 @@ export class DebuggerService {
    */
   maxLines: number = 2000;
 
-  pageMap = {};
+  debugMap = {};
+  conversationsMap = {};
+  scopeMap = {};
+  watermarkMap = {};
 
   /**
    * When creating this keyword facade,a bot instance is
@@ -109,7 +112,7 @@ export class DebuggerService {
 
   private client;
 
-  public async setBreakPoint({ botId, botApiKey, line }) {
+  public async setBreakpoint({ botId, botApiKey, line }) {
 
     const client = GBServer.globals.debuggers[botId];
 
@@ -126,7 +129,7 @@ export class DebuggerService {
     const { breakpointId } = await await client.Debugger.setBreakpoint({
       location: {
         scriptId,
-        lineNumber: 6 - 1 // (zero-based)
+        lineNumber: line - 1
       }
     });
   }
@@ -135,37 +138,64 @@ export class DebuggerService {
 
   }
 
-  public async continue({ botId, botApiKey, force }) {
+  public async continueRun({ botId, botApiKey, force }) {
     const client = GBServer.globals.debuggers[botId];
     client.Debugger.resume();
   }
 
-  public async stopDebug({ botId, botApiKey, force }) {
+  public async stop({ botId, botApiKey, force }) {
     const client = GBServer.globals.debuggers[botId];
     client.close();
   }
 
-  public async stepOver({ botId, botApiKey, force }) {
+  public async stepOver({ botId, botApiKey }) {
     const client = GBServer.globals.debuggers[botId];
     client.stepOver();
   }
 
+  public async getExecutionContext({ botId, botApiKey, force }) {
+
+    const client = GBServer.globals.debuggers[botId];
+    const conversationId = this.conversationsMap[botId];
 
 
-  public async startDebug({ botId, botApiKey, scriptName }) {
+    const response = await client.Conversations.Conversations_GetActivities({
+      conversationId: conversationId,
+      watermark: this.watermarkMap[botId]
+    });
+    this.watermarkMap[botId] = response.obj.watermark;
+    let activities = response.obj.activites;
+    let messages = [];
+    if (activities && activities.length) {
+      activities = activities.filter(m => m.from.id === botId && m.type === 'message');
+      if (activities.length) {
+        activities.forEach(activity => {
+          messages.push({ text: activity.text });
+          GBLog.info(`GBDEBUG: SND TO WORD ${activity.text}`);
+        });
+      }
+    }
+    return { state:this.debugMap[botId].state, messages, scope: this.scopeMap[botId] };
+  }
 
-    // TODO : Map this.
-    let webchatKey = null;
+  public async run({ botId, botApiKey, scriptName }) {
+
+    this.debugMap[botId] = { state: 1 };
+
+    let min: GBMinInstance = GBServer.globals.minInstances.filter(
+      p => p.instance.botId === botId
+    )[0];
 
     this.client = await new Swagger({
       spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')), usePromise: true
     });
     this.client.clientAuthorizations.add(
       'AuthorizationBotConnector',
-      new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${webchatKey}`, 'header')
+      new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${min.instance.webchatKey}`, 'header')
     );
     const response = await this.client.Conversations.Conversations_StartConversation();
     const conversationId = response.obj.conversationId;
+    this.conversationsMap[botId] = conversationId;
     GBServer.globals.debugConversationId = conversationId;
 
     this.client.Conversations.Conversations_PostActivity({
@@ -184,21 +214,24 @@ export class DebuggerService {
     // Setup debugger.
 
     const client = GBServer.globals.debuggers[botId];
- 
+
     client.Debugger.paused(({ callFrames, reason, hitBreakpoints }) => {
 
-      if (hitBreakpoints.length>1)
-      {
-        GBLog.info(`.gbdialog break at line ${callFrames[0].location.lineNumber + 1}`); // (zero-based)
+      const frame = callFrames[0];
+      if (hitBreakpoints.length > 1) {
+        GBLog.info(`.gbdialog break at line ${frame.location.lineNumber + 1}`); // (zero-based)
+
+        const scope = `${frame.scopeChain[0].name} ${frame.scopeChain[0].object}`;
+
+        this.scopeMap[botId] = scope;
       }
-      else (reason === ''){
-        GBLog.info(`.gbdialog ${reason} at line ${callFrames[0].location.lineNumber + 1}`); // (zero-based)
+      else if (reason === ''){
+        GBLog.info(`.gbdialog ${reason} at line ${frame.location.lineNumber + 1}`); // (zero-based)
       }
     });
- 
+
     await client.Runtime.runIfWaitingForDebugger();
     await client.Debugger.enable();
     await client.Debugger.setPauseOnExceptions('all');
-    
   }
 }

@@ -49,7 +49,7 @@ const textract = require('textract');
 const walkPromise = require('walk-promise');
 const child_process = require('child_process');
 const Path = require('path');
-
+const indent = require('indent.js');
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging, 
  * over a beautiful BASIC transpiler (to be done).
@@ -200,9 +200,12 @@ export class GBVMService extends GBService {
       }
     } while (include);
 
-    const vbsCode = await this.convertGBASICToVBS(min, basicCode);
+    const [vbsCode, jsonMap] = await this.convertGBASICToVBS(min, basicCode);
     const vbsFile = `${filename}.compiled`;
+    const mapFile = `${filename}.map`;
+
     fs.writeFileSync(vbsFile, vbsCode);
+    fs.writeFileSync(mapFile, JSON.stringify(jsonMap));
 
     // Converts VBS into TS.
 
@@ -226,7 +229,6 @@ export class GBVMService extends GBService {
       code.replace(/^.*exports.*$/gm, '');
 
       code = `
-
       return (async () => {
         require('isomorphic-fetch');
         const rest = require ('typescript-rest-rpc/lib/client');
@@ -272,14 +274,10 @@ export class GBVMService extends GBService {
       })(); 
     
   `;
-      // Finds all hear calls.
-
-      const parsedCode = beautify(code, { indent_size: 2, space_in_empty_paren: true, preserve_newlines: true, wrap_line_length: 240 });
-      fs.writeFileSync(jsfile, parsedCode);
-
-      min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
-
-      GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${parsedCode}`);
+      code = indent.js(code, {tabString: '\t'});
+      fs.writeFileSync(jsfile, code);
+      min.sandBoxMap[mainName.toLowerCase().trim()] = code;
+      GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
     }
   }
 
@@ -363,22 +361,24 @@ export class GBVMService extends GBService {
 
     `;
 
-    var matchingLines = [];
     var allLines = code.split("\n");
+    const keywords = this.getKeywords();
+    const offset = 37;
+    const jsonMap = {};
 
     for (var i = 0; i < allLines.length; i++) {
-      if (allLines[i].match(pattern)) {
-        matchingLines.push(i);
+      for (var j = 0; j < keywords.length; j++) {
+        allLines[i] = allLines[i].replace(keywords[j][0], keywords[j][1]);
+
+        //  Add additional lines returned from replacement.
+
+        let add = allLines[i].split(/\r\n|\r|\n/).length;
+        jsonMap[i] = (offset + i) + (add ? add : 0);
       }
     }
 
-    return matchingLines;
-
-
-
-    code = `${code}\n%>`;
-
-    return code;
+    code = `${allLines.join('\n')}\n%>`;
+    return [code, jsonMap];
   }
 
   private getKeywords() {
@@ -513,7 +513,7 @@ export class GBVMService extends GBService {
     }];
 
     keywords[i++] = [/^\s*(wait)\s*(\d+)/gim, ($0, $1, $2) => {
-      return `await sys.wait({seconds:${$2})`;
+      return `await sys.wait({seconds:${$2}})`;
     }];
 
     keywords[i++] = [/^\s*(get stock for )(.*)/gim, ($0, $1, $2) => {
