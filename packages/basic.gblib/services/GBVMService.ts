@@ -223,7 +223,7 @@ export class GBVMService extends GBService {
     if (fs.existsSync(jsfile)) {
       let code: string = fs.readFileSync(jsfile, 'utf8');
 
-      code = code.replace(/^.*exports.*$/gm, '');
+      code.replace(/^.*exports.*$/gm, '');
 
       code = `
 
@@ -313,6 +313,38 @@ export class GBVMService extends GBService {
     });
   }
 
+  private getParams = (text, names) => {
+
+    let ret = {};
+    const splitParamsButIgnoreCommasInDoublequotes = (str) => {
+      return str.split(',').reduce((accum, curr) => {
+        if (accum.isConcatting) {
+          accum.soFar[accum.soFar.length - 1] += ',' + curr
+        } else {
+          accum.soFar.push(curr)
+        }
+        if (curr.split('"').length % 2 == 0) {
+          accum.isConcatting = !accum.isConcatting
+        }
+        return accum;
+      }, { soFar: [], isConcatting: false }).soFar
+    }
+
+    const items = splitParamsButIgnoreCommasInDoublequotes(text);
+
+    let i = 0;
+    let json = '{';
+    names.forEach(name => {
+      let value = items[i];
+      i++;
+      json = `${json} "${name}": ${value} ${names.length == i ? '' : ','}`;
+    });
+    json = `${json}}`
+
+    return json;
+  };
+
+
   /**
    * Converts General Bots BASIC
    *
@@ -325,180 +357,170 @@ export class GBVMService extends GBService {
 
     code = `<%\n
 
-
     ${process.env.ENABLE_AUTH ? `hear gbLogin as login` : ``}
 
     ${code}
 
     `;
 
-    // Split all params by comma, not inside strings.
+    var matchingLines = [];
+    var allLines = code.split("\n");
 
-    const getParams = (text, names) => {
-
-      let ret = {};
-      const splitParamsButIgnoreCommasInDoublequotes = (str) => {
-        return str.split(',').reduce((accum, curr) => {
-          if (accum.isConcatting) {
-            accum.soFar[accum.soFar.length - 1] += ',' + curr
-          } else {
-            accum.soFar.push(curr)
-          }
-          if (curr.split('"').length % 2 == 0) {
-            accum.isConcatting = !accum.isConcatting
-          }
-          return accum;
-        }, { soFar: [], isConcatting: false }).soFar
+    for (var i = 0; i < allLines.length; i++) {
+      if (allLines[i].match(pattern)) {
+        matchingLines.push(i);
       }
+    }
 
-      const items = splitParamsButIgnoreCommasInDoublequotes(text);
+    return matchingLines;
 
-      let i = 0;
-      let json = '{';
-      names.forEach(name => {
-        let value = items[i];
-        i++;
-        json = `${json} "${name}": ${value} ${names.length == i ? '' : ','}`;
-      });
-      json = `${json}}`
 
-      return json;
-    };
+
+    code = `${code}\n%>`;
+
+    return code;
+  }
+
+  private getKeywords() {
 
     // Keywords from General Bots BASIC.
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*SELECT\s*(.*)/gim, ($0, $1, $2) => {
+    let keywords = [];
+    let i = 0;
+
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*SELECT\s*(.*)/gim, ($0, $1, $2) => {
       let tableName = /\sFROM\s(\w+)/.exec($2)[1];
       let sql = `SELECT ${$2}`.replace(tableName, '?');
       return `${$1} = await sys.executeSQL({data:${$1}, sql:"${sql}", tableName:"${tableName}"})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*open\s*(.*)/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\s*open\s*(.*)/gim, ($0, $1, $2) => {
 
       if (!$1.startsWith("\"") && !$1.startsWith("\'")) {
         $1 = `"${$1}"`;
       }
-      const params = getParams($1, ['url', 'username', 'password']);
+      const params = this.getParams($1, ['url', 'username', 'password']);
 
       return `page = await wa.getPage(${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(set hear on)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(set hear on)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
       return `hrOn = ${$3}\n`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as login/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as login/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"login"})`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as email/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as email/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"email"})`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as integer/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as integer/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"integer"})`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as file/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as file/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"file"})`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as boolean/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as boolean/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"boolean"})`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as name/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as name/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"name"})`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as date/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as date/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"date"})`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as hour/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as hour/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"hour"})`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as phone/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as phone/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"phone"})`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as money/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as money/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"money")}`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as language/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as language/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"language")}`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as zipcode/gim, ($0, $1) => {
+    keywords[i++] = [/^\shear (\w+) as zipcode/gim, ($0, $1) => {
       return `${$1} = await dk.getHear({kind:"zipcode")}`;
-    });
+    }];
 
-    code = code.replace(/^\shear (\w+) as (.*)/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\shear (\w+) as (.*)/gim, ($0, $1, $2) => {
       return `${$1} = await dk.getHear({kind:"menu", args: [${$2}])}`;
-    });
+    }];
 
-    code = code.replace(/^\s*(hear)\s*(\w+)/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\s*(hear)\s*(\w+)/gim, ($0, $1, $2) => {
       return `${$2} = await dk.getHear({})`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*find contact\s*(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*find contact\s*(.*)/gim, ($0, $1, $2, $3) => {
       return `${$1} = await dk.fndContact({${$2})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(\w+)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gim, ($0, $1, $2, $3) => {
       return `${$1} = await sys.find({args:[${$2}])\n
       if (!${$1}) {
         await dk.talk ({${$3}})\n;
         return -1;
       }
       `;
-    });
+    }];
 
-    code = code.replace(/^\sCALL\s*(.*)/gim, ($0, $1) => {
+    keywords[i++] = [/^\sCALL\s*(.*)/gim, ($0, $1) => {
       return `await ${$1}\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*find\s*(.*)/gim, ($0, $1, $2, $3) => {
-      return `${$1} = await sys.find({args: [${$2}]})\n`;
-    });
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*find\s*(.*)/gim, ($0, $1, $2, $3) => {
+      return `
+      ${$1} = await sys.find({args: [${$2}]})\n`;
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*create deal(\s)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['dealName', 'contact', 'company', 'amount']);
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*create deal(\s)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['dealName', 'contact', 'company', 'amount']);
 
       return `${$1} = await dk.createDeal(${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*active tasks/gim, ($0, $1) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*active tasks/gim, ($0, $1) => {
       return `${$1} = await dk.getActiveTasks({})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*append\s*(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*append\s*(.*)/gim, ($0, $1, $2, $3) => {
       return `${$1} = await sys.append({args:[${$2}]})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*sort\s*(\w+)\s*by(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*sort\s*(\w+)\s*by(.*)/gim, ($0, $1, $2, $3) => {
       return `${$1} = await sys.sortBy({array: ${$2}, memberName: "${$3}"})\n`;
-    });
+    }];
 
-    code = code.replace(/^\ssee\s*text\s*of\s*(\w+)\s*as\s*(\w+)\s*/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\ssee\s*text\s*of\s*(\w+)\s*as\s*(\w+)\s*/gim, ($0, $1, $2, $3) => {
       return `${$2} = await sys.seeText({url: ${$1})\n`;
-    });
+    }];
 
-    code = code.replace(/^\ssee\s*caption\s*of\s*(\w+)\s*as(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\ssee\s*caption\s*of\s*(\w+)\s*as(.*)/gim, ($0, $1, $2, $3) => {
       return `${$2} = await sys.seeCaption({url: ${$1})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(wait)\s*(\d+)/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\s*(wait)\s*(\d+)/gim, ($0, $1, $2) => {
       return `await sys.wait({seconds:${$2})`;
-    });
+    }];
 
-    code = code.replace(/^\s*(get stock for )(.*)/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\s*(get stock for )(.*)/gim, ($0, $1, $2) => {
       return `stock = await sys.getStock({symbol: ${$2})`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*get\s(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*get\s(.*)/gim, ($0, $1, $2, $3) => {
 
       const count = ($2.match(/\,/g) || []).length;
       const values = $2.split(',');
@@ -523,224 +545,222 @@ export class GBVMService extends GBService {
         return `${$1} = await sys.get ({file: ${$2}, addressOrHeaders: headers, httpUsername, httpPs})`;
       }
 
-    });
+    }];
 
-    code = code.replace(/\= NEW OBJECT/gi, ($0, $1, $2, $3) => {
+    keywords[i++] = [/\= NEW OBJECT/gi, ($0, $1, $2, $3) => {
       return ` = {}`;
-    });
+    }];
 
-    code = code.replace(/\= NEW ARRAY/gi, ($0, $1, $2, $3) => {
+    keywords[i++] = [/\= NEW ARRAY/gi, ($0, $1, $2, $3) => {
       return ` = []`;
-    });
+    }];
 
 
-    code = code.replace(/^\s*(go to)(\s)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['fromOrDialogName', 'dialogName']);
+    keywords[i++] = [/^\s*(go to)(\s)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['fromOrDialogName', 'dialogName']);
       return `await dk.gotoDialog(${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(set language)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(set language)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
       return `await dk.setLanguage ({${$3}})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*set header\s*(.*)\sas\s(.*)/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\s*set header\s*(.*)\sas\s(.*)/gim, ($0, $1, $2) => {
       return `headers[${$1}]=${$2})`;
-    });
+    }];
 
-    code = code.replace(/^\s*set http username\s*\=\s*(.*)/gim, ($0, $1) => {
+    keywords[i++] = [/^\s*set http username\s*\=\s*(.*)/gim, ($0, $1) => {
       return `httpUsername = ${$1}`;
-    });
+    }];
 
-    code = code.replace(/^\sset http password\s*\=\s*(.*)/gim, ($0, $1) => {
+    keywords[i++] = [/^\sset http password\s*\=\s*(.*)/gim, ($0, $1) => {
       return `httpPs = ${$1}`;
-    });
+    }];
 
-    code = code.replace(/^\s*(datediff)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['date1', 'date2', 'mode']);
+    keywords[i++] = [/^\s*(datediff)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['date1', 'date2', 'mode']);
       return `await dk.dateDiff (${params}})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(dateadd)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['date', 'mode', 'units']);
+    keywords[i++] = [/^\s*(dateadd)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['date', 'mode', 'units']);
       return `await dk.dateAdd (${$3})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(set max lines)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(set max lines)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
       return `await dk.setMaxLines ({count: ${$3}})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(set max columns)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(set max columns)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
       return `await dk.setMaxColumns ({count: ${$3}})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(set translator)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(set translator)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
       return `await dk.setTranslatorOn ({on: "${$3.toLowerCase()}"})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(set theme)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(set theme)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
       return `await dk.setTheme ({theme: "${$3.toLowerCase()}"})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(set whole word)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(set whole word)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
       return `await dk.setWholeWord ({on: "${$3.toLowerCase()}"})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gim, ($0, $1, $2, $3) => {
       return `${$1} = await sys.postByHttp ({url:${$2}, data:${$3}, headers})`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*put\s*(.*),\s*(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*put\s*(.*),\s*(.*)/gim, ($0, $1, $2, $3) => {
       return `${$1} = await sys.putByHttp ({url:${$2}, data:${$3}, headers})`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*download\s*(.*),\s*(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*download\s*(.*),\s*(.*)/gim, ($0, $1, $2, $3) => {
       return `${$1} = await sys.download ({handle:page, selector: ${$2}, folder:${$3}})`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*CREATE FOLDER\s*(.*)/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*CREATE FOLDER\s*(.*)/gim, ($0, $1, $2) => {
       return `${$1} = await sys.createFolder ({name:${$2}})`;
-    });
+    }];
 
-    code = code.replace(/^\sSHARE FOLDER\s*(.*)/gim, ($0, $1) => {
+    keywords[i++] = [/^\sSHARE FOLDER\s*(.*)/gim, ($0, $1) => {
       return `await sys.shareFolder ({name: ${$1}})`;
-    });
+    }];
 
-    code = code.replace(/^\s*(create a bot farm using)(\s)(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(create a bot farm using)(\s)(.*)/gim, ($0, $1, $2, $3) => {
       return `await sys.createABotFarmUsing ({${$3}})`;
-    });
+    }];
 
-    code = code.replace(/^\s*(transfer to)(\s)(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(transfer to)(\s)(.*)/gim, ($0, $1, $2, $3) => {
       return `await dk.transferTo ({to:${$3}})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gim, () => {
+    keywords[i++] = [/^\s*(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gim, () => {
       return `await dk.transferTo ({})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(exit)/gim, () => {
+    keywords[i++] = [/^\s*(exit)/gim, () => {
       return ``;
-    });
+    }];
 
-    code = code.replace(/^\s*(show menu)/gim, () => {
+    keywords[i++] = [/^\s*(show menu)/gim, () => {
       return `await dk.showMenu ({})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(talk to)(\s)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['mobile', 'message']);
+    keywords[i++] = [/^\s*(talk to)(\s)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['mobile', 'message']);
       return `await sys.talkTo(${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(talk)(\s)(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(talk)(\s)(.*)/gim, ($0, $1, $2, $3) => {
       if ($3.substr(0, 1) !== "\"") {
         $3 = `"${$3}"`;
       }
       return `await dk.talk ({text: ${$3}})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(send sms to)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['mobile', 'message']);
+    keywords[i++] = [/^\s*(send sms to)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['mobile', 'message']);
       return `await sys.sendSmsTo(${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(send email)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['to', 'subject', 'body']);
+    keywords[i++] = [/^\s*(send email)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['to', 'subject', 'body']);
       return `await dk.sendEmail(${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(send mail)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['to', 'subject', 'body']);
+    keywords[i++] = [/^\s*(send mail)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['to', 'subject', 'body']);
       return `await dk.sendEmail(${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(send file to)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['mobile', 'filename', 'caption']);
+    keywords[i++] = [/^\s*(send file to)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['mobile', 'filename', 'caption']);
       return `await dk.sendFileTo(${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(hover)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['handle', 'selector']);
+    keywords[i++] = [/^\s*(hover)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['handle', 'selector']);
       return `await wa.hover (${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(click link text)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams('page,' + $3, ['handle', 'text', 'index']);
+    keywords[i++] = [/^\s*(click link text)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams('page,' + $3, ['handle', 'text', 'index']);
       return `await wa.linkByText (${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(click)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(click)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
       // TODO: page is not string.
-      const params = getParams('page,' + $3, ['handle', 'frameOrSelector', 'selector']);
+      const params = this.getParams('page,' + $3, ['handle', 'frameOrSelector', 'selector']);
       return `await wa.click (${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(send file)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['filename', 'caption']);
+    keywords[i++] = [/^\s*(send file)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['filename', 'caption']);
       return `await dk.sendFile(${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(copy)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['src', 'dst']);
+    keywords[i++] = [/^\s*(copy)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['src', 'dst']);
       return `await sys.copyFile (${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(convert)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['src', 'dst']);
+    keywords[i++] = [/^\s*(convert)(\s*)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['src', 'dst']);
       return `await sys.convert (${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*(.*)\s*as chart/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*(.*)\s*as chart/gim, ($0, $1, $2) => {
       return `await dk.chart ({type:'bar', data: ${2}, legends:null, transpose: false})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(chart)(\s)(.*)/gim, ($0, $1, $2, $3) => {
-      const params = getParams($3, ['type', 'data', 'legends', 'transpose']);
+    keywords[i++] = [/^\s*(chart)(\s)(.*)/gim, ($0, $1, $2, $3) => {
+      const params = this.getParams($3, ['type', 'data', 'legends', 'transpose']);
       return `await dk.chart (${params})\n`;
-    });
+    }];
 
-    code = code.replace(/^\sMERGE\s(.*)\sWITH\s(.*)BY\s(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\sMERGE\s(.*)\sWITH\s(.*)BY\s(.*)/gim, ($0, $1, $2, $3) => {
       return `await sys.merge({file: ${$1}, data: ${$2}, key1: ${$3}})\n`;
-    });
+    }];
 
-    code = code.replace(/^\sPRESS\s(.*)/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\sPRESS\s(.*)/gim, ($0, $1, $2) => {
       return `await wa.pressKey({handle: page, char: ${$1})\n`;
-    });
+    }];
 
-    code = code.replace(/^\sSCREENSHOT\s(.*)/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\sSCREENSHOT\s(.*)/gim, ($0, $1, $2) => {
       return `await wa.screenshot({handle: page, selector: ${$1}})\n`;
-    });
+    }];
 
-    code = code.replace(/^\sTWEET\s(.*)/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\sTWEET\s(.*)/gim, ($0, $1, $2) => {
       return `await sys.tweet({text: ${$1})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*(.*)\s*as image/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*(.*)\s*as image/gim, ($0, $1, $2) => {
       return `${$1} = await sys.asImage({data: ${$2}})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*(.*)\s*as pdf/gim, ($0, $1, $2) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*(.*)\s*as pdf/gim, ($0, $1, $2) => {
       return `${$1} = await sys.asPdf({data: ${$2})\n`;
-    });
+    }];
 
-    code = code.replace(/^\s*(\w+)\s*\=\s*FILL\s(.*)\sWITH\s(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\s*(\w+)\s*\=\s*FILL\s(.*)\sWITH\s(.*)/gim, ($0, $1, $2, $3) => {
       return `${$1} = await sys.fill({templateName: ${$2}, data: ${$3}})\n`;
-    });
+    }];
 
-    code = code.replace(/^\ssave\s(.*)\sas\s(.*)/gim, ($0, $1, $2, $3) => {
+    keywords[i++] = [/^\ssave\s(.*)\sas\s(.*)/gim, ($0, $1, $2, $3) => {
       return `await sys.saveFile({file: ${$2}, data: ${$1})\n`;
-    });
-    code = code.replace(/^\s*(save)(\s)(.*)/gim, ($0, $1, $2, $3) => {
+    }];
+    keywords[i++] = [/^\s*(save)(\s)(.*)/gim, ($0, $1, $2, $3) => {
       return `await sys.save({args: [${$3}]})\n`;
-    });
+    }];
 
-    code = code.replace(/^\sset\s(.*)/gim, ($0, $1, $2) => {
-      const params = getParams($1, ['file', 'address', 'value']);
+    keywords[i++] = [/^\sset\s(.*)/gim, ($0, $1, $2) => {
+      const params = this.getParams($1, ['file', 'address', 'value']);
       return `await sys.set (${params})`;
-    });
-
-    code = `${code}\n%>`;
-
-    return code;
+    }];
+    return keywords;
   }
+
 
   /**
    * Executes the converted JavaScript from BASIC code inside execution context.
@@ -810,6 +830,7 @@ export class GBVMService extends GBService {
           min: 1,
           max: 1,
           debuggerPort: 9222,
+          botId: botId,
           cpu: 100,
           memory: 50000,
           time: 60 * 60 * 24 * 14,

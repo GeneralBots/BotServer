@@ -365,7 +365,7 @@ export class GBMinService {
           }
         });
 
-        await sleep(15000);
+        await sleep(5000);
 
 
       });

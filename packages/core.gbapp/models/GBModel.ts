@@ -86,6 +86,9 @@ export class GuaribasInstance extends Model<GuaribasInstance>
 
   public version: string;
 
+  @Column(DataType.STRING(64))
+  public botKey: string;
+
   @Column(DataType.STRING(255))
   public enabledAdmin: boolean;
 

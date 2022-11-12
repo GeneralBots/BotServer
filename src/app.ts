@@ -70,6 +70,7 @@ export class RootData {
   public wwwroot: string; // .gbui or a static webapp.
   public entryPointDialog: string; // To replace default welcome dialog.
   public debugConversationId: any; // Used to self-message during debug.
+  public debuggers: any []; // Client of attached Debugger instances by botId.
 }
 /**
  * General Bots open-core entry point.
