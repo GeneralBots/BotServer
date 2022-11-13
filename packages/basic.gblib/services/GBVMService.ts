@@ -363,7 +363,7 @@ export class GBVMService extends GBService {
 
     var allLines = code.split("\n");
     const keywords = this.getKeywords();
-    const offset = 37;
+    const offset = 34;
     const jsonMap = {};
 
     for (var i = 0; i < allLines.length; i++) {
