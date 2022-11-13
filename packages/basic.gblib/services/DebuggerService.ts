@@ -89,9 +89,7 @@ export class DebuggerService {
    */
   maxLines: number = 2000;
 
-  debugMap = {};
   conversationsMap = {};
-  scopeMap = {};
   watermarkMap = {};
 
   /**
@@ -108,54 +106,47 @@ export class DebuggerService {
       'Debug Web Automation',
       false
     );
+
+    const botId = min.botId;
+
+    GBServer.globals.debuggers[botId] = {};
+    GBServer.globals.debuggers[botId].state = 1;
+    GBServer.globals.debuggers[botId].breaks = [];
+
   }
 
   private client;
 
-  public async setBreakpoint({ botId, botApiKey, line }) {
+  public async breakpoint({ botId, botApiKey, line }) {
 
-    const client = GBServer.globals.debuggers[botId];
+    GBServer.globals.debuggers[botId].breaks.push(Number.parseInt(line));
 
-    async function mainScript({ Debugger }) {
-      return new Promise((fulfill, reject) => {
-        Debugger.scriptParsed((params) => {
-          const { scriptId, url } = params;
-          fulfill(scriptId);
-        });
-      });
-    }
-
-    const scriptId = await mainScript(client);
-    const { breakpointId } = await await client.Debugger.setBreakpoint({
-      location: {
-        scriptId,
-        lineNumber: line - 1
-      }
-    });
   }
 
   public async removeBreakPoint({ botId, botApiKey, line }) {
+    const client = GBServer.globals.debuggers[botId].client;
+    
 
   }
 
   public async continueRun({ botId, botApiKey, force }) {
-    const client = GBServer.globals.debuggers[botId];
+    const client = GBServer.globals.debuggers[botId].client;
     client.Debugger.resume();
   }
 
   public async stop({ botId, botApiKey, force }) {
-    const client = GBServer.globals.debuggers[botId];
+    const client = GBServer.globals.debuggers[botId].client;
     client.close();
   }
 
   public async stepOver({ botId, botApiKey }) {
-    const client = GBServer.globals.debuggers[botId];
+    const client = GBServer.globals.debuggers[botId].client;
     client.stepOver();
   }
 
   public async getExecutionContext({ botId, botApiKey, force }) {
 
-    const client = GBServer.globals.debuggers[botId];
+    const client = GBServer.globals.debuggers[botId].client;
     const conversationId = this.conversationsMap[botId];
 
 
@@ -175,12 +166,17 @@ export class DebuggerService {
         });
       }
     }
-    return { state:this.debugMap[botId].state, messages, scope: this.scopeMap[botId] };
+
+    return { state: GBServer.globals.debuggers[botId].state, messages, scope: GBServer.globals.debuggers[botId].scope };
   }
 
   public async run({ botId, botApiKey, scriptName }) {
+    
+    GBLog.info(`BASIC: Running ${botId} in DEBUG mode.`);
 
-    this.debugMap[botId] = { state: 1 };
+
+    GBServer.globals.debuggers[botId].state = 1;
+
 
     let min: GBMinInstance = GBServer.globals.minInstances.filter(
       p => p.instance.botId === botId
@@ -210,28 +206,5 @@ export class DebuggerService {
         }
       }
     });
-
-    // Setup debugger.
-
-    const client = GBServer.globals.debuggers[botId];
-
-    client.Debugger.paused(({ callFrames, reason, hitBreakpoints }) => {
-
-      const frame = callFrames[0];
-      if (hitBreakpoints.length > 1) {
-        GBLog.info(`.gbdialog break at line ${frame.location.lineNumber + 1}`); // (zero-based)
-
-        const scope = `${frame.scopeChain[0].name} ${frame.scopeChain[0].object}`;
-
-        this.scopeMap[botId] = scope;
-      }
-      else if (reason === ''){
-        GBLog.info(`.gbdialog ${reason} at line ${frame.location.lineNumber + 1}`); // (zero-based)
-      }
-    });
-
-    await client.Runtime.runIfWaitingForDebugger();
-    await client.Debugger.enable();
-    await client.Debugger.setPauseOnExceptions('all');
   }
 }

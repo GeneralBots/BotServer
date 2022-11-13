@@ -108,6 +108,7 @@ export class GBServer {
     GBServer.globals.minInstances = [];
     GBServer.globals.wwwroot = null;
     GBServer.globals.entryPointDialog = null;
+    GBServer.globals.debuggers = [];
 
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));

@@ -770,7 +770,7 @@ export class GBVMService extends GBService {
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 
-    const user = step ? await min.userProfile.get(step.context, {}) : null;
+    const user = step   ? await min.userProfile.get(step.context, {}) : null;
 
     const sandbox = { user: user.systemUser };
 
@@ -826,9 +826,9 @@ export class GBVMService extends GBService {
       const runnerPath = urlJoin(process.cwd(), 'dist', 'packages', 'basic.gblib', 'services', 'vm2-process', 'vm2ProcessRunner.js');
 
       try {
-        const { run, drain } = createVm2Pool({
-          min: 1,
-          max: 1,
+        const { run } = createVm2Pool({
+          min: 0,
+          max: 0,
           debuggerPort: 9222,
           botId: botId,
           cpu: 100,
@@ -840,8 +840,7 @@ export class GBVMService extends GBService {
 
         const port = run.port;
         const result = await run(code, { filename: scriptPath, sandbox: sandbox });
-
-        drain();
+        
         return result;
       } catch (error) {
         throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
