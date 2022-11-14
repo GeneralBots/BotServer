@@ -32,7 +32,7 @@
 
 'use strict';
 
-import { GBLog, GBMinInstance } from 'botlib';
+import { GBError, GBLog, GBMinInstance } from 'botlib';
 import { GBServer } from '../../../src/app';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GuaribasUser } from '../../security.gbapp/models';
@@ -52,10 +52,9 @@ const url = require('url');
  * Web Automation services of conversation to be called by BASIC.
  */
 export class DebuggerService {
-
   /**
-  * Reference to minimal bot instance.
-  */
+   * Reference to minimal bot instance.
+   */
   public min: GBMinInstance;
 
   /**
@@ -91,6 +90,96 @@ export class DebuggerService {
 
   conversationsMap = {};
   watermarkMap = {};
+  static systemVariables = [
+    'AggregateError',
+    'Array',
+    'ArrayBuffer',
+    'Atomics',
+    'BigInt',
+    'BigInt64Array',
+    'BigUint64Array',
+    'Boolean',
+    'DataView',
+    'Date',
+    'Error',
+    'EvalError',
+    'FinalizationRegistry',
+    'Float32Array',
+    'Float64Array',
+    'Function',
+    'Headers',
+    'Infinity',
+    'Int16Array',
+    'Int32Array',
+    'Int8Array',
+    'Intl',
+    'JSON',
+    'Map',
+    'Math',
+    'NaN',
+    'Number',
+    'Object',
+    'Promise',
+    'Proxy',
+    'RangeError',
+    'ReferenceError',
+    'Reflect',
+    'RegExp',
+    'Request',
+    'Response',
+    'Set',
+    'SharedArrayBuffer',
+    'String',
+    'Symbol',
+    'SyntaxError',
+    'TypeError',
+    'URIError',
+    'Uint16Array',
+    'Uint32Array',
+    'Uint8Array',
+    'Uint8ClampedArray',
+    'VM2_INTERNAL_STATE_DO_NOT_USE_OR_PROGRAM_WILL_FAIL',
+    'WeakMap',
+    'WeakRef',
+    'WeakSet',
+    'WebAssembly',
+    '__defineGetter__',
+    '__defineSetter__',
+    '__lookupGetter__',
+    '__lookupSetter__',
+    '__proto__',
+    'clearImmediate',
+    'clearInterval',
+    'clearTimeout',
+    'console',
+    'constructor',
+    'decodeURI',
+    'decodeURIComponent',
+    'dss',
+    'encodeURI',
+    'encodeURIComponent',
+    'escape',
+    'eval',
+    'fetch',
+    'global',
+    'globalThis',
+    'hasOwnProperty',
+    'isFinite',
+    'isNaN',
+    'isPrototypeOf',
+    'parseFloat',
+    'parseInt',
+    'process',
+    'propertyIsEnumerable',
+    'setImmediate',
+    'setInterval',
+    'setTimeout',
+    'toLocaleString',
+    'toString',
+    'undefined',
+    'unescape',
+    'valueOf'
+  ];
 
   /**
    * When creating this keyword facade,a bot instance is
@@ -101,110 +190,111 @@ export class DebuggerService {
     this.user = user;
     this.dk = dk;
 
-    this.debugWeb = this.min.core.getParam<boolean>(
-      this.min.instance,
-      'Debug Web Automation',
-      false
-    );
+    this.debugWeb = this.min.core.getParam<boolean>(this.min.instance, 'Debug Web Automation', false);
 
     const botId = min.botId;
 
     GBServer.globals.debuggers[botId] = {};
-    GBServer.globals.debuggers[botId].state = 1;
+    GBServer.globals.debuggers[botId].state = 0;
     GBServer.globals.debuggers[botId].breaks = [];
-
   }
 
   private client;
 
   public async breakpoint({ botId, botApiKey, line }) {
-
+    GBLog.info(`GBDEBUG: Enabled breakpoint for ${botId} on ${line}.`);
     GBServer.globals.debuggers[botId].breaks.push(Number.parseInt(line));
-
   }
 
-  public async removeBreakPoint({ botId, botApiKey, line }) {
+  public async resume({ botId, botApiKey, force }) {
     const client = GBServer.globals.debuggers[botId].client;
-    
-
-  }
-
-  public async continueRun({ botId, botApiKey, force }) {
-    const client = GBServer.globals.debuggers[botId].client;
-    client.Debugger.resume();
+    await client.Debugger.resume();
   }
 
   public async stop({ botId, botApiKey, force }) {
+    GBServer.globals.debuggers[botId].state = 0;
     const client = GBServer.globals.debuggers[botId].client;
-    client.close();
+    await client.close();
   }
 
-  public async stepOver({ botId, botApiKey }) {
-    const client = GBServer.globals.debuggers[botId].client;
-    client.stepOver();
+  public async step({ botId, botApiKey }) {
+    if (GBServer.globals.debuggers[botId].state === 2) {
+      const client = GBServer.globals.debuggers[botId].client;
+      await client.stepOver();
+    } else {
+      throw new GBError(new Error('Invalid call to stepOver and state not being debug(2).'));
+    }
   }
 
-  public async getExecutionContext({ botId, botApiKey, force }) {
-
-    const client = GBServer.globals.debuggers[botId].client;
+  public async context({ botId, botApiKey, force }) {
     const conversationId = this.conversationsMap[botId];
-
-
-    const response = await client.Conversations.Conversations_GetActivities({
-      conversationId: conversationId,
-      watermark: this.watermarkMap[botId]
-    });
-    this.watermarkMap[botId] = response.obj.watermark;
-    let activities = response.obj.activites;
     let messages = [];
-    if (activities && activities.length) {
-      activities = activities.filter(m => m.from.id === botId && m.type === 'message');
-      if (activities.length) {
-        activities.forEach(activity => {
-          messages.push({ text: activity.text });
-          GBLog.info(`GBDEBUG: SND TO WORD ${activity.text}`);
-        });
+    if (this.client) {
+      const response = await this.client.Conversations.Conversations_GetActivities({
+        conversationId: conversationId,
+        watermark: this.watermarkMap[botId]
+      });
+      this.watermarkMap[botId] = response.obj.watermark;
+      let activities = response.obj.activites;
+
+      if (activities && activities.length) {
+        activities = activities.filter(m => m.from.id === botId && m.type === 'message');
+        if (activities.length) {
+          activities.forEach(activity => {
+            messages.push({ text: activity.text });
+            GBLog.info(`Debugger sending text to API: ${activity.text}`);
+          });
+        }
       }
     }
 
-    return { state: GBServer.globals.debuggers[botId].state, messages, scope: GBServer.globals.debuggers[botId].scope };
+    let messagesText = messages.join('\n');
+
+    return {
+      state: GBServer.globals.debuggers[botId].state,
+      messagesText,
+      scope: GBServer.globals.debuggers[botId].scope
+    };
   }
 
-  public async run({ botId, botApiKey, scriptName }) {
-    
-    GBLog.info(`BASIC: Running ${botId} in DEBUG mode.`);
+  public async debug({ botId, botApiKey, scriptName }) {
+    if (GBServer.globals.debuggers[botId].state === 1) {
+      throw new Error(`Cannot DEBUG an already running process. ${botId}`);
+    } else if (GBServer.globals.debuggers[botId].state === 2) {
+      GBLog.info(`BASIC: Releasing execution ${botId} in DEBUG mode.`);
+      return await this.continueRun({ botId, botApiKey, force: false });
+    } else {
+      GBLog.info(`BASIC: Running ${botId} in DEBUG mode.`);
 
+      GBServer.globals.debuggers[botId].state = 1;
 
-    GBServer.globals.debuggers[botId].state = 1;
+      let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
+      this.client = await new Swagger({
+        spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
+        usePromise: true
+      });
+      this.client.clientAuthorizations.add(
+        'AuthorizationBotConnector',
+        new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${min.instance.webchatKey}`, 'header')
+      );
+      const response = await this.client.Conversations.Conversations_StartConversation();
+      const conversationId = response.obj.conversationId;
+      this.conversationsMap[botId] = conversationId;
+      GBServer.globals.debugConversationId = conversationId;
 
-    let min: GBMinInstance = GBServer.globals.minInstances.filter(
-      p => p.instance.botId === botId
-    )[0];
-
-    this.client = await new Swagger({
-      spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')), usePromise: true
-    });
-    this.client.clientAuthorizations.add(
-      'AuthorizationBotConnector',
-      new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${min.instance.webchatKey}`, 'header')
-    );
-    const response = await this.client.Conversations.Conversations_StartConversation();
-    const conversationId = response.obj.conversationId;
-    this.conversationsMap[botId] = conversationId;
-    GBServer.globals.debugConversationId = conversationId;
-
-    this.client.Conversations.Conversations_PostActivity({
-      conversationId: conversationId,
-      activity: {
-        textFormat: 'plain',
-        text: `/call ${scriptName}`,
-        type: 'message',
-        from: {
-          id: 'test',
-          name: 'test'
+      this.client.Conversations.Conversations_PostActivity({
+        conversationId: conversationId,
+        activity: {
+          textFormat: 'plain',
+          text: `/calldbg ${scriptName}`,
+          type: 'message',
+          from: {
+            id: 'test',
+            name: 'test'
+          }
         }
-      }
-    });
+      });
+    }
   }
 }

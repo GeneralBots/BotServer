@@ -765,7 +765,9 @@ export class GBVMService extends GBService {
   /**
    * Executes the converted JavaScript from BASIC code inside execution context.
    */
-  public static async callVM(text: string, min: GBMinInstance, step, GBDialogdeployer: GBDeployer) {
+  public static async callVM(text: string, min: GBMinInstance, step, GBDialogdeployer: GBDeployer, debug: boolean) {
+
+    const debuggerPort = 9222;
 
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
@@ -829,7 +831,8 @@ export class GBVMService extends GBService {
         const { run } = createVm2Pool({
           min: 0,
           max: 0,
-          debuggerPort: 9222,
+          debug: debug,
+          debuggerPort: debuggerPort,
           botId: botId,
           cpu: 100,
           memory: 50000,

@@ -179,7 +179,7 @@ export class AskDialog extends IGBDialog {
           const startDialog =
             min.core.getParam(min.instance, 'Start Dialog', null);
           if (startDialog) {
-            await GBVMService.callVM(startDialog.toLowerCase().trim(), min, step, this.deployer);
+            await GBVMService.callVM(startDialog.toLowerCase().trim(), min, step, this.deployer, false);
           }
 
           return step.endDialog();
@@ -304,7 +304,7 @@ export class AskDialog extends IGBDialog {
 
 
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
-      return await GBVMService.callVM(mainName, min, step, this.deployer);
+      return await GBVMService.callVM(mainName, min, step, this.deployer, false);
     } else {
       await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
       return await step.replaceDialog('/ask', { isReturning: true });

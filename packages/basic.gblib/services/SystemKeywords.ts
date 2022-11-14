@@ -99,7 +99,7 @@ export class SystemKeywords {
     const step = null;
     const deployer = null;
 
-    return await GBVMService.callVM(text, min, step, deployer);
+    return await GBVMService.callVM(text, min, step, deployer, false);
   }
 
   public async append({args}) {

@@ -148,7 +148,7 @@ export class ScheduleServices extends GBService {
             let min: GBMinInstance = GBServer.globals.minInstances.filter(
               p => p.instance.instanceId === item.instanceId
             )[0];
-            await GBVMService.callVM(script, min, null, null);
+            await GBVMService.callVM(script, min, null, null, false);
           };
           (async () => {
             await finalData();

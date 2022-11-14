@@ -6,6 +6,7 @@ const net = require('net');
 import { GBLog } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../../src/app';
+import { DebuggerService } from '../DebuggerService';
 const finalStream = require('final-stream');
 
 const waitUntil = condition => {
@@ -53,7 +54,7 @@ const createVm2Pool = ({ min, max, ...limits }) => {
         limits.cpu,
         '--',
         'node',
-        `--inspect=${limits.debuggerPort}`,
+        `${limits.debug ? '--inspect=' + limits.debuggerPort : ''}`,
         `--experimental-fetch`,
         `--max-old-space-size=${limits.memory}`,
         limits.script,
@@ -79,60 +80,71 @@ const createVm2Pool = ({ min, max, ...limits }) => {
     });
 
     let socket = null;
-
     await waitUntil(() => childProcess.socket);
     socket = net.createConnection(childProcess.socket);
     socket.write(JSON.stringify({ code, scope }) + '\n');
 
-    // Only attach if called by /debugger/run.
+    // Only attach if called by debugger/run.
 
     if (GBServer.globals.debuggers[limits.botId]) {
-
-
       const debug = async () => {
         return new Promise((resolve, reject) => {
           CDP(async client => {
             const { Debugger, Runtime } = client;
             try {
               GBServer.globals.debuggers[limits.botId].client = client;
-              await client.Runtime.runIfWaitingForDebugger();
-              await client.Debugger.enable();
 
-              async function mainScript({ Debugger }) {
-                return new Promise((fulfill, reject) => {
-                  Debugger.scriptParsed(params => {
-                    const { scriptId, url } = params;
-                    fulfill(scriptId);
-                  });
-                });
-              }
-
-              await CollectionUtil.asyncForEach(GBServer.globals.debuggers[limits.botId].breaks, async brk => {
-                const scriptId = await mainScript(client);
-                const { breakpointId } = await client.Debugger.setBreakpoint({
-                  location: {
-                    scriptId,
-                    lineNumber: brk
-                  }
-                });
-                GBLog.info(`BASIC break defined ${breakpointId} for ${limits.botId}`);
-              });
-
-              await client.Debugger.paused(({ callFrames, reason, hitBreakpoints }) => {
+              await client.Debugger.paused(async ({ callFrames, reason, hitBreakpoints }) => {
                 const frame = callFrames[0];
-                if (hitBreakpoints.length > 1) {
-                  GBLog.info(`.gbdialog break at line ${frame.location.lineNumber + 1}`); // (zero-based)
 
-                  const scope = `${frame.scopeChain[0].name} ${frame.scopeChain[0].object}`;
+                // Build variable list ignoring system variables of script.
 
-                  GBServer.globals.debuggers[limits.botId].scope = scope;
+                const scopeObjectId = frame.scopeChain[2].object.objectId;
+                const variables = await Runtime.getProperties({ objectId: scopeObjectId });
+                let variablesText = '';
+                if (variables && variables.result) {
+                  await CollectionUtil.asyncForEach(variables.result, async v => {
+                    if (!DebuggerService.systemVariables.filter(x => x === v.name)[0]) {
+                      if (v.value.value) {
+                        variablesText = `${variablesText} \n ${v.name}: ${v.value.value}`;
+                      }
+                    }
+                  });
+                }
+                GBLog.info(`BASIC: Breakpoint variables: ${variablesText}`); // (zero-based)
+
+                // Processes breakpoint hits.
+
+                if (hitBreakpoints.length >= 1) {
+                  GBLog.info(`BASIC: Break at line ${frame.location.lineNumber + 1}`); // (zero-based)
+
+                  GBServer.globals.debuggers[limits.botId].scope = variablesText;
                   GBServer.globals.debuggers[limits.botId].state = 2;
-                } else if (reason === '') {
-                  GBLog.info(`.gbdialog ${reason} at line ${frame.location.lineNumber + 1}`); // (zero-based)
+                } else {
+                  GBLog.info(`BASIC: Configuring breakpoints if any for ${limits.botId}`);
+                  // Waits for debugger and setup breakpoints.
+
+                  await CollectionUtil.asyncForEach(GBServer.globals.debuggers[limits.botId].breaks, async brk => {
+                    try {
+                      const { breakpointId } = await client.Debugger.setBreakpoint({
+                        location: {
+                          scriptId: frame.location.scriptId,
+                          lineNumber: brk
+                        }
+                      });
+                      GBLog.info(`BASIC break defined ${breakpointId} for ${limits.botId}`);
+                    } catch (error) {
+                      GBLog.info(`BASIC error defining defining ${brk} for ${limits.botId}. ${error}`);
+                    }
+                  });
+                  await client.Debugger.resume();
                 }
               });
 
-        
+              await client.Runtime.runIfWaitingForDebugger();
+              await client.Debugger.enable();
+              await client.Runtime.enable();
+
               resolve(1);
             } catch (err) {
               GBLog.error(err);

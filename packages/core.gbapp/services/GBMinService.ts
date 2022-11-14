@@ -945,7 +945,7 @@ export class GBMinService {
             if (startDialog && !user.welcomed) {
               user.welcomed = true;
               GBLog.info(`Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
-              await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+              await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
             }
           }
         }
@@ -990,7 +990,7 @@ export class GBMinService {
                 min["conversationWelcomed"][step.context.activity.conversation.id] = true;
 
                 GBLog.info(`Auto start (web 1) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
-                await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+                await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
               }
             }
 
@@ -1004,7 +1004,7 @@ export class GBMinService {
                 min["conversationWelcomed"][step.context.activity.conversation.id] = true;
                 await min.userProfile.set(step.context, user);
                 GBLog.info(`Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
-                await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+                await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
               }
             }
           }
@@ -1071,7 +1071,7 @@ export class GBMinService {
       if (startDialog && !min["conversationWelcomed"][step.context.activity.conversation.id]) {
         user.welcomed = true;
         GBLog.info(`Auto start (web 2) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
-        await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer);
+        await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
       }
     } else if (context.activity.name === 'updateToken') {
       const token = context.activity.data;
@@ -1139,7 +1139,7 @@ export class GBMinService {
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
     if (isVMCall) {
-      await GBVMService.callVM(context.activity.text, min, step, this.deployer);
+      await GBVMService.callVM(context.activity.text, min, step, this.deployer, false);
     } else if (context.activity.text.charAt(0) === '/') {
 
       const text = context.activity.text;
@@ -1158,9 +1158,11 @@ export class GBMinService {
         await min.userProfile.set(step.context, user);
 
       } else if (cmdOrDialogName === '/call') {
-        await GBVMService.callVM(args, min, step, this.deployer);
+        await GBVMService.callVM(args, min, step, this.deployer, false);
       } else if (cmdOrDialogName === '/callsch') {
-        await GBVMService.callVM(args, min, null, null);
+        await GBVMService.callVM(args, min, null, null, false);
+      } else if (cmdOrDialogName === '/calldbg') {
+        await GBVMService.callVM(args, min, step, this.deployer, true);
       } else {
         await step.beginDialog(cmdOrDialogName, { args: args });
       }
