@@ -32,21 +32,13 @@
 
 'use strict';
 
-import { GBError, GBLog, GBMinInstance } from 'botlib';
+import { GBLog, GBMinInstance } from 'botlib';
 import { GBServer } from '../../../src/app';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GuaribasUser } from '../../security.gbapp/models';
 import { DialogKeywords } from './DialogKeywords';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
 const Swagger = require('swagger-client');
 const fs = require('fs');
-import { CollectionUtil } from 'pragmatismo-io-framework';
-import * as request from 'request-promise-native';
-
-const urlJoin = require('url-join');
-const Path = require('path');
-const Fs = require('fs');
-const url = require('url');
+const { spawn } = require('child_process');
 
 /**
  * Web Automation services of conversation to be called by BASIC.
@@ -82,6 +74,7 @@ export class DebuggerService {
   userId: GuaribasUser;
   debugWeb: boolean;
   lastDebugWeb: Date;
+
 
   /**
    * SYSTEM account maxLines,when used with impersonated contexts (eg. running in SET SCHEDULE).
@@ -198,16 +191,17 @@ export class DebuggerService {
     GBServer.globals.debuggers[botId].state = 0;
     GBServer.globals.debuggers[botId].breaks = [];
     GBServer.globals.debuggers[botId].stateInfo = "Stopped";
+    GBServer.globals.debuggers[botId].childProcess = null;
   }
 
   private client;
 
-  public async breakpoint({ botId, botApiKey, line }) {
+  public async breakpoint({ botId, line }) {
     GBLog.info(`BASIC: Enabled breakpoint for ${botId} on ${line}.`);
     GBServer.globals.debuggers[botId].breaks.push(Number.parseInt(line));
   }
 
-  public async resume({ botId, botApiKey, force }) {
+  public async resume({ botId }) {
     if (GBServer.globals.debuggers[botId].state === 2) {
       const client = GBServer.globals.debuggers[botId].client;
       await client.Debugger.resume();
@@ -220,15 +214,20 @@ export class DebuggerService {
     }
   }
 
-  public async stop({ botId, botApiKey, force }) {
+  public async stop({ botId }) {
     GBServer.globals.debuggers[botId].state = 0;
     GBServer.globals.debuggers[botId].stateInfo = "Stopped";
-    const client = GBServer.globals.debuggers[botId].client;
-    await client.Debugger.close();
+
+    const kill = ref => {
+      spawn('sh', ['-c', `pkill -9 -f ${ref}`]);
+    };
+
+    kill(GBServer.globals.debuggers[botId].childProcess);
+
     return {status: 'OK'};
   }
 
-  public async step({ botId, botApiKey }) {
+  public async step({ botId }) {
     if (GBServer.globals.debuggers[botId].state === 2) {
       GBServer.globals.debuggers[botId].stateInfo = "Break";
       const client = GBServer.globals.debuggers[botId].client;
@@ -240,7 +239,7 @@ export class DebuggerService {
     }
   }
 
-  public async context({ botId, botApiKey, force }) {
+  public async context({ botId }) {
     const conversationId = this.conversationsMap[botId];
     let messages = [];
     if (this.client) {
@@ -273,14 +272,24 @@ export class DebuggerService {
     };
   }
 
-  public async debug({ botId, botApiKey, scriptName }) {
+  public async getRunning({ botId, botApiKey, scriptName }) {
     let error;
+    botId = botId[0]; // TODO: Handle call in POST.
+    if (!GBServer.globals.debuggers[botId])
+    {
+      GBServer.globals.debuggers[botId]= {};
+    }
+
+    if (!scriptName){
+      scriptName = 'start';
+    }
+
     if (GBServer.globals.debuggers[botId].state === 1) {
       error  = `Cannot DEBUG an already running process. ${botId}`;
       return {error: error};
     } else if (GBServer.globals.debuggers[botId].state === 2) {
       GBLog.info(`BASIC: Releasing execution ${botId} in DEBUG mode.`);
-      await this.resume({ botId, botApiKey, force: false });
+      await this.resume({ botId});
       return {status: 'OK'};
     } else {
       GBLog.info(`BASIC: Running ${botId} in DEBUG mode.`);

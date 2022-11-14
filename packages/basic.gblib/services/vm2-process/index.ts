@@ -63,6 +63,7 @@ const createVm2Pool = ({ min, max, ...limits }) => {
       { cwd: limits.cwd, shell: false }
     );
 
+
     childProcess.stdout.on('data', data => {
       childProcess.socket = childProcess.socket || data.toString().trim();
     });
@@ -75,18 +76,22 @@ const createVm2Pool = ({ min, max, ...limits }) => {
         GBServer.globals.debuggers[limits.botId].state = 0;
         GBServer.globals.debuggers[limits.botId].stateInfo = stderrCache;
       }
-      if (stderrCache.includes('FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory')) {
+      else if (stderrCache.includes('FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory')) {
         limitError = 'code execution exceeed allowed memory';
         kill(process);
         GBServer.globals.debuggers[limits.botId].state = 0;
-        GBServer.globals.debuggers[limits.botId].stateInfo = "Fail";
+        GBServer.globals.debuggers[limits.botId].stateInfo = 'Fail';
       }
+      else if (stderrCache.includes('Debugger attached.')) {
+        GBLog.info(`BASIC: General Bots Debugger attached to Node .gbdialog process for ${limits.botId}.`);
+      }      
     });
 
     let socket = null;
     await waitUntil(() => childProcess.socket);
-    socket = net.createConnection(childProcess.socket);
-    socket.write(JSON.stringify({ code, scope }) + '\n');
+
+    GBServer.globals.debuggers[limits.botId].childProcess = ref;
+
 
     // Only attach if called by debugger/run.
 
@@ -124,7 +129,7 @@ const createVm2Pool = ({ min, max, ...limits }) => {
                   GBLog.info(`BASIC: Break at line ${frame.location.lineNumber + 1}`); // (zero-based)
 
                   GBServer.globals.debuggers[limits.botId].state = 2;
-                  GBServer.globals.debuggers[limits.botId].stateInfo = "Break";
+                  GBServer.globals.debuggers[limits.botId].stateInfo = 'Break';
                 } else {
                   GBLog.verbose(`BASIC: Configuring breakpoints if any for ${limits.botId}...`);
                   // Waits for debugger and setup breakpoints.
@@ -149,19 +154,20 @@ const createVm2Pool = ({ min, max, ...limits }) => {
               await client.Runtime.runIfWaitingForDebugger();
               await client.Debugger.enable();
               await client.Runtime.enable();
+              
 
               resolve(1);
             } catch (err) {
               GBLog.error(err);
               kill(childProcess);
               GBServer.globals.debuggers[limits.botId].state = 0;
-              GBServer.globals.debuggers[limits.botId].stateInfo = "Stopped";
+              GBServer.globals.debuggers[limits.botId].stateInfo = 'Stopped';
             }
           }).on('error', err => {
             console.error(err);
             kill(childProcess);
             GBServer.globals.debuggers[limits.botId].state = 0;
-            GBServer.globals.debuggers[limits.botId].stateInfo = "Stopped";
+            GBServer.globals.debuggers[limits.botId].stateInfo = 'Stopped';
             reject(err);
           });
         });
@@ -169,6 +175,8 @@ const createVm2Pool = ({ min, max, ...limits }) => {
 
       await debug();
     }
+    socket = net.createConnection(childProcess.socket);
+    socket.write(JSON.stringify({ code, scope }) + '\n');
 
     const timer = setTimeout(() => {
       limitError = 'code execution took too long and was killed';
