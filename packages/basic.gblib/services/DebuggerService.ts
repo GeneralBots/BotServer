@@ -207,22 +207,32 @@ export class DebuggerService {
   }
 
   public async resume({ botId, botApiKey, force }) {
-    const client = GBServer.globals.debuggers[botId].client;
-    await client.Debugger.resume();
+    if (GBServer.globals.debuggers[botId].state === 2) {
+      const client = GBServer.globals.debuggers[botId].client;
+      await client.Debugger.resume();
+      GBServer.globals.debuggers[botId].state = 1;
+      return {status: 'OK'};
+    } else {
+      const error = 'Invalid call to resume and state not being debug(2).';
+      return {error: error};
+    }
   }
 
   public async stop({ botId, botApiKey, force }) {
     GBServer.globals.debuggers[botId].state = 0;
     const client = GBServer.globals.debuggers[botId].client;
-    await client.close();
+    await client.Debugger.close();
+    return {status: 'OK'};
   }
 
   public async step({ botId, botApiKey }) {
     if (GBServer.globals.debuggers[botId].state === 2) {
       const client = GBServer.globals.debuggers[botId].client;
-      await client.stepOver();
+      await client.Debugger.stepOver();
+      return {status: 'OK'};
     } else {
-      throw new GBError(new Error('Invalid call to stepOver and state not being debug(2).'));
+      const error = 'Invalid call to stepOver and state not being debug(2).';
+      return {error: error};
     }
   }
 
@@ -251,6 +261,7 @@ export class DebuggerService {
     let messagesText = messages.join('\n');
 
     return {
+      status: 'OK',
       state: GBServer.globals.debuggers[botId].state,
       messagesText,
       scope: GBServer.globals.debuggers[botId].scope
@@ -258,11 +269,14 @@ export class DebuggerService {
   }
 
   public async debug({ botId, botApiKey, scriptName }) {
+    let error;
     if (GBServer.globals.debuggers[botId].state === 1) {
-      throw new Error(`Cannot DEBUG an already running process. ${botId}`);
+      error  = `Cannot DEBUG an already running process. ${botId}`;
+      return {error: error};
     } else if (GBServer.globals.debuggers[botId].state === 2) {
       GBLog.info(`BASIC: Releasing execution ${botId} in DEBUG mode.`);
-      return await this.continueRun({ botId, botApiKey, force: false });
+      await this.resume({ botId, botApiKey, force: false });
+      return {status: 'OK'};
     } else {
       GBLog.info(`BASIC: Running ${botId} in DEBUG mode.`);
 
@@ -295,6 +309,8 @@ export class DebuggerService {
           }
         }
       });
+
+      return {status: 'OK'};
     }
   }
 }

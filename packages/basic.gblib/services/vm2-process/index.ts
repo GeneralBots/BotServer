@@ -111,6 +111,7 @@ const createVm2Pool = ({ min, max, ...limits }) => {
                     }
                   });
                 }
+                GBServer.globals.debuggers[limits.botId].scope = variablesText;
                 GBLog.info(`BASIC: Breakpoint variables: ${variablesText}`); // (zero-based)
 
                 // Processes breakpoint hits.
@@ -118,7 +119,6 @@ const createVm2Pool = ({ min, max, ...limits }) => {
                 if (hitBreakpoints.length >= 1) {
                   GBLog.info(`BASIC: Break at line ${frame.location.lineNumber + 1}`); // (zero-based)
 
-                  GBServer.globals.debuggers[limits.botId].scope = variablesText;
                   GBServer.globals.debuggers[limits.botId].state = 2;
                 } else {
                   GBLog.info(`BASIC: Configuring breakpoints if any for ${limits.botId}`);
