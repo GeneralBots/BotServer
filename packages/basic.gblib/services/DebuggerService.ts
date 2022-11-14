@@ -197,12 +197,13 @@ export class DebuggerService {
     GBServer.globals.debuggers[botId] = {};
     GBServer.globals.debuggers[botId].state = 0;
     GBServer.globals.debuggers[botId].breaks = [];
+    GBServer.globals.debuggers[botId].stateInfo = "Stopped";
   }
 
   private client;
 
   public async breakpoint({ botId, botApiKey, line }) {
-    GBLog.info(`GBDEBUG: Enabled breakpoint for ${botId} on ${line}.`);
+    GBLog.info(`BASIC: Enabled breakpoint for ${botId} on ${line}.`);
     GBServer.globals.debuggers[botId].breaks.push(Number.parseInt(line));
   }
 
@@ -211,6 +212,7 @@ export class DebuggerService {
       const client = GBServer.globals.debuggers[botId].client;
       await client.Debugger.resume();
       GBServer.globals.debuggers[botId].state = 1;
+      GBServer.globals.debuggers[botId].stateInfo = "Running (Debug)";
       return {status: 'OK'};
     } else {
       const error = 'Invalid call to resume and state not being debug(2).';
@@ -220,6 +222,7 @@ export class DebuggerService {
 
   public async stop({ botId, botApiKey, force }) {
     GBServer.globals.debuggers[botId].state = 0;
+    GBServer.globals.debuggers[botId].stateInfo = "Stopped";
     const client = GBServer.globals.debuggers[botId].client;
     await client.Debugger.close();
     return {status: 'OK'};
@@ -227,6 +230,7 @@ export class DebuggerService {
 
   public async step({ botId, botApiKey }) {
     if (GBServer.globals.debuggers[botId].state === 2) {
+      GBServer.globals.debuggers[botId].stateInfo = "Break";
       const client = GBServer.globals.debuggers[botId].client;
       await client.Debugger.stepOver();
       return {status: 'OK'};
@@ -263,8 +267,9 @@ export class DebuggerService {
     return {
       status: 'OK',
       state: GBServer.globals.debuggers[botId].state,
-      messagesText,
-      scope: GBServer.globals.debuggers[botId].scope
+      messages:messagesText,
+      scope: GBServer.globals.debuggers[botId].scope,
+      scopeInfo: GBServer.globals.debuggers[botId].stateInfo
     };
   }
 
@@ -279,8 +284,8 @@ export class DebuggerService {
       return {status: 'OK'};
     } else {
       GBLog.info(`BASIC: Running ${botId} in DEBUG mode.`);
-
       GBServer.globals.debuggers[botId].state = 1;
+      GBServer.globals.debuggers[botId].stateInfo = "Running (Debug)";
 
       let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 

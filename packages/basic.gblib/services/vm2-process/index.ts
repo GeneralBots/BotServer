@@ -72,10 +72,14 @@ const createVm2Pool = ({ min, max, ...limits }) => {
       if (stderrCache.includes('failed: address already in use')) {
         limitError = stderrCache;
         kill(process);
+        GBServer.globals.debuggers[limits.botId].state = 0;
+        GBServer.globals.debuggers[limits.botId].stateInfo = stderrCache;
       }
       if (stderrCache.includes('FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory')) {
         limitError = 'code execution exceeed allowed memory';
         kill(process);
+        GBServer.globals.debuggers[limits.botId].state = 0;
+        GBServer.globals.debuggers[limits.botId].stateInfo = "Fail";
       }
     });
 
@@ -120,8 +124,9 @@ const createVm2Pool = ({ min, max, ...limits }) => {
                   GBLog.info(`BASIC: Break at line ${frame.location.lineNumber + 1}`); // (zero-based)
 
                   GBServer.globals.debuggers[limits.botId].state = 2;
+                  GBServer.globals.debuggers[limits.botId].stateInfo = "Break";
                 } else {
-                  GBLog.info(`BASIC: Configuring breakpoints if any for ${limits.botId}`);
+                  GBLog.verbose(`BASIC: Configuring breakpoints if any for ${limits.botId}...`);
                   // Waits for debugger and setup breakpoints.
 
                   await CollectionUtil.asyncForEach(GBServer.globals.debuggers[limits.botId].breaks, async brk => {
@@ -149,10 +154,14 @@ const createVm2Pool = ({ min, max, ...limits }) => {
             } catch (err) {
               GBLog.error(err);
               kill(childProcess);
+              GBServer.globals.debuggers[limits.botId].state = 0;
+              GBServer.globals.debuggers[limits.botId].stateInfo = "Stopped";
             }
           }).on('error', err => {
             console.error(err);
             kill(childProcess);
+            GBServer.globals.debuggers[limits.botId].state = 0;
+            GBServer.globals.debuggers[limits.botId].stateInfo = "Stopped";
             reject(err);
           });
         });
@@ -163,13 +172,17 @@ const createVm2Pool = ({ min, max, ...limits }) => {
 
     const timer = setTimeout(() => {
       limitError = 'code execution took too long and was killed';
+
       kill(childProcess);
+      GBServer.globals.debuggers[limits.botId].state = 0;
+      GBServer.globals.debuggers[limits.botId].stateInfo = limitError;
     }, limits.time);
 
     try {
       let data = await finalStream(socket);
 
       data = JSON.parse(data);
+
       if (!data.length) {
         return null;
       }
@@ -182,6 +195,9 @@ const createVm2Pool = ({ min, max, ...limits }) => {
       throw new Error(limitError || error);
     } finally {
       kill(childProcess);
+
+      GBServer.globals.debuggers[limits.botId].state = 0;
+      GBServer.globals.debuggers[limits.botId].stateInfo = 'Stopped';
       clearTimeout(timer);
     }
   };
