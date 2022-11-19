@@ -58,7 +58,7 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBBasicPackage } from '../../basic.gblib/index.js';
 import { GBGoogleChatPackage } from '../../google-chat.gblib/index.js';
 import { GBHubSpotPackage } from '../../hubspot.gblib/index.js';
-import opn from 'opn';
+import open from 'open';
 import ngrok from 'ngrok';
 
 /**
@@ -524,7 +524,7 @@ ENDPOINT_UPDATE=true
    */
   public openBrowserInDevelopment() {
     if (process.env.NODE_ENV === 'development') {
-      opn('http://localhost:4242');
+      open('http://localhost:4242');
     }
   }
 

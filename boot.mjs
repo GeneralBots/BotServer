@@ -26,7 +26,7 @@ try {
     var run = () => {
         
         console.log(`[GB Runtime] Initializing General Bots (BotServer)...`);
-        console.log(`[GB Runtime] ${now()} - Running '${GBServer.name}' on '${import.meta.url}'`);
+        console.log(`[GB Runtime] ${now()} - Running on '${import.meta.url}'`);
         GBServer.GBServer.run();
     }
     var processDist = () => {
