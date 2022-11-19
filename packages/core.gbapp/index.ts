@@ -38,12 +38,12 @@
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
-import { BroadcastDialog } from './dialogs/BroadcastDialog';
-import { LanguageDialog } from './dialogs/LanguageDialog';
-import { SwitchBotDialog } from './dialogs/SwitchBot';
-import { WelcomeDialog } from './dialogs/WelcomeDialog';
-import { WhoAmIDialog } from './dialogs/WhoAmIDialog';
-import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage } from './models/GBModel';
+import { BroadcastDialog } from './dialogs/BroadcastDialog.js';
+import { LanguageDialog } from './dialogs/LanguageDialog.js';
+import { SwitchBotDialog } from './dialogs/SwitchBot.js';
+import { WelcomeDialog } from './dialogs/WelcomeDialog.js';
+import { WhoAmIDialog } from './dialogs/WhoAmIDialog.js';
+import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage } from './models/GBModel.js';
 
 /**
  * Package for core.gbapp.

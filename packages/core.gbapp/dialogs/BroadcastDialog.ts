@@ -39,10 +39,10 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import { Messages } from '../strings';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { GBServer } from '../../../src/app';
-import { GBConversationalService } from '../services/GBConversationalService';
+import { Messages } from '../strings.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
+import { GBServer } from '../../../src/app.js';
+import { GBConversationalService } from '../services/GBConversationalService.js';
 /**
  * Dialog for the bot explains about itself.
  */

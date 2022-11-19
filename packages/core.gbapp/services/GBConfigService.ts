@@ -33,6 +33,7 @@
 'use strict';
 
 import { GBLog } from 'botlib';
+import * as en from 'dotenv-extended';
 
 /**
  * @fileoverview General Bots server core.
@@ -58,7 +59,7 @@ export class GBConfigService {
 
   public static init(): any {
     try {
-      require('dotenv-extended').load({
+      en.load({
         encoding: 'utf8',
         silent: true,
         path: '.env',

@@ -36,15 +36,15 @@
 
 'use strict';
 
-const puppeteer = require('puppeteer-extra')
-const Fs = require('fs');
+import puppeteer from 'puppeteer-extra';
+import Fs from 'fs';
 
-// const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+// const StealthPlugin from 'puppeteer-extra-plugin-stealth')
 // puppeteer.use(StealthPlugin());
 
 import { NextFunction, Request, Response } from "express";
-import urljoin = require("url-join");
-const Path = require('path');
+import urljoin from "url-join";
+
 
 // https://hackernoon.com/tips-and-tricks-for-web-scraping-with-puppeteer-ed391a63d952
 // Dont download all resources, we just need the HTML
@@ -114,7 +114,6 @@ async function createBrowser(profilePath): Promise<any> {
         args: args,
         ignoreHTTPSErrors: true,
         headless: false,
-        devTools: false,
         defaultViewport: null,
         ignoreDefaultArgs: ["--enable-automation", "--enable-blink-features=IdleDetection"]
     });

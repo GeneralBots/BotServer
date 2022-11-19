@@ -38,8 +38,8 @@
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
-import { AdminDialog } from './dialogs/AdminDialog';
-import { GuaribasAdmin } from './models/AdminModel';
+import { AdminDialog } from './dialogs/AdminDialog.js';
+import { GuaribasAdmin } from './models/AdminModel.js';
 
 /**
  * The package for admin.gbapp.

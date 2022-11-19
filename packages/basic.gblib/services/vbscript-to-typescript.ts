@@ -1,9 +1,10 @@
 // Source: https://github.com/uweg/vbscript-to-typescript
 "use strict";
-exports.__esModule = true;
-var fs_1 = require("fs");
-var path = require("path");
-function convertFile(file) {
+
+import fs_1 from 'fs';
+import path from 'path';
+
+export function convertFile(file) {
     var extension = path.extname(file);
     var withoutExtension = file.substr(0, file.length - extension.length);
     var targetFile = withoutExtension + ".ts";
@@ -13,12 +14,12 @@ function convertFile(file) {
     console.log("Writing to \"" + targetFile + "\"...");
     fs_1.writeFileSync(targetFile, result);
 }
-exports.convertFile = convertFile;
-function convert(input, name) {
+
+export function convert(input, name) {
     var result = convertImports(input, name);
     return result;
 }
-exports.convert = convert;
+
 function convertImports(input, name) {
     var items = [];
     var result = input.replace(/<!-- #include file="(.*?\/)?(.*?).asp" -->/gi, function (input, group1, group2) {
@@ -37,7 +38,7 @@ function convertImports(input, name) {
     }
     return result;
 }
-exports.convertImports = convertImports;
+
 function convertCode(input) {
     var result = input.replace(/<%([^=][\s\S]*?)%>/gi, function (input, group1) {
         var code = group1;
@@ -53,7 +54,7 @@ function convertCode(input) {
     });
     return result;
 }
-exports.convertCode = convertCode;
+
 function convertExpressions(input) {
     var result = input.replace(/<%=([\s\S]*?)%>/gi, function (input, group1) {
         var content = convertPRec(group1);
@@ -62,7 +63,7 @@ function convertExpressions(input) {
     });
     return result;
 }
-exports.convertExpressions = convertExpressions;
+
 function convertStrings(input) {
     var result = input.replace(/%>([\s\S]+?)<%/gi, "\nResponse.Write(`$1`);\n");
     // Entire document is a string
@@ -83,7 +84,7 @@ function convertStrings(input) {
     result = result.replace(/^<%/, "");
     return result;
 }
-exports.convertStrings = convertStrings;
+
 function convertComments(input) {
     var result = '';
     var splitted = input.split(/(".*")/gim);
@@ -98,7 +99,7 @@ function convertComments(input) {
     }
     return result;
 }
-exports.convertComments = convertComments;
+
 function convertIfStatements(input) {
     var result = input.replace(/if +(.*?) +then/gi, function (input, group1) {
         var condition = convertConditions(group1);
@@ -108,25 +109,25 @@ function convertIfStatements(input) {
     result = result.replace(/else(?!{)/gi, "\n}\nelse {\n");
     return result;
 }
-exports.convertIfStatements = convertIfStatements;
+
 function convertSwitchStatements(input) {
     var result = input.replace(/select case +(.*)/gi, "\nswitch ($1) {\n");
     result = result.replace(/end select/gi, "\n}\n");
     return result;
 }
-exports.convertSwitchStatements = convertSwitchStatements;
+
 function convertFunctions(input) {
     var result = input.replace(/function +(.*)\((.*)\)/gi, "\n$1 = ($2) => {\n");
     result = result.replace(/end function/gi, "\n}\n");
     return result;
 }
-exports.convertFunctions = convertFunctions;
+
 function convertForStatements(input) {
     var result = input.replace(/for +(.*to.*)/gi, "\nfor ($1) {\n");
     result = result.replace(/^ *next *$/gim, "}\n");
     return result;
 }
-exports.convertForStatements = convertForStatements;
+
 function convertConditions(input) {
     var result = input.replace(/ +and +/gi, " && ");
     result = result.replace(/ +or +/gi, " || ");
@@ -134,7 +135,7 @@ function convertConditions(input) {
     result = result.replace(/ += +/gi, " === ");
     return result;
 }
-exports.convertConditions = convertConditions;
+
 function convertLoops(input) {
     var result = input.replace(/do while +(.*)/gi, function (input, group1) {
         var condition = convertConditions(group1);
@@ -144,14 +145,14 @@ function convertLoops(input) {
     result = result.replace(/^ *loop *$/gim, "}\n");
     return result;
 }
-exports.convertLoops = convertLoops;
+
 function convertPRec(input) {
     var result = input.replace(/(p_rec\("\S+?"\))/gi, "$1.Value");
     return result;
 }
-exports.convertPRec = convertPRec;
+
 function convertPLan(input) {
     var result = input.replace(/(l_\S+?)\(p_lan\)/gi, "$1[p_lan]");
     return result;
 }
-exports.convertPLan = convertPLan;
+

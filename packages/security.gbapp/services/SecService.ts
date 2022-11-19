@@ -1,10 +1,10 @@
-const Fs = require('fs');
-const urlJoin = require('url-join');
+import Fs from 'fs';
+import urlJoin from 'url-join';
 
 import { ConversationReference } from 'botbuilder';
 import { GBLog, GBMinInstance, GBService, IGBInstance } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models';
+import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models/index.js';
 import { FindOptions } from 'sequelize';
 
 /**

@@ -33,23 +33,21 @@
 'use strict';
 
 import { GBLog, GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
-import * as fs from 'fs';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { TSCompiler } from './TSCompiler';
+import * as Fs from 'fs';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { TSCompiler } from './TSCompiler.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { ScheduleServices } from './ScheduleServices';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
-//tslint:disable-next-line:no-submodule-imports
-const urlJoin = require('url-join');
-const { NodeVM, VMScript } = require('vm2');
-const { createVm2Pool } = require('./vm2-process/index');
-const vb2ts = require('./vbscript-to-typescript');
-const beautify = require('js-beautify').js;
-const textract = require('textract');
-const walkPromise = require('walk-promise');
-const child_process = require('child_process');
-const Path = require('path');
-const indent = require('indent.js');
+import { ScheduleServices } from './ScheduleServices.js';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
+import urlJoin from 'url-join';
+import { NodeVM, VMScript } from 'vm2';
+import { createVm2Pool } from './vm2-process/index.js';
+import *  as vb2ts from './vbscript-to-typescript.js';
+import textract from 'textract';
+import walkPromise from 'walk-promise';
+import child_process from 'child_process';
+import Path from 'path';
+import indent from 'indent.js';
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging, 
  * over a beautiful BASIC transpiler (to be done).
@@ -73,11 +71,11 @@ export class GBVMService extends GBService {
         const wordFile = filename;
         const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
         const fullVbsFile = urlJoin(folder, vbsFile);
-        const docxStat = fs.statSync(urlJoin(folder, wordFile));
+        const docxStat = Fs.statSync(urlJoin(folder, wordFile));
         const interval = 3000; // If compiled is older 30 seconds, then recompile.
         let writeVBS = true;
-        if (fs.existsSync(fullVbsFile)) {
-          const vbsStat = fs.statSync(fullVbsFile);
+        if (Fs.existsSync(fullVbsFile)) {
+          const vbsStat = Fs.statSync(fullVbsFile);
           if (docxStat['mtimeMs'] < vbsStat['mtimeMs'] + interval) {
             writeVBS = false;
           }
@@ -98,13 +96,13 @@ export class GBVMService extends GBService {
             await s.deleteScheduleIfAny(min, mainName);
           }
           text = text.replace(/^\s*SET SCHEDULE (.*)/gim, '');
-          fs.writeFileSync(urlJoin(folder, vbsFile), text);
+          Fs.writeFileSync(urlJoin(folder, vbsFile), text);
         }
 
         // Process node_modules install.
 
         const node_modules = urlJoin(folder, 'node_modules');
-        if (!fs.existsSync(node_modules)) {
+        if (!Fs.existsSync(node_modules)) {
           const packageJson = `
             {
               "name": "${min.botId}.gbdialog",
@@ -120,7 +118,7 @@ export class GBVMService extends GBService {
                 "vm2": "3.9.11"
               }
             }`;
-          fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
+          Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
 
           GBLog.info(`BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
           const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
@@ -131,21 +129,21 @@ export class GBVMService extends GBService {
 
         const fullFilename = urlJoin(folder, filename);
         if (process.env.GBDIALOG_HOTSWAP) {
-          fs.watchFile(fullFilename, async () => {
+          Fs.watchFile(fullFilename, async () => {
             await this.translateBASIC(fullFilename, min, deployer, mainName);
           });
         }
 
-        const compiledAt = fs.statSync(fullFilename);
+        const compiledAt = Fs.statSync(fullFilename);
         const jsfile = urlJoin(folder, `${filename}.js`);
 
-        if (fs.existsSync(jsfile)) {
-          const jsStat = fs.statSync(jsfile);
+        if (Fs.existsSync(jsfile)) {
+          const jsStat = Fs.statSync(jsfile);
           const interval = 30000; // If compiled is older 30 seconds, then recompile.
           if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
             await this.translateBASIC(fullFilename, min, deployer, mainName);
           } else {
-            const parsedCode: string = fs.readFileSync(jsfile, 'utf8');
+            const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
 
             min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
           }
@@ -160,7 +158,7 @@ export class GBVMService extends GBService {
 
     // Converts General Bots BASIC into regular VBS
 
-    let basicCode: string = fs.readFileSync(filename, 'utf8');
+    let basicCode: string = Fs.readFileSync(filename, 'utf8');
 
     // Processes END keyword, removing extracode, useful
     // for development in .gbdialog. 
@@ -195,17 +193,17 @@ export class GBVMService extends GBService {
         // To use include, two /publish will be necessary (for now)
         // because of alphabet order may raise not found errors.
 
-        let includeCode: string = fs.readFileSync(includeName, 'utf8');
+        let includeCode: string = Fs.readFileSync(includeName, 'utf8');
         basicCode = basicCode.replace(/^include\b.*$/gmi, includeCode);
       }
     } while (include);
 
-    const [vbsCode, jsonMap] = await this.convertGBASICToVBS(min, basicCode);
+    const {code, jsonMap} = await this.convertGBASICToVBS(min, basicCode);
     const vbsFile = `${filename}.compiled`;
     const mapFile = `${filename}.map`;
 
-    fs.writeFileSync(vbsFile, vbsCode);
-    fs.writeFileSync(mapFile, JSON.stringify(jsonMap));
+    Fs.writeFileSync(vbsFile, code);
+    Fs.writeFileSync(mapFile, JSON.stringify(jsonMap));
 
     // Converts VBS into TS.
 
@@ -214,8 +212,8 @@ export class GBVMService extends GBService {
     // Convert TS into JS.
 
     const tsfile: string = `${filename}.ts`;
-    let tsCode: string = fs.readFileSync(tsfile, 'utf8');
-    fs.writeFileSync(tsfile, tsCode);
+    let tsCode: string = Fs.readFileSync(tsfile, 'utf8');
+    Fs.writeFileSync(tsfile, tsCode);
     const tsc = new TSCompiler();
     tsc.compile([tsfile]);
 
@@ -223,15 +221,15 @@ export class GBVMService extends GBService {
 
     const jsfile = `${tsfile}.js`.replace('.ts', '');
 
-    if (fs.existsSync(jsfile)) {
-      let code: string = fs.readFileSync(jsfile, 'utf8');
+    if (Fs.existsSync(jsfile)) {
+      let code: string = Fs.readFileSync(jsfile, 'utf8');
 
       code.replace(/^.*exports.*$/gm, '');
 
       code = `
       return (async () => {
         require('isomorphic-fetch');
-        const rest = require ('typescript-rest-rpc/lib/client');
+        const rest from 'typescript-rest-rpc/lib/client');
 
         // Interprocess communication from local HTTP to the BotServer.
 
@@ -275,7 +273,7 @@ export class GBVMService extends GBService {
     
   `;
       code = indent.js(code, {tabString: '\t'});
-      fs.writeFileSync(jsfile, code);
+      Fs.writeFileSync(jsfile, code);
       min.sandBoxMap[mainName.toLowerCase().trim()] = code;
       GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
     }
@@ -378,7 +376,7 @@ export class GBVMService extends GBService {
     }
 
     code = `${allLines.join('\n')}\n%>`;
-    return [code, jsonMap];
+    return {code, jsonMap};
   }
 
   private getKeywords() {
@@ -841,7 +839,6 @@ export class GBVMService extends GBService {
           script: runnerPath
         });
 
-        const port = run.port;
         const result = await run(code, { filename: scriptPath, sandbox: sandbox });
         
         return result;

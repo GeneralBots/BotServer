@@ -1,5 +1,5 @@
-const Swagger = require('swagger-client');
-const rp = require('request-promise');
+import Swagger from 'swagger-client';
+import rp from 'request-promise';
 import { GBLog, GBService } from 'botlib';
 
 /**

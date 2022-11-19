@@ -36,14 +36,14 @@
 
 'use strict';
 
-const crypto = require('crypto');
+import crypto from 'crypto';
+import urlJoin from 'url-join';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog, GBLog, IGBPackage } from 'botlib';
-const urlJoin = require('url-join');
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { GBImporter } from '../../core.gbapp/services/GBImporterService';
-import { Messages } from '../strings';
-import { GBAdminService } from '../services/GBAdminService';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
+import { Messages } from '../strings.js';
+import { GBAdminService } from '../services/GBAdminService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 
 /**

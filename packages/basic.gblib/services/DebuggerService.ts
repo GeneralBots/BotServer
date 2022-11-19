@@ -33,12 +33,12 @@
 'use strict';
 
 import { GBLog, GBMinInstance } from 'botlib';
-import { GBServer } from '../../../src/app';
-import { GuaribasUser } from '../../security.gbapp/models';
-import { DialogKeywords } from './DialogKeywords';
-const Swagger = require('swagger-client');
-const fs = require('fs');
-const { spawn } = require('child_process');
+import { GBServer } from '../../../src/app.js';
+import { GuaribasUser } from '../../security.gbapp/models/index.js';
+import { DialogKeywords } from './DialogKeywords.js';
+import Fs from 'fs';
+import Swagger from 'swagger-client';
+import { spawn } from 'child_process';
 
 /**
  * Web Automation services of conversation to be called by BASIC.
@@ -299,7 +299,7 @@ export class DebuggerService {
       let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
       this.client = await new Swagger({
-        spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
+        spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
         usePromise: true
       });
       this.client.clientAuthorizations.add(

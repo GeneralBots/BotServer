@@ -38,7 +38,7 @@
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
-import { ConsoleDirectLine } from './services/ConsoleDirectLine';
+import { ConsoleDirectLine } from './services/ConsoleDirectLine.js';
 
 /**
  * Package for console.glib.

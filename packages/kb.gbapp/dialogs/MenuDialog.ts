@@ -36,15 +36,15 @@
 
 'use strict';
 
-const urlJoin = require('url-join');
+import urlJoin from 'url-join';
 
 import { BotAdapter, CardFactory, MessageFactory } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
-import { GuaribasSubject } from '../models';
-import { KBService } from '../services/KBService';
-import { Messages } from '../strings';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
+import { GuaribasSubject } from '../models/index.js';
+import { KBService } from '../services/KBService.js';
+import { Messages } from '../strings.js';
 
 /**
  * Dialog arguments.

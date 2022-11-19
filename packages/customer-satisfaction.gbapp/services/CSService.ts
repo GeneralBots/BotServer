@@ -31,9 +31,9 @@
 \*****************************************************************************/
 
 import { FindOptions, NonNullFindOptions } from 'sequelize/types';
-import { GuaribasQuestion } from '../../../packages/kb.gbapp/models';
-import { GuaribasConversation } from '../../analytics.gblib/models';
-import { GuaribasQuestionAlternate } from '../models';
+import { GuaribasQuestion } from '../../../packages/kb.gbapp/models/index.js';
+import { GuaribasConversation } from '../../analytics.gblib/models/index.js';
+import { GuaribasQuestionAlternate } from '../models/index.js';
 
 /**
  * Customer Satisfaction Service Layer.

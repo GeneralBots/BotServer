@@ -31,32 +31,28 @@
 \*****************************************************************************/
 'use strict';
 import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { DialogKeywords } from './DialogKeywords';
-import { GBServer } from '../../../src/app';
-import { GBVMService } from './GBVMService';
-import { ThisPath } from 'botbuilder-dialogs';
-const Fs = require('fs');
-const Excel = require('exceljs');
-import { createBrowser } from '../../core.gbapp/services/GBSSR';
-const urlJoin = require('url-join');
-
-const { TwitterApi } = require('twitter-api-v2');
-
-
-const Path = require('path');
-const ComputerVisionClient = require('@azure/cognitiveservices-computervision').ComputerVisionClient;
-const ApiKeyCredentials = require('@azure/ms-rest-js').ApiKeyCredentials;
-const alasql = require('alasql');
-const PizZip = require("pizzip");
-const Docxtemplater = require("docxtemplater");
-const pptxTemplaterModule = require('pptxtemplater');
-
-const _ = require('lodash');
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { DialogKeywords } from './DialogKeywords.js';
+import { GBServer } from '../../../src/app.js';
+import { GBVMService } from './GBVMService.js';
+import Fs from 'fs';
+import { createBrowser } from '../../core.gbapp/services/GBSSR.js';
+import urlJoin from 'url-join';
+import Excel from 'exceljs';
+import { TwitterApi } from 'twitter-api-v2';
+import tesseract from 'node-tesseract-ocr';
+import Path from 'path';
+import ComputerVisionClient from '@azure/cognitiveservices-computervision';
+import ApiKeyCredentials from '@azure/ms-rest-js';
+import alasql from 'alasql';
+import PizZip from 'pizzip';
+import Docxtemplater from 'docxtemplater';
+import pptxTemplaterModule from 'pptxtemplater';
+import _ from 'lodash';
 
 /**
  * @fileoverview General Bots server core.
@@ -114,8 +110,8 @@ export class SystemKeywords {
    *  
    */
   public async seeCaption({url}) {
-    const computerVisionClient = new ComputerVisionClient(
-      new ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
+    const computerVisionClient = new ComputerVisionClient.ComputerVisionClient(
+      new ApiKeyCredentials.ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
       process.env.VISION_ENDPOINT);
 
     let caption = (await computerVisionClient.describeImage(url)).captions[0];
@@ -127,13 +123,11 @@ export class SystemKeywords {
     );
     GBLog.info(`GBVision (caption): '${caption.text}' (Confidence: ${caption.confidence.toFixed(2)})`);
 
-    caption = await this.min.conversationalService.translate(
+    return await this.min.conversationalService.translate(
       this.min,
-      caption,
+      caption.text,
       contentLocale
     );
-
-    return caption.text;
   }
 
   /**
@@ -142,8 +136,8 @@ export class SystemKeywords {
    *  
    */
   public async seeText({url}) {
-    const computerVisionClient = new ComputerVisionClient(
-      new ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
+    const computerVisionClient = new ComputerVisionClient.ComputerVisionClient(
+      new ApiKeyCredentials.ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
       process.env.VISION_ENDPOINT);
 
     const result = (await computerVisionClient.recognizePrintedText(true, url));
@@ -481,7 +475,7 @@ export class SystemKeywords {
 
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
 
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
 
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
@@ -530,7 +524,7 @@ export class SystemKeywords {
   public async saveFile({file, data}): Promise<any> {
 
     GBLog.info(`BASIC: Saving '${file}' (SAVE file).`);
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
@@ -566,7 +560,7 @@ export class SystemKeywords {
     const file = args[0];
     args.shift();
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
@@ -614,7 +608,7 @@ export class SystemKeywords {
     }
     else {
       GBLog.info(`BASIC: GET '${addressOrHeaders}' in '${file}'.`);
-      let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+      let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
       const botId = this.min.instance.botId;
       const path = `/${botId}.gbai/${botId}.gbdata`;
 
@@ -752,11 +746,11 @@ export class SystemKeywords {
       header = [];
       rows = [];
 
-      for (let i = 0; i < worksheet._rows.length; i++) {
-        const r = worksheet._rows[i];
+      for (let i = 0; i < worksheet.rowCount; i++) {
+        const r = worksheet.getRow(i+1);
         let outRow = [];
-        for (let j = 0; j < r._cells.length; j++) {
-          outRow.push(r._cells[j].text);
+        for (let j = 0; j < r.cellCount; j++) {
+          outRow.push(r.getCell(j+1).text);
         }
 
         if (i == 0) {
@@ -769,7 +763,7 @@ export class SystemKeywords {
 
     } else {
 
-      let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+      let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
 
       let document
       document = await this.internalGetDocument(client, baseUrl, path, file);
@@ -1065,7 +1059,7 @@ export class SystemKeywords {
    */
   public async createFolder({name}) {
 
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
     let path = `/${botId}.gbai/${botId}.gbdrive`;
 
@@ -1121,7 +1115,7 @@ export class SystemKeywords {
    *
    */
   public async shareFolder({folder, email, message}) {
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
     const root = urlJoin(`/${this.min.botId}.gbai/${this.min.botId}.gbdrive`, folder);
 
     const src = await client.api(
@@ -1153,7 +1147,7 @@ export class SystemKeywords {
    */
   public async copyFile({src, dest}) {
     GBLog.info(`BASIC: BEGINING COPY '${src}' to '${dest}'`);
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
 
     // Normalizes all slashes.
@@ -1173,7 +1167,7 @@ export class SystemKeywords {
     let folder;
     if (dest.indexOf('/') !== -1) {
       const pathOnly = Path.dirname(dest);
-      folder = await this.createFolder(pathOnly);
+      folder = await this.createFolder({name:pathOnly});
     }
     else {
       folder = await client.api(
@@ -1222,7 +1216,7 @@ export class SystemKeywords {
    */
   public async convert({src, dest}) {
     GBLog.info(`BASIC: CONVERT '${src}' to '${dest}'`);
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
 
     // Normalizes all slashes.
@@ -1242,7 +1236,7 @@ export class SystemKeywords {
     let folder;
     if (dest.indexOf('/') !== -1) {
       const pathOnly = Path.dirname(dest);
-      folder = await this.createFolder(pathOnly);
+      folder = await this.createFolder({name:pathOnly});
     }
     else {
       folder = await client.api(
@@ -1395,7 +1389,7 @@ export class SystemKeywords {
 
     // Downloads template from .gbdrive.
 
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
     let template = await this.internalGetDocument(client, baseUrl, path, templateName);
     const url = template['@microsoft.graph.downloadUrl'];
     const localName = Path.join('work', gbaiName, 'cache', ``);
@@ -1425,43 +1419,39 @@ export class SystemKeywords {
   public screenCapture() {
     // scrcpy
 
-    const tesseract = require("node-tesseract-ocr")
-    const robot = require('robotjs')
-    const Jimp = require('jimp')
-
-    function captureImage({ x, y, w, h }) {
-      const pic = robot.screen.capture(x, y, w, h)
-      const width = pic.byteWidth / pic.bytesPerPixel // pic.width is sometimes wrong!
-      const height = pic.height
-      const image = new Jimp(width, height)
-      let red, green, blue
-      pic.image.forEach((byte, i) => {
-        switch (i % 4) {
-          case 0: return blue = byte
-          case 1: return green = byte
-          case 2: return red = byte
-          case 3:
-            image.bitmap.data[i - 3] = red
-            image.bitmap.data[i - 2] = green
-            image.bitmap.data[i - 1] = blue
-            image.bitmap.data[i] = 255
-        }
-      })
-      return image
-    }
-    let file = 'out.png';
-    captureImage({ x: 60, y: 263, w: 250, h: 83 }).write(file)
+    // function captureImage({ x, y, w, h }) {
+    //   const pic = robot.screen.capture(x, y, w, h)
+    //   const width = pic.byteWidth / pic.bytesPerPixel // pic.width is sometimes wrong!
+    //   const height = pic.height
+    //   const image = new Jimp(width, height)
+    //   let red, green, blue
+    //   pic.image.forEach((byte, i) => {
+    //     switch (i % 4) {
+    //       case 0: return blue = byte
+    //       case 1: return green = byte
+    //       case 2: return red = byte
+    //       case 3:
+    //         image.bitmap.data[i - 3] = red
+    //         image.bitmap.data[i - 2] = green
+    //         image.bitmap.data[i - 1] = blue
+    //         image.bitmap.data[i] = 255
+    //     }
+    //   })
+    //   return image
+    // }
+    // let file = 'out.png';
+    // captureImage({ x: 60, y: 263, w: 250, h: 83 }).write(file)
 
 
-    const config = {
-      lang: "eng",
-      oem: 1,
-      psm: 3,
-    }
+    // const config = {
+    //   lang: "eng",
+    //   oem: 1,
+    //   psm: 3,
+    // }
 
-    tesseract.recognize(file, config).then(value => {
-      console.log(value);
-    });
+    // tesseract.recognize(file, config).then(value => {
+    //   console.log(value);
+    // });
   }
 
   private numberToLetters(num) {
@@ -1501,7 +1491,7 @@ export class SystemKeywords {
 
     let results;
     let header, rows;
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
 
     let document
     document = await this.internalGetDocument(client, baseUrl, path, file);

@@ -36,9 +36,9 @@
 
 import { AzureText } from 'pragmatismo-io-framework';
 import { FindOptions } from 'sequelize/types';
-import { GBServer } from '../../../src/app';
-import { GuaribasUser } from '../../security.gbapp/models';
-import { GuaribasConversation, GuaribasConversationMessage } from '../models';
+import { GBServer } from '../../../src/app.js';
+import { GuaribasUser } from '../../security.gbapp/models/index.js';
+import { GuaribasConversation, GuaribasConversationMessage } from '../models/index.js';
 
 /**
  * Base services for Bot Analytics.

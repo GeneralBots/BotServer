@@ -33,13 +33,12 @@
 'use strict';
 
 import { GBLog, GBMinInstance, GBService } from 'botlib';
-import { GBServer } from '../../../src/app';
+import { GBServer } from '../../../src/app.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GBVMService } from '../../basic.gblib/services/GBVMService';
-import { GuaribasSchedule } from '../../core.gbapp/models/GBModel';
-import { FindOptions } from 'sequelize/types';
+import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
+import { GuaribasSchedule } from '../../core.gbapp/models/GBModel.js';
 
-const cron = require('node-cron');
+import cron from 'node-cron';
 
 /**
  * @fileoverview Schedule Services.

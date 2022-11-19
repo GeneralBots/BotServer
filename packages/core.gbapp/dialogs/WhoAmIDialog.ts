@@ -39,8 +39,8 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import { GBConversationalService } from '../services/GBConversationalService';
-import { Messages } from '../strings';
+import { GBConversationalService } from '../services/GBConversationalService.js';
+import { Messages } from '../strings.js';
 /**
  * Dialog for the bot explains about itself.
  */

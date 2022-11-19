@@ -37,10 +37,10 @@
 'use strict';
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
-const urlJoin = require('url-join');
-import { FeedbackDialog } from './dialogs/FeedbackDialog';
-import { QualityDialog } from './dialogs/QualityDialog';
-import { GuaribasQuestionAlternate } from './models/index';
+import urlJoin from 'url-join';
+import { FeedbackDialog } from './dialogs/FeedbackDialog.js';
+import { QualityDialog } from './dialogs/QualityDialog.js';
+import { GuaribasQuestionAlternate } from './models/index.js';
 
 import { Sequelize } from 'sequelize-typescript';
 

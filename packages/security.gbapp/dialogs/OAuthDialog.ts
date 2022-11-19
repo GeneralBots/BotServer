@@ -38,7 +38,7 @@
 
 import { TokenResponse } from 'botbuilder';
 import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
-import { Messages } from '../strings';
+import { Messages } from '../strings.js';
 
 /**
  * Dialogs for handling Menu control.

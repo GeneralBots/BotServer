@@ -49,31 +49,31 @@ import {
   UpdatedAt
 } from 'sequelize-typescript';
 
-import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
+import { GuaribasInstance } from '../../core.gbapp/models/GBModel.js';
 
 @Table
 //tslint:disable-next-line:max-classes-per-file
 export class GuaribasSchedule extends Model<GuaribasSchedule> {
 
   @Column (DataType.STRING(255)) 
-  public name: string;
+  declare name: string;
 
   @Column (DataType.STRING(255)) 
-  public schedule: string;
+  declare schedule: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  declare instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
+  declare instance: GuaribasInstance;
 
     @Column(DataType.DATE)
   @CreatedAt
-  public createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  public updatedAt: Date;
+  declare updatedAt: Date;
 
 }

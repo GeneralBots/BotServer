@@ -35,19 +35,18 @@
  */
 
 'use strict';
-const cliProgress = require('cli-progress');
-const { DialogSet, TextPrompt } = require('botbuilder-dialogs');
-const express = require('express');
-const Swagger = require('swagger-client');
-const Fs = require('fs');
-const request = require('request-promise-native');
-const removeRoute = require('express-remove-route');
-const AuthenticationContext = require('adal-node').AuthenticationContext;
-const wash = require('washyourmouthoutwithsoap');
-const { FacebookAdapter } = require('botbuilder-adapter-facebook');
-const path = require('path');
-const { NerManager } = require('node-nlp');
-const mkdirp = require('mkdirp');
+import cliProgress from 'cli-progress';
+import { DialogSet, TextPrompt } from 'botbuilder-dialogs';
+import express from 'express';
+import Swagger from 'swagger-client';
+import request from 'request-promise-native';
+import removeRoute from 'express-remove-route';
+import AuthenticationContext from 'adal-node';
+import wash from 'washyourmouthoutwithsoap';
+import { FacebookAdapter } from 'botbuilder-adapter-facebook';
+import path from 'path';
+import mkdirp from 'mkdirp';
+import Fs from 'fs';
 import {
   AutoSaveStateMiddleware,
   BotFrameworkAdapter,
@@ -69,25 +68,26 @@ import {
 } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { MicrosoftAppCredentials } from 'botframework-connector';
-import { GBServer } from '../../../src/app';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { GuaribasConversationMessage } from '../../analytics.gblib/models';
-import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
-import { GBVMService } from '../../basic.gblib/services/GBVMService';
-import { AskDialogArgs } from '../../kb.gbapp/dialogs/AskDialog';
-import { KBService } from '../../kb.gbapp/services/KBService';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
-import { Messages } from '../strings';
-import { GBConfigService } from './GBConfigService';
-import { GBConversationalService } from './GBConversationalService';
-import { GBDeployer } from './GBDeployer';
-import urlJoin = require('url-join');
-import fs = require('fs');
-import { GoogleChatDirectLine } from '../../google-chat.gblib/services/GoogleChatDirectLine';
-import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices';
-import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords';
+import { GBServer } from '../../../src/app.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { GuaribasConversationMessage } from '../../analytics.gblib/models/index.js';
+import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService.js';
+import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
+import { AskDialogArgs } from '../../kb.gbapp/dialogs/AskDialog.js';
+import { KBService } from '../../kb.gbapp/services/KBService.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
+import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine.js';
+import { Messages } from '../strings.js';
+import { GBConfigService } from './GBConfigService.js';
+import { GBConversationalService } from './GBConversationalService.js';
+import { GBDeployer } from './GBDeployer.js';
+import urlJoin from 'url-join';
+import fs from 'fs';
+import { GoogleChatDirectLine } from '../../google-chat.gblib/services/GoogleChatDirectLine.js';
+import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices.js';
+import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 import { ssrForBots } from './GBSSR';
+import * as nlp from 'node-nlp';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -268,33 +268,33 @@ export class GBMinService {
     // Install per bot deployed packages.
 
     let packagePath = `work/${min.botId}.gbai/${min.botId}.gbdialog`;
-    if (fs.existsSync(packagePath)) {
+    if (Fs.existsSync(packagePath)) {
       await this.deployer.deployPackage(min, packagePath);
     }
     packagePath = `work/${min.botId}.gbai/${min.botId}.gbapp`;
-    if (fs.existsSync(packagePath)) {
+    if (Fs.existsSync(packagePath)) {
       await this.deployer.deployPackage(min, packagePath);
     }
     packagePath = `work/${min.botId}.gbai/${min.botId}.gbtheme`;
-    if (fs.existsSync(packagePath)) {
+    if (Fs.existsSync(packagePath)) {
       await this.deployer.deployPackage(min, packagePath);
     }
     packagePath = `work/${min.botId}.gbai/${min.botId}.gblib`;
-    if (fs.existsSync(packagePath)) {
+    if (Fs.existsSync(packagePath)) {
       await this.deployer.deployPackage(min, packagePath);
     }
 
     let dir = `work/${min.botId}.gbai/cache`;
 
-    if (!fs.existsSync(dir)) {
+    if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
     dir = `work/${min.botId}.gbai/profile`;
-    if (!fs.existsSync(dir)) {
+    if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
     dir = `work/${min.botId}.gbai/uploads`;
-    if (!fs.existsSync(dir)) {
+    if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
 
@@ -333,7 +333,7 @@ export class GBMinService {
       GBLog.info(`Starting auto test with '${process.env.TEST_MESSAGE}'.`);
 
       const client = await new Swagger({
-        spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')), usePromise: true
+        spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')), usePromise: true
       });
       client.clientAuthorizations.add(
         'AuthorizationBotConnector',
@@ -472,7 +472,7 @@ export class GBMinService {
         GBLog.error(msg);
         throw new Error(msg);
       }
-      const authenticationContext = new AuthenticationContext(
+      const authenticationContext = new AuthenticationContext.AuthenticationContext(
         urlJoin(min.instance.authenticatorAuthorityHostUrl, min.instance.authenticatorTenant)
       );
       const resource = 'https://graph.microsoft.com';
@@ -491,12 +491,12 @@ export class GBMinService {
             GBLog.error(msg);
             res.send(msg);
           } else {
-
+            
             // Saves token to the database.
 
-            await this.adminService.setValue(instance.instanceId, 'accessToken', token.accessToken);
-            await this.adminService.setValue(instance.instanceId, 'refreshToken', token.refreshToken);
-            await this.adminService.setValue(instance.instanceId, 'expiresOn', token.expiresOn.toString());
+            await this.adminService.setValue(instance.instanceId, 'accessToken',  token['accessToken']);
+            await this.adminService.setValue(instance.instanceId, 'refreshToken', token['refreshToken']);
+            await this.adminService.setValue(instance.instanceId, 'expiresOn',    token['expiresOn'].toString());
             await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', undefined);
 
             // Inform the home for default .gbui after finishing token retrival.
@@ -664,7 +664,7 @@ export class GBMinService {
     min.sandBoxMap = {};
     min["scheduleMap"] = {};
     min["conversationWelcomed"] = {};
-    min["nerEngine"] = new NerManager();;
+    min["nerEngine"] = new nlp.default.NerManager();
     min.packages = sysPackages;
     min.appPackages = appPackages;
 

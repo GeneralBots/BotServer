@@ -36,13 +36,11 @@
 
 'use strict';
 
-const urlJoin = require('url-join');
-
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
-import { OAuthDialog } from './dialogs/OAuthDialog';
-import { ProfileDialog } from './dialogs/ProfileDialog';
-import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models';
+import { OAuthDialog } from './dialogs/OAuthDialog.js';
+import { ProfileDialog } from './dialogs/ProfileDialog.js';
+import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models/index.js';
 
 /**
  * Package for the security module.

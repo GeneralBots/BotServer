@@ -36,24 +36,24 @@
 
 'use strict';
 
-const express = require('express');
-const bodyParser = require('body-parser');
-const https = require('https');
-const mkdirp = require('mkdirp');
-const Path = require('path');
-
-import * as fs from 'fs';
+import express from 'express';
+import bodyParser from 'body-parser';
+import https from 'https';
+import mkdirp from 'mkdirp';
+import Path from 'path';
+import * as Fs from 'fs';
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
-import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService';
-import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService';
-import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService';
-import { GBConversationalService } from '../packages/core.gbapp/services/GBConversationalService';
-import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService';
-import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer';
-import { GBImporter } from '../packages/core.gbapp/services/GBImporterService';
-import { GBMinService } from '../packages/core.gbapp/services/GBMinService';
-var auth = require('basic-auth');
-const child_process = require('child_process');
+import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService.js';
+import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService.js';
+import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
+import { GBConversationalService } from '../packages/core.gbapp/services/GBConversationalService.js';
+import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService.js';
+import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer.js';
+import { GBImporter } from '../packages/core.gbapp/services/GBImporterService.js';
+import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
+import  auth from 'basic-auth';
+import  child_process from 'child_process';
+import * as winston from 'winston-logs-display';
 
 /**
  * Global shared server data;
@@ -117,7 +117,7 @@ export class GBServer {
     // Creates working directory.
 
     const workDir = Path.join(process.env.PWD, 'work');
-    if (!fs.existsSync(workDir)) {
+    if (!Fs.existsSync(workDir)) {
       mkdirp.sync(workDir);
     }
 
@@ -236,7 +236,7 @@ export class GBServer {
             // If global log enabled, reorders transports adding web logging.
 
             const loggers = GBLog.getLogger();
-            require('winston-logs-display')(server, loggers[1]);
+            winston.default(server, loggers[1]);
           }
 
 
@@ -254,14 +254,14 @@ export class GBServer {
     if (process.env.CERTIFICATE_PFX) {
       let options = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
-        pfx: fs.readFileSync(process.env.CERTIFICATE_PFX)
+        pfx: Fs.readFileSync(process.env.CERTIFICATE_PFX)
       };
       const httpsServer = https.createServer(options, server).listen(port, mainCallback);
 
       if (process.env.CERTIFICATE2_PFX) {
         let options = {
           passphrase: process.env.CERTIFICATE2_PASSPHRASE,
-          pfx: fs.readFileSync(process.env.CERTIFICATE2_PFX)
+          pfx: Fs.readFileSync(process.env.CERTIFICATE2_PFX)
         };
         httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options);
 

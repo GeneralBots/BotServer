@@ -1,6 +1,6 @@
-const { VMScript, NodeVM } = require('vm2');
-const crypto1 = require('crypto');
-const net1 = require('net');
+import { VMScript, NodeVM } from 'vm2';
+import crypto1 from 'crypto';
+import net1 from 'net';
 
 const evaluate = async (script, scope) => {
   const vm = new NodeVM({

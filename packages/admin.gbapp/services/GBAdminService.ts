@@ -39,18 +39,18 @@
 import { AuthenticationContext, TokenResponse } from 'adal-node';
 import { GBLog, GBMinInstance, IGBAdminService, IGBCoreService, IGBDeployer, IGBInstance } from 'botlib';
 import { FindOptions } from 'sequelize/types';
-const urlJoin = require('url-join');
-import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
-import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { GBImporter } from '../../core.gbapp/services/GBImporterService';
-import { GBSharePointService } from '../../sharepoint.gblib/services/SharePointService';
-import { GuaribasAdmin } from '../models/AdminModel';
-const Path = require('path');
-const msRestAzure = require('ms-rest-azure');
-const PasswordGenerator = require('strict-password-generator').default;
-const crypto = require("crypto");
+import urlJoin from 'url-join'; 
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService.js';
+import { GuaribasInstance } from '../../core.gbapp/models/GBModel.js';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
+import { GBSharePointService } from '../../sharepoint.gblib/services/SharePointService.js';
+import { GuaribasAdmin } from '../models/AdminModel.js';
+import msRestAzure from 'ms-rest-azure';
+import Path from 'path';
+import PasswordGenerator from 'strict-password-generator';
+import crypto  from 'crypto';
 
 /**
  * Services for server administration.
@@ -68,25 +68,27 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static generateUuid(): string {
-    return msRestAzure.generateUuid();
+    return crypto.randomUUID();
   }
 
   public static getNodeVersion() {
+    return "19.1.0";
     const packageJson = urlJoin(process.cwd(), 'package.json');
     // tslint:disable-next-line: non-literal-require
-    const pjson = require(packageJson);
+    // TODO
+    // const pjson = require(packageJson);
 
-    return pjson.engines.node.replace('=', '');
+    // return pjson.engines.node.replace('=', '');
   }
 
   public static async getADALTokenFromUsername(username: string, password: string) {
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
 
-    return credentials.tokenCache._entries[0].accessToken;
+    return (credentials as any).tokenCache._entries[0].accessToken;
   }
 
   public static async getADALCredentialsFromUsername(username: string, password: string) {
-    return await msRestAzure.loginWithUsernamePassword(username, password);
+    return await msRestAzure.loginWithUsernamePassword(username, password)
   }
 
   public static getMobileCode() {

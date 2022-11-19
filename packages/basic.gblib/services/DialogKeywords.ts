@@ -33,36 +33,31 @@
 'use strict';
 
 import { GBLog, GBMinInstance } from 'botlib';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
-import { ChartServices } from './ChartServices';
-const urlJoin = require('url-join');
-import { GBServer } from '../../../src/app';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { SystemKeywords } from './SystemKeywords';
-import { GBMinService } from '../../core.gbapp/services/GBMinService';
-import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices';
-import { WhatsappDirectLine } from '../../whatsapp.gblib/services/WhatsappDirectLine';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { createBrowser } from '../../core.gbapp/services/GBSSR';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
+import { ChartServices } from './ChartServices.js';
+import urlJoin from 'url-join';
+import { GBServer } from '../../../src/app.js';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
+import { SystemKeywords } from './SystemKeywords.js';
+import * as wpp from 'whatsapp-web.js';
+import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import * as request from 'request-promise-native';
-import { Messages } from '../strings';
-
-import * as fs from 'fs';
+import { Messages } from '../strings.js';
+import * as Fs from 'fs';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
-import { GuaribasUser } from '../../security.gbapp/models';
-
-
-const DateDiff = require('date-diff');
-const { Buttons } = require('whatsapp-web.js');
-const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
-const phone = require('phone');
-
-const Path = require('path');
-const sgMail = require('@sendgrid/mail');
-var mammoth = require("mammoth");
-const qrcode = require('qrcode');
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
+import { GuaribasUser } from '../../security.gbapp/models/index.js';
+import phoneUtil from 'google-libphonenumber';
+import phone from 'phone';
+import DateDiff from 'date-diff';
+import { Buttons } from 'whatsapp-web.js';
+import tesseract from 'node-tesseract-ocr';
+import Path from 'path';
+import sgMail from '@sendgrid/mail';
+import mammoth from 'mammoth';
+import qrcode from 'qrcode';
 
 /**
  * Base services of conversation to be called by BASIC.
@@ -232,7 +227,7 @@ export class DialogKeywords {
    */
   public async getOCR({localFile}) {
     GBLog.info(`BASIC: OCR processing on ${localFile}.`);
-    const tesseract = require("node-tesseract-ocr")
+    
 
     const config = {
       lang: "eng",
@@ -290,8 +285,6 @@ export class DialogKeywords {
    * @example list = ACTIVE TASKS
    */
   public async getActiveTasks({}) {
-    let s = new HubSpotServices(null, null, process.env.HUBSPOT_KEY);
-    return await s.getActiveTasks();
   }
 
   /**
@@ -300,9 +293,6 @@ export class DialogKeywords {
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
   public async createDeal({dealName, contact, company, amount}) {
-    let s = new HubSpotServices(null, null, process.env.HUBSPOT_KEY);
-    let deal = await s.createDeal(dealName, contact, company, amount);
-    return deal;
   }
 
   /**
@@ -311,8 +301,6 @@ export class DialogKeywords {
    * @example list = FIND CONTACT "Sandra"
    */
   public async fndContact({name}) {
-    let s = new HubSpotServices(null, null, process.env.HUBSPOT_KEY);
-    return await s.searchContact(name);
   }
 
 
@@ -703,7 +691,7 @@ export class DialogKeywords {
         response = await request.get(options);
       }
 
-      fs.writeFile(localFileName, response, (fsError) => {
+      Fs.writeFile(localFileName, response, (fsError) => {
         if (fsError) {
           throw fsError;
         }
@@ -772,12 +760,12 @@ export class DialogKeywords {
         let i = 0;
         await CollectionUtil.asyncForEach(args, async arg => {
           i++;
-          // DISABLED: choices.push({ body: arg, id: `button${i}` });
+          choices.push({ body: arg, id: `button${i}` });
           await this.talk(arg);
         });
 
-        // DISABLED const button = new Buttons(Messages[locale].choices, choices, ' ', ' ');
-        // await this.talk(button);
+        const button = new wpp.Buttons(Messages[locale].choices, choices, ' ', ' ');
+        // TODO: await this.talk(button);
 
         GBLog.info(`BASIC: HEAR with [${args.toString()}] (Asking for input).`);
       }
@@ -826,7 +814,7 @@ export class DialogKeywords {
         // await Promise.all(replyPromises);
 
         // result = {
-        //   data: fs.readFileSync(successfulSaves[0]['localPath']),
+        //   data: Fs.readFileSync(successfulSaves[0]['localPath']),
         //   filename: successfulSaves[0]['fileName']
         // };
 
@@ -938,7 +926,7 @@ export class DialogKeywords {
 
         let phoneNumber;
         try {
-          phoneNumber = phone(text, 'BRA')[0]; // TODO: Use accordingly to the person.
+          phoneNumber = phone(text, {country:'BRA'})[0]; // TODO: Use accordingly to the person.
           phoneNumber = phoneUtil.parse(phoneNumber);
         } catch (error) {
           await this.talk(Messages[locale].validation_enter_valid_mobile);

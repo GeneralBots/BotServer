@@ -54,9 +54,9 @@ import {
   UpdatedAt
 } from 'sequelize-typescript';
 
-import { GuaribasChannel, GuaribasInstance } from '../../core.gbapp/models/GBModel';
-import { GuaribasSubject } from '../../kb.gbapp/models';
-import { GuaribasUser } from '../../security.gbapp/models';
+import { GuaribasChannel, GuaribasInstance } from '../../core.gbapp/models/GBModel.js';
+import { GuaribasSubject } from '../../kb.gbapp/models/index.js';
+import { GuaribasUser } from '../../security.gbapp/models/index.js';
 
 /**
  * A conversation that groups many messages.
@@ -67,45 +67,45 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  public conversationId: number;
+  declare conversationId: number;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  declare instanceId: number;
 
   @ForeignKey(() => GuaribasSubject)
   @Column(DataType.INTEGER)
-  public startSubjectId: number;
+  declare startSubjectId: number;
 
   @BelongsTo(() => GuaribasSubject)
-  public startSubject: GuaribasSubject;
+  declare startSubject: GuaribasSubject;
 
   @ForeignKey(() => GuaribasChannel)
   @Column(DataType.INTEGER)
-  public channelId: string;
+  declare channelId: string;
 
   @Column(DataType.DATE)
-  public rateDate: Date;
+  declare rateDate: Date;
 
   @Column(DataType.FLOAT)
-  public rate: number;
+  declare rate: number;
 
   @Column(DataType.STRING(512))
-  public feedback: string;
+  declare feedback: string;
 
   @CreatedAt
   @Column(DataType.DATE)
-  public createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.STRING(255))
-  public text: string;
+  declare text: string;
 
   @ForeignKey(() => GuaribasUser)
   @Column(DataType.INTEGER)
-  public startedByUserId: number;
+  declare startedByUserId: number;
 
   @BelongsTo(() => GuaribasUser)
-  public startedBy: GuaribasUser;
+  declare startedBy: GuaribasUser;
 }
 
 /**
@@ -117,41 +117,41 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  public conversationMessageId: number;
+  declare conversationMessageId: number;
 
   @ForeignKey(() => GuaribasSubject)
   @Column(DataType.INTEGER)
-  public subjectId: number;
+  declare subjectId: number;
 
   @Column(DataType.TEXT)
-  public content: string;
+  declare content: string;
 
   @Column(DataType.DATE)
   @CreatedAt
-  public createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  public updatedAt: Date;
+  declare updatedAt: Date;
 
 
   //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasConversation)
   @Column(DataType.INTEGER)
-  public conversationId: number;
+  declare conversationId: number;
 
   //tslint:disable-next-line:no-use-before-declare
   @BelongsTo(() => GuaribasConversation)
-  public conversation: GuaribasConversation;
+  declare conversation: GuaribasConversation;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  declare instanceId: number;
 
   @ForeignKey(() => GuaribasUser)
   @Column(DataType.INTEGER)
-  public userId: number;
+  declare userId: number;
 
   @BelongsTo(() => GuaribasUser)
-  public user: GuaribasUser;
+  declare user: GuaribasUser;
 }

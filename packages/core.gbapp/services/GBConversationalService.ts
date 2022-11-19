@@ -39,31 +39,30 @@
 import { MessageFactory, RecognizerResult, TurnContext } from 'botbuilder';
 import { LuisRecognizer } from 'botbuilder-ai';
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService } from 'botlib';
-import { GBServer } from '../../../src/app';
+import { GBServer } from '../../../src/app.js';
 import { Readable } from 'stream';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
+import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService.js';
 import { MicrosoftAppCredentials } from 'botframework-connector';
-import { GBConfigService } from './GBConfigService';
-import { Messages } from '../strings';
+import { GBConfigService } from './GBConfigService.js';
 import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
-import { GuaribasUser } from '../../security.gbapp/models';
-import { GBMinService } from './GBMinService';
-const urlJoin = require('url-join');
-const PasswordGenerator = require('strict-password-generator').default;
-const Nexmo = require('nexmo');
-const { join } = require('path');
-const shell = require('any-shell-escape');
-const { exec } = require('child_process');
-const prism = require('prism-media');
-const request = require('request-promise-native');
-const fs = require('fs');
-const SpeechToTextV1 = require('ibm-watson/speech-to-text/v1');
-const TextToSpeechV1 = require('ibm-watson/text-to-speech/v1');
-const { IamAuthenticator } = require('ibm-watson/auth');
-const marked = require('marked');
-const { Translate } = require('@google-cloud/translate').v2;
+import { GuaribasUser } from '../../security.gbapp/models/index.js';
+import { GBMinService } from './GBMinService.js';
+import urlJoin from 'url-join';
+import Fs from 'fs';
+import PasswordGenerator from 'strict-password-generator';
+import Nexmo from 'nexmo';
+import { join } from 'path';
+import shell from 'any-shell-escape';
+import { exec } from 'child_process';
+import prism from 'prism-media';
+import request from 'request-promise-native';
+import SpeechToTextV1 from 'ibm-watson/speech-to-text/v1.js';
+import TextToSpeechV1 from 'ibm-watson/text-to-speech/v1.js';
+import { IamAuthenticator } from 'ibm-watson/auth/index.js';
+import * as marked from 'marked';
+import  Translate from '@google-cloud/translate';
 
 /**
  * Provides basic services for handling messages and dispatching to back-end
@@ -309,7 +308,7 @@ export class GBConversationalService {
           apiSecret: min.instance.smsSecret
         });
         // tslint:disable-next-line:no-unsafe-any
-        nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, (err, data) => {
+        nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text,{}, (err, data) => {
           const message = data.messages ? data.messages[0] : {};
           if (err || message['error-text']) {
             GBLog.error(`BASIC: error sending SMS to ${mobile}: ${message['error-text']}`);
@@ -317,7 +316,7 @@ export class GBConversationalService {
           } else {
             resolve(data);
           }
-        });
+        }, );
       });
     }
   }
@@ -350,17 +349,16 @@ export class GBConversationalService {
         let res = await textToSpeech.synthesize(params);
         const waveFilename = `work/tmp${name}.pcm`;
 
-        let audio = '';
-        audio = await textToSpeech.repairWavHeaderStream(res.result);
-        fs.writeFileSync(waveFilename, audio);
+        let audio = await textToSpeech.repairWavHeaderStream(res.result as any);
+        Fs.writeFileSync(waveFilename, audio);
 
         const oggFilenameOnly = `tmp${name}.ogg`;
         const oggFilename = `work/${oggFilenameOnly}`;
-        const output = fs.createWriteStream(oggFilename);
+        const output = Fs.createWriteStream(oggFilename);
         const transcoder = new prism.FFmpeg({
           args: ['-analyzeduration', '0', '-loglevel', '0', '-f', 'opus', '-ar', '16000', '-ac', '1']
         });
-        fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
+        Fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
 
         let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
         resolve(url);
@@ -383,7 +381,7 @@ export class GBConversationalService {
 
         const dest = `work/tmp${name}.wav`;
         const src = `work/tmp${name}.ogg`;
-        fs.writeFileSync(src, oggFile.read());
+        Fs.writeFileSync(src, oggFile.read());
 
         const makeMp3 = shell([
           'node_modules/ffmpeg-static/ffmpeg.exe',
@@ -406,7 +404,7 @@ export class GBConversationalService {
             GBLog.error(error);
             return Promise.reject(error);
           } else {
-            let data = fs.readFileSync(dest);
+            let data = Fs.readFileSync(dest);
 
             const speechToText = new SpeechToTextV1({
               authenticator: new IamAuthenticator({ apikey: process.env.WATSON_STT_KEY }),
@@ -461,7 +459,7 @@ export class GBConversationalService {
       GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
     }
 
-    var renderer = new marked.Renderer();
+    var renderer = new marked.marked.Renderer();
     renderer.oldImage = renderer.image;
     renderer.image = function (href, title, text) {
       var videos = ['webm', 'mp4', 'mov'];
@@ -859,7 +857,7 @@ export class GBConversationalService {
     if (min.instance.googleProjectId) {
       // Instantiates a client
 
-      const translate = new Translate({
+      const translate = new Translate.v2.Translate({
         projectId: min.instance.googleProjectId,
         credentials: { client_email: min.instance.googleClientEmail, private_key: min.instance.googlePrivateKey.replace(/\\n/gm, '\n') }
       });

@@ -40,10 +40,10 @@ import { GBMinInstance, IGBDialog } from 'botlib';
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
-import { CSService } from '../services/CSService';
-import { Messages } from '../strings';
+import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService.js';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
+import { CSService } from '../services/CSService.js';
+import { Messages } from '../strings.js';
 
 /**
  * Dialog for collecting quality of answer.

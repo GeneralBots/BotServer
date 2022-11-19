@@ -36,27 +36,27 @@
 
 'use strict';
 
-const Path = require('path');
-const urlJoin = require('url-join');
-const Fs = require('fs');
-const express = require('express');
-const child_process = require('child_process');
-const rimraf = require('rimraf');
-const request = require('request-promise-native');
-const  vhost = require('vhost')
+import Path from 'path';
+import express from 'express';
+import child_process from 'child_process';
+import rimraf from 'rimraf';
+import request from 'request-promise-native';
+import  vhost from 'vhost'
+import urlJoin from 'url-join';
+import Fs from 'fs';
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GBServer } from '../../../src/app';
-import { GBVMService } from '../../basic.gblib/services/GBVMService';
-import { GuaribasPackage } from '../models/GBModel';
-import { GBAdminService } from './../../admin.gbapp/services/GBAdminService';
-import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService';
-import { KBService } from './../../kb.gbapp/services/KBService';
-import { GBConfigService } from './GBConfigService';
-import { GBImporter } from './GBImporterService';
-import { TeamsService } from '../../teams.gblib/services/TeamsService';
-const MicrosoftGraph = require('@microsoft/microsoft-graph-client');
+import { GBServer } from '../../../src/app.js';
+import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
+import { GuaribasPackage } from '../models/GBModel.js';
+import { GBAdminService } from './../../admin.gbapp/services/GBAdminService.js';
+import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService.js';
+import { KBService } from './../../kb.gbapp/services/KBService.js';
+import { GBConfigService } from './GBConfigService.js';
+import { GBImporter } from './GBImporterService.js';
+import { TeamsService } from '../../teams.gblib/services/TeamsService.js';
+import MicrosoftGraph from '@microsoft/microsoft-graph-client';
 
 
 /**
@@ -114,7 +114,7 @@ export class GBDeployer implements IGBDeployer {
       }
     });
     const baseUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}`;
-    return [baseUrl, client];
+    return {baseUrl, client};
   }
 
   /**
@@ -452,7 +452,7 @@ export class GBDeployer implements IGBDeployer {
     GBLog.info(`downloadFolder: localPath=${localPath}, remotePath=${remotePath}, baseUrl=${baseUrl}`);
 
     if (!baseUrl) {
-      [baseUrl, client] = await GBDeployer.internalGetDriveClient(min);
+      client = await GBDeployer.internalGetDriveClient(min);
 
       remotePath = remotePath.replace(/\\/gi, '/');
       const parts = remotePath.split('/');
@@ -479,7 +479,7 @@ export class GBDeployer implements IGBDeployer {
 
       GBLog.info(`Download URL: ${url}`);
 
-      const res = await client
+      const res = await client.client
         .api(url)
         .get();
       const documents = res.value;

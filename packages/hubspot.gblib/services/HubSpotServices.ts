@@ -30,13 +30,11 @@
 |                                                                             |
 \*****************************************************************************/
 
-const Swagger = require('swagger-client');
-const fs = require('fs');
-const { promisify } = require('util');
+
 import { GBLog, GBMinInstance, GBService } from 'botlib';
-import { GBServer } from '../../../src/app';
-import { SecService } from '../../security.gbapp/services/SecService';
-const hubspot = require('@hubspot/api-client');
+import { promisify } from 'util';
+import Swagger from 'swagger-client';
+import * as hubspot from '@hubspot/api-client';
 
 
 /**
@@ -44,157 +42,5 @@ const hubspot = require('@hubspot/api-client');
  */
 export class HubSpotServices extends GBService {
 
-  public static conversationIds = {};
-  public pollInterval = 5000;
 
-  public botId: string;
-  public min: GBMinInstance;
-  private key: any;
-
-  constructor(
-    min: GBMinInstance,
-    botId,
-    key
-  ) {
-    super();
-
-    this.min = min;
-    this.botId = botId;
-    this.key = key;
-
-  }
-  public static async asyncForEach(array, callback) {
-    for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
-    }
-  }
-
-  public async addDealNote(name, note)
-  {
-
-  }
-
-  public async createDeal(dealName, contact, company, amount) {
-    const dealObj = {
-      properties: {
-        dealname: dealName,
-        dealstage: 'appointmentscheduled',
-        pipeline: 'default',
-        amount: amount
-      },
-    }
-    const contactObj = {
-      properties: {
-        firstname: contact
-      },
-    }
-    const companyObj = {
-      properties: {
-        name: company,
-      },
-    }
-
-    const hubspotClient = new hubspot.Client({ apiKey: this.key });
-    const createDealResponse = await hubspotClient.crm.deals.basicApi.create(dealObj);
-    const createContactResponse = await hubspotClient.crm.contacts.basicApi.create(contactObj);
-    const createCompanyResponse = await hubspotClient.crm.companies.basicApi.create(companyObj);
-
-    await hubspotClient.crm.deals.associationsApi.create(
-      createDealResponse.body.id,
-      'contacts',
-      createContactResponse.body.id,
-      'deal_to_contact'
-    )
-
-    await hubspotClient.crm.deals.associationsApi.create(
-      createDealResponse.body.id,
-      'companies',
-      createCompanyResponse.body.id,
-      'deal_to_company'
-    )
-
-    return createDealResponse.body;
-
-  }
-
-
-  public async createContact(firstName, lastName, domain, companyName) {
-    const contactObj = {
-      properties: {
-        firstname: firstName,
-        lastname: lastName,
-      },
-    }
-    const companyObj = {
-      properties: {
-        domain: domain,
-        name: companyName,
-      },
-    }
-
-    const hubspotClient = new hubspot.Client({ apiKey: this.key })
-    const createContactResponse = await hubspotClient.crm.contacts.basicApi.create(contactObj)
-    const createCompanyResponse = await hubspotClient.crm.companies.basicApi.create(companyObj)
-
-    return await hubspotClient.crm.companies.associationsApi.create(
-      createCompanyResponse.body.id,
-      'contacts',
-      createContactResponse.body.id,
-      'company_to_contact'
-    )
-  }
-
-  public async searchContact(query) {
-    const client = new hubspot.Client({ apiKey: this.key });
-    const sort = JSON.stringify({ propertyName: 'createdate', direction: 'DESCENDING' })
-
-    const properties = ['createdate', 'firstname', 'lastname', 'phone', 'email']
-    const limit = 100
-    const after = 0
-
-    const publicObjectSearchRequest = {
-      sorts: [sort],
-      query,
-      properties,
-      limit,
-      after,
-    }
-
-    const result = await client.crm.contacts.searchApi.doSearch(publicObjectSearchRequest)
-    return result.body.results;
-  }
-
-
-  public async getActiveTasks(): Promise<[]> {
-
-    const client = new hubspot.Client({ apiKey: this.key });
-    let properties = ['hs_task_subject', 'hubspot_owner_id', 'hs_task_status', 'hs_task_priority'];
-    const pageSize = 100;
-    let list;
-    list = [];
-
-    let r = await client.crm.objects.basicApi.getPage("TASK", pageSize, 0, properties);
-    list = list.concat(r.body.results);
-
-    while (r.body.results && r.body.results.length === pageSize) {
-      r = await client.crm.objects.basicApi.getPage("TASK", pageSize, r.body.paging.next.after, properties);
-      list = list.concat(r.body.results);
-    }
-
-    let final;
-    final = [];
-    list.forEach(e => {
-      if (e.properties.hs_task_status === "NOT_STARTED") {
-        e['status'] = e.properties.hs_task_status;
-        e['title'] = e.properties.hs_task_subject;
-        e['ownerId'] = e.properties.hubspot_owner_id;
-        e['priority'] = e.properties.hs_task_priority;
-
-        final.push(e);
-      }
-    });
-
-
-    return final;
-  }
 }

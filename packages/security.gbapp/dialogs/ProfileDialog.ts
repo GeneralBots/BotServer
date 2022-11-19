@@ -36,16 +36,11 @@
 
 'use strict';
 
-const urlJoin = require('url-join');
 
-import { BotAdapter, CardFactory, MessageFactory } from 'botbuilder';
-import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
-import { Messages } from '../strings';
-const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
-const phone = require('phone');
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { Messages } from '../strings.js';
+import * as phone from 'google-libphonenumber';
 
 /**
  * Dialogs for handling Menu control.
@@ -112,14 +107,15 @@ export class ProfileDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           let phoneNumber;
           try {
-            phoneNumber = phone(step.result, 'BRA')[0]; // TODO: Use accordingly to the person.
-            phoneNumber = phoneUtil.parse(phoneNumber);
+            let p = phone.PhoneNumberUtil.getInstance();
+            phoneNumber = p(step.result, 'BRA')[0]; // TODO: Use accordingly to the person.
+            phoneNumber = phone.phoneUtil.parse(phoneNumber);
           } catch (error) {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_mobile);
 
             return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);
           }
-          if (!phoneUtil.isPossibleNumber(phoneNumber)) {
+          if (!phone.phoneUtil.isPossibleNumber(phoneNumber)) {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_mobile);
 
             return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);

@@ -38,7 +38,7 @@
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
-import { GuaribasConversation, GuaribasConversationMessage } from './models';
+import { GuaribasConversation, GuaribasConversationMessage } from './models/index.js';
 
 /**
  * .gblib Package handler.

@@ -36,19 +36,19 @@
 
 'use strict';
 
-import { GBServer } from '../../../src/app';
+import { GBServer } from '../../../src/app.js';
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBLog, GBMinInstance, IGBDialog, IGBPackage } from 'botlib';
-import { Messages } from '../strings';
-import { KBService } from './../services/KBService';
-import { GuaribasAnswer } from '../models';
-import { SecService } from '../../security.gbapp/services/SecService';
+import { Messages } from '../strings.js';
+import { KBService } from './../services/KBService.js';
+import { GuaribasAnswer } from '../models/index.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
 import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
-import { GBVMService } from '../../basic.gblib/services/GBVMService';
-import { GBImporter } from '../../core.gbapp/services/GBImporterService';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
+import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
+import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 
 /**
  * Dialog arguments.

@@ -38,10 +38,10 @@
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
-import { AskDialog } from './dialogs/AskDialog';
-import { FaqDialog } from './dialogs/FaqDialog';
-import { MenuDialog } from './dialogs/MenuDialog';
-import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index';
+import { AskDialog } from './dialogs/AskDialog.js';
+import { FaqDialog } from './dialogs/FaqDialog.js';
+import { MenuDialog } from './dialogs/MenuDialog.js';
+import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/index.js';
 
 /**
  * Package for kb.gbapp.

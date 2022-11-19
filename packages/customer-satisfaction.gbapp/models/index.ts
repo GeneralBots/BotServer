@@ -47,7 +47,7 @@ import {
   Table
 } from 'sequelize-typescript';
 
-import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
+import { GuaribasInstance } from '../../core.gbapp/models/GBModel.js';
 
 /**
  * List of saved alternate questions.
@@ -58,18 +58,18 @@ export class GuaribasQuestionAlternate extends Model<GuaribasQuestionAlternate> 
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  public quickAnswerId: number;
+  declare quickAnswerId: number;
 
   @Column(DataType.STRING(255))
-  public questionTyped: string;
+  declare questionTyped: string;
 
   @Column(DataType.STRING(255))
-  public questionText: string;
+  declare questionText: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  declare instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
+  declare instance: GuaribasInstance;
 }

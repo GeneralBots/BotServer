@@ -33,7 +33,7 @@
 'use strict';
 
 
-import { createBrowser } from '../../core.gbapp/services/GBSSR';
+import { createBrowser } from '../../core.gbapp/services/GBSSR.js';
 
 export class ChartServices {
 

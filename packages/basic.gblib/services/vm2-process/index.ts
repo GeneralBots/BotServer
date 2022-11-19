@@ -1,13 +1,13 @@
-const crypto2 = require('crypto');
-const { spawn } = require('child_process');
-const CDP = require('chrome-remote-interface');
-const {} = require('child_process');
-const net = require('net');
+import crypto2 from 'crypto';
+import { spawn } from 'child_process';
+import CDP from 'chrome-remote-interface';
+import {} from 'child_process';
+import net from 'net';
 import { GBLog } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GBServer } from '../../../../src/app';
-import { DebuggerService } from '../DebuggerService';
-const finalStream = require('final-stream');
+import { GBServer } from '../../../../src/app.js';
+import { DebuggerService } from '../DebuggerService.js';
+import finalStream from 'final-stream';
 
 const waitUntil = condition => {
   if (condition()) {
@@ -26,7 +26,7 @@ const waitUntil = condition => {
   });
 };
 
-const createVm2Pool = ({ min, max, ...limits }) => {
+export const createVm2Pool = ({ min, max, ...limits }) => {
   limits = Object.assign(
     {
       cpu: 100,
@@ -65,7 +65,7 @@ const createVm2Pool = ({ min, max, ...limits }) => {
 
 
     childProcess.stdout.on('data', data => {
-      childProcess.socket = childProcess.socket || data.toString().trim();
+      childProcess['socket'] = childProcess['socket'] || data.toString().trim();
     });
 
     childProcess.stderr.on('data', data => {
@@ -88,7 +88,7 @@ const createVm2Pool = ({ min, max, ...limits }) => {
     });
 
     let socket = null;
-    await waitUntil(() => childProcess.socket);
+    await waitUntil(() => childProcess['socket']);
 
     GBServer.globals.debuggers[limits.botId].childProcess = ref;
 
@@ -175,7 +175,7 @@ const createVm2Pool = ({ min, max, ...limits }) => {
 
       await debug();
     }
-    socket = net.createConnection(childProcess.socket);
+    socket = net.createConnection(childProcess['socket']);
     socket.write(JSON.stringify({ code, scope }) + '\n');
 
     const timer = setTimeout(() => {
@@ -215,4 +215,3 @@ const createVm2Pool = ({ min, max, ...limits }) => {
   };
 };
 
-exports.createVm2Pool = createVm2Pool;

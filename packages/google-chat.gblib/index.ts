@@ -38,7 +38,7 @@
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
-import { GoogleChatDirectLine } from './services/GoogleChatDirectLine';
+import { GoogleChatDirectLine } from './services/GoogleChatDirectLine.js';
 
 /**
  * Package for GoogleChat.gblib

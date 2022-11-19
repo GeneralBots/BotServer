@@ -37,15 +37,16 @@
 'use strict';
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
-import { GuaribasSchedule } from '../core.gbapp/models/GBModel';
+import { GuaribasSchedule } from '../core.gbapp/models/GBModel.js';
 import { Sequelize } from 'sequelize-typescript';
-import { createServerRouter } from "typescript-rest-rpc/lib/server"
-import { DialogKeywords } from './services/DialogKeywords';
-const Koa = require('koa');
+import { createServerRouter } from "typescript-rest-rpc/lib/server.js"
+import { DialogKeywords } from './services/DialogKeywords.js';
 import * as koaBody from "koa-body"
-import { SystemKeywords } from './services/SystemKeywords';
-import { WebAutomationKeywords } from './services/WebAutomationKeywords';
-import { DebuggerService } from './services/DebuggerService';
+import { SystemKeywords } from './services/SystemKeywords.js';
+import { WebAutomationKeywords } from './services/WebAutomationKeywords.js';
+import { DebuggerService } from './services/DebuggerService.js';
+import Koa from 'koa';
+
 const app = new Koa()
 
 /**
@@ -59,7 +60,7 @@ export class GBBasicPackage implements IGBPackage {
 
   public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasSchedule]);
-    app.use(koaBody({ multipart: true }));
+    app.use(koaBody.koaBody({ multipart: true }));
     app.listen(1111);
   }
 

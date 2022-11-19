@@ -30,29 +30,23 @@
 |                                                                             |
 \*****************************************************************************/
 
-const urlJoin = require('url-join');
-
-const Swagger = require('swagger-client');
-const fs = require('fs');
-const Path = require('path');
+import urlJoin from 'url-join';
+import Swagger from 'swagger-client';
+import Path from 'path';
+import Fs from 'fs';
 import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import * as request from 'request-promise-native';
-import { GBServer } from '../../../src/app';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { Messages } from '../strings';
-import { GuaribasUser } from '../../security.gbapp/models';
-import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { GBMinService } from '../../core.gbapp/services/GBMinService';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
-
-const puppeteer = require('puppeteer');
-
-const { MessageMedia, Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
-
+import { GBServer } from '../../../src/app.js';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
+import { Messages } from '../strings.js';
+import { GuaribasUser } from '../../security.gbapp/models/index.js';
+import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
+import * as wpp from 'whatsapp-web.js';
+import qrcode from 'qrcode-terminal';
+import express from 'express';
 
 /**
  * Support for Whatsapp.
@@ -117,7 +111,7 @@ export class WhatsappDirectLine extends GBService {
 
     this.directLineClient =
       new Swagger({
-        spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')), usePromise: true
+        spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')), usePromise: true
       });
     const client = await this.directLineClient;
 
@@ -164,8 +158,8 @@ export class WhatsappDirectLine extends GBService {
               puppeteer = { browserWSEndpoint: browserWSEndpoint };
             }
 
-            const client = this.customClient = new Client({
-              authStrategy: new LocalAuth({
+            const client = this.customClient = new wpp.Client({
+              authStrategy: new wpp.LocalAuth({
                 clientId: this.min.botId,
                 dataPath: localName
               }),
@@ -194,7 +188,7 @@ export class WhatsappDirectLine extends GBService {
               // const qrBuf = await s.getQRCode(qr);
               // const gbaiName = `${this.min.botId}.gbai`;
               // const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-              // fs.writeFileSync(localName, qrBuf);
+              // Fs.writeFileSync(localName, qrBuf);
               // const url = urlJoin(
               //   GBServer.globals.publicAddress,
               //   this.min.botId,
@@ -291,7 +285,7 @@ export class WhatsappDirectLine extends GBService {
     }
 
     if (setUrl && options&& this.whatsappServiceUrl) {
-      const express = require('express');
+      
       GBServer.globals.server.use(`/audios`, express.static('work'));
 
       if (options) {
@@ -729,7 +723,7 @@ export class WhatsappDirectLine extends GBService {
     let options;
     switch (this.provider) {
       case 'GeneralBots':
-        const attachment = await MessageMedia.fromUrl(url);
+        const attachment = await wpp.MessageMedia.fromUrl(url);
         if (to.indexOf('@') == -1) {
           if (to.length == 18) {
             to = to + '@g.us';
@@ -806,7 +800,7 @@ export class WhatsappDirectLine extends GBService {
     switch (this.provider) {
       case 'GeneralBots':
 
-        const attachment = MessageMedia.fromUrl(url);
+        const attachment = wpp.MessageMedia.fromUrl(url);
         await this.customClient.sendMessage(to, attachment);
 
         break;

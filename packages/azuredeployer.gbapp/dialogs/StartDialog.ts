@@ -37,10 +37,10 @@
 'use strict';
 
 import { GBLog, IGBInstallationDeployer, IGBInstance } from 'botlib';
-import * as fs from 'fs';
-import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService';
-import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService';
-const scanf = require('scanf');
+import * as Fs from 'fs';
+import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService.js';
+import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService.js';
+import scanf from 'scanf';
 
 /**
  * Handles command-line dialog for getting info for Boot Bot.
@@ -49,7 +49,7 @@ export class StartDialog {
   public static async createBaseInstance(installationDeployer: IGBInstallationDeployer) {
     // No .env so asks for cloud credentials to start a new farm.
 
-    if (!fs.existsSync(`.env`)) {
+    if (!Fs.existsSync(`.env`)) {
       process.stdout.write(
         'A empty enviroment is detected. To start automatic deploy, please enter some information:\n'
       );

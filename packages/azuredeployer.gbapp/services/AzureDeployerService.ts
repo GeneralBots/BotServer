@@ -36,31 +36,27 @@
 
 'use strict';
 
-import { HttpHeaders, HttpMethods, ServiceClient, WebResource } from '@azure/ms-rest-js';
+import urlJoin from 'url-join';
+import { HttpMethods, ServiceClient, WebResource } from '@azure/ms-rest-js';
 import { CognitiveServicesManagementClient } from 'azure-arm-cognitiveservices';
 import { ResourceManagementClient, SubscriptionClient } from 'azure-arm-resource';
 import { SearchManagementClient } from 'azure-arm-search';
 import { SqlManagementClient } from 'azure-arm-sql';
 import { WebSiteManagementClient } from 'azure-arm-website';
-//tslint:disable-next-line:no-submodule-imports
-import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
+import { AppServicePlan, Site, SiteLogsConfig, SiteSourceControl } from 'azure-arm-website/lib/models/index.js';
 import { GBLog, IGBInstallationDeployer, IGBInstance, IGBDeployer, IGBCoreService } from 'botlib';
-import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService';
-import { GBCorePackage } from '../../../packages/core.gbapp';
-import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService';
-import { GBDeployer } from '../../../packages/core.gbapp/services/GBDeployer';
-const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
+import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService.js';
+import { GBCorePackage } from '../../../packages/core.gbapp/index.js';
+import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService.js';
+import { GBDeployer } from '../../../packages/core.gbapp/services/GBDeployer.js';
+import { CognitiveServicesAccount } from 'azure-arm-cognitiveservices/lib/models/index.js';
+import MicrosoftGraph from "@microsoft/microsoft-graph-client";
+import Spinner from 'cli-spinner';
+import * as publicIp from 'public-ip';
 
-const Spinner = require('cli-spinner').Spinner;
-// tslint:disable-next-line: no-submodule-imports
 
-// tslint:disable-next-line:no-submodule-imports
-import { CognitiveServicesAccount } from 'azure-arm-cognitiveservices/lib/models';
-const urlJoin = require('url-join');
-const iconUrl = 'https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png';
-const publicIp = require('public-ip');
 const WebSiteResponseTimeout = 900;
-
+const iconUrl = 'https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png';
 /**
  * Deployer for Microsoft cloud.
  */
@@ -347,7 +343,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
     const storageClient = new SqlManagementClient(credentials, subscriptionId);
 
-    const ip = await publicIp.v4();
+    const ip = await publicIp.publicIpv4();
     let params = {
       startIpAddress: ip,
       endIpAddress: ip
@@ -404,7 +400,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await this.createSearch(name, searchName, instance.cloudLocation);
     const searchKeys = await this.searchClient.adminKeys.get(name, searchName);
     instance.searchHost = `${searchName}.search.windows.net`;
-    instance.searchIndex = 'azuresql-index';
+    instance.searchIndex = 'azuresql-index.js';
     instance.searchIndexer = 'azuresql-indexer';
     instance.searchKey = searchKeys.primaryKey;
 

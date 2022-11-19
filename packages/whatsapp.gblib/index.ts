@@ -38,7 +38,7 @@
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
-import { WhatsappDirectLine } from './services/WhatsappDirectLine';
+import { WhatsappDirectLine } from './services/WhatsappDirectLine.js';
 
 /**
  * Package for whatsapp.gblib

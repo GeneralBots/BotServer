@@ -39,11 +39,11 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import { GBMinService } from '../../core.gbapp/services/GBMinService';
-import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { CSService } from '../services/CSService';
-import { Messages } from '../strings';
+import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
+import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
+import { CSService } from '../services/CSService.js';
+import { Messages } from '../strings.js';
 
 /**
  * Dialog for feedback collecting.

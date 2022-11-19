@@ -33,18 +33,17 @@
 'use strict';
 
 import { GBLog, GBMinInstance } from 'botlib';
-import { GBServer } from '../../../src/app';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { createBrowser } from '../../core.gbapp/services/GBSSR';
-import { GuaribasUser } from '../../security.gbapp/models';
-import { DialogKeywords } from './DialogKeywords';
+import { GBServer } from '../../../src/app.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { createBrowser } from '../../core.gbapp/services/GBSSR.js';
+import { GuaribasUser } from '../../security.gbapp/models/index.js';
+import { DialogKeywords } from './DialogKeywords.js';
 import * as request from 'request-promise-native';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-
-const urlJoin = require('url-join');
-const Path = require('path');
-const Fs = require('fs');
-const url = require('url');
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import urlJoin from 'url-join';
+import Fs from 'fs';
+import Path from 'path';
+import url from 'url';
 
 /**
  * Web Automation services of conversation to be called by BASIC.
@@ -371,7 +370,7 @@ export class WebAutomationKeywords {
     } else {
       result = await request.get(options);
     }
-    let [baseUrl, client] = await GBDeployer.internalGetDriveClient(this.min);
+    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
 
     // Normalizes all slashes.

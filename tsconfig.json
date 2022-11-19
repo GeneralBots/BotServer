@@ -6,11 +6,13 @@
     "declaration": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
     "mapRoot": "./dist/",
-    "module": "CommonJS",
     "moduleResolution": "Node",
-    "resolveJsonModule": false,
+    "module": "ESNext",
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
     "outDir": "./dist",
     "paths": {
       "*": [

@@ -37,30 +37,29 @@
 'use strict';
 
 import { GBLog, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
-import * as fs from 'fs';
+import * as Fs from 'fs';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Op, Dialect } from 'sequelize';
-import { GBServer } from '../../../src/app';
-import { GBAdminPackage } from '../../admin.gbapp/index';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
-import { GBAnalyticsPackage } from '../../analytics.gblib';
-import { StartDialog } from '../../azuredeployer.gbapp/dialogs/StartDialog';
-import { GBCorePackage } from '../../core.gbapp';
-import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp';
-import { GBKBPackage } from '../../kb.gbapp';
-import { GBSecurityPackage } from '../../security.gbapp';
-import { GBWhatsappPackage } from '../../whatsapp.gblib/index';
-import { GuaribasInstance } from '../models/GBModel';
-import { GBConfigService } from './GBConfigService';
-import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp';
-import { GBSharePointPackage } from '../../sharepoint.gblib';
+import { GBServer } from '../../../src/app.js';
+import { GBAdminPackage } from '../../admin.gbapp/index.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { GBAnalyticsPackage } from '../../analytics.gblib/index.js';
+import { StartDialog } from '../../azuredeployer.gbapp/dialogs/StartDialog.js';
+import { GBCorePackage } from '../../core.gbapp/index.js';
+import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp/index.js';
+import { GBKBPackage } from '../../kb.gbapp/index.js';
+import { GBSecurityPackage } from '../../security.gbapp/index.js';
+import { GBWhatsappPackage } from '../../whatsapp.gblib/index.js';
+import { GuaribasInstance } from '../models/GBModel.js';
+import { GBConfigService } from './GBConfigService.js';
+import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp/index.js';
+import { GBSharePointPackage } from '../../sharepoint.gblib/index.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GBBasicPackage } from '../../basic.gblib';
-import { GBGoogleChatPackage } from '../../google-chat.gblib';
-import { GBHubSpotPackage } from '../../hubspot.gblib';
-
-const opn = require('opn');
-const cron = require('node-cron');
+import { GBBasicPackage } from '../../basic.gblib/index.js';
+import { GBGoogleChatPackage } from '../../google-chat.gblib/index.js';
+import { GBHubSpotPackage } from '../../hubspot.gblib/index.js';
+import opn from 'opn';
+import ngrok from 'ngrok';
 
 /**
  * GBCoreService contains main logic for handling storage services related
@@ -288,7 +287,7 @@ STORAGE_SYNC_ALTER=true
 ENDPOINT_UPDATE=true
 `;
 
-    fs.writeFileSync('.env', env);
+    Fs.writeFileSync('.env', env);
   }
 
 
@@ -299,9 +298,9 @@ ENDPOINT_UPDATE=true
    */
   public async ensureProxy(port): Promise<string> {
     try {
-      if (fs.existsSync('node_modules/ngrok/bin/ngrok.exe') || fs.existsSync('node_modules/ngrok/bin/ngrok')) {
-        const ngrok = require('ngrok');
-          return await ngrok.connect({ port: port }, 10);
+      if (Fs.existsSync('node_modules/ngrok/bin/ngrok.exe') || Fs.existsSync('node_modules/ngrok/bin/ngrok')) {
+        
+          return await ngrok.connect({ port: port});
       } else {
         GBLog.warn('ngrok executable not found (only tested on Windows). Check installation or node_modules folder.');
 

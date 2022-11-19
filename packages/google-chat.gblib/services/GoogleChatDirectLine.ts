@@ -30,14 +30,14 @@
 |                                                                             |
 \*****************************************************************************/
 
-const Swagger = require('swagger-client');
-const fs = require('fs');
-const { google } = require('googleapis')
-const { promisify } = require('util');
-const { PubSub } = require('@google-cloud/pubsub');
+import Swagger from 'swagger-client';
+import { google } from 'googleapis';
+import { promisify } from 'util';
+import { PubSub } from '@google-cloud/pubsub';
+import Fs from 'fs';
 import { GBLog, GBMinInstance, GBService } from 'botlib';
-import { GBServer } from '../../../src/app';
-import { SecService } from '../../security.gbapp/services/SecService';
+import { GBServer } from '../../../src/app.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
 
 /**
  * Support for Google Chat.
@@ -97,7 +97,7 @@ export class GoogleChatDirectLine extends GBService {
 
     this.directLineClient =
       new Swagger({
-        spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
+        spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
         usePromise: true
       });
     const client = await this.directLineClient;
@@ -270,9 +270,9 @@ export class GoogleChatDirectLine extends GBService {
       );
       await jwtClient.authorize();
       const chat = google.chat({version: 'v1', auth: jwtClient});
-      chat.spaces.messages.createAsync = promisify(chat.spaces.messages.create);
+      
 
-      const res = await chat.spaces.messages.createAsync({
+      const res = await chat.spaces.messages.create({
         parent: `spaces/${spaces}`,
         threadKey: threadKey,
         requestBody: {

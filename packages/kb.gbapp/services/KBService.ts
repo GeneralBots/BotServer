@@ -34,17 +34,16 @@
  * @fileoverview Knowledge base services and logic.
  */
 
-const Path = require('path');
-const Fs = require('fs');
-const urlJoin = require('url-join');
-const path = require('path');
-const asyncPromise = require('async-promises');
-const walkPromise = require('walk-promise');
-// tslint:disable-next-line:newline-per-chained-call
-const { SearchService } = require('azure-search-client');
-const Excel = require('exceljs');
-const getSlug = require('speakingurl');
-import { GBServer } from '../../../src/app';
+import Path from 'path';
+import Fs from 'fs';
+import urlJoin from 'url-join';
+import path from 'path';
+import asyncPromise from 'async-promises';
+import walkPromise from 'walk-promise';
+import { SearchService } from 'azure-search-client';
+import Excel from 'exceljs';
+import getSlug from 'speakingurl';
+import { GBServer } from '../../../src/app.js';
 import {
   GBDialogStep,
   GBLog,
@@ -57,15 +56,15 @@ import {
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
-import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
-import { GuaribasPackage } from '../../core.gbapp/models/GBModel';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
-import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
-import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
-const request = require('request-promise-native');
-const textract = require('textract');
-const pdf = require("pdf-extraction");
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService.js';
+import { GuaribasPackage } from '../../core.gbapp/models/GBModel.js';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { CSService } from '../../customer-satisfaction.gbapp/services/CSService.js';
+import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models/index.js';
+import { GBConfigService } from './../../core.gbapp/services/GBConfigService.js';
+import request from 'request-promise-native';
+import textract from 'textract';
+import pdf from "pdf-extraction";
 
 /**
  * Result for quey on KB data.
@@ -425,8 +424,8 @@ export class KBService implements IGBKBService {
     // when loading worksheets collection.
 
     let worksheet: any;
-    for (let t = 0; t < data._worksheets.length; t++) {
-      worksheet = data._worksheets[t];
+    for (let t = 0; t < data.worksheets.length; t++) {
+      worksheet = data.worksheets[t];
       if (worksheet) {
         break;
       }
