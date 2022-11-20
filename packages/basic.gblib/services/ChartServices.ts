@@ -32,34 +32,32 @@
 
 'use strict';
 
-
 import { createBrowser } from '../../core.gbapp/services/GBSSR.js';
 
 export class ChartServices {
+  /**
+   * Generate chart image screenshot
+   * @param {object} options billboard.js generation option object
+   * @param {string} path screenshot image full path with file name
+   */
+  public static async screenshot (args, path) {
+    const browser = await createBrowser(null);
+    const page = await browser.newPage();
 
-    /**
-     * Generate chart image screenshot
-     * @param {object} options billboard.js generation option object
-     * @param {string} path screenshot image full path with file name
-     */
-    public static async screenshot(args, path) {
-        const browser = await createBrowser(null);
-        const page = await browser.newPage();
+    // load billboard.js assets from CDN.
+    await page.addStyleTag({ url: 'https://cdn.jsdelivr.net/npm/billboard.js/dist/theme/datalab.min.css' });
+    await page.addScriptTag({ url: 'https://cdn.jsdelivr.net/npm/billboard.js/dist/billboard.pkgd.min.js' });
 
-        // load billboard.js assets from CDN.
-        await page.addStyleTag({ url: "https://cdn.jsdelivr.net/npm/billboard.js/dist/theme/datalab.min.css" });
-        await page.addScriptTag({ url: "https://cdn.jsdelivr.net/npm/billboard.js/dist/billboard.pkgd.min.js" });
+    await page.evaluate(`bb.generate(${JSON.stringify(args)});`);
 
-        await page.evaluate(`bb.generate(${JSON.stringify(args)});`);
+    const content = await page.$('.bb');
 
-        const content = await page.$(".bb");
+    await content.screenshot({
+      path,
+      omitBackground: true
+    });
 
-        await content.screenshot({
-            path,
-            omitBackground: true
-        });
-
-        await page.close();
-        await browser.close();
-    }
+    await page.close();
+    await browser.close();
+  }
 }

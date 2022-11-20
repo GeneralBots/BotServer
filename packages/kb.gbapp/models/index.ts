@@ -54,10 +54,7 @@ import {
   UpdatedAt
 } from 'sequelize-typescript';
 
-import {
-  GuaribasInstance,
-  GuaribasPackage
-} from '../../core.gbapp/models/GBModel.js';
+import { GuaribasInstance, GuaribasPackage } from '../../core.gbapp/models/GBModel.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 
 /**
@@ -68,53 +65,53 @@ export class GuaribasSubject extends Model<GuaribasSubject> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  declare subjectId: number;
+  subjectId: number;
 
   @Column(DataType.INTEGER)
-  declare internalId: string;
+  internalId: string;
 
   @Column(DataType.STRING(255))
-  declare title: string;
+  title: string;
 
   @Column(DataType.STRING(512))
-  declare description: string;
+  description: string;
 
   @Column(DataType.STRING(255))
-  declare from: string;
+  from: string;
 
   @Column(DataType.STRING(255))
-  declare to: string;
+  to: string;
 
   @ForeignKey(() => GuaribasSubject)
   @Column(DataType.INTEGER)
-  declare parentSubjectId: number;
+  parentSubjectId: number;
 
   @BelongsTo(() => GuaribasSubject, 'parentSubjectId')
-  declare parentSubject: GuaribasSubject;
+  parentSubject: GuaribasSubject;
 
   @HasMany(() => GuaribasSubject, { foreignKey: 'parentSubjectId' })
-  declare childrenSubjects: GuaribasSubject[];
+  childrenSubjects: GuaribasSubject[];
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  declare instanceId: number;
+  instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  declare instance: GuaribasInstance;
+  instance: GuaribasInstance;
 
   @ForeignKey(() => GuaribasUser)
   @Column(DataType.INTEGER)
-  declare responsibleUserId: number;
+  responsibleUserId: number;
 
   @BelongsTo(() => GuaribasUser)
-  declare responsibleUser: GuaribasUser;
+  responsibleUser: GuaribasUser;
 
   @ForeignKey(() => GuaribasPackage)
   @Column(DataType.INTEGER)
-  declare packageId: number;
+  packageId: number;
 
   @BelongsTo(() => GuaribasPackage)
-  declare package: GuaribasPackage;
+  package: GuaribasPackage;
 }
 
 /**
@@ -125,62 +122,61 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  declare questionId: number;
+  questionId: number;
 
   @Column(DataType.STRING(64))
-  declare subject1: string;
+  subject1: string;
 
   @Column(DataType.STRING(64))
-  declare subject2: string;
+  subject2: string;
 
   @Column(DataType.STRING(64))
-  declare subject3: string;
+  subject3: string;
 
   @Column(DataType.STRING(64))
-  declare subject4: string;
+  subject4: string;
 
   @Column(DataType.STRING(1024))
-  declare keywords: string;
+  keywords: string;
 
   @Column(DataType.BOOLEAN)
-  declare skipIndex: boolean;
+  skipIndex: boolean;
 
   @Column(DataType.STRING(512))
-  declare from: string;
+  from: string;
 
   @Column(DataType.STRING(512))
-  declare to: string;
+  to: string;
 
   @Column(DataType.TEXT)
-  declare content: string;
+  content: string;
 
   @Column(DataType.DATE)
   @CreatedAt
-  declare createdAt: Date;
+  createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  declare updatedAt: Date;
-
+  updatedAt: Date;
 
   //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasAnswer)
   @Column(DataType.INTEGER)
-  declare answerId: number;
+  answerId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  declare instance: GuaribasInstance;
+  instance: GuaribasInstance;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  declare instanceId: number;
+  instanceId: number;
 
   @ForeignKey(() => GuaribasPackage)
   @Column(DataType.INTEGER)
-  declare packageId: number;
+  packageId: number;
 
   @BelongsTo(() => GuaribasPackage)
-  declare package: GuaribasPackage;
+  package: GuaribasPackage;
 }
 
 /**
@@ -191,53 +187,52 @@ export class GuaribasAnswer extends Model<GuaribasAnswer> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  declare answerId: number;
+  answerId: number;
 
   @Length({ min: 0, max: 512 })
   @Column(DataType.STRING(512))
-  declare media: string;
+  media: string;
 
   @Length({ min: 0, max: 12 })
   @Column(DataType.STRING(12))
-  declare format: string;
+  format: string;
 
   @Column(DataType.TEXT)
-  declare content: string;
+  content: string;
 
   @Column(DataType.DATE)
   @CreatedAt
-  declare createdAt: Date;
+  createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  declare updatedAt: Date;
-
+  updatedAt: Date;
 
   @HasMany(() => GuaribasQuestion)
-  declare questions: GuaribasQuestion[];
+  questions: GuaribasQuestion[];
 
   @HasOne(() => GuaribasQuestion)
-  declare prev: GuaribasQuestion;
+  prev: GuaribasQuestion;
 
   @HasOne(() => GuaribasQuestion)
-  declare next: GuaribasQuestion;
+  next: GuaribasQuestion;
 
   @ForeignKey(() => GuaribasQuestion)
   @Column(DataType.INTEGER)
-  declare nextId: number;
+  nextId: number;
 
   @ForeignKey(() => GuaribasQuestion)
   @Column(DataType.INTEGER)
-  declare prevId: number;
+  prevId: number;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  declare instanceId: number;
+  instanceId: number;
 
   @ForeignKey(() => GuaribasPackage)
   @Column(DataType.INTEGER)
-  declare packageId: number;
+  packageId: number;
 
   @BelongsTo(() => GuaribasPackage)
-  declare package: GuaribasPackage;
+  package: GuaribasPackage;
 }

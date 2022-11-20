@@ -36,36 +36,27 @@
 
 'use strict';
 
-import {
-  Column,
-  CreatedAt,
-  DataType,
-  Model,
-  Table,
-  UpdatedAt
-} from 'sequelize-typescript';
+import { Column, CreatedAt, DataType, Model, Table, UpdatedAt } from 'sequelize-typescript';
 
 /**
  * General settings store.
  */
 @Table
 export class GuaribasAdmin extends Model<GuaribasAdmin> {
-
   @Column(DataType.INTEGER)
-  declare instanceId: number;
+  instanceId: number;
 
   @Column(DataType.STRING(255))
-  declare key: string;
+  key: string;
 
   @Column(DataType.STRING(4000))
-  declare value: string;
+  value: string;
 
   @Column(DataType.DATE)
   @CreatedAt
-  declare createdAt: Date;
+  createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  declare updatedAt: Date;
-
+  updatedAt: Date;
 }

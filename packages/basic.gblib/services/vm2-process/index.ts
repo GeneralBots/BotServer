@@ -63,7 +63,6 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
       { cwd: limits.cwd, shell: false }
     );
 
-
     childProcess.stdout.on('data', data => {
       childProcess['socket'] = childProcess['socket'] || data.toString().trim();
     });
@@ -75,23 +74,22 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
         kill(process);
         GBServer.globals.debuggers[limits.botId].state = 0;
         GBServer.globals.debuggers[limits.botId].stateInfo = stderrCache;
-      }
-      else if (stderrCache.includes('FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory')) {
+      } else if (
+        stderrCache.includes('FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory')
+      ) {
         limitError = 'code execution exceeed allowed memory';
         kill(process);
         GBServer.globals.debuggers[limits.botId].state = 0;
         GBServer.globals.debuggers[limits.botId].stateInfo = 'Fail';
-      }
-      else if (stderrCache.includes('Debugger attached.')) {
+      } else if (stderrCache.includes('Debugger attached.')) {
         GBLog.info(`BASIC: General Bots Debugger attached to Node .gbdialog process for ${limits.botId}.`);
-      }      
+      }
     });
 
     let socket = null;
     await waitUntil(() => childProcess['socket']);
 
     GBServer.globals.debuggers[limits.botId].childProcess = ref;
-
 
     // Only attach if called by debugger/run.
 
@@ -154,7 +152,6 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
               await client.Runtime.runIfWaitingForDebugger();
               await client.Debugger.enable();
               await client.Runtime.enable();
-              
 
               resolve(1);
             } catch (err) {
@@ -214,4 +211,3 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
     run
   };
 };
-

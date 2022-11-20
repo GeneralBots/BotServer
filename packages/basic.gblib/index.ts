@@ -39,47 +39,46 @@
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { GuaribasSchedule } from '../core.gbapp/models/GBModel.js';
 import { Sequelize } from 'sequelize-typescript';
-import { createServerRouter } from "typescript-rest-rpc/lib/server.js"
+import { createServerRouter } from 'typescript-rest-rpc/lib/server.js';
 import { DialogKeywords } from './services/DialogKeywords.js';
-import * as koaBody from "koa-body"
+import * as koaBody from 'koa-body';
 import { SystemKeywords } from './services/SystemKeywords.js';
 import { WebAutomationKeywords } from './services/WebAutomationKeywords.js';
 import { DebuggerService } from './services/DebuggerService.js';
 import Koa from 'koa';
 
-const app = new Koa()
+const app = new Koa();
 
 /**
  * Package for core.gbapp.
  */
- 
+
 export class GBBasicPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
-  public CurrentEngineName = "guaribas-1.0.0";
+  public CurrentEngineName = 'guaribas-1.0.0';
 
-
-  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
+  public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasSchedule]);
     app.use(koaBody.koaBody({ multipart: true }));
     app.listen(1111);
   }
 
-  public async getDialogs(min: GBMinInstance) {
+  public async getDialogs (min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);
   }
-  public async unloadPackage(core: IGBCoreService): Promise<void> {
+  public async unloadPackage (core: IGBCoreService): Promise<void> {
     GBLog.verbose(`unloadPackage called.`);
   }
-  public async unloadBot(min: GBMinInstance): Promise<void> {
+  public async unloadBot (min: GBMinInstance): Promise<void> {
     GBLog.verbose(`unloadBot called.`);
   }
-  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
+  public async onNewSession (min: GBMinInstance, step: GBDialogStep): Promise<void> {
     GBLog.verbose(`onNewSession called.`);
   }
-  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
+  public async onExchangeData (min: GBMinInstance, kind: string, data: any) {
     GBLog.verbose(`onExchangeData called.`);
   }
-  public async loadBot(min: GBMinInstance): Promise<void> {
+  public async loadBot (min: GBMinInstance): Promise<void> {
     const dk = new DialogKeywords(min, null, null);
     const wa = new WebAutomationKeywords(min, null, dk);
     const sys = new SystemKeywords(min, null, dk, wa);
@@ -87,12 +86,12 @@ export class GBBasicPackage implements IGBPackage {
     dk.wa = wa;
     wa.sys = sys;
     const dialogRouter = createServerRouter(`/api/v2/${min.botId}/dialog`, dk);
-    const waRouter = createServerRouter(`/api/v2/${min.botId}/webautomation`, wa );
+    const waRouter = createServerRouter(`/api/v2/${min.botId}/webautomation`, wa);
     const sysRouter = createServerRouter(`/api/v2/${min.botId}/system`, sys);
     const dbgRouter = createServerRouter(`/api/v2/${min.botId}/debugger`, dbg);
     app.use(dialogRouter.routes());
     app.use(sysRouter.routes());
-    app.use(waRouter.routes());    
-    app.use(dbgRouter.routes());    
+    app.use(waRouter.routes());
+    app.use(dbgRouter.routes());
   }
 }

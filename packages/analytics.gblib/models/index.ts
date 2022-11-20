@@ -63,49 +63,48 @@ import { GuaribasUser } from '../../security.gbapp/models/index.js';
  */
 @Table
 export class GuaribasConversation extends Model<GuaribasConversation> {
-
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  declare conversationId: number;
+  conversationId: number;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  declare instanceId: number;
+  instanceId: number;
 
   @ForeignKey(() => GuaribasSubject)
   @Column(DataType.INTEGER)
-  declare startSubjectId: number;
+  startSubjectId: number;
 
   @BelongsTo(() => GuaribasSubject)
-  declare startSubject: GuaribasSubject;
+  startSubject: GuaribasSubject;
 
   @ForeignKey(() => GuaribasChannel)
   @Column(DataType.INTEGER)
-  declare channelId: string;
+  channelId: string;
 
   @Column(DataType.DATE)
-  declare rateDate: Date;
+  rateDate: Date;
 
   @Column(DataType.FLOAT)
-  declare rate: number;
+  rate: number;
 
   @Column(DataType.STRING(512))
-  declare feedback: string;
+  feedback: string;
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  createdAt: Date;
 
   @Column(DataType.STRING(255))
-  declare text: string;
+  text: string;
 
   @ForeignKey(() => GuaribasUser)
   @Column(DataType.INTEGER)
-  declare startedByUserId: number;
+  startedByUserId: number;
 
   @BelongsTo(() => GuaribasUser)
-  declare startedBy: GuaribasUser;
+  startedBy: GuaribasUser;
 }
 
 /**
@@ -113,45 +112,43 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
  */
 @Table
 export class GuaribasConversationMessage extends Model<GuaribasConversationMessage> {
-
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  declare conversationMessageId: number;
+  conversationMessageId: number;
 
   @ForeignKey(() => GuaribasSubject)
   @Column(DataType.INTEGER)
-  declare subjectId: number;
+  subjectId: number;
 
   @Column(DataType.TEXT)
-  declare content: string;
+  content: string;
 
   @Column(DataType.DATE)
   @CreatedAt
-  declare createdAt: Date;
+  createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  declare updatedAt: Date;
-
+  updatedAt: Date;
 
   //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasConversation)
   @Column(DataType.INTEGER)
-  declare conversationId: number;
+  conversationId: number;
 
   //tslint:disable-next-line:no-use-before-declare
   @BelongsTo(() => GuaribasConversation)
-  declare conversation: GuaribasConversation;
+  conversation: GuaribasConversation;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  declare instanceId: number;
+  instanceId: number;
 
   @ForeignKey(() => GuaribasUser)
   @Column(DataType.INTEGER)
-  declare userId: number;
+  userId: number;
 
   @BelongsTo(() => GuaribasUser)
-  declare user: GuaribasUser;
+  user: GuaribasUser;
 }

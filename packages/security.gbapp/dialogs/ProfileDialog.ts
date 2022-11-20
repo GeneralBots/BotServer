@@ -36,7 +36,6 @@
 
 'use strict';
 
-
 import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { Messages } from '../strings.js';
@@ -46,16 +45,14 @@ import * as phone from 'google-libphonenumber';
  * Dialogs for handling Menu control.
  */
 export class ProfileDialog extends IGBDialog {
-
-  public static getNameDialog(min: GBMinInstance) {
-
+  public static getNameDialog (min: GBMinInstance) {
     return {
-      id: '/profile_name', waterfall: [
+      id: '/profile_name',
+      waterfall: [
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else{
+          } else {
             return await step.next(step.options);
           }
         },
@@ -67,7 +64,7 @@ export class ProfileDialog extends IGBDialog {
         async step => {
           const locale = step.context.activity.locale;
 
-          const fullName = (text) => {
+          const fullName = text => {
             return text.match(/^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/gi);
           };
 
@@ -80,21 +77,20 @@ export class ProfileDialog extends IGBDialog {
             step.activeDialog.state.options.name = value[0];
 
             return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);
-
           }
-        }]
+        }
+      ]
     };
   }
 
-  public static getMobileDialog(min: GBMinInstance) {
-
+  public static getMobileDialog (min: GBMinInstance) {
     return {
-      id: '/profile_mobile', waterfall: [
+      id: '/profile_mobile',
+      waterfall: [
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else{
+          } else {
             return await step.next(step.options);
           }
         },
@@ -125,19 +121,19 @@ export class ProfileDialog extends IGBDialog {
 
             return await step.replaceDialog('/profile_mobile_confirm', step.activeDialog.state.options);
           }
-        }]
+        }
+      ]
     };
   }
 
-  public static getMobileConfirmDialog(min: GBMinInstance) {
-
+  public static getMobileConfirmDialog (min: GBMinInstance) {
     return {
-      id: '/profile_mobile_confirm', waterfall: [
+      id: '/profile_mobile_confirm',
+      waterfall: [
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else{
+          } else {
             return await step.next(step.options);
           }
         },
@@ -146,8 +142,10 @@ export class ProfileDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const from = step.activeDialog.state.options.mobile;
           if (min.whatsAppDirectLine) {
-
-            await min.whatsAppDirectLine.sendToDevice(from, `${step.activeDialog.state.options.mobileCode} is your General Bots creation code.`);
+            await min.whatsAppDirectLine.sendToDevice(
+              from,
+              `${step.activeDialog.state.options.mobileCode} is your General Bots creation code.`
+            );
           } else {
             GBLog.info(`WhatsApp not configured. Here is the code: ${step.activeDialog.state.options.mobileCode}.`);
           }
@@ -164,18 +162,19 @@ export class ProfileDialog extends IGBDialog {
           } else {
             await step.replaceDialog('/profile_email', step.activeDialog.state.options);
           }
-        }]
+        }
+      ]
     };
   }
 
-  public static getEmailDialog(min: GBMinInstance) {
+  public static getEmailDialog (min: GBMinInstance) {
     return {
-      id: '/profile_email', waterfall: [
+      id: '/profile_email',
+      waterfall: [
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else{
+          } else {
             return await step.next(step.options);
           }
         },
@@ -186,7 +185,7 @@ export class ProfileDialog extends IGBDialog {
         async step => {
           const locale = step.context.activity.locale;
 
-          const extractEntity = (text) => {
+          const extractEntity = text => {
             return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi);
           };
 
@@ -199,7 +198,8 @@ export class ProfileDialog extends IGBDialog {
             step.activeDialog.state.options.email = value[0];
             await step.replaceDialog(`/${step.activeDialog.state.options.nextDialog}`, step.activeDialog.state.options);
           }
-        }]
+        }
+      ]
     };
   }
 }

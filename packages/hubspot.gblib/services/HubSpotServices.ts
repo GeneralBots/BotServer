@@ -30,17 +30,12 @@
 |                                                                             |
 \*****************************************************************************/
 
-
 import { GBLog, GBMinInstance, GBService } from 'botlib';
 import { promisify } from 'util';
 import Swagger from 'swagger-client';
 import * as hubspot from '@hubspot/api-client';
 
-
 /**
  * Support for Hub Spot XRM.
  */
-export class HubSpotServices extends GBService {
-
-
-}
+export class HubSpotServices extends GBService {}

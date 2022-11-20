@@ -46,7 +46,7 @@ import scanf from 'scanf';
  * Handles command-line dialog for getting info for Boot Bot.
  */
 export class StartDialog {
-  public static async createBaseInstance(installationDeployer: IGBInstallationDeployer) {
+  public static async createBaseInstance (installationDeployer: IGBInstallationDeployer) {
     // No .env so asks for cloud credentials to start a new farm.
 
     if (!Fs.existsSync(`.env`)) {
@@ -111,7 +111,7 @@ export class StartDialog {
     return { instance, credentials, subscriptionId };
   }
 
-  private static retrieveUsername() {
+  private static retrieveUsername () {
     let value = GBConfigService.get('CLOUD_USERNAME');
     if (value === undefined) {
       process.stdout.write(`${GBAdminService.GB_PROMPT}CLOUD_USERNAME:`);
@@ -121,7 +121,7 @@ export class StartDialog {
     return value;
   }
 
-  private static retrievePassword() {
+  private static retrievePassword () {
     let password = GBConfigService.get('CLOUD_PASSWORD');
     if (password === undefined) {
       process.stdout.write(`${GBAdminService.GB_PROMPT}CLOUD_PASSWORD:`);
@@ -131,7 +131,7 @@ export class StartDialog {
     return password;
   }
 
-  private static retrieveBotId() {
+  private static retrieveBotId () {
     let botId = GBConfigService.get('BOT_ID');
     if (botId === undefined) {
       process.stdout.write(
@@ -146,12 +146,11 @@ cannot start or end with or contain consecutive dashes and having 4 to 42 charac
     return botId;
   }
 
-
   /**
-   * 
+   *
    * Update Manifest in Azure: "signInAudience": "AzureADandPersonalMicrosoftAccount" and "accessTokenAcceptedVersion": 2.
    */
-  private static retrieveAppId() {
+  private static retrieveAppId () {
     let appId = GBConfigService.get('MARKETPLACE_ID');
     if (appId === undefined) {
       process.stdout.write(
@@ -167,7 +166,7 @@ generate manually an App ID and App Secret.\n`
     return appId;
   }
 
-  private static retrieveAppPassword() {
+  private static retrieveAppPassword () {
     let appPassword = GBConfigService.get('MARKETPLACE_SECRET');
     if (appPassword === undefined) {
       process.stdout.write('Generated Password (MARKETPLACE_SECRET):');
@@ -177,7 +176,7 @@ generate manually an App ID and App Secret.\n`
     return appPassword;
   }
 
-  private static retrieveSubscriptionId(list) {
+  private static retrieveSubscriptionId (list) {
     let subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
     const map = {};
     let index = 1;
@@ -195,7 +194,7 @@ generate manually an App ID and App Secret.\n`
     return subscriptionId;
   }
 
-  private static retrieveLocation() {
+  private static retrieveLocation () {
     let location = GBConfigService.get('CLOUD_LOCATION');
     if (location === undefined) {
       process.stdout.write('CLOUD_LOCATION (eg. westus):');

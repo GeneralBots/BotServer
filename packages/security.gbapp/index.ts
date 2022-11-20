@@ -47,8 +47,7 @@ import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models/index.j
  */
 export class GBSecurityPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
-  public async getDialogs(min: GBMinInstance) {
-
+  public async getDialogs (min: GBMinInstance) {
     const out = [
       ProfileDialog.getNameDialog(min),
       ProfileDialog.getEmailDialog(min),
@@ -60,25 +59,24 @@ export class GBSecurityPackage implements IGBPackage {
       out.push(OAuthDialog.getOAuthDialog(min));
     }
     return out;
-
   }
-  public async unloadPackage(core: IGBCoreService): Promise<void> {
+  public async unloadPackage (core: IGBCoreService): Promise<void> {
     GBLog.verbose(`unloadPackage called.`);
   }
-  public async loadBot(min: GBMinInstance): Promise<void> {
+  public async loadBot (min: GBMinInstance): Promise<void> {
     GBLog.verbose(`loadBot called.`);
   }
-  public async unloadBot(min: GBMinInstance): Promise<void> {
+  public async unloadBot (min: GBMinInstance): Promise<void> {
     GBLog.verbose(`unloadBot called.`);
   }
-  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
+  public async onNewSession (min: GBMinInstance, step: GBDialogStep): Promise<void> {
     GBLog.verbose(`onNewSession called.`);
   }
-  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
+  public async onExchangeData (min: GBMinInstance, kind: string, data: any) {
     GBLog.verbose(`onExchangeData called.`);
   }
 
-  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
+  public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasGroup, GuaribasUser, GuaribasUserGroup]);
   }
 }

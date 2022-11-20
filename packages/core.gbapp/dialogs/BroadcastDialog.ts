@@ -53,14 +53,13 @@ export class BroadcastDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup(bot: BotAdapter, min: GBMinInstance) {
+  public static setup (bot: BotAdapter, min: GBMinInstance) {
     min.dialogs.add(
       new WaterfallDialog('/gb-broadcast', [
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else{
+          } else {
             return await step.next(step.options);
           }
         },

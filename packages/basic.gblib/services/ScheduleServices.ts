@@ -48,14 +48,12 @@ import cron from 'node-cron';
  * Basic services for BASIC manipulation.
  */
 export class ScheduleServices extends GBService {
-
-  public async deleteScheduleIfAny(min: GBMinInstance, name: string) {
-
-    const task = min["scheduleMap"] ? min["scheduleMap"][name] : null;
+  public async deleteScheduleIfAny (min: GBMinInstance, name: string) {
+    const task = min['scheduleMap'] ? min['scheduleMap'][name] : null;
 
     if (task) {
       task.destroy();
-      delete min["scheduleMap"][name];
+      delete min['scheduleMap'][name];
     }
 
     const count = await GuaribasSchedule.destroy({
@@ -73,11 +71,7 @@ export class ScheduleServices extends GBService {
   /**
    * Finds and update user agent information to a next available person.
    */
-  public async createOrUpdateSchedule(
-    min: GBMinInstance,
-    schedule: string,
-    name: string
-  ): Promise<GuaribasSchedule> {
+  public async createOrUpdateSchedule (min: GBMinInstance, schedule: string, name: string): Promise<GuaribasSchedule> {
     let record = await GuaribasSchedule.findOne({
       where: {
         instanceId: min.instance.instanceId,
@@ -101,12 +95,10 @@ export class ScheduleServices extends GBService {
     return record;
   }
 
-
   /**
- * Load all cached schedule from BASIC SET SCHEDULE keyword.
- */
-  public async scheduleAll() {
-   
+   * Load all cached schedule from BASIC SET SCHEDULE keyword.
+   */
+  public async scheduleAll () {
     let schedules;
     try {
       schedules = await GuaribasSchedule.findAll();
@@ -115,7 +107,7 @@ export class ScheduleServices extends GBService {
           p => p.instance.instanceId === item.instanceId
         )[0];
 
-        if (min){
+        if (min) {
           this.ScheduleItem(item, min);
         }
       });
@@ -125,7 +117,7 @@ export class ScheduleServices extends GBService {
     return schedules;
   }
 
-  private ScheduleItem(item: GuaribasSchedule, min: GBMinInstance) {
+  private ScheduleItem (item: GuaribasSchedule, min: GBMinInstance) {
     GBLog.info(`Scheduling ${item.name} on ${min.botId}...`);
     try {
       const options = {
@@ -133,13 +125,13 @@ export class ScheduleServices extends GBService {
         timezone: 'America/Sao_Paulo'
       };
 
-      const task = min["scheduleMap"][item.name];
+      const task = min['scheduleMap'][item.name];
       if (task) {
         task.stop();
-        min["scheduleMap"][item.name] = null;
+        min['scheduleMap'][item.name] = null;
       }
 
-      min["scheduleMap"][item.name] = cron.schedule(
+      min['scheduleMap'][item.name] = cron.schedule(
         item.schedule,
         function () {
           const finalData = async () => {
@@ -152,9 +144,10 @@ export class ScheduleServices extends GBService {
           (async () => {
             await finalData();
           })();
-        }, options
+        },
+        options
       );
       GBLog.info(`Running .gbdialog word ${item.name} on:${item.schedule}...`);
-    } catch (error) { }
+    } catch (error) {}
   }
 }

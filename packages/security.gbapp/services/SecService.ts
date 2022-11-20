@@ -11,8 +11,7 @@ import { FindOptions } from 'sequelize';
  * Security service layer.
  */
 export class SecService extends GBService {
-
-  public async ensureUser(
+  public async ensureUser (
     instanceId: number,
     userSystemId: string,
     userName: string,
@@ -44,7 +43,7 @@ export class SecService extends GBService {
   /**
    * Retrives a conversation reference from contact phone.
    */
-  public async getConversationReference(phone: string): Promise<ConversationReference> {
+  public async getConversationReference (phone: string): Promise<ConversationReference> {
     const options = <FindOptions>{ rejectOnEmpty: true, where: { phone: phone } };
     const user = await GuaribasUser.findOne(options);
 
@@ -54,7 +53,7 @@ export class SecService extends GBService {
   /**
    * Updates a conversation reference from contact phone.
    */
-  public async updateConversationReference(phone: string, conversationReference: string) {
+  public async updateConversationReference (phone: string, conversationReference: string) {
     const options = <FindOptions>{ where: { phone: phone } };
     const user = await GuaribasUser.findOne(options);
 
@@ -62,7 +61,7 @@ export class SecService extends GBService {
     await user.save();
   }
 
-  public async updateConversationReferenceById(userId: number, conversationReference: string) {
+  public async updateConversationReferenceById (userId: number, conversationReference: string) {
     const options = <FindOptions>{ where: { userId: userId } };
     const user = await GuaribasUser.findOne(options);
 
@@ -70,7 +69,7 @@ export class SecService extends GBService {
     await user.save();
   }
 
-  public async updateUserLocale(userId: number, locale: any): Promise<GuaribasUser> {
+  public async updateUserLocale (userId: number, locale: any): Promise<GuaribasUser> {
     const user = await GuaribasUser.findOne({
       where: {
         userId: userId
@@ -81,7 +80,7 @@ export class SecService extends GBService {
     return await user.save();
   }
 
-  public async updateUserHearOnDialog(userId: number, dialogName: string): Promise<GuaribasUser> {
+  public async updateUserHearOnDialog (userId: number, dialogName: string): Promise<GuaribasUser> {
     const user = await GuaribasUser.findOne({
       where: {
         userId: userId
@@ -92,7 +91,7 @@ export class SecService extends GBService {
     return await user.save();
   }
 
-  public async updateUserInstance(userSystemId: string, instanceId: number): Promise<GuaribasUser> {
+  public async updateUserInstance (userSystemId: string, instanceId: number): Promise<GuaribasUser> {
     const user = await GuaribasUser.findOne({
       where: {
         userSystemId: userSystemId
@@ -106,12 +105,12 @@ export class SecService extends GBService {
   /**
    * Finds and update user agent information to a next available person.
    */
-  public async updateHumanAgent(
+  public async updateHumanAgent (
     userSystemId: string,
     instanceId: number,
     agentSystemId: string
   ): Promise<GuaribasUser> {
-    const user =  await GuaribasUser.findOne({
+    const user = await GuaribasUser.findOne({
       where: {
         userSystemId: userSystemId,
         instanceId: instanceId
@@ -153,7 +152,7 @@ export class SecService extends GBService {
     return user;
   }
 
-  public async isAgentSystemId(systemId: string): Promise<Boolean> {
+  public async isAgentSystemId (systemId: string): Promise<Boolean> {
     const user = await GuaribasUser.findOne({
       where: {
         userSystemId: systemId
@@ -167,24 +166,24 @@ export class SecService extends GBService {
     return user.agentMode === 'self';
   }
 
-  public async assignHumanAgent(min: GBMinInstance, userSystemId: string, agentSystemId: string = null): Promise<string> {
-
+  public async assignHumanAgent (
+    min: GBMinInstance,
+    userSystemId: string,
+    agentSystemId: string = null
+  ): Promise<string> {
     if (!agentSystemId) {
-      let list = min.core.getParam<string>(
-        min.instance,
-        'Transfer To',
-        process.env.TRANSFER_TO
-      );
+      let list = min.core.getParam<string>(min.instance, 'Transfer To', process.env.TRANSFER_TO);
 
       if (list) {
-        list = list.split(';')
+        list = list.split(';');
       }
 
       await CollectionUtil.asyncForEach(list, async item => {
         if (
           item !== undefined &&
           agentSystemId === undefined &&
-          item !== userSystemId && !await this.isAgentSystemId(item)
+          item !== userSystemId &&
+          !(await this.isAgentSystemId(item))
         ) {
           // TODO: Optimize loop.
           agentSystemId = item;
@@ -198,7 +197,7 @@ export class SecService extends GBService {
     return agentSystemId;
   }
 
-  public async getUserFromSystemId(systemId: string): Promise<GuaribasUser> {
+  public async getUserFromSystemId (systemId: string): Promise<GuaribasUser> {
     return await GuaribasUser.findOne({
       where: {
         userSystemId: systemId
@@ -206,7 +205,7 @@ export class SecService extends GBService {
     });
   }
 
-  public async getUserFromAgentSystemId(systemId: string): Promise<GuaribasUser> {
+  public async getUserFromAgentSystemId (systemId: string): Promise<GuaribasUser> {
     return await GuaribasUser.findOne({
       where: {
         agentSystemId: systemId
@@ -214,7 +213,7 @@ export class SecService extends GBService {
     });
   }
 
-  public async getAllUsers(instanceId: number): Promise<GuaribasUser[]> {
+  public async getAllUsers (instanceId: number): Promise<GuaribasUser[]> {
     return await GuaribasUser.findAll({
       where: {
         instanceId: instanceId

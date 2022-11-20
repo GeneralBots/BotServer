@@ -53,57 +53,61 @@ export class WelcomeDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup(bot: BotAdapter, min: GBMinInstance) {
+  public static setup (bot: BotAdapter, min: GBMinInstance) {
+    min.dialogs.add(
+      new WaterfallDialog('/', [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          } else {
+            return await step.next(step.options);
+          }
+        },
+        async step => {
+          if (
+            GBServer.globals.entryPointDialog !== null &&
+            min.instance.botId === process.env.BOT_ID &&
+            step.context.activity.channelId === 'webchat'
+          ) {
+            return step.replaceDialog(GBServer.globals.entryPointDialog);
+          }
 
-    min.dialogs.add(new WaterfallDialog('/', [
-      async step => {
-        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
-          return await step.beginDialog('/auth');
-        }
-        else{
-          return await step.next(step.options);
-        }
-      },
-    async step => {
+          const user = await min.userProfile.get(step.context, {});
+          const locale = step.context.activity.locale;
 
-        if (GBServer.globals.entryPointDialog !== null &&
-          min.instance.botId === process.env.BOT_ID &&
-          step.context.activity.channelId === 'webchat') {
-          return step.replaceDialog(GBServer.globals.entryPointDialog);
-        }
-
-        const user = await min.userProfile.get(step.context, {});
-        const locale = step.context.activity.locale;
-
-        if (!user.once && step.context.activity.channelId === 'webchat'
-          && min.core.getParam<boolean>(min.instance, 'HelloGoodX', true) === "true") {
-          user.once = true;
-          await min.userProfile.set(step.context, user);
-          const a = new Date();
-          const date = a.getHours();
-          const msg =
-            date < 12
-              ? Messages[locale].good_morning
-              : date < 18
+          if (
+            !user.once &&
+            step.context.activity.channelId === 'webchat' &&
+            min.core.getParam<boolean>(min.instance, 'HelloGoodX', true) === 'true'
+          ) {
+            user.once = true;
+            await min.userProfile.set(step.context, user);
+            const a = new Date();
+            const date = a.getHours();
+            const msg =
+              date < 12
+                ? Messages[locale].good_morning
+                : date < 18
                 ? Messages[locale].good_evening
                 : Messages[locale].good_night;
 
-          await min.conversationalService.sendText(min, step, Messages[locale].hi(msg));
+            await min.conversationalService.sendText(min, step, Messages[locale].hi(msg));
 
-          await step.replaceDialog('/ask', { firstTime: true });
+            await step.replaceDialog('/ask', { firstTime: true });
 
-          if (
-            step.context.activity !== undefined &&
-            step.context.activity.type === 'message' &&
-            step.context.activity.text !== ''
-          ) {
-            GBLog.info(`/answer being called from WelcomeDialog.`);
-            await step.replaceDialog('/answer', { query: step.context.activity.text });
+            if (
+              step.context.activity !== undefined &&
+              step.context.activity.type === 'message' &&
+              step.context.activity.text !== ''
+            ) {
+              GBLog.info(`/answer being called from WelcomeDialog.`);
+              await step.replaceDialog('/answer', { query: step.context.activity.text });
+            }
           }
-        }
 
-        return await step.next();
-      }
-    ]));
+          return await step.next();
+        }
+      ])
+    );
   }
 }

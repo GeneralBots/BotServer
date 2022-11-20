@@ -58,46 +58,46 @@ export class GuaribasUser extends Model<GuaribasUser> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  declare userId: number;
+  userId: number;
 
   @Column(DataType.STRING(255))
-  declare displayName: string;
+  displayName: string;
 
   @Column(DataType.INTEGER)
-  declare userSystemId: string;
+  userSystemId: string;
   @Column(DataType.STRING(255))
-  declare userName: string;
+  userName: string;
 
   @Column(DataType.STRING(255))
-  declare defaultChannel: string;
+  defaultChannel: string;
 
   @Column(DataType.STRING(255))
-  declare email: string;
+  email: string;
 
   @Column(DataType.STRING(5))
-  declare locale: string;
+  locale: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  declare instanceId: number;
+  instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  declare instance: GuaribasInstance;
+  instance: GuaribasInstance;
 
   @Column(DataType.INTEGER)
-  declare agentSystemId: string;
+  agentSystemId: string;
 
   @Column(DataType.DATE)
-  declare agentContacted: Date;
-  
+  agentContacted: Date;
+
   @Column(DataType.STRING(16))
-  declare agentMode: string;
+  agentMode: string;
 
   @Column(DataType.TEXT)
-  declare conversationReference: string;
+  conversationReference: string;
 
   @Column(DataType.STRING(64))
-  declare hearOnDialog: string;
+  hearOnDialog: string;
 }
 
 /**
@@ -108,18 +108,18 @@ export class GuaribasGroup extends Model<GuaribasGroup> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-    declare groupId: number;
+  groupId: number;
 
   @Length({ min: 0, max: 512 })
   @Column(DataType.STRING(512))
-  declare displayName: string;
+  displayName: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  declare instanceId: number;
+  instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  declare instance: GuaribasInstance;
+  instance: GuaribasInstance;
 }
 
 /**
@@ -129,22 +129,22 @@ export class GuaribasGroup extends Model<GuaribasGroup> {
 export class GuaribasUserGroup extends Model<GuaribasUserGroup> {
   @ForeignKey(() => GuaribasUser)
   @Column(DataType.INTEGER)
-  declare userId: number;
+  userId: number;
 
   @ForeignKey(() => GuaribasGroup)
   @Column(DataType.INTEGER)
-  declare groupId: number;
+  groupId: number;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  declare instanceId: number;
+  instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  declare instance: GuaribasInstance;
+  instance: GuaribasInstance;
 
   @BelongsTo(() => GuaribasGroup)
-  declare group: GuaribasGroup;
+  group: GuaribasGroup;
 
   @BelongsTo(() => GuaribasUser)
-  declare user: GuaribasUser;
+  user: GuaribasUser;
 }

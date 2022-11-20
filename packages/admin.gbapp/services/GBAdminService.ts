@@ -39,7 +39,7 @@
 import { AuthenticationContext, TokenResponse } from 'adal-node';
 import { GBLog, GBMinInstance, IGBAdminService, IGBCoreService, IGBDeployer, IGBInstance } from 'botlib';
 import { FindOptions } from 'sequelize/types';
-import urlJoin from 'url-join'; 
+import urlJoin from 'url-join';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService.js';
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
@@ -50,7 +50,7 @@ import { GuaribasAdmin } from '../models/AdminModel.js';
 import msRestAzure from 'ms-rest-azure';
 import Path from 'path';
 import PasswordGenerator from 'strict-password-generator';
-import crypto  from 'crypto';
+import crypto from 'crypto';
 
 /**
  * Services for server administration.
@@ -63,16 +63,16 @@ export class GBAdminService implements IGBAdminService {
 
   public core: IGBCoreService;
 
-  constructor(core: IGBCoreService) {
+  constructor (core: IGBCoreService) {
     this.core = core;
   }
 
-  public static generateUuid(): string {
+  public static generateUuid (): string {
     return crypto.randomUUID();
   }
 
-  public static getNodeVersion() {
-    return "19.1.0";
+  public static getNodeVersion () {
+    return '19.1.0';
     const packageJson = urlJoin(process.cwd(), 'package.json');
     // tslint:disable-next-line: non-literal-require
     // TODO
@@ -81,17 +81,17 @@ export class GBAdminService implements IGBAdminService {
     // return pjson.engines.node.replace('=', '');
   }
 
-  public static async getADALTokenFromUsername(username: string, password: string) {
+  public static async getADALTokenFromUsername (username: string, password: string) {
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
 
     return (credentials as any).tokenCache._entries[0].accessToken;
   }
 
-  public static async getADALCredentialsFromUsername(username: string, password: string) {
-    return await msRestAzure.loginWithUsernamePassword(username, password)
+  public static async getADALCredentialsFromUsername (username: string, password: string) {
+    return await msRestAzure.loginWithUsernamePassword(username, password);
   }
 
-  public static getMobileCode() {
+  public static getMobileCode () {
     const passwordGenerator = new PasswordGenerator();
     const options = {
       upperCaseAlpha: false,
@@ -105,7 +105,7 @@ export class GBAdminService implements IGBAdminService {
     return passwordGenerator.generatePassword(options);
   }
 
-  public static getRndPassword(): string {
+  public static getRndPassword (): string {
     const passwordGenerator = new PasswordGenerator();
     const options = {
       upperCaseAlpha: true,
@@ -121,7 +121,7 @@ export class GBAdminService implements IGBAdminService {
     return password;
   }
 
-  public static getRndReadableIdentifier() {
+  public static getRndReadableIdentifier () {
     const passwordGenerator = new PasswordGenerator();
     const options = {
       upperCaseAlpha: false,
@@ -135,7 +135,7 @@ export class GBAdminService implements IGBAdminService {
     return passwordGenerator.generatePassword(options);
   }
 
-  public static getNumberIdentifier() {
+  public static getNumberIdentifier () {
     const passwordGenerator = new PasswordGenerator();
     const options = {
       upperCaseAlpha: false,
@@ -152,8 +152,9 @@ export class GBAdminService implements IGBAdminService {
   /**
    * @see https://stackoverflow.com/a/52171480
    */
-  public static getHash(str, seed = 0) {
-    let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  public static getHash (str, seed = 0) {
+    let h1 = 0xdeadbeef ^ seed,
+      h2 = 0x41c6ce57 ^ seed;
     for (let i = 0, ch; i < str.length; i++) {
       ch = str.charCodeAt(i);
       h1 = Math.imul(h1 ^ ch, 2654435761);
@@ -164,7 +165,7 @@ export class GBAdminService implements IGBAdminService {
     return 4294967296 * (2097151 & h2) + (h1 >>> 0);
   }
 
-  public static async undeployPackageCommand(text: any, min: GBMinInstance) {
+  public static async undeployPackageCommand (text: any, min: GBMinInstance) {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
@@ -172,10 +173,10 @@ export class GBAdminService implements IGBAdminService {
     await deployer.undeployPackageFromLocalPath(min.instance, localFolder);
   }
 
-  public static isSharePointPath(path: string) {
+  public static isSharePointPath (path: string) {
     return path.indexOf('sharepoint.com') !== -1;
   }
-  public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: IGBDeployer) {
+  public static async deployPackageCommand (min: GBMinInstance, text: string, deployer: IGBDeployer) {
     const packageName = text.split(' ')[1];
 
     if (!this.isSharePointPath(packageName)) {
@@ -195,26 +196,24 @@ export class GBAdminService implements IGBAdminService {
       // .gbot packages are handled using storage API, so no download
       // of local resources is required.
 
-      await deployer['downloadFolder'](min,
-        Path.join('work', `${min.instance.botId}.gbai`),
-        Path.basename(folderName));
+      await deployer['downloadFolder'](min, Path.join('work', `${min.instance.botId}.gbai`), Path.basename(folderName));
       await deployer.deployPackage(min, localFolder);
     }
   }
-  public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: IGBDeployer) {
+  public static async rebuildIndexPackageCommand (min: GBMinInstance, deployer: IGBDeployer) {
     await deployer.rebuildIndex(
       min.instance,
       new AzureDeployerService(deployer).getKBSearchSchema(min.instance.searchIndex)
     );
   }
 
-  public static async syncBotServerCommand(min: GBMinInstance, deployer: GBDeployer) {
+  public static async syncBotServerCommand (min: GBMinInstance, deployer: GBDeployer) {
     const serverName = `${min.instance.botId}-server`;
     const service = await AzureDeployerService.createInstance(deployer);
     service.syncBotServerRepository(min.instance.botId, serverName);
   }
 
-  public async setValue(instanceId: number, key: string, value: string) {
+  public async setValue (instanceId: number, key: string, value: string) {
     const options = <FindOptions>{ where: {} };
     options.where = { key: key };
     let admin = await GuaribasAdmin.findOne(options);
@@ -227,7 +226,7 @@ export class GBAdminService implements IGBAdminService {
     await admin.save();
   }
 
-  public async updateSecurityInfo(
+  public async updateSecurityInfo (
     instanceId: number,
     authenticatorTenant: string,
     authenticatorAuthorityHostUrl: string
@@ -241,7 +240,7 @@ export class GBAdminService implements IGBAdminService {
     return item.save();
   }
 
-  public async getValue(instanceId: number, key: string): Promise<string> {
+  public async getValue (instanceId: number, key: string): Promise<string> {
     const options = <FindOptions>{ where: {} };
     options.where = { key: key, instanceId: instanceId };
     const obj = await GuaribasAdmin.findOne(options);
@@ -249,7 +248,7 @@ export class GBAdminService implements IGBAdminService {
     return obj.value;
   }
 
-  public async acquireElevatedToken(instanceId: number): Promise<string> {
+  public async acquireElevatedToken (instanceId: number): Promise<string> {
     // TODO: Use boot bot as base for authentication.
 
     const botId = GBConfigService.get('BOT_ID');
@@ -298,5 +297,5 @@ export class GBAdminService implements IGBAdminService {
     });
   }
 
-  public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void> { }
+  public async publish (min: GBMinInstance, packageName: string, republish: boolean): Promise<void> {}
 }

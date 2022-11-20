@@ -64,19 +64,18 @@ export class MenuDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup(bot: BotAdapter, min: GBMinInstance) {
+  public static setup (bot: BotAdapter, min: GBMinInstance) {
     const service = new KBService(min.core.sequelize);
 
     min.dialogs.add(new WaterfallDialog('/menu', MenuDialog.getMenuDialog(min, service)));
   }
 
-  private static getMenuDialog(min: GBMinInstance, service: KBService) {
+  private static getMenuDialog (min: GBMinInstance, service: KBService) {
     return [
       async step => {
         if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
           return await step.beginDialog('/auth');
-        }
-        else{
+        } else {
           return await step.next(step.options);
         }
       },
@@ -103,8 +102,7 @@ export class MenuDialog extends IGBDialog {
 
           // Whenever a subject is selected, shows a faq about it.
           if (user.subjects.length > 0) {
-            const list = await service.getFaqBySubjectArray(min.instance.instanceId,
-               'menu', user.subjects);
+            const list = await service.getFaqBySubjectArray(min.instance.instanceId, 'menu', user.subjects);
             await min.conversationalService.sendEvent(min, step, 'play', {
               playerType: 'bullet',
               data: list.slice(0, 10)
@@ -142,10 +140,11 @@ export class MenuDialog extends IGBDialog {
           attachments.push(card);
         });
         if (attachments.length === 0) {
-
           if (user.subjects && user.subjects.length > 0) {
-            await min.conversationalService.sendText(min, step,
-                                                     Messages[locale].lets_search(KBService.getFormattedSubjectItems(user.subjects))
+            await min.conversationalService.sendText(
+              min,
+              step,
+              Messages[locale].lets_search(KBService.getFormattedSubjectItems(user.subjects))
             );
           }
         } else {

@@ -49,10 +49,9 @@ import url from 'url';
  * Web Automation services of conversation to be called by BASIC.
  */
 export class WebAutomationKeywords {
-
   /**
-  * Reference to minimal bot instance.
-  */
+   * Reference to minimal bot instance.
+   */
   public min: GBMinInstance;
 
   /**
@@ -107,16 +106,12 @@ export class WebAutomationKeywords {
    * When creating this keyword facade,a bot instance is
    * specified among the deployer service.
    */
-  constructor(min: GBMinInstance, user, dk) {
+  constructor (min: GBMinInstance, user, dk) {
     this.min = min;
     this.user = user;
     this.dk = dk;
 
-    this.debugWeb = this.min.core.getParam<boolean>(
-      this.min.instance,
-      'Debug Web Automation',
-      false
-    );
+    this.debugWeb = this.min.core.getParam<boolean>(this.min.instance, 'Debug Web Automation', false);
   }
 
   /**
@@ -124,14 +119,14 @@ export class WebAutomationKeywords {
    *
    * @example x = GET PAGE
    */
-  public async getPage({ url, username, password }) {
+  public async getPage ({ url, username, password }) {
     GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);
     if (!this.browser) {
       this.browser = await createBrowser(null);
     }
     const page = (await this.browser.pages())[0];
     if (username || password) {
-      await page.authenticate({ 'username': username, 'password': password });
+      await page.authenticate({ username: username, password: password });
     }
     await page.goto(url);
 
@@ -142,7 +137,7 @@ export class WebAutomationKeywords {
     return handle;
   }
 
-  public getPageByHandle(hash) {
+  public getPageByHandle (hash) {
     return this.pageMap[hash];
   }
 
@@ -151,15 +146,14 @@ export class WebAutomationKeywords {
    *
    * @example GET page,"selector"
    */
-  public async getBySelector({ handle, selector }) {
+  public async getBySelector ({ handle, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation GET element: ${selector}.`);
-    await page.waitForSelector(selector)
+    await page.waitForSelector(selector);
     let elements = await page.$$(selector);
     if (elements && elements.length > 1) {
       return elements;
-    }
-    else {
+    } else {
       const el = elements[0];
       el['originalSelector'] = selector;
       el['href'] = await page.evaluate(e => e.getAttribute('href'), el);
@@ -175,10 +169,10 @@ export class WebAutomationKeywords {
    *
    * @example GET page,"frameSelector,"elementSelector"
    */
-  public async getByFrame({ handle, frame, selector }) {
+  public async getByFrame ({ handle, frame, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation GET element by frame: ${selector}.`);
-    await page.waitForSelector(frame)
+    await page.waitForSelector(frame);
     let frameHandle = await page.$(frame);
     const f = await frameHandle.contentFrame();
     await f.waitForSelector(selector);
@@ -193,9 +187,9 @@ export class WebAutomationKeywords {
   }
 
   /**
-   * Simulates a mouse hover an web page element. 
+   * Simulates a mouse hover an web page element.
    */
-  public async hover({ handle, selector }) {
+  public async hover ({ handle, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation HOVER element: ${selector}.`);
     await this.getBySelector({ handle, selector: selector });
@@ -208,35 +202,33 @@ export class WebAutomationKeywords {
    *
    * @example CLICK page,"#idElement"
    */
-  public async click({ handle, frameOrSelector, selector }) {
+  public async click ({ handle, frameOrSelector, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
     if (selector) {
-      await page.waitForSelector(frameOrSelector)
+      await page.waitForSelector(frameOrSelector);
       let frameHandle = await page.$(frameOrSelector);
       const f = await frameHandle.contentFrame();
       await f.waitForSelector(selector);
       await f.click(selector);
-    }
-    else {
+    } else {
       await page.waitForSelector(frameOrSelector);
       await page.click(frameOrSelector);
     }
     await this.debugStepWeb(page);
   }
 
-  private async debugStepWeb(page) {
-
+  private async debugStepWeb (page) {
     let refresh = true;
     if (this.lastDebugWeb) {
-      refresh = (new Date().getTime() - this.lastDebugWeb.getTime()) > 5000;
+      refresh = new Date().getTime() - this.lastDebugWeb.getTime() > 5000;
     }
 
     if (this.debugWeb && refresh) {
       const mobile = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
       const filename = page;
       if (mobile) {
-        await this.dk.sendFileTo({ mobile, filename, caption: "General Bots Debugger" });
+        await this.dk.sendFileTo({ mobile, filename, caption: 'General Bots Debugger' });
       }
       this.lastDebugWeb = new Date();
     }
@@ -247,42 +239,39 @@ export class WebAutomationKeywords {
    *
    * @example PRESS ENTER ON page
    */
-  public async pressKey({ handle, char, frame }) {
+  public async pressKey ({ handle, char, frame }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation PRESS ${char} ON element: ${frame}.`);
-    if (char.toLowerCase() === "enter") {
+    if (char.toLowerCase() === 'enter') {
       char = '\n';
     }
     if (frame) {
-      await page.waitForSelector(frame)
+      await page.waitForSelector(frame);
       let frameHandle = await page.$(frame);
       const f = await frameHandle.contentFrame();
       await f.keyboard.press(char);
-    }
-    else {
+    } else {
       await page.keyboard.press(char);
     }
   }
 
-  public async linkByText({ handle, text, index }) {
+  public async linkByText ({ handle, text, index }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
     if (!index) {
-      index = 1
+      index = 1;
     }
     const els = await page.$x(`//a[contains(.,'${text}')]`);
     await els[index - 1].click();
     await this.debugStepWeb(page);
   }
 
-
-
   /**
    * Returns the screenshot of page or element
    *
    * @example file = SCREENSHOT page
    */
-  public async screenshot({ handle, selector }) {
+  public async screenshot ({ handle, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation SCREENSHOT ${selector}.`);
 
@@ -291,24 +280,18 @@ export class WebAutomationKeywords {
 
     await page.screenshot({ path: localName });
 
-    const url = urlJoin(
-      GBServer.globals.publicAddress,
-      this.min.botId,
-      'cache',
-      Path.basename(localName)
-    );
+    const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
     GBLog.info(`BASIC: WebAutomation: Screenshot captured at ${url}.`);
 
     return url;
   }
-
 
   /**
    * Types the text into the text field.
    *
    * @example SET page,"selector","text"
    */
-  public async setElementText({ handle, selector, text }) {
+  public async setElementText ({ handle, selector, text }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation TYPE on ${selector}: ${text}.`);
     const e = await this.getBySelector({ handle, selector });
@@ -318,13 +301,12 @@ export class WebAutomationKeywords {
     await this.debugStepWeb(page);
   }
 
-
   /**
- * Performs the download to the .gbdrive Download folder.
- *
- * @example file = DOWNLOAD element, folder
- */
-  public async download({ handle, selector, folder }) {
+   * Performs the download to the .gbdrive Download folder.
+   *
+   * @example file = DOWNLOAD element, folder
+   */
+  public async download ({ handle, selector, folder }) {
     const page = this.getPageByHandle(handle);
     const container = page; // TODO: element['_frame'] ? element['_frame'] : element['_page'];
     const element = await this.getBySelector({ handle, selector });
@@ -333,7 +315,7 @@ export class WebAutomationKeywords {
 
     const xRequest = await new Promise(resolve => {
       page.on('request', interceptedRequest => {
-        interceptedRequest.abort();     //stop intercepting requests
+        interceptedRequest.abort(); //stop intercepting requests
         resolve(interceptedRequest);
       });
     });
@@ -344,7 +326,7 @@ export class WebAutomationKeywords {
       uri: xRequest['_url'],
       body: xRequest['_postData'],
       headers: xRequest['_headers']
-    }
+    };
 
     const cookies = await page.cookies();
     options.headers.Cookie = cookies.map(ck => ck.name + '=' + ck.value).join(';');
@@ -355,11 +337,10 @@ export class WebAutomationKeywords {
     if (options.uri.indexOf('file://') != -1) {
       local = url.fileURLToPath(options.uri);
       filename = Path.basename(local);
-    }
-    else {
-      const getBasenameFormUrl = (urlStr) => {
-        const url = new URL(urlStr)
-        return Path.basename(url.pathname)
+    } else {
+      const getBasenameFormUrl = urlStr => {
+        const url = new URL(urlStr);
+        return Path.basename(url.pathname);
       };
       filename = getBasenameFormUrl(options.uri);
     }
@@ -370,7 +351,7 @@ export class WebAutomationKeywords {
     } else {
       result = await request.get(options);
     }
-    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
 
     // Normalizes all slashes.
@@ -391,14 +372,9 @@ export class WebAutomationKeywords {
     // to the source and calling /content on drive API.
     let file;
     try {
-
-      file = await client
-        .api(`${baseUrl}/drive/root:/${dstPath}:/content`)
-        .put(result);
-
+      file = await client.api(`${baseUrl}/drive/root:/${dstPath}:/content`).put(result);
     } catch (error) {
-
-      if (error.code === "nameAlreadyExists") {
+      if (error.code === 'nameAlreadyExists') {
         GBLog.info(`BASIC: DOWNLOAD destination file already exists: ${dstPath}.`);
       }
       throw error;
@@ -406,6 +382,4 @@ export class WebAutomationKeywords {
 
     return file;
   }
-
-
 }

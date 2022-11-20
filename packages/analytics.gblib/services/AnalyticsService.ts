@@ -44,10 +44,7 @@ import { GuaribasConversation, GuaribasConversationMessage } from '../models/ind
  * Base services for Bot Analytics.
  */
 export class AnalyticsService {
-
-  public async createConversation(
-    user: GuaribasUser
-  ): Promise<GuaribasConversation> {
+  public async createConversation (user: GuaribasUser): Promise<GuaribasConversation> {
     const conversation = new GuaribasConversation();
     conversation.startedBy = user;
     conversation.startedByUserId = user.userId;
@@ -56,15 +53,18 @@ export class AnalyticsService {
     return await conversation.save();
   }
 
-  public async updateConversationSuggestion(instanceId: number,
-    conversationId: string, feedback: string, locale: string): Promise<number> {
-
+  public async updateConversationSuggestion (
+    instanceId: number,
+    conversationId: string,
+    feedback: string,
+    locale: string
+  ): Promise<number> {
     const minBoot = GBServer.globals.minBoot as any;
     const rate = await AzureText.getSentiment(
-      minBoot.instance.textAnalyticsKey ? minBoot.instance.textAnalyticsKey :
-        minBoot.instance.textAnalyticsKey,
-      minBoot.instance.textAnalyticsEndpoint ? minBoot.instance.textAnalyticsEndpoint :
-        minBoot.instance.textAnalyticsEndpoint,
+      minBoot.instance.textAnalyticsKey ? minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
+      minBoot.instance.textAnalyticsEndpoint
+        ? minBoot.instance.textAnalyticsEndpoint
+        : minBoot.instance.textAnalyticsEndpoint,
       locale,
       feedback
     );
@@ -79,18 +79,16 @@ export class AnalyticsService {
     await item.save();
 
     return rate;
-
   }
 
-  public async createMessage(
+  public async createMessage (
     instanceId: number,
     conversation: GuaribasConversation,
     userId: number,
     content: string
   ): Promise<GuaribasConversationMessage> {
-
     const message = GuaribasConversationMessage.build();
-    message.content = typeof (content) === 'object' ? JSON.stringify(content) : content;
+    message.content = typeof content === 'object' ? JSON.stringify(content) : content;
     message.instanceId = instanceId;
     message.userId = userId;
     message.conversationId = conversation.conversationId;

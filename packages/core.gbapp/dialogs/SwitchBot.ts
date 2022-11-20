@@ -53,32 +53,33 @@ export class SwitchBotDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add(new WaterfallDialog('/bot', [
-      async step => {
-        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
-          return await step.beginDialog('/auth');
+  public static setup (bot: BotAdapter, min: GBMinInstance) {
+    min.dialogs.add(
+      new WaterfallDialog('/bot', [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          } else {
+            return await step.next(step.options);
+          }
+        },
+
+        async step => {
+          const locale = step.context.activity.locale;
+
+          return await min.conversationalService.prompt(min, step, 'Qual seria o código de ativação?');
+        },
+        async step => {
+          const sec = new SecService();
+          const from = step.context.activity.from.id;
+          const botId = step.result;
+          const instance = await min.core.loadInstanceByBotId(botId);
+          await sec.updateUserInstance(from, instance.instanceId);
+          await min.conversationalService.sendText(min, step, `Opa, vamos lá!`);
+
+          return await step.next();
         }
-        else{
-          return await step.next(step.options);
-        }
-      },
-
-      async step => {
-        const locale = step.context.activity.locale;
-
-        return await min.conversationalService.prompt (min, step,  'Qual seria o código de ativação?');
-      },
-      async step => {
-        const sec = new SecService();
-        const from = step.context.activity.from.id;
-        const botId = step.result;
-        const instance = await min.core.loadInstanceByBotId(botId);
-        await sec.updateUserInstance(from, instance.instanceId);
-        await min.conversationalService.sendText(min, step, `Opa, vamos lá!`);
-
-        return await step.next();
-      }
-    ]));
+      ])
+    );
   }
 }

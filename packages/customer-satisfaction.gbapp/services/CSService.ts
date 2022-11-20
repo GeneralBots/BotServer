@@ -39,11 +39,7 @@ import { GuaribasQuestionAlternate } from '../models/index.js';
  * Customer Satisfaction Service Layer.
  */
 export class CSService {
-
-  public async getQuestionFromAlternateText(
-    instanceId: number,
-    text: string): Promise<GuaribasQuestion> {
-
+  public async getQuestionFromAlternateText (instanceId: number, text: string): Promise<GuaribasQuestion> {
     const questionAlternate = await GuaribasQuestionAlternate.findOne({
       where: {
         instanceId: instanceId,
@@ -54,7 +50,6 @@ export class CSService {
     let question: GuaribasQuestion = null;
 
     if (questionAlternate !== null) {
-
       question = await GuaribasQuestion.findOne({
         where: {
           instanceId: instanceId,
@@ -66,17 +61,18 @@ export class CSService {
     return question;
   }
 
-  public async insertQuestionAlternate(
+  public async insertQuestionAlternate (
     instanceId: number,
     questionTyped: string,
-    questionText: string): Promise<GuaribasQuestionAlternate> {
+    questionText: string
+  ): Promise<GuaribasQuestionAlternate> {
     return await GuaribasQuestionAlternate.create(<GuaribasQuestionAlternate>{
       questionTyped: questionTyped,
       questionText: questionText
     });
   }
 
-  public async updateConversationRate(
+  public async updateConversationRate (
     conversation: GuaribasConversation,
     rate: number
   ): Promise<GuaribasConversation> {

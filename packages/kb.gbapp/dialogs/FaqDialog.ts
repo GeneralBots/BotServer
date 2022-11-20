@@ -53,34 +53,34 @@ export class FaqDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup(bot: BotAdapter, min: GBMinInstance) {
-
+  public static setup (bot: BotAdapter, min: GBMinInstance) {
     const service = new KBService(min.core.sequelize);
 
-    min.dialogs.add(new WaterfallDialog('/faq', [
-      async step => {
-        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
-          return await step.beginDialog('/auth');
-        }
-        else{
-          return await step.next(step.options);
-        }
-      },
+    min.dialogs.add(
+      new WaterfallDialog('/faq', [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          } else {
+            return await step.next(step.options);
+          }
+        },
 
-      async step => {
-        const data = await service.getFaqBySubjectArray(min.instance.instanceId, 'faq', undefined);
-        const locale = step.context.activity.locale;
-        if (data !== undefined) {
-          await min.conversationalService.sendEvent(min, step, 'play', {
-            playerType: 'bullet',
-            data: data.slice(0, 10)
-          });
+        async step => {
+          const data = await service.getFaqBySubjectArray(min.instance.instanceId, 'faq', undefined);
+          const locale = step.context.activity.locale;
+          if (data !== undefined) {
+            await min.conversationalService.sendEvent(min, step, 'play', {
+              playerType: 'bullet',
+              data: data.slice(0, 10)
+            });
 
-          await min.conversationalService.sendText(min, step, Messages[locale].see_faq);
+            await min.conversationalService.sendText(min, step, Messages[locale].see_faq);
 
-          return await step.next();
+            return await step.next();
+          }
         }
-      }
-    ]));
+      ])
+    );
   }
 }

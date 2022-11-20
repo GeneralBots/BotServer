@@ -50,12 +50,16 @@ import { GBConfigService } from './GBConfigService.js';
 export class GBImporter {
   public core: IGBCoreService;
 
-  constructor(core: IGBCoreService) {
+  constructor (core: IGBCoreService) {
     this.core = core;
   }
 
-  public async importIfNotExistsBotPackage(botId: string,
-                                           packageName: string, localPath: string, additionalInstance: IGBInstance = null) {
+  public async importIfNotExistsBotPackage (
+    botId: string,
+    packageName: string,
+    localPath: string,
+    additionalInstance: IGBInstance = null
+  ) {
     const settingsJson = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'settings.json'), 'utf8'));
     if (botId === undefined) {
       botId = settingsJson.botId;
@@ -94,14 +98,14 @@ export class GBImporter {
     return await this.createOrUpdateInstanceInternal(instance, botId, localPath, settingsJson);
   }
 
-  public async createBotInstance(botId: string) {
-    const fullSettingsJson=<GuaribasInstance> { ...GBServer.globals.bootInstance };
+  public async createBotInstance (botId: string) {
+    const fullSettingsJson = <GuaribasInstance>{ ...GBServer.globals.bootInstance };
     fullSettingsJson['botId'] = botId;
 
     return await GuaribasInstance.create(fullSettingsJson);
   }
 
-  private async createOrUpdateInstanceInternal(
+  private async createOrUpdateInstanceInternal (
     instance: IGBInstance,
     botId: string,
     localPath: string,

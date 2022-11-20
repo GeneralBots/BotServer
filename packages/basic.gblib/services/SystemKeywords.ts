@@ -59,12 +59,11 @@ import _ from 'lodash';
  */
 
 /**
-* BASIC system class for extra manipulation of bot behaviour.
-*/
+ * BASIC system class for extra manipulation of bot behaviour.
+ */
 export class SystemKeywords {
-
-  /** 
-   * Reference to minimal bot instance. 
+  /**
+   * Reference to minimal bot instance.
    */
   public min: GBMinInstance;
 
@@ -80,17 +79,15 @@ export class SystemKeywords {
    * When creating this keyword facade, a bot instance is
    * specified among the deployer service.
    */
-  constructor(min: GBMinInstance, deployer: GBDeployer, dk: DialogKeywords, wa) {
+  constructor (min: GBMinInstance, deployer: GBDeployer, dk: DialogKeywords, wa) {
     this.min = min;
     this.wa = wa;
     this.deployer = deployer;
     this.dk = dk;
   }
 
-
-  public async callVM({text}) {
-
-    // TODO: 
+  public async callVM ({ text }) {
+    // TODO:
     const min = null;
     const step = null;
     const deployer = null;
@@ -98,21 +95,23 @@ export class SystemKeywords {
     return await GBVMService.callVM(text, min, step, deployer, false);
   }
 
-  public async append({args}) {
+  public async append ({ args }) {
     let array = [].concat(...args);
-    return array.filter(function (item, pos) { return item; });
+    return array.filter(function (item, pos) {
+      return item;
+    });
   }
 
-
   /**
-   * 
+   *
    * @example SEE CAPTION OF url AS variable
-   *  
+   *
    */
-  public async seeCaption({url}) {
+  public async seeCaption ({ url }) {
     const computerVisionClient = new ComputerVisionClient.ComputerVisionClient(
       new ApiKeyCredentials.ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
-      process.env.VISION_ENDPOINT);
+      process.env.VISION_ENDPOINT
+    );
 
     let caption = (await computerVisionClient.describeImage(url)).captions[0];
 
@@ -123,24 +122,21 @@ export class SystemKeywords {
     );
     GBLog.info(`GBVision (caption): '${caption.text}' (Confidence: ${caption.confidence.toFixed(2)})`);
 
-    return await this.min.conversationalService.translate(
-      this.min,
-      caption.text,
-      contentLocale
-    );
+    return await this.min.conversationalService.translate(this.min, caption.text, contentLocale);
   }
 
   /**
-   * 
+   *
    * @example SEE TEXT OF url AS variable
-   *  
+   *
    */
-  public async seeText({url}) {
+  public async seeText ({ url }) {
     const computerVisionClient = new ComputerVisionClient.ComputerVisionClient(
       new ApiKeyCredentials.ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
-      process.env.VISION_ENDPOINT);
+      process.env.VISION_ENDPOINT
+    );
 
-    const result = (await computerVisionClient.recognizePrintedText(true, url));
+    const result = await computerVisionClient.recognizePrintedText(true, url);
     const text = result.regions[0].lines[0].words[0].text;
     let final = '';
 
@@ -160,7 +156,7 @@ export class SystemKeywords {
     return final;
   }
 
-  public async sortBy({array, memberName}) {
+  public async sortBy ({ array, memberName }) {
     memberName = memberName.trim();
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
@@ -173,26 +169,29 @@ export class SystemKeywords {
     let dt = array[0] ? array[0][memberName] : null;
     let date = SystemKeywords.getDateFromLocaleString(dt, contentLocale);
     if (date) {
-      return array ? array.sort((a, b) => {
-        const c = new Date(a[memberName]);
-        const d = new Date(b[memberName]);
-        return c.getTime() - d.getTime();
-      }) : null;
-    }
-    else {
-      return array ? array.sort((a, b) => {
-        if (a[memberName] < b[memberName]) {
-          return -1;
-        }
-        if (a[memberName] > b[memberName]) {
-          return 1;
-        }
-        return 0;
-      }) : array;
+      return array
+        ? array.sort((a, b) => {
+            const c = new Date(a[memberName]);
+            const d = new Date(b[memberName]);
+            return c.getTime() - d.getTime();
+          })
+        : null;
+    } else {
+      return array
+        ? array.sort((a, b) => {
+            if (a[memberName] < b[memberName]) {
+              return -1;
+            }
+            if (a[memberName] > b[memberName]) {
+              return 1;
+            }
+            return 0;
+          })
+        : array;
     }
   }
 
-  public static JSONAsGBTable(data, headers) {
+  public static JSONAsGBTable (data, headers) {
     try {
       let output = [];
       let isObject = false;
@@ -202,21 +201,17 @@ export class SystemKeywords {
       }
 
       if (isObject || JSON.parse(data) !== null) {
-
         let keys = Object.keys(data[1]);
-
 
         if (headers) {
           output[0] = [];
           // Copies headers as the first element.
 
           for (let i = 0; i < keys.length; i++) {
-
             output[0][i] = keys[i];
           }
-        }
-        else {
-          output.push({ 'gbarray': '0' });;
+        } else {
+          output.push({ gbarray: '0' });
         }
 
         // Copies data from JSON format into simple array.
@@ -237,16 +232,15 @@ export class SystemKeywords {
   }
 
   /**
-   * 
-   * @param data 
-   * @param renderPDF 
-   * @param renderImage 
-   * @returns 
-   * 
+   *
+   * @param data
+   * @param renderPDF
+   * @param renderImage
+   * @returns
+   *
    * @see http://tabulator.info/examples/5.2
    */
-  private async renderTable(data, renderPDF, renderImage) {
-
+  private async renderTable (data, renderPDF, renderImage) {
     if (!data[1]) {
       return null;
     }
@@ -256,7 +250,6 @@ export class SystemKeywords {
     // Detects if it is a collection with repeated
     // headers.
 
-
     const gbaiName = `${this.min.botId}.gbai`;
     const browser = await createBrowser(null);
     const page = await browser.newPage();
@@ -265,14 +258,14 @@ export class SystemKeywords {
 
     const theme = this.dk.user.basicOptions.theme;
     switch (theme) {
-      case "white":
-        await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_simple.min.css' })
+      case 'white':
+        await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_simple.min.css' });
         break;
-      case "dark":
-        await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_midnight.min.css' })
+      case 'dark':
+        await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_midnight.min.css' });
         break;
-      case "blue":
-        await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_modern.min.css' })
+      case 'blue':
+        await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_modern.min.css' });
         break;
       default:
         break;
@@ -295,8 +288,8 @@ export class SystemKeywords {
     // Adds DIV for Tabulator.
 
     await page.evaluate(() => {
-      const el = document.createElement("div");
-      el.setAttribute("id", "table");
+      const el = document.createElement('div');
+      el.setAttribute('id', 'table');
       document.body.appendChild(el);
     });
 
@@ -318,12 +311,7 @@ export class SystemKeywords {
     if (renderImage) {
       localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       await page.screenshot({ path: localName, fullPage: true });
-      url = urlJoin(
-        GBServer.globals.publicAddress,
-        this.min.botId,
-        'cache',
-        Path.basename(localName)
-      );
+      url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
       GBLog.info(`BASIC: Table image generated at ${url} .`);
     }
 
@@ -331,12 +319,7 @@ export class SystemKeywords {
 
     if (renderPDF) {
       localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.pdf`);
-      url = urlJoin(
-        GBServer.globals.publicAddress,
-        this.min.botId,
-        'cache',
-        Path.basename(localName)
-      );
+      url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
       let pdf = await page.pdf({ format: 'A4' });
       GBLog.info(`BASIC: Table PDF generated at ${url} .`);
     }
@@ -345,19 +328,17 @@ export class SystemKeywords {
     return [url, localName];
   }
 
-  public async asPDF({data, filename}) {
+  public async asPDF ({ data, filename }) {
     let file = await this.renderTable(data, true, false);
     return file[0];
   }
 
-  public async asImage({data, filename}) {
+  public async asImage ({ data, filename }) {
     let file = await this.renderTable(data, false, true);
     return file[0];
-
   }
 
-  public async executeSQL({data, sql, tableName}) {
-
+  public async executeSQL ({ data, sql, tableName }) {
     let objectMode = false;
     if (Object.keys(data[0])) {
       objectMode = true;
@@ -377,7 +358,7 @@ export class SystemKeywords {
   /**
    * Retrives the content of a given URL.
    */
-  public async getFileContents({url, headers}) {
+  public async getFileContents ({ url, headers }) {
     const options = {
       url: url,
       method: 'GET',
@@ -390,22 +371,19 @@ export class SystemKeywords {
   /**
    * Retrives a random id with a length of five, every time it is called.
    */
-  public async getRandomId() {
-
+  public async getRandomId () {
     const idGeneration = this.dk['idGeneration'];
     if (idGeneration && idGeneration.trim().toLowerCase() === 'number') {
       return GBAdminService.getNumberIdentifier();
-    }
-    else {
+    } else {
       return GBAdminService.getRndReadableIdentifier().substr(5);
     }
-
   }
 
   /**
    * Retrives stock inforation for a given symbol.
    */
-  public async getStock({symbol}) {
+  public async getStock ({ symbol }) {
     var options = {
       uri: `http://live-nse.herokuapp.com/?symbol=${symbol}`
     };
@@ -414,14 +392,13 @@ export class SystemKeywords {
     return data;
   }
 
-
   /**
    * Holds script execution for the number of seconds specified.
-   * 
+   *
    * @example WAIT 5 ' This will wait five seconds.
-   *  
+   *
    */
-  public async wait({seconds}) {
+  public async wait ({ seconds }) {
     // tslint:disable-next-line no-string-based-set-timeout
     GBLog.info(`BASIC: WAIT for ${seconds} second(s).`);
     const timeout = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -430,22 +407,22 @@ export class SystemKeywords {
 
   /**
    * Sends a text message to the mobile number specified.
-   * 
+   *
    * @example TALK TO "+199988887777", "Message text here"
-   * 
+   *
    */
-  public async talkTo({mobile, message}) {
+  public async talkTo ({ mobile, message }) {
     GBLog.info(`BASIC: Talking '${message}' to a specific user (${mobile}) (TALK TO). `);
     await this.min.conversationalService.sendMarkdownToMobile(this.min, null, mobile, message);
   }
 
   /**
    * Sends a SMS message to the mobile number specified.
-   * 
+   *
    * @example SEND SMS TO "+199988887777", "Message text here"
-   * 
+   *
    */
-  public async sendSmsTo({mobile, message}) {
+  public async sendSmsTo ({ mobile, message }) {
     GBLog.info(`BASIC: SEND SMS TO '${mobile}', message '${message}'.`);
     await this.min.conversationalService.sendSms(this.min, mobile, message);
   }
@@ -453,21 +430,20 @@ export class SystemKeywords {
   /**
    * 1. Defines a cell value in the tabular file.
    * 2. Defines an element text on HTML page.
-   * 
+   *
    * @example SET "file.xlsx", "A2", 4500
-   * 
+   *
    * @example SET page, "elementHTMLSelector", "text"
-   * 
+   *
    */
-  public async set({file, address, value}): Promise<any> {
-
+  public async set ({ file, address, value }): Promise<any> {
     // Handles calls for HTML stuff
 
     if (file._javascriptEnabled) {
       const page = file;
       GBLog.info(`BASIC: Web automation setting ${page}' to '${value}' (SET). `);
-      await this.wa.setElementText({page, selector: address, text: value});
-      
+      await this.wa.setElementText({ page, selector: address, text: value });
+
       return;
     }
 
@@ -475,34 +451,34 @@ export class SystemKeywords {
 
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
 
-    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
 
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
-    address = address.indexOf(':') !== -1 ? address : address + ":" + address;
+    address = address.indexOf(':') !== -1 ? address : address + ':' + address;
 
     let document = await this.internalGetDocument(client, baseUrl, path, file);
 
     let body = { values: [[]] };
     body.values[0][0] = value;
 
-    let sheets = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
-      .get();
+    let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
 
     await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
+      .api(
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
+          sheets.value[0].name
+        }')/range(address='${address}')`
+      )
       .patch(body);
   }
 
   /**
    * Retrives a document from the drive, given a path and filename.
    */
-  private async internalGetDocument(client: any, baseUrl: any, path: string, file: string) {
-    let res = await client
-      .api(`${baseUrl}/drive/root:${path}:/children`)
-      .get();
+  private async internalGetDocument (client: any, baseUrl: any, path: string, file: string) {
+    let res = await client.api(`${baseUrl}/drive/root:${path}:/children`).get();
 
     let documents = res.value.filter(m => {
       return m.name.toLowerCase() === file.toLowerCase();
@@ -517,14 +493,13 @@ export class SystemKeywords {
 
   /**
    * Saves the content of variable into the file in .gbdata default folder.
-   * 
+   *
    * @exaple SAVE variable as "my.txt"
-   * 
+   *
    */
-  public async saveFile({file, data}): Promise<any> {
-
+  public async saveFile ({ file, data }): Promise<any> {
     GBLog.info(`BASIC: Saving '${file}' (SAVE file).`);
-    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
@@ -535,15 +510,11 @@ export class SystemKeywords {
     }
 
     try {
-      await client
-        .api(`${baseUrl}/drive/root:/${path}/${file}:/content`)
-        .put(data);
-
+      await client.api(`${baseUrl}/drive/root:/${path}/${file}:/content`).put(data);
     } catch (error) {
-
-      if (error.code === "itemNotFound") {
+      if (error.code === 'itemNotFound') {
         GBLog.info(`BASIC: CONVERT source file not found: ${file}.`);
-      } else if (error.code === "nameAlreadyExists") {
+      } else if (error.code === 'nameAlreadyExists') {
         GBLog.info(`BASIC: CONVERT destination file already exists: ${file}.`);
       }
       throw error;
@@ -552,25 +523,27 @@ export class SystemKeywords {
 
   /**
    * Saves the content of several variables to a new row in a tabular file.
-   * 
+   *
    * @exaple SAVE "customers.xlsx", name, email, phone, address, city, state, country
-   * 
+   *
    */
-  public async save({args}): Promise<any> {
+  public async save ({ args }): Promise<any> {
     const file = args[0];
     args.shift();
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
-    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
     let document = await this.internalGetDocument(client, baseUrl, path, file);
-    let sheets = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
-      .get();
+    let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
 
     await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A2:DX2')/insert`)
+      .api(
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
+          sheets.value[0].name
+        }')/range(address='A2:DX2')/insert`
+      )
       .post({});
 
     if (args.length > 128) {
@@ -589,26 +562,33 @@ export class SystemKeywords {
     }
 
     await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
+      .api(
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
+          sheets.value[0].name
+        }')/range(address='${address}')`
+      )
       .patch(body);
   }
 
   /**
    * Retrives the content of a cell in a tabular file.
-   * 
+   *
    * @example value = GET "file.xlsx", "A2"
-   * 
+   *
    */
-  public async get({file, addressOrHeaders, httpUsername, httpPs, qs, streaming}): Promise<any> {
-
+  public async get ({ file, addressOrHeaders, httpUsername, httpPs, qs, streaming }): Promise<any> {
     if (file.startsWith('http')) {
-
-      return await this.getByHttp({url:file, headers: addressOrHeaders, username: httpUsername, 
-        ps: httpPs, qs, streaming});
-    }
-    else {
+      return await this.getByHttp({
+        url: file,
+        headers: addressOrHeaders,
+        username: httpUsername,
+        ps: httpPs,
+        qs,
+        streaming
+      });
+    } else {
       GBLog.info(`BASIC: GET '${addressOrHeaders}' in '${file}'.`);
-      let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
       const botId = this.min.instance.botId;
       const path = `/${botId}.gbai/${botId}.gbdata`;
 
@@ -616,12 +596,14 @@ export class SystemKeywords {
 
       // Creates workbook session that will be discarded.
 
-      let sheets = await client
-        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
-        .get();
+      let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
 
       let results = await client
-        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${addressOrHeaders}')`)
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
+            sheets.value[0].name
+          }')/range(address='${addressOrHeaders}')`
+        )
         .get();
 
       let val = results.text[0][0];
@@ -630,7 +612,7 @@ export class SystemKeywords {
     }
   }
 
-  public isValidDate({dt}) {
+  public isValidDate ({ dt }) {
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
       'Default Content Language',
@@ -649,21 +631,22 @@ export class SystemKeywords {
     return !isNaN(date.valueOf());
   }
 
-  public isValidNumber({number}) {
-    if (number === '') { return false }
+  public isValidNumber ({ number }) {
+    if (number === '') {
+      return false;
+    }
     return !isNaN(number);
   }
 
-  public isValidHour({value}) {
+  public isValidHour ({ value }) {
     return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value);
   }
 
-
   /**
    * Finds a value or multi-value results in a tabular file.
-   * 
-   * @example 
-   * 
+   *
+   * @example
+   *
    *  rows = FIND "file.xlsx", "A2=active", "A2 < 12/06/2010 15:00"
    *  i = 1
    *  do while i < ubound(row)
@@ -671,10 +654,10 @@ export class SystemKeywords {
    *    send sms to "+" + row.mobile, "Hello " + row.name + "! "
    *  loop
    * @see NPM package data-forge
-   * 
+   *
    * // TODO: https://www.npmjs.com/package/parse-markdown-table
    */
-  public async find({args}): Promise<any> {
+  public async find ({ args }): Promise<any> {
     const file = args[0];
     args.shift();
     GBLog.info(`BASIC: FIND running on ${file} and args: ${JSON.stringify(args)}...`);
@@ -686,11 +669,10 @@ export class SystemKeywords {
 
     let maxLines;
     if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
-      if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
+      if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== 'default') {
         maxLines = Number.parseInt(this.dk.user.basicOptions.maxLines).valueOf();
       }
-    }
-    else {
+    } else {
       maxLines = this.dk.maxLines;
     }
 
@@ -705,7 +687,7 @@ export class SystemKeywords {
 
       // Transforms table
 
-      const resultH = await container.evaluate((originalSelector) => {
+      const resultH = await container.evaluate(originalSelector => {
         const rows = document.querySelectorAll(`${originalSelector} tr`);
         return Array.from(rows, row => {
           const columns = row.querySelectorAll('th');
@@ -713,7 +695,7 @@ export class SystemKeywords {
         });
       }, originalSelector);
 
-      const result = await container.evaluate((originalSelector) => {
+      const result = await container.evaluate(originalSelector => {
         const rows = document.querySelectorAll(`${originalSelector} tr`);
         return Array.from(rows, row => {
           const columns = row.querySelectorAll('td');
@@ -731,10 +713,7 @@ export class SystemKeywords {
       for (let i = 1; i < result.length; i++) {
         rows[i] = result[i];
       }
-
-
     } else if (file['cTag']) {
-
       const gbaiName = `${this.min.botId}.gbai`;
       const localName = Path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
       const url = file['@microsoft.graph.downloadUrl'];
@@ -747,53 +726,57 @@ export class SystemKeywords {
       rows = [];
 
       for (let i = 0; i < worksheet.rowCount; i++) {
-        const r = worksheet.getRow(i+1);
+        const r = worksheet.getRow(i + 1);
         let outRow = [];
         for (let j = 0; j < r.cellCount; j++) {
-          outRow.push(r.getCell(j+1).text);
+          outRow.push(r.getCell(j + 1).text);
         }
 
         if (i == 0) {
           header = outRow;
-        }
-        else {
+        } else {
           rows.push(outRow);
         }
       }
-
     } else {
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
 
-      let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
-
-      let document
+      let document;
       document = await this.internalGetDocument(client, baseUrl, path, file);
 
       // Creates workbook session that will be discarded.
 
-      let sheets = await client
-        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
-        .get();
+      let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
 
       results = await client
-        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:CZ${maxLines}')`)
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
+            sheets.value[0].name
+          }')/range(address='A1:CZ${maxLines}')`
+        )
         .get();
 
       header = results.text[0];
       rows = results.text;
     }
 
-    let getFilter = async (text) => {
+    let getFilter = async text => {
       let filter;
       const operators = [/\<\=/, /\>\=/, /\</, /\>/, /\bnot in\b/, /\bin\b/, /\=/];
       let done = false;
       await CollectionUtil.asyncForEach(operators, async op => {
-        var re = new RegExp(op, "gi");
+        var re = new RegExp(op, 'gi');
         const parts = text.split(re);
 
         if (parts.length === 2 && !done) {
           filter = {
             columnName: parts[0].trim(),
-            operator: op.toString().replace(/\\b/g, '').replace(/\//g, '').replace(/\\/g, '').replace(/\b/g, ''),
+            operator: op
+              .toString()
+              .replace(/\\b/g, '')
+              .replace(/\//g, '')
+              .replace(/\\/g, '')
+              .replace(/\b/g, ''),
             value: parts[1].trim()
           };
 
@@ -851,11 +834,11 @@ export class SystemKeywords {
       filters.push(filter);
     });
 
-    // As BASIC uses arrays starting with 1 (one) as index, 
+    // As BASIC uses arrays starting with 1 (one) as index,
     // a ghost element is added at 0 (zero) position.
 
     let table = [];
-    table.push({ 'gbarray': '0' });
+    table.push({ gbarray: '0' });
     let foundIndex = 1;
 
     // Fills the row variable.
@@ -864,7 +847,6 @@ export class SystemKeywords {
     for (; foundIndex < rows.length; foundIndex++) {
       let filterAcceptCount = 0;
       await CollectionUtil.asyncForEach(filters, async filter => {
-
         let result = rows[foundIndex][filter.columnIndex];
         let wholeWord = true;
         if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.wholeWord) {
@@ -879,9 +861,14 @@ export class SystemKeywords {
                   if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
                     filterAcceptCount++;
                   }
-                }
-                else {
-                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) > -1) {
+                } else {
+                  if (
+                    result &&
+                    result
+                      .toLowerCase()
+                      .trim()
+                      .indexOf(filter.value.toLowerCase().trim()) > -1
+                  ) {
                     filterAcceptCount++;
                   }
                 }
@@ -891,9 +878,14 @@ export class SystemKeywords {
                   if (result && result.toLowerCase().trim() !== filter.value.toLowerCase().trim()) {
                     filterAcceptCount++;
                   }
-                }
-                else {
-                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) === -1) {
+                } else {
+                  if (
+                    result &&
+                    result
+                      .toLowerCase()
+                      .trim()
+                      .indexOf(filter.value.toLowerCase().trim()) === -1
+                  ) {
                     filterAcceptCount++;
                   }
                 }
@@ -903,9 +895,14 @@ export class SystemKeywords {
                   if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
                     filterAcceptCount++;
                   }
-                }
-                else {
-                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) > -1) {
+                } else {
+                  if (
+                    result &&
+                    result
+                      .toLowerCase()
+                      .trim()
+                      .indexOf(filter.value.toLowerCase().trim()) > -1
+                  ) {
                     filterAcceptCount++;
                   }
                 }
@@ -956,25 +953,19 @@ export class SystemKeywords {
             if (resultDate) {
               switch (filter.operator) {
                 case '=':
-
-                  if (resultDate.getTime() == filter.value.getTime())
-                    filterAcceptCount++;
+                  if (resultDate.getTime() == filter.value.getTime()) filterAcceptCount++;
                   break;
                 case '<':
-                  if (resultDate.getTime() < filter.value.getTime())
-                    filterAcceptCount++;
+                  if (resultDate.getTime() < filter.value.getTime()) filterAcceptCount++;
                   break;
                 case '>':
-                  if (resultDate.getTime() > filter.value.getTime())
-                    filterAcceptCount++;
+                  if (resultDate.getTime() > filter.value.getTime()) filterAcceptCount++;
                   break;
                 case '<=':
-                  if (resultDate.getTime() <= filter.value.getTime())
-                    filterAcceptCount++;
+                  if (resultDate.getTime() <= filter.value.getTime()) filterAcceptCount++;
                   break;
                 case '>=':
-                  if (resultDate.getTime() >= filter.value.getTime())
-                    filterAcceptCount++;
+                  if (resultDate.getTime() >= filter.value.getTime()) filterAcceptCount++;
                   break;
               }
               break;
@@ -1000,7 +991,6 @@ export class SystemKeywords {
         row['line'] = foundIndex + 1;
         table.push(row);
       }
-
     }
 
     if (table.length === 1) {
@@ -1015,19 +1005,32 @@ export class SystemKeywords {
     }
   }
 
-  public static getDateFromLocaleString(date: any, contentLocale: any) {
+  public static getDateFromLocaleString (date: any, contentLocale: any) {
     let ret = null;
     let parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})\s*(10|11|12|0?[1-9]):([0-5][0-9])/gi.exec(date);
     if (parts && parts[5]) {
-
       switch (contentLocale) {
         case 'pt':
-          ret = new Date(Number.parseInt(parts[3]), Number.parseInt(parts[2]) - 1, Number.parseInt(parts[1]),
-            Number.parseInt(parts[4]), Number.parseInt(parts[5]), 0, 0);
+          ret = new Date(
+            Number.parseInt(parts[3]),
+            Number.parseInt(parts[2]) - 1,
+            Number.parseInt(parts[1]),
+            Number.parseInt(parts[4]),
+            Number.parseInt(parts[5]),
+            0,
+            0
+          );
           break;
         case 'en':
-          ret = new Date(Number.parseInt(parts[3]), Number.parseInt(parts[1]) - 1, Number.parseInt(parts[2]),
-            Number.parseInt(parts[4]), Number.parseInt(parts[5]), 0, 0);
+          ret = new Date(
+            Number.parseInt(parts[3]),
+            Number.parseInt(parts[1]) - 1,
+            Number.parseInt(parts[2]),
+            Number.parseInt(parts[4]),
+            Number.parseInt(parts[5]),
+            0,
+            0
+          );
           break;
       }
 
@@ -1036,13 +1039,28 @@ export class SystemKeywords {
 
     parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})$/gi.exec(date);
     if (parts && parts[3]) {
-
       switch (contentLocale) {
         case 'pt':
-          ret = new Date(Number.parseInt(parts[3]), Number.parseInt(parts[2]) - 1, Number.parseInt(parts[1]), 0, 0, 0, 0);
+          ret = new Date(
+            Number.parseInt(parts[3]),
+            Number.parseInt(parts[2]) - 1,
+            Number.parseInt(parts[1]),
+            0,
+            0,
+            0,
+            0
+          );
           break;
         case 'en':
-          ret = new Date(Number.parseInt(parts[3]), Number.parseInt(parts[1]) - 1, Number.parseInt(parts[2]), 0, 0, 0, 0);
+          ret = new Date(
+            Number.parseInt(parts[3]),
+            Number.parseInt(parts[1]) - 1,
+            Number.parseInt(parts[2]),
+            0,
+            0,
+            0,
+            0
+          );
           break;
       }
 
@@ -1057,9 +1075,8 @@ export class SystemKeywords {
    * @example folder = CREATE FOLDER "notes\01"
    *
    */
-  public async createFolder({name}) {
-
-    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
+  public async createFolder ({ name }) {
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
     let path = `/${botId}.gbai/${botId}.gbdrive`;
 
@@ -1073,28 +1090,21 @@ export class SystemKeywords {
     // Creates each subfolder.
 
     await CollectionUtil.asyncForEach(parts, async item => {
-
       // Calls drive API.
 
       const body = {
-        "name": item,
-        "folder": {},
-        "@microsoft.graph.conflictBehavior": "fail"
+        name: item,
+        folder: {},
+        '@microsoft.graph.conflictBehavior': 'fail'
       };
 
       try {
-        lastFolder = await client
-          .api(`${baseUrl}/drive/root:/${path}:/children`)
-          .post(body);
-
+        lastFolder = await client.api(`${baseUrl}/drive/root:/${path}:/children`).post(body);
       } catch (error) {
-        if (error.code !== "nameAlreadyExists") {
+        if (error.code !== 'nameAlreadyExists') {
           throw error;
-        }
-        else {
-          lastFolder = await client
-            .api(`${baseUrl}/drive/root:/${urlJoin(path, item)}`)
-            .get();
+        } else {
+          lastFolder = await client.api(`${baseUrl}/drive/root:/${urlJoin(path, item)}`).get();
         }
       }
 
@@ -1107,47 +1117,43 @@ export class SystemKeywords {
 
   /**
    * Shares a folder from the drive to a e-mail recipient.
-   * 
+   *
    * @example
-   * 
+   *
    * folder = CREATE FOLDER "notes\10"
    * SHARE FOLDER folder, "nome@domain.com", "E-mail message"
    *
    */
-  public async shareFolder({folder, email, message}) {
-    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
+  public async shareFolder ({ folder, email, message }) {
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const root = urlJoin(`/${this.min.botId}.gbai/${this.min.botId}.gbdrive`, folder);
 
-    const src = await client.api(
-      `${baseUrl}/drive/root:/${root}`)
-      .get();
+    const src = await client.api(`${baseUrl}/drive/root:/${root}`).get();
 
     const driveId = src.parentReference.driveId;
     const itemId = src.id;
     const body = {
-      "recipients": [{ "email": email }],
-      "message": message,
-      "requireSignIn": true,
-      "sendInvitation": true,
-      "roles": ["write"]
+      recipients: [{ email: email }],
+      message: message,
+      requireSignIn: true,
+      sendInvitation: true,
+      roles: ['write']
     };
 
-    await client
-      .api(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/invite`)
-      .post(body);
+    await client.api(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/invite`).post(body);
   }
 
   /**
    * Copies a drive file from a place to another .
-   * 
+   *
    * @example
-   * 
+   *
    * COPY "template.xlsx", "reports\" + customerName + "\final.xlsx"
-   * 
+   *
    */
-  public async copyFile({src, dest}) {
+  public async copyFile ({ src, dest }) {
     GBLog.info(`BASIC: BEGINING COPY '${src}' to '${dest}'`);
-    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
 
     // Normalizes all slashes.
@@ -1167,35 +1173,26 @@ export class SystemKeywords {
     let folder;
     if (dest.indexOf('/') !== -1) {
       const pathOnly = Path.dirname(dest);
-      folder = await this.createFolder({name:pathOnly});
-    }
-    else {
-      folder = await client.api(
-        `${baseUrl}/drive/root:/${root}`)
-        .get();
+      folder = await this.createFolder({ name: pathOnly });
+    } else {
+      folder = await client.api(`${baseUrl}/drive/root:/${root}`).get();
     }
 
     // Performs the copy operation getting a reference
     // to the source and calling /copy on drive API.
 
     try {
-      const srcFile = await client.api(
-        `${baseUrl}/drive/root:/${srcPath}`)
-        .get();
+      const srcFile = await client.api(`${baseUrl}/drive/root:/${srcPath}`).get();
       const destFile = {
-        "parentReference": { driveId: folder.parentReference.driveId, id: folder.id },
-        "name": `${Path.basename(dest)}`
-      }
+        parentReference: { driveId: folder.parentReference.driveId, id: folder.id },
+        name: `${Path.basename(dest)}`
+      };
 
-      return await client.api(
-        `${baseUrl}/drive/items/${srcFile.id}/copy`)
-        .post(destFile);
-
+      return await client.api(`${baseUrl}/drive/items/${srcFile.id}/copy`).post(destFile);
     } catch (error) {
-
-      if (error.code === "itemNotFound") {
+      if (error.code === 'itemNotFound') {
         GBLog.info(`BASIC: COPY source file not found: ${srcPath}.`);
-      } else if (error.code === "nameAlreadyExists") {
+      } else if (error.code === 'nameAlreadyExists') {
         GBLog.info(`BASIC: COPY destination file already exists: ${dstPath}.`);
       }
       throw error;
@@ -1205,18 +1202,18 @@ export class SystemKeywords {
 
   /**
    * Converts a drive file from a place to another .
-   * 
-   * Supported sources csv, doc, docx, odp, ods, odt, pot, potm, potx, pps, 
+   *
+   * Supported sources csv, doc, docx, odp, ods, odt, pot, potm, potx, pps,
    * ppsx, ppsxm, ppt, pptm, pptx, rtf, xls, xlsx
-   * 
+   *
    * @example
-   * 
+   *
    * CONVERT "customers.xlsx" TO "reports\" + today + ".pdf"
-   * 
+   *
    */
-  public async convert({src, dest}) {
+  public async convert ({ src, dest }) {
     GBLog.info(`BASIC: CONVERT '${src}' to '${dest}'`);
-    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
 
     // Normalizes all slashes.
@@ -1236,67 +1233,56 @@ export class SystemKeywords {
     let folder;
     if (dest.indexOf('/') !== -1) {
       const pathOnly = Path.dirname(dest);
-      folder = await this.createFolder({name:pathOnly});
-    }
-    else {
-      folder = await client.api(
-        `${baseUrl}/drive/root:/${root}`)
-        .get();
+      folder = await this.createFolder({ name: pathOnly });
+    } else {
+      folder = await client.api(`${baseUrl}/drive/root:/${root}`).get();
     }
 
     // Performs the conversion operation getting a reference
     // to the source and calling /content on drive API.
 
     try {
+      const res = await client.api(`${baseUrl}/drive/root:/${srcPath}:/content?format=pdf`).get();
 
-      const res = await client
-        .api(`${baseUrl}/drive/root:/${srcPath}:/content?format=pdf`)
-        .get();
-
-      const streamToString = (stream) => {
-        const chunks = []
+      const streamToString = stream => {
+        const chunks = [];
         return new Promise((resolve, reject) => {
-          stream.on('data', chunk => chunks.push(chunk))
-          stream.on('error', reject)
-          stream.on('end', () => resolve(Buffer.concat(chunks)))
-        })
-      }
+          stream.on('data', chunk => chunks.push(chunk));
+          stream.on('error', reject);
+          stream.on('end', () => resolve(Buffer.concat(chunks)));
+        });
+      };
 
       const result = await streamToString(res);
 
-      await client
-        .api(`${baseUrl}/drive/root:/${dstPath}:/content`)
-        .put(result);
-
+      await client.api(`${baseUrl}/drive/root:/${dstPath}:/content`).put(result);
     } catch (error) {
-
-      if (error.code === "itemNotFound") {
+      if (error.code === 'itemNotFound') {
         GBLog.info(`BASIC: CONVERT source file not found: ${srcPath}.`);
-      } else if (error.code === "nameAlreadyExists") {
+      } else if (error.code === 'nameAlreadyExists') {
         GBLog.info(`BASIC: CONVERT destination file already exists: ${dstPath}.`);
       }
       throw error;
     }
   }
 
-  /** 
+  /**
    * Generate a secure and unique password.
-   * 
+   *
    * @example pass = PASSWORD
-   * 
+   *
    */
-  public generatePassword() {
+  public generatePassword () {
     return GBAdminService.getRndPassword();
   }
 
-
   /**
    * Calls any REST API by using GET HTTP method.
-   * 
+   *
    * @example user = get "http://server/users/1"
-   * 
+   *
    */
-  public async getByHttp({url, headers, username, ps, qs, streaming}) {
+  public async getByHttp ({ url, headers, username, ps, qs, streaming }) {
     let options = { url: url };
     if (headers) {
       options['headers'] = headers;
@@ -1305,7 +1291,7 @@ export class SystemKeywords {
       options['auth'] = {
         user: username,
         pass: ps
-      }
+      };
     }
     if (qs) {
       options['qs'] = qs;
@@ -1317,9 +1303,7 @@ export class SystemKeywords {
     let result = await request.get(options);
 
     try {
-
       return JSON.parse(result);
-
     } catch (error) {
       GBLog.info(`[GET]: OK.`);
 
@@ -1329,14 +1313,14 @@ export class SystemKeywords {
 
   /**
    * Calls any REST API by using POST HTTP method.
-   * 
-   * @example 
-   * 
+   *
+   * @example
+   *
    * user = put "http://server/path", "data"
    * talk "The updated user area is" + user.area
-   * 
+   *
    */
-  public async putByHttp({url, data, headers}) {
+  public async putByHttp ({ url, data, headers }) {
     const options = {
       uri: url,
       json: data,
@@ -1345,19 +1329,19 @@ export class SystemKeywords {
 
     let result = await request.put(options);
     GBLog.info(`[PUT]: ${url} (${data}): ${result}`);
-    return typeof (result) === 'object' ? result : JSON.parse(result);
+    return typeof result === 'object' ? result : JSON.parse(result);
   }
 
   /**
    * Calls any REST API by using POST HTTP method.
-   * 
-   * @example 
-   * 
+   *
+   * @example
+   *
    * user = post "http://server/path", "data"
    * talk "The updated user area is" + user.area
-   * 
+   *
    */
-  public async postByHttp({url, data, headers}) {
+  public async postByHttp ({ url, data, headers }) {
     const options = {
       uri: url,
       json: data,
@@ -1367,29 +1351,28 @@ export class SystemKeywords {
     let result = await request.post(options);
     GBLog.info(`[POST]: ${url} (${data}): ${result}`);
 
-    return result ? typeof (result) === 'object' ? result : JSON.parse(result) : true;
+    return result ? (typeof result === 'object' ? result : JSON.parse(result)) : true;
   }
 
-  public async numberOnly(text: string) {
+  public async numberOnly (text: string) {
     return text.replace(/\D/gi, '');
   }
 
   /**
- *
- * Fills a .docx or .pptx with template data.
- * 
- * doc = FILL "templates/template.docx", data
- *
- */
-  public async fill({templateName, data}) {
-
+   *
+   * Fills a .docx or .pptx with template data.
+   *
+   * doc = FILL "templates/template.docx", data
+   *
+   */
+  public async fill ({ templateName, data }) {
     const botId = this.min.instance.botId;
     const gbaiName = `${botId}.gbai`;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
     // Downloads template from .gbdrive.
 
-    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     let template = await this.internalGetDocument(client, baseUrl, path, templateName);
     const url = template['@microsoft.graph.downloadUrl'];
     const localName = Path.join('work', gbaiName, 'cache', ``);
@@ -1398,9 +1381,9 @@ export class SystemKeywords {
 
     // Loads the file as binary content.
 
-    const content = Fs.readFileSync(localName, "binary");
+    const content = Fs.readFileSync(localName, 'binary');
     const zip = new PizZip(content);
-    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true, });
+    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
     if (localName.endsWith('.pptx')) {
       doc.attachModule(pptxTemplaterModule);
     }
@@ -1411,14 +1394,13 @@ export class SystemKeywords {
 
     // Returns the buffer to be used with SAVE AS for example.
 
-    const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE", });
+    const buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
 
     return buf;
   }
 
-  public screenCapture() {
+  public screenCapture () {
     // scrcpy
-
     // function captureImage({ x, y, w, h }) {
     //   const pic = robot.screen.capture(x, y, w, h)
     //   const width = pic.byteWidth / pic.bytesPerPixel // pic.width is sometimes wrong!
@@ -1441,38 +1423,35 @@ export class SystemKeywords {
     // }
     // let file = 'out.png';
     // captureImage({ x: 60, y: 263, w: 250, h: 83 }).write(file)
-
-
     // const config = {
     //   lang: "eng",
     //   oem: 1,
     //   psm: 3,
     // }
-
     // tesseract.recognize(file, config).then(value => {
     //   console.log(value);
     // });
   }
 
-  private numberToLetters(num) {
-    let letters = ''
+  private numberToLetters (num) {
+    let letters = '';
     while (num >= 0) {
-      letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[num % 26] + letters
-      num = Math.floor(num / 26) - 1
+      letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[num % 26] + letters;
+      num = Math.floor(num / 26) - 1;
     }
-    return letters
+    return letters;
   }
 
   /**
    * Merges a multi-value with a tabular file using BY field as key.
-   * 
-   * @example 
-   * 
+   *
+   * @example
+   *
    *  data = FIND first.xlsx
    *  MERGE "second.xlsx" WITH data BY customer_id
    *
    */
-  public async merge({file, data, key1, key2}): Promise<any> {
+  public async merge ({ file, data, key1, key2 }): Promise<any> {
     GBLog.info(`BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
 
     const botId = this.min.instance.botId;
@@ -1482,7 +1461,7 @@ export class SystemKeywords {
 
     let maxLines = 1000;
     if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
-      if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== "default") {
+      if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== 'default') {
         maxLines = Number.parseInt(this.dk.user.basicOptions.maxLines).valueOf();
       }
     }
@@ -1491,29 +1470,31 @@ export class SystemKeywords {
 
     let results;
     let header, rows;
-    let {baseUrl, client} = await GBDeployer.internalGetDriveClient(this.min);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
 
-    let document
+    let document;
     document = await this.internalGetDocument(client, baseUrl, path, file);
 
     // Creates workbook session that will be discarded.
 
-    let sheets = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
-      .get();
+    let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
 
     results = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:CZ${maxLines}')`)
+      .api(
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
+          sheets.value[0].name
+        }')/range(address='A1:CZ${maxLines}')`
+      )
       .get();
 
     header = results.text[0];
     rows = results.text;
 
-    // As BASIC uses arrays starting with 1 (one) as index, 
+    // As BASIC uses arrays starting with 1 (one) as index,
     // a ghost element is added at 0 (zero) position.
 
     let table = [];
-    table.push({ 'gbarray': '0' });
+    table.push({ gbarray: '0' });
     let foundIndex = 1;
 
     // Fills the row variable.
@@ -1535,7 +1516,6 @@ export class SystemKeywords {
       table.push(row);
     }
 
-
     let key1Index, key2Index;
 
     if (key1) {
@@ -1546,12 +1526,12 @@ export class SystemKeywords {
       key2Index = _.invertBy(table, key2);
     }
 
-    let merges = 0, adds = 0;
+    let merges = 0,
+      adds = 0;
 
     // Scans all items in incoming data.
 
     for (let i = 1; i < data.length; i++) {
-
       // Scans all sheet lines and compare keys.
 
       const row = data[i];
@@ -1567,27 +1547,24 @@ export class SystemKeywords {
       if (found) {
         let keys = Object.keys(row);
         for (let j = 0; j < keys.length; j++) {
-
           const columnName = header[j];
           const value = row[keys[j]];
           const cell = `${this.numberToLetters(j)}${i + 1}`;
           const address = `${cell}:${cell}`;
 
-
           if (value !== found[columnName]) {
-            await this.set({file, address, value});
+            await this.set({ file, address, value });
             merges++;
           }
         }
-      }
-      else {
+      } else {
         let args = [file];
         let keys = Object.keys(row);
         for (let j = 0; j < keys.length; j++) {
           args.push(row[keys[j]]);
         }
 
-        await this.save({args});
+        await this.save({ args });
         adds++;
       }
     }
@@ -1601,8 +1578,7 @@ export class SystemKeywords {
     }
   }
 
-  public async tweet({text}) {
-
+  public async tweet ({ text }) {
     const consumer_key = this.min.core.getParam(this.min.instance, 'Twitter Consumer Key', null);
     const consumer_secret = this.min.core.getParam(this.min.instance, 'Twitter Consumer Key Secret', null);
     const access_token_key = this.min.core.getParam(this.min.instance, 'Twitter Access Token', null);

@@ -51,8 +51,8 @@ import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService.js'
 import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer.js';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService.js';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
-import  auth from 'basic-auth';
-import  child_process from 'child_process';
+import auth from 'basic-auth';
+import child_process from 'child_process';
 import * as winston from 'winston-logs-display';
 
 /**
@@ -70,7 +70,7 @@ export class RootData {
   public wwwroot: string; // .gbui or a static webapp.
   public entryPointDialog: string; // To replace default welcome dialog.
   public debugConversationId: any; // Used to self-message during debug.
-  public debuggers: any []; // Client of attached Debugger instances by botId.
+  public debuggers: any[]; // Client of attached Debugger instances by botId.
 }
 /**
  * General Bots open-core entry point.
@@ -82,21 +82,18 @@ export class GBServer {
    *  Program entry-point.
    */
 
-  public static run() {
-
-    
+  public static run () {
     GBLog.info(`The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
     GBConfigService.init();
     const port = GBConfigService.getServerPort();
 
-    if (process.env.TEST_SHELL)
-    {
+    if (process.env.TEST_SHELL) {
       GBLog.info(`Running TEST_SHELL: ${process.env.TEST_SHELL}...`);
-      try{
-      child_process.execSync(process.env.TEST_SHELL);
-      }catch(error){
-        GBLog.error(`Running TEST_SHELL ERROR: ${error}...`);  
+      try {
+        child_process.execSync(process.env.TEST_SHELL);
+      } catch (error) {
+        GBLog.error(`Running TEST_SHELL ERROR: ${error}...`);
       }
     }
 
@@ -113,7 +110,6 @@ export class GBServer {
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 
-
     // Creates working directory.
 
     const workDir = Path.join(process.env.PWD, 'work');
@@ -123,9 +119,7 @@ export class GBServer {
 
     const mainCallback = () => {
       (async () => {
-
         try {
-
           GBLog.info(`Now accepting connections on ${port}...`);
           process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
@@ -160,9 +154,11 @@ export class GBServer {
             await core.initStorage();
           } catch (error) {
             GBLog.verbose(`Error initializing storage: ${error}`);
-            GBServer.globals.bootInstance =
-              await core.createBootInstance(core, azureDeployer, GBServer.globals.publicAddress);
-
+            GBServer.globals.bootInstance = await core.createBootInstance(
+              core,
+              azureDeployer,
+              GBServer.globals.publicAddress
+            );
           }
 
           core.ensureAdminIsSecured();
@@ -190,7 +186,6 @@ export class GBServer {
           );
 
           if (instances.length === 0) {
-
             const instance = await importer.importIfNotExistsBotPackage(
               GBConfigService.get('BOT_ID'),
               'boot.gbot',
@@ -215,15 +210,15 @@ export class GBServer {
           await minService.buildMin(instances);
 
           if (process.env.ENABLE_WEBLOG) {
-            var admins = {
-              'admin': { password: process.env.ADMIN_PASS },
+            const admins = {
+              admin: { password: process.env.ADMIN_PASS }
             };
 
             // ... some not authenticated middlewares
 
             server.use(async (req, res, next) => {
               if (req.originalUrl.startsWith('/logs')) {
-                var user = auth(req);
+                const user = auth(req);
                 if (!user || !admins[user.name] || admins[user.name].password !== user.pass) {
                   res.set('WWW-Authenticate', 'Basic realm="example"');
                   return res.status(401).send();
@@ -239,7 +234,6 @@ export class GBServer {
             winston.default(server, loggers[1]);
           }
 
-
           GBLog.info(`The Bot Server is in RUNNING mode...`);
 
           // Opens Navigator.
@@ -252,22 +246,20 @@ export class GBServer {
       })();
     };
     if (process.env.CERTIFICATE_PFX) {
-      let options = {
+      const options = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
         pfx: Fs.readFileSync(process.env.CERTIFICATE_PFX)
       };
       const httpsServer = https.createServer(options, server).listen(port, mainCallback);
 
       if (process.env.CERTIFICATE2_PFX) {
-        let options = {
+        const options = {
           passphrase: process.env.CERTIFICATE2_PASSPHRASE,
           pfx: Fs.readFileSync(process.env.CERTIFICATE2_PFX)
         };
         httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options);
-
       }
-    }
-    else {
+    } else {
       server.listen(port, mainCallback);
     }
   }

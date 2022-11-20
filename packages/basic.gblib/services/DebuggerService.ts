@@ -75,7 +75,6 @@ export class DebuggerService {
   debugWeb: boolean;
   lastDebugWeb: Date;
 
-
   /**
    * SYSTEM account maxLines,when used with impersonated contexts (eg. running in SET SCHEDULE).
    */
@@ -178,7 +177,7 @@ export class DebuggerService {
    * When creating this keyword facade,a bot instance is
    * specified among the deployer service.
    */
-  constructor(min: GBMinInstance, user, dk) {
+  constructor (min: GBMinInstance, user, dk) {
     this.min = min;
     this.user = user;
     this.dk = dk;
@@ -190,33 +189,33 @@ export class DebuggerService {
     GBServer.globals.debuggers[botId] = {};
     GBServer.globals.debuggers[botId].state = 0;
     GBServer.globals.debuggers[botId].breaks = [];
-    GBServer.globals.debuggers[botId].stateInfo = "Stopped";
+    GBServer.globals.debuggers[botId].stateInfo = 'Stopped';
     GBServer.globals.debuggers[botId].childProcess = null;
   }
 
   private client;
 
-  public async breakpoint({ botId, line }) {
+  public async breakpoint ({ botId, line }) {
     GBLog.info(`BASIC: Enabled breakpoint for ${botId} on ${line}.`);
     GBServer.globals.debuggers[botId].breaks.push(Number.parseInt(line));
   }
 
-  public async resume({ botId }) {
+  public async resume ({ botId }) {
     if (GBServer.globals.debuggers[botId].state === 2) {
       const client = GBServer.globals.debuggers[botId].client;
       await client.Debugger.resume();
       GBServer.globals.debuggers[botId].state = 1;
-      GBServer.globals.debuggers[botId].stateInfo = "Running (Debug)";
-      return {status: 'OK'};
+      GBServer.globals.debuggers[botId].stateInfo = 'Running (Debug)';
+      return { status: 'OK' };
     } else {
       const error = 'Invalid call to resume and state not being debug(2).';
-      return {error: error};
+      return { error: error };
     }
   }
 
-  public async stop({ botId }) {
+  public async stop ({ botId }) {
     GBServer.globals.debuggers[botId].state = 0;
-    GBServer.globals.debuggers[botId].stateInfo = "Stopped";
+    GBServer.globals.debuggers[botId].stateInfo = 'Stopped';
 
     const kill = ref => {
       spawn('sh', ['-c', `pkill -9 -f ${ref}`]);
@@ -224,22 +223,22 @@ export class DebuggerService {
 
     kill(GBServer.globals.debuggers[botId].childProcess);
 
-    return {status: 'OK'};
+    return { status: 'OK' };
   }
 
-  public async step({ botId }) {
+  public async step ({ botId }) {
     if (GBServer.globals.debuggers[botId].state === 2) {
-      GBServer.globals.debuggers[botId].stateInfo = "Break";
+      GBServer.globals.debuggers[botId].stateInfo = 'Break';
       const client = GBServer.globals.debuggers[botId].client;
       await client.Debugger.stepOver();
-      return {status: 'OK'};
+      return { status: 'OK' };
     } else {
       const error = 'Invalid call to stepOver and state not being debug(2).';
-      return {error: error};
+      return { error: error };
     }
   }
 
-  public async context({ botId }) {
+  public async context ({ botId }) {
     const conversationId = this.conversationsMap[botId];
     let messages = [];
     if (this.client) {
@@ -266,35 +265,34 @@ export class DebuggerService {
     return {
       status: 'OK',
       state: GBServer.globals.debuggers[botId].state,
-      messages:messagesText,
+      messages: messagesText,
       scope: GBServer.globals.debuggers[botId].scope,
       scopeInfo: GBServer.globals.debuggers[botId].stateInfo
     };
   }
 
-  public async getRunning({ botId, botApiKey, scriptName }) {
+  public async getRunning ({ botId, botApiKey, scriptName }) {
     let error;
     botId = botId[0]; // TODO: Handle call in POST.
-    if (!GBServer.globals.debuggers[botId])
-    {
-      GBServer.globals.debuggers[botId]= {};
+    if (!GBServer.globals.debuggers[botId]) {
+      GBServer.globals.debuggers[botId] = {};
     }
 
-    if (!scriptName){
+    if (!scriptName) {
       scriptName = 'start';
     }
 
     if (GBServer.globals.debuggers[botId].state === 1) {
-      error  = `Cannot DEBUG an already running process. ${botId}`;
-      return {error: error};
+      error = `Cannot DEBUG an already running process. ${botId}`;
+      return { error: error };
     } else if (GBServer.globals.debuggers[botId].state === 2) {
       GBLog.info(`BASIC: Releasing execution ${botId} in DEBUG mode.`);
-      await this.resume({ botId});
-      return {status: 'OK'};
+      await this.resume({ botId });
+      return { status: 'OK' };
     } else {
       GBLog.info(`BASIC: Running ${botId} in DEBUG mode.`);
       GBServer.globals.debuggers[botId].state = 1;
-      GBServer.globals.debuggers[botId].stateInfo = "Running (Debug)";
+      GBServer.globals.debuggers[botId].stateInfo = 'Running (Debug)';
 
       let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
@@ -324,7 +322,7 @@ export class DebuggerService {
         }
       });
 
-      return {status: 'OK'};
+      return { status: 'OK' };
     }
   }
 }

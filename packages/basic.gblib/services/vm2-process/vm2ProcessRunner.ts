@@ -9,20 +9,20 @@ const evaluate = async (script, scope) => {
     console: 'inherit',
     wrapper: 'none',
     require: {
-      builtin:['stream', 'http' , 'https', 'url', 'buffer', 'zlib', 'isomorphic-fetch', 'punycode', 'encoding'],
+      builtin: ['stream', 'http', 'https', 'url', 'buffer', 'zlib', 'isomorphic-fetch', 'punycode', 'encoding'],
       root: ['./'],
       external: true,
       context: 'sandbox'
-    },
+    }
   });
-  
+
   const s = new VMScript(script, scope);
   return await vm.run(script, scope);
 };
 
 const socketName = crypto1.randomBytes(20).toString('hex');
 
-const server = net1.createServer((socket) => {
+const server = net1.createServer(socket => {
   const buffer = [];
 
   const sync = async () => {
@@ -39,7 +39,7 @@ const server = net1.createServer((socket) => {
         socket.write(JSON.stringify({ result }) + '\n');
         socket.end();
       } catch (error) {
-        console.log(`BASIC: RUNTIME: ${error.message}, ${error.stack}`)
+        console.log(`BASIC: RUNTIME: ${error.message}, ${error.stack}`);
         socket.write(JSON.stringify({ error: error.message }) + '\n');
         socket.end();
       }
