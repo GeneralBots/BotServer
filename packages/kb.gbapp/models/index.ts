@@ -187,52 +187,52 @@ export class GuaribasAnswer extends Model<GuaribasAnswer> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  answerId: number;
+  declare answerId: number;
 
   @Length({ min: 0, max: 512 })
   @Column(DataType.STRING(512))
-  media: string;
+  declare media: string;
 
   @Length({ min: 0, max: 12 })
   @Column(DataType.STRING(12))
-  format: string;
+  declare format: string;
 
   @Column(DataType.TEXT)
-  content: string;
+  declare content: string;
 
   @Column(DataType.DATE)
   @CreatedAt
-  createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  updatedAt: Date;
+  declare updatedAt: Date;
 
   @HasMany(() => GuaribasQuestion)
-  questions: GuaribasQuestion[];
+  declare questions: GuaribasQuestion[];
 
   @HasOne(() => GuaribasQuestion)
-  prev: GuaribasQuestion;
+  declare prev: GuaribasQuestion;
 
   @HasOne(() => GuaribasQuestion)
-  next: GuaribasQuestion;
+  declare next: GuaribasQuestion;
 
   @ForeignKey(() => GuaribasQuestion)
   @Column(DataType.INTEGER)
-  nextId: number;
+  declare nextId: number;
 
   @ForeignKey(() => GuaribasQuestion)
   @Column(DataType.INTEGER)
-  prevId: number;
+  declare prevId: number;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  instanceId: number;
+  declare instanceId: number;
 
   @ForeignKey(() => GuaribasPackage)
   @Column(DataType.INTEGER)
-  packageId: number;
+  declare packageId: number;
 
   @BelongsTo(() => GuaribasPackage)
-  package: GuaribasPackage;
+  declare package: GuaribasPackage;
 }

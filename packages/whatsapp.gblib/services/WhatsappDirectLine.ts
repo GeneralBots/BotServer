@@ -36,7 +36,6 @@ import Path from 'path';
 import Fs from 'fs';
 import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import * as request from 'request-promise-native';
 import { GBServer } from '../../../src/app.js';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
@@ -116,6 +115,8 @@ export class WhatsappDirectLine extends GBService {
       usePromise: true
     });
     const client = await this.directLineClient;
+    let url;
+    let body;
 
     client.clientAuthorizations.add(
       'AuthorizationBotConnector',
@@ -246,9 +247,10 @@ export class WhatsappDirectLine extends GBService {
         break;
 
       case 'chatapi':
+        url = urlJoin(this.whatsappServiceUrl, 'webhook')
         options = {
           method: 'POST',
-          url: urlJoin(this.whatsappServiceUrl, 'webhook'),
+          url: url,
           timeout: 10000,
           qs: {
             token: this.whatsappServiceKey,
@@ -264,16 +266,17 @@ export class WhatsappDirectLine extends GBService {
       case 'maytapi':
         let phoneId = this.whatsappServiceNumber.split(';')[0];
         let productId = this.whatsappServiceNumber.split(';')[1];
-        let url = `${this.INSTANCE_URL}/${productId}/${phoneId}/config`;
+        url = `${this.INSTANCE_URL}/${productId}/${phoneId}/config`;
+        body= {
+          webhook: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`,
+          ack_delivery: false
+        };
         WhatsappDirectLine.phones[phoneId] = this.botId;
 
         options = {
           url: url,
           method: 'POST',
-          body: {
-            webhook: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`,
-            ack_delivery: false
-          },
+          body:body,
           headers: {
             'x-maytapi-key': this.whatsappServiceKey,
             'Content-Type': 'application/json'
@@ -288,7 +291,9 @@ export class WhatsappDirectLine extends GBService {
 
       if (options) {
         try {
-          await request.post(options);
+
+          const response: Response = await fetch(url,options);
+        
         } catch (error) {
           GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
         }
