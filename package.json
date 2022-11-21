@@ -64,7 +64,7 @@
     "@sendgrid/mail": "7.7.0",
     "@types/node": "18.11.9",
     "@types/validator": "13.7.10",
-    "adal-node": "0.2.3",
+    "@azure/msal-node": "1.14.3",
     "adm-zip": "0.5.9",
     "alasql": "2.1.6",
     "any-shell-escape": "0.1.1",

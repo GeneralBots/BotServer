@@ -41,7 +41,7 @@ import express from 'express';
 import Swagger from 'swagger-client';
 import request from 'request-promise-native';
 import removeRoute from 'express-remove-route';
-import AuthenticationContext from 'adal-node';
+import AuthenticationContext from '@azure/msal-node';
 import wash from 'washyourmouthoutwithsoap';
 import { FacebookAdapter } from 'botbuilder-adapter-facebook';
 import path from 'path';
