@@ -44,19 +44,19 @@ import { Column, CreatedAt, DataType, Model, Table, UpdatedAt } from 'sequelize-
 @Table
 export class GuaribasAdmin extends Model<GuaribasAdmin> {
   @Column(DataType.INTEGER)
-  instanceId: number;
+  declare instanceId: number;
 
   @Column(DataType.STRING(255))
-  key: string;
+  declare key: string;
 
   @Column(DataType.STRING(4000))
-  value: string;
+  declare value: string;
 
   @Column(DataType.DATE)
   @CreatedAt
-  createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  updatedAt: Date;
+  declare   updatedAt: Date;
 }
