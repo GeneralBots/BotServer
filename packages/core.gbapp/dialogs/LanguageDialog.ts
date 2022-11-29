@@ -39,10 +39,10 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import { Messages } from '../strings';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { GBServer } from '../../../src/app';
-import { GBConversationalService } from '../services/GBConversationalService';
+import { Messages } from '../strings.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
+import { GBServer } from '../../../src/app.js';
+import { GBConversationalService } from '../services/GBConversationalService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 /**
  * Dialog for the bot explains about itself.
@@ -54,63 +54,63 @@ export class LanguageDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add(new WaterfallDialog('/language', [
-      async step => {
-        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
-          return await step.beginDialog('/auth');
-        }
-        else{
-          return await step.next(step.options);
-        }
-      },
-
-      async step => {
-        const locale = step.context.activity.locale;
-
-        return await min.conversationalService.prompt(min, step,
-          Messages[locale].which_language);
-      },
-      async step => {
-
-        const locale = step.context.activity.locale;
-        const user = await min.userProfile.get(step.context, {});
-
-        const list = [
-          { name: 'english', code: 'en' },
-          { name: 'inglês', code: 'en' },
-          { name: 'portuguese', code: 'pt' },
-          { name: 'português', code: 'pt' },
-          { name: 'français', code: 'fr' },
-          { name: 'francês', code: 'fr' },
-          { name: 'french', code: 'fr' },
-          { name: 'português', code: 'pt' },
-          { name: 'spanish', code: 'es' },
-          { name: 'espanõl', code: 'es' },
-          { name: 'espanhol', code: 'es' },
-          { name: 'german', code: 'de' },
-          { name: 'deutsch', code: 'de' },
-          { name: 'alemão', code: 'de' }
-        ];
-        let translatorLocale = null;
-        const text = step.context.activity['originalText'];
-
-        await CollectionUtil.asyncForEach(list, async item => {
-          if (GBConversationalService.kmpSearch(text.toLowerCase(), item.name.toLowerCase()) != -1 ||
-            GBConversationalService.kmpSearch(text.toLowerCase(), item.code.toLowerCase()) != -1) {
-            translatorLocale = item.code;
+  public static setup (bot: BotAdapter, min: GBMinInstance) {
+    min.dialogs.add(
+      new WaterfallDialog('/language', [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          } else {
+            return await step.next(step.options);
           }
-        });
+        },
 
-        let sec = new SecService();
-        user.systemUser = await sec.updateUserLocale(user.systemUser.userId, translatorLocale);
+        async step => {
+          const locale = step.context.activity.locale;
 
-        await min.userProfile.set(step.context, user);
-        await min.conversationalService.sendText(min, step,
-          Messages[locale].language_chosen);
+          return await min.conversationalService.prompt(min, step, Messages[locale].which_language);
+        },
+        async step => {
+          const locale = step.context.activity.locale;
+          const user = await min.userProfile.get(step.context, {});
 
-        await step.replaceDialog('/ask', { firstTime: true });
-      }
-    ]));
+          const list = [
+            { name: 'english', code: 'en' },
+            { name: 'inglês', code: 'en' },
+            { name: 'portuguese', code: 'pt' },
+            { name: 'português', code: 'pt' },
+            { name: 'français', code: 'fr' },
+            { name: 'francês', code: 'fr' },
+            { name: 'french', code: 'fr' },
+            { name: 'português', code: 'pt' },
+            { name: 'spanish', code: 'es' },
+            { name: 'espanõl', code: 'es' },
+            { name: 'espanhol', code: 'es' },
+            { name: 'german', code: 'de' },
+            { name: 'deutsch', code: 'de' },
+            { name: 'alemão', code: 'de' }
+          ];
+          let translatorLocale = null;
+          const text = step.context.activity['originalText'];
+
+          await CollectionUtil.asyncForEach(list, async item => {
+            if (
+              GBConversationalService.kmpSearch(text.toLowerCase(), item.name.toLowerCase()) != -1 ||
+              GBConversationalService.kmpSearch(text.toLowerCase(), item.code.toLowerCase()) != -1
+            ) {
+              translatorLocale = item.code;
+            }
+          });
+
+          let sec = new SecService();
+          user.systemUser = await sec.updateUserLocale(user.systemUser.userId, translatorLocale);
+
+          await min.userProfile.set(step.context, user);
+          await min.conversationalService.sendText(min, step, Messages[locale].language_chosen);
+
+          await step.replaceDialog('/ask', { firstTime: true });
+        }
+      ])
+    );
   }
 }

@@ -38,11 +38,11 @@
 
 import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
 import { CreateOptions } from 'sequelize/types';
-const fs = require('fs');
-const urlJoin = require('url-join');
-import { GBServer } from '../../../src/app';
-import { GuaribasInstance } from '../models/GBModel';
-import { GBConfigService } from './GBConfigService';
+import Fs from 'fs';
+import urlJoin from 'url-join';
+import { GBServer } from '../../../src/app.js';
+import { GuaribasInstance } from '../models/GBModel.js';
+import { GBConfigService } from './GBConfigService.js';
 
 /**
  * Handles the importing of packages.
@@ -50,13 +50,17 @@ import { GBConfigService } from './GBConfigService';
 export class GBImporter {
   public core: IGBCoreService;
 
-  constructor(core: IGBCoreService) {
+  constructor (core: IGBCoreService) {
     this.core = core;
   }
 
-  public async importIfNotExistsBotPackage(botId: string,
-                                           packageName: string, localPath: string, additionalInstance: IGBInstance = null) {
-    const settingsJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'settings.json'), 'utf8'));
+  public async importIfNotExistsBotPackage (
+    botId: string,
+    packageName: string,
+    localPath: string,
+    additionalInstance: IGBInstance = null
+  ) {
+    const settingsJson = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'settings.json'), 'utf8'));
     if (botId === undefined) {
       botId = settingsJson.botId;
     }
@@ -94,21 +98,21 @@ export class GBImporter {
     return await this.createOrUpdateInstanceInternal(instance, botId, localPath, settingsJson);
   }
 
-  public async createBotInstance(botId: string) {
-    const fullSettingsJson=<GuaribasInstance> { ...GBServer.globals.bootInstance };
+  public async createBotInstance (botId: string) {
+    const fullSettingsJson = <GuaribasInstance>{ ...GBServer.globals.bootInstance };
     fullSettingsJson['botId'] = botId;
 
     return await GuaribasInstance.create(fullSettingsJson);
   }
 
-  private async createOrUpdateInstanceInternal(
+  private async createOrUpdateInstanceInternal (
     instance: IGBInstance,
     botId: string,
     localPath: string,
     settingsJson: any
   ) {
-    const packageJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
-    const servicesJson = JSON.parse(fs.readFileSync(urlJoin(localPath, 'services.json'), 'utf8'));
+    const packageJson = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
+    const servicesJson = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'services.json'), 'utf8'));
 
     const fullSettingsJson = { ...GBServer.globals.bootInstance, ...packageJson, ...settingsJson, ...servicesJson };
 

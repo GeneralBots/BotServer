@@ -6,7 +6,7 @@
       "request": "launch",
       "sourceMaps": true,
       "name": "Debug Program",
-      "program": "${workspaceRoot}/boot.js",
+      "program": "${workspaceRoot}/boot.mjs",
       "cwd": "${workspaceRoot}",
       "env": {
         "NODE_ENV": "development"

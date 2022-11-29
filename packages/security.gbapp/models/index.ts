@@ -48,7 +48,7 @@ import {
   Table
 } from 'sequelize-typescript';
 
-import { GuaribasInstance } from '../../core.gbapp/models/GBModel';
+import { GuaribasInstance } from '../../core.gbapp/models/GBModel.js';
 
 /**
  * A user and its metadata.
@@ -58,46 +58,46 @@ export class GuaribasUser extends Model<GuaribasUser> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  public userId: number;
+  userId: number;
 
   @Column(DataType.STRING(255))
-  public displayName: string;
+  displayName: string;
 
   @Column(DataType.INTEGER)
-  public userSystemId: string;
+  userSystemId: string;
   @Column(DataType.STRING(255))
-  public userName: string;
+  userName: string;
 
   @Column(DataType.STRING(255))
-  public defaultChannel: string;
+  defaultChannel: string;
 
   @Column(DataType.STRING(255))
-  public email: string;
+  email: string;
 
   @Column(DataType.STRING(5))
-  public locale: string;
+  locale: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
+  instance: GuaribasInstance;
 
   @Column(DataType.INTEGER)
-  public agentSystemId: string;
+  agentSystemId: string;
 
   @Column(DataType.DATE)
-  public agentContacted: Date;
-  
+  agentContacted: Date;
+
   @Column(DataType.STRING(16))
-  public agentMode: string;
+  agentMode: string;
 
   @Column(DataType.TEXT)
-  public conversationReference: string;
+  conversationReference: string;
 
   @Column(DataType.STRING(64))
-  public hearOnDialog: string;
+  hearOnDialog: string;
 }
 
 /**
@@ -108,18 +108,18 @@ export class GuaribasGroup extends Model<GuaribasGroup> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-    public groupId: number;
+  groupId: number;
 
   @Length({ min: 0, max: 512 })
   @Column(DataType.STRING(512))
-  public displayName: string;
+  displayName: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
+  instance: GuaribasInstance;
 }
 
 /**
@@ -129,22 +129,22 @@ export class GuaribasGroup extends Model<GuaribasGroup> {
 export class GuaribasUserGroup extends Model<GuaribasUserGroup> {
   @ForeignKey(() => GuaribasUser)
   @Column(DataType.INTEGER)
-  public userId: number;
+  userId: number;
 
   @ForeignKey(() => GuaribasGroup)
   @Column(DataType.INTEGER)
-  public groupId: number;
+  groupId: number;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
+  instance: GuaribasInstance;
 
   @BelongsTo(() => GuaribasGroup)
-  public group: GuaribasGroup;
+  group: GuaribasGroup;
 
   @BelongsTo(() => GuaribasUser)
-  public user: GuaribasUser;
+  user: GuaribasUser;
 }

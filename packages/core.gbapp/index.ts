@@ -38,12 +38,12 @@
 
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { Sequelize } from 'sequelize-typescript';
-import { BroadcastDialog } from './dialogs/BroadcastDialog';
-import { LanguageDialog } from './dialogs/LanguageDialog';
-import { SwitchBotDialog } from './dialogs/SwitchBot';
-import { WelcomeDialog } from './dialogs/WelcomeDialog';
-import { WhoAmIDialog } from './dialogs/WhoAmIDialog';
-import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage } from './models/GBModel';
+import { BroadcastDialog } from './dialogs/BroadcastDialog.js';
+import { LanguageDialog } from './dialogs/LanguageDialog.js';
+import { SwitchBotDialog } from './dialogs/SwitchBot.js';
+import { WelcomeDialog } from './dialogs/WelcomeDialog.js';
+import { WhoAmIDialog } from './dialogs/WhoAmIDialog.js';
+import { GuaribasChannel, GuaribasException, GuaribasInstance, GuaribasPackage } from './models/GBModel.js';
 
 /**
  * Package for core.gbapp.
@@ -52,27 +52,27 @@ export class GBCorePackage implements IGBPackage {
   public sysPackages: IGBPackage[];
   public CurrentEngineName = 'guaribas-1.0.0';
 
-  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
+  public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasInstance, GuaribasPackage, GuaribasChannel, GuaribasException]);
   }
 
-  public async getDialogs(min: GBMinInstance) {
+  public async getDialogs (min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);
   }
-  public async unloadPackage(core: IGBCoreService): Promise<void> {
+  public async unloadPackage (core: IGBCoreService): Promise<void> {
     GBLog.verbose(`unloadPackage called.`);
   }
-  public async unloadBot(min: GBMinInstance): Promise<void> {
+  public async unloadBot (min: GBMinInstance): Promise<void> {
     GBLog.verbose(`unloadBot called.`);
   }
-  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
+  public async onNewSession (min: GBMinInstance, step: GBDialogStep): Promise<void> {
     GBLog.verbose(`onNewSession called.`);
   }
-  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
+  public async onExchangeData (min: GBMinInstance, kind: string, data: any) {
     GBLog.verbose(`onExchangeData called.`);
   }
 
-  public async loadBot(min: GBMinInstance): Promise<void> {
+  public async loadBot (min: GBMinInstance): Promise<void> {
     WelcomeDialog.setup(min.bot, min);
     WhoAmIDialog.setup(min.bot, min);
     SwitchBotDialog.setup(min.bot, min);

@@ -30,28 +30,24 @@
 |                                                                             |
 \*****************************************************************************/
 
-const urlJoin = require('url-join');
 import { GBService } from 'botlib';
-const fs = require('fs');
-var AdmZip = require("adm-zip");
-
+import Fs from 'fs';
+import AdmZip from 'adm-zip';
 
 /**
  * Support for Whatsapp.
  */
 export class TeamsService extends GBService {
- 
-  public async getAppFile(manifest)
-  {
+  public async getAppFile (manifest) {
     var zip = new AdmZip();
-    zip.addFile("manifest.json", Buffer.from(manifest, "utf8"), "Built with General Bots™.");
-    zip.addLocalFile("teams-color.png", null, "color.png");
-    zip.addLocalFile("teams-outline.png", null, "outline.png");
+    zip.addFile('manifest.json', Buffer.from(manifest, 'utf8'), 'Built with General Bots™.');
+    zip.addLocalFile('teams-color.png', null, 'color.png');
+    zip.addLocalFile('teams-outline.png', null, 'outline.png');
     return zip.toBuffer();
   }
 
-  public async getManifest(marketplaceId, botName, botDescription, id, packageName, yourName) {
-    let content = fs.readFileSync('teams-manifest.json', 'utf8');
+  public async getManifest (marketplaceId, botName, botDescription, id, packageName, yourName) {
+    let content = Fs.readFileSync('teams-manifest.json', 'utf8');
 
     content = content.replace(/\@\@marketplaceId/gi, marketplaceId);
     content = content.replace(/\@\@botName/gi, botName);

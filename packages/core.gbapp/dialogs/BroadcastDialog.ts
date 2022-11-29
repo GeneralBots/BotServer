@@ -39,10 +39,10 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import { Messages } from '../strings';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { GBServer } from '../../../src/app';
-import { GBConversationalService } from '../services/GBConversationalService';
+import { Messages } from '../strings.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
+import { GBServer } from '../../../src/app.js';
+import { GBConversationalService } from '../services/GBConversationalService.js';
 /**
  * Dialog for the bot explains about itself.
  */
@@ -53,14 +53,13 @@ export class BroadcastDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup(bot: BotAdapter, min: GBMinInstance) {
+  public static setup (bot: BotAdapter, min: GBMinInstance) {
     min.dialogs.add(
       new WaterfallDialog('/gb-broadcast', [
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else{
+          } else {
             return await step.next(step.options);
           }
         },

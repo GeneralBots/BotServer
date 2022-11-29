@@ -34,17 +34,16 @@
  * @fileoverview Knowledge base services and logic.
  */
 
-const Path = require('path');
-const Fs = require('fs');
-const urlJoin = require('url-join');
-const path = require('path');
-const asyncPromise = require('async-promises');
-const walkPromise = require('walk-promise');
-// tslint:disable-next-line:newline-per-chained-call
-const { SearchService } = require('azure-search-client');
-const Excel = require('exceljs');
-const getSlug = require('speakingurl');
-import { GBServer } from '../../../src/app';
+import Path from 'path';
+import Fs from 'fs';
+import urlJoin from 'url-join';
+import path from 'path';
+import asyncPromise from 'async-promises';
+import walkPromise from 'walk-promise';
+import { SearchClient } from '@azure/search-documents';
+import Excel from 'exceljs';
+import getSlug from 'speakingurl';
+import { GBServer } from '../../../src/app.js';
 import {
   GBDialogStep,
   GBLog,
@@ -57,15 +56,15 @@ import {
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
-import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService';
-import { GuaribasPackage } from '../../core.gbapp/models/GBModel';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { CSService } from '../../customer-satisfaction.gbapp/services/CSService';
-import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models';
-import { GBConfigService } from './../../core.gbapp/services/GBConfigService';
-const request = require('request-promise-native');
-const textract = require('textract');
-const pdf = require("pdf-extraction");
+import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService.js';
+import { GuaribasPackage } from '../../core.gbapp/models/GBModel.js';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { CSService } from '../../customer-satisfaction.gbapp/services/CSService.js';
+import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models/index.js';
+import { GBConfigService } from './../../core.gbapp/services/GBConfigService.js';
+import request from 'request-promise-native';
+import textract from 'textract';
+import pdf from 'pdf-extraction';
 
 /**
  * Result for quey on KB data.
@@ -81,11 +80,11 @@ export class KBServiceSearchResults {
 export class KBService implements IGBKBService {
   public sequelize: Sequelize;
 
-  constructor(sequelize: Sequelize) {
+  constructor (sequelize: Sequelize) {
     this.sequelize = sequelize;
   }
 
-  public static getFormattedSubjectItems(subjects: GuaribasSubject[]) {
+  public static getFormattedSubjectItems (subjects: GuaribasSubject[]) {
     if (subjects === null) {
       return '';
     }
@@ -97,7 +96,7 @@ export class KBService implements IGBKBService {
     return out.join(', ');
   }
 
-  public static getSubjectItemsSeparatedBySpaces(subjects: GuaribasSubject[]) {
+  public static getSubjectItemsSeparatedBySpaces (subjects: GuaribasSubject[]) {
     const out = [];
     if (subjects === undefined) {
       return '';
@@ -109,7 +108,7 @@ export class KBService implements IGBKBService {
     return out.join(' ');
   }
 
-  public async getAnswerTextByMediaName(instanceId: number, answerMediaName: string): Promise<string> {
+  public async getAnswerTextByMediaName (instanceId: number, answerMediaName: string): Promise<string> {
     const answer = await GuaribasAnswer.findOne({
       where: {
         instanceId: instanceId,
@@ -120,7 +119,7 @@ export class KBService implements IGBKBService {
     return answer != undefined ? answer.content : null;
   }
 
-  public async getQuestionById(instanceId: number, questionId: number): Promise<GuaribasQuestion> {
+  public async getQuestionById (instanceId: number, questionId: number): Promise<GuaribasQuestion> {
     return GuaribasQuestion.findOne({
       where: {
         instanceId: instanceId,
@@ -129,7 +128,7 @@ export class KBService implements IGBKBService {
     });
   }
 
-  public async getAnswerById(instanceId: number, answerId: number): Promise<GuaribasAnswer> {
+  public async getAnswerById (instanceId: number, answerId: number): Promise<GuaribasAnswer> {
     return GuaribasAnswer.findOne({
       where: {
         instanceId: instanceId,
@@ -141,8 +140,7 @@ export class KBService implements IGBKBService {
   /**
    * Returns a question object given a SEO friendly URL.
    */
-  public async getQuestionIdFromURL(core: IGBCoreService, url: string) {
-
+  public async getQuestionIdFromURL (core: IGBCoreService, url: string) {
     // Extracts questionId from URL.
 
     const id = url.substr(url.lastIndexOf('-') + 1);
@@ -166,7 +164,7 @@ export class KBService implements IGBKBService {
 
     return question;
   }
-  public static async getQuestionsNER(instanceId: number) {
+  public static async getQuestionsNER (instanceId: number) {
     const where = {
       instanceId: instanceId,
       content: { [Op.like]: `%(%` }
@@ -177,11 +175,9 @@ export class KBService implements IGBKBService {
     });
 
     return questions;
-
   }
 
-  public async getQuestionsSEO(instanceId: number) {
-
+  public async getQuestionsSEO (instanceId: number) {
     const questions = await GuaribasQuestion.findAll({
       where: {
         instanceId: instanceId
@@ -199,18 +195,16 @@ export class KBService implements IGBKBService {
     return output;
   }
 
-  public async getDocs(instanceId: number) {
-
+  public async getDocs (instanceId: number) {
     return await GuaribasAnswer.findAll({
       where: {
         instanceId: instanceId,
         format: '.docx'
       }
     });
-
   }
 
-  public async getAnswerByText(instanceId: number, text: string, from: string = null): Promise<any> {
+  public async getAnswerByText (instanceId: number, text: string, from: string = null): Promise<any> {
     text = text.trim();
 
     const service = new CSService();
@@ -233,7 +227,7 @@ export class KBService implements IGBKBService {
       let where = {
         instanceId: instanceId,
         content: { [Op.eq]: `${text}` }
-      }
+      };
       question = await GuaribasQuestion.findOne({
         where: where
       });
@@ -253,21 +247,16 @@ export class KBService implements IGBKBService {
     return undefined;
   }
 
-
-
-
-  public async addAnswer(obj: GuaribasAnswer): Promise<GuaribasAnswer> {
+  public async addAnswer (obj: GuaribasAnswer): Promise<GuaribasAnswer> {
     return await GuaribasAnswer.create(obj);
   }
 
-  public async ask(
+  public async ask (
     instance: IGBInstance,
     query: string,
     searchScore: number,
     subjects: GuaribasSubject[]
   ): Promise<KBServiceSearchResults> {
-
-
     // Builds search query.
 
     query = query.toLowerCase();
@@ -293,43 +282,51 @@ export class KBService implements IGBKBService {
       }
     }
 
-
     // No direct match found, so Search is used.
 
     if (instance.searchKey !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
-      const client = new SearchService(instance.searchHost.split('.')[0], instance.searchKey);
+      interface SearchResults {
+        instanceId: number;
+        questionId: number;
+        answerId: number;
+        content: string;
+        subject1: string;
+        subject2: string;
+        subject: string;
+        subject4: string;
+      }
 
-      const results = await client.indexes.use('azuresql-index').search({
-        count: true,
+      const client = new SearchClient<SearchResults>(instance.searchHost.split('.')[0], 'azuresql-index', {
+        key: instance.searchKey
+      } as any);
+
+      const results = await client.search(query, {
         filter: `instanceId eq ${instance.instanceId} and skipIndex eq false`,
-        search: query,
-        searchFields: 'content, subject1, subject2, subject3, subject4',
-        select: 'instanceId, questionId, answerId',
+        searchFields: ['content', 'subject1', 'subject2', 'subject', 'subject4'],
+        select: ['instanceId', 'questionId', 'answerId'],
         skip: 0,
-        top: 1,
+        top: 1
       });
 
-
-      const values = results.result.value;
+      const values = results.results; // TODO: See.
 
       let returnedScore = 0;
 
       // Searches via Search (Azure Search).
 
-      if (values && values.length > 0) {
-        returnedScore = values[0]['@search.score'];
+      let found = false;
+      for await (const result of values) {
+        found = true;
+        returnedScore = result['@search.score'];
         if (returnedScore >= searchScore) {
-          const value = await this.getAnswerById(instance.instanceId, values[0].answerId);
+          const value = await this.getAnswerById(instance.instanceId, result.document.answerId);
           if (value !== null) {
-            GBLog.info(
-              `SEARCH WILL BE USED with score: ${returnedScore} > required (searchScore): ${searchScore}`
-            );
+            GBLog.info(`SEARCH WILL BE USED with score: ${returnedScore} > required (searchScore): ${searchScore}`);
 
-
-            return { answer: value, questionId: values[0].questionId };
+            return { answer: value, questionId: result.document.questionId };
           } else {
             GBLog.info(
-              `SEARCH WILL NOT be used as answerId ${values[0].answerId} was not found in database,
+              `SEARCH WILL NOT be used as answerId ${result.document.answerId} was not found in database,
                 returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
             );
 
@@ -343,17 +340,17 @@ export class KBService implements IGBKBService {
 
           return { answer: undefined, questionId: 0 };
         }
-      } else {
-        GBLog.info(
-          `SEARCH called but NO answer could be found (zero results).`
-        );
-
-        return { answer: undefined, questionId: 0 };
       }
+
+      if (!found) {
+        GBLog.info(`SEARCH called but NO answer could be found (zero results).`);
+      }
+
+      return { answer: undefined, questionId: 0 };
     }
   }
 
-  public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {
+  public async getSubjectItems (instanceId: number, parentId: number): Promise<GuaribasSubject[]> {
     const where = { parentSubjectId: parentId, instanceId: instanceId };
 
     return GuaribasSubject.findAll({
@@ -361,7 +358,7 @@ export class KBService implements IGBKBService {
     });
   }
 
-  public async getFaqBySubjectArray(instanceId: number, from: string, subjects: any): Promise<GuaribasQuestion[]> {
+  public async getFaqBySubjectArray (instanceId: number, from: string, subjects: any): Promise<GuaribasQuestion[]> {
     if (subjects) {
       const where = {
         from: from,
@@ -403,13 +400,13 @@ export class KBService implements IGBKBService {
     }
   }
 
-  public static async getGroupReplies(instanceId: number): Promise<GuaribasQuestion[]> {
+  public static async getGroupReplies (instanceId: number): Promise<GuaribasQuestion[]> {
     return await GuaribasQuestion.findAll({
       where: { from: 'group', instanceId: instanceId }
     });
   }
 
-  public async importKbTabularFile(
+  public async importKbTabularFile (
     filePath: string,
     instanceId: number,
     packageId: number
@@ -425,8 +422,8 @@ export class KBService implements IGBKBService {
     // when loading worksheets collection.
 
     let worksheet: any;
-    for (let t = 0; t < data._worksheets.length; t++) {
-      worksheet = data._worksheets[t];
+    for (let t = 0; t < data.worksheets.length; t++) {
+      worksheet = data.worksheets[t];
       if (worksheet) {
         break;
       }
@@ -456,8 +453,13 @@ export class KBService implements IGBKBService {
         const question = line._cells[3].text.trim();
         let answer = line._cells[4].text.trim();
 
-        if (!(subjectsText === 'subjects' && from === 'from') && answer !== null && question !== null &&
-          answer !== '' && question !== '') {
+        if (
+          !(subjectsText === 'subjects' && from === 'from') &&
+          answer !== null &&
+          question !== null &&
+          answer !== '' &&
+          question !== ''
+        ) {
           let format = '.txt';
 
           // Extracts answer from external media if any.
@@ -469,16 +471,13 @@ export class KBService implements IGBKBService {
             answer =
               'Existe um problema na base de conhecimento. Fui treinado para entender sua pergunta, avise a quem me criou que a resposta não foi informada para esta pergunta.';
           } else if (answer.indexOf('.md') > -1 || answer.indexOf('.docx') > -1) {
-
             const mediaFilename = urlJoin(path.dirname(filePath), '..', 'articles', answer);
             if (Fs.existsSync(mediaFilename)) {
-
               // Tries to load .docx file from Articles folder.
 
               if (answer.indexOf('.docx') > -1) {
                 answer = await this.getTextFromFile(filePath);
-              }
-              else {
+              } else {
                 // Loads normally markdown file.
 
                 answer = Fs.readFileSync(mediaFilename, 'utf8');
@@ -543,7 +542,7 @@ export class KBService implements IGBKBService {
             subject4: subject4,
             content: question.replace(/["]+/g, ''),
             instanceId: instanceId,
-            skipIndex: (question.charAt(0) === "\""),
+            skipIndex: question.charAt(0) === '"',
             packageId: packageId
           };
           questions.push(question1);
@@ -573,7 +572,7 @@ export class KBService implements IGBKBService {
     return await GuaribasQuestion.bulkCreate(questions);
   }
 
-  public async sendAnswer(min: GBMinInstance, channel: string, step: GBDialogStep, answer: GuaribasAnswer) {
+  public async sendAnswer (min: GBMinInstance, channel: string, step: GBDialogStep, answer: GuaribasAnswer) {
     if (answer.content.endsWith('.mp4')) {
       await this.playVideo(min, min.conversationalService, step, answer, channel);
     } else if (
@@ -583,16 +582,19 @@ export class KBService implements IGBKBService {
       answer.content.endsWith('.docx') ||
       answer.content.endsWith('.xls') ||
       answer.content.endsWith('.xlsx')
-
     ) {
-      const doc = urlJoin(GBServer.globals.publicAddress, 'kb', `${min.instance.botId}.gbai`,
-        `${min.instance.botId}.gbkb`, 'assets', answer.content)
+      const doc = urlJoin(
+        GBServer.globals.publicAddress,
+        'kb',
+        `${min.instance.botId}.gbai`,
+        `${min.instance.botId}.gbkb`,
+        'assets',
+        answer.content
+      );
       const url = `http://view.officeapps.live.com/op/view.aspx?src=${doc}`;
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.content.endsWith('.pdf')) {
-
-      const url = urlJoin('kb', `${min.instance.botId}.gbai`,
-        `${min.instance.botId}.gbkb`, 'assets', answer.content);
+      const url = urlJoin('kb', `${min.instance.botId}.gbai`, `${min.instance.botId}.gbkb`, 'assets', answer.content);
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
       await min.conversationalService['playMarkdown'](min, answer.content, channel, step, min.conversationalService);
@@ -604,7 +606,7 @@ export class KBService implements IGBKBService {
     }
   }
 
-  public async importKbPackage(
+  public async importKbPackage (
     min: GBMinInstance,
     localPath: string,
     packageStorage: GuaribasPackage,
@@ -634,7 +636,7 @@ export class KBService implements IGBKBService {
   /**
    * Import all .md files in articles folder that has not been referenced by tabular files.
    */
-  public async importRemainingArticles(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
+  public async importRemainingArticles (localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
     const files = await walkPromise(urlJoin(localPath, 'articles'));
 
     await CollectionUtil.asyncForEach(files, async file => {
@@ -661,12 +663,18 @@ export class KBService implements IGBKBService {
   /**
    * Import all .docx files in reading comprehension folder.
    */
-  public async importDocs(min: GBMinInstance, localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
+  public async importDocs (
+    min: GBMinInstance,
+    localPath: string,
+    instance: IGBInstance,
+    packageId: number
+  ): Promise<any> {
     const files = await walkPromise(urlJoin(localPath, 'docs'));
     if (!files[0]) {
-      GBLog.info(`[GBDeployer] docs folder not created yet in .gbkb. To use Reading Comprehension, create this folder at root and put a document to get read by the.`);
-    }
-    else {
+      GBLog.info(
+        `[GBDeployer] docs folder not created yet in .gbkb. To use Reading Comprehension, create this folder at root and put a document to get read by the.`
+      );
+    } else {
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
         let filePath = Path.join(file.root, file.name);
@@ -689,12 +697,11 @@ export class KBService implements IGBKBService {
             packageId: packageId
           });
         }
-
       });
     }
   }
 
-  public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
+  public async importKbTabularDirectory (localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
     const files = await walkPromise(localPath);
 
     await CollectionUtil.asyncForEach(files, async file => {
@@ -704,7 +711,7 @@ export class KBService implements IGBKBService {
     });
   }
 
-  public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise<any> {
+  public async importSubjectFile (packageId: number, filename: string, instance: IGBInstance): Promise<any> {
     const subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
 
     const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
@@ -731,7 +738,7 @@ export class KBService implements IGBKBService {
     return doIt(subjectsLoaded.children, undefined);
   }
 
-  public async undeployKbFromStorage(instance: IGBInstance, deployer: GBDeployer, packageId: number) {
+  public async undeployKbFromStorage (instance: IGBInstance, deployer: GBDeployer, packageId: number) {
     await GuaribasQuestion.destroy({
       where: { instanceId: instance.instanceId, packageId: packageId }
     });
@@ -744,7 +751,7 @@ export class KBService implements IGBKBService {
     await this.undeployPackageFromStorage(instance, packageId);
   }
 
-  public static async RefreshNER(min: GBMinInstance) {
+  public static async RefreshNER (min: GBMinInstance) {
     const questions = await KBService.getQuestionsNER(min.instance.instanceId);
     const contentLocale = min.core.getParam<string>(
       min.instance,
@@ -761,12 +768,9 @@ export class KBService implements IGBKBService {
       if (categoryReg && nameReg) {
         let category = categoryReg[1];
         let name = nameReg[1];
-        min["nerEngine"].addNamedEntityText(category, name,
-          [contentLocale], [name]);
+        min['nerEngine'].addNamedEntityText(category, name, [contentLocale], [name]);
       }
     });
-
-
   }
 
   /**
@@ -774,7 +778,7 @@ export class KBService implements IGBKBService {
    *
    * @param localPath Path to the .gbkb folder.
    */
-  public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
+  public async deployKb (core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
     const packageName = Path.basename(localPath);
     GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
 
@@ -792,7 +796,7 @@ export class KBService implements IGBKBService {
     GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
   }
 
-  private async playAudio(
+  private async playAudio (
     min: GBMinInstance,
     answer: GuaribasAnswer,
     channel: string,
@@ -802,7 +806,7 @@ export class KBService implements IGBKBService {
     conversationalService.sendAudio(min, step, answer.content);
   }
 
-  private async playUrl(
+  private async playUrl (
     min,
     conversationalService: IGBConversationalService,
     step: GBDialogStep,
@@ -819,7 +823,7 @@ export class KBService implements IGBKBService {
     }
   }
 
-  private async playVideo(
+  private async playVideo (
     min,
     conversationalService: IGBConversationalService,
     step: GBDialogStep,
@@ -836,13 +840,13 @@ export class KBService implements IGBKBService {
     }
   }
 
-  private async undeployPackageFromStorage(instance: any, packageId: number) {
+  private async undeployPackageFromStorage (instance: any, packageId: number) {
     await GuaribasPackage.destroy({
       where: { instanceId: instance.instanceId, packageId: packageId }
     });
   }
 
-  public async readComprehension(instanceId: number, doc: string, question: string) {
+  public async readComprehension (instanceId: number, doc: string, question: string) {
     const options = {
       timeout: 60000 * 5,
       uri: `http://${process.env.GBMODELS_SERVER}/reading-comprehension`,
@@ -854,7 +858,7 @@ export class KBService implements IGBKBService {
     return await request.post(options);
   }
 
-  private async getTextFromFile(filename: string) {
+  private async getTextFromFile (filename: string) {
     return new Promise<string>(async (resolve, reject) => {
       textract.fromFileWithPath(filename, { preserveLineBreaks: true }, (error, text) => {
         if (error) {
@@ -866,5 +870,3 @@ export class KBService implements IGBKBService {
     });
   }
 }
-
-

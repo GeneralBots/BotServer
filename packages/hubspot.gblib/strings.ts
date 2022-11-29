@@ -1,8 +1,4 @@
 export const Messages = {
-  'en-US': {
-
-  },
-  'pt-BR': {
-
-  }
+  'en-US': {},
+  'pt-BR': {}
 };

@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
-const Fs = require('fs');
-const Path = require('path');
-const { exec } = require('child_process');
-var pjson = require('./package.json');
+import Fs from 'fs';
+import Path from 'path';
+import { exec } from 'child_process';
+import pjson from './package.json' assert { type: "json" };
+import * as GBServer from "./dist/src/app.js";
 
 // Displays version of Node JS being used at runtime and others attributes.
 
@@ -19,15 +20,14 @@ console.log(`[GB Runtime] debugPort        = ${process.debugPort}`);
 var now = () => {
     return (new Date()).toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC';
 }
-
+var __dirname = process.env.PWD;
 try {
 
     var run = () => {
+        
         console.log(`[GB Runtime] Initializing General Bots (BotServer)...`);
-        const GBServer = require("./dist/src/app").GBServer
-        console.log(`[GB Runtime] ${now()} - Running '${GBServer.name}' on '${__dirname}' directory`);
-        process.env.PWD = __dirname;
-        GBServer.run();
+        console.log(`[GB Runtime] ${now()} - Running on '${import.meta.url}'`);
+        GBServer.GBServer.run();
     }
     var processDist = () => {
         if (!Fs.existsSync('dist')) {

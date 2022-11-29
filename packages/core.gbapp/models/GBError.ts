@@ -47,4 +47,4 @@ import {
   Table,
   UpdatedAt
 } from 'sequelize-typescript';
-import { GuaribasInstance } from './GBModel';
+import { GuaribasInstance } from './GBModel.js';

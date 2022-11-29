@@ -136,3 +136,8 @@ CREATE TABLE [dbo].[GuaribasSchedule]
 	[updatedAt] [datetimeoffset](7) NULL
 
 GO
+
+
+# 3.0.0
+
+ALTER TABLE dbo.GuaribasInstance ADD botKey nvarchar(64) NULL;

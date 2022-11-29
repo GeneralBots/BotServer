@@ -36,25 +36,25 @@
 
 'use strict';
 
-const crypto = require('crypto');
+import crypto from 'crypto';
+import urlJoin from 'url-join';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog, GBLog, IGBPackage } from 'botlib';
-const urlJoin = require('url-join');
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { GBImporter } from '../../core.gbapp/services/GBImporterService';
-import { Messages } from '../strings';
-import { GBAdminService } from '../services/GBAdminService';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
+import { Messages } from '../strings.js';
+import { GBAdminService } from '../services/GBAdminService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 
 /**
  * Dialogs for administration tasks.
  */
 export class AdminDialog extends IGBDialog {
-  public static isIntentYes(locale, utterance) {
+  public static isIntentYes (locale, utterance) {
     return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
   }
 
-  public static isIntentNo(locale, utterance) {
+  public static isIntentNo (locale, utterance) {
     return utterance.toLowerCase().match(Messages[locale].negative_sentences);
   }
 
@@ -64,7 +64,7 @@ export class AdminDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup(min: GBMinInstance) {
+  public static setup (min: GBMinInstance) {
     // Setup services.
 
     const importer = new GBImporter(min.core);
@@ -77,8 +77,7 @@ export class AdminDialog extends IGBDialog {
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else {
+          } else {
             return await step.next(step.options);
           }
         },
@@ -109,8 +108,7 @@ export class AdminDialog extends IGBDialog {
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else {
+          } else {
             return await step.next(step.options);
           }
         },
@@ -200,8 +198,7 @@ export class AdminDialog extends IGBDialog {
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else {
+          } else {
             return await step.next(step.options);
           }
         },
@@ -237,17 +234,15 @@ export class AdminDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/publish', [
         async step => {
-
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else {
+          } else {
             return await step.next(step.options);
           }
         },
 
         async step => {
-          if (step.activeDialog.state.options.confirm || process.env.ADMIN_OPEN_PUBLISH === "true") {
+          if (step.activeDialog.state.options.confirm || process.env.ADMIN_OPEN_PUBLISH === 'true') {
             return await step.next('sim');
           } else {
             const locale = step.context.activity.locale;
@@ -266,7 +261,7 @@ export class AdminDialog extends IGBDialog {
             if (step.activeDialog.state.options.firstTime) {
               canPublish = true;
             } else {
-              canPublish = AdminDialog.canPublish(min, from) || process.env.ADMIN_OPEN_PUBLISH === "true";
+              canPublish = AdminDialog.canPublish(min, from) || process.env.ADMIN_OPEN_PUBLISH === 'true';
             }
 
             if (!canPublish) {
@@ -313,11 +308,14 @@ export class AdminDialog extends IGBDialog {
             try {
               let cmd1;
               if (packageName.indexOf('.') !== -1) {
-                cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
+                cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${
+                  process.env.STORAGE_LIBRARY
+                }/${botId}.gbai/${packageName}`;
               } else {
                 cmd1 = `deployPackage ${packageName}`;
               }
-              if ((await (deployer as any).getStoragePackageByName(min.instance.instanceId, packageName)) !== null &&
+              if (
+                (await (deployer as any).getStoragePackageByName(min.instance.instanceId, packageName)) !== null &&
                 !process.env.DONT_DOWNLOAD
               ) {
                 const cmd2 = `undeployPackage ${packageName}`;
@@ -350,12 +348,11 @@ export class AdminDialog extends IGBDialog {
    * the /broadcast command with specific phone numbers.
    * @param phone Phone number to check (eg.: +5521900002233)
    */
-  public static canPublish(min: GBMinInstance, phone: string): Boolean {
+  public static canPublish (min: GBMinInstance, phone: string): Boolean {
     if (process.env.SECURITY_CAN_PUBLISH !== undefined) {
       let list = process.env.SECURITY_CAN_PUBLISH.split(';');
 
-      const canPublish =
-        min.core.getParam(min.instance, 'Can Publish', null);
+      const canPublish = min.core.getParam(min.instance, 'Can Publish', null);
       if (canPublish) {
         list = list.concat(canPublish.split(';'));
       }
@@ -370,14 +367,13 @@ export class AdminDialog extends IGBDialog {
     }
   }
 
-  private static setupSecurityDialogs(min: GBMinInstance) {
+  private static setupSecurityDialogs (min: GBMinInstance) {
     min.dialogs.add(
       new WaterfallDialog('/setupSecurity', [
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else {
+          } else {
             return await step.next(step.options);
           }
         },
@@ -398,10 +394,8 @@ export class AdminDialog extends IGBDialog {
         async step => {
           step.activeDialog.state.authenticatorAuthorityHostUrl = step.result;
 
-          min.instance.authenticatorTenant =
-            step.activeDialog.state.authenticatorTenant;
-          min.instance.authenticatorAuthorityHostUrl =
-            step.activeDialog.state.authenticatorAuthorityHostUrl;
+          min.instance.authenticatorTenant = step.activeDialog.state.authenticatorTenant;
+          min.instance.authenticatorAuthorityHostUrl = step.activeDialog.state.authenticatorAuthorityHostUrl;
 
           await min.adminService.updateSecurityInfo(
             min.instance.instanceId,
@@ -415,15 +409,12 @@ export class AdminDialog extends IGBDialog {
 
           min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
 
-          const redirectUri = urlJoin(
-            min.instance.botEndpoint,
-            min.instance.botId,
-            '/token'
-          );
-          const url = `https://login.microsoftonline.com/${step.activeDialog.state.authenticatorTenant
-            }/oauth2/authorize?client_id=${min.instance.marketplaceId
-            }&response_type=code&redirect_uri=${redirectUri
-            }&scope=https://graph.microsoft.com/.default&state=${state}&response_mode=query`;
+          const redirectUri = urlJoin(min.instance.botEndpoint, min.instance.botId, '/token');
+          const url = `https://login.microsoftonline.com/${
+            step.activeDialog.state.authenticatorTenant
+          }/oauth2/authorize?client_id=${
+            min.instance.marketplaceId
+          }&response_type=code&redirect_uri=${redirectUri}&scope=https://graph.microsoft.com/.default&state=${state}&response_mode=query`;
 
           await min.conversationalService.sendText(min, step, Messages[locale].consent(url));
 

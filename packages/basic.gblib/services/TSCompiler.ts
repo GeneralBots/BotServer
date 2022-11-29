@@ -43,15 +43,15 @@ import * as ts from 'typescript';
  * Wrapper for a TypeScript compiler.
  */
 export class TSCompiler {
-
-  private static shouldIgnoreError(diagnostic) {
+  private static shouldIgnoreError (diagnostic) {
     const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
 
-    if (message.indexOf('Cannot find name') >= 0 
-    || message.indexOf('Cannot find module') >= 0
-    || message.indexOf('implicitly has an') >= 0
-    || message.indexOf('Cannot invoke an') >= 0
-    || message.indexOf('Cannot use imports, exports, or module') >= 0
+    if (
+      message.indexOf('Cannot find name') >= 0 ||
+      message.indexOf('Cannot find module') >= 0 ||
+      message.indexOf('implicitly has an') >= 0 ||
+      message.indexOf('Cannot invoke an') >= 0 ||
+      message.indexOf('Cannot use imports, exports, or module') >= 0
     ) {
       return true;
     }
@@ -59,14 +59,14 @@ export class TSCompiler {
     return false;
   }
 
-  public compile(
+  public compile (
     fileNames: string[],
     options: ts.CompilerOptions = {
       noStrictGenericChecks: true,
       noImplicitUseStrict: true,
       noEmitOnError: false,
       noImplicitAny: true,
-      target: ts.ScriptTarget.ES5,
+      target: ts.ScriptTarget.ESNext,
       module: ts.ModuleKind.None,
       moduleResolution: ts.ModuleResolutionKind.Classic,
       noEmitHelpers: true,
@@ -99,5 +99,4 @@ export class TSCompiler {
 
     return emitResult;
   }
-
 }

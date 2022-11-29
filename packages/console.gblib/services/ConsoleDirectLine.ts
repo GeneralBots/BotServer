@@ -1,5 +1,5 @@
-const Swagger = require('swagger-client');
-const rp = require('request-promise');
+import Swagger from 'swagger-client';
+import rp from 'request-promise';
 import { GBLog, GBService } from 'botlib';
 
 /**
@@ -11,7 +11,7 @@ export class ConsoleDirectLine extends GBService {
   public directLineClientName: string = 'DirectLineClient';
   public directLineSpecUrl: string = 'https://docs.botframework.com/en-us/restapi/directline3/swagger.json';
 
-  constructor(directLineSecret: string) {
+  constructor (directLineSecret: string) {
     super();
 
     this.directLineSecret = directLineSecret;
@@ -57,7 +57,7 @@ export class ConsoleDirectLine extends GBService {
     });
   }
 
-  public sendMessagesFromConsole(client, conversationId) {
+  public sendMessagesFromConsole (client, conversationId) {
     const _this_ = this;
     process.stdin.resume();
     const stdin = process.stdin;
@@ -92,7 +92,7 @@ export class ConsoleDirectLine extends GBService {
     });
   }
 
-  public pollMessages(client, conversationId) {
+  public pollMessages (client, conversationId) {
     const _this_ = this;
     GBLog.info(`Starting polling message for conversationId: ${conversationId}`);
     let watermark;
@@ -112,7 +112,7 @@ export class ConsoleDirectLine extends GBService {
   }
 
   // tslint:disable:no-unsafe-any
-  public printMessages(activities, directLineClientName) {
+  public printMessages (activities, directLineClientName) {
     if (activities && activities.length) {
       // ignore own messages
       activities = activities.filter(m => {
@@ -133,7 +133,7 @@ export class ConsoleDirectLine extends GBService {
   // tslint:enable:no-unsafe-any
 
   // tslint:disable:no-unsafe-any
-  public printMessage(activity) {
+  public printMessage (activity) {
     if (activity.text) {
       GBLog.info(activity.text);
     }
@@ -160,7 +160,7 @@ export class ConsoleDirectLine extends GBService {
   // tslint:enable:no-unsafe-any
 
   // tslint:disable:no-unsafe-any
-  public renderHeroCard(attachment) {
+  public renderHeroCard (attachment) {
     const width = 70;
     const contentLine = content => {
       return `${' '.repeat((width - content.length) / 2)}content${' '.repeat((width - content.length) / 2)}`;

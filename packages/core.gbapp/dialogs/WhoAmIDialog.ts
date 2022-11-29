@@ -39,8 +39,8 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import { GBConversationalService } from '../services/GBConversationalService';
-import { Messages } from '../strings';
+import { GBConversationalService } from '../services/GBConversationalService.js';
+import { Messages } from '../strings.js';
 /**
  * Dialog for the bot explains about itself.
  */
@@ -51,33 +51,34 @@ export class WhoAmIDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup(bot: BotAdapter, min: GBMinInstance) {
-    min.dialogs.add(new WaterfallDialog('/whoAmI', [
-      async step => {
-        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
-          return await step.beginDialog('/auth');
+  public static setup (bot: BotAdapter, min: GBMinInstance) {
+    min.dialogs.add(
+      new WaterfallDialog('/whoAmI', [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          } else {
+            return await step.next(step.options);
+          }
+        },
+
+        async step => {
+          const locale = step.context.activity.locale;
+          await min.conversationalService.sendText(min, step, `${min.instance.description}`);
+
+          if (min.instance.whoAmIVideo !== undefined) {
+            await min.conversationalService.sendText(min, step, Messages[locale].show_video);
+            await min.conversationalService.sendEvent(min, step, 'play', {
+              playerType: 'video',
+              data: min.instance.whoAmIVideo.trim()
+            });
+          }
+
+          await step.replaceDialog('/ask', { isReturning: true });
+
+          return await step.next();
         }
-        else{
-          return await step.next(step.options);
-        }
-      },
-
-      async step => {
-        const locale = step.context.activity.locale;
-        await min.conversationalService.sendText(min, step, `${min.instance.description}`);
-
-        if (min.instance.whoAmIVideo !== undefined) {
-          await min.conversationalService.sendText(min, step, Messages[locale].show_video);
-          await min.conversationalService.sendEvent(min, step, 'play', {
-            playerType: 'video',
-            data: min.instance.whoAmIVideo.trim()
-          });
-        }
-
-        await step.replaceDialog('/ask', { isReturning: true });
-
-        return await step.next();
-      }
-    ]));
+      ])
+    );
   }
 }

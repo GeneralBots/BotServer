@@ -36,29 +36,7 @@
 
 'use strict';
 
-const { sppull } = require('sppull');
-
 /**
  * Service facade for SharePoint Online.
  */
-export class GBSharePointService {
-
-    public async downloadFolder(localPath: string, siteUrl: string, folderUrl: string, username: string, password: string) {
-
-        const context = {
-            siteUrl: siteUrl,
-            creds: {
-                username: username,
-                password: password
-            }
-        };
-
-        const options = {
-            spRootFolder: folderUrl,
-            dlRootFolder: localPath
-        };
-
-        return await sppull(context, options);
-    }
-
-}
+export class GBSharePointService {}

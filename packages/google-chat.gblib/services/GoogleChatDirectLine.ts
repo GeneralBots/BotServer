@@ -30,20 +30,19 @@
 |                                                                             |
 \*****************************************************************************/
 
-const Swagger = require('swagger-client');
-const fs = require('fs');
-const { google } = require('googleapis')
-const { promisify } = require('util');
-const { PubSub } = require('@google-cloud/pubsub');
+import Swagger from 'swagger-client';
+import { google } from 'googleapis';
+import { promisify } from 'util';
+import { PubSub } from '@google-cloud/pubsub';
+import Fs from 'fs';
 import { GBLog, GBMinInstance, GBService } from 'botlib';
-import { GBServer } from '../../../src/app';
-import { SecService } from '../../security.gbapp/services/SecService';
+import { GBServer } from '../../../src/app.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
 
 /**
  * Support for Google Chat.
  */
 export class GoogleChatDirectLine extends GBService {
-
   public static conversationIds = {};
   public pollInterval = 5000;
   public directLineClientName = 'DirectLineClient';
@@ -59,7 +58,7 @@ export class GoogleChatDirectLine extends GBService {
   GoogleClientPrivateKey: any;
   GoogleProjectId: any;
 
-  constructor(
+  constructor (
     min: GBMinInstance,
     botId,
     directLineSecret,
@@ -84,22 +83,19 @@ export class GoogleChatDirectLine extends GBService {
       projectId: this.GoogleProjectId,
       credentials: { client_email: GoogleClientEmail, private_key: GoogleClientPrivateKey }
     });
-
   }
 
-  public static async asyncForEach(array, callback) {
+  public static async asyncForEach (array, callback) {
     for (let index = 0; index < array.length; index++) {
       await callback(array[index], index, array);
     }
   }
 
-  public async setup(setUrl) {
-
-    this.directLineClient =
-      new Swagger({
-        spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
-        usePromise: true
-      });
+  public async setup (setUrl) {
+    this.directLineClient = new Swagger({
+      spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
+      usePromise: true
+    });
     const client = await this.directLineClient;
 
     client.clientAuthorizations.add(
@@ -109,29 +105,24 @@ export class GoogleChatDirectLine extends GBService {
 
     if (setUrl) {
       try {
-
         const subscription = this.pubSubClient.subscription(this.GoogleChatSubscriptionName);
         subscription.on('message', this.receiver.bind(this));
-
       } catch (error) {
         GBLog.error(`Error initializing 3rd party GoogleChat provider(1) ${error.message}`);
       }
     }
-
   }
 
-  public async resetConversationId(key) {
+  public async resetConversationId (key) {
     GoogleChatDirectLine.conversationIds[key] = undefined;
   }
 
-  public async check() {
-
+  public async check () {
     GBLog.info(`GBGoogleChat: Checking server...`);
   }
 
   // TODO: Check service.Users.Messages.List("me").
-  public async receiver(message) {
-
+  public async receiver (message) {
     const event = JSON.parse(Buffer.from(message.data, 'binary').toString());
 
     let from = '';
@@ -140,7 +131,6 @@ export class GoogleChatDirectLine extends GBService {
     const threadName = event.message.thread.name;
 
     if (event['type'] === 'ADDED_TO_SPACE' && event['space']['singleUserBotDm']) {
-
     } else if (event['type'] === 'MESSAGE') {
       text = event.message.text;
       fromName = event.message.sender.displayName;
@@ -150,8 +140,7 @@ export class GoogleChatDirectLine extends GBService {
     message.ack();
 
     const sec = new SecService();
-    const user = await sec.ensureUser(this.min.instance.instanceId, from,
-      from, '', 'googlechat', fromName, from);
+    const user = await sec.ensureUser(this.min.instance.instanceId, from, from, '', 'googlechat', fromName, from);
 
     await sec.updateConversationReferenceById(user.userId, threadName);
 
@@ -170,12 +159,11 @@ export class GoogleChatDirectLine extends GBService {
       this.pollMessages(client, generatedConversationId, threadName, from, fromName);
       this.inputMessage(client, generatedConversationId, threadName, text, from, fromName);
     } else {
-
       this.inputMessage(client, conversationId, threadName, text, from, fromName);
     }
   }
 
-  public inputMessage(client, conversationId, threadName, text, from, fromName) {
+  public inputMessage (client, conversationId, threadName, text, from, fromName) {
     return client.Conversations.Conversations_PostActivity({
       conversationId: conversationId,
       activity: {
@@ -192,7 +180,7 @@ export class GoogleChatDirectLine extends GBService {
     });
   }
 
-  public pollMessages(client, conversationId, threadName, from, fromName) {
+  public pollMessages (client, conversationId, threadName, from, fromName) {
     GBLog.info(`GBGoogleChat: Starting message polling(${from}, ${conversationId}).`);
 
     let watermark: any;
@@ -212,7 +200,7 @@ export class GoogleChatDirectLine extends GBService {
     setInterval(worker, this.pollInterval);
   }
 
-  public async printMessages(activities, conversationId, threadName, from, fromName) {
+  public async printMessages (activities, conversationId, threadName, from, fromName) {
     if (activities && activities.length) {
       // Ignore own messages.
 
@@ -228,7 +216,7 @@ export class GoogleChatDirectLine extends GBService {
     }
   }
 
-  public async printMessage(activity, conversationId, threadName, from, fromName) {
+  public async printMessage (activity, conversationId, threadName, from, fromName) {
     let output = '';
 
     if (activity.text) {
@@ -252,27 +240,18 @@ export class GoogleChatDirectLine extends GBService {
     await this.sendToDevice(from, conversationId, threadName, output);
   }
 
-  public async sendToDevice(from: string, conversationId: string, threadName, msg: string) {
-
+  public async sendToDevice (from: string, conversationId: string, threadName, msg: string) {
     try {
-
       let threadParts = threadName.split('/');
       let spaces = threadParts[1];
       let threadKey = threadParts[3];
       const scopes = ['https://www.googleapis.com/auth/chat.bot'];
 
-      const jwtClient = new google.auth.JWT(
-        this.GoogleClientEmail,
-        null,
-        this.GoogleClientPrivateKey,
-        scopes,
-        null
-      );
+      const jwtClient = new google.auth.JWT(this.GoogleClientEmail, null, this.GoogleClientPrivateKey, scopes, null);
       await jwtClient.authorize();
-      const chat = google.chat({version: 'v1', auth: jwtClient});
-      chat.spaces.messages.createAsync = promisify(chat.spaces.messages.create);
+      const chat = google.chat({ version: 'v1', auth: jwtClient });
 
-      const res = await chat.spaces.messages.createAsync({
+      const res = await chat.spaces.messages.create({
         parent: `spaces/${spaces}`,
         threadKey: threadKey,
         requestBody: {
@@ -286,15 +265,10 @@ export class GoogleChatDirectLine extends GBService {
     }
   }
 
-
-  public async sendToDeviceEx(to, conversationId, threadName, text, locale) {
+  public async sendToDeviceEx (to, conversationId, threadName, text, locale) {
     const minBoot = GBServer.globals.minBoot as any;
 
-    text = await minBoot.conversationalService.translate(
-      minBoot,
-      text,
-      locale
-    );
+    text = await minBoot.conversationalService.translate(minBoot, text, locale);
     await this.sendToDevice(to, conversationId, threadName, text);
   }
 }

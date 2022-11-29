@@ -33,38 +33,31 @@
 'use strict';
 
 import { GBLog, GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
-import * as fs from 'fs';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer';
-import { TSCompiler } from './TSCompiler';
+import * as Fs from 'fs';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { TSCompiler } from './TSCompiler.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-const urlJoin = require('url-join');
-import { DialogKeywords } from './DialogKeywords';
-import { ScheduleServices } from './ScheduleServices';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService';
-//tslint:disable-next-line:no-submodule-imports
-const { VM } = require('vm2');
-
-
-const vb2ts = require('./vbscript-to-typescript');
-const beautify = require('js-beautify').js;
-const textract = require('textract');
-const walkPromise = require('walk-promise');
-
-const Path = require('path');
+import { ScheduleServices } from './ScheduleServices.js';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
+import urlJoin from 'url-join';
+import { NodeVM, VMScript } from 'vm2';
+import { createVm2Pool } from './vm2-process/index.js';
+import * as vb2ts from './vbscript-to-typescript.js';
+import textract from 'textract';
+import walkPromise from 'walk-promise';
+import child_process from 'child_process';
+import Path from 'path';
+import indent from 'indent.js';
 /**
- * @fileoverview Virtualization services for emulation of BASIC.
- * This alpha version is using a antipattern hack in form of converter to
- * translate BASIC to TS and string replacements to emulate await code.
- * See https://github.com/uweg/vbscript-to-typescript for more info on vb2ts, so
- * http://stevehanov.ca/blog/index.php?id=92 should be used to run it without
- * translation and enhance classic BASIC experience.
+ * @fileoverview  Decision was to priorize security(isolation) and debugging,
+ * over a beautiful BASIC transpiler (to be done).
  */
 
 /**
  * Basic services for BASIC manipulation.
  */
 export class GBVMService extends GBService {
-  public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
+  public async loadDialogPackage (folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
     const files = await walkPromise(folder);
 
     await CollectionUtil.asyncForEach(files, async file => {
@@ -78,11 +71,11 @@ export class GBVMService extends GBService {
         const wordFile = filename;
         const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
         const fullVbsFile = urlJoin(folder, vbsFile);
-        const docxStat = fs.statSync(urlJoin(folder, wordFile));
+        const docxStat = Fs.statSync(urlJoin(folder, wordFile));
         const interval = 3000; // If compiled is older 30 seconds, then recompile.
         let writeVBS = true;
-        if (fs.existsSync(fullVbsFile)) {
-          const vbsStat = fs.statSync(fullVbsFile);
+        if (Fs.existsSync(fullVbsFile)) {
+          const vbsStat = Fs.statSync(fullVbsFile);
           if (docxStat['mtimeMs'] < vbsStat['mtimeMs'] + interval) {
             writeVBS = false;
           }
@@ -98,54 +91,204 @@ export class GBVMService extends GBService {
           const s = new ScheduleServices();
           if (schedule) {
             await s.createOrUpdateSchedule(min, schedule, mainName);
-          }
-          else {
+          } else {
             await s.deleteScheduleIfAny(min, mainName);
           }
-          text = text.replace(/SET SCHEDULE (.*)/gi, '');
-          fs.writeFileSync(urlJoin(folder, vbsFile), text);
+          text = text.replace(/^\s*SET SCHEDULE (.*)/gim, '');
+          Fs.writeFileSync(urlJoin(folder, vbsFile), text);
         }
 
-        const fullFilename = urlJoin(folder, filename);
-        // TODO: Implement in development mode, how swap for .vbs files
-        // fs.watchFile(fullFilename, async () => {
-        //   await this.run(fullFilename, min, deployer, mainName);
-        // });
+        // Process node_modules install.
 
-        const compiledAt = fs.statSync(fullFilename);
+        const node_modules = urlJoin(folder, 'node_modules');
+        if (!Fs.existsSync(node_modules)) {
+          const packageJson = `
+            {
+              "name": "${min.botId}.gbdialog",
+              "version": "1.0.0",
+              "description": "${min.botId} transpiled .gbdialog",
+              "author": "${min.botId} owner.",
+              "license": "ISC",
+              "dependencies": {
+                "encoding": "0.1.13",
+                "isomorphic-fetch": "3.0.0",
+                "punycode": "2.1.1",
+                "typescript-rest-rpc": "1.0.10",
+                "vm2": "3.9.11"
+              }
+            }`;
+          Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
+
+          GBLog.info(`BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
+          const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
+          child_process.execSync(`${npmPath} install`, { cwd: folder });
+        }
+
+        // Hot swap for .vbs files.
+
+        const fullFilename = urlJoin(folder, filename);
+        if (process.env.GBDIALOG_HOTSWAP) {
+          Fs.watchFile(fullFilename, async () => {
+            await this.translateBASIC(fullFilename, min, deployer, mainName);
+          });
+        }
+
+        const compiledAt = Fs.statSync(fullFilename);
         const jsfile = urlJoin(folder, `${filename}.js`);
 
-        if (fs.existsSync(jsfile)) {
-          const jsStat = fs.statSync(jsfile);
+        if (Fs.existsSync(jsfile)) {
+          const jsStat = Fs.statSync(jsfile);
           const interval = 30000; // If compiled is older 30 seconds, then recompile.
           if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
-            await this.executeBASIC(fullFilename, min, deployer, mainName);
+            await this.translateBASIC(fullFilename, min, deployer, mainName);
           } else {
-            const parsedCode: string = fs.readFileSync(jsfile, 'utf8');
+            const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
 
-            this.executeJS(min, deployer, parsedCode, mainName);
+            min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
           }
         } else {
-          await this.executeBASIC(fullFilename, min, deployer, mainName);
+          await this.translateBASIC(fullFilename, min, deployer, mainName);
         }
       }
     });
   }
 
-  public static getMethodNameFromVBSFilename(filename: string) {
-    let mainName = filename.replace(/\s|\-/gi, '').split('.')[0];
+  public async translateBASIC (filename: any, min: GBMinInstance, deployer: GBDeployer, mainName: string) {
+    // Converts General Bots BASIC into regular VBS
+
+    let basicCode: string = Fs.readFileSync(filename, 'utf8');
+
+    // Processes END keyword, removing extracode, useful
+    // for development in .gbdialog.
+
+    if (process.env.GBDIALOG_NOEND === 'true') {
+      basicCode = basicCode.replace(/^\s*END(\W|\n)/gim, '');
+    } else {
+      let end = /^\s*END(\W|\n)/gi.exec(basicCode);
+      if (end) {
+        basicCode = basicCode.substring(0, end.index);
+      }
+    }
+
+    // Removes comments.
+
+    basicCode = basicCode.replace(/^\s*REM.*/gim, '');
+    basicCode = basicCode.replace(/^\s*\'.*/gim, '');
+
+    // Process INCLUDE keyword to include another
+    // dialog inside the dialog.
+
+    let include = null;
+    do {
+      include = /^include\b(.*)$/gim.exec(basicCode);
+
+      if (include) {
+        let includeName = include[1].trim();
+        includeName = Path.join(Path.dirname(filename), includeName);
+        includeName = includeName.substr(0, includeName.lastIndexOf('.')) + '.vbs';
+
+        // To use include, two /publish will be necessary (for now)
+        // because of alphabet order may raise not found errors.
+
+        let includeCode: string = Fs.readFileSync(includeName, 'utf8');
+        basicCode = basicCode.replace(/^include\b.*$/gim, includeCode);
+      }
+    } while (include);
+
+    const { code, jsonMap } = await this.convertGBASICToVBS(min, basicCode);
+    const vbsFile = `${filename}.compiled`;
+    const mapFile = `${filename}.map`;
+
+    Fs.writeFileSync(vbsFile, code);
+    Fs.writeFileSync(mapFile, JSON.stringify(jsonMap));
+
+    // Converts VBS into TS.
+
+    vb2ts.convertFile(vbsFile);
+
+    // Convert TS into JS.
+
+    const tsfile: string = `${filename}.ts`;
+    let tsCode: string = Fs.readFileSync(tsfile, 'utf8');
+    Fs.writeFileSync(tsfile, tsCode);
+    const tsc = new TSCompiler();
+    tsc.compile([tsfile]);
+
+    // Run JS into the GB context.
+
+    const jsfile = `${tsfile}.js`.replace('.ts', '');
+
+    if (Fs.existsSync(jsfile)) {
+      let code: string = Fs.readFileSync(jsfile, 'utf8');
+
+      code.replace(/^.*exports.*$/gm, '');
+
+      code = `
+      return (async () => {
+        require('isomorphic-fetch');
+        const rest from 'typescript-rest-rpc/lib/client');
+
+        // Interprocess communication from local HTTP to the BotServer.
+
+        const dk = rest.createClient('http://localhost:1111/api/v2/${min.botId}/dialog');
+        const sys = rest.createClient('http://localhost:1111/api/v2/${min.botId}/system');
+        const wa = rest.createClient('http://localhost:1111/api/v2/${min.botId}/webautomation');
+                
+        // Local variables.
+
+        const gb = await dk.getSingleton();
+        const id = gb.id;
+        const username = gb.username;
+        const mobile = gb.mobile;
+        const from = gb.from;
+        const ENTER = gb.ENTER;
+        const headers = gb.headers;
+        const data = gb.data;
+        const list = gb.list;
+        const httpUsername = gb.httpUsername;
+        const httpPs = gb.httpPs;
+        let page = null;
+
+    
+        // Local functions.
+
+        const ubound = (array) => {return array.length};
+        const isarray = (array) => {return Array.isArray(array) };
+    
+        // Remote functions.
+        
+        const weekday = (v) => { return (async () => { return await dk.getWeekFromDate({v}) })(); };
+        const hour = (v) => { return (async () => { return await dk.getHourFromDate({v}) })(); };
+        const base64 =  (v) => { return (async () => { return await dk.getCoded({v}) })(); };
+        const tolist =  (v) => { return (async () => { return await dk.getToLst({v}) })(); };
+        const now =  (v) => { return (async () => { return await dk.getNow({v}) })(); };
+        const today =  (v) => { return (async () => { return await dk.getToday({v}) })(); };
+
+        ${code}
+
+      })(); 
+    
+  `;
+      code = indent.js(code, { tabString: '\t' });
+      Fs.writeFileSync(jsfile, code);
+      min.sandBoxMap[mainName.toLowerCase().trim()] = code;
+      GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
+    }
+  }
+
+  public static getMethodNameFromVBSFilename (filename: string) {
+    let mainName = filename.replace(/\s|\-/gim, '').split('.')[0];
     return mainName.toLowerCase();
   }
 
-  public static getSetScheduleKeywordArgs(code: string) {
-    if (!code)
-      return null;
-    const keyword = /SET SCHEDULE (.*)/gi;
+  public static getSetScheduleKeywordArgs (code: string) {
+    if (!code) return null;
+    const keyword = /^\s*SET SCHEDULE (.*)/gim;
     const result = keyword.exec(code);
     return result ? result[1] : null;
   }
 
-  private async getTextFromWord(folder: string, filename: string) {
+  private async getTextFromWord (folder: string, filename: string) {
     return new Promise<string>(async (resolve, reject) => {
       textract.fromFileWithPath(urlJoin(folder, filename), { preserveLineBreaks: true }, (error, text) => {
         if (error) {
@@ -162,599 +305,695 @@ export class GBVMService extends GBService {
     });
   }
 
+  private getParams = (text, names) => {
+    let ret = {};
+    const splitParamsButIgnoreCommasInDoublequotes = str => {
+      return str.split(',').reduce(
+        (accum, curr) => {
+          if (accum.isConcatting) {
+            accum.soFar[accum.soFar.length - 1] += ',' + curr;
+          } else {
+            accum.soFar.push(curr);
+          }
+          if (curr.split('"').length % 2 == 0) {
+            accum.isConcatting = !accum.isConcatting;
+          }
+          return accum;
+        },
+        { soFar: [], isConcatting: false }
+      ).soFar;
+    };
+
+    const items = splitParamsButIgnoreCommasInDoublequotes(text);
+
+    let i = 0;
+    let json = '{';
+    names.forEach(name => {
+      let value = items[i];
+      i++;
+      json = `${json} "${name}": ${value} ${names.length == i ? '' : ','}`;
+    });
+    json = `${json}}`;
+
+    return json;
+  };
+
   /**
    * Converts General Bots BASIC
    *
    *
    * @param code General Bots BASIC
    */
-  public convertGBASICToVBS(code: string) {
+  public async convertGBASICToVBS (min: GBMinInstance, code: string) {
     // Start and End of VB2TS tags of processing.
 
-
     code = `<%\n
-    step=dk.step
-    id = sys().getRandomId()
-    username = step ? dk.userName(step) : sys().getRandomId();
-    mobile = step ? dk.userMobile(step) : sys().getRandomId();
-    from = mobile;
-    ENTER = String.fromCharCode(13);
-    ubound = function(array){return array.length};
-    isarray = function(array){return Array.isArray(array) };
-    weekday = dk.getWeekFromDate.bind(dk);
-    hour = dk.getHourFromDate.bind(dk);
-    base64 = dk.getCoded;
-    tolist = dk.getToLst;
-    headers = {};
-    data = {};
-    list = [];
-    httpUsername = "";
-    httpPs = "";
 
     ${process.env.ENABLE_AUTH ? `hear gbLogin as login` : ``}
 
     ${code}
 
-
-    
     `;
 
+    var allLines = code.split('\n');
+    const keywords = this.getKeywords();
+    const offset = 34;
+    const jsonMap = {};
+
+    for (var i = 0; i < allLines.length; i++) {
+      for (var j = 0; j < keywords.length; j++) {
+        allLines[i] = allLines[i].replace(keywords[j][0], keywords[j][1]);
+
+        //  Add additional lines returned from replacement.
+
+        let add = allLines[i].split(/\r\n|\r|\n/).length;
+        jsonMap[i] = offset + i + (add ? add : 0);
+      }
+    }
+
+    code = `${allLines.join('\n')}\n%>`;
+    return { code, jsonMap };
+  }
+
+  private getKeywords () {
     // Keywords from General Bots BASIC.
 
-    code = code.replace(/(\w+)\s*\=\s*SELECT\s*(.*)/gi, ($0, $1, $2) => {
+    let keywords = [];
+    let i = 0;
 
-      let tableName = /\sFROM\s(\w+)/.exec($2)[1];
-      let sql = `SELECT ${$2}`.replace(tableName, '?');
-      return `${$1} = sys().executeSQL(${$1}, "${sql}", "${tableName}")\n`;
-    });
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*SELECT\s*(.*)/gim,
+      ($0, $1, $2) => {
+        let tableName = /\sFROM\s(\w+)/.exec($2)[1];
+        let sql = `SELECT ${$2}`.replace(tableName, '?');
+        return `${$1} = await sys.executeSQL({data:${$1}, sql:"${sql}", tableName:"${tableName}"})\n`;
+      }
+    ];
 
-
-    code = code.replace(/(\w+)\s*\=\s*get html\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = getPage(step, ${$2})\n`;
-    });
-    code = code.replace(/(set hear on)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `hrOn = ${$3}\n`;
-    });
-
-    code = code.replace(/hear (\w+) as login/gi, ($0, $1) => {
-      return `${$1} = hear("login")`;
-    });
-    code = code.replace(/hear (\w+) as email/gi, ($0, $1) => {
-      return `${$1} = hear("email")`;
-    });
-
-    code = code.replace(/hear (\w+) as integer/gi, ($0, $1, $2) => {
-      return `${$1} = hear("integer")`;
-    });
-
-    code = code.replace(/hear (\w+) as file/gi, ($0, $1, $2) => {
-      return `${$1} = hear("file")`;
-    });
-
-    code = code.replace(/hear (\w+) as boolean/gi, ($0, $1, $2) => {
-      return `${$1} = hear("boolean")`;
-    });
-
-    code = code.replace(/hear (\w+) as name/gi, ($0, $1, $2) => {
-      return `${$1} = hear("name")`;
-    });
-
-    code = code.replace(/hear (\w+) as date/gi, ($0, $1, $2) => {
-      return `${$1} = hear("date")`;
-    });
-
-    code = code.replace(/hear (\w+) as hour/gi, ($0, $1, $2) => {
-      return `${$1} = hear("hour")`;
-    });
-
-    code = code.replace(/hear (\w+) as phone/gi, ($0, $1, $2) => {
-      return `${$1} = hear("phone")`;
-    });
-
-    code = code.replace(/hear (\w+) as money/gi, ($0, $1, $2) => {
-      return `${$1} = hear("money")`;
-    });
-
-    code = code.replace(/hear (\w+) as language/gi, ($0, $1, $2) => {
-      return `${$1} = hear("language")`;
-    });
-
-    code = code.replace(/hear (\w+) as zipcode/gi, ($0, $1, $2) => {
-      return `${$1} = hear("zipcode")`;
-    });
-
-    code = code.replace(/hear (\w+) as (.*)/gi, ($0, $1, $2) => {
-      return `${$1} = hear("menu", ${$2})`;
-    });
-
-    code = code.replace(/(hear)\s*(\w+)/gi, ($0, $1, $2) => {
-      return `${$2} = hear()`;
-    });
-
-    code = code.replace(/(\w)\s*\=\s*find contact\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = fndContact(${$2})\n`;
-    });
-
-    code = code.replace(/(\w+)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = sys().find(${$2})\n
-      if (!${$1}) {
-        if (resolve){
-          resolve();
+    keywords[i++] = [
+      /^\s*open\s*(.*)/gim,
+      ($0, $1, $2) => {
+        if (!$1.startsWith('"') && !$1.startsWith("'")) {
+          $1 = `"${$1}"`;
         }
-        talk (${$3})\n;
+        const params = this.getParams($1, ['url', 'username', 'password']);
+
+        return `page = await wa.getPage(${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(set hear on)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `hrOn = ${$3}\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as login/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"login"})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as email/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"email"})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as integer/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"integer"})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as file/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"file"})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as boolean/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"boolean"})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as name/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"name"})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as date/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"date"})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as hour/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"hour"})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as phone/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"phone"})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as money/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"money")}`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as language/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"language")}`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as zipcode/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({kind:"zipcode")}`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\shear (\w+) as (.*)/gim,
+      ($0, $1, $2) => {
+        return `${$1} = await dk.getHear({kind:"menu", args: [${$2}])}`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(hear)\s*(\w+)/gim,
+      ($0, $1, $2) => {
+        return `${$2} = await dk.getHear({})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*find contact\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `${$1} = await dk.fndContact({${$2})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(\w+)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `${$1} = await sys.find({args:[${$2}])\n
+      if (!${$1}) {
+        await dk.talk ({${$3}})\n;
         return -1;
       }
       `;
-    });
-
-    code = code.replace(/CALL\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().callVM("${$1}", dk.getMin(), dk.getStep(), dk.getDeployer())\n`;
-    });
-
-    code = code.replace(/(\w)\s*\=\s*find\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = sys().find(${$2})\n`;
-    });
-
-    code = code.replace(/(\w)\s*\=\s*create deal(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} =createDeal(${$3})\n`;
-    });
-
-    code = code.replace(/(\w)\s*\=\s*active tasks/gi, ($0, $1) => {
-      return `${$1} = getActiveTasks()\n`;
-    });
-
-    code = code.replace(/(\w)\s*\=\s*append\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = sys().append(${$2})\n`;
-    });
-
-    code = code.replace(/(\w+)\s*\=\s*sort\s*(\w+)\s*by(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = sys().sortBy(${$2}, "${$3}")\n`;
-    });
-
-    code = code.replace(/see\s*text\s*of\s*(\w+)\s*as\s*(\w+)\s*/gi, ($0, $1, $2, $3) => {
-      return `${$2} = sys().seeText(${$1})\n`;
-    });
-
-    code = code.replace(/see\s*caption\s*of\s*(\w+)\s*as(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$2} = sys().seeCaption(${$1})\n`;
-    });
-
-    code = code.replace(/(wait)\s*(\d+)/gi, ($0, $1, $2) => {
-      return `sys().wait(${$2})`;
-    });
-
-    code = code.replace(/(get stock for )(.*)/gi, ($0, $1, $2) => {
-      return `stock = sys().getStock(${$2})`;
-    });
-
-    code = code.replace(/(\w+)\s*\=\s*get\s(.*)/gi, ($0, $1, $2, $3) => {
-
-      const count = ($2.match(/\,/g) || []).length;
-      const values = $2.split(',');
-
-      // Handles GET page, "selector".
-
-      if (count == 1) {
-
-        return `${$1} = this.getBySelector(${values[0]}, ${values[1]} )`;
       }
+    ];
 
-      // Handles GET page, "frameSelector", "selector"
-
-      else if (count == 2) {
-
-        return `${$1} = this.getByFrame(${values[0]}, ${values[1]}, ${values[2]} )`;
+    keywords[i++] = [
+      /^\sCALL\s*(.*)/gim,
+      ($0, $1) => {
+        return `await ${$1}\n`;
       }
+    ];
 
-      // Handles the GET http version.
-
-      else {
-
-        return `${$1} = sys().get (${$2}, headers, httpUsername, httpPs)`;
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*find\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `
+      ${$1} = await sys.find({args: [${$2}]})\n`;
       }
+    ];
 
-    });
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*create deal(\s)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['dealName', 'contact', 'company', 'amount']);
 
-    code = code.replace(/\= NEW OBJECT/gi, ($0, $1, $2, $3) => {
-      return ` = {}`;
-    });
-
-    code = code.replace(/\= NEW ARRAY/gi, ($0, $1, $2, $3) => {
-      return ` = []`;
-    });
-
-
-    code = code.replace(/(go to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `gotoDialog(step, ${$3})\n`;
-    });
-
-    code = code.replace(/(set language)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `setLanguage (step, ${$3})\n`;
-    });
-
-    code = code.replace(/set header\s*(.*)\sas\s(.*)/gi, ($0, $1, $2) => {
-      return `headers[${$1}]=${$2})`;
-    });
-
-    code = code.replace(/set http username\s*\=\s*(.*)/gi, ($0, $1) => {
-      return `httpUsername = ${$1}`;
-    });
-
-    code = code.replace(/set http password\s*\=\s*(.*)/gi, ($0, $1) => {
-      return `httpPs = ${$1}`;
-    });
-
-    code = code.replace(/(datediff)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `dateDiff (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(dateadd)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `dateAdd (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(set max lines)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `setMaxLines (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(set max columns)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `setMaxColumns (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(set translator)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `setTranslatorOn (step, "${$3.toLowerCase()}")\n`;
-    });
-
-    code = code.replace(/(set theme)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `setTheme (step, "${$3.toLowerCase()}")\n`;
-    });
-
-    code = code.replace(/(set whole word)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `setWholeWord (step, "${$3.toLowerCase()}")\n`;
-    });
-
-    code = code.replace(/(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = sys().postByHttp (${$2}, ${$3}, headers)`;
-    });
-
-    code = code.replace(/(\w+)\s*\=\s*put\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = sys().putByHttp (${$2}, ${$3}, headers)`;
-    });
-
-    code = code.replace(/(\w+)\s*\=\s*download\s*(.*),\s*(.*)/gi, ($0, $1, $2, $3) => {
-      return `${$1} = sys().download (${$2}, ${$3})`;
-    });
-
-    code = code.replace(/(\w+)\s*\=\s*CREATE FOLDER\s*(.*)/gi, ($0, $1, $2) => {
-      return `${$1} = sys().createFolder (${$2})`;
-    });
-
-    code = code.replace(/SHARE FOLDER\s*(.*)/gi, ($0, $1) => {
-      return `sys().shareFolder (${$1})`;
-    });
-
-    code = code.replace(/(create a bot farm using)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().createABotFarmUsing (${$3})`;
-    });
-
-    code = code.replace(/(chart)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `chart (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(transfer to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `transferTo (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gi, () => {
-      return `transferTo (step)\n`;
-    });
-
-    code = code.replace(/(exit)/gi, () => {
-      return `if(resolve) {resolve();}\n`;
-    });
-
-    code = code.replace(/(show menu)/gi, () => {
-      return `showMenu (step)\n`;
-    });
-
-    code = code.replace(/(talk to)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().talkTo(${$3})\n`;
-    });
-
-    code = code.replace(/(talk)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `talk (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(send sms to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().sendSmsTo (${$3})\n`;
-    });
-
-    code = code.replace(/(send email)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sendEmail (${$3})\n`;
-    });
-
-    code = code.replace(/(send mail)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sendEmail (${$3})\n`;
-    });
-
-    code = code.replace(/(send file to)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sendFileTo (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(hover)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `hover (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(click link text)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `linkByText (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(click)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `click (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(send file)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sendFile (step, ${$3})\n`;
-    });
-
-    code = code.replace(/(copy)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().copyFile(${$3})\n`;
-    });
-
-    code = code.replace(/(convert)(\s*)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().convert(${$3})\n`;
-    });
-
-    // TODO: AS CHART.
-    // code = code.replace(/(\w+)\s*\=\s*(.*)\s*as chart/gi, ($0, $1, $2) => {
-    //   return `${$1} = sys().asImage(${$2})\n`;
-    // });
-
-    code = code.replace(/MERGE\s(.*)\sWITH\s(.*)BY\s(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().merge(${$1}, ${$2}, ${$3})\n`;
-    });
-
-    code = code.replace(/PRESS\s(.*)\sON\s(.*)/gi, ($0, $1, $2) => {
-      return `pressKey(step, ${$2}, ${$1})\n`;
-    });
-
-    code = code.replace(/SCREENSHOT\s(.*)/gi, ($0, $1, $2) => {
-      return `screenshot(step, ${$1})\n`;
-    });
-
-    code = code.replace(/TWEET\s(.*)/gi, ($0, $1, $2) => {
-      return `sys().tweet(step, ${$1})\n`;
-    });
-
-    code = code.replace(/(\w+)\s*\=\s*(.*)\s*as image/gi, ($0, $1, $2) => {
-      return `${$1} = sys().asImage(${$2})\n`;
-    });
-
-    code = code.replace(/(\w+)\s*\=\s*(.*)\s*as pdf/gi, ($0, $1, $2) => {
-      return `${$1} = sys().asPdf(${$2})\n`;
-    });
-
-    code = code.replace(/(\w+)\s*\=\s*FILL\s(.*)\sWITH\s(.*)/gi, ($0, $1, $2, $3) => {
-      return `${1} = sys().fill(${$2}, ${$3})\n`;
-    });
-
-    code = code.replace(/save\s(.*)\sas\s(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().saveFile(${$2}, ${$1})\n`;
-    });
-    code = code.replace(/(save)(\s)(.*)/gi, ($0, $1, $2, $3) => {
-      return `sys().save(${$3})\n`;
-    });
-
-    code = code.replace(/set\s(.*)/gi, ($0, $1, $2) => {
-      return `sys().set (${$1})`;
-    });
-
-
-    code = `${code}\n%>`;
-
-    return code;
-  }
-
-  public async executeBASIC(filename: any, min: GBMinInstance, deployer: GBDeployer, mainName: string) {
-
-    // Converts General Bots BASIC into regular VBS
-
-    let basicCode: string = fs.readFileSync(filename, 'utf8');
-
-    // Processes END keyword, removing extracode, useful
-    // for development.
-
-    let end = /(\nend\n)/gi.exec(basicCode);
-    if (end) {
-      basicCode = basicCode.substring(0, end.index);
-    }
-
-    // Removes comments.
-
-    basicCode = basicCode.replace(/((^|\W)REM.*\n)/gi, '');
-
-    // Process INCLUDE keyword to include another
-    // dialog inside the dialog.
-
-    let include = null;
-    do {
-      include = /^include\b(.*)$/gmi.exec(basicCode);
-
-      if (include) {
-        let includeName = include[1].trim();
-        includeName = Path.join(Path.dirname(filename), includeName);
-        includeName = includeName.substr(0, includeName.lastIndexOf(".")) + ".vbs";
-
-        // To use include, two /publish will be necessary (for now)
-        // because of alphabet order may raise not found errors.
-
-        let includeCode: string = fs.readFileSync(includeName, 'utf8');
-        basicCode = basicCode.replace(/^include\b.*$/gmi, includeCode);
+        return `${$1} = await dk.createDeal(${params})\n`;
       }
-    } while (include);
+    ];
 
-    const vbsCode = this.convertGBASICToVBS(basicCode);
-    const vbsFile = `${filename}.compiled`;
-    fs.writeFileSync(vbsFile, vbsCode);
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*active tasks/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getActiveTasks({})\n`;
+      }
+    ];
 
-    // Converts VBS into TS.
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*append\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `${$1} = await sys.append({args:[${$2}]})\n`;
+      }
+    ];
 
-    vb2ts.convertFile(vbsFile);
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*sort\s*(\w+)\s*by(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `${$1} = await sys.sortBy({array: ${$2}, memberName: "${$3}"})\n`;
+      }
+    ];
 
-    // Convert TS into JS.
+    keywords[i++] = [
+      /^\ssee\s*text\s*of\s*(\w+)\s*as\s*(\w+)\s*/gim,
+      ($0, $1, $2, $3) => {
+        return `${$2} = await sys.seeText({url: ${$1})\n`;
+      }
+    ];
 
-    const tsfile: string = `${filename}.ts`;
-    let tsCode: string = fs.readFileSync(tsfile, 'utf8');
-    tsCode = tsCode + `let resolve;`;
-    fs.writeFileSync(tsfile, tsCode);
-    const tsc = new TSCompiler();
-    tsc.compile([tsfile]);
+    keywords[i++] = [
+      /^\ssee\s*caption\s*of\s*(\w+)\s*as(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `${$2} = await sys.seeCaption({url: ${$1})\n`;
+      }
+    ];
 
-    // Run JS into the GB context.
+    keywords[i++] = [
+      /^\s*(wait)\s*(\d+)/gim,
+      ($0, $1, $2) => {
+        return `await sys.wait({seconds:${$2}})`;
+      }
+    ];
 
-    const jsfile = `${tsfile}.js`.replace('.ts', '');
+    keywords[i++] = [
+      /^\s*(get stock for )(.*)/gim,
+      ($0, $1, $2) => {
+        return `stock = await sys.getStock({symbol: ${$2})`;
+      }
+    ];
 
-    if (fs.existsSync(jsfile)) {
-      let code: string = fs.readFileSync(jsfile, 'utf8');
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*get\s(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const count = ($2.match(/\,/g) || []).length;
+        const values = $2.split(',');
 
-      code = code.replace(/^.*exports.*$/gm, '');
+        // Handles GET "selector".
 
-      // Finds all hear calls.
+        if (count == 1) {
+          return `${$1} =  await wa.getBySelector({handle:page, selector: ${values[0]}})`;
+        }
 
-      let parsedCode = code;
+        // Handles GET "frameSelector", "selector"
+        else if (count == 2) {
+          return `${$1} =  await wa.getByFrame({handle: page, ${values[0]}, frameOrSelector: ${values[1]}, selector: ${
+            values[2]
+          }})`;
+        }
 
-      parsedCode = this.handleThisAndAwait(parsedCode);
+        // Handles the GET http version.
+        else {
+          return `${$1} = await sys.get ({file: ${$2}, addressOrHeaders: headers, httpUsername, httpPs})`;
+        }
+      }
+    ];
 
-      parsedCode = parsedCode.replace(/(\bnow\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'await dk.getNow()');
-      parsedCode = parsedCode.replace(/(\btoday\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'await dk.getToday(step)');
-      parsedCode = parsedCode.replace(/(\bweekday\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'weekday');
-      parsedCode = parsedCode.replace(/(\bhour\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'hour');
-      parsedCode = parsedCode.replace(/(\btolist\b)(?=(?:[^"]|"[^"]*")*$)/gi, 'tolist');
+    keywords[i++] = [
+      /\= NEW OBJECT/gi,
+      ($0, $1, $2, $3) => {
+        return ` = {}`;
+      }
+    ];
 
-      parsedCode = beautify(parsedCode, { indent_size: 2, space_in_empty_paren: true });
-      fs.writeFileSync(jsfile, parsedCode);
+    keywords[i++] = [
+      /\= NEW ARRAY/gi,
+      ($0, $1, $2, $3) => {
+        return ` = []`;
+      }
+    ];
 
-      this.executeJS(min, deployer, parsedCode, mainName);
-      GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${parsedCode}`);
-    }
-  }
+    keywords[i++] = [
+      /^\s*(go to)(\s)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['fromOrDialogName', 'dialogName']);
+        return `await dk.gotoDialog(${params})\n`;
+      }
+    ];
 
-  private executeJS(min: GBMinInstance, deployer: GBDeployer, parsedCode: string, mainName: string) {
-    try {
-      min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
-    } catch (error) {
-      GBLog.error(`[GBVMService] ERROR loading ${error}`);
-    }
-  }
+    keywords[i++] = [
+      /^\s*(set language)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await dk.setLanguage ({${$3}})\n`;
+      }
+    ];
 
-  private handleThisAndAwait(code: string) {
-    // this insertion.
+    keywords[i++] = [
+      /^\s*set header\s*(.*)\sas\s(.*)/gim,
+      ($0, $1, $2) => {
+        return `headers[${$1}]=${$2})`;
+      }
+    ];
 
-    code = code.replace(/sys\(\)/gi, 'dk.sys()');
-    code = code.replace(/("[^"]*"|'[^']*')|\btalk\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.talk' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bhear\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.hear' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\baskEmail\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.askEmail' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsendFileTo\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.sendFileTo' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsendFile\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.sendFile' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsetLanguage\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.setLanguage' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bdateAdd\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.dateAdd' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bdateDiff\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.dateDiff' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bgotoDialog\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.gotoDialog' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsetMaxLines\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.setMaxLines' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsetTranslatorOn\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.setTranslatorOn' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsetTheme\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.setTheme' : $1;
-    });
+    keywords[i++] = [
+      /^\s*set http username\s*\=\s*(.*)/gim,
+      ($0, $1) => {
+        return `httpUsername = ${$1}`;
+      }
+    ];
 
-    code = code.replace(/("[^"]*"|'[^']*')|\bsetWholeWord\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.setWholeWord' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\btransferTo\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.transferTo' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bchart\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.chart' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bcreateDeal\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.createDeal' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bfndContact\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.fndContact' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bgetActiveTasks\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.getActiveTasks' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bmenu\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.menu' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bgetPage\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.getPage' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bclick\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.click' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\blinkByText\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.linkByText' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bpressKey\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.pressKey' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bscreenshot\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.screenshot' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bhover\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.hover' : $1;
-    });
-    code = code.replace(/("[^"]*"|'[^']*')|\bsendEmail\b/gi, ($0, $1) => {
-      return $1 === undefined ? 'dk.sendEmail' : $1;
-    });
-    // await insertion.
+    keywords[i++] = [
+      /^\sset http password\s*\=\s*(.*)/gim,
+      ($0, $1) => {
+        return `httpPs = ${$1}`;
+      }
+    ];
 
-    code = code.replace(/dk\./gm, 'await dk.');
-    code = code.replace(/\nfunction/i, 'async function');
-    code = code.replace('ubound = async', 'ubound =');  // TODO: Improve this.
-    code = code.replace('hour = await', 'hour =');  // TODO: Improve this.
-    code = code.replace('weekday = await', 'weekday =');  // TODO: Improve this.
-    code = code.replace('tolist = await', 'tolist =');  // TODO: Improve this.
-    code = code.replace('isarray = async', 'isarray =');  // TODO: Waiting for a compiler.
-    code = code.replace('isArray = async', 'isarray =');  // TODO: Waiting for a compiler.
-    code = code.replace('base64 = await', 'base64 =');  // TODO: Waiting for a compiler.
+    keywords[i++] = [
+      /^\s*(datediff)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['date1', 'date2', 'mode']);
+        return `await dk.dateDiff (${params}})\n`;
+      }
+    ];
 
-    return code;
+    keywords[i++] = [
+      /^\s*(dateadd)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['date', 'mode', 'units']);
+        return `await dk.dateAdd (${$3})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(set max lines)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await dk.setMaxLines ({count: ${$3}})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(set max columns)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await dk.setMaxColumns ({count: ${$3}})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(set translator)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await dk.setTranslatorOn ({on: "${$3.toLowerCase()}"})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(set theme)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await dk.setTheme ({theme: "${$3.toLowerCase()}"})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(set whole word)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await dk.setWholeWord ({on: "${$3.toLowerCase()}"})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*post\s*(.*),\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `${$1} = await sys.postByHttp ({url:${$2}, data:${$3}, headers})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*put\s*(.*),\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `${$1} = await sys.putByHttp ({url:${$2}, data:${$3}, headers})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*download\s*(.*),\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `${$1} = await sys.download ({handle:page, selector: ${$2}, folder:${$3}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*CREATE FOLDER\s*(.*)/gim,
+      ($0, $1, $2) => {
+        return `${$1} = await sys.createFolder ({name:${$2}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\sSHARE FOLDER\s*(.*)/gim,
+      ($0, $1) => {
+        return `await sys.shareFolder ({name: ${$1}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(create a bot farm using)(\s)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await sys.createABotFarmUsing ({${$3}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(transfer to)(\s)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await dk.transferTo ({to:${$3}})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gim,
+      () => {
+        return `await dk.transferTo ({})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(exit)/gim,
+      () => {
+        return ``;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(show menu)/gim,
+      () => {
+        return `await dk.showMenu ({})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(talk to)(\s)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['mobile', 'message']);
+        return `await sys.talkTo(${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(talk)(\s)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        if ($3.substr(0, 1) !== '"') {
+          $3 = `"${$3}"`;
+        }
+        return `await dk.talk ({text: ${$3}})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(send sms to)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['mobile', 'message']);
+        return `await sys.sendSmsTo(${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(send email)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['to', 'subject', 'body']);
+        return `await dk.sendEmail(${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(send mail)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['to', 'subject', 'body']);
+        return `await dk.sendEmail(${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(send file to)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['mobile', 'filename', 'caption']);
+        return `await dk.sendFileTo(${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(hover)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['handle', 'selector']);
+        return `await wa.hover (${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(click link text)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams('page,' + $3, ['handle', 'text', 'index']);
+        return `await wa.linkByText (${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(click)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        // TODO: page is not string.
+        const params = this.getParams('page,' + $3, ['handle', 'frameOrSelector', 'selector']);
+        return `await wa.click (${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(send file)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['filename', 'caption']);
+        return `await dk.sendFile(${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(copy)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['src', 'dst']);
+        return `await sys.copyFile (${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(convert)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['src', 'dst']);
+        return `await sys.convert (${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*(.*)\s*as chart/gim,
+      ($0, $1, $2) => {
+        return `await dk.chart ({type:'bar', data: ${2}, legends:null, transpose: false})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(chart)(\s)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['type', 'data', 'legends', 'transpose']);
+        return `await dk.chart (${params})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\sMERGE\s(.*)\sWITH\s(.*)BY\s(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await sys.merge({file: ${$1}, data: ${$2}, key1: ${$3}})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\sPRESS\s(.*)/gim,
+      ($0, $1, $2) => {
+        return `await wa.pressKey({handle: page, char: ${$1})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\sSCREENSHOT\s(.*)/gim,
+      ($0, $1, $2) => {
+        return `await wa.screenshot({handle: page, selector: ${$1}})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\sTWEET\s(.*)/gim,
+      ($0, $1, $2) => {
+        return `await sys.tweet({text: ${$1})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*(.*)\s*as image/gim,
+      ($0, $1, $2) => {
+        return `${$1} = await sys.asImage({data: ${$2}})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*(.*)\s*as pdf/gim,
+      ($0, $1, $2) => {
+        return `${$1} = await sys.asPdf({data: ${$2})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*FILL\s(.*)\sWITH\s(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `${$1} = await sys.fill({templateName: ${$2}, data: ${$3}})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\ssave\s(.*)\sas\s(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await sys.saveFile({file: ${$2}, data: ${$1})\n`;
+      }
+    ];
+    keywords[i++] = [
+      /^\s*(save)(\s)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await sys.save({args: [${$3}]})\n`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\sset\s(.*)/gim,
+      ($0, $1, $2) => {
+        const params = this.getParams($1, ['file', 'address', 'value']);
+        return `await sys.set (${params})`;
+      }
+    ];
+    return keywords;
   }
 
   /**
    * Executes the converted JavaScript from BASIC code inside execution context.
    */
-  public static async callVM(text: string, min: GBMinInstance, step: GBDialogStep, deployer: GBDeployer) {
+  public static async callVM (text: string, min: GBMinInstance, step, GBDialogdeployer: GBDeployer, debug: boolean) {
+    const debuggerPort = 9222;
 
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 
     const user = step ? await min.userProfile.get(step.context, {}) : null;
 
-    const sandbox: DialogKeywords = new DialogKeywords(min, deployer, step, user);
+    const sandbox = { user: user.systemUser };
 
     const contentLocale = min.core.getParam<string>(
       min.instance,
@@ -765,9 +1004,7 @@ export class GBVMService extends GBService {
     // Auto-NLP generates BASIC variables related to entities.
 
     if (step && step.context.activity['originalText']) {
-      const entities = await min["nerEngine"].findEntities(
-        step.context.activity['originalText'],
-        contentLocale);
+      const entities = await min['nerEngine'].findEntities(step.context.activity['originalText'], contentLocale);
 
       for (let i = 0; i < entities.length; i++) {
         const v = entities[i];
@@ -776,27 +1013,63 @@ export class GBVMService extends GBService {
       }
     }
 
-    // Injects the .gbdialog generated code into the VM.
+    const botId = min.botId;
+    const gbdialogPath = urlJoin(process.cwd(), 'work', `${botId}.gbai`, `${botId}.gbdialog`);
+    const scriptPath = urlJoin(gbdialogPath, `${text}.js`);
 
     let code = min.sandBoxMap[text];
 
-    code = `(async () => {${code}})();`;
-    sandbox['this'] = sandbox;
-    const vm = new VM({
-      timeout: 600000,
-      allowAsync: true,
-      sandbox: { dk: sandbox }
-    });
+    if (GBConfigService.get('VM3') === 'true') {
+      try {
+        const vm1 = new NodeVM({
+          allowAsync: true,
+          sandbox: {},
+          console: 'inherit',
+          wrapper: 'commonjs',
+          require: {
+            builtin: ['stream', 'http', 'https', 'url', 'zlib'],
+            root: ['./'],
+            external: true,
+            context: 'sandbox'
+          }
+        });
+        const s = new VMScript(code, { filename: scriptPath });
+        let x = vm1.run(s);
+        return x;
+      } catch (error) {
+        throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
+      }
+    } else {
+      const runnerPath = urlJoin(
+        process.cwd(),
+        'dist',
+        'packages',
+        'basic.gblib',
+        'services',
+        'vm2-process',
+        'vm2ProcessRunner.js'
+      );
 
-    // Calls the function.
+      try {
+        const { run } = createVm2Pool({
+          min: 0,
+          max: 0,
+          debug: debug,
+          debuggerPort: debuggerPort,
+          botId: botId,
+          cpu: 100,
+          memory: 50000,
+          time: 60 * 60 * 24 * 14,
+          cwd: gbdialogPath,
+          script: runnerPath
+        });
 
-    let ret = null;
-    try {
-      vm.run(code)
-    } catch (error) {
-      throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
+        const result = await run(code, { filename: scriptPath, sandbox: sandbox });
+
+        return result;
+      } catch (error) {
+        throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
+      }
     }
-
-    return ret;
   }
 }

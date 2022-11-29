@@ -39,11 +39,11 @@
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { GBMinInstance, IGBDialog } from 'botlib';
-import { GBMinService } from '../../core.gbapp/services/GBMinService';
-import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService';
-import { SecService } from '../../security.gbapp/services/SecService';
-import { CSService } from '../services/CSService';
-import { Messages } from '../strings';
+import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
+import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
+import { CSService } from '../services/CSService.js';
+import { Messages } from '../strings.js';
 
 /**
  * Dialog for feedback collecting.
@@ -55,7 +55,7 @@ export class FeedbackDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup(bot: BotAdapter, min: GBMinInstance) {
+  public static setup (bot: BotAdapter, min: GBMinInstance) {
     const service = new CSService();
 
     min.dialogs.add(
@@ -74,13 +74,11 @@ export class FeedbackDialog extends IGBDialog {
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else {
+          } else {
             return await step.next(step.options);
           }
         },
         async step => {
-
           const locale = step.context.activity.locale;
           const sec = new SecService();
           let from = GBMinService.userMobile(step);
@@ -90,40 +88,39 @@ export class FeedbackDialog extends IGBDialog {
           // Transfer to...
 
           if (args && args.to) {
-
             // An user from Teams willing to transfer to a WhatsApp user.
-            
-            await sec.ensureUser(min.instance.instanceId, args.to,
-              'Name', '', 'whatsapp', 'Name', null);
+
+            await sec.ensureUser(min.instance.instanceId, args.to, 'Name', '', 'whatsapp', 'Name', null);
 
             await sec.assignHumanAgent(min, args.to, profile.systemUser.userSystemId);
-            await min.conversationalService.sendText(min, step, 
-              Messages[locale].notify_agent_transfer_done(min.instance.botId));
-
-          }
-          else {
-
-
+            await min.conversationalService.sendText(
+              min,
+              step,
+              Messages[locale].notify_agent_transfer_done(min.instance.botId)
+            );
+          } else {
             await min.conversationalService.sendText(min, step, Messages[locale].please_wait_transfering);
             const agentSystemId = await sec.assignHumanAgent(min, from);
             profile.systemUser = await sec.getUserFromAgentSystemId(agentSystemId);
             await min.userProfile.set(step.context, profile);
 
-            if (agentSystemId.charAt(2) === ":" || agentSystemId.indexOf("@") > -1) { // Agent is from Teams or Google Chat.
+            if (agentSystemId.charAt(2) === ':' || agentSystemId.indexOf('@') > -1) {
+              // Agent is from Teams or Google Chat.
 
               const agent = await sec.getUserFromSystemId(agentSystemId);
-              await min.conversationalService['sendOnConversation'](min, agent,
-                Messages[locale].notify_agent(step.context.activity.from.name));
-
-            }
-            else {
-            
-              await min.whatsAppDirectLine.sendToDevice(agentSystemId, Messages[locale].notify_agent(step.context.activity.from.name));
-
+              await min.conversationalService['sendOnConversation'](
+                min,
+                agent,
+                Messages[locale].notify_agent(step.context.activity.from.name)
+              );
+            } else {
+              await min.whatsAppDirectLine.sendToDevice(
+                agentSystemId,
+                Messages[locale].notify_agent(step.context.activity.from.name)
+              );
             }
           }
           return await step.next();
-
         }
       ])
     );
@@ -133,13 +130,11 @@ export class FeedbackDialog extends IGBDialog {
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else {
+          } else {
             return await step.next(step.options);
           }
         },
         async step => {
-
           const locale = step.context.activity.locale;
 
           const sec = new SecService();
@@ -149,16 +144,27 @@ export class FeedbackDialog extends IGBDialog {
           if (user.systemUser.agentMode === 'self') {
             const manualUser = await sec.getUserFromAgentSystemId(userSystemId);
 
-            await min.whatsAppDirectLine.sendToDeviceEx(manualUser.userSystemId,
-              Messages[locale].notify_end_transfer(min.instance.botId), locale, step.context.activity.conversation.id);
+            await min.whatsAppDirectLine.sendToDeviceEx(
+              manualUser.userSystemId,
+              Messages[locale].notify_end_transfer(min.instance.botId),
+              locale,
+              step.context.activity.conversation.id
+            );
 
-            if (userSystemId.charAt(2) === ":" || userSystemId.indexOf('@') > -1) { // Agent is from Teams or Google Chat.
-              await min.conversationalService.sendText(min, step, Messages[locale].notify_end_transfer(min.instance.botId));
-            }
-            else {
-              await min.whatsAppDirectLine.sendToDeviceEx(userSystemId,
-                Messages[locale].notify_end_transfer(min.instance.botId), locale
-                , step.context.activity.conversation.id);
+            if (userSystemId.charAt(2) === ':' || userSystemId.indexOf('@') > -1) {
+              // Agent is from Teams or Google Chat.
+              await min.conversationalService.sendText(
+                min,
+                step,
+                Messages[locale].notify_end_transfer(min.instance.botId)
+              );
+            } else {
+              await min.whatsAppDirectLine.sendToDeviceEx(
+                userSystemId,
+                Messages[locale].notify_end_transfer(min.instance.botId),
+                locale,
+                step.context.activity.conversation.id
+              );
             }
 
             await sec.updateHumanAgent(userSystemId, min.instance.instanceId, null);
@@ -166,22 +172,30 @@ export class FeedbackDialog extends IGBDialog {
 
             user.systemUser = await sec.getUserFromSystemId(userSystemId);
             await min.userProfile.set(step.context, user);
-
-          }
-
-          else if (user.systemUser.agentMode === 'human') {
+          } else if (user.systemUser.agentMode === 'human') {
             const agent = await sec.getUserFromSystemId(user.systemUser.agentSystemId);
 
-            await min.whatsAppDirectLine.sendToDeviceEx(user.systemUser.userSystemId,
-              Messages[locale].notify_end_transfer(min.instance.botId), locale, step.context.activity.conversation.id);
+            await min.whatsAppDirectLine.sendToDeviceEx(
+              user.systemUser.userSystemId,
+              Messages[locale].notify_end_transfer(min.instance.botId),
+              locale,
+              step.context.activity.conversation.id
+            );
 
-
-            if (user.systemUser.agentSystemId.charAt(2) === ":" || userSystemId.indexOf('@') > -1) { // Agent is from Teams or Google Chat.
-              await min.conversationalService.sendText(min, step, Messages[locale].notify_end_transfer(min.instance.botId));
-            }
-            else {
-              await min.whatsAppDirectLine.sendToDeviceEx(user.systemUser.agentSystemId,
-                Messages[locale].notify_end_transfer(min.instance.botId), locale, step.context.activity.conversation.id);
+            if (user.systemUser.agentSystemId.charAt(2) === ':' || userSystemId.indexOf('@') > -1) {
+              // Agent is from Teams or Google Chat.
+              await min.conversationalService.sendText(
+                min,
+                step,
+                Messages[locale].notify_end_transfer(min.instance.botId)
+              );
+            } else {
+              await min.whatsAppDirectLine.sendToDeviceEx(
+                user.systemUser.agentSystemId,
+                Messages[locale].notify_end_transfer(min.instance.botId),
+                locale,
+                step.context.activity.conversation.id
+              );
             }
 
             await sec.updateHumanAgent(user.systemUser.userSystemId, min.instance.instanceId, null);
@@ -189,15 +203,17 @@ export class FeedbackDialog extends IGBDialog {
 
             user.systemUser = await sec.getUserFromSystemId(userSystemId);
             await min.userProfile.set(step.context, user);
-
-          }
-          else {
-            if (user.systemUser.userSystemId.charAt(2) === ":" || userSystemId.indexOf('@') > -1) { // Agent is from Teams or Google Chat.
+          } else {
+            if (user.systemUser.userSystemId.charAt(2) === ':' || userSystemId.indexOf('@') > -1) {
+              // Agent is from Teams or Google Chat.
               await min.conversationalService.sendText(min, step, 'Nenhum atendimento em andamento.');
-            }
-            else {
-              await min.whatsAppDirectLine.sendToDeviceEx(user.systemUser.userSystemId,
-                'Nenhum atendimento em andamento.', locale, step.context.activity.conversation.id);
+            } else {
+              await min.whatsAppDirectLine.sendToDeviceEx(
+                user.systemUser.userSystemId,
+                'Nenhum atendimento em andamento.',
+                locale,
+                step.context.activity.conversation.id
+              );
             }
           }
 
@@ -211,8 +227,7 @@ export class FeedbackDialog extends IGBDialog {
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else {
+          } else {
             return await step.next(step.options);
           }
         },
@@ -238,8 +253,7 @@ export class FeedbackDialog extends IGBDialog {
         async step => {
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
-          }
-          else {
+          } else {
             return await step.next(step.options);
           }
         },
@@ -259,14 +273,20 @@ export class FeedbackDialog extends IGBDialog {
 
           const analytics = new AnalyticsService();
           const rate = await analytics.updateConversationSuggestion(
-            min.instance.instanceId, user.conversation.conversationId, step.result, user.systemUser.locale);
+            min.instance.instanceId,
+            user.conversation.conversationId,
+            step.result,
+            user.systemUser.locale
+          );
 
           if (rate > 0.5) {
             await min.conversationalService.sendText(min, step, Messages[fixedLocale].glad_you_liked);
           } else {
-
-            const message = min.core.getParam<string>(min.instance, 'Feedback Improve Message',
-              Messages[fixedLocale].we_will_improve); // TODO: Improve to be multi-language.
+            const message = min.core.getParam<string>(
+              min.instance,
+              'Feedback Improve Message',
+              Messages[fixedLocale].we_will_improve
+            ); // TODO: Improve to be multi-language.
 
             await min.conversationalService.sendText(min, step, message);
           }

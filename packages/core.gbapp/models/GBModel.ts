@@ -55,218 +55,219 @@ import { IGBInstance } from 'botlib';
  * Base instance data for a bot.
  */
 @Table
-export class GuaribasInstance extends Model<GuaribasInstance>
-  implements IGBInstance {
-
+export class GuaribasInstance extends Model<GuaribasInstance> implements IGBInstance {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  instanceId: number;
 
   @Column(DataType.STRING(255))
-  public botEndpoint: string;
+  declare  botEndpoint: string;
 
   @Column(DataType.STRING(255))
-  public whoAmIVideo: string;
+  declare  whoAmIVideo: string;
 
   @Column(DataType.STRING(255))
-  public botId: string;
+  declare  botId: string;
 
   @Column(DataType.STRING(255))
-  public title: string;
+  declare title: string;
 
   @Column({ type: DataType.STRING(16) })
-  public activationCode: string;
+  declare activationCode: string;
 
   @Column(DataType.STRING(255))
-  public description: string;
+  declare description: string;
 
   @Column({ type: DataType.STRING(16) })
-  public state: string;
+  declare  state: string;
 
-  public version: string;
+  declare  version: string;
 
-  @Column(DataType.STRING(255))
-  public enabledAdmin: boolean;
-
-  @Column(DataType.STRING(255))
-  public engineName: string;
+  @Column(DataType.STRING(64))
+  declare  botKey: string;
 
   @Column(DataType.STRING(255))
-  public marketplaceId: string;
+  declare enabledAdmin: boolean;
 
   @Column(DataType.STRING(255))
-  public textAnalyticsKey: string;
+  declare  engineName: string;
 
   @Column(DataType.STRING(255))
-  public textAnalyticsEndpoint: string;
+  declare  marketplaceId: string;
+
+  @Column(DataType.STRING(255))
+  declare  textAnalyticsKey: string;
+
+  @Column(DataType.STRING(255))
+  declare  textAnalyticsEndpoint: string;
 
   @Column({ type: DataType.STRING(64) })
-  public translatorKey: string;
+  declare  translatorKey: string;
 
   @Column({ type: DataType.STRING(128) })
-  public translatorEndpoint: string;
+  declare   translatorEndpoint: string;
 
   @Column(DataType.STRING(255))
-  public marketplacePassword: string;
+  declare  marketplacePassword: string;
 
   @Column(DataType.STRING(255))
-  public webchatKey: string;
+  declare  webchatKey: string;
 
   @Column(DataType.STRING(255))
-  public authenticatorTenant: string;
+  declare  authenticatorTenant: string;
 
   @Column(DataType.STRING(255))
-  public authenticatorAuthorityHostUrl: string;
+  declare authenticatorAuthorityHostUrl: string;
 
   @Column(DataType.STRING(255))
-  public cloudSubscriptionId: string;
+  declare  cloudSubscriptionId: string;
 
   @Column(DataType.STRING(255))
-  public cloudUsername: string;
+  declare cloudUsername: string;
 
   @Column(DataType.STRING(255))
-  public cloudPassword: string;
+  declare cloudPassword: string;
 
   @Column(DataType.STRING(255))
-  public cloudLocation: string;
+  declare cloudLocation: string;
 
   @Column(DataType.STRING(255))
-  public googleBotKey: string;
+  declare  googleBotKey: string;
 
   @Column(DataType.STRING(255))
-  public googleChatApiKey: string;
+  declare googleChatApiKey: string;
 
   @Column(DataType.STRING(255))
-  public googleChatSubscriptionName: string;
+  declare  googleChatSubscriptionName: string;
 
   @Column(DataType.STRING(255))
-  public googleClientEmail: string;
+  declare googleClientEmail: string;
 
   @Column({ type: DataType.STRING(4000) })
-  public googlePrivateKey: string;
-  
+  declare googlePrivateKey: string;
+
   @Column(DataType.STRING(255))
-  public googleProjectId: string;
-  
-  @Column({ type: DataType.STRING(255) })
-  facebookWorkplaceVerifyToken: string;
+  declare googleProjectId: string;
 
   @Column({ type: DataType.STRING(255) })
-  facebookWorkplaceAppSecret: string;
+  declare   facebookWorkplaceVerifyToken: string;
+
+  @Column({ type: DataType.STRING(255) })
+  declare  facebookWorkplaceAppSecret: string;
 
   @Column({ type: DataType.STRING(512) })
-  facebookWorkplaceAccessToken: string;
-  
-  @Column(DataType.STRING(255))
-  public whatsappBotKey: string;
+  declare  facebookWorkplaceAccessToken: string;
 
   @Column(DataType.STRING(255))
-  public whatsappServiceKey: string;
+  declare   whatsappBotKey: string;
 
   @Column(DataType.STRING(255))
-  public whatsappServiceNumber: string;
+  declare  whatsappServiceKey: string;
 
   @Column(DataType.STRING(255))
-  public whatsappServiceUrl: string;
+  declare  whatsappServiceNumber: string;
 
   @Column(DataType.STRING(255))
-  public smsKey: string;
+  declare  whatsappServiceUrl: string;
 
   @Column(DataType.STRING(255))
-  public smsSecret: string;
+  declare   smsKey: string;
 
   @Column(DataType.STRING(255))
-  public smsServiceNumber: string;
+  declare  smsSecret: string;
 
   @Column(DataType.STRING(255))
-  public speechKey: string;
+  declare  smsServiceNumber: string;
 
   @Column(DataType.STRING(255))
-  public speechEndpoint: string;
+  declare  speechKey: string;
 
   @Column(DataType.STRING(255))
-  public spellcheckerKey: string;
+  declare  speechEndpoint: string;
 
   @Column(DataType.STRING(255))
-  public spellcheckerEndpoint: string;
+  declare  spellcheckerKey: string;
 
   @Column(DataType.STRING(255))
-  public theme: string;
+  declare  spellcheckerEndpoint: string;
 
   @Column(DataType.STRING(255))
-  public ui: string;
+  declare theme: string;
 
   @Column(DataType.STRING(255))
-  public kb: string;
+  declare  ui: string;
 
   @Column(DataType.STRING(255))
-  public nlpAppId: string;
+  declare   kb: string;
 
   @Column(DataType.STRING(255))
-  public nlpKey: string;
+  declare  nlpAppId: string;
+
+  @Column(DataType.STRING(255))
+  declare  nlpKey: string;
 
   @Column({ type: DataType.STRING(512) })
-  public nlpEndpoint: string;
+  declare  nlpEndpoint: string;
 
   @Column(DataType.STRING(255))
-  public nlpAuthoringKey: string;
+  declare  nlpAuthoringKey: string;
 
   @Column(DataType.STRING(255))
-  public deploymentPaths: string;
+  declare  deploymentPaths: string;
 
   @Column(DataType.STRING(255))
-  public searchHost: string;
+  declare   searchHost: string;
 
   @Column(DataType.STRING(255))
-  public searchKey: string;
+  declare   searchKey: string;
 
   @Column(DataType.STRING(255))
-  public searchIndex: string;
+  declare  searchIndex: string;
 
   @Column(DataType.STRING(255))
-  public searchIndexer: string;
+  declare   searchIndexer: string;
 
   @Column(DataType.STRING(255))
-  public storageUsername: string;
+  declare  storageUsername: string;
 
   @Column(DataType.STRING(255))
-  public storagePassword: string;
+  declare   storagePassword: string;
 
   @Column(DataType.STRING(255))
-  public storageName: string;
+  declare  storageName: string;
 
   @Column(DataType.STRING(255))
-  public storageServer: string;
+  declare   storageServer: string;
 
   @Column(DataType.STRING(255))
-  public storageDialect: string;
+  declare   storageDialect: string;
 
   @Column(DataType.STRING(255))
-  public storagePath: string;
+  declare   storagePath: string;
 
   @Column(DataType.STRING(255))
-  public adminPass: string;
+  declare  adminPass: string;
 
   @Column(DataType.FLOAT)
-  public nlpVsSearch: number;  // TODO: Remove field.
+  declare  nlpVsSearch: number; // TODO: Remove field.
 
   @Column(DataType.FLOAT)
-  public searchScore: number;
+  declare   searchScore: number;
 
   @Column(DataType.FLOAT)
-  public nlpScore: number;
+  declare   nlpScore: number;
 
   @Column(DataType.DATE)
   @CreatedAt
-  public createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  public updatedAt: Date;
+  declare updatedAt: Date;
 
   @Column(DataType.STRING(4000))
-  public params: string;
+  declare  params: string;
 }
 
 /**
@@ -277,28 +278,28 @@ export class GuaribasPackage extends Model<GuaribasPackage> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  public packageId: number;
+  declare packageId: number;
 
   @Column(DataType.STRING(255))
-  public packageName: string;
+  declare packageName: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  declare instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
+  declare instance: GuaribasInstance;
 
   @Column(DataType.DATE)
   @CreatedAt
-  public createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  public updatedAt: Date;
+  declare  updatedAt: Date;
 
   @Column({ type: DataType.STRING(512) })
-  public custom: string;
+  declare custom: string;
 }
 
 /**
@@ -309,18 +310,18 @@ export class GuaribasChannel extends Model<GuaribasChannel> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  public channelId: number;
+  declare channelId: number;
 
   @Column(DataType.STRING(255))
-  public title: string;
+  declare title: string;
 
   @Column(DataType.DATE)
   @CreatedAt
-  public createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  public updatedAt: Date;
+  declare updatedAt: Date;
 }
 
 /**
@@ -332,72 +333,70 @@ export class GuaribasException extends Model<GuaribasException> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  public exceptionId: number;
+  declare  exceptionId: number;
 
   @Column(DataType.STRING(255))
-  public message: string;
+  declare  message: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  declare  instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
+  declare  instance: GuaribasInstance;
 
   @Column(DataType.DATE)
   @CreatedAt
-  public createdAt: Date;
+  declare   createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  public updatedAt: Date;
+  declare  updatedAt: Date;
 }
 
 @Table
 //tslint:disable-next-line:max-classes-per-file
 export class GuaribasApplications extends Model<GuaribasApplications> {
-
   @Column(DataType.STRING(255))
-  public name: string;
+  declare name: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  declare instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
+  declare instance: GuaribasInstance;
 
   @Column(DataType.DATE)
   @CreatedAt
-  public createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  public updatedAt: Date;
+  declare updatedAt: Date;
 }
 
 @Table
 //tslint:disable-next-line:max-classes-per-file
 export class GuaribasSchedule extends Model<GuaribasSchedule> {
+  @Column(DataType.STRING(255))
+  declare name: string;
 
   @Column(DataType.STRING(255))
-  public name: string;
-
-  @Column(DataType.STRING(255))
-  public schedule: string;
+  declare schedule: string;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  public instanceId: number;
+  declare instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  public instance: GuaribasInstance;
+  declare instance: GuaribasInstance;
 
   @Column(DataType.DATE)
   @CreatedAt
-  public createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  public updatedAt: Date;
+  declare updatedAt: Date;
 }
