@@ -38,7 +38,7 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { createBrowser } from '../../core.gbapp/services/GBSSR.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { DialogKeywords } from './DialogKeywords.js';
-import * as request from 'request-promise-native';
+
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import urlJoin from 'url-join';
 import Fs from 'fs';
@@ -349,7 +349,8 @@ export class WebAutomationKeywords {
     if (local) {
       result = Fs.readFileSync(local);
     } else {
-      result = await request.get(options);
+      const res = await fetch(options.uri, options);
+      result = Buffer.from(await res.arrayBuffer());
     }
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;

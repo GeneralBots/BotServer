@@ -33,7 +33,7 @@
 import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import * as request from 'request-promise-native';
+
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { DialogKeywords } from './DialogKeywords.js';
@@ -360,12 +360,11 @@ export class SystemKeywords {
    */
   public async getFileContents ({ url, headers }) {
     const options = {
-      url: url,
       method: 'GET',
       encoding: 'binary',
       headers: headers
     };
-    return await request(options); // TODO: Check this.
+    return await fetch(url, options); 
   }
 
   /**

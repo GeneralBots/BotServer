@@ -41,9 +41,7 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { SystemKeywords } from './SystemKeywords.js';
 import * as wpp from 'whatsapp-web.js';
-import { HubSpotServices } from '../../hubspot.gblib/services/HubSpotServices.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import * as request from 'request-promise-native';
 import { Messages } from '../strings.js';
 import * as Fs from 'fs';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -678,11 +676,10 @@ export class DialogKeywords {
       } else {
         // arraybuffer is necessary for images
         const options = {
-          url: url,
           method: 'GET',
           encoding: 'binary'
         };
-        response = await request.get(options);
+        response = await fetch(url, options);
       }
 
       Fs.writeFile(localFileName, response, fsError => {
