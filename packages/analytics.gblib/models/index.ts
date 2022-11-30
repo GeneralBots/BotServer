@@ -94,7 +94,7 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
 
   @CreatedAt
   @Column(DataType.DATE)
-  createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.STRING(255))
   text: string;
@@ -126,11 +126,11 @@ export class GuaribasConversationMessage extends Model<GuaribasConversationMessa
 
   @Column(DataType.DATE)
   @CreatedAt
-  createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  updatedAt: Date;
+  declare updatedAt: Date;
 
   //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasConversation)

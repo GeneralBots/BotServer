@@ -153,11 +153,11 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
 
   @Column(DataType.DATE)
   @CreatedAt
-  createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  updatedAt: Date;
+  declare updatedAt: Date;
 
   //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasAnswer)

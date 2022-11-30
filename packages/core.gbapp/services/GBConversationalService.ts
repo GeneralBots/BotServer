@@ -57,7 +57,7 @@ import { join } from 'path';
 import shell from 'any-shell-escape';
 import { exec } from 'child_process';
 import prism from 'prism-media';
-import request from 'request-promise-native';
+
 import SpeechToTextV1 from 'ibm-watson/speech-to-text/v1.js';
 import TextToSpeechV1 from 'ibm-watson/text-to-speech/v1.js';
 import { IamAuthenticator } from 'ibm-watson/auth/index.js';
@@ -355,27 +355,26 @@ export class GBConversationalService {
     GBLog.info(`Sending SMS to ${mobile} with text: '${text}'.`);
 
     if (!min.instance.smsKey && min.instance.smsSecret) {
+      const url = 'http://sms-api.megaconecta.com.br/mt';
       let options = {
         method: 'POST',
-        url: 'http://sms-api.megaconecta.com.br/mt',
         headers: {
           'content-type': 'application/json',
           authorization: `Bearer ${min.instance.smsSecret}`
         },
-        body: [
-          {
+        body: 
+          JSON.stringify({
             numero: `${mobile}`,
             servico: 'short',
             mensagem: text,
             parceiro_id: '',
             codificacao: '0'
-          }
-        ],
-        json: true
+          })
+        
       };
 
       try {
-        const results = await request(options);
+        const results = await fetch(url, options);
 
         return results;
       } catch (error) {
@@ -961,30 +960,24 @@ export class GBConversationalService {
         return Promise.reject(new Error(msg));
       }
     } else {
+      const url = urlJoin(endPoint, 'translate', new URLSearchParams({
+          'api-version': '3.0',
+          to: language
+        }).toString());
       let options = {
         method: 'POST',
-        baseUrl: endPoint,
-        url: 'translate',
-        qs: {
-          'api-version': '3.0',
-          to: [language]
-        },
         headers: {
           'Ocp-Apim-Subscription-Key': key,
           'Ocp-Apim-Subscription-Region': 'westeurope',
           'Content-type': 'application/json',
           'X-ClientTraceId': GBAdminService.generateUuid()
         },
-        body: [
-          {
-            text: text
-          }
-        ],
+        body:text,
         json: true
       };
 
       try {
-        const results = await request(options);
+        const results = await fetch(url, options);
 
         return results[0].translations[0].text;
       } catch (error) {

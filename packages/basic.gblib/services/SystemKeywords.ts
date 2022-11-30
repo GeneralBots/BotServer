@@ -383,11 +383,8 @@ export class SystemKeywords {
    * Retrives stock inforation for a given symbol.
    */
   public async getStock ({ symbol }) {
-    var options = {
-      uri: `http://live-nse.herokuapp.com/?symbol=${symbol}`
-    };
-
-    let data = await request.get(options);
+    const url = `http://live-nse.herokuapp.com/?symbol=${symbol}`;
+    let data = await fetch(url);
     return data;
   }
 
@@ -716,8 +713,8 @@ export class SystemKeywords {
       const gbaiName = `${this.min.botId}.gbai`;
       const localName = Path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
       const url = file['@microsoft.graph.downloadUrl'];
-      const response = await request({ uri: url, encoding: null });
-      Fs.writeFileSync(localName, response, { encoding: null });
+      const response = await fetch(url);
+      Fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
 
       var workbook = new Excel.Workbook();
       const worksheet = await workbook.csv.readFile(localName);
@@ -1282,7 +1279,7 @@ export class SystemKeywords {
    *
    */
   public async getByHttp ({ url, headers, username, ps, qs, streaming }) {
-    let options = { url: url };
+    let options = { };
     if (headers) {
       options['headers'] = headers;
     }
@@ -1295,14 +1292,14 @@ export class SystemKeywords {
     if (qs) {
       options['qs'] = qs;
     }
-    if (streaming) {
+    if (streaming) { // TODO: Do it with fetch.
       options['responseType'] = 'stream';
       options['encoding'] = null;
     }
-    let result = await request.get(options);
+    let result = await fetch(url, options);
 
     try {
-      return JSON.parse(result);
+      return JSON.parse(await result.text());
     } catch (error) {
       GBLog.info(`[GET]: OK.`);
 
@@ -1321,12 +1318,11 @@ export class SystemKeywords {
    */
   public async putByHttp ({ url, data, headers }) {
     const options = {
-      uri: url,
       json: data,
       headers: headers
     };
 
-    let result = await request.put(options);
+    let result = await fetch(url, options);
     GBLog.info(`[PUT]: ${url} (${data}): ${result}`);
     return typeof result === 'object' ? result : JSON.parse(result);
   }
@@ -1342,12 +1338,11 @@ export class SystemKeywords {
    */
   public async postByHttp ({ url, data, headers }) {
     const options = {
-      uri: url,
       json: data,
       headers: headers
     };
 
-    let result = await request.post(options);
+    let result = await fetch(url, options);
     GBLog.info(`[POST]: ${url} (${data}): ${result}`);
 
     return result ? (typeof result === 'object' ? result : JSON.parse(result)) : true;
@@ -1375,8 +1370,8 @@ export class SystemKeywords {
     let template = await this.internalGetDocument(client, baseUrl, path, templateName);
     const url = template['@microsoft.graph.downloadUrl'];
     const localName = Path.join('work', gbaiName, 'cache', ``);
-    const response = await request({ uri: url, encoding: null });
-    Fs.writeFileSync(localName, response, { encoding: null });
+    const response = await fetch( url);
+    Fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
 
     // Loads the file as binary content.
 

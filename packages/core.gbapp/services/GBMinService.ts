@@ -39,9 +39,9 @@ import cliProgress from 'cli-progress';
 import { DialogSet, TextPrompt } from 'botbuilder-dialogs';
 import express from 'express';
 import Swagger from 'swagger-client';
-import request from 'request-promise-native';
+
 import removeRoute from 'express-remove-route';
-import AuthenticationContext from '@azure/msal-node';
+import AuthenticationContext from 'adal-node';
 import wash from 'washyourmouthoutwithsoap';
 import { FacebookAdapter } from 'botbuilder-adapter-facebook';
 import path from 'path';
@@ -574,8 +574,8 @@ export class GBMinService {
    * Gets Webchat token from Bot Service.
    */
   private async getWebchatToken (instance: any) {
+    const url = 'https://directline.botframework.com/v3/directline/tokens/generate';
     const options = {
-      url: 'https://directline.botframework.com/v3/directline/tokens/generate',
       method: 'POST',
       headers: {
         Authorization: `Bearer ${instance.webchatKey}`
@@ -583,9 +583,9 @@ export class GBMinService {
     };
 
     try {
-      const json = await request(options);
+      const res = await fetch(url, options);
 
-      return JSON.parse(json);
+      return await res.json();
     } catch (error) {
       const msg = `[botId:${instance.botId}] Error calling Direct Line to generate a token for Web control: ${error}.`;
 
@@ -598,7 +598,6 @@ export class GBMinService {
    */
   private async getSTSToken (instance: any) {
     const options = {
-      url: instance.speechEndpoint,
       method: 'POST',
       headers: {
         'Ocp-Apim-Subscription-Key': instance.speechKey
@@ -606,7 +605,7 @@ export class GBMinService {
     };
 
     try {
-      return await request(options);
+      return await fetch(instance.speechEndpoint, options);
     } catch (error) {
       const msg = `Error calling Speech to Text client. Error is: ${error}.`;
 

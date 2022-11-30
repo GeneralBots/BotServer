@@ -79,7 +79,7 @@ export class WhatsappDirectLine extends GBService {
   private browserWSEndpoint;
   private groupId;
 
-  constructor (
+  constructor(
     min: GBMinInstance,
     botId,
     directLineSecret,
@@ -105,13 +105,13 @@ export class WhatsappDirectLine extends GBService {
     this.groupId = groupId;
   }
 
-  public static async asyncForEach (array, callback) {
+  public static async asyncForEach(array, callback) {
     for (let index = 0; index < array.length; index++) {
       await callback(array[index], index, array);
     }
   }
 
-  public async setup (setUrl) {
+  public async setup(setUrl) {
     this.directLineClient = new Swagger({
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
       usePromise: true
@@ -192,17 +192,22 @@ export class WhatsappDirectLine extends GBService {
                 const s = new DialogKeywords(this.min, null, null);
                 const qrBuf = await s.getQRCode(qr);
                 const gbaiName = `${this.min.botId}.gbai`;
-                const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-                Fs.writeFileSync(localName, qrBuf);
-                const url = urlJoin(
-                  GBServer.globals.publicAddress,
-                  this.min.botId,
+                const localName = Path.join(
+                  'work',
+                  gbaiName,
                   'cache',
-                  Path.basename(localName)
+                  `qr${GBAdminService.getRndReadableIdentifier()}.png`
                 );
-                GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
+                Fs.writeFileSync(localName, qrBuf);
+                const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
+                GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(
+                  adminNumber,
+                  url,
+                  Path.basename(localName),
+                  msg
+                );
 
-                s.sendEmail({to:adminEmail, subject:`Check your WhatsApp for bot ${this.botId}`, body:msg);
+                s.sendEmail({ to: adminEmail, subject: `Check your WhatsApp for bot ${this.botId}`, body: msg });
               }).bind(this)
             );
 
@@ -250,7 +255,7 @@ export class WhatsappDirectLine extends GBService {
         break;
 
       case 'chatapi':
-        url = urlJoin(this.whatsappServiceUrl, 'webhook')
+        url = urlJoin(this.whatsappServiceUrl, 'webhook');
         options = {
           method: 'POST',
           url: url,
@@ -270,7 +275,7 @@ export class WhatsappDirectLine extends GBService {
         let phoneId = this.whatsappServiceNumber.split(';')[0];
         let productId = this.whatsappServiceNumber.split(';')[1];
         url = `${this.INSTANCE_URL}/${productId}/${phoneId}/config`;
-        body= {
+        body = {
           webhook: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`,
           ack_delivery: false
         };
@@ -279,7 +284,7 @@ export class WhatsappDirectLine extends GBService {
         options = {
           url: url,
           method: 'POST',
-          body:body,
+          body: body,
           headers: {
             'x-maytapi-key': this.whatsappServiceKey,
             'Content-Type': 'application/json'
@@ -294,9 +299,7 @@ export class WhatsappDirectLine extends GBService {
 
       if (options) {
         try {
-
-          const response: Response = await fetch(url,options);
-        
+          const response: Response = await fetch(url, options);
         } catch (error) {
           GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
         }
@@ -304,33 +307,33 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async resetConversationId (botId, number, group = '') {
+  public async resetConversationId(botId, number, group = '') {
     WhatsappDirectLine.conversationIds[botId + number + group] = undefined;
   }
 
-  public async check () {
+  public async check() {
     switch (this.provider) {
       case 'GeneralBots':
         return true;
       default:
         GBLog.verbose(`GBWhatsapp: Checking server...`);
+        let url = urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`;
         const options = {
-          url: urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`,
+          url: url,
           method: 'GET'
         };
 
-        const res = await request(options);
-        const json = JSON.parse(res);
-
-        return json.accountStatus === 'authenticated';
+        const res = await fetch(url, options);
+        const json = (await res.json());
+        return json ['accountStatus'] === 'authenticated';
     }
   }
 
-  public static providerFromRequest (req) {
+  public static providerFromRequest(req) {
     return req.body.messages ? 'chatapi' : req.body.message ? 'maytapi' : 'GeneralBots';
   }
 
-  public async received (req, res) {
+  public async received(req, res) {
     const provider = WhatsappDirectLine.providerFromRequest(req);
 
     let message, from, fromName, text;
@@ -484,15 +487,16 @@ export class WhatsappDirectLine extends GBService {
     }
 
     if (message.type === 'ptt') {
+      let url = provider ? message.body : message.text;
       if (process.env.AUDIO_DISABLED !== 'true') {
         const options = {
-          url: provider ? message.body : message.text,
+          url: url,
           method: 'GET',
           encoding: 'binary'
         };
 
-        const res = await request(options);
-        const buf = Buffer.from(res, 'binary');
+        const res = await fetch(url, options);
+        const buf = Buffer.from(await res.arrayBuffer());
         text = await GBConversationalService.getTextFromAudioBuffer(
           this.min.instance.speechKey,
           this.min.instance.cloudLocation,
@@ -620,7 +624,7 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  private async endTransfer (id: any, locale: string, user: GuaribasUser, agent: GuaribasUser, sec: SecService) {
+  private async endTransfer(id: any, locale: string, user: GuaribasUser, agent: GuaribasUser, sec: SecService) {
     await this.sendToDeviceEx(id, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale, null);
 
     if (user.agentSystemId.charAt(2) === ':') {
@@ -642,7 +646,7 @@ export class WhatsappDirectLine extends GBService {
     await sec.updateHumanAgent(id, this.min.instance.instanceId, null);
   }
 
-  public inputMessage (client, conversationId, text, from, fromName, group, attachments) {
+  public inputMessage(client, conversationId, text, from, fromName, group, attachments) {
     return client.Conversations.Conversations_PostActivity({
       conversationId: conversationId,
       activity: {
@@ -661,7 +665,7 @@ export class WhatsappDirectLine extends GBService {
     });
   }
 
-  public pollMessages (client, conversationId, from, fromName) {
+  public pollMessages(client, conversationId, from, fromName) {
     GBLog.info(`GBWhatsapp: Starting message polling(${from}, ${conversationId}).`);
 
     let watermark: any;
@@ -685,7 +689,7 @@ export class WhatsappDirectLine extends GBService {
     setInterval(worker, this.pollInterval);
   }
 
-  public async printMessages (activities, conversationId, from, fromName) {
+  public async printMessages(activities, conversationId, from, fromName) {
     if (activities && activities.length) {
       // Ignore own messages.
 
@@ -701,7 +705,7 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async printMessage (activity, conversationId, from, fromName) {
+  public async printMessage(activity, conversationId, from, fromName) {
     let output = '';
 
     if (activity.text) {
@@ -729,11 +733,11 @@ export class WhatsappDirectLine extends GBService {
     await this.sendToDevice(from, output, conversationId);
   }
 
-  public renderHeroCard (attachment) {
+  public renderHeroCard(attachment) {
     return `${attachment.content.title} - ${attachment.content.text}`;
   }
 
-  public async sendFileToDevice (to, url, filename, caption, chatId) {
+  public async sendFileToDevice(to, url, filename, caption, chatId) {
     let options;
     switch (this.provider) {
       case 'GeneralBots':
@@ -797,7 +801,7 @@ export class WhatsappDirectLine extends GBService {
     if (options) {
       try {
         // tslint:disable-next-line: await-promise
-        const result = await request.post(options);
+        const result = await fetch(url, options);
         GBLog.info(`File ${url} sent to ${to}: ${result}`);
       } catch (error) {
         GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
@@ -805,7 +809,7 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async sendAudioToDevice (to, url, chatId) {
+  public async sendAudioToDevice(to, url, chatId) {
     let options;
     switch (this.provider) {
       case 'GeneralBots':
@@ -838,7 +842,7 @@ export class WhatsappDirectLine extends GBService {
 
     if (options) {
       try {
-        const result = await request.post(options);
+        const result = await fetch(url, options);
         GBLog.info(`Audio ${url} sent to ${to}: ${result}`);
       } catch (error) {
         GBLog.error(`Error sending audio message to Whatsapp provider ${error.message}`);
@@ -846,15 +850,15 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async sendTextAsAudioToDevice (to, msg, chatId) {
+  public async sendTextAsAudioToDevice(to, msg, chatId) {
     const url = await GBConversationalService.getAudioBufferFromText(msg);
 
     await this.sendFileToDevice(to, url, 'Audio', msg, chatId);
   }
 
-  public async sendToDevice (to: string, msg: string, conversationId) {
+  public async sendToDevice(to: string, msg: string, conversationId) {
     const cmd = '/audio ';
-
+    let url;
     let chatId = WhatsappDirectLine.chatIds[conversationId];
 
     if (typeof msg !== 'object' && msg.startsWith(cmd)) {
@@ -895,10 +899,9 @@ export class WhatsappDirectLine extends GBService {
         case 'maytapi':
           let phoneId = this.whatsappServiceNumber.split(';')[0];
           let productId = this.whatsappServiceNumber.split(';')[1];
-          let url = `${this.INSTANCE_URL}/${productId}/${phoneId}/sendMessage`;
+          url = `${this.INSTANCE_URL}/${productId}/${phoneId}/sendMessage`;
 
           options = {
-            url: url,
             method: 'post',
             json: true,
             body: { type: 'text', message: msg, to_number: to },
@@ -913,7 +916,7 @@ export class WhatsappDirectLine extends GBService {
       if (options) {
         try {
           GBLog.info(`Message [${msg}] is being sent to ${to}...`);
-          await request.post(options);
+          await fetch(url, options);
         } catch (error) {
           GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
 
@@ -923,12 +926,12 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async sendToDeviceEx (to, text, locale, conversationId) {
+  public async sendToDeviceEx(to, text, locale, conversationId) {
     text = await this.min.conversationalService.translate(this.min, text, locale);
     await this.sendToDevice(to, text, conversationId);
   }
 
-  private async WhatsAppCallback (req, res) {
+  private async WhatsAppCallback(req, res) {
     try {
       if (req.body && req.body.webhook) {
         res.status(200);
@@ -1030,7 +1033,7 @@ export class WhatsappDirectLine extends GBService {
 
       if (group) {
         GBLog.info(`Group: ${group}`);
-        function getKeyByValue (object, value) {
+        function getKeyByValue(object, value) {
           return Object.keys(object).find(key => object[key] === value);
         }
         const botId = getKeyByValue(WhatsappDirectLine.botGroups, group);
@@ -1090,9 +1093,7 @@ export class WhatsappDirectLine extends GBService {
           } else {
             await (activeMin as any).whatsAppDirectLine.sendToDevice(
               id,
-              `Olá! Seja bem-vinda(o)!\nMe chamo ${
-                activeMin.instance.title
-              }. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`,
+              `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`,
               null
             );
             if (res) {
@@ -1138,9 +1139,7 @@ export class WhatsappDirectLine extends GBService {
               activeMin = GBServer.globals.minBoot;
               await (activeMin as any).whatsAppDirectLine.sendToDevice(
                 id,
-                `O outro Bot que você estava falando(${
-                  user.instanceId
-                }), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`
+                `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`
               );
             }
             await (activeMin as any).whatsAppDirectLine.received(req, res);

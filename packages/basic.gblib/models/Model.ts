@@ -69,9 +69,9 @@ export class GuaribasSchedule extends Model<GuaribasSchedule> {
 
   @Column(DataType.DATE)
   @CreatedAt
-  createdAt: Date;
+  declare createdAt: Date;
 
   @Column(DataType.DATE)
   @UpdatedAt
-  updatedAt: Date;
+  declare updatedAt: Date;
 }

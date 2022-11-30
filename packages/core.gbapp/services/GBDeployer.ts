@@ -40,7 +40,7 @@ import Path from 'path';
 import express from 'express';
 import child_process from 'child_process';
 import rimraf from 'rimraf';
-import request from 'request-promise-native';
+
 import vhost from 'vhost';
 import urlJoin from 'url-join';
 import Fs from 'fs';
@@ -522,8 +522,8 @@ export class GBDeployer implements IGBDeployer {
             GBLog.info(`Downloading ${itemPath}...`);
             const url = item['@microsoft.graph.downloadUrl'];
 
-            const response = await request({ uri: url, encoding: null });
-            Fs.writeFileSync(itemPath, response, { encoding: null });
+            const response = await fetch(url);
+            Fs.writeFileSync(itemPath, Buffer.from(await response.arrayBuffer()), { encoding: null });
             Fs.utimesSync(itemPath, new Date(), new Date(item.lastModifiedDateTime));
           } else {
             GBLog.info(`Local is up to date: ${itemPath}...`);
