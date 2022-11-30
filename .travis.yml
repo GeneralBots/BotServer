@@ -1,7 +1,7 @@
 language: node_js
-dist: kinetic
 node_js:
-- lts/*
+  - 19
+dist: kinetic
 
 notifications:
   email: false
