@@ -110,6 +110,12 @@ export class GBServer {
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 
+    process.on('unhandledRejection', (err, p) => {
+      console.log('An unhandledRejection occurred');
+      console.log(`Rejected Promise: ${p}`);
+      console.log(`Rejection: ${err}`);
+    });
+
     // Creates working directory.
 
     process.env.PWD = process.cwd();
