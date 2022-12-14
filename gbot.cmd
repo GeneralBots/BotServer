@@ -12,4 +12,4 @@ ECHO Compiling...
 CALL node_modules\.bin\tsc
 
 :ALLSET
-node boot.cjs
+node boot.mjs

@@ -651,7 +651,7 @@ export class GBMinService {
     min.sandBoxMap = {};
     min['scheduleMap'] = {};
     min['conversationWelcomed'] = {};
-    min['nerEngine'] = new nlp.default.NerManager();
+    min['nerEngine'] = new nlp.NlpManager(); // TODO: migrate to MerManager.
     min.packages = sysPackages;
     min.appPackages = appPackages;
 
@@ -712,16 +712,18 @@ export class GBMinService {
       await min.whatsAppDirectLine.setup(true);
     } else {
       const minBoot = GBServer.globals.minBoot as any;
-      min.whatsAppDirectLine = new WhatsappDirectLine(
-        min,
-        min.botId,
-        min.instance.whatsappBotKey,
-        minBoot.instance.whatsappServiceKey,
-        minBoot.instance.whatsappServiceNumber,
-        minBoot.instance.whatsappServiceUrl,
-        group
-      );
-      await min.whatsAppDirectLine.setup(false);
+      if(minBoot.whatsappServiceKey){
+        min.whatsAppDirectLine = new WhatsappDirectLine(
+          min,
+          min.botId,
+          min.instance.whatsappBotKey,
+          minBoot.instance.whatsappServiceKey,
+          minBoot.instance.whatsappServiceNumber,
+          minBoot.instance.whatsappServiceUrl,
+          group
+        );
+        await min.whatsAppDirectLine.setup(false);
+      }
     }
 
     // Setups default BOT Framework dialogs.

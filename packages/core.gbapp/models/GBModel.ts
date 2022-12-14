@@ -59,7 +59,7 @@ export class GuaribasInstance extends Model<GuaribasInstance> implements IGBInst
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  instanceId: number;
+  declare instanceId: number;
 
   @Column(DataType.STRING(255))
   declare  botEndpoint: string;
