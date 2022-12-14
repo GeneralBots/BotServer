@@ -29,43 +29,28 @@
 | our trademarks remain entirely with us.                                     |
 |                                                                             |
 \*****************************************************************************/
-
 /**
  * @fileoverview General Bots server core.
  */
-
 'use strict';
-
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
-import { Sequelize } from 'sequelize-typescript';
-import { WhatsappDirectLine } from './services/WhatsappDirectLine.js';
+import { GBMinInstance, IGBInstance } from 'botlib';
+import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
 
 /**
- * Package for whatsapp.gblib
+ * Global shared server data;
  */
-export class GBWhatsappPackage implements IGBPackage {
-  public sysPackages: IGBPackage[];
 
-  public async loadBot (min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`loadBot called.`);
-  }
-
-  public async getDialogs (min: GBMinInstance) {
-    GBLog.verbose(`getDialogs called.`);
-  }
-  public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {
-    GBLog.verbose(`loadPackage called.`);
-  }
-  public async unloadPackage (core: IGBCoreService): Promise<void> {
-    GBLog.verbose(`unloadPackage called.`);
-  }
-  public async unloadBot (min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`unloadBot called.`);
-  }
-  public async onNewSession (min: GBMinInstance, step: GBDialogStep): Promise<void> {
-    GBLog.verbose(`onNewSession called.`);
-  }
-  public async onExchangeData (min: GBMinInstance, kind: string, data: any) {
-    GBLog.verbose(`onExchangeData called.`);
-  }
+export class RootData {
+  public publicAddress: string; // URI for BotServer
+  public server: any; // Express reference
+  public sysPackages: any[]; // Loaded system package list
+  public appPackages: any[]; // Loaded .gbapp package list
+  public minService: GBMinService; // Minimalist service core
+  public bootInstance: IGBInstance; // General Bot Interface Instance
+  public minInstances: any[]; // List of bot instances.
+  public minBoot: GBMinInstance; // Reference to boot bot.
+  public wwwroot: string; // .gbui or a static webapp.
+  public entryPointDialog: string; // To replace default welcome dialog.
+  public debugConversationId: any; // Used to self-message during debug.
+  public debuggers: any[]; // Client of attached Debugger instances by botId.
 }

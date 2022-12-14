@@ -656,7 +656,7 @@ export class SystemKeywords {
   public async find ({ args }): Promise<any> {
     const file = args[0];
     args.shift();
-    GBLog.info(`BASIC: FIND running on ${file} and args: ${JSON.stringify(args)}...`);
+    
 
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
@@ -671,6 +671,7 @@ export class SystemKeywords {
     } else {
       maxLines = this.dk.maxLines;
     }
+    GBLog.info(`BASIC: FIND running on ${file} (maxLines: ${maxLines}) and args: ${JSON.stringify(args)}...`);
 
     // Choose data sources based on file type (HTML Table, data variable or sheet file)
 
@@ -1295,8 +1296,8 @@ export class SystemKeywords {
     if (streaming) { // TODO: Do it with fetch.
       options['responseType'] = 'stream';
       options['encoding'] = null;
-    }
-    let result = await fetch(url, options);
+    }fetch
+    const result = await fetch(url, options);
 
     try {
       return JSON.parse(await result.text());

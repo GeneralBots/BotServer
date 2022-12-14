@@ -46,7 +46,9 @@ import { GoogleChatDirectLine } from './services/GoogleChatDirectLine.js';
 export class GBGoogleChatPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
 
-  public async loadBot (min: GBMinInstance): Promise<void> {}
+  public async loadBot (min: GBMinInstance): Promise<void> {
+    GBLog.verbose(`loadBot called.`);
+  }
 
   public async getDialogs (min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);

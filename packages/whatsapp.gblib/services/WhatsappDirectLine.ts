@@ -314,6 +314,9 @@ export class WhatsappDirectLine extends GBService {
   public async check() {
     switch (this.provider) {
       case 'GeneralBots':
+
+        // TODO: Verify if browser is OK.
+
         return true;
       default:
         GBLog.verbose(`GBWhatsapp: Checking server...`);

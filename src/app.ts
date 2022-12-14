@@ -42,7 +42,7 @@ import https from 'https';
 import mkdirp from 'mkdirp';
 import Path from 'path';
 import * as Fs from 'fs';
-import { GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
+import { GBLog, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService.js';
 import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService.js';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
@@ -54,24 +54,8 @@ import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
 import auth from 'basic-auth';
 import child_process from 'child_process';
 import * as winston from 'winston-logs-display';
+import { RootData } from './RootData.js';
 
-/**
- * Global shared server data;
- */
-export class RootData {
-  public publicAddress: string; // URI for BotServer
-  public server: any; // Express reference
-  public sysPackages: any[]; // Loaded system package list
-  public appPackages: any[]; // Loaded .gbapp package list
-  public minService: GBMinService; // Minimalist service core
-  public bootInstance: IGBInstance; // General Bot Interface Instance
-  public minInstances: any[]; // List of bot instances.
-  public minBoot: GBMinInstance; // Reference to boot bot.
-  public wwwroot: string; // .gbui or a static webapp.
-  public entryPointDialog: string; // To replace default welcome dialog.
-  public debugConversationId: any; // Used to self-message during debug.
-  public debuggers: any[]; // Client of attached Debugger instances by botId.
-}
 /**
  * General Bots open-core entry point.
  */
@@ -245,19 +229,20 @@ export class GBServer {
         }
       })();
     };
+    // TODO: Move to .gbot folder myown.com pointing to generalbots.ai/myown
     if (process.env.CERTIFICATE_PFX) {
-      const options = {
+      const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
         pfx: Fs.readFileSync(process.env.CERTIFICATE_PFX)
       };
-      const httpsServer = https.createServer(options, server).listen(port, mainCallback);
+      const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
 
       if (process.env.CERTIFICATE2_PFX) {
-        const options = {
+        const options2 = {
           passphrase: process.env.CERTIFICATE2_PASSPHRASE,
           pfx: Fs.readFileSync(process.env.CERTIFICATE2_PFX)
         };
-        httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options);
+        httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options2);
       }
     } else {
       server.listen(port, mainCallback);

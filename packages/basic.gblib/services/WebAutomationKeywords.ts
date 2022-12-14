@@ -117,7 +117,7 @@ export class WebAutomationKeywords {
   /**
    * Returns the page object.
    *
-   * @example x = GET PAGE
+   * @example OPEN "https://wikipedia.org"
    */
   public async getPage ({ url, username, password }) {
     GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);

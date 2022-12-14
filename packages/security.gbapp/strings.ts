@@ -14,7 +14,8 @@ export const Messages = {
     whats_mobile: 'Qual o seu celular?',
     confirm_mobile: 'Por favor, digite o código enviado para seu celular.',
     confirm_mobile_again:
-      'Esse não me parece ser um código numérico válido. Por favor, digite novamente o código enviado para seu celular.',
+      `Esse não me parece ser um código numérico válido. Por favor, digite novamente o
+      código enviado para seu celular.`,
     validation_enter_valid_email: 'Por favor, digite um e-mail válido no formato nome@domínio.com.br.',
     validation_enter_name: 'Por favor, digite seu nome completo',
     validation_enter_valid_mobile: 'Por favor, insira um número de celular válido (ex.: +55 21 98888-7766).'

@@ -37,7 +37,7 @@
 'use strict';
 
 import { AuthenticationContext, TokenResponse } from 'adal-node';
-import { GBLog, GBMinInstance, IGBAdminService, IGBCoreService, IGBDeployer, IGBInstance } from 'botlib';
+import { GBMinInstance, IGBAdminService, IGBCoreService, IGBDeployer, IGBInstance } from 'botlib';
 import { FindOptions } from 'sequelize/types';
 import urlJoin from 'url-join';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService.js';

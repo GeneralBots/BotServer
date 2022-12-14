@@ -19,7 +19,7 @@
     "no-unsafe-any": false,
     "no-floating-promises": false,
     "no-var-requires": false,
-    "typedef": false,
+    "typedef": true,
     "variable-name": false,
     "no-parameter-properties": false,
     "max-line-length": [
@@ -28,10 +28,6 @@
         "limit": 120,
         "ignore-pattern": "^\\s+\\*"
       }
-    ],
-    "await-promise": [
-      true,
-      "Bluebird"
     ],
     "no-reserved-keywords": false,
     "no-unnecessary-class": false,

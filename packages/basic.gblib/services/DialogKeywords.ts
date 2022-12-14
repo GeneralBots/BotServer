@@ -50,7 +50,7 @@ import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import phoneUtil from 'google-libphonenumber';
 import phone from 'phone';
 import DateDiff from 'date-diff';
-import { Buttons } from 'whatsapp-web.js';
+import { Buttons, List } from 'whatsapp-web.js';
 import tesseract from 'node-tesseract-ocr';
 import Path from 'path';
 import sgMail from '@sendgrid/mail';
@@ -96,11 +96,11 @@ export class DialogKeywords {
    */
   maxLines: number = 2000;
 
-  public async getDeployer () {
+  public async getDeployer() {
     return this.min.deployService;
   }
 
-  public async getMin () {
+  public async getMin() {
     return this.min;
   }
 
@@ -108,7 +108,7 @@ export class DialogKeywords {
    * When creating this keyword facade,a bot instance is
    * specified among the deployer service.
    */
-  constructor (min: GBMinInstance, deployer: GBDeployer, user) {
+  constructor(min: GBMinInstance, deployer: GBDeployer, user) {
     this.min = min;
     this.user = user;
     this.internalSys = new SystemKeywords(min, deployer, this, null);
@@ -120,7 +120,7 @@ export class DialogKeywords {
    * Base reference of system keyword facade,called directly
    * by the script.
    */
-  public sys (): SystemKeywords {
+  public sys(): SystemKeywords {
     return this.internalSys;
   }
 
@@ -137,7 +137,7 @@ export class DialogKeywords {
    * @param legends
    * @see https://www.npmjs.com/package/plot
    */
-  public async chart ({ type, data, legends, transpose }) {
+  public async chart({ type, data, legends, transpose }) {
     let table = [[]];
 
     if (legends) {
@@ -206,7 +206,7 @@ export class DialogKeywords {
    * Returns the OCR of image file.
    *
    */
-  public async getOCR ({ localFile }) {
+  public async getOCR({ localFile }) {
     GBLog.info(`BASIC: OCR processing on ${localFile}.`);
 
     const config = {
@@ -223,7 +223,7 @@ export class DialogKeywords {
    *
    * @example x = TODAY
    */
-  public async getToday ({}) {
+  public async getToday({}) {
     let d = new Date(),
       month = '' + (d.getMonth() + 1),
       day = '' + d.getDate(),
@@ -259,30 +259,30 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit ({}) {}
+  public async exit({}) {}
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks ({}) {}
+  public async getActiveTasks({}) {}
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal ({ dealName, contact, company, amount }) {}
+  public async createDeal({ dealName, contact, company, amount }) {}
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact ({ name }) {}
+  public async fndContact({ name }) {}
 
-  public getContentLocaleWithCulture (contentLocale) {
+  public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
       case 'pt':
         return 'pt-BR';
@@ -295,7 +295,7 @@ export class DialogKeywords {
     }
   }
 
-  public async getCoded ({ value }) {
+  public async getCoded({ value }) {
     // Checks if it is a GB FILE object.
 
     if (value.data && value.filename) {
@@ -311,7 +311,7 @@ export class DialogKeywords {
    * @example day = WEEKDAY (date)
    *
    */
-  public getWeekFromDate (date) {
+  public getWeekFromDate(date) {
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
       'Default Content Language',
@@ -340,7 +340,7 @@ export class DialogKeywords {
    * @example days = DATEDIFF date1,date2,mode
    *
    */
-  public dateDiff (date1, date2, mode) {
+  public dateDiff(date1, date2, mode) {
     let dt1 = date1;
     let dt2 = date2;
     if (!(dt1 instanceof Date)) {
@@ -373,7 +373,7 @@ export class DialogKeywords {
    *
    * https://stackoverflow.com/a/1214753/18511
    */
-  public dateAdd (date, mode, units) {
+  public dateAdd(date, mode, units) {
     let dateCopy = date;
     if (!(dateCopy instanceof Date)) {
       dateCopy = new Date(dateCopy);
@@ -423,7 +423,7 @@ export class DialogKeywords {
    * @example TALK TOLIST (array,member)
    *
    */
-  public getToLst (array, member) {
+  public getToLst(array, member) {
     if (!array) {
       return '<Empty>';
     }
@@ -448,8 +448,8 @@ export class DialogKeywords {
    * @example hour = HOUR (date)
    *
    */
-  public getHourFromDate (date) {
-    function addZero (i) {
+  public getHourFromDate(date) {
+    function addZero(i) {
       if (i < 10) {
         i = '0' + i;
       }
@@ -479,7 +479,7 @@ export class DialogKeywords {
    * @example SAVE "contacts.xlsx", name, email, NOW
    *
    */
-  public async getNow ({}) {
+  public async getNow({}) {
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
       'Default Content Language',
@@ -504,7 +504,7 @@ export class DialogKeywords {
    * SEND MAIL "email@domain.com","Subject", "Message text."
    *
    */
-  public async sendEmail ({ to, subject, body }) {
+  public async sendEmail({ to, subject, body }) {
     // tslint:disable-next-line:no-console
 
     GBLog.info(`[E-mail]: to:${to},subject: ${subject},body: ${body}.`);
@@ -542,7 +542,7 @@ export class DialogKeywords {
    * @example SEND FILE TO "+199988887777","image.jpg",caption
    *
    */
-  public async sendFileTo ({ mobile, filename, caption }) {
+  public async sendFileTo({ mobile, filename, caption }) {
     GBLog.info(`BASIC: SEND FILE TO '${mobile}',filename '${filename}'.`);
     return await this.internalSendFile({ mobile, filename, caption });
   }
@@ -553,7 +553,7 @@ export class DialogKeywords {
    * @example SEND FILE "image.jpg"
    *
    */
-  public async sendFile ({ filename, caption }) {
+  public async sendFile({ filename, caption }) {
     const mobile = await this.userMobile();
     GBLog.info(`BASIC: SEND FILE (current: ${mobile},filename '${filename}'.`);
     return await this.internalSendFile({ mobile, filename, caption });
@@ -565,7 +565,7 @@ export class DialogKeywords {
    * @example SET LANGUAGE "pt"
    *
    */
-  public async setLanguage ({ language }) {
+  public async setLanguage({ language }) {
     const sec = new SecService();
     await sec.updateUserLocale(this.user.userId, language);
   }
@@ -576,7 +576,7 @@ export class DialogKeywords {
    * @example SET ID NUMBER
    *
    */
-  public async setIdGeneration ({ mode }) {
+  public async setIdGeneration({ mode }) {
     this['idGeneration'] = mode;
     this['id'] = await this.sys().getRandomId();
   }
@@ -587,7 +587,7 @@ export class DialogKeywords {
    * @example SET MAX LINES 5000
    *
    */
-  public async setMaxLines ({ count }) {
+  public async setMaxLines({ count }) {
     if (this.user) {
       // TODO: PARAM     user.basicOptions.maxLines = count;
     } else {
@@ -601,7 +601,7 @@ export class DialogKeywords {
    * @example SET MAX COLUMNS 5000
    *
    */
-  public async setMaxColumns ({ count }) {
+  public async setMaxColumns({ count }) {
     // TODO: user.basicOptions.maxColumns = count;
   }
 
@@ -611,7 +611,7 @@ export class DialogKeywords {
    * @example SET WHOLE WORD ON
    *
    */
-  public async setWholeWord ({ on }) {
+  public async setWholeWord({ on }) {
     // TODO: user.basicOptions.wholeWord = (on.trim() === "on");
   }
 
@@ -621,7 +621,7 @@ export class DialogKeywords {
    * @example SET THEME "themename"
    *
    */
-  public async setTheme ({ theme }) {
+  public async setTheme({ theme }) {
     // TODO: user.basicOptions.theme = theme.trim();
   }
 
@@ -631,14 +631,14 @@ export class DialogKeywords {
    * @example SET TRANSLATOR ON | OFF
    *
    */
-  public async setTranslatorOn ({ on }) {
+  public async setTranslatorOn({ on }) {
     // TODO: user.basicOptions.translatorOn = (on.trim() === "on");
   }
 
   /**
    * Returns the name of the user acquired by WhatsApp API.
    */
-  public async userName () {
+  public async userName() {
     // TODO: WhatsappDirectLine.usernames[await this.userMobile()] : 'N/A';
     return this.sys().getRandomId();
   }
@@ -646,7 +646,7 @@ export class DialogKeywords {
   /**
    * Returns current mobile number from user in conversation.
    */
-  public async userMobile () {
+  public async userMobile() {
     // TODO: return GBMinService.userMobile();
     return this.sys().getRandomId();
   }
@@ -657,10 +657,10 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu ({}) {
+  public async showMenu({}) {
     // TODO: return await beginDialog('/menu');
   }
-  private static async downloadAttachmentAndWrite (attachment) {
+  private static async downloadAttachmentAndWrite(attachment) {
     const url = attachment.contentUrl;
     const localFolder = Path.join('work'); // TODO: ,'${botId}','uploads');
     const localFileName = Path.join(localFolder, attachment.name);
@@ -705,7 +705,7 @@ export class DialogKeywords {
    * @example TRANSFER
    *
    */
-  public async transferTo ({ to }) {
+  public async transferTo({ to }) {
     // TODO: return await beginDialog('/t',{ to: to });
   }
 
@@ -715,7 +715,7 @@ export class DialogKeywords {
    * @example HEAR name
    *
    */
-  public async getHear ({ kind, arg }) {
+  public async getHear({ kind, arg }) {
     // Handles first arg as an array of args.
 
     let args = [];
@@ -742,16 +742,33 @@ export class DialogKeywords {
       // TODO: https://github.com/GeneralBots/BotServer/issues/266
 
       if (args && args.length > 1) {
-        let choices = [];
-        let i = 0;
-        await CollectionUtil.asyncForEach(args, async arg => {
-          i++;
-          choices.push({ body: arg, id: `button${i}` });
-          await this.talk(arg);
-        });
 
-        const button = new wpp.Buttons(Messages[locale].choices, choices, ' ', ' ');
-        // TODO: await this.talk(button);
+
+        // TODO: https://github.com/pedroslopez/whatsapp-web.js/issues/1811
+        // 
+        // const list = new List(
+        //   'Escolha um dos itens',
+        //   'Itens1',
+        //   [
+        //     {
+        //       title: 'Itens2',
+        //       rows: []
+        //     }
+        //   ],
+        //   'Please select a product'
+        // );
+
+        
+        // let i = 0;
+        // await CollectionUtil.asyncForEach(args, async arg => {
+        //   i++;
+        //   list.sections[0].rows.push({ title: arg, id: `button${i}` });
+        //   await this.talk(arg);
+        // });
+
+        // const button = new wpp.Buttons(Messages[locale].choices, choices, ' ', ' ');
+        // await this.talk(button);
+
 
         GBLog.info(`BASIC: HEAR with [${args.toString()}] (Asking for input).`);
       } else {
@@ -980,7 +997,7 @@ export class DialogKeywords {
   /**
    * Prepares the next dialog to be shown to the specified user.
    */
-  public async gotoDialog ({ fromOrDialogName, dialogName }) {
+  public async gotoDialog({ fromOrDialogName, dialogName }) {
     if (dialogName) {
       if (dialogName.charAt(0) === '/') {
         // TODO: await step.beginDialog(fromOrDialogName);
@@ -1005,7 +1022,7 @@ export class DialogKeywords {
     }
   }
 
-  public async getSingleton ({}) {
+  public async getSingleton({}) {
     return {
       id: this.sys().getRandomId(),
       username: this.userName(),
@@ -1023,7 +1040,7 @@ export class DialogKeywords {
   /**
    * Talks to the user by using the specified text.
    */
-  public async talk ({ text }) {
+  public async talk({ text }) {
     GBLog.info(`BASIC: TALK '${text}'.`);
     if (this.user) {
       const translate = this.user ? this.user.basicOptions.translatorOn : false;
@@ -1032,7 +1049,7 @@ export class DialogKeywords {
     }
   }
 
-  private static getChannel (): string {
+  private static getChannel(): string {
     return 'whatsapp';
     // TODO:
   }
@@ -1040,7 +1057,7 @@ export class DialogKeywords {
   /**
    * Processes the sending of the file.
    */
-  private async internalSendFile ({ mobile, filename, caption }) {
+  private async internalSendFile({ mobile, filename, caption }) {
     // Handles SEND FILE TO mobile,element in Web Automation.
 
     const element = filename._page ? filename._page : filename.screenshot ? filename : null;
@@ -1085,7 +1102,7 @@ export class DialogKeywords {
     }
   }
 
-  public async getQRCode ({ text }) {
+  public async getQRCode({ text }) {
     const img = await qrcode.toDataURL(text);
     const data = img.replace(/^data:image\/\w+;base64,/, '');
     const buf = Buffer.from(data, 'base64');

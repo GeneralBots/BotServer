@@ -63,8 +63,9 @@ export class GuaribasUser extends Model<GuaribasUser> {
   @Column(DataType.STRING(255))
   displayName: string;
 
-  @Column(DataType.INTEGER)
+  @Column(DataType.STRING(255))
   userSystemId: string;
+
   @Column(DataType.STRING(255))
   userName: string;
 

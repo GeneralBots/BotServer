@@ -294,6 +294,7 @@ export class GBVMService extends GBService {
         if (error) {
           reject(error);
         } else {
+          text = text.replace('¨', '"');
           text = text.replace('“', '"');
           text = text.replace('”', '"');
           text = text.replace('‘', "'");

@@ -256,7 +256,9 @@ export class GBMinService {
       GBServer.globals.sysPackages,
       GBServer.globals.appPackages
     );
-    min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
+    
+    // TODO: min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
+
     GBServer.globals.minInstances.push(min);
 
     await this.deployer.deployPackage(min, 'packages/default.gbtheme');
@@ -296,7 +298,7 @@ export class GBMinService {
 
     // Loads Named Entity data for this bot.
 
-    await KBService.RefreshNER(min);
+    // TODO: await KBService.RefreshNER(min);
 
     // Calls the loadBot context.activity for all packages.
 
