@@ -119,7 +119,7 @@ export class GBServer {
           const core: IGBCoreService = new GBCoreService();
           const importer: GBImporter = new GBImporter(core);
           const deployer: GBDeployer = new GBDeployer(core, importer);
-          const azureDeployer: AzureDeployerService = new AzureDeployerService(deployer);
+          const azureDeployer: AzureDeployerService = await AzureDeployerService.createInstance(deployer);
           const adminService: GBAdminService = new GBAdminService(core);
 
           if (process.env.NODE_ENV === 'development' && !process.env.BOT_URL) {

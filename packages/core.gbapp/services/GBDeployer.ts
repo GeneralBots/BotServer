@@ -213,7 +213,7 @@ export class GBDeployer implements IGBDeployer {
 
     // Creates the MSFT application that will be associated to the bot.
 
-    const service = new AzureDeployerService(this);
+    const service = await AzureDeployerService.createInstance(this);
     const application = await service.createApplication(accessToken, botId);
 
     // Fills new instance base information and get App secret.
@@ -244,7 +244,7 @@ export class GBDeployer implements IGBDeployer {
    * Verifies if bot exists on bot catalog.
    */
   public async botExists (botId: string): Promise<boolean> {
-    const service = new AzureDeployerService(this);
+    const service = await AzureDeployerService.createInstance(this);
 
     return await service.botExists(botId);
   }
@@ -255,7 +255,7 @@ export class GBDeployer implements IGBDeployer {
   public async deployBotFull (instance: IGBInstance, publicAddress: string): Promise<IGBInstance> {
     // Reads base configuration from environent file.
 
-    const service = new AzureDeployerService(this);
+    const service = await AzureDeployerService.createInstance(this);
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
     const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
@@ -323,7 +323,7 @@ export class GBDeployer implements IGBDeployer {
    * Performs the NLP publishing process on remote service.
    */
   public async publishNLP (instance: IGBInstance): Promise<void> {
-    const service = new AzureDeployerService(this);
+    const service = await AzureDeployerService.createInstance(this);
     const res = await service.publishNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
     if (res.status !== 200 && res.status !== 201) {
       throw res.bodyAsText;
@@ -334,7 +334,7 @@ export class GBDeployer implements IGBDeployer {
    * Trains NLP on the remote service.
    */
   public async trainNLP (instance: IGBInstance): Promise<void> {
-    const service = new AzureDeployerService(this);
+    const service = await AzureDeployerService.createInstance(this);
     const res = await service.trainNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
     if (res.status !== 200 && res.status !== 202) {
       throw res.bodyAsText;
@@ -368,7 +368,7 @@ export class GBDeployer implements IGBDeployer {
    * Refreshes NLP entities on the remote service.
    */
   public async refreshNLPEntity (instance: IGBInstance, listName, listData): Promise<void> {
-    const service = new AzureDeployerService(this);
+    const service = await AzureDeployerService.createInstance(this);
     const res = await service.refreshEntityList(
       instance.cloudLocation,
       instance.nlpAppId,
@@ -538,7 +538,7 @@ export class GBDeployer implements IGBDeployer {
   public async undeployBot (botId: string, packageName: string): Promise<void> {
     // Deletes Bot registration on cloud.
 
-    const service = new AzureDeployerService(this);
+    const service = await AzureDeployerService.createInstance(this);
     const group = GBConfigService.get('CLOUD_GROUP');
     if (await service.botExists(botId)) {
       await service.deleteBot(botId, group);

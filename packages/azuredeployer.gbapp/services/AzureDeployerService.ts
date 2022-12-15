@@ -37,7 +37,7 @@
 'use strict';
 
 import urlJoin from 'url-join';
-import { HttpMethods, ServiceClient, WebResource } from '@azure/ms-rest-js';
+import { HttpMethods, ServiceClient, TokenCredentials, WebResource } from '@azure/ms-rest-js';
 import { CognitiveServicesManagementClient } from '@azure/arm-cognitiveservices';
 import { ResourceManagementClient } from '@azure/arm-resources';
 import { SubscriptionClient } from '@azure/arm-subscriptions';
@@ -54,6 +54,9 @@ import { Account } from '@azure/arm-cognitiveservices';
 import MicrosoftGraph from '@microsoft/microsoft-graph-client';
 import Spinner from 'cli-spinner';
 import * as publicIp from 'public-ip';
+import { AccessToken, TokenCredential } from '@azure/core-auth';
+
+
 
 const WebSiteResponseTimeout = 900;
 const iconUrl = 'https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png';
@@ -79,24 +82,26 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   public core: IGBCoreService;
   private freeTier: boolean;
 
-  constructor (deployer: IGBDeployer, freeTier: boolean = true) {
-    this.deployer = deployer;
-    this.freeTier = freeTier;
-  }
 
   public async runSearch (instance: IGBInstance) {
     await this.deployer.rebuildIndex(instance, this.getKBSearchSchema(instance.searchIndex));
   }
 
-  public static async createInstance (deployer: GBDeployer): Promise<AzureDeployerService> {
+  public static async createInstance (deployer: GBDeployer, freeTier: boolean = false): Promise<AzureDeployerService> {
+
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
-    const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+    const service = new AzureDeployerService();
 
-    const service = new AzureDeployerService(deployer);
     service.core = deployer.core;
-    service.initServices(credentials, subscriptionId);
+    service.deployer = deployer;
+    service.freeTier = freeTier;
+
+    const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
+    const token = credentials['tokenCache']._entries[0];
+
+    await service.initServices(token.accessToken, token.expiresOn, subscriptionId);
 
     return service;
   }
@@ -334,19 +339,15 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   }
 
   public async openStorageFirewall (groupName, serverName) {
-    const username = GBConfigService.get('CLOUD_USERNAME');
-    const password = GBConfigService.get('CLOUD_PASSWORD');
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
 
-    const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
-    const storageClient = new SqlManagementClient(credentials as any, subscriptionId);
 
     const ip = await publicIp.publicIpv4();
     let params = {
       startIpAddress: ip,
       endIpAddress: ip
     };
-    await storageClient.firewallRules.createOrUpdate(groupName, serverName, 'gb', params);
+    await this.storageClient.firewallRules.createOrUpdate(groupName, serverName, 'gb', params);
   }
 
   public async deployFarm (
@@ -357,7 +358,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   ): Promise<IGBInstance> {
     const culture = 'en-us';
 
-    this.initServices(credentials, subscriptionId);
+    const token = credentials['tokenCache']._entries[0];
+
+    await this.initServices(token.accessToken, token.expiresOn, subscriptionId);
+
     const spinner = new Spinner('%s');
     spinner.start();
     spinner.setSpinnerString('|/-\\');
@@ -580,13 +584,33 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await this.webSiteClient.webApps.syncRepository(group, name);
   }
 
-  public initServices (credentials: any, subscriptionId: string) {
-    this.cloud = new ResourceManagementClient(credentials, subscriptionId);
-    this.webSiteClient = new WebSiteManagementClient(credentials, subscriptionId);
-    this.storageClient = new SqlManagementClient(credentials, subscriptionId);
-    this.cognitiveClient = new CognitiveServicesManagementClient(credentials, subscriptionId);
-    this.searchClient = new SearchManagementClient(credentials, subscriptionId);
-    this.accessToken = credentials.tokenCache._entries[0].accessToken;
+  public async initServices (accessToken: string, expiresOnTimestamp,  subscriptionId: string) {
+
+    class AccessToken2 implements AccessToken
+    {
+        public expiresOnTimestamp: number;
+        public token: string;
+    }
+
+    class StaticAccessToken implements TokenCredential {
+      
+      public getToken(): Promise<AccessToken> {
+        return new Promise<AccessToken>(async (resolve, reject) => {
+          const t = new AccessToken2();
+          t.token  = accessToken;
+          t.expiresOnTimestamp = expiresOnTimestamp;
+          resolve(t);
+        });
+      }
+    }
+
+    const token = await new StaticAccessToken();
+
+    this.cloud = new ResourceManagementClient(token, subscriptionId);
+    this.webSiteClient = new WebSiteManagementClient(token, subscriptionId);
+    this.storageClient = new SqlManagementClient(token, subscriptionId);
+    this.cognitiveClient = new CognitiveServicesManagementClient(token, subscriptionId);
+    this.searchClient = new SearchManagementClient(token, subscriptionId);
   }
 
   private async createStorageServer (group, name, administratorLogin, administratorPassword, serverName, location) {

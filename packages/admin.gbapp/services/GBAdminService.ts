@@ -200,16 +200,17 @@ export class GBAdminService implements IGBAdminService {
       await deployer.deployPackage(min, localFolder);
     }
   }
-  public static async rebuildIndexPackageCommand (min: GBMinInstance, deployer: IGBDeployer) {
+  public static async rebuildIndexPackageCommand (min: GBMinInstance, deployer: GBDeployer) {
+    const service = await AzureDeployerService.createInstance(deployer);
     await deployer.rebuildIndex(
       min.instance,
-      new AzureDeployerService(deployer).getKBSearchSchema(min.instance.searchIndex)
+      service.getKBSearchSchema(min.instance.searchIndex)
     );
   }
 
   public static async syncBotServerCommand (min: GBMinInstance, deployer: GBDeployer) {
     const serverName = `${min.instance.botId}-server`;
-    const service = await AzureDeployerService.createInstance(deployer);
+    const service = await AzureDeployerService.createInstance(deployer );
     service.syncBotServerRepository(min.instance.botId, serverName);
   }
 
