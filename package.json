@@ -1,6 +1,6 @@
 {
   "name": "botserver",
-  "version": "3.0.0",
+  "version": "2.0.180",
   "type": "module",
   "description": "General Bot Community Edition open-core server.",
   "main": "./boot.mjs",
@@ -66,7 +66,6 @@
     "@hubspot/api-client": "7.1.2",
     "@microsoft/microsoft-graph-client": "3.0.4",
     "@nosferatu500/textract": "3.1.2",
-
     "@semantic-release/changelog": "5.0.1",
     "@semantic-release/exec": "5.0.0",
     "@semantic-release/git": "9.0.0",

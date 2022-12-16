@@ -1,3 +1,33 @@
+## [2.0.180](https://github.com/GeneralBots/BotServer/compare/2.0.179...2.0.180) (2022-12-16)
+
+
+### Bug Fixes
+
+* **all:** CI fixing. ([e4fc246](https://github.com/GeneralBots/BotServer/commit/e4fc246b252aaebd8da25b9fa6c642ad9d8d278d))
+* **all:** CI fixing. ([fa32b51](https://github.com/GeneralBots/BotServer/commit/fa32b510d94a94a687a23cb72e74aeca8e122d54))
+* **all:** fetch calls replaces request packages. ([ea6c721](https://github.com/GeneralBots/BotServer/commit/ea6c721cb53f1eaa4ab8f4b4a10ecf7329a473d6))
+* **all:** Fixing [#294](https://github.com/GeneralBots/BotServer/issues/294). ([25ce766](https://github.com/GeneralBots/BotServer/commit/25ce766820ecd2a98e2fca9e1648ac41fbe76d38))
+* **all:** Fixing bugs of 3.0 ([d09265e](https://github.com/GeneralBots/BotServer/commit/d09265e023b8b3ac746ba623cc0613c311f4c49c))
+* **all:** Fixing bugs of 3.0 ([6cad39d](https://github.com/GeneralBots/BotServer/commit/6cad39d8c70e9827c41ea4afedefe8fa330c0295))
+* **all:** Fixing bugs of 3.0. ([d180753](https://github.com/GeneralBots/BotServer/commit/d180753253a249958340dbdfeef94a1442e58675))
+* **all:** Fixing bugs of 3.0. ([83d98c7](https://github.com/GeneralBots/BotServer/commit/83d98c794fe24c420949e355b438aab9f2f46fad))
+* **all:** Fixing bugs of 3.0. ([bf705c7](https://github.com/GeneralBots/BotServer/commit/bf705c730b2bf7565e43003d4299513d1819ef38))
+* **all:** Fixing CI integration bugs. ([0ce6bc5](https://github.com/GeneralBots/BotServer/commit/0ce6bc5d8c0b68f4079b64bf6b8916bb426a1b52))
+* **all:** Fixing CI integration bugs. ([9c44e38](https://github.com/GeneralBots/BotServer/commit/9c44e385605ced77185f9b96c6f2cefb61559465))
+* **all:** Fixing CI integration bugs. ([9acb055](https://github.com/GeneralBots/BotServer/commit/9acb05567a6991334c6586db4dad888cfb84b050))
+* **all:** Fixing CI integration bugs. ([c323f5a](https://github.com/GeneralBots/BotServer/commit/c323f5a3e875448819b3d61e60c9f5b20d79aabd))
+* **all:** Fixing CI integration bugs. ([b2c1dda](https://github.com/GeneralBots/BotServer/commit/b2c1dda2b2635ef808976593ec4df542fa292bb2))
+* **all:** Fixing CI integration bugs. ([ae29dda](https://github.com/GeneralBots/BotServer/commit/ae29dda0fa027a9c59c3b6ffe57a2e9752c016ec))
+* **all:** Fixing CI integration bugs. ([0ecac1a](https://github.com/GeneralBots/BotServer/commit/0ecac1a4b52c3dbafb1cfb943be1b6f77c1fc058))
+* **all:** Fixing CI integration bugs. ([9f88210](https://github.com/GeneralBots/BotServer/commit/9f8821089a1a6f22505539ae95af3b378dfe59ae))
+* **all:** Removal of warnings and erros after pkg update. ([663c85e](https://github.com/GeneralBots/BotServer/commit/663c85e7c51ce0e2d3f31e8cbe62fcb4039ca8f6))
+* **all:** Update of arm packages and token usage. ([179b20a](https://github.com/GeneralBots/BotServer/commit/179b20a248c245e7b85635c4b3080b34ffa7c02b))
+* **core.gbapp:** Lint of all. ([4a2f8b7](https://github.com/GeneralBots/BotServer/commit/4a2f8b7b43cb7550d11965719459d3fb336739ca))
+* **core.gbapp:** Update of all packages and nodejs to 19.1.0. ([f8d2cd8](https://github.com/GeneralBots/BotServer/commit/f8d2cd895a31c41b7cdc4f688dd8dcbec6f56317))
+* **core.gbapp:** Update of all packages and nodejs to 19.1.0. ([a315d21](https://github.com/GeneralBots/BotServer/commit/a315d21cfe3775de745910764bf60bff76043053))
+* **core.gbapp:** Update of properties modifier with declare. ([21df92e](https://github.com/GeneralBots/BotServer/commit/21df92e280186b87c457e226b6f92d80bd0efa34))
+* **core.gbapp:** WARNINGS.md ([f35a2ac](https://github.com/GeneralBots/BotServer/commit/f35a2aceba957339c607d22743c02f7690bd3a97))
+
 ## [2.0.179](https://github.com/GeneralBots/BotServer/compare/2.0.178...2.0.179) (2022-10-22)
 
 
