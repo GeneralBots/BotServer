@@ -335,7 +335,7 @@ export class GBMinService {
       });
       client.clientAuthorizations.add(
         'AuthorizationBotConnector',
-        new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${min.instance.webchatKey}`, 'header')
+        new Swagger.ApiKeyAfuthorization('Authorization', `Bearer ${min.instance.webchatKey}`, 'header')
       );
       const response = await client.Conversations.Conversations_StartConversation();
       const conversationId = response.obj.conversationId;

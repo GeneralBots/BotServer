@@ -39,6 +39,7 @@
 import { GBServer } from '../../../src/app.js';
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
+import { ChatGPTAPIBrowser } from 'chatgpt';
 import { GBLog, GBMinInstance, IGBDialog, IGBPackage } from 'botlib';
 import { Messages } from '../strings.js';
 import { KBService } from './../services/KBService.js';
@@ -69,7 +70,7 @@ export class AskDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup (bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new KBService(min.core.sequelize);
     const importer = new GBImporter(min.core);
     this.deployer = new GBDeployer(min.core, importer);
@@ -79,7 +80,7 @@ export class AskDialog extends IGBDialog {
     min.dialogs.add(new WaterfallDialog('/ask', AskDialog.getAskDialog(min)));
   }
 
-  private static getAskDialog (min: GBMinInstance) {
+  private static getAskDialog(min: GBMinInstance) {
     return [
       async step => {
         if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
@@ -157,7 +158,7 @@ export class AskDialog extends IGBDialog {
     ];
   }
 
-  private static getAnswerDialog (min: GBMinInstance, service: KBService) {
+  private static getAnswerDialog(min: GBMinInstance, service: KBService) {
     return [
       async step => {
         if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
@@ -291,6 +292,25 @@ export class AskDialog extends IGBDialog {
           });
           return await step.replaceDialog('/ask', { isReturning: true });
         }
+        if (process.env.OPENAI_EMAIL) {
+          if (!GBServer.globals.chatGPT) {
+            GBServer.globals.chatGPT = new ChatGPTAPIBrowser({
+              email: process.env.OPENAI_EMAIL,
+              password: process.env.OPENAI_PASSWORD
+            });
+            await GBServer.globals.chatGPT.init();
+          }
+          GBLog.info(`ChatGPT being used...`);
+          const response = await GBServer.globals.chatGPT.sendMessage(text);
+
+          if (!response) {
+            GBLog.info(`SEARCH called but NO answer could be found (zero results).`);
+          } else {
+            
+            await min.conversationalService.sendText(min, step, response);
+          }
+          return await step.replaceDialog('/ask', { isReturning: true });
+        }
 
         // Not found.
 
@@ -302,7 +322,7 @@ export class AskDialog extends IGBDialog {
     ];
   }
 
-  private static async handleAnswer (service: KBService, min: GBMinInstance, step: any, answer: GuaribasAnswer) {
+  private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, answer: GuaribasAnswer) {
     const text = answer.content;
     if (text.endsWith('.docx')) {
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
@@ -313,11 +333,11 @@ export class AskDialog extends IGBDialog {
     }
   }
 
-  private static getChannel (step): string {
+  private static getChannel(step): string {
     return !isNaN(step.context.activity['mobile']) ? 'whatsapp' : step.context.activity.channelId;
   }
 
-  private static getAnswerEventDialog (service: KBService, min: GBMinInstance) {
+  private static getAnswerEventDialog(service: KBService, min: GBMinInstance) {
     return [
       async step => {
         if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {

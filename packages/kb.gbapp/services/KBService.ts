@@ -291,17 +291,17 @@ export class KBService implements IGBKBService {
         content: string;
         subject1: string;
         subject2: string;
-        subject: string;
+        subject3: string;
         subject4: string;
       }
 
-      const client = new SearchClient<SearchResults>(instance.searchHost.split('.')[0], 'azuresql-index', {
+      const client = new SearchClient<SearchResults>('https://' + instance.searchHost, 'azuresql-index', {
         key: instance.searchKey
       } as any);
 
       const results = await client.search(query, {
         filter: `instanceId eq ${instance.instanceId} and skipIndex eq false`,
-        searchFields: ['content', 'subject1', 'subject2', 'subject', 'subject4'],
+        searchFields: ['content', 'subject1', 'subject2', 'subject3', 'subject4'],
         select: ['instanceId', 'questionId', 'answerId'],
         skip: 0,
         top: 1
@@ -339,10 +339,6 @@ export class KBService implements IGBKBService {
 
           return { answer: undefined, questionId: 0 };
         }
-      }
-
-      if (!found) {
-        GBLog.info(`SEARCH called but NO answer could be found (zero results).`);
       }
 
       return { answer: undefined, questionId: 0 };

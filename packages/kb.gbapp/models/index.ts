@@ -122,34 +122,34 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  questionId: number;
+  declare questionId: number;
 
   @Column(DataType.STRING(64))
-  subject1: string;
+  declare subject1: string;
 
   @Column(DataType.STRING(64))
-  subject2: string;
+  declare subject2: string;
 
   @Column(DataType.STRING(64))
-  subject3: string;
+  declare subject3: string;
 
   @Column(DataType.STRING(64))
-  subject4: string;
+  declare subject4: string;
 
   @Column(DataType.STRING(1024))
-  keywords: string;
+  declare keywords: string;
 
   @Column(DataType.BOOLEAN)
-  skipIndex: boolean;
+  declare skipIndex: boolean;
 
   @Column(DataType.STRING(512))
-  from: string;
+  declare from: string;
 
   @Column(DataType.STRING(512))
-  to: string;
+  declare to: string;
 
   @Column(DataType.TEXT)
-  content: string;
+  declare content: string;
 
   @Column(DataType.DATE)
   @CreatedAt
@@ -162,18 +162,18 @@ export class GuaribasQuestion extends Model<GuaribasQuestion> {
   //tslint:disable-next-line:no-use-before-declare
   @ForeignKey(() => GuaribasAnswer)
   @Column(DataType.INTEGER)
-  answerId: number;
+  declare answerId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance;
+  declare instance: GuaribasInstance;
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  instanceId: number;
+  declare instanceId: number;
 
   @ForeignKey(() => GuaribasPackage)
   @Column(DataType.INTEGER)
-  packageId: number;
+  declare packageId: number;
 
   @BelongsTo(() => GuaribasPackage)
   package: GuaribasPackage;
