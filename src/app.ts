@@ -127,6 +127,7 @@ export class GBServer {
             if (proxy !== undefined) {
               GBServer.globals.publicAddress = proxy;
             } else {
+
               // Ensure that local development proxy is setup.
 
               GBLog.info(`Establishing a development local proxy (ngrok)...`);
@@ -223,6 +224,7 @@ export class GBServer {
 
             const loggers = GBLog.getLogger();
             winston.default(server, loggers[1]);
+            
           }
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
@@ -230,13 +232,16 @@ export class GBServer {
           // Opens Navigator.
 
           // TODO: Config: core.openBrowserInDevelopment();
+
         } catch (err) {
           GBLog.error(`STOP: ${err.message ? err.message : err} ${err.stack ? err.stack : ''}`);
           process.exit(1);
         }
       })();
     };
-    // TODO: Move to .gbot folder myown.com pointing to generalbots.ai/myown
+
+    // TODO: Move to .gbot folder myown.com pointing to generalbots.ai/myown.
+    
     if (process.env.CERTIFICATE_PFX) {
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
