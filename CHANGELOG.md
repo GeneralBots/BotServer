@@ -1,3 +1,10 @@
+## [2.0.181](https://github.com/GeneralBots/BotServer/compare/2.0.180...2.0.181) (2022-12-22)
+
+
+### Bug Fixes
+
+* **admin.gbapp:** .gbapp List param added to .gbot. ([48a1aa4](https://github.com/GeneralBots/BotServer/commit/48a1aa4d4695b480b6724f6c59830cfe3fa45f8c))
+
 ## [2.0.180](https://github.com/GeneralBots/BotServer/compare/2.0.179...2.0.180) (2022-12-16)
 
 
