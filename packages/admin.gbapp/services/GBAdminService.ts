@@ -51,6 +51,7 @@ import msRestAzure from 'ms-rest-azure';
 import Path from 'path';
 import PasswordGenerator from 'strict-password-generator';
 import crypto from 'crypto';
+import Fs from 'fs';
 
 /**
  * Services for server administration.
@@ -72,13 +73,9 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static getNodeVersion () {
-    return '19.1.0';
     const packageJson = urlJoin(process.cwd(), 'package.json');
-    // tslint:disable-next-line: non-literal-require
-    // TODO
-    // const pjson = require(packageJson);
-
-    // return pjson.engines.node.replace('=', '');
+    const pkg = JSON.parse(Fs.readFileSync(packageJson, 'utf8'));
+    return pkg.engines.node.replace('=', '');
   }
 
   public static async getADALTokenFromUsername (username: string, password: string) {
