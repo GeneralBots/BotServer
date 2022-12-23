@@ -52,6 +52,7 @@ import Path from 'path';
 import PasswordGenerator from 'strict-password-generator';
 import crypto from 'crypto';
 import Fs from 'fs';
+import { GBServer } from '../../../src/app.js';
 
 /**
  * Services for server administration.
@@ -247,10 +248,8 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public async acquireElevatedToken (instanceId: number): Promise<string> {
-    // TODO: Use boot bot as base for authentication.
-
-    const botId = GBConfigService.get('BOT_ID');
-    instanceId = (await this.core.loadInstanceByBotId(botId)).instanceId;
+    const minBoot = GBServer.globals.minBoot as any;
+    instanceId = minBoot.instanceId;
 
     return new Promise<string>(async (resolve, reject) => {
       const instance = await this.core.loadInstanceById(instanceId);
