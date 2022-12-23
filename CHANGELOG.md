@@ -1,3 +1,10 @@
+## [2.0.182](https://github.com/GeneralBots/BotServer/compare/2.0.181...2.0.182) (2022-12-23)
+
+
+### Bug Fixes
+
+* **all:** Node version info retrieval automated. ([9cbd8c1](https://github.com/GeneralBots/BotServer/commit/9cbd8c17de674547ed24a189084e8b99588ac69b))
+
 ## [2.0.181](https://github.com/GeneralBots/BotServer/compare/2.0.180...2.0.181) (2022-12-22)
 
 
