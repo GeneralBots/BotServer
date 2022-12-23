@@ -11,6 +11,8 @@
 /packages/default.gbui/build
 /packages/default.gbui/.env
 /packages/default.gbui/node_modules
+/packages/default.gbui/package-lock.json
+/packages/default.gbui/yarn-lock.json
 /work
 *.vbs.compiled
 *.vbs.js
@@ -24,3 +26,4 @@ gb.log
 GB.log.json
 yarn-error.log
 package-lock.json
+yarn-lock.json
