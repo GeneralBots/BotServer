@@ -1,3 +1,11 @@
+# [2.1.0](https://github.com/GeneralBots/BotServer/compare/2.0.182...2.1.0) (2022-12-23)
+
+
+### Features
+
+* **all:** Cleaning package manager files. ([0cb406a](https://github.com/GeneralBots/BotServer/commit/0cb406ab7923761ad7476ef694d5079af059244c))
+* **all:** Token retrieve optimized. ([6eb9d6c](https://github.com/GeneralBots/BotServer/commit/6eb9d6cbf466a18283285d6775e08aa488632762))
+
 ## [2.0.182](https://github.com/GeneralBots/BotServer/compare/2.0.181...2.0.182) (2022-12-23)
 
 
