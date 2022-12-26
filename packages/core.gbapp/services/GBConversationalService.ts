@@ -571,11 +571,11 @@ export class GBConversationalService {
       xhtml: false
     });
 
-    // MSFT Translator breaks markdown, so we need to fix it:
+    // MSFT Translator breaks markdown, so we need to manually fix it:
 
     text = text.replace('! [', '![').replace('] (', '](');
-    text = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', ''); // TODO: Improve it.
-    text = text.replace(`](kb`, '](' + process.env.BOT_URL + '/kb'); // TODO: Improve it.
+    text = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', '');
+    text = text.replace(`](kb`, '](' + process.env.BOT_URL + '/kb'); 
 
     if (mobile) {
       await this.sendMarkdownToMobile(min, step, mobile, text);
@@ -597,8 +597,8 @@ export class GBConversationalService {
       data: {
         content: html,
         answer: answer,
-        prevId: 0, // TODO: answer.prevId,
-        nextId: 0 // TODO: answer.nextId
+        prevId: 0, // https://github.com/GeneralBots/BotServer/issues/312
+        nextId: 0 
       }
     });
   }
@@ -775,11 +775,7 @@ export class GBConversationalService {
     }
   }
 
-  // TODO: Update botlib.
-  public async routeNLP (step: GBDialogStep, min: GBMinInstance, text: string): Promise<boolean> {
-    return false;
-  }
-  public async routeNLP2 (step: GBDialogStep, min: GBMinInstance, text: string) {
+  public async routeNLP (step: GBDialogStep, min: GBMinInstance, text: string) {
     if (min.instance.nlpAppId === null || min.instance.nlpAppId === undefined) {
       return false;
     }

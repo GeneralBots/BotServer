@@ -661,7 +661,8 @@ export class DialogKeywords {
   }
   private static async downloadAttachmentAndWrite(attachment) {
     const url = attachment.contentUrl;
-    const localFolder = Path.join('work'); // TODO: ,'${botId}','uploads');
+    // https://github.com/GeneralBots/BotServer/issues/195 - '${botId}','uploads');
+    const localFolder = Path.join('work'); 
     const localFileName = Path.join(localFolder, attachment.name);
 
     try {
@@ -1002,7 +1003,8 @@ export class DialogKeywords {
   public async gotoDialog({ fromOrDialogName, dialogName }) {
     if (dialogName) {
       if (dialogName.charAt(0) === '/') {
-        // TODO: await step.beginDialog(fromOrDialogName);
+        // https://github.com/GeneralBots/BotServer/issues/308
+        // await step.beginDialog(fromOrDialogName);
       } else {
         let sec = new SecService();
         let user = await sec.getUserFromSystemId(fromOrDialogName);
@@ -1020,7 +1022,8 @@ export class DialogKeywords {
         await sec.updateUserHearOnDialog(user.userId, dialogName);
       }
     } else {
-      // TODO: await step.beginDialog(fromOrDialogName);
+      // https://github.com/GeneralBots/BotServer/issues/308
+      // await step.beginDialog(fromOrDialogName);
     }
   }
 
@@ -1053,7 +1056,7 @@ export class DialogKeywords {
 
   private static getChannel(): string {
     return 'whatsapp';
-    // TODO:
+    // https://github.com/GeneralBots/BotServer/issues/309
   }
 
   /**

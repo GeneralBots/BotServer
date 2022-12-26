@@ -538,7 +538,9 @@ export class WhatsappDirectLine extends GBService {
             await this.min.conversationalService.sendMarkdownToMobile(this.min, null, user.userSystemId, message);
           }
         } else if (text === '/qt') {
-          // TODO: Transfers only in pt-br for now.
+          
+          // https://github.com/GeneralBots/BotServer/issues/307
+
           await this.sendToDeviceEx(
             manualUser.userSystemId,
             Messages[this.locale].notify_end_transfer(this.min.instance.botId),

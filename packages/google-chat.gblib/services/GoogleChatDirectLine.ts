@@ -121,7 +121,6 @@ export class GoogleChatDirectLine extends GBService {
     GBLog.info(`GBGoogleChat: Checking server...`);
   }
 
-  // TODO: Check service.Users.Messages.List("me").
   public async receiver (message) {
     const event = JSON.parse(Buffer.from(message.data, 'binary').toString());
 

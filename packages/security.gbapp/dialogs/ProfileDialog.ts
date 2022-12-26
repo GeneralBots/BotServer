@@ -104,7 +104,7 @@ export class ProfileDialog extends IGBDialog {
           let phoneNumber;
           try {
             let p = phone.PhoneNumberUtil.getInstance();
-            phoneNumber = p(step.result, 'BRA')[0]; // TODO: Use accordingly to the person.
+            phoneNumber = p(step.result, 'BRA')[0]; // https://github.com/GeneralBots/BotServer/issues/307
             phoneNumber = phone.phoneUtil.parse(phoneNumber);
           } catch (error) {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_mobile);

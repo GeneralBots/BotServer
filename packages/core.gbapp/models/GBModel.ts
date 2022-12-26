@@ -250,9 +250,6 @@ export class GuaribasInstance extends Model<GuaribasInstance> implements IGBInst
   declare  adminPass: string;
 
   @Column(DataType.FLOAT)
-  declare  nlpVsSearch: number; // TODO: Remove field.
-
-  @Column(DataType.FLOAT)
   declare   searchScore: number;
 
   @Column(DataType.FLOAT)
