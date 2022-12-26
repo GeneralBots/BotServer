@@ -126,12 +126,12 @@ export class DialogKeywords {
 
   /**
    *
-   *
    * Data = [10,20,30]
    * Legends = "Steve;Yui;Carlos"
    * img = CHART "pie",data,legends
    *
    * https://c3js.org/examples.html
+   * https://c3js.org/samples/timeseries.html (used here)
    *
    * @param data
    * @param legends
@@ -178,8 +178,6 @@ export class DialogKeywords {
         ratio: 0.5
       }
     };
-
-    // TODO: https://c3js.org/samples/timeseries.html
 
     if (type === 'timeseries') {
       definition['axis'][table[0]] = {
@@ -589,7 +587,7 @@ export class DialogKeywords {
    */
   public async setMaxLines({ count }) {
     if (this.user) {
-      // TODO: PARAM     user.basicOptions.maxLines = count;
+      // #307 user.basicOptions.maxLines = count;
     } else {
       this.maxLines = count;
     }
@@ -602,7 +600,7 @@ export class DialogKeywords {
    *
    */
   public async setMaxColumns({ count }) {
-    // TODO: user.basicOptions.maxColumns = count;
+    // #307 user.basicOptions.maxColumns = count;
   }
 
   /**
@@ -612,7 +610,7 @@ export class DialogKeywords {
    *
    */
   public async setWholeWord({ on }) {
-    // TODO: user.basicOptions.wholeWord = (on.trim() === "on");
+    // #307 user.basicOptions.wholeWord = (on.trim() === "on");
   }
 
   /**
@@ -622,7 +620,7 @@ export class DialogKeywords {
    *
    */
   public async setTheme({ theme }) {
-    // TODO: user.basicOptions.theme = theme.trim();
+    // #307 user.basicOptions.theme = theme.trim();
   }
 
   /**
@@ -632,14 +630,14 @@ export class DialogKeywords {
    *
    */
   public async setTranslatorOn({ on }) {
-    // TODO: user.basicOptions.translatorOn = (on.trim() === "on");
+    // #307 user.basicOptions.translatorOn = (on.trim() === "on");
   }
 
   /**
    * Returns the name of the user acquired by WhatsApp API.
    */
   public async userName() {
-    // TODO: WhatsappDirectLine.usernames[await this.userMobile()] : 'N/A';
+    // #307 WhatsappDirectLine.usernames[await this.userMobile()] : 'N/A';
     return this.sys().getRandomId();
   }
 
@@ -647,7 +645,7 @@ export class DialogKeywords {
    * Returns current mobile number from user in conversation.
    */
   public async userMobile() {
-    // TODO: return GBMinService.userMobile();
+    // #307 return GBMinService.userMobile();
     return this.sys().getRandomId();
   }
 
@@ -658,7 +656,8 @@ export class DialogKeywords {
    *
    */
   public async showMenu({}) {
-    // TODO: return await beginDialog('/menu');
+    // https://github.com/GeneralBots/BotServer/issues/237
+    // return await beginDialog('/menu');
   }
   private static async downloadAttachmentAndWrite(attachment) {
     const url = attachment.contentUrl;
@@ -706,7 +705,8 @@ export class DialogKeywords {
    *
    */
   public async transferTo({ to }) {
-    // TODO: return await beginDialog('/t',{ to: to });
+    // https://github.com/GeneralBots/BotServer/issues/150
+    // return await beginDialog('/t',{ to: to });
   }
 
   /**
@@ -739,12 +739,12 @@ export class DialogKeywords {
       let result;
 
       const locale = user.locale ? user.locale : 'en-US';
-      // TODO: https://github.com/GeneralBots/BotServer/issues/266
+      // https://github.com/GeneralBots/BotServer/issues/266
 
       if (args && args.length > 1) {
 
 
-        // TODO: https://github.com/pedroslopez/whatsapp-web.js/issues/1811
+        // https://github.com/pedroslopez/whatsapp-web.js/issues/1811
         // 
         // const list = new List(
         //   'Escolha um dos itens',
@@ -889,12 +889,13 @@ export class DialogKeywords {
         result = value;
       } else if (kind === 'money') {
         const extractEntity = text => {
-          // if (user.locale === 'en') { // TODO: Change to user.
-          //   return text.match(/(?:\d{1,3},)*\d{1,3}(?:\.\d+)?/gi);
-          // }
-          // else {
-          //   return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
-          // }
+          // https://github.com/GeneralBots/BotServer/issues/307
+          if (user.locale === 'en') { 
+            return text.match(/(?:\d{1,3},)*\d{1,3}(?:\.\d+)?/gi);
+          }
+          else {
+            return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
+          }
           return [];
         };
 
@@ -909,7 +910,8 @@ export class DialogKeywords {
       } else if (kind === 'mobile') {
         let phoneNumber;
         try {
-          phoneNumber = phone(text, { country: 'BRA' })[0]; // TODO: Use accordingly to the person.
+          // https://github.com/GeneralBots/BotServer/issues/307
+          phoneNumber = phone(text, { country: 'BRA' })[0]; 
           phoneNumber = phoneUtil.parse(phoneNumber);
         } catch (error) {
           await this.talk(Messages[locale].validation_enter_valid_mobile);
@@ -927,7 +929,7 @@ export class DialogKeywords {
           text = text.replace(/\-/gi, '');
 
           if (user.locale === 'en') {
-            // TODO: Change to user.
+            // https://github.com/GeneralBots/BotServer/issues/307
             return text.match(/\d{8}/gi);
           } else {
             return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
