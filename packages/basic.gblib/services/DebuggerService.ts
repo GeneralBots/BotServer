@@ -273,7 +273,7 @@ export class DebuggerService {
 
   public async getRunning ({ botId, botApiKey, scriptName }) {
     let error;
-    botId = botId[0]; // TODO: Handle call in POST.
+    botId = botId[0];
     if (!GBServer.globals.debuggers[botId]) {
       GBServer.globals.debuggers[botId] = {};
     }
