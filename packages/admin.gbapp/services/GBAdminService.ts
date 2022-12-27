@@ -249,7 +249,7 @@ export class GBAdminService implements IGBAdminService {
 
   public async acquireElevatedToken (instanceId: number): Promise<string> {
     const minBoot = GBServer.globals.minBoot as any;
-    instanceId = minBoot.instanceId;
+    instanceId = minBoot.instance.instanceId;
 
     return new Promise<string>(async (resolve, reject) => {
       const instance = await this.core.loadInstanceById(instanceId);
