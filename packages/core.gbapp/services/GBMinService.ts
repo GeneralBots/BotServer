@@ -487,7 +487,7 @@ export class GBMinService {
             await this.adminService.setValue(instance.instanceId, 'accessToken', token['accessToken']);
             await this.adminService.setValue(instance.instanceId, 'refreshToken', token['refreshToken']);
             await this.adminService.setValue(instance.instanceId, 'expiresOn', token['expiresOn'].toString());
-            await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', undefined);
+            await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', null);
 
             // Inform the home for default .gbui after finishing token retrival.
 

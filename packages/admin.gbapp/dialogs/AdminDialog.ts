@@ -366,7 +366,9 @@ export class AdminDialog extends IGBDialog {
 
       if (!result && min.instance.params) {
         const params = JSON.parse(min.instance.params);
-        return list.includes(params['Can Publish']);
+        if (params){
+          return list.includes(params['Can Publish']);
+        }
       }
       return result;
     }
