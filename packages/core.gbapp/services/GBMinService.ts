@@ -910,8 +910,7 @@ export class GBMinService {
               headers,
               username: null,
               ps: null,
-              qs: null,
-              streaming: true
+              qs: null
             });
             const folder = `work/${min.instance.botId}.gbai/cache`;
             const filename = `${GBAdminService.generateUuid()}.png`;
