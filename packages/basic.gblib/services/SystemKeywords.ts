@@ -579,8 +579,7 @@ export class SystemKeywords {
         headers: addressOrHeaders,
         username: httpUsername,
         ps: httpPs,
-        qs,
-        streaming
+        qs
       });
     } else {
       GBLog.info(`BASIC: GET '${addressOrHeaders}' in '${file}'.`);
