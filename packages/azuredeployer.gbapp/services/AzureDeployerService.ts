@@ -52,7 +52,7 @@ import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigS
 import { GBDeployer } from '../../../packages/core.gbapp/services/GBDeployer.js';
 import { Account } from '@azure/arm-cognitiveservices';
 import MicrosoftGraph from '@microsoft/microsoft-graph-client';
-import Spinner from 'cli-spinner';
+import {Spinner} from 'cli-spinner';
 import * as publicIp from 'public-ip';
 import { AccessToken, TokenCredential } from '@azure/core-auth';
 

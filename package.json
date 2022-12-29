@@ -166,7 +166,6 @@
     "yarn": "1.22.19"
   },
   "devDependencies": {
-    "simple-commit-message": "4.0.13",
     "@types/url-join": "4.0.1",
     "ban-sensitive-files": "1.9.18",
     "commitizen": "4.2.2",
@@ -177,6 +176,9 @@
     "ngrok": "4.3.3",
     "prettier-standard": "15.0.1",
     "semantic-release": "17.2.4",
+    "simple-commit-message": "4.0.13",
+    "super-strong-password-generator": "^2.0.2",
+    "super-strong-password-generator-es": "^2.0.2",
     "travis-deploy-once": "5.0.11",
     "ts-node": "10.9.1",
     "tslint": "6.1.3"
