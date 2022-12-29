@@ -49,7 +49,7 @@ import { GBSharePointService } from '../../sharepoint.gblib/services/SharePointS
 import { GuaribasAdmin } from '../models/AdminModel.js';
 import msRestAzure from 'ms-rest-azure';
 import Path from 'path';
-import PasswordGenerator from 'strict-password-generator';
+import {caseSensitive_Numbs_SpecialCharacters_PW} from 'super-strong-password-generator'
 import crypto from 'crypto';
 
 /**
@@ -92,61 +92,25 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static getMobileCode () {
-    const passwordGenerator = new PasswordGenerator();
-    const options = {
-      upperCaseAlpha: false,
-      lowerCaseAlpha: false,
-      number: true,
-      specialCharacter: false,
-      minimumLength: 6,
-      maximumLength: 6
-    };
-
-    return passwordGenerator.generatePassword(options);
+    
+    return caseSensitive_Numbs_SpecialCharacters_PW(15);
   }
 
   public static getRndPassword (): string {
-    const passwordGenerator = new PasswordGenerator();
-    const options = {
-      upperCaseAlpha: true,
-      lowerCaseAlpha: true,
-      number: true,
-      specialCharacter: true,
-      minimumLength: 14,
-      maximumLength: 14
-    };
-    let password = passwordGenerator.generatePassword(options);
+    let password = caseSensitive_Numbs_SpecialCharacters_PW(15);
     password = password.replace(/[\@\[\=\:\;\?\"\'\#]/gi, '*');
 
     return password;
   }
 
   public static getRndReadableIdentifier () {
-    const passwordGenerator = new PasswordGenerator();
-    const options = {
-      upperCaseAlpha: false,
-      lowerCaseAlpha: true,
-      number: false,
-      specialCharacter: false,
-      minimumLength: 14,
-      maximumLength: 14
-    };
 
-    return passwordGenerator.generatePassword(options);
+    return caseSensitive_Numbs_SpecialCharacters_PW(15);
   }
 
   public static getNumberIdentifier () {
-    const passwordGenerator = new PasswordGenerator();
-    const options = {
-      upperCaseAlpha: false,
-      lowerCaseAlpha: false,
-      number: true,
-      specialCharacter: false,
-      minimumLength: 14,
-      maximumLength: 14
-    };
 
-    return passwordGenerator.generatePassword(options);
+    return caseSensitive_Numbs_SpecialCharacters_PW(15);
   }
 
   /**

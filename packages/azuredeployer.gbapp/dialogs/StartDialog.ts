@@ -73,10 +73,10 @@ export class StartDialog {
     // Connects to the cloud and retrieves subscriptions.
 
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
-    const list = await installationDeployer.getSubscriptions(credentials);
-
+    
     let subscriptionId: string;
     while (subscriptionId === undefined) {
+      const list = await installationDeployer.getSubscriptions(credentials);
       subscriptionId = this.retrieveSubscriptionId(list);
     }
 
@@ -178,6 +178,10 @@ generate manually an App ID and App Secret.\n`
 
   private static retrieveSubscriptionId (list) {
     let subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+    if (subscriptionId){
+      
+      return subscriptionId;
+    }
     const map = {};
     let index = 1;
     list.forEach(element => {
