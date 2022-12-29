@@ -866,7 +866,8 @@ export class GBVMService extends GBService {
     keywords[i++] = [
       /^\s*(click)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        // TODO: page is not string.
+        // page is not string.
+        // https://github.com/GeneralBots/BotServer/issues/310
         const params = this.getParams('page,' + $3, ['handle', 'frameOrSelector', 'selector']);
         return `await wa.click (${params})\n`;
       }

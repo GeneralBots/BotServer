@@ -286,7 +286,7 @@ export class FeedbackDialog extends IGBDialog {
               min.instance,
               'Feedback Improve Message',
               Messages[fixedLocale].we_will_improve
-            ); // TODO: Improve to be multi-language.
+            );
 
             await min.conversationalService.sendText(min, step, message);
           }

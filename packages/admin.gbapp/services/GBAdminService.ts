@@ -51,6 +51,8 @@ import msRestAzure from 'ms-rest-azure';
 import Path from 'path';
 import {caseSensitive_Numbs_SpecialCharacters_PW} from 'super-strong-password-generator'
 import crypto from 'crypto';
+import Fs from 'fs';
+import { GBServer } from '../../../src/app.js';
 
 /**
  * Services for server administration.
@@ -72,13 +74,9 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static getNodeVersion () {
-    return '19.1.0';
     const packageJson = urlJoin(process.cwd(), 'package.json');
-    // tslint:disable-next-line: non-literal-require
-    // TODO
-    // const pjson = require(packageJson);
-
-    // return pjson.engines.node.replace('=', '');
+    const pkg = JSON.parse(Fs.readFileSync(packageJson, 'utf8'));
+    return pkg.engines.node.replace('=', '');
   }
 
   public static async getADALTokenFromUsername (username: string, password: string) {
@@ -214,10 +212,8 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public async acquireElevatedToken (instanceId: number): Promise<string> {
-    // TODO: Use boot bot as base for authentication.
-
-    const botId = GBConfigService.get('BOT_ID');
-    instanceId = (await this.core.loadInstanceByBotId(botId)).instanceId;
+    const minBoot = GBServer.globals.minBoot as any;
+    instanceId = minBoot.instance.instanceId;
 
     return new Promise<string>(async (resolve, reject) => {
       const instance = await this.core.loadInstanceById(instanceId);

@@ -257,7 +257,8 @@ export class GBMinService {
       GBServer.globals.appPackages
     );
     
-    // TODO: min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
+    // https://github.com/GeneralBots/BotServer/issues/286
+    // min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
 
     GBServer.globals.minInstances.push(min);
 
@@ -298,7 +299,8 @@ export class GBMinService {
 
     // Loads Named Entity data for this bot.
 
-    // TODO: await KBService.RefreshNER(min);
+    // https://github.com/GeneralBots/BotServer/issues/217
+    // await KBService.RefreshNER(min);
 
     // Calls the loadBot context.activity for all packages.
 
@@ -485,7 +487,7 @@ export class GBMinService {
             await this.adminService.setValue(instance.instanceId, 'accessToken', token['accessToken']);
             await this.adminService.setValue(instance.instanceId, 'refreshToken', token['refreshToken']);
             await this.adminService.setValue(instance.instanceId, 'expiresOn', token['expiresOn'].toString());
-            await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', undefined);
+            await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', null);
 
             // Inform the home for default .gbui after finishing token retrival.
 
@@ -651,7 +653,7 @@ export class GBMinService {
     min.sandBoxMap = {};
     min['scheduleMap'] = {};
     min['conversationWelcomed'] = {};
-    min['nerEngine'] = new nlp.NlpManager(); // TODO: migrate to MerManager.
+    min['nerEngine'] = new nlp.NlpManager(); //   https://github.com/GeneralBots/BotServer/issues/217
     min.packages = sysPackages;
     min.appPackages = appPackages;
 
@@ -666,7 +668,8 @@ export class GBMinService {
         access_token: min.instance.facebookWorkplaceAccessToken
       });
     }
-    // TODO: min.appPackages =  core.getPackagesByInstanceId(min.instance.instanceId);
+    // https://github.com/GeneralBots/BotServer/issues/123
+    // min.appPackages =  core.getPackagesByInstanceId(min.instance.instanceId);
 
     // Creates a hub of services available in .gbapps.
 
@@ -785,7 +788,7 @@ export class GBMinService {
     });
   }
 
-  // TODO: Unify in util.
+  // https://github.com/GeneralBots/BotServer/issues/313
   public static userMobile (step) {
     let mobile = WhatsappDirectLine.mobiles[step.context.activity.conversation.id];
 
@@ -907,8 +910,7 @@ export class GBMinService {
               headers,
               username: null,
               ps: null,
-              qs: null,
-              streaming: true
+              qs: null
             });
             const folder = `work/${min.instance.botId}.gbai/cache`;
             const filename = `${GBAdminService.generateUuid()}.png`;
@@ -1080,7 +1082,6 @@ export class GBMinService {
     let data = { query: context.activity.text };
     await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
       await e.onExchangeData(min, 'handleRawInput', data);
-      // TODO: Handle priority over .gbapp, today most common case is just one item per server.
     });
     context.activity.text = data.query;
 

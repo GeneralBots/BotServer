@@ -1,3 +1,25 @@
+# [2.1.0](https://github.com/GeneralBots/BotServer/compare/2.0.182...2.1.0) (2022-12-23)
+
+
+### Features
+
+* **all:** Cleaning package manager files. ([0cb406a](https://github.com/GeneralBots/BotServer/commit/0cb406ab7923761ad7476ef694d5079af059244c))
+* **all:** Token retrieve optimized. ([6eb9d6c](https://github.com/GeneralBots/BotServer/commit/6eb9d6cbf466a18283285d6775e08aa488632762))
+
+## [2.0.182](https://github.com/GeneralBots/BotServer/compare/2.0.181...2.0.182) (2022-12-23)
+
+
+### Bug Fixes
+
+* **all:** Node version info retrieval automated. ([9cbd8c1](https://github.com/GeneralBots/BotServer/commit/9cbd8c17de674547ed24a189084e8b99588ac69b))
+
+## [2.0.181](https://github.com/GeneralBots/BotServer/compare/2.0.180...2.0.181) (2022-12-22)
+
+
+### Bug Fixes
+
+* **admin.gbapp:** .gbapp List param added to .gbot. ([48a1aa4](https://github.com/GeneralBots/BotServer/commit/48a1aa4d4695b480b6724f6c59830cfe3fa45f8c))
+
 ## [2.0.180](https://github.com/GeneralBots/BotServer/compare/2.0.179...2.0.180) (2022-12-16)
 
 

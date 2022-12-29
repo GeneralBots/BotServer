@@ -307,8 +307,7 @@ export class KBService implements IGBKBService {
         top: 1
       });
 
-      const values = results.results; // TODO: See.
-
+      const values = results.results;
       let returnedScore = 0;
 
       // Searches via Search (Azure Search).
@@ -542,7 +541,8 @@ export class KBService implements IGBKBService {
           };
           questions.push(question1);
 
-          // TODO: Tutorial. if (lastAnswer !== undefined && lastQuestionId !== 0) {
+          // https://github.com/GeneralBots/BotServer/issues/312
+          // if (lastAnswer !== undefined && lastQuestionId !== 0) {
           //   await lastAnswer.update({ nextId: lastQuestionId });
           // }
           // lastAnswer = answer1;
@@ -648,7 +648,7 @@ export class KBService implements IGBKBService {
             format: '.md',
             media: file.name,
             packageId: packageId,
-            prevId: 0 // TODO: Calculate total rows and increment.
+            prevId: 0 // https://github.com/GeneralBots/BotServer/issues/312
           });
         }
       }

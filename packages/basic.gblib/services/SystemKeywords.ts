@@ -87,7 +87,7 @@ export class SystemKeywords {
   }
 
   public async callVM ({ text }) {
-    // TODO:
+    
     const min = null;
     const step = null;
     const deployer = null;
@@ -579,8 +579,7 @@ export class SystemKeywords {
         headers: addressOrHeaders,
         username: httpUsername,
         ps: httpPs,
-        qs,
-        streaming
+        qs
       });
     } else {
       GBLog.info(`BASIC: GET '${addressOrHeaders}' in '${file}'.`);
@@ -651,7 +650,6 @@ export class SystemKeywords {
    *  loop
    * @see NPM package data-forge
    *
-   * // TODO: https://www.npmjs.com/package/parse-markdown-table
    */
   public async find ({ args }): Promise<any> {
     const file = args[0];
@@ -1279,7 +1277,7 @@ export class SystemKeywords {
    * @example user = get "http://server/users/1"
    *
    */
-  public async getByHttp ({ url, headers, username, ps, qs, streaming }) {
+  public async getByHttp ({ url, headers, username, ps, qs}) {
     let options = { };
     if (headers) {
       options['headers'] = headers;
@@ -1293,10 +1291,7 @@ export class SystemKeywords {
     if (qs) {
       options['qs'] = qs;
     }
-    if (streaming) { // TODO: Do it with fetch.
-      options['responseType'] = 'stream';
-      options['encoding'] = null;
-    }fetch
+   
     const result = await fetch(url, options);
 
     try {

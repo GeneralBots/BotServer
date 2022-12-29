@@ -130,10 +130,6 @@ export class WhatsappDirectLine extends GBService {
       case 'GeneralBots':
         const minBoot = GBServer.globals.minBoot as any;
 
-        // TODO:  REMOVE THIS.
-        if (minBoot.botId !== this.botId) {
-          this.customClient = minBoot.whatsAppDirectLine.customClient;
-        } else {
           // Initialize the browser using a local profile for each bot.
 
           const gbaiName = `${this.min.botId}.gbai`;
@@ -251,7 +247,7 @@ export class WhatsappDirectLine extends GBService {
           await createClient.bind(this)(this.browserWSEndpoint);
 
           setUrl = false;
-        }
+
         break;
 
       case 'chatapi':
@@ -542,7 +538,9 @@ export class WhatsappDirectLine extends GBService {
             await this.min.conversationalService.sendMarkdownToMobile(this.min, null, user.userSystemId, message);
           }
         } else if (text === '/qt') {
-          // TODO: Transfers only in pt-br for now.
+          
+          // https://github.com/GeneralBots/BotServer/issues/307
+
           await this.sendToDeviceEx(
             manualUser.userSystemId,
             Messages[this.locale].notify_end_transfer(this.min.instance.botId),

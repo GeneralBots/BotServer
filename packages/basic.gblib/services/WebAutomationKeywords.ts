@@ -308,8 +308,10 @@ export class WebAutomationKeywords {
    */
   public async download ({ handle, selector, folder }) {
     const page = this.getPageByHandle(handle);
-    const container = page; // TODO: element['_frame'] ? element['_frame'] : element['_page'];
+    
     const element = await this.getBySelector({ handle, selector });
+    // https://github.com/GeneralBots/BotServer/issues/311
+    const container = element['_frame'] ? element['_frame'] : element['_page'];
     await page.setRequestInterception(true);
     await container.click(element.originalSelector);
 

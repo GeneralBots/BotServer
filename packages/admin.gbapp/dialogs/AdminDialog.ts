@@ -50,11 +50,11 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
  * Dialogs for administration tasks.
  */
 export class AdminDialog extends IGBDialog {
-  public static isIntentYes (locale, utterance) {
+  public static isIntentYes(locale, utterance) {
     return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
   }
 
-  public static isIntentNo (locale, utterance) {
+  public static isIntentNo(locale, utterance) {
     return utterance.toLowerCase().match(Messages[locale].negative_sentences);
   }
 
@@ -64,7 +64,7 @@ export class AdminDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup (min: GBMinInstance) {
+  public static setup(min: GBMinInstance) {
     // Setup services.
 
     const importer = new GBImporter(min.core);
@@ -217,12 +217,19 @@ export class AdminDialog extends IGBDialog {
           // If the user says yes, starts publishing.
 
           if (AdminDialog.isIntentYes(locale, step.result)) {
+            const list = min.core.getParam(min.instance, '.gbapp List', null);
+            const items = list ? list.split(';') : [];
+
             step.activeDialog.state.options.args;
 
-            for (let index = 0; index < min.appPackages.length; index++) {
-              const element = min.appPackages[index];
-              await element.onExchangeData(min, 'install', null);
-              // TODO: Filter just to the .gbapp being installed.
+            for (let i = 0; i < items.length; i++) {
+              for (let j = 0; j < min.appPackages.length; j++) {
+                if (items[i] === min.appPackages[j]['name']) {
+                  const element = min.appPackages[i];
+                  await element.onExchangeData(min, 'install', null);
+                  break;
+                }
+              }
             }
           } else {
             await min.conversationalService.sendText(min, step, Messages[locale].publish_canceled);
@@ -308,9 +315,7 @@ export class AdminDialog extends IGBDialog {
             try {
               let cmd1;
               if (packageName.indexOf('.') !== -1) {
-                cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${
-                  process.env.STORAGE_LIBRARY
-                }/${botId}.gbai/${packageName}`;
+                cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
               } else {
                 cmd1 = `deployPackage ${packageName}`;
               }
@@ -348,7 +353,7 @@ export class AdminDialog extends IGBDialog {
    * the /broadcast command with specific phone numbers.
    * @param phone Phone number to check (eg.: +5521900002233)
    */
-  public static canPublish (min: GBMinInstance, phone: string): Boolean {
+  public static canPublish(min: GBMinInstance, phone: string): Boolean {
     if (process.env.SECURITY_CAN_PUBLISH !== undefined) {
       let list = process.env.SECURITY_CAN_PUBLISH.split(';');
 
@@ -361,13 +366,15 @@ export class AdminDialog extends IGBDialog {
 
       if (!result && min.instance.params) {
         const params = JSON.parse(min.instance.params);
-        return list.includes(params['Can Publish']);
+        if (params){
+          return list.includes(params['Can Publish']);
+        }
       }
       return result;
     }
   }
 
-  private static setupSecurityDialogs (min: GBMinInstance) {
+  private static setupSecurityDialogs(min: GBMinInstance) {
     min.dialogs.add(
       new WaterfallDialog('/setupSecurity', [
         async step => {
@@ -410,11 +417,7 @@ export class AdminDialog extends IGBDialog {
           min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
 
           const redirectUri = urlJoin(min.instance.botEndpoint, min.instance.botId, '/token');
-          const url = `https://login.microsoftonline.com/${
-            step.activeDialog.state.authenticatorTenant
-          }/oauth2/authorize?client_id=${
-            min.instance.marketplaceId
-          }&response_type=code&redirect_uri=${redirectUri}&scope=https://graph.microsoft.com/.default&state=${state}&response_mode=query`;
+          const url = `https://login.microsoftonline.com/${step.activeDialog.state.authenticatorTenant}/oauth2/authorize?client_id=${min.instance.marketplaceId}&response_type=code&redirect_uri=${redirectUri}&scope=https://graph.microsoft.com/.default&state=${state}&response_mode=query`;
 
           await min.conversationalService.sendText(min, step, Messages[locale].consent(url));
 

@@ -463,7 +463,7 @@ export class GBDeployer implements IGBDeployer {
     GBLog.info(`downloadFolder: localPath=${localPath}, remotePath=${remotePath}, baseUrl=${baseUrl}`);
 
     if (!baseUrl) {
-      client = await GBDeployer.internalGetDriveClient(min);
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
       remotePath = remotePath.replace(/\\/gi, '/');
       const parts = remotePath.split('/');
@@ -490,7 +490,7 @@ export class GBDeployer implements IGBDeployer {
 
       GBLog.info(`Download URL: ${url}`);
 
-      const res = await client.client.api(url).get();
+      const res = await client.api(url).get();
       const documents = res.value;
       if (documents === undefined || documents.length === 0) {
         GBLog.info(`${remotePath} is an empty folder.`);
@@ -880,6 +880,10 @@ export class GBDeployer implements IGBDeployer {
         const m = await import(gbappPath);
         if (m.Package) {
           const p = new m.Package();
+
+          // Adds a name property to the list of loaded .gbapp packages.
+
+          p['name'] = gbappPath;
           await p.loadPackage(core, core.sequelize);
           if (appPackages !== undefined) {
             appPackages.push(p);
