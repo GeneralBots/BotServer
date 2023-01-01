@@ -1,6 +1,6 @@
 {
   "name": "botserver",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "type": "module",
   "description": "General Bot Community Edition open-core server.",
   "main": "./boot.mjs",
@@ -231,7 +231,9 @@
   "release": {
     "tagFormat": "${version}",
     "debug": true,
-    "branches": ["main"],
+    "branches": [
+      "main"
+    ],
     "verifyConditions": [
       "@semantic-release/github"
     ],

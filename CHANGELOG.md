@@ -1,3 +1,23 @@
+## [2.1.1](https://github.com/GeneralBots/BotServer/compare/2.1.0...2.1.1) (2023-01-01)
+
+
+### Bug Fixes
+
+* **admin.gbapp:** Fixing token generation  issues. ([8fb35c2](https://github.com/GeneralBots/BotServer/commit/8fb35c2c2d4798b819e38bdf7c12ec5fe59d7f64))
+* **admin.gbapp:** Fixing token generation  issues. ([2a848f4](https://github.com/GeneralBots/BotServer/commit/2a848f4ea6b7fb3359bd0f9db9a9bdf167544cab))
+* **admin.gbapp:** Fixing token generation  issues. ([3de3bd6](https://github.com/GeneralBots/BotServer/commit/3de3bd6c01aaa80e38b57cdef63f80bf67fb785d))
+* **all:** Finishing renaming to main branch. ([16d2101](https://github.com/GeneralBots/BotServer/commit/16d21019a081151db21e4726cb5c2eac3326336d))
+* **all:** Finishing renaming to main branch. ([cac92cc](https://github.com/GeneralBots/BotServer/commit/cac92cca22a03b67326993f42e528900fa55a263))
+* **all:** Finishing renaming to main branch. ([bff8bcf](https://github.com/GeneralBots/BotServer/commit/bff8bcf7e5fef6499f180d1a1bc9e57f131d6299))
+* **all:** Finishing renaming to main branch. ([07f173e](https://github.com/GeneralBots/BotServer/commit/07f173ec7302a77945abc0bcd772af5ccd6c0761))
+* **all:** Fixing bugs of 3.0 ([39eff93](https://github.com/GeneralBots/BotServer/commit/39eff935283883dcbdfcb5a38c599bd3d7153cd5))
+* **all:** TODO items removed or moved to ALM. ([7348c54](https://github.com/GeneralBots/BotServer/commit/7348c5489433eb82a44af12b4a8f4e76f01998b4))
+* **basic.gblib:** Renaming branch to main. ([c6d9662](https://github.com/GeneralBots/BotServer/commit/c6d96621455039a822f19746a1d8664c79e7ca28))
+* **basic.gblib:** Renaming branch to main. ([203416c](https://github.com/GeneralBots/BotServer/commit/203416c47737c1a4cfb5e5110b4878a6534ecdcf))
+* **basic.gblib:** TODO removal. ([2b08965](https://github.com/GeneralBots/BotServer/commit/2b0896521e537e22858d9d43b019bc95079af6b5))
+* **basic.gblib:** TODO removal. ([c0133a8](https://github.com/GeneralBots/BotServer/commit/c0133a89606336824b93e453b60fce2630815c67))
+* **basic.gblib:** TODO removal. ([9ad1d56](https://github.com/GeneralBots/BotServer/commit/9ad1d5693e954e88675c7e0605b6f64f2900f9d7))
+
 # [2.1.0](https://github.com/GeneralBots/BotServer/compare/2.0.182...2.1.0) (2022-12-23)
 
 
