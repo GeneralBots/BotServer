@@ -231,6 +231,7 @@
   "release": {
     "tagFormat": "${version}",
     "debug": true,
+    "branches": ["main"],
     "verifyConditions": [
       "@semantic-release/github"
     ],
