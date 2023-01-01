@@ -30,4 +30,4 @@ deploy:
     github_token: $GITHUB_TOKEN
     on:
       tags: false
-      branch: master
+      branch: main
