@@ -185,7 +185,6 @@ export class SecService extends GBService {
           item !== userSystemId &&
           !(await this.isAgentSystemId(item))
         ) {
-          // TODO: Optimize loop.
           agentSystemId = item;
         }
       });

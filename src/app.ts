@@ -66,7 +66,7 @@ export class GBServer {
    *  Program entry-point.
    */
 
-  public static run () {
+  public static run() {
     GBLog.info(`The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
     GBConfigService.init();
@@ -127,7 +127,6 @@ export class GBServer {
             if (proxy !== undefined) {
               GBServer.globals.publicAddress = proxy;
             } else {
-
               // Ensure that local development proxy is setup.
 
               GBLog.info(`Establishing a development local proxy (ngrok)...`);
@@ -224,15 +223,15 @@ export class GBServer {
 
             const loggers = GBLog.getLogger();
             winston.default(server, loggers[1]);
-            
           }
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
 
           // Opens Navigator.
 
-          // TODO: Config: core.openBrowserInDevelopment();
-
+          if (process.env.DEV_OPEN_BROWSER) {
+            core.openBrowserInDevelopment();
+          }
         } catch (err) {
           GBLog.error(`STOP: ${err.message ? err.message : err} ${err.stack ? err.stack : ''}`);
           process.exit(1);
@@ -240,8 +239,8 @@ export class GBServer {
       })();
     };
 
-    // TODO: Move to .gbot folder myown.com pointing to generalbots.ai/myown.
-    
+    // 
+
     if (process.env.CERTIFICATE_PFX) {
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,

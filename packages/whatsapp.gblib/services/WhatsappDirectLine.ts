@@ -34,7 +34,7 @@ import urlJoin from 'url-join';
 import Swagger from 'swagger-client';
 import Path from 'path';
 import Fs from 'fs';
-import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
+import { GBError, GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app.js';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
@@ -130,123 +130,123 @@ export class WhatsappDirectLine extends GBService {
       case 'GeneralBots':
         const minBoot = GBServer.globals.minBoot as any;
 
-          // Initialize the browser using a local profile for each bot.
+        // Initialize the browser using a local profile for each bot.
 
-          const gbaiName = `${this.min.botId}.gbai`;
-          const localName = Path.join('work', gbaiName, 'profile');
+        const gbaiName = `${this.min.botId}.gbai`;
+        const localName = Path.join('work', gbaiName, 'profile');
 
-          const createClient = async browserWSEndpoint => {
-            let puppeteer: any = {
-              headless: false,
-              args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--no-first-run',
-                '--no-zygote',
-                '--single-process',
-                '--disable-gpu',
-                '--disable-infobars',
-                '--disable-features=site-per-process',
-                `--user-data-dir=${localName}`
-              ]
-            };
-            if (browserWSEndpoint) {
-              puppeteer = { browserWSEndpoint: browserWSEndpoint };
-            }
+        const createClient = async browserWSEndpoint => {
+          let puppeteer: any = {
+            headless: false,
+            args: [
+              '--no-sandbox',
+              '--disable-setuid-sandbox',
+              '--disable-dev-shm-usage',
+              '--disable-accelerated-2d-canvas',
+              '--no-first-run',
+              '--no-zygote',
+              '--single-process',
+              '--disable-gpu',
+              '--disable-infobars',
+              '--disable-features=site-per-process',
+              `--user-data-dir=${localName}`
+            ]
+          };
+          if (browserWSEndpoint) {
+            puppeteer = { browserWSEndpoint: browserWSEndpoint };
+          }
 
-            const client = (this.customClient = new wpp.Client({
-              authStrategy: new wpp.LocalAuth({
-                clientId: this.min.botId,
-                dataPath: localName
-              }),
-              puppeteer: puppeteer
-            }));
+          const client = (this.customClient = new wpp.Client({
+            authStrategy: new wpp.LocalAuth({
+              clientId: this.min.botId,
+              dataPath: localName
+            }),
+            puppeteer: puppeteer
+          }));
 
-            client.on(
-              'message',
-              (async message => {
-                await this.WhatsAppCallback(message, null);
-              }).bind(this)
-            );
+          client.on(
+            'message',
+            (async message => {
+              await this.WhatsAppCallback(message, null);
+            }).bind(this)
+          );
 
-            client.on(
-              'qr',
-              (async qr => {
-                const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
-                const adminEmail = this.min.core.getParam(this.min.instance, 'Bot Admin E-mail', null);
+          client.on(
+            'qr',
+            (async qr => {
+              const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
+              const adminEmail = this.min.core.getParam(this.min.instance, 'Bot Admin E-mail', null);
 
-                // Sends QR Code to boot bot admin.
+              // Sends QR Code to boot bot admin.
 
-                const msg = `Please, scan QR Code with for bot ${this.botId}.`;
-                GBLog.info(msg);
-                qrcode.generate(qr, { small: true, scale: 0.5 });
+              const msg = `Please, scan QR Code with for bot ${this.botId}.`;
+              GBLog.info(msg);
+              qrcode.generate(qr, { small: true, scale: 0.5 });
 
-                // While handling other bots uses boot instance of this class to send QR Codes.
+              // While handling other bots uses boot instance of this class to send QR Codes.
 
-                const s = new DialogKeywords(this.min, null, null);
-                const qrBuf = await s.getQRCode(qr);
-                const gbaiName = `${this.min.botId}.gbai`;
-                const localName = Path.join(
-                  'work',
-                  gbaiName,
-                  'cache',
-                  `qr${GBAdminService.getRndReadableIdentifier()}.png`
-                );
-                Fs.writeFileSync(localName, qrBuf);
-                const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
-                GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(
-                  adminNumber,
-                  url,
-                  Path.basename(localName),
-                  msg
-                );
-
-                s.sendEmail({ to: adminEmail, subject: `Check your WhatsApp for bot ${this.botId}`, body: msg });
-              }).bind(this)
-            );
-
-            client.on('authenticated', async () => {
-              this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
-              GBLog.verbose(`GBWhatsApp: QR Code authenticated for ${this.botId}.`);
-            });
-
-            client.on('ready', async () => {
-              client.pupBrowser.on(
-                'disconnected',
-                (async () => {
-                  GBLog.info(`Browser terminated. Restarting ${this.min.botId} WhatsApp native provider.`);
-                  await createClient.bind(this)(null);
-                }).bind(this)
+              const s = new DialogKeywords(this.min, null, null);
+              const qrBuf = await s.getQRCode(qr);
+              const gbaiName = `${this.min.botId}.gbai`;
+              const localName = Path.join(
+                'work',
+                gbaiName,
+                'cache',
+                `qr${GBAdminService.getRndReadableIdentifier()}.png`
+              );
+              Fs.writeFileSync(localName, qrBuf);
+              const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
+              GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(
+                adminNumber,
+                url,
+                Path.basename(localName),
+                msg
               );
 
-              GBLog.verbose(`GBWhatsApp: Emptying chat list for ${this.botId}...`);
+              s.sendEmail({ to: adminEmail, subject: `Check your WhatsApp for bot ${this.botId}`, body: msg });
+            }).bind(this)
+          );
 
-              // Keeps the chat list cleaned.
+          client.on('authenticated', async () => {
+            this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
+            GBLog.verbose(`GBWhatsApp: QR Code authenticated for ${this.botId}.`);
+          });
 
-              const chats = await client.getChats();
-              await CollectionUtil.asyncForEach(chats, async chat => {
-                const sleep = ms => {
-                  return new Promise(resolve => {
-                    setTimeout(resolve, ms);
-                  });
-                };
-                const wait = Math.floor(Math.random() * 5000) + 1000;
-                await sleep(wait);
-                if (chat.isGroup) {
-                  await chat.clearMessages();
-                } else if (!chat.pinned) {
-                  await chat.delete();
-                }
-              });
+          client.on('ready', async () => {
+            client.pupBrowser.on(
+              'disconnected',
+              (async () => {
+                GBLog.info(`Browser terminated. Restarting ${this.min.botId} WhatsApp native provider.`);
+                await createClient.bind(this)(null);
+              }).bind(this)
+            );
+
+            GBLog.verbose(`GBWhatsApp: Emptying chat list for ${this.botId}...`);
+
+            // Keeps the chat list cleaned.
+
+            const chats = await client.getChats();
+            await CollectionUtil.asyncForEach(chats, async chat => {
+              const sleep = ms => {
+                return new Promise(resolve => {
+                  setTimeout(resolve, ms);
+                });
+              };
+              const wait = Math.floor(Math.random() * 5000) + 1000;
+              await sleep(wait);
+              if (chat.isGroup) {
+                await chat.clearMessages();
+              } else if (!chat.pinned) {
+                await chat.delete();
+              }
             });
+          });
 
-            client.initialize();
-          };
-          await createClient.bind(this)(this.browserWSEndpoint);
+          client.initialize();
+        };
+        await createClient.bind(this)(this.browserWSEndpoint);
 
-          setUrl = false;
+        setUrl = false;
 
         break;
 
@@ -310,10 +310,8 @@ export class WhatsappDirectLine extends GBService {
   public async check() {
     switch (this.provider) {
       case 'GeneralBots':
+        return this.customClient.getState() === 'CONNECTED';
 
-        // TODO: Verify if browser is OK.
-
-        return true;
       default:
         GBLog.verbose(`GBWhatsapp: Checking server...`);
         let url = urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`;
@@ -323,8 +321,8 @@ export class WhatsappDirectLine extends GBService {
         };
 
         const res = await fetch(url, options);
-        const json = (await res.json());
-        return json ['accountStatus'] === 'authenticated';
+        const json = await res.json();
+        return json['accountStatus'] === 'authenticated';
     }
   }
 
@@ -538,7 +536,6 @@ export class WhatsappDirectLine extends GBService {
             await this.min.conversationalService.sendMarkdownToMobile(this.min, null, user.userSystemId, message);
           }
         } else if (text === '/qt') {
-          
           // https://github.com/GeneralBots/BotServer/issues/307
 
           await this.sendToDeviceEx(
@@ -579,8 +576,7 @@ export class WhatsappDirectLine extends GBService {
           locale,
           null
         );
-      } else if (text === '/qt' || text === 'Sair' || text === 'Fechar') {
-        // TODO: Transfers only in pt-br for now.
+      } else if (text === '/qt' || GBMinService.isGlobalQuitUtterance(locale, text)) {
         await this.endTransfer(from, locale, user, agent, sec);
       } else {
         GBLog.info(`USER (${from}) TO AGENT ${agent.userSystemId}: ${text}`);
@@ -836,9 +832,7 @@ export class WhatsappDirectLine extends GBService {
 
         break;
       case 'maytapi':
-        options = {}; // TODO: Code Maytapi.
-
-        break;
+        throw GBError.create('Sending audio in Maytapi not supported.');
     }
 
     if (options) {
@@ -920,8 +914,6 @@ export class WhatsappDirectLine extends GBService {
           await fetch(url, options);
         } catch (error) {
           GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
-
-          // TODO: Handle Error: socket hang up and retry.
         }
       }
     }

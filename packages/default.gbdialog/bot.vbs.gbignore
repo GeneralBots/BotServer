@@ -54,9 +54,6 @@ else
 			talk "The maximum number of payments is 60"
 		end if
 
-
-		' TODO: This must be reviewed in terms of financing logic.
-		
 		nInstallments = parseInt(installments)
 		vamount = parseFloat(amount)
 		initialPayment = vamount * 0.3 ' 30% of the value

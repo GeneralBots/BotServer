@@ -123,7 +123,7 @@ export class GBMinService {
   /**
    * Static initialization of minimal instance.
    */
-  constructor (
+  constructor(
     core: IGBCoreService,
     conversationalService: IGBConversationalService,
     adminService: IGBAdminService,
@@ -138,7 +138,7 @@ export class GBMinService {
   /**
    * Constructs a new minimal instance for each bot.
    */
-  public async buildMin (instances: IGBInstance[]) {
+  public async buildMin(instances: IGBInstance[]) {
     // Servers default UI on root address '/' if web enabled.
 
     if (process.env.DISABLE_WEB !== 'true') {
@@ -184,7 +184,7 @@ export class GBMinService {
       const MAX_IN_PROCESS = 20;
       const results = new Array(promises.length);
 
-      async function doBlock (startIndex) {
+      async function doBlock(startIndex) {
         // Shallow-copy a block of promises to work on
         const currBlock = promises.slice(startIndex, startIndex + MAX_IN_PROCESS);
         // Await the completion. If any fail, it will throw and that's good.
@@ -233,7 +233,7 @@ export class GBMinService {
    * Removes bot endpoint from web listeners and remove bot instance
    * from list of global server bot instances.
    */
-  public async unmountBot (botId: string) {
+  public async unmountBot(botId: string) {
     const url = `/api/messages/${botId}`;
     removeRoute(GBServer.globals.server, url);
 
@@ -248,7 +248,7 @@ export class GBMinService {
    * serving bot endpoint in several URL like WhatsApp endpoint, .gbkb assets,
    * installing all BASIC artifacts from .gbdialog and OAuth2.
    */
-  public async mountBot (instance: IGBInstance) {
+  public async mountBot(instance: IGBInstance) {
     // Build bot adapter.
 
     const { min, adapter, conversationState } = await this.buildBotAdapter(
@@ -256,7 +256,7 @@ export class GBMinService {
       GBServer.globals.sysPackages,
       GBServer.globals.appPackages
     );
-    
+
     // https://github.com/GeneralBots/BotServer/issues/286
     // min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
 
@@ -411,7 +411,7 @@ export class GBMinService {
     GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`, instance.botId, `${instance.botId}.gbkb`);
   }
 
-  public static isChatAPI (req, res) {
+  public static isChatAPI(req, res) {
     if (!res) {
       return 'GeneralBots';
     }
@@ -422,7 +422,7 @@ export class GBMinService {
    * Creates a listener that can be used by external monitors to check
    * bot instance health.
    */
-  private createCheckHealthAddress (server: any, min: GBMinInstance, instance: IGBInstance) {
+  private createCheckHealthAddress(server: any, min: GBMinInstance, instance: IGBInstance) {
     server.get(`/${min.instance.botId}/check`, async (req, res) => {
       try {
         // Performs the checking of WhatsApp API if enabled for this instance.
@@ -453,7 +453,7 @@ export class GBMinService {
    * Handle OAuth2 web service calls for token requests
    * on https://<gbhost>/<BotId>/token URL.
    */
-  private handleOAuthTokenRequests (server: any, min: GBMinInstance, instance: IGBInstance) {
+  private handleOAuthTokenRequests(server: any, min: GBMinInstance, instance: IGBInstance) {
     server.get(`/${min.instance.botId}/token`, async (req, res) => {
       // Checks request state by reading AntiCSRFAttackState from GB Admin infrastructure.
 
@@ -502,7 +502,7 @@ export class GBMinService {
    * Handle OAuth2 web service calls for authorization requests
    * on https://<gbhost>/<BotId>/auth URL.
    */
-  private handleOAuthRequests (server: any, min: GBMinInstance) {
+  private handleOAuthRequests(server: any, min: GBMinInstance) {
     server.get(`/${min.instance.botId}/auth`, (req, res) => {
       let authorizationUrl = urlJoin(
         min.instance.authenticatorAuthorityHostUrl,
@@ -520,7 +520,7 @@ export class GBMinService {
   /**
    * Returns the instance object to clients requesting bot info.
    */
-  private async handleGetInstanceForClient (req: any, res: any) {
+  private async handleGetInstanceForClient(req: any, res: any) {
     // Translates the requested botId.
 
     let botId = req.params.botId;
@@ -577,7 +577,7 @@ export class GBMinService {
   /**
    * Gets Webchat token from Bot Service.
    */
-  private async getWebchatToken (instance: any) {
+  private async getWebchatToken(instance: any) {
     const url = 'https://directline.botframework.com/v3/directline/tokens/generate';
     const options = {
       method: 'POST',
@@ -600,7 +600,7 @@ export class GBMinService {
   /**
    * Gets a Speech to Text / Text to Speech token from the provider.
    */
-  private async getSTSToken (instance: any) {
+  private async getSTSToken(instance: any) {
     const options = {
       method: 'POST',
       headers: {
@@ -620,7 +620,7 @@ export class GBMinService {
   /**
    * Builds the BOT Framework & GB infrastructures.
    */
-  private async buildBotAdapter (instance: any, sysPackages: IGBPackage[], appPackages: IGBPackage[]) {
+  private async buildBotAdapter(instance: any, sysPackages: IGBPackage[], appPackages: IGBPackage[]) {
     // MSFT stuff.
 
     const adapter = new BotFrameworkAdapter({
@@ -715,7 +715,7 @@ export class GBMinService {
       await min.whatsAppDirectLine.setup(true);
     } else {
       const minBoot = GBServer.globals.minBoot as any;
-      if(minBoot.whatsappServiceKey){
+      if (minBoot.whatsappServiceKey) {
         min.whatsAppDirectLine = new WhatsappDirectLine(
           min,
           min.botId,
@@ -755,7 +755,7 @@ export class GBMinService {
   /**
    * Performs calling of loadBot event in all .gbapps.
    */
-  private async invokeLoadBot (appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance) {
+  private async invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance) {
     // Calls loadBot event in all .gbapp packages.
 
     await CollectionUtil.asyncForEach(sysPackages, async p => {
@@ -789,7 +789,7 @@ export class GBMinService {
   }
 
   // https://github.com/GeneralBots/BotServer/issues/313
-  public static userMobile (step) {
+  public static userMobile(step) {
     let mobile = WhatsappDirectLine.mobiles[step.context.activity.conversation.id];
 
     if (!mobile && step) {
@@ -802,7 +802,7 @@ export class GBMinService {
   /**
    * BOT Framework web service hook method.
    */
-  private async receiver (
+  private async receiver(
     req: any,
     res: any,
     conversationState: ConversationState,
@@ -937,9 +937,7 @@ export class GBMinService {
         // Required for F0 handling of persisted conversations.
 
         GBLog.info(
-          `Input> ${context.activity.text} (type: ${context.activity.type}, name: ${
-            context.activity.name
-          }, channelId: ${context.activity.channelId})`
+          `Input> ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
         );
 
         // Answer to specific BOT Framework event conversationUpdate to auto start dialogs.
@@ -1030,7 +1028,7 @@ export class GBMinService {
   /**
    * Called to handle all event sent by .gbui clients.
    */
-  private async processEventActivity (min, user, context, step: GBDialogStep) {
+  private async processEventActivity(min, user, context, step: GBDialogStep) {
     if (context.activity.name === 'whoAmI') {
       await step.beginDialog('/whoAmI');
     } else if (context.activity.name === 'showSubjects') {
@@ -1066,9 +1064,19 @@ export class GBMinService {
   }
 
   /**
+   * 
+   * Checks for global exit kewywords cancelling any active dialogs.
+   *  
+   * */ 
+
+  public static isGlobalQuitUtterance(locale, utterance) {
+    return utterance.match(Messages.global_quit);
+  }
+
+  /**
    * Called to handle all text messages sent and received by the bot.
    */
-  private async processMessageActivity (context, min: GBMinInstance, step: GBDialogStep) {
+  private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
     const sec = new SecService();
 
     if (!context.activity.text) {
@@ -1109,12 +1117,6 @@ export class GBMinService {
       }
     }
 
-    // Checks for global exit kewywords cancelling any active dialogs.
-
-    const globalQuit = (locale, utterance) => {
-      return utterance.match(Messages.global_quit);
-    };
-
     // Files in .gbdialog can be called directly by typing its name normalized into JS .
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
@@ -1142,7 +1144,7 @@ export class GBMinService {
       } else {
         await step.beginDialog(cmdOrDialogName, { args: args });
       }
-    } else if (globalQuit(step.context.activity.locale, context.activity.text)) {
+    } else if (GBMinService.isGlobalQuitUtterance(step.context.activity.locale, context.activity.text)) {
       await step.cancelAllDialogs();
       await min.conversationalService.sendText(min, step, Messages[step.context.activity.locale].canceled);
     } else if (context.activity.text === 'admin') {
