@@ -1,3 +1,10 @@
+## [2.1.2](https://github.com/GeneralBots/BotServer/compare/2.1.1...2.1.2) (2023-01-02)
+
+
+### Bug Fixes
+
+* **azuredeployer.gbapp:** createInstance free ([1b41551](https://github.com/GeneralBots/BotServer/commit/1b41551ac553f7340f29a3f17214499084752296))
+
 ## [2.1.1](https://github.com/GeneralBots/BotServer/compare/2.1.0...2.1.1) (2023-01-01)
 
 
