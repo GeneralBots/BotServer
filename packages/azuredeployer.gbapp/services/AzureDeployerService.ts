@@ -87,7 +87,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await this.deployer.rebuildIndex(instance, this.getKBSearchSchema(instance.searchIndex));
   }
 
-  public static async createInstance (deployer: GBDeployer, freeTier: boolean = false): Promise<AzureDeployerService> {
+  public static async createInstance (deployer: GBDeployer, freeTier: boolean = true): Promise<AzureDeployerService> {
 
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
