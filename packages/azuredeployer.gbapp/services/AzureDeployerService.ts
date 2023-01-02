@@ -579,13 +579,14 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       }
     });
   }
-
+  
   public async syncBotServerRepository (group, name) {
     await this.webSiteClient.webApps.syncRepository(group, name);
   }
-
+  
   public async initServices (accessToken: string, expiresOnTimestamp,  subscriptionId: string) {
-
+    
+    this.accessToken = accessToken;
     class AccessToken2 implements AccessToken
     {
         public expiresOnTimestamp: number;
