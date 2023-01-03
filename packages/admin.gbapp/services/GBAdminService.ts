@@ -49,7 +49,7 @@ import { GBSharePointService } from '../../sharepoint.gblib/services/SharePointS
 import { GuaribasAdmin } from '../models/AdminModel.js';
 import msRestAzure from 'ms-rest-azure';
 import Path from 'path';
-import {caseSensitive_Numbs_SpecialCharacters_PW} from 'super-strong-password-generator'
+import { caseSensitive_Numbs_SpecialCharacters_PW, lowercase_PW } from 'super-strong-password-generator'
 import crypto from 'crypto';
 import Fs from 'fs';
 import { GBServer } from '../../../src/app.js';
@@ -65,56 +65,56 @@ export class GBAdminService implements IGBAdminService {
 
   public core: IGBCoreService;
 
-  constructor (core: IGBCoreService) {
+  constructor(core: IGBCoreService) {
     this.core = core;
   }
 
-  public static generateUuid (): string {
+  public static generateUuid(): string {
     return crypto.randomUUID();
   }
 
-  public static getNodeVersion () {
+  public static getNodeVersion() {
     const packageJson = urlJoin(process.cwd(), 'package.json');
     const pkg = JSON.parse(Fs.readFileSync(packageJson, 'utf8'));
     return pkg.engines.node.replace('=', '');
   }
 
-  public static async getADALTokenFromUsername (username: string, password: string) {
+  public static async getADALTokenFromUsername(username: string, password: string) {
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
 
     return (credentials as any).tokenCache._entries[0].accessToken;
   }
 
-  public static async getADALCredentialsFromUsername (username: string, password: string) {
+  public static async getADALCredentialsFromUsername(username: string, password: string) {
     return await msRestAzure.loginWithUsernamePassword(username, password);
   }
 
-  public static getMobileCode () {
-    
-    return caseSensitive_Numbs_SpecialCharacters_PW(15);
+  public static getMobileCode() {
+
+    return Math.trunc(Math.random() * 6);
   }
 
-  public static getRndPassword (): string {
+  public static getRndPassword(): string {
     let password = caseSensitive_Numbs_SpecialCharacters_PW(15);
     password = password.replace(/[\@\[\=\:\;\?\"\'\#]/gi, '*');
 
     return password;
   }
 
-  public static getRndReadableIdentifier () {
+  public static getRndReadableIdentifier() {
 
-    return caseSensitive_Numbs_SpecialCharacters_PW(15);
+    return lowercase_PW(14);
   }
 
-  public static getNumberIdentifier () {
+  public static getNumberIdentifier(size: number = 14): string {
 
-    return caseSensitive_Numbs_SpecialCharacters_PW(15);
+    return Math.trunc(Math.random() * size).toString();
   }
 
   /**
    * @see https://stackoverflow.com/a/52171480
    */
-  public static getHash (str, seed = 0) {
+  public static getHash(str: string, seed = 0) {
     let h1 = 0xdeadbeef ^ seed,
       h2 = 0x41c6ce57 ^ seed;
     for (let i = 0, ch; i < str.length; i++) {
@@ -127,7 +127,7 @@ export class GBAdminService implements IGBAdminService {
     return 4294967296 * (2097151 & h2) + (h1 >>> 0);
   }
 
-  public static async undeployPackageCommand (text: any, min: GBMinInstance) {
+  public static async undeployPackageCommand(text: string, min: GBMinInstance) {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
@@ -135,10 +135,10 @@ export class GBAdminService implements IGBAdminService {
     await deployer.undeployPackageFromLocalPath(min.instance, localFolder);
   }
 
-  public static isSharePointPath (path: string) {
+  public static isSharePointPath(path: string) {
     return path.indexOf('sharepoint.com') !== -1;
   }
-  public static async deployPackageCommand (min: GBMinInstance, text: string, deployer: IGBDeployer) {
+  public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: IGBDeployer) {
     const packageName = text.split(' ')[1];
 
     if (!this.isSharePointPath(packageName)) {
@@ -151,8 +151,6 @@ export class GBAdminService implements IGBAdminService {
       const siteName = text.split(' ')[1];
       const folderName = text.split(' ')[2];
 
-      const s = new GBSharePointService();
-
       const localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(folderName));
 
       // .gbot packages are handled using storage API, so no download
@@ -162,7 +160,7 @@ export class GBAdminService implements IGBAdminService {
       await deployer.deployPackage(min, localFolder);
     }
   }
-  public static async rebuildIndexPackageCommand (min: GBMinInstance, deployer: GBDeployer) {
+  public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: GBDeployer) {
     const service = await AzureDeployerService.createInstance(deployer);
     await deployer.rebuildIndex(
       min.instance,
@@ -170,13 +168,13 @@ export class GBAdminService implements IGBAdminService {
     );
   }
 
-  public static async syncBotServerCommand (min: GBMinInstance, deployer: GBDeployer) {
+  public static async syncBotServerCommand(min: GBMinInstance, deployer: GBDeployer) {
     const serverName = `${min.instance.botId}-server`;
-    const service = await AzureDeployerService.createInstance(deployer );
+    const service = await AzureDeployerService.createInstance(deployer);
     service.syncBotServerRepository(min.instance.botId, serverName);
   }
 
-  public async setValue (instanceId: number, key: string, value: string) {
+  public async setValue(instanceId: number, key: string, value: string) {
     const options = <FindOptions>{ where: {} };
     options.where = { key: key };
     let admin = await GuaribasAdmin.findOne(options);
@@ -189,7 +187,7 @@ export class GBAdminService implements IGBAdminService {
     await admin.save();
   }
 
-  public async updateSecurityInfo (
+  public async updateSecurityInfo(
     instanceId: number,
     authenticatorTenant: string,
     authenticatorAuthorityHostUrl: string
@@ -203,7 +201,7 @@ export class GBAdminService implements IGBAdminService {
     return item.save();
   }
 
-  public async getValue (instanceId: number, key: string): Promise<string> {
+  public async getValue(instanceId: number, key: string): Promise<string> {
     const options = <FindOptions>{ where: {} };
     options.where = { key: key, instanceId: instanceId };
     const obj = await GuaribasAdmin.findOne(options);
@@ -211,8 +209,8 @@ export class GBAdminService implements IGBAdminService {
     return obj.value;
   }
 
-  public async acquireElevatedToken (instanceId: number): Promise<string> {
-    const minBoot = GBServer.globals.minBoot as any;
+  public async acquireElevatedToken(instanceId: number): Promise<string> {
+    const minBoot = GBServer.globals.minBoot;
     instanceId = minBoot.instance.instanceId;
 
     return new Promise<string>(async (resolve, reject) => {
@@ -258,5 +256,5 @@ export class GBAdminService implements IGBAdminService {
     });
   }
 
-  public async publish (min: GBMinInstance, packageName: string, republish: boolean): Promise<void> {}
+  public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void> { }
 }

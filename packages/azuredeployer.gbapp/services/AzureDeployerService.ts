@@ -404,7 +404,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await this.createSearch(name, searchName, instance.cloudLocation);
     const searchKeys = await this.searchClient.adminKeys.get(name, searchName);
     instance.searchHost = `${searchName}.search.windows.net`;
-    instance.searchIndex = 'azuresql-index.js';
+    instance.searchIndex = 'azuresql-index';
     instance.searchIndexer = 'azuresql-indexer';
     instance.searchKey = searchKeys.primaryKey;
 

@@ -10,7 +10,7 @@
     "@midudev/react-static-content": "1.0.4",
     "ajv": "8.11.2",
     "botframework-directlinejs": "0.15.1",
-    "botframework-webchat": "4.15.5",
+    "botframework-webchat": "4.15.6",
     "deep-extend": "0.6.0",
     "eslint": "8.28.0",
     "fetch": "1.1.0",
