@@ -962,7 +962,7 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\s**save\s*(.*)\s*as\s*(.*)/gim,
+      /^\s*save\s*(.*)\s*as\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.saveFile({file: ${$2}, data: ${$1})\n`;
       }
