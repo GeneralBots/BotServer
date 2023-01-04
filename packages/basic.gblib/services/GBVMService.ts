@@ -277,7 +277,7 @@ export class GBVMService extends GBService {
   }
 
   public static getMethodNameFromVBSFilename (filename: string) {
-    let mainName = filename.replace(/\s|\-/gim, '').split('.')[0];
+    let mainName = filename.replace(/\s*|\-/gim, '').split('.')[0];
     return mainName.toLowerCase();
   }
 
@@ -385,7 +385,7 @@ export class GBVMService extends GBService {
     keywords[i++] = [
       /^\s*(\w+)\s*\=\s*SELECT\s*(.*)/gim,
       ($0, $1, $2) => {
-        let tableName = /\sFROM\s(\w+)/.exec($2)[1];
+        let tableName = /\s*FROM\s*(\w+)/.exec($2)[1];
         let sql = `SELECT ${$2}`.replace(tableName, '?');
         return `${$1} = await sys.executeSQL({data:${$1}, sql:"${sql}", tableName:"${tableName}"})\n`;
       }
@@ -411,91 +411,91 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as login/gim,
+      /^\s*hear (\w+) as login/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"login"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as email/gim,
+      /^\s*hear (\w+) as email/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"email"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as integer/gim,
+      /^\s*hear (\w+) as integer/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"integer"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as file/gim,
+      /^\s*hear (\w+) as file/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"file"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as boolean/gim,
+      /^\s*hear (\w+) as boolean/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"boolean"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as name/gim,
+      /^\s*hear (\w+) as name/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"name"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as date/gim,
+      /^\s*hear (\w+) as date/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"date"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as hour/gim,
+      /^\s*hear (\w+) as hour/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"hour"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as phone/gim,
+      /^\s*hear (\w+) as phone/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"phone"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as money/gim,
+      /^\s*hear (\w+) as money/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"money")}`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as language/gim,
+      /^\s*hear (\w+) as language/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"language")}`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as zipcode/gim,
+      /^\s*hear (\w+) as zipcode/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({kind:"zipcode")}`;
       }
     ];
 
     keywords[i++] = [
-      /^\shear (\w+) as (.*)/gim,
+      /^\s*hear (\w+) as (.*)/gim,
       ($0, $1, $2) => {
         return `${$1} = await dk.getHear({kind:"menu", args: [${$2}])}`;
       }
@@ -528,7 +528,7 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\sCALL\s*(.*)/gim,
+      /^\s*CALL\s*(.*)/gim,
       ($0, $1) => {
         return `await ${$1}\n`;
       }
@@ -543,7 +543,7 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\s*(\w+)\s*\=\s*create deal(\s)(.*)/gim,
+      /^\s*(\w+)\s*\=\s*create deal(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['dealName', 'contact', 'company', 'amount']);
 
@@ -573,14 +573,14 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\ssee\s*text\s*of\s*(\w+)\s*as\s*(\w+)\s*/gim,
+      /^\s*see\s*text\s*of\s*(\w+)\s*as\s*(\w+)\s*/gim,
       ($0, $1, $2, $3) => {
         return `${$2} = await sys.seeText({url: ${$1})\n`;
       }
     ];
 
     keywords[i++] = [
-      /^\ssee\s*caption\s*of\s*(\w+)\s*as(.*)/gim,
+      /^\s*see\s*caption\s*of\s*(\w+)\s*as(.*)/gim,
       ($0, $1, $2, $3) => {
         return `${$2} = await sys.seeCaption({url: ${$1})\n`;
       }
@@ -601,7 +601,7 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\s*(\w+)\s*\=\s*get\s(.*)/gim,
+      /^\s*(\w+)\s*\=\s*get\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         const count = ($2.match(/\,/g) || []).length;
         const values = $2.split(',');
@@ -641,7 +641,7 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\s*(go to)(\s)(.*)/gim,
+      /^\s*(go to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['fromOrDialogName', 'dialogName']);
         return `await dk.gotoDialog(${params})\n`;
@@ -656,7 +656,7 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\s*set header\s*(.*)\sas\s(.*)/gim,
+      /^\s*set header\s*(.*)\s*as\s*(.*)/gim,
       ($0, $1, $2) => {
         return `headers[${$1}]=${$2})`;
       }
@@ -670,7 +670,7 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\sset http password\s*\=\s*(.*)/gim,
+      /^\s*set http password\s*\=\s*(.*)/gim,
       ($0, $1) => {
         return `httpPs = ${$1}`;
       }
@@ -756,21 +756,21 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\sSHARE FOLDER\s*(.*)/gim,
+      /^\s*SHARE FOLDER\s*(.*)/gim,
       ($0, $1) => {
         return `await sys.shareFolder ({name: ${$1}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(create a bot farm using)(\s)(.*)/gim,
+      /^\s*(create a bot farm using)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.createABotFarmUsing ({${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(transfer to)(\s)(.*)/gim,
+      /^\s*(transfer to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.transferTo ({to:${$3}})\n`;
       }
@@ -798,7 +798,7 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\s*(talk to)(\s)(.*)/gim,
+      /^\s*(talk to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['mobile', 'message']);
         return `await sys.talkTo(${params})\n`;
@@ -806,7 +806,7 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\s*(talk)(\s)(.*)/gim,
+      /^\s*(talk)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         if ($3.substr(0, 1) !== '"') {
           $3 = `"${$3}"`;
@@ -905,7 +905,7 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\s*(chart)(\s)(.*)/gim,
+      /^\s*(chart)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['type', 'data', 'legends', 'transpose']);
         return `await dk.chart (${params})\n`;
@@ -913,28 +913,28 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\sMERGE\s(.*)\sWITH\s(.*)BY\s(.*)/gim,
+      /^\s*MERGE\s*(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.merge({file: ${$1}, data: ${$2}, key1: ${$3}})\n`;
       }
     ];
 
     keywords[i++] = [
-      /^\sPRESS\s(.*)/gim,
+      /^\s*PRESS\s*(.*)/gim,
       ($0, $1, $2) => {
         return `await wa.pressKey({handle: page, char: ${$1})\n`;
       }
     ];
 
     keywords[i++] = [
-      /^\sSCREENSHOT\s(.*)/gim,
+      /^\s*SCREENSHOT\s*(.*)/gim,
       ($0, $1, $2) => {
         return `await wa.screenshot({handle: page, selector: ${$1}})\n`;
       }
     ];
 
     keywords[i++] = [
-      /^\sTWEET\s(.*)/gim,
+      /^\s*TWEET\s*(.*)/gim,
       ($0, $1, $2) => {
         return `await sys.tweet({text: ${$1})\n`;
       }
@@ -955,27 +955,27 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /^\s*(\w+)\s*\=\s*FILL\s(.*)\sWITH\s(.*)/gim,
+      /^\s*(\w+)\s*\=\s*FILL\s*(.*)\s*WITH\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `${$1} = await sys.fill({templateName: ${$2}, data: ${$3}})\n`;
       }
     ];
 
     keywords[i++] = [
-      /^\ssave\s(.*)\sas\s(.*)/gim,
+      /^\s**save\s*(.*)\s*as\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.saveFile({file: ${$2}, data: ${$1})\n`;
       }
     ];
     keywords[i++] = [
-      /^\s*(save)(\s)(.*)/gim,
+      /^\s*(save)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.save({args: [${$3}]})\n`;
       }
     ];
 
     keywords[i++] = [
-      /^\sset\s(.*)/gim,
+      /^\s*set\s*(.*)/gim,
       ($0, $1, $2) => {
         const params = this.getParams($1, ['file', 'address', 'value']);
         return `await sys.set (${params})`;
