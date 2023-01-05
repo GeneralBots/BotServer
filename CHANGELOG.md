@@ -1,3 +1,10 @@
+## [2.1.4](https://github.com/GeneralBots/BotServer/compare/2.1.3...2.1.4) (2023-01-05)
+
+
+### Bug Fixes
+
+* **tscompiler.ts:** Update typescript import. ([f4209eb](https://github.com/GeneralBots/BotServer/commit/f4209eb4f0b89905fa463dbfe7354532b58a933e))
+
 ## [2.1.3](https://github.com/GeneralBots/BotServer/compare/2.1.2...2.1.3) (2023-01-04)
 
 
