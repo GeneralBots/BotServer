@@ -226,7 +226,7 @@ export class GBVMService extends GBService {
       code = `
       return (async () => {
         require('isomorphic-fetch');
-        const rest from 'typescript-rest-rpc/lib/client');
+        const rest = require('typescript-rest-rpc/lib/client');
 
         // Interprocess communication from local HTTP to the BotServer.
 
