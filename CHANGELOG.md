@@ -1,3 +1,13 @@
+## [2.1.3](https://github.com/GeneralBots/BotServer/compare/2.1.2...2.1.3) (2023-01-04)
+
+
+### Bug Fixes
+
+* **AzureDeployerService:** accessToken ([07d9cf6](https://github.com/GeneralBots/BotServer/commit/07d9cf67dbf96afe1b6811dc80c20c34e43794b7))
+* **azuredeployerservice.gbapp:** Update of password generator libs. ([57461ee](https://github.com/GeneralBots/BotServer/commit/57461ee0060e9e4224d674f07e96008419ff57b6))
+* **basic.gblib:** Threat multiple spaces as one. ([0721a3f](https://github.com/GeneralBots/BotServer/commit/0721a3fa78776259f7b238d180ee55c823787237))
+* **basic.gblib:** Threat multiple spaces as one. ([ac5911e](https://github.com/GeneralBots/BotServer/commit/ac5911ee02cc6e844d7a35788e962b8cef7a037e))
+
 ## [2.1.2](https://github.com/GeneralBots/BotServer/compare/2.1.1...2.1.2) (2023-01-02)
 
 
