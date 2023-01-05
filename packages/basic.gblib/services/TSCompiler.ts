@@ -37,7 +37,7 @@
 'use strict';
 
 import { GBLog } from 'botlib';
-import * as ts from 'typescript';
+import ts from 'typescript';
 
 /**
  * Wrapper for a TypeScript compiler.
