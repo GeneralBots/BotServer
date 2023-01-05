@@ -1,3 +1,10 @@
+## [2.1.5](https://github.com/GeneralBots/BotServer/compare/2.1.4...2.1.5) (2023-01-05)
+
+
+### Bug Fixes
+
+* **gbvmservices.ts:** Update ([c62d372](https://github.com/GeneralBots/BotServer/commit/c62d372ec6fdfd46bd7b1c48f9d3212f58d8c5e6))
+
 ## [2.1.4](https://github.com/GeneralBots/BotServer/compare/2.1.3...2.1.4) (2023-01-05)
 
 
