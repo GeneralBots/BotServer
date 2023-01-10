@@ -1028,7 +1028,10 @@ export class DialogKeywords {
   }
 
   public async getSingleton({}) {
+    const executionId = this.sys().getRandomId();
+    GBServer.globals.executions[executionId]={};
     return {
+      executionId: executionId,
       id: this.sys().getRandomId(),
       username: this.userName(),
       mobile: this.userMobile(),

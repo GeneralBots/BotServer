@@ -41,12 +41,13 @@ import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
  */
 
 export class RootData {
-  public publicAddress: string; // URI for BotServer
-  public server: any; // Express reference
-  public sysPackages: any[]; // Loaded system package list
-  public appPackages: any[]; // Loaded .gbapp package list
-  public minService: GBMinService; // Minimalist service core
-  public bootInstance: IGBInstance; // General Bot Interface Instance
+  public executions: {}; // List of .gbdialog active executions.
+  public publicAddress: string; // URI for BotServer.
+  public server: any; // Express reference.
+  public sysPackages: any[]; // Loaded system package list.
+  public appPackages: any[]; // Loaded .gbapp package list.
+  public minService: GBMinService; // Minimalist service core.
+  public bootInstance: IGBInstance; // General Bot Interface Instance.
   public minInstances: any[]; // List of bot instances.
   public minBoot: GBMinInstance; // Reference to boot bot.
   public wwwroot: string; // .gbui or a static webapp.

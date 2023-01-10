@@ -119,14 +119,14 @@ export class WebAutomationKeywords {
    *
    * @example OPEN "https://wikipedia.org"
    */
-  public async getPage ({ url, username, password }) {
+  public async getPage ({ executionId, url, username, password }) {
     GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);
     if (!this.browser) {
       this.browser = await createBrowser(null);
     }
     const page = (await this.browser.pages())[0];
     if (username || password) {
-      await page.authenticate({ username: username, password: password });
+      await page.authenticate({executionId, username: username, password: password });
     }
     await page.goto(url);
 

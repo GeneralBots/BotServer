@@ -101,7 +101,7 @@ export class GBAdminService implements IGBAdminService {
     return password;
   }
 
-  public static getRndReadableIdentifier() {
+  public static getRndReadableIdentifier(): string {
 
     return lowercase_PW(14);
   }
