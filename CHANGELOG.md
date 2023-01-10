@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/GeneralBots/BotServer/compare/2.1.5...2.2.0) (2023-01-10)
+
+
+### Features
+
+* **systemkeywords.ts:** introducing executionid feature in api ([52dea44](https://github.com/GeneralBots/BotServer/commit/52dea442d5fc00cebcc50ca0cb28ee4f8c12c4db))
+
 ## [2.1.5](https://github.com/GeneralBots/BotServer/compare/2.1.4...2.1.5) (2023-01-05)
 
 
