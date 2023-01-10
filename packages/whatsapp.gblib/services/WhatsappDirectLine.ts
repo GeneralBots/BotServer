@@ -203,7 +203,7 @@ export class WhatsappDirectLine extends GBService {
                 msg
               );
 
-              s.sendEmail({ to: adminEmail, subject: `Check your WhatsApp for bot ${this.botId}`, body: msg });
+              s.sendEmail({executionId: 0, to: adminEmail, subject: `Check your WhatsApp for bot ${this.botId}`, body: msg });
             }).bind(this)
           );
 
