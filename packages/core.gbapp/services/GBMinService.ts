@@ -38,8 +38,7 @@
 import cliProgress from 'cli-progress';
 import { DialogSet, TextPrompt } from 'botbuilder-dialogs';
 import express from 'express';
-import Swagger from 'swagger-client';
-
+import SwaggerClient from 'swagger-client';
 import removeRoute from 'express-remove-route';
 import AuthenticationContext from 'adal-node';
 import wash from 'washyourmouthoutwithsoap';
@@ -331,15 +330,14 @@ export class GBMinService {
     if (process.env.TEST_MESSAGE) {
       GBLog.info(`Starting auto test with '${process.env.TEST_MESSAGE}'.`);
 
-      const client = await new Swagger({
-        spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-        usePromise: true
-      });
-      client.clientAuthorizations.add(
-        'AuthorizationBotConnector',
-        new Swagger.ApiKeyAfuthorization('Authorization', `Bearer ${min.instance.webchatKey}`, 'header')
-      );
-      const response = await client.Conversations.Conversations_StartConversation();
+      const client = await new SwaggerClient({
+        spec:JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
+        requestInterceptor: req => {
+            req.headers["Authorization"] = `Bearer ${min.instance.webchatKey}`
+    
+      }});
+
+      const response = await client.apis.Conversations.Conversations_StartConversation();
       const conversationId = response.obj.conversationId;
       GBServer.globals.debugConversationId = conversationId;
 
@@ -351,7 +349,7 @@ export class GBMinService {
       };
 
       await CollectionUtil.asyncForEach(steps, async step => {
-        client.Conversations.Conversations_PostActivity({
+        client.apis.Conversations.Conversations_PostActivity({
           conversationId: conversationId,
           activity: {
             textFormat: 'plain',
@@ -411,7 +409,7 @@ export class GBMinService {
     GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`, instance.botId, `${instance.botId}.gbkb`);
   }
 
-  public static isChatAPI(req, res) {
+  public static isChatAPI(req:any, res: any) {
     if (!res) {
       return 'GeneralBots';
     }

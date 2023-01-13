@@ -46,7 +46,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
 
   let stderrCache = '';
 
-  const run = async (code, scope) => {
+  const run = async (code: any, scope: any) => {
     const childProcess = spawn(
       'cpulimit',
       [

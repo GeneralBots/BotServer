@@ -124,7 +124,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     return subscriptionClient.subscriptions.list();
   }
 
-  public getKBSearchSchema (indexName) {
+  public getKBSearchSchema (indexName: any) {
     return {
       name: indexName,
       fields: [
@@ -235,7 +235,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     };
   }
 
-  public async botExists (botId) {
+  public async botExists (botId: string) {
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
@@ -257,7 +257,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     return !res.parsedBody.valid;
   }
 
-  public async updateBotProxy (botId, group, endpoint) {
+  public async updateBotProxy (botId: string, group: string, endpoint: string) {
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
@@ -316,7 +316,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     GBLog.info(`Bot updated at: ${endpoint}.`);
   }
 
-  public async deleteBot (botId: string, group) {
+  public async deleteBot (botId: string, group: string) {
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
@@ -338,7 +338,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     GBLog.info(`Bot ${botId} was deleted from the provider.`);
   }
 
-  public async openStorageFirewall (groupName, serverName) {
+  public async openStorageFirewall (groupName: string, serverName: string) {
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
 
 
@@ -353,7 +353,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   public async deployFarm (
     proxyAddress: string,
     instance: IGBInstance,
-    credentials,
+    credentials: any,
     subscriptionId: string
   ): Promise<IGBInstance> {
     const culture = 'en-us';
@@ -580,7 +580,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     });
   }
   
-  public async syncBotServerRepository (group, name) {
+  public async syncBotServerRepository (group: string, name: string) {
     await this.webSiteClient.webApps.syncRepository(group, name);
   }
   
@@ -605,7 +605,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       }
     }
 
-    const token = await new StaticAccessToken();
+    const token = new StaticAccessToken();
 
     this.cloud = new ResourceManagementClient(token, subscriptionId);
     this.webSiteClient = new WebSiteManagementClient(token, subscriptionId);
@@ -614,7 +614,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     this.searchClient = new SearchManagementClient(token, subscriptionId);
   }
 
-  private async createStorageServer (group, name, administratorLogin, administratorPassword, serverName, location) {
+  private async createStorageServer (group: string, name: string, administratorLogin: string, administratorPassword: string, serverName: string, location: string) {
     const params = {
       location: location,
       administratorLogin: administratorLogin,
@@ -680,7 +680,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     });
   }
 
-  private async registerProviders (subscriptionId, baseUrl, accessToken) {
+  private async registerProviders (subscriptionId: string, baseUrl: string, accessToken: string) {
     const query = `subscriptions/${subscriptionId}/providers/${this.provider}/register?api-version=2018-02-01`;
     const requestUrl = urlJoin(baseUrl, query);
 
@@ -793,7 +793,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     return await httpClient.sendRequest(req);
   }
 
-  private async createSearch (group, name, location) {
+  private async createSearch (group: string, name: string, location: string) {
     const params = {
       sku: {
         name: this.freeTier ? 'free' : 'standard'
@@ -804,7 +804,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     return await this.searchClient.services.beginCreateOrUpdateAndWait(group, name, params as any);
   }
 
-  private async createStorage (group, serverName, name, location) {
+  private async createStorage (group: string, serverName: string, name: string, location: string) {
     const params = {
       sku: { name: this.freeTier ? 'Free' : 'Basic' },
       createMode: 'Default',
@@ -814,7 +814,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     return await this.storageClient.databases.beginCreateOrUpdateAndWait(group, serverName, name, params);
   }
 
-  private async createCognitiveServices (group, name, location, kind): Promise<Account> {
+  private async createCognitiveServices (group: string, name: string, location: string, kind: string): Promise<Account> {
     const params = {
       sku: {
         name: name
@@ -840,40 +840,40 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     return await this.cognitiveClient.accounts.beginCreateAndWait(group, name, params);
   }
 
-  private async createSpeech (group, name, location): Promise<Account> {
+  private async createSpeech (group: string, name: string, location: string): Promise<Account> {
     return await this.createCognitiveServices(group, name, location, 'SpeechServices');
   }
 
-  private async createNLP (group, name, location): Promise<Account> {
+  private async createNLP (group: string, name: string, location: string): Promise<Account> {
     return await this.createCognitiveServices(group, name, location, 'LUIS');
   }
 
-  private async createNLPAuthoring (group, name, location): Promise<Account> {
+  private async createNLPAuthoring (group: string, name: string, location: string): Promise<Account> {
     return await this.createCognitiveServices(group, name, location, 'LUIS.Authoring');
   }
 
-  private async createSpellChecker (group, name): Promise<Account> {
+  private async createSpellChecker (group: string, name: string): Promise<Account> {
     return await this.createCognitiveServices(group, name, 'westus', 'CognitiveServices');
   }
 
-  private async createTextAnalytics (group, name, location): Promise<Account> {
+  private async createTextAnalytics (group: string, name: string, location: string): Promise<Account> {
     return await this.createCognitiveServices(group, name, location, 'TextAnalytics');
   }
 
-  private async createDeployGroup (name, location) {
+  private async createDeployGroup (name: string, location: string) {
     const params = { location: location };
 
     return await this.cloud.resourceGroups.createOrUpdate(name, params);
   }
 
-  private async enableResourceProviders (name) {
+  private async enableResourceProviders (name: string) {
     const ret = await this.cloud.providers.get(name);
     if (ret.registrationState === 'NotRegistered') {
       await this.cloud.providers.register(name);
     }
   }
 
-  private async createHostingPlan (group, name, location): Promise<AppServicePlan> {
+  private async createHostingPlan (group: string, name: string, location: string): Promise<AppServicePlan> {
     const params = {
       serverFarmWithRichSkuName: name,
       location: location,
@@ -887,7 +887,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     return await this.webSiteClient.appServicePlans.beginCreateOrUpdateAndWait(group, name, params);
   }
 
-  private async createServer (farmId, group, name, location) {
+  private async createServer (farmId: string, group: string, name: string, location: string) {
     let tryed = false;
     const create = async () => {
       const parameters: Site = {
@@ -937,7 +937,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     }
   }
 
-  private async updateWebisteConfig (group, name, serverFarmId, instance: IGBInstance) {
+  private async updateWebisteConfig (group: string, name: string, serverFarmId: string, instance: IGBInstance) {
     const parameters: Site = {
       location: instance.cloudLocation,
       serverFarmId: serverFarmId,

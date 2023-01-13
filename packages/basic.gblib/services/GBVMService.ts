@@ -34,6 +34,7 @@
 
 import { GBLog, GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
 import * as Fs from 'fs';
+import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { TSCompiler } from './TSCompiler.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -48,6 +49,10 @@ import walkPromise from 'walk-promise';
 import child_process from 'child_process';
 import Path from 'path';
 import indent from 'indent.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import pkg from 'swagger-client';
+const {Swagger} = pkg;
+
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
  * over a beautiful BASIC transpiler (to be done).
@@ -1021,7 +1026,11 @@ export class GBVMService extends GBService {
     const scriptPath = urlJoin(gbdialogPath, `${text}.js`);
 
     let code = min.sandBoxMap[text];
-
+  
+    const executionId = GBAdminService.getNumberIdentifier();
+    GBServer.globals.executions[executionId]={
+      executionId: executionId,  
+    };
     if (GBConfigService.get('VM3') === 'true') {
       try {
         const vm1 = new NodeVM({

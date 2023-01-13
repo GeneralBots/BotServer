@@ -56,6 +56,7 @@ import Path from 'path';
 import sgMail from '@sendgrid/mail';
 import mammoth from 'mammoth';
 import qrcode from 'qrcode';
+import { json } from 'body-parser';
 
 /**
  * Base services of conversation to be called by BASIC.
@@ -1028,10 +1029,7 @@ export class DialogKeywords {
   }
 
   public async getSingleton({}) {
-    const executionId = this.sys().getRandomId();
-    GBServer.globals.executions[executionId]={};
     return {
-      executionId: executionId,
       id: this.sys().getRandomId(),
       username: this.userName(),
       mobile: this.userMobile(),
