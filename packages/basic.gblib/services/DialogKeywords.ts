@@ -265,21 +265,21 @@ export class DialogKeywords {
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ executionId }) {}
+  public async getActiveTasks({ pid }) {}
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ executionId, dealName, contact, company, amount }) {}
+  public async createDeal({ pid, dealName, contact, company, amount }) {}
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ executionId, name }) {}
+  public async fndContact({ pid, name }) {}
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -294,7 +294,7 @@ export class DialogKeywords {
     }
   }
 
-  public async getCoded({ executionId, value }) {
+  public async getCoded({ pid, value }) {
     // Checks if it is a GB FILE object.
 
     if (value.data && value.filename) {
@@ -310,14 +310,14 @@ export class DialogKeywords {
    * @example day = WEEKDAY (date)
    *
    */
-  public getWeekFromDate(executionId, date) {
+  public getWeekFromDate(pid, date) {
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    let dt = SystemKeywords.getDateFromLocaleString(executionId, date, contentLocale);
+    let dt = SystemKeywords.getDateFromLocaleString(pid, date, contentLocale);
     GBLog.info(`BASIC WEEKDAY contentLocale: ${this.getContentLocaleWithCulture(contentLocale)}`);
     GBLog.info(`BASIC WEEKDAY date: ${dt}`);
     GBLog.info(dt.toLocaleString(this.getContentLocaleWithCulture(contentLocale), { weekday: 'short' }));
@@ -447,7 +447,7 @@ export class DialogKeywords {
    * @example hour = HOUR (date)
    *
    */
-  public getHourFromDate(executionId, date) {
+  public getHourFromDate(pid, date) {
     function addZero(i) {
       if (i < 10) {
         i = '0' + i;
@@ -461,7 +461,7 @@ export class DialogKeywords {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    let dt = SystemKeywords.getDateFromLocaleString(executionId, date, contentLocale);
+    let dt = SystemKeywords.getDateFromLocaleString(pid, date, contentLocale);
 
     if (dt) {
       if (!(dt instanceof Date)) {
@@ -503,7 +503,7 @@ export class DialogKeywords {
    * SEND MAIL "email@domain.com","Subject", "Message text."
    *
    */
-  public async sendEmail({ executionId, to, subject, body }) {
+  public async sendEmail({ pid, to, subject, body }) {
     // tslint:disable-next-line:no-console
 
     GBLog.info(`[E-mail]: to:${to},subject: ${subject},body: ${body}.`);
@@ -541,9 +541,9 @@ export class DialogKeywords {
    * @example SEND FILE TO "+199988887777","image.jpg",caption
    *
    */
-  public async sendFileTo({ executionId, mobile, filename, caption }) {
+  public async sendFileTo({ pid, mobile, filename, caption }) {
     GBLog.info(`BASIC: SEND FILE TO '${mobile}',filename '${filename}'.`);
-    return await this.internalSendFile({ executionId, mobile, filename, caption });
+    return await this.internalSendFile({ pid, mobile, filename, caption });
   }
 
   /**
@@ -552,10 +552,10 @@ export class DialogKeywords {
    * @example SEND FILE "image.jpg"
    *
    */
-  public async sendFile({ executionId, filename, caption }) {
+  public async sendFile({ pid, filename, caption }) {
     const mobile = await this.userMobile();
     GBLog.info(`BASIC: SEND FILE (current: ${mobile},filename '${filename}'.`);
-    return await this.internalSendFile({ executionId, mobile, filename, caption });
+    return await this.internalSendFile({ pid, mobile, filename, caption });
   }
 
   /**
@@ -717,7 +717,13 @@ export class DialogKeywords {
    * @example HEAR name
    *
    */
-  public async getHear({ executionId, kind, arg }) {
+  public async getHear({ pid, kind, arg }) {
+
+    const process = GBServer.globals.processes[pid]; 
+    
+    const min = GBServer.globals.minInstances.filter(p =>
+      p.instance.instanceId == process.instanceId)[0];
+
     // Handles first arg as an array of args.
 
     let args = [];
@@ -730,12 +736,13 @@ export class DialogKeywords {
       const isIntentYes = (locale, utterance) => {
         return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
       };
+      
+      const sec = new SecService();
 
       if (this.hrOn) {
-        const sec = new SecService();
         user = await sec.getUserFromAgentSystemId(this.hrOn);
       } else {
-        user = this.user.systemUser;
+        user = await sec.getUserFromId (process.instanceId, process.userId);
       }
       const userId = user.userId;
       let result;
@@ -830,8 +837,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null) {
-          await this.talk({ executionId, text: 'Por favor,digite um e-mail válido.' });
-          return await this.getHear({ executionId, kind, arg });
+          await this.talk({ pid, text: 'Por favor,digite um e-mail válido.' });
+          return await this.getHear({ pid, kind, arg });
         }
 
         result = value;
@@ -843,8 +850,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk({ executionId, text: 'Por favor,digite um nome válido.' });
-          return await this.getHear({ executionId, kind, arg });
+          await this.talk({ pid, text: 'Por favor,digite um nome válido.' });
+          return await this.getHear({ pid, kind, arg });
         }
 
         result = value;
@@ -856,8 +863,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk({ executionId, text: 'Por favor,digite um número válido.' });
-          return await this.getHear({ executionId, kind, arg });
+          await this.talk({ pid, text: 'Por favor,digite um número válido.' });
+          return await this.getHear({ pid, kind, arg });
         }
 
         result = value;
@@ -871,8 +878,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk({ executionId, text: 'Por favor,digite uma data no formato 12/12/2020.' });
-          return await this.getHear({ executionId, kind, arg });
+          await this.talk({ pid, text: 'Por favor,digite uma data no formato 12/12/2020.' });
+          return await this.getHear({ pid, kind, arg });
         }
 
         result = value;
@@ -884,8 +891,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk({ executionId, text: 'Por favor,digite um horário no formato hh:ss.' });
-          return await this.getHear({ executionId, kind, arg });
+          await this.talk({ pid, text: 'Por favor,digite um horário no formato hh:ss.' });
+          return await this.getHear({ pid, kind, arg });
         }
 
         result = value;
@@ -904,8 +911,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk({ executionId, text: 'Por favor,digite um valor monetário.' });
-          return await this.getHear({ executionId, kind, arg });
+          await this.talk({ pid, text: 'Por favor,digite um valor monetário.' });
+          return await this.getHear({ pid, kind, arg });
         }
 
         result = value;
@@ -918,11 +925,11 @@ export class DialogKeywords {
         } catch (error) {
           await this.talk(Messages[locale].validation_enter_valid_mobile);
 
-          return await this.getHear({ executionId, kind, arg });
+          return await this.getHear({ pid, kind, arg });
         }
         if (!phoneUtil.isPossibleNumber(phoneNumber)) {
-          await this.talk({ executionId, text: 'Por favor,digite um número de telefone válido.' });
-          return await this.getHear({ executionId, kind, arg });
+          await this.talk({ pid, text: 'Por favor,digite um número de telefone válido.' });
+          return await this.getHear({ pid, kind, arg });
         }
 
         result = phoneNumber;
@@ -941,8 +948,8 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk({ executionId, text: 'Por favor, digite um CEP válido.' });
-          return await this.getHear({ executionId, kind, arg });
+          await this.talk({ pid, text: 'Por favor, digite um CEP válido.' });
+          return await this.getHear({ pid, kind, arg });
         }
 
         result = value[0];
@@ -956,8 +963,8 @@ export class DialogKeywords {
         });
 
         if (result === null) {
-          await this.talk({ executionId, text: `Escolha por favor um dos itens sugeridos.` });
-          return await this.getHear({ executionId, kind, arg });
+          await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
+          return await this.getHear({ pid, kind, arg });
         }
       } else if (kind === 'language') {
         result = null;
@@ -988,8 +995,8 @@ export class DialogKeywords {
         });
 
         if (result === null) {
-          await this.talk({ executionId, text: `Escolha por favor um dos itens sugeridos.` });
-          return await this.getHear({ executionId, kind, arg });
+          await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
+          return await this.getHear({ pid, kind, arg });
         }
       }
       return result;
@@ -1028,25 +1035,10 @@ export class DialogKeywords {
     }
   }
 
-  public async getSingleton({}) {
-    return {
-      id: this.sys().getRandomId(),
-      username: this.userName(),
-      mobile: this.userMobile(),
-      from: this.userMobile(),
-      ENTER: String.fromCharCode(13),
-      headers: {},
-      data: {},
-      list: [],
-      httpUsername: '',
-      httpPs: ''
-    };
-  }
-
   /**
    * Talks to the user by using the specified text.
    */
-  public async talk({ executionId, text }) {
+  public async talk({ pid, text }) {
     GBLog.info(`BASIC: TALK '${text}'.`);
     if (this.user) {
       const translate = this.user ? this.user.basicOptions.translatorOn : false;
@@ -1063,7 +1055,7 @@ export class DialogKeywords {
   /**
    * Processes the sending of the file.
    */
-  private async internalSendFile({ executionId, mobile, filename, caption }) {
+  private async internalSendFile({ pid, mobile, filename, caption }) {
     // Handles SEND FILE TO mobile,element in Web Automation.
 
     const element = filename._page ? filename._page : filename.screenshot ? filename : null;
@@ -1108,7 +1100,7 @@ export class DialogKeywords {
     }
   }
 
-  public async getQRCode({ executionId, text }) {
+  public async getQRCode({ pid, text }) {
     const img = await qrcode.toDataURL(text);
     const data = img.replace(/^data:image\/\w+;base64,/, '');
     const buf = Buffer.from(data, 'base64');

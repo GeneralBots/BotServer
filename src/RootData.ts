@@ -41,7 +41,7 @@ import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
  */
 
 export class RootData {
-  public executions: {}; // List of .gbdialog active executions.
+  public processes: {}; // List of .gbdialog active executions.
   public publicAddress: string; // URI for BotServer.
   public server: any; // Express reference.
   public sysPackages: any[]; // Loaded system package list.

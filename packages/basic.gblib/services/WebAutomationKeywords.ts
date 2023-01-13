@@ -44,6 +44,7 @@ import urlJoin from 'url-join';
 import Fs from 'fs';
 import Path from 'path';
 import url from 'url';
+import { pid } from 'process';
 
 /**
  * Web Automation services of conversation to be called by BASIC.
@@ -119,14 +120,14 @@ export class WebAutomationKeywords {
    *
    * @example OPEN "https://wikipedia.org"
    */
-  public async getPage ({ executionId, url, username, password }) {
+  public async getPage ({ pid, url, username, password }) {
     GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);
     if (!this.browser) {
       this.browser = await createBrowser(null);
     }
     const page = (await this.browser.pages())[0];
     if (username || password) {
-      await page.authenticate({executionId, username: username, password: password });
+      await page.authenticate({pid, username: username, password: password });
     }
     await page.goto(url);
 
@@ -189,12 +190,12 @@ export class WebAutomationKeywords {
   /**
    * Simulates a mouse hover an web page element.
    */
-  public async hover ({ executionId, handle, selector }) {
+  public async hover ({ pid, handle, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation HOVER element: ${selector}.`);
     await this.getBySelector({ handle, selector: selector });
     await page.hover(selector);
-    await this.debugStepWeb(executionId, page);
+    await this.debugStepWeb(pid, page);
   }
 
   /**
@@ -202,7 +203,7 @@ export class WebAutomationKeywords {
    *
    * @example CLICK page,"#idElement"
    */
-  public async click ({ executionId, handle, frameOrSelector, selector }) {
+  public async click ({ pid, handle, frameOrSelector, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
     if (selector) {
@@ -215,10 +216,10 @@ export class WebAutomationKeywords {
       await page.waitForSelector(frameOrSelector);
       await page.click(frameOrSelector);
     }
-    await this.debugStepWeb(executionId, page);
+    await this.debugStepWeb(pid, page);
   }
 
-  private async debugStepWeb (executionId, page) {
+  private async debugStepWeb (pid, page) {
     let refresh = true;
     if (this.lastDebugWeb) {
       refresh = new Date().getTime() - this.lastDebugWeb.getTime() > 5000;
@@ -228,7 +229,7 @@ export class WebAutomationKeywords {
       const mobile = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
       const filename = page;
       if (mobile) {
-        await this.dk.sendFileTo({executionId,  mobile, filename, caption: 'General Bots Debugger' });
+        await this.dk.sendFileTo({pid: pid,  mobile, filename, caption: 'General Bots Debugger' });
       }
       this.lastDebugWeb = new Date();
     }
@@ -255,7 +256,7 @@ export class WebAutomationKeywords {
     }
   }
 
-  public async linkByText ({ executionId, handle, text, index }) {
+  public async linkByText ({ pid, handle, text, index }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
     if (!index) {
@@ -263,7 +264,7 @@ export class WebAutomationKeywords {
     }
     const els = await page.$x(`//a[contains(.,'${text}')]`);
     await els[index - 1].click();
-    await this.debugStepWeb(executionId, page);
+    await this.debugStepWeb(pid, page);
   }
 
   /**
@@ -291,14 +292,14 @@ export class WebAutomationKeywords {
    *
    * @example SET page,"selector","text"
    */
-  public async setElementText ({ executionId, handle, selector, text }) {
+  public async setElementText ({ pid, handle, selector, text }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation TYPE on ${selector}: ${text}.`);
     const e = await this.getBySelector({ handle, selector });
     await e.click({ clickCount: 3 });
     await page.keyboard.press('Backspace');
     await e.type(text, { delay: 200 });
-    await this.debugStepWeb(executionId, page);
+    await this.debugStepWeb(pid, page);
   }
 
   /**

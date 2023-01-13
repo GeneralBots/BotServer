@@ -196,6 +196,15 @@ export class SecService extends GBService {
     return agentSystemId;
   }
 
+  public async getUserFromId (instanceId: number, userId: string): Promise<GuaribasUser> {
+    return await GuaribasUser.findOne({
+      where: {
+        instanceId: instanceId,
+        userId: userId
+      }
+    });
+  }
+
   public async getUserFromSystemId (systemId: string): Promise<GuaribasUser> {
     return await GuaribasUser.findOne({
       where: {
