@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/GeneralBots/BotServer/compare/2.3.0...2.3.1) (2023-01-13)
+
+
+### Bug Fixes
+
+* **gbminservice.ts:** swagger-client migration from 2.0 to 3.0 ([552e8b1](https://github.com/GeneralBots/BotServer/commit/552e8b14c41aa01c538e9eda1bb6666adb098b38))
+
 # [2.3.0](https://github.com/GeneralBots/BotServer/compare/2.2.0...2.3.0) (2023-01-10)
 
 
