@@ -1,3 +1,10 @@
+## [2.3.2](https://github.com/GeneralBots/BotServer/compare/2.3.1...2.3.2) (2023-01-13)
+
+
+### Bug Fixes
+
+* **systemkeywords.ts:** executionid, and changed to pid ([274db0d](https://github.com/GeneralBots/BotServer/commit/274db0d389f6d145355ca38d9143da4b1b1694fa))
+
 ## [2.3.1](https://github.com/GeneralBots/BotServer/compare/2.3.0...2.3.1) (2023-01-13)
 
 
