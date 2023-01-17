@@ -1,3 +1,10 @@
+## [2.3.3](https://github.com/GeneralBots/BotServer/compare/2.3.2...2.3.3) (2023-01-17)
+
+
+### Bug Fixes
+
+* **basic.gblib:** Refactoring processInfo into all methods. ([50d3fcc](https://github.com/GeneralBots/BotServer/commit/50d3fccd0dcb593662649d5cc1443017eb11227f))
+
 ## [2.3.2](https://github.com/GeneralBots/BotServer/compare/2.3.1...2.3.2) (2023-01-13)
 
 
