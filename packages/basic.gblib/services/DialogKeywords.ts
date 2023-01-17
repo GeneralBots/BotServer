@@ -222,7 +222,7 @@ export class DialogKeywords {
    *
    * @example x = TODAY
    */
-  public async getToday({}) {
+  public async getToday({ }) {
     let d = new Date(),
       month = '' + (d.getMonth() + 1),
       day = '' + d.getDate(),
@@ -258,28 +258,28 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit({}) {}
+  public async exit({ }) { }
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ pid }) {}
+  public async getActiveTasks({ pid }) { }
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ pid, dealName, contact, company, amount }) {}
+  public async createDeal({ pid, dealName, contact, company, amount }) { }
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ pid, name }) {}
+  public async fndContact({ pid, name }) { }
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -478,7 +478,7 @@ export class DialogKeywords {
    * @example SAVE "contacts.xlsx", name, email, NOW
    *
    */
-  public async getNow({}) {
+  public async getNow({ }) {
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
       'Default Content Language',
@@ -656,14 +656,14 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu({}) {
+  public async showMenu({ }) {
     // https://github.com/GeneralBots/BotServer/issues/237
     // return await beginDialog('/menu');
   }
   private static async downloadAttachmentAndWrite(attachment) {
     const url = attachment.contentUrl;
     // https://github.com/GeneralBots/BotServer/issues/195 - '${botId}','uploads');
-    const localFolder = Path.join('work'); 
+    const localFolder = Path.join('work');
     const localFileName = Path.join(localFolder, attachment.name);
 
     try {
@@ -719,8 +719,8 @@ export class DialogKeywords {
    */
   public async getHear({ pid, kind, arg }) {
 
-    const process = GBServer.globals.processes[pid]; 
-    
+    const process = GBServer.globals.processes[pid];
+
     const min = GBServer.globals.minInstances.filter(p =>
       p.instance.instanceId == process.instanceId)[0];
 
@@ -736,13 +736,13 @@ export class DialogKeywords {
       const isIntentYes = (locale, utterance) => {
         return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
       };
-      
+
       const sec = new SecService();
 
       if (this.hrOn) {
         user = await sec.getUserFromAgentSystemId(this.hrOn);
       } else {
-        user = await sec.getUserFromId (process.instanceId, process.userId);
+        user = await sec.getUserFromId(process.instanceId, process.userId);
       }
       const userId = user.userId;
       let result;
@@ -767,7 +767,7 @@ export class DialogKeywords {
         //   'Please select a product'
         // );
 
-        
+
         // let i = 0;
         // await CollectionUtil.asyncForEach(args, async arg => {
         //   i++;
@@ -899,7 +899,7 @@ export class DialogKeywords {
       } else if (kind === 'money') {
         const extractEntity = text => {
           // https://github.com/GeneralBots/BotServer/issues/307
-          if (user.locale === 'en') { 
+          if (user.locale === 'en') {
             return text.match(/(?:\d{1,3},)*\d{1,3}(?:\.\d+)?/gi);
           }
           else {
@@ -920,7 +920,7 @@ export class DialogKeywords {
         let phoneNumber;
         try {
           // https://github.com/GeneralBots/BotServer/issues/307
-          phoneNumber = phone(text, { country: 'BRA' })[0]; 
+          phoneNumber = phone(text, { country: 'BRA' })[0];
           phoneNumber = phoneUtil.parse(phoneNumber);
         } catch (error) {
           await this.talk(Messages[locale].validation_enter_valid_mobile);
@@ -1035,15 +1035,31 @@ export class DialogKeywords {
     }
   }
 
+  public async getProcessInfo(pid: number) {
+    const proc = GBServer.globals.processes[pid];
+
+    const min = GBServer.globals.minInstances.filter(p =>
+      p.instance.instanceId == proc.instanceId)[0];
+    const sec = new SecService();
+    const user = await sec.getUserFromId(min.instance.instanceId, proc.userId);
+    return {
+      min, user
+    }
+  }
+
+
   /**
    * Talks to the user by using the specified text.
    */
   public async talk({ pid, text }) {
     GBLog.info(`BASIC: TALK '${text}'.`);
-    if (this.user) {
-      const translate = this.user ? this.user.basicOptions.translatorOn : false;
+    const {
+      min, user
+    } = await this.getProcessInfo(pid);
+    if (user) {
+      // TODO: const translate = this.user ? this.user.basicOptions.translatorOn : false;
 
-      await this.min.conversationalService['sendOnConversation'](this.min, this.user.systemUser, text);
+      await min.conversationalService['sendOnConversation'](min, user, text);
     }
   }
 
