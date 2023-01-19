@@ -1,3 +1,10 @@
+## [2.3.4](https://github.com/GeneralBots/BotServer/compare/2.3.3...2.3.4) (2023-01-19)
+
+
+### Bug Fixes
+
+* **basic.gblib:** executionid and changed to pid and security context for HEAR. ([1063739](https://github.com/GeneralBots/BotServer/commit/1063739cbeab3ebbc1210b1962f6275d619debdd))
+
 ## [2.3.3](https://github.com/GeneralBots/BotServer/compare/2.3.2...2.3.3) (2023-01-17)
 
 
