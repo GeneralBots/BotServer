@@ -722,7 +722,7 @@ export class DialogKeywords {
     const process = GBServer.globals.processes[pid];
     let {
       min, user
-    } = await this.getProcessInfo(pid);
+    } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles first arg as an array of args.
 
@@ -1038,7 +1038,7 @@ export class DialogKeywords {
     }
   }
 
-  public async getProcessInfo(pid: number) {
+  public static async getProcessInfo(pid: number) {
     const proc = GBServer.globals.processes[pid];
 
     const min = GBServer.globals.minInstances.filter(p =>
@@ -1058,7 +1058,7 @@ export class DialogKeywords {
     GBLog.info(`BASIC: TALK '${text}'.`);
     const {
       min, user
-    } = await this.getProcessInfo(pid);
+    } = await DialogKeywords.getProcessInfo(pid);
     if (user) {
       // TODO: const translate = this.user ? this.user.basicOptions.translatorOn : false;
 
