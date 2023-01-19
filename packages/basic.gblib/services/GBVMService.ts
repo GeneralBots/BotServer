@@ -1029,6 +1029,7 @@ export class GBVMService extends GBService {
 
     const pid = GBAdminService.getNumberIdentifier();
     GBServer.globals.processes[pid] = {
+      pid: pid,
       userId: user.systemUser.userId,
       instanceId: min.instance.instanceId
     };

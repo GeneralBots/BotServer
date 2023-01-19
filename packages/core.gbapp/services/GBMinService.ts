@@ -904,7 +904,7 @@ export class GBMinService {
             const headers = { Authorization: `Bearer ${botToken}` };
             const t = new SystemKeywords(null, null, null, null);
             const data = await t.getByHttp({
-              executionId: 0, 
+              pid: 0, 
               url: file.contentUrl,
               headers,
               username: null,

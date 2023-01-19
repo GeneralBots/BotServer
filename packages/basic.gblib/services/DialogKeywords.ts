@@ -720,9 +720,9 @@ export class DialogKeywords {
   public async getHear({ pid, kind, arg }) {
 
     const process = GBServer.globals.processes[pid];
-
-    const min = GBServer.globals.minInstances.filter(p =>
-      p.instance.instanceId == process.instanceId)[0];
+    let {
+      min, user
+    } = await this.getProcessInfo(pid);
 
     // Handles first arg as an array of args.
 
@@ -732,18 +732,20 @@ export class DialogKeywords {
     }
 
     try {
-      let user;
       const isIntentYes = (locale, utterance) => {
         return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
       };
 
       const sec = new SecService();
 
+      // If SET HEAR ON is defined an impersonated context is created
+      // containing the specified user other than the actual user
+      // TODO: Store hrOn in processInfo.
+
       if (this.hrOn) {
         user = await sec.getUserFromAgentSystemId(this.hrOn);
-      } else {
-        user = await sec.getUserFromId(process.instanceId, process.userId);
       }
+
       const userId = user.userId;
       let result;
 
@@ -801,6 +803,7 @@ export class DialogKeywords {
       const text = this.min.cbMap[userId].promise;
 
       if (kind === 'file') {
+        // TODO: https://github.com/GeneralBots/BotServer/issues/227
         // await prompt('attachmentPrompt',{});
         // // Prepare Promises to download each attachment and then execute each Promise.
         // const promises = step.context.activity.attachments.map(
@@ -923,7 +926,7 @@ export class DialogKeywords {
           phoneNumber = phone(text, { country: 'BRA' })[0];
           phoneNumber = phoneUtil.parse(phoneNumber);
         } catch (error) {
-          await this.talk(Messages[locale].validation_enter_valid_mobile);
+          await this.talk({pid, text: Messages[locale].validation_enter_valid_mobile});
 
           return await this.getHear({ pid, kind, arg });
         }
@@ -1044,7 +1047,7 @@ export class DialogKeywords {
     const user = await sec.getUserFromId(min.instance.instanceId, proc.userId);
     return {
       min, user
-    }
+    };
   }
 
 
