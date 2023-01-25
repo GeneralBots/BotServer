@@ -1,3 +1,10 @@
+## [2.3.7](https://github.com/GeneralBots/BotServer/compare/2.3.6...2.3.7) (2023-01-25)
+
+
+### Bug Fixes
+
+* **systemkeywords.ts:** injected security context inside systemkeywords.ts ([8a895d3](https://github.com/GeneralBots/BotServer/commit/8a895d3da1f9a2cfee680f09e79ea999cdf3db8d))
+
 ## [2.3.6](https://github.com/GeneralBots/BotServer/compare/2.3.5...2.3.6) (2023-01-25)
 
 
