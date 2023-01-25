@@ -481,7 +481,7 @@ export class SystemKeywords {
     });
 
     if (!documents || documents.length === 0) {
-      throw `File '${file}' specified on GBasic command not found. Check the .gbdata or the .gb'dialog' associated.`;
+      throw `File '${file}' specified on GBasic command not found. Check the .gbdata or the .gbdialog associated.`;
     }
 
     return documents[0];

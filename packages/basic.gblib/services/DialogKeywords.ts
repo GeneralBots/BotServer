@@ -422,7 +422,11 @@ export class DialogKeywords {
    * @example TALK TOLIST (array,member)
    *
    */
-  public getToLst(array, member) {
+  public async getToLst(pid,array, member) {
+    const {
+      min, user
+    } = await DialogKeywords.getProcessInfo(pid);
+    
     if (!array) {
       return '<Empty>';
     }
@@ -447,7 +451,11 @@ export class DialogKeywords {
    * @example hour = HOUR (date)
    *
    */
-  public getHourFromDate(pid, date) {
+  public async getHourFromDate(pid, date) {
+    const {
+      min, user
+    } = await DialogKeywords.getProcessInfo(pid);
+        
     function addZero(i) {
       if (i < 10) {
         i = '0' + i;
@@ -456,7 +464,7 @@ export class DialogKeywords {
     }
 
     const contentLocale = this.min.core.getParam<string>(
-      this.min.instance,
+      min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
@@ -577,7 +585,7 @@ export class DialogKeywords {
    */
   public async setIdGeneration({ mode }) {
     this['idGeneration'] = mode;
-    this['id'] = await this.sys().getRandomId();
+    this['id'] = this.sys().getRandomId();
   }
 
   /**
@@ -793,14 +801,14 @@ export class DialogKeywords {
           setTimeout(resolve, ms);
         });
       };
-      this.min.cbMap[userId] = {};
-      this.min.cbMap[userId]['promise'] = '!GBHEAR';
+      min.cbMap[userId] = {};
+      min.cbMap[userId]['promise'] = '!GBHEAR';
 
-      while (this.min.cbMap[userId].promise === '!GBHEAR') {
+      while (min.cbMap[userId].promise === '!GBHEAR') {
         await sleep(500);
       }
 
-      const text = this.min.cbMap[userId].promise;
+      const text = min.cbMap[userId].promise;
 
       if (kind === 'file') {
         // TODO: https://github.com/GeneralBots/BotServer/issues/227
@@ -887,7 +895,7 @@ export class DialogKeywords {
 
         result = value;
       } else if (kind === 'hour') {
-        const extractEntity = text => {
+        const extractEntity = (text: string) => {
           return text.match(/^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])?$/gi);
         };
 
@@ -900,7 +908,7 @@ export class DialogKeywords {
 
         result = value;
       } else if (kind === 'money') {
-        const extractEntity = text => {
+        const extractEntity = (text: string) => {
           // https://github.com/GeneralBots/BotServer/issues/307
           if (user.locale === 'en') {
             return text.match(/(?:\d{1,3},)*\d{1,3}(?:\.\d+)?/gi);
@@ -926,7 +934,7 @@ export class DialogKeywords {
           phoneNumber = phone(text, { country: 'BRA' })[0];
           phoneNumber = phoneUtil.parse(phoneNumber);
         } catch (error) {
-          await this.talk({pid, text: Messages[locale].validation_enter_valid_mobile});
+          await this.talk({ pid, text: Messages[locale].validation_enter_valid_mobile });
 
           return await this.getHear({ pid, kind, arg });
         }
@@ -937,7 +945,7 @@ export class DialogKeywords {
 
         result = phoneNumber;
       } else if (kind === 'zipcode') {
-        const extractEntity = text => {
+        const extractEntity = (text: string) => {
           text = text.replace(/\-/gi, '');
 
           if (user.locale === 'en') {
@@ -1077,37 +1085,40 @@ export class DialogKeywords {
   private async internalSendFile({ pid, mobile, filename, caption }) {
     // Handles SEND FILE TO mobile,element in Web Automation.
 
+    const {
+      min, user
+    } = await DialogKeywords.getProcessInfo(pid);
     const element = filename._page ? filename._page : filename.screenshot ? filename : null;
 
     if (element) {
-      const gbaiName = `${this.min.botId}.gbai`;
+      const gbaiName = `${min.botId}.gbai`;
       const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
       await element.screenshot({ path: localName, fullPage: true });
 
-      const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
+      const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
       GBLog.info(`BASIC: WebAutomation: Sending the file ${url} to mobile ${mobile}.`);
-      await this.min.conversationalService.sendFile(this.min, null, mobile, url, caption);
+      await min.conversationalService.sendFile(min, null, mobile, url, caption);
     }
 
     // Handles Markdown.
     else if (filename.indexOf('.md') > -1) {
       GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
-      const md = await this.min.kbService.getAnswerTextByMediaName(this.min.instance.instanceId, filename);
+      const md = await min.kbService.getAnswerTextByMediaName(min.instance.instanceId, filename);
       if (!md) {
-        GBLog.info(`BASIC: Markdown file ${filename} not found on database for ${this.min.instance.botId}.`);
+        GBLog.info(`BASIC: Markdown file ${filename} not found on database for ${min.instance.botId}.`);
       }
 
-      await this.min.conversationalService['playMarkdown'](this.min, md, DialogKeywords.getChannel(), mobile);
+      await min.conversationalService['playMarkdown'](min, md, DialogKeywords.getChannel(), mobile);
     } else {
       GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
-      let url;
+      let url: string;
       if (!filename.startsWith('https://')) {
         url = urlJoin(
           GBServer.globals.publicAddress,
           'kb',
-          `${this.min.botId}.gbai`,
-          `${this.min.botId}.gbkb`,
+          `${min.botId}.gbai`,
+          `${min.botId}.gbkb`,
           'assets',
           filename
         );
@@ -1115,7 +1126,7 @@ export class DialogKeywords {
         url = filename;
       }
 
-      await this.min.conversationalService.sendFile(this.min, null, mobile, url, caption);
+      await min.conversationalService.sendFile(min, null, mobile, url, caption);
     }
   }
 

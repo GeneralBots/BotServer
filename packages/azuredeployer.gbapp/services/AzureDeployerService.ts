@@ -507,17 +507,17 @@ export class AzureDeployerService implements IGBInstallationDeployer {
    */
   public async internalDeployBot (
     instance,
-    accessToken,
-    botId,
-    name,
+    accessToken: string,
+    botId: string,
+    name: string,
     group,
-    description,
+    description: string ,
     endpoint,
     location,
     nlpAppId,
-    nlpKey,
-    appId,
-    appPassword,
+    nlpKey: string,
+    appId: string,
+    appPassword: string,
     subscriptionId
   ): Promise<IGBInstance> {
     return new Promise(async (resolve, reject) => {
@@ -578,7 +578,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         reject(error);
       }
     });
-  }
+      }
   
   public async syncBotServerRepository (group: string, name: string) {
     await this.webSiteClient.webApps.syncRepository(group, name);

@@ -75,8 +75,8 @@ export class WhatsappDirectLine extends GBService {
   private locale: string = 'pt-BR';
   provider: any;
   INSTANCE_URL = 'https://api.maytapi.com/api';
-  private customClient;
-  private browserWSEndpoint;
+  private customClient: any;
+  private browserWSEndpoint: any;
   private groupId;
 
   constructor(
@@ -111,20 +111,20 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async setup(setUrl) {
+  public async setup(setUrl: boolean) {
     this.directLineClient = new Swagger({
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
       usePromise: true
     });
     const client = await this.directLineClient;
-    let url;
-    let body;
+    let url: string;
+    let body: any;
 
     client.clientAuthorizations.add(
       'AuthorizationBotConnector',
       new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${this.directLineSecret}`, 'header')
     );
-    let options;
+    let options: any;
 
     switch (this.provider) {
       case 'GeneralBots':
@@ -166,7 +166,7 @@ export class WhatsappDirectLine extends GBService {
 
           client.on(
             'message',
-            (async message => {
+            (async (message: string) => {
               await this.WhatsAppCallback(message, null);
             }).bind(this)
           );
@@ -227,7 +227,7 @@ export class WhatsappDirectLine extends GBService {
 
             const chats = await client.getChats();
             await CollectionUtil.asyncForEach(chats, async chat => {
-              const sleep = ms => {
+              const sleep = (ms: number) => {
                 return new Promise(resolve => {
                   setTimeout(resolve, ms);
                 });
@@ -303,7 +303,7 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async resetConversationId(botId, number, group = '') {
+  public async resetConversationId(botId: string, number: number, group = '') {
     WhatsappDirectLine.conversationIds[botId + number + group] = undefined;
   }
 
@@ -326,14 +326,14 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public static providerFromRequest(req) {
+  public static providerFromRequest(req: any) {
     return req.body.messages ? 'chatapi' : req.body.message ? 'maytapi' : 'GeneralBots';
   }
 
   public async received(req, res) {
     const provider = WhatsappDirectLine.providerFromRequest(req);
 
-    let message, from, fromName, text;
+    let message, from, fromName, text: string;
     let group = '';
     let answerText = null;
     let attachments = null;
