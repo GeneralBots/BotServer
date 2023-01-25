@@ -1,3 +1,10 @@
+## [2.3.6](https://github.com/GeneralBots/BotServer/compare/2.3.5...2.3.6) (2023-01-25)
+
+
+### Bug Fixes
+
+* **dialogkeywords.ts:** injected security context inside DialogKeywords ([81953d7](https://github.com/GeneralBots/BotServer/commit/81953d7d9f48407968e2d35e686347f6f6005a0d))
+
 ## [2.3.5](https://github.com/GeneralBots/BotServer/compare/2.3.4...2.3.5) (2023-01-19)
 
 
