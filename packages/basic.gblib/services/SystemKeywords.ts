@@ -108,6 +108,9 @@ export class SystemKeywords {
    *
    */
   public async seeCaption ({ pid, url }) {
+    const {
+      min, user
+    } = await DialogKeywords.getProcessInfo(pid);
     const computerVisionClient = new ComputerVisionClient.ComputerVisionClient(
       new ApiKeyCredentials.ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
       process.env.VISION_ENDPOINT
@@ -116,13 +119,13 @@ export class SystemKeywords {
     let caption = (await computerVisionClient.describeImage(url)).captions[0];
 
     const contentLocale = this.min.core.getParam<string>(
-      this.min.instance,
+      min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
     GBLog.info(`GBVision (caption): '${caption.text}' (Confidence: ${caption.confidence.toFixed(2)})`);
 
-    return await this.min.conversationalService.translate(this.min, caption.text, contentLocale);
+    return await min.conversationalService.translate(min, caption.text, contentLocale);
   }
 
   /**
@@ -157,9 +160,12 @@ export class SystemKeywords {
   }
 
   public async sortBy ({ pid, array, memberName }) {
+    const {
+      min, user
+    } = await DialogKeywords.getProcessInfo(pid);
     memberName = memberName.trim();
     const contentLocale = this.min.core.getParam<string>(
-      this.min.instance,
+      min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
@@ -240,7 +246,8 @@ export class SystemKeywords {
    *
    * @see http://tabulator.info/examples/5.2
    */
-  private async renderTable (data, renderPDF, renderImage) {
+  private async renderTable (pid, data, renderPDF, renderImage) {
+
     if (!data[1]) {
       return null;
     }
@@ -250,7 +257,10 @@ export class SystemKeywords {
     // Detects if it is a collection with repeated
     // headers.
 
-    const gbaiName = `${this.min.botId}.gbai`;
+    const {
+      min, user
+    } = await DialogKeywords.getProcessInfo(pid);
+    const gbaiName = `${min.botId}.gbai`;
     const browser = await createBrowser(null);
     const page = await browser.newPage();
 
@@ -311,7 +321,7 @@ export class SystemKeywords {
     if (renderImage) {
       localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       await page.screenshot({ path: localName, fullPage: true });
-      url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
       GBLog.info(`BASIC: Table image generated at ${url} .`);
     }
 
@@ -319,7 +329,7 @@ export class SystemKeywords {
 
     if (renderPDF) {
       localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.pdf`);
-      url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
       let pdf = await page.pdf({ format: 'A4' });
       GBLog.info(`BASIC: Table PDF generated at ${url} .`);
     }
@@ -329,12 +339,12 @@ export class SystemKeywords {
   }
 
   public async asPDF ({ pid, data, filename }) {
-    let file = await this.renderTable(data, true, false);
+    let file = await this.renderTable(pid, data, true, false);
     return file[0];
   }
 
   public async asImage ({ pid, data, filename }) {
-    let file = await this.renderTable(data, false, true);
+    let file = await this.renderTable(pid, data, false, true);
     return file[0];
   }
 
@@ -408,8 +418,11 @@ export class SystemKeywords {
    *
    */
   public async talkTo ({ pid, mobile, message }) {
+    const {
+      min, user
+    } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Talking '${message}' to a specific user (${mobile}) (TALK TO). `);
-    await this.min.conversationalService.sendMarkdownToMobile(this.min, null, mobile, message);
+    await min.conversationalService.sendMarkdownToMobile(min, null, mobile, message);
   }
 
   /**
@@ -419,8 +432,11 @@ export class SystemKeywords {
    *
    */
   public async sendSmsTo ({ pid, mobile, message }) {
+    const {
+      min, user
+    } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: SEND SMS TO '${mobile}', message '${message}'.`);
-    await this.min.conversationalService.sendSms(this.min, mobile, message);
+    await min.conversationalService.sendSms(min, mobile, message);
   }
 
   /**
@@ -1570,10 +1586,14 @@ export class SystemKeywords {
   }
 
   public async tweet ({ pid, text }) {
-    const consumer_key = this.min.core.getParam(this.min.instance, 'Twitter Consumer Key', null);
-    const consumer_secret = this.min.core.getParam(this.min.instance, 'Twitter Consumer Key Secret', null);
-    const access_token_key = this.min.core.getParam(this.min.instance, 'Twitter Access Token', null);
-    const access_token_secret = this.min.core.getParam(this.min.instance, 'Twitter Access Token Secret', null);
+    const {
+      min, user
+    } = await DialogKeywords.getProcessInfo(pid);
+    
+    const consumer_key = min.core.getParam(min.instance, 'Twitter Consumer Key', null);
+    const consumer_secret = min.core.getParam(min.instance, 'Twitter Consumer Key Secret', null);
+    const access_token_key = min.core.getParam(min.instance, 'Twitter Access Token', null);
+    const access_token_secret = min.core.getParam(min.instance, 'Twitter Access Token Secret', null);
 
     if (!consumer_key || !consumer_secret || !access_token_key || !access_token_secret) {
       GBLog.info('Twitter not configured in .gbot.');
