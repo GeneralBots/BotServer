@@ -79,15 +79,15 @@ export class SystemKeywords {
    * When creating this keyword facade, a bot instance is
    * specified among the deployer service.
    */
-  constructor (min: GBMinInstance, deployer: GBDeployer, dk: DialogKeywords, wa) {
+  constructor(min: GBMinInstance, deployer: GBDeployer, dk: DialogKeywords, wa) {
     this.min = min;
     this.wa = wa;
     this.deployer = deployer;
     this.dk = dk;
   }
 
-  public async callVM ({ pid, text }) {
-    
+  public async callVM({ pid, text }) {
+
     const min = null;
     const step = null;
     const deployer = null;
@@ -95,7 +95,7 @@ export class SystemKeywords {
     return await GBVMService.callVM(text, min, step, deployer, false);
   }
 
-  public async append ({ pid, args }) {
+  public async append({ pid, args }) {
     let array = [].concat(...args);
     return array.filter(function (item, pos) {
       return item;
@@ -107,7 +107,7 @@ export class SystemKeywords {
    * @example SEE CAPTION OF url AS variable
    *
    */
-  public async seeCaption ({ pid, url }) {
+  public async seeCaption({ pid, url }) {
     const {
       min, user
     } = await DialogKeywords.getProcessInfo(pid);
@@ -133,7 +133,7 @@ export class SystemKeywords {
    * @example SEE TEXT OF url AS variable
    *
    */
-  public async seeText ({ pid, url }) {
+  public async seeText({ pid, url }) {
     const computerVisionClient = new ComputerVisionClient.ComputerVisionClient(
       new ApiKeyCredentials.ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
       process.env.VISION_ENDPOINT
@@ -159,7 +159,7 @@ export class SystemKeywords {
     return final;
   }
 
-  public async sortBy ({ pid, array, memberName }) {
+  public async sortBy({ pid, array, memberName }) {
     const {
       min, user
     } = await DialogKeywords.getProcessInfo(pid);
@@ -177,27 +177,27 @@ export class SystemKeywords {
     if (date) {
       return array
         ? array.sort((a, b) => {
-            const c = new Date(a[memberName]);
-            const d = new Date(b[memberName]);
-            return c.getTime() - d.getTime();
-          })
+          const c = new Date(a[memberName]);
+          const d = new Date(b[memberName]);
+          return c.getTime() - d.getTime();
+        })
         : null;
     } else {
       return array
         ? array.sort((a, b) => {
-            if (a[memberName] < b[memberName]) {
-              return -1;
-            }
-            if (a[memberName] > b[memberName]) {
-              return 1;
-            }
-            return 0;
-          })
+          if (a[memberName] < b[memberName]) {
+            return -1;
+          }
+          if (a[memberName] > b[memberName]) {
+            return 1;
+          }
+          return 0;
+        })
         : array;
     }
   }
 
-  public static JSONAsGBTable (data, headers) {
+  public static JSONAsGBTable(data, headers) {
     try {
       let output = [];
       let isObject = false;
@@ -246,7 +246,7 @@ export class SystemKeywords {
    *
    * @see http://tabulator.info/examples/5.2
    */
-  private async renderTable (pid, data, renderPDF, renderImage) {
+  private async renderTable(pid, data, renderPDF, renderImage) {
 
     if (!data[1]) {
       return null;
@@ -338,17 +338,17 @@ export class SystemKeywords {
     return [url, localName];
   }
 
-  public async asPDF ({ pid, data, filename }) {
+  public async asPDF({ pid, data, filename }) {
     let file = await this.renderTable(pid, data, true, false);
     return file[0];
   }
 
-  public async asImage ({ pid, data, filename }) {
+  public async asImage({ pid, data, filename }) {
     let file = await this.renderTable(pid, data, false, true);
     return file[0];
   }
 
-  public async executeSQL ({ pid, data, sql, tableName }) {
+  public async executeSQL({ pid, data, sql, tableName }) {
     let objectMode = false;
     if (Object.keys(data[0])) {
       objectMode = true;
@@ -368,19 +368,19 @@ export class SystemKeywords {
   /**
    * Retrives the content of a given URL.
    */
-  public async getFileContents ({ pid, url, headers }) {
+  public async getFileContents({ pid, url, headers }) {
     const options = {
       method: 'GET',
       encoding: 'binary',
       headers: headers
     };
-    return await fetch(url, options); 
+    return await fetch(url, options);
   }
 
   /**
    * Retrives a random id with a length of five, every time it is called.
    */
-  public getRandomId () {
+  public getRandomId() {
     const idGeneration = this.dk['idGeneration'];
     if (idGeneration && idGeneration.trim().toLowerCase() === 'number') {
       return GBAdminService.getNumberIdentifier();
@@ -392,7 +392,7 @@ export class SystemKeywords {
   /**
    * Retrives stock inforation for a given symbol.
    */
-  public async getStock ({ pid, symbol }) {
+  public async getStock({ pid, symbol }) {
     const url = `http://live-nse.herokuapp.com/?symbol=${symbol}`;
     let data = await fetch(url);
     return data;
@@ -404,7 +404,7 @@ export class SystemKeywords {
    * @example WAIT 5 ' This will wait five seconds.
    *
    */
-  public async wait ({ pid, seconds }) {
+  public async wait({ pid, seconds }) {
     // tslint:disable-next-line no-string-based-set-timeout
     GBLog.info(`BASIC: WAIT for ${seconds} second(s).`);
     const timeout = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -417,7 +417,7 @@ export class SystemKeywords {
    * @example TALK TO "+199988887777", "Message text here"
    *
    */
-  public async talkTo ({ pid, mobile, message }) {
+  public async talkTo({ pid, mobile, message }) {
     const {
       min, user
     } = await DialogKeywords.getProcessInfo(pid);
@@ -431,7 +431,7 @@ export class SystemKeywords {
    * @example SEND SMS TO "+199988887777", "Message text here"
    *
    */
-  public async sendSmsTo ({ pid, mobile, message }) {
+  public async sendSmsTo({ pid, mobile, message }) {
     const {
       min, user
     } = await DialogKeywords.getProcessInfo(pid);
@@ -448,7 +448,7 @@ export class SystemKeywords {
    * @example SET page, "elementHTMLSelector", "text"
    *
    */
-  public async set ({ pid, file, address, value }): Promise<any> {
+  public async set({ pid, file, address, value }): Promise<any> {
     // Handles calls for HTML stuff
 
     if (file._javascriptEnabled) {
@@ -479,8 +479,7 @@ export class SystemKeywords {
 
     await client
       .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
-          sheets.value[0].name
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
         }')/range(address='${address}')`
       )
       .patch(body);
@@ -489,7 +488,7 @@ export class SystemKeywords {
   /**
    * Retrives a document from the drive, given a path and filename.
    */
-  private async internalGetDocument (client: any, baseUrl: any, path: string, file: string) {
+  private async internalGetDocument(client: any, baseUrl: any, path: string, file: string) {
     let res = await client.api(`${baseUrl}/drive/root:${path}:/children`).get();
 
     let documents = res.value.filter(m => {
@@ -509,7 +508,7 @@ export class SystemKeywords {
    * @exaple SAVE variable as "my.txt"
    *
    */
-  public async saveFile ({ pid, file, data }): Promise<any> {
+  public async saveFile({ pid, file, data }): Promise<any> {
     GBLog.info(`BASIC: Saving '${file}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
@@ -539,7 +538,7 @@ export class SystemKeywords {
    * @exaple SAVE "customers.xlsx", name, email, phone, address, city, state, country
    *
    */
-  public async save ({ pid, args }): Promise<any> {
+  public async save({ pid, args }): Promise<any> {
     const file = args[0];
     args.shift();
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
@@ -552,8 +551,7 @@ export class SystemKeywords {
 
     await client
       .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
-          sheets.value[0].name
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
         }')/range(address='A2:DX2')/insert`
       )
       .post({});
@@ -575,8 +573,7 @@ export class SystemKeywords {
 
     await client
       .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
-          sheets.value[0].name
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
         }')/range(address='${address}')`
       )
       .patch(body);
@@ -588,10 +585,10 @@ export class SystemKeywords {
    * @example value = GET "file.xlsx", "A2"
    *
    */
-  public async get ({ pid, file, addressOrHeaders, httpUsername, httpPs, qs, streaming }): Promise<any> {
+  public async get({ pid, file, addressOrHeaders, httpUsername, httpPs, qs, streaming }): Promise<any> {
     if (file.startsWith('http')) {
       return await this.getByHttp({
-        pid, 
+        pid,
         url: file,
         headers: addressOrHeaders,
         username: httpUsername,
@@ -612,8 +609,7 @@ export class SystemKeywords {
 
       let results = await client
         .api(
-          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
-            sheets.value[0].name
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
           }')/range(address='${addressOrHeaders}')`
         )
         .get();
@@ -624,7 +620,7 @@ export class SystemKeywords {
     }
   }
 
-  public isValidDate ({ pid, dt }) {
+  public isValidDate({ pid, dt }) {
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
       'Default Content Language',
@@ -643,14 +639,14 @@ export class SystemKeywords {
     return !isNaN(date.valueOf());
   }
 
-  public isValidNumber ({ pid, number }) {
+  public isValidNumber({ pid, number }) {
     if (number === '') {
       return false;
     }
     return !isNaN(number);
   }
 
-  public isValidHour ({ pid, value }) {
+  public isValidHour({ pid, value }) {
     return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value);
   }
 
@@ -668,10 +664,10 @@ export class SystemKeywords {
    * @see NPM package data-forge
    *
    */
-  public async find ({ pid, args }): Promise<any> {
+  public async find({ pid, args }): Promise<any> {
     const file = args[0];
     args.shift();
-    
+
 
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
@@ -762,8 +758,7 @@ export class SystemKeywords {
 
       results = await client
         .api(
-          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
-            sheets.value[0].name
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
           }')/range(address='A1:CZ${maxLines}')`
         )
         .get();
@@ -1017,7 +1012,7 @@ export class SystemKeywords {
     }
   }
 
-  public static getDateFromLocaleString (pid, date: any, contentLocale: any) {
+  public static getDateFromLocaleString(pid, date: any, contentLocale: any) {
     let ret = null;
     let parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})\s*(10|11|12|0?[1-9]):([0-5][0-9])/gi.exec(date);
     if (parts && parts[5]) {
@@ -1087,7 +1082,7 @@ export class SystemKeywords {
    * @example folder = CREATE FOLDER "notes\01"
    *
    */
-  public async createFolder ({ pid, name }) {
+  public async createFolder({ pid, name }) {
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
     let path = `/${botId}.gbai/${botId}.gbdrive`;
@@ -1136,7 +1131,7 @@ export class SystemKeywords {
    * SHARE FOLDER folder, "nome@domain.com", "E-mail message"
    *
    */
-  public async shareFolder ({ pid, folder, email, message }) {
+  public async shareFolder({ pid, folder, email, message }) {
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const root = urlJoin(`/${this.min.botId}.gbai/${this.min.botId}.gbdrive`, folder);
 
@@ -1163,7 +1158,7 @@ export class SystemKeywords {
    * COPY "template.xlsx", "reports\" + customerName + "\final.xlsx"
    *
    */
-  public async copyFile ({ pid, src, dest }) {
+  public async copyFile({ pid, src, dest }) {
     GBLog.info(`BASIC: BEGINING COPY '${src}' to '${dest}'`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
@@ -1185,7 +1180,7 @@ export class SystemKeywords {
     let folder;
     if (dest.indexOf('/') !== -1) {
       const pathOnly = Path.dirname(dest);
-      folder = await this.createFolder({pid, name: pathOnly });
+      folder = await this.createFolder({ pid, name: pathOnly });
     } else {
       folder = await client.api(`${baseUrl}/drive/root:/${root}`).get();
     }
@@ -1223,7 +1218,7 @@ export class SystemKeywords {
    * CONVERT "customers.xlsx" TO "reports\" + today + ".pdf"
    *
    */
-  public async convert ({ pid, src, dest }) {
+  public async convert({ pid, src, dest }) {
     GBLog.info(`BASIC: CONVERT '${src}' to '${dest}'`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
@@ -1284,7 +1279,7 @@ export class SystemKeywords {
    * @example pass = PASSWORD
    *
    */
-  public generatePassword ( pid ) {
+  public generatePassword(pid) {
     return GBAdminService.getRndPassword();
   }
 
@@ -1294,8 +1289,8 @@ export class SystemKeywords {
    * @example user = get "http://server/users/1"
    *
    */
-  public async getByHttp ({ pid, url, headers, username, ps, qs}) {
-    let options = { };
+  public async getByHttp({ pid, url, headers, username, ps, qs }) {
+    let options = {};
     if (headers) {
       options['headers'] = headers;
     }
@@ -1308,7 +1303,7 @@ export class SystemKeywords {
     if (qs) {
       options['qs'] = qs;
     }
-   
+
     const result = await fetch(url, options);
 
     try {
@@ -1329,7 +1324,7 @@ export class SystemKeywords {
    * talk "The updated user area is" + user.area
    *
    */
-  public async putByHttp ({ pid, url, data, headers }) {
+  public async putByHttp({ pid, url, data, headers }) {
     const options = {
       json: data,
       headers: headers
@@ -1349,7 +1344,7 @@ export class SystemKeywords {
    * talk "The updated user area is" + user.area
    *
    */
-  public async postByHttp ({ pid, url, data, headers }) {
+  public async postByHttp({ pid, url, data, headers }) {
     const options = {
       json: data,
       headers: headers
@@ -1361,7 +1356,7 @@ export class SystemKeywords {
     return result ? (typeof result === 'object' ? result : JSON.parse(result)) : true;
   }
 
-  public async numberOnly ({pid, text}) {
+  public async numberOnly({ pid, text }) {
     return text.replace(/\D/gi, '');
   }
 
@@ -1372,7 +1367,7 @@ export class SystemKeywords {
    * doc = FILL "templates/template.docx", data
    *
    */
-  public async fill ({ pid, templateName, data }) {
+  public async fill({ pid, templateName, data }) {
     const botId = this.min.instance.botId;
     const gbaiName = `${botId}.gbai`;
     const path = `/${botId}.gbai/${botId}.gbdata`;
@@ -1383,7 +1378,7 @@ export class SystemKeywords {
     let template = await this.internalGetDocument(client, baseUrl, path, templateName);
     const url = template['@microsoft.graph.downloadUrl'];
     const localName = Path.join('work', gbaiName, 'cache', ``);
-    const response = await fetch( url);
+    const response = await fetch(url);
     Fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
 
     // Loads the file as binary content.
@@ -1406,7 +1401,7 @@ export class SystemKeywords {
     return buf;
   }
 
-  public screenCapture (pid) {
+  public screenCapture(pid) {
     // scrcpy Disabled
     // function captureImage({ x, y, w, h }) {
     //   const pic = robot.screen.capture(x, y, w, h)
@@ -1440,7 +1435,7 @@ export class SystemKeywords {
     // });
   }
 
-  private numberToLetters (num) {
+  private numberToLetters(num) {
     let letters = '';
     while (num >= 0) {
       letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[num % 26] + letters;
@@ -1458,10 +1453,13 @@ export class SystemKeywords {
    *  MERGE "second.xlsx" WITH data BY customer_id
    *
    */
-  public async merge ({ pid, file, data, key1, key2 }): Promise<any> {
+  public async merge({ pid, file, data, key1, key2 }): Promise<any> {
     GBLog.info(`BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
 
-    const botId = this.min.instance.botId;
+    const {
+      min, user
+    } = await DialogKeywords.getProcessInfo(pid);
+    const botId = min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
     // MAX LINES property.
@@ -1477,7 +1475,7 @@ export class SystemKeywords {
 
     let results;
     let header, rows;
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
     let document;
     document = await this.internalGetDocument(client, baseUrl, path, file);
@@ -1488,8 +1486,7 @@ export class SystemKeywords {
 
     results = await client
       .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${
-          sheets.value[0].name
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
         }')/range(address='A1:CZ${maxLines}')`
       )
       .get();
@@ -1585,11 +1582,11 @@ export class SystemKeywords {
     }
   }
 
-  public async tweet ({ pid, text }) {
+  public async tweet({ pid, text }) {
     const {
       min, user
     } = await DialogKeywords.getProcessInfo(pid);
-    
+
     const consumer_key = min.core.getParam(min.instance, 'Twitter Consumer Key', null);
     const consumer_secret = min.core.getParam(min.instance, 'Twitter Consumer Key Secret', null);
     const access_token_key = min.core.getParam(min.instance, 'Twitter Access Token', null);

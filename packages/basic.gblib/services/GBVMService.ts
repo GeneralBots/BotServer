@@ -312,9 +312,9 @@ export class GBVMService extends GBService {
     });
   }
 
-  private getParams = (text, names) => {
+  private getParams = (text: string, names) => {
     let ret = {};
-    const splitParamsButIgnoreCommasInDoublequotes = str => {
+    const splitParamsButIgnoreCommasInDoublequotes = (str: string) => {
       return str.split(',').reduce(
         (accum, curr) => {
           if (accum.isConcatting) {
@@ -334,13 +334,13 @@ export class GBVMService extends GBService {
     const items = splitParamsButIgnoreCommasInDoublequotes(text);
 
     let i = 0;
-    let json = '{';
+    let json = '';
     names.forEach(name => {
       let value = items[i];
       i++;
       json = `${json} "${name}": ${value} ${names.length == i ? '' : ','}`;
     });
-    json = `${json}}`;
+    json = `${json}`;
 
     return json;
   };
@@ -403,7 +403,7 @@ export class GBVMService extends GBService {
         if (!$1.startsWith('"') && !$1.startsWith("'")) {
           $1 = `"${$1}"`;
         }
-        const params = this.getParams($1, ['pid', 'url', 'username', 'password']);
+        const params = this.getParams($1, ['url', 'username', 'password']);
 
         return `page = await wa.getPage({pid: pid,${params}})\n`;
       }
