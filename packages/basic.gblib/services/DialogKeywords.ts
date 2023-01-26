@@ -57,12 +57,17 @@ import sgMail from '@sendgrid/mail';
 import mammoth from 'mammoth';
 import qrcode from 'qrcode';
 import { json } from 'body-parser';
+ 
+/** 
+   * Default check interval for user replay
+   */
+ const DEFAULT_HEAR_POLL_INTERVAL = 500;
 
 /**
  * Base services of conversation to be called by BASIC.
  */
 export class DialogKeywords {
-  /**
+   /**
    * Reference to minimal bot instance.
    */
   public min: GBMinInstance;
@@ -86,7 +91,6 @@ export class DialogKeywords {
    * The number used in this execution for HEAR calls (useful for SET SCHEDULE).
    */
   hrOn: string;
-
   userId: GuaribasUser;
   debugWeb: boolean;
   lastDebugWeb: Date;
@@ -805,7 +809,7 @@ export class DialogKeywords {
       min.cbMap[userId]['promise'] = '!GBHEAR';
 
       while (min.cbMap[userId].promise === '!GBHEAR') {
-        await sleep(500);
+        await sleep(DEFAULT_HEAR_POLL_INTERVAL);
       }
 
       const text = min.cbMap[userId].promise;
