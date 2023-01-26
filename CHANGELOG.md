@@ -1,3 +1,11 @@
+## [2.3.8](https://github.com/GeneralBots/BotServer/compare/2.3.7...2.3.8) (2023-01-26)
+
+
+### Bug Fixes
+
+* **basic.gblib:** OPEN keyword fix. Magic number removal. ([e1c389c](https://github.com/GeneralBots/BotServer/commit/e1c389cbd03b1245deb1d2f37a415e371ed67481))
+* **basic.gblib:** OPEN keyword fix. Magic number removal. ([fe2af84](https://github.com/GeneralBots/BotServer/commit/fe2af84b21d49e2d87247dd4cb0b078371c3dfa1))
+
 ## [2.3.7](https://github.com/GeneralBots/BotServer/compare/2.3.6...2.3.7) (2023-01-25)
 
 
