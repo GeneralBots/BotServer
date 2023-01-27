@@ -1,0 +1,71 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "version": "3.0.0",
+      "title": "General Bots API",
+      "description": "General Bots API definitions.",
+      "contact": {
+        "name": "Pragmatismo",
+        "url": "https://generalbots.ai",
+        "email": "info@pragmatismo.io"
+      },
+      "x-ms-api-annotation": {
+        "status": "Production"
+      }
+    },
+    "host": "generalbots.ai",
+    "basePath": "/",
+    "schemes": [
+      "https"
+    ],
+    "consumes": [],
+    "produces": [],
+    "paths": {
+      "/api/talkTo": {
+        "post": {
+          "summary": "Talk to the user.",
+          "description": "Talk to the user.",
+          "x-ms-no-generic-test": true,
+          "operationId": "talkTo",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "name": "content",
+              "in": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/TalkRequest"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          },
+          "deprecated": false
+        }
+      }   
+    },
+    "definitions": {
+        "TalkRequest": {
+          "type": "object",
+          "properties": {
+            "pid": {
+              "type": "string"
+            },
+            "mobile": {
+                "type": "string"
+              },
+            "text": {
+              "type": "string"
+            }
+          }
+        }
+    }
+  }
