@@ -1,3 +1,10 @@
+## [2.3.9](https://github.com/GeneralBots/BotServer/compare/2.3.8...2.3.9) (2023-01-29)
+
+
+### Bug Fixes
+
+* **basic.gblib:** [#326](https://github.com/GeneralBots/BotServer/issues/326) align JS and BASIC map file. ([b572cc9](https://github.com/GeneralBots/BotServer/commit/b572cc9b8db624f4d686a9cb934cb5bbd8e41cc1))
+
 ## [2.3.8](https://github.com/GeneralBots/BotServer/compare/2.3.7...2.3.8) (2023-01-26)
 
 
