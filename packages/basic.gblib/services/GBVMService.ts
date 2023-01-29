@@ -46,7 +46,6 @@ import textract from 'textract';
 import walkPromise from 'walk-promise';
 import child_process from 'child_process';
 import Path from 'path';
-import indent from 'indent.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import pkg from 'swagger-client';
 import { DialogKeywords } from './DialogKeywords.js';
@@ -133,7 +132,9 @@ export class GBVMService extends GBService {
         const fullFilename = urlJoin(folder, filename);
         if (process.env.GBDIALOG_HOTSWAP) {
           Fs.watchFile(fullFilename, async () => {
-            await this.translateBASIC(fullFilename, min, deployer, mainName);
+            await this.translateBASIC(fullFilename, mainName, min.botId);
+            const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
+            min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
           });
         }
 
@@ -144,40 +145,21 @@ export class GBVMService extends GBService {
           const jsStat = Fs.statSync(jsfile);
           const interval = 30000; // If compiled is older 30 seconds, then recompile.
           if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
-            await this.translateBASIC(fullFilename, min, deployer, mainName);
-          } else {
-            const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
-
-            min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
+            await this.translateBASIC(fullFilename, mainName, min.botId);
           }
         } else {
-          await this.translateBASIC(fullFilename, min, deployer, mainName);
+          await this.translateBASIC(fullFilename, mainName, min.botId);
         }
+        const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
+        min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
       }
     });
   }
 
-  public async translateBASIC(filename: any, min: GBMinInstance, deployer: GBDeployer, mainName: string) {
+  public async translateBASIC(filename: any, mainName: string, botId: string) {
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = Fs.readFileSync(filename, 'utf8');
-
-    // Processes END keyword, removing extracode, useful
-    // for development in .gbdialog.
-
-    if (process.env.GBDIALOG_NOEND === 'true') {
-      basicCode = basicCode.replace(/^\s*END(\W|\n)/gim, '');
-    } else {
-      let end = /^\s*END(\W|\n)/gi.exec(basicCode);
-      if (end) {
-        basicCode = basicCode.substring(0, end.index);
-      }
-    }
-
-    // Removes comments.
-
-    basicCode = basicCode.replace(/^\s*REM.*/gim, '');
-    basicCode = basicCode.replace(/^\s*\'.*/gim, '');
 
     // Process INCLUDE keyword to include another
     // dialog inside the dialog.
@@ -199,73 +181,63 @@ export class GBVMService extends GBService {
       }
     } while (include);
 
-    const { code, jsonMap } = await this.convertGBASICToVBS(min, basicCode);
-    const vbsFile = `${filename}.compiled`;
+    let { code, jsonMap } = await this.convert(basicCode);
     const mapFile = `${filename}.map`;
 
-    Fs.writeFileSync(vbsFile, code);
     Fs.writeFileSync(mapFile, JSON.stringify(jsonMap));
 
     // Run JS into the GB context.
 
     const jsfile: string = `${filename}.js`;
 
-    if (Fs.existsSync(jsfile)) {
-      let code: string = Fs.readFileSync(jsfile, 'utf8');
+    code = `
+    return (async () => {
+      require('isomorphic-fetch');
+      const rest = require('typescript-rest-rpc/lib/client');
 
-      code.replace(/^.*exports.*$/gm, '');
+      // Interprocess communication from local HTTP to the BotServer.
 
-      code = `
-      return (async () => {
-        require('isomorphic-fetch');
-        const rest = require('typescript-rest-rpc/lib/client');
+      const dk = rest.createClient('http://localhost:1111/api/v2/${botId}/dialog');
+      const sys = rest.createClient('http://localhost:1111/api/v2/${botId}/system');
+      const wa = rest.createClient('http://localhost:1111/api/v2/${botId}/webautomation');
+              
+      // Local variables.
 
-        // Interprocess communication from local HTTP to the BotServer.
+      let pid = this.pid;
+      let id = this.id;
+      let username = this.username;
+      let mobile = this.mobile;
+      let from = this.from;
+      let ENTER = this.ENTER;
+      let headers = this.headers;
+      let data = this.data;
+      let list = this.list;
+      let httpUsername = this.httpUsername;
+      let httpPs = this.httpPs;
+      let page = null;
 
-        const dk = rest.createClient('http://localhost:1111/api/v2/${min.botId}/dialog');
-        const sys = rest.createClient('http://localhost:1111/api/v2/${min.botId}/system');
-        const wa = rest.createClient('http://localhost:1111/api/v2/${min.botId}/webautomation');
-                
-        // Local variables.
+  
+      // Local functions.
 
-        const pid = this.pid;
-        const id = this.id;
-        const username = this.username;
-        const mobile = this.mobile;
-        const from = this.from;
-        const ENTER = this.ENTER;
-        const headers = this.headers;
-        const data = this.data;
-        const list = this.list;
-        const httpUsername = this.httpUsername;
-        const httpPs = this.httpPs;
-        let page = null;
+      const ubound = (array) => {return array.length};
+      const isarray = (array) => {return Array.isArray(array) };
+  
+      // Remote functions.
+      
+      const weekday = (v) => { return (async () => { return await dk.getWeekFromDate({v}) })(); };
+      const hour = (v) => { return (async () => { return await dk.getHourFromDate({v}) })(); };
+      const base64 =  (v) => { return (async () => { return await dk.getCoded({v}) })(); };
+      const tolist =  (v) => { return (async () => { return await dk.getToLst({v}) })(); };
+      const now =  (v) => { return (async () => { return await dk.getNow({v}) })(); };
+      const today =  (v) => { return (async () => { return await dk.getToday({v}) })(); };
 
-    
-        // Local functions.
+      ${code}
 
-        const ubound = (array) => {return array.length};
-        const isarray = (array) => {return Array.isArray(array) };
-    
-        // Remote functions.
-        
-        const weekday = (v) => { return (async () => { return await dk.getWeekFromDate({v}) })(); };
-        const hour = (v) => { return (async () => { return await dk.getHourFromDate({v}) })(); };
-        const base64 =  (v) => { return (async () => { return await dk.getCoded({v}) })(); };
-        const tolist =  (v) => { return (async () => { return await dk.getToLst({v}) })(); };
-        const now =  (v) => { return (async () => { return await dk.getNow({v}) })(); };
-        const today =  (v) => { return (async () => { return await dk.getToday({v}) })(); };
-
-        ${code}
-
-      })(); 
-    
-  `;
-      code = indent.js(code, { tabString: '\t' });
-      Fs.writeFileSync(jsfile, code);
-      min.sandBoxMap[mainName.toLowerCase().trim()] = code;
-      GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
-    }
+    })(); 
+  
+`;
+    Fs.writeFileSync(jsfile, code);
+    GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
   }
 
   public static getMethodNameFromVBSFilename(filename: string) {
@@ -337,32 +309,29 @@ export class GBVMService extends GBService {
    *
    * @param code General Bots BASIC
    */
-  public async convertGBASICToVBS(min: GBMinInstance, code: string) {
+  public async convert(code: string) {
     // Start and End of VB2TS tags of processing.
 
-    code = `
-      ${process.env.ENABLE_AUTH ? `hear gbLogin as login` : ``}
-      ${code}
-    `;
-
-    var allLines = code.split('\n');
+    code = process.env.ENABLE_AUTH ? `hear gbLogin as login\n${code}` : code;
+    var lines = code.split('\n');
     const keywords = this.getKeywords();
-    const offset = 34;
-    const jsonMap = {};
+    let current = 41;
+    const map = {};
 
-    for (var i = 0; i < allLines.length; i++) {
-      for (var j = 0; j < keywords.length; j++) {
-        allLines[i] = allLines[i].replace(keywords[j][0], keywords[j][1]);
-
-        //  Add additional lines returned from replacement.
-
-        let add = allLines[i].split(/\r\n|\r|\n/).length;
-        jsonMap[i] = offset + i + (add ? add : 0);
+    for (let i = 1; i <= lines.length; i++) {
+      for (let j = 0; j < keywords.length; j++) {
+        lines[i - 1] = lines[i - 1].replace(keywords[j][0], keywords[j][1]);
       }
+
+      //  Add additional lines returned from replacement.
+
+      let add = lines[i - 1].split(/\r\n|\r|\n/).length;
+      current = current + (add ? add : 0);
+      map[i] = current;
     }
 
-    code = `${allLines.join('\n')}\n%>`;
-    return { code, jsonMap };
+    code = `${lines.join('\n')}\n`;
+    return { code, jsonMap: map };
   }
 
   private getKeywords() {
@@ -372,12 +341,16 @@ export class GBVMService extends GBService {
     let i = 0;
 
     const convertConditions = input => {
-      var result = input.replace(/ +and +/gi, ' && ');
-      result = result.replace(/ +or +/gi, ' || ');
-      result = result.replace(/ +<> +/gi, ' !== ');
-      result = result.replace(/ += +/gi, ' === ');
+      var result = input.replace(/ +and +/gim, ' && ');
+      result = result.replace(/ +or +/gim, ' || ');
+      result = result.replace(/ +<> +/gim, ' !== ');
+      result = result.replace(/ += +/gim, ' === ');
       return result;
     };
+
+    keywords[i++] = [/^\s*REM.*/gim, ''];
+    
+    keywords[i++] = [/^\s*\'.*/gim, ''];
 
     keywords[i++] = [
       /^\s*(\w+)\s*\=\s*SELECT\s*(.*)/gim,
@@ -388,39 +361,38 @@ export class GBVMService extends GBService {
       }
     ];
 
+    keywords[i++] = [/^\s*end if/gim, '}'];
+
     keywords[i++] = [
-      /if +(.*?) +then/gi,
+      /^\s*if +(.*?) +then/gim,
       (input, group1) => {
         var condition = convertConditions(group1);
-        return '\nif (' + condition + ') {\n';
+        return 'if (' + condition + ') {';
       }
     ];
 
-    keywords[i++] = [/end if/gi, '\n}\n'];
+    keywords[i++] = [/^\s*else(?!{)/gim, '}\nelse {'];
 
-    keywords[i++] = [/else(?!{)/gi, '\n}\nelse {\n'];
+    keywords[i++] = [/^\s*select case +(.*)/gim, 'switch ($1) {'];
 
-    keywords[i++] = [/select case +(.*)/gi, '\nswitch ($1) {\n'];
+    keywords[i++] = [/^\s*end select/gim, '}'];
 
-    keywords[i++] = [/end select/gi, '\n}\n'];
+    keywords[i++] = [/^\s*end function/gim, '}'];
+    keywords[i++] = [/^\s*function +(.*)\((.*)\)/gim, '$1 = ($2) => {\n'];
 
-    keywords[i++] = [/function +(.*)\((.*)\)/gi, '\n$1 = ($2) => {\n'];
+    keywords[i++] = [/^\s*for +(.*to.*)/gim, 'for ($1) {'];
 
-    keywords[i++] = [/end function/gi, '\n}\n'];
-
-    keywords[i++] = [/for +(.*to.*)/gi, '\nfor ($1) {\n'];
-
-    keywords[i++] = [/^ *next *$/gim, '}\n'];
+    keywords[i++] = [/^\s*next *$/gim, '}'];
 
     keywords[i++] = [
-      /do while +(.*)/gi,
+      /^\s*do while +(.*)/gim,
       function (input, group1) {
         var condition = convertConditions(group1);
-        return '\nwhile (' + condition + ') {\n';
+        return 'while (' + condition + ') {';
       }
     ];
 
-    keywords[i++] = [/^ *loop *$/gim, '}\n'];
+    keywords[i++] = [/^\s*loop *$/gim, '}'];
 
     keywords[i++] = [
       /^\s*open\s*(.*)/gim,
@@ -430,14 +402,14 @@ export class GBVMService extends GBService {
         }
         const params = this.getParams($1, ['url', 'username', 'password']);
 
-        return `page = await wa.getPage({pid: pid,${params}})\n`;
+        return `page = await wa.getPage({pid: pid,${params}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(set hear on)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `hrOn = ${$3}\n`;
+        return `hrOn = ${$3}`;
       }
     ];
 
@@ -528,7 +500,7 @@ export class GBVMService extends GBService {
     keywords[i++] = [
       /^\s*hear (\w+) as (.*)/gim,
       ($0, $1, $2) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"menu", args: [${$2}])}`;
+        return `${$1} = await dk.getHear({pid: pid, kind:"menu", args: [${$2}]})`;
       }
     ];
 
@@ -542,7 +514,7 @@ export class GBVMService extends GBService {
     keywords[i++] = [
       /^\s*(\w+)\s*\=\s*find contact\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `${$1} = await dk.fndContact({pid: pid, ${$2}})\n`;
+        return `${$1} = await dk.fndContact({pid: pid, ${$2}})`;
       }
     ];
 
@@ -561,7 +533,7 @@ export class GBVMService extends GBService {
     keywords[i++] = [
       /^\s*CALL\s*(.*)/gim,
       ($0, $1) => {
-        return `await ${$1}\n`;
+        return `await ${$1}`;
       }
     ];
 
@@ -569,7 +541,7 @@ export class GBVMService extends GBService {
       /^\s*(\w+)\s*\=\s*find\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `
-      ${$1} = await sys.find({pid: pid, args: [${$2}]})\n`;
+      ${$1} = await sys.find({pid: pid, args: [${$2}]})`;
       }
     ];
 
@@ -578,42 +550,42 @@ export class GBVMService extends GBService {
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['dealName', 'contact', 'company', 'amount']);
 
-        return `${$1} = await dk.createDeal({pid: pid, ${params}})\n`;
+        return `${$1} = await dk.createDeal({pid: pid, ${params}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(\w+)\s*\=\s*active tasks/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getActiveTasks({pid: pid})\n`;
+        return `${$1} = await dk.getActiveTasks({pid: pid})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(\w+)\s*\=\s*append\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `${$1} = await sys.append({pid: pid, args:[${$2}]})\n`;
+        return `${$1} = await sys.append({pid: pid, args:[${$2}]})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(\w+)\s*\=\s*sort\s*(\w+)\s*by(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `${$1} = await sys.sortBy({pid: pid, array: ${$2}, memberName: "${$3}"})\n`;
+        return `${$1} = await sys.sortBy({pid: pid, array: ${$2}, memberName: "${$3}"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*see\s*text\s*of\s*(\w+)\s*as\s*(\w+)\s*/gim,
       ($0, $1, $2, $3) => {
-        return `${$2} = await sys.seeText({pid: pid, url: ${$1})\n`;
+        return `${$2} = await sys.seeText({pid: pid, url: ${$1})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*see\s*caption\s*of\s*(\w+)\s*as(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `${$2} = await sys.seeCaption({pid: pid, url: ${$1})\n`;
+        return `${$2} = await sys.seeCaption({pid: pid, url: ${$1})`;
       }
     ];
 
@@ -656,14 +628,14 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
-      /\= NEW OBJECT/gi,
+      /\= NEW OBJECT/gim,
       ($0, $1, $2, $3) => {
         return ` = {pid: pid}`;
       }
     ];
 
     keywords[i++] = [
-      /\= NEW ARRAY/gi,
+      /\= NEW ARRAY/gim,
       ($0, $1, $2, $3) => {
         return ` = []`;
       }
@@ -673,14 +645,14 @@ export class GBVMService extends GBService {
       /^\s*(go to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['fromOrDialogName', 'dialogName']);
-        return `await dk.gotoDialog({pid: pid, ${params}})\n`;
+        return `await dk.gotoDialog({pid: pid, ${params}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(set language)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await dk.setLanguage ({pid: pid, ${$3}})\n`;
+        return `await dk.setLanguage ({pid: pid, ${$3}})`;
       }
     ];
 
@@ -709,7 +681,7 @@ export class GBVMService extends GBService {
       /^\s*(datediff)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['date1', 'date2', 'mode']);
-        return `await dk.dateDiff (pid: pid, ${params}})\n`;
+        return `await dk.dateDiff (pid: pid, ${params}})`;
       }
     ];
 
@@ -717,42 +689,42 @@ export class GBVMService extends GBService {
       /^\s*(dateadd)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['date', 'mode', 'units']);
-        return `await dk.dateAdd (pid: pid, ${$3})\n`;
+        return `await dk.dateAdd (pid: pid, ${$3})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(set max lines)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await dk.setMaxLines ({pid: pid, count: ${$3}})\n`;
+        return `await dk.setMaxLines ({pid: pid, count: ${$3}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(set max columns)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await dk.setMaxColumns ({pid: pid, count: ${$3}})\n`;
+        return `await dk.setMaxColumns ({pid: pid, count: ${$3}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(set translator)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await dk.setTranslatorOn ({pid: pid, on: "${$3.toLowerCase()}"})\n`;
+        return `await dk.setTranslatorOn ({pid: pid, on: "${$3.toLowerCase()}"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(set theme)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await dk.setTheme ({pid: pid, theme: "${$3.toLowerCase()}"})\n`;
+        return `await dk.setTheme ({pid: pid, theme: "${$3.toLowerCase()}"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(set whole word)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await dk.setWholeWord ({pid: pid, on: "${$3.toLowerCase()}"})\n`;
+        return `await dk.setWholeWord ({pid: pid, on: "${$3.toLowerCase()}"})`;
       }
     ];
 
@@ -801,14 +773,14 @@ export class GBVMService extends GBService {
     keywords[i++] = [
       /^\s*(transfer to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await dk.transferTo ({pid: pid, to:${$3}})\n`;
+        return `await dk.transferTo ({pid: pid, to:${$3}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gim,
       () => {
-        return `await dk.transferTo ({pid: pid, })\n`;
+        return `await dk.transferTo ({pid: pid, })`;
       }
     ];
 
@@ -820,9 +792,16 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
+      /^\s*(END)/gim,
+      () => {
+        return ``;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*(show menu)/gim,
       () => {
-        return `await dk.showMenu ({pid: pid, })\n`;
+        return `await dk.showMenu ({pid: pid, })`;
       }
     ];
 
@@ -830,7 +809,7 @@ export class GBVMService extends GBService {
       /^\s*(talk to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['mobile', 'message']);
-        return `await sys.talkTo({pid: pid, ${params}})\n`;
+        return `await sys.talkTo({pid: pid, ${params}})`;
       }
     ];
 
@@ -840,7 +819,7 @@ export class GBVMService extends GBService {
         if ($3.substr(0, 1) !== '"') {
           $3 = `"${$3}"`;
         }
-        return `await dk.talk ({pid: pid, text: ${$3}})\n`;
+        return `await dk.talk ({pid: pid, text: ${$3}})`;
       }
     ];
 
@@ -848,7 +827,7 @@ export class GBVMService extends GBService {
       /^\s*(send sms to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['mobile', 'message']);
-        return `await sys.sendSmsTo({pid: pid, ${params}})\n`;
+        return `await sys.sendSmsTo({pid: pid, ${params}})`;
       }
     ];
 
@@ -856,7 +835,7 @@ export class GBVMService extends GBService {
       /^\s*(send email)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['to', 'subject', 'body']);
-        return `await dk.sendEmail({pid: pid, ${params}})\n`;
+        return `await dk.sendEmail({pid: pid, ${params}})`;
       }
     ];
 
@@ -864,7 +843,7 @@ export class GBVMService extends GBService {
       /^\s*(send mail)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['to', 'subject', 'body']);
-        return `await dk.sendEmail({pid: pid, ${params}})\n`;
+        return `await dk.sendEmail({pid: pid, ${params}})`;
       }
     ];
 
@@ -872,7 +851,7 @@ export class GBVMService extends GBService {
       /^\s*(send file to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['mobile', 'filename', 'caption']);
-        return `await dk.sendFileTo({pid: pid, ${params}})\n`;
+        return `await dk.sendFileTo({pid: pid, ${params}})`;
       }
     ];
 
@@ -880,7 +859,7 @@ export class GBVMService extends GBService {
       /^\s*(hover)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['handle', 'selector']);
-        return `await wa.hover ({pid: pid, ${params}})\n`;
+        return `await wa.hover ({pid: pid, ${params}})`;
       }
     ];
 
@@ -888,7 +867,7 @@ export class GBVMService extends GBService {
       /^\s*(click link text)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams('page,' + $3, ['handle', 'text', 'index']);
-        return `await wa.linkByText ({pid: pid, ${params}})\n`;
+        return `await wa.linkByText ({pid: pid, ${params}})`;
       }
     ];
 
@@ -898,7 +877,7 @@ export class GBVMService extends GBService {
         // page is not string.
         // https://github.com/GeneralBots/BotServer/issues/310
         const params = this.getParams('page,' + $3, ['handle', 'frameOrSelector', 'selector']);
-        return `await wa.click ({pid: pid, ${params}})\n`;
+        return `await wa.click ({pid: pid, ${params}})`;
       }
     ];
 
@@ -906,7 +885,7 @@ export class GBVMService extends GBService {
       /^\s*(send file)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['filename', 'caption']);
-        return `await dk.sendFile({pid: pid, ${params}})\n`;
+        return `await dk.sendFile({pid: pid, ${params}})`;
       }
     ];
 
@@ -914,7 +893,7 @@ export class GBVMService extends GBService {
       /^\s*(copy)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['src', 'dst']);
-        return `await sys.copyFile ({pid: pid, ${params}})\n`;
+        return `await sys.copyFile ({pid: pid, ${params}})`;
       }
     ];
 
@@ -922,84 +901,77 @@ export class GBVMService extends GBService {
       /^\s*(convert)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['src', 'dst']);
-        return `await sys.convert ({pid: pid, ${params}})\n`;
+        return `await sys.convert ({pid: pid, ${params}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(\w+)\s*\=\s*(.*)\s*as chart/gim,
-      ($0, $1, $2) => {
-        return `await dk.chart ({pid: pid, type:'bar', data: ${2}, legends:null, transpose: false})\n`;
-      }
-    ];
-
-    keywords[i++] = [
-      /^\s*(chart)(\s*)(.*)/gim,
+      /^\s*(\w+)\s*\=\s*chart(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['type', 'data', 'legends', 'transpose']);
-        return `await dk.chart ({pid: pid, ${params}})\n`;
+        return `${$1} = await dk.chart ({pid: pid, ${params}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*MERGE\s*(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await sys.merge({pid: pid, file: ${$1}, data: ${$2}, key1: ${$3}})\n`;
+        return `await sys.merge({pid: pid, file: ${$1}, data: ${$2}, key1: ${$3}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*PRESS\s*(.*)/gim,
       ($0, $1, $2) => {
-        return `await wa.pressKey({pid: pid, handle: page, char: ${$1})\n`;
+        return `await wa.pressKey({pid: pid, handle: page, char: ${$1}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*SCREENSHOT\s*(.*)/gim,
       ($0, $1, $2) => {
-        return `await wa.screenshot({pid: pid, handle: page, selector: ${$1}})\n`;
+        return `await wa.screenshot({pid: pid, handle: page, selector: ${$1}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*TWEET\s*(.*)/gim,
       ($0, $1, $2) => {
-        return `await sys.tweet({pid: pid, text: ${$1})\n`;
+        return `await sys.tweet({pid: pid, text: ${$1}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(\w+)\s*\=\s*(.*)\s*as image/gim,
       ($0, $1, $2) => {
-        return `${$1} = await sys.asImage({pid: pid, data: ${$2}})\n`;
+        return `${$1} = await sys.asImage({pid: pid, data: ${$2}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(\w+)\s*\=\s*(.*)\s*as pdf/gim,
       ($0, $1, $2) => {
-        return `${$1} = await sys.asPdf({pid: pid, data: ${$2})\n`;
+        return `${$1} = await sys.asPdf({pid: pid, data: ${$2})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(\w+)\s*\=\s*FILL\s*(.*)\s*WITH\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `${$1} = await sys.fill({pid: pid, templateName: ${$2}, data: ${$3}})\n`;
+        return `${$1} = await sys.fill({pid: pid, templateName: ${$2}, data: ${$3}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*save\s*(.*)\s*as\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await sys.saveFile({pid: pid, file: ${$2}, data: ${$1})\n`;
+        return `await sys.saveFile({pid: pid, file: ${$2}, data: ${$1}})`;
       }
     ];
     keywords[i++] = [
       /^\s*(save)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await sys.save({pid: pid, args: [${$3}]})\n`;
+        return `await sys.save({pid: pid, args: [${$3}]})`;
       }
     ];
 

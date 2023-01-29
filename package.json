@@ -103,8 +103,6 @@
     "google-libphonenumber": "3.2.31",
     "googleapis": "109.0.1",
     "ibm-watson": "7.1.2",
-    "indent.js": "0.3.5",
-    "js-beautify": "1.14.7",
     "keyv": "4.5.2",
     "koa": "2.13.4",
     "koa-body": "6.0.1",
