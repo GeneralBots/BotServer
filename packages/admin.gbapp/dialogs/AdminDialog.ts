@@ -312,7 +312,6 @@ export class AdminDialog extends IGBDialog {
           }
 
           await CollectionUtil.asyncForEach(packages, async packageName => {
-            try {
               let cmd1;
               if (packageName.indexOf('.') !== -1) {
                 cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
@@ -328,14 +327,6 @@ export class AdminDialog extends IGBDialog {
               }
               await GBAdminService.deployPackageCommand(min, cmd1, deployer);
               await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
-            } catch (error) {
-              GBLog.error(error);
-              if (!skipError) {
-                await min.conversationalService.sendText(min, step, `ERROR: ${error}`);
-
-                return await step.replaceDialog('/ask', { isReturning: true });
-              }
-            }
           });
           await min.conversationalService.sendText(min, step, Messages[locale].publish_success);
           if (!step.activeDialog.state.options.confirm) {

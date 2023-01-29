@@ -37,7 +37,7 @@
 'use strict';
 
 import { AuthenticationContext, TokenResponse } from 'adal-node';
-import { GBMinInstance, IGBAdminService, IGBCoreService, IGBDeployer, IGBInstance } from 'botlib';
+import { GBError, GBLog, GBMinInstance, IGBAdminService, IGBCoreService, IGBDeployer, IGBInstance } from 'botlib';
 import { FindOptions } from 'sequelize/types';
 import urlJoin from 'url-join';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService.js';
@@ -205,18 +205,23 @@ export class GBAdminService implements IGBAdminService {
     const options = <FindOptions>{ where: {} };
     options.where = { key: key, instanceId: instanceId };
     const obj = await GuaribasAdmin.findOne(options);
-
     return obj.value;
   }
 
   public async acquireElevatedToken(instanceId: number): Promise<string> {
     const minBoot = GBServer.globals.minBoot;
     instanceId = minBoot.instance.instanceId;
+    let expiresOnV;
+    try {
+      expiresOnV = await this.getValue(instanceId, 'expiresOn');
+    } catch (error) {
+      throw new Error(`/setupSecurity is required before running /publish.`);
+    }
 
     return new Promise<string>(async (resolve, reject) => {
       const instance = await this.core.loadInstanceById(instanceId);
 
-      const expiresOn = new Date(await this.getValue(instanceId, 'expiresOn'));
+      const expiresOn = new Date(expiresOnV);
       if (expiresOn.getTime() > new Date().getTime()) {
         const accessToken = await this.getValue(instanceId, 'accessToken');
         resolve(accessToken);

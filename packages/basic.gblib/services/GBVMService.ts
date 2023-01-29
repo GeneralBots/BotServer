@@ -36,14 +36,12 @@ import { GBLog, GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'b
 import * as Fs from 'fs';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
-import { TSCompiler } from './TSCompiler.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { ScheduleServices } from './ScheduleServices.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import urlJoin from 'url-join';
 import { NodeVM, VMScript } from 'vm2';
 import { createVm2Pool } from './vm2-process/index.js';
-import * as vb2ts from './vbscript-to-typescript.js';
 import textract from 'textract';
 import walkPromise from 'walk-promise';
 import child_process from 'child_process';
@@ -208,21 +206,9 @@ export class GBVMService extends GBService {
     Fs.writeFileSync(vbsFile, code);
     Fs.writeFileSync(mapFile, JSON.stringify(jsonMap));
 
-    // Converts VBS into TS.
-
-    vb2ts.convertFile(vbsFile);
-
-    // Convert TS into JS.
-
-    const tsfile: string = `${filename}.ts`;
-    let tsCode: string = Fs.readFileSync(tsfile, 'utf8');
-    Fs.writeFileSync(tsfile, tsCode);
-    const tsc = new TSCompiler();
-    tsc.compile([tsfile]);
-
     // Run JS into the GB context.
 
-    const jsfile = `${tsfile}.js`.replace('.ts', '');
+    const jsfile: string = `${filename}.js`;
 
     if (Fs.existsSync(jsfile)) {
       let code: string = Fs.readFileSync(jsfile, 'utf8');
@@ -354,12 +340,9 @@ export class GBVMService extends GBService {
   public async convertGBASICToVBS(min: GBMinInstance, code: string) {
     // Start and End of VB2TS tags of processing.
 
-    code = `<%\n
-
-    ${process.env.ENABLE_AUTH ? `hear gbLogin as login` : ``}
-
-    ${code}
-
+    code = `
+      ${process.env.ENABLE_AUTH ? `hear gbLogin as login` : ``}
+      ${code}
     `;
 
     var allLines = code.split('\n');
@@ -388,6 +371,14 @@ export class GBVMService extends GBService {
     let keywords = [];
     let i = 0;
 
+    const convertConditions = input => {
+      var result = input.replace(/ +and +/gi, ' && ');
+      result = result.replace(/ +or +/gi, ' || ');
+      result = result.replace(/ +<> +/gi, ' !== ');
+      result = result.replace(/ += +/gi, ' === ');
+      return result;
+    };
+
     keywords[i++] = [
       /^\s*(\w+)\s*\=\s*SELECT\s*(.*)/gim,
       ($0, $1, $2) => {
@@ -396,6 +387,40 @@ export class GBVMService extends GBService {
         return `${$1} = await sys.executeSQL({pid: pid, data:${$1}, sql:"${sql}", tableName:"${tableName}"})\n`;
       }
     ];
+
+    keywords[i++] = [
+      /if +(.*?) +then/gi,
+      (input, group1) => {
+        var condition = convertConditions(group1);
+        return '\nif (' + condition + ') {\n';
+      }
+    ];
+
+    keywords[i++] = [/end if/gi, '\n}\n'];
+
+    keywords[i++] = [/else(?!{)/gi, '\n}\nelse {\n'];
+
+    keywords[i++] = [/select case +(.*)/gi, '\nswitch ($1) {\n'];
+
+    keywords[i++] = [/end select/gi, '\n}\n'];
+
+    keywords[i++] = [/function +(.*)\((.*)\)/gi, '\n$1 = ($2) => {\n'];
+
+    keywords[i++] = [/end function/gi, '\n}\n'];
+
+    keywords[i++] = [/for +(.*to.*)/gi, '\nfor ($1) {\n'];
+
+    keywords[i++] = [/^ *next *$/gim, '}\n'];
+
+    keywords[i++] = [
+      /do while +(.*)/gi,
+      function (input, group1) {
+        var condition = convertConditions(group1);
+        return '\nwhile (' + condition + ') {\n';
+      }
+    ];
+
+    keywords[i++] = [/^ *loop *$/gim, '}\n'];
 
     keywords[i++] = [
       /^\s*open\s*(.*)/gim,

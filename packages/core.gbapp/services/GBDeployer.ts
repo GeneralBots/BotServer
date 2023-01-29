@@ -85,7 +85,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Deployer needs core and importer to be created.
    */
-  constructor (core: IGBCoreService, importer: GBImporter) {
+  constructor(core: IGBCoreService, importer: GBImporter) {
     this.core = core;
     this.importer = importer;
   }
@@ -94,16 +94,14 @@ export class GBDeployer implements IGBDeployer {
    * Builds a connection string text to be used in direct
    * use to database like the Indexer (Azure Search).
    */
-  public static getConnectionStringFromInstance (instance: IGBInstance) {
-    return `Server=tcp:${instance.storageServer},1433;Database=${instance.storageName};User ID=${
-      instance.storageUsername
-    };Password=${instance.storagePassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
+  public static getConnectionStringFromInstance(instance: IGBInstance) {
+    return `Server=tcp:${instance.storageServer},1433;Database=${instance.storageName};User ID=${instance.storageUsername};Password=${instance.storagePassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
   }
 
   /**
    * Retrives token and initialize drive client API.
    */
-  public static async internalGetDriveClient (min: GBMinInstance) {
+  public static async internalGetDriveClient(min: GBMinInstance) {
     const token = await min.adminService.acquireElevatedToken(min.instance.instanceId);
     const siteId = process.env.STORAGE_SITE_ID;
     const libraryId = process.env.STORAGE_LIBRARY;
@@ -120,7 +118,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Performs package deployment in all .gbai or default.
    */
-  public async deployPackages (core: IGBCoreService, server: any, appPackages: IGBPackage[]) {
+  public async deployPackages(core: IGBCoreService, server: any, appPackages: IGBPackage[]) {
     // Builds lists of paths to search for packages.
 
     let paths = [urlJoin(process.env.PWD, GBDeployer.deployFolder), urlJoin(process.env.PWD, GBDeployer.workFolder)];
@@ -132,7 +130,7 @@ export class GBDeployer implements IGBDeployer {
     const gbappPackages: string[] = [];
     const generalPackages: string[] = [];
 
-    async function scanPackageDirectory (path) {
+    async function scanPackageDirectory(path) {
       // Gets all directories.
 
       const isDirectory = source => Fs.lstatSync(source).isDirectory();
@@ -201,7 +199,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Deploys a new blank bot to the database, cognitive services and other services.
    */
-  public async deployBlankBot (botId: string, mobile: string, email: string) {
+  public async deployBlankBot(botId: string, mobile: string, email: string) {
     // Creates a new row on the GuaribasInstance table.
 
     const instance = await this.importer.createBotInstance(botId);
@@ -243,7 +241,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Verifies if bot exists on bot catalog.
    */
-  public async botExists (botId: string): Promise<boolean> {
+  public async botExists(botId: string): Promise<boolean> {
     const service = await AzureDeployerService.createInstance(this);
 
     return await service.botExists(botId);
@@ -252,7 +250,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Performs all tasks of deploying a new bot on the cloud.
    */
-  public async deployBotFull (instance: IGBInstance, publicAddress: string): Promise<IGBInstance> {
+  public async deployBotFull(instance: IGBInstance, publicAddress: string): Promise<IGBInstance> {
     // Reads base configuration from environent file.
 
     const service = await AzureDeployerService.createInstance(this);
@@ -322,7 +320,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Performs the NLP publishing process on remote service.
    */
-  public async publishNLP (instance: IGBInstance): Promise<void> {
+  public async publishNLP(instance: IGBInstance): Promise<void> {
     const service = await AzureDeployerService.createInstance(this);
     const res = await service.publishNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
     if (res.status !== 200 && res.status !== 201) {
@@ -333,7 +331,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Trains NLP on the remote service.
    */
-  public async trainNLP (instance: IGBInstance): Promise<void> {
+  public async trainNLP(instance: IGBInstance): Promise<void> {
     const service = await AzureDeployerService.createInstance(this);
     const res = await service.trainNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
     if (res.status !== 200 && res.status !== 202) {
@@ -350,7 +348,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Return a zip file for importing bot in apps, currently MS Teams.
    */
-  public async getBotManifest (instance: IGBInstance): Promise<Buffer> {
+  public async getBotManifest(instance: IGBInstance): Promise<Buffer> {
     const s = new TeamsService();
     const manifest = await s.getManifest(
       instance.marketplaceId,
@@ -367,7 +365,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Refreshes NLP entities on the remote service.
    */
-  public async refreshNLPEntity (instance: IGBInstance, listName, listData): Promise<void> {
+  public async refreshNLPEntity(instance: IGBInstance, listName, listData): Promise<void> {
     const service = await AzureDeployerService.createInstance(this);
     const res = await service.refreshEntityList(
       instance.cloudLocation,
@@ -384,7 +382,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Deploys a bot to the storage from a .gbot folder.
    */
-  public async deployBotFromLocalPath (localPath: string, publicAddress: string): Promise<void> {
+  public async deployBotFromLocalPath(localPath: string, publicAddress: string): Promise<void> {
     const packageName = Path.basename(localPath);
     const instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
     await this.deployBotFull(instance, publicAddress);
@@ -393,7 +391,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Loads all para from tabular file Config.xlsx.
    */
-  public async loadParamsFromTabular (min: GBMinInstance): Promise<any> {
+  public async loadParamsFromTabular(min: GBMinInstance): Promise<any> {
     const siteId = process.env.STORAGE_SITE_ID;
     const libraryId = process.env.STORAGE_LIBRARY;
 
@@ -433,9 +431,7 @@ export class GBDeployer implements IGBDeployer {
 
     const results = await client
       .api(
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${
-          document[0].id
-        }/workbook/worksheets('General')/range(address='A7:B100')`
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('General')/range(address='A7:B100')`
       )
       .get();
     let index = 0,
@@ -453,7 +449,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Loads all para from tabular file Config.xlsx.
    */
-  public async downloadFolder (
+  public async downloadFolder(
     min: GBMinInstance,
     localPath: string,
     remotePath: string,
@@ -535,7 +531,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * UndDeploys a bot to the storage.
    */
-  public async undeployBot (botId: string, packageName: string): Promise<void> {
+  public async undeployBot(botId: string, packageName: string): Promise<void> {
     // Deletes Bot registration on cloud.
 
     const service = await AzureDeployerService.createInstance(this);
@@ -556,7 +552,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Deploys a new package to the database storage (just a group).
    */
-  public async deployPackageToStorage (instanceId: number, packageName: string): Promise<GuaribasPackage> {
+  public async deployPackageToStorage(instanceId: number, packageName: string): Promise<GuaribasPackage> {
     return await GuaribasPackage.create(<GuaribasPackage>{
       packageName: packageName,
       instanceId: instanceId
@@ -566,7 +562,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Deploys a folder into the bot storage.
    */
-  public async deployPackage (min: GBMinInstance, localPath: string) {
+  public async deployPackage(min: GBMinInstance, localPath: string) {
     const packageType = Path.extname(localPath);
     let handled = false;
     let pck = null;
@@ -575,28 +571,24 @@ export class GBDeployer implements IGBDeployer {
 
     const _this = this;
     await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-      try {
-        // If it will be handled, create a temporary service layer to be
-        // called by .gbapp and manage the associated package row.
+      // If it will be handled, create a temporary service layer to be
+      // called by .gbapp and manage the associated package row.
 
-        if (
-          (pck = await e.onExchangeData(min, 'handlePackage', {
-            name: localPath,
-            createPackage: async packageName => {
-              return await _this.deployPackageToStorage(min.instance.instanceId, packageName);
-            },
-            updatePackage: async (p: GuaribasPackage) => {
-              p.save();
-            },
-            existsPackage: async (packageName: string) => {
-              return await _this.getStoragePackageByName(min.instance.instanceId, packageName);
-            }
-          }))
-        ) {
-          handled = true;
-        }
-      } catch (error) {
-        GBLog.error(error);
+      if (
+        (pck = await e.onExchangeData(min, 'handlePackage', {
+          name: localPath,
+          createPackage: async packageName => {
+            return await _this.deployPackageToStorage(min.instance.instanceId, packageName);
+          },
+          updatePackage: async (p: GuaribasPackage) => {
+            p.save();
+          },
+          existsPackage: async (packageName: string) => {
+            return await _this.getStoragePackageByName(min.instance.instanceId, packageName);
+          }
+        }))
+      ) {
+        handled = true;
       }
     });
 
@@ -663,16 +655,14 @@ export class GBDeployer implements IGBDeployer {
         break;
 
       default:
-        const err = GBError.create(`Unhandled package type: ${packageType}.`);
-        Promise.reject(err);
-        break;
-    }
+          throw GBError.create(`Unhandled package type: ${packageType}.`);
+}
   }
 
   /**
    * Removes the package from the storage and local work folders.
    */
-  public async undeployPackageFromLocalPath (instance: IGBInstance, localPath: string) {
+  public async undeployPackageFromLocalPath(instance: IGBInstance, localPath: string) {
     // Gets information about the package.
 
     const packageType = Path.extname(localPath);
@@ -720,7 +710,7 @@ export class GBDeployer implements IGBDeployer {
    * Performs automation of the Indexer (Azure Search) and rebuild
    * its index based on .gbkb structure.
    */
-  public async rebuildIndex (instance: IGBInstance, searchSchema: any) {
+  public async rebuildIndex(instance: IGBInstance, searchSchema: any) {
     // Prepares search.
 
     const search = new AzureSearch(
@@ -770,7 +760,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Finds a storage package by using package name.
    */
-  public async getStoragePackageByName (instanceId: number, packageName: string): Promise<GuaribasPackage> {
+  public async getStoragePackageByName(instanceId: number, packageName: string): Promise<GuaribasPackage> {
     const where = { packageName: packageName, instanceId: instanceId };
 
     return await GuaribasPackage.findOne({
@@ -782,7 +772,7 @@ export class GBDeployer implements IGBDeployer {
    * Prepares the React application inside default.gbui folder and
    * makes this web application available as default web front-end.
    */
-  public setupDefaultGBUI () {
+  public setupDefaultGBUI() {
     // Setups paths.
 
     const root = 'packages/default.gbui';
@@ -809,7 +799,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Servers bot storage assets to be used by web, WhatsApp and other channels.
    */
-  public static mountGBKBAssets (packageName: any, botId: string, filename: string) {
+  public static mountGBKBAssets(packageName: any, botId: string, filename: string) {
     // Servers menu assets.
 
     GBServer.globals.server.use(
@@ -848,7 +838,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Invokes Type Script compiler for a given .gbapp package (Node.js based).
    */
-  public async callGBAppCompiler (
+  public async callGBAppCompiler(
     gbappPath: string,
     core: IGBCoreService,
     appPackages: any[] = undefined,
@@ -906,7 +896,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Determines if a given package is of system kind.
    */
-  private isSystemPackage (name: string): Boolean {
+  private isSystemPackage(name: string): Boolean {
     const names = [
       'analytics.gblib',
       'console.gblib',
@@ -930,7 +920,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Performs the process of compiling all .gbapp folders.
    */
-  private async deployAppPackages (gbappPackages: string[], core: any, appPackages: any[]) {
+  private async deployAppPackages(gbappPackages: string[], core: any, appPackages: any[]) {
     // Loops through all ready to load .gbapp packages.
 
     let appPackagesProcessed = 0;

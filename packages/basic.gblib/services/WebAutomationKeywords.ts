@@ -145,7 +145,7 @@ export class WebAutomationKeywords {
   /**
    * Find element on page DOM.
    *
-   * @example GET page,"selector"
+   * @example GET "selector"
    */
   public async getBySelector ({ handle, selector }) {
     const page = this.getPageByHandle(handle);

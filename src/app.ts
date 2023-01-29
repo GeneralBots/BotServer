@@ -96,9 +96,11 @@ export class GBServer {
     server.use(bodyParser.urlencoded({ extended: true }));
 
     process.on('unhandledRejection', (err, p) => {
-      console.log('An unhandledRejection occurred');
-      console.log(`Rejected Promise: ${p}`);
-      console.log(`Rejection: ${err}`);
+      GBLog.error(`UNHANDLED_REJECTION(promises): ${p} ${err.toString()}`);
+    });
+
+    process.on('uncaughtException', (err, origin) => {
+      GBLog.error(`UNCAUGHT_EXCEPTION: ${err.toString()}`);
     });
 
     // Creates working directory.
@@ -240,7 +242,7 @@ export class GBServer {
       })();
     };
 
-    // 
+    //
 
     if (process.env.CERTIFICATE_PFX) {
       const options1 = {
