@@ -678,45 +678,6 @@ export class DialogKeywords {
     // return await beginDialog('/menu');
   }
 
-  private static async downloadAttachmentAndWrite(attachment) {
-    const url = attachment.contentUrl;
-    // https://github.com/GeneralBots/BotServer/issues/195 - '${botId}','uploads');
-    const localFolder = Path.join('work');
-    const localFileName = Path.join(localFolder, attachment.name);
-
-    try {
-      let response;
-      if (url.startsWith('data:')) {
-        var regex = /^data:.+\/(.+);base64,(.*)$/;
-        var matches = url.match(regex);
-        var ext = matches[1];
-        var data = matches[2];
-        response = Buffer.from(data, 'base64');
-      } else {
-        // arraybuffer is necessary for images
-        const options = {
-          method: 'GET',
-          encoding: 'binary'
-        };
-        response = await fetch(url, options);
-      }
-
-      Fs.writeFile(localFileName, response, fsError => {
-        if (fsError) {
-          throw fsError;
-        }
-      });
-    } catch (error) {
-      console.error(error);
-      return undefined;
-    }
-    // If no error was thrown while writing to disk,return the attachment's name
-    // and localFilePath for the response back to the user.
-    return {
-      fileName: attachment.name,
-      localPath: localFileName
-    };
-  }
 
   /**
    * Performs the transfer of the conversation to a human agent.
@@ -814,29 +775,7 @@ export class DialogKeywords {
       const text = min.cbMap[userId].promise;
 
       if (kind === 'file') {
-        // TODO: https://github.com/GeneralBots/BotServer/issues/227
-        // await prompt('attachmentPrompt',{});
-        // // Prepare Promises to download each attachment and then execute each Promise.
-        // const promises = step.context.activity.attachments.map(
-        //   DialogKeywords.downloadAttachmentAndWrite);
-        // const successfulSaves = await Promise.all(promises);
-        // async function replyForReceivedAttachments(localAttachmentData) {
-        //   if (localAttachmentData) {
-        //     // Because the TurnContext was bound to this function,the bot can call
-        //     // `TurnContext.sendActivity` via `this.sendActivity`;
-        //     await this.sendActivity(`Upload OK.`);
-        //   } else {
-        //     await this.sendActivity('Error uploading file. Please,start again.');
-        //   }
-        // }
-        // // Prepare Promises to reply to the user with information about saved attachments.
-        // // The current TurnContext is bound so `replyForReceivedAttachments` can also send replies.
-        // const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
-        // await Promise.all(replyPromises);
-        // result = {
-        //   data: Fs.readFileSync(successfulSaves[0]['localPath']),
-        //   filename: successfulSaves[0]['fileName']
-        // };
+
       } else if (kind === 'boolean') {
         if (isIntentYes('pt-BR', text)) {
           result = true;

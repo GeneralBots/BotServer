@@ -81,12 +81,10 @@ import { GBConfigService } from './GBConfigService.js';
 import { GBConversationalService } from './GBConversationalService.js';
 import { GBDeployer } from './GBDeployer.js';
 import urlJoin from 'url-join';
-import fs from 'fs';
 import { GoogleChatDirectLine } from '../../google-chat.gblib/services/GoogleChatDirectLine.js';
-import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices.js';
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
-import { ssrForBots } from './GBSSR';
 import * as nlp from 'node-nlp';
+import Path from 'path';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -331,11 +329,11 @@ export class GBMinService {
       GBLog.info(`Starting auto test with '${process.env.TEST_MESSAGE}'.`);
 
       const client = await new SwaggerClient({
-        spec:JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
+        spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
         requestInterceptor: req => {
-            req.headers["Authorization"] = `Bearer ${min.instance.webchatKey}`
-    
-      }});
+          req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
+        }
+      });
 
       const response = await client.apis.Conversations.Conversations_StartConversation();
       const conversationId = response.obj.conversationId;
@@ -409,7 +407,7 @@ export class GBMinService {
     GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`, instance.botId, `${instance.botId}.gbkb`);
   }
 
-  public static isChatAPI(req:any, res: any) {
+  public static isChatAPI(req: any, res: any) {
     if (!res) {
       return 'GeneralBots';
     }
@@ -808,8 +806,9 @@ export class GBMinService {
     instance: any,
     appPackages: any[]
   ) {
-    let adapter = min.bot;
+    // Uses standard or Facebook Adapter.
 
+    let adapter = min.bot;
     if (req.body.object) {
       req['rawBody'] = JSON.stringify(req.body);
       adapter = min['fbAdapter'];
@@ -818,6 +817,8 @@ export class GBMinService {
     // Default activity processing and handler.
 
     await adapter['processActivity'](req, res, async context => {
+      // Handle activity text issues.
+
       if (!context.activity.text) {
         context.activity.text = '';
       }
@@ -825,27 +826,37 @@ export class GBMinService {
 
       // Get loaded user state
 
+      const member = context.activity.from;
       const step = await min.dialogs.createContext(context);
       step.context.activity.locale = 'pt-BR';
       let firstTime = false;
 
+      const sec = new SecService();
+      const user = await sec.ensureUser(instance.instanceId, member.id, member.name, '', 'web', member.name, null);
+      const userId = user.userId;
+      const params = user.params ? JSON.parse(user.params) : {};
+
       try {
-        const sec = new SecService();
-        const user = await min.userProfile.get(context, {});
         const conversationReference = JSON.stringify(TurnContext.getConversationReference(context.activity));
 
         // First time processing.
 
-        if (!user.loaded) {
+        if (!params.loaded) {
           if (step.context.activity.channelId !== 'msteams') {
             await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
           }
 
-          user.loaded = true;
-          user.subjects = [];
-          user.cb = undefined;
-          user.welcomed = false;
-          user.basicOptions = { maxLines: 100, translatorOn: true, wholeWord: true, theme: 'white', maxColumns: 40 };
+          // Default params.
+
+          await sec.setParam(userId, 'loaded', true);
+          await sec.setParam(userId, 'subjects', '[]');
+          await sec.setParam(userId, 'cb', null);
+          await sec.setParam(userId, 'welcomed', 'false');
+          await sec.setParam(userId, 'maxLines', 100);
+          await sec.setParam(userId, 'translatorOn', true);
+          await sec.setParam(userId, 'wholeWord', true);
+          await sec.setParam(userId, 'theme', 'white');
+          await sec.setParam(userId, 'maxColumns', 40);
 
           firstTime = true;
 
@@ -855,24 +866,13 @@ export class GBMinService {
           if (context.activity.from.id !== min.botId) {
             // Creates a new row in user table if it does not exists.
 
-            const member = context.activity.from;
-            const persistedUser = await sec.ensureUser(
-              instance.instanceId,
-              member.id,
-              member.name,
-              '',
-              'web',
-              member.name,
-              null
-            );
             // Stores conversation associated to the user to group each message.
 
             const analytics = new AnalyticsService();
-            user.systemUser = persistedUser;
-            user.conversation = await analytics.createConversation(persistedUser);
+            const conversation = await analytics.createConversation(user);
           }
 
-          await sec.updateConversationReferenceById(user.systemUser.userId, conversationReference);
+          await sec.updateConversationReferenceById(userId, conversationReference);
 
           if (step.context.activity.channelId !== 'msteams') {
             const service = new KBService(min.core.sequelize);
@@ -888,9 +888,6 @@ export class GBMinService {
           await min.userProfile.set(step.context, user);
         }
 
-        user.systemUser = await sec.getUserFromSystemId(user.systemUser.userSystemId);
-        await min.userProfile.set(step.context, user);
-
         // Required for MSTEAMS handling of persisted conversations.
 
         if (step.context.activity.channelId === 'msteams') {
@@ -904,7 +901,7 @@ export class GBMinService {
             const headers = { Authorization: `Bearer ${botToken}` };
             const t = new SystemKeywords(null, null, null, null);
             const data = await t.getByHttp({
-              pid: 0, 
+              pid: 0,
               url: file.contentUrl,
               headers,
               username: null,
@@ -923,10 +920,10 @@ export class GBMinService {
             );
           }
 
-          if (!user.welcomed) {
+          if (!(await sec.getParam(user, 'welcomed'))) {
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
-            if (startDialog && !user.welcomed) {
-              user.welcomed = true;
+            if (startDialog) {
+              await sec.setParam(userId, 'welcomed', 'true');
               GBLog.info(`Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
             }
@@ -960,7 +957,7 @@ export class GBMinService {
 
             // Auto starts dialogs if any is specified.
 
-            if (!startDialog && !user.welcomed) {
+            if (!startDialog && !(await sec.getParam(user, 'welcomed'))) {
               // Otherwise, calls / (root) to default welcome users.
 
               await step.beginDialog('/');
@@ -986,7 +983,7 @@ export class GBMinService {
                 !min['conversationWelcomed'][step.context.activity.conversation.id] &&
                 !step.context.activity['group']
               ) {
-                user.welcomed = true;
+                await sec.setParam(userId, 'welcomed', 'true');
                 min['conversationWelcomed'][step.context.activity.conversation.id] = true;
                 await min.userProfile.set(step.context, user);
                 GBLog.info(
@@ -1062,11 +1059,51 @@ export class GBMinService {
     }
   }
 
+  private static async downloadAttachmentAndWrite(attachment) {
+    const url = attachment.contentUrl;
+    // https://github.com/GeneralBots/BotServer/issues/195 - '${botId}','uploads');
+    const localFolder = Path.join('work');
+    const localFileName = Path.join(localFolder, attachment.name);
+
+    try {
+      let response;
+      if (url.startsWith('data:')) {
+        var regex = /^data:.+\/(.+);base64,(.*)$/;
+        var matches = url.match(regex);
+        var ext = matches[1];
+        var data = matches[2];
+        response = Buffer.from(data, 'base64');
+      } else {
+        // arraybuffer is necessary for images
+        const options = {
+          method: 'GET',
+          encoding: 'binary'
+        };
+        response = await fetch(url, options);
+      }
+
+      Fs.writeFile(localFileName, response, fsError => {
+        if (fsError) {
+          throw fsError;
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      return undefined;
+    }
+    // If no error was thrown while writing to disk,return the attachment's name
+    // and localFilePath for the response back to the user.
+    return {
+      fileName: attachment.name,
+      localPath: localFileName
+    };
+  }
+
   /**
-   * 
+   *
    * Checks for global exit kewywords cancelling any active dialogs.
-   *  
-   * */ 
+   *
+   * */
 
   public static isGlobalQuitUtterance(locale, utterance) {
     return utterance.match(Messages.global_quit);
@@ -1114,6 +1151,30 @@ export class GBMinService {
           context.activity.text
         );
       }
+    }
+
+    if (process.env.ENABLE_DOWNLOAD) {
+      // Prepare Promises to download each attachment and then execute each Promise.
+
+      const promises = step.context.activity.attachments.map(GBMinService.downloadAttachmentAndWrite);
+      const successfulSaves = await Promise.all(promises);
+      async function replyForReceivedAttachments(localAttachmentData) {
+        if (localAttachmentData) {
+          // Because the TurnContext was bound to this function,the bot can call
+          // `TurnContext.sendActivity` via `this.sendActivity`;
+          await this.sendActivity(`Upload OK.`);
+        } else {
+          await this.sendActivity('Error uploading file. Please,start again.');
+        }
+      }
+      // Prepare Promises to reply to the user with information about saved attachments.
+      // The current TurnContext is bound so `replyForReceivedAttachments` can also send replies.
+      const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
+      await Promise.all(replyPromises);
+      const result = {
+        data: Fs.readFileSync(successfulSaves[0]['localPath']),
+        filename: successfulSaves[0]['fileName']
+      };
     }
 
     // Files in .gbdialog can be called directly by typing its name normalized into JS .

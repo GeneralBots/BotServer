@@ -235,7 +235,7 @@ export class SecService extends GBService {
    * @param name Name of param to get from instance.
    * @param defaultValue Value returned when no param is defined.
    */
-   public getParam<T> (user: IGBInstance, name: string, defaultValue?: T): any {
+   public getParam<T> (user: GuaribasUser, name: string, defaultValue?: T): any {
     let value = null;
     if (user.params) {
       const params = JSON.parse(user.params);
