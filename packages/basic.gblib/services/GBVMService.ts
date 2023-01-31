@@ -1035,9 +1035,9 @@ export class GBVMService extends GBService {
     };
 
     sandbox['id'] = dk.sys().getRandomId();
-    sandbox['username'] = await dk.userName();
-    sandbox['mobile'] = await dk.userMobile();
-    sandbox['from'] = await dk.userMobile();
+    sandbox['username'] = await dk.userName({pid});
+    sandbox['mobile'] = await dk.userMobile({pid});
+    sandbox['from'] = await dk.userMobile({pid});
     sandbox['ENTER'] = String.fromCharCode(13);
     sandbox['headers'] = {};
     sandbox['data'] = {};
