@@ -371,6 +371,8 @@ export class GBVMService extends GBService {
       }
     ];
 
+    // Based on https://github.com/uweg/vbscript-to-typescript.
+
     keywords[i++] = [/^\s*else(?!{)/gim, '}\nelse {'];
 
     keywords[i++] = [/^\s*select case +(.*)/gim, 'switch ($1) {'];
@@ -378,6 +380,7 @@ export class GBVMService extends GBService {
     keywords[i++] = [/^\s*end select/gim, '}'];
 
     keywords[i++] = [/^\s*end function/gim, '}'];
+    
     keywords[i++] = [/^\s*function +(.*)\((.*)\)/gim, '$1 = ($2) => {\n'];
 
     keywords[i++] = [/^\s*for +(.*to.*)/gim, 'for ($1) {'];
@@ -780,21 +783,21 @@ export class GBVMService extends GBService {
     keywords[i++] = [
       /^\s*(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gim,
       () => {
-        return `await dk.transferTo ({pid: pid, })`;
+        return `await dk.transferTo ({pid: pid})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(exit)/gim,
       () => {
-        return ``;
+        return `return;`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(END)/gim,
       () => {
-        return ``;
+        return `return;`;
       }
     ];
 

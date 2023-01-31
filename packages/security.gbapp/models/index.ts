@@ -99,6 +99,9 @@ export class GuaribasUser extends Model<GuaribasUser> {
 
   @Column(DataType.STRING(64))
   declare hearOnDialog: string;
+
+  @Column(DataType.STRING(4000))
+  declare  params: string;
 }
 
 /**

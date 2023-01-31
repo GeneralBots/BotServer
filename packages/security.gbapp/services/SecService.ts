@@ -1,10 +1,8 @@
-import Fs from 'fs';
-import urlJoin from 'url-join';
-
+import { GBServer } from '../../../src/app.js';
 import { ConversationReference } from 'botbuilder';
 import { GBLog, GBMinInstance, GBService, IGBInstance } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from '../models/index.js';
+import { GuaribasUser } from '../models/index.js';
 import { FindOptions } from 'sequelize';
 
 /**
@@ -227,5 +225,58 @@ export class SecService extends GBService {
         instanceId: instanceId
       }
     });
+  }
+
+
+  /**
+   * Get a dynamic param from user. Dynamic params are defined in .gbdialog SET
+   * variables and other semantics during conversation.
+   *
+   * @param name Name of param to get from instance.
+   * @param defaultValue Value returned when no param is defined.
+   */
+   public getParam<T> (user: IGBInstance, name: string, defaultValue?: T): any {
+    let value = null;
+    if (user.params) {
+      const params = JSON.parse(user.params);
+      value = params ? params[name] : defaultValue;
+    }
+    if (typeof defaultValue === 'boolean') {
+      return new Boolean(value ? value.toString().toLowerCase() === 'true' : defaultValue);
+    }
+    if (typeof defaultValue === 'string') {
+      return value ? value : defaultValue;
+    }
+    if (typeof defaultValue === 'number') {
+      return new Number(value ? value : defaultValue ? defaultValue : 0);
+    }
+
+    if (user['dataValues'] && !value) {
+      value = user['dataValues'][name];
+      if (value === null) {
+        switch(name)
+        {
+          case 'language':
+            value = 'en';
+            break;
+        }
+      }
+    }
+
+    return value;
+  }
+  /**
+   * Saves user instance object to the storage handling
+   * multi-column JSON based store 'params' field.
+   */
+   public async setParam (userId: number, name: string, value:any) {
+    const options = { where: {} };
+    options.where = { botId: userId };
+    let user = await GuaribasUser.findOne(options);
+    // tslint:disable-next-line:prefer-object-spread
+    let obj =  JSON.parse(user.params);
+    obj['name'] = value;
+    user.params = JSON.stringify(obj);
+    return await user.save();
   }
 }

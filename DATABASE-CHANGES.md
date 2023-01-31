@@ -137,7 +137,12 @@ CREATE TABLE [dbo].[GuaribasSchedule]
 
 GO
 
-
-# 3.0.0
-
 ALTER TABLE dbo.GuaribasInstance ADD botKey nvarchar(64) NULL;
+
+# 2.3.9 
+
+GO
+
+ALTER TABLE dbo.GuaribasUser ADD
+	params nvarchar(4000) NULL
+GO
