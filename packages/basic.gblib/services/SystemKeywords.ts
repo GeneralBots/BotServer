@@ -449,6 +449,11 @@ export class SystemKeywords {
    *
    */
   public async set({ pid, file, address, value }): Promise<any> {
+
+    const {
+      min, user
+    } = await DialogKeywords.getProcessInfo(pid);
+
     // Handles calls for HTML stuff
 
     if (file._javascriptEnabled) {
@@ -463,9 +468,9 @@ export class SystemKeywords {
 
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
 
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
-    const botId = this.min.instance.botId;
+    const botId = min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
     address = address.indexOf(':') !== -1 ? address : address + ':' + address;

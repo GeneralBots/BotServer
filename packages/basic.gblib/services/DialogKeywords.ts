@@ -57,17 +57,17 @@ import sgMail from '@sendgrid/mail';
 import mammoth from 'mammoth';
 import qrcode from 'qrcode';
 import { json } from 'body-parser';
- 
-/** 
-   * Default check interval for user replay
-   */
- const DEFAULT_HEAR_POLL_INTERVAL = 500;
+
+/**
+ * Default check interval for user replay
+ */
+const DEFAULT_HEAR_POLL_INTERVAL = 500;
 
 /**
  * Base services of conversation to be called by BASIC.
  */
 export class DialogKeywords {
-   /**
+  /**
    * Reference to minimal bot instance.
    */
   public min: GBMinInstance;
@@ -226,7 +226,7 @@ export class DialogKeywords {
    *
    * @example x = TODAY
    */
-  public async getToday({ }) {
+  public async getToday({}) {
     let d = new Date(),
       month = '' + (d.getMonth() + 1),
       day = '' + d.getDate(),
@@ -262,28 +262,28 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit({ }) { }
+  public async exit({}) {}
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ pid }) { }
+  public async getActiveTasks({ pid }) {}
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ pid, dealName, contact, company, amount }) { }
+  public async createDeal({ pid, dealName, contact, company, amount }) {}
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ pid, name }) { }
+  public async fndContact({ pid, name }) {}
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -426,11 +426,9 @@ export class DialogKeywords {
    * @example TALK TOLIST (array,member)
    *
    */
-  public async getToLst(pid,array, member) {
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
-    
+  public async getToLst(pid, array, member) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
     if (!array) {
       return '<Empty>';
     }
@@ -456,10 +454,8 @@ export class DialogKeywords {
    *
    */
   public async getHourFromDate(pid, date) {
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
-        
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
     function addZero(i) {
       if (i < 10) {
         i = '0' + i;
@@ -490,7 +486,7 @@ export class DialogKeywords {
    * @example SAVE "contacts.xlsx", name, email, NOW
    *
    */
-  public async getNow({ }) {
+  public async getNow({}) {
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
       'Default Content Language',
@@ -592,18 +588,24 @@ export class DialogKeywords {
     this['id'] = this.sys().getRandomId();
   }
 
+  private async setOption({pid, name, value})
+  {
+    const process = GBServer.globals.processes[pid];
+    let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    const sec = new SecService();
+    await sec.setParam(user.userId, name, value);
+    GBLog.info(`BASIC: ${name} = ${value} (botId: ${min.botId})`);
+    return { min, user, params };
+  }
+
   /**
    * Defines the maximum lines to scan in spreedsheets.
    *
    * @example SET MAX LINES 5000
    *
    */
-  public async setMaxLines({ count }) {
-    if (this.user) {
-      // #307 user.basicOptions.maxLines = count;
-    } else {
-      this.maxLines = count;
-    }
+  public async setMaxLines({ pid, count }) {
+    await this.setOption({pid, name: "maxLines", value: count});
   }
 
   /**
@@ -612,8 +614,8 @@ export class DialogKeywords {
    * @example SET MAX COLUMNS 5000
    *
    */
-  public async setMaxColumns({ count }) {
-    // #307 user.basicOptions.maxColumns = count;
+  public async setMaxColumns({ pid, count }) {
+    await this.setOption({pid, name: "setMaxColumns", value: count});
   }
 
   /**
@@ -622,8 +624,9 @@ export class DialogKeywords {
    * @example SET WHOLE WORD ON
    *
    */
-  public async setWholeWord({ on }) {
-    // #307 user.basicOptions.wholeWord = (on.trim() === "on");
+  public async setWholeWord({ pid, on }) {
+    const value = (on.trim() === "on");
+    await this.setOption({pid, name: "wholeWord", value: value});
   }
 
   /**
@@ -632,8 +635,9 @@ export class DialogKeywords {
    * @example SET THEME "themename"
    *
    */
-  public async setTheme({ theme }) {
-    // #307 user.basicOptions.theme = theme.trim();
+  public async setTheme({ pid, theme }) {
+    const value = theme.trim();
+    await this.setOption({pid, name: "theme", value: value});
   }
 
   /**
@@ -642,24 +646,25 @@ export class DialogKeywords {
    * @example SET TRANSLATOR ON | OFF
    *
    */
-  public async setTranslatorOn({ on }) {
-    // #307 user.basicOptions.translatorOn = (on.trim() === "on");
+  public async setTranslatorOn({ pid, on }) {
+    const value = (on.trim() === "on");
+    await this.setOption({pid, name: "translatorOn", value: value});
   }
 
   /**
    * Returns the name of the user acquired by WhatsApp API.
    */
-  public async userName() {
-    // #307 WhatsappDirectLine.usernames[await this.userMobile()] : 'N/A';
-    return this.sys().getRandomId();
+  public async userName({pid}) {
+    let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    return user.userName;
   }
 
   /**
    * Returns current mobile number from user in conversation.
    */
-  public async userMobile() {
-    // #307 return GBMinService.userMobile();
-    return this.sys().getRandomId();
+  public async userMobile({pid}) {
+    let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    return user.userSystemId;
   }
 
   /**
@@ -668,10 +673,11 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu({ }) {
+  public async showMenu({}) {
     // https://github.com/GeneralBots/BotServer/issues/237
     // return await beginDialog('/menu');
   }
+
   private static async downloadAttachmentAndWrite(attachment) {
     const url = attachment.contentUrl;
     // https://github.com/GeneralBots/BotServer/issues/195 - '${botId}','uploads');
@@ -730,11 +736,8 @@ export class DialogKeywords {
    *
    */
   public async getHear({ pid, kind, arg }) {
-
     const process = GBServer.globals.processes[pid];
-    let {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
+    let { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles first arg as an array of args.
 
@@ -765,10 +768,8 @@ export class DialogKeywords {
       // https://github.com/GeneralBots/BotServer/issues/266
 
       if (args && args.length > 1) {
-
-
         // https://github.com/pedroslopez/whatsapp-web.js/issues/1811
-        // 
+        //
         // const list = new List(
         //   'Escolha um dos itens',
         //   'Itens1',
@@ -781,7 +782,6 @@ export class DialogKeywords {
         //   'Please select a product'
         // );
 
-
         // let i = 0;
         // await CollectionUtil.asyncForEach(args, async arg => {
         //   i++;
@@ -791,7 +791,6 @@ export class DialogKeywords {
 
         // const button = new wpp.Buttons(Messages[locale].choices, choices, ' ', ' ');
         // await this.talk(button);
-
 
         GBLog.info(`BASIC: HEAR with [${args.toString()}] (Asking for input).`);
       } else {
@@ -852,7 +851,7 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null) {
-          await this.talk({ pid, text: 'Por favor,digite um e-mail válido.' });
+          await this.talk({ pid, text: 'Por favor, digite um e-mail válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -865,7 +864,7 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk({ pid, text: 'Por favor,digite um nome válido.' });
+          await this.talk({ pid, text: 'Por favor, digite um nome válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -878,7 +877,7 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk({ pid, text: 'Por favor,digite um número válido.' });
+          await this.talk({ pid, text: 'Por favor, digite um número válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -893,7 +892,7 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk({ pid, text: 'Por favor,digite uma data no formato 12/12/2020.' });
+          await this.talk({ pid, text: 'Por favor, digite uma data no formato 12/12/2020.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -906,7 +905,7 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk({ pid, text: 'Por favor,digite um horário no formato hh:ss.' });
+          await this.talk({ pid, text: 'Por favor, digite um horário no formato hh:ss.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -916,8 +915,7 @@ export class DialogKeywords {
           // https://github.com/GeneralBots/BotServer/issues/307
           if (user.locale === 'en') {
             return text.match(/(?:\d{1,3},)*\d{1,3}(?:\.\d+)?/gi);
-          }
-          else {
+          } else {
             return text.match(/(?:\d{1,3}.)*\d{1,3}(?:\,\d+)?/gi);
           }
           return [];
@@ -926,7 +924,7 @@ export class DialogKeywords {
         const value = extractEntity(text);
 
         if (value === null || value.length != 1) {
-          await this.talk({ pid, text: 'Por favor,digite um valor monetário.' });
+          await this.talk({ pid, text: 'Por favor, digite um valor monetário.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -943,7 +941,7 @@ export class DialogKeywords {
           return await this.getHear({ pid, kind, arg });
         }
         if (!phoneUtil.isPossibleNumber(phoneNumber)) {
-          await this.talk({ pid, text: 'Por favor,digite um número de telefone válido.' });
+          await this.talk({ pid, text: 'Por favor, digite um número de telefone válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -1053,24 +1051,23 @@ export class DialogKeywords {
   public static async getProcessInfo(pid: number) {
     const proc = GBServer.globals.processes[pid];
 
-    const min = GBServer.globals.minInstances.filter(p =>
-      p.instance.instanceId == proc.instanceId)[0];
+    const min = GBServer.globals.minInstances.filter(p => p.instance.instanceId == proc.instanceId)[0];
     const sec = new SecService();
     const user = await sec.getUserFromId(min.instance.instanceId, proc.userId);
+    const params = JSON.parse(user.params);
     return {
-      min, user
+      min,
+      user,
+      params
     };
   }
-
 
   /**
    * Talks to the user by using the specified text.
    */
   public async talk({ pid, text }) {
     GBLog.info(`BASIC: TALK '${text}'.`);
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     if (user) {
       // TODO: const translate = this.user ? this.user.basicOptions.translatorOn : false;
 
@@ -1089,9 +1086,7 @@ export class DialogKeywords {
   private async internalSendFile({ pid, mobile, filename, caption }) {
     // Handles SEND FILE TO mobile,element in Web Automation.
 
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const element = filename._page ? filename._page : filename.screenshot ? filename : null;
 
     if (element) {
