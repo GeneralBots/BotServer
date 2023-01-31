@@ -1063,7 +1063,7 @@ export class GBMinService {
     const url = attachment.contentUrl;
     // https://github.com/GeneralBots/BotServer/issues/195 - '${botId}','uploads');
     const localFolder = Path.join('work');
-    const localFileName = Path.join(localFolder, attachment.name);
+    const localFileName = Path.join(localFolder, this['botId'],'uploads', attachment.name);
 
     try {
       let response;
@@ -1156,7 +1156,7 @@ export class GBMinService {
     if (process.env.ENABLE_DOWNLOAD) {
       // Prepare Promises to download each attachment and then execute each Promise.
 
-      const promises = step.context.activity.attachments.map(GBMinService.downloadAttachmentAndWrite);
+      const promises = step.context.activity.attachments.map(GBMinService.downloadAttachmentAndWrite.bind(min));
       const successfulSaves = await Promise.all(promises);
       async function replyForReceivedAttachments(localAttachmentData) {
         if (localAttachmentData) {
