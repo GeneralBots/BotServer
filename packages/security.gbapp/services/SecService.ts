@@ -271,10 +271,14 @@ export class SecService extends GBService {
    */
    public async setParam (userId: number, name: string, value:any) {
     const options = { where: {} };
-    options.where = { botId: userId };
+    options.where = { userId: userId };
     let user = await GuaribasUser.findOne(options);
     // tslint:disable-next-line:prefer-object-spread
     let obj =  JSON.parse(user.params);
+    if (!obj)
+    {
+      obj = {};
+    }
     obj['name'] = value;
     user.params = JSON.stringify(obj);
     return await user.save();
