@@ -608,12 +608,26 @@ export class DialogKeywords {
 
   private async setOption({pid, name, value})
   {
+    if (this.isUserSystemParam(name)){
+      throw new Error(`Not possible to define ${name} as it is a reserved system param name.`);
+    }
     const process = GBServer.globals.processes[pid];
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const sec = new SecService();
     await sec.setParam(user.userId, name, value);
     GBLog.info(`BASIC: ${name} = ${value} (botId: ${min.botId})`);
     return { min, user, params };
+  }
+
+  private async getOption({pid, name})
+  {
+    if (this.isUserSystemParam(name)){
+      throw new Error(`Not possible to retrieve ${name} system param.`);
+    }
+    const process = GBServer.globals.processes[pid];
+    let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    const sec = new SecService();
+    return await sec.getParam(user, name);
   }
 
   /**
@@ -811,12 +825,14 @@ export class DialogKeywords {
         await sleep(DEFAULT_HEAR_POLL_INTERVAL);
       }
 
-      const text = min.cbMap[userId].promise;
+      const answer = min.cbMap[userId].promise;
 
       if (kind === 'file') {
+        GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
+        // TODO: answer.filename, answer.data.
 
       } else if (kind === 'boolean') {
-        if (isIntentYes('pt-BR', text)) {
+        if (isIntentYes('pt-BR', answer)) {
           result = true;
         } else {
           result = false;
@@ -852,7 +868,7 @@ export class DialogKeywords {
           return text.match(/\d+/gi);
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um número válido.' });
@@ -867,7 +883,7 @@ export class DialogKeywords {
           );
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite uma data no formato 12/12/2020.' });
@@ -880,7 +896,7 @@ export class DialogKeywords {
           return text.match(/^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])?$/gi);
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um horário no formato hh:ss.' });
@@ -899,7 +915,7 @@ export class DialogKeywords {
           return [];
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um valor monetário.' });
@@ -911,7 +927,7 @@ export class DialogKeywords {
         let phoneNumber;
         try {
           // https://github.com/GeneralBots/BotServer/issues/307
-          phoneNumber = phone(text, { country: 'BRA' })[0];
+          phoneNumber = phone(answer, { country: 'BRA' })[0];
           phoneNumber = phoneUtil.parse(phoneNumber);
         } catch (error) {
           await this.talk({ pid, text: Messages[locale].validation_enter_valid_mobile });
@@ -936,7 +952,7 @@ export class DialogKeywords {
           }
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um CEP válido.' });
@@ -948,7 +964,7 @@ export class DialogKeywords {
         const list = args;
         result = null;
         await CollectionUtil.asyncForEach(list, async item => {
-          if (GBConversationalService.kmpSearch(text, item) != -1) {
+          if (GBConversationalService.kmpSearch(answer, item) != -1) {
             result = item;
           }
         });
@@ -978,8 +994,8 @@ export class DialogKeywords {
 
         await CollectionUtil.asyncForEach(list, async item => {
           if (
-            GBConversationalService.kmpSearch(text.toLowerCase(), item.name.toLowerCase()) != -1 ||
-            GBConversationalService.kmpSearch(text.toLowerCase(), item.code.toLowerCase()) != -1
+            GBConversationalService.kmpSearch(answer.toLowerCase(), item.name.toLowerCase()) != -1 ||
+            GBConversationalService.kmpSearch(answer.toLowerCase(), item.code.toLowerCase()) != -1
           ) {
             result = item.code;
           }
