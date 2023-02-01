@@ -36,6 +36,7 @@
 
 'use strict';
 
+import { GuaribasConversation } from '../../analytics.gblib/models/index.js';
 import {
   AutoIncrement,
   BelongsTo,
@@ -97,11 +98,14 @@ export class GuaribasUser extends Model<GuaribasUser> {
   @Column(DataType.TEXT)
   declare conversationReference: string;
 
+  @Column(DataType.INTEGER)
+  declare conversationId: number;
+
   @Column(DataType.STRING(64))
   declare hearOnDialog: string;
 
   @Column(DataType.STRING(4000))
-  declare  params: string;
+  declare params: string;
 }
 
 /**

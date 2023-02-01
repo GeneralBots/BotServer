@@ -826,11 +826,11 @@ export class GBMinService {
 
       // Get loaded user state
 
-      const member = context.activity.from;
       const step = await min.dialogs.createContext(context);
       step.context.activity.locale = 'pt-BR';
       let firstTime = false;
 
+      const member = context.activity.from;
       const sec = new SecService();
       const user = await sec.ensureUser(instance.instanceId, member.id, member.name, '', 'web', member.name, null);
       const userId = user.userId;
@@ -1061,9 +1061,9 @@ export class GBMinService {
 
   private static async downloadAttachmentAndWrite(attachment) {
     const url = attachment.contentUrl;
-    // https://github.com/GeneralBots/BotServer/issues/195 - '${botId}','uploads');
+    // TODO: https://github.com/GeneralBots/BotServer/issues/195 - '${botId}','uploads');
     const localFolder = Path.join('work');
-    const localFileName = Path.join(localFolder, this['botId'],'uploads', attachment.name);
+    const localFileName = Path.join(localFolder, this['botId'], 'uploads', attachment.name);
 
     try {
       let response;
@@ -1133,21 +1133,29 @@ export class GBMinService {
 
     context.activity.text = context.activity.text.trim();
 
-    const user = await min.userProfile.get(context, {});
+    const member = context.activity.from;
+
+    let user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name, null);
+    const userId = user.userId;
+    const params = user.params ? JSON.parse(user.params) : {};
+
     let message: GuaribasConversationMessage;
     if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
       // Adds message to the analytics layer.
 
       const analytics = new AnalyticsService();
+
       if (user) {
-        if (!user.conversation) {
-          user.conversation = await analytics.createConversation(user.systemUser);
+        let conversation;
+        if (!user.conversationId) {
+          conversation = await analytics.createConversation(user);
+          user.conversationId = conversation.Id;
         }
 
         message = await analytics.createMessage(
           min.instance.instanceId,
-          user.conversation,
-          user.systemUser.userId,
+          user.conversationId,
+          userId,
           context.activity.text
         );
       }
@@ -1156,7 +1164,9 @@ export class GBMinService {
     if (process.env.ENABLE_DOWNLOAD) {
       // Prepare Promises to download each attachment and then execute each Promise.
 
-      const promises = step.context.activity.attachments.map(GBMinService.downloadAttachmentAndWrite.bind(min));
+      const promises = step.context.activity.attachments.map(
+        GBMinService.downloadAttachmentAndWrite.bind({ min, user, params })
+      );
       const successfulSaves = await Promise.all(promises);
       async function replyForReceivedAttachments(localAttachmentData) {
         if (localAttachmentData) {
@@ -1171,10 +1181,17 @@ export class GBMinService {
       // The current TurnContext is bound so `replyForReceivedAttachments` can also send replies.
       const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
       await Promise.all(replyPromises);
-      const result = {
-        data: Fs.readFileSync(successfulSaves[0]['localPath']),
-        filename: successfulSaves[0]['fileName']
-      };
+      if (successfulSaves.length) {
+        const result = {
+          data: Fs.readFileSync(successfulSaves[0]['localPath']),
+          filename: successfulSaves[0]['fileName']
+        };
+
+        if (min.cbMap[userId] && min.cbMap[userId].promise == '!GBHEAR') {
+          min.cbMap[userId].promise = result;
+        }
+
+      }
     }
 
     // Files in .gbdialog can be called directly by typing its name normalized into JS .
@@ -1298,13 +1315,11 @@ export class GBMinService {
           'Language Detector',
           GBConfigService.getBoolean('LANGUAGE_DETECTOR')
         ) === 'true';
-      const systemUser = user.systemUser;
-      locale = systemUser.locale;
+      locale = user.locale;
       if (text != '' && detectLanguage && !locale) {
         locale = await min.conversationalService.getLanguage(min, text);
-        if (systemUser.locale != locale) {
-          user.systemUser = await sec.updateUserLocale(systemUser.userId, locale);
-          await min.userProfile.set(step.context, user);
+        if (user.locale != locale) {
+          user = await sec.updateUserLocale(user.userId, locale);
         }
       }
 
@@ -1340,10 +1355,10 @@ export class GBMinService {
 
       GBLog.info(`Text>: ${text}.`);
 
-      if (user.systemUser.agentMode === 'self') {
-        const manualUser = await sec.getUserFromAgentSystemId(user.systemUser.userSystemId);
+      if (user.agentMode === 'self') {
+        const manualUser = await sec.getUserFromAgentSystemId(user.userSystemId);
 
-        GBLog.info(`HUMAN AGENT (${user.systemUser.userSystemId}) TO USER ${manualUser.userSystemId}: ${text}`);
+        GBLog.info(`HUMAN AGENT (${user.userId}) TO USER ${manualUser.userSystemId}: ${text}`);
 
         const cmd = 'SEND FILE ';
         if (text.startsWith(cmd)) {
@@ -1366,8 +1381,8 @@ export class GBMinService {
           );
         }
       } else {
-        if (min.cbMap[user.systemUser.userId] && min.cbMap[user.systemUser.userId].promise == '!GBHEAR') {
-          min.cbMap[user.systemUser.userId].promise = text;
+        if (min.cbMap[userId] && min.cbMap[userId].promise == '!GBHEAR') {
+          min.cbMap[userId].promise = text;
         }
 
         // If there is a dialog in course, continue to the next step.

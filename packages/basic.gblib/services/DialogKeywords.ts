@@ -588,14 +588,46 @@ export class DialogKeywords {
     this['id'] = this.sys().getRandomId();
   }
 
+  private isUserSystemParam(name: string): Boolean {
+    const names = [
+      'welcomed',
+      'loaded',
+      'subjects',
+      'cb',
+      'welcomed',
+      'maxLines',
+      'translatorOn',
+      'wholeWord',
+      'theme',
+      'maxColumns'
+    ];
+
+    return names.indexOf(name) > -1;
+  }
+
+
   private async setOption({pid, name, value})
   {
+    if (this.isUserSystemParam(name)){
+      throw new Error(`Not possible to define ${name} as it is a reserved system param name.`);
+    }
     const process = GBServer.globals.processes[pid];
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const sec = new SecService();
     await sec.setParam(user.userId, name, value);
     GBLog.info(`BASIC: ${name} = ${value} (botId: ${min.botId})`);
     return { min, user, params };
+  }
+
+  private async getOption({pid, name})
+  {
+    if (this.isUserSystemParam(name)){
+      throw new Error(`Not possible to retrieve ${name} system param.`);
+    }
+    const process = GBServer.globals.processes[pid];
+    let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    const sec = new SecService();
+    return await sec.getParam(user, name);
   }
 
   /**
@@ -607,6 +639,27 @@ export class DialogKeywords {
   public async setMaxLines({ pid, count }) {
     await this.setOption({pid, name: "maxLines", value: count});
   }
+
+  /**
+   * Defines a custom user param to be persisted to storage.
+   *
+   * @example SET PARAM name AS value
+   *
+   */
+   public async setUserParam({ pid, name, value }) {
+    await this.setOption({pid, name, value});
+  }
+
+  /**
+   * Returns a custom user param persisted on storage.
+   *
+   * @example GET PARAM name
+   *
+   */
+   public async getUserParam({ pid, name }) {
+    await this.getOption({pid, name});
+  }
+
 
   /**
    * Defines the maximum lines to scan in spreedsheets.
@@ -772,12 +825,14 @@ export class DialogKeywords {
         await sleep(DEFAULT_HEAR_POLL_INTERVAL);
       }
 
-      const text = min.cbMap[userId].promise;
+      const answer = min.cbMap[userId].promise;
 
       if (kind === 'file') {
+        GBLog.info('BASIC: HEAR (Asking for input).');
+        // TODO: answer.filename, answer.data.
 
       } else if (kind === 'boolean') {
-        if (isIntentYes('pt-BR', text)) {
+        if (isIntentYes('pt-BR', answer)) {
           result = true;
         } else {
           result = false;
@@ -787,7 +842,7 @@ export class DialogKeywords {
           return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi);
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null) {
           await this.talk({ pid, text: 'Por favor, digite um e-mail válido.' });
@@ -800,7 +855,7 @@ export class DialogKeywords {
           return text.match(/[_a-zA-Z][_a-zA-Z0-9]{0,16}/gi);
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um nome válido.' });
@@ -813,7 +868,7 @@ export class DialogKeywords {
           return text.match(/\d+/gi);
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um número válido.' });
@@ -828,7 +883,7 @@ export class DialogKeywords {
           );
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite uma data no formato 12/12/2020.' });
@@ -841,7 +896,7 @@ export class DialogKeywords {
           return text.match(/^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])?$/gi);
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um horário no formato hh:ss.' });
@@ -860,7 +915,7 @@ export class DialogKeywords {
           return [];
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um valor monetário.' });
@@ -872,7 +927,7 @@ export class DialogKeywords {
         let phoneNumber;
         try {
           // https://github.com/GeneralBots/BotServer/issues/307
-          phoneNumber = phone(text, { country: 'BRA' })[0];
+          phoneNumber = phone(answer, { country: 'BRA' })[0];
           phoneNumber = phoneUtil.parse(phoneNumber);
         } catch (error) {
           await this.talk({ pid, text: Messages[locale].validation_enter_valid_mobile });
@@ -897,7 +952,7 @@ export class DialogKeywords {
           }
         };
 
-        const value = extractEntity(text);
+        const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um CEP válido.' });
@@ -909,7 +964,7 @@ export class DialogKeywords {
         const list = args;
         result = null;
         await CollectionUtil.asyncForEach(list, async item => {
-          if (GBConversationalService.kmpSearch(text, item) != -1) {
+          if (GBConversationalService.kmpSearch(answer, item) != -1) {
             result = item;
           }
         });
@@ -939,8 +994,8 @@ export class DialogKeywords {
 
         await CollectionUtil.asyncForEach(list, async item => {
           if (
-            GBConversationalService.kmpSearch(text.toLowerCase(), item.name.toLowerCase()) != -1 ||
-            GBConversationalService.kmpSearch(text.toLowerCase(), item.code.toLowerCase()) != -1
+            GBConversationalService.kmpSearch(answer.toLowerCase(), item.name.toLowerCase()) != -1 ||
+            GBConversationalService.kmpSearch(answer.toLowerCase(), item.code.toLowerCase()) != -1
           ) {
             result = item.code;
           }

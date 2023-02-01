@@ -660,6 +660,20 @@ export class GBVMService extends GBService {
     ];
 
     keywords[i++] = [
+      /^\s*set param \s*(.*)\s*as\s*(.*)/gim,
+      ($0, $1, $2) => {
+        return `await dk.setUserParam ({pid: pid, ${$1}}, ${$2})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*get param \s*(.*)/gim,
+      ($0, $1, $2) => {
+        return `await dk.getUserParam ({pid: pid, ${$1}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*set header\s*(.*)\s*as\s*(.*)/gim,
       ($0, $1, $2) => {
         return `headers[${$1}]=${$2})`;
