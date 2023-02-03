@@ -57,6 +57,7 @@ import sgMail from '@sendgrid/mail';
 import mammoth from 'mammoth';
 import qrcode from 'qrcode';
 import { json } from 'body-parser';
+import { WebAutomationKeywords } from './WebAutomationKeywords.js';
 
 /**
  * Default check interval for user replay
@@ -743,6 +744,10 @@ export class DialogKeywords {
     // return await beginDialog('/t',{ to: to });
   }
 
+  public static getFileByHandle (hash) {
+    return GBServer.globals.files[hash];
+  }
+
   /**
    * Hears something from user and put it in a variable
    *
@@ -795,7 +800,6 @@ export class DialogKeywords {
         //   ],
         //   'Please select a product'
         // );
-
         // let i = 0;
         // await CollectionUtil.asyncForEach(args, async arg => {
         //   i++;
@@ -818,7 +822,7 @@ export class DialogKeywords {
           setTimeout(resolve, ms);
         });
       };
-      min.cbMap[userId] = {};
+      min.cbMap[userId] = {}; 
       min.cbMap[userId]['promise'] = '!GBHEAR';
 
       while (min.cbMap[userId].promise === '!GBHEAR') {
@@ -829,8 +833,9 @@ export class DialogKeywords {
 
       if (kind === 'file') {
         GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
-        // TODO: answer.filename, answer.data.
-
+        const handle = WebAutomationKeywords.cyrb53(this.min.botId + answer.filename);
+        GBServer.globals.files[handle] = answer;
+        result = handle;
       } else if (kind === 'boolean') {
         if (isIntentYes('pt-BR', answer)) {
           result = true;

@@ -1060,10 +1060,13 @@
        await step.continueDialog();
      }
    }
- 
+
+   /**
+    * Private handler which receives the Attachment and persists to disk.
+    * during a HEAR attachment AS FILE upload.
+    */
    private static async downloadAttachmentAndWrite(attachment) {
      const url = attachment.contentUrl;
-     // TODO: https://github.com/GeneralBots/BotServer/issues/195 - '${botId}','uploads');
      const localFolder = Path.join('work');
      const localFileName = Path.join(localFolder, `${this['min'].botId}.gbai`, 'uploads', attachment.name);
  
@@ -1156,7 +1159,7 @@
      }
  
      // Prepare Promises to download each attachment and then execute each Promise.
- 
+    
      const promises = step.context.activity.attachments.map(
        GBMinService.downloadAttachmentAndWrite.bind({ min, user, params })
      );
@@ -1170,18 +1173,26 @@
          await this.sendActivity('Error uploading file. Please,start again.');
        }
      }
-     // Prepare Promises to reply to the user with information about saved attachments.
-     // The current TurnContext is bound so `replyForReceivedAttachments` can also send replies.
      const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
      await Promise.all(replyPromises);
      if (successfulSaves.length > 0) {
-       const result = {
-         data: Fs.readFileSync(successfulSaves[0]['localPath']),
-         filename: successfulSaves[0]['fileName']
-       };
+
+      class GBFile {data:Buffer; filename: string};
+
+       const results = successfulSaves.reduce((accum:GBFile[], item)=>{
+          const result: GBFile = {
+            data: Fs.readFileSync(successfulSaves[0]['localPath']),
+            filename: successfulSaves[0]['fileName']
+          };   
+          accum.push(result);
+       }, []) as GBFile[];
  
        if (min.cbMap[userId] && min.cbMap[userId].promise == '!GBHEAR') {
-         min.cbMap[userId].promise = result;
+        if (results.length>1)
+        {
+          throw new Error('It is only possible to upload one file per message, right now.');
+        }
+         min.cbMap[userId].promise = results[0];
        }
      }
  

@@ -88,7 +88,7 @@ export class WebAutomationKeywords {
 
   pageMap = {};
 
-  cyrb53 = (str, seed = 0) => {
+  public static cyrb53 = (str, seed = 0) => {
     let h1 = 0xdeadbeef ^ seed,
       h2 = 0x41c6ce57 ^ seed;
     for (let i = 0, ch; i < str.length; i++) {
@@ -131,7 +131,7 @@ export class WebAutomationKeywords {
     }
     await page.goto(url);
 
-    const handle = this.cyrb53(this.min.botId + url);
+    const handle = WebAutomationKeywords.cyrb53(this.min.botId + url);
 
     this.pageMap[handle] = page;
 
