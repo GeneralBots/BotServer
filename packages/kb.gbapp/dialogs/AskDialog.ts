@@ -282,8 +282,8 @@ export class AskDialog extends IGBDialog {
               text = await min.conversationalService.translate(
                 min,
                 text,
-                user.systemUser.locale
-                  ? user.systemUser.locale
+                user.locale
+                  ? user.locale
                   : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
               );
               await min.conversationalService.sendText(min, step, answerText);

@@ -41,10 +41,11 @@ import { GuaribasSchedule } from '../core.gbapp/models/GBModel.js';
 import { Sequelize } from 'sequelize-typescript';
 import { createServerRouter } from 'typescript-rest-rpc/lib/server.js';
 import { DialogKeywords } from './services/DialogKeywords.js';
-import * as koaBody from 'koa-body';
 import { SystemKeywords } from './services/SystemKeywords.js';
 import { WebAutomationKeywords } from './services/WebAutomationKeywords.js';
+import { ImageProcessing } from './services/ImageProcessing.js';
 import { DebuggerService } from './services/DebuggerService.js';
+import * as koaBody from 'koa-body';
 import Koa from 'koa';
 
 const app = new Koa();
@@ -83,15 +84,18 @@ export class GBBasicPackage implements IGBPackage {
     const wa = new WebAutomationKeywords(min, null, dk);
     const sys = new SystemKeywords(min, null, dk, wa);
     const dbg = new DebuggerService(min, null, dk);
+    const img = new ImageProcessing(min, null, dk);
     dk.wa = wa;
     wa.sys = sys;
     const dialogRouter = createServerRouter(`/api/v2/${min.botId}/dialog`, dk);
     const waRouter = createServerRouter(`/api/v2/${min.botId}/webautomation`, wa);
     const sysRouter = createServerRouter(`/api/v2/${min.botId}/system`, sys);
     const dbgRouter = createServerRouter(`/api/v2/${min.botId}/debugger`, dbg);
+    const imgRouter = createServerRouter(`/api/v2/${min.botId}/imageprocessing`, dbg);
     app.use(dialogRouter.routes());
     app.use(sysRouter.routes());
     app.use(waRouter.routes());
     app.use(dbgRouter.routes());
+    app.use(imgRouter.routes());
   }
 }

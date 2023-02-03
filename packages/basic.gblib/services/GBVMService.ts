@@ -200,6 +200,7 @@ export class GBVMService extends GBService {
       const dk = rest.createClient('http://localhost:1111/api/v2/${botId}/dialog');
       const sys = rest.createClient('http://localhost:1111/api/v2/${botId}/system');
       const wa = rest.createClient('http://localhost:1111/api/v2/${botId}/webautomation');
+      const img = rest.createClient('http://localhost:1111/api/v2/${botId}/imagprocessing');
               
       // Local variables.
 
@@ -999,6 +1000,14 @@ export class GBVMService extends GBService {
         return `await sys.set ({pid: pid, ${params}})`;
       }
     ];
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*SHARPEN\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `
+      ${$1} = await img.sharpen({pid: pid, args: [${$2}]})`;
+      }
+    ];
+
     return keywords;
   }
 
@@ -1044,7 +1053,7 @@ export class GBVMService extends GBService {
     const pid = GBAdminService.getNumberIdentifier();
     GBServer.globals.processes[pid] = {
       pid: pid,
-      userId: user.systemUser.userId,
+      userId: user.userId,
       instanceId: min.instance.instanceId
     };
 

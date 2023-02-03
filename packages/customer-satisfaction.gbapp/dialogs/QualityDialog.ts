@@ -103,7 +103,7 @@ export class QualityDialog extends IGBDialog {
               min.instance.instanceId,
               user.conversation,
               step.result,
-              user.systemUser.locale
+              user.locale
             );
 
             // Goes to the ask loop.

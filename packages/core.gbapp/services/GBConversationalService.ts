@@ -528,8 +528,8 @@ export class GBConversationalService {
       text = await min.conversationalService.translate(
         min,
         answer,
-        user.systemUser.locale
-          ? user.systemUser.locale
+        user.locale
+          ? user.locale
           : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
       GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
@@ -985,15 +985,15 @@ export class GBConversationalService {
   }
 
   public async prompt (min: GBMinInstance, step: GBDialogStep, text: string) {
-    const user = await min.userProfile.get(step.context, {});
-    const systemUser = user.systemUser;
+    let sec = new SecService();
+    let user = await  sec.getUserFromSystemId(step.context.activity.from.id);
 
     if (text && text !== '') {
       text = await min.conversationalService.translate(
         min,
         text,
-        systemUser.locale
-          ? systemUser.locale
+        user.locale
+          ? user.locale
           : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
       GBLog.verbose(`Translated text(prompt): ${text}.`);
@@ -1011,8 +1011,8 @@ export class GBConversationalService {
 
   public async sendTextWithOptions (min: GBMinInstance, step, text, translate, keepTextList) {
     const member = step.context.activity.from;
-    const user = await min.userProfile.get(step.context, {});
-    const systemUser = user.systemUser;
+    let sec = new SecService();
+    let user = await  sec.getUserFromSystemId(step.context.activity.from.id);
 
     if (translate) {
       let replacements = [];
@@ -1032,7 +1032,7 @@ export class GBConversationalService {
         });
       }
 
-      const locale = systemUser ? systemUser.locale : null;
+      const locale = user.locale;
       text = await min.conversationalService.translate(
         min,
         text,
@@ -1051,10 +1051,12 @@ export class GBConversationalService {
     }
 
     const analytics = new AnalyticsService();
-    if (!user.conversation) {
-      user.conversation = await analytics.createConversation(user);
+    const conversation = null;
+    if (!user.conversationId) {
+      const conversation = await analytics.createConversation(user);
+      user.conversationId  = conversation.conversationId;
     }
-    analytics.createMessage(min.instance.instanceId, user.conversation, null, text);
+    analytics.createMessage(min.instance.instanceId, conversation, null, text);
 
     if (!isNaN(member.id) && !member.id.startsWith('1000')) {
       const to = step.context.activity.group ? step.context.activity.group : member.id;
@@ -1080,7 +1082,7 @@ export class GBConversationalService {
       if (user.conversationReference) {
         await this.sendOnConversation(min, user, message);
       } else {
-        GBLog.info(`User: ${user.systemUserId} with no conversation ID while broadcasting.`);
+        GBLog.info(`User: ${user.Id} with no conversation ID while broadcasting.`);
       }
     });
   }

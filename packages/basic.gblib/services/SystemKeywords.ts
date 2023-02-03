@@ -517,7 +517,7 @@ export class SystemKeywords {
     GBLog.info(`BASIC: Saving '${file}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     const botId = this.min.instance.botId;
-    const path = `/${botId}.gbai/${botId}.gbdata`;
+    const path = `/${botId}.gbai/${botId}.gbdrive`;
 
     // Checks if it is a GB FILE object.
 
@@ -526,6 +526,7 @@ export class SystemKeywords {
     }
 
     try {
+      data = GBServer.globals.files[data].data;
       await client.api(`${baseUrl}/drive/root:/${path}/${file}:/content`).put(data);
     } catch (error) {
       if (error.code === 'itemNotFound') {

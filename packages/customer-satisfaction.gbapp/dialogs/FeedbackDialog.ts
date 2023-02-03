@@ -92,7 +92,7 @@ export class FeedbackDialog extends IGBDialog {
 
             await sec.ensureUser(min.instance.instanceId, args.to, 'Name', '', 'whatsapp', 'Name', null);
 
-            await sec.assignHumanAgent(min, args.to, profile.systemUser.userSystemId);
+            await sec.assignHumanAgent(min, args.to, profile.userSystemId);
             await min.conversationalService.sendText(
               min,
               step,
@@ -101,7 +101,7 @@ export class FeedbackDialog extends IGBDialog {
           } else {
             await min.conversationalService.sendText(min, step, Messages[locale].please_wait_transfering);
             const agentSystemId = await sec.assignHumanAgent(min, from);
-            profile.systemUser = await sec.getUserFromAgentSystemId(agentSystemId);
+            
             await min.userProfile.set(step.context, profile);
 
             if (agentSystemId.charAt(2) === ':' || agentSystemId.indexOf('@') > -1) {
@@ -139,9 +139,9 @@ export class FeedbackDialog extends IGBDialog {
 
           const sec = new SecService();
           const userSystemId = GBMinService.userMobile(step);
-          const user = await min.userProfile.get(step.context, {});
+          let user = await sec.getUserFromSystemId(userSystemId);
 
-          if (user.systemUser.agentMode === 'self') {
+          if (user.agentMode === 'self') {
             const manualUser = await sec.getUserFromAgentSystemId(userSystemId);
 
             await min.whatsAppDirectLine.sendToDeviceEx(
@@ -170,19 +170,19 @@ export class FeedbackDialog extends IGBDialog {
             await sec.updateHumanAgent(userSystemId, min.instance.instanceId, null);
             await sec.updateHumanAgent(manualUser.userSystemId, min.instance.instanceId, null);
 
-            user.systemUser = await sec.getUserFromSystemId(userSystemId);
+            user = await sec.getUserFromSystemId(userSystemId);
             await min.userProfile.set(step.context, user);
-          } else if (user.systemUser.agentMode === 'human') {
-            const agent = await sec.getUserFromSystemId(user.systemUser.agentSystemId);
+          } else if (user.agentMode === 'human') {
+            const agent = await sec.getUserFromSystemId(user.agentSystemId);
 
             await min.whatsAppDirectLine.sendToDeviceEx(
-              user.systemUser.userSystemId,
+              user.userSystemId,
               Messages[locale].notify_end_transfer(min.instance.botId),
               locale,
               step.context.activity.conversation.id
             );
 
-            if (user.systemUser.agentSystemId.charAt(2) === ':' || userSystemId.indexOf('@') > -1) {
+            if (user.agentSystemId.charAt(2) === ':' || userSystemId.indexOf('@') > -1) {
               // Agent is from Teams or Google Chat.
               await min.conversationalService.sendText(
                 min,
@@ -191,25 +191,25 @@ export class FeedbackDialog extends IGBDialog {
               );
             } else {
               await min.whatsAppDirectLine.sendToDeviceEx(
-                user.systemUser.agentSystemId,
+                user.agentSystemId,
                 Messages[locale].notify_end_transfer(min.instance.botId),
                 locale,
                 step.context.activity.conversation.id
               );
             }
 
-            await sec.updateHumanAgent(user.systemUser.userSystemId, min.instance.instanceId, null);
+            await sec.updateHumanAgent(user.userSystemId, min.instance.instanceId, null);
             await sec.updateHumanAgent(agent.userSystemId, min.instance.instanceId, null);
 
-            user.systemUser = await sec.getUserFromSystemId(userSystemId);
+            user = await sec.getUserFromSystemId(userSystemId);
             await min.userProfile.set(step.context, user);
           } else {
-            if (user.systemUser.userSystemId.charAt(2) === ':' || userSystemId.indexOf('@') > -1) {
+            if (user.userSystemId.charAt(2) === ':' || userSystemId.indexOf('@') > -1) {
               // Agent is from Teams or Google Chat.
               await min.conversationalService.sendText(min, step, 'Nenhum atendimento em andamento.');
             } else {
               await min.whatsAppDirectLine.sendToDeviceEx(
-                user.systemUser.userSystemId,
+                user.userSystemId,
                 'Nenhum atendimento em andamento.',
                 locale,
                 step.context.activity.conversation.id
@@ -276,7 +276,7 @@ export class FeedbackDialog extends IGBDialog {
             min.instance.instanceId,
             user.conversation.conversationId,
             step.result,
-            user.systemUser.locale
+            user.locale
           );
 
           if (rate > 0.5) {

@@ -71,8 +71,7 @@ export class LanguageDialog extends IGBDialog {
           return await min.conversationalService.prompt(min, step, Messages[locale].which_language);
         },
         async step => {
-          const locale = step.context.activity.locale;
-          const user = await min.userProfile.get(step.context, {});
+          const locale = step.context.activity.locale;          
 
           const list = [
             { name: 'english', code: 'en' },
@@ -103,9 +102,9 @@ export class LanguageDialog extends IGBDialog {
           });
 
           let sec = new SecService();
-          user.systemUser = await sec.updateUserLocale(user.systemUser.userId, translatorLocale);
+          let user = await  sec.getUserFromSystemId(step.context.activity.from.id);
+          user = await sec.updateUserLocale(user.userId, translatorLocale);
 
-          await min.userProfile.set(step.context, user);
           await min.conversationalService.sendText(min, step, Messages[locale].language_chosen);
 
           await step.replaceDialog('/ask', { firstTime: true });

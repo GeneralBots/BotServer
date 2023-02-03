@@ -85,6 +85,7 @@ export class GBServer {
 
     GBServer.globals.server = server;
     GBServer.globals.processes = {};
+    GBServer.globals.files = {};
     GBServer.globals.appPackages = [];
     GBServer.globals.sysPackages = [];
     GBServer.globals.minInstances = [];
