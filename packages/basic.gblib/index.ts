@@ -43,7 +43,7 @@ import { createServerRouter } from 'typescript-rest-rpc/lib/server.js';
 import { DialogKeywords } from './services/DialogKeywords.js';
 import { SystemKeywords } from './services/SystemKeywords.js';
 import { WebAutomationServices } from './services/WebAutomationServices.js';
-import { ImageProcessing } from './services/ImageProcessing.js';
+import { ImageProcessingServices } from './services/ImageProcessingServices.js';
 import { DebuggerService } from './services/DebuggerService.js';
 import * as koaBody from 'koa-body';
 import Koa from 'koa';
@@ -84,7 +84,7 @@ export class GBBasicPackage implements IGBPackage {
     const wa = new WebAutomationServices(min, null, dk);
     const sys = new SystemKeywords(min, null, dk, wa);
     const dbg = new DebuggerService(min, null, dk);
-    const img = new ImageProcessing(min, null, dk);
+    const img = new ImageProcessingServices(min, null, dk);
     dk.wa = wa;
     wa.sys = sys;
     const dialogRouter = createServerRouter(`/api/v2/${min.botId}/dialog`, dk);

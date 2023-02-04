@@ -39,7 +39,7 @@ import sharp from 'sharp';
 /**
  * Image processing services of conversation to be called by BASIC.
  */
-export class ImageProcessing {
+export class ImageProcessingServices {
   /**
    * Reference to minimal bot instance.
    */
