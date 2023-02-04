@@ -42,7 +42,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { createServerRouter } from 'typescript-rest-rpc/lib/server.js';
 import { DialogKeywords } from './services/DialogKeywords.js';
 import { SystemKeywords } from './services/SystemKeywords.js';
-import { WebAutomationKeywords } from './services/WebAutomationKeywords.js';
+import { WebAutomationServices } from './services/WebAutomationServices.js';
 import { ImageProcessing } from './services/ImageProcessing.js';
 import { DebuggerService } from './services/DebuggerService.js';
 import * as koaBody from 'koa-body';
@@ -81,7 +81,7 @@ export class GBBasicPackage implements IGBPackage {
   }
   public async loadBot (min: GBMinInstance): Promise<void> {
     const dk = new DialogKeywords(min, null, null);
-    const wa = new WebAutomationKeywords(min, null, dk);
+    const wa = new WebAutomationServices(min, null, dk);
     const sys = new SystemKeywords(min, null, dk, wa);
     const dbg = new DebuggerService(min, null, dk);
     const img = new ImageProcessing(min, null, dk);

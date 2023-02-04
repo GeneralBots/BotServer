@@ -49,7 +49,7 @@ import { pid } from 'process';
 /**
  * Web Automation services of conversation to be called by BASIC.
  */
-export class WebAutomationKeywords {
+export class WebAutomationServices {
   /**
    * Reference to minimal bot instance.
    */
@@ -131,7 +131,7 @@ export class WebAutomationKeywords {
     }
     await page.goto(url);
 
-    const handle = WebAutomationKeywords.cyrb53(this.min.botId + url);
+    const handle = WebAutomationServices.cyrb53(this.min.botId + url);
 
     this.pageMap[handle] = page;
 

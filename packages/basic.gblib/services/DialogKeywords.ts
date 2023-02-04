@@ -57,7 +57,7 @@ import sgMail from '@sendgrid/mail';
 import mammoth from 'mammoth';
 import qrcode from 'qrcode';
 import { json } from 'body-parser';
-import { WebAutomationKeywords } from './WebAutomationKeywords.js';
+import { WebAutomationServices } from './WebAutomationServices.js';
 
 /**
  * Default check interval for user replay
@@ -833,7 +833,7 @@ export class DialogKeywords {
 
       if (kind === 'file') {
         GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
-        const handle = WebAutomationKeywords.cyrb53(this.min.botId + answer.filename);
+        const handle = WebAutomationServices.cyrb53(this.min.botId + answer.filename);
         GBServer.globals.files[handle] = answer;
         result = handle;
       } else if (kind === 'boolean') {
