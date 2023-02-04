@@ -68,9 +68,9 @@ export class ImageProcessing {
   }
 
   /**
-   * Returns the page object.
+   * Sharpen the image.
    *
-   * @example OPEN "https://wikipedia.org"
+   * @example file = SHARPEN file
    */
   public async sharpen({ pid, file: file }) {
     GBLog.info(`BASIC: Image Processing SHARPEN ${file}.`);
@@ -94,4 +94,25 @@ export class ImageProcessing {
     };
     return;
   }
+
+  /**
+   * Sharpen the image.
+   *
+   * @example file = BLUR file
+   */
+   public async blur({ pid, file: file }) {
+    GBLog.info(`BASIC: Image Processing SHARPEN ${file}.`);
+
+    const gbfile = DialogKeywords.getFileByHandle(file);
+    const data = await sharp(gbfile.data)
+      .blur()
+      .toBuffer();
+
+    const newFile = {
+      filename: gbfile.filename,
+      data: data
+    };
+    return;
+  }
+
 }

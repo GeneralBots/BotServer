@@ -742,12 +742,26 @@ export class KeywordsExpressions {
       }
     ];
     keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*BLUR\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `
+        ${$1} = await img.blur({pid: pid, args: [${$2}]})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*(\w+)\s*\=\s*SHARPEN\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `
         ${$1} = await img.sharpen({pid: pid, args: [${$2}]})`;
       }
     ];
+
+
+
+
+
+
 
     return keywords;
   }
