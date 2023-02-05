@@ -312,21 +312,31 @@ export class AdminDialog extends IGBDialog {
           }
 
           await CollectionUtil.asyncForEach(packages, async packageName => {
-              let cmd1;
-              if (packageName.indexOf('.') !== -1) {
-                cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
-              } else {
-                cmd1 = `deployPackage ${packageName}`;
-              }
-              if (
-                (await (deployer as any).getStoragePackageByName(min.instance.instanceId, packageName)) !== null &&
-                !process.env.DONT_DOWNLOAD
-              ) {
-                const cmd2 = `undeployPackage ${packageName}`;
-                await GBAdminService.undeployPackageCommand(cmd2, min);
-              }
-              await GBAdminService.deployPackageCommand(min, cmd1, deployer);
-              await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
+            let cmd1;
+
+            if (
+              packageName.indexOf('gbdialog') !== -1 ||
+              packageName.indexOf('gbkb') !== -1 ||
+              packageName.indexOf('gbot') !== -1 ||
+              packageName.indexOf('gbtheme') !== -1
+            ) {
+              packageName = `${min.botId}.${packageName}`;
+            }
+
+            if (packageName.indexOf('.') !== -1) {
+              cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
+            } else {
+              cmd1 = `deployPackage ${packageName}`;
+            }
+            if (
+              (await (deployer as any).getStoragePackageByName(min.instance.instanceId, packageName)) !== null &&
+              !process.env.DONT_DOWNLOAD
+            ) {
+              const cmd2 = `undeployPackage ${packageName}`;
+              await GBAdminService.undeployPackageCommand(cmd2, min);
+            }
+            await GBAdminService.deployPackageCommand(min, cmd1, deployer);
+            await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
           });
           await min.conversationalService.sendText(min, step, Messages[locale].publish_success);
           if (!step.activeDialog.state.options.confirm) {
@@ -357,7 +367,7 @@ export class AdminDialog extends IGBDialog {
 
       if (!result && min.instance.params) {
         const params = JSON.parse(min.instance.params);
-        if (params){
+        if (params) {
           return list.includes(params['Can Publish']);
         }
       }
