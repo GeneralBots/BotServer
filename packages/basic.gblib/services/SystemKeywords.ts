@@ -355,7 +355,7 @@ export class SystemKeywords {
       const res = await client.api(`${baseUrl}/drive/root:/${tmpDocx}:/content?format=pdf`).get();
       await client.api(`${baseUrl}/drive/root:/${tmpDocx}:/content`).delete();
 
-      const streamToString = stream => {
+      const streamToBuffer = stream => {
         const chunks = [];
         return new Promise((resolve, reject) => {
           stream.on('data', chunk => chunks.push(chunk));
@@ -364,7 +364,7 @@ export class SystemKeywords {
         });
       };
 
-      gbfile.data = await streamToString(res);
+      gbfile.data = await streamToBuffer(res);
 
       // Converts the PDF to PNG.
 
@@ -1267,7 +1267,7 @@ export class SystemKeywords {
     try {
       const res = await client.api(`${baseUrl}/drive/root:/${srcPath}:/content?format=pdf`).get();
 
-      const streamToString = stream => {
+      const streamToBuffer = stream => {
         const chunks = [];
         return new Promise((resolve, reject) => {
           stream.on('data', chunk => chunks.push(chunk));
@@ -1276,7 +1276,7 @@ export class SystemKeywords {
         });
       };
 
-      const result = await streamToString(res);
+      const result = await streamToBuffer(res);
 
       await client.api(`${baseUrl}/drive/root:/${dstPath}:/content`).put(result);
     } catch (error) {
@@ -1387,27 +1387,27 @@ export class SystemKeywords {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const botId = this.min.instance.botId;
     const gbaiName = `${botId}.gbai`;
-    const path = `/${botId}.gbai/${botId}.gbdata`;
+    const path = `/${botId}.gbai/${botId}.gbdrive`;
 
     // Downloads template from .gbdrive.
 
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     let template = await this.internalGetDocument(client, baseUrl, path, templateName);
     let url = template['@microsoft.graph.downloadUrl'];
-    let localName = Path.join('work', gbaiName, 'cache', ``);
-    const response = await fetch(url);
-    Fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
+    const res = await fetch(url);
+    let localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+    let buf = Buffer.from(await res.arrayBuffer());
+    Fs.writeFileSync(localName, buf, { encoding: null });
 
     // Loads the file as binary content.
 
-    let content = Fs.readFileSync(localName, 'binary');
-    let zip = new PizZip(content);
+    let zip = new PizZip(buf);
     let doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
     if (localName.endsWith('.pptx')) {
       doc.attachModule(pptxTemplaterModule);
     }
 
-    // Replace image path on all elements of data.s
+    // Replace image path on all elements of data.
 
     const images = [];
 
@@ -1447,6 +1447,9 @@ export class SystemKeywords {
 
     traverse(data, process);
     doc.render(data);
+
+    buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
+    Fs.writeFileSync(localName, buf, { encoding: null });
 
     if (images) {
       // Replaces images within the document.

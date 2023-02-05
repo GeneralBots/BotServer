@@ -364,7 +364,7 @@ export class GBVMService extends GBService {
     sandbox['httpPs'] = '';
     sandbox['pid'] = pid;
 
-    if (GBConfigService.get('VM3') === 'false') {
+    if (GBConfigService.get('GBVM') === 'false') {
       try {
         const vm1 = new NodeVM({
           allowAsync: true,
