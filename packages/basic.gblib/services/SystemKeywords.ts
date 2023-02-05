@@ -30,10 +30,9 @@
 |                                                                             |
 \*****************************************************************************/
 'use strict';
-import { GBDialogStep, GBLog, GBMinInstance } from 'botlib';
+import { GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { DialogKeywords } from './DialogKeywords.js';
@@ -44,7 +43,6 @@ import { createBrowser } from '../../core.gbapp/services/GBSSR.js';
 import urlJoin from 'url-join';
 import Excel from 'exceljs';
 import { TwitterApi } from 'twitter-api-v2';
-import tesseract from 'node-tesseract-ocr';
 import Path from 'path';
 import ComputerVisionClient from '@azure/cognitiveservices-computervision';
 import ApiKeyCredentials from '@azure/ms-rest-js';
@@ -53,6 +51,9 @@ import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import pptxTemplaterModule from 'pptxtemplater';
 import _ from 'lodash';
+import DocxImager from 'docximager';
+import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
+import sharp from 'sharp';
 
 /**
  * @fileoverview General Bots server core.
@@ -87,7 +88,6 @@ export class SystemKeywords {
   }
 
   public async callVM({ pid, text }) {
-
     const min = null;
     const step = null;
     const deployer = null;
@@ -108,9 +108,7 @@ export class SystemKeywords {
    *
    */
   public async seeCaption({ pid, url }) {
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const computerVisionClient = new ComputerVisionClient.ComputerVisionClient(
       new ApiKeyCredentials.ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
       process.env.VISION_ENDPOINT
@@ -160,9 +158,7 @@ export class SystemKeywords {
   }
 
   public async sortBy({ pid, array, memberName }) {
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     memberName = memberName.trim();
     const contentLocale = this.min.core.getParam<string>(
       min.instance,
@@ -177,22 +173,22 @@ export class SystemKeywords {
     if (date) {
       return array
         ? array.sort((a, b) => {
-          const c = new Date(a[memberName]);
-          const d = new Date(b[memberName]);
-          return c.getTime() - d.getTime();
-        })
+            const c = new Date(a[memberName]);
+            const d = new Date(b[memberName]);
+            return c.getTime() - d.getTime();
+          })
         : null;
     } else {
       return array
         ? array.sort((a, b) => {
-          if (a[memberName] < b[memberName]) {
-            return -1;
-          }
-          if (a[memberName] > b[memberName]) {
-            return 1;
-          }
-          return 0;
-        })
+            if (a[memberName] < b[memberName]) {
+              return -1;
+            }
+            if (a[memberName] > b[memberName]) {
+              return 1;
+            }
+            return 0;
+          })
         : array;
     }
   }
@@ -247,7 +243,6 @@ export class SystemKeywords {
    * @see http://tabulator.info/examples/5.2
    */
   private async renderTable(pid, data, renderPDF, renderImage) {
-
     if (!data[1]) {
       return null;
     }
@@ -257,9 +252,7 @@ export class SystemKeywords {
     // Detects if it is a collection with repeated
     // headers.
 
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const gbaiName = `${min.botId}.gbai`;
     const browser = await createBrowser(null);
     const page = await browser.newPage();
@@ -338,14 +331,67 @@ export class SystemKeywords {
     return [url, localName];
   }
 
-  public async asPDF({ pid, data, filename }) {
+  public async asPDF({ pid, data }) {
     let file = await this.renderTable(pid, data, true, false);
     return file[0];
   }
 
-  public async asImage({ pid, data, filename }) {
-    let file = await this.renderTable(pid, data, false, true);
-    return file[0];
+  public async asImage({ pid, data }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
+    // Checks if it is a GBFILE.
+
+    if (data.data) {
+      const gbfile = data.data;
+
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
+      const botId = this.min.instance.botId;
+      const gbaiName = `${this.min.botId}.gbai`;
+      const tmpDocx = urlJoin(gbaiName, `${botId}.gbdrive`, `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+
+      // Performs the conversion operation.
+
+      await client.api(`${baseUrl}/drive/root:/${tmpDocx}:/content`).put(data.data);
+      const res = await client.api(`${baseUrl}/drive/root:/${tmpDocx}:/content?format=pdf`).get();
+      await client.api(`${baseUrl}/drive/root:/${tmpDocx}:/content`).delete();
+
+      const streamToString = stream => {
+        const chunks = [];
+        return new Promise((resolve, reject) => {
+          stream.on('data', chunk => chunks.push(chunk));
+          stream.on('error', reject);
+          stream.on('end', () => resolve(Buffer.concat(chunks)));
+        });
+      };
+
+      gbfile.data = await streamToString(res);
+
+      // Converts the PDF to PNG.
+
+      const pngPages: PngPageOutput[] = await pdfToPng(gbfile.data, {
+        disableFontFace: false,
+        useSystemFonts: false,
+        viewportScale: 2.0,
+        pagesToProcess: [1],
+        strictPagesToProcess: false,
+        verbosityLevel: 0
+      });
+
+      // Prepare an image on cache and return the GBFILE information.
+
+      const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
+      if (pngPages.length > 0) {
+        const buffer = pngPages[0].content;
+        const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+
+        Fs.writeFileSync(localName, buffer, { encoding: null });
+
+        return { localName: localName, url: url, data: buffer };
+      }
+    } else {
+      let file = await this.renderTable(pid, data, false, true);
+      return file[0];
+    }
   }
 
   public async executeSQL({ pid, data, sql, tableName }) {
@@ -418,9 +464,7 @@ export class SystemKeywords {
    *
    */
   public async talkTo({ pid, mobile, message }) {
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Talking '${message}' to a specific user (${mobile}) (TALK TO). `);
     await min.conversationalService.sendMarkdownToMobile(min, null, mobile, message);
   }
@@ -432,9 +476,7 @@ export class SystemKeywords {
    *
    */
   public async sendSmsTo({ pid, mobile, message }) {
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: SEND SMS TO '${mobile}', message '${message}'.`);
     await min.conversationalService.sendSms(min, mobile, message);
   }
@@ -449,10 +491,7 @@ export class SystemKeywords {
    *
    */
   public async set({ pid, file, address, value }): Promise<any> {
-
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles calls for HTML stuff
 
@@ -484,8 +523,7 @@ export class SystemKeywords {
 
     await client
       .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
-        }')/range(address='${address}')`
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
       )
       .patch(body);
   }
@@ -530,9 +568,9 @@ export class SystemKeywords {
       await client.api(`${baseUrl}/drive/root:/${path}/${file}:/content`).put(data);
     } catch (error) {
       if (error.code === 'itemNotFound') {
-        GBLog.info(`BASIC: CONVERT source file not found: ${file}.`);
+        GBLog.info(`BASIC: BASIC source file not found: ${file}.`);
       } else if (error.code === 'nameAlreadyExists') {
-        GBLog.info(`BASIC: CONVERT destination file already exists: ${file}.`);
+        GBLog.info(`BASIC: BASIC destination file already exists: ${file}.`);
       }
       throw error;
     }
@@ -557,8 +595,7 @@ export class SystemKeywords {
 
     await client
       .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
-        }')/range(address='A2:DX2')/insert`
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A2:DX2')/insert`
       )
       .post({});
 
@@ -579,8 +616,7 @@ export class SystemKeywords {
 
     await client
       .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
-        }')/range(address='${address}')`
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
       )
       .patch(body);
   }
@@ -615,8 +651,7 @@ export class SystemKeywords {
 
       let results = await client
         .api(
-          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
-          }')/range(address='${addressOrHeaders}')`
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${addressOrHeaders}')`
         )
         .get();
 
@@ -673,7 +708,6 @@ export class SystemKeywords {
   public async find({ pid, args }): Promise<any> {
     const file = args[0];
     args.shift();
-
 
     const botId = this.min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
@@ -764,8 +798,7 @@ export class SystemKeywords {
 
       results = await client
         .api(
-          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
-          }')/range(address='A1:CZ${maxLines}')`
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:CZ${maxLines}')`
         )
         .get();
 
@@ -784,12 +817,7 @@ export class SystemKeywords {
         if (parts.length === 2 && !done) {
           filter = {
             columnName: parts[0].trim(),
-            operator: op
-              .toString()
-              .replace(/\\b/g, '')
-              .replace(/\//g, '')
-              .replace(/\\/g, '')
-              .replace(/\b/g, ''),
+            operator: op.toString().replace(/\\b/g, '').replace(/\//g, '').replace(/\\/g, '').replace(/\b/g, ''),
             value: parts[1].trim()
           };
 
@@ -875,13 +903,7 @@ export class SystemKeywords {
                     filterAcceptCount++;
                   }
                 } else {
-                  if (
-                    result &&
-                    result
-                      .toLowerCase()
-                      .trim()
-                      .indexOf(filter.value.toLowerCase().trim()) > -1
-                  ) {
+                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) > -1) {
                     filterAcceptCount++;
                   }
                 }
@@ -892,13 +914,7 @@ export class SystemKeywords {
                     filterAcceptCount++;
                   }
                 } else {
-                  if (
-                    result &&
-                    result
-                      .toLowerCase()
-                      .trim()
-                      .indexOf(filter.value.toLowerCase().trim()) === -1
-                  ) {
+                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) === -1) {
                     filterAcceptCount++;
                   }
                 }
@@ -909,13 +925,7 @@ export class SystemKeywords {
                     filterAcceptCount++;
                   }
                 } else {
-                  if (
-                    result &&
-                    result
-                      .toLowerCase()
-                      .trim()
-                      .indexOf(filter.value.toLowerCase().trim()) > -1
-                  ) {
+                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) > -1) {
                     filterAcceptCount++;
                   }
                 }
@@ -1374,6 +1384,7 @@ export class SystemKeywords {
    *
    */
   public async fill({ pid, templateName, data }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const botId = this.min.instance.botId;
     const gbaiName = `${botId}.gbai`;
     const path = `/${botId}.gbai/${botId}.gbdata`;
@@ -1382,29 +1393,77 @@ export class SystemKeywords {
 
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
     let template = await this.internalGetDocument(client, baseUrl, path, templateName);
-    const url = template['@microsoft.graph.downloadUrl'];
-    const localName = Path.join('work', gbaiName, 'cache', ``);
+    let url = template['@microsoft.graph.downloadUrl'];
+    let localName = Path.join('work', gbaiName, 'cache', ``);
     const response = await fetch(url);
     Fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
 
     // Loads the file as binary content.
 
-    const content = Fs.readFileSync(localName, 'binary');
-    const zip = new PizZip(content);
-    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+    let content = Fs.readFileSync(localName, 'binary');
+    let zip = new PizZip(content);
+    let doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
     if (localName.endsWith('.pptx')) {
       doc.attachModule(pptxTemplaterModule);
     }
 
-    // Renders the document (Replace {first_name} by John, {last_name} by Doe, ...)
+    // Replace image path on all elements of data.s
 
+    const images = [];
+
+    const process = async (key, value, obj) => {
+      for (const kind in ['png', 'jpg', 'jpeg']) {
+        if (value.endsWith(`.${kind}`)) {
+          const { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
+          const path = `/${botId}.gbai/${botId}.gbdrive`;
+          const ref = await this.internalGetDocument(client, baseUrl, path, value);
+          let url = ref['@microsoft.graph.downloadUrl'];
+          let localName = Path.join('work', gbaiName, 'cache', ``);
+          const response = await fetch(url);
+          const buf = Buffer.from(await response.arrayBuffer());
+          Fs.writeFileSync(localName, buf, { encoding: null });
+
+          const getNormalSize = ({ width, height, orientation }) => {
+            return (orientation || 0) >= 5 ? { width: height, height: width } : { width, height };
+          };
+
+          const size = getNormalSize(await sharp(buf).metadata());
+          url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+
+          const imageToken = `{{Insert_Image ${kind} ${size.width} ${size.height}}}`;
+          obj = imageToken;
+        }
+      }
+    };
+    const traverse = (o, func) => {
+      for (var i in o) {
+        func.apply(this, [i, o[i], o]);
+        if (o[i] !== null && typeof o[i] == 'object') {
+          //going one step down in the object tree!!
+          traverse(o[i], func);
+        }
+      }
+    };
+
+    traverse(data, process);
     doc.render(data);
 
-    // Returns the buffer to be used with SAVE AS for example.
+    if (images) {
+      // Replaces images within the document.
 
-    const buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
+      let docxImager = new DocxImager();
+      await docxImager.load(localName);
+      let i = 0;
+      await CollectionUtil.asyncForEach(images, async image => {
+        const imageName = images[i++];
+        await docxImager.insertImage({ imageName: imageName });
+      });
+      await docxImager.save(localName);
+    }
 
-    return buf;
+    const buffer = Fs.readFileSync(localName, 'binary');
+
+    return { localName: localName, url: url, data: buffer };
   }
 
   public screenCapture(pid) {
@@ -1462,9 +1521,7 @@ export class SystemKeywords {
   public async merge({ pid, file, data, key1, key2 }): Promise<any> {
     GBLog.info(`BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
 
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const botId = min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
@@ -1492,8 +1549,7 @@ export class SystemKeywords {
 
     results = await client
       .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name
-        }')/range(address='A1:CZ${maxLines}')`
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:CZ${maxLines}')`
       )
       .get();
 
@@ -1589,9 +1645,7 @@ export class SystemKeywords {
   }
 
   public async tweet({ pid, text }) {
-    const {
-      min, user
-    } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     const consumer_key = min.core.getParam(min.instance, 'Twitter Consumer Key', null);
     const consumer_secret = min.core.getParam(min.instance, 'Twitter Consumer Key Secret', null);

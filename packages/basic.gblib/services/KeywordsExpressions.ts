@@ -757,11 +757,14 @@ export class KeywordsExpressions {
       }
     ];
 
-
-
-
-
-
+    keywords[i++] = [
+      /^\s*(\w+)\s*\=\s*CARD\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($1, ['doc', 'data']);
+        return `
+        ${$1} = await dk.card({pid: pid, args: [${$2}]})`;
+      }
+    ];
 
     return keywords;
   }
