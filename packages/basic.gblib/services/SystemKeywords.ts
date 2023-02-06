@@ -51,9 +51,10 @@ import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import pptxTemplaterModule from 'pptxtemplater';
 import _ from 'lodash';
-import DocxImager from 'docximager';
+import { DocxImager } from 'docximager';
 import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
 import sharp from 'sharp';
+import apply from 'async/apply';
 
 /**
  * @fileoverview General Bots server core.
@@ -1387,16 +1388,17 @@ export class SystemKeywords {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const botId = this.min.instance.botId;
     const gbaiName = `${botId}.gbai`;
-    const path = `/${botId}.gbai/${botId}.gbdrive`;
+    let localName;
 
     // Downloads template from .gbdrive.
 
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
+    let path = '/' + urlJoin(gbaiName, `${botId}.gbdrive`);
     let template = await this.internalGetDocument(client, baseUrl, path, templateName);
     let url = template['@microsoft.graph.downloadUrl'];
     const res = await fetch(url);
-    let localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
-    let buf = Buffer.from(await res.arrayBuffer());
+    let buf: any = Buffer.from(await res.arrayBuffer());
+    localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
     Fs.writeFileSync(localName, buf, { encoding: null });
 
     // Loads the file as binary content.
@@ -1410,42 +1412,50 @@ export class SystemKeywords {
     // Replace image path on all elements of data.
 
     const images = [];
+    let index = 0;
+    path = Path.join(gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
 
-    const process = async (key, value, obj) => {
-      for (const kind in ['png', 'jpg', 'jpeg']) {
-        if (value.endsWith(`.${kind}`)) {
-          const { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
-          const path = `/${botId}.gbai/${botId}.gbdrive`;
-          const ref = await this.internalGetDocument(client, baseUrl, path, value);
-          let url = ref['@microsoft.graph.downloadUrl'];
-          let localName = Path.join('work', gbaiName, 'cache', ``);
-          const response = await fetch(url);
-          const buf = Buffer.from(await response.arrayBuffer());
-          Fs.writeFileSync(localName, buf, { encoding: null });
-
-          const getNormalSize = ({ width, height, orientation }) => {
-            return (orientation || 0) >= 5 ? { width: height, height: width } : { width, height };
-          };
-
-          const size = getNormalSize(await sharp(buf).metadata());
-          url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
-
-          const imageToken = `{{Insert_Image ${kind} ${size.width} ${size.height}}}`;
-          obj = imageToken;
-        }
-      }
-    };
-    const traverse = (o, func) => {
+    const traverseDataToInjectImageUrl = async o => {
       for (var i in o) {
-        func.apply(this, [i, o[i], o]);
+        let value = o[i];
+        let key = i;
+
+        for (const kind of ['png', 'jpg', 'jpeg']) {
+          if (value.endsWith && value.endsWith(`.${kind}`)) {
+            const { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
+
+            path = urlJoin(gbaiName, `${botId}.gbdrive`);
+            if (value.indexOf('/') !== -1) {
+              path = '/' + urlJoin(path, Path.dirname(value));
+              value = Path.basename(value);
+            }
+
+            const ref = await this.internalGetDocument(client, baseUrl, path, value);
+            let url = ref['@microsoft.graph.downloadUrl'];
+            const imageName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.png`);
+            const response = await fetch(url);
+            const buf = Buffer.from(await response.arrayBuffer());
+            Fs.writeFileSync(imageName, buf, { encoding: null });
+
+            const getNormalSize = ({ width, height, orientation }) => {
+              return (orientation || 0) >= 5 ? { width: height, height: width } : { width, height };
+            };
+
+            const size = getNormalSize(await sharp(buf).metadata());
+            url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(imageName));
+            images[index++] = url;
+
+            const imageToken = `{{insert_image img${index} ${kind} ${size.height} ${size.width} }}`;
+            o[key] = imageToken;
+          }
+        }
         if (o[i] !== null && typeof o[i] == 'object') {
-          //going one step down in the object tree!!
-          traverse(o[i], func);
+          await traverseDataToInjectImageUrl(o[i]);
         }
       }
     };
 
-    traverse(data, process);
+    await traverseDataToInjectImageUrl(data);
     doc.render(data);
 
     buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
@@ -1458,15 +1468,16 @@ export class SystemKeywords {
       await docxImager.load(localName);
       let i = 0;
       await CollectionUtil.asyncForEach(images, async image => {
-        const imageName = images[i++];
-        await docxImager.insertImage({ imageName: imageName });
+        if (i>0)return; //////////////////////////////
+        const url = images[i++];
+        const json = JSON.parse(`{"img${i}": "${url}"}`);
+        await docxImager.insertImage(json);
       });
       await docxImager.save(localName);
+      buf = Fs.readFileSync(localName, 'binary');
     }
 
-    const buffer = Fs.readFileSync(localName, 'binary');
-
-    return { localName: localName, url: url, data: buffer };
+    return { localName: localName, url: url, data: buf };
   }
 
   public screenCapture(pid) {
