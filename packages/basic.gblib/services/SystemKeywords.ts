@@ -55,6 +55,7 @@ import { DocxImager } from 'docximager';
 import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
 import sharp from 'sharp';
 import apply from 'async/apply';
+import ImageModule from 'open-docxtemplater-image-module';
 
 /**
  * @fileoverview General Bots server core.
@@ -1404,10 +1405,6 @@ export class SystemKeywords {
     // Loads the file as binary content.
 
     let zip = new PizZip(buf);
-    let doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
-    if (localName.endsWith('.pptx')) {
-      doc.attachModule(pptxTemplaterModule);
-    }
 
     // Replace image path on all elements of data.
 
@@ -1418,10 +1415,15 @@ export class SystemKeywords {
     const traverseDataToInjectImageUrl = async o => {
       for (var i in o) {
         let value = o[i];
-        let key = i;
+
+        if (value && value.gbarray){
+          o.shift();
+          value = o[i];
+        }
 
         for (const kind of ['png', 'jpg', 'jpeg']) {
           if (value.endsWith && value.endsWith(`.${kind}`)) {
+
             const { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
 
             path = urlJoin(gbaiName, `${botId}.gbdrive`);
@@ -1429,24 +1431,27 @@ export class SystemKeywords {
               path = '/' + urlJoin(path, Path.dirname(value));
               value = Path.basename(value);
             }
-
+    
             const ref = await this.internalGetDocument(client, baseUrl, path, value);
             let url = ref['@microsoft.graph.downloadUrl'];
-            const imageName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.png`);
+            const imageName = Path.join(
+              'work',
+              gbaiName,
+              'cache',
+              `tmp${GBAdminService.getRndReadableIdentifier()}-${value}.png`
+            );
             const response = await fetch(url);
             const buf = Buffer.from(await response.arrayBuffer());
             Fs.writeFileSync(imageName, buf, { encoding: null });
-
+    
             const getNormalSize = ({ width, height, orientation }) => {
-              return (orientation || 0) >= 5 ? { width: height, height: width } : { width, height };
+              return (orientation || 0) >= 5 ? [  height, width ] : [ width, height];
             };
-
+    
             const size = getNormalSize(await sharp(buf).metadata());
             url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(imageName));
-            images[index++] = url;
+            images[index++] = {url: url, size:size, buf: buf} ;
 
-            const imageToken = `{{insert_image img${index} ${kind} ${size.height} ${size.width} }}`;
-            o[key] = imageToken;
           }
         }
         if (o[i] !== null && typeof o[i] == 'object') {
@@ -1455,27 +1460,34 @@ export class SystemKeywords {
       }
     };
 
-    await traverseDataToInjectImageUrl(data);
-    doc.render(data);
+    let indexImage = 0;
+    var opts = {
+      fileType: 'docx',
+      centered: false,
+      getImage: (tagValue, tagName) => {
+        return images[indexImage].buf;
 
+      },
+      getSize: (img, tagValue, tagName) => {
+        return images[indexImage].size;
+      }
+    };
+
+    let doc = new Docxtemplater();
+    doc.setOptions({ paragraphLoop: true, linebreaks: true });
+    doc.loadZip(zip);
+    if (localName.endsWith('.pptx')) {
+      doc.attachModule(pptxTemplaterModule);
+    }
+    doc.attachModule(new ImageModule(opts));
+
+    await traverseDataToInjectImageUrl(data);
+    doc
+        .setData(data)
+        .render();
+    
     buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
     Fs.writeFileSync(localName, buf, { encoding: null });
-
-    if (images) {
-      // Replaces images within the document.
-
-      let docxImager = new DocxImager();
-      await docxImager.load(localName);
-      let i = 0;
-      await CollectionUtil.asyncForEach(images, async image => {
-        if (i>0)return; //////////////////////////////
-        const url = images[i++];
-        const json = JSON.parse(`{"img${i}": "${url}"}`);
-        await docxImager.insertImage(json);
-      });
-      await docxImager.save(localName);
-      buf = Fs.readFileSync(localName, 'binary');
-    }
 
     return { localName: localName, url: url, data: buf };
   }
