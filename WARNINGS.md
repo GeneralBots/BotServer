@@ -24,6 +24,8 @@ warning react-scripts > react-dev-utils > fork-ts-checker-webpack-plugin@6.5.2" 
 
 # BotServer
 
+docxtemplater is not working in more modern versions. Stay with 3.9.7.
+
 nodejs/node-gyp#2756
 warning npm > node-gyp > make-fetch-happen > cacache > @npmcli/move-file@2.0.1: This functionality has been moved to @npmcli/fs
 
