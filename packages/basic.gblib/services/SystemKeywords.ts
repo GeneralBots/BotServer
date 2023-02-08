@@ -57,6 +57,7 @@ import sharp from 'sharp';
 import apply from 'async/apply';
 import ImageModule from 'open-docxtemplater-image-module';
 
+
 /**
  * @fileoverview General Bots server core.
  */
@@ -1469,7 +1470,7 @@ export class SystemKeywords {
 
       },
       getSize: (img, tagValue, tagName) => {
-        return images[indexImage].size;
+        return images[indexImage++].size;
       }
     };
 
