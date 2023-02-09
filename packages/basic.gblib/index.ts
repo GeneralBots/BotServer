@@ -60,7 +60,8 @@ export class GBBasicPackage implements IGBPackage {
 
   public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasSchedule]);
-    app.use(koaBody.koaBody({ multipart: true }));
+    app.use(koaBody.koaBody({ multipart: true,  }));
+
     app.listen(1111);
   }
 
@@ -97,5 +98,11 @@ export class GBBasicPackage implements IGBPackage {
     app.use(waRouter.routes());
     app.use(dbgRouter.routes());
     app.use(imgRouter.routes());
+    app.use(async (ctx, next) => {
+      if(ctx['status'] === 404){
+         ctx.status = 404
+         ctx.body = {msg:'emmmmmmm, seems 404'};
+      }
+  });
   }
 }

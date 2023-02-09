@@ -96,7 +96,7 @@ export class GBServer {
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 
-    process.on('unhandledRejection', (err, p) => {
+      process.on('unhandledRejection', (err, p) => {
       GBLog.error(`UNHANDLED_REJECTION(promises): ${p} ${err.toString()}`);
     });
 
@@ -126,7 +126,7 @@ export class GBServer {
           const azureDeployer: AzureDeployerService = await AzureDeployerService.createInstance(deployer);
           const adminService: GBAdminService = new GBAdminService(core);
 
-          if (process.env.NODE_ENV === 'development' ) {
+          if (process.env.NODE_ENV === 'development') {
             const proxy = GBConfigService.get('BOT_URL');
             if (proxy !== undefined) {
               GBServer.globals.publicAddress = proxy;
@@ -227,6 +227,12 @@ export class GBServer {
             const loggers = GBLog.getLogger();
             winston.default(server, loggers[1]);
           }
+
+          server.get('*', function(req, res){
+            GBLog.info(`HTTP 404: ${req.url}.`);
+            res.status(404);
+            res.end();
+          });
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
 

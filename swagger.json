@@ -13,7 +13,7 @@
         "status": "Production"
       }
     },
-    "host": "generalbots.ai",
+    "host": "",
     "basePath": "/",
     "schemes": [
       "https"
@@ -21,7 +21,7 @@
     "consumes": [],
     "produces": [],
     "paths": {
-      "/api/talkTo": {
+      "/api/v2//dialog/talk": {
         "post": {
           "summary": "Talk to the user.",
           "description": "Talk to the user.",
@@ -58,9 +58,6 @@
           "properties": {
             "pid": {
               "type": "string"
-            },
-            "mobile": {
-                "type": "string"
               },
             "text": {
               "type": "string"

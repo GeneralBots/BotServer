@@ -48,6 +48,7 @@ import qrcode from 'qrcode-terminal';
 import express from 'express';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { method } from 'lodash';
 
 /**
  * Support for Whatsapp.
@@ -96,11 +97,13 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceKey = whatsappServiceKey;
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
-    this.provider =
+    this.provider =   
       whatsappServiceKey === 'internal'
         ? 'GeneralBots'
         : whatsappServiceNumber.indexOf(';') > -1
         ? 'maytapi'
+        : whatsappServiceKey !== 'internal' 
+        ? 'graphapi' 
         : 'chatapi';
     this.groupId = groupId;
   }
@@ -125,6 +128,7 @@ export class WhatsappDirectLine extends GBService {
       new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${this.directLineSecret}`, 'header')
     );
     let options: any;
+    const phoneId = this.whatsappServiceNumber.split(';')[0];
 
     switch (this.provider) {
       case 'GeneralBots':
@@ -203,7 +207,7 @@ export class WhatsappDirectLine extends GBService {
                 msg
               );
 
-              s.sendEmail({pid: 0, to: adminEmail, subject: `Check your WhatsApp for bot ${this.botId}`, body: msg });
+              s.sendEmail({ pid: 0, to: adminEmail, subject: `Check your WhatsApp for bot ${this.botId}`, body: msg });
             }).bind(this)
           );
 
@@ -249,7 +253,6 @@ export class WhatsappDirectLine extends GBService {
         setUrl = false;
 
         break;
-
       case 'chatapi':
         url = urlJoin(this.whatsappServiceUrl, 'webhook');
         options = {
@@ -268,7 +271,6 @@ export class WhatsappDirectLine extends GBService {
 
         break;
       case 'maytapi':
-        let phoneId = this.whatsappServiceNumber.split(';')[0];
         let productId = this.whatsappServiceNumber.split(';')[1];
         url = `${this.INSTANCE_URL}/${productId}/${phoneId}/config`;
         body = {
@@ -288,7 +290,7 @@ export class WhatsappDirectLine extends GBService {
           json: true
         };
         break;
-    }
+      }
 
     if (setUrl && options && this.whatsappServiceUrl) {
       GBServer.globals.server.use(`/audios`, express.static('work'));
@@ -327,7 +329,7 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public static providerFromRequest(req: any) {
-    return req.body.messages ? 'chatapi' : req.body.message ? 'maytapi' : 'GeneralBots';
+    return req.body.messages ? 'chatapi' : req.body.message ? 'maytapi' : req.body.message ? 'graphapi' : 'GeneralBots';
   }
 
   public async received(req, res) {
@@ -378,6 +380,8 @@ export class WhatsappDirectLine extends GBService {
           return; // Exit here.
         }
 
+        break;
+      case 'graphapi':
         break;
 
       case 'maytapi':
@@ -621,7 +625,7 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  private async endTransfer(id: any, locale: string, user: GuaribasUser, agent: GuaribasUser, sec: SecService) {
+  private async endTransfer(id: string, locale: string, user: GuaribasUser, agent: GuaribasUser, sec: SecService) {
     await this.sendToDeviceEx(id, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale, null);
 
     if (user.agentSystemId.charAt(2) === ':') {
@@ -643,7 +647,7 @@ export class WhatsappDirectLine extends GBService {
     await sec.updateHumanAgent(id, this.min.instance.instanceId, null);
   }
 
-  public inputMessage(client, conversationId, text, from, fromName, group, attachments) {
+  public inputMessage(client, conversationId: string, text: string, from, fromName: string, group, attachments: File) {
     return client.Conversations.Conversations_PostActivity({
       conversationId: conversationId,
       activity: {
@@ -794,7 +798,24 @@ export class WhatsappDirectLine extends GBService {
         };
 
         break;
+      
+        case 'graphapi':
+          url = `https://graph.facebook.com/v15.0/${phoneId}/messages`
+          options = {
+            method:'POST',
+            timeout: 10000,
+            headers: {
+              token: `Bearer `,
+              'Content-Type': 'application/json'
+            },
+            body:{
+              messaging_product: 'whatsapp',
+              recipient_type: 'individual',
+              to: phoneId,
+            }
+          }
     }
+
     if (options) {
       try {
         // tslint:disable-next-line: await-promise
@@ -845,7 +866,7 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async sendTextAsAudioToDevice(to, msg, chatId) {
+  public async sendTextAsAudioToDevice(to, msg: string, chatId) {
     const url = await GBConversationalService.getAudioBufferFromText(msg);
 
     await this.sendFileToDevice(to, url, 'Audio', msg, chatId);
@@ -906,6 +927,8 @@ export class WhatsappDirectLine extends GBService {
             }
           };
           break;
+        case 'graphapi':
+          
       }
 
       if (options) {
