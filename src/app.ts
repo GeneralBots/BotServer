@@ -126,17 +126,16 @@ export class GBServer {
           const azureDeployer: AzureDeployerService = await AzureDeployerService.createInstance(deployer);
           const adminService: GBAdminService = new GBAdminService(core);
 
-          if (process.env.NODE_ENV === 'development' && !process.env.BOT_URL) {
-            const proxy = GBConfigService.get('REVERSE_PROXY');
+          if (process.env.NODE_ENV === 'development' ) {
+            const proxy = GBConfigService.get('BOT_URL');
             if (proxy !== undefined) {
               GBServer.globals.publicAddress = proxy;
             } else {
               // Ensure that local development proxy is setup.
 
-              GBLog.info(`Establishing a development local proxy (ngrok)...`);
+              GBLog.info(`Establishing a development local proxy (proxy) on BOT_URL...`);
               GBServer.globals.publicAddress = await core.ensureProxy(port);
             }
-            process.env.BOT_URL = GBServer.globals.publicAddress;
           } else {
             const serverAddress = process.env.BOT_URL;
             GBLog.info(`Defining server address at ${serverAddress}...`);

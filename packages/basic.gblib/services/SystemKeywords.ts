@@ -344,7 +344,7 @@ export class SystemKeywords {
 
     // Checks if it is a GBFILE.
 
-    if (data.data) {
+    if (data.data) {  
       const gbfile = data.data;
 
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
@@ -1249,9 +1249,9 @@ export class SystemKeywords {
 
     // Determines full path at source and destination.
 
-    const root = urlJoin(`/${botId}.gbai/${botId}.gbdata`);
+    const root = urlJoin(`/${botId}.gbai/${botId}.gbdrive`);
     const srcPath = urlJoin(root, src);
-    const dstPath = urlJoin(`/${botId}.gbai/${botId}.gbdata`, dest);
+    const dstPath = urlJoin(`/${botId}.gbai/${botId}.gbdrive`, dest);
 
     // Checks if the destination contains subfolders that
     // need to be created.
