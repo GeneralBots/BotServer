@@ -23,32 +23,18 @@
     "paths": {
       "/api/v2//dialog/talk": {
         "post": {
+          "requestBody":{
+            "content": "text/plain"
+          },
           "summary": "Talk to the user.",
           "description": "Talk to the user.",
           "x-ms-no-generic-test": true,
-          "operationId": "talkTo",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "parameters": [
-            {
-              "name": "content",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/TalkRequest"
-              }
-            }
-          ],
+          "operationId": "talk",
           "responses": {
             "200": {
               "description": "OK"
             }
-          },
-          "deprecated": false
+          }
         }
       }   
     },
