@@ -326,15 +326,18 @@ export class GuaribasChannel extends Model<GuaribasChannel> {
  */
 @Table
 //tslint:disable-next-line:max-classes-per-file
-export class GuaribasException extends Model<GuaribasException> {
+export class GuaribasLog extends Model<GuaribasLog> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  declare  exceptionId: number;
+  declare  logId: number;
 
-  @Column(DataType.STRING(255))
+  @Column(DataType.STRING(1024))
   declare  message: string;
 
+  @Column(DataType.STRING(1))
+  declare  kind: string;
+  
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
   declare  instanceId: number;

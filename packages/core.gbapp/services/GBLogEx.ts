@@ -1,8 +1,8 @@
 /*****************************************************************************\
 |                                               ( )_  _                       |
-|    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
-|   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' v `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| (˅) |( (_) )  |
+|    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___  _   _    _     |
+|   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/ \ /`\ /'_`\   |
+|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| |*| |( (_) )  |
 |   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
@@ -36,47 +36,50 @@
 
 'use strict';
 
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
-import { Sequelize } from 'sequelize-typescript';
-import { BroadcastDialog } from './dialogs/BroadcastDialog.js';
-import { LanguageDialog } from './dialogs/LanguageDialog.js';
-import { SwitchBotDialog } from './dialogs/SwitchBot.js';
-import { WelcomeDialog } from './dialogs/WelcomeDialog.js';
-import { WhoAmIDialog } from './dialogs/WhoAmIDialog.js';
-import { GuaribasChannel, GuaribasInstance, GuaribasLog, GuaribasPackage } from './models/GBModel.js';
+import { GBLog, IGBInstance } from "botlib";
+import { GuaribasLog } from "../models/GBModel";
 
-/**
- * Package for core.gbapp.
- */
-export class GBCorePackage implements IGBPackage {
-  public sysPackages: IGBPackage[];
-  public CurrentEngineName = 'guaribas-1.0.0';
-
-  public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {
-    core.sequelize.addModels([GuaribasInstance, GuaribasPackage, GuaribasChannel, GuaribasLog]);
+export class GBLogEx {
+  public static async error(minOrInstanceId: any, message: string) {
+    GBLog.error(message);
+    if (typeof minOrInstanceId === 'object') {
+      minOrInstanceId = minOrInstanceId.instance.instanceId;
+    }
+    await this.log(minOrInstanceId, 'e', message);
   }
 
-  public async getDialogs (min: GBMinInstance) {
-    GBLog.verbose(`getDialogs called.`);
-  }
-  public async unloadPackage (core: IGBCoreService): Promise<void> {
-    GBLog.verbose(`unloadPackage called.`);
-  }
-  public async unloadBot (min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`unloadBot called.`);
-  }
-  public async onNewSession (min: GBMinInstance, step: GBDialogStep): Promise<void> {
-    GBLog.verbose(`onNewSession called.`);
-  }
-  public async onExchangeData (min: GBMinInstance, kind: string, data: any) {
-    GBLog.verbose(`onExchangeData called.`);
+  public static async debug(minOrInstanceId: any, message: string) {
+    GBLog.debug(message);
+    if (typeof minOrInstanceId === 'object') {
+      minOrInstanceId = minOrInstanceId.instance.instanceId;
+    }
+    await this.log(minOrInstanceId, 'd', message);
   }
 
-  public async loadBot (min: GBMinInstance): Promise<void> {
-    WelcomeDialog.setup(min.bot, min);
-    WhoAmIDialog.setup(min.bot, min);
-    SwitchBotDialog.setup(min.bot, min);
-    BroadcastDialog.setup(min.bot, min);
-    LanguageDialog.setup(min.bot, min);
+  public static async info(minOrInstanceId: any,  message: string) {
+    GBLog.info(message);
+    if (typeof minOrInstanceId === 'object') {
+      minOrInstanceId = minOrInstanceId.instance.instanceId;
+    }
+    await this.log(minOrInstanceId, 'i', message);
+  }
+
+  public static async verbose(minOrInstanceId: any, message: string) {
+    GBLog.verbose(message);
+    if (typeof minOrInstanceId === 'object') {
+      minOrInstanceId = minOrInstanceId.instance.instanceId;
+    }
+    await this.log(minOrInstanceId, 'v', message);
+  }
+
+  /**
+   * Finds and update user agent information to a next available person.
+   */
+  public static async log(instance: IGBInstance, kind: string, message: string): Promise<GuaribasLog> {
+    return await GuaribasLog.create(<GuaribasLog>{
+      instanceId: instance.instanceId,
+      message: message,
+      kind: kind
+    });
   }
 }
