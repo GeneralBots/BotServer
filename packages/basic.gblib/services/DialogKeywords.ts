@@ -1050,9 +1050,9 @@ export class DialogKeywords {
   public static async getProcessInfo(pid: number) {
     const proc = GBServer.globals.processes[pid];
 
-    const min = GBServer.globals.minInstances.filter(p => p.instance.instanceId == proc.instanceId)[0];
+    const min = GBServer.globals.minInstances[0];//.filter(p => p.instance.instanceId == proc.instanceId)[0];
     const sec = new SecService();
-    const user = await sec.getUserFromId(min.instance.instanceId, proc.userId);
+    const user = await sec.getUserFromId(min.instance.instanceId, "1");
     const params = JSON.parse(user.params);
     return {
       min,
@@ -1064,13 +1064,15 @@ export class DialogKeywords {
   /**
    * Talks to the user by using the specified text.
    */
-  public async talk({ pid, text }) {
+  public async talk(x) {
+    const text="",pid=0
     GBLog.info(`BASIC: TALK '${text}'.`);
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    await min.whatsAppDirectLine.sendButton();
     if (user) {
       // TODO: const translate = this.user ? this.user.basicOptions.translatorOn : false;
 
-      await min.conversationalService['sendOnConversation'](min, user, text);
+     // await min.conversationalService['sendOnConversation'](min, user, text);
     }
   }
 

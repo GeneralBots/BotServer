@@ -131,7 +131,7 @@
     "prism-media": "1.3.4",
     "public-ip": "6.0.1",
     "punycode": "2.1.1",
-    "puppeteer": "19.2.2",
+    "puppeteer": "19.6.3",
     "puppeteer-extra": "3.3.4",
     "puppeteer-extra-plugin-stealth": "2.11.1",
     "qrcode": "1.5.1",
@@ -163,7 +163,7 @@
     "vm2-process": "2.1.1",
     "walk-promise": "0.2.0",
     "washyourmouthoutwithsoap": "1.0.2",
-    "whatsapp-web.js": "1.18.3",
+    "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#fix-buttons-list",
     "winston": "3.8.2",
     "winston-logs-display": "1.0.0",
     "yarn": "1.22.19"
