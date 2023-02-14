@@ -678,6 +678,13 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(MERGE)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await img.mergeImage({pid: pid, files: [${$3}]})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*PRESS\s*(.*)/gim,
       ($0, $1, $2) => {
         return `await wa.pressKey({pid: pid, handle: page, char: ${$1}})`;

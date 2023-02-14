@@ -32,9 +32,15 @@
 
 'use strict';
 
+import Path from 'path';
 import { GBLog, GBMinInstance } from 'botlib';
 import { DialogKeywords } from './DialogKeywords.js';
 import sharp from 'sharp';
+import joinImages from 'join-images-updated';
+import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import urlJoin from 'url-join';
+import { GBServer } from '../../../src/app.js';
 
 /**
  * Image processing services of conversation to be called by BASIC.
@@ -93,6 +99,32 @@ export class ImageProcessingServices {
 
     };
     return;
+  }
+
+  /**
+   * SET ORIENTATION VERTICAL
+   * 
+   * file = MERGE file1, file2, file3 
+   */
+  public async mergeImage({pid, files})
+  {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
+    let paths = [];
+    await CollectionUtil.asyncForEach(files, async file => {
+      const gbfile = DialogKeywords.getFileByHandle(file);  
+      paths.push(gbfile.path);
+    });
+
+    const botId = this.min.instance.botId;
+    const gbaiName = `${botId}.gbai`;
+    const img = await joinImages(paths);
+    const localName = Path.join('work', gbaiName, 'cache', `img-mrg${GBAdminService.getRndReadableIdentifier()}.png`);
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+    img.toFile(localName);
+
+    return { localName: localName, url: url, data: null };
+
   }
 
   /**

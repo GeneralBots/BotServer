@@ -1412,6 +1412,7 @@ export class SystemKeywords {
     const images = [];
     let index = 0;
     path = Path.join(gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+    url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
     const traverseDataToInjectImageUrl = async o => {
       for (var i in o) {
