@@ -238,6 +238,24 @@ export class AdminDialog extends IGBDialog {
       ])
     );
 
+
+    min.dialogs.add(
+      new WaterfallDialog('/logs', [
+        async step => {
+          if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+            return await step.beginDialog('/auth');
+          } else {
+            return await step.next(step.options);
+          }
+        },
+        async step => {
+          const logs = await min.core['getLatestLogs'](); 
+          await min.conversationalService.sendText(min, step, logs);
+          return await step.replaceDialog('/ask', { isReturning: true });
+        }
+      ]));
+
+
     min.dialogs.add(
       new WaterfallDialog('/publish', [
         async step => {

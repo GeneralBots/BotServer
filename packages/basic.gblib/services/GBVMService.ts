@@ -32,7 +32,7 @@
 
 'use strict';
 
-import { GBLog, GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
+import {  GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
 import * as Fs from 'fs';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
@@ -50,9 +50,7 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import pkg from 'swagger-client';
 import { DialogKeywords } from './DialogKeywords.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
-const { Swagger } = pkg;
-
-
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -129,7 +127,7 @@ export class GBVMService extends GBService {
             }`;
           Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
 
-          GBLog.info(`BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
+          GBLogEx.info(min, `BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
           const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
           child_process.execSync(`${npmPath} install`, { cwd: folder });
         }
@@ -139,7 +137,7 @@ export class GBVMService extends GBService {
         const fullFilename = urlJoin(folder, filename);
         if (process.env.GBDIALOG_HOTSWAP) {
           Fs.watchFile(fullFilename, async () => {
-            await this.translateBASIC(fullFilename, mainName, min.botId);
+            await this.translateBASIC(fullFilename, mainName, min);
             const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
             min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
           });
@@ -152,10 +150,10 @@ export class GBVMService extends GBService {
           const jsStat = Fs.statSync(jsfile);
           const interval = 30000; // If compiled is older 30 seconds, then recompile.
           if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
-            await this.translateBASIC(fullFilename, mainName, min.botId);
+            await this.translateBASIC(fullFilename, mainName, min);
           }
         } else {
-          await this.translateBASIC(fullFilename, mainName, min.botId);
+          await this.translateBASIC(fullFilename, mainName, min);
         }
         const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
         min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
@@ -163,7 +161,7 @@ export class GBVMService extends GBService {
     });
   }
 
-  public async translateBASIC(filename: any, mainName: string, botId: string) {
+  public async translateBASIC(filename: any, mainName: string, min:GBMinInstance) {
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = Fs.readFileSync(filename, 'utf8');
@@ -204,10 +202,10 @@ export class GBVMService extends GBService {
 
       // Interprocess communication from local HTTP to the BotServer.
 
-      const dk = rest.createClient('http://localhost:1111/api/v2/${botId}/dialog');
-      const sys = rest.createClient('http://localhost:1111/api/v2/${botId}/system');
-      const wa = rest.createClient('http://localhost:1111/api/v2/${botId}/webautomation');
-      const img = rest.createClient('http://localhost:1111/api/v2/${botId}/imagprocessing');
+      const dk = rest.createClient('http://localhost:1111/api/v2/${min.botId}/dialog');
+      const sys = rest.createClient('http://localhost:1111/api/v2/${min.botId}/system');
+      const wa = rest.createClient('http://localhost:1111/api/v2/${min.botId}/webautomation');
+      const img = rest.createClient('http://localhost:1111/api/v2/${min.botId}/imagprocessing');
               
       // Local variables.
 
@@ -245,7 +243,7 @@ export class GBVMService extends GBService {
   
 `;
     Fs.writeFileSync(jsfile, code);
-    GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
+    GBLogEx.info(min, `[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
   }
 
   public static getMethodNameFromVBSFilename(filename: string) {
@@ -288,7 +286,7 @@ export class GBVMService extends GBService {
   public async convert(code: string) {
     // Start and End of VB2TS tags of processing.
 
-    code = process.env.ENABLE_AUTH ? `hear gbLogin as login\n${code}` : code;
+    code = process.env.ENABLE_AUTH ? `hear GBLogExin as login\n${code}` : code;
     var lines = code.split('\n');
     const keywords = KeywordsExpressions.getKeywords();
     let current = 41;
