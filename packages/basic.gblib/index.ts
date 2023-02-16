@@ -60,7 +60,7 @@ export class GBBasicPackage implements IGBPackage {
 
   public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasSchedule]);
-    app.use(koaBody.koaBody({ multipart: true,  }));
+    //app.use(koaBody.koaBody({ multipart: true,  }));
 
     app.listen(1111);
   }

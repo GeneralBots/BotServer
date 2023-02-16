@@ -13,7 +13,7 @@
         "status": "Production"
       }
     },
-    "host": "",
+    "host": "f993e4828c0d50.lhr.life",
     "basePath": "/",
     "schemes": [
       "https"
@@ -21,11 +21,11 @@
     "consumes": [],
     "produces": [],
     "paths": {
-      "/api/v2//dialog/talk": {
+      "/api/v2/dev-perdomo/dialog/talk": {
         "post": {
-          "requestBody":{
-            "content": "text/plain"
-          },
+          "consumes":[
+            "text/plain; charset=utf-8"
+          ],
           "summary": "Talk to the user.",
           "description": "Talk to the user.",
           "x-ms-no-generic-test": true,
