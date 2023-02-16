@@ -140,12 +140,21 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*open\s*(.*)/gim,
       ($0, $1, $2) => {
+
+        let pos;
+        let sessionName;
+        if (pos = $1.match(/\s*AS\s*\#/)){
+          let part = $1.substr($1.lastIndexOf(pos[0]));
+          sessionName = `"${part.substr(part.indexOf("#") + 1)}"`;
+          $1 = $1.substr(0, $1.lastIndexOf(pos[0]));
+        }
+
         if (!$1.startsWith('"') && !$1.startsWith("'")) {
           $1 = `"${$1}"`;
         }
         const params = this.getParams($1, ['url', 'username', 'password']);
-
-        return `page = await wa.getPage({pid: pid,${params}})`;
+        
+        return `page = await wa.getPage({pid: pid, sessionName: ${sessionName}, ${params}})`;
       }
     ];
 

@@ -14,7 +14,7 @@
     "Dário Vieira <dario.junior3@gmail.com>"
   ],
   "engines": {
-    "node": "=19.5.0"
+    "node": "=19.6.0"
   },
   "license": "AGPL-3.0",
   "preferGlobal": true,
@@ -76,6 +76,7 @@
     "alasql": "2.1.6",
     "any-shell-escape": "0.1.1",
     "arraybuffer-to-buffer": "^0.0.7",
+    "async-mutex": "^0.4.0",
     "async-promises": "0.2.3",
     "basic-auth": "2.0.1",
     "billboard.js": "3.6.3",

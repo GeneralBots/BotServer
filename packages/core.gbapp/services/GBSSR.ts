@@ -36,11 +36,17 @@
 
 'use strict';
 
-import puppeteer from 'puppeteer-extra';
+
+import {createRequire} from "module";
+const require = createRequire(import.meta.url);
+
+const puppeteer = require('puppeteer-extra');
+const hidden = require('puppeteer-extra-plugin-stealth')
+
+// require executablePath from puppeteer
+const {executablePath} = require('puppeteer')
 import Fs from 'fs';
 
-// const StealthPlugin from 'puppeteer-extra-plugin-stealth')
-// puppeteer.use(StealthPlugin());
 
 import { NextFunction, Request, Response } from 'express';
 import urljoin from 'url-join';
@@ -96,12 +102,13 @@ async function createBrowser (profilePath): Promise<any> {
       Fs.writeFileSync(preferences, JSON.stringify(data));
     }
   }
-
+  puppeteer.use(hidden())
   const browser = await puppeteer.launch({
     args: args,
     ignoreHTTPSErrors: true,
     headless: false,
     defaultViewport: null,
+    executablePath:executablePath(),
     ignoreDefaultArgs: ['--enable-automation', '--enable-blink-features=IdleDetection']
   });
   return browser;

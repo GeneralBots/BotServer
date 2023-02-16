@@ -44,12 +44,15 @@ import urlJoin from 'url-join';
 import Fs from 'fs';
 import Path from 'path';
 import url from 'url';
-import { pid } from 'process';
+import {Mutex, Semaphore, withTimeout} from 'async-mutex';
 
 /**
  * Web Automation services of conversation to be called by BASIC.
  */
 export class WebAutomationServices {
+
+  static semaphoreWithTimeout = withTimeout(new Semaphore(5), 60 * 1000, new Error('new fancy error'));
+
   /**
    * Reference to minimal bot instance.
    */
@@ -107,7 +110,7 @@ export class WebAutomationServices {
    * When creating this keyword facade,a bot instance is
    * specified among the deployer service.
    */
-  constructor (min: GBMinInstance, user, dk) {
+  constructor(min: GBMinInstance, user, dk) {
     this.min = min;
     this.user = user;
     this.dk = dk;
@@ -120,25 +123,37 @@ export class WebAutomationServices {
    *
    * @example OPEN "https://wikipedia.org"
    */
-  public async getPage ({ pid, url, username, password }) {
-    GBLog.info(`BASIC: Web Automation GET PAGE ${url}.`);
-    if (!this.browser) {
-      this.browser = await createBrowser(null);
-    }
-    const page = (await this.browser.pages())[0];
-    if (username || password) {
-      await page.authenticate({pid, username: username, password: password });
+   
+  public async getPage({ pid, sessionName, url, username, password }) {
+    GBLog.info(`BASIC: Web Automation GET PAGE ${sessionName ? sessionName : ''} ${url}.`);
+
+    let page;
+    if (url.startsWith('#')) {
+      const [value, release] = await WebAutomationServices.semaphoreWithTimeout.acquire();
+      try {
+        page = GBServer.globals.webSessions[url.substr(1)];
+      } finally {
+          release();
+      }      
+    } else {
+      if (!this.browser) {
+        this.browser = await createBrowser(null);
+      }      
+      page = (await this.browser.pages())[0];
+      if (sessionName) {
+        GBServer.globals.webSessions[sessionName] = page;
+      }
+      if (username || password) {
+        await page.authenticate({ pid, username: username, password: password });
+      }
     }
     await page.goto(url);
-
     const handle = WebAutomationServices.cyrb53(this.min.botId + url);
-
     this.pageMap[handle] = page;
-
     return handle;
   }
 
-  public getPageByHandle (hash) {
+  public getPageByHandle(hash) {
     return this.pageMap[hash];
   }
 
@@ -147,7 +162,7 @@ export class WebAutomationServices {
    *
    * @example GET "selector"
    */
-  public async getBySelector ({ handle, selector }) {
+  public async getBySelector({ handle, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation GET element: ${selector}.`);
     await page.waitForSelector(selector);
@@ -170,7 +185,7 @@ export class WebAutomationServices {
    *
    * @example GET page,"frameSelector,"elementSelector"
    */
-  public async getByFrame ({ handle, frame, selector }) {
+  public async getByFrame({ handle, frame, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation GET element by frame: ${selector}.`);
     await page.waitForSelector(frame);
@@ -190,7 +205,7 @@ export class WebAutomationServices {
   /**
    * Simulates a mouse hover an web page element.
    */
-  public async hover ({ pid, handle, selector }) {
+  public async hover({ pid, handle, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation HOVER element: ${selector}.`);
     await this.getBySelector({ handle, selector: selector });
@@ -203,7 +218,7 @@ export class WebAutomationServices {
    *
    * @example CLICK page,"#idElement"
    */
-  public async click ({ pid, handle, frameOrSelector, selector }) {
+  public async click({ pid, handle, frameOrSelector, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
     if (selector) {
@@ -219,7 +234,7 @@ export class WebAutomationServices {
     await this.debugStepWeb(pid, page);
   }
 
-  private async debugStepWeb (pid, page) {
+  private async debugStepWeb(pid, page) {
     let refresh = true;
     if (this.lastDebugWeb) {
       refresh = new Date().getTime() - this.lastDebugWeb.getTime() > 5000;
@@ -229,7 +244,7 @@ export class WebAutomationServices {
       const mobile = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
       const filename = page;
       if (mobile) {
-        await this.dk.sendFileTo({pid: pid,  mobile, filename, caption: 'General Bots Debugger' });
+        await this.dk.sendFileTo({ pid: pid, mobile, filename, caption: 'General Bots Debugger' });
       }
       this.lastDebugWeb = new Date();
     }
@@ -240,7 +255,7 @@ export class WebAutomationServices {
    *
    * @example PRESS ENTER ON page
    */
-  public async pressKey ({ handle, char, frame }) {
+  public async pressKey({ handle, char, frame }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation PRESS ${char} ON element: ${frame}.`);
     if (char.toLowerCase() === 'enter') {
@@ -256,7 +271,7 @@ export class WebAutomationServices {
     }
   }
 
-  public async linkByText ({ pid, handle, text, index }) {
+  public async linkByText({ pid, handle, text, index }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
     if (!index) {
@@ -272,7 +287,7 @@ export class WebAutomationServices {
    *
    * @example file = SCREENSHOT page
    */
-  public async screenshot ({ handle, selector }) {
+  public async screenshot({ handle, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation SCREENSHOT ${selector}.`);
 
@@ -292,7 +307,7 @@ export class WebAutomationServices {
    *
    * @example SET page,"selector","text"
    */
-  public async setElementText ({ pid, handle, selector, text }) {
+  public async setElementText({ pid, handle, selector, text }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation TYPE on ${selector}: ${text}.`);
     const e = await this.getBySelector({ handle, selector });
@@ -307,9 +322,9 @@ export class WebAutomationServices {
    *
    * @example file = DOWNLOAD element, folder
    */
-  public async download ({ handle, selector, folder }) {
+  public async download({ handle, selector, folder }) {
     const page = this.getPageByHandle(handle);
-    
+
     const element = await this.getBySelector({ handle, selector });
     // https://github.com/GeneralBots/BotServer/issues/311
     const container = element['_frame'] ? element['_frame'] : element['_page'];

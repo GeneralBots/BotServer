@@ -84,6 +84,7 @@ export class GBServer {
     const server = express();
 
     GBServer.globals.server = server;
+    GBServer.globals.webSessions = {};
     GBServer.globals.processes = {};
     GBServer.globals.files = {};
     GBServer.globals.appPackages = [];
