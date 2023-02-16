@@ -32,7 +32,7 @@
 
 'use strict';
 
-import {  GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
+import { GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
 import * as Fs from 'fs';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
@@ -61,9 +61,7 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
  * Basic services for BASIC manipulation.
  */
 export class GBVMService extends GBService {
-
   private static DEBUGGER_PORT = 9222;
-
 
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
     const files = await walkPromise(folder);
@@ -161,7 +159,7 @@ export class GBVMService extends GBService {
     });
   }
 
-  public async translateBASIC(filename: any, mainName: string, min:GBMinInstance) {
+  public async translateBASIC(filename: any, mainName: string, min: GBMinInstance) {
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = Fs.readFileSync(filename, 'utf8');
@@ -276,7 +274,6 @@ export class GBVMService extends GBService {
     });
   }
 
-
   /**
    * Converts General Bots BASIC
    *
@@ -312,7 +309,6 @@ export class GBVMService extends GBService {
    * Executes the converted JavaScript from BASIC code inside execution context.
    */
   public static async callVM(text: string, min: GBMinInstance, step, deployer: GBDeployer, debug: boolean) {
-
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 
@@ -351,9 +347,9 @@ export class GBVMService extends GBService {
     };
 
     sandbox['id'] = dk.sys().getRandomId();
-    sandbox['username'] = await dk.userName({pid});
-    sandbox['mobile'] = await dk.userMobile({pid});
-    sandbox['from'] = await dk.userMobile({pid});
+    sandbox['username'] = await dk.userName({ pid });
+    sandbox['mobile'] = await dk.userMobile({ pid });
+    sandbox['from'] = await dk.userMobile({ pid });
     sandbox['ENTER'] = String.fromCharCode(13);
     sandbox['headers'] = {};
     sandbox['data'] = {};
@@ -362,8 +358,10 @@ export class GBVMService extends GBService {
     sandbox['httpPs'] = '';
     sandbox['pid'] = pid;
 
-    if (GBConfigService.get('GBVM') === 'false') {
-      try {
+    let result;
+
+    try {
+      if (GBConfigService.get('GBVM') === 'false') {
         const vm1 = new NodeVM({
           allowAsync: true,
           sandbox: sandbox,
@@ -377,23 +375,18 @@ export class GBVMService extends GBService {
           }
         });
         const s = new VMScript(code, { filename: scriptPath });
-        let x = vm1.run(s);
-        return x;
-      } catch (error) {
-        throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
-      }
-    } else {
-      const runnerPath = urlJoin(
-        process.cwd(),
-        'dist',
-        'packages',
-        'basic.gblib',
-        'services',
-        'vm2-process',
-        'vm2ProcessRunner.js'
-      );
+        result = vm1.run(s);
+      } else {
+        const runnerPath = urlJoin(
+          process.cwd(),
+          'dist',
+          'packages',
+          'basic.gblib',
+          'services',
+          'vm2-process',
+          'vm2ProcessRunner.js'
+        );
 
-      try {
         const { run } = createVm2Pool({
           min: 0,
           max: 0,
@@ -407,12 +400,23 @@ export class GBVMService extends GBService {
           script: runnerPath
         });
 
-        const result = await run(code, { filename: scriptPath, sandbox: sandbox });
+        result = await run(code, { filename: scriptPath, sandbox: sandbox });
+      }
+    } catch (error) {
+      throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
+    } finally {
+      
+      // Releases previous allocated OPEN semaphores.
 
-        return result;
-      } catch (error) {
-        throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
+      let keys = Object.keys(GBServer.globals.webSessions);
+      for (let i = 0; i < keys.length; i++) {
+        const session = GBServer.globals.webSessions[keys[i]];
+        if (session.pid === pid) {
+          session.semaphore.release();
+        }
       }
     }
+
+    return result;
   }
 }

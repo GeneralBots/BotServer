@@ -44,15 +44,12 @@ import urlJoin from 'url-join';
 import Fs from 'fs';
 import Path from 'path';
 import url from 'url';
-import {Mutex, Semaphore, withTimeout} from 'async-mutex';
+import { Mutex, Semaphore, withTimeout } from 'async-mutex';
 
 /**
  * Web Automation services of conversation to be called by BASIC.
  */
 export class WebAutomationServices {
-
-  static semaphoreWithTimeout = withTimeout(new Semaphore(5), 60 * 1000, new Error('new fancy error'));
-
   /**
    * Reference to minimal bot instance.
    */
@@ -123,26 +120,47 @@ export class WebAutomationServices {
    *
    * @example OPEN "https://wikipedia.org"
    */
-   
-  public async getPage({ pid, sessionName, url, username, password }) {
+
+  public async getPage({ pid, sessionKind, sessionName, url, username, password }) {
     GBLog.info(`BASIC: Web Automation GET PAGE ${sessionName ? sessionName : ''} ${url}.`);
 
+    // Semaphore logic to block multiple entries on the same session.
+
     let page;
-    if (url.startsWith('#')) {
-      const [value, release] = await WebAutomationServices.semaphoreWithTimeout.acquire();
+    let session = GBServer.globals.webSessions[sessionName];
+
+    if (session) {
+      const [value, release] = await session.semaphore.acquire();
       try {
+        GBServer.globals.webSessions[sessionName].release = release;
         page = GBServer.globals.webSessions[url.substr(1)];
-      } finally {
-          release();
-      }      
+      } catch {
+        release();
+      }
+    }
+
+    // There is no session yet,
+
+    if (!session && sessionKind === 'AS') {
+      
+      // A new web session is being created.
+
+      GBServer.globals.webSessions[sessionName] = {};
+      GBServer.globals.webSessions[sessionName].pid = pid;
+      GBServer.globals.webSessions[sessionName].page = page;
+      GBServer.globals.webSessions[sessionName].semaphore = withTimeout(
+        new Semaphore(5),
+        60 * 1000,
+        new Error('Error waiting for OPEN keyword.')
+      );
+    }
+
+    if (url.startsWith('#') && sessionKind == 'WITH') {
     } else {
       if (!this.browser) {
         this.browser = await createBrowser(null);
-      }      
-      page = (await this.browser.pages())[0];
-      if (sessionName) {
-        GBServer.globals.webSessions[sessionName] = page;
       }
+      page = (await this.browser.pages())[0];
       if (username || password) {
         await page.authenticate({ pid, username: username, password: password });
       }

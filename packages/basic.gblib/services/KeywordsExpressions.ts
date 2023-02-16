@@ -36,8 +36,7 @@
  * Image processing services of conversation to be called by BASIC.
  */
 export class KeywordsExpressions {
-
-  private static  getParams = (text: string, names) => {
+  private static getParams = (text: string, names) => {
     let ret = {};
     const splitParamsButIgnoreCommasInDoublequotes = (str: string) => {
       return str.split(',').reduce(
@@ -74,7 +73,6 @@ export class KeywordsExpressions {
    * Returns the list of BASIC keyword and their JS match.
    */
   public static getKeywords() {
-    
     // Keywords from General Bots BASIC.
 
     let keywords = [];
@@ -140,12 +138,19 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*open\s*(.*)/gim,
       ($0, $1, $2) => {
-
-        let pos;
         let sessionName;
-        if (pos = $1.match(/\s*AS\s*\#/)){
+        let kind = '';
+        let pos;
+
+        if (pos = $1.match(/\s*AS\s*\#/)) {
+          kind = '"AS"';
+        } else if (pos = $1.match(/\s*WITH\s*\#/)) {
+          kind = '"WITH"';
+        }
+
+        if (pos) {
           let part = $1.substr($1.lastIndexOf(pos[0]));
-          sessionName = `"${part.substr(part.indexOf("#") + 1)}"`;
+          sessionName = `"${part.substr(part.indexOf('#') + 1)}"`;
           $1 = $1.substr(0, $1.lastIndexOf(pos[0]));
         }
 
@@ -153,8 +158,8 @@ export class KeywordsExpressions {
           $1 = `"${$1}"`;
         }
         const params = this.getParams($1, ['url', 'username', 'password']);
-        
-        return `page = await wa.getPage({pid: pid, sessionName: ${sessionName}, ${params}})`;
+
+        return `page = await wa.getPage({pid: pid, sessionKind: ${kind}, sessionName: ${sessionName}, ${params}})`;
       }
     ];
 
