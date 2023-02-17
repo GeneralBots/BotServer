@@ -114,16 +114,18 @@ export class WebAutomationServices {
     this.debugWeb = this.min.core.getParam<boolean>(this.min.instance, 'Debug Web Automation', false);
   }
 
-  public async closeHandles({pid}){
-      // Releases previous allocated OPEN semaphores.
+  public async getCloseHandles({ pid }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    // Releases previous allocated OPEN semaphores.
 
-      let keys = Object.keys(GBServer.globals.webSessions);
-      for (let i = 0; i < keys.length; i++) {
-        const session = GBServer.globals.webSessions[keys[i]];
-        if (session.pid === pid) {
-          session.semaphore.release();
-        }
+    let keys = Object.keys(GBServer.globals.webSessions);
+    for (let i = 0; i < keys.length; i++) {
+      const session = GBServer.globals.webSessions[keys[i]];
+      if (session.activePid === pid) {
+        session.semaphore.release();
+        GBLogEx.info(min, `Release for PID: ${pid} done.`);
       }
+    }
   }
 
   /**
@@ -135,7 +137,7 @@ export class WebAutomationServices {
   public async getPage({ pid, sessionKind, sessionName, url, username, password }) {
     GBLog.info(`BASIC: Web Automation GET PAGE ${sessionName ? sessionName : ''} ${url}.`);
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
- 
+
     let handle;
 
     // Try to find an existing handle.
@@ -149,14 +151,17 @@ export class WebAutomationServices {
         break;
       }
     }
-    
+
     // Semaphore logic to block multiple entries on the same session.
 
     let page;
     if (session) {
-      const [value, release] = await session.semaphore.acquire();
+      GBLogEx.info(min, `Acquiring (1) for PID: ${pid}...`);
+      const release = await session.semaphore.acquire();
+      GBLogEx.info(min, `Acquire (1) for PID: ${pid} done.`);
       try {
-        GBServer.globals.webSessions[handle].release = release;
+        session.activePid = pid;
+        session.release = release;
         page = session.page;
       } catch {
         release();
@@ -164,7 +169,7 @@ export class WebAutomationServices {
     }
 
     // Creates the page if it is the first time.
-    
+
     let browser;
     if (!page) {
       browser = await createBrowser(null);
@@ -177,28 +182,30 @@ export class WebAutomationServices {
     // There is no session yet,
 
     if (!session && sessionKind === 'AS') {
-      
       // A new web session is being created.
 
       handle = WebAutomationServices.cyrb53(this.min.botId + url);
-      GBServer.globals.webSessions[handle] = session= {};
-      GBServer.globals.webSessions[handle].sessionName = sessionName;
-      GBServer.globals.webSessions[handle].pid = pid;
-      GBServer.globals.webSessions[handle].page = page;
-      GBServer.globals.webSessions[handle].browser = browser;
-      GBServer.globals.webSessions[handle].semaphore = withTimeout(
-        new Semaphore(5),
-        60 * 1000,
-        new Error('Error waiting for OPEN keyword.')
-      );
+      GBServer.globals.webSessions[handle] = session = {};
+      session.sessionName = sessionName;
+      
+      session.page = page;
+      session.browser = browser;
+      session.semaphore = new Mutex();
+      GBLogEx.info(min, `Acquiring (2) for PID: ${pid}...`);
+      const release = await session.semaphore.acquire();
+      GBLogEx.info(min, `Acquire (2) for PID: ${pid} done.`);
+      session.release = release;
+      session.activePid = pid;
+
     }
 
     // WITH is only valid in a previously defined session.
 
     if (!session && sessionKind == 'WITH') {
-        GBLogEx.error(min, `NULL session for OPEN WITH #${sessionName}.`);
+      const error = `NULL session for OPEN WITH #${sessionName}.`;
+      GBLogEx.error(min, error);
     }
-    
+
     await page.goto(url);
 
     return handle;

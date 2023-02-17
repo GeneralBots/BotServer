@@ -237,7 +237,7 @@ export class GBVMService extends GBService {
 
       ${code}
 
-      await wa.closeHandles({pid: pid});
+      await wa.getCloseHandles({pid: pid});
 
     })(); 
   
