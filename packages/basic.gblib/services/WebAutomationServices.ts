@@ -114,6 +114,18 @@ export class WebAutomationServices {
     this.debugWeb = this.min.core.getParam<boolean>(this.min.instance, 'Debug Web Automation', false);
   }
 
+  public async closeHandles({pid}){
+      // Releases previous allocated OPEN semaphores.
+
+      let keys = Object.keys(GBServer.globals.webSessions);
+      for (let i = 0; i < keys.length; i++) {
+        const session = GBServer.globals.webSessions[keys[i]];
+        if (session.pid === pid) {
+          session.semaphore.release();
+        }
+      }
+  }
+
   /**
    * Returns the page object.
    *
@@ -128,11 +140,11 @@ export class WebAutomationServices {
 
     // Try to find an existing handle.
 
-    let session = GBServer.globals.webSessions[sessionName];
+    let session;
     let keys = Object.keys(GBServer.globals.webSessions);
     for (let i = 0; i < keys.length; i++) {
-      const session = GBServer.globals.webSessions[keys[i]];
-      if (session.sessionName === sessionName) {
+      if (GBServer.globals.webSessions[keys[i]].sessionName === sessionName) {
+        session = GBServer.globals.webSessions[keys[i]];
         handle = keys[i];
         break;
       }
@@ -144,8 +156,8 @@ export class WebAutomationServices {
     if (session) {
       const [value, release] = await session.semaphore.acquire();
       try {
-        GBServer.globals.webSessions[sessionName].release = release;
-        page = GBServer.globals.webSessions[url.substr(1)];
+        GBServer.globals.webSessions[handle].release = release;
+        page = session.page;
       } catch {
         release();
       }
@@ -156,7 +168,7 @@ export class WebAutomationServices {
     let browser;
     if (!page) {
       browser = await createBrowser(null);
-      page = (await this.browser.pages())[0];
+      page = (await browser.pages())[0];
       if (username || password) {
         await page.authenticate({ pid, username: username, password: password });
       }
@@ -169,7 +181,7 @@ export class WebAutomationServices {
       // A new web session is being created.
 
       handle = WebAutomationServices.cyrb53(this.min.botId + url);
-      GBServer.globals.webSessions[handle] = {};
+      GBServer.globals.webSessions[handle] = session= {};
       GBServer.globals.webSessions[handle].sessionName = sessionName;
       GBServer.globals.webSessions[handle].pid = pid;
       GBServer.globals.webSessions[handle].page = page;

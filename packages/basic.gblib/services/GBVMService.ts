@@ -237,6 +237,8 @@ export class GBVMService extends GBService {
 
       ${code}
 
+      await wa.closeHandles({pid: pid});
+
     })(); 
   
 `;
@@ -406,15 +408,7 @@ export class GBVMService extends GBService {
       throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
     } finally {
       
-      // Releases previous allocated OPEN semaphores.
-
-      let keys = Object.keys(GBServer.globals.webSessions);
-      for (let i = 0; i < keys.length; i++) {
-        const session = GBServer.globals.webSessions[keys[i]];
-        if (session.pid === pid) {
-          session.semaphore.release();
-        }
-      }
+    
     }
 
     return result;
