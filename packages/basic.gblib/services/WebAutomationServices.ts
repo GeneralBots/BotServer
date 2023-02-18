@@ -32,19 +32,19 @@
 
 'use strict';
 
-import { GBLog, GBMinInstance } from 'botlib';
-import { GBServer } from '../../../src/app.js';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import { createBrowser } from '../../core.gbapp/services/GBSSR.js';
-import { GuaribasUser } from '../../security.gbapp/models/index.js';
-import { DialogKeywords } from './DialogKeywords.js';
-
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import urlJoin from 'url-join';
 import Fs from 'fs';
 import Path from 'path';
 import url from 'url';
-import { Mutex, Semaphore, withTimeout } from 'async-mutex';
+
+import { GBLog, GBMinInstance } from 'botlib';
+import { GBServer } from '../../../src/app.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { GBSSR }from '../../core.gbapp/services/GBSSR.js';
+import { GuaribasUser } from '../../security.gbapp/models/index.js';
+import { DialogKeywords } from './DialogKeywords.js';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { Mutex } from 'async-mutex';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
@@ -172,16 +172,17 @@ export class WebAutomationServices {
 
     let browser;
     if (!page) {
-      browser = await createBrowser(null);
+      browser = await GBSSR.createBrowser(null);
       page = (await browser.pages())[0];
       if (username || password) {
         await page.authenticate({ pid, username: username, password: password });
       }
     }
 
-    // There is no session yet,
+    // There is no session yet.
 
     if (!session && sessionKind === 'AS') {
+
       // A new web session is being created.
 
       handle = WebAutomationServices.cyrb53(this.min.botId + url);
@@ -459,4 +460,20 @@ export class WebAutomationServices {
 
     return file;
   }
+
+  private async  recursiveFindInFrames (inputFrame, selector) {
+    const frames = inputFrame.childFrames();
+    const results = await Promise.all(
+      frames.map(async frame => {
+        const el = await frame.$(selector);
+        if (el) return el;
+        if (frame.childFrames().length > 0) {
+          return await this.recursiveFindInFrames(frame, selector);
+        }
+        return null;
+      })
+    );
+    return results.find(Boolean);
+  }
+  
 }

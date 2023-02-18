@@ -55,6 +55,7 @@ import auth from 'basic-auth';
 import child_process from 'child_process';
 import * as winston from 'winston-logs-display';
 import { RootData } from './RootData.js';
+import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
 
 /**
  * General Bots open-core entry point.
@@ -97,7 +98,7 @@ export class GBServer {
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 
-      process.on('unhandledRejection', (err, p) => {
+    process.on('unhandledRejection', (err, p) => {
       GBLog.error(`UNHANDLED_REJECTION(promises): ${p} ${err.toString()}`);
     });
 
@@ -229,7 +230,7 @@ export class GBServer {
             winston.default(server, loggers[1]);
           }
 
-          server.get('*', function(req, res){
+        server.get('*', function (req, res) {
             GBLog.info(`HTTP 404: ${req.url}.`);
             res.status(404);
             res.end();

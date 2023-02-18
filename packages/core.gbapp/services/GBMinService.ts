@@ -87,6 +87,7 @@ import { GoogleChatDirectLine } from '../../google-chat.gblib/services/GoogleCha
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 import * as nlp from 'node-nlp';
 import Path from 'path';
+import { GBSSR } from './GBSSR.js';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -236,6 +237,7 @@ export class GBMinService {
     const url = `/api/messages/${botId}`;
     removeRoute(GBServer.globals.server, url);
 
+
     const uiUrl = `/${botId}`;
     removeRoute(GBServer.globals.server, uiUrl);
 
@@ -292,6 +294,10 @@ export class GBMinService {
       mkdirp.sync(dir);
     }
     dir = `work/${min.botId}.gbai/uploads`;
+    if (!Fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
+    dir = `work/${min.botId}.gbai/${min.botId}.gbui`;
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
@@ -370,15 +376,17 @@ export class GBMinService {
 
     if (process.env.DISABLE_WEB !== 'true') {
       const uiUrl = `/${instance.botId}`;
+      let staticHandler = express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'));
+      
+      GBServer.globals.server.get(uiUrl, async (req, res, next)=> {
+        await GBSSR.ssrFilter(req, res, staticHandler as any);
+      });
       const uiUrlAlt = `/${instance.activationCode}`;
-      GBServer.globals.server.use(
-        uiUrl,
-        express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
-      );
       GBServer.globals.server.use(
         uiUrlAlt,
         express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
       );
+
       const domain = min.core.getParam(min.instance, 'Domain', null);
       if (domain) {
         GBServer.globals.server.use(

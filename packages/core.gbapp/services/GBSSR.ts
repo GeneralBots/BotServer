@@ -36,297 +36,240 @@
 
 'use strict';
 
-
-import {createRequire} from "module";
-const require = createRequire(import.meta.url);
-
-const puppeteer = require('puppeteer-extra');
-const hidden = require('puppeteer-extra-plugin-stealth')
-
-// require executablePath from puppeteer
-const {executablePath} = require('puppeteer')
+import Path from 'path';
 import Fs from 'fs';
-
-
 import { NextFunction, Request, Response } from 'express';
 import urljoin from 'url-join';
+import { GBMinInstance } from 'botlib';
+import { GBServer } from '../../../src/app.js';
+import { GBLogEx } from './GBLogEx.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const puppeteer = require('puppeteer-extra');
+const hidden = require('puppeteer-extra-plugin-stealth');
+const { executablePath } = require('puppeteer');
 
-// https://hackernoon.com/tips-and-tricks-for-web-scraping-with-puppeteer-ed391a63d952
-// Dont download all resources, we just need the HTML
-// Also, this is huge performance/response time boost
-const blockedResourceTypes = ['image', 'media', 'font', 'texttrack', 'object', 'beacon', 'csp_report', 'imageset'];
-// const whitelist = ["document", "script", "xhr", "fetch"];
-const skippedResources = [
-  'quantserve',
-  'adzerk',
-  'doubleclick',
-  'adition',
-  'exelator',
-  'sharethrough',
-  'cdn.api.twitter',
-  'google-analytics',
-  'googletagmanager',
-  'google',
-  'fontawesome',
-  'facebook',
-  'analytics',
-  'optimizely',
-  'clicktale',
-  'mixpanel',
-  'zedo',
-  'clicksor',
-  'tiqcdn'
-];
+export class GBSSR {
+  // https://hackernoon.com/tips-and-tricks-for-web-scraping-with-puppeteer-ed391a63d952
+  // Dont download all resources, we just need the HTML
+  // Also, this is huge performance/response time boost
+  private blockedResourceTypes = ['image', 'media', 'font', 'texttrack', 'object', 'beacon', 'csp_report', 'imageset'];
 
-const RENDER_CACHE = new Map();
-
-async function createBrowser (profilePath): Promise<any> {
-  let args = [
-    '--check-for-update-interval=2592000',
-    '--disable-accelerated-2d-canvas',
-    '--disable-dev-shm-usage',
-    '--disable-features=site-per-process',
-    '--disable-gpu',
-    '--no-first-run',
-    '--no-default-browser-check'
+  // const whitelist = ["document", "script", "xhr", "fetch"];
+  private skippedResources = [
+    'quantserve',
+    'adzerk',
+    'doubleclick',
+    'adition',
+    'exelator',
+    'sharethrough',
+    'cdn.api.twitter',
+    'google-analytics',
+    'googletagmanager',
+    'google',
+    'fontawesome',
+    'facebook',
+    'analytics',
+    'optimizely',
+    'clicktale',
+    'mixpanel',
+    'zedo',
+    'clicksor',
+    'tiqcdn'
   ];
 
-  if (profilePath) {
-    args.push(`--user-data-dir=${profilePath}`);
+  public static async createBrowser(profilePath): Promise<any> {
+    let args = [
+      '--check-for-update-interval=2592000',
+      '--disable-accelerated-2d-canvas',
+      '--disable-dev-shm-usage',
+      '--disable-features=site-per-process',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-default-browser-check'
+    ];
 
-    const preferences = urljoin(profilePath, 'Default', 'Preferences');
-    if (Fs.existsSync(preferences)) {
-      const file = Fs.readFileSync(preferences, 'utf8');
-      const data = JSON.parse(file);
-      data['profile']['exit_type'] = 'none';
-      Fs.writeFileSync(preferences, JSON.stringify(data));
+    if (profilePath) {
+      args.push(`--user-data-dir=${profilePath}`);
+
+      const preferences = urljoin(profilePath, 'Default', 'Preferences');
+      if (Fs.existsSync(preferences)) {
+        const file = Fs.readFileSync(preferences, 'utf8');
+        const data = JSON.parse(file);
+        data['profile']['exit_type'] = 'none';
+        Fs.writeFileSync(preferences, JSON.stringify(data));
+      }
     }
+    puppeteer.use(hidden());
+    const browser = await puppeteer.launch({
+      args: args,
+      ignoreHTTPSErrors: true,
+      headless: false,
+      defaultViewport: null,
+      executablePath: executablePath(),
+      ignoreDefaultArgs: ['--enable-automation', '--enable-blink-features=IdleDetection']
+    });
+    return browser;
   }
-  puppeteer.use(hidden())
-  const browser = await puppeteer.launch({
-    args: args,
-    ignoreHTTPSErrors: true,
-    headless: false,
-    defaultViewport: null,
-    executablePath:executablePath(),
-    ignoreDefaultArgs: ['--enable-automation', '--enable-blink-features=IdleDetection']
-  });
-  return browser;
-}
 
-async function recursiveFindInFrames (inputFrame, selector) {
-  const frames = inputFrame.childFrames();
-  const results = await Promise.all(
-    frames.map(async frame => {
-      const el = await frame.$(selector);
-      if (el) return el;
-      if (frame.childFrames().length > 0) {
-        return await recursiveFindInFrames(frame, selector);
-      }
-      return null;
-    })
-  );
-  return results.find(Boolean);
-}
+  /**
+   * Return the HTML of bot default.gbui.
+   */
+  public async getHTML(min: GBMinInstance) {
+    const url = urljoin(GBServer.globals.publicAddress, min.botId);
+    const browser = await GBSSR.createBrowser(null);
+    const stylesheetContents = {};
 
-/**
- * https://developers.google.com/web/tools/puppeteer/articles/ssr#reuseinstance
- * @param {string} url URL to prerender.
- */
-async function ssr (url: string, useCache: boolean, cacheRefreshRate: number) {
-  if (RENDER_CACHE.has(url) && useCache) {
-    const cached = RENDER_CACHE.get(url);
-    if (Date.now() - cached.renderedAt > cacheRefreshRate && !(cacheRefreshRate <= 0)) {
-      RENDER_CACHE.delete(url);
-    } else {
-      return {
-        html: cached.html,
-        status: 200
-      };
-    }
-  }
-  const browser = await createBrowser(null);
-  const stylesheetContents = {};
-
-  try {
-    const page = await browser.newPage();
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'
-    );
-    await page.setRequestInterception(true);
-    page.on('request', request => {
-      const requestUrl = request
-        .url()
-        .split('?')[0]
-        .split('#')[0];
-      if (
-        blockedResourceTypes.indexOf(request.resourceType()) !== -1 ||
-        skippedResources.some(resource => requestUrl.indexOf(resource) !== -1)
-      ) {
-        request.abort();
-      } else {
-        request.continue();
-      }
-    });
-
-    page.on('response', async resp => {
-      const responseUrl = resp.url();
-      const sameOrigin = new URL(responseUrl).origin === new URL(url).origin;
-      const isStylesheet = resp.request().resourceType() === 'stylesheet';
-      if (sameOrigin && isStylesheet) {
-        stylesheetContents[responseUrl] = await resp.text();
-      }
-    });
-
-    const response = await page.goto(url, {
-      timeout: 120000,
-      waitUntil: 'networkidle0'
-    });
-
-    const sleep = ms => {
-      return new Promise(resolve => {
-        setTimeout(resolve, ms);
+    try {
+      const page = await browser.newPage();
+      await page.setUserAgent(
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'
+      );
+      await page.setRequestInterception(true);
+      page.on('request', request => {
+        const requestUrl = request.url().split('?')[0].split('#')[0];
+        if (
+          this.blockedResourceTypes.indexOf(request.resourceType()) !== -1 ||
+          this.skippedResources.some(resource => requestUrl.indexOf(resource) !== -1)
+        ) {
+          request.abort();
+        } else {
+          request.continue();
+        }
       });
-    };
-    await sleep(45000);
 
-    // Inject <base> on page to relative resources load properly.
-    await page.evaluate(url => {
-      const base = document.createElement('base');
-      base.href = url;
-      // Add to top of head, before all other resources.
-      document.head.prepend(base);
-    }, url);
-
-    // Remove scripts and html imports. They've already executed.
-    await page.evaluate(() => {
-      const elements = document.querySelectorAll('script, link[rel="import"]');
-      elements.forEach(e => {
-        e.remove();
+      page.on('response', async resp => {
+        const responseUrl = resp.url();
+        const sameOrigin = new URL(responseUrl).origin === new URL(url).origin;
+        const isStylesheet = resp.request().resourceType() === 'stylesheet';
+        if (sameOrigin && isStylesheet) {
+          stylesheetContents[responseUrl] = await resp.text();
+        }
       });
-    });
 
-    // Replace stylesheets in the page with their equivalent <style>.
-    await page.$$eval(
-      'link[rel="stylesheet"]',
-      (links, content) => {
-        links.forEach((link: any) => {
-          const cssText = content[link.href];
-          if (cssText) {
-            const style = document.createElement('style');
-            style.textContent = cssText;
-            link.replaceWith(style);
-          }
+      const response = await page.goto(url, {
+        timeout: 120000,
+        waitUntil: 'networkidle0'
+      });
+
+      const sleep = ms => {
+        return new Promise(resolve => {
+          setTimeout(resolve, ms);
         });
-      },
-      stylesheetContents
-    );
+      };
+      await sleep(45000);
 
-    const html = await page.content();
+      // Inject <base> on page to relative resources load properly.
 
-    // Close the page we opened here (not the browser).
-    await page.close();
-    if (useCache) {
-      RENDER_CACHE.set(url, { html, renderedAt: Date.now() });
+      await page.evaluate(url => {
+        const base = document.createElement('base');
+        base.href = url;
+        // Add to top of head, before all other resources.
+        document.head.prepend(base);
+      }, url);
+
+      // Remove scripts and html imports. They've already executed.
+
+      await page.evaluate(() => {
+        const elements = document.querySelectorAll('script, link[rel="import"]');
+        elements.forEach(e => {
+          e.remove();
+        });
+      });
+
+      // Replace stylesheets in the page with their equivalent <style>.
+
+      await page.$$eval(
+        'link[rel="stylesheet"]',
+        (links, content) => {
+          links.forEach((link: any) => {
+            const cssText = content[link.href];
+            if (cssText) {
+              const style = document.createElement('style');
+              style.textContent = cssText;
+              link.replaceWith(style);
+            }
+          });
+        },
+        stylesheetContents
+      );
+
+      const html = await page.content();
+
+      // Close the page we opened here (not the browser).
+
+      await page.close();
+      return html;
+    } catch (e) {
+      const html = e.toString();
+      GBLogEx.error(min, `URL: ${url} Failed with message: ${html}`);
+      return html;
+    } finally {
+      await browser.close();
     }
-    return { html, status: response!.status() };
-  } catch (e) {
-    const html = e.toString();
-    console.warn({ message: `URL: ${url} Failed with message: ${html}` });
-    return { html, status: 500 };
-  } finally {
-    await browser.close();
   }
-}
 
-function clearCache () {
-  RENDER_CACHE.clear();
-}
-
-interface Options {
-  prerender?: Array<string>;
-  exclude?: Array<string>;
-  useCache?: boolean;
-  cacheRefreshRate?: number;
-}
-
-function ssrForBots (
-  options: Options = {
-    prerender: [], // Array containing the user-agents that will trigger the ssr service
-    exclude: [], // Array containing paths and/or extentions that will be excluded from being prerendered by the ssr service
-    useCache: true, // Variable that determins if we will use page caching or not
-    cacheRefreshRate: 86400 // Seconds of which the cache will be kept alive, pass 0 or negative value for infinite lifespan
-  }
-) {
-  let applyOptions = Object.assign(
-    {
+  public static async ssrFilter(req: Request, res: Response, next) {
+    let applyOptions = {
       prerender: [], // Array containing the user-agents that will trigger the ssr service
       exclude: [], // Array containing paths and/or extentions that will be excluded from being prerendered by the ssr service
       useCache: true, // Variable that determins if we will use page caching or not
       cacheRefreshRate: 86400 // Seconds of which the cache will be kept alive, pass 0 or negative value for infinite lifespan
-    },
-    options
-  );
+    };
 
-  // Default user agents
-  const prerenderArray = [
-    'bot',
-    'googlebot',
-    'Chrome-Lighthouse',
-    'DuckDuckBot',
-    'ia_archiver',
-    'bingbot',
-    'yandex',
-    'baiduspider',
-    'Facebot',
-    'facebookexternalhit',
-    'facebookexternalhit/1.1',
-    'twitterbot',
-    'rogerbot',
-    'linkedinbot',
-    'embedly',
-    'quora link preview',
-    'showyoubot',
-    'outbrain',
-    'pinterest',
-    'slackbot',
-    'vkShare',
-    'W3C_Validator'
-  ];
+    // Default user agents
+    const prerenderArray = [
+      'bot',
+      'googlebot',
+      'Chrome-Lighthouse',
+      'DuckDuckBot',
+      'ia_archiver',
+      'bingbot',
+      'yandex',
+      'baiduspider',
+      'Facebot',
+      'facebookexternalhit',
+      'facebookexternalhit/1.1',
+      'twitterbot',
+      'rogerbot',
+      'linkedinbot',
+      'embedly',
+      'quora link preview',
+      'showyoubot',
+      'outbrain',
+      'pinterest',
+      'slackbot',
+      'vkShare',
+      'W3C_Validator'
+    ];
 
-  // default exclude array
-  const excludeArray = ['.xml', '.ico', '.txt', '.json'];
+    // default exclude array
+    const excludeArray = ['.xml', '.ico', '.txt', '.json'];
+    const userAgent: string = req.headers['user-agent'] || '';
+    const prerender = new RegExp([...prerenderArray, ...applyOptions.prerender].join('|').slice(0, -1), 'i').test(
+      userAgent
+    );
+    const exclude = !new RegExp([...excludeArray, ...applyOptions.exclude].join('|').slice(0, -1)).test(
+      req.originalUrl
+    );
 
-  function ssrOnDemand (req: Request, res: Response, next: NextFunction) {
-    Promise.resolve(() => {
+    // Reads from static HTML when a bot is crawling.
+
+    const botId = req.originalUrl ? req.originalUrl.substr(1) : GBServer.globals.minInstances[0].botId; // TODO: Get only bot.
+    const min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
+    const path = Path.join(process.env.PWD, 'work', `${min.instance.botId}.gbai`, `${min.instance.botId}.gbui`, 'index.html');
+
+    if (req.originalUrl && prerender && exclude) {
+      const html = Fs.readFileSync(path, 'utf8');
+      res.status(200).send(html);
       return true;
-    })
-      .then(async () => {
-        const userAgent: string = req.headers['user-agent'] || '';
-
-        const prerender = new RegExp([...prerenderArray, ...applyOptions.prerender].join('|').slice(0, -1), 'i').test(
-          userAgent
-        );
-
-        const exclude = !new RegExp([...excludeArray, ...applyOptions.exclude].join('|').slice(0, -1)).test(
-          req.originalUrl
-        );
-
-        if (req.originalUrl && prerender && exclude) {
-          const { html, status } = await ssr(
-            req.protocol + '://' + req.get('host') + req.originalUrl,
-            applyOptions.useCache,
-            applyOptions.cacheRefreshRate
-          );
-          return res.status(status).send(html);
-        } else {
-          return next();
-        }
-      })
-      .catch(next);
+    } else {
+      if (Fs.existsSync(path)) {
+        res.sendFile(path);
+      } else {
+        res.status(404);
+        res.end();
+      }      
+    }
   }
-
-  return ssrOnDemand;
 }
-
-export { createBrowser, ssr, clearCache, ssrForBots };
