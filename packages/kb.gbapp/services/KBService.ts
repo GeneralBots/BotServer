@@ -64,6 +64,8 @@ import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models/ind
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService.js';
 import textract from 'textract';
 import pdf from 'pdf-extraction';
+import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * Result for quey on KB data.
@@ -775,7 +777,13 @@ export class KBService implements IGBKBService {
    */
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
     const packageName = Path.basename(localPath);
+    
     GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
+    const html = await GBSSR.getHTML(min);
+    const path = Path.join(process.env.PWD, 'work', `${min.instance.botId}.gbai`, `${min.instance.botId}.gbui`, 'index.html');
+    GBLogEx.info(min, `[GBDeployer] Generating SSR HTML in ${path}.`);
+    Fs.writeFileSync(path, html, 'utf8');
+
 
     const instance = await core.loadInstanceByBotId(min.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
@@ -788,6 +796,8 @@ export class KBService implements IGBKBService {
     min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
     await KBService.RefreshNER(min);
 
+
+    
     GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
   }
 

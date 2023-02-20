@@ -36,39 +36,39 @@
 
 'use strict';
 
-import { GBLog, IGBInstance } from "botlib";
-import { GuaribasLog } from "../models/GBModel.js";
+import { GBLog, IGBInstance } from 'botlib';
+import { GuaribasLog } from '../models/GBModel.js';
 
 export class GBLogEx {
   public static async error(minOrInstanceId: any, message: string) {
-    GBLog.error(message);
     if (typeof minOrInstanceId === 'object') {
       minOrInstanceId = minOrInstanceId.instance.instanceId;
     }
+    GBLog.error(`${minOrInstanceId}: ${message}.`);
     await this.log(minOrInstanceId, 'e', message);
   }
 
   public static async debug(minOrInstanceId: any, message: string) {
-    GBLog.debug(message);
     if (typeof minOrInstanceId === 'object') {
       minOrInstanceId = minOrInstanceId.instance.instanceId;
     }
+    GBLog.debug(`${minOrInstanceId}: ${message}.`);
     await this.log(minOrInstanceId, 'd', message);
   }
 
-  public static async info(minOrInstanceId: any,  message: string) {
-    GBLog.info(message);
+  public static async info(minOrInstanceId: any, message: string) {
     if (typeof minOrInstanceId === 'object') {
       minOrInstanceId = minOrInstanceId.instance.instanceId;
     }
+    GBLog.info(`${minOrInstanceId}: ${message}.`);
     await this.log(minOrInstanceId, 'i', message);
   }
 
   public static async verbose(minOrInstanceId: any, message: string) {
-    GBLog.verbose(message);
     if (typeof minOrInstanceId === 'object') {
       minOrInstanceId = minOrInstanceId.instance.instanceId;
     }
+    GBLog.verbose(`${minOrInstanceId}: ${message}.`);
     await this.log(minOrInstanceId, 'v', message);
   }
 
@@ -76,9 +76,9 @@ export class GBLogEx {
    * Finds and update user agent information to a next available person.
    */
   public static async log(instance: IGBInstance, kind: string, message: string): Promise<GuaribasLog> {
-    message = message?message.substring(0,1023):null;
+    message = message ? message.substring(0, 1023) : null;
     return await GuaribasLog.create(<GuaribasLog>{
-      instanceId: instance.instanceId,
+      instanceId: instance ? instance.instanceId : 1,
       message: message,
       kind: kind
     });

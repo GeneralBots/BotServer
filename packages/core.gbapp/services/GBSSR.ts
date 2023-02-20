@@ -44,6 +44,9 @@ import { GBMinInstance } from 'botlib';
 import { GBServer } from '../../../src/app.js';
 import { GBLogEx } from './GBLogEx.js';
 import { createRequire } from 'module';
+import urlJoin from 'url-join';
+import { GBDeployer } from './GBDeployer.js';
+import { GBMinService } from './GBMinService.js';
 const require = createRequire(import.meta.url);
 const puppeteer = require('puppeteer-extra');
 const hidden = require('puppeteer-extra-plugin-stealth');
@@ -53,10 +56,19 @@ export class GBSSR {
   // https://hackernoon.com/tips-and-tricks-for-web-scraping-with-puppeteer-ed391a63d952
   // Dont download all resources, we just need the HTML
   // Also, this is huge performance/response time boost
-  private blockedResourceTypes = ['image', 'media', 'font', 'texttrack', 'object', 'beacon', 'csp_report', 'imageset'];
+  private static blockedResourceTypes = [
+    'image',
+    'media',
+    'font',
+    'texttrack',
+    'object',
+    'beacon',
+    'csp_report',
+    'imageset'
+  ];
 
   // const whitelist = ["document", "script", "xhr", "fetch"];
-  private skippedResources = [
+  private static skippedResources = [
     'quantserve',
     'adzerk',
     'doubleclick',
@@ -115,10 +127,11 @@ export class GBSSR {
   /**
    * Return the HTML of bot default.gbui.
    */
-  public async getHTML(min: GBMinInstance) {
+  public static async getHTML(min: GBMinInstance) {
     const url = urljoin(GBServer.globals.publicAddress, min.botId);
     const browser = await GBSSR.createBrowser(null);
     const stylesheetContents = {};
+    let html;
 
     try {
       const page = await browser.newPage();
@@ -129,8 +142,8 @@ export class GBSSR {
       page.on('request', request => {
         const requestUrl = request.url().split('?')[0].split('#')[0];
         if (
-          this.blockedResourceTypes.indexOf(request.resourceType()) !== -1 ||
-          this.skippedResources.some(resource => requestUrl.indexOf(resource) !== -1)
+          GBSSR.blockedResourceTypes.indexOf(request.resourceType()) !== -1 ||
+          GBSSR.skippedResources.some(resource => requestUrl.indexOf(resource) !== -1)
         ) {
           request.abort();
         } else {
@@ -147,6 +160,9 @@ export class GBSSR {
         }
       });
 
+      await page.setExtraHTTPHeaders({
+        'ngrok-skip-browser-warning': '1'
+      });
       const response = await page.goto(url, {
         timeout: 120000,
         waitUntil: 'networkidle0'
@@ -157,14 +173,15 @@ export class GBSSR {
           setTimeout(resolve, ms);
         });
       };
-      await sleep(45000);
+
+      await sleep(15000);
 
       // Inject <base> on page to relative resources load properly.
 
       await page.evaluate(url => {
         const base = document.createElement('base');
         base.href = url;
-        // Add to top of head, before all other resources.
+        // Add to top of head, beeeEEEfore all other resources.
         document.head.prepend(base);
       }, url);
 
@@ -194,19 +211,18 @@ export class GBSSR {
         stylesheetContents
       );
 
-      const html = await page.content();
+      html = await page.content();
 
       // Close the page we opened here (not the browser).
 
       await page.close();
-      return html;
     } catch (e) {
       const html = e.toString();
       GBLogEx.error(min, `URL: ${url} Failed with message: ${html}`);
-      return html;
     } finally {
       await browser.close();
     }
+    return html;
   }
 
   public static async ssrFilter(req: Request, res: Response, next) {
@@ -257,19 +273,34 @@ export class GBSSR {
 
     const botId = req.originalUrl ? req.originalUrl.substr(1) : GBServer.globals.minInstances[0].botId; // TODO: Get only bot.
     const min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
-    const path = Path.join(process.env.PWD, 'work', `${min.instance.botId}.gbai`, `${min.instance.botId}.gbui`, 'index.html');
-
-    if (req.originalUrl && prerender && exclude) {
+    if (min && req.originalUrl && prerender && exclude) {
+      const path = Path.join(
+        process.env.PWD,
+        'work',
+        `${min.instance.botId}.gbai`,
+        `${min.instance.botId}.gbui`,
+        'index.html'
+      );
       const html = Fs.readFileSync(path, 'utf8');
       res.status(200).send(html);
       return true;
     } else {
+      const path = Path.join(
+        process.env.PWD,
+        GBDeployer.deployFolder,
+        GBMinService.uiPackage,
+        'build',
+        min ? 'index.html' : req.url
+      );
+
       if (Fs.existsSync(path)) {
         res.sendFile(path);
+        return true;
       } else {
+        GBLogEx.info(min, `HTTP 404: ${req.url}.`);
         res.status(404);
         res.end();
-      }      
+      }
     }
   }
 }

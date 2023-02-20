@@ -230,10 +230,8 @@ export class GBServer {
             winston.default(server, loggers[1]);
           }
 
-        server.get('*', function (req, res) {
-            GBLog.info(`HTTP 404: ${req.url}.`);
-            res.status(404);
-            res.end();
+          server.get('*', async (req, res, next) => {
+            await GBSSR.ssrFilter(req, res, next);
           });
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);

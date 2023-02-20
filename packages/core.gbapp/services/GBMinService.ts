@@ -96,7 +96,7 @@ export class GBMinService {
   /**
    * Default General Bots User Interface package.
    */
-  private static uiPackage = 'default.gbui';
+  public static uiPackage = 'default.gbui';
 
   /**
    * Main core service attached to this bot service.
@@ -142,23 +142,11 @@ export class GBMinService {
     // Servers default UI on root address '/' if web enabled.
 
     if (process.env.DISABLE_WEB !== 'true') {
-      // SSR processing.
+      // SSR processing and default.gbui access definition.
 
-      const defaultOptions = {
-        prerender: [],
-        exclude: ['/api/', '/instances/', '/webhooks/'],
-        useCache: true,
-        cacheRefreshRate: 86400
-      };
-      // GBServer.globals.server.use(ssrForBots(defaultOptions));
-
-      const url = GBServer.globals.wwwroot
-        ? GBServer.globals.wwwroot
-        : urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build');
-
-      // default.gbui access definition.
-
-      GBServer.globals.server.use('/', express.static(url));
+      GBServer.globals.server.get('/', async (req, res, next)=> {
+        await GBSSR.ssrFilter(req, res, next);
+      });
 
       // Servers the bot information object via HTTP so clients can get
       // instance information stored on server.
@@ -376,24 +364,22 @@ export class GBMinService {
 
     if (process.env.DISABLE_WEB !== 'true') {
       const uiUrl = `/${instance.botId}`;
-      let staticHandler = express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'));
-      
+     
       GBServer.globals.server.get(uiUrl, async (req, res, next)=> {
-        await GBSSR.ssrFilter(req, res, staticHandler as any);
+        await GBSSR.ssrFilter(req, res, next);
       });
       const uiUrlAlt = `/${instance.activationCode}`;
-      GBServer.globals.server.use(
-        uiUrlAlt,
-        express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
-      );
+      GBServer.globals.server.get(uiUrlAlt, async (req, res, next)=> {
+        await GBSSR.ssrFilter(req, res, next);
+      });
+
 
       const domain = min.core.getParam(min.instance, 'Domain', null);
       if (domain) {
-        GBServer.globals.server.use(
-          domain,
-          express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
-        );
-        GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at custom domain: ${domain}.`);
+        GBServer.globals.server.get(domain, async (req, res, next)=> {
+          await GBSSR.ssrFilter(req, res, next);
+        });
+          GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at custom domain: ${domain}.`);
       }
       GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at: ${uiUrl} and ${uiUrlAlt}.`);
     }
@@ -607,6 +593,7 @@ export class GBMinService {
    * Gets a Speech to Text / Text to Speech token from the provider.
    */
   private async getSTSToken(instance: any) {
+    return null; // TODO: https://github.com/GeneralBots/BotServer/issues/332
     const options = {
       method: 'POST',
       headers: {
