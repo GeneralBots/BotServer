@@ -66,6 +66,10 @@ import textract from 'textract';
 import pdf from 'pdf-extraction';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import mammoth from 'mammoth';
+import { url } from 'inspector';
+import { min } from 'lodash';
+import { GBAdminService } from 'packages/admin.gbapp/services/GBAdminService.js';
 
 /**
  * Result for quey on KB data.
@@ -653,6 +657,36 @@ export class KBService implements IGBKBService {
             prevId: 0 // https://github.com/GeneralBots/BotServer/issues/312
           });
         }
+      } else if (file !== null && file.name.endsWith('.docx')) {
+        const gbaiName = `${instance.botId}.gbai`;
+        const gbkbName = `${instance.botId}.gbkb`;
+        const localName = Path.join('work', gbaiName, gbkbName, file.name);
+        const buffer = Fs.readFileSync(localName, { encoding: null });
+        var options = {
+          buffer: buffer,
+          convertImage: mammoth.images.imgElement(async image => {
+            const localName = Path.join(
+              'work',
+              gbaiName,
+              'cache',
+              `img-docx${GBAdminService.getRndReadableIdentifier()}.png`
+            );
+            const url = urlJoin(GBServer.globals.publicAddress, instance.botId, 'cache', Path.basename(localName));
+            const buffer = await image.read();
+            Fs.writeFileSync(localName, buffer, { encoding: null });
+            return { src: url };
+          })
+        };
+
+        const answer = await mammoth.convertToHtml(options);
+        await GuaribasAnswer.create(<GuaribasAnswer>{
+          instanceId: instance.instanceId,
+          content: answer.value,
+          format: '.docx',
+          media: file.name,
+          packageId: packageId,
+          prevId: 0 // https://github.com/GeneralBots/BotServer/issues/312
+        });
       }
     });
   }
@@ -777,14 +811,6 @@ export class KBService implements IGBKBService {
    */
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
     const packageName = Path.basename(localPath);
-    
-    GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
-    const html = await GBSSR.getHTML(min);
-    const path = Path.join(process.env.PWD, 'work', `${min.instance.botId}.gbai`, `${min.instance.botId}.gbui`, 'index.html');
-    GBLogEx.info(min, `[GBDeployer] Generating SSR HTML in ${path}.`);
-    Fs.writeFileSync(path, html, 'utf8');
-
-
     const instance = await core.loadInstanceByBotId(min.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
@@ -796,8 +822,18 @@ export class KBService implements IGBKBService {
     min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
     await KBService.RefreshNER(min);
 
+    GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
+    const html = await GBSSR.getHTML(min);
+    const path = Path.join(
+      process.env.PWD,
+      'work',
+      `${min.instance.botId}.gbai`,
+      `${min.instance.botId}.gbui`,
+      'index.html'
+    );
+    GBLogEx.info(min, `[GBDeployer] Generating SSR HTML in ${path}.`);
+    Fs.writeFileSync(path, html, 'utf8');
 
-    
     GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
   }
 
