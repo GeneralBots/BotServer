@@ -581,14 +581,14 @@ export class GBConversationalService {
       await this.sendMarkdownToMobile(min, step, mobile, text);
     } else if (GBConfigService.get('DISABLE_WEB') !== 'true') {
       const html = marked(text);
-      await this.sendMarkdownToWeb(min, step, html, answer);
+      await this.sendHTMLToWeb(min, step, html, answer);
     } else {
       const html = marked(text);
       await min.conversationalService.sendText(min, step, html);
     }
   }
 
-  private async sendMarkdownToWeb (min, step: GBDialogStep, html: string, answer: string) {
+  private async sendHTMLToWeb (min, step: GBDialogStep, html: string, answer: string) {
     const locale = step.context.activity.locale;
 
     html = html.replace(/src\=\"kb\//gi, `src=\"../kb/`);
