@@ -69,7 +69,7 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import mammoth from 'mammoth';
 import { url } from 'inspector';
 import { min } from 'lodash';
-import { GBAdminService } from 'packages/admin.gbapp/services/GBAdminService.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 
 /**
  * Result for quey on KB data.
@@ -662,7 +662,6 @@ export class KBService implements IGBKBService {
         const gbkbName = `${instance.botId}.gbkb`;
         const localName = Path.join('work', gbaiName, gbkbName, file.name);
         const buffer = Fs.readFileSync(localName, { encoding: null });
-        
         var options = {
           buffer: buffer,
           convertImage: mammoth.images.imgElement(async image => {
