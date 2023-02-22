@@ -91,11 +91,11 @@ export class SystemKeywords {
   }
 
   public async callVM({ pid, text }) {
-    const min = null;
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const step = null;
     const deployer = null;
 
-    return await GBVMService.callVM(text, min, step, deployer, false);
+    return await GBVMService.callVM(text, min, step, user, deployer, false);
   }
 
   public async append({ pid, args }) {

@@ -590,7 +590,7 @@ export class KeywordsExpressions {
         if ($3.substr(0, 1) !== '"') {
           $3 = `"${$3}"`;
         }
-        return `await dk.talk ({pid: pid, text: ${$3}})`;
+        return `await dk.getTalk ({pid: pid, text: ${$3}})`;
       }
     ];
 

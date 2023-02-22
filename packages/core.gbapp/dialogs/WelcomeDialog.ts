@@ -72,16 +72,14 @@ export class WelcomeDialog extends IGBDialog {
             return step.replaceDialog(GBServer.globals.entryPointDialog);
           }
 
-          const user = await min.userProfile.get(step.context, {});
           const locale = step.context.activity.locale;
 
           if (
-            !user.once &&
+            //  TODO: https://github.com/GeneralBots/BotServer/issues/9            !user.once &&
             step.context.activity.channelId === 'webchat' &&
             min.core.getParam<boolean>(min.instance, 'HelloGoodX', true) === 'true'
           ) {
-            user.once = true;
-            await min.userProfile.set(step.context, user);
+            // user.once = true;
             const a = new Date();
             const date = a.getHours();
             const msg =

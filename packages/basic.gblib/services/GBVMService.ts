@@ -47,10 +47,10 @@ import walkPromise from 'walk-promise';
 import child_process from 'child_process';
 import Path from 'path';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import pkg from 'swagger-client';
 import { DialogKeywords } from './DialogKeywords.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GuaribasUser } from '../../security.gbapp/models/index.js';
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -319,12 +319,11 @@ export class GBVMService extends GBService {
   /**
    * Executes the converted JavaScript from BASIC code inside execution context.
    */
-  public static async callVM(text: string, min: GBMinInstance, step, deployer: GBDeployer, debug: boolean) {
+  public static async callVM(text: string, min: GBMinInstance, step, user:GuaribasUser, deployer: GBDeployer,  debug: boolean = false) {
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 
-    const user = step ? await min.userProfile.get(step.context, {}) : null;
-    const dk = new DialogKeywords(min, deployer, user);
+    const dk = new DialogKeywords(min, deployer, null);
     const sandbox = {};
     const contentLocale = min.core.getParam<string>(
       min.instance,

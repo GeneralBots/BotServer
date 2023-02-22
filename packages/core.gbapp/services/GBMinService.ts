@@ -880,11 +880,7 @@ export class GBMinService {
             });
           }
 
-          // Saves session user (persisted GuaribasUser is inside).
-
-          await min.userProfile.set(step.context, user);
         }
-
         // Required for MSTEAMS handling of persisted conversations.
 
         if (step.context.activity.channelId === 'msteams') {
@@ -922,7 +918,7 @@ export class GBMinService {
             if (startDialog) {
               await sec.setParam(userId, 'welcomed', 'true');
               GBLog.info(`Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
-              await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
+              await GBVMService.callVM(startDialog.toLowerCase(), min, step, user,  this.deployer, false);
             }
           }
         }
@@ -968,7 +964,7 @@ export class GBMinService {
                 GBLog.info(
                   `Auto start (web 1) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
                 );
-                await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
+                await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
               }
             }
           } else {
@@ -982,11 +978,10 @@ export class GBMinService {
               ) {
                 await sec.setParam(userId, 'welcomed', 'true');
                 min['conversationWelcomed'][step.context.activity.conversation.id] = true;
-                await min.userProfile.set(step.context, user);
                 GBLog.info(
                   `Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
                 );
-                await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
+                await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
               }
             }
           }
@@ -1000,9 +995,6 @@ export class GBMinService {
           await this.processEventActivity(min, user, context, step);
         }
 
-        // Saves conversation state for later use.
-
-        await conversationState.saveChanges(context, true);
       } catch (error) {
         const msg = `ERROR: ${error.message} ${error.stack ? error.stack : ''}`;
         GBLog.error(msg);
@@ -1046,7 +1038,7 @@ export class GBMinService {
       if (startDialog && !min['conversationWelcomed'][step.context.activity.conversation.id]) {
         user.welcomed = true;
         GBLog.info(`Auto start (web 2) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
-        await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
+        await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
       }
     } else if (context.activity.name === 'updateToken') {
       const token = context.activity.data;
@@ -1128,6 +1120,7 @@ export class GBMinService {
     const member = context.activity.from;
 
     let user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name, null);
+    
     const userId = user.userId;
     const params = user.params ? JSON.parse(user.params) : {};
 
@@ -1144,12 +1137,16 @@ export class GBMinService {
           user.conversationId = conversation.Id;
         }
 
+
         message = await analytics.createMessage(
           min.instance.instanceId,
           user.conversationId,
           userId,
           context.activity.text
         );
+
+        const conversationReference = JSON.stringify(TurnContext.getConversationReference(context.activity));
+        await sec.updateConversationReferenceById(userId, conversationReference);
       }
     }
 
@@ -1197,7 +1194,7 @@ export class GBMinService {
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
     if (isVMCall) {
-      await GBVMService.callVM(context.activity.text, min, step, this.deployer, false);
+      await GBVMService.callVM(context.activity.text, min, step, user, this.deployer, false);
     } else if (context.activity.text.charAt(0) === '/') {
       const text = context.activity.text;
       const parts = text.split(' ');
@@ -1207,16 +1204,13 @@ export class GBMinService {
       if (cmdOrDialogName === '/start') {
         // Reset user.
 
-        const user = await min.userProfile.get(context, {});
         await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
-        user.loaded = false;
-        await min.userProfile.set(step.context, user);
       } else if (cmdOrDialogName === '/call') {
-        await GBVMService.callVM(args, min, step, this.deployer, false);
+        await GBVMService.callVM(args, min, step, user,  this.deployer, false);
       } else if (cmdOrDialogName === '/callsch') {
-        await GBVMService.callVM(args, min, null, null, false);
+        await GBVMService.callVM(args, min, null, null, null, false);
       } else if (cmdOrDialogName === '/calldbg') {
-        await GBVMService.callVM(args, min, step, this.deployer, true);
+        await GBVMService.callVM(args, min, step, user, this.deployer, true);
       } else {
         await step.beginDialog(cmdOrDialogName, { args: args });
       }

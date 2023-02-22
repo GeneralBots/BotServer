@@ -804,11 +804,11 @@ export class DialogKeywords {
         // await CollectionUtil.asyncForEach(args, async arg => {
         //   i++;
         //   list.sections[0].rows.push({ title: arg, id: `button${i}` });
-        //   await this.talk(arg);
+        //   await this.getTalk(arg);
         // });
 
         // const button = new wpp.Buttons(Messages[locale].choices, choices, ' ', ' ');
-        // await this.talk(button);
+        // await this.getTalk(button);
 
         GBLog.info(`BASIC: HEAR with [${args.toString()}] (Asking for input).`);
       } else {
@@ -850,7 +850,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null) {
-          await this.talk({ pid, text: 'Por favor, digite um e-mail válido.' });
+          await this.getTalk({ pid, text: 'Por favor, digite um e-mail válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -863,7 +863,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.talk({ pid, text: 'Por favor, digite um nome válido.' });
+          await this.getTalk({ pid, text: 'Por favor, digite um nome válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -876,7 +876,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.talk({ pid, text: 'Por favor, digite um número válido.' });
+          await this.getTalk({ pid, text: 'Por favor, digite um número válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -891,7 +891,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.talk({ pid, text: 'Por favor, digite uma data no formato 12/12/2020.' });
+          await this.getTalk({ pid, text: 'Por favor, digite uma data no formato 12/12/2020.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -904,7 +904,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.talk({ pid, text: 'Por favor, digite um horário no formato hh:ss.' });
+          await this.getTalk({ pid, text: 'Por favor, digite um horário no formato hh:ss.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -923,7 +923,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.talk({ pid, text: 'Por favor, digite um valor monetário.' });
+          await this.getTalk({ pid, text: 'Por favor, digite um valor monetário.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -935,12 +935,12 @@ export class DialogKeywords {
           phoneNumber = phone(answer, { country: 'BRA' })[0];
           phoneNumber = phoneUtil.parse(phoneNumber);
         } catch (error) {
-          await this.talk({ pid, text: Messages[locale].validation_enter_valid_mobile });
+          await this.getTalk({ pid, text: Messages[locale].validation_enter_valid_mobile });
 
           return await this.getHear({ pid, kind, arg });
         }
         if (!phoneUtil.isPossibleNumber(phoneNumber)) {
-          await this.talk({ pid, text: 'Por favor, digite um número de telefone válido.' });
+          await this.getTalk({ pid, text: 'Por favor, digite um número de telefone válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -960,7 +960,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.talk({ pid, text: 'Por favor, digite um CEP válido.' });
+          await this.getTalk({ pid, text: 'Por favor, digite um CEP válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -975,7 +975,7 @@ export class DialogKeywords {
         });
 
         if (result === null) {
-          await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
+          await this.getTalk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
           return await this.getHear({ pid, kind, arg });
         }
       } else if (kind === 'language') {
@@ -1007,7 +1007,7 @@ export class DialogKeywords {
         });
 
         if (result === null) {
-          await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
+          await this.getTalk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
           return await this.getHear({ pid, kind, arg });
         }
       }
@@ -1064,15 +1064,14 @@ export class DialogKeywords {
   /**
    * Talks to the user by using the specified text.
    */
-  public async talk(x) {
-    const text="",pid=0
+  public async getTalk({pid, text}) {
     GBLog.info(`BASIC: TALK '${text}'.`);
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    await min.whatsAppDirectLine.sendButton();
+    
     if (user) {
       // TODO: const translate = this.user ? this.user.basicOptions.translatorOn : false;
 
-     // await min.conversationalService['sendOnConversation'](min, user, text);
+      await min.conversationalService['sendOnConversation'](min, user, text);
     }
   }
 

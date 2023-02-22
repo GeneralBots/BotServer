@@ -169,7 +169,9 @@ export class AskDialog extends IGBDialog {
       },
       async step => {
         let answer: GuaribasAnswer = null;
-        const user = await min.userProfile.get(step.context, {});
+        const member = step.context.activity.from;
+        const sec = new SecService();
+        let user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name, null);
 
         const minBoot = GBServer.globals.minBoot as any;
 
@@ -182,7 +184,7 @@ export class AskDialog extends IGBDialog {
         if (!text) {
           const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
           if (startDialog) {
-            await GBVMService.callVM(startDialog.toLowerCase().trim(), min, step, this.deployer, false);
+            await GBVMService.callVM(startDialog.toLowerCase().trim(), min, step, user, this.deployer, false);
           }
 
           return step.endDialog();
@@ -210,18 +212,19 @@ export class AskDialog extends IGBDialog {
           min.instance.searchScore ? min.instance.searchScore : minBoot.instance.searchScore
         );
 
-        user.lastQuestion = text;
+        // TODO: https://github.com/GeneralBots/BotServer/issues/9 user.lastQuestion = text;
         await min.userProfile.set(step.context, user);
 
-        const resultsA = await service.ask(min.instance, text, searchScore, user.subjects);
+
+        const resultsA = await service.ask(min.instance, text, searchScore, null /* user.subjects */ );
 
         // If there is some result, answer immediately.
 
         if (resultsA !== undefined && resultsA.answer !== undefined) {
           // Saves some context info.
 
-          user.isAsking = false;
-          user.lastQuestionId = resultsA.questionId;
+          // user.isAsking = false;
+          // user.lastQuestionId = resultsA.questionId;
           await min.userProfile.set(step.context, user);
 
           // Sends the answer to all outputs, including projector.
@@ -229,35 +232,36 @@ export class AskDialog extends IGBDialog {
           answer = resultsA.answer;
 
           // If this search was restricted to some subjects...
-        } else if (user.subjects && user.subjects.length > 0) {
-          // ...second time running Search, now with no filter.
+        } 
+        // TODO: https://github.com/GeneralBots/BotServer/issues/9
+        // else if (user.subjects && user.subjects.length > 0) {
+        //   // ...second time running Search, now with no filter.
 
-          const resultsB = await service.ask(min.instance, text, searchScore, undefined);
+        //   const resultsB = await service.ask(min.instance, text, searchScore, undefined);
 
-          // If there is some result, answer immediately.
+        //   // If there is some result, answer immediately.
 
-          if (resultsB !== undefined && resultsB.answer !== undefined) {
-            // Saves some context info.
+        //   if (resultsB !== undefined && resultsB.answer !== undefined) {
+        //     // Saves some context info.
 
-            const user2 = await min.userProfile.get(step.context, {});
-            user2.isAsking = false;
-            user2.lastQuestionId = resultsB.questionId;
-            await min.userProfile.set(step.context, user2);
+        //     // user2.isAsking = false;
+        //     // user2.lastQuestionId = resultsB.questionId;
+           
 
-            // Informs user that a broader search will be used.
+        //     // Informs user that a broader search will be used.
 
-            if (user2.subjects.length > 0) {
-              await min.conversationalService.sendText(min, step, Messages[locale].wider_answer);
-            }
+        //     if (user2.subjects.length > 0) {
+        //       await min.conversationalService.sendText(min, step, Messages[locale].wider_answer);
+        //     }
 
-            answer = resultsB.answer;
-          }
-        }
+        //     answer = resultsB.answer;
+        //   }
+        // }
 
         // Try to answer by search.
 
         if (answer) {
-          return await AskDialog.handleAnswer(service, min, step, answer);
+          return await AskDialog.handleAnswer(service, min, step, user, answer);
         }
 
         // Tries to answer by NLP.
@@ -322,11 +326,11 @@ export class AskDialog extends IGBDialog {
     ];
   }
 
-  private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, answer: GuaribasAnswer) {
+  private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, user, answer: GuaribasAnswer) {
     const text = answer.content;
     if (text.endsWith('.docx')) {
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
-      return await GBVMService.callVM(mainName, min, step, this.deployer, false);
+      return await GBVMService.callVM(mainName, min, step, user, this.deployer, false);
     } else {
       await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
       return await step.replaceDialog('/ask', { isReturning: true });
