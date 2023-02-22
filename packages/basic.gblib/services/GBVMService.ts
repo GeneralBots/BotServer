@@ -74,41 +74,46 @@ export class GBVMService extends GBService {
       let filename: string = file.name;
 
       if (filename.endsWith('.docx')) {
-        const wordFile = filename;
-        const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
-        const fullVbsFile = urlJoin(folder, vbsFile);
-        const docxStat = Fs.statSync(urlJoin(folder, wordFile));
-        const interval = 3000; // If compiled is older 30 seconds, then recompile.
-        let writeVBS = true;
-        if (Fs.existsSync(fullVbsFile)) {
-          const vbsStat = Fs.statSync(fullVbsFile);
-          if (docxStat['mtimeMs'] < vbsStat['mtimeMs'] + interval) {
-            writeVBS = false;
-          }
-        }
-        filename = vbsFile;
-        let mainName = GBVMService.getMethodNameFromVBSFilename(filename);
-        min.scriptMap[filename] = mainName;
+        filename = await this.loadDialog(filename, folder, min);
+      }
+    });
+  }
 
-        if (writeVBS) {
-          let text = await this.getTextFromWord(folder, wordFile);
+  public async loadDialog(filename: string, folder: string, min: GBMinInstance) {
+    const wordFile = filename;
+    const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
+    const fullVbsFile = urlJoin(folder, vbsFile);
+    const docxStat = Fs.statSync(urlJoin(folder, wordFile));
+    const interval = 3000; // If compiled is older 30 seconds, then recompile.
+    let writeVBS = true;
+    if (Fs.existsSync(fullVbsFile)) {
+      const vbsStat = Fs.statSync(fullVbsFile);
+      if (docxStat['mtimeMs'] < vbsStat['mtimeMs'] + interval) {
+        writeVBS = false;
+      }
+    }
+    filename = vbsFile;
+    let mainName = GBVMService.getMethodNameFromVBSFilename(filename);
+    min.scriptMap[filename] = mainName;
 
-          const schedule = GBVMService.getSetScheduleKeywordArgs(text);
-          const s = new ScheduleServices();
-          if (schedule) {
-            await s.createOrUpdateSchedule(min, schedule, mainName);
-          } else {
-            await s.deleteScheduleIfAny(min, mainName);
-          }
-          text = text.replace(/^\s*SET SCHEDULE (.*)/gim, '');
-          Fs.writeFileSync(urlJoin(folder, vbsFile), text);
-        }
+    if (writeVBS) {
+      let text = await this.getTextFromWord(folder, wordFile);
 
-        // Process node_modules install.
+      const schedule = GBVMService.getSetScheduleKeywordArgs(text);
+      const s = new ScheduleServices();
+      if (schedule) {
+        await s.createOrUpdateSchedule(min, schedule, mainName);
+      } else {
+        await s.deleteScheduleIfAny(min, mainName);
+      }
+      text = text.replace(/^\s*SET SCHEDULE (.*)/gim, '');
+      Fs.writeFileSync(urlJoin(folder, vbsFile), text);
+    }
 
-        const node_modules = urlJoin(folder, 'node_modules');
-        if (!Fs.existsSync(node_modules)) {
-          const packageJson = `
+    // Process node_modules install.
+    const node_modules = urlJoin(folder, 'node_modules');
+    if (!Fs.existsSync(node_modules)) {
+      const packageJson = `
             {
               "name": "${min.botId}.gbdialog",
               "version": "1.0.0",
@@ -123,40 +128,38 @@ export class GBVMService extends GBService {
                 "vm2": "3.9.11"
               }
             }`;
-          Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
+      Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
 
-          GBLogEx.info(min, `BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
-          const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
-          child_process.execSync(`${npmPath} install`, { cwd: folder });
-        }
+      GBLogEx.info(min, `BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
+      const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
+      child_process.execSync(`${npmPath} install`, { cwd: folder });
+    }
 
-        // Hot swap for .vbs files.
-
-        const fullFilename = urlJoin(folder, filename);
-        if (process.env.GBDIALOG_HOTSWAP) {
-          Fs.watchFile(fullFilename, async () => {
-            await this.translateBASIC(fullFilename, mainName, min);
-            const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
-            min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
-          });
-        }
-
-        const compiledAt = Fs.statSync(fullFilename);
-        const jsfile = urlJoin(folder, `${filename}.js`);
-
-        if (Fs.existsSync(jsfile)) {
-          const jsStat = Fs.statSync(jsfile);
-          const interval = 30000; // If compiled is older 30 seconds, then recompile.
-          if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
-            await this.translateBASIC(fullFilename, mainName, min);
-          }
-        } else {
-          await this.translateBASIC(fullFilename, mainName, min);
-        }
+    // Hot swap for .vbs files.
+    const fullFilename = urlJoin(folder, filename);
+    if (process.env.GBDIALOG_HOTSWAP) {
+      Fs.watchFile(fullFilename, async () => {
+        await this.translateBASIC(fullFilename, mainName, min);
         const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
         min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
+      });
+    }
+
+    const compiledAt = Fs.statSync(fullFilename);
+    const jsfile = urlJoin(folder, `${filename}.js`);
+
+    if (Fs.existsSync(jsfile)) {
+      const jsStat = Fs.statSync(jsfile);
+      const interval = 30000; // If compiled is older 30 seconds, then recompile.
+      if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
+        await this.translateBASIC(fullFilename, mainName, min);
       }
-    });
+    } else {
+      await this.translateBASIC(fullFilename, mainName, min);
+    }
+    const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
+    min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
+    return filename;
   }
 
   public async translateBASIC(filename: any, mainName: string, min: GBMinInstance) {
@@ -260,18 +263,24 @@ export class GBVMService extends GBService {
 
   private async getTextFromWord(folder: string, filename: string) {
     return new Promise<string>(async (resolve, reject) => {
-      textract.fromFileWithPath(urlJoin(folder, filename), { preserveLineBreaks: true }, (error, text) => {
+      const path = urlJoin(folder, filename);
+      textract.fromFileWithPath(path, { preserveLineBreaks: true }, (error, text) => {
         if (error) {
-          reject(error);
-        } else {
+          if (error.message.startsWith('File not correctly recognized as zip file')) {
+            text = Fs.readFileSync(path, 'utf8');
+          } else {
+            reject(error);
+          }
+        }
+
+        if (text) {
           text = text.replace('¨', '"');
           text = text.replace('“', '"');
           text = text.replace('”', '"');
           text = text.replace('‘', "'");
           text = text.replace('’', "'");
-
-          resolve(text);
         }
+        resolve(text);
       });
     });
   }
@@ -407,8 +416,6 @@ export class GBVMService extends GBService {
     } catch (error) {
       throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
     } finally {
-      
-    
     }
 
     return result;

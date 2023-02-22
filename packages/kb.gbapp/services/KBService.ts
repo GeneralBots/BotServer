@@ -72,6 +72,7 @@ import { url } from 'inspector';
 import { min } from 'lodash';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { text } from 'body-parser';
+import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 
 /**
  * Result for quey on KB data.
@@ -410,7 +411,7 @@ export class KBService implements IGBKBService {
 
   public async importKbTabularFile(
     filePath: string,
-    instanceId: number,
+    min: GBMinInstance,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
     GBLog.info(`Now reading file ${filePath}...`);
@@ -522,10 +523,26 @@ export class KBService implements IGBKBService {
             return false;
           }
 
+          // In case  of code cell, compiles it and associate with the answer.
+
+          if (answer.toLowerCase().startsWith ('/basic') ){
+              const code = answer.substr(6);
+              const gbaiName = `${min.instance.botId}.gbai`;
+              const gbdialogName = `${min.instance.botId}.gbdialog`;
+              const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
+              const localName = Path.join('work', gbaiName, gbdialogName, `${scriptName}`);
+              Fs.writeFileSync(localName, code, { encoding: null });
+              answer = scriptName;
+
+              const vm = new GBVMService();
+              await vm.loadDialog(Path.basename(localName), Path.dirname(localName), min);
+          }
+
+
           // Now with all the data ready, creates entities in the store.
 
           const answer1 = {
-            instanceId: instanceId,
+            instanceId: min.instance.instanceId,
             content: answer,
             format: format,
             media: media,
@@ -543,7 +560,7 @@ export class KBService implements IGBKBService {
             subject3: subject3,
             subject4: subject4,
             content: question.replace(/["]+/g, ''),
-            instanceId: instanceId,
+            instanceId: min.instance.instanceId,
             skipIndex: question.charAt(0) === '"',
             packageId: packageId
           };
@@ -625,7 +642,7 @@ export class KBService implements IGBKBService {
 
     // Import tabular files in the tabular directory.
 
-    await this.importKbTabularDirectory(localPath, instance, packageStorage.packageId);
+    await this.importKbTabularDirectory(localPath, min, packageStorage.packageId);
 
     // Import remaining .md files in articles directory.
 
@@ -803,12 +820,12 @@ export class KBService implements IGBKBService {
     }
   }
 
-  public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
+  public async importKbTabularDirectory(localPath: string, min: GBMinInstance, packageId: number): Promise<any> {
     const files = await walkPromise(localPath);
 
     await CollectionUtil.asyncForEach(files, async file => {
       if (file !== null && file.name.endsWith('.xlsx')) {
-        return await this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
+        return await this.importKbTabularFile(urlJoin(file.root, file.name), min, packageId);
       }
     });
   }
