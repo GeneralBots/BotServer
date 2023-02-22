@@ -118,6 +118,7 @@
     "ms-rest-azure": "3.0.0",
     "nexmo": "2.9.1",
     "node-cron": "3.0.2",
+    "node-html-parser": "^6.1.5",
     "node-nlp": "4.24.0",
     "node-tesseract-ocr": "2.2.1",
     "npm": "9.1.2",

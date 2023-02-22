@@ -62,6 +62,7 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService.js';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models/index.js';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService.js';
+import { parse } from 'node-html-parser';
 import textract from 'textract';
 import pdf from 'pdf-extraction';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
@@ -70,6 +71,7 @@ import mammoth from 'mammoth';
 import { url } from 'inspector';
 import { min } from 'lodash';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { text } from 'body-parser';
 
 /**
  * Result for quey on KB data.
@@ -639,6 +641,7 @@ export class KBService implements IGBKBService {
    */
   public async importRemainingArticles(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
     const files = await walkPromise(urlJoin(localPath, 'articles'));
+    const data = { questions: [], answers: [] };
 
     await CollectionUtil.asyncForEach(files, async file => {
       if (file !== null && file.name.endsWith('.md')) {
@@ -660,11 +663,11 @@ export class KBService implements IGBKBService {
       } else if (file !== null && file.name.endsWith('.docx')) {
         const gbaiName = `${instance.botId}.gbai`;
         const gbkbName = `${instance.botId}.gbkb`;
-        const localName = Path.join('work', gbaiName, gbkbName, file.name);
+        const localName = Path.join('work', gbaiName, gbkbName, 'articles', file.name);
         const buffer = Fs.readFileSync(localName, { encoding: null });
         var options = {
           buffer: buffer,
-          convertImage: mammoth.images.imgElement(async image => {
+          convertImage: async image => {
             const localName = Path.join(
               'work',
               gbaiName,
@@ -675,19 +678,87 @@ export class KBService implements IGBKBService {
             const buffer = await image.read();
             Fs.writeFileSync(localName, buffer, { encoding: null });
             return { src: url };
-          })
+          }
         };
 
-        const answer = await mammoth.convertToHtml(options);
-        await GuaribasAnswer.create(<GuaribasAnswer>{
-          instanceId: instance.instanceId,
-          content: answer.value,
-          format: '.docx',
-          media: file.name,
-          packageId: packageId,
-          prevId: 0 // https://github.com/GeneralBots/BotServer/issues/312
-        });
+        let state = 0;
+        let previousState = state;
+        const next = (root, el, data) => {
+          // If it is root, change to the first item.
+
+          if (el.parentNode == null) {
+            el = el.firstChild;
+          }
+          let value = el.innerHTML;
+          const isHeader = el => el.rawTagName.startsWith('h') && el.rawTagName.length === 2;
+
+          // Handle questions from H* elements.
+
+          if (state === 0) {
+            const question = {
+              from: 'document',
+              to: '',
+              subject1: '',
+              subject2: '',
+              subject3: '',
+              subject4: '',
+              content: value.replace(/["]+/g, ''),
+              instanceId: instance.instanceId,
+              skipIndex: 0,
+              packageId: packageId
+            };
+            data.questions.push(question);
+            previousState = state;
+            state = 1;
+
+            // Everything else is content for that Header.
+          } else if (state === 1) {
+
+            // If next element is null, the tree has been passed, so
+            // finish the append of other elements between the last Header
+            // and the end of the document.
+
+            if (!el.nextSibling || isHeader(el.nextSibling)) {
+              const answer = {
+                instanceId: instance.instanceId,
+                content: value,
+                format: '.html',
+                media: file.name,
+                packageId: packageId,
+                prevId: 0
+              };
+
+              data.answers.push(answer);
+
+              state = 0;
+
+            // Otherwise, just append content to insert later.
+
+            } else {
+              value += value;
+            }
+          }
+
+          // Goes to the next node, as it is all same level nodes.
+
+          if (el.nextSibling) {
+            next(root, el.nextSibling, data);
+          }
+        };
+
+        const html = await mammoth.convertToHtml(options);
+        const root = parse(html.value);
+        next(root, root, data);
       }
+
+      // Persist to storage.
+
+      const answersCreated = await GuaribasAnswer.bulkCreate(data.answers);
+      let i = 0;
+      await CollectionUtil.asyncForEach(data.questions, async question => {
+        question.answerId = answersCreated[i++].answerId;
+      });
+      return await GuaribasQuestion.bulkCreate(data.questions);
     });
   }
 
