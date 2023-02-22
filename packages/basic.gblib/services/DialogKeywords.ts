@@ -1050,9 +1050,9 @@ export class DialogKeywords {
   public static async getProcessInfo(pid: number) {
     const proc = GBServer.globals.processes[pid];
 
-    const min = GBServer.globals.minInstances[0];//.filter(p => p.instance.instanceId == proc.instanceId)[0];
+    const min = GBServer.globals.minInstances.filter(p => p.instance.instanceId == proc.instanceId)[0];
     const sec = new SecService();
-    const user = await sec.getUserFromId(min.instance.instanceId, "1");
+    const user = await sec.getUserFromId(min.instance.instanceId, proc.userId );
     const params = JSON.parse(user.params);
     return {
       min,
