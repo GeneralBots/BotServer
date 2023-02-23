@@ -304,7 +304,7 @@ export class KBService implements IGBKBService {
         subject4: string;
       }
 
-      const client = new SearchClient<SearchResults>('https://' + instance.searchHost, 'azuresql-index', {
+      const client = new SearchClient<any>('https://' + instance.searchHost, 'azuresql-index', {
         key: instance.searchKey
       } as any);
 
@@ -316,15 +316,14 @@ export class KBService implements IGBKBService {
         top: 1
       });
 
-      const values = results.results;
       let returnedScore = 0;
 
       // Searches via Search (Azure Search).
 
       let found = false;
-      for await (const result of values) {
+      for await (const result of results.results) {
         found = true;
-        returnedScore = result['@search.score'];
+        returnedScore = result.score;
         if (returnedScore >= searchScore) {
           const value = await this.getAnswerById(instance.instanceId, result.document.answerId);
           if (value !== null) {

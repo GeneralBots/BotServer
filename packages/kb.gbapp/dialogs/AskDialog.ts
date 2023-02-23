@@ -213,8 +213,6 @@ export class AskDialog extends IGBDialog {
         );
 
         // TODO: https://github.com/GeneralBots/BotServer/issues/9 user.lastQuestion = text;
-        await min.userProfile.set(step.context, user);
-
 
         const resultsA = await service.ask(min.instance, text, searchScore, null /* user.subjects */ );
 
@@ -225,7 +223,7 @@ export class AskDialog extends IGBDialog {
 
           // user.isAsking = false;
           // user.lastQuestionId = resultsA.questionId;
-          await min.userProfile.set(step.context, user);
+
 
           // Sends the answer to all outputs, including projector.
 

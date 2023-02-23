@@ -223,7 +223,7 @@ export class GBDeployer implements IGBDeployer {
     instance.activationCode = instance.botId;
     instance.state = 'active';
     instance.nlpScore = 0.8;
-    instance.searchScore = 0.45;
+    instance.searchScore = 0.25;
     instance.whatsappServiceKey = null;
     instance.whatsappServiceNumber = null;
     instance.whatsappServiceUrl = null;
