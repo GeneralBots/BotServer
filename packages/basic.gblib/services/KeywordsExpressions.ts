@@ -171,6 +171,13 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*hear (\w+) as (\w+( \w+)*.xlsx)/gim,
+      ($0, $1, $2) => {
+        return `${$1} = await dk.getHear({pid: pid, kind:"sheet", arg: "${$2}"})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*hear (\w+) as\s*login/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({pid: pid, kind:"login"})`;

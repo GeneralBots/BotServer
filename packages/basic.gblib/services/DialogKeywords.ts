@@ -58,6 +58,7 @@ import mammoth from 'mammoth';
 import qrcode from 'qrcode';
 import { json } from 'body-parser';
 import { WebAutomationServices } from './WebAutomationServices.js';
+import urljoin from 'url-join';
 
 /**
  * Default check interval for user replay
@@ -562,7 +563,7 @@ export class DialogKeywords {
    *
    */
   public async sendFile({ pid, filename, caption }) {
-    const mobile = await this.userMobile({pid});
+    const mobile = await this.userMobile({ pid });
     GBLog.info(`BASIC: SEND FILE (current: ${mobile},filename '${filename}'.`);
     return await this.internalSendFile({ pid, mobile, filename, caption });
   }
@@ -606,10 +607,8 @@ export class DialogKeywords {
     return names.indexOf(name) > -1;
   }
 
-
-  private async setOption({pid, name, value})
-  {
-    if (this.isUserSystemParam(name)){
+  private async setOption({ pid, name, value }) {
+    if (this.isUserSystemParam(name)) {
       throw new Error(`Not possible to define ${name} as it is a reserved system param name.`);
     }
     const process = GBServer.globals.processes[pid];
@@ -620,9 +619,8 @@ export class DialogKeywords {
     return { min, user, params };
   }
 
-  private async getOption({pid, name})
-  {
-    if (this.isUserSystemParam(name)){
+  private async getOption({ pid, name }) {
+    if (this.isUserSystemParam(name)) {
       throw new Error(`Not possible to retrieve ${name} system param.`);
     }
     const process = GBServer.globals.processes[pid];
@@ -638,7 +636,7 @@ export class DialogKeywords {
    *
    */
   public async setMaxLines({ pid, count }) {
-    await this.setOption({pid, name: "maxLines", value: count});
+    await this.setOption({ pid, name: 'maxLines', value: count });
   }
 
   /**
@@ -647,8 +645,8 @@ export class DialogKeywords {
    * @example SET PARAM name AS value
    *
    */
-   public async setUserParam({ pid, name, value }) {
-    await this.setOption({pid, name, value});
+  public async setUserParam({ pid, name, value }) {
+    await this.setOption({ pid, name, value });
   }
 
   /**
@@ -657,10 +655,9 @@ export class DialogKeywords {
    * @example GET PARAM name
    *
    */
-   public async getUserParam({ pid, name }) {
-    await this.getOption({pid, name});
+  public async getUserParam({ pid, name }) {
+    await this.getOption({ pid, name });
   }
-
 
   /**
    * Defines the maximum lines to scan in spreedsheets.
@@ -669,7 +666,7 @@ export class DialogKeywords {
    *
    */
   public async setMaxColumns({ pid, count }) {
-    await this.setOption({pid, name: "setMaxColumns", value: count});
+    await this.setOption({ pid, name: 'setMaxColumns', value: count });
   }
 
   /**
@@ -679,8 +676,8 @@ export class DialogKeywords {
    *
    */
   public async setWholeWord({ pid, on }) {
-    const value = (on.trim() === "on");
-    await this.setOption({pid, name: "wholeWord", value: value});
+    const value = on.trim() === 'on';
+    await this.setOption({ pid, name: 'wholeWord', value: value });
   }
 
   /**
@@ -691,7 +688,7 @@ export class DialogKeywords {
    */
   public async setTheme({ pid, theme }) {
     const value = theme.trim();
-    await this.setOption({pid, name: "theme", value: value});
+    await this.setOption({ pid, name: 'theme', value: value });
   }
 
   /**
@@ -701,14 +698,14 @@ export class DialogKeywords {
    *
    */
   public async setTranslatorOn({ pid, on }) {
-    const value = (on.trim() === "on");
-    await this.setOption({pid, name: "translatorOn", value: value});
+    const value = on.trim() === 'on';
+    await this.setOption({ pid, name: 'translatorOn', value: value });
   }
 
   /**
    * Returns the name of the user acquired by WhatsApp API.
    */
-  public async userName({pid}) {
+  public async userName({ pid }) {
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     return user.userName;
   }
@@ -716,7 +713,7 @@ export class DialogKeywords {
   /**
    * Returns current mobile number from user in conversation.
    */
-  public async userMobile({pid}) {
+  public async userMobile({ pid }) {
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     return user.userSystemId;
   }
@@ -732,7 +729,6 @@ export class DialogKeywords {
     // return await beginDialog('/menu');
   }
 
-
   /**
    * Performs the transfer of the conversation to a human agent.
    *
@@ -744,7 +740,7 @@ export class DialogKeywords {
     // return await beginDialog('/t',{ to: to });
   }
 
-  public static getFileByHandle (hash) {
+  public static getFileByHandle(hash) {
     return GBServer.globals.files[hash];
   }
 
@@ -822,7 +818,7 @@ export class DialogKeywords {
           setTimeout(resolve, ms);
         });
       };
-      min.cbMap[userId] = {}; 
+      min.cbMap[userId] = {};
       min.cbMap[userId]['promise'] = '!GBHEAR';
 
       while (min.cbMap[userId].promise === '!GBHEAR') {
@@ -831,7 +827,68 @@ export class DialogKeywords {
 
       const answer = min.cbMap[userId].promise;
 
-      if (kind === 'file') {
+      if (kind === 'sheet') {
+        
+        // Retrieves the .xlsx file associated with the HEAR var AS file.xlsx.
+
+        let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
+        const botId = min.instance.botId;
+        const path = urljoin(`${botId}.gbai`, `${botId}.gbdata`);
+        let url = `${baseUrl}/drive/root:/${path}:/children`;
+
+        GBLog.info(`Loading HEAR AS .xlsx options from Sheet: ${url}`);
+        const res = await client.api(url).get();
+
+        // Finds .xlsx specified by arg.
+
+        const document = res.value.filter(m => {
+          return m.name === arg;
+        });
+        if (document === undefined || document.length === 0) {
+          GBLog.info(`${arg} not found on .gbdata folder, check the package.`);
+          return null;
+        }
+
+        // Reads all rows to be used as menu items in HEAR validation.
+
+        let sheets = await client.api(`${baseUrl}/drive/items/${document[0].id}/workbook/worksheets`).get();
+        const results = await client
+          .api(
+            `${baseUrl}/drive/items/${document[0].id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A256')`
+          )
+          .get();
+
+        // Builds an array of items found in sheet file.
+
+        let index = 0;
+        let list = [];
+        for (; index < results.text.length; index++) {
+          if (results.text[index][0] !== '') {
+            list.push( results.text[index][0]);
+          }
+          else
+          {
+            break;
+          }          
+        }
+
+        // Search the answer in one of valid list items loaded from sheeet.
+
+        result = null;
+        await CollectionUtil.asyncForEach(list, async item => {
+          if (GBConversationalService.kmpSearch(answer, item) != -1) {
+            result = item;
+          }
+        });
+
+        // In case of unmatch, asks the person to try again.
+
+        if (result === null) {
+          await this.getTalk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
+          return await this.getHear({ pid, kind, arg });
+        }
+
+      } else if (kind === 'file') {
         GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
         const handle = WebAutomationServices.cyrb53(this.min.botId + answer.filename);
         GBServer.globals.files[handle] = answer;
@@ -1052,7 +1109,7 @@ export class DialogKeywords {
 
     const min = GBServer.globals.minInstances.filter(p => p.instance.instanceId == proc.instanceId)[0];
     const sec = new SecService();
-    const user = await sec.getUserFromId(min.instance.instanceId, proc.userId );
+    const user = await sec.getUserFromId(min.instance.instanceId, proc.userId);
     const params = JSON.parse(user.params);
     return {
       min,
@@ -1064,10 +1121,10 @@ export class DialogKeywords {
   /**
    * Talks to the user by using the specified text.
    */
-  public async getTalk({pid, text}) {
+  public async getTalk({ pid, text }) {
     GBLog.info(`BASIC: TALK '${text}'.`);
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    
+
     if (user) {
       // TODO: const translate = this.user ? this.user.basicOptions.translatorOn : false;
 
