@@ -635,9 +635,10 @@ export class KBService implements IGBKBService {
     // Imports subjects tree into database and return it.
 
     const subjectFile = urlJoin(localPath, 'subjects.json');
+    const menuFile = urlJoin(localPath, 'menu.xlsx');
 
-    if (Fs.existsSync(subjectFile)) {
-      await this.importSubjectFile(packageStorage.packageId, subjectFile, instance);
+    if (Fs.existsSync(subjectFile) || Fs.existsSync(menuFile)) {
+      await this.importSubjectFile(packageStorage.packageId, subjectFile, menuFile, instance);
     }
 
     // Import tabular files in the tabular directory.
@@ -828,8 +829,83 @@ export class KBService implements IGBKBService {
     });
   }
 
-  public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise<any> {
-    const subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
+  public async importSubjectFile(
+    packageId: number,
+    filename: string,
+    menuFile: string,
+    instance: IGBInstance
+  ): Promise<any> {
+    let subjectsLoaded;
+    if (menuFile) {
+      // Loads menu.xlsx and finds worksheet.
+
+      const workbook = new Excel.Workbook();
+      const data = await workbook.xlsx.readFile(menuFile);
+      let worksheet: any;
+      for (let t = 0; t < data.worksheets.length; t++) {
+        worksheet = data.worksheets[t];
+        if (worksheet) {
+          break;
+        }
+      }
+
+      const MAX_LEVEL = 4; // Max column level to reach menu items in plan.
+      // Iterates over all items.
+
+      let rows = worksheet._rows;
+      rows.length = 24;
+      let lastLevel = 0;
+      let subjects = { children: [] };
+      let childrenNode = subjects.children;
+      let activeObj = null;
+
+      let activeChildrenGivenLevel = [childrenNode];
+
+      await asyncPromise.eachSeries(rows, async row => {
+        if (!row) return;
+        let menu;
+
+        // Detect menu level by skipping blank cells on left.
+        
+        let level;
+        for (level = 0; level < MAX_LEVEL; level++) {
+          menu = row._cells[level];
+          if (menu && menu.text) {
+            break;
+          }
+        }
+
+        // Tree hierarchy calculation.        
+
+         if (level > lastLevel) {
+          childrenNode = activeObj.children;
+        } else if (level < lastLevel) {
+          childrenNode = activeChildrenGivenLevel[level];
+        }
+
+        /// Keeps the record of last subroots for each level, to
+        // changel levels greater than one (return to main menu),
+        // can exists between leaf nodes and roots.
+
+        activeChildrenGivenLevel[level] = childrenNode;
+
+        // Insert the object into JSON.
+
+        activeObj = {
+          title: menu,
+          description: row._cells[level + 1],
+          id: menu,
+          children: []
+        };
+        activeChildrenGivenLevel[level].push(activeObj);
+
+        lastLevel = level;
+      });
+
+      subjectsLoaded = subjects;
+    } else {
+      subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
+    }
 
     const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
       return asyncPromise.eachSeries(subjects, async item => {
@@ -852,7 +928,7 @@ export class KBService implements IGBKBService {
       });
     };
 
-    return doIt(subjectsLoaded.children, undefined);
+    /publish gbkbreturn doIt(subjectsLoaded.children, undefined);
   }
 
   public async undeployKbFromStorage(instance: IGBInstance, deployer: GBDeployer, packageId: number) {
