@@ -524,8 +524,8 @@ export class KBService implements IGBKBService {
 
           // In case  of code cell, compiles it and associate with the answer.
 
-          if (answer.toLowerCase().startsWith ('/basic') ){
-              const code = answer.substr(6);
+          if (/TALK\s*\".*\"/.test(answer) || answer.toLowerCase().startsWith ('/basic') ){
+              const code = answer.substr(6);  
               const gbaiName = `${min.instance.botId}.gbai`;
               const gbdialogName = `${min.instance.botId}.gbdialog`;
               const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
