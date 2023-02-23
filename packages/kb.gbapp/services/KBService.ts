@@ -524,19 +524,20 @@ export class KBService implements IGBKBService {
 
           // In case  of code cell, compiles it and associate with the answer.
 
-          if (/TALK\s*\".*\"/.test(answer) || answer.toLowerCase().startsWith ('/basic') ){
-              const code = answer.substr(6);  
-              const gbaiName = `${min.instance.botId}.gbai`;
-              const gbdialogName = `${min.instance.botId}.gbdialog`;
-              const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
-              const localName = Path.join('work', gbaiName, gbdialogName, `${scriptName}`);
-              Fs.writeFileSync(localName, code, { encoding: null });
-              answer = scriptName;
+          answer = GBVMService.normalizeQuotes(answer);
+          const isBasic = answer.toLowerCase().startsWith('/basic');
+          if (/TALK\s*\".*\"/gi.test(answer) || isBasic) {
+            const code = isBasic ? answer.substr(6) : answer;
+            const gbaiName = `${min.instance.botId}.gbai`;
+            const gbdialogName = `${min.instance.botId}.gbdialog`;
+            const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
+            const localName = Path.join('work', gbaiName, gbdialogName, `${scriptName}`);
+            Fs.writeFileSync(localName, code, { encoding: null });
+            answer = scriptName;
 
-              const vm = new GBVMService();
-              await vm.loadDialog(Path.basename(localName), Path.dirname(localName), min);
+            const vm = new GBVMService();
+            await vm.loadDialog(Path.basename(localName), Path.dirname(localName), min);
           }
-
 
           // Now with all the data ready, creates entities in the store.
 
@@ -729,7 +730,6 @@ export class KBService implements IGBKBService {
 
             // Everything else is content for that Header.
           } else if (state === 1) {
-
             // If next element is null, the tree has been passed, so
             // finish the append of other elements between the last Header
             // and the end of the document.
@@ -748,8 +748,7 @@ export class KBService implements IGBKBService {
 
               state = 0;
 
-            // Otherwise, just append content to insert later.
-
+              // Otherwise, just append content to insert later.
             } else {
               value += value;
             }

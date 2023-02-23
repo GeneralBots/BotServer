@@ -274,15 +274,20 @@ export class GBVMService extends GBService {
         }
 
         if (text) {
-          text = text.replace('¨', '"');
-          text = text.replace('“', '"');
-          text = text.replace('”', '"');
-          text = text.replace('‘', "'");
-          text = text.replace('’', "'");
+          text = GBVMService.normalizeQuotes(text);
         }
         resolve(text);
       });
     });
+  }
+
+  public static normalizeQuotes(text: any) {
+    text = text.replace('¨', '"');
+    text = text.replace('“', '"');
+    text = text.replace('”', '"');
+    text = text.replace('‘', "'");
+    text = text.replace('’', "'");
+    return text;
   }
 
   /**
@@ -319,7 +324,14 @@ export class GBVMService extends GBService {
   /**
    * Executes the converted JavaScript from BASIC code inside execution context.
    */
-  public static async callVM(text: string, min: GBMinInstance, step, user:GuaribasUser, deployer: GBDeployer,  debug: boolean = false) {
+  public static async callVM(
+    text: string,
+    min: GBMinInstance,
+    step,
+    user: GuaribasUser,
+    deployer: GBDeployer,
+    debug: boolean = false
+  ) {
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 
@@ -331,17 +343,18 @@ export class GBVMService extends GBService {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
+    // TODO: https://github.com/GeneralBots/BotServer/issues/217
     // Auto-NLP generates BASIC variables related to entities.
 
-    if (step && step.context.activity['originalText']) {
-      const entities = await min['nerEngine'].findEntities(step.context.activity['originalText'], contentLocale);
+    // if (step && step.context.activity['originalText'] && min['nerEngine']) {
+    //   const entities = await min['nerEngine'].findEntities(step.context.activity['originalText'], contentLocale);
 
-      for (let i = 0; i < entities.length; i++) {
-        const v = entities[i];
-        const variableName = `${v.entity}`;
-        sandbox[variableName] = v.option;
-      }
-    }
+    //   for (let i = 0; i < entities.length; i++) {
+    //     const v = entities[i];
+    //     const variableName = `${v.entity}`;
+    //     sandbox[variableName] = v.option;
+    //   }
+    // }
 
     const botId = min.botId;
     const gbdialogPath = urlJoin(process.cwd(), 'work', `${botId}.gbai`, `${botId}.gbdialog`);
