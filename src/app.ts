@@ -85,6 +85,7 @@ export class GBServer {
     const server = express();
 
     GBServer.globals.server = server;
+    GBServer.globals.httpsServer = null;
     GBServer.globals.webSessions = {};
     GBServer.globals.processes = {};
     GBServer.globals.files = {};
@@ -256,7 +257,7 @@ export class GBServer {
         pfx: Fs.readFileSync(process.env.CERTIFICATE_PFX)
       };
       const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
-
+      GBServer.globals.httpsServer = httpsServer;
       if (process.env.CERTIFICATE2_PFX) {
         const options2 = {
           passphrase: process.env.CERTIFICATE2_PASSPHRASE,

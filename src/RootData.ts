@@ -47,6 +47,7 @@ export class RootData {
   public files: {}; // List of uploaded files handled.
   public publicAddress: string; // URI for BotServer.
   public server: any; // Express reference.
+  public httpsServer: any; // Express reference (HTTPS).
   public sysPackages: any[]; // Loaded system package list.
   public appPackages: any[]; // Loaded .gbapp package list.
   public minService: GBMinService; // Minimalist service core.
