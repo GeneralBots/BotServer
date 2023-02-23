@@ -928,7 +928,7 @@ export class KBService implements IGBKBService {
       });
     };
 
-    /publish gbkbreturn doIt(subjectsLoaded.children, undefined);
+    return doIt(subjectsLoaded.children, undefined);
   }
 
   public async undeployKbFromStorage(instance: IGBInstance, deployer: GBDeployer, packageId: number) {
