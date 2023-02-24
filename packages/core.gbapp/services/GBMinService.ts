@@ -144,7 +144,7 @@ export class GBMinService {
     if (process.env.DISABLE_WEB !== 'true') {
       // SSR processing and default.gbui access definition.
 
-      GBServer.globals.server.get('/', async (req, res, next)=> {
+      GBServer.globals.server.get('/', async (req, res, next) => {
         await GBSSR.ssrFilter(req, res, next);
       });
 
@@ -225,11 +225,43 @@ export class GBMinService {
     const url = `/api/messages/${botId}`;
     removeRoute(GBServer.globals.server, url);
 
-
     const uiUrl = `/${botId}`;
     removeRoute(GBServer.globals.server, uiUrl);
 
     GBServer.globals.minInstances = GBServer.globals.minInstances.filter(p => p.instance.botId !== botId);
+  }
+
+  /**
+   * Mount the bot web site (default.gbui) secure domain.
+   */
+  public async loadDomain(min: GBMinInstance) {
+    // TODO: https://github.com/GeneralBots/BotServer/issues/321
+    const options = {
+      passphrase: process.env.CERTIFICATE2_PASSPHRASE,
+      pfx: Fs.readFileSync(process.env.CERTIFICATE2_PFX)
+    };
+
+    const domain = min.core.getParam(min.instance, 'Domain', null);
+    if (domain) {
+      GBServer.globals.server.get(domain, async (req, res, next) => {
+        await GBSSR.ssrFilter(req, res, next);
+      });
+      GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at custom domain: ${domain}.`);
+    }
+
+    
+    GBServer.globals.httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options);
+  }
+
+  /**
+   * Unmounts the bot web site (default.gbui) secure domain, if any.
+   */
+  public async unloadDomain(instance: IGBInstance) {
+
+
+
+
+    
   }
 
   /**
@@ -364,23 +396,15 @@ export class GBMinService {
 
     if (process.env.DISABLE_WEB !== 'true') {
       const uiUrl = `/${instance.botId}`;
-     
-      GBServer.globals.server.get(uiUrl, async (req, res, next)=> {
+
+      GBServer.globals.server.get(uiUrl, async (req, res, next) => {
         await GBSSR.ssrFilter(req, res, next);
       });
       const uiUrlAlt = `/${instance.activationCode}`;
-      GBServer.globals.server.get(uiUrlAlt, async (req, res, next)=> {
+      GBServer.globals.server.get(uiUrlAlt, async (req, res, next) => {
         await GBSSR.ssrFilter(req, res, next);
       });
 
-
-      const domain = min.core.getParam(min.instance, 'Domain', null);
-      if (domain) {
-        GBServer.globals.server.get(domain, async (req, res, next)=> {
-          await GBSSR.ssrFilter(req, res, next);
-        });
-          GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at custom domain: ${domain}.`);
-      }
       GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at: ${uiUrl} and ${uiUrlAlt}.`);
     }
 
@@ -879,7 +903,6 @@ export class GBMinService {
               data: data.slice(0, 10)
             });
           }
-
         }
         // Required for MSTEAMS handling of persisted conversations.
 
@@ -918,7 +941,7 @@ export class GBMinService {
             if (startDialog) {
               await sec.setParam(userId, 'welcomed', 'true');
               GBLog.info(`Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
-              await GBVMService.callVM(startDialog.toLowerCase(), min, step, user,  this.deployer, false);
+              await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
             }
           }
         }
@@ -994,7 +1017,6 @@ export class GBMinService {
 
           await this.processEventActivity(min, user, context, step);
         }
-
       } catch (error) {
         const msg = `ERROR: ${error.message} ${error.stack ? error.stack : ''}`;
         GBLog.error(msg);
@@ -1120,7 +1142,7 @@ export class GBMinService {
     const member = context.activity.from;
 
     let user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name, null);
-    
+
     const userId = user.userId;
     const params = user.params ? JSON.parse(user.params) : {};
 
@@ -1136,7 +1158,6 @@ export class GBMinService {
           conversation = await analytics.createConversation(user);
           user.conversationId = conversation.Id;
         }
-
 
         message = await analytics.createMessage(
           min.instance.instanceId,
@@ -1206,7 +1227,7 @@ export class GBMinService {
 
         await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
       } else if (cmdOrDialogName === '/call') {
-        await GBVMService.callVM(args, min, step, user,  this.deployer, false);
+        await GBVMService.callVM(args, min, step, user, this.deployer, false);
       } else if (cmdOrDialogName === '/callsch') {
         await GBVMService.callVM(args, min, null, null, null, false);
       } else if (cmdOrDialogName === '/calldbg') {

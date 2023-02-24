@@ -1,5 +1,2 @@
-echo General Bots
-echo Installing modules for the first time...
-
-npm i
-node .
+echo Starting General Bots...
+node boot.mjs --no-warnings

@@ -36,6 +36,9 @@
 
 'use strict';
 
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 import Path from 'path';
 import Fs from 'fs';
 import { NextFunction, Request, Response } from 'express';
@@ -43,11 +46,9 @@ import urljoin from 'url-join';
 import { GBMinInstance } from 'botlib';
 import { GBServer } from '../../../src/app.js';
 import { GBLogEx } from './GBLogEx.js';
-import { createRequire } from 'module';
 import urlJoin from 'url-join';
 import { GBDeployer } from './GBDeployer.js';
 import { GBMinService } from './GBMinService.js';
-const require = createRequire(import.meta.url);
 const puppeteer = require('puppeteer-extra');
 const hidden = require('puppeteer-extra-plugin-stealth');
 const { executablePath } = require('puppeteer');
