@@ -1,2 +1,2 @@
 echo Starting General Bots...
-node boot.mjs --no-warnings
+npm run start

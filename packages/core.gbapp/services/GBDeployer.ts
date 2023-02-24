@@ -713,6 +713,7 @@ export class GBDeployer implements IGBDeployer {
   public async rebuildIndex(instance: IGBInstance, searchSchema: any) {
     // Prepares search.
 
+
     const search = new AzureSearch(
       instance.searchKey,
       instance.searchHost,
@@ -721,40 +722,28 @@ export class GBDeployer implements IGBDeployer {
     );
     const connectionString = GBDeployer.getConnectionStringFromInstance(instance);
     const dsName = 'gb';
-
-    // Removes any previous index.
-
     try {
-      await search.deleteDataSource(dsName);
+      await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
     } catch (err) {
-      // If it is a 404 there is nothing to delete as it is the first creation.
+      GBLog.error(err);
 
-      if (err.code !== 404) {
-        throw err;
-      }
     }
 
     // Removes the index.
 
     try {
-      await search.deleteIndex();
+      await search.createIndex(searchSchema, dsName);
     } catch (err) {
       // If it is a 404 there is nothing to delete as it is the first creation.
 
       if (err.code !== 404 && err.code !== 'OperationNotAllowed') {
-        throw err;
+
       }
     }
 
-    // Creates the data source and index on the cloud.
 
-    try {
-      await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
-    } catch (err) {
-      GBLog.error(err);
-      throw err;
-    }
-    await search.createIndex(searchSchema, dsName);
+    await search.rebuildIndex(instance.searchIndexer);
+
   }
 
   /**
