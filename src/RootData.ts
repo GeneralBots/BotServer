@@ -29,6 +29,7 @@
 | our trademarks remain entirely with us.                                     |
 |                                                                             |
 \*****************************************************************************/
+
 /**
  * @fileoverview General Bots server core.
  */
@@ -41,10 +42,12 @@ import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
  */
 
 export class RootData {
+  public webSessions: {}  // List of Web Automation sessions.
   public processes: {}; // List of .gbdialog active executions.
   public files: {}; // List of uploaded files handled.
   public publicAddress: string; // URI for BotServer.
   public server: any; // Express reference.
+  public httpsServer: any; // Express reference (HTTPS).
   public sysPackages: any[]; // Loaded system package list.
   public appPackages: any[]; // Loaded .gbapp package list.
   public minService: GBMinService; // Minimalist service core.

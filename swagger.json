@@ -13,7 +13,7 @@
         "status": "Production"
       }
     },
-    "host": "generalbots.ai",
+    "host": "f993e4828c0d50.lhr.life",
     "basePath": "/",
     "schemes": [
       "https"
@@ -21,34 +21,20 @@
     "consumes": [],
     "produces": [],
     "paths": {
-      "/api/talkTo": {
+      "/api/v2/dev-perdomo/dialog/talk": {
         "post": {
+          "consumes":[
+            "text/plain; charset=utf-8"
+          ],
           "summary": "Talk to the user.",
           "description": "Talk to the user.",
           "x-ms-no-generic-test": true,
-          "operationId": "talkTo",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "parameters": [
-            {
-              "name": "content",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/TalkRequest"
-              }
-            }
-          ],
+          "operationId": "talk",
           "responses": {
             "200": {
               "description": "OK"
             }
-          },
-          "deprecated": false
+          }
         }
       }   
     },
@@ -58,9 +44,6 @@
           "properties": {
             "pid": {
               "type": "string"
-            },
-            "mobile": {
-                "type": "string"
               },
             "text": {
               "type": "string"

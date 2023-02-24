@@ -36,8 +36,7 @@
  * Image processing services of conversation to be called by BASIC.
  */
 export class KeywordsExpressions {
-
-  private static  getParams = (text: string, names) => {
+  private static getParams = (text: string, names) => {
     let ret = {};
     const splitParamsButIgnoreCommasInDoublequotes = (str: string) => {
       return str.split(',').reduce(
@@ -74,7 +73,6 @@ export class KeywordsExpressions {
    * Returns the list of BASIC keyword and their JS match.
    */
   public static getKeywords() {
-    
     // Keywords from General Bots BASIC.
 
     let keywords = [];
@@ -140,12 +138,28 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*open\s*(.*)/gim,
       ($0, $1, $2) => {
+        let sessionName;
+        let kind = '';
+        let pos;
+
+        if (pos = $1.match(/\s*AS\s*\#/)) {
+          kind = '"AS"';
+        } else if (pos = $1.match(/\s*WITH\s*\#/)) {
+          kind = '"WITH"';
+        }
+
+        if (pos) {
+          let part = $1.substr($1.lastIndexOf(pos[0]));
+          sessionName = `"${part.substr(part.indexOf('#') + 1)}"`;
+          $1 = $1.substr(0, $1.lastIndexOf(pos[0]));
+        }
+
         if (!$1.startsWith('"') && !$1.startsWith("'")) {
           $1 = `"${$1}"`;
         }
         const params = this.getParams($1, ['url', 'username', 'password']);
 
-        return `page = await wa.getPage({pid: pid,${params}})`;
+        return `page = await wa.getPage({pid: pid, sessionKind: ${kind}, sessionName: ${sessionName}, ${params}})`;
       }
     ];
 
@@ -153,6 +167,13 @@ export class KeywordsExpressions {
       /^\s*(set hear on)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `hrOn = ${$3}`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*hear (\w+) as (\w+( \w+)*.xlsx)/gim,
+      ($0, $1, $2) => {
+        return `${$1} = await dk.getHear({pid: pid, kind:"sheet", arg: "${$2}"})`;
       }
     ];
 
@@ -576,7 +597,7 @@ export class KeywordsExpressions {
         if ($3.substr(0, 1) !== '"') {
           $3 = `"${$3}"`;
         }
-        return `await dk.talk ({pid: pid, text: ${$3}})`;
+        return `await dk.getTalk ({pid: pid, text: ${$3}})`;
       }
     ];
 
@@ -674,6 +695,13 @@ export class KeywordsExpressions {
       /^\s*MERGE\s*(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.merge({pid: pid, file: ${$1}, data: ${$2}, key1: ${$3}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(MERGE)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await img.mergeImage({pid: pid, files: [${$3}]})`;
       }
     ];
 

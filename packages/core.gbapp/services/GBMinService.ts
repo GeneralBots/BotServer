@@ -87,6 +87,7 @@ import { GoogleChatDirectLine } from '../../google-chat.gblib/services/GoogleCha
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 import * as nlp from 'node-nlp';
 import Path from 'path';
+import { GBSSR } from './GBSSR.js';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -95,7 +96,7 @@ export class GBMinService {
   /**
    * Default General Bots User Interface package.
    */
-  private static uiPackage = 'default.gbui';
+  public static uiPackage = 'default.gbui';
 
   /**
    * Main core service attached to this bot service.
@@ -141,23 +142,11 @@ export class GBMinService {
     // Servers default UI on root address '/' if web enabled.
 
     if (process.env.DISABLE_WEB !== 'true') {
-      // SSR processing.
+      // SSR processing and default.gbui access definition.
 
-      const defaultOptions = {
-        prerender: [],
-        exclude: ['/api/', '/instances/', '/webhooks/'],
-        useCache: true,
-        cacheRefreshRate: 86400
-      };
-      // GBServer.globals.server.use(ssrForBots(defaultOptions));
-
-      const url = GBServer.globals.wwwroot
-        ? GBServer.globals.wwwroot
-        : urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build');
-
-      // default.gbui access definition.
-
-      GBServer.globals.server.use('/', express.static(url));
+      GBServer.globals.server.get('/', async (req, res, next) => {
+        await GBSSR.ssrFilter(req, res, next);
+      });
 
       // Servers the bot information object via HTTP so clients can get
       // instance information stored on server.
@@ -243,6 +232,39 @@ export class GBMinService {
   }
 
   /**
+   * Mount the bot web site (default.gbui) secure domain.
+   */
+  public async loadDomain(min: GBMinInstance) {
+    // TODO: https://github.com/GeneralBots/BotServer/issues/321
+    const options = {
+      passphrase: process.env.CERTIFICATE2_PASSPHRASE,
+      pfx: Fs.readFileSync(process.env.CERTIFICATE2_PFX)
+    };
+
+    const domain = min.core.getParam(min.instance, 'Domain', null);
+    if (domain) {
+      GBServer.globals.server.get(domain, async (req, res, next) => {
+        await GBSSR.ssrFilter(req, res, next);
+      });
+      GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at custom domain: ${domain}.`);
+    }
+
+    
+    GBServer.globals.httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options);
+  }
+
+  /**
+   * Unmounts the bot web site (default.gbui) secure domain, if any.
+   */
+  public async unloadDomain(instance: IGBInstance) {
+
+
+
+
+    
+  }
+
+  /**
    * Mount the instance by creating an BOT Framework bot object,
    * serving bot endpoint in several URL like WhatsApp endpoint, .gbkb assets,
    * installing all BASIC artifacts from .gbdialog and OAuth2.
@@ -292,6 +314,10 @@ export class GBMinService {
       mkdirp.sync(dir);
     }
     dir = `work/${min.botId}.gbai/uploads`;
+    if (!Fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
+    dir = `work/${min.botId}.gbai/${min.botId}.gbui`;
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
@@ -370,23 +396,15 @@ export class GBMinService {
 
     if (process.env.DISABLE_WEB !== 'true') {
       const uiUrl = `/${instance.botId}`;
+
+      GBServer.globals.server.get(uiUrl, async (req, res, next) => {
+        await GBSSR.ssrFilter(req, res, next);
+      });
       const uiUrlAlt = `/${instance.activationCode}`;
-      GBServer.globals.server.use(
-        uiUrl,
-        express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
-      );
-      GBServer.globals.server.use(
-        uiUrlAlt,
-        express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
-      );
-      const domain = min.core.getParam(min.instance, 'Domain', null);
-      if (domain) {
-        GBServer.globals.server.use(
-          domain,
-          express.static(urlJoin(GBDeployer.deployFolder, GBMinService.uiPackage, 'build'))
-        );
-        GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at custom domain: ${domain}.`);
-      }
+      GBServer.globals.server.get(uiUrlAlt, async (req, res, next) => {
+        await GBSSR.ssrFilter(req, res, next);
+      });
+
       GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at: ${uiUrl} and ${uiUrlAlt}.`);
     }
 
@@ -599,6 +617,7 @@ export class GBMinService {
    * Gets a Speech to Text / Text to Speech token from the provider.
    */
   private async getSTSToken(instance: any) {
+    return null; // TODO: https://github.com/GeneralBots/BotServer/issues/332
     const options = {
       method: 'POST',
       headers: {
@@ -884,12 +903,7 @@ export class GBMinService {
               data: data.slice(0, 10)
             });
           }
-
-          // Saves session user (persisted GuaribasUser is inside).
-
-          await min.userProfile.set(step.context, user);
         }
-
         // Required for MSTEAMS handling of persisted conversations.
 
         if (step.context.activity.channelId === 'msteams') {
@@ -927,7 +941,7 @@ export class GBMinService {
             if (startDialog) {
               await sec.setParam(userId, 'welcomed', 'true');
               GBLog.info(`Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
-              await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
+              await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
             }
           }
         }
@@ -973,7 +987,7 @@ export class GBMinService {
                 GBLog.info(
                   `Auto start (web 1) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
                 );
-                await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
+                await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
               }
             }
           } else {
@@ -987,11 +1001,10 @@ export class GBMinService {
               ) {
                 await sec.setParam(userId, 'welcomed', 'true');
                 min['conversationWelcomed'][step.context.activity.conversation.id] = true;
-                await min.userProfile.set(step.context, user);
                 GBLog.info(
                   `Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
                 );
-                await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
+                await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
               }
             }
           }
@@ -1004,10 +1017,6 @@ export class GBMinService {
 
           await this.processEventActivity(min, user, context, step);
         }
-
-        // Saves conversation state for later use.
-
-        await conversationState.saveChanges(context, true);
       } catch (error) {
         const msg = `ERROR: ${error.message} ${error.stack ? error.stack : ''}`;
         GBLog.error(msg);
@@ -1051,7 +1060,7 @@ export class GBMinService {
       if (startDialog && !min['conversationWelcomed'][step.context.activity.conversation.id]) {
         user.welcomed = true;
         GBLog.info(`Auto start (web 2) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
-        await GBVMService.callVM(startDialog.toLowerCase(), min, step, this.deployer, false);
+        await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
       }
     } else if (context.activity.name === 'updateToken') {
       const token = context.activity.data;
@@ -1133,6 +1142,7 @@ export class GBMinService {
     const member = context.activity.from;
 
     let user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name, null);
+
     const userId = user.userId;
     const params = user.params ? JSON.parse(user.params) : {};
 
@@ -1155,6 +1165,9 @@ export class GBMinService {
           userId,
           context.activity.text
         );
+
+        const conversationReference = JSON.stringify(TurnContext.getConversationReference(context.activity));
+        await sec.updateConversationReferenceById(userId, conversationReference);
       }
     }
 
@@ -1202,7 +1215,7 @@ export class GBMinService {
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
     if (isVMCall) {
-      await GBVMService.callVM(context.activity.text, min, step, this.deployer, false);
+      await GBVMService.callVM(context.activity.text, min, step, user, this.deployer, false);
     } else if (context.activity.text.charAt(0) === '/') {
       const text = context.activity.text;
       const parts = text.split(' ');
@@ -1212,16 +1225,13 @@ export class GBMinService {
       if (cmdOrDialogName === '/start') {
         // Reset user.
 
-        const user = await min.userProfile.get(context, {});
         await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
-        user.loaded = false;
-        await min.userProfile.set(step.context, user);
       } else if (cmdOrDialogName === '/call') {
-        await GBVMService.callVM(args, min, step, this.deployer, false);
+        await GBVMService.callVM(args, min, step, user, this.deployer, false);
       } else if (cmdOrDialogName === '/callsch') {
-        await GBVMService.callVM(args, min, null, null, false);
+        await GBVMService.callVM(args, min, null, null, null, false);
       } else if (cmdOrDialogName === '/calldbg') {
-        await GBVMService.callVM(args, min, step, this.deployer, true);
+        await GBVMService.callVM(args, min, step, user, this.deployer, true);
       } else {
         await step.beginDialog(cmdOrDialogName, { args: args });
       }

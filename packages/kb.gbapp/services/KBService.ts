@@ -62,8 +62,17 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService.js';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models/index.js';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService.js';
+import { parse } from 'node-html-parser';
 import textract from 'textract';
 import pdf from 'pdf-extraction';
+import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import mammoth from 'mammoth';
+import { url } from 'inspector';
+import { min } from 'lodash';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { text } from 'body-parser';
+import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 
 /**
  * Result for quey on KB data.
@@ -295,7 +304,7 @@ export class KBService implements IGBKBService {
         subject4: string;
       }
 
-      const client = new SearchClient<SearchResults>('https://' + instance.searchHost, 'azuresql-index', {
+      const client = new SearchClient<any>('https://' + instance.searchHost, 'azuresql-index', {
         key: instance.searchKey
       } as any);
 
@@ -307,15 +316,14 @@ export class KBService implements IGBKBService {
         top: 1
       });
 
-      const values = results.results;
       let returnedScore = 0;
 
       // Searches via Search (Azure Search).
 
       let found = false;
-      for await (const result of values) {
+      for await (const result of results.results) {
         found = true;
-        returnedScore = result['@search.score'];
+        returnedScore = result.score;
         if (returnedScore >= searchScore) {
           const value = await this.getAnswerById(instance.instanceId, result.document.answerId);
           if (value !== null) {
@@ -402,7 +410,7 @@ export class KBService implements IGBKBService {
 
   public async importKbTabularFile(
     filePath: string,
-    instanceId: number,
+    min: GBMinInstance,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
     GBLog.info(`Now reading file ${filePath}...`);
@@ -514,10 +522,27 @@ export class KBService implements IGBKBService {
             return false;
           }
 
+          // In case  of code cell, compiles it and associate with the answer.
+
+          answer = GBVMService.normalizeQuotes(answer);
+          const isBasic = answer.toLowerCase().startsWith('/basic');
+          if (/TALK\s*\".*\"/gi.test(answer) || isBasic) {
+            const code = isBasic ? answer.substr(6) : answer;
+            const gbaiName = `${min.instance.botId}.gbai`;
+            const gbdialogName = `${min.instance.botId}.gbdialog`;
+            const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
+            const localName = Path.join('work', gbaiName, gbdialogName, `${scriptName}`);
+            Fs.writeFileSync(localName, code, { encoding: null });
+            answer = scriptName;
+
+            const vm = new GBVMService();
+            await vm.loadDialog(Path.basename(localName), Path.dirname(localName), min);
+          }
+
           // Now with all the data ready, creates entities in the store.
 
           const answer1 = {
-            instanceId: instanceId,
+            instanceId: min.instance.instanceId,
             content: answer,
             format: format,
             media: media,
@@ -535,7 +560,7 @@ export class KBService implements IGBKBService {
             subject3: subject3,
             subject4: subject4,
             content: question.replace(/["]+/g, ''),
-            instanceId: instanceId,
+            instanceId: min.instance.instanceId,
             skipIndex: question.charAt(0) === '"',
             packageId: packageId
           };
@@ -610,14 +635,15 @@ export class KBService implements IGBKBService {
     // Imports subjects tree into database and return it.
 
     const subjectFile = urlJoin(localPath, 'subjects.json');
+    const menuFile = urlJoin(localPath, 'menu.xlsx');
 
-    if (Fs.existsSync(subjectFile)) {
-      await this.importSubjectFile(packageStorage.packageId, subjectFile, instance);
+    if (Fs.existsSync(subjectFile) || Fs.existsSync(menuFile)) {
+      await this.importSubjectFile(packageStorage.packageId, subjectFile, menuFile, instance);
     }
 
     // Import tabular files in the tabular directory.
 
-    await this.importKbTabularDirectory(localPath, instance, packageStorage.packageId);
+    await this.importKbTabularDirectory(localPath, min, packageStorage.packageId);
 
     // Import remaining .md files in articles directory.
 
@@ -633,6 +659,7 @@ export class KBService implements IGBKBService {
    */
   public async importRemainingArticles(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
     const files = await walkPromise(urlJoin(localPath, 'articles'));
+    const data = { questions: [], answers: [] };
 
     await CollectionUtil.asyncForEach(files, async file => {
       if (file !== null && file.name.endsWith('.md')) {
@@ -651,7 +678,103 @@ export class KBService implements IGBKBService {
             prevId: 0 // https://github.com/GeneralBots/BotServer/issues/312
           });
         }
+      } else if (file !== null && file.name.endsWith('.docx')) {
+        const gbaiName = `${instance.botId}.gbai`;
+        const gbkbName = `${instance.botId}.gbkb`;
+        const localName = Path.join('work', gbaiName, gbkbName, 'articles', file.name);
+        const buffer = Fs.readFileSync(localName, { encoding: null });
+        var options = {
+          buffer: buffer,
+          convertImage: async image => {
+            const localName = Path.join(
+              'work',
+              gbaiName,
+              'cache',
+              `img-docx${GBAdminService.getRndReadableIdentifier()}.png`
+            );
+            const url = urlJoin(GBServer.globals.publicAddress, instance.botId, 'cache', Path.basename(localName));
+            const buffer = await image.read();
+            Fs.writeFileSync(localName, buffer, { encoding: null });
+            return { src: url };
+          }
+        };
+
+        let state = 0;
+        let previousState = state;
+        const next = (root, el, data) => {
+          // If it is root, change to the first item.
+
+          if (el.parentNode == null) {
+            el = el.firstChild;
+          }
+          let value = el.innerHTML;
+          const isHeader = el => el.rawTagName.startsWith('h') && el.rawTagName.length === 2;
+
+          // Handle questions from H* elements.
+
+          if (state === 0) {
+            const question = {
+              from: 'document',
+              to: '',
+              subject1: '',
+              subject2: '',
+              subject3: '',
+              subject4: '',
+              content: value.replace(/["]+/g, ''),
+              instanceId: instance.instanceId,
+              skipIndex: 0,
+              packageId: packageId
+            };
+            data.questions.push(question);
+            previousState = state;
+            state = 1;
+
+            // Everything else is content for that Header.
+          } else if (state === 1) {
+            // If next element is null, the tree has been passed, so
+            // finish the append of other elements between the last Header
+            // and the end of the document.
+
+            if (!el.nextSibling || isHeader(el.nextSibling)) {
+              const answer = {
+                instanceId: instance.instanceId,
+                content: value,
+                format: '.html',
+                media: file.name,
+                packageId: packageId,
+                prevId: 0
+              };
+
+              data.answers.push(answer);
+
+              state = 0;
+
+              // Otherwise, just append content to insert later.
+            } else {
+              value += value;
+            }
+          }
+
+          // Goes to the next node, as it is all same level nodes.
+
+          if (el.nextSibling) {
+            next(root, el.nextSibling, data);
+          }
+        };
+
+        const html = await mammoth.convertToHtml(options);
+        const root = parse(html.value);
+        next(root, root, data);
       }
+
+      // Persist to storage.
+
+      const answersCreated = await GuaribasAnswer.bulkCreate(data.answers);
+      let i = 0;
+      await CollectionUtil.asyncForEach(data.questions, async question => {
+        question.answerId = answersCreated[i++].answerId;
+      });
+      return await GuaribasQuestion.bulkCreate(data.questions);
     });
   }
 
@@ -696,18 +819,93 @@ export class KBService implements IGBKBService {
     }
   }
 
-  public async importKbTabularDirectory(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
+  public async importKbTabularDirectory(localPath: string, min: GBMinInstance, packageId: number): Promise<any> {
     const files = await walkPromise(localPath);
 
     await CollectionUtil.asyncForEach(files, async file => {
       if (file !== null && file.name.endsWith('.xlsx')) {
-        return await this.importKbTabularFile(urlJoin(file.root, file.name), instance.instanceId, packageId);
+        return await this.importKbTabularFile(urlJoin(file.root, file.name), min, packageId);
       }
     });
   }
 
-  public async importSubjectFile(packageId: number, filename: string, instance: IGBInstance): Promise<any> {
-    const subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
+  public async importSubjectFile(
+    packageId: number,
+    filename: string,
+    menuFile: string,
+    instance: IGBInstance
+  ): Promise<any> {
+    let subjectsLoaded;
+    if (menuFile) {
+      // Loads menu.xlsx and finds worksheet.
+
+      const workbook = new Excel.Workbook();
+      const data = await workbook.xlsx.readFile(menuFile);
+      let worksheet: any;
+      for (let t = 0; t < data.worksheets.length; t++) {
+        worksheet = data.worksheets[t];
+        if (worksheet) {
+          break;
+        }
+      }
+
+      const MAX_LEVEL = 4; // Max column level to reach menu items in plan.
+      // Iterates over all items.
+
+      let rows = worksheet._rows;
+      rows.length = 24;
+      let lastLevel = 0;
+      let subjects = { children: [] };
+      let childrenNode = subjects.children;
+      let activeObj = null;
+
+      let activeChildrenGivenLevel = [childrenNode];
+
+      await asyncPromise.eachSeries(rows, async row => {
+        if (!row) return;
+        let menu;
+
+        // Detect menu level by skipping blank cells on left.
+        
+        let level;
+        for (level = 0; level < MAX_LEVEL; level++) {
+          menu = row._cells[level];
+          if (menu && menu.text) {
+            break;
+          }
+        }
+
+        // Tree hierarchy calculation.        
+
+         if (level > lastLevel) {
+          childrenNode = activeObj.children;
+        } else if (level < lastLevel) {
+          childrenNode = activeChildrenGivenLevel[level];
+        }
+
+        /// Keeps the record of last subroots for each level, to
+        // changel levels greater than one (return to main menu),
+        // can exists between leaf nodes and roots.
+
+        activeChildrenGivenLevel[level] = childrenNode;
+
+        // Insert the object into JSON.
+
+        activeObj = {
+          title: menu,
+          description: row._cells[level + 1],
+          id: menu,
+          children: []
+        };
+        activeChildrenGivenLevel[level].push(activeObj);
+
+        lastLevel = level;
+      });
+
+      subjectsLoaded = subjects;
+    } else {
+      subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
+    }
 
     const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
       return asyncPromise.eachSeries(subjects, async item => {
@@ -775,8 +973,6 @@ export class KBService implements IGBKBService {
    */
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
     const packageName = Path.basename(localPath);
-    GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
-
     const instance = await core.loadInstanceByBotId(min.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
@@ -787,6 +983,18 @@ export class KBService implements IGBKBService {
 
     min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
     await KBService.RefreshNER(min);
+
+    GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
+    const html = await GBSSR.getHTML(min);
+    const path = Path.join(
+      process.env.PWD,
+      'work',
+      `${min.instance.botId}.gbai`,
+      `${min.instance.botId}.gbui`,
+      'index.html'
+    );
+    GBLogEx.info(min, `[GBDeployer] Generating SSR HTML in ${path}.`);
+    Fs.writeFileSync(path, html, 'utf8');
 
     GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
   }

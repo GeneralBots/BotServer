@@ -39,7 +39,7 @@ import { DialogKeywords } from './DialogKeywords.js';
 import { GBServer } from '../../../src/app.js';
 import { GBVMService } from './GBVMService.js';
 import Fs from 'fs';
-import { createBrowser } from '../../core.gbapp/services/GBSSR.js';
+import { GBSSR }from '../../core.gbapp/services/GBSSR.js';
 import urlJoin from 'url-join';
 import Excel from 'exceljs';
 import { TwitterApi } from 'twitter-api-v2';
@@ -93,11 +93,11 @@ export class SystemKeywords {
   }
 
   public async callVM({ pid, text }) {
-    const min = null;
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const step = null;
     const deployer = null;
 
-    return await GBVMService.callVM(text, min, step, deployer, false);
+    return await GBVMService.callVM(text, min, step, user, deployer, false);
   }
 
   public async append({ pid, args }) {
@@ -259,7 +259,7 @@ export class SystemKeywords {
 
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const gbaiName = `${min.botId}.gbai`;
-    const browser = await createBrowser(null);
+    const browser = await GBSSR.createBrowser(null);
     const page = await browser.newPage();
 
     // Includes the associated CSS related to current theme.
@@ -1462,6 +1462,7 @@ export class SystemKeywords {
     const images = [];
     let index = 0;
     path = Path.join(gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+    url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
     const traverseDataToInjectImageUrl = async o => {
       for (var i in o) {

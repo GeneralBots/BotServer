@@ -9,10 +9,13 @@
       "program": "${workspaceRoot}/boot.mjs",
       "cwd": "${workspaceRoot}",
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "NODE_NO_WARNINGS":"1"
       },
       "args": [
-        "--no-deprecation"
+        "--no-deprecation", 
+        "--loader ts-node/esm", 
+        "--require ${workspaceRoot}/suppress-node-warnings.cjs", 
       ],
       "skipFiles": [
         "node_modules/**/*.js"

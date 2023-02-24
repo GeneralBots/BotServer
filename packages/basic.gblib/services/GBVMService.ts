@@ -32,7 +32,7 @@
 
 'use strict';
 
-import { GBLog, GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
+import { GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
 import * as Fs from 'fs';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
@@ -47,12 +47,10 @@ import walkPromise from 'walk-promise';
 import child_process from 'child_process';
 import Path from 'path';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import pkg from 'swagger-client';
 import { DialogKeywords } from './DialogKeywords.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
-const { Swagger } = pkg;
-
-
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GuaribasUser } from '../../security.gbapp/models/index.js';
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -63,9 +61,7 @@ const { Swagger } = pkg;
  * Basic services for BASIC manipulation.
  */
 export class GBVMService extends GBService {
-
   private static DEBUGGER_PORT = 9222;
-
 
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
     const files = await walkPromise(folder);
@@ -78,41 +74,46 @@ export class GBVMService extends GBService {
       let filename: string = file.name;
 
       if (filename.endsWith('.docx')) {
-        const wordFile = filename;
-        const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
-        const fullVbsFile = urlJoin(folder, vbsFile);
-        const docxStat = Fs.statSync(urlJoin(folder, wordFile));
-        const interval = 3000; // If compiled is older 30 seconds, then recompile.
-        let writeVBS = true;
-        if (Fs.existsSync(fullVbsFile)) {
-          const vbsStat = Fs.statSync(fullVbsFile);
-          if (docxStat['mtimeMs'] < vbsStat['mtimeMs'] + interval) {
-            writeVBS = false;
-          }
-        }
-        filename = vbsFile;
-        let mainName = GBVMService.getMethodNameFromVBSFilename(filename);
-        min.scriptMap[filename] = mainName;
+        filename = await this.loadDialog(filename, folder, min);
+      }
+    });
+  }
 
-        if (writeVBS) {
-          let text = await this.getTextFromWord(folder, wordFile);
+  public async loadDialog(filename: string, folder: string, min: GBMinInstance) {
+    const wordFile = filename;
+    const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
+    const fullVbsFile = urlJoin(folder, vbsFile);
+    const docxStat = Fs.statSync(urlJoin(folder, wordFile));
+    const interval = 3000; // If compiled is older 30 seconds, then recompile.
+    let writeVBS = true;
+    if (Fs.existsSync(fullVbsFile)) {
+      const vbsStat = Fs.statSync(fullVbsFile);
+      if (docxStat['mtimeMs'] < vbsStat['mtimeMs'] + interval) {
+        writeVBS = false;
+      }
+    }
+    filename = vbsFile;
+    let mainName = GBVMService.getMethodNameFromVBSFilename(filename);
+    min.scriptMap[filename] = mainName;
 
-          const schedule = GBVMService.getSetScheduleKeywordArgs(text);
-          const s = new ScheduleServices();
-          if (schedule) {
-            await s.createOrUpdateSchedule(min, schedule, mainName);
-          } else {
-            await s.deleteScheduleIfAny(min, mainName);
-          }
-          text = text.replace(/^\s*SET SCHEDULE (.*)/gim, '');
-          Fs.writeFileSync(urlJoin(folder, vbsFile), text);
-        }
+    if (writeVBS) {
+      let text = await this.getTextFromWord(folder, wordFile);
 
-        // Process node_modules install.
+      const schedule = GBVMService.getSetScheduleKeywordArgs(text);
+      const s = new ScheduleServices();
+      if (schedule) {
+        await s.createOrUpdateSchedule(min, schedule, mainName);
+      } else {
+        await s.deleteScheduleIfAny(min, mainName);
+      }
+      text = text.replace(/^\s*SET SCHEDULE (.*)/gim, '');
+      Fs.writeFileSync(urlJoin(folder, vbsFile), text);
+    }
 
-        const node_modules = urlJoin(folder, 'node_modules');
-        if (!Fs.existsSync(node_modules)) {
-          const packageJson = `
+    // Process node_modules install.
+    const node_modules = urlJoin(folder, 'node_modules');
+    if (!Fs.existsSync(node_modules)) {
+      const packageJson = `
             {
               "name": "${min.botId}.gbdialog",
               "version": "1.0.0",
@@ -127,43 +128,41 @@ export class GBVMService extends GBService {
                 "vm2": "3.9.11"
               }
             }`;
-          Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
+      Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
 
-          GBLog.info(`BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
-          const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
-          child_process.execSync(`${npmPath} install`, { cwd: folder });
-        }
+      GBLogEx.info(min, `BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
+      const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
+      child_process.execSync(`${npmPath} install`, { cwd: folder });
+    }
 
-        // Hot swap for .vbs files.
-
-        const fullFilename = urlJoin(folder, filename);
-        if (process.env.GBDIALOG_HOTSWAP) {
-          Fs.watchFile(fullFilename, async () => {
-            await this.translateBASIC(fullFilename, mainName, min.botId);
-            const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
-            min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
-          });
-        }
-
-        const compiledAt = Fs.statSync(fullFilename);
-        const jsfile = urlJoin(folder, `${filename}.js`);
-
-        if (Fs.existsSync(jsfile)) {
-          const jsStat = Fs.statSync(jsfile);
-          const interval = 30000; // If compiled is older 30 seconds, then recompile.
-          if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
-            await this.translateBASIC(fullFilename, mainName, min.botId);
-          }
-        } else {
-          await this.translateBASIC(fullFilename, mainName, min.botId);
-        }
+    // Hot swap for .vbs files.
+    const fullFilename = urlJoin(folder, filename);
+    if (process.env.GBDIALOG_HOTSWAP) {
+      Fs.watchFile(fullFilename, async () => {
+        await this.translateBASIC(fullFilename, mainName, min);
         const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
         min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
+      });
+    }
+
+    const compiledAt = Fs.statSync(fullFilename);
+    const jsfile = urlJoin(folder, `${filename}.js`);
+
+    if (Fs.existsSync(jsfile)) {
+      const jsStat = Fs.statSync(jsfile);
+      const interval = 30000; // If compiled is older 30 seconds, then recompile.
+      if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
+        await this.translateBASIC(fullFilename, mainName, min);
       }
-    });
+    } else {
+      await this.translateBASIC(fullFilename, mainName, min);
+    }
+    const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
+    min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
+    return filename;
   }
 
-  public async translateBASIC(filename: any, mainName: string, botId: string) {
+  public async translateBASIC(filename: any, mainName: string, min: GBMinInstance) {
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = Fs.readFileSync(filename, 'utf8');
@@ -204,10 +203,10 @@ export class GBVMService extends GBService {
 
       // Interprocess communication from local HTTP to the BotServer.
 
-      const dk = rest.createClient('http://localhost:1111/api/v2/${botId}/dialog');
-      const sys = rest.createClient('http://localhost:1111/api/v2/${botId}/system');
-      const wa = rest.createClient('http://localhost:1111/api/v2/${botId}/webautomation');
-      const img = rest.createClient('http://localhost:1111/api/v2/${botId}/imagprocessing');
+      const dk = rest.createClient('http://localhost:1111/api/v2/${min.botId}/dialog');
+      const sys = rest.createClient('http://localhost:1111/api/v2/${min.botId}/system');
+      const wa = rest.createClient('http://localhost:1111/api/v2/${min.botId}/webautomation');
+      const img = rest.createClient('http://localhost:1111/api/v2/${min.botId}/imagprocessing');
               
       // Local variables.
 
@@ -241,11 +240,13 @@ export class GBVMService extends GBService {
 
       ${code}
 
+      await wa.getCloseHandles({pid: pid});
+
     })(); 
   
 `;
     Fs.writeFileSync(jsfile, code);
-    GBLog.info(`[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
+    GBLogEx.info(min, `[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
   }
 
   public static getMethodNameFromVBSFilename(filename: string) {
@@ -262,22 +263,32 @@ export class GBVMService extends GBService {
 
   private async getTextFromWord(folder: string, filename: string) {
     return new Promise<string>(async (resolve, reject) => {
-      textract.fromFileWithPath(urlJoin(folder, filename), { preserveLineBreaks: true }, (error, text) => {
+      const path = urlJoin(folder, filename);
+      textract.fromFileWithPath(path, { preserveLineBreaks: true }, (error, text) => {
         if (error) {
-          reject(error);
-        } else {
-          text = text.replace('¨', '"');
-          text = text.replace('“', '"');
-          text = text.replace('”', '"');
-          text = text.replace('‘', "'");
-          text = text.replace('’', "'");
-
-          resolve(text);
+          if (error.message.startsWith('File not correctly recognized as zip file')) {
+            text = Fs.readFileSync(path, 'utf8');
+          } else {
+            reject(error);
+          }
         }
+
+        if (text) {
+          text = GBVMService.normalizeQuotes(text);
+        }
+        resolve(text);
       });
     });
   }
 
+  public static normalizeQuotes(text: any) {
+    text = text.replace('¨', '"');
+    text = text.replace('“', '"');
+    text = text.replace('”', '"');
+    text = text.replace('‘', "'");
+    text = text.replace('’', "'");
+    return text;
+  }
 
   /**
    * Converts General Bots BASIC
@@ -288,7 +299,7 @@ export class GBVMService extends GBService {
   public async convert(code: string) {
     // Start and End of VB2TS tags of processing.
 
-    code = process.env.ENABLE_AUTH ? `hear gbLogin as login\n${code}` : code;
+    code = process.env.ENABLE_AUTH ? `hear GBLogExin as login\n${code}` : code;
     var lines = code.split('\n');
     const keywords = KeywordsExpressions.getKeywords();
     let current = 41;
@@ -313,13 +324,18 @@ export class GBVMService extends GBService {
   /**
    * Executes the converted JavaScript from BASIC code inside execution context.
    */
-  public static async callVM(text: string, min: GBMinInstance, step, deployer: GBDeployer, debug: boolean) {
-
+  public static async callVM(
+    text: string,
+    min: GBMinInstance,
+    step,
+    user: GuaribasUser,
+    deployer: GBDeployer,
+    debug: boolean = false
+  ) {
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 
-    const user = step ? await min.userProfile.get(step.context, {}) : null;
-    const dk = new DialogKeywords(min, deployer, user);
+    const dk = new DialogKeywords(min, deployer, null);
     const sandbox = {};
     const contentLocale = min.core.getParam<string>(
       min.instance,
@@ -327,17 +343,18 @@ export class GBVMService extends GBService {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
+    // TODO: https://github.com/GeneralBots/BotServer/issues/217
     // Auto-NLP generates BASIC variables related to entities.
 
-    if (step && step.context.activity['originalText']) {
-      const entities = await min['nerEngine'].findEntities(step.context.activity['originalText'], contentLocale);
+    // if (step && step.context.activity['originalText'] && min['nerEngine']) {
+    //   const entities = await min['nerEngine'].findEntities(step.context.activity['originalText'], contentLocale);
 
-      for (let i = 0; i < entities.length; i++) {
-        const v = entities[i];
-        const variableName = `${v.entity}`;
-        sandbox[variableName] = v.option;
-      }
-    }
+    //   for (let i = 0; i < entities.length; i++) {
+    //     const v = entities[i];
+    //     const variableName = `${v.entity}`;
+    //     sandbox[variableName] = v.option;
+    //   }
+    // }
 
     const botId = min.botId;
     const gbdialogPath = urlJoin(process.cwd(), 'work', `${botId}.gbai`, `${botId}.gbdialog`);
@@ -353,9 +370,9 @@ export class GBVMService extends GBService {
     };
 
     sandbox['id'] = dk.sys().getRandomId();
-    sandbox['username'] = await dk.userName({pid});
-    sandbox['mobile'] = await dk.userMobile({pid});
-    sandbox['from'] = await dk.userMobile({pid});
+    sandbox['username'] = await dk.userName({ pid });
+    sandbox['mobile'] = await dk.userMobile({ pid });
+    sandbox['from'] = await dk.userMobile({ pid });
     sandbox['ENTER'] = String.fromCharCode(13);
     sandbox['headers'] = {};
     sandbox['data'] = {};
@@ -364,8 +381,10 @@ export class GBVMService extends GBService {
     sandbox['httpPs'] = '';
     sandbox['pid'] = pid;
 
-    if (GBConfigService.get('GBVM') === 'false') {
-      try {
+    let result;
+
+    try {
+      if (GBConfigService.get('GBVM') === 'false') {
         const vm1 = new NodeVM({
           allowAsync: true,
           sandbox: sandbox,
@@ -379,23 +398,18 @@ export class GBVMService extends GBService {
           }
         });
         const s = new VMScript(code, { filename: scriptPath });
-        let x = vm1.run(s);
-        return x;
-      } catch (error) {
-        throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
-      }
-    } else {
-      const runnerPath = urlJoin(
-        process.cwd(),
-        'dist',
-        'packages',
-        'basic.gblib',
-        'services',
-        'vm2-process',
-        'vm2ProcessRunner.js'
-      );
+        result = vm1.run(s);
+      } else {
+        const runnerPath = urlJoin(
+          process.cwd(),
+          'dist',
+          'packages',
+          'basic.gblib',
+          'services',
+          'vm2-process',
+          'vm2ProcessRunner.js'
+        );
 
-      try {
         const { run } = createVm2Pool({
           min: 0,
           max: 0,
@@ -409,12 +423,13 @@ export class GBVMService extends GBService {
           script: runnerPath
         });
 
-        const result = await run(code, { filename: scriptPath, sandbox: sandbox });
-
-        return result;
-      } catch (error) {
-        throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
+        result = await run(code, { filename: scriptPath, sandbox: sandbox });
       }
+    } catch (error) {
+      throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
+    } finally {
     }
+
+    return result;
   }
 }

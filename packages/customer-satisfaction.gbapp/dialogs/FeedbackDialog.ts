@@ -170,8 +170,7 @@ export class FeedbackDialog extends IGBDialog {
             await sec.updateHumanAgent(userSystemId, min.instance.instanceId, null);
             await sec.updateHumanAgent(manualUser.userSystemId, min.instance.instanceId, null);
 
-            user = await sec.getUserFromSystemId(userSystemId);
-            await min.userProfile.set(step.context, user);
+            
           } else if (user.agentMode === 'human') {
             const agent = await sec.getUserFromSystemId(user.agentSystemId);
 
@@ -200,9 +199,7 @@ export class FeedbackDialog extends IGBDialog {
 
             await sec.updateHumanAgent(user.userSystemId, min.instance.instanceId, null);
             await sec.updateHumanAgent(agent.userSystemId, min.instance.instanceId, null);
-
-            user = await sec.getUserFromSystemId(userSystemId);
-            await min.userProfile.set(step.context, user);
+            
           } else {
             if (user.userSystemId.charAt(2) === ':' || userSystemId.indexOf('@') > -1) {
               // Agent is from Teams or Google Chat.

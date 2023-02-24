@@ -55,6 +55,7 @@ import auth from 'basic-auth';
 import child_process from 'child_process';
 import * as winston from 'winston-logs-display';
 import { RootData } from './RootData.js';
+import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
 
 /**
  * General Bots open-core entry point.
@@ -84,6 +85,8 @@ export class GBServer {
     const server = express();
 
     GBServer.globals.server = server;
+    GBServer.globals.httpsServer = null;
+    GBServer.globals.webSessions = {};
     GBServer.globals.processes = {};
     GBServer.globals.files = {};
     GBServer.globals.appPackages = [];
@@ -126,7 +129,7 @@ export class GBServer {
           const azureDeployer: AzureDeployerService = await AzureDeployerService.createInstance(deployer);
           const adminService: GBAdminService = new GBAdminService(core);
 
-          if (process.env.NODE_ENV === 'development' ) {
+          if (process.env.NODE_ENV === 'development') {
             const proxy = GBConfigService.get('BOT_URL');
             if (proxy !== undefined) {
               GBServer.globals.publicAddress = proxy;
@@ -228,6 +231,10 @@ export class GBServer {
             winston.default(server, loggers[1]);
           }
 
+          server.get('*', async (req, res, next) => {
+            await GBSSR.ssrFilter(req, res, next);
+          });
+
           GBLog.info(`The Bot Server is in RUNNING mode...`);
 
           // Opens Navigator.
@@ -250,7 +257,7 @@ export class GBServer {
         pfx: Fs.readFileSync(process.env.CERTIFICATE_PFX)
       };
       const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
-
+      GBServer.globals.httpsServer = httpsServer;
       if (process.env.CERTIFICATE2_PFX) {
         const options2 = {
           passphrase: process.env.CERTIFICATE2_PASSPHRASE,
