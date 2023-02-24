@@ -11,9 +11,9 @@ import pjson from './package.json' assert { type: 'json' };
 console.log(``);
 console.log(``);
 console.log(``);
-console.log(` ████    ██████ ███    ██ ██████ ██████   █████  ██        ██████   ███████  ████████   ████ ® `);
-console.log(` ██  ███ ██ █   ██ ██  ██ ██ █   ██ ███  ███ ███ ██        ██████  ██ * * ██    ██      █      `);
-console.log(` ██████  ██████ ██   ████ ██████ ██   ██ ██   ██ ██████    ██████   ███████     ██   ████   3.0`);
+console.log(` █████   ██████ ███  ██ ██████ █████   █████  ██      █████   █████  ██████   ███ ® `);
+console.log(` ██  ███ ██ █   ██ █ ██ ██ █   ██ ██  ███ ███ ██      ██████ █ * * █   ██     █     `);
+console.log(` ██████  ██████ ██  ███ ██████ ██  ██ ██   ██ █████   █████   █████    ██  ████  3.0`);
 console.log(``);
 console.debug(`botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, nodeJS: ${process.version}, platform: ${process.platform}, architecture: ${process.arch}.`);
 var now = () => {
