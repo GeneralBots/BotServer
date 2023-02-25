@@ -56,6 +56,8 @@ import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
 import sharp from 'sharp';
 import apply from 'async/apply';
 import ImageModule from 'open-docxtemplater-image-module';
+import DynamicsWebApi from 'dynamics-web-api';
+import * as MSAL from '@azure/msal-node';
 
 
 /**
@@ -1379,6 +1381,54 @@ export class SystemKeywords {
     return text.replace(/\D/gi, '');
   }
 
+
+  //Create a CREAT LEAD keyword
+  public async createLead({ pid, templateName, data }) {    
+    //OAuth Token Endpoint (from your Azure App Registration)
+    const authorityUrl = 'https://login.microsoftonline.com/<COPY A GUID HERE>';
+    const msalConfig = {
+      auth: {
+        authority: authorityUrl,
+        clientId: process.env.DYNAMICS_CLIENTID,
+        clientSecret: process.env.DYNAMICS_CLIENTSECRET,
+        knownAuthorities: ['login.microsoftonline.com']
+        }
+    }
+    const cca = new MSAL.ConfidentialClientApplication(msalConfig);
+    const serverUrl = ` `;
+
+    //function that acquires a token and passes it to DynamicsWebApi
+    const acquireToken = (dynamicsWebApiCallback) => {
+      cca.acquireTokenByClientCredential({
+          scopes: [`${serverUrl}/.default`],
+      }).then(response => {
+          //call DynamicsWebApi callback only when a token has been retrieved successfully
+          dynamicsWebApiCallback(response.accessToken);
+      }).catch((error) => {
+          console.log(JSON.stringify(error));
+      });
+    } 
+    
+      //create DynamicsWebApi
+    const dynamicsWebApi = new DynamicsWebApi({
+      webApiUrl: `${serverUrl}/api/data/v9.2/`,
+      onTokenRefresh: acquireToken
+    });
+    //initialize a CRM entity record object
+    var lead = {
+      subject: "Test WebAPI",
+      firstname: "Test",
+      lastname: "WebAPI",
+      jobtitle: "Title"
+    };
+    //call dynamicsWebApi.create function
+    dynamicsWebApi.create(lead, "leads").then(function (id) {
+    //do something with id here
+    }).catch(function (error) {
+    //catch error here
+    })
+  } 
+  
   /**
    *
    * Fills a .docx or .pptx with template data.

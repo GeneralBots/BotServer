@@ -19,7 +19,7 @@ console.log(`botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, bo
 var now = () => {
   return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC';
 };
-var __dirname = process.env.PWD;
+var __dirname = process.env.PWD || process.cwd();
 try {
   var run = () => {
     import('./dist/src/app.js').then((gb)=> gb.GBServer.run());
