@@ -10,12 +10,12 @@ import pjson from './package.json' assert { type: 'json' };
 
 console.log(``);
 console.log(``);
-console.log(``);
-console.log(` █████   ██████ ███  ██ ██████ █████   █████  ██      █████   █████  ██████   ███ ® `);
-console.log(` ██  ███ ██ █   ██ █ ██ ██ █   ██ ██  ███ ███ ██      ██████ █ * * █   ██     █     `);
-console.log(` ██████  ██████ ██  ███ ██████ ██  ██ ██   ██ █████   █████   █████    ██  ████  3.0`);
-console.log(``);
-console.debug(`botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, nodeJS: ${process.version}, platform: ${process.platform}, architecture: ${process.arch}.`);
+console.log(` ██████  ███████ ███    ██ ███████ ██████   █████  ██       ██████   ██████  ████████ ███████ ®  `);
+console.log(`██       ██      ████   ██ ██      ██   ██ ██   ██ ██       ██   ██ ██    ██    ██    ██         `);
+console.log(`██   ███ █████   ██ ██  ██ █████   ██████  ███████ ██       ██████  ██    ██    ██    ███████    `);
+console.log(`██    ██ ██      ██  ██ ██ ██      ██   ██ ██   ██ ██       ██   ██ ██    ██    ██         ██    `);
+console.log(` ██████  ███████ ██   ████ ███████ ██   ██ ██   ██ ██████   ██████   ██████     ██    ███████ 3.0`);
+console.log(`botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, node@${process.version}, ${process.platform}(${process.arch}).`);
 var now = () => {
   return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC';
 };
