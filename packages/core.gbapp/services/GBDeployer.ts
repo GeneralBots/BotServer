@@ -510,13 +510,13 @@ export class GBDeployer implements IGBDeployer {
 
           if (Fs.existsSync(itemPath)) {
             const dt = Fs.statSync(itemPath);
-            if (new Date(dt.mtime) > new Date(item.lastModifiedDateTime)) {
+            if (new Date(dt.mtime) >= new Date(item.lastModifiedDateTime)) {
               download = false;
             }
           }
 
           if (download) {
-            GBLog.info(`Downloading ${itemPath}...`);
+            GBLog.verbose(`Downloading ${itemPath}...`);
             const url = item['@microsoft.graph.downloadUrl'];
 
             const response = await fetch(url);
