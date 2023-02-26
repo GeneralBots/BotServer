@@ -40,11 +40,11 @@ import GBBulletPlayer from './players/GBBulletPlayer.js';
 import SidebarMenu from './components/SidebarMenu.js';
 import SEO from './components/SEO.js';
 import GBCss from './components/GBCss.js';
-import { DirectLine } from 'botframework-directlinejs';
+import { DirectLine, createCognitiveServicesSpeechServicesPonyfillFactory } from 'botframework-directlinejs';
 import { ConnectionStatus } from 'botframework-directlinejs';
 import ReactWebChat from 'botframework-webchat';
 import { UserAgentApplication } from 'msal';
-import StaticContent from '@midudev/react-static-content'
+import StaticContent from '@midudev/react-static-content';
 
 class GBUIApp extends React.Component {
   constructor() {
@@ -77,21 +77,17 @@ class GBUIApp extends React.Component {
   }
 
   send(command) {
-    
-      window.line
-        .postActivity({
-          type: 'event',
-          name: command,
-          locale: 'en-us',
-          textFormat: 'plain',
-          timestamp: new Date().toISOString(),
-          from: this.getUser()
-        });
-    
+    window.line.postActivity({
+      type: 'event',
+      name: command,
+      locale: 'en-us',
+      textFormat: 'plain',
+      timestamp: new Date().toISOString(),
+      from: this.getUser()
+    });
   }
 
   getUser() {
-
     return { id: 'web@gb', name: 'You' };
   }
 
@@ -129,7 +125,6 @@ class GBUIApp extends React.Component {
   }
 
   authenticate() {
-
     if (this.state.instanceClient.authenticatorClientId === null) {
       return;
     }
@@ -150,8 +145,12 @@ class GBUIApp extends React.Component {
     );
     window.userAgentApplication = userAgentApplication;
 
-    if (!userAgentApplication.isCallback(window.location.hash) && window.parent === window
-      && !window.opener && userAgentApplication.getUser) {
+    if (
+      !userAgentApplication.isCallback(window.location.hash) &&
+      window.parent === window &&
+      !window.opener &&
+      userAgentApplication.getUser
+    ) {
       var user = userAgentApplication.getUser();
       if (user) {
         userAgentApplication.acquireTokenSilent(graphScopes).then(
@@ -177,6 +176,7 @@ class GBUIApp extends React.Component {
 
     line.connectionStatus$.subscribe(connectionStatus => {
       if (connectionStatus === ConnectionStatus.Online) {
+        line.setUserId = null;
         _this_.setState({ instanceClient: instanceClient });
         window['botConnection'] = line;
       }
@@ -211,6 +211,7 @@ class GBUIApp extends React.Component {
     this.configureChat();
   }
 
+  webSpeechPonyfillFactory = 0;
   render() {
     let playerComponent = '';
 
@@ -302,43 +303,37 @@ class GBUIApp extends React.Component {
       </div>
     );
 
+    async function fetchCredentials() {
+      const res = await fetch('/api/authorizationtoken');
+
+      if (res.ok) {
+        return {
+          authorizationToken: await res.text(),
+          region: 'westus2'
+        };
+      } else {
+        throw new Error('Failed to retrieve authorization token for Cognitive Services.');
+      }
+    }
 
     if (this.state.line) {
-
       if (this.state.instanceClient) {
-
         gbCss = <GBCss instance={this.state.instanceClient} />;
         seo = <SEO instance={this.state.instanceClient} />;
+        const token = this.state.instanceClient.speechToken;
+        chat = (
+          <ReactWebChat
+            ref={chat => {
+              this.chat = chat;
+            }}
+            locale={'pt-br'}
+            directLine={this.state.line}
+            webSpeechPonyfillFactory={window.WebChat.createCognitiveServicesSpeechServicesPonyfillFactory({
+              credentials: { authorizationToken: token, region: 'westus' }
+            })}
+          />
+        );
       }
-
-      // let speechOptions;
-      // let token = this.state.instanceClient.speechToken;
-
-      // speechOptions = {
-      //     speechRecognizer: new SpeechRecognizer({
-      //         locale: "pt-br",
-      //         fetchCallback: (authFetchEventId) => getToken(),
-      //         fetchOnExpiryCallback: (authFetchEventId) => getToken()
-      //     }),
-      //     speechSynthesizer: new SpeechSynthesizer({
-      //         fetchCallback: (authFetchEventId) => getToken(),
-      //         fetchOnExpiryCallback: (authFetchEventId) => getToken(),
-      //         gender: SynthesisGender.Male,
-      //         voiceName: 'Microsoft Server Speech Text to Speech Voice (pt-BR, Daniel, Apollo)'
-      //     })
-      // };
-
-      chat = (
-        <ReactWebChat
-          ref={chat => {
-            this.chat = chat;
-          }}
-          locale={'pt-br'}
-          directLine={this.state.line}
-          user={this.getUser()}
-          bot={{ id: 'bot@gb', name: 'Bot' }}
-        />
-      );
     }
 
     if (!this.state.instanceClient) {
@@ -352,9 +347,7 @@ class GBUIApp extends React.Component {
           {gbCss}
           {sideBar}
           <div className="player">{playerComponent}</div>
-          <div className="webchat">
-            {chat}
-          </div>
+          <div className="webchat">{chat}</div>
         </div>
       </StaticContent>
     );

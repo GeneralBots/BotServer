@@ -1,6 +1,6 @@
 {
   "name": "default.gbui",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "private": false,
   "repository": "https://github.com/GeneralBots/BotServer",
   "description": "Default web interface for General Bots open-core",

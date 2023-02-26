@@ -619,7 +619,7 @@ export class GBMinService {
    * Gets a Speech to Text / Text to Speech token from the provider.
    */
   private async getSTSToken(instance: any) {
-    return null; // TODO: https://github.com/GeneralBots/BotServer/issues/332
+    
     const options = {
       method: 'POST',
       headers: {
@@ -628,7 +628,9 @@ export class GBMinService {
     };
 
     try {
-      return await fetch(instance.speechEndpoint, options);
+
+      const res = await fetch(instance.speechEndpoint, options)
+      return res.text();
     } catch (error) {
       const msg = `Error calling Speech to Text client. Error is: ${error}.`;
 
