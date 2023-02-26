@@ -19,7 +19,7 @@
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
 | This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY without even the implied warranty of                |
+| but WITHOUT ANY WARRANTY without even the implied warranty of               |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
@@ -39,12 +39,13 @@
 import crypto from 'crypto';
 import urlJoin from 'url-join';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog, GBLog, IGBPackage } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
 import { Messages } from '../strings.js';
 import { GBAdminService } from '../services/GBAdminService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
+import { SecService } from '../../security.gbapp/services/SecService.js';
 
 /**
  * Dialogs for administration tasks.
@@ -143,37 +144,7 @@ export class AdminDialog extends IGBDialog {
 
           try {
             if (text === 'quit') {
-              return await step.replaceDialog('/');
-            } else if (cmdName === 'deployPackage' || cmdName === 'dp') {
-              await GBAdminService.deployPackageCommand(min, text, deployer);
-
-              return await step.replaceDialog('/admin', { firstRun: false });
-            } else if (cmdName === 'redeployPackage' || cmdName === 'rp') {
-              await min.conversationalService.sendText(min, step, 'The package is being *unloaded*...');
-              await GBAdminService.undeployPackageCommand(text, min);
-              await min.conversationalService.sendText(min, step, 'Now, *deploying* package...');
-              await GBAdminService.deployPackageCommand(min, text, deployer);
-              await min.conversationalService.sendText(
-                min,
-                step,
-                'Package deployed. Just need to rebuild the index... Doing it right now.'
-              );
-              await GBAdminService.rebuildIndexPackageCommand(min, deployer);
-              await min.conversationalService.sendText(min, step, 'Finished importing of that .gbkb package. Thanks.');
-              return await step.replaceDialog('/admin', { firstRun: false });
-            } else if (cmdName === 'undeployPackage' || cmdName === 'up') {
-              await min.conversationalService.sendText(min, step, 'The package is being *undeployed*...');
-              await GBAdminService.undeployPackageCommand(text, min);
-              await min.conversationalService.sendText(min, step, 'Package *undeployed*.');
-              return await step.replaceDialog('/admin', { firstRun: false });
-            } else if (cmdName === 'rebuildIndex' || cmdName === 'ri' || cmdName === 'Ri') {
-              await GBAdminService.rebuildIndexPackageCommand(min, deployer);
-
-              return await step.replaceDialog('/admin', { firstRun: false });
-            } else if (cmdName === 'syncBotServer') {
-              await GBAdminService.syncBotServerCommand(min, deployer);
-
-              return await step.replaceDialog('/admin', { firstRun: false });
+              return await step.replaceDialog('/');           
             } else if (cmdName === 'setupSecurity') {
               return await step.beginDialog('/setupSecurity');
             } else {
@@ -325,18 +296,18 @@ export class AdminDialog extends IGBDialog {
             packages.push(`${botId}.gbot`);
             skipError = true;
           } else {
-            await min.conversationalService.sendText(min, step, `Starting publishing for ${filename}...`);
             packages.push(filename);
           }
+
 
           await CollectionUtil.asyncForEach(packages, async packageName => {
             let cmd1;
 
             if (
-              packageName.indexOf('gbdialog') !== -1 ||
-              packageName.indexOf('gbkb') !== -1 ||
-              packageName.indexOf('gbot') !== -1 ||
-              packageName.indexOf('gbtheme') !== -1
+              packageName.toLowerCase() === 'gbdialog' ||
+              packageName.toLowerCase() === 'gbkb' ||
+              packageName.toLowerCase() === 'gbot' ||
+              packageName.toLowerCase() === 'gbtheme'
             ) {
               packageName = `${min.botId}.${packageName}`;
             }
@@ -353,10 +324,23 @@ export class AdminDialog extends IGBDialog {
               const cmd2 = `undeployPackage ${packageName}`;
               await GBAdminService.undeployPackageCommand(cmd2, min);
             }
-            await GBAdminService.deployPackageCommand(min, cmd1, deployer);
-            await min.conversationalService.sendText(min, step, `Finished publishing ${packageName}.`);
+            let sec = new SecService();
+            const member = step.context.activity.from;
+            const user = await sec.ensureUser(
+              min.instance.instanceId,
+              member.id,
+              member.name,
+              '',
+              'web',
+              member.name,
+              null
+            );
+             
+            await GBAdminService.deployPackageCommand(min, user, cmd1, deployer);
+
           });
-          await min.conversationalService.sendText(min, step, Messages[locale].publish_success);
+          await min.conversationalService.sendText(min, step, `Training is finished.`);
+
           if (!step.activeDialog.state.options.confirm) {
             return await step.replaceDialog('/ask', { isReturning: true });
           } else {

@@ -65,53 +65,52 @@ export class GuaribasSubject extends Model<GuaribasSubject> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
-  subjectId: number;
-
-  @Column(DataType.INTEGER)
-  internalId: string;
+  declare subjectId: number;
 
   @Column(DataType.STRING(255))
-  title: string;
+  declare internalId: string;
+
+  declare title: string;
 
   @Column(DataType.STRING(512))
-  description: string;
+  declare description: string;
 
   @Column(DataType.STRING(255))
-  from: string;
+  declare from: string;
 
   @Column(DataType.STRING(255))
-  to: string;
+  declare to: string;
 
   @ForeignKey(() => GuaribasSubject)
   @Column(DataType.INTEGER)
-  parentSubjectId: number;
+  declare parentSubjectId: number;
 
   @BelongsTo(() => GuaribasSubject, 'parentSubjectId')
   parentSubject: GuaribasSubject;
 
   @HasMany(() => GuaribasSubject, { foreignKey: 'parentSubjectId' })
-  childrenSubjects: GuaribasSubject[];
+  declare childrenSubjects: GuaribasSubject[];
 
   @ForeignKey(() => GuaribasInstance)
   @Column(DataType.INTEGER)
-  instanceId: number;
+  declare instanceId: number;
 
   @BelongsTo(() => GuaribasInstance)
-  instance: GuaribasInstance;
+  declare instance: GuaribasInstance;
 
   @ForeignKey(() => GuaribasUser)
   @Column(DataType.INTEGER)
-  responsibleUserId: number;
+  declare responsibleUserId: number;
 
   @BelongsTo(() => GuaribasUser)
-  responsibleUser: GuaribasUser;
+  declare responsibleUser: GuaribasUser;
 
   @ForeignKey(() => GuaribasPackage)
   @Column(DataType.INTEGER)
-  packageId: number;
+  declare packageId: number;
 
   @BelongsTo(() => GuaribasPackage)
-  package: GuaribasPackage;
+  declare package: GuaribasPackage;
 }
 
 /**

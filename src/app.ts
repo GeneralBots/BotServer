@@ -103,13 +103,13 @@ export class GBServer {
     server.use(bodyParser.urlencoded({ extended: true }));
 
     process.on('unhandledRejection', (err, p) => {
-      GBLog.error(`UNHANDLED_REJECTION(promises): ${p} ${err.toString()}`);
+      GBLog.error(`UNHANDLED_REJECTION(promises): ${err.toString()} ${err['stack']?'\n'+err['stack']:''}`);
     });
 
-    process.on('uncaughtException', (err, origin) => {
-      GBLog.error(`UNCAUGHT_EXCEPTION: ${err.toString()}`);
+    process.on('uncaughtException', (err, p) => {
+      GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack']?'\n'+err['stack']:''}`);
     });
-
+    
     // Creates working directory.
 
     process.env.PWD = process.cwd();

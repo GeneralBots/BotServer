@@ -869,8 +869,9 @@ export class KBService implements IGBKBService {
         
         let level;
         for (level = 0; level < MAX_LEVEL; level++) {
-          menu = row._cells[level];
-          if (menu && menu.text) {
+          const cell = row._cells[level];
+          if (cell && cell.text) {
+            menu = cell.text;
             break;
           }
         }
@@ -890,10 +891,10 @@ export class KBService implements IGBKBService {
         activeChildrenGivenLevel[level] = childrenNode;
 
         // Insert the object into JSON.
-
+        const description  = row._cells[level + 1]?row._cells[level + 1].text: null;
         activeObj = {
           title: menu,
-          description: row._cells[level + 1],
+          description: description,
           id: menu,
           children: []
         };
@@ -984,7 +985,7 @@ export class KBService implements IGBKBService {
     min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
     await KBService.RefreshNER(min);
 
-    GBLog.info(`[GBDeployer] Opening package: ${localPath}`);
+    GBLog.info(`[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
     const html = await GBSSR.getHTML(min);
     const path = Path.join(
       process.env.PWD,
@@ -993,7 +994,7 @@ export class KBService implements IGBKBService {
       `${min.instance.botId}.gbui`,
       'index.html'
     );
-    GBLogEx.info(min, `[GBDeployer] Generating SSR HTML in ${path}.`);
+    GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${path}.`);
     Fs.writeFileSync(path, html, 'utf8');
 
     GBLog.info(`[GBDeployer] Finished import of ${localPath}`);

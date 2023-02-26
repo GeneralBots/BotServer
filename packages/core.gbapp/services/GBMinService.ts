@@ -282,26 +282,27 @@ export class GBMinService {
     // min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
 
     GBServer.globals.minInstances.push(min);
+    const user = null; // No user context.
 
-    await this.deployer.deployPackage(min, 'packages/default.gbtheme');
+    await this.deployer['deployPackage2'](min, user, 'packages/default.gbtheme');
 
     // Install per bot deployed packages.
 
     let packagePath = `work/${min.botId}.gbai/${min.botId}.gbdialog`;
     if (Fs.existsSync(packagePath)) {
-      await this.deployer.deployPackage(min, packagePath);
+      await this.deployer['deployPackage2'](min, user, packagePath);
     }
     packagePath = `work/${min.botId}.gbai/${min.botId}.gbapp`;
     if (Fs.existsSync(packagePath)) {
-      await this.deployer.deployPackage(min, packagePath);
+      await this.deployer['deployPackage2'](min, user, packagePath);
     }
     packagePath = `work/${min.botId}.gbai/${min.botId}.gbtheme`;
     if (Fs.existsSync(packagePath)) {
-      await this.deployer.deployPackage(min, packagePath);
+      await this.deployer['deployPackage2'](min, user, packagePath);
     }
     packagePath = `work/${min.botId}.gbai/${min.botId}.gblib`;
     if (Fs.existsSync(packagePath)) {
-      await this.deployer.deployPackage(min, packagePath);
+      await this.deployer['deployPackage2'](min, user, packagePath);
     }
 
     let dir = `work/${min.botId}.gbai/cache`;
@@ -375,6 +376,7 @@ export class GBMinService {
       };
 
       await CollectionUtil.asyncForEach(steps, async step => {
+
         client.apis.Conversations.Conversations_PostActivity({
           conversationId: conversationId,
           activity: {
@@ -388,7 +390,7 @@ export class GBMinService {
           }
         });
 
-        await sleep(5000);
+        await sleep(3000);
       });
     }
 

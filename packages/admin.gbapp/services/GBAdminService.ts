@@ -53,6 +53,7 @@ import { caseSensitive_Numbs_SpecialCharacters_PW, lowercase_PW } from 'super-st
 import crypto from 'crypto';
 import Fs from 'fs';
 import { GBServer } from '../../../src/app.js';
+import { GuaribasUser } from '../../security.gbapp/models/index.js';
 
 /**
  * Services for server administration.
@@ -138,7 +139,7 @@ export class GBAdminService implements IGBAdminService {
   public static isSharePointPath(path: string) {
     return path.indexOf('sharepoint.com') !== -1;
   }
-  public static async deployPackageCommand(min: GBMinInstance, text: string, deployer: IGBDeployer) {
+  public static async deployPackageCommand(min: GBMinInstance, user: GuaribasUser, text: string, deployer: IGBDeployer) {
     const packageName = text.split(' ')[1];
 
     if (!this.isSharePointPath(packageName)) {
@@ -146,7 +147,7 @@ export class GBAdminService implements IGBAdminService {
       if (additionalPath === undefined) {
         throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
       }
-      await deployer.deployPackage(min, urlJoin(additionalPath, packageName));
+      await deployer['deployPackage2'](min, user, urlJoin(additionalPath, packageName));
     } else {
       const siteName = text.split(' ')[1];
       const folderName = text.split(' ')[2];
@@ -157,7 +158,7 @@ export class GBAdminService implements IGBAdminService {
       // of local resources is required.
 
       await deployer['downloadFolder'](min, Path.join('work', `${min.instance.botId}.gbai`), Path.basename(folderName));
-      await deployer.deployPackage(min, localFolder);
+      await deployer['deployPackage2'](min, user, localFolder);
     }
   }
   public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: GBDeployer) {

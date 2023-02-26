@@ -559,11 +559,13 @@ export class GBDeployer implements IGBDeployer {
       instanceId: instanceId
     });
   }
-
+  public async deployPackage(min: GBMinInstance, localPath: string) {
+    // TODO: @alanperdomo: Adjust interface mismatch.
+  }
   /**
    * Deploys a folder into the bot storage.
    */
-  public async deployPackage(min: GBMinInstance, localPath: string) {
+  public async deployPackage2(min: GBMinInstance, user, localPath: string) {
     const packageType = Path.extname(localPath);
     let handled = false;
     let pck = null;
@@ -717,7 +719,7 @@ export class GBDeployer implements IGBDeployer {
     try {
       GBLogEx.info(instance.instanceId, `Acquiring rebuildIndex mutex...`);
       release = await GBServer.globals.indexSemaphore.acquire();
-
+      GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
       const search = new AzureSearch(
         instance.searchKey,
         instance.searchHost,
@@ -729,7 +731,11 @@ export class GBDeployer implements IGBDeployer {
       try {
         await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
       } catch (err) {
-        GBLog.error(err);
+        // If it is a 404 there is nothing to delete as it is the first creation.
+
+        if (err.code !== 400 && err.message.indexOf('already exists') !==-1) {
+          throw err;
+        }
       }
 
       // Removes the index.
@@ -739,11 +745,11 @@ export class GBDeployer implements IGBDeployer {
       } catch (err) {
         // If it is a 404 there is nothing to delete as it is the first creation.
 
-        if (err.code !== 404 && err.code !== 'OperationNotAllowed') {
+        if (err.code !== 'ResourceNameAlreadyInUse') {
+          throw err;
         }
       }
 
-      GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
       await search.rebuildIndex(instance.searchIndexer);
       release();
       GBLogEx.info(instance.instanceId, `Released rebuildIndex mutex.`);

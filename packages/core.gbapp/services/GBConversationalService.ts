@@ -78,7 +78,7 @@ export class GBConversationalService {
    *
    * @param coreService
    */
-  constructor (coreService: IGBCoreService) {
+  constructor(coreService: IGBCoreService) {
     this.coreService = coreService;
   }
 
@@ -263,11 +263,11 @@ export class GBConversationalService {
   ];
 
   // "what?" version ... http://jsperf.com/diacritics/12
-  public static removeDiacriticsAndPunctuation (str) {
+  public static removeDiacriticsAndPunctuation(str) {
     str = GBConversationalService.removeDiacritics(str);
     return str.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
   }
-  public static removeDiacritics (str) {
+  public static removeDiacritics(str) {
     var diacriticsMap = {};
     for (var i = 0; i < GBConversationalService.defaultDiacriticsRemovalMap.length; i++) {
       var letters = GBConversationalService.defaultDiacriticsRemovalMap[i].letters;
@@ -281,7 +281,7 @@ export class GBConversationalService {
     return str;
   }
 
-  public getNewMobileCode () {
+  public getNewMobileCode() {
     const passwordGenerator = new PasswordGenerator();
     const options = {
       upperCaseAlpha: false,
@@ -295,15 +295,15 @@ export class GBConversationalService {
     return code;
   }
 
-  public getCurrentLanguage (step: GBDialogStep) {
+  public getCurrentLanguage(step: GBDialogStep) {
     return step.context.activity.locale;
   }
 
-  public userMobile (step) {
+  public userMobile(step) {
     return GBMinService.userMobile(step);
   }
 
-  public async sendFile (
+  public async sendFile(
     min: GBMinInstance,
     step: GBDialogStep,
     mobile: string,
@@ -330,13 +330,13 @@ export class GBConversationalService {
     }
   }
 
-  public async sendAudio (min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
+  public async sendAudio(min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
     const mobile = step.context.activity['mobile'];
     GBLog.info(`Sending audio to ${mobile} in URL: ${url}.`);
     await min.whatsAppDirectLine.sendAudioToDevice(mobile, url);
   }
 
-  public async sendEvent (min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
+  public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
     if (!this.userMobile(step) && step.context.activity.channelId !== 'msteams') {
       GBLog.info(
         `Sending event ${name}:${typeof value === 'object' ? JSON.stringify(value) : value ? value : ''} to client...`
@@ -351,7 +351,7 @@ export class GBConversationalService {
   }
 
   // tslint:disable:no-unsafe-any due to Nexmo.
-  public async sendSms (min: GBMinInstance, mobile: string, text: string): Promise<any> {
+  public async sendSms(min: GBMinInstance, mobile: string, text: string): Promise<any> {
     GBLog.info(`Sending SMS to ${mobile} with text: '${text}'.`);
 
     if (!min.instance.smsKey && min.instance.smsSecret) {
@@ -362,15 +362,13 @@ export class GBConversationalService {
           'content-type': 'application/json',
           authorization: `Bearer ${min.instance.smsSecret}`
         },
-        body: 
-          JSON.stringify({
-            numero: `${mobile}`,
-            servico: 'short',
-            mensagem: text,
-            parceiro_id: '',
-            codificacao: '0'
-          })
-        
+        body: JSON.stringify({
+          numero: `${mobile}`,
+          servico: 'short',
+          mensagem: text,
+          parceiro_id: '',
+          codificacao: '0'
+        })
       };
 
       try {
@@ -383,33 +381,31 @@ export class GBConversationalService {
         return Promise.reject(new Error(msg));
       }
     } else {
-      return new Promise(
-        (resolve: any, reject: any): any => {
-          const nexmo = new Nexmo({
-            apiKey: min.instance.smsKey,
-            apiSecret: min.instance.smsSecret
-          });
-          // tslint:disable-next-line:no-unsafe-any
-          nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, {}, (err, data) => {
-            const message = data.messages ? data.messages[0] : {};
-            if (err || message['error-text']) {
-              GBLog.error(`BASIC: error sending SMS to ${mobile}: ${message['error-text']}`);
-              reject(message['error-text']);
-            } else {
-              resolve(data);
-            }
-          });
-        }
-      );
+      return new Promise((resolve: any, reject: any): any => {
+        const nexmo = new Nexmo({
+          apiKey: min.instance.smsKey,
+          apiSecret: min.instance.smsSecret
+        });
+        // tslint:disable-next-line:no-unsafe-any
+        nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, {}, (err, data) => {
+          const message = data.messages ? data.messages[0] : {};
+          if (err || message['error-text']) {
+            GBLog.error(`BASIC: error sending SMS to ${mobile}: ${message['error-text']}`);
+            reject(message['error-text']);
+          } else {
+            resolve(data);
+          }
+        });
+      });
     }
   }
 
-  public async sendToMobile (min: GBMinInstance, mobile: string, message: string, conversationId) {
+  public async sendToMobile(min: GBMinInstance, mobile: string, message: string, conversationId) {
     GBLog.info(`Sending message ${message} to ${mobile}...`);
     await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId);
   }
 
-  public static async getAudioBufferFromText (text): Promise<string> {
+  public static async getAudioBufferFromText(text): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const name = GBAdminService.getRndReadableIdentifier();
 
@@ -439,9 +435,7 @@ export class GBConversationalService {
         const transcoder = new prism.FFmpeg({
           args: ['-analyzeduration', '0', '-loglevel', '0', '-f', 'opus', '-ar', '16000', '-ac', '1']
         });
-        Fs.createReadStream(waveFilename)
-          .pipe(transcoder)
-          .pipe(output);
+        Fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
 
         let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
         resolve(url);
@@ -451,7 +445,7 @@ export class GBConversationalService {
     });
   }
 
-  public static async getTextFromAudioBuffer (speechKey, cloudRegion, buffer, locale): Promise<string> {
+  public static async getTextFromAudioBuffer(speechKey, cloudRegion, buffer, locale): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       try {
         const oggFile = new Readable();
@@ -519,7 +513,7 @@ export class GBConversationalService {
     });
   }
 
-  public async playMarkdown (min: GBMinInstance, answer: string, channel: string, step: GBDialogStep, mobile: string) {
+  public async playMarkdown(min: GBMinInstance, answer: string, channel: string, step: GBDialogStep, mobile: string) {
     const user = step ? await min.userProfile.get(step.context, {}) : null;
     let text = answer;
 
@@ -528,9 +522,7 @@ export class GBConversationalService {
       text = await min.conversationalService.translate(
         min,
         answer,
-        user.locale
-          ? user.locale
-          : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
+        user.locale ? user.locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
       GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
     }
@@ -575,7 +567,7 @@ export class GBConversationalService {
 
     text = text.replace('! [', '![').replace('] (', '](');
     text = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', '');
-    text = text.replace(`](kb`, '](' + process.env.BOT_URL + '/kb'); 
+    text = text.replace(`](kb`, '](' + process.env.BOT_URL + '/kb');
 
     if (mobile) {
       await this.sendMarkdownToMobile(min, step, mobile, text);
@@ -588,7 +580,7 @@ export class GBConversationalService {
     }
   }
 
-  private async sendHTMLToWeb (min, step: GBDialogStep, html: string, answer: string) {
+  private async sendHTMLToWeb(min, step: GBDialogStep, html: string, answer: string) {
     const locale = step.context.activity.locale;
 
     html = html.replace(/src\=\"kb\//gi, `src=\"../kb/`);
@@ -598,14 +590,14 @@ export class GBConversationalService {
         content: html,
         answer: answer,
         prevId: 0, // https://github.com/GeneralBots/BotServer/issues/312
-        nextId: 0 
+        nextId: 0
       }
     });
   }
 
   // tslint:enable:no-unsafe-any
 
-  public async sendMarkdownToMobile (min: GBMinInstance, step: GBDialogStep, mobile: string, text: string) {
+  public async sendMarkdownToMobile(min: GBMinInstance, step: GBDialogStep, mobile: string, text: string) {
     let sleep = ms => {
       return new Promise(resolve => {
         setTimeout(resolve, ms);
@@ -775,7 +767,7 @@ export class GBConversationalService {
     }
   }
 
-  public async routeNLP (step: GBDialogStep, min: GBMinInstance, text: string) {
+  public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string) {
     if (min.instance.nlpAppId === null || min.instance.nlpAppId === undefined) {
       return false;
     }
@@ -851,9 +843,7 @@ export class GBConversationalService {
       }
 
       GBLog.info(
-        `NLP called: ${intent}, entities: ${
-          nlp.entities.length
-        }, score: ${score} > required (nlpScore): ${instanceScore}`
+        `NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${instanceScore}`
       );
 
       step.activeDialog.state.options.entities = nlp.entities;
@@ -879,7 +869,7 @@ export class GBConversationalService {
     return null;
   }
 
-  public async getLanguage (min: GBMinInstance, text: string): Promise<string> {
+  public async getLanguage(min: GBMinInstance, text: string): Promise<string> {
     const key = min.core.getParam<string>(min.instance, 'textAnalyticsKey', null);
     if (!key) {
       return process.env.DEFAULT_USER_LANGUAGE;
@@ -893,7 +883,7 @@ export class GBConversationalService {
     return language === '(Unknown)' ? 'en' : language;
   }
 
-  public async spellCheck (min: GBMinInstance, text: string): Promise<string> {
+  public async spellCheck(min: GBMinInstance, text: string): Promise<string> {
     const key = min.core.getParam<string>(min.instance, 'spellcheckerKey', null);
 
     if (key) {
@@ -908,7 +898,7 @@ export class GBConversationalService {
     return text;
   }
 
-  public async translate (min: GBMinInstance, text: string, language: string): Promise<string> {
+  public async translate(min: GBMinInstance, text: string, language: string): Promise<string> {
     const translatorEnabled = () => {
       if (min.instance.params) {
         const params = JSON.parse(min.instance.params);
@@ -956,10 +946,14 @@ export class GBConversationalService {
         return Promise.reject(new Error(msg));
       }
     } else {
-      const url = urlJoin(endPoint, 'translate', new URLSearchParams({
+      const url = urlJoin(
+        endPoint,
+        'translate',
+        new URLSearchParams({
           'api-version': '3.0',
           to: language
-        }).toString());
+        }).toString()
+      );
       let options = {
         method: 'POST',
         headers: {
@@ -968,7 +962,7 @@ export class GBConversationalService {
           'Content-type': 'application/json',
           'X-ClientTraceId': GBAdminService.generateUuid()
         },
-        body:text,
+        body: text,
         json: true
       };
 
@@ -984,17 +978,15 @@ export class GBConversationalService {
     }
   }
 
-  public async prompt (min: GBMinInstance, step: GBDialogStep, text: string) {
+  public async prompt(min: GBMinInstance, step: GBDialogStep, text: string) {
     let sec = new SecService();
-    let user = await  sec.getUserFromSystemId(step.context.activity.from.id);
+    let user = await sec.getUserFromSystemId(step.context.activity.from.id);
 
     if (text && text !== '') {
       text = await min.conversationalService.translate(
         min,
         text,
-        user.locale
-          ? user.locale
-          : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
+        user.locale ? user.locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
       GBLog.verbose(`Translated text(prompt): ${text}.`);
     }
@@ -1005,18 +997,23 @@ export class GBConversationalService {
     }
   }
 
-  public async sendText (min: GBMinInstance, step, text) {
+  public async sendText(min: GBMinInstance, step, text) {
     await this['sendTextWithOptions'](min, step, text, true, null);
   }
 
-  public async sendTextWithOptions (min: GBMinInstance, step, text, translate, keepTextList) {
+  public async sendTextWithOptions(min: GBMinInstance, step, text, translate, keepTextList) {
     const member = step.context.activity.from;
     let sec = new SecService();
-    let user = await  sec.getUserFromSystemId(step.context.activity.from.id);
+    let user = await sec.getUserFromSystemId(step.context.activity.from.id);
+    await this['sendTextWithOptionsAndUser'](min, user, step, text, true, null);
+  }
+
+  public async sendTextWithOptionsAndUser(min: GBMinInstance, user, step, text, translate, keepTextList) {
+    const member = step ? step.context.activity.from : null;
+
+    let replacements = [];
 
     if (translate) {
-      let replacements = [];
-
       // To fix MSFT bug.
 
       if (keepTextList) {
@@ -1054,11 +1051,11 @@ export class GBConversationalService {
     const conversation = null;
     if (!user.conversationId) {
       const conversation = await analytics.createConversation(user);
-      user.conversationId  = conversation.conversationId;
+      user.conversationId = conversation.conversationId;
     }
     analytics.createMessage(min.instance.instanceId, conversation, null, text);
 
-    if (!isNaN(member.id) && !member.id.startsWith('1000')) {
+    if (member && !isNaN(member.id) && !member.id.startsWith('1000')) {
       const to = step.context.activity.group ? step.context.activity.group : member.id;
 
       await min.whatsAppDirectLine.sendToDevice(to, text, step.context.activity.conversation.id);
@@ -1066,8 +1063,7 @@ export class GBConversationalService {
       await step.context.sendActivity(text);
     }
   }
-
-  public async broadcast (min: GBMinInstance, message: string) {
+  public async broadcast(min: GBMinInstance, message: string) {
     GBLog.info(`Sending broadcast notifications...`);
 
     let sleep = ms => {
@@ -1091,7 +1087,7 @@ export class GBConversationalService {
    *
    * Sends a message in a user with an already started conversation (got ConversationReference set)
    */
-  public async sendOnConversation (min: GBMinInstance, user: GuaribasUser, message: string) {
+  public async sendOnConversation(min: GBMinInstance, user: GuaribasUser, message: string) {
     if (user.conversationReference.startsWith('spaces')) {
       await min['googleDirectLine'].sendToDevice(user.userSystemId, null, user.conversationReference, message);
     } else {
@@ -1110,7 +1106,7 @@ export class GBConversationalService {
     }
   }
 
-  public static kmpSearch (pattern, text) {
+  public static kmpSearch(pattern, text) {
     pattern = pattern.toLowerCase();
     text = text.toLowerCase();
     if (pattern.length == 0) return 0; // Immediate match
