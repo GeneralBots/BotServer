@@ -56,6 +56,7 @@ import child_process from 'child_process';
 import * as winston from 'winston-logs-display';
 import { RootData } from './RootData.js';
 import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
+import { Mutex } from 'async-mutex';
 
 /**
  * General Bots open-core entry point.
@@ -95,6 +96,8 @@ export class GBServer {
     GBServer.globals.wwwroot = null;
     GBServer.globals.entryPointDialog = null;
     GBServer.globals.debuggers = [];
+    GBServer.globals.indexSemaphore = new Mutex();
+
 
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));

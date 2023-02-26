@@ -6,23 +6,25 @@ import { exec } from 'child_process';
 import pjson from './package.json' assert { type: 'json' };
 
 // Displays version of Node JS being used at runtime and others attributes.
-
-
 console.log(``);
 console.log(``);
-console.log(` ██████  ███████ ███    ██ ███████ ██████   █████  ██       ██████   ██████  ████████ ███████ ®  `);
-console.log(`██       ██      ████   ██ ██      ██   ██ ██   ██ ██       ██   ██ ██    ██    ██    ██         `);
-console.log(`██   ███ █████   ██ ██  ██ █████   ██████  ███████ ██       ██████  ██    ██    ██    ███████    `);
-console.log(`██    ██ ██      ██  ██ ██ ██      ██   ██ ██   ██ ██       ██   ██ ██    ██    ██         ██    `);
-console.log(` ██████  ███████ ██   ████ ███████ ██   ██ ██   ██ ██████   ██████   ██████     ██    ███████ 3.0`);
-console.log(`botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, node@${process.version}, ${process.platform}(${process.arch}).`);
+console.log(` █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ®  `);
+console.log(`██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █       `);
+console.log(`██  ███ ████  █ ██  █ ████  █████  ██████ ██      ████   █   █   █    ██     `);
+console.log(`██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █    `);
+console.log(` █████  █████ █   ███ █████ ██  ██ ██  ██ ██████  ████   █████   █   ███  3.0`);
+console.log(`   botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch}`);
+
 var now = () => {
   return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC';
 };
 var __dirname = process.env.PWD || process.cwd();
 try {
   var run = () => {
-    import('./dist/src/app.js').then((gb)=> gb.GBServer.run());
+    import('./dist/src/app.js').then((gb)=> {
+      console.log(``);
+      gb.GBServer.run()
+    });
   };
   var processDist = () => {
     if (!Fs.existsSync('dist')) {

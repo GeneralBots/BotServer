@@ -57,6 +57,7 @@ import { GBConfigService } from './GBConfigService.js';
 import { GBImporter } from './GBImporterService.js';
 import { TeamsService } from '../../teams.gblib/services/TeamsService.js';
 import MicrosoftGraph from '@microsoft/microsoft-graph-client';
+import { GBLogEx } from './GBLogEx.js';
 
 /**
  * Deployer service for bots, themes, ai and more.
@@ -655,8 +656,8 @@ export class GBDeployer implements IGBDeployer {
         break;
 
       default:
-          throw GBError.create(`Unhandled package type: ${packageType}.`);
-}
+        throw GBError.create(`Unhandled package type: ${packageType}.`);
+    }
   }
 
   /**
@@ -712,38 +713,45 @@ export class GBDeployer implements IGBDeployer {
    */
   public async rebuildIndex(instance: IGBInstance, searchSchema: any) {
     // Prepares search.
-
-
-    const search = new AzureSearch(
-      instance.searchKey,
-      instance.searchHost,
-      instance.searchIndex,
-      instance.searchIndexer
-    );
-    const connectionString = GBDeployer.getConnectionStringFromInstance(instance);
-    const dsName = 'gb';
+    let release;
     try {
-      await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
-    } catch (err) {
-      GBLog.error(err);
+      GBLogEx.info(instance.instanceId, `Acquiring rebuildIndex mutex...`);
+      release = await GBServer.globals.indexSemaphore.acquire();
 
-    }
+      const search = new AzureSearch(
+        instance.searchKey,
+        instance.searchHost,
+        instance.searchIndex,
+        instance.searchIndexer
+      );
+      const connectionString = GBDeployer.getConnectionStringFromInstance(instance);
+      const dsName = 'gb';
+      try {
+        await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
+      } catch (err) {
+        GBLog.error(err);
+      }
 
-    // Removes the index.
+      // Removes the index.
 
-    try {
-      await search.createIndex(searchSchema, dsName);
-    } catch (err) {
-      // If it is a 404 there is nothing to delete as it is the first creation.
+      try {
+        await search.createIndex(searchSchema, dsName);
+      } catch (err) {
+        // If it is a 404 there is nothing to delete as it is the first creation.
 
-      if (err.code !== 404 && err.code !== 'OperationNotAllowed') {
+        if (err.code !== 404 && err.code !== 'OperationNotAllowed') {
+        }
+      }
 
+      GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
+      await search.rebuildIndex(instance.searchIndexer);
+      release();
+      GBLogEx.info(instance.instanceId, `Released rebuildIndex mutex.`);
+    } catch {
+      if (release) {
+        release();
       }
     }
-
-
-    await search.rebuildIndex(instance.searchIndexer);
-
   }
 
   /**
