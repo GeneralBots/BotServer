@@ -720,6 +720,8 @@ export class GBDeployer implements IGBDeployer {
       GBLogEx.info(instance.instanceId, `Acquiring rebuildIndex mutex...`);
       release = await GBServer.globals.indexSemaphore.acquire();
       GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
+      // Prepares search.
+
       const search = new AzureSearch(
         instance.searchKey,
         instance.searchHost,
@@ -728,12 +730,15 @@ export class GBDeployer implements IGBDeployer {
       );
       const connectionString = GBDeployer.getConnectionStringFromInstance(instance);
       const dsName = 'gb';
+
+      // Removes any previous index.
+
       try {
-        await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
+        await search.deleteDataSource(dsName);
       } catch (err) {
         // If it is a 404 there is nothing to delete as it is the first creation.
 
-        if (err.code !== 400 && err.message.indexOf('already exists') !==-1) {
+        if (err.code !== 404) {
           throw err;
         }
       }
@@ -741,16 +746,25 @@ export class GBDeployer implements IGBDeployer {
       // Removes the index.
 
       try {
-        await search.createIndex(searchSchema, dsName);
+        await search.deleteIndex();
       } catch (err) {
         // If it is a 404 there is nothing to delete as it is the first creation.
 
-        if (err.code !== 'ResourceNameAlreadyInUse') {
+        if (err.code !== 404 && err.code !== 'OperationNotAllowed') {
           throw err;
         }
       }
 
-      await search.rebuildIndex(instance.searchIndexer);
+      // Creates the data source and index on the cloud.
+
+      try {
+        await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
+      } catch (err) {
+        GBLog.error(err);
+        throw err;
+      }
+      await search.createIndex(searchSchema, dsName);
+
       release();
       GBLogEx.info(instance.instanceId, `Released rebuildIndex mutex.`);
     } catch {

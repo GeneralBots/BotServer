@@ -223,7 +223,12 @@ export class GBVMService extends GBService {
       let httpPs = this.httpPs;
       let page = null;
 
-  
+      for(i in this.variables) { 
+          global[i] = this.variables[i];
+      }   
+
+      debugger;
+
       // Local functions.
 
       const ubound = (array) => {return array.length};
@@ -345,13 +350,14 @@ export class GBVMService extends GBService {
 
     // Auto-NLP generates BASIC variables related to entities.
 
-    if (text && min['nerEngine']) {
-      const result = await min['nerEngine'].process(text);
+    let variables = [];
+    if (step ? step.context.activity.originalText : null && min['nerEngine']) {
+      const result = await min['nerEngine'].process(step.context.activity.originalText);
 
       for (let i = 0; i < result.entities.length; i++) {
         const v = result.entities[i];
         const variableName = `${v.entity}`;
-        sandbox[variableName] = v.option;
+        variables[variableName] = v.option ? v.option : v.sourceText;
       }
     }
 
@@ -368,6 +374,7 @@ export class GBVMService extends GBService {
       instanceId: min.instance.instanceId
     };
 
+    sandbox['variables'] = variables;
     sandbox['id'] = dk.sys().getRandomId();
     sandbox['username'] = await dk.userName({ pid });
     sandbox['mobile'] = await dk.userMobile({ pid });

@@ -667,7 +667,7 @@ export class GBMinService {
 
     // NLP Manager.
 
-    const manager = new NlpManager({ languages: ['en'], forceNER: true });
+    const manager = new NlpManager({ languages: ['pt'], forceNER: true });
     min['nerEngine'] = manager;
 
     if (GBServer.globals.minBoot === undefined) {

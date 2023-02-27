@@ -866,7 +866,7 @@ export class KBService implements IGBKBService {
         let menu;
 
         // Detect menu level by skipping blank cells on left.
-        
+
         let level;
         for (level = 0; level < MAX_LEVEL; level++) {
           const cell = row._cells[level];
@@ -876,9 +876,9 @@ export class KBService implements IGBKBService {
           }
         }
 
-        // Tree hierarchy calculation.        
+        // Tree hierarchy calculation.
 
-         if (level > lastLevel) {
+        if (level > lastLevel) {
           childrenNode = activeObj.children;
         } else if (level < lastLevel) {
           childrenNode = activeChildrenGivenLevel[level];
@@ -891,7 +891,7 @@ export class KBService implements IGBKBService {
         activeChildrenGivenLevel[level] = childrenNode;
 
         // Insert the object into JSON.
-        const description  = row._cells[level + 1]?row._cells[level + 1].text: null;
+        const description = row._cells[level + 1] ? row._cells[level + 1].text : null;
         activeObj = {
           title: menu,
           description: description,
@@ -959,10 +959,17 @@ export class KBService implements IGBKBService {
       const categoryReg = /.*\((.*)\).*/gi.exec(text);
       const nameReg = /(\w+)\(.*\).*/gi.exec(text);
 
-      if (categoryReg && nameReg) {
+      if (categoryReg) {
         let category = categoryReg[1];
-        let name = nameReg[1];
-        min['nerEngine'].addNamedEntityText(category, name, [contentLocale], [name]);
+
+        if (category === 'number') {
+          min['nerEngine'].addRegexEntity('number','pt', '/d+/gi');
+        }
+        if (nameReg) {
+          let name = nameReg[1];
+
+          min['nerEngine'].addNamedEntityText(category, name, [contentLocale], [name]);
+        }
       }
     });
   }
