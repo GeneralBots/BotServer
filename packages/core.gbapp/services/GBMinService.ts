@@ -47,7 +47,7 @@ import path from 'path';
 import mkdirp from 'mkdirp';
 import Fs from 'fs';
 import arrayBufferToBuffer from 'arraybuffer-to-buffer';
-
+import { NlpManager } from 'node-nlp';
 import {
   AutoSaveStateMiddleware,
   BotFrameworkAdapter,
@@ -85,7 +85,6 @@ import { GBDeployer } from './GBDeployer.js';
 import urlJoin from 'url-join';
 import { GoogleChatDirectLine } from '../../google-chat.gblib/services/GoogleChatDirectLine.js';
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
-import * as nlp from 'node-nlp';
 import Path from 'path';
 import { GBSSR } from './GBSSR.js';
 
@@ -249,20 +248,13 @@ export class GBMinService {
       GBLog.verbose(`Bot UI ${GBMinService.uiPackage} accessible at custom domain: ${domain}.`);
     }
 
-    
     GBServer.globals.httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options);
   }
 
   /**
    * Unmounts the bot web site (default.gbui) secure domain, if any.
    */
-  public async unloadDomain(instance: IGBInstance) {
-
-
-
-
-    
-  }
+  public async unloadDomain(instance: IGBInstance) {}
 
   /**
    * Mount the instance by creating an BOT Framework bot object,
@@ -325,8 +317,7 @@ export class GBMinService {
 
     // Loads Named Entity data for this bot.
 
-    // https://github.com/GeneralBots/BotServer/issues/217
-    // await KBService.RefreshNER(min);
+    await KBService.RefreshNER(min);
 
     // Calls the loadBot context.activity for all packages.
 
@@ -376,7 +367,6 @@ export class GBMinService {
       };
 
       await CollectionUtil.asyncForEach(steps, async step => {
-
         client.apis.Conversations.Conversations_PostActivity({
           conversationId: conversationId,
           activity: {
@@ -619,7 +609,6 @@ export class GBMinService {
    * Gets a Speech to Text / Text to Speech token from the provider.
    */
   private async getSTSToken(instance: any) {
-    
     const options = {
       method: 'POST',
       headers: {
@@ -628,8 +617,7 @@ export class GBMinService {
     };
 
     try {
-
-      const res = await fetch(instance.speechEndpoint, options)
+      const res = await fetch(instance.speechEndpoint, options);
       return res.text();
     } catch (error) {
       const msg = `Error calling Speech to Text client. Error is: ${error}.`;
@@ -674,9 +662,13 @@ export class GBMinService {
     min.sandBoxMap = {};
     min['scheduleMap'] = {};
     min['conversationWelcomed'] = {};
-    min['nerEngine'] = new nlp.NlpManager(); //   https://github.com/GeneralBots/BotServer/issues/217
     min.packages = sysPackages;
     min.appPackages = appPackages;
+
+    // NLP Manager.
+
+    const manager = new NlpManager({ languages: ['en'], forceNER: true });
+    min['nerEngine'] = manager;
 
     if (GBServer.globals.minBoot === undefined) {
       GBServer.globals.minBoot = min;

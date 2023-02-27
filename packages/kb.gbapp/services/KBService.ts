@@ -137,7 +137,7 @@ export class KBService implements IGBKBService {
   }
 
   public async getAnswerById(instanceId: number, answerId: number): Promise<GuaribasAnswer> {
-    return GuaribasAnswer.findOne({
+    return await GuaribasAnswer.findOne({
       where: {
         instanceId: instanceId,
         answerId: answerId
@@ -332,7 +332,7 @@ export class KBService implements IGBKBService {
             return { answer: value, questionId: result.document.questionId };
           } else {
             GBLog.info(
-              `SEARCH WILL NOT be used as answerId ${result.document.answerId} was not found in database,
+              `Index problem. SEARCH WILL NOT be used as answerId ${result.document.answerId} was not found in database,
                 returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
             );
 

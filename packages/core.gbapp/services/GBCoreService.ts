@@ -633,7 +633,7 @@ ENDPOINT_UPDATE=true
 
   /**
    * Get a dynamic param from instance. Dynamic params are defined in Config.xlsx
-   * and loaded into the work folder from /publish command.
+   * and loaded into the work folder from   comida command.
    *
    * @param name Name of param to get from instance.
    * @param defaultValue Value returned when no param is defined in Config.xlsx.

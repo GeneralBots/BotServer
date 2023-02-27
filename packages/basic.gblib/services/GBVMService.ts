@@ -343,18 +343,17 @@ export class GBVMService extends GBService {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    // TODO: https://github.com/GeneralBots/BotServer/issues/217
     // Auto-NLP generates BASIC variables related to entities.
 
-    // if (step && step.context.activity['originalText'] && min['nerEngine']) {
-    //   const entities = await min['nerEngine'].findEntities(step.context.activity['originalText'], contentLocale);
+    if (text && min['nerEngine']) {
+      const result = await min['nerEngine'].process(text);
 
-    //   for (let i = 0; i < entities.length; i++) {
-    //     const v = entities[i];
-    //     const variableName = `${v.entity}`;
-    //     sandbox[variableName] = v.option;
-    //   }
-    // }
+      for (let i = 0; i < result.entities.length; i++) {
+        const v = result.entities[i];
+        const variableName = `${v.entity}`;
+        sandbox[variableName] = v.option;
+      }
+    }
 
     const botId = min.botId;
     const gbdialogPath = urlJoin(process.cwd(), 'work', `${botId}.gbai`, `${botId}.gbdialog`);

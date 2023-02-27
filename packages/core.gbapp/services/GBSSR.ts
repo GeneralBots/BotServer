@@ -175,14 +175,14 @@ export class GBSSR {
         });
       };
 
-      await sleep(15000);
+      await sleep(6000);
 
       // Inject <base> on page to relative resources load properly.
 
       await page.evaluate(url => {
         const base = document.createElement('base');
         base.href = url;
-        // Add to top of head, beeeEEEfore all other resources.
+        // Add to top of head, before all other resources.
         document.head.prepend(base);
       }, url);
 
