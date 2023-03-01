@@ -887,10 +887,10 @@ export class GBConversationalService {
     const key = min.core.getParam<string>(min.instance, 'spellcheckerKey', null);
 
     if (key) {
-      text = text.charAt(0).toUpperCase() + text.slice(1);
+    text = text.charAt(0).toUpperCase() + text.slice(1);
       const data = await AzureText.getSpelledText(key, text);
       if (data !== text) {
-        GBLog.info(`Spelling corrected (processMessageActivity): ${data}`);
+        GBLog.info(`Spelling>: ${data}`);
         text = data;
       }
     }

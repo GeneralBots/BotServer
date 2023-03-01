@@ -1363,8 +1363,6 @@ export class GBMinService {
       step.context.activity['text'] = text;
       step.context.activity['originalText'] = originalText;
 
-      GBLog.info(`Text>: ${text}.`);
-
       if (user.agentMode === 'self') {
         const manualUser = await sec.getUserFromAgentSystemId(user.userSystemId);
 
