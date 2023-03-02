@@ -51,13 +51,12 @@ import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import pptxTemplaterModule from 'pptxtemplater';
 import _ from 'lodash';
-import { DocxImager } from 'docximager';
 import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
 import sharp from 'sharp';
-import apply from 'async/apply';
 import ImageModule from 'open-docxtemplater-image-module';
 import DynamicsWebApi from 'dynamics-web-api';
 import * as MSAL from '@azure/msal-node';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 
 
 /**
@@ -73,11 +72,6 @@ export class SystemKeywords {
    */
   public min: GBMinInstance;
 
-  /**
-   * Reference to the deployer service.
-   */
-  private readonly deployer: GBDeployer;
-
   dk: DialogKeywords;
   wa;
 
@@ -88,7 +82,6 @@ export class SystemKeywords {
   constructor(min: GBMinInstance, deployer: GBDeployer, dk: DialogKeywords, wa) {
     this.min = min;
     this.wa = wa;
-    this.deployer = deployer;
     this.dk = dk;
   }
 
@@ -710,7 +703,7 @@ export class SystemKeywords {
    * @see NPM package data-forge
    *
    */
-  public async find({ pid, args }): Promise<any> {
+  public async getFind({ pid, args }): Promise<any> {
     const file = args[0];
     args.shift();
 
@@ -901,36 +894,40 @@ export class SystemKeywords {
 
         switch (filter.dataType) {
           case 'string':
+
+            const v1 = GBConversationalService.removeDiacritics(result.toLowerCase().trim());
+            const v2 = GBConversationalService.removeDiacritics(filter.toLowerCase().trim());
+
             switch (filter.operator) {
               case '=':
                 if (wholeWord) {
-                  if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
+                  if (v1 === v2) {
                     filterAcceptCount++;
                   }
                 } else {
-                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) > -1) {
+                  if (v1.indexOf(v2) > -1) {
                     filterAcceptCount++;
                   }
                 }
                 break;
               case 'not in':
                 if (wholeWord) {
-                  if (result && result.toLowerCase().trim() !== filter.value.toLowerCase().trim()) {
+                  if (v1 !== v2) {
                     filterAcceptCount++;
                   }
                 } else {
-                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) === -1) {
+                  if (v1.indexOf(v2) === -1) {
                     filterAcceptCount++;
                   }
                 }
                 break;
               case 'in':
                 if (wholeWord) {
-                  if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
+                  if (v1 === v2) {
                     filterAcceptCount++;
                   }
                 } else {
-                  if (result && result.toLowerCase().trim().indexOf(filter.value.toLowerCase().trim()) > -1) {
+                  if (v1.indexOf(v2) > -1) {
                     filterAcceptCount++;
                   }
                 }
@@ -950,7 +947,7 @@ export class SystemKeywords {
           case 'hourInterval':
             switch (filter.operator) {
               case '=':
-                if (result && result.toLowerCase().trim() === filter.value.toLowerCase().trim()) {
+                if (v1 === v2) {
                   filterAcceptCount++;
                 }
                 break;

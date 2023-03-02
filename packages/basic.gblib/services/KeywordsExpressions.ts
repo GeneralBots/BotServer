@@ -285,8 +285,8 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `${$1} = await sys.find({pid: pid, args:[${$2}])\n
-        if (!${$1}) {
+        return `${$1} = await sys.getFind({pid: pid, args:[${$2}])\n
+        if (!${$1}) {s
           await dk.talk ({pid: pid, ${$3}})\n;
           return -1;
         }
@@ -305,7 +305,7 @@ export class KeywordsExpressions {
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `
-        ${$1} = await sys.find({pid: pid, args: [${$2}]})`;
+        ${$1} = await sys.getFind({pid: pid, args: [${$2}]})`;
       }
     ];
 
