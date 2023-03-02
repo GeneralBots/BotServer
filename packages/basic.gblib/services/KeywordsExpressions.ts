@@ -456,18 +456,18 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(datediff)(\s*)(.*)/gim,
-      ($0, $1, $2, $3) => {
-        const params = this.getParams($3, ['date1', 'date2', 'mode']);
-        return `await dk.dateDiff (pid: pid, ${params}})`;
+      /^\s*(.*)\=\s*(datediff)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['date1', 'date2', 'mode']);
+        return `await dk.getDateDiff ({pid: pid, ${params}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(dateadd)(\s*)(.*)/gim,
-      ($0, $1, $2, $3) => {
-        const params = this.getParams($3, ['date', 'mode', 'units']);
-        return `await dk.dateAdd (pid: pid, ${$3})`;
+      /^\s*(.*)\=\s*(dateadd)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['date', 'mode', 'units']);
+        return `await dk.dateAdd ({pid: pid, ${params}})`;
       }
     ];
 

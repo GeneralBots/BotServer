@@ -386,6 +386,7 @@ export class GBVMService extends GBService {
     sandbox['httpUsername'] = '';
     sandbox['httpPs'] = '';
     sandbox['pid'] = pid;
+    sandbox['contentLocale'] = contentLocale;
 
     let result;
 
