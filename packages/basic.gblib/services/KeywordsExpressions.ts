@@ -248,6 +248,13 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*hear (\w+) as\s*qrcode/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.getHear({pid: pid, kind:"qrcode")}`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*hear (\w+) as\s*language/gim,
       ($0, $1) => {
         return `${$1} = await dk.getHear({pid: pid, kind:"language")}`;

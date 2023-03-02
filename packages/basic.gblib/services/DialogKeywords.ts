@@ -59,6 +59,7 @@ import qrcode from 'qrcode';
 import { json } from 'body-parser';
 import { WebAutomationServices } from './WebAutomationServices.js';
 import urljoin from 'url-join';
+import QrScanner from 'qr-scanner';
 
 /**
  * Default check interval for user replay
@@ -1002,6 +1003,13 @@ export class DialogKeywords {
         }
 
         result = phoneNumber;
+      } else if (kind === 'qr-scanner'){
+        //https://github.com/GeneralBots/BotServer/issues/171
+        GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
+        const handle = WebAutomationServices.cyrb53(this.min.botId + answer.filename);
+        GBServer.globals.files[handle] = answer;
+        QrScanner.scanImage(GBServer.globals.files[handle]).then(result => console.log(result)).catch(error => console.log(error || 'no QR code found.'));
+
       } else if (kind === 'zipcode') {
         const extractEntity = (text: string) => {
           text = text.replace(/\-/gi, '');
