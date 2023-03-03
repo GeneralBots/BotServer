@@ -139,7 +139,7 @@ export class KeywordsExpressions {
       /^\s*open\s*(.*)/gim,
       ($0, $1, $2) => {
         let sessionName;
-        let kind = '';
+        let kind = null;
         let pos;
 
         if (pos = $1.match(/\s*AS\s*\#/)) {
@@ -655,7 +655,7 @@ export class KeywordsExpressions {
         // page is not string.
         // https://github.com/GeneralBots/BotServer/issues/310
         const params = this.getParams('page,' + $3, ['handle', 'frameOrSelector', 'selector']);
-        return `await wa.click ({pid: pid, ${params}})`;
+        return `await wa.getClick ({pid: pid, ${params}})`;
       }
     ];
 
@@ -764,7 +764,7 @@ export class KeywordsExpressions {
       /^\s*set\s*(.*)/gim,
       ($0, $1, $2) => {
         const params = this.getParams($1, ['file', 'address', 'value']);
-        return `await sys.set ({pid: pid, ${params}})`;
+        return `await sys.getSet ({pid: pid, handle:page, ${params}})`;
       }
     ];
     keywords[i++] = [

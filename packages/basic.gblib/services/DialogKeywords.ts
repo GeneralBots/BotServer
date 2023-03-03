@@ -228,7 +228,7 @@ export class DialogKeywords {
    *
    * @example x = TODAY
    */
-  public async getToday({}) {
+  public async getToday({ }) {
     let d = new Date(),
       month = '' + (d.getMonth() + 1),
       day = '' + d.getDate(),
@@ -264,28 +264,28 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit({}) {}
+  public async exit({ }) { }
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ pid }) {}
+  public async getActiveTasks({ pid }) { }
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ pid, dealName, contact, company, amount }) {}
+  public async createDeal({ pid, dealName, contact, company, amount }) { }
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ pid, name }) {}
+  public async fndContact({ pid, name }) { }
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -488,7 +488,7 @@ export class DialogKeywords {
    * @example SAVE "contacts.xlsx", name, email, NOW
    *
    */
-  public async getNow({}) {
+  public async getNow({ }) {
     const contentLocale = this.min.core.getParam<string>(
       this.min.instance,
       'Default Content Language',
@@ -724,7 +724,7 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu({}) {
+  public async showMenu({ }) {
     // https://github.com/GeneralBots/BotServer/issues/237
     // return await beginDialog('/menu');
   }
@@ -828,7 +828,7 @@ export class DialogKeywords {
       const answer = min.cbMap[userId].promise;
 
       if (kind === 'sheet') {
-        
+
         // Retrieves the .xlsx file associated with the HEAR var AS file.xlsx.
 
         let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
@@ -864,12 +864,11 @@ export class DialogKeywords {
         let list = [];
         for (; index < results.text.length; index++) {
           if (results.text[index][0] !== '') {
-            list.push( results.text[index][0]);
+            list.push(results.text[index][0]);
           }
-          else
-          {
+          else {
             break;
-          }          
+          }
         }
 
         // Search the answer in one of valid list items loaded from sheeet.
@@ -1121,7 +1120,7 @@ export class DialogKeywords {
   /**
    * Talks to the user by using the specified text.
    */
-  public async getTalk({ pid, text }) {
+  public async getTalk({ pid, text }): Promise<{ status: number }> {
     GBLog.info(`BASIC: TALK '${text}'.`);
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
@@ -1130,6 +1129,7 @@ export class DialogKeywords {
 
       await min.conversationalService['sendOnConversation'](min, user, text);
     }
+    return { status: 0 };
   }
 
   private static getChannel(): string {

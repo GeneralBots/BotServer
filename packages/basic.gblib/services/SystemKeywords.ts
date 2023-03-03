@@ -488,14 +488,15 @@ export class SystemKeywords {
    * @example SET page, "elementHTMLSelector", "text"
    *
    */
-  public async set({ pid, file, address, value }): Promise<any> {
+  public async getSet({ pid, page, file, address, value }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles calls for HTML stuff
 
-    if (file._javascriptEnabled) {
-      const page = file;
-      GBLog.info(`BASIC: Web automation setting ${page}' to '${value}' (SET). `);
+    if (file.indexOf("#") != -1 ||
+    file.indexOf("[") != -1 ) {
+      value = address;
+      GBLog.info(`BASIC: Web automation setting ${file}' to '${value}' (SET). `);
       await this.wa.setElementText({ page, selector: address, text: value });
 
       return;
@@ -1694,7 +1695,7 @@ export class SystemKeywords {
           const address = `${cell}:${cell}`;
 
           if (value !== found[columnName]) {
-            await this.set({ pid, file, address, value });
+            await this.getSet({ pid, file, page:null, address, value });
             merges++;
           }
         }

@@ -277,7 +277,7 @@ export class WebAutomationServices {
    *
    * @example CLICK page,"#idElement"
    */
-  public async click({ pid, handle, frameOrSelector, selector }) {
+  public async getClick({ pid, handle, frameOrSelector, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
     if (selector) {
