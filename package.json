@@ -11,7 +11,8 @@
     "João Ferreira <joao.parana@gmail.com>",
     "Jorge Ramos <jramos@pobox.com>",
     "PH <ph.an@outlook.com>",
-    "Dário Vieira <dario.junior3@gmail.com>"
+    "Dário Vieira <dario.junior3@gmail.com>",
+    "Alan Perdomo <alanperdomo@hotmail.com>"
   ],
   "engines": {
     "node": "=19.7.0"
@@ -143,6 +144,7 @@
     "puppeteer-extra": "3.3.4",
     "puppeteer-extra-plugin-stealth": "2.11.1",
     "qrcode": "1.5.1",
+    "qr-scanner": "^1.4.2",
     "qrcode-terminal": "0.12.0",
     "readline": "1.3.0",
     "reflect-metadata": "0.1.13",

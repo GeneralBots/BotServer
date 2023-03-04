@@ -59,6 +59,7 @@ import qrcode from 'qrcode';
 import { json } from 'body-parser';
 import { WebAutomationServices } from './WebAutomationServices.js';
 import urljoin from 'url-join';
+import QrScanner from 'qr-scanner';
 
 /**
  * Default check interval for user replay
@@ -205,28 +206,28 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit({}) {}
+  public async exit({ }) { }
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ pid }) {}
+  public async getActiveTasks({ pid }) { }
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ pid, dealName, contact, company, amount }) {}
+  public async createDeal({ pid, dealName, contact, company, amount }) { }
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ pid, name }) {}
+  public async fndContact({ pid, name }) { }
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -668,7 +669,7 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu({}) {
+  public async showMenu({ }) {
     // https://github.com/GeneralBots/BotServer/issues/237
     // return await beginDialog('/menu');
   }
@@ -771,7 +772,7 @@ export class DialogKeywords {
       const answer = min.cbMap[userId].promise;
 
       if (kind === 'sheet') {
-        
+
         // Retrieves the .xlsx file associated with the HEAR var AS file.xlsx.
 
         let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
@@ -807,12 +808,11 @@ export class DialogKeywords {
         let list = [];
         for (; index < results.text.length; index++) {
           if (results.text[index][0] !== '') {
-            list.push( results.text[index][0]);
+            list.push(results.text[index][0]);
           }
-          else
-          {
+          else {
             break;
-          }          
+          }
         }
 
         // Search the answer in one of valid list items loaded from sheeet.
@@ -945,6 +945,13 @@ export class DialogKeywords {
         }
 
         result = phoneNumber;
+      } else if (kind === 'qr-scanner'){
+        //https://github.com/GeneralBots/BotServer/issues/171
+        GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
+        const handle = WebAutomationServices.cyrb53(this.min.botId + answer.filename);
+        GBServer.globals.files[handle] = answer;
+        QrScanner.scanImage(GBServer.globals.files[handle]).then(result => console.log(result)).catch(error => console.log(error || 'no QR code found.'));
+
       } else if (kind === 'zipcode') {
         const extractEntity = (text: string) => {
           text = text.replace(/\-/gi, '');
@@ -1074,6 +1081,7 @@ export class DialogKeywords {
 
       await min.conversationalService['sendOnConversation'](min, user, text);
     }
+    return { status: 0 };
   }
 
   private static getChannel(): string {
