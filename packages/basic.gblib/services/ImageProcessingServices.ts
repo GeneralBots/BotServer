@@ -47,33 +47,6 @@ import { GBServer } from '../../../src/app.js';
  */
 export class ImageProcessingServices {
   /**
-   * Reference to minimal bot instance.
-   */
-  public min: GBMinInstance;
-
-  /**
-   * Reference to the base system keywords functions to be called.
-   */
-  public dk: DialogKeywords;
-
-  /**
-   * Current user object to get BASIC properties read.
-   */
-  public user;
-
-  sys: any;
-
-  /**
-   * When creating this keyword facade,a bot instance is
-   * specified among the deployer service.
-   */
-  constructor(min: GBMinInstance, user, dk) {
-    this.min = min;
-    this.user = user;
-    this.dk = dk;
-  }
-
-  /**
    * Sharpen the image.
    *
    * @example file = SHARPEN file
@@ -116,7 +89,7 @@ export class ImageProcessingServices {
       paths.push(gbfile.path);
     });
 
-    const botId = this.min.instance.botId;
+    const botId = min.instance.botId;
     const gbaiName = `${botId}.gbai`;
     const img = await joinImages(paths);
     const localName = Path.join('work', gbaiName, 'cache', `img-mrg${GBAdminService.getRndReadableIdentifier()}.png`);

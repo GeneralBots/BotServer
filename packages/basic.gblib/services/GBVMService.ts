@@ -51,6 +51,7 @@ import { DialogKeywords } from './DialogKeywords.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
+import { SystemKeywords } from './SystemKeywords.js';
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -340,7 +341,6 @@ export class GBVMService extends GBService {
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 
-    const dk = new DialogKeywords(min, deployer, null);
     const sandbox = {};
     const contentLocale = min.core.getParam<string>(
       min.instance,
@@ -373,9 +373,11 @@ export class GBVMService extends GBService {
       userId: user.userId,
       instanceId: min.instance.instanceId
     };
+    const dk = new DialogKeywords();
+    const sys = new SystemKeywords();
 
     sandbox['variables'] = variables;
-    sandbox['id'] = dk.sys().getRandomId();
+    sandbox['id'] = sys.getRandomId();
     sandbox['username'] = await dk.userName({ pid });
     sandbox['mobile'] = await dk.userMobile({ pid });
     sandbox['from'] = await dk.userMobile({ pid });
@@ -398,7 +400,7 @@ export class GBVMService extends GBService {
           console: 'inherit',
           wrapper: 'commonjs',
           require: {
-            builtin: ['stream', 'http', 'https', 'url', 'zlib'],
+            builtin: ['stream', 'http', 'https', 'url', 'zlib', 'net', 'tls', 'crypto', ],
             root: ['./'],
             external: true,
             context: 'sandbox'

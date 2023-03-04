@@ -57,6 +57,7 @@ import ImageModule from 'open-docxtemplater-image-module';
 import DynamicsWebApi from 'dynamics-web-api';
 import * as MSAL from '@azure/msal-node';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
+import { WebAutomationServices } from './WebAutomationServices.js';
 
 
 /**
@@ -67,23 +68,6 @@ import { GBConversationalService } from '../../core.gbapp/services/GBConversatio
  * BASIC system class for extra manipulation of bot behaviour.
  */
 export class SystemKeywords {
-  /**
-   * Reference to minimal bot instance.
-   */
-  public min: GBMinInstance;
-
-  dk: DialogKeywords;
-  wa;
-
-  /**
-   * When creating this keyword facade, a bot instance is
-   * specified among the deployer service.
-   */
-  constructor(min: GBMinInstance, deployer: GBDeployer, dk: DialogKeywords, wa) {
-    this.min = min;
-    this.wa = wa;
-    this.dk = dk;
-  }
 
   public async callVM({ pid, text }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
@@ -114,7 +98,7 @@ export class SystemKeywords {
 
     let caption = (await computerVisionClient.describeImage(url)).captions[0];
 
-    const contentLocale = this.min.core.getParam<string>(
+    const contentLocale = min.core.getParam(
       min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
@@ -158,7 +142,7 @@ export class SystemKeywords {
   public async sortBy({ pid, array, memberName }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     memberName = memberName.trim();
-    const contentLocale = this.min.core.getParam<string>(
+    const contentLocale = min.core.getParam(
       min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
@@ -257,7 +241,7 @@ export class SystemKeywords {
 
     // Includes the associated CSS related to current theme.
 
-    const theme = this.dk.user.basicOptions.theme;
+    const theme: string = 'white'; // TODO: params.theme;
     switch (theme) {
       case 'white':
         await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_simple.min.css' });
@@ -342,9 +326,9 @@ export class SystemKeywords {
     if (data.data) {  
       const gbfile = data.data;
 
-      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
-      const botId = this.min.instance.botId;
-      const gbaiName = `${this.min.botId}.gbai`;
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+      const botId = min.instance.botId;
+      const gbaiName = `${min.botId}.gbai`;
       const tmpDocx = urlJoin(gbaiName, `${botId}.gbdrive`, `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
 
       // Performs the conversion operation.
@@ -425,7 +409,7 @@ export class SystemKeywords {
    * Retrives a random id with a length of five, every time it is called.
    */
   public getRandomId() {
-    const idGeneration = this.dk['idGeneration'];
+    const idGeneration = '1v'; // TODO:  this.dk['idGeneration'];
     if (idGeneration && idGeneration.trim().toLowerCase() === 'number') {
       return GBAdminService.getNumberIdentifier();
     } else {
@@ -488,15 +472,15 @@ export class SystemKeywords {
    * @example SET page, "elementHTMLSelector", "text"
    *
    */
-  public async set({ pid, file, address, value }): Promise<any> {
+  public async set({ pid, handle, file, address, value }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles calls for HTML stuff
 
     if (file._javascriptEnabled) {
-      const page = file;
-      GBLog.info(`BASIC: Web automation setting ${page}' to '${value}' (SET). `);
-      await this.wa.setElementText({ page, selector: address, text: value });
+      
+      GBLog.info(`BASIC: Web automation setting ${file}' to '${value}' (SET). `);
+      await new WebAutomationServices().setElementText({ pid, handle, selector: address, text: value });
 
       return;
     }
@@ -550,9 +534,10 @@ export class SystemKeywords {
    *
    */
   public async saveFile({ pid, file, data }): Promise<any> {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Saving '${file}' (SAVE file).`);
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
-    const botId = this.min.instance.botId;
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const botId = min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdrive`;
 
     // Checks if it is a GB FILE object.
@@ -581,11 +566,12 @@ export class SystemKeywords {
    *
    */
   public async save({ pid, args }): Promise<any> {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const file = args[0];
     args.shift();
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
-    const botId = this.min.instance.botId;
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const botId = min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
     let document = await this.internalGetDocument(client, baseUrl, path, file);
@@ -626,6 +612,7 @@ export class SystemKeywords {
    *
    */
   public async get({ pid, file, addressOrHeaders, httpUsername, httpPs, qs, streaming }): Promise<any> {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     if (file.startsWith('http')) {
       return await this.getByHttp({
         pid,
@@ -637,8 +624,8 @@ export class SystemKeywords {
       });
     } else {
       GBLog.info(`BASIC: GET '${addressOrHeaders}' in '${file}'.`);
-      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
-      const botId = this.min.instance.botId;
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+      const botId = min.instance.botId;
       const path = `/${botId}.gbai/${botId}.gbdata`;
 
       let document = await this.internalGetDocument(client, baseUrl, path, file);
@@ -659,9 +646,10 @@ export class SystemKeywords {
     }
   }
 
-  public isValidDate({ pid, dt }) {
-    const contentLocale = this.min.core.getParam<string>(
-      this.min.instance,
+  public async isValidDate({ pid, dt }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const contentLocale = min.core.getParam(
+      min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
@@ -678,7 +666,8 @@ export class SystemKeywords {
     return !isNaN(date.valueOf());
   }
 
-  public isValidNumber({ pid, number }) {
+  public async isValidNumber({ pid, number }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     if (number === '') {
       return false;
     }
@@ -704,21 +693,22 @@ export class SystemKeywords {
    *
    */
   public async getFind({ pid, args }): Promise<any> {
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const file = args[0];
     args.shift();
 
-    const botId = this.min.instance.botId;
+    const botId = min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
     // MAX LINES property.
 
     let maxLines;
-    if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
-      if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== 'default') {
-        maxLines = Number.parseInt(this.dk.user.basicOptions.maxLines).valueOf();
+    if (user && params && params.maxLines) {
+      if (params.maxLines.toString().toLowerCase() !== 'default') {
+        maxLines = Number.parseInt(params.maxLines).valueOf();
       }
     } else {
-      maxLines = this.dk.maxLines;
+      maxLines = maxLines;
     }
     GBLog.info(`BASIC: FIND running on ${file} (maxLines: ${maxLines}) and args: ${JSON.stringify(args)}...`);
 
@@ -760,7 +750,7 @@ export class SystemKeywords {
         rows[i] = result[i];
       }
     } else if (file['cTag']) {
-      const gbaiName = `${this.min.botId}.gbai`;
+      const gbaiName = `${min.botId}.gbai`;
       const localName = Path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
       const url = file['@microsoft.graph.downloadUrl'];
       const response = await fetch(url);
@@ -785,7 +775,7 @@ export class SystemKeywords {
         }
       }
     } else {
-      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
       let document;
       document = await this.internalGetDocument(client, baseUrl, path, file);
@@ -834,8 +824,8 @@ export class SystemKeywords {
       return filter;
     };
 
-    const contentLocale = this.min.core.getParam<string>(
-      this.min.instance,
+    const contentLocale = min.core.getParam(
+      min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
@@ -888,8 +878,8 @@ export class SystemKeywords {
       await CollectionUtil.asyncForEach(filters, async filter => {
         let result = rows[foundIndex][filter.columnIndex];
         let wholeWord = true;
-        if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.wholeWord) {
-          wholeWord = this.dk.user.basicOptions.wholeWord;
+        if (user && params && params.wholeWord) {
+          wholeWord = params.wholeWord;
         }
 
         switch (filter.dataType) {
@@ -1101,8 +1091,9 @@ export class SystemKeywords {
    *
    */
   public async createFolder({ pid, name }) {
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
-    const botId = this.min.instance.botId;
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const botId = min.instance.botId;
     let path = `/${botId}.gbai/${botId}.gbdrive`;
 
     // Extracts each part of path to call create folder to each
@@ -1150,8 +1141,9 @@ export class SystemKeywords {
    *
    */
   public async shareFolder({ pid, folder, email, message }) {
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
-    const root = urlJoin(`/${this.min.botId}.gbai/${this.min.botId}.gbdrive`, folder);
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const root = urlJoin(`/${min.botId}.gbai/${min.botId}.gbdrive`, folder);
 
     const src = await client.api(`${baseUrl}/drive/root:/${root}`).get();
 
@@ -1177,9 +1169,10 @@ export class SystemKeywords {
    *
    */
   public async copyFile({ pid, src, dest }) {
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: BEGINING COPY '${src}' to '${dest}'`);
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
-    const botId = this.min.instance.botId;
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const botId = min.instance.botId;
 
     // Normalizes all slashes.
 
@@ -1237,9 +1230,10 @@ export class SystemKeywords {
    *
    */
   public async convert({ pid, src, dest }) {
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: CONVERT '${src}' to '${dest}'`);
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
-    const botId = this.min.instance.botId;
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const botId = min.instance.botId;
 
     // Normalizes all slashes.
 
@@ -1339,7 +1333,7 @@ export class SystemKeywords {
    * @example
    *
    * user = put "http://server/path", "data"
-   * talk "The updated user area is" + user.area
+   * talk "The updated user area is" + area
    *
    */
   public async putByHttp({ pid, url, data, headers }) {
@@ -1359,7 +1353,7 @@ export class SystemKeywords {
    * @example
    *
    * user = post "http://server/path", "data"
-   * talk "The updated user area is" + user.area
+   * talk "The updated user area is" + area
    *
    */
   public async postByHttp({ pid, url, data, headers }) {
@@ -1435,13 +1429,13 @@ export class SystemKeywords {
    */
   public async fill({ pid, templateName, data }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    const botId = this.min.instance.botId;
+    const botId = min.instance.botId;
     const gbaiName = `${botId}.gbai`;
     let localName;
 
     // Downloads template from .gbdrive.
 
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     let path = '/' + urlJoin(gbaiName, `${botId}.gbdrive`);
     let template = await this.internalGetDocument(client, baseUrl, path, templateName);
     let url = template['@microsoft.graph.downloadUrl'];
@@ -1473,7 +1467,7 @@ export class SystemKeywords {
         for (const kind of ['png', 'jpg', 'jpeg']) {
           if (value.endsWith && value.endsWith(`.${kind}`)) {
 
-            const { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
+            const { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
             path = urlJoin(gbaiName, `${botId}.gbdrive`);
             if (value.indexOf('/') !== -1) {
@@ -1596,16 +1590,16 @@ export class SystemKeywords {
   public async merge({ pid, file, data, key1, key2 }): Promise<any> {
     GBLog.info(`BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
 
-    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const botId = min.instance.botId;
     const path = `/${botId}.gbai/${botId}.gbdata`;
 
     // MAX LINES property.
 
     let maxLines = 1000;
-    if (this.dk.user && this.dk.user.basicOptions && this.dk.user.basicOptions.maxLines) {
-      if (this.dk.user.basicOptions.maxLines.toString().toLowerCase() !== 'default') {
-        maxLines = Number.parseInt(this.dk.user.basicOptions.maxLines).valueOf();
+    if (user && params && params.maxLines) {
+      if (params.maxLines.toString().toLowerCase() !== 'default') {
+        maxLines = Number.parseInt(params.maxLines).valueOf();
       }
     }
 
@@ -1694,7 +1688,7 @@ export class SystemKeywords {
           const address = `${cell}:${cell}`;
 
           if (value !== found[columnName]) {
-            await this.set({ pid, file, address, value });
+            await this.set({ pid, handle:null, file, address, value });
             merges++;
           }
         }

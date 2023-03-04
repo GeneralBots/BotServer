@@ -9,7 +9,7 @@ const evaluate = async (script, scope) => {
     console: 'inherit',
     wrapper: 'none',
     require: {
-      builtin: ['stream', 'http', 'https', 'url', 'buffer', 'zlib', 'isomorphic-fetch', 'punycode', 'encoding'],
+      builtin: ['stream', 'http', 'https', 'url', 'buffer', 'zlib', 'isomorphic-fetch', 'punycode', 'encoding', 'net'],
       root: ['./'],
       external: true,
       context: 'sandbox'

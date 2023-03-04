@@ -39,16 +39,43 @@
 import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { GuaribasSchedule } from '../core.gbapp/models/GBModel.js';
 import { Sequelize } from 'sequelize-typescript';
-import { createServerRouter } from 'typescript-rest-rpc/lib/server.js';
 import { DialogKeywords } from './services/DialogKeywords.js';
 import { SystemKeywords } from './services/SystemKeywords.js';
 import { WebAutomationServices } from './services/WebAutomationServices.js';
 import { ImageProcessingServices } from './services/ImageProcessingServices.js';
 import { DebuggerService } from './services/DebuggerService.js';
-import * as koaBody from 'koa-body';
 import Koa from 'koa';
-
+import {createRpcServer, createRpcClient} from "@push-rpc/core"
+import {createKoaHttpMiddleware, createExpressHttpMiddleware, createHttpClient} from "@push-rpc/http"
+import { GBServer } from '../../src/app.js';
 const app = new Koa();
+import {SocketServer} from "@push-rpc/core"
+import * as koaBody from "koa-body"
+
+
+export function createKoaHttpServer(
+  port: number,
+  getRemoteId: (ctx: Koa.Context) => string
+): SocketServer {
+  const {onError, onConnection, middleware} = createKoaHttpMiddleware(getRemoteId)
+
+  const app = new Koa()
+  app.use(koaBody.koaBody({multipart: true}))
+  app.use(middleware)
+  const server = app.listen(port)
+
+  return {
+    onError,
+    onConnection,
+    close(cb) {
+      server.close(cb)
+    },
+  }
+}
+
+
+
+
 
 /**
  * Package for core.gbapp.
@@ -60,9 +87,49 @@ export class GBBasicPackage implements IGBPackage {
 
   public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasSchedule]);
-    //app.use(koaBody.koaBody({ multipart: true,  }));
 
-    app.listen(1111);
+    const dk = new DialogKeywords();
+    const wa = new WebAutomationServices();
+    const sys = new SystemKeywords();
+    const dbg = new DebuggerService();
+    const img = new ImageProcessingServices();
+
+// remote id is required for assigning separate HTTP requests to a single session 
+function getRemoteId(ctx: Koa.Context) {
+  return "1" // share a single session for now, real impl could use cookies or some other meaning for HTTP sessions
+}
+
+      
+
+
+
+     GBServer.globals.server.dk = createRpcServer(dk, createKoaHttpServer(5555, getRemoteId),{
+      listeners: {
+        unsubscribed(subscriptions: number): void {},
+        subscribed(subscriptions: number): void {},
+        disconnected(remoteId: string, connections: number): void {
+          console.log(`Client ${remoteId} disconnected`)
+        },
+        connected(remoteId: string, connections: number): void {
+          console.log(`New client ${remoteId} connected`)
+        },
+        messageIn(...params): void {
+          console.log("IN ", params)
+        },
+        messageOut(...params): void {
+          console.log("OUT ", params)
+        },
+      },
+      pingSendTimeout: null,
+      keepAliveTimeout: null,
+    })
+    
+    console.log("RPC Server started at ws://localhost:5555")
+
+    // GBServer.globals.wa = createRpcServer(wa, createWebsocketServer({port: 1112}));
+    // GBServer.globals.sys = createRpcServer(sys, createWebsocketServer({port: 1113}));
+    // GBServer.globals.dbg = createRpcServer(dbg, createWebsocketServer({port: 1114}));
+    // GBServer.globals.img = createRpcServer(img, createWebsocketServer({port: 1115}));
   }
 
   public async getDialogs (min: GBMinInstance) {
@@ -81,28 +148,16 @@ export class GBBasicPackage implements IGBPackage {
     GBLog.verbose(`onExchangeData called.`);
   }
   public async loadBot (min: GBMinInstance): Promise<void> {
-    const dk = new DialogKeywords(min, null, null);
-    const wa = new WebAutomationServices(min, null, dk);
-    const sys = new SystemKeywords(min, null, dk, wa);
-    const dbg = new DebuggerService(min, null, dk);
-    const img = new ImageProcessingServices(min, null, dk);
-    dk.wa = wa;
-    wa.sys = sys;
-    const dialogRouter = createServerRouter(`/api/v2/${min.botId}/dialog`, dk);
-    const waRouter = createServerRouter(`/api/v2/${min.botId}/webautomation`, wa);
-    const sysRouter = createServerRouter(`/api/v2/${min.botId}/system`, sys);
-    const dbgRouter = createServerRouter(`/api/v2/${min.botId}/debugger`, dbg);
-    const imgRouter = createServerRouter(`/api/v2/${min.botId}/imageprocessing`, dbg);
-    app.use(dialogRouter.routes());
-    app.use(sysRouter.routes());
-    app.use(waRouter.routes());
-    app.use(dbgRouter.routes());
-    app.use(imgRouter.routes());
-    app.use(async (ctx, next) => {
-      if(ctx['status'] === 404){
-         ctx.status = 404
-         ctx.body = {msg:'emmmmmmm, seems 404'};
-      }
-  });
+
+    const botId = min.botId;
+    GBServer.globals.debuggers[botId] = {};
+    GBServer.globals.debuggers[botId].state = 0;
+    GBServer.globals.debuggers[botId].breaks = [];
+    GBServer.globals.debuggers[botId].stateInfo = 'Stopped';
+    GBServer.globals.debuggers[botId].childProcess = null;
+    GBServer.globals.debuggers[botId].client = null;
+    GBServer.globals.debuggers[botId].conversationsMap = {};
+    GBServer.globals.debuggers[botId].watermarkMap = {};
+  
   }
 }

@@ -46,39 +46,18 @@ import { DialogKeywords } from './DialogKeywords.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { Mutex } from 'async-mutex';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { SystemKeywords } from './SystemKeywords.js';
 
 /**
  * Web Automation services of conversation to be called by BASIC.
  */
 export class WebAutomationServices {
-  /**
-   * Reference to minimal bot instance.
-   */
-  public min: GBMinInstance;
-
-  /**
-   * Reference to the base system keywords functions to be called.
-   */
-  public dk: DialogKeywords;
-
-  /**
-   * Current user object to get BASIC properties read.
-   */
-  public user;
-
-  /**
-   * HTML browser for conversation over page interaction.
-   */
-  browser: any;
-
-  sys: any;
 
   /**
    * The number used in this execution for HEAR calls (useful for SET SCHEDULE).
    */
   hrOn: string;
 
-  userId: GuaribasUser;
   debugWeb: boolean;
   lastDebugWeb: Date;
 
@@ -102,17 +81,6 @@ export class WebAutomationServices {
     return 4294967296 * (2097151 & h2) + (h1 >>> 0);
   };
 
-  /**
-   * When creating this keyword facade,a bot instance is
-   * specified among the deployer service.
-   */
-  constructor(min: GBMinInstance, user, dk) {
-    this.min = min;
-    this.user = user;
-    this.dk = dk;
-
-    this.debugWeb = this.min.core.getParam<boolean>(this.min.instance, 'Debug Web Automation', false);
-  }
 
   public async getCloseHandles({ pid }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
@@ -185,7 +153,7 @@ export class WebAutomationServices {
 
       // A new web session is being created.
 
-      handle = WebAutomationServices.cyrb53(this.min.botId + url);
+      handle = WebAutomationServices.cyrb53(min.botId + url);
       GBServer.globals.webSessions[handle] = session = {};
       session.sessionName = sessionName;
       
@@ -294,16 +262,17 @@ export class WebAutomationServices {
   }
 
   private async debugStepWeb(pid, page) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     let refresh = true;
     if (this.lastDebugWeb) {
       refresh = new Date().getTime() - this.lastDebugWeb.getTime() > 5000;
     }
 
     if (this.debugWeb && refresh) {
-      const mobile = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
+      const mobile = min.core.getParam(min.instance, 'Bot Admin Number', null);
       const filename = page;
       if (mobile) {
-        await this.dk.sendFileTo({ pid: pid, mobile, filename, caption: 'General Bots Debugger' });
+        await new DialogKeywords().sendFileTo({ pid: pid, mobile, filename, caption: 'General Bots Debugger' });
       }
       this.lastDebugWeb = new Date();
     }
@@ -346,16 +315,17 @@ export class WebAutomationServices {
    *
    * @example file = SCREENSHOT page
    */
-  public async screenshot({ handle, selector }) {
+  public async screenshot({pid,  handle, selector }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation SCREENSHOT ${selector}.`);
 
-    const gbaiName = `${this.min.botId}.gbai`;
+    const gbaiName = `${min.botId}.gbai`;
     const localName = Path.join('work', gbaiName, 'cache', `screen-${GBAdminService.getRndReadableIdentifier()}.jpg`);
 
     await page.screenshot({ path: localName });
 
-    const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
     GBLog.info(`BASIC: WebAutomation: Screenshot captured at ${url}.`);
 
     return url;
@@ -381,7 +351,8 @@ export class WebAutomationServices {
    *
    * @example file = DOWNLOAD element, folder
    */
-  public async download({ handle, selector, folder }) {
+  public async download({ pid, handle, selector, folder }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const page = this.getPageByHandle(handle);
 
     const element = await this.getBySelector({ handle, selector });
@@ -429,8 +400,8 @@ export class WebAutomationServices {
       const res = await fetch(options.uri, options);
       result = Buffer.from(await res.arrayBuffer());
     }
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
-    const botId = this.min.instance.botId;
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const botId = min.instance.botId;
 
     // Normalizes all slashes.
 
@@ -444,7 +415,7 @@ export class WebAutomationServices {
     // Checks if the destination contains subfolders that
     // need to be created.
 
-    folder = await this.sys.createFolder(folder);
+    folder = await new SystemKeywords().createFolder(folder);
 
     // Performs the conversion operation getting a reference
     // to the source and calling /content on drive API.

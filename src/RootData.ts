@@ -42,7 +42,7 @@ import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
  */
 
 export class RootData {
-  public webSessions: {}  // List of Web Automation sessions.
+  public webSessions: {}; // List of Web Automation sessions.
   public processes: {}; // List of .gbdialog active executions.
   public files: {}; // List of uploaded files handled.
   public publicAddress: string; // URI for BotServer.
@@ -59,5 +59,10 @@ export class RootData {
   public debugConversationId: any; // Used to self-message during debug.
   public debuggers: any[]; // Client of attached Debugger instances by botId.
   public chatGPT: any; // ChatGPT API handle (shared Browser).
+  public dk;
+  public wa;
+  public sys;
+  public dbg;
+  public img;
   indexSemaphore: any;
 }

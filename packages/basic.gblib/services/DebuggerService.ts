@@ -44,44 +44,6 @@ import { spawn } from 'child_process';
  * Web Automation services of conversation to be called by BASIC.
  */
 export class DebuggerService {
-  /**
-   * Reference to minimal bot instance.
-   */
-  public min: GBMinInstance;
-
-  /**
-   * Reference to the base system keywords functions to be called.
-   */
-  public dk: DialogKeywords;
-
-  /**
-   * Current user object to get BASIC properties read.
-   */
-  public user;
-
-  /**
-   * HTML browser for conversation over page interaction.
-   */
-  browser: any;
-
-  sys: any;
-
-  /**
-   * The number used in this execution for HEAR calls (useful for SET SCHEDULE).
-   */
-  hrOn: string;
-
-  userId: GuaribasUser;
-  debugWeb: boolean;
-  lastDebugWeb: Date;
-
-  /**
-   * SYSTEM account maxLines,when used with impersonated contexts (eg. running in SET SCHEDULE).
-   */
-  maxLines: number = 2000;
-
-  conversationsMap = {};
-  watermarkMap = {};
   static systemVariables = [
     'AggregateError',
     'Array',
@@ -173,28 +135,6 @@ export class DebuggerService {
     'valueOf'
   ];
 
-  /**
-   * When creating this keyword facade,a bot instance is
-   * specified among the deployer service.
-   */
-  constructor (min: GBMinInstance, user, dk) {
-    this.min = min;
-    this.user = user;
-    this.dk = dk;
-
-    this.debugWeb = this.min.core.getParam<boolean>(this.min.instance, 'Debug Web Automation', false);
-
-    const botId = min.botId;
-
-    GBServer.globals.debuggers[botId] = {};
-    GBServer.globals.debuggers[botId].state = 0;
-    GBServer.globals.debuggers[botId].breaks = [];
-    GBServer.globals.debuggers[botId].stateInfo = 'Stopped';
-    GBServer.globals.debuggers[botId].childProcess = null;
-  }
-
-  private client;
-
   public async breakpoint ({ botId, line }) {
     GBLog.info(`BASIC: Enabled breakpoint for ${botId} on ${line}.`);
     GBServer.globals.debuggers[botId].breaks.push(Number.parseInt(line));
@@ -239,14 +179,18 @@ export class DebuggerService {
   }
 
   public async context ({ botId }) {
-    const conversationId = this.conversationsMap[botId];
+    const conversationsMap = GBServer.globals.debuggers[botId].conversationsMap;
+    const watermarkMap = GBServer.globals.debuggers[botId].watermarkMap;
+
+    const conversationId = conversationsMap[botId];
     let messages = [];
-    if (this.client) {
-      const response = await this.client.Conversations.Conversations_GetActivities({
+    const client = GBServer.globals.debuggers[botId].client;
+    if (client) {
+      const response = await client.Conversations.Conversations_GetActivities({
         conversationId: conversationId,
-        watermark: this.watermarkMap[botId]
+        watermark: watermarkMap[botId]
       });
-      this.watermarkMap[botId] = response.obj.watermark;
+      watermarkMap[botId] = response.obj.watermark;
       let activities = response.obj.activites;
 
       if (activities && activities.length) {
@@ -272,6 +216,8 @@ export class DebuggerService {
   }
 
   public async getRunning ({ botId, botApiKey, scriptName }) {
+    const conversationsMap = GBServer.globals.debuggers[botId].conversationsMap;
+
     let error;
     botId = botId[0];
     if (!GBServer.globals.debuggers[botId]) {
@@ -296,20 +242,21 @@ export class DebuggerService {
 
       let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
-      this.client = await new Swagger({
+      GBServer.globals.debuggers[botId].client = await new Swagger({
         spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
         usePromise: true
       });
-      this.client.clientAuthorizations.add(
+      const client = GBServer.globals.debuggers[botId].client;
+      client.clientAuthorizations.add(
         'AuthorizationBotConnector',
         new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${min.instance.webchatKey}`, 'header')
       );
-      const response = await this.client.Conversations.Conversations_StartConversation();
+      const response = await client.Conversations.Conversations_StartConversation();
       const conversationId = response.obj.conversationId;
-      this.conversationsMap[botId] = conversationId;
+      conversationsMap[botId] = conversationId;
       GBServer.globals.debugConversationId = conversationId;
 
-      this.client.Conversations.Conversations_PostActivity({
+      client.Conversations.Conversations_PostActivity({
         conversationId: conversationId,
         activity: {
           textFormat: 'plain',

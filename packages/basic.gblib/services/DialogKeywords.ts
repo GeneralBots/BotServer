@@ -69,67 +69,6 @@ const DEFAULT_HEAR_POLL_INTERVAL = 500;
  * Base services of conversation to be called by BASIC.
  */
 export class DialogKeywords {
-  /**
-   * Reference to minimal bot instance.
-   */
-  public min: GBMinInstance;
-
-  /**
-   * Reference to the base system keywords functions to be called.
-   */
-  public internalSys: SystemKeywords;
-
-  /**
-   * Current user object to get BASIC properties read.
-   */
-  public user;
-
-  /**
-   * HTML browser for conversation over page interaction.
-   */
-  browser: any;
-
-  /**
-   * The number used in this execution for HEAR calls (useful for SET SCHEDULE).
-   */
-  hrOn: string;
-  userId: GuaribasUser;
-  debugWeb: boolean;
-  lastDebugWeb: Date;
-  public wa;
-
-  /**
-   * SYSTEM account maxLines,when used with impersonated contexts (eg. running in SET SCHEDULE).
-   */
-  maxLines: number = 2000;
-
-  public async getDeployer() {
-    return this.min.deployService;
-  }
-
-  public async getMin() {
-    return this.min;
-  }
-
-  /**
-   * When creating this keyword facade,a bot instance is
-   * specified among the deployer service.
-   */
-  constructor(min: GBMinInstance, deployer: GBDeployer, user) {
-    this.min = min;
-    this.user = user;
-    this.internalSys = new SystemKeywords(min, deployer, this, null);
-
-    this.debugWeb = this.min.core.getParam<boolean>(this.min.instance, 'Debug Web Automation', false);
-  }
-
-  /**
-   * Base reference of system keyword facade,called directly
-   * by the script.
-   */
-  public sys(): SystemKeywords {
-    return this.internalSys;
-  }
 
   /**
    *
@@ -144,7 +83,8 @@ export class DialogKeywords {
    * @param legends
    * @see https://www.npmjs.com/package/plot
    */
-  public async chart({ type, data, legends, transpose }) {
+  public async chart({pid, type, data, legends, transpose }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     let table = [[]];
 
     if (legends) {
@@ -195,12 +135,12 @@ export class DialogKeywords {
       };
     }
 
-    const gbaiName = `${this.min.botId}.gbai`;
+    const gbaiName = `${min.botId}.gbai`;
     const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
 
     await ChartServices.screenshot(definition, localName);
 
-    const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
     GBLog.info(`BASIC: Visualization: Chart generated at ${url}.`);
 
@@ -228,7 +168,8 @@ export class DialogKeywords {
    *
    * @example x = TODAY
    */
-  public async getToday({}) {
+  public async getToday({pid}) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     let d = new Date(),
       month = '' + (d.getMonth() + 1),
       day = '' + d.getDate(),
@@ -241,8 +182,8 @@ export class DialogKeywords {
       day = '0' + day;
     }
 
-    const contentLocale = this.min.core.getParam<string>(
-      this.min.instance,
+    const contentLocale = min.core.getParam(
+      min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
@@ -316,9 +257,10 @@ export class DialogKeywords {
    * @example day = WEEKDAY (date)
    *
    */
-  public getWeekFromDate(pid, date) {
-    const contentLocale = this.min.core.getParam<string>(
-      this.min.instance,
+  public async getWeekFromDate({pid, date}) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const contentLocale = min.core.getParam(
+      min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
@@ -465,7 +407,7 @@ export class DialogKeywords {
       return i;
     }
 
-    const contentLocale = this.min.core.getParam<string>(
+    const contentLocale = min.core.getParam(
       min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
@@ -488,9 +430,10 @@ export class DialogKeywords {
    * @example SAVE "contacts.xlsx", name, email, NOW
    *
    */
-  public async getNow({}) {
-    const contentLocale = this.min.core.getParam<string>(
-      this.min.instance,
+  public async getNow({pid}) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const contentLocale = min.core.getParam(
+      min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
@@ -574,9 +517,10 @@ export class DialogKeywords {
    * @example SET LANGUAGE "pt"
    *
    */
-  public async setLanguage({ language }) {
+  public async setLanguage({ pid, language }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const sec = new SecService();
-    await sec.updateUserLocale(this.user.userId, language);
+    await sec.updateUserLocale(user.userId, language);
   }
 
   /**
@@ -587,7 +531,7 @@ export class DialogKeywords {
    */
   public async setIdGeneration({ mode }) {
     this['idGeneration'] = mode;
-    this['id'] = this.sys().getRandomId();
+    this['id'] = new SystemKeywords().getRandomId();
   }
 
   private isUserSystemParam(name: string): Boolean {
@@ -751,8 +695,7 @@ export class DialogKeywords {
    *
    */
   public async getHear({ pid, kind, arg }) {
-    const process = GBServer.globals.processes[pid];
-    let { min, user } = await DialogKeywords.getProcessInfo(pid);
+    let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles first arg as an array of args.
 
@@ -772,8 +715,8 @@ export class DialogKeywords {
       // containing the specified user other than the actual user
       // TODO: Store hrOn in processInfo.
 
-      if (this.hrOn) {
-        user = await sec.getUserFromAgentSystemId(this.hrOn);
+      if (params.hrOn) {
+        user = await sec.getUserFromAgentSystemId(params.hrOn);
       }
 
       const userId = user.userId;
@@ -831,7 +774,7 @@ export class DialogKeywords {
         
         // Retrieves the .xlsx file associated with the HEAR var AS file.xlsx.
 
-        let { baseUrl, client } = await GBDeployer.internalGetDriveClient(this.min);
+        let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
         const botId = min.instance.botId;
         const path = urljoin(`${botId}.gbai`, `${botId}.gbdata`);
         let url = `${baseUrl}/drive/root:/${path}:/children`;
@@ -884,13 +827,13 @@ export class DialogKeywords {
         // In case of unmatch, asks the person to try again.
 
         if (result === null) {
-          await this.getTalk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
+          await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
           return await this.getHear({ pid, kind, arg });
         }
 
       } else if (kind === 'file') {
         GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
-        const handle = WebAutomationServices.cyrb53(this.min.botId + answer.filename);
+        const handle = WebAutomationServices.cyrb53(min.botId + answer.filename);
         GBServer.globals.files[handle] = answer;
         result = handle;
       } else if (kind === 'boolean') {
@@ -907,7 +850,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null) {
-          await this.getTalk({ pid, text: 'Por favor, digite um e-mail válido.' });
+          await this.talk({ pid, text: 'Por favor, digite um e-mail válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -920,7 +863,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.getTalk({ pid, text: 'Por favor, digite um nome válido.' });
+          await this.talk({ pid, text: 'Por favor, digite um nome válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -933,7 +876,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.getTalk({ pid, text: 'Por favor, digite um número válido.' });
+          await this.talk({ pid, text: 'Por favor, digite um número válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -948,7 +891,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.getTalk({ pid, text: 'Por favor, digite uma data no formato 12/12/2020.' });
+          await this.talk({ pid, text: 'Por favor, digite uma data no formato 12/12/2020.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -961,7 +904,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.getTalk({ pid, text: 'Por favor, digite um horário no formato hh:ss.' });
+          await this.talk({ pid, text: 'Por favor, digite um horário no formato hh:ss.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -980,7 +923,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.getTalk({ pid, text: 'Por favor, digite um valor monetário.' });
+          await this.talk({ pid, text: 'Por favor, digite um valor monetário.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -992,12 +935,12 @@ export class DialogKeywords {
           phoneNumber = phone(answer, { country: 'BRA' })[0];
           phoneNumber = phoneUtil.parse(phoneNumber);
         } catch (error) {
-          await this.getTalk({ pid, text: Messages[locale].validation_enter_valid_mobile });
+          await this.talk({ pid, text: Messages[locale].validation_enter_valid_mobile });
 
           return await this.getHear({ pid, kind, arg });
         }
         if (!phoneUtil.isPossibleNumber(phoneNumber)) {
-          await this.getTalk({ pid, text: 'Por favor, digite um número de telefone válido.' });
+          await this.talk({ pid, text: 'Por favor, digite um número de telefone válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -1017,7 +960,7 @@ export class DialogKeywords {
         const value = extractEntity(answer);
 
         if (value === null || value.length != 1) {
-          await this.getTalk({ pid, text: 'Por favor, digite um CEP válido.' });
+          await this.talk({ pid, text: 'Por favor, digite um CEP válido.' });
           return await this.getHear({ pid, kind, arg });
         }
 
@@ -1032,7 +975,7 @@ export class DialogKeywords {
         });
 
         if (result === null) {
-          await this.getTalk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
+          await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
           return await this.getHear({ pid, kind, arg });
         }
       } else if (kind === 'language') {
@@ -1064,7 +1007,7 @@ export class DialogKeywords {
         });
 
         if (result === null) {
-          await this.getTalk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
+          await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
           return await this.getHear({ pid, kind, arg });
         }
       }
@@ -1077,7 +1020,8 @@ export class DialogKeywords {
   /**
    * Prepares the next dialog to be shown to the specified user.
    */
-  public async gotoDialog({ fromOrDialogName, dialogName }) {
+  public async gotoDialog({ pid, fromOrDialogName, dialogName }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     if (dialogName) {
       if (dialogName.charAt(0) === '/') {
         // https://github.com/GeneralBots/BotServer/issues/308
@@ -1087,7 +1031,7 @@ export class DialogKeywords {
         let user = await sec.getUserFromSystemId(fromOrDialogName);
         if (!user) {
           user = await sec.ensureUser(
-            this.min.instance.instanceId,
+            min.instance.instanceId,
             fromOrDialogName,
             fromOrDialogName,
             null,
@@ -1121,7 +1065,7 @@ export class DialogKeywords {
   /**
    * Talks to the user by using the specified text.
    */
-  public async getTalk({ pid, text }) {
+  public async talk({ pid, text }) {
     GBLog.info(`BASIC: TALK '${text}'.`);
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
