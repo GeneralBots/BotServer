@@ -63,6 +63,7 @@ import { SystemKeywords } from './SystemKeywords.js';
  */
 export class GBVMService extends GBService {
   private static DEBUGGER_PORT = 9222;
+  public static API_PORT = 1111;
 
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
     const files = await walkPromise(folder);
@@ -125,7 +126,8 @@ export class GBVMService extends GBService {
                 "encoding": "0.1.13",
                 "isomorphic-fetch": "3.0.0",
                 "punycode": "2.1.1",
-                "typescript-rest-rpc": "1.0.10",
+                "@push-rpc/core": "1.1.5",
+                "@push-rpc/http": "1.1.5",
                 "vm2": "3.9.11"
               }
             }`;
@@ -199,17 +201,26 @@ export class GBVMService extends GBService {
 
     code = `
     return (async () => {
+
+      // Imports npm packages for this .gbdialog conversational application.
+
       require('isomorphic-fetch');
-      const rest = require('typescript-rest-rpc/lib/client');
+      const createRpcClient = require("@push-rpc/core").createRpcClient;
+      const createHttpClient = require("@push-rpc/http").createHttpClient;
 
-      // Interprocess communication from local HTTP to the BotServer.
-
-      const dk = rest.createClient('http://localhost:1111/api/v2/${min.botId}/dialog');
-      const sys = rest.createClient('http://localhost:1111/api/v2/${min.botId}/system');
-      const wa = rest.createClient('http://localhost:1111/api/v2/${min.botId}/webautomation');
-      const img = rest.createClient('http://localhost:1111/api/v2/${min.botId}/imagprocessing');
-              
-      // Local variables.
+      // Setups interprocess communication from .gbdialog run-time to the BotServer API.
+      
+      let url;
+      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/dk';
+      const dk = (await createRpcClient(0, async () => createHttpClient(url))).remote;
+      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/sys';
+      const sys = (await createRpcClient(0, async () => createHttpClient(url))).remote;
+      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/wa';
+      const wa = (await createRpcClient(0, async () => createHttpClient(url))).remote;
+      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/img';
+      const img = (await createRpcClient(0, async () => createHttpClient(url))).remote;
+      
+      // Unmarshalls Local variables from server VM.
 
       let pid = this.pid;
       let id = this.id;
@@ -228,14 +239,12 @@ export class GBVMService extends GBService {
           global[i] = this.variables[i];
       }   
 
-      debugger;
-
-      // Local functions.
+      // Defines local utility BASIC functions.
 
       const ubound = (array) => {return array.length};
       const isarray = (array) => {return Array.isArray(array) };
   
-      // Remote functions.
+      // Proxies remote functions as BASIC functions.
       
       const weekday = (v) => { return (async () => { return await dk.getWeekFromDate({v}) })(); };
       const hour = (v) => { return (async () => { return await dk.getHourFromDate({v}) })(); };
@@ -423,7 +432,7 @@ export class GBVMService extends GBService {
           min: 0,
           max: 0,
           debug: debug,
-          debuggerPort: GBVMService.DEBUGGER_PORT,
+          debuggerport: GBVMService.DEBUGGER_PORT,
           botId: botId,
           cpu: 100,
           memory: 50000,

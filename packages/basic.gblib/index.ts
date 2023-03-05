@@ -36,7 +36,7 @@
 
 'use strict';
 
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { GuaribasSchedule } from '../core.gbapp/models/GBModel.js';
 import { Sequelize } from 'sequelize-typescript';
 import { DialogKeywords } from './services/DialogKeywords.js';
@@ -45,37 +45,37 @@ import { WebAutomationServices } from './services/WebAutomationServices.js';
 import { ImageProcessingServices } from './services/ImageProcessingServices.js';
 import { DebuggerService } from './services/DebuggerService.js';
 import Koa from 'koa';
-import {createRpcServer, createRpcClient} from "@push-rpc/core"
-import {createKoaHttpMiddleware, createExpressHttpMiddleware, createHttpClient} from "@push-rpc/http"
+import { createRpcServer, createRpcClient } from '@push-rpc/core';
+import { createHttpKoaMiddleware, createHttpClient } from '@push-rpc/http';
+import { HttpServerOptions } from '@push-rpc/http/dist/server.js';
 import { GBServer } from '../../src/app.js';
 const app = new Koa();
-import {SocketServer} from "@push-rpc/core"
-import * as koaBody from "koa-body"
-
+import { SocketServer } from '@push-rpc/core';
+import * as koaBody from 'koa-body';
+import { GBVMService } from './services/GBVMService.js';
+import { GBLogEx } from '../core.gbapp/services/GBLogEx.js';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 
 export function createKoaHttpServer(
   port: number,
-  getRemoteId: (ctx: Koa.Context) => string
+  getRemoteId: (ctx: Koa.Context) => string,
+  opts: Partial<HttpServerOptions> = {}
 ): SocketServer {
-  const {onError, onConnection, middleware} = createKoaHttpMiddleware(getRemoteId)
+  const { onError, onConnection, middleware } = createHttpKoaMiddleware(getRemoteId, opts);
 
-  const app = new Koa()
-  app.use(koaBody.koaBody({multipart: true}))
-  app.use(middleware)
-  const server = app.listen(port)
+  const app = new Koa();
+  app.use(koaBody.koaBody({ multipart: true }));
+  app.use(middleware);
+  const server = app.listen(port);
 
   return {
     onError,
     onConnection,
     close(cb) {
-      server.close(cb)
-    },
-  }
+      server.close(cb);
+    }
+  };
 }
-
-
-
-
 
 /**
  * Package for core.gbapp.
@@ -85,71 +85,74 @@ export class GBBasicPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
   public CurrentEngineName = 'guaribas-1.0.0';
 
-  public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {
+  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasSchedule]);
+  }
 
-    const dk = new DialogKeywords();
-    const wa = new WebAutomationServices();
-    const sys = new SystemKeywords();
-    const dbg = new DebuggerService();
-    const img = new ImageProcessingServices();
+  public async getDialogs(min: GBMinInstance) {
+    GBLog.verbose(`getDialogs called.`);
+  }
+  public async unloadPackage(core: IGBCoreService): Promise<void> {
+    GBLog.verbose(`unloadPackage called.`);
+  }
+  public async unloadBot(min: GBMinInstance): Promise<void> {
+    GBLog.verbose(`unloadBot called.`);
+  }
+  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
+    GBLog.verbose(`onNewSession called.`);
+  }
+  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
+    GBLog.verbose(`onExchangeData called.`);
+  }
+  public async loadBot(min: GBMinInstance): Promise<void> {
+    const botId = min.botId;
 
-// remote id is required for assigning separate HTTP requests to a single session 
-function getRemoteId(ctx: Koa.Context) {
-  return "1" // share a single session for now, real impl could use cookies or some other meaning for HTTP sessions
-}
-
-      
-
-
-
-     GBServer.globals.server.dk = createRpcServer(dk, createKoaHttpServer(5555, getRemoteId),{
+    const opts = {
+      pingSendTimeout: null,
+      keepAliveTimeout: null,
       listeners: {
         unsubscribed(subscriptions: number): void {},
         subscribed(subscriptions: number): void {},
         disconnected(remoteId: string, connections: number): void {
-          console.log(`Client ${remoteId} disconnected`)
+          GBLogEx.info(min, `[GBAPI]: New client ${remoteId} disconnected`);
         },
         connected(remoteId: string, connections: number): void {
-          console.log(`New client ${remoteId} connected`)
+          GBLogEx.info(min, `[GBAPI]: New client ${remoteId} connected`);
         },
         messageIn(...params): void {
-          console.log("IN ", params)
+          GBLogEx.info(min, '[GBAPI]: IN ' + params);
         },
         messageOut(...params): void {
-          console.log("OUT ", params)
-        },
-      },
-      pingSendTimeout: null,
-      keepAliveTimeout: null,
-    })
-    
-    console.log("RPC Server started at ws://localhost:5555")
+          GBLogEx.info(min, '[GBAPI]: OUT ' + params);
+        }
+      }
+    };
 
-    // GBServer.globals.wa = createRpcServer(wa, createWebsocketServer({port: 1112}));
-    // GBServer.globals.sys = createRpcServer(sys, createWebsocketServer({port: 1113}));
-    // GBServer.globals.dbg = createRpcServer(dbg, createWebsocketServer({port: 1114}));
-    // GBServer.globals.img = createRpcServer(img, createWebsocketServer({port: 1115}));
-  }
+    function getRemoteId(ctx: Koa.Context) {
+      return '1'; // share a single session for now, real impl could use cookies or some other meaning for HTTP sessions
+    }
+    let instances: IGBInstance[];
+    instances = await min.core.loadInstances();
+    let proxies = {};
+    await CollectionUtil.asyncForEach(instances, async instance => {
+      const proxy = {
+        dk: new DialogKeywords(),
+        wa: new WebAutomationServices(),
+        sys: new SystemKeywords(),
+        dbg: new DebuggerService(),
+        img: new ImageProcessingServices()
+      };
+      proxies[instance.botId] = proxy;
+    });
 
-  public async getDialogs (min: GBMinInstance) {
-    GBLog.verbose(`getDialogs called.`);
-  }
-  public async unloadPackage (core: IGBCoreService): Promise<void> {
-    GBLog.verbose(`unloadPackage called.`);
-  }
-  public async unloadBot (min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`unloadBot called.`);
-  }
-  public async onNewSession (min: GBMinInstance, step: GBDialogStep): Promise<void> {
-    GBLog.verbose(`onNewSession called.`);
-  }
-  public async onExchangeData (min: GBMinInstance, kind: string, data: any) {
-    GBLog.verbose(`onExchangeData called.`);
-  }
-  public async loadBot (min: GBMinInstance): Promise<void> {
+    GBServer.globals.server.dk = createRpcServer(
+      proxies,
+      createKoaHttpServer(GBVMService.API_PORT, getRemoteId, { prefix: `api/v3` }),
+      opts
+    );
 
-    const botId = min.botId;
+    GBLogEx.info(min, '[GBAPI] RPC HTTP Server started at http://localhost:' + GBVMService.API_PORT);
+
     GBServer.globals.debuggers[botId] = {};
     GBServer.globals.debuggers[botId].state = 0;
     GBServer.globals.debuggers[botId].breaks = [];
@@ -158,6 +161,5 @@ function getRemoteId(ctx: Koa.Context) {
     GBServer.globals.debuggers[botId].client = null;
     GBServer.globals.debuggers[botId].conversationsMap = {};
     GBServer.globals.debuggers[botId].watermarkMap = {};
-  
   }
 }

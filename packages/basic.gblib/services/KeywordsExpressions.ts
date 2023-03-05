@@ -173,112 +173,112 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*hear (\w+) as (\w+( \w+)*.xlsx)/gim,
       ($0, $1, $2) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"sheet", arg: "${$2}"})`;
+        return `${$1} = await dk.hear({pid: pid, kind:"sheet", arg: "${$2}"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*login/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"login"})`;
+        return `${$1} = await dk.hear({pid: pid, kind:"login"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*email/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"email"})`;
+        return `${$1} = await dk.hear({pid: pid, kind:"email"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*integer/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"integer"})`;
+        return `${$1} = await dk.hear({pid: pid, kind:"integer"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*file/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"file"})`;
+        return `${$1} = await dk.hear({pid: pid, kind:"file"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*boolean/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"boolean"})`;
+        return `${$1} = await dk.hear({pid: pid, kind:"boolean"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*name/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"name"})`;
+        return `${$1} = await dk.hear({pid: pid, kind:"name"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*date/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"date"})`;
+        return `${$1} = await dk.hear({pid: pid, kind:"date"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*hour/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"hour"})`;
+        return `${$1} = await dk.hear({pid: pid, kind:"hour"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*phone/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"phone"})`;
+        return `${$1} = await dk.hear({pid: pid, kind:"phone"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*money/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"money")}`;
+        return `${$1} = await dk.hear({pid: pid, kind:"money")}`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*qrcode/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"qrcode")}`;
+        return `${$1} = await dk.hear({pid: pid, kind:"qrcode")}`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*language/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"language")}`;
+        return `${$1} = await dk.hear({pid: pid, kind:"language")}`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*zipcode/gim,
       ($0, $1) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"zipcode")}`;
+        return `${$1} = await dk.hear({pid: pid, kind:"zipcode")}`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+) as\s*(.*)/gim,
       ($0, $1, $2) => {
-        return `${$1} = await dk.getHear({pid: pid, kind:"menu", args: [${$2}]})`;
+        return `${$1} = await dk.hear({pid: pid, kind:"menu", args: [${$2}]})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(hear)\s*(\w+)/gim,
       ($0, $1, $2) => {
-        return `${$2} = await dk.getHear({pid: pid})`;
+        return `${$2} = await dk.hear({pid: pid})`;
       }
     ];
 
@@ -604,7 +604,7 @@ export class KeywordsExpressions {
         if ($3.substr(0, 1) !== '"') {
           $3 = `"${$3}"`;
         }
-        return `await dk.getTalk ({pid: pid, text: ${$3}})`;
+        return `await dk.talk ({pid: pid, text: ${$3}})`;
       }
     ];
 

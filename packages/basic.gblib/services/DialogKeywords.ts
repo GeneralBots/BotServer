@@ -695,7 +695,7 @@ export class DialogKeywords {
    * @example HEAR name
    *
    */
-  public async getHear({ pid, kind, arg }) {
+  public async hear({ pid, kind, arg }) {
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles first arg as an array of args.
@@ -828,7 +828,7 @@ export class DialogKeywords {
 
         if (result === null) {
           await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
 
       } else if (kind === 'file') {
@@ -851,7 +851,7 @@ export class DialogKeywords {
 
         if (value === null) {
           await this.talk({ pid, text: 'Por favor, digite um e-mail válido.' });
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
 
         result = value;
@@ -864,7 +864,7 @@ export class DialogKeywords {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um nome válido.' });
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
 
         result = value;
@@ -877,7 +877,7 @@ export class DialogKeywords {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um número válido.' });
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
 
         result = value;
@@ -892,7 +892,7 @@ export class DialogKeywords {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite uma data no formato 12/12/2020.' });
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
 
         result = value;
@@ -905,7 +905,7 @@ export class DialogKeywords {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um horário no formato hh:ss.' });
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
 
         result = value;
@@ -924,7 +924,7 @@ export class DialogKeywords {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um valor monetário.' });
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
 
         result = value;
@@ -937,18 +937,18 @@ export class DialogKeywords {
         } catch (error) {
           await this.talk({ pid, text: Messages[locale].validation_enter_valid_mobile });
 
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
         if (!phoneUtil.isPossibleNumber(phoneNumber)) {
           await this.talk({ pid, text: 'Por favor, digite um número de telefone válido.' });
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
 
         result = phoneNumber;
       } else if (kind === 'qr-scanner'){
         //https://github.com/GeneralBots/BotServer/issues/171
         GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
-        const handle = WebAutomationServices.cyrb53(this.min.botId + answer.filename);
+        const handle = WebAutomationServices.cyrb53(min.botId + answer.filename);
         GBServer.globals.files[handle] = answer;
         QrScanner.scanImage(GBServer.globals.files[handle]).then(result => console.log(result)).catch(error => console.log(error || 'no QR code found.'));
 
@@ -968,7 +968,7 @@ export class DialogKeywords {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um CEP válido.' });
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
 
         result = value[0];
@@ -983,7 +983,7 @@ export class DialogKeywords {
 
         if (result === null) {
           await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
       } else if (kind === 'language') {
         result = null;
@@ -1015,7 +1015,7 @@ export class DialogKeywords {
 
         if (result === null) {
           await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
-          return await this.getHear({ pid, kind, arg });
+          return await this.hear({ pid, kind, arg });
         }
       }
       return result;
@@ -1077,7 +1077,7 @@ export class DialogKeywords {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     if (user) {
-      // TODO: const translate = this.user ? this.user.basicOptions.translatorOn : false;
+      // TODO: const translate = user ? user.basicOptions.translatorOn : false;
 
       await min.conversationalService['sendOnConversation'](min, user, text);
     }
