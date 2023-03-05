@@ -288,7 +288,7 @@ export class DialogKeywords {
    * @example days = DATEDIFF date1,date2,mode
    *
    */
-  public getDateDiff(date1, date2, mode) {
+  public async dateDiff(date1, date2, mode) {
     let dt1 = date1;
     let dt2 = date2;
     if (!(dt1 instanceof Date)) {

@@ -40,7 +40,7 @@ import url from 'url';
 import { GBLog, GBMinInstance } from 'botlib';
 import { GBServer } from '../../../src/app.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import { GBSSR }from '../../core.gbapp/services/GBSSR.js';
+import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { DialogKeywords } from './DialogKeywords.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
@@ -52,7 +52,6 @@ import { SystemKeywords } from './SystemKeywords.js';
  * Web Automation services of conversation to be called by BASIC.
  */
 export class WebAutomationServices {
-
   /**
    * The number used in this execution for HEAR calls (useful for SET SCHEDULE).
    */
@@ -81,7 +80,6 @@ export class WebAutomationServices {
     return 4294967296 * (2097151 & h2) + (h1 >>> 0);
   };
 
-
   public async getCloseHandles({ pid }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     // Releases previous allocated OPEN semaphores.
@@ -102,37 +100,44 @@ export class WebAutomationServices {
    * @example OPEN "https://wikipedia.org"
    */
 
-  public async getPage({ pid, sessionKind, sessionName, url, username, password }) {
-    GBLog.info(`BASIC: Web Automation GET PAGE ${sessionName ? sessionName : ''} ${url}.`);
+  public async getPage({ pid, handle, sessionKind, sessionName, url, username, password }) {
+    GBLog.info(`BASIC: Web Automation OPEN ${sessionName ? sessionName : ''} ${url}.`);
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-
-    let handle;
 
     // Try to find an existing handle.
 
     let session;
-    let keys = Object.keys(GBServer.globals.webSessions);
-    for (let i = 0; i < keys.length; i++) {
-      if (GBServer.globals.webSessions[keys[i]].sessionName === sessionName) {
-        session = GBServer.globals.webSessions[keys[i]];
-        handle = keys[i];
-        break;
-      }
+    if (handle)
+    {
+      session = GBServer.globals.webSessions[handle];
     }
-
-    // Semaphore logic to block multiple entries on the same session.
+    else if (sessionName) {
+      let keys = Object.keys(GBServer.globals.webSessions);
+      for (let i = 0; i < keys.length; i++) {
+        if (GBServer.globals.webSessions[keys[i]].sessionName === sessionName) {
+          session = GBServer.globals.webSessions[keys[i]];
+          handle = keys[i];
+          break;
+        }
+      }
+    }    
 
     let page;
     if (session) {
-      GBLogEx.info(min, `Acquiring (1) for PID: ${pid}...`);
-      const release = await session.semaphore.acquire();
-      GBLogEx.info(min, `Acquire (1) for PID: ${pid} done.`);
-      try {
-        session.activePid = pid;
-        session.release = release;
-        page = session.page;
-      } catch {
-        release();
+      page = session.page;
+
+      // Semaphore logic to block multiple entries on the same session.
+
+      if (sessionName) {
+        GBLogEx.info(min, `Acquiring (1) for PID: ${pid}...`);
+        const release = await session.semaphore.acquire();
+        GBLogEx.info(min, `Acquire (1) for PID: ${pid} done.`);
+        try {
+          session.activePid = pid;
+          session.release = release;
+        } catch {
+          release();
+        }
       }
     }
 
@@ -147,25 +152,30 @@ export class WebAutomationServices {
       }
     }
 
-    // There is no session yet.
+    // There is no session yet or it is an unamed session.
 
-    if (!session && sessionKind === 'AS') {
-
+    if ((!session && sessionKind === 'AS') || !sessionName) {
       // A new web session is being created.
 
       handle = WebAutomationServices.cyrb53(min.botId + url);
-      GBServer.globals.webSessions[handle] = session = {};
+
+      session = {};
       session.sessionName = sessionName;
-      
       session.page = page;
       session.browser = browser;
       session.semaphore = new Mutex();
-      GBLogEx.info(min, `Acquiring (2) for PID: ${pid}...`);
-      const release = await session.semaphore.acquire();
-      GBLogEx.info(min, `Acquire (2) for PID: ${pid} done.`);
-      session.release = release;
       session.activePid = pid;
 
+      GBServer.globals.webSessions[handle] = session;
+
+      // Only uses semaphore logic in named web sessions.
+
+      if (sessionName) {
+        GBLogEx.info(min, `Acquiring (2) for PID: ${pid}...`);
+        const release = await session.semaphore.acquire();
+        session.release = release;
+        GBLogEx.info(min, `Acquire (2) for PID: ${pid} done.`);
+      }
     }
 
     // WITH is only valid in a previously defined session.
@@ -245,7 +255,7 @@ export class WebAutomationServices {
    *
    * @example CLICK page,"#idElement"
    */
-  public async getClick({ pid, handle, frameOrSelector, selector }) {
+  public async click({ pid, handle, frameOrSelector, selector }) {
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
     if (selector) {
@@ -315,7 +325,7 @@ export class WebAutomationServices {
    *
    * @example file = SCREENSHOT page
    */
-  public async screenshot({pid,  handle, selector }) {
+  public async screenshot({ pid, handle, selector }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const page = this.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation SCREENSHOT ${selector}.`);
@@ -432,7 +442,7 @@ export class WebAutomationServices {
     return file;
   }
 
-  private async  recursiveFindInFrames (inputFrame, selector) {
+  private async recursiveFindInFrames(inputFrame, selector) {
     const frames = inputFrame.childFrames();
     const results = await Promise.all(
       frames.map(async frame => {
@@ -446,5 +456,4 @@ export class WebAutomationServices {
     );
     return results.find(Boolean);
   }
-  
 }

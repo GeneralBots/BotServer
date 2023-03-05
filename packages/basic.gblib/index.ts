@@ -113,17 +113,13 @@ export class GBBasicPackage implements IGBPackage {
       listeners: {
         unsubscribed(subscriptions: number): void {},
         subscribed(subscriptions: number): void {},
-        disconnected(remoteId: string, connections: number): void {
-          GBLogEx.info(min, `[GBAPI]: New client ${remoteId} disconnected`);
-        },
-        connected(remoteId: string, connections: number): void {
-          GBLogEx.info(min, `[GBAPI]: New client ${remoteId} connected`);
-        },
+        disconnected(remoteId: string, connections: number): void {},
+        connected(remoteId: string, connections: number): void {},
         messageIn(...params): void {
-          GBLogEx.info(min, '[GBAPI]: IN ' + params);
+          GBLogEx.info(min, 'API IN' + params);
         },
         messageOut(...params): void {
-          GBLogEx.info(min, '[GBAPI]: OUT ' + params);
+          GBLogEx.info(min, 'API OUT ' + params);
         }
       }
     };
@@ -151,7 +147,7 @@ export class GBBasicPackage implements IGBPackage {
       opts
     );
 
-    GBLogEx.info(min, '[GBAPI] RPC HTTP Server started at http://localhost:' + GBVMService.API_PORT);
+    GBLogEx.info(min, 'API RPC HTTP Server started at http://localhost:' + GBVMService.API_PORT);
 
     GBServer.globals.debuggers[botId] = {};
     GBServer.globals.debuggers[botId].state = 0;

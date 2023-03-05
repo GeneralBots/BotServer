@@ -477,10 +477,11 @@ export class SystemKeywords {
 
     // Handles calls for HTML stuff
 
-    if (file._javascriptEnabled) {
+    if (handle) {
       
-      GBLog.info(`BASIC: Web automation setting ${file}' to '${value}' (SET). `);
-      await new WebAutomationServices().setElementText({ pid, handle, selector: address, text: value });
+      GBLog.info(`BASIC: Web automation SET ${file}' to '${address}'    . `);
+      await new WebAutomationServices()
+        .setElementText({ pid, handle, selector: file, text: address });
 
       return;
     }

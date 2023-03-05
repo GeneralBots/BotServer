@@ -159,7 +159,7 @@ export class KeywordsExpressions {
         }
         const params = this.getParams($1, ['url', 'username', 'password']);
 
-        return `page = await wa.getPage({pid: pid, sessionKind: ${kind}, sessionName: ${sessionName}, ${params}})`;
+        return `page = await wa.getPage({pid: pid, page: page, sessionKind: ${kind}, sessionName: ${sessionName}, ${params}})`;
       }
     ];
 
@@ -661,8 +661,8 @@ export class KeywordsExpressions {
       ($0, $1, $2, $3) => {
         // page is not string.
         // https://github.com/GeneralBots/BotServer/issues/310
-        const params = this.getParams('page,' + $3, ['handle', 'frameOrSelector', 'selector']);
-        return `await wa.getClick ({pid: pid, ${params}})`;
+        const params = this.getParams($3, ['handle', 'frameOrSelector', 'selector']);
+        return `await wa.click ({pid: pid, ${params}})`;
       }
     ];
 
@@ -771,7 +771,7 @@ export class KeywordsExpressions {
       /^\s*set\s*(.*)/gim,
       ($0, $1, $2) => {
         const params = this.getParams($1, ['file', 'address', 'value']);
-        return `await sys.getSet ({pid: pid, handle:page, ${params}})`;
+        return `await sys.set ({pid: pid, handle: page, ${params}})`;
       }
     ];
     keywords[i++] = [
