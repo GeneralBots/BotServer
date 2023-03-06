@@ -46,20 +46,19 @@ import { Messages } from '../strings.js';
 import * as Fs from 'fs';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
-import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import phoneUtil from 'google-libphonenumber';
 import phone from 'phone';
 import DateDiff from 'date-diff';
-import { Buttons, List } from 'whatsapp-web.js';
 import tesseract from 'node-tesseract-ocr';
 import Path from 'path';
 import sgMail from '@sendgrid/mail';
 import mammoth from 'mammoth';
 import qrcode from 'qrcode';
-import { json } from 'body-parser';
 import { WebAutomationServices } from './WebAutomationServices.js';
 import urljoin from 'url-join';
 import QrScanner from 'qr-scanner';
+import pkg from 'whatsapp-web.js';
+const { List, Buttons } = pkg;
 
 /**
  * Default check interval for user replay
@@ -70,7 +69,6 @@ const DEFAULT_HEAR_POLL_INTERVAL = 500;
  * Base services of conversation to be called by BASIC.
  */
 export class DialogKeywords {
-
   /**
    *
    * Data = [10,20,30]
@@ -84,7 +82,7 @@ export class DialogKeywords {
    * @param legends
    * @see https://www.npmjs.com/package/plot
    */
-  public async chart({pid, type, data, legends, transpose }) {
+  public async chart({ pid, type, data, legends, transpose }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     let table = [[]];
 
@@ -169,7 +167,7 @@ export class DialogKeywords {
    *
    * @example x = TODAY
    */
-  public async getToday({pid}) {
+  public async getToday({ pid }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     let d = new Date(),
       month = '' + (d.getMonth() + 1),
@@ -206,28 +204,28 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit({ }) { }
+  public async exit({}) {}
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ pid }) { }
+  public async getActiveTasks({ pid }) {}
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ pid, dealName, contact, company, amount }) { }
+  public async createDeal({ pid, dealName, contact, company, amount }) {}
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ pid, name }) { }
+  public async fndContact({ pid, name }) {}
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -258,7 +256,7 @@ export class DialogKeywords {
    * @example day = WEEKDAY (date)
    *
    */
-  public async getWeekFromDate({pid, date}) {
+  public async getWeekFromDate({ pid, date }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const contentLocale = min.core.getParam(
       min.instance,
@@ -431,7 +429,7 @@ export class DialogKeywords {
    * @example SAVE "contacts.xlsx", name, email, NOW
    *
    */
-  public async getNow({pid}) {
+  public async getNow({ pid }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const contentLocale = min.core.getParam(
       min.instance,
@@ -623,16 +621,16 @@ export class DialogKeywords {
     await this.setOption({ pid, name: 'wholeWord', value: value });
   }
 
-/**
+  /**
    * Defines the FIND behaviour to consider whole words while searching.
    *
    * @example SET FILTER TYPE date, string
    *
    */
-public async setFilterTypes({ pid, types }) {
-  const value = types;
-  await this.setOption({ pid, name: 'filterTypes', value: value });
-}
+  public async setFilterTypes({ pid, types }) {
+    const value = types;
+    await this.setOption({ pid, name: 'filterTypes', value: value });
+  }
 
   /**
    * Defines the theme for assets generation.
@@ -678,7 +676,7 @@ public async setFilterTypes({ pid, types }) {
    * @example MENU
    *
    */
-  public async showMenu({ }) {
+  public async showMenu({}) {
     // https://github.com/GeneralBots/BotServer/issues/237
     // return await beginDialog('/menu');
   }
@@ -704,15 +702,16 @@ public async setFilterTypes({ pid, types }) {
    * @example HEAR name
    *
    */
-  public async hear({ pid, kind, arg }) {
+  public async hear({ pid, kind, args }) {
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles first arg as an array of args.
 
-    let args = [];
-    if (arg && arg.length) {
-      args = arg;
+    let args1 = [];
+    if (args && args.length) {
+      args1 = args;
     }
+    args = args1;
 
     try {
       const isIntentYes = (locale, utterance) => {
@@ -736,28 +735,25 @@ public async setFilterTypes({ pid, types }) {
       // https://github.com/GeneralBots/BotServer/issues/266
 
       if (args && args.length > 1) {
-        // https://github.com/pedroslopez/whatsapp-web.js/issues/1811
-        //
-        // const list = new List(
-        //   'Escolha um dos itens',
-        //   'Itens1',
-        //   [
-        //     {
-        //       title: 'Itens2',
-        //       rows: []
-        //     }
-        //   ],
-        //   'Please select a product'
-        // );
-        // let i = 0;
-        // await CollectionUtil.asyncForEach(args, async arg => {
-        //   i++;
-        //   list.sections[0].rows.push({ title: arg, id: `button${i}` });
-        //   await this.getTalk(arg);
-        // });
+        let i = 0;
 
-        // const button = new wpp.Buttons(Messages[locale].choices, choices, ' ', ' ');
-        // await this.getTalk(button);
+        if (args.length > 3) {
+          let section = { title: '', rows: [] };
+          await CollectionUtil.asyncForEach(args, async arg => {
+            i++;
+            section.rows.push({ title: arg, id: `button${i}` });
+          });
+          const list = new List('Select:', '', [section], '', '');
+          await this.talk({ pid: pid, text: list });
+        } else {
+          let buttons = [];
+          await CollectionUtil.asyncForEach(args, async arg => {
+            i++;
+            buttons.push({ body: arg, id: `button${i}` });
+          });
+          let button = new Buttons('Select:', buttons, '', 'General Bots');
+          await this.talk({ pid: pid, text: button });
+        }
 
         GBLog.info(`BASIC: HEAR with [${args.toString()}] (Asking for input).`);
       } else {
@@ -781,7 +777,6 @@ public async setFilterTypes({ pid, types }) {
       const answer = min.cbMap[userId].promise;
 
       if (kind === 'sheet') {
-
         // Retrieves the .xlsx file associated with the HEAR var AS file.xlsx.
 
         let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
@@ -795,10 +790,10 @@ public async setFilterTypes({ pid, types }) {
         // Finds .xlsx specified by arg.
 
         const document = res.value.filter(m => {
-          return m.name === arg;
+          return m.name === args;
         });
         if (document === undefined || document.length === 0) {
-          GBLog.info(`${arg} not found on .gbdata folder, check the package.`);
+          GBLog.info(`${args} not found on .gbdata folder, check the package.`);
           return null;
         }
 
@@ -818,8 +813,7 @@ public async setFilterTypes({ pid, types }) {
         for (; index < results.text.length; index++) {
           if (results.text[index][0] !== '') {
             list.push(results.text[index][0]);
-          }
-          else {
+          } else {
             break;
           }
         }
@@ -837,9 +831,8 @@ public async setFilterTypes({ pid, types }) {
 
         if (result === null) {
           await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
-
       } else if (kind === 'file') {
         GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
         const handle = WebAutomationServices.cyrb53(min.botId + answer.filename);
@@ -860,7 +853,7 @@ public async setFilterTypes({ pid, types }) {
 
         if (value === null) {
           await this.talk({ pid, text: 'Por favor, digite um e-mail válido.' });
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
 
         result = value;
@@ -873,7 +866,7 @@ public async setFilterTypes({ pid, types }) {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um nome válido.' });
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
 
         result = value;
@@ -886,7 +879,7 @@ public async setFilterTypes({ pid, types }) {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um número válido.' });
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
 
         result = value;
@@ -901,7 +894,7 @@ public async setFilterTypes({ pid, types }) {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite uma data no formato 12/12/2020.' });
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
 
         result = value;
@@ -914,7 +907,7 @@ public async setFilterTypes({ pid, types }) {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um horário no formato hh:ss.' });
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
 
         result = value;
@@ -933,7 +926,7 @@ public async setFilterTypes({ pid, types }) {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um valor monetário.' });
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
 
         result = value;
@@ -946,21 +939,22 @@ public async setFilterTypes({ pid, types }) {
         } catch (error) {
           await this.talk({ pid, text: Messages[locale].validation_enter_valid_mobile });
 
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
         if (!phoneUtil.isPossibleNumber(phoneNumber)) {
           await this.talk({ pid, text: 'Por favor, digite um número de telefone válido.' });
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
 
         result = phoneNumber;
-      } else if (kind === 'qr-scanner'){
+      } else if (kind === 'qr-scanner') {
         //https://github.com/GeneralBots/BotServer/issues/171
         GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
         const handle = WebAutomationServices.cyrb53(min.botId + answer.filename);
         GBServer.globals.files[handle] = answer;
-        QrScanner.scanImage(GBServer.globals.files[handle]).then(result => console.log(result)).catch(error => console.log(error || 'no QR code found.'));
-
+        QrScanner.scanImage(GBServer.globals.files[handle])
+          .then(result => console.log(result))
+          .catch(error => console.log(error || 'no QR code found.'));
       } else if (kind === 'zipcode') {
         const extractEntity = (text: string) => {
           text = text.replace(/\-/gi, '');
@@ -977,7 +971,7 @@ public async setFilterTypes({ pid, types }) {
 
         if (value === null || value.length != 1) {
           await this.talk({ pid, text: 'Por favor, digite um CEP válido.' });
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
 
         result = value[0];
@@ -992,7 +986,7 @@ public async setFilterTypes({ pid, types }) {
 
         if (result === null) {
           await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
       } else if (kind === 'language') {
         result = null;
@@ -1024,7 +1018,7 @@ public async setFilterTypes({ pid, types }) {
 
         if (result === null) {
           await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
-          return await this.hear({ pid, kind, arg });
+          return await this.hear({ pid, kind, args });
         }
       }
       return result;
@@ -1146,12 +1140,12 @@ public async setFilterTypes({ pid, types }) {
       await min.conversationalService.sendFile(min, null, mobile, url, caption);
     }
   }
-/**
- * Generates a new QRCode.
- * 
- * file = QRCODE "data"
- *  
- */
+  /**
+   * Generates a new QRCode.
+   *
+   * file = QRCODE "data"
+   *
+   */
   public async getQRCode({ pid, text }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const img = await qrcode.toDataURL(text);
@@ -1163,6 +1157,6 @@ public async setFilterTypes({ pid, types }) {
     Fs.writeFileSync(localName, buf, { encoding: null });
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
-    return {data: data, localName: localName, url: url};
+    return { data: data, localName: localName, url: url };
   }
 }

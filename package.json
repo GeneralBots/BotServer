@@ -172,10 +172,10 @@
     "vm2-process": "2.1.1",
     "walk-promise": "0.2.0",
     "washyourmouthoutwithsoap": "1.0.2",
-    "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#fix-buttons-list",
+    "whatsapp-web.js": "github:meetscrm/whatsapp-web.js#8a46b65e2284ae2b031b5a9217e33ec2bab2e579",
     "winston": "3.8.2",
     "winston-logs-display": "1.0.0",
-    "ws": "^8.12.1",
+    "ws": "8.12.1",
     "yarn": "1.22.19"
   },
   "devDependencies": {

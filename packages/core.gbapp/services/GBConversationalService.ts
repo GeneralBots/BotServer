@@ -63,6 +63,7 @@ import TextToSpeechV1 from 'ibm-watson/text-to-speech/v1.js';
 import { IamAuthenticator } from 'ibm-watson/auth/index.js';
 import * as marked from 'marked';
 import Translate from '@google-cloud/translate';
+import { List } from 'whatsapp-web.js';
 
 /**
  * Provides basic services for handling messages and dispatching to back-end
@@ -1087,8 +1088,10 @@ export class GBConversationalService {
    *
    * Sends a message in a user with an already started conversation (got ConversationReference set)
    */
-  public async sendOnConversation(min: GBMinInstance, user: GuaribasUser, message: string) {
-    if (user.conversationReference.startsWith('spaces')) {
+  public async sendOnConversation(min: GBMinInstance, user: GuaribasUser, message: any) {
+    if (message['buttons'] || message['sections']) {
+      await min['whatsAppDirectLine'].sendToDevice(user.userSystemId, message, user.conversationReference );
+    } else  if (user.conversationReference.startsWith('spaces')) {
       await min['googleDirectLine'].sendToDevice(user.userSystemId, null, user.conversationReference, message);
     } else {
       const ref = JSON.parse(user.conversationReference);
