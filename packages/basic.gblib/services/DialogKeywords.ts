@@ -556,7 +556,6 @@ export class DialogKeywords {
     if (this.isUserSystemParam(name)) {
       throw new Error(`Not possible to define ${name} as it is a reserved system param name.`);
     }
-    const process = GBServer.globals.processes[pid];
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const sec = new SecService();
     await sec.setParam(user.userId, name, value);
@@ -568,7 +567,6 @@ export class DialogKeywords {
     if (this.isUserSystemParam(name)) {
       throw new Error(`Not possible to retrieve ${name} system param.`);
     }
-    const process = GBServer.globals.processes[pid];
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const sec = new SecService();
     return await sec.getParam(user, name);
@@ -624,6 +622,17 @@ export class DialogKeywords {
     const value = on.trim() === 'on';
     await this.setOption({ pid, name: 'wholeWord', value: value });
   }
+
+/**
+   * Defines the FIND behaviour to consider whole words while searching.
+   *
+   * @example SET FILTER TYPE date, string
+   *
+   */
+public async setFilterTypes({ pid, types }) {
+  const value = types;
+  await this.setOption({ pid, name: 'filterTypes', value: value });
+}
 
   /**
    * Defines the theme for assets generation.

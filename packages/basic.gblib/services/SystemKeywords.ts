@@ -39,7 +39,7 @@ import { DialogKeywords } from './DialogKeywords.js';
 import { GBServer } from '../../../src/app.js';
 import { GBVMService } from './GBVMService.js';
 import Fs from 'fs';
-import { GBSSR }from '../../core.gbapp/services/GBSSR.js';
+import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import urlJoin from 'url-join';
 import Excel from 'exceljs';
 import { TwitterApi } from 'twitter-api-v2';
@@ -59,7 +59,6 @@ import * as MSAL from '@azure/msal-node';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 import { WebAutomationServices } from './WebAutomationServices.js';
 
-
 /**
  * @fileoverview General Bots server core.
  */
@@ -68,7 +67,6 @@ import { WebAutomationServices } from './WebAutomationServices.js';
  * BASIC system class for extra manipulation of bot behaviour.
  */
 export class SystemKeywords {
-
   public async callVM({ pid, text }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const step = null;
@@ -323,7 +321,7 @@ export class SystemKeywords {
 
     // Checks if it is a GBFILE.
 
-    if (data.data) {  
+    if (data.data) {
       const gbfile = data.data;
 
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
@@ -478,10 +476,8 @@ export class SystemKeywords {
     // Handles calls for HTML stuff
 
     if (handle) {
-      
       GBLog.info(`BASIC: Web automation SET ${file}' to '${address}'    . `);
-      await new WebAutomationServices()
-        .setElementText({ pid, handle, selector: file, text: address });
+      await new WebAutomationServices().setElementText({ pid, handle, selector: file, text: address });
 
       return;
     }
@@ -693,7 +689,7 @@ export class SystemKeywords {
    * @see NPM package data-forge
    *
    */
-  public async getFind({ pid, args }): Promise<any> {
+  public async find({ pid, args }): Promise<any> {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const file = args[0];
     args.shift();
@@ -834,7 +830,12 @@ export class SystemKeywords {
     // Increments columnIndex by looping until find a column match.
 
     const filters = [];
+    let predefinedFilterTypes;
+    if (params.filterTypes) {
+      predefinedFilterTypes = params.filterTypes.split(',');
+    }
 
+    let filterIndex = 0;
     await CollectionUtil.asyncForEach(args, async arg => {
       const filter = await getFilter(arg);
       if (!filter) {
@@ -848,20 +849,22 @@ export class SystemKeywords {
         }
       }
       filter.columnIndex = columnIndex;
+      const fixed = predefinedFilterTypes ? predefinedFilterTypes[filterIndex] : null;
 
       if (this.isValidHour(filter.value)) {
-        filter.dataType = 'hourInterval';
+        filter.dataType = fixed ? fixed : 'hourInterval';
       } else if (this.isValidDate(filter.value)) {
         filter.value = SystemKeywords.getDateFromLocaleString(pid, filter.value, contentLocale);
-        filter.dataType = 'date';
+        filter.dataType = fixed ? fixed : 'date';
       } else if (this.isValidNumber(filter.value)) {
         filter.value = Number.parseInt(filter.value);
-        filter.dataType = 'number';
+        filter.dataType = fixed ? fixed : 'number';
       } else {
         filter.value = filter.value;
-        filter.dataType = 'string';
+        filter.dataType = fixed ? fixed : 'string';
       }
       filters.push(filter);
+      filterIndex++;
     });
 
     // As BASIC uses arrays starting with 1 (one) as index,
@@ -885,7 +888,6 @@ export class SystemKeywords {
 
         switch (filter.dataType) {
           case 'string':
-
             const v1 = GBConversationalService.removeDiacritics(result.toLowerCase().trim());
             const v2 = GBConversationalService.removeDiacritics(filter.toLowerCase().trim());
 
@@ -1373,9 +1375,8 @@ export class SystemKeywords {
     return text.replace(/\D/gi, '');
   }
 
-
   //Create a CREAT LEAD keyword
-  public async createLead({ pid, templateName, data }) {    
+  public async createLead({ pid, templateName, data }) {
     //OAuth Token Endpoint (from your Azure App Registration)
     const authorityUrl = 'https://login.microsoftonline.com/<COPY A GUID HERE>';
     const msalConfig = {
@@ -1384,43 +1385,49 @@ export class SystemKeywords {
         clientId: process.env.DYNAMICS_CLIENTID,
         clientSecret: process.env.DYNAMICS_CLIENTSECRET,
         knownAuthorities: ['login.microsoftonline.com']
-        }
-    }
+      }
+    };
     const cca = new MSAL.ConfidentialClientApplication(msalConfig);
     const serverUrl = ` `;
 
     //function that acquires a token and passes it to DynamicsWebApi
-    const acquireToken = (dynamicsWebApiCallback) => {
-      cca.acquireTokenByClientCredential({
-          scopes: [`${serverUrl}/.default`],
-      }).then(response => {
+    const acquireToken = dynamicsWebApiCallback => {
+      cca
+        .acquireTokenByClientCredential({
+          scopes: [`${serverUrl}/.default`]
+        })
+        .then(response => {
           //call DynamicsWebApi callback only when a token has been retrieved successfully
           dynamicsWebApiCallback(response.accessToken);
-      }).catch((error) => {
+        })
+        .catch(error => {
           console.log(JSON.stringify(error));
-      });
-    } 
-    
-      //create DynamicsWebApi
+        });
+    };
+
+    //create DynamicsWebApi
     const dynamicsWebApi = new DynamicsWebApi({
       webApiUrl: `${serverUrl}/api/data/v9.2/`,
       onTokenRefresh: acquireToken
     });
     //initialize a CRM entity record object
     var lead = {
-      subject: "Test WebAPI",
-      firstname: "Test",
-      lastname: "WebAPI",
-      jobtitle: "Title"
+      subject: 'Test WebAPI',
+      firstname: 'Test',
+      lastname: 'WebAPI',
+      jobtitle: 'Title'
     };
     //call dynamicsWebApi.create function
-    dynamicsWebApi.create(lead, "leads").then(function (id) {
-    //do something with id here
-    }).catch(function (error) {
-    //catch error here
-    })
-  } 
-  
+    dynamicsWebApi
+      .create(lead, 'leads')
+      .then(function (id) {
+        //do something with id here
+      })
+      .catch(function (error) {
+        //catch error here
+      });
+  }
+
   /**
    *
    * Fills a .docx or .pptx with template data.
@@ -1460,14 +1467,13 @@ export class SystemKeywords {
       for (var i in o) {
         let value = o[i];
 
-        if (value && value.gbarray){
+        if (value && value.gbarray) {
           o.shift();
           value = o[i];
         }
 
         for (const kind of ['png', 'jpg', 'jpeg']) {
           if (value.endsWith && value.endsWith(`.${kind}`)) {
-
             const { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
             path = urlJoin(gbaiName, `${botId}.gbdrive`);
@@ -1475,7 +1481,7 @@ export class SystemKeywords {
               path = '/' + urlJoin(path, Path.dirname(value));
               value = Path.basename(value);
             }
-    
+
             const ref = await this.internalGetDocument(client, baseUrl, path, value);
             let url = ref['@microsoft.graph.downloadUrl'];
             const imageName = Path.join(
@@ -1487,15 +1493,14 @@ export class SystemKeywords {
             const response = await fetch(url);
             const buf = Buffer.from(await response.arrayBuffer());
             Fs.writeFileSync(imageName, buf, { encoding: null });
-    
+
             const getNormalSize = ({ width, height, orientation }) => {
-              return (orientation || 0) >= 5 ? [  height, width ] : [ width, height];
+              return (orientation || 0) >= 5 ? [height, width] : [width, height];
             };
-    
+
             const size = getNormalSize(await sharp(buf).metadata());
             url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(imageName));
-            images[index++] = {url: url, size:size, buf: buf} ;
-
+            images[index++] = { url: url, size: size, buf: buf };
           }
         }
         if (o[i] !== null && typeof o[i] == 'object') {
@@ -1510,7 +1515,6 @@ export class SystemKeywords {
       centered: false,
       getImage: (tagValue, tagName) => {
         return images[indexImage].buf;
-
       },
       getSize: (img, tagValue, tagName) => {
         return images[indexImage++].size;
@@ -1526,10 +1530,8 @@ export class SystemKeywords {
     doc.attachModule(new ImageModule(opts));
 
     await traverseDataToInjectImageUrl(data);
-    doc
-        .setData(data)
-        .render();
-    
+    doc.setData(data).render();
+
     buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
     Fs.writeFileSync(localName, buf, { encoding: null });
 
@@ -1689,7 +1691,7 @@ export class SystemKeywords {
           const address = `${cell}:${cell}`;
 
           if (value !== found[columnName]) {
-            await this.set({ pid, handle:null, file, address, value });
+            await this.set({ pid, handle: null, file, address, value });
             merges++;
           }
         }
