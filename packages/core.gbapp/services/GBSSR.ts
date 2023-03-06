@@ -91,7 +91,7 @@ export class GBSSR {
     'tiqcdn'
   ];
 
-  public static async createBrowser(profilePath): Promise<any> {
+  public static preparePuppeteer(profilePath){
     let args = [
       '--check-for-update-interval=2592000',
       '--disable-accelerated-2d-canvas',
@@ -113,15 +113,21 @@ export class GBSSR {
         Fs.writeFileSync(preferences, JSON.stringify(data));
       }
     }
-    puppeteer.use(hidden());
-    const browser = await puppeteer.launch({
+
+    return {
       args: args,
       ignoreHTTPSErrors: true,
       headless: false,
       defaultViewport: null,
       executablePath: executablePath(),
       ignoreDefaultArgs: ['--enable-automation', '--enable-blink-features=IdleDetection']
-    });
+    };
+  }
+
+  public static async createBrowser(profilePath): Promise<any> {
+    const opts = this.preparePuppeteer(profilePath);
+    puppeteer.use(hidden());
+    const browser = await puppeteer.launch(      opts    );
     return browser;
   }
 

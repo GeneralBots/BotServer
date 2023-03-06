@@ -31,7 +31,7 @@
 \*****************************************************************************/
 
 import urlJoin from 'url-join';
-import Swagger from 'swagger-client';
+import SwaggerClient from 'swagger-client';
 import Path from 'path';
 import Fs from 'fs';
 import { GBError, GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
@@ -49,6 +49,7 @@ import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { method } from 'lodash';
 import pkg from 'whatsapp-web.js';
+import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 const { Buttons, Client, MessageMedia } = pkg;
 
 /**
@@ -116,28 +117,25 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async sendButton() {
-    let url = 'https://wwebjs.dev/logo.png';
+    let url = '';
     const media = await MessageMedia.fromUrl(url);
     media.mimetype = 'image/png';
     media.filename = 'hello.png';
     let btnClickableMenu = new Buttons(media as any, [{ id: 'customId', body: 'button1' }, { body: 'button2' }]);
-    await this.sendToDevice("5521996049063",btnClickableMenu as any,null)
+    await this.sendToDevice('', btnClickableMenu as any, null);
   }
   public async setup(setUrl: boolean) {
-    this.directLineClient = new Swagger({
+    const client = await new SwaggerClient({
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-      usePromise: true
+      requestInterceptor: req => {
+        req.headers['Authorization'] = `Bearer ${this.min.instance.webchatKey}`;
+      }
     });
-    const client = await this.directLineClient;
+    this.directLineClient = client;
+
     let url: string;
     let body: any;
-
-    /*client.clientAuthorizations.add(
-      'AuthorizationBotConnector',
-      new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${this.directLineSecret}`, 'header')
-    );*/
     let options: any;
-    const phoneId = this.whatsappServiceNumber.split(';')[0];
 
     switch (this.provider) {
       case 'GeneralBots':
@@ -149,13 +147,9 @@ export class WhatsappDirectLine extends GBService {
           // Initialize the browser using a local profile for each bot.
           const gbaiName = `${this.min.botId}.gbai`;
           const localName = Path.join('work', gbaiName, 'profile');
-          const createClient = async browserWSEndpoint => {
-            let puppeteer = { headless: false, args: ['--no-sandbox', '--disable-dev-shm-usage'] };
-            if (browserWSEndpoint) {
-              // puppeteer.browserWSEndpoint = browserWSEndpoint ;
-            }
+          const createClient = () => {
             const client = (this.customClient = new Client({
-              puppeteer: puppeteer
+              puppeteer: GBSSR.preparePuppeteer(localName)
             }));
             client.on(
               'message',
@@ -189,11 +183,11 @@ export class WhatsappDirectLine extends GBService {
               }).bind(this)
             );
             client.on('authenticated', async () => {
-              this.browserWSEndpoint = client.pupBrowser.wsEndpoint();
               GBLog.verbose(`GBWhatsApp: QR Code authenticated for ${this.botId}.`);
             });
             client.on('ready', async () => {
               GBLog.verbose(`GBWhatsApp: Emptying chat list for ${this.botId}...`);
+              
               // Keeps the chat list cleaned.
               const chats = await client.getChats();
               await CollectionUtil.asyncForEach(chats, async chat => {
@@ -213,7 +207,7 @@ export class WhatsappDirectLine extends GBService {
             });
             client.initialize();
           };
-          await createClient.bind(this)(this.browserWSEndpoint);
+          createClient.bind(this)();
           setUrl = false;
         }
         break;
@@ -250,6 +244,7 @@ export class WhatsappDirectLine extends GBService {
 
         break;
       case 'maytapi':
+        const phoneId = this.whatsappServiceNumber.split(';')[0];
         let productId = this.whatsappServiceNumber.split(';')[1];
         url = `${this.INSTANCE_URL}/${productId}/${phoneId}/config`;
         body = {
@@ -579,7 +574,7 @@ export class WhatsappDirectLine extends GBService {
     } else if (user.agentMode === 'bot' || user.agentMode === null || user.agentMode === undefined) {
       if (WhatsappDirectLine.conversationIds[botId + from + group] === undefined) {
         GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
-        const response = await client.Conversations.Conversations_StartConversation();
+        const response = await client.apis.Conversations.Conversations_StartConversation();
         const generatedConversationId = response.obj.conversationId;
 
         WhatsappDirectLine.conversationIds[botId + from + group] = generatedConversationId;
@@ -627,7 +622,7 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public inputMessage(client, conversationId: string, text: string, from, fromName: string, group, attachments: File) {
-    return client.Conversations.Conversations_PostActivity({
+    return client.apis.Conversations.Conversations_PostActivity({
       conversationId: conversationId,
       activity: {
         textFormat: 'plain',
@@ -652,7 +647,7 @@ export class WhatsappDirectLine extends GBService {
 
     const worker = async () => {
       try {
-        const response = await client.Conversations.Conversations_GetActivities({
+        const response = await client.apis.Conversations.Conversations_GetActivities({
           conversationId: conversationId,
           watermark: watermark
         });
