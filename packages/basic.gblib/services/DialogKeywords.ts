@@ -1146,11 +1146,23 @@ public async setFilterTypes({ pid, types }) {
       await min.conversationalService.sendFile(min, null, mobile, url, caption);
     }
   }
-
+/**
+ * Generates a new QRCode.
+ * 
+ * file = QRCODE "data"
+ *  
+ */
   public async getQRCode({ pid, text }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const img = await qrcode.toDataURL(text);
     const data = img.replace(/^data:image\/\w+;base64,/, '');
     const buf = Buffer.from(data, 'base64');
-    return buf;
+
+    const gbaiName = `${min.botId}.gbai`;
+    const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
+    Fs.writeFileSync(localName, buf, { encoding: null });
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+
+    return {data: data, localName: localName, url: url};
   }
 }
