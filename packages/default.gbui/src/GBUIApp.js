@@ -328,6 +328,7 @@ class GBUIApp extends React.Component {
             }}
             locale={'pt-br'}
             directLine={this.state.line}
+            styleOptions={(markdownRespectCRLF = true)}
             webSpeechPonyfillFactory={window.WebChat.createCognitiveServicesSpeechServicesPonyfillFactory({
               credentials: { authorizationToken: token, region: 'westus' }
             })}
