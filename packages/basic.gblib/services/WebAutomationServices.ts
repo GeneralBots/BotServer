@@ -100,7 +100,7 @@ export class WebAutomationServices {
    * @example OPEN "https://wikipedia.org"
    */
 
-  public async getPage({ pid, handle, sessionKind, sessionName, url, username, password }) {
+  public async openPage({ pid, handle, sessionKind, sessionName, url, username, password }) {
     GBLog.info(`BASIC: Web Automation OPEN ${sessionName ? sessionName : ''} ${url}.`);
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
@@ -190,7 +190,7 @@ export class WebAutomationServices {
     return handle;
   }
 
-  public getPageByHandle(handle) {
+  public static getPageByHandle(handle) {
     return GBServer.globals.webSessions[handle].page;
   }
 
@@ -200,7 +200,7 @@ export class WebAutomationServices {
    * @example GET "selector"
    */
   public async getBySelector({ handle, selector }) {
-    const page = this.getPageByHandle(handle);
+    const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation GET element: ${selector}.`);
     await page.waitForSelector(selector);
     let elements = await page.$$(selector);
@@ -223,7 +223,7 @@ export class WebAutomationServices {
    * @example GET page,"frameSelector,"elementSelector"
    */
   public async getByFrame({ handle, frame, selector }) {
-    const page = this.getPageByHandle(handle);
+    const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation GET element by frame: ${selector}.`);
     await page.waitForSelector(frame);
     let frameHandle = await page.$(frame);
@@ -243,7 +243,7 @@ export class WebAutomationServices {
    * Simulates a mouse hover an web page element.
    */
   public async hover({ pid, handle, selector }) {
-    const page = this.getPageByHandle(handle);
+    const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation HOVER element: ${selector}.`);
     await this.getBySelector({ handle, selector: selector });
     await page.hover(selector);
@@ -256,7 +256,7 @@ export class WebAutomationServices {
    * @example CLICK page,"#idElement"
    */
   public async click({ pid, handle, frameOrSelector, selector }) {
-    const page = this.getPageByHandle(handle);
+    const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
     if (selector) {
       await page.waitForSelector(frameOrSelector);
@@ -294,7 +294,7 @@ export class WebAutomationServices {
    * @example PRESS ENTER ON page
    */
   public async pressKey({ handle, char, frame }) {
-    const page = this.getPageByHandle(handle);
+    const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation PRESS ${char} ON element: ${frame}.`);
     if (char.toLowerCase() === 'enter') {
       char = '\n';
@@ -310,7 +310,7 @@ export class WebAutomationServices {
   }
 
   public async linkByText({ pid, handle, text, index }) {
-    const page = this.getPageByHandle(handle);
+    const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
     if (!index) {
       index = 1;
@@ -327,7 +327,7 @@ export class WebAutomationServices {
    */
   public async screenshot({ pid, handle, selector }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    const page = this.getPageByHandle(handle);
+    const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation SCREENSHOT ${selector}.`);
 
     const gbaiName = `${min.botId}.gbai`;
@@ -347,7 +347,7 @@ export class WebAutomationServices {
    * @example SET page,"selector","text"
    */
   public async setElementText({ pid, handle, selector, text }) {
-    const page = this.getPageByHandle(handle);
+    const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation TYPE on ${selector}: ${text}.`);
     const e = await this.getBySelector({ handle, selector });
     await e.click({ clickCount: 3 });
@@ -363,7 +363,7 @@ export class WebAutomationServices {
    */
   public async download({ pid, handle, selector, folder }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    const page = this.getPageByHandle(handle);
+    const page = WebAutomationServices.getPageByHandle(handle);
 
     const element = await this.getBySelector({ handle, selector });
     // https://github.com/GeneralBots/BotServer/issues/311

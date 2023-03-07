@@ -689,7 +689,7 @@ export class SystemKeywords {
    * @see NPM package data-forge
    *
    */
-  public async find({ pid, args }): Promise<any> {
+  public async find({ pid, handle,  args }): Promise<any> {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const file = args[0];
     args.shift();
@@ -713,10 +713,14 @@ export class SystemKeywords {
 
     let results;
     let header, rows;
+    let page;
+    if (handle){
+      page = WebAutomationServices.getPageByHandle(handle);
+    }
 
-    if (file['$eval']) {
-      const container = file['frame'] ? file['frame'] : file['_page'];
-      const originalSelector = file['originalSelector'];
+    if (page['$eval'] && (file.startsWith('.') || file.startsWith('#'))) {
+      const container = page['frame'] ? page['frame'] : page;
+      const originalSelector = file;
 
       // Transforms table
 

@@ -159,7 +159,7 @@ export class KeywordsExpressions {
         }
         const params = this.getParams($1, ['url', 'username', 'password']);
 
-        return `page = await wa.getPage({pid: pid, page: page, sessionKind: ${kind}, sessionName: ${sessionName}, ${params}})`;
+        return `page = await wa.openPage({pid: pid, handle: page, sessionKind: ${kind}, sessionName: ${sessionName}, ${params}})`;
       }
     ];
 
@@ -292,7 +292,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `${$1} = await sys.find({pid: pid, args:[${$2}])\n
+        return `${$1} = await sys.find({pid: pid, handle: page, args:[${$2}])\n
         if (!${$1}) {s
           await dk.talk ({pid: pid, ${$3}})\n;
           return -1;
@@ -312,7 +312,7 @@ export class KeywordsExpressions {
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `
-        ${$1} = await sys.find({pid: pid, args: [${$2}]})`;
+        ${$1} = await sys.find({pid: pid, handle: page, args: [${$2}]})`;
       }
     ];
 
@@ -643,16 +643,16 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(hover)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        const params = this.getParams($3, ['handle', 'selector']);
-        return `await wa.hover ({pid: pid, ${params}})`;
+        const params = this.getParams($3, ['selector']);
+        return `await wa.hover ({pid: pid, handle: page, ${params}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(click link text)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        const params = this.getParams('page,' + $3, ['handle', 'text', 'index']);
-        return `await wa.linkByText ({pid: pid, ${params}})`;
+        const params = this.getParams('page,' + $3, ['text', 'index']);
+        return `await wa.linkByText ({pid: pid, handle: page, ${params}})`;
       }
     ];
 
@@ -661,8 +661,8 @@ export class KeywordsExpressions {
       ($0, $1, $2, $3) => {
         // page is not string.
         // https://github.com/GeneralBots/BotServer/issues/310
-        const params = this.getParams($3, ['handle', 'frameOrSelector', 'selector']);
-        return `await wa.click ({pid: pid, ${params}})`;
+        const params = this.getParams($3, ['frameOrSelector', 'selector']);
+        return `await wa.click ({pid: pid, handle:page, ${params}})`;
       }
     ];
 
