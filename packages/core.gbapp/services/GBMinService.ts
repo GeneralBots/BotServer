@@ -831,6 +831,11 @@ export class GBMinService {
       adapter = min['fbAdapter'];
     }
 
+    // Unifies channel detection.
+
+    req.body.channelId = 
+      (req.body.from.channelIdEx === 'whatsapp' ? 'omnichannel' : req.body.channelId);
+
     // Default activity processing and handler.
 
     await adapter['processActivity'](req, res, async context => {

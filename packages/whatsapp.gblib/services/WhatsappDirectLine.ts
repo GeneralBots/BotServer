@@ -113,18 +113,6 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async sendButton(number) {
-    let url = 'https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE1Mu3b?ver=5c31';
-    const media = await MessageMedia.fromUrl(url, {unsafeMime: true});
-    media.mimetype = 'image/png';
-    media.filename = 'hello.png';
-    let btnClickableMenu = new Buttons(media as any, [
-      { id: 'customId', body: 'button1' }, { body: 'button2' },
-      {  body: 'button3' }, { body: 'button4' },
-      { body: 'button4' }, { body: 'button6' },
-    ]);
-    await this.sendToDevice(number, btnClickableMenu as any, null);
-  }
   public async setup(setUrl: boolean) {
     const client = await new SwaggerClient({
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
@@ -180,12 +168,11 @@ export class WhatsappDirectLine extends GBService {
             }).bind(this)
           );
           client.on('authenticated', async () => {
-            
             GBLog.verbose(`GBWhatsApp: QR Code authenticated for ${this.botId}.`);
           });
           client.on('ready', async () => {
             GBLog.verbose(`GBWhatsApp: Emptying chat list for ${this.botId}...`);
-            
+
             // Keeps the chat list cleaned.
             const chats = await client.getChats();
             await CollectionUtil.asyncForEach(chats, async chat => {
@@ -630,6 +617,7 @@ export class WhatsappDirectLine extends GBService {
         attachments: attachments,
         from: {
           id: from,
+          channelIdEx: 'whatsapp', 
           name: fromName
         },
         replyToId: from
