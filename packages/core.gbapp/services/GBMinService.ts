@@ -911,7 +911,7 @@ export class GBMinService {
             );
             const botToken = await credentials.getToken();
             const headers = { Authorization: `Bearer ${botToken}` };
-            const t = new SystemKeywords(     );
+            const t = new SystemKeywords();
             const data = await t.getByHttp({
               pid: 0,
               url: file.contentUrl,
@@ -1014,7 +1014,9 @@ export class GBMinService {
           await this.processEventActivity(min, user, context, step);
         }
       } catch (error) {
-        const msg = `ERROR: ${error.message} ${error.stack ? error.stack : ''}`;
+        const msg = `ERROR: ${error.message} ${error.error ? error.error.body : ''} ${
+          error.error ? (error.error.stack ? error.error.stack : '') : ''
+        }`;
         GBLog.error(msg);
 
         await min.conversationalService.sendText(
