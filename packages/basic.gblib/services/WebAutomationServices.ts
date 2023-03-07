@@ -246,7 +246,7 @@ export class WebAutomationServices {
   /**
    * Clicks on an element in a web page.
    *
-   * @example CLICK page,"#idElement"
+   * @example CLICK "#idElement"
    */
   public async click({ pid, handle, frameOrSelector, selector }) {
     const page = WebAutomationServices.getPageByHandle(handle);
