@@ -774,9 +774,11 @@ export class DialogKeywords {
         await sleep(DEFAULT_HEAR_POLL_INTERVAL);
       }
 
-      const answer = min.cbMap[userId].promise;
+      const answer = min.   cbMap[userId].promise;
 
-      if (kind === 'sheet') {
+      if (!kind) {
+        result = answer;
+      } else if (kind === 'sheet') {
         // Retrieves the .xlsx file associated with the HEAR var AS file.xlsx.
 
         let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
