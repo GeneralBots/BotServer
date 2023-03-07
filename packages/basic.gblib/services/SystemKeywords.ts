@@ -475,7 +475,7 @@ export class SystemKeywords {
 
     // Handles calls for HTML stuff
 
-    if (handle) {
+    if (handle && WebAutomationServices.isSelector(file)) {
       GBLog.info(`BASIC: Web automation SET ${file}' to '${address}'    . `);
       await new WebAutomationServices().setElementText({ pid, handle, selector: file, text: address });
 
@@ -718,7 +718,7 @@ export class SystemKeywords {
       page = WebAutomationServices.getPageByHandle(handle);
     }
 
-    if (page['$eval'] && (file.startsWith('.') || file.startsWith('#'))) {
+    if (page['$eval'] && WebAutomationServices.isSelector(file)) {
       const container = page['frame'] ? page['frame'] : page;
       const originalSelector = file;
 

@@ -52,18 +52,11 @@ import { SystemKeywords } from './SystemKeywords.js';
  * Web Automation services of conversation to be called by BASIC.
  */
 export class WebAutomationServices {
-  /**
-   * The number used in this execution for HEAR calls (useful for SET SCHEDULE).
-   */
-  hrOn: string;
-
-  debugWeb: boolean;
-  lastDebugWeb: Date;
-
-  /**
-   * SYSTEM account maxLines,when used with impersonated contexts (eg. running in SET SCHEDULE).
-   */
-  maxLines: number = 2000;
+  static isSelector(name: any) {
+    return name.startsWith('.') || name.startsWith('#');
+  }
+  private debugWeb: boolean;
+  private lastDebugWeb: Date;
 
   public static cyrb53 = (str, seed = 0) => {
     let h1 = 0xdeadbeef ^ seed,
@@ -347,6 +340,7 @@ export class WebAutomationServices {
    * @example SET page,"selector","text"
    */
   public async setElementText({ pid, handle, selector, text }) {
+    text = `${text}`;
     const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation TYPE on ${selector}: ${text}.`);
     const e = await this.getBySelector({ handle, selector });

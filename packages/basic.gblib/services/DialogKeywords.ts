@@ -774,7 +774,7 @@ export class DialogKeywords {
         await sleep(DEFAULT_HEAR_POLL_INTERVAL);
       }
 
-      const answer = min.   cbMap[userId].promise;
+      const answer = min.cbMap[userId].promise;
 
       if (!kind) {
         result = answer;
