@@ -97,12 +97,14 @@ export class AskDialog extends IGBDialog {
           user.subjects = [];
         }
         let text: string;
+
         // Three forms of asking.
+
         if (step.options && step.options.firstTime) {
           text = Messages[locale].ask_first_time;
-        } else if (step.options && step.options.isReturning) {
+        } else if (step.options && step.options.isReturning && !step.context.activity.group) {
           text = Messages[locale].anything_else;
-        } else if (step.options && step.options.emptyPrompt) {
+        } else if (step.context.activity.group || (step.options && step.options.emptyPrompt)) {
           text = '';
         } else if (user.subjects.length > 0) {
           text = Messages[locale].which_question;
@@ -302,8 +304,7 @@ export class AskDialog extends IGBDialog {
           }
           const CHATGPT_TIMEOUT = 60 * 1000;
           GBLog.info(`ChatGPT being used...`);
-          const response = await GBServer.globals.chatGPT.sendMessage(text, 
-            { timeoutMs: CHATGPT_TIMEOUT });
+          const response = await GBServer.globals.chatGPT.sendMessage(text, { timeoutMs: CHATGPT_TIMEOUT });
 
           if (!response) {
             GBLog.info(`SEARCH called but NO answer could be found (zero results).`);

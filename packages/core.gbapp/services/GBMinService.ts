@@ -831,10 +831,10 @@ export class GBMinService {
       adapter = min['fbAdapter'];
     }
 
-    // Unifies channel detection.
+    // Unifies channel detection.  Unmarshalls group information.
 
-    req.body.channelId = 
-      (req.body.from.channelIdEx === 'whatsapp' ? 'omnichannel' : req.body.channelId);
+    req.body.channelId = req.body.from.channelIdEx === 'whatsapp' ? 'omnichannel' : req.body.channelId;
+    req.body.group = req.body.from.group;
 
     // Default activity processing and handler.
 
@@ -1322,11 +1322,8 @@ export class GBMinService {
       // If it is a group, spells and sends them back.
 
       const group = step.context.activity['group'];
-      if (textProcessed  !==  text && group){
-        await min.whatsAppDirectLine.sendToDevice(
-          group,
-          `Spell: ${text}`
-        );
+      if (textProcessed !== text && group) {
+        await min.whatsAppDirectLine.sendToDevice(group, `Spell: ${text}`);
       }
 
       // Detects user typed language and updates their locale profile if applies.

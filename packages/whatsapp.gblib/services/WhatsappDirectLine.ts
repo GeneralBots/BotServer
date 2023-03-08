@@ -618,7 +618,8 @@ export class WhatsappDirectLine extends GBService {
         from: {
           id: from,
           channelIdEx: 'whatsapp', 
-          name: fromName
+          name: fromName, 
+          group: group
         },
         replyToId: from
       }

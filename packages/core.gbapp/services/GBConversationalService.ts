@@ -992,9 +992,11 @@ export class GBConversationalService {
       GBLog.verbose(`Translated text(prompt): ${text}.`);
     }
     if (step.activeDialog.state.options['kind'] === 'file') {
+      
       return await step.prompt('attachmentPrompt', {});
     } else {
-      return await step.prompt('textPrompt', text ? text : {});
+      await this.sendText(min, step, text);
+      return await step.prompt('textPrompt',  {});
     }
   }
 
