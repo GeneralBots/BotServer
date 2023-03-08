@@ -1319,6 +1319,16 @@ export class GBMinService {
 
       text = await min.conversationalService.spellCheck(min, textProcessed);
 
+      // If it is a group, spells and sends them back.
+
+      const group = step.context.activity['group'];
+      if (textProcessed  !==  text && group){
+        await min.whatsAppDirectLine.sendToDevice(
+          group,
+          `Spell: ${text}`
+        );
+      }
+
       // Detects user typed language and updates their locale profile if applies.
 
       let locale = min.core.getParam<string>(

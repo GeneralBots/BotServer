@@ -45,11 +45,10 @@ import { WebAutomationServices } from './services/WebAutomationServices.js';
 import { ImageProcessingServices } from './services/ImageProcessingServices.js';
 import { DebuggerService } from './services/DebuggerService.js';
 import Koa from 'koa';
-import { createRpcServer, createRpcClient } from '@push-rpc/core';
-import { createHttpKoaMiddleware, createHttpClient } from '@push-rpc/http';
+import { createRpcServer } from '@push-rpc/core';
+import { createHttpKoaMiddleware } from '@push-rpc/http';
 import { HttpServerOptions } from '@push-rpc/http/dist/server.js';
 import { GBServer } from '../../src/app.js';
-const app = new Koa();
 import { SocketServer } from '@push-rpc/core';
 import * as koaBody from 'koa-body';
 import { GBVMService } from './services/GBVMService.js';
@@ -67,6 +66,8 @@ export function createKoaHttpServer(
   app.use(koaBody.koaBody({ multipart: true }));
   app.use(middleware);
   const server = app.listen(port);
+  const SERVER_TIMEOUT = 60 * 1000;
+  server.timeout = SERVER_TIMEOUT;
 
   return {
     onError,

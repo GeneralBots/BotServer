@@ -214,7 +214,7 @@ export class AskDialog extends IGBDialog {
 
         // TODO: https://github.com/GeneralBots/BotServer/issues/9 user.lastQuestion = text;
 
-        const resultsA = await service.ask(min.instance, text, searchScore, null /* user.subjects */ );
+        const resultsA = await service.ask(min.instance, text, searchScore, null /* user.subjects */);
 
         // If there is some result, answer immediately.
 
@@ -224,13 +224,12 @@ export class AskDialog extends IGBDialog {
           // user.isAsking = false;
           // user.lastQuestionId = resultsA.questionId;
 
-
           // Sends the answer to all outputs, including projector.
 
           answer = resultsA.answer;
 
           // If this search was restricted to some subjects...
-        } 
+        }
         // TODO: https://github.com/GeneralBots/BotServer/issues/9
         // else if (user.subjects && user.subjects.length > 0) {
         //   // ...second time running Search, now with no filter.
@@ -244,7 +243,6 @@ export class AskDialog extends IGBDialog {
 
         //     // user2.isAsking = false;
         //     // user2.lastQuestionId = resultsB.questionId;
-           
 
         //     // Informs user that a broader search will be used.
 
@@ -302,13 +300,14 @@ export class AskDialog extends IGBDialog {
             });
             await GBServer.globals.chatGPT.init();
           }
+          const CHATGPT_TIMEOUT = 60 * 1000;
           GBLog.info(`ChatGPT being used...`);
-          const response = await GBServer.globals.chatGPT.sendMessage(text);
+          const response = await GBServer.globals.chatGPT.sendMessage(text, 
+            { timeoutMs: CHATGPT_TIMEOUT });
 
           if (!response) {
             GBLog.info(`SEARCH called but NO answer could be found (zero results).`);
           } else {
-            
             await min.conversationalService.sendText(min, step, response);
           }
           return await step.replaceDialog('/ask', { isReturning: true });

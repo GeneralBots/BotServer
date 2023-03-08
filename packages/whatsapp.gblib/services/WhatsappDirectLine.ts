@@ -1019,9 +1019,13 @@ export class WhatsappDirectLine extends GBService {
           await (activeMin as any).whatsAppDirectLine.received(req, res);
           return; // EXIT HERE.
         }
+        else
+        {
+          GBLog.warn(`Group: ${group} not associated with botId:${botId}.`);
+        }
       }
 
-      // Detects if the welcome message is enabled.
+      // Detects if the welcome message is enabled.z
 
       if (process.env.WHATSAPP_WELCOME_DISABLED !== 'true') {
         // Tries to find if user wants to switch bots.
