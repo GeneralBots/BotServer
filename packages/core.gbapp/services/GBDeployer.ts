@@ -58,6 +58,7 @@ import { GBImporter } from './GBImporterService.js';
 import { TeamsService } from '../../teams.gblib/services/TeamsService.js';
 import MicrosoftGraph from '@microsoft/microsoft-graph-client';
 import { GBLogEx } from './GBLogEx.js';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 
 /**
  * Deployer service for bots, themes, ai and more.
@@ -410,7 +411,7 @@ export class GBDeployer implements IGBDeployer {
     // Retrieves all files in .bot folder.
 
     const botId = min.instance.botId;
-    const path = `/${botId}.gbai/${botId}.gbot`;
+    const path = DialogKeywords.getGBAIPath(botId, 'gbot');
     let url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`;
 
     GBLog.info(`Loading .gbot from Excel: ${url}`);
@@ -482,7 +483,8 @@ export class GBDeployer implements IGBDeployer {
       // Retrieves all files in remote folder.
 
       const botId = min.instance.botId;
-      const path = urlJoin(`/${botId}.gbai`, remotePath);
+      let path = DialogKeywords.getGBAIPath(min.botId);
+      path = urlJoin(path, remotePath);
       let url = `${baseUrl}/drive/root:${path}:/children`;
 
       GBLog.info(`Download URL: ${url}`);
@@ -817,16 +819,17 @@ export class GBDeployer implements IGBDeployer {
    * Servers bot storage assets to be used by web, WhatsApp and other channels.
    */
   public static mountGBKBAssets(packageName: any, botId: string, filename: string) {
+    const gbaiName = DialogKeywords.getGBAIPath(botId);
+
     // Servers menu assets.
 
     GBServer.globals.server.use(
-      `/kb/${botId}.gbai/${packageName}/subjects`,
+      `/kb/${gbaiName}/${packageName}/subjects`,
       express.static(urlJoin(filename, 'subjects'))
     );
 
     // Servers all other assets in .gbkb folders.
 
-    const gbaiName = `${botId}.gbai`;
     GBServer.globals.server.use(
       `/kb/${gbaiName}/${packageName}/assets`,
       express.static(urlJoin('work', gbaiName, filename, 'assets'))
@@ -849,7 +852,7 @@ export class GBDeployer implements IGBDeployer {
       express.static(urlJoin('work', gbaiName, `${botId}.gbdata`, 'public'))
     );
 
-    GBLog.verbose(`KB (.gbkb) assets accessible at: /kb/${botId}.gbai/${packageName}.`);
+    GBLog.verbose(`KB (.gbkb) assets accessible at: /kb/${gbaiName}/${packageName}.`);
   }
 
   /**

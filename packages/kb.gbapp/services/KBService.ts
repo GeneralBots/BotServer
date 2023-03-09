@@ -73,6 +73,7 @@ import { min } from 'lodash';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { text } from 'body-parser';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
+import { DialogKeywords } from 'packages/basic.gblib/services/DialogKeywords.js';
 
 /**
  * Result for quey on KB data.
@@ -528,10 +529,9 @@ export class KBService implements IGBKBService {
           const isBasic = answer.toLowerCase().startsWith('/basic');
           if (/TALK\s*\".*\"/gi.test(answer) || isBasic) {
             const code = isBasic ? answer.substr(6) : answer;
-            const gbaiName = `${min.instance.botId}.gbai`;
-            const gbdialogName = `${min.instance.botId}.gbdialog`;
+            const path = DialogKeywords.getGBAIPath(min.botId,`gbdialog`);
             const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
-            const localName = Path.join('work', gbaiName, gbdialogName, `${scriptName}`);
+            const localName = Path.join('work', path, `${scriptName}`);
             Fs.writeFileSync(localName, code, { encoding: null });
             answer = scriptName;
 
@@ -603,18 +603,19 @@ export class KBService implements IGBKBService {
       answer.content.endsWith('.xls') ||
       answer.content.endsWith('.xlsx')
     ) {
+      const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
       const doc = urlJoin(
         GBServer.globals.publicAddress,
         'kb',
-        `${min.instance.botId}.gbai`,
-        `${min.instance.botId}.gbkb`,
+        path,
         'assets',
         answer.content
       );
       const url = `http://view.officeapps.live.com/op/view.aspx?src=${doc}`;
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.content.endsWith('.pdf')) {
-      const url = urlJoin('kb', `${min.instance.botId}.gbai`, `${min.instance.botId}.gbkb`, 'assets', answer.content);
+      const path = DialogKeywords.getGBAIPath(min.botId,`gbkb`);
+      const url = urlJoin('kb', path, 'assets', answer.content);
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
       await min.conversationalService['playMarkdown'](min, answer.content, channel, step, min.conversationalService);
@@ -679,20 +680,21 @@ export class KBService implements IGBKBService {
           });
         }
       } else if (file !== null && file.name.endsWith('.docx')) {
-        const gbaiName = `${instance.botId}.gbai`;
-        const gbkbName = `${instance.botId}.gbkb`;
-        const localName = Path.join('work', gbaiName, gbkbName, 'articles', file.name);
+        const path = DialogKeywords.getGBAIPath(instance.botId, `gbkb`);
+        const localName = Path.join('work', path, 'articles', file.name);
         const buffer = Fs.readFileSync(localName, { encoding: null });
         var options = {
           buffer: buffer,
           convertImage: async image => {
             const localName = Path.join(
               'work',
-              gbaiName,
+              DialogKeywords.getGBAIPath(instance.botId),
               'cache',
               `img-docx${GBAdminService.getRndReadableIdentifier()}.png`
             );
-            const url = urlJoin(GBServer.globals.publicAddress, instance.botId, 'cache', Path.basename(localName));
+            const url = urlJoin(GBServer.globals.publicAddress,
+              DialogKeywords.getGBAIPath(instance.botId).replace(/\.[^/.]+$/, "")
+              , 'cache', Path.basename(localName));
             const buffer = await image.read();
             Fs.writeFileSync(localName, buffer, { encoding: null });
             return { src: url };
@@ -994,11 +996,11 @@ export class KBService implements IGBKBService {
 
     GBLog.info(`[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
     const html = await GBSSR.getHTML(min);
-    const path = Path.join(
+    let path = DialogKeywords.getGBAIPath(min.botId,`gbui`);
+     path = Path.join(
       process.env.PWD,
       'work',
-      `${min.instance.botId}.gbai`,
-      `${min.instance.botId}.gbui`,
+      path,
       'index.html'
     );
     GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${path}.`);
@@ -1044,9 +1046,10 @@ export class KBService implements IGBKBService {
     if (channel === 'whatsapp') {
       await min.conversationalService.sendFile(min, step, null, answer.content, '');
     } else {
+      const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
       await conversationalService.sendEvent(min, step, 'play', {
         playerType: 'video',
-        data: urlJoin(`${min.instance.botId}.gbai`, `${min.instance.botId}.gbkb`, 'videos', answer.content)
+        data: urlJoin(path, 'videos', answer.content)
       });
     }
   }

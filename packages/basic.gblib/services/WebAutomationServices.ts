@@ -323,7 +323,7 @@ export class WebAutomationServices {
     const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation SCREENSHOT ${selector}.`);
 
-    const gbaiName = `${min.botId}.gbai`;
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
     const localName = Path.join('work', gbaiName, 'cache', `screen-${GBAdminService.getRndReadableIdentifier()}.jpg`);
 
     await page.screenshot({ path: localName });
@@ -412,8 +412,8 @@ export class WebAutomationServices {
     folder = folder.replace(/\\/gi, '/');
 
     // Determines full path at source and destination.
-
-    const root = urlJoin(`/${botId}.gbai/${botId}.gbdrive`);
+    const path = DialogKeywords.getGBAIPath(min.botId,`gbdrive`);
+    const root = path;
     const dstPath = urlJoin(root, folder, filename);
 
     // Checks if the destination contains subfolders that

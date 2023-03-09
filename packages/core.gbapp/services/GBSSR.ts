@@ -49,6 +49,7 @@ import { GBLogEx } from './GBLogEx.js';
 import urlJoin from 'url-join';
 import { GBDeployer } from './GBDeployer.js';
 import { GBMinService } from './GBMinService.js';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 const puppeteer = require('puppeteer-extra');
 const hidden = require('puppeteer-extra-plugin-stealth');
 const { executablePath } = require('puppeteer');
@@ -283,12 +284,13 @@ export class GBSSR {
     GBServer.globals.minInstances[0]:
     GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
     
+    const path = DialogKeywords.getGBAIPath(min.botId,`gbui`);
+
     if (min && req.originalUrl && prerender && exclude) {
       const path = Path.join(
         process.env.PWD,
         'work',
-        `${min.instance.botId}.gbai`,
-        `${min.instance.botId}.gbui`,
+        path,
         'index.html'
       );
       const html = Fs.readFileSync(path, 'utf8');

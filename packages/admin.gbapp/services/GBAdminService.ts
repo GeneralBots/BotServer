@@ -54,6 +54,7 @@ import crypto from 'crypto';
 import Fs from 'fs';
 import { GBServer } from '../../../src/app.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 
 /**
  * Services for server administration.
@@ -129,10 +130,12 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static async undeployPackageCommand(text: string, min: GBMinInstance) {
+    
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
-    const localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(packageName));
+    const path = DialogKeywords.getGBAIPath(min.botId, null, packageName);
+    const localFolder = Path.join('work', path);
     await deployer.undeployPackageFromLocalPath(min.instance, localFolder);
   }
 
@@ -149,15 +152,13 @@ export class GBAdminService implements IGBAdminService {
       }
       await deployer['deployPackage2'](min, user, urlJoin(additionalPath, packageName));
     } else {
-      const siteName = text.split(' ')[1];
-      const folderName = text.split(' ')[2];
-
-      const localFolder = Path.join('work', `${min.instance.botId}.gbai`, Path.basename(folderName));
+      const gbaiPath = DialogKeywords.getGBAIPath(min.instance.botId, null, packageName);
+      const localFolder = Path.join('work', gbaiPath);
 
       // .gbot packages are handled using storage API, so no download
       // of local resources is required.
 
-      await deployer['downloadFolder'](min, Path.join('work', `${min.instance.botId}.gbai`), Path.basename(folderName));
+      await deployer['downloadFolder'](min, localFolder);
       await deployer['deployPackage2'](min, user, localFolder);
     }
   }

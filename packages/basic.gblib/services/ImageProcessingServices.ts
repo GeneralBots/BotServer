@@ -90,9 +90,9 @@ export class ImageProcessingServices {
     });
 
     const botId = min.instance.botId;
-    const gbaiName = `${botId}.gbai`;
+    const path = DialogKeywords.getGBAIPath(min.botId);
     const img = await joinImages(paths);
-    const localName = Path.join('work', gbaiName, 'cache', `img-mrg${GBAdminService.getRndReadableIdentifier()}.png`);
+    const localName = Path.join('work', path, 'cache', `img-mrg${GBAdminService.getRndReadableIdentifier()}.png`);
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
     img.toFile(localName);
 

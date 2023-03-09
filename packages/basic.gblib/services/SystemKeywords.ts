@@ -233,7 +233,7 @@ export class SystemKeywords {
     // headers.
 
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    const gbaiName = `${min.botId}.gbai`;
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
     const browser = await GBSSR.createBrowser(null);
     const page = await browser.newPage();
 
@@ -326,7 +326,7 @@ export class SystemKeywords {
 
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const botId = min.instance.botId;
-      const gbaiName = `${min.botId}.gbai`;
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
       const tmpDocx = urlJoin(gbaiName, `${botId}.gbdrive`, `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
 
       // Performs the conversion operation.
@@ -489,7 +489,7 @@ export class SystemKeywords {
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
     const botId = min.instance.botId;
-    const path = DialogKeywords.getGBDataPath(botId);
+    const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
 
     address = address.indexOf(':') !== -1 ? address : address + ':' + address;
 
@@ -535,7 +535,7 @@ export class SystemKeywords {
     GBLog.info(`BASIC: Saving '${file}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    const path = `/${botId}.gbai/${botId}.gbdrive`;
+    const path = DialogKeywords.getGBAIPath(min.botId,`gbdrive`);
 
     // Checks if it is a GB FILE object.
 
@@ -569,7 +569,7 @@ export class SystemKeywords {
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    const path = DialogKeywords.getGBDataPath(botId);
+    const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
 
     let document = await this.internalGetDocument(client, baseUrl, path, file);
     let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
@@ -622,8 +622,8 @@ export class SystemKeywords {
     } else {
       GBLog.info(`BASIC: GET '${addressOrHeaders}' in '${file}'.`);
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-      const botId = min.instance.botId;
-      const path = DialogKeywords.getGBDataPath(botId);
+      const botId = min.instance.botId;''
+      const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
 
       let document = await this.internalGetDocument(client, baseUrl, path, file);
 
@@ -695,7 +695,7 @@ export class SystemKeywords {
     args.shift();
 
     const botId = min.instance.botId;
-    const path = DialogKeywords.getGBDataPath(botId);
+    const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
 
     // MAX LINES property.
 
@@ -751,7 +751,7 @@ export class SystemKeywords {
         rows[i] = result[i];
       }
     } else if (file['cTag']) {
-      const gbaiName = `${min.botId}.gbai`;
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
       const localName = Path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
       const url = file['@microsoft.graph.downloadUrl'];
       const response = await fetch(url);
@@ -1101,7 +1101,8 @@ export class SystemKeywords {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    let path = `/${botId}.gbai/${botId}.gbdrive`;
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+
 
     // Extracts each part of path to call create folder to each
     // one of them.
@@ -1150,7 +1151,8 @@ export class SystemKeywords {
   public async shareFolder({ pid, folder, email, message }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-    const root = urlJoin(`/${min.botId}.gbai/${min.botId}.gbdrive`, folder);
+    const path = DialogKeywords.getGBAIPath(min.botId,`gbdrive`);
+    const root = urlJoin(path, folder);
 
     const src = await client.api(`${baseUrl}/drive/root:/${root}`).get();
 
@@ -1188,7 +1190,7 @@ export class SystemKeywords {
 
     // Determines full path at source and destination.
 
-    const root = DialogKeywords.getGBDataPath(botId);
+    const root = DialogKeywords.getGBAIPath(botId, 'gbdrive');
     const srcPath = urlJoin(root, src);
     const dstPath = urlJoin(root, dest);
 
@@ -1248,10 +1250,10 @@ export class SystemKeywords {
     dest = dest.replace(/\\/gi, '/');
 
     // Determines full path at source and destination.
-
-    const root = urlJoin(`/${botId}.gbai/${botId}.gbdrive`);
+    const path = DialogKeywords.getGBAIPath(min.botId,`gbdrive`);
+    const root = path;
     const srcPath = urlJoin(root, src);
-    const dstPath = urlJoin(`/${botId}.gbai/${botId}.gbdrive`, dest);
+    const dstPath = urlJoin(path dest);
 
     // Checks if the destination contains subfolders that
     // need to be created.
@@ -1442,7 +1444,7 @@ export class SystemKeywords {
   public async fill({ pid, templateName, data }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const botId = min.instance.botId;
-    const gbaiName = `${botId}.gbai`;
+    const gbaiName = DialogKeywords.getGBAIPath(botId, 'gbdata');
     let localName;
 
     // Downloads template from .gbdrive.
@@ -1599,7 +1601,7 @@ export class SystemKeywords {
 
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const botId = min.instance.botId;
-    const path = DialogKeywords.getGBDataPath(botId);
+    const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
 
     // MAX LINES property.
 

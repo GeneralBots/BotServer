@@ -140,7 +140,7 @@ export class GBVMService extends GBService {
 
     // Hot swap for .vbs files.
     const fullFilename = urlJoin(folder, filename);
-    if (process.env.GBDIALOG_HOTSWAP) {
+    if (process.env.DEV_HOTSWAP) {
       Fs.watchFile(fullFilename, async () => {
         await this.translateBASIC(fullFilename, mainName, min);
         const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
@@ -371,7 +371,8 @@ export class GBVMService extends GBService {
     }
 
     const botId = min.botId;
-    const gbdialogPath = urlJoin(process.cwd(), 'work', `${botId}.gbai`, `${botId}.gbdialog`);
+    const path = DialogKeywords.getGBAIPath(min.botId,`gbdialog`);
+    const gbdialogPath = urlJoin(process.cwd(), 'work', path);
     const scriptPath = urlJoin(gbdialogPath, `${text}.js`);
 
     let code = min.sandBoxMap[text];

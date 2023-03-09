@@ -134,7 +134,7 @@ export class DialogKeywords {
       };
     }
 
-    const gbaiName = `${min.botId}.gbai`;
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
     const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
 
     await ChartServices.screenshot(definition, localName);
@@ -204,28 +204,28 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit({}) {}
+  public async exit({ }) { }
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ pid }) {}
+  public async getActiveTasks({ pid }) { }
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ pid, dealName, contact, company, amount }) {}
+  public async createDeal({ pid, dealName, contact, company, amount }) { }
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ pid, name }) {}
+  public async fndContact({ pid, name }) { }
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -676,7 +676,7 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu({}) {
+  public async showMenu({ }) {
     // https://github.com/GeneralBots/BotServer/issues/237
     // return await beginDialog('/menu');
   }
@@ -783,7 +783,7 @@ export class DialogKeywords {
 
         let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
         const botId = min.instance.botId;
-        const path = DialogKeywords.getGBDataPath(botId);
+        const path = DialogKeywords.getGBAIPath(botId);
         let url = `${baseUrl}/drive/root:/${path}:/children`;
 
         GBLog.info(`Loading HEAR AS .xlsx options from Sheet: ${url}`);
@@ -1028,11 +1028,28 @@ export class DialogKeywords {
       GBLog.error(`BASIC RUNTIME ERR HEAR ${error.message ? error.message : error}\n Stack:${error.stack}`);
     }
   }
-  static getGBDataPath(botId) {
-    
-    return GBConfigService.get('GBDIALOG_GBDATABOT')?
-      GBConfigService.get('GBDIALOG_GBDATABOT'):  
-      urljoin(`${botId}.gbai`, `${botId}.gbdata`);
+  static getGBAIPath(botId, packageType = null, packageName = null) {
+    const gbai = `${botId}.gbai`;
+    if (!packageType && !packageName) {
+      return GBConfigService.get('DEV_GBAI') ?
+        GBConfigService.get('DEV_GBAI') :
+        gbai;
+    }
+
+    if (GBConfigService.get('DEV_GBAI')) {
+
+      return urljoin(GBConfigService.get('DEV_GBAI'),
+        packageName ?
+          packageName :
+          `${botId}.${packageType}`);
+    }
+    else {
+
+      return urljoin(gbai,
+        packageName ?
+          packageName :
+          `${botId}.${packageType}`);
+    }
   }
 
   /**
@@ -1110,7 +1127,7 @@ export class DialogKeywords {
     const element = filename._page ? filename._page : filename.screenshot ? filename : null;
 
     if (element) {
-      const gbaiName = `${min.botId}.gbai`;
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
       const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
       await element.screenshot({ path: localName, fullPage: true });
 
@@ -1130,14 +1147,16 @@ export class DialogKeywords {
 
       await min.conversationalService['playMarkdown'](min, md, DialogKeywords.getChannel(), mobile);
     } else {
+
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
+
       GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
       let url: string;
       if (!filename.startsWith('https://')) {
         url = urlJoin(
           GBServer.globals.publicAddress,
           'kb',
-          `${min.botId}.gbai`,
-          `${min.botId}.gbkb`,
+          gbaiName,
           'assets',
           filename
         );
@@ -1160,7 +1179,7 @@ export class DialogKeywords {
     const data = img.replace(/^data:image\/\w+;base64,/, '');
     const buf = Buffer.from(data, 'base64');
 
-    const gbaiName = `${min.botId}.gbai`;
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
     const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
     Fs.writeFileSync(localName, buf, { encoding: null });
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));

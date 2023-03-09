@@ -87,6 +87,7 @@ import { GoogleChatDirectLine } from '../../google-chat.gblib/services/GoogleCha
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 import Path from 'path';
 import { GBSSR } from './GBSSR.js';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -280,37 +281,38 @@ export class GBMinService {
 
     // Install per bot deployed packages.
 
-    let packagePath = `work/${min.botId}.gbai/${min.botId}.gbdialog`;
+    let packagePath = urlJoin(`work`, DialogKeywords.getGBAIPath(min.botId, 'gbdialog'));
     if (Fs.existsSync(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
-    packagePath = `work/${min.botId}.gbai/${min.botId}.gbapp`;
+    packagePath = urlJoin(`work`, DialogKeywords.getGBAIPath(min.botId, 'gbapp'));
     if (Fs.existsSync(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
-    packagePath = `work/${min.botId}.gbai/${min.botId}.gbtheme`;
+    packagePath = urlJoin(`work`, DialogKeywords.getGBAIPath(min.botId, 'gbtheme'));
     if (Fs.existsSync(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
-    packagePath = `work/${min.botId}.gbai/${min.botId}.gblib`;
+    packagePath = urlJoin(`work`, DialogKeywords.getGBAIPath(min.botId, `gblib`));
     if (Fs.existsSync(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
-
-    let dir = `work/${min.botId}.gbai/cache`;
-
+    
+    const gbai = DialogKeywords.getGBAIPath(min.botId);
+    let dir = `work/${gbai}/cache`;
+    
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
-    dir = `work/${min.botId}.gbai/profile`;
+    dir = `${gbai}/profile`;
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
-    dir = `work/${min.botId}.gbai/uploads`;
+    dir = `${gbai}/uploads`;
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
-    dir = `work/${min.botId}.gbai/${min.botId}.gbui`;
+    dir = DialogKeywords.getGBAIPath(min.botId, `gbui`);
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
@@ -925,7 +927,8 @@ export class GBMinService {
               ps: null,
               qs: null
             });
-            const folder = `work/${min.instance.botId}.gbai/cache`;
+            const path = DialogKeywords.getGBAIPath(min.botId);
+            const folder = `work/${path}/cache`;
             const filename = `${GBAdminService.generateUuid()}.png`;
 
             Fs.writeFileSync(path.join(folder, filename), data);
@@ -1080,7 +1083,8 @@ export class GBMinService {
   private static async downloadAttachmentAndWrite(attachment) {
     const url = attachment.contentUrl;
     const localFolder = Path.join('work');
-    const localFileName = Path.join(localFolder, `${this['min'].botId}.gbai`, 'uploads', attachment.name);
+    const path = DialogKeywords.getGBAIPath(this['min'].botId);
+    const localFileName = Path.join(localFolder, path, 'uploads', attachment.name);
 
     let res;
     if (url.startsWith('data:')) {
