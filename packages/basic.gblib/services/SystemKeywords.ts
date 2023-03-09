@@ -489,7 +489,7 @@ export class SystemKeywords {
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
     const botId = min.instance.botId;
-    const path = `/${botId}.gbai/${botId}.gbdata`;
+    const path = DialogKeywords.getGBDataPath(botId);
 
     address = address.indexOf(':') !== -1 ? address : address + ':' + address;
 
@@ -569,7 +569,7 @@ export class SystemKeywords {
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    const path = `/${botId}.gbai/${botId}.gbdata`;
+    const path = DialogKeywords.getGBDataPath(botId);
 
     let document = await this.internalGetDocument(client, baseUrl, path, file);
     let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
@@ -623,7 +623,7 @@ export class SystemKeywords {
       GBLog.info(`BASIC: GET '${addressOrHeaders}' in '${file}'.`);
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const botId = min.instance.botId;
-      const path = `/${botId}.gbai/${botId}.gbdata`;
+      const path = DialogKeywords.getGBDataPath(botId);
 
       let document = await this.internalGetDocument(client, baseUrl, path, file);
 
@@ -695,7 +695,7 @@ export class SystemKeywords {
     args.shift();
 
     const botId = min.instance.botId;
-    const path = `/${botId}.gbai/${botId}.gbdata`;
+    const path = DialogKeywords.getGBDataPath(botId);
 
     // MAX LINES property.
 
@@ -1188,9 +1188,9 @@ export class SystemKeywords {
 
     // Determines full path at source and destination.
 
-    const root = urlJoin(`/${botId}.gbai/${botId}.gbdata`);
+    const root = DialogKeywords.getGBDataPath(botId);
     const srcPath = urlJoin(root, src);
-    const dstPath = urlJoin(`/${botId}.gbai/${botId}.gbdata`, dest);
+    const dstPath = urlJoin(root, dest);
 
     // Checks if the destination contains subfolders that
     // need to be created.
@@ -1599,7 +1599,7 @@ export class SystemKeywords {
 
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const botId = min.instance.botId;
-    const path = `/${botId}.gbai/${botId}.gbdata`;
+    const path = DialogKeywords.getGBDataPath(botId);
 
     // MAX LINES property.
 

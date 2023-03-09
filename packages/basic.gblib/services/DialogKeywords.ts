@@ -783,7 +783,7 @@ export class DialogKeywords {
 
         let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
         const botId = min.instance.botId;
-        const path = urljoin(`${botId}.gbai`, `${botId}.gbdata`);
+        const path = DialogKeywords.getGBDataPath(botId);
         let url = `${baseUrl}/drive/root:/${path}:/children`;
 
         GBLog.info(`Loading HEAR AS .xlsx options from Sheet: ${url}`);
@@ -1027,6 +1027,12 @@ export class DialogKeywords {
     } catch (error) {
       GBLog.error(`BASIC RUNTIME ERR HEAR ${error.message ? error.message : error}\n Stack:${error.stack}`);
     }
+  }
+  static getGBDataPath(botId) {
+    
+    return GBConfigService.get('GBDIALOG_GBDATABOT')?
+      GBConfigService.get('GBDIALOG_GBDATABOT'):  
+      urljoin(`${botId}.gbai`, `${botId}.gbdata`);
   }
 
   /**
