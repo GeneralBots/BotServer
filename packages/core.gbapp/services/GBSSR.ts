@@ -284,10 +284,10 @@ export class GBSSR {
     GBServer.globals.minInstances[0]:
     GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
     
-    const path = DialogKeywords.getGBAIPath(min.botId,`gbui`);
+    let path = DialogKeywords.getGBAIPath(min.botId,`gbui`);
 
     if (min && req.originalUrl && prerender && exclude) {
-      const path = Path.join(
+      path = Path.join(
         process.env.PWD,
         'work',
         path,
@@ -298,7 +298,7 @@ export class GBSSR {
       return true;
     } else {
 
-      const path = Path.join(
+      path = Path.join(
         process.env.PWD,
         GBDeployer.deployFolder,
         GBMinService.uiPackage,

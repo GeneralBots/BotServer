@@ -73,7 +73,7 @@ import { min } from 'lodash';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { text } from 'body-parser';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
-import { DialogKeywords } from 'packages/basic.gblib/services/DialogKeywords.js';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 
 /**
  * Result for quey on KB data.

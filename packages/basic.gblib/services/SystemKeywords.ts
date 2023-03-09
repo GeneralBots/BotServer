@@ -1101,7 +1101,7 @@ export class SystemKeywords {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+    let path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
 
 
     // Extracts each part of path to call create folder to each
@@ -1253,7 +1253,7 @@ export class SystemKeywords {
     const path = DialogKeywords.getGBAIPath(min.botId,`gbdrive`);
     const root = path;
     const srcPath = urlJoin(root, src);
-    const dstPath = urlJoin(path dest);
+    const dstPath = urlJoin(path, dest);
 
     // Checks if the destination contains subfolders that
     // need to be created.

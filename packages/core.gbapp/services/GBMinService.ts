@@ -931,7 +931,7 @@ export class GBMinService {
             const folder = `work/${path}/cache`;
             const filename = `${GBAdminService.generateUuid()}.png`;
 
-            Fs.writeFileSync(path.join(folder, filename), data);
+            Fs.writeFileSync(urlJoin(folder, filename), data);
             step.context.activity.text = urlJoin(
               GBServer.globals.publicAddress,
               `${min.instance.botId}`,

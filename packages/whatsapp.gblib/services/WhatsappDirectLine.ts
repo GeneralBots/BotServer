@@ -47,7 +47,7 @@ import qrcode from 'qrcode-terminal';
 import express from 'express';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import pkg from 'whatsapp-web.js';
-import { DialogKeywords } from 'packages/basic.gblib/services/DialogKeywords.js';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 const { List, Buttons, Client, MessageMedia } = pkg;
 
 /**
