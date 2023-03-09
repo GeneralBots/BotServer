@@ -47,6 +47,7 @@ import qrcode from 'qrcode-terminal';
 import express from 'express';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import pkg from 'whatsapp-web.js';
+import { DialogKeywords } from 'packages/basic.gblib/services/DialogKeywords.js';
 const { List, Buttons, Client, MessageMedia } = pkg;
 
 /**
@@ -130,8 +131,8 @@ export class WhatsappDirectLine extends GBService {
       case 'GeneralBots':
         const minBoot = GBServer.globals.minBoot;
         // Initialize the browser using a local profile for each bot.
-        const gbaiName = `${this.min.botId}.gbai`;
-        const localName = Path.join('work', gbaiName, 'profile');
+        const path = DialogKeywords.getGBAIPath(this.min.botId);
+        const localName = Path.join('work', path, 'profile');
         const createClient = () => {
           const client = (this.customClient = new Client({
             puppeteer: GBSSR.preparePuppeteer(localName)
@@ -154,7 +155,6 @@ export class WhatsappDirectLine extends GBService {
               // While handling other bots uses boot instance of this class to send QR Codes.
               // const s = new DialogKeywords(min., null, null, null);
               // const qrBuf = await s.getQRCode(qr);
-              // const gbaiName = `${this.min.botId}.gbai`;
               // const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
               // fs.writeFileSync(localName, qrBuf);
               // const url = urlJoin(
