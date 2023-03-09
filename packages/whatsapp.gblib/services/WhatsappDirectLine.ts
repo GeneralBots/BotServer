@@ -402,6 +402,8 @@ export class WhatsappDirectLine extends GBService {
               if (q.content === e1 && !found) {
                 const answer = this.min.kbService['getAnswerById'](this.min.instance.instanceId, q.answerId);
                 answerText = answer.content;
+
+                answerText = answerText.replace(/\$username/, fromName);
               }
             });
           }
@@ -615,10 +617,13 @@ export class WhatsappDirectLine extends GBService {
         mobile: from,
         group: group,
         attachments: attachments,
+
+        // Use from container to transport information to GBMinService.receiver.
+
         from: {
           id: from,
-          channelIdEx: 'whatsapp', 
           name: fromName, 
+          channelIdEx: 'whatsapp', 
           group: group
         },
         replyToId: from
