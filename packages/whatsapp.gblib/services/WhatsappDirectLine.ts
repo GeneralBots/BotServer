@@ -403,7 +403,7 @@ export class WhatsappDirectLine extends GBService {
                 const answer = this.min.kbService['getAnswerById'](this.min.instance.instanceId, q.answerId);
                 answerText = answer.content;
 
-                answerText = answerText.replace(/\$username/, fromName);
+                answerText = answerText.replace(/\$username/gi, fromName);
               }
             });
           }
