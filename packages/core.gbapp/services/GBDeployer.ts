@@ -412,7 +412,7 @@ export class GBDeployer implements IGBDeployer {
 
     const botId = min.instance.botId;
     const path = DialogKeywords.getGBAIPath(botId, 'gbot');
-    let url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`;
+    let url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${path}:/children`;
 
     GBLog.info(`Loading .gbot from Excel: ${url}`);
     const res = await client.api(url).get();
@@ -482,10 +482,10 @@ export class GBDeployer implements IGBDeployer {
 
       // Retrieves all files in remote folder.
 
-      const botId = min.instance.botId;
+    
       let path = DialogKeywords.getGBAIPath(min.botId);
       path = urlJoin(path, remotePath);
-      let url = `${baseUrl}/drive/root:${path}:/children`;
+      let url = `${baseUrl}/drive/root:/${path}:/children`;
 
       GBLog.info(`Download URL: ${url}`);
 

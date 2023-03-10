@@ -300,19 +300,32 @@ export class GBMinService {
     
     const gbai = DialogKeywords.getGBAIPath(min.botId);
     let dir = `work/${gbai}/cache`;
+    const botId  = gbai.replace(/\.[^/.]+$/, "");
     
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
-    dir = `${gbai}/profile`;
+    dir = `work/${gbai}/profile`;
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
-    dir = `${gbai}/uploads`;
+    dir = `work/${gbai}/uploads`;
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
-    dir = DialogKeywords.getGBAIPath(min.botId, `gbui`);
+    dir = `work/${gbai}/${botId}.gbkb`;
+    if (!Fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
+    dir = `work/${gbai}/${botId}.gbdialog`;
+    if (!Fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
+    dir = `work/${gbai}/${botId}.gbot`;
+    if (!Fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
+    dir = `work/${gbai}/${botId}.gbui`;
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
@@ -840,7 +853,7 @@ export class GBMinService {
 
     // Default activity processing and handler.
 
-    await adapter['processActivity'](req, res, async context => {
+    const handler =  async context => {
       // Handle activity text issues.
 
       if (!context.activity.text) {
@@ -1035,7 +1048,19 @@ export class GBMinService {
 
         await step.beginDialog('/ask', { isReturning: true });
       }
-    });
+    };
+
+    try {
+      await adapter['processActivity'](req, res, handler);
+    } catch (error) {
+      if (error.code === 401){
+        GBLog.error('Calling processActivity due to Signing Key could not be retrieved error.');
+        await adapter['processActivity'](req, res, handler);
+      }
+      else {
+        throw error;
+      }
+    }
   }
 
   /**

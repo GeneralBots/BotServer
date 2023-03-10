@@ -98,18 +98,20 @@ export class GBServer {
     GBServer.globals.debuggers = [];
     GBServer.globals.indexSemaphore = new Mutex();
 
-
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 
     process.on('unhandledRejection', (err, p) => {
-      GBLog.error(`UNHANDLED_REJECTION(promises): ${err.toString()} ${err['stack']?'\n'+err['stack']:''}`);
+      GBLog.error(`UNHANDLED_REJECTION(promises): ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''}`);
+      if (err['response']?.obj?.httpStatusCode === 404) {
+        GBLog.warn(`Check reverse proxy: ${process.env.BOT_URL} as it seems to be invalid.`);
+      }
     });
 
     process.on('uncaughtException', (err, p) => {
-      GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack']?'\n'+err['stack']:''}`);
+      GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''}`);
     });
-    
+
     // Creates working directory.
 
     process.env.PWD = process.cwd();

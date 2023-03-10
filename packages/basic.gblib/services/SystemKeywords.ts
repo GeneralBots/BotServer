@@ -511,7 +511,7 @@ export class SystemKeywords {
    * Retrives a document from the drive, given a path and filename.
    */
   private async internalGetDocument(client: any, baseUrl: any, path: string, file: string) {
-    let res = await client.api(`${baseUrl}/drive/root:${path}:/children`).get();
+    let res = await client.api(`${baseUrl}/drive/root:/${path}:/children`).get();
 
     let documents = res.value.filter(m => {
       return m.name.toLowerCase() === file.toLowerCase();

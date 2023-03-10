@@ -152,13 +152,17 @@ export class GBAdminService implements IGBAdminService {
       }
       await deployer['deployPackage2'](min, user, urlJoin(additionalPath, packageName));
     } else {
-      const gbaiPath = DialogKeywords.getGBAIPath(min.instance.botId, null, packageName);
+      const folderName = text.split(' ')[2]; 
+      const packageType = Path.extname(folderName).substr(1);
+      const gbaiPath = DialogKeywords.getGBAIPath(min.instance.botId, packageType, null);
       const localFolder = Path.join('work', gbaiPath);
 
       // .gbot packages are handled using storage API, so no download
       // of local resources is required.
-
-      await deployer['downloadFolder'](min, localFolder);
+      const gbai  = DialogKeywords.getGBAIPath(min.instance.botId);
+      await deployer  ['downloadFolder'](min, 
+        Path.join('work', `${gbai}`), 
+        Path.basename(localFolder));
       await deployer['deployPackage2'](min, user, localFolder);
     }
   }

@@ -608,27 +608,31 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public inputMessage(client, conversationId: string, text: string, from, fromName: string, group, attachments: File) {
-    return client.apis.Conversations.Conversations_PostActivity({
-      conversationId: conversationId,
-      activity: {
-        textFormat: 'plain',
-        text: text,
-        type: 'message',
-        mobile: from,
-        group: group,
-        attachments: attachments,
+    try {
+      return client.apis.Conversations.Conversations_PostActivity({
+        conversationId: conversationId,
+        activity: {
+          textFormat: 'plain',
+          text: text,
+          type: 'message',
+          mobile: from,
+          group: group,
+          attachments: attachments,
 
-        // Use from container to transport information to GBMinService.receiver.
+          // Use from container to transport information to GBMinService.receiver.
 
-        from: {
-          id: from,
-          name: fromName, 
-          channelIdEx: 'whatsapp', 
-          group: group
-        },
-        replyToId: from
-      }
-    });
+          from: {
+            id: from,
+            name: fromName,
+            channelIdEx: 'whatsapp',
+            group: group
+          },
+          replyToId: from
+        }
+      });
+    } catch (e) {
+      GBLog.error(e);
+    }
   }
 
   public pollMessages(client, conversationId, from, fromName) {
@@ -1024,9 +1028,7 @@ export class WhatsappDirectLine extends GBService {
           activeMin = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
           await (activeMin as any).whatsAppDirectLine.received(req, res);
           return; // EXIT HERE.
-        }
-        else
-        {
+        } else {
           GBLog.warn(`Group: ${group} not associated with botId:${botId}.`);
         }
       }

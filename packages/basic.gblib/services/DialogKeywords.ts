@@ -1029,7 +1029,7 @@ export class DialogKeywords {
     }
   }
   static getGBAIPath(botId, packageType = null, packageName = null) {
-    const gbai = `${botId}.gbai`;
+    let gbai = `${botId}.gbai`;
     if (!packageType && !packageName) {
       return GBConfigService.get('DEV_GBAI') ?
         GBConfigService.get('DEV_GBAI') :
@@ -1037,7 +1037,8 @@ export class DialogKeywords {
     }
 
     if (GBConfigService.get('DEV_GBAI')) {
-
+      gbai = GBConfigService.get('DEV_GBAI');
+      botId  = gbai.replace(/\.[^/.]+$/, "");
       return urljoin(GBConfigService.get('DEV_GBAI'),
         packageName ?
           packageName :

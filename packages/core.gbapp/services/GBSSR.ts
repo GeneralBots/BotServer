@@ -92,7 +92,7 @@ export class GBSSR {
     'tiqcdn'
   ];
 
-  public static preparePuppeteer(profilePath){
+  public static preparePuppeteer(profilePath) {
     let args = [
       '--check-for-update-interval=2592000',
       '--disable-accelerated-2d-canvas',
@@ -128,7 +128,7 @@ export class GBSSR {
   public static async createBrowser(profilePath): Promise<any> {
     const opts = this.preparePuppeteer(profilePath);
     puppeteer.use(hidden());
-    const browser = await puppeteer.launch(      opts    );
+    const browser = await puppeteer.launch(opts);
     return browser;
   }
 
@@ -279,44 +279,38 @@ export class GBSSR {
 
     // Reads from static HTML when a bot is crawling.
 
-    const botId = req.originalUrl ? req.originalUrl.substr(1) : GBServer.globals.minInstances[0].botId; // TODO: Get only bot.
-    let min: GBMinInstance = req.url ===  '/'?
-    GBServer.globals.minInstances[0]:
-    GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
-    
-    let path = DialogKeywords.getGBAIPath(min.botId,`gbui`);
+    const botId =
+      req.originalUrl || req.originalUrl === '/' ? req.originalUrl.substr(1) : GBServer.globals.minInstances[0].botId;
+    let min: GBMinInstance =
+      req.url === '/'
+        ? GBServer.globals.minInstances[0]
+        : GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
+
+    let path = DialogKeywords.getGBAIPath(botId, `gbui`);
 
     if (min && req.originalUrl && prerender && exclude) {
-      path = Path.join(
-        process.env.PWD,
-        'work',
-        path,
-        'index.html'
-      );
+      path = Path.join(process.env.PWD, 'work', path, 'index.html');
       const html = Fs.readFileSync(path, 'utf8');
       res.status(200).send(html);
       return true;
     } else {
-
       path = Path.join(
         process.env.PWD,
         GBDeployer.deployFolder,
         GBMinService.uiPackage,
         'build',
         min ? `index.html` : req.url
-      ); 
+      );
       if (Fs.existsSync(path)) {
-        if (min){   
+        if (min) {
           let html = Fs.readFileSync(path, 'utf8');
           html = html.replace(/\{botId\}/gi, min.botId);
           html = html.replace(/\{theme\}/gi, min.instance.theme);
           html = html.replace(/\{title\}/gi, min.instance.title);
           res.send(html).end();
-        }
-        else
-        {
+        } else {
           res.sendFile(path);
-        }        
+        }
         return true;
       } else {
         GBLogEx.info(min, `HTTP 404: ${req.url}.`);
