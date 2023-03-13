@@ -34,10 +34,8 @@
 
 import { GBLog, GBMinInstance } from 'botlib';
 import { GBServer } from '../../../src/app.js';
-import { GuaribasUser } from '../../security.gbapp/models/index.js';
-import { DialogKeywords } from './DialogKeywords.js';
 import Fs from 'fs';
-import Swagger from 'swagger-client';
+import SwaggerClient from 'swagger-client';
 import { spawn } from 'child_process';
 
 /**
@@ -135,12 +133,12 @@ export class DebuggerService {
     'valueOf'
   ];
 
-  public async breakpoint ({ botId, line }) {
+  public async setBreakpoint({ botId, line }) {
     GBLog.info(`BASIC: Enabled breakpoint for ${botId} on ${line}.`);
     GBServer.globals.debuggers[botId].breaks.push(Number.parseInt(line));
   }
 
-  public async resume ({ botId }) {
+  public async resume({ botId }) {
     if (GBServer.globals.debuggers[botId].state === 2) {
       const client = GBServer.globals.debuggers[botId].client;
       await client.Debugger.resume();
@@ -153,7 +151,7 @@ export class DebuggerService {
     }
   }
 
-  public async stop ({ botId }) {
+  public async stop({ botId }) {
     GBServer.globals.debuggers[botId].state = 0;
     GBServer.globals.debuggers[botId].stateInfo = 'Stopped';
 
@@ -166,7 +164,7 @@ export class DebuggerService {
     return { status: 'OK' };
   }
 
-  public async step ({ botId }) {
+  public async step({ botId }) {
     if (GBServer.globals.debuggers[botId].state === 2) {
       GBServer.globals.debuggers[botId].stateInfo = 'Break';
       const client = GBServer.globals.debuggers[botId].client;
@@ -178,7 +176,7 @@ export class DebuggerService {
     }
   }
 
-  public async context ({ botId }) {
+  public async getContext({ botId }) {
     const conversationsMap = GBServer.globals.debuggers[botId].conversationsMap;
     const watermarkMap = GBServer.globals.debuggers[botId].watermarkMap;
 
@@ -186,7 +184,7 @@ export class DebuggerService {
     let messages = [];
     const client = GBServer.globals.debuggers[botId].client;
     if (client) {
-      const response = await client.Conversations.Conversations_GetActivities({
+      const response = await client.apis.Conversations.Conversations_GetActivities({
         conversationId: conversationId,
         watermark: watermarkMap[botId]
       });
@@ -215,11 +213,10 @@ export class DebuggerService {
     };
   }
 
-  public async getRunning ({ botId, botApiKey, scriptName }) {
+  public async start({ botId, botApiKey, scriptName }) {
     const conversationsMap = GBServer.globals.debuggers[botId].conversationsMap;
 
     let error;
-    botId = botId[0];
     if (!GBServer.globals.debuggers[botId]) {
       GBServer.globals.debuggers[botId] = {};
     }
@@ -242,29 +239,26 @@ export class DebuggerService {
 
       let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
-      GBServer.globals.debuggers[botId].client = await new Swagger({
+      const client = await new SwaggerClient({
         spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-        usePromise: true
+        requestInterceptor: req => {
+          req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
+        }
       });
-      const client = GBServer.globals.debuggers[botId].client;
-      client.clientAuthorizations.add(
-        'AuthorizationBotConnector',
-        new Swagger.ApiKeyAuthorization('Authorization', `Bearer ${min.instance.webchatKey}`, 'header')
-      );
-      const response = await client.Conversations.Conversations_StartConversation();
+      GBServer.globals.debuggers[botId].client = client;
+      const response = await client.apis.Conversations.Conversations_StartConversation();
       const conversationId = response.obj.conversationId;
-      conversationsMap[botId] = conversationId;
-      GBServer.globals.debugConversationId = conversationId;
+      GBServer.globals.debuggers[botId].conversationId = conversationId;
 
-      client.Conversations.Conversations_PostActivity({
+      client.apis.Conversations.Conversations_PostActivity({
         conversationId: conversationId,
         activity: {
           textFormat: 'plain',
           text: `/calldbg ${scriptName}`,
           type: 'message',
           from: {
-            id: 'test',
-            name: 'test'
+            id: 'word',
+            name: 'word'
           }
         }
       });
@@ -272,4 +266,39 @@ export class DebuggerService {
       return { status: 'OK' };
     }
   }
+
+  public async sendMessage({ botId, botApiKey, text }) {
+    const conversationsMap = GBServer.globals.debuggers[botId].conversationsMap;
+
+    let error;
+    if (!GBServer.globals.debuggers[botId]) {
+      GBServer.globals.debuggers[botId] = {};
+    }
+
+    if (GBServer.globals.debuggers[botId].state != 1) {
+      error = `Cannot sendMessage to an stopped process. ${botId}`;
+      return { error: error };
+    }
+
+    let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
+
+      const client  = GBServer.globals.debuggers[botId].client;
+      const conversationId = GBServer.globals.debuggers[botId].conversationId;
+
+      client.apis.Conversations.Conversations_PostActivity({
+        conversationId: conversationId,
+        activity: {
+          textFormat: 'plain',
+          text: text,
+          type: 'message',
+          from: {
+            id: 'word',
+            name: 'word'
+          }
+        }
+      });
+
+      return { status: 'OK' };
+  }
+
 }

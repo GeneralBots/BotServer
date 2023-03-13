@@ -13,7 +13,7 @@ console.log(`██      █     ███   █ █     ██  ██ ██  
 console.log(`██  ███ ████  █ ██  █ ████  █████  ██████ ██      ████   █   █   █    ██     `);
 console.log(`██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █    `);
 console.log(` █████  █████ █   ███ █████ ██  ██ ██  ██ ██████  ████   █████   █   ███  3.0`);
-console.log(`   botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch}`);
+process.stdout.write(`   botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch}`);
 
 var now = () => {
   return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC';
@@ -22,7 +22,7 @@ var __dirname = process.env.PWD || process.cwd();
 try {
   var run = () => {
     import('./dist/src/app.js').then((gb)=> {
-      console.log(``);
+      console.log(`\n`);
       gb.GBServer.run()
     });
   };

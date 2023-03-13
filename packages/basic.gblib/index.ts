@@ -45,6 +45,7 @@ import { WebAutomationServices } from './services/WebAutomationServices.js';
 import { ImageProcessingServices } from './services/ImageProcessingServices.js';
 import { DebuggerService } from './services/DebuggerService.js';
 import Koa from 'koa';
+import cors from '@koa/cors';
 import { createRpcServer } from '@push-rpc/core';
 import { createHttpKoaMiddleware } from '@push-rpc/http';
 import { HttpServerOptions } from '@push-rpc/http/dist/server.js';
@@ -63,6 +64,7 @@ export function createKoaHttpServer(
   const { onError, onConnection, middleware } = createHttpKoaMiddleware(getRemoteId, opts);
 
   const app = new Koa();
+  app.use(cors({ origin: '*' }));
   app.use(koaBody.koaBody({ multipart: true }));
   app.use(middleware);
   const server = app.listen(port);
@@ -117,10 +119,10 @@ export class GBBasicPackage implements IGBPackage {
         disconnected(remoteId: string, connections: number): void {},
         connected(remoteId: string, connections: number): void {},
         messageIn(...params): void {
-          GBLogEx.info(min, 'API IN' + params);
+          GBLogEx.info(min, '[IN] ' + params);
         },
         messageOut(...params): void {
-          GBLogEx.info(min, 'API OUT ' + params);
+          GBLogEx.info(min, '[OUT] ' + params);
         }
       }
     };
@@ -156,7 +158,7 @@ export class GBBasicPackage implements IGBPackage {
     GBServer.globals.debuggers[botId].stateInfo = 'Stopped';
     GBServer.globals.debuggers[botId].childProcess = null;
     GBServer.globals.debuggers[botId].client = null;
-    GBServer.globals.debuggers[botId].conversationsMap = {};
+    GBServer.globals.debuggers[botId].conversationId = null;
     GBServer.globals.debuggers[botId].watermarkMap = {};
   }
 }

@@ -65,6 +65,7 @@
     "@google-cloud/pubsub": "3.2.1",
     "@google-cloud/translate": "7.0.4",
     "@hubspot/api-client": "7.1.2",
+    "@koa/cors": "4.0.0",
     "@microsoft/microsoft-graph-client": "3.0.4",
     "@nlpjs/basic": "4.26.1",
     "@nosferatu500/textract": "3.1.2",

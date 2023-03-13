@@ -212,13 +212,13 @@ export class GBVMService extends GBService {
       
       let url;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/dk';
-      const dk = (await createRpcClient(0, async () => createHttpClient(url))).remote;
+      const dk = (await createRpcClient(0, () => createHttpClient(url))).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/sys';
-      const sys = (await createRpcClient(0, async () => createHttpClient(url))).remote;
+      const sys = (await createRpcClient(0, () => createHttpClient(url))).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/wa';
-      const wa = (await createRpcClient(0, async () => createHttpClient(url))).remote;
+      const wa = (await createRpcClient(0, () => createHttpClient(url))).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/img';
-      const img = (await createRpcClient(0, async () => createHttpClient(url))).remote;
+      const img = (await createRpcClient(0, () => createHttpClient(url))).remote;
       
       // Unmarshalls Local variables from server VM.
 
