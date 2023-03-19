@@ -43,10 +43,10 @@ import * as en from 'dotenv-extended';
  * Base configuration for the server like storage.
  */
 export class GBConfigService {
-  public static getBoolean (value: string): boolean {
+  public static getBoolean(value: string): boolean {
     return (this.get(value) as unknown) as boolean;
   }
-  public static getServerPort (): string {
+  public static getServerPort(): string {
     if (process.env.PORT) {
       return process.env.PORT;
     }
@@ -57,7 +57,7 @@ export class GBConfigService {
     return '4242';
   }
 
-  public static init (): any {
+  public static init(): any {
     try {
       en.load({
         encoding: 'utf8',
@@ -78,7 +78,7 @@ export class GBConfigService {
     }
   }
 
-  public static get (key: string): string | undefined {
+  public static get(key: string): string | undefined {
     let value = GBConfigService.tryGet(key);
 
     if (value === undefined) {
@@ -155,6 +155,9 @@ export class GBConfigService {
         case 'ENABLE_SPELLING_CHECKER':
           value = false;
           break;
+        case 'DEV_GBAI':
+          value = undefined;
+          break;
         default:
           GBLog.warn(`Invalid key on .env file: '${key}'`);
           break;
@@ -164,7 +167,7 @@ export class GBConfigService {
     return value;
   }
 
-  public static tryGet (key: string): any {
+  public static tryGet(key: string): any {
     let value = process.env[`container:${key}`];
     if (value === undefined) {
       value = process.env[key];

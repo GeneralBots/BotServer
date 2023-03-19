@@ -125,9 +125,11 @@ export class GBSSR {
     };
   }
 
+
   public static async createBrowser(profilePath): Promise<any> {
     const opts = this.preparePuppeteer(profilePath);
     puppeteer.use(hidden());
+    puppeteer.use(require("puppeteer-extra-plugin-minmax")());
     const browser = await puppeteer.launch(opts);
     return browser;
   }
@@ -143,6 +145,8 @@ export class GBSSR {
 
     try {
       const page = await browser.newPage();
+      await page.minimize();
+
       await page.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'
       );
@@ -277,35 +281,61 @@ export class GBSSR {
       req.originalUrl
     );
 
-    // Reads from static HTML when a bot is crawling.
+    // Tries to find botId from URL.
 
-    const botId =
-      req.originalUrl || req.originalUrl === '/' ? req.originalUrl.substr(1) : GBServer.globals.minInstances[0].botId;
+    const minBoot = GBServer.globals.minInstances[0];
+    let botId =
+      req.originalUrl && req.originalUrl === '/' ?
+        minBoot.botId :
+        /\/([A-Za-z0-9\-\_]+)\/*/.exec(req.originalUrl)[1]
     let min: GBMinInstance =
       req.url === '/'
-        ? GBServer.globals.minInstances[0]
-        : GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
+        ? minBoot
+        : GBServer.globals.minInstances.filter(p => p.instance.botId.toLowerCase() === botId.toLowerCase())[0];
+    if (!min) {
+      min = req.url === '/'
+        ? minBoot
+        : GBServer.globals.minInstances.filter(p => p.instance.activationCode.toLowerCase() === botId.toLowerCase())[0];
+    }
+    if (!min) {
+      botId = minBoot.botId;
+    }
+
 
     let path = DialogKeywords.getGBAIPath(botId, `gbui`);
 
+    // Checks if the bot has an .gbui published or use default.gbui.
+
+    if (!Fs.existsSync(path)) {
+      path = DialogKeywords.getGBAIPath(minBoot.botId, `gbui`);
+    }
+    const url = req.url.replace(`/${botId}`, '');
+
     if (min && req.originalUrl && prerender && exclude) {
+
+      // Reads from static HTML when a bot is crawling.
+
       path = Path.join(process.env.PWD, 'work', path, 'index.html');
       const html = Fs.readFileSync(path, 'utf8');
       res.status(200).send(html);
       return true;
     } else {
+
+      // Servers default.gbui web application.
+
       path = Path.join(
         process.env.PWD,
         GBDeployer.deployFolder,
         GBMinService.uiPackage,
         'build',
-        min ? `index.html` : req.url
+        url === '/' || url === '' ? `index.html` : url
       );
       if (Fs.existsSync(path)) {
         if (min) {
           let html = Fs.readFileSync(path, 'utf8');
           html = html.replace(/\{botId\}/gi, min.botId);
-          html = html.replace(/\{theme\}/gi, min.instance.theme);
+          html = html.replace(/\{theme\}/gi, min.instance.theme ? min.instance.theme :
+            'default.gbtheme');
           html = html.replace(/\{title\}/gi, min.instance.title);
           res.send(html).end();
         } else {

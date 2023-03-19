@@ -900,6 +900,7 @@ export class GBConversationalService {
   }
 
   public async translate(min: GBMinInstance, text: string, language: string): Promise<string> {
+    
     const translatorEnabled = () => {
       if (min.instance.params) {
         const params = JSON.parse(min.instance.params);

@@ -551,9 +551,9 @@ export class DialogKeywords {
   }
 
   private async setOption({ pid, name, value }) {
-    if (this.isUserSystemParam(name)) {
-      throw new Error(`Not possible to define ${name} as it is a reserved system param name.`);
-    }
+    // if (this.isUserSystemParam(name)) {
+    //   throw new Error(`Not possible to define ${name} as it is a reserved system param name.`);
+    // }
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const sec = new SecService();
     await sec.setParam(user.userId, name, value);

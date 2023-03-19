@@ -144,6 +144,7 @@
     "punycode": "2.1.1",
     "puppeteer": "19.6.3",
     "puppeteer-extra": "3.3.4",
+    "puppeteer-extra-plugin-minmax": "1.1.2",
     "puppeteer-extra-plugin-stealth": "2.11.1",
     "qr-scanner": "1.4.2",
     "qrcode": "1.5.1",

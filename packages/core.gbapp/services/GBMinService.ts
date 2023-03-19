@@ -48,6 +48,11 @@ import mkdirp from 'mkdirp';
 import Fs from 'fs';
 import arrayBufferToBuffer from 'arraybuffer-to-buffer';
 import { NlpManager } from 'node-nlp';
+import Koa from 'koa';
+import cors from '@koa/cors';
+import { createRpcServer } from '@push-rpc/core';
+import { createHttpKoaMiddleware } from '@push-rpc/http';
+import { HttpServerOptions } from '@push-rpc/http/dist/server.js';
 import {
   AutoSaveStateMiddleware,
   BotFrameworkAdapter,
@@ -88,6 +93,11 @@ import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 import Path from 'path';
 import { GBSSR } from './GBSSR.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
+import { GBLogEx } from './GBLogEx.js';
+import { WebAutomationServices } from '../../basic.gblib/services/WebAutomationServices.js';
+import { createKoaHttpServer } from '../../basic.gblib/index.js';
+import { DebuggerService } from '../../basic.gblib/services/DebuggerService.js';
+import { ImageProcessingServices } from '../../basic.gblib/services/ImageProcessingServices.js';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -156,6 +166,7 @@ export class GBMinService {
     // Calls mountBot event to all bots.
     let i = 1;
 
+
     if (instances.length > 1) {
       this.bar1 = new cliProgress.SingleBar(
         {
@@ -168,45 +179,65 @@ export class GBMinService {
       this.bar1.start(instances.length, i, { botId: 'Boot' });
     }
 
-    const throttledPromiseAll = async promises => {
-      const MAX_IN_PROCESS = 20;
-      const results = new Array(promises.length);
 
-      async function doBlock(startIndex) {
-        // Shallow-copy a block of promises to work on
-        const currBlock = promises.slice(startIndex, startIndex + MAX_IN_PROCESS);
-        // Await the completion. If any fail, it will throw and that's good.
-        const blockResults = await Promise.all(currBlock);
-        // Assuming all succeeded, copy the results into the results array
-        for (let ix = 0; ix < blockResults.length; ix++) {
-          results[ix + startIndex] = blockResults[ix];
+    await CollectionUtil.asyncForEach(instances, (async instance => {
+      try {
+        await this['mountBot'](instance);
+      } catch (error) {
+        GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
+      }
+      finally {
+        if (this.bar1) {
+          this.bar1.update(i++, { botId: instance.botId });
         }
       }
+    }).bind(this));
 
-      for (let iBlock = 0; iBlock < promises.length; iBlock += MAX_IN_PROCESS) {
-        await doBlock(iBlock);
-      }
-      return results;
-    };
-
-    await throttledPromiseAll(
-      instances.map(
-        (async instance => {
-          try {
-            await this['mountBot'](instance);
-
-            if (this.bar1) {
-              this.bar1.update(i++, { botId: instance.botId });
-            }
-          } catch (error) {
-            GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
-          }
-        }).bind(this)
-      )
-    );
     if (this.bar1) {
       this.bar1.stop();
     }
+    const opts = {
+      pingSendTimeout: null,
+      keepAliveTimeout: null,
+      listeners: {
+        unsubscribed(subscriptions: number): void { },
+        subscribed(subscriptions: number): void { },
+        disconnected(remoteId: string, connections: number): void { },
+        connected(remoteId: string, connections: number): void { },
+        messageIn(...params): void {
+          GBLogEx.info(0, '[IN] ' + params);
+        },
+        messageOut(...params): void {
+          GBLogEx.info(0, '[OUT] ' + params);
+        }
+      }
+    };
+
+    function getRemoteId(ctx: Koa.Context) {
+      return '1'; // share a single session for now, real impl could use cookies or some other meaning for HTTP sessions
+    }
+
+    let proxies = {};
+    await CollectionUtil.asyncForEach(instances, async instance => {
+      const proxy = {
+        dk: new DialogKeywords(),
+        wa: new WebAutomationServices(),
+        sys: new SystemKeywords(),
+        dbg: new DebuggerService(),
+        img: new ImageProcessingServices()
+      };
+      proxies[instance.botId] = proxy;
+    });
+
+    GBServer.globals.server.dk = createRpcServer(
+      proxies,
+      createKoaHttpServer(GBVMService.API_PORT, getRemoteId, { prefix: `api/v3` }),
+      opts
+    );
+
+    GBLogEx.info(0, 'API RPC HTTP Server started.');
+
+
 
     // // Loads schedules.
     // GBLog.info(`Preparing SET SCHEDULE dialog calls...`);
@@ -255,7 +286,7 @@ export class GBMinService {
   /**
    * Unmounts the bot web site (default.gbui) secure domain, if any.
    */
-  public async unloadDomain(instance: IGBInstance) {}
+  public async unloadDomain(instance: IGBInstance) { }
 
   /**
    * Mount the instance by creating an BOT Framework bot object,
@@ -297,11 +328,11 @@ export class GBMinService {
     if (Fs.existsSync(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
-    
+
     const gbai = DialogKeywords.getGBAIPath(min.botId);
     let dir = `work/${gbai}/cache`;
-    const botId  = gbai.replace(/\.[^/.]+$/, "");
-    
+    const botId = gbai.replace(/\.[^/.]+$/, "");
+
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
@@ -332,7 +363,7 @@ export class GBMinService {
 
     // Loads Named Entity data for this bot.
 
-    await KBService.RefreshNER(min);
+    // TODO: await KBService.RefreshNER(min);
 
     // Calls the loadBot context.activity for all packages.
 
@@ -452,7 +483,7 @@ export class GBMinService {
 
         if (min.whatsAppDirectLine != undefined && instance.whatsappServiceKey !== null) {
           if (!(await min.whatsAppDirectLine.check(min))) {
-            const error = `WhatsApp API lost connection.`;
+            const error = `WhatsApp API lost connection for: ${min.botId}.`;
             GBLog.error(error);
             res.status(500).send(error);
 
@@ -532,9 +563,8 @@ export class GBMinService {
         min.instance.authenticatorTenant,
         '/oauth2/authorize'
       );
-      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
-        min.instance.marketplaceId
-      }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.marketplaceId
+        }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
       GBLog.info(`HandleOAuthRequests: ${authorizationUrl}.`);
       res.redirect(authorizationUrl);
     });
@@ -743,18 +773,16 @@ export class GBMinService {
       await min.whatsAppDirectLine.setup(true);
     } else {
       const minBoot = GBServer.globals.minBoot as any;
-      if (minBoot.whatsappServiceKey) {
-        min.whatsAppDirectLine = new WhatsappDirectLine(
-          min,
-          min.botId,
-          min.instance.whatsappBotKey,
-          minBoot.instance.whatsappServiceKey,
-          minBoot.instance.whatsappServiceNumber,
-          minBoot.instance.whatsappServiceUrl,
-          group
-        );
-        await min.whatsAppDirectLine.setup(false);
-      }
+      min.whatsAppDirectLine = new WhatsappDirectLine(
+        min,
+        min.botId,
+        min.instance.whatsappBotKey,
+        minBoot.instance.whatsappServiceKey,
+        minBoot.instance.whatsappServiceNumber,
+        minBoot.instance.whatsappServiceUrl,
+        group
+      );
+      await min.whatsAppDirectLine.setup(false);
     }
 
     // Setups default BOT Framework dialogs.
@@ -853,7 +881,7 @@ export class GBMinService {
 
     // Default activity processing and handler.
 
-    const handler =  async context => {
+    const handler = async context => {
       // Handle activity text issues.
 
       if (!context.activity.text) {
@@ -1035,9 +1063,8 @@ export class GBMinService {
           await this.processEventActivity(min, user, context, step);
         }
       } catch (error) {
-        const msg = `ERROR: ${error.message} ${error.error ? error.error.body : ''} ${
-          error.error ? (error.error.stack ? error.error.stack : '') : ''
-        }`;
+        const msg = `ERROR: ${error.message} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''
+          }`;
         GBLog.error(msg);
 
         await min.conversationalService.sendText(
@@ -1053,7 +1080,7 @@ export class GBMinService {
     try {
       await adapter['processActivity'](req, res, handler);
     } catch (error) {
-      if (error.code === 401){
+      if (error.code === 401) {
         GBLog.error('Calling processActivity due to Signing Key could not be retrieved error.');
         await adapter['processActivity'](req, res, handler);
       }

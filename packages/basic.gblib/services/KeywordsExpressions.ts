@@ -32,6 +32,8 @@
 
 'use strict';
 
+import { GBVMService } from "./GBVMService.js";
+
 /**
  * Image processing services of conversation to be called by BASIC.
  */
@@ -292,9 +294,9 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `${$1} = await sys.find({pid: pid, handle: page, args:[${$2}])\n
-        if (!${$1}) {s
-          await dk.talk ({pid: pid, ${$3}})\n;
+        return `${$1} = await sys.find({pid: pid, handle: page, args:[${$2}]})\n
+        if (!${$1}) {
+          await dk.talk ({pid: pid, text: ${$3}})\n;
           return -1;
         }
         `;
@@ -601,7 +603,12 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(talk)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        if ($3.substr(0, 1) !== '"') {
+        $3 = GBVMService.normalizeQuotes($3);
+
+        // Uses auto quote if this is a frase with more then one word.
+
+        if (/\s/.test($3) && $3.substr(0, 1) !== '"') {
+        
           $3 = `"${$3}"`;
         }
         return `await dk.talk ({pid: pid, text: ${$3}})`;
@@ -755,15 +762,19 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*save\s*(.*)\s*as\s*(.*)/gim,
+      /^\s*save\s*(\w+)\s*as\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.saveFile({pid: pid, file: ${$2}, data: ${$1}})`;
       }
     ];
+    
     keywords[i++] = [
-      /^\s*(save)(\s*)(.*)/gim,
-      ($0, $1, $2, $3) => {
-        return `await sys.save({pid: pid, args: [${$3}]})`;
+      /^\s*(save)(\s*)(.*\.xlsx)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        $3 = $3.replace (/\'/g, "")
+        $3 = $3.replace (/\"/g, "")
+        $4 = $4.substr(2)
+        return `await sys.save({pid: pid,file: "${$3}" , args: [${$4}]})`;
       }
     ];
 

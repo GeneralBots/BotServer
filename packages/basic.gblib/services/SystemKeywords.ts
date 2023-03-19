@@ -236,6 +236,7 @@ export class SystemKeywords {
     const gbaiName = DialogKeywords.getGBAIPath(min.botId);
     const browser = await GBSSR.createBrowser(null);
     const page = await browser.newPage();
+    await page.minimize();
 
     // Includes the associated CSS related to current theme.
 
@@ -544,7 +545,7 @@ export class SystemKeywords {
     }
 
     try {
-      data = GBServer.globals.files[data].data;
+      data = GBServer.globals.files[data].data; // TODO
       await client.api(`${baseUrl}/drive/root:/${path}/${file}:/content`).put(data);
     } catch (error) {
       if (error.code === 'itemNotFound') {
@@ -562,9 +563,8 @@ export class SystemKeywords {
    * @exaple SAVE "customers.xlsx", name, email, phone, address, city, state, country
    *
    */
-  public async save({ pid, args }): Promise<any> {
+  public async save({ pid,file, args }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    const file = args[0];
     args.shift();
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
@@ -589,7 +589,7 @@ export class SystemKeywords {
     const address = `A2:${this.numberToLetters(args.length - 1)}2`;
     for (let index = 0; index < args.length; index++) {
       let value = args[index];
-      if (value && this.isValidDate(value)) {
+      if (value && await this.isValidDate({pid, dt:value})) {
         value = `'${value}`;
       }
       body.values[0][index] = value;
@@ -699,8 +699,8 @@ export class SystemKeywords {
 
     // MAX LINES property.
 
-    let maxLines;
-    if (user && params && params.maxLines) {
+    let maxLines = 5000;
+    if (params && params.maxLines) {
       if (params.maxLines.toString().toLowerCase() !== 'default') {
         maxLines = Number.parseInt(params.maxLines).valueOf();
       }
@@ -718,7 +718,7 @@ export class SystemKeywords {
       page = WebAutomationServices.getPageByHandle(handle);
     }
 
-    if (page['$eval'] && WebAutomationServices.isSelector(file)) {
+    if (handle &&page['$eval'] && WebAutomationServices.isSelector(file)) {
       const container = page['frame'] ? page['frame'] : page;
       const originalSelector = file;
 
@@ -857,10 +857,10 @@ export class SystemKeywords {
 
       if (this.isValidHour(filter.value)) {
         filter.dataType = fixed ? fixed : 'hourInterval';
-      } else if (this.isValidDate(filter.value)) {
+      } else if (await this.isValidDate({pid, dt: filter.value})) {
         filter.value = SystemKeywords.getDateFromLocaleString(pid, filter.value, contentLocale);
         filter.dataType = fixed ? fixed : 'date';
-      } else if (this.isValidNumber(filter.value)) {
+      } else if (await this.isValidNumber({pid, number: filter.value})) {
         filter.value = Number.parseInt(filter.value);
         filter.dataType = fixed ? fixed : 'number';
       } else {
@@ -893,7 +893,7 @@ export class SystemKeywords {
         switch (filter.dataType) {
           case 'string':
             const v1 = GBConversationalService.removeDiacritics(result.toLowerCase().trim());
-            const v2 = GBConversationalService.removeDiacritics(filter.toLowerCase().trim());
+            const v2 = GBConversationalService.removeDiacritics(filter.value.toLowerCase().trim());
 
             switch (filter.operator) {
               case '=':
@@ -1003,7 +1003,7 @@ export class SystemKeywords {
           const propertyName = header[colIndex];
           let value = xlRow[colIndex];
           if (value && value.charAt(0) === "'") {
-            if (this.isValidDate(value.substr(1))) {
+            if (await this.isValidDate({pid, dt:value.substr(1)})) {
               value = value.substr(1);
             }
           }
@@ -1650,7 +1650,7 @@ export class SystemKeywords {
         const propertyName = header[colIndex];
         let value = xlRow[colIndex];
         if (value && value.charAt(0) === "'") {
-          if (this.isValidDate(value.substr(1))) {
+          if (await this.isValidDate({pid, dt:value.substr(1)})) {
             value = value.substr(1);
           }
         }
@@ -1702,13 +1702,13 @@ export class SystemKeywords {
           }
         }
       } else {
-        let args = [file];
+        let args = [];
         let keys = Object.keys(row);
         for (let j = 0; j < keys.length; j++) {
           args.push(row[keys[j]]);
         }
 
-        await this.save({ pid, args });
+        await this.save({ pid,file, args });
         adds++;
       }
     }

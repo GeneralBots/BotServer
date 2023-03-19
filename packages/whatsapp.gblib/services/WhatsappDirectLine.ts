@@ -101,10 +101,10 @@ export class WhatsappDirectLine extends GBService {
       whatsappServiceKey === 'internal'
         ? 'GeneralBots'
         : whatsappServiceNumber.indexOf(';') > -1
-        ? 'maytapi'
-        : whatsappServiceKey !== 'internal'
-        ? 'graphapi'
-        : 'chatapi';
+          ? 'maytapi'
+          : whatsappServiceKey !== 'internal'
+            ? 'graphapi'
+            : 'chatapi';
     this.groupId = groupId;
   }
 
@@ -172,7 +172,7 @@ export class WhatsappDirectLine extends GBService {
           });
           client.on('ready', async () => {
             GBLog.verbose(`GBWhatsApp: Emptying chat list for ${this.botId}...`);
-
+            // TODO: await client.pupPage['minimize']();
             // Keeps the chat list cleaned.
             const chats = await client.getChats();
             await CollectionUtil.asyncForEach(chats, async chat => {
@@ -192,8 +192,15 @@ export class WhatsappDirectLine extends GBService {
           });
           client.initialize();
         };
-        createClient.bind(this)();
+        if (setUrl){
+          createClient.bind(this)();
+        }
+        else
+        {
+          this.customClient = minBoot.whatsAppDirectLine.customClient;
+        }
         setUrl = false;
+
         break;
       case 'chatapi':
         options = {
@@ -650,8 +657,7 @@ export class WhatsappDirectLine extends GBService {
         await this.printMessages(response.obj.activities, conversationId, from, fromName);
       } catch (err) {
         GBLog.error(
-          `Error calling printMessages on Whatsapp channel ${err.data === undefined ? err : err.data} ${
-            err.errObj ? err.errObj.message : ''
+          `Error calling printMessages on Whatsapp channel ${err.data === undefined ? err : err.data} ${err.errObj ? err.errObj.message : ''
           }`
         );
       }
@@ -941,7 +947,7 @@ export class WhatsappDirectLine extends GBService {
           id = req.from.split('@')[0];
           senderName = req._data.notifyName;
           text = req.body;
-
+          botId = this.botId;
           break;
 
         case 'chatapi':
@@ -992,11 +998,14 @@ export class WhatsappDirectLine extends GBService {
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
+      if  (botNumber){
+        user = await sec.updateUserInstance(user.userSystemId, urlMin.instance.instanceId);
+      }
       let activeMin;
 
       // Processes group behaviour.
 
-      text = text.replace(/\@\d+ /gi, '');
+        text = text.replace(/\@\d+ /gi, '');
 
       let group;
       if (provider === 'chatapi') {
@@ -1120,15 +1129,25 @@ export class WhatsappDirectLine extends GBService {
               res.end();
             }
           } else {
+            let t;
             activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
             if (activeMin === undefined) {
               activeMin = GBServer.globals.minBoot;
-              await (activeMin as any).whatsAppDirectLine.sendToDevice(
+              t = (activeMin as any).whatsAppDirectLine;
+              await t.sendToDevice(
                 id,
                 `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`
               );
             }
-            await (activeMin as any).whatsAppDirectLine.received(req, res);
+            else {
+              if ((activeMin as any).whatsAppDirectLine) {
+                t = (activeMin as any).whatsAppDirectLine;
+              } else {
+                t = (GBServer.globals.minBoot as any).whatsAppDirectLine;
+              }
+            }
+
+            t.received(req, res);
           }
         }
       } else {

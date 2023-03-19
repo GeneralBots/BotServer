@@ -109,50 +109,7 @@ export class GBBasicPackage implements IGBPackage {
   }
   public async loadBot(min: GBMinInstance): Promise<void> {
     const botId = min.botId;
-
-    const opts = {
-      pingSendTimeout: null,
-      keepAliveTimeout: null,
-      listeners: {
-        unsubscribed(subscriptions: number): void {},
-        subscribed(subscriptions: number): void {},
-        disconnected(remoteId: string, connections: number): void {},
-        connected(remoteId: string, connections: number): void {},
-        messageIn(...params): void {
-          GBLogEx.info(min, '[IN] ' + params);
-        },
-        messageOut(...params): void {
-          GBLogEx.info(min, '[OUT] ' + params);
-        }
-      }
-    };
-
-    function getRemoteId(ctx: Koa.Context) {
-      return '1'; // share a single session for now, real impl could use cookies or some other meaning for HTTP sessions
-    }
-    let instances: IGBInstance[];
-    instances = await min.core.loadInstances();
-    let proxies = {};
-    await CollectionUtil.asyncForEach(instances, async instance => {
-      const proxy = {
-        dk: new DialogKeywords(),
-        wa: new WebAutomationServices(),
-        sys: new SystemKeywords(),
-        dbg: new DebuggerService(),
-        img: new ImageProcessingServices()
-      };
-      proxies[instance.botId] = proxy;
-    });
-
-    GBServer.globals.server.dk = createRpcServer(
-      proxies,
-      createKoaHttpServer(GBVMService.API_PORT, getRemoteId, { prefix: `api/v3` }),
-      opts
-    );
-
-    GBLogEx.info(min, 'API RPC HTTP Server started at http://localhost:' + GBVMService.API_PORT);
-
-    GBServer.globals.debuggers[botId] = {};
+   GBServer.globals.debuggers[botId] = {};
     GBServer.globals.debuggers[botId].state = 0;
     GBServer.globals.debuggers[botId].breaks = [];
     GBServer.globals.debuggers[botId].stateInfo = 'Stopped';
