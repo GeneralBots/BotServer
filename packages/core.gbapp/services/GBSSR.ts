@@ -295,7 +295,9 @@ export class GBSSR {
     if (!min) {
       min = req.url === '/'
         ? minBoot
-        : GBServer.globals.minInstances.filter(p => p.instance.activationCode.toLowerCase() === botId.toLowerCase())[0];
+        : GBServer.globals.minInstances.filter(p =>
+          p.instance.activationCode ? p.instance.activationCode.toLowerCase() === botId.toLowerCase()
+            : null)[0];
     }
     if (!min) {
       botId = minBoot.botId;
