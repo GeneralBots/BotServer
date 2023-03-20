@@ -1042,7 +1042,7 @@ export class WhatsappDirectLine extends GBService {
         }
       }
 
-      // Detects if the welcome message is enabled.z
+      // Detects if the welcome message is enabled.
 
       if (process.env.WHATSAPP_WELCOME_DISABLED !== 'true') {
         // Tries to find if user wants to switch bots.
