@@ -803,7 +803,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   private async createStorage(group: string, serverName: string, name: string, location: string) {
     const params = {
-      sku: { name: 'Basic' },
+      sku: { name: 'Free' },
       createMode: 'Default',
       location: location
     };
