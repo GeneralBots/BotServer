@@ -359,6 +359,8 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     GBLog.info(`Enabling resource providers...`);
     await this.enableResourceProviders('Microsoft.BotService');
+    await this.enableResourceProviders('Microsoft.Web');
+    await this.enableResourceProviders('Microsoft.Sql');
 
     GBLog.info(`Deploying Deploy Group (It may take a few minutes)...`);
     await this.createDeployGroup(name, instance.cloudLocation);
