@@ -50,7 +50,7 @@ import { createRpcServer } from '@push-rpc/core';
 import { createHttpKoaMiddleware } from '@push-rpc/http';
 import { HttpServerOptions } from '@push-rpc/http/dist/server.js';
 import { GBServer } from '../../src/app.js';
-import { SocketServer } from '@push-rpc/core';
+import {   } from '@push-rpc/core';
 import * as koaBody from 'koa-body';
 import { GBVMService } from './services/GBVMService.js';
 import { GBLogEx } from '../core.gbapp/services/GBLogEx.js';
@@ -67,7 +67,7 @@ export function createKoaHttpServer(
   app.use(cors({ origin: '*' }));
   app.use(koaBody.koaBody({ multipart: true }));
   app.use(middleware);
-  const server = app.listen(port);
+  const server =   app.listen(port);
   const SERVER_TIMEOUT = 60 * 1000;
   server.timeout = SERVER_TIMEOUT;
 
