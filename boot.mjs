@@ -13,7 +13,7 @@ console.log(`██      █     ███   █ █     ██  ██ ██  
 console.log(`██  ███ ████  █ ██  █ ████  █████  ██████ ██      ████   █   █   █    ██     `);
 console.log(`██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █    `);
 console.log(` █████  █████ █   ███ █████ ██  ██ ██  ██ ██████  ████   █████   █   ███  3.0`);
-process.stdout.write(`   botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch}`);
+process.stdout.write(`   botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
 
 var now = () => {
   return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC';
@@ -28,7 +28,8 @@ try {
   };
   var processDist = () => {
     if (!Fs.existsSync('dist')) {
-      console.log(`${now()} - Compiling...`);
+      console.log(`\n`);
+      console.log(`Generall Bots: Compiling...`);
       exec(Path.join(__dirname, 'node_modules/.bin/tsc'), (err, stdout, stderr) => {
         if (err) {
           console.error(err);
@@ -44,7 +45,8 @@ try {
   // Installing modules if it has not been done yet.
 
   if (!Fs.existsSync('node_modules')) {
-    console.log(`${now()} - Installing modules for the first time, please wait...`);
+    console.log(`\n`);
+    console.log(`Generall Bots: Installing modules for the first time, please wait...`);
     exec('npm install', (err, stdout, stderr) => {
       if (err) {
         console.error(err);

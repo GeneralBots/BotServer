@@ -39,7 +39,7 @@
 import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { Messages } from '../strings.js';
-import * as phone from 'google-libphonenumber';
+import * as phone from 'google-libphonenumber';   
 
 /**
  * Dialogs for handling Menu control.

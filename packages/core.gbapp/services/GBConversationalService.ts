@@ -304,6 +304,17 @@ export class GBConversationalService {
     return GBMinService.userMobile(step);
   }
 
+  public async sendFile2(
+    min: GBMinInstance,
+    step: GBDialogStep,
+    mobile: string,
+    url: string,
+    caption: string, 
+    channel: string
+  ): Promise<any> {
+    return await this.sendFile(min, step, mobile, url , caption);
+  }
+
   public async sendFile(
     min: GBMinInstance,
     step: GBDialogStep,

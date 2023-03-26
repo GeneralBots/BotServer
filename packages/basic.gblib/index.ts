@@ -36,39 +36,31 @@
 
 'use strict';
 
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { GuaribasSchedule } from '../core.gbapp/models/GBModel.js';
 import { Sequelize } from 'sequelize-typescript';
-import { DialogKeywords } from './services/DialogKeywords.js';
-import { SystemKeywords } from './services/SystemKeywords.js';
-import { WebAutomationServices } from './services/WebAutomationServices.js';
-import { ImageProcessingServices } from './services/ImageProcessingServices.js';
-import { DebuggerService } from './services/DebuggerService.js';
 import Koa from 'koa';
 import cors from '@koa/cors';
-import { createRpcServer } from '@push-rpc/core';
 import { createHttpKoaMiddleware } from '@push-rpc/http';
 import { HttpServerOptions } from '@push-rpc/http/dist/server.js';
 import { GBServer } from '../../src/app.js';
-import {   } from '@push-rpc/core';
+import { SocketServer } from '@push-rpc/core';
 import * as koaBody from 'koa-body';
-import { GBVMService } from './services/GBVMService.js';
-import { GBLogEx } from '../core.gbapp/services/GBLogEx.js';
-import { CollectionUtil } from 'pragmatismo-io-framework';
 
 export function createKoaHttpServer(
   port: number,
   getRemoteId: (ctx: Koa.Context) => string,
   opts: Partial<HttpServerOptions> = {}
 ): SocketServer {
-  const { onError, onConnection, middleware } = createHttpKoaMiddleware(getRemoteId, opts);
+  const { onError, onConnection, middleware } = 
+    createHttpKoaMiddleware(getRemoteId, opts);
 
   const app = new Koa();
   app.use(cors({ origin: '*' }));
   app.use(koaBody.koaBody({ multipart: true }));
   app.use(middleware);
   const server =   app.listen(port);
-  const SERVER_TIMEOUT = 60 * 1000;
+  const SERVER_TIMEOUT = 60 * 60 * 24 * 1000; // Equals to client RPC set .
   server.timeout = SERVER_TIMEOUT;
 
   return {

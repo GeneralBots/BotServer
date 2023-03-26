@@ -46,7 +46,7 @@ import { Messages } from '../strings.js';
 import * as Fs from 'fs';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
-import phoneUtil from 'google-libphonenumber';
+import phoneUtil from  'google-libphonenumber';
 import phone from 'phone';
 import DateDiff from 'date-diff';
 import tesseract from 'node-tesseract-ocr';
@@ -58,7 +58,9 @@ import { WebAutomationServices } from './WebAutomationServices.js';
 import urljoin from 'url-join';
 import QrScanner from 'qr-scanner';
 import pkg from 'whatsapp-web.js';
+import { ActivityTypes } from 'botbuilder';
 const { List, Buttons } = pkg;
+import mime from 'mime-types';
 
 /**
  * Default check interval for user replay
@@ -204,28 +206,28 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit({ }) { }
+  public async exit({}) {}
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ pid }) { }
+  public async getActiveTasks({ pid }) {}
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ pid, dealName, contact, company, amount }) { }
+  public async createDeal({ pid, dealName, contact, company, amount }) {}
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ pid, name }) { }
+  public async fndContact({ pid, name }) {}
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -495,7 +497,7 @@ export class DialogKeywords {
    */
   public async sendFileTo({ pid, mobile, filename, caption }) {
     GBLog.info(`BASIC: SEND FILE TO '${mobile}',filename '${filename}'.`);
-    return await this.internalSendFile({ pid, mobile, filename, caption });
+    return await this.internalSendFile({ pid, mobile, channel: null, filename, caption });
   }
 
   /**
@@ -505,9 +507,10 @@ export class DialogKeywords {
    *
    */
   public async sendFile({ pid, filename, caption }) {
+    const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
+    GBLog.info(`BASIC: SEND FILE (to: ${user.userSystemId},filename '${filename}'.`);
     const mobile = await this.userMobile({ pid });
-    GBLog.info(`BASIC: SEND FILE (current: ${mobile},filename '${filename}'.`);
-    return await this.internalSendFile({ pid, mobile, filename, caption });
+    return await this.internalSendFile({ pid, channel: proc.channel, mobile, filename, caption });
   }
 
   /**
@@ -676,7 +679,7 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu({ }) {
+  public async showMenu({}) {
     // https://github.com/GeneralBots/BotServer/issues/237
     // return await beginDialog('/menu');
   }
@@ -1031,25 +1034,15 @@ export class DialogKeywords {
   static getGBAIPath(botId, packageType = null, packageName = null) {
     let gbai = `${botId}.gbai`;
     if (!packageType && !packageName) {
-      return GBConfigService.get('DEV_GBAI') ?
-        GBConfigService.get('DEV_GBAI') :
-        gbai;
+      return GBConfigService.get('DEV_GBAI') ? GBConfigService.get('DEV_GBAI') : gbai;
     }
 
     if (GBConfigService.get('DEV_GBAI')) {
       gbai = GBConfigService.get('DEV_GBAI');
-      botId  = gbai.replace(/\.[^/.]+$/, "");
-      return urljoin(GBConfigService.get('DEV_GBAI'),
-        packageName ?
-          packageName :
-          `${botId}.${packageType}`);
-    }
-    else {
-
-      return urljoin(gbai,
-        packageName ?
-          packageName :
-          `${botId}.${packageType}`);
+      botId = gbai.replace(/\.[^/.]+$/, '');
+      return urljoin(GBConfigService.get('DEV_GBAI'), packageName ? packageName : `${botId}.${packageType}`);
+    } else {
+      return urljoin(gbai, packageName ? packageName : `${botId}.${packageType}`);
     }
   }
 
@@ -1094,7 +1087,8 @@ export class DialogKeywords {
     return {
       min,
       user,
-      params
+      params,
+      proc
     };
   }
 
@@ -1121,21 +1115,22 @@ export class DialogKeywords {
   /**
    * Processes the sending of the file.
    */
-  private async internalSendFile({ pid, mobile, filename, caption }) {
+  private async internalSendFile({ pid, channel, mobile, filename, caption }) {
     // Handles SEND FILE TO mobile,element in Web Automation.
 
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const element = filename._page ? filename._page : filename.screenshot ? filename : null;
+    let url;
 
     if (element) {
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
       const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
       await element.screenshot({ path: localName, fullPage: true });
 
-      const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
       GBLog.info(`BASIC: WebAutomation: Sending the file ${url} to mobile ${mobile}.`);
-      await min.conversationalService.sendFile(min, null, mobile, url, caption);
+
     }
 
     // Handles Markdown.
@@ -1148,25 +1143,37 @@ export class DialogKeywords {
 
       await min.conversationalService['playMarkdown'](min, md, DialogKeywords.getChannel(), mobile);
     } else {
-
       const gbaiName = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
 
       GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
-      let url: string;
+
       if (!filename.startsWith('https://')) {
-        url = urlJoin(
-          GBServer.globals.publicAddress,
-          'kb',
-          gbaiName,
-          'assets',
-          filename
-        );
+        url = urlJoin(GBServer.globals.publicAddress, 'kb', gbaiName, 'assets', filename);
       } else {
         url = filename;
       }
-
-      await min.conversationalService.sendFile(min, null, mobile, url, caption);
     }
+
+    if (url){
+      const reply = { type: ActivityTypes.Message, text: caption };
+
+      const imageData = await (await fetch(url)).arrayBuffer();
+      const base64Image = Buffer.from(imageData).toString('base64');
+      const contentType = mime.lookup(url);
+      reply['attachments'] = [];
+      reply['attachments'].push({
+        name: filename,
+        contentType: contentType,
+        contentUrl: `data:${contentType};base64,${base64Image}`
+      });
+
+      if (channel === 'omnichannel') {
+        await min.conversationalService.sendFile(min, null, mobile, url, caption);
+      } else {
+        await min.conversationalService['sendOnConversation'](min, user, reply);
+      }
+    }
+
   }
   /**
    * Generates a new QRCode.

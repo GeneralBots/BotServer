@@ -52,6 +52,7 @@ import { KeywordsExpressions } from './KeywordsExpressions.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { SystemKeywords } from './SystemKeywords.js';
+import lineReplace from 'line-replace';
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -113,7 +114,7 @@ export class GBVMService extends GBService {
     }
 
     // Process node_modules install.
-    const node_modules = urlJoin(folder, 'node_modules');
+    const node_modules = urlJoin(process.env.PWD, folder, 'node_modules');
     if (!Fs.existsSync(node_modules)) {
       const packageJson = `
             {
@@ -136,6 +137,34 @@ export class GBVMService extends GBService {
       GBLogEx.info(min, `BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
       const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
       child_process.execSync(`${npmPath} install`, { cwd: folder });
+
+      // // Hacks push-rpc to put timeout.
+
+      // const inject1 = `
+      // const { AbortController } = require("node-abort-controller");
+      // var controller_1 = new AbortController();
+      // var signal = controller_1.signal;
+      // setTimeout(function () { controller_1.abort(); }, 24 * 60 * 60 * 1000);`;
+      // const inject2 = `signal: signal,`;
+      // const js = Path.join(process.env.PWD, folder, 'node_modules/@push-rpc/http/dist/client.js');
+
+      // lineReplace({
+      //   file: js,
+      //   line: 75,
+      //   text: inject1,
+      //   addNewLine: true,
+      //   callback: ({ file, line, text, replacedText, error }) => {
+      //     lineReplace({
+      //       file: js,
+      //       line: 82,
+      //       text: inject2,
+      //       addNewLine: true,
+      //       callback: ({ file, line, text, replacedText, error }) => {
+      //         GBLogEx.info(min, `BASIC: Patching node_modules for ${min.botId} done.`);
+      //       }
+      //     });
+      //   }
+      // });
     }
 
     // Hot swap for .vbs files.
@@ -209,16 +238,17 @@ export class GBVMService extends GBService {
       const createHttpClient = require("@push-rpc/http").createHttpClient;
 
       // Setups interprocess communication from .gbdialog run-time to the BotServer API.
-      
+      const optsRPC = {callTimeout: this.callTimeout};
       let url;
+
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/dk';
-      const dk = (await createRpcClient(0, () => createHttpClient(url))).remote;
+      const dk = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/sys';
-      const sys = (await createRpcClient(0, () => createHttpClient(url))).remote;
+      const sys = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/wa';
-      const wa = (await createRpcClient(0, () => createHttpClient(url))).remote;
+      const wa = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/img';
-      const img = (await createRpcClient(0, () => createHttpClient(url))).remote;
+      const img = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
       
       // Unmarshalls Local variables from server VM.
 
@@ -227,6 +257,7 @@ export class GBVMService extends GBService {
       let username = this.username;
       let mobile = this.mobile;
       let from = this.from;
+      let channel = this.channel;
       let ENTER = this.ENTER;
       let headers = this.headers;
       let data = this.data;
@@ -302,7 +333,7 @@ export class GBVMService extends GBService {
     text = text.replace(/\”/gm, '"');
     text = text.replace(/\‘/gm, "'");
     text = text.replace(/\’/gm, "'");
-    
+
     return text;
   }
 
@@ -372,17 +403,18 @@ export class GBVMService extends GBService {
     }
 
     const botId = min.botId;
-    const path = DialogKeywords.getGBAIPath(min.botId,`gbdialog`);
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbdialog`);
     const gbdialogPath = urlJoin(process.cwd(), 'work', path);
     const scriptPath = urlJoin(gbdialogPath, `${text}.js`);
 
     let code = min.sandBoxMap[text];
-
+    const channel = step? step.context.activity.channelId : 'web';
     const pid = GBAdminService.getNumberIdentifier();
     GBServer.globals.processes[pid] = {
       pid: pid,
       userId: user.userId,
-      instanceId: min.instance.instanceId
+      instanceId: min.instance.instanceId,
+      channel: channel
     };
     const dk = new DialogKeywords();
     const sys = new SystemKeywords();
@@ -400,7 +432,9 @@ export class GBVMService extends GBService {
     sandbox['httpPs'] = '';
     sandbox['pid'] = pid;
     sandbox['contentLocale'] = contentLocale;
-
+    sandbox['callTimeout'] =  60 * 60 * 24 * 1000;
+    sandbox['channel'] = channel;
+    
     let result;
 
     try {
@@ -411,7 +445,7 @@ export class GBVMService extends GBService {
           console: 'inherit',
           wrapper: 'commonjs',
           require: {
-            builtin: ['stream', 'http', 'https', 'url', 'zlib', 'net', 'tls', 'crypto', ],
+            builtin: ['stream', 'http', 'https', 'url', 'zlib', 'net', 'tls', 'crypto'],
             root: ['./'],
             external: true,
             context: 'sandbox'

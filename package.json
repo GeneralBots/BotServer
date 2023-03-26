@@ -35,7 +35,7 @@
     "build-gbui": "cd packages/default.gbui && echo SKIP_PREFLIGHT_CHECK=true >.env &&  npm install && npm run build",
     "build-docs": "typedoc --options typedoc.json src/",
     "test": "node test.js",
-    "start": "NODE_NO_WARNINGS=1 node ./boot.mjs --loader ts-node/esm --require ./suppress-node-warnings.cjs ",
+    "start": "NODE_NO_WARNINGS=1 node ./boot.mjs --loader ts-node/esm --require ./suppress-node-warnings.cjs",
     "reverse-proxy": "node_modules/.bin/ngrok http 4242",
     "watch:build": "tsc --watch",
     "posttypedoc": "shx cp .nojekyll docs/reference/.nojekyll",
@@ -119,9 +119,11 @@
     "koa": "2.13.4",
     "koa-body": "6.0.1",
     "koa-router": "12.0.0",
+    "line-replace": "2.0.1",
     "lodash": "4.17.21",
     "luxon": "3.1.0",
     "mammoth": "1.5.1",
+    "mime-types": "^2.1.35",
     "moment": "1.3.0",
     "ms-rest-azure": "3.0.0",
     "nexmo": "2.9.1",
@@ -182,6 +184,7 @@
     "yarn": "1.22.19"
   },
   "devDependencies": {
+    "@types/qrcode": "1.5.0",
     "@types/url-join": "4.0.1",
     "ban-sensitive-files": "1.9.18",
     "commitizen": "4.2.2",

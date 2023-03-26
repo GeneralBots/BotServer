@@ -15,7 +15,6 @@
       "args": [
         "--no-deprecation", 
         "--loader ts-node/esm", 
-        "--openssl-legacy-provider",
         "--require ${workspaceRoot}/suppress-node-warnings.cjs", 
       ],
       "skipFiles": [

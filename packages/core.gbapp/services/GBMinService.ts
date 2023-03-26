@@ -462,7 +462,7 @@ export class GBMinService {
 
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
 
-    GBDeployer.mountGBKBAssets(`${instance.botId}.gbkb`, instance.botId, `${instance.botId}.gbkb`);
+    GBDeployer.mountGBKBAssets(`${botId}.gbkb`, botId, `${botId}.gbkb`);
   }
 
   public static isChatAPI(req: any, res: any) {

@@ -3,13 +3,13 @@
 ECHO General Bots Command Line
 
 IF EXIST node_modules goto COMPILE
-ECHO Installing Packages for the first time use...
+ECHO Installing Packages for the first time use (it may take several minutes)...
 CALL npm install --silent
 
 :COMPILE
 IF EXIST dist goto ALLSET
 ECHO Compiling...
-CALL node_modules\.bin\tsc
+npm run build
 
 :ALLSET
-node boot.mjs
+npm run start
