@@ -265,6 +265,7 @@ export class GBVMService extends GBService {
       let httpUsername = this.httpUsername;
       let httpPs = this.httpPs;
       let page = null;
+      let today = this.today;
 
       for(i in this.variables) { 
           global[i] = this.variables[i];
@@ -282,7 +283,6 @@ export class GBVMService extends GBService {
       const base64 =  (v) => { return (async () => { return await dk.getCoded({v}) })(); };
       const tolist =  (v) => { return (async () => { return await dk.getToLst({v}) })(); };
       const now =  (v) => { return (async () => { return await dk.getNow({v}) })(); };
-      const today =  (v) => { return (async () => { return await dk.getToday({v}) })(); };
 
       ${code}
 
@@ -434,6 +434,7 @@ export class GBVMService extends GBService {
     sandbox['contentLocale'] = contentLocale;
     sandbox['callTimeout'] =  60 * 60 * 24 * 1000;
     sandbox['channel'] = channel;
+    sandbox['today'] = await dk.getToday;
     
     let result;
 
