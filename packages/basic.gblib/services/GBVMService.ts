@@ -283,7 +283,6 @@ export class GBVMService extends GBService {
       const hour = (v) => { return (async () => { return await dk.getHourFromDate({v}) })(); };
       const base64 =  (v) => { return (async () => { return await dk.getCoded({v}) })(); };
       const tolist =  (v) => { return (async () => { return await dk.getToLst({v}) })(); };
-      const now =  (v) => { return (async () => { return await dk.getNow({v}) })(); };
 
       ${code}
 
