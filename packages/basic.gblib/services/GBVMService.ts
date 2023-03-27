@@ -266,6 +266,7 @@ export class GBVMService extends GBService {
       let httpPs = this.httpPs;
       let page = null;
       let today = this.today;
+      let now = this.now;
 
       for(i in this.variables) { 
           global[i] = this.variables[i];
@@ -434,8 +435,8 @@ export class GBVMService extends GBService {
     sandbox['contentLocale'] = contentLocale;
     sandbox['callTimeout'] =  60 * 60 * 24 * 1000;
     sandbox['channel'] = channel;
-    sandbox['today'] = await dk.getToday;
-    
+    sandbox['today'] = await dk.getToday({ pid });
+    sandbox['now'] = await dk.getNow({ pid });
     let result;
 
     try {
