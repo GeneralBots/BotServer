@@ -212,24 +212,6 @@ export class GBServer {
           await minService.buildMin(instances);
 
           if (process.env.ENABLE_WEBLOG) {
-            const admins = {
-              admin: { password: process.env.ADMIN_PASS }
-            };
-
-            // ... some not authenticated middlewares
-
-            server.use(async (req, res, next) => {
-              if (req.originalUrl.startsWith('/logs')) {
-                const user = auth(req);
-                if (!user || !admins[user.name] || admins[user.name].password !== user.pass) {
-                  res.set('WWW-Authenticate', 'Basic realm="example"');
-                  return res.status(401).send();
-                }
-              } else {
-                return next();
-              }
-            });
-
             // If global log enabled, reorders transports adding web logging.
 
             const loggers = GBLog.getLogger();
@@ -237,7 +219,24 @@ export class GBServer {
           }
 
           server.get('*', async (req, res, next) => {
-            await GBSSR.ssrFilter(req, res, next);
+            if (req.originalUrl.startsWith('/logs')) {
+              if (process.env.ENABLE_WEBLOG) {
+                const admins = {
+                  admin: { password: process.env.ADMIN_PASS }
+                };
+
+                // ... some not authenticated middlewares.
+                const user = auth(req);
+                if (!user || !admins[user.name] || admins[user.name].password !== user.pass) {
+                  res.set('WWW-Authenticate', 'Basic realm="example"');
+                  return res.status(401).send();
+                }
+              } else {
+                await GBSSR.ssrFilter(req, res, next);
+              }
+            } else {
+              await GBSSR.ssrFilter(req, res, next);
+            }
           });
 
           GBLog.info(`The Bot Server is in RUNNING mode...`);
