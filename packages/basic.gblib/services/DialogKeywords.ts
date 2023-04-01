@@ -46,7 +46,7 @@ import { Messages } from '../strings.js';
 import * as Fs from 'fs';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
-import phoneUtil from  'google-libphonenumber';
+import phoneUtil from 'google-libphonenumber';
 import phone from 'phone';
 import DateDiff from 'date-diff';
 import tesseract from 'node-tesseract-ocr';
@@ -536,7 +536,7 @@ export class DialogKeywords {
     this['id'] = new SystemKeywords().getRandomId();
   }
 
-  private isUserSystemParam(name: string): Boolean {
+  public static isUserSystemParam(name: string): Boolean {
     const names = [
       'welcomed',
       'loaded',
@@ -553,7 +553,7 @@ export class DialogKeywords {
     return names.indexOf(name) > -1;
   }
 
-  private async setOption({ pid, name, value }) {
+  public static async setOption({ pid, name, value }) {
     // if (this.isUserSystemParam(name)) {
     //   throw new Error(`Not possible to define ${name} as it is a reserved system param name.`);
     // }
@@ -564,7 +564,7 @@ export class DialogKeywords {
     return { min, user, params };
   }
 
-  private async getOption({ pid, name }) {
+  public static async getOption({ pid, name }) {
     if (this.isUserSystemParam(name)) {
       throw new Error(`Not possible to retrieve ${name} system param.`);
     }
@@ -580,7 +580,7 @@ export class DialogKeywords {
    *
    */
   public async setMaxLines({ pid, count }) {
-    await this.setOption({ pid, name: 'maxLines', value: count });
+    await DialogKeywords.setOption({ pid, name: 'maxLines', value: count });
   }
 
   /**
@@ -590,7 +590,7 @@ export class DialogKeywords {
    *
    */
   public async setUserParam({ pid, name, value }) {
-    await this.setOption({ pid, name, value });
+    await DialogKeywords.setOption({ pid, name, value });
   }
 
   /**
@@ -600,7 +600,7 @@ export class DialogKeywords {
    *
    */
   public async getUserParam({ pid, name }) {
-    await this.getOption({ pid, name });
+    await DialogKeywords.getOption({ pid, name });
   }
 
   /**
@@ -610,7 +610,18 @@ export class DialogKeywords {
    *
    */
   public async setMaxColumns({ pid, count }) {
-    await this.setOption({ pid, name: 'setMaxColumns', value: count });
+    await DialogKeywords.setOption({ pid, name: 'setMaxColumns', value: count });
+  }
+
+  /**
+   * Defines a custom user filter for SET calls.
+   *
+   * @example SET FILTER "ColumnName=33"
+   *          SET "file.xlsx", "C", "200000"
+   *
+   */
+  public async setFilter({ pid, value }) {
+    await DialogKeywords.setOption({ pid, name: 'filter', value });
   }
 
   /**
@@ -621,7 +632,7 @@ export class DialogKeywords {
    */
   public async setWholeWord({ pid, on }) {
     const value = on.trim() === 'on';
-    await this.setOption({ pid, name: 'wholeWord', value: value });
+    await DialogKeywords.setOption({ pid, name: 'wholeWord', value: value });
   }
 
   /**
@@ -632,7 +643,7 @@ export class DialogKeywords {
    */
   public async setFilterTypes({ pid, types }) {
     const value = types;
-    await this.setOption({ pid, name: 'filterTypes', value: value });
+    await DialogKeywords.setOption({ pid, name: 'filterTypes', value: value });
   }
 
   /**
@@ -643,7 +654,7 @@ export class DialogKeywords {
    */
   public async setTheme({ pid, theme }) {
     const value = theme.trim();
-    await this.setOption({ pid, name: 'theme', value: value });
+    await DialogKeywords.setOption({ pid, name: 'theme', value: value });
   }
 
   /**
@@ -654,7 +665,7 @@ export class DialogKeywords {
    */
   public async setTranslatorOn({ pid, on }) {
     const value = on.trim() === 'on';
-    await this.setOption({ pid, name: 'translatorOn', value: value });
+    await DialogKeywords.setOption({ pid, name: 'translatorOn', value: value });
   }
 
   /**
@@ -1130,13 +1141,9 @@ export class DialogKeywords {
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
       GBLog.info(`BASIC: WebAutomation: Sending the file ${url} to mobile ${mobile}.`);
-
-    }
-
-    else  if (filename.url)
-    {
+    } else if (filename.url) {
       url = filename.url;
-    } 
+    }
 
     // Handles Markdown.
     else if (filename.indexOf('.md') > -1) {
@@ -1159,7 +1166,7 @@ export class DialogKeywords {
       }
     }
 
-    if (url){
+    if (url) {
       const reply = { type: ActivityTypes.Message, text: caption };
 
       const imageData = await (await fetch(url)).arrayBuffer();
@@ -1178,7 +1185,6 @@ export class DialogKeywords {
         await min.conversationalService['sendOnConversation'](min, user, reply);
       }
     }
-
   }
   /**
    * Generates a new QRCode.

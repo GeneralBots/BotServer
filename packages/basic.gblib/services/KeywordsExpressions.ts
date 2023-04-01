@@ -433,6 +433,13 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(set filter)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await dk.setFilter ({pid: pid, ${$3}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*set param \s*(.*)\s*as\s*(.*)/gim,
       ($0, $1, $2) => {
         return `await dk.setUserParam ({pid: pid, ${$1}}, ${$2})`;

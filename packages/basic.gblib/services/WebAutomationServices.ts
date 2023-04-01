@@ -72,9 +72,12 @@ export class WebAutomationServices {
 
     return 4294967296 * (2097151 & h2) + (h1 >>> 0);
   };
-
-  public async getCloseHandles({ pid }) {
+  
+  public async closeHandles({ pid }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
+    await DialogKeywords.setOption({ pid, name: "filter", value: null });
+
     // Releases previous allocated OPEN semaphores.
 
     let keys = Object.keys(GBServer.globals.webSessions);

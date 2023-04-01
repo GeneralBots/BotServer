@@ -268,6 +268,8 @@ export class GBVMService extends GBService {
       let today = this.today;
       let now = this.now;
 
+      // Transfers NLP auto variables into global object.
+
       for(i in this.variables) { 
           global[i] = this.variables[i];
       }   
@@ -286,10 +288,9 @@ export class GBVMService extends GBService {
 
       ${code}
 
-      await wa.getCloseHandles({pid: pid});
+      await wa.closeHandles({pid: pid});
 
     })(); 
-  
 `;
     Fs.writeFileSync(jsfile, code);
     GBLogEx.info(min, `[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);

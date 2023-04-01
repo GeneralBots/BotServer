@@ -483,6 +483,16 @@ export class SystemKeywords {
       return;
     }
 
+    // TODO: Add a semaphore between FILTER and SET.
+
+    // Processes FILTER option to ensure parallel SET calls.
+
+    const filter = await DialogKeywords.getOption({ pid, name });
+    if (filter) {
+      const row = this.find({ pid, handle: null, args: [filter] });
+      address += row['line'];
+    }
+
     // Handles calls for BASIC persistence on sheet files.
 
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
@@ -536,7 +546,7 @@ export class SystemKeywords {
     GBLog.info(`BASIC: Saving '${file}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    const path = DialogKeywords.getGBAIPath(min.botId,`gbdrive`);
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
 
     // Checks if it is a GB FILE object.
 
@@ -563,7 +573,7 @@ export class SystemKeywords {
    * @exaple SAVE "customers.xlsx", name, email, phone, address, city, state, country
    *
    */
-  public async save({ pid,file, args }): Promise<any> {
+  public async save({ pid, file, args }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     args.shift();
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
@@ -589,7 +599,7 @@ export class SystemKeywords {
     const address = `A2:${this.numberToLetters(args.length - 1)}2`;
     for (let index = 0; index < args.length; index++) {
       let value = args[index];
-      if (value && await this.isValidDate({pid, dt:value})) {
+      if (value && (await this.isValidDate({ pid, dt: value }))) {
         value = `'${value}`;
       }
       body.values[0][index] = value;
@@ -622,7 +632,8 @@ export class SystemKeywords {
     } else {
       GBLog.info(`BASIC: GET '${addressOrHeaders}' in '${file}'.`);
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-      const botId = min.instance.botId;''
+      const botId = min.instance.botId;
+      ('');
       const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
 
       let document = await this.internalGetDocument(client, baseUrl, path, file);
@@ -689,7 +700,7 @@ export class SystemKeywords {
    * @see NPM package data-forge
    *
    */
-  public async find({ pid, handle,  args }): Promise<any> {
+  public async find({ pid, handle, args }): Promise<any> {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const file = args[0];
     args.shift();
@@ -714,11 +725,11 @@ export class SystemKeywords {
     let results;
     let header, rows;
     let page;
-    if (handle){
+    if (handle) {
       page = WebAutomationServices.getPageByHandle(handle);
     }
 
-    if (handle &&page['$eval'] && WebAutomationServices.isSelector(file)) {
+    if (handle && page['$eval'] && WebAutomationServices.isSelector(file)) {
       const container = page['frame'] ? page['frame'] : page;
       const originalSelector = file;
 
@@ -857,10 +868,10 @@ export class SystemKeywords {
 
       if (this.isValidHour(filter.value)) {
         filter.dataType = fixed ? fixed : 'hourInterval';
-      } else if (await this.isValidDate({pid, dt: filter.value})) {
+      } else if (await this.isValidDate({ pid, dt: filter.value })) {
         filter.value = SystemKeywords.getDateFromLocaleString(pid, filter.value, contentLocale);
         filter.dataType = fixed ? fixed : 'date';
-      } else if (await this.isValidNumber({pid, number: filter.value})) {
+      } else if (await this.isValidNumber({ pid, number: filter.value })) {
         filter.value = Number.parseInt(filter.value);
         filter.dataType = fixed ? fixed : 'number';
       } else {
@@ -1003,7 +1014,7 @@ export class SystemKeywords {
           const propertyName = header[colIndex];
           let value = xlRow[colIndex];
           if (value && value.charAt(0) === "'") {
-            if (await this.isValidDate({pid, dt:value.substr(1)})) {
+            if (await this.isValidDate({ pid, dt: value.substr(1) })) {
               value = value.substr(1);
             }
           }
@@ -1103,7 +1114,6 @@ export class SystemKeywords {
     const botId = min.instance.botId;
     let path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
 
-
     // Extracts each part of path to call create folder to each
     // one of them.
 
@@ -1151,7 +1161,7 @@ export class SystemKeywords {
   public async shareFolder({ pid, folder, email, message }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-    const path = DialogKeywords.getGBAIPath(min.botId,`gbdrive`);
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
     const root = urlJoin(path, folder);
 
     const src = await client.api(`${baseUrl}/drive/root:/${root}`).get();
@@ -1250,7 +1260,7 @@ export class SystemKeywords {
     dest = dest.replace(/\\/gi, '/');
 
     // Determines full path at source and destination.
-    const path = DialogKeywords.getGBAIPath(min.botId,`gbdrive`);
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
     const root = path;
     const srcPath = urlJoin(root, src);
     const dstPath = urlJoin(path, dest);
@@ -1650,7 +1660,7 @@ export class SystemKeywords {
         const propertyName = header[colIndex];
         let value = xlRow[colIndex];
         if (value && value.charAt(0) === "'") {
-          if (await this.isValidDate({pid, dt:value.substr(1)})) {
+          if (await this.isValidDate({ pid, dt: value.substr(1) })) {
             value = value.substr(1);
           }
         }
@@ -1708,7 +1718,7 @@ export class SystemKeywords {
           args.push(row[keys[j]]);
         }
 
-        await this.save({ pid,file, args });
+        await this.save({ pid, file, args });
         adds++;
       }
     }
