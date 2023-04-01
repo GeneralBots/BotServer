@@ -46,6 +46,9 @@ export class KeywordsExpressions {
           if (accum.isConcatting) {
             accum.soFar[accum.soFar.length - 1] += ',' + curr;
           } else {
+            if(curr===""){
+              curr = null;
+            }
             accum.soFar.push(curr);
           }
           if (curr.split('"').length % 2 == 0) {
