@@ -426,9 +426,9 @@ export class DialogKeywords {
   }
 
   /**
-   * Returns current time in format hh:dd.
+   * Returns current time in format hh:mm.
    *
-   * @example SAVE "contacts.xlsx", name, email, NOW
+   * @example NOW
    *
    */
   public async getNow({ pid }) {
@@ -1132,6 +1132,11 @@ export class DialogKeywords {
       GBLog.info(`BASIC: WebAutomation: Sending the file ${url} to mobile ${mobile}.`);
 
     }
+
+    else  if (filename.url)
+    {
+      url = filename.url;
+    } 
 
     // Handles Markdown.
     else if (filename.indexOf('.md') > -1) {

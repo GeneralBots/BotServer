@@ -684,7 +684,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(copy)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        const params = this.getParams($3, ['src', 'dst']);
+        const params = this.getParams($3, ['src', 'dest']);
         return `await sys.copyFile ({pid: pid, ${params}})`;
       }
     ];
@@ -692,7 +692,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(convert)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        const params = this.getParams($3, ['src', 'dst']);
+        const params = this.getParams($3, ['src', 'dest']);
         return `await sys.convert ({pid: pid, ${params}})`;
       }
     ];
@@ -727,9 +727,9 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*SCREENSHOT\s*(.*)/gim,
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*SCREENSHOT\s*(.*)/gim,
       ($0, $1, $2) => {
-        return `await wa.screenshot({pid: pid, handle: page, selector: ${$1}})`;
+        return `${$1} = await wa.screenshot({pid: pid, handle: page, selector: ${$1}})`;
       }
     ];
 
@@ -788,8 +788,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*BLUR\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `
-        ${$1} = await img.blur({pid: pid, args: [${$2}]})`;
+        return `${$1} = await img.blur({pid: pid, args: [${$2}]})`;
       }
     ];
 

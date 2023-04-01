@@ -316,7 +316,7 @@ export class WebAutomationServices {
   /**
    * Returns the screenshot of page or element
    *
-   * @example file = SCREENSHOT page
+   * @example file = SCREENSHOT "#selector"
    */
   public async screenshot({ pid, handle, selector }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
@@ -331,7 +331,7 @@ export class WebAutomationServices {
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
     GBLog.info(`BASIC: WebAutomation: Screenshot captured at ${url}.`);
 
-    return url;
+    return { data: null, localName: localName, url: url };
   }
 
   /**

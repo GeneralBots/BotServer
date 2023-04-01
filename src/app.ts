@@ -112,6 +112,10 @@ export class GBServer {
       GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''}`);
     });
 
+    process.on('SIGTERM', () => {
+      GBLog.info('SIGTERM signal received.');
+    });
+
     // Creates working directory.
 
     process.env.PWD = process.cwd();
