@@ -487,7 +487,7 @@ export class SystemKeywords {
 
     // Processes FILTER option to ensure parallel SET calls.
 
-    const filter = await DialogKeywords.getOption({ pid, name });
+    const filter = await DialogKeywords.getOption({ pid, name: 'filter' });
     if (filter) {
       const row = this.find({ pid, handle: null, args: [filter] });
       address += row['line'];
