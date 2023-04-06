@@ -98,7 +98,7 @@ import { WebAutomationServices } from '../../basic.gblib/services/WebAutomationS
 import { createKoaHttpServer } from '../../basic.gblib/index.js';
 import { DebuggerService } from '../../basic.gblib/services/DebuggerService.js';
 import { ImageProcessingServices } from '../../basic.gblib/services/ImageProcessingServices.js';
-
+import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices.js';
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
  */
@@ -237,13 +237,11 @@ export class GBMinService {
 
     GBLogEx.info(0, 'API RPC HTTP Server started.');
 
-
-
-    // // Loads schedules.
-    // GBLog.info(`Preparing SET SCHEDULE dialog calls...`);
-
-    // const service = new ScheduleServices();
-    // await service.scheduleAll();
+    // Loads schedules.
+    
+    GBLog.info(`Preparing SET SCHEDULE dialog calls...`);
+    const service = new ScheduleServices();
+    await service.scheduleAll();
 
     GBLog.info(`All Bot instances loaded.`);
   }
