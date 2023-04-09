@@ -486,6 +486,14 @@ export class SystemKeywords {
 
     // TODO: Add a semaphore between FILTER and SET.
 
+    // Processes FILTER option to ensure parallel SET calls.
+
+    const filter = await DialogKeywords.getOption({ pid, name: 'filter' });
+    if (filter) {
+      const row = this.find({ pid, handle: null, args: [filter] });
+      address += row['line'];
+    }
+
     // Handles calls for BASIC persistence on sheet files.
 
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);

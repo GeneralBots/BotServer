@@ -906,14 +906,23 @@ export class DialogKeywords {
           );
         };
 
-        const value = extractEntity(answer);
+        const parseDate = str => {
+          function pad(x){return (((''+x).length==2) ? '' : '0') + x; }
+          var m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+            , d = (m) ? new Date(m[3], m[2]-1, m[1]) : null
+            , matchesPadded = (d&&(str==[pad(d.getDate()),pad(d.getMonth()+1),d.getFullYear()].join('/')))
+            , matchesNonPadded = (d&&(str==[d.getDate(),d.getMonth()+1,d.getFullYear()].join('/')));
+          return (matchesPadded || matchesNonPadded) ? d : null;
+        }
 
-        if (value === null || value.length != 1) {
+        let value = parseDate(answer);
+
+        if (value === null) {
           await this.talk({ pid, text: 'Por favor, digite uma data no formato 12/12/2020.' });
           return await this.hear({ pid, kind, args });
         }
-
-        result = value;
+        value = new Date(value);
+        result = value.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
       } else if (kind === 'hour') {
         const extractEntity = (text: string) => {
           return text.match(/^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])?$/gi);
