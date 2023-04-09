@@ -166,7 +166,6 @@ export class GBMinService {
     // Calls mountBot event to all bots.
     let i = 1;
 
-
     if (instances.length > 1) {
       this.bar1 = new cliProgress.SingleBar(
         {
@@ -179,19 +178,20 @@ export class GBMinService {
       this.bar1.start(instances.length, i, { botId: 'Boot' });
     }
 
-
-    await CollectionUtil.asyncForEach(instances, (async instance => {
-      try {
-        await this['mountBot'](instance);
-      } catch (error) {
-        GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
-      }
-      finally {
-        if (this.bar1) {
-          this.bar1.update(i++, { botId: instance.botId });
+    await CollectionUtil.asyncForEach(
+      instances,
+      (async instance => {
+        try {
+          await this['mountBot'](instance);
+        } catch (error) {
+          GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
+        } finally {
+          if (this.bar1) {
+            this.bar1.update(i++, { botId: instance.botId });
+          }
         }
-      }
-    }).bind(this));
+      }).bind(this)
+    );
 
     if (this.bar1) {
       this.bar1.stop();
@@ -200,10 +200,10 @@ export class GBMinService {
       pingSendTimeout: null,
       keepAliveTimeout: null,
       listeners: {
-        unsubscribed(subscriptions: number): void { },
-        subscribed(subscriptions: number): void { },
-        disconnected(remoteId: string, connections: number): void { },
-        connected(remoteId: string, connections: number): void { },
+        unsubscribed(subscriptions: number): void {},
+        subscribed(subscriptions: number): void {},
+        disconnected(remoteId: string, connections: number): void {},
+        connected(remoteId: string, connections: number): void {},
         messageIn(...params): void {
           GBLogEx.info(0, '[IN] ' + params);
         },
@@ -236,8 +236,6 @@ export class GBMinService {
     );
 
     GBLogEx.info(0, 'API RPC HTTP Server started.');
-
-
 
     // // Loads schedules.
     // GBLog.info(`Preparing SET SCHEDULE dialog calls...`);
@@ -286,7 +284,7 @@ export class GBMinService {
   /**
    * Unmounts the bot web site (default.gbui) secure domain, if any.
    */
-  public async unloadDomain(instance: IGBInstance) { }
+  public async unloadDomain(instance: IGBInstance) {}
 
   /**
    * Mount the instance by creating an BOT Framework bot object,
@@ -331,7 +329,7 @@ export class GBMinService {
 
     const gbai = DialogKeywords.getGBAIPath(min.botId);
     let dir = `work/${gbai}/cache`;
-    const botId = gbai.replace(/\.[^/.]+$/, "");
+    const botId = gbai.replace(/\.[^/.]+$/, '');
 
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
@@ -563,8 +561,9 @@ export class GBMinService {
         min.instance.authenticatorTenant,
         '/oauth2/authorize'
       );
-      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.marketplaceId
-        }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
+        min.instance.marketplaceId
+      }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
       GBLog.info(`HandleOAuthRequests: ${authorizationUrl}.`);
       res.redirect(authorizationUrl);
     });
@@ -1065,8 +1064,9 @@ export class GBMinService {
           await this.processEventActivity(min, user, context, step);
         }
       } catch (error) {
-        const msg = `ERROR: ${error.message} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''
-          }`;
+        const msg = `ERROR: ${error.message} ${error.error ? error.error.body : ''} ${
+          error.error ? (error.error.stack ? error.error.stack : '') : ''
+        }`;
         GBLog.error(msg);
 
         await min.conversationalService.sendText(
@@ -1085,8 +1085,7 @@ export class GBMinService {
       if (error.code === 401) {
         GBLog.error('Calling processActivity due to Signing Key could not be retrieved error.');
         await adapter['processActivity'](req, res, handler);
-      }
-      else {
+      } else {
         throw error;
       }
     }
@@ -1275,7 +1274,9 @@ export class GBMinService {
     // Files in .gbdialog can be called directly by typing its name normalized into JS .
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
-    if (isVMCall) {
+    if (/create dialog|creative dialog|create a dialog|criar diálogo|criar diálogo/gi.test(context.activity.text)) {
+      await step.beginDialog('/dialog');
+    } else if (isVMCall) {
       await GBVMService.callVM(context.activity.text, min, step, user, this.deployer, false);
     } else if (context.activity.text.charAt(0) === '/') {
       const text = context.activity.text;

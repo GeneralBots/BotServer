@@ -50,6 +50,9 @@ import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
+import Fs from 'fs';
+import urlJoin from 'url-join';
+import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 
 /**
  * Dialog arguments.
@@ -78,6 +81,7 @@ export class AskDialog extends IGBDialog {
     min.dialogs.add(new WaterfallDialog('/answerEvent', AskDialog.getAnswerEventDialog(service, min)));
     min.dialogs.add(new WaterfallDialog('/answer', AskDialog.getAnswerDialog(min, service)));
     min.dialogs.add(new WaterfallDialog('/ask', AskDialog.getAskDialog(min)));
+    min.dialogs.add(new WaterfallDialog('/dialog', AskDialog.getLLVMDialog(min, service)));
   }
 
   private static getAskDialog(min: GBMinInstance) {
@@ -234,7 +238,7 @@ export class AskDialog extends IGBDialog {
         }
         // TODO: https://github.com/GeneralBots/BotServer/issues/9
         // else if (user.subjects && user.subjects.length > 0) {
-        //   // ...second time running Search, now with no filter.
+        //   // ..second time running Search, now with no filter.
 
         //   const resultsB = await service.ask(min.instance, text, searchScore, undefined);
 
@@ -304,6 +308,7 @@ export class AskDialog extends IGBDialog {
           }
           const CHATGPT_TIMEOUT = 60 * 1000;
           GBLog.info(`ChatGPT being used...`);
+
           const response = await GBServer.globals.chatGPT.sendMessage(text, { timeoutMs: CHATGPT_TIMEOUT });
 
           if (!response) {
@@ -360,6 +365,79 @@ export class AskDialog extends IGBDialog {
         }
 
         return await step.next();
+      }
+    ];
+  }
+
+  private static getLLVMDialog(min: GBMinInstance, service: KBService) {
+    return [
+      async step => {
+        if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
+          return await step.beginDialog('/auth');
+        } else {
+          return await step.next(step.options);
+        }
+      },
+      async step => {
+        return await min.conversationalService.prompt(min, step, 'Please, describe the dialog scene.');
+      },
+      async step => {
+        step.options.dialog = step.result;
+        return await min.conversationalService.prompt(min, step, 'How would you call this?');
+      },
+      async step => {
+        if (GBServer.globals.chatGPT) {
+          let input = `Write a BASIC program that ${step.options.dialog.toLowerCase()}. And does not explain.`;
+          
+          await min.conversationalService.sendText(min, step, 'Thank you. The dialog is being written right now...');
+
+          const CHATGPT_TIMEOUT = 3 * 60 * 1000;
+          GBLog.info(`ChatGPT Code: ${input}`);
+          let response = await GBServer.globals.chatGPT.sendMessage(input, {
+            timeoutMs: CHATGPT_TIMEOUT
+          });         
+
+          // Removes instructions, just code.
+
+          response = response.replace(/Copy code/gim, '\n');
+          let lines = response.split('\n')
+          let filteredLines = lines.filter(line => /\s*\d+\s*.*/.test(line))
+          response = filteredLines.join('\n');
+
+          // Gets dialog name and file handling
+
+          let  dialogName = step.result.replace('.', '');
+          const docx = urlJoin(`${min.botId}.gbdialog`, `${dialogName}.docx`);
+          const sys = new SystemKeywords();
+          const document = await sys.internalCreateDocument(min, docx, response);
+          await service.addQA(min, dialogName, dialogName); 
+
+          let message = `Waiting for publishing...`;
+          await min.conversationalService.sendText(min, step, message);
+
+          await step.replaceDialog('/publish', { confirm: true });
+          
+          message = `Dialog is ready! Let's run:`;
+          await min.conversationalService.sendText(min, step, message);
+
+
+          let sec = new SecService();
+          const member = step.context.activity.from;
+          const user = await sec.ensureUser(
+            min.instance.instanceId,
+            member.id,
+            member.name,
+            '',
+            'web',
+            member.name,
+            null
+          );
+
+          await step.endDialog();
+
+          await GBVMService.callVM(dialogName.toLowerCase(),
+           min, step, user, this.deployer, false);
+        }
       }
     ];
   }

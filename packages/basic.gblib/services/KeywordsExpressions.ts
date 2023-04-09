@@ -32,7 +32,9 @@
 
 'use strict';
 
-import { GBVMService } from "./GBVMService.js";
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { GBVMService } from './GBVMService.js';
+import Path from 'path';
 
 /**
  * Image processing services of conversation to be called by BASIC.
@@ -46,7 +48,7 @@ export class KeywordsExpressions {
           if (accum.isConcatting) {
             accum.soFar[accum.soFar.length - 1] += ',' + curr;
           } else {
-            if(curr===""){
+            if (curr === '') {
               curr = null;
             }
             accum.soFar.push(curr);
@@ -67,15 +69,20 @@ export class KeywordsExpressions {
     names.forEach(name => {
       let value = items[i];
       i++;
-      json = `${json} "${name}": ${value} ${names.length == i ? '' : ','}`;
+      json = `${json} "${name}": ${value === undefined ? null : value} ${names.length == i ? '' : ','}`;
     });
     json = `${json}`;
 
     return json;
   };
 
+  public static isNumber(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+  }
+
   /**
    * Returns the list of BASIC keyword and their JS match.
+   * Based on https://github.com/uweg/vbscript-to-typescript.
    */
   public static getKeywords() {
     // Keywords from General Bots BASIC.
@@ -91,14 +98,134 @@ export class KeywordsExpressions {
       return result;
     };
 
+    keywords[i++] = [
+      /^\s*INPUT(.*)/gim,
+      ($0, $1, $2) => {
+
+        let separator;
+        if ($1.indexOf(',')  > -1){
+          separator  = ',';
+        }
+        else if ($1.indexOf(';')  > -1){
+          separator  = ';';
+        }
+        let parts; 
+        if ( separator && (parts = $1.split(separator)) && parts.length > 1){
+          return `
+          TALK ${parts[0]}
+          HEAR ${parts[1]}`;
+        }
+        else
+        {
+          return `
+          HEAR ${$1}`;
+        }
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*WRITE(.*)/gim,
+      ($0, $1, $2) => {
+        return `PRINT${$1}`;
+      }
+    ];
+
     keywords[i++] = [/^\s*REM.*/gim, ''];
+
+    keywords[i++] = [/^\s*CLOSE.*/gim, ''];
+
+    // Always autoclose keyword.
+
+    keywords[i++] = [/^\s*CLOSE.*/gim, ''];
 
     keywords[i++] = [/^\s*\'.*/gim, ''];
 
     keywords[i++] = [
+      /^\s*PRINT ([\s\S]*)/gim,
+      ($0, $1, $2) => {
+        let sessionName;
+        let kind = null;
+        let pos;
+        $1 = $1.trim();
+
+        if ($1.substr(0, 1) === '#') {
+          let sessionName = $1.substr(1, $1.indexOf(',') - 1);
+          $1 = $1.replace(/\; \"\,\"/gi, '');
+          $1 = $1.substr($1.indexOf(',') + 1);
+
+          let separator;
+          if ($1.indexOf(',')  > -1){
+            separator  = ',';
+          }
+          else if ($1.indexOf(';')  > -1){
+            separator  = ';';
+          }
+          let items;
+          if (separator && (items = $1.split(separator)) && items.length > 1) {
+            return `await sys.save({pid: pid, file: files[${sessionName}], args:[${items.join(',')}]})`;
+          } else {
+            return `await sys.set({pid: pid, file: files[${sessionName}], address: col++, name: "${items[0]}",   value:  ${items[0]}})`;
+          }
+        } else {
+          return `await dk.talk({pid: pid, text: ${$1}})`;
+        }
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*open([\s\S]*)/gim,
+      ($0, $1, $2) => {
+        let sessionName;
+        let kind = null;
+        let pos;
+
+        $1 = $1.replace('FOR APPEND', '');
+        $1 = $1.replace('FOR OUTPUT', '');
+
+
+
+        if ((pos = $1.match(/\s*AS\s*\#/gi))) {
+          kind = 'AS';
+        } else if ((pos = $1.match(/\s*WITH\s*\#/gi))) {
+          kind = 'WITH';
+        }
+
+        if (pos) {
+          let part = $1.substr($1.lastIndexOf(pos[0]));
+          sessionName = `${part.substr(part.indexOf('#') + 1)}`;
+          $1 = $1.substr(0, $1.lastIndexOf(pos[0]));
+        }
+        $1 = $1.trim();
+        if (!$1.startsWith('"') && !$1.startsWith("'")) {
+          $1 = `"${$1}"`;
+        }
+        const params = this.getParams($1, ['url', 'username', 'password']);
+
+        // Checks if it is opening a file or a webpage.
+
+        if (kind === 'AS' && KeywordsExpressions.isNumber(sessionName)) {
+          const jParams = JSON.parse(`{${params}}`);
+          const filename = `${jParams.url.substr(0, jParams.url.lastIndexOf("."))}.xlsx`;
+          let code = 
+          `
+           col = 1
+           await sys.save({pid: pid,file: "${filename}", args: [id] })
+           await dk.setFilter ({pid: pid, value:  "id=" + id })
+           files[${sessionName}] = "${filename}"  
+          `;
+          return code;
+        } else {
+          sessionName = `"${sessionName}"`;
+          kind = `"${kind}"`;
+          return `page = await wa.openPage({pid: pid, handle: page, sessionKind: ${kind}, sessionName: ${sessionName}, ${params}})`;
+        }
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*SELECT\s*(.*)/gim,
       ($0, $1, $2) => {
-        let tableName = /\s*FROM\s*(\w+)/.exec($2)[1];
+        let tableName = /\s*FROM\s*(\w+\$*)/.exec($2)[1];
         let sql = `SELECT ${$2}`.replace(tableName, '?');
         return `${$1} = await sys.executeSQL({pid: pid, data:${$1}, sql:"${sql}", tableName:"${tableName}"})\n`;
       }
@@ -113,8 +240,6 @@ export class KeywordsExpressions {
         return 'if (' + condition + ') {';
       }
     ];
-
-    // Based on https://github.com/uweg/vbscript-to-typescript.
 
     keywords[i++] = [/^\s*else(?!{)/gim, '}\nelse {'];
 
@@ -141,30 +266,42 @@ export class KeywordsExpressions {
     keywords[i++] = [/^\s*loop *$/gim, '}'];
 
     keywords[i++] = [
-      /^\s*open\s*(.*)/gim,
+      /^\s*open([\s\S]*)/gim,
       ($0, $1, $2) => {
         let sessionName;
         let kind = null;
         let pos;
 
-        if (pos = $1.match(/\s*AS\s*\#/)) {
-          kind = '"AS"';
-        } else if (pos = $1.match(/\s*WITH\s*\#/)) {
-          kind = '"WITH"';
+        $1 = $1.replace(' FOR APPEND', '');
+
+        if ((pos = $1.match(/\s*AS\s*\#/))) {
+          kind = 'AS';
+        } else if ((pos = $1.match(/\s*WITH\s*\#/))) {
+          kind = 'WITH';
         }
 
         if (pos) {
           let part = $1.substr($1.lastIndexOf(pos[0]));
-          sessionName = `"${part.substr(part.indexOf('#') + 1)}"`;
+          sessionName = `${part.substr(part.indexOf('#') + 1)}`;
           $1 = $1.substr(0, $1.lastIndexOf(pos[0]));
         }
-
+        $1 = $1.trim();
         if (!$1.startsWith('"') && !$1.startsWith("'")) {
           $1 = `"${$1}"`;
         }
         const params = this.getParams($1, ['url', 'username', 'password']);
 
-        return `page = await wa.openPage({pid: pid, handle: page, sessionKind: ${kind}, sessionName: ${sessionName}, ${params}})`;
+        // Checks if it is opening a file or a webpage.
+
+        if (kind === 'AS' && KeywordsExpressions.isNumber(sessionName)) {
+          const jParams = JSON.parse(`{${params}}`);
+          const filename = `${Path.basename(jParams.url, 'txt')}xlsx`;
+          return `files[${sessionName}] = "${filename}"`;
+        } else {
+          sessionName = `"${sessionName}"`;
+          kind = `"${kind}"`;
+          return `page = await wa.openPage({pid: pid, handle: page, sessionKind: ${kind}, sessionName: ${sessionName}, ${params}})`;
+        }
       }
     ];
 
@@ -176,112 +313,112 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as (\w+( \w+)*.xlsx)/gim,
+      /^\s*hear (\w+\$*) as (\w+( \w+)*.xlsx)/gim,
       ($0, $1, $2) => {
         return `${$1} = await dk.hear({pid: pid, kind:"sheet", arg: "${$2}"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*login/gim,
+      /^\s*hear (\w+\$*) as\s*login/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"login"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*email/gim,
+      /^\s*hear (\w+\$*) as\s*email/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"email"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*integer/gim,
+      /^\s*hear (\w+\$*) as\s*integer/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"integer"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*file/gim,
+      /^\s*hear (\w+\$*) as\s*file/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"file"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*boolean/gim,
+      /^\s*hear (\w+\$*) as\s*boolean/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"boolean"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*name/gim,
+      /^\s*hear (\w+\$*) as\s*name/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"name"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*date/gim,
+      /^\s*hear (\w+\$*) as\s*date/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"date"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*hour/gim,
+      /^\s*hear (\w+\$*) as\s*hour/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"hour"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*phone/gim,
+      /^\s*hear (\w+\$*) as\s*phone/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"phone"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*money/gim,
+      /^\s*hear (\w+\$*) as\s*money/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"money")}`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*qrcode/gim,
+      /^\s*hear (\w+\$*) as\s*qrcode/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"qrcode")}`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*language/gim,
+      /^\s*hear (\w+\$*) as\s*language/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"language")}`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*zipcode/gim,
+      /^\s*hear (\w+\$*) as\s*zipcode/gim,
       ($0, $1) => {
         return `${$1} = await dk.hear({pid: pid, kind:"zipcode")}`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+) as\s*(.*)/gim,
+      /^\s*hear (\w+\$*) as\s*(.*)/gim,
       ($0, $1, $2) => {
         return `${$1} = await dk.hear({pid: pid, kind:"menu", args: [${$2}]})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(hear)\s*(\w+)/gim,
+      /^\s*(hear)\s*(\w+\$*)/gim,
       ($0, $1, $2) => {
         return `${$2} = await dk.hear({pid: pid})`;
       }
@@ -345,21 +482,21 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*sort\s*(\w+)\s*by(.*)/gim,
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*sort\s*(\w+\$*)\s*by(.*)/gim,
       ($0, $1, $2, $3) => {
         return `${$1} = await sys.sortBy({pid: pid, array: ${$2}, memberName: "${$3}"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*see\s*text\s*of\s*(\w+)\s*as\s*(\w+)\s*/gim,
+      /^\s*see\s*text\s*of\s*(\w+\$*)\s*as\s*(\w+\$*)\s*/gim,
       ($0, $1, $2, $3) => {
         return `${$2} = await sys.seeText({pid: pid, url: ${$1})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*see\s*caption\s*of\s*(\w+)\s*as(.*)/gim,
+      /^\s*see\s*caption\s*of\s*(\w+\$*)\s*as(.*)/gim,
       ($0, $1, $2, $3) => {
         return `${$2} = await sys.seeCaption({pid: pid, url: ${$1})`;
       }
@@ -618,7 +755,6 @@ export class KeywordsExpressions {
         // Uses auto quote if this is a frase with more then one word.
 
         if (/\s/.test($3) && $3.substr(0, 1) !== '"') {
-        
           $3 = `"${$3}"`;
         }
         return `await dk.talk ({pid: pid, text: ${$3}})`;
@@ -772,19 +908,19 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*save\s*(\w+)\s*as\s*(.*)/gim,
+      /^\s*save\s*(\w+\$*)\s*as\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.saveFile({pid: pid, file: ${$2}, data: ${$1}})`;
       }
     ];
-    
+
     keywords[i++] = [
       /^\s*(save)(\s*)(.*\.xlsx)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
-        $3 = $3.replace (/\'/g, "")
-        $3 = $3.replace (/\"/g, "")
-        $4 = $4.substr(2)
-        return `await sys.save({pid: pid,file: "${$3}" , args: [${$4}]})`;
+        $3 = $3.replace(/\'/g, '');
+        $3 = $3.replace(/\"/g, '');
+        $4 = $4.substr(2);
+        return `await sys.save({pid: pid, file: "${$3}", args: [${$4}]})`;
       }
     ];
 

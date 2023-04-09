@@ -137,41 +137,13 @@ export class GBVMService extends GBService {
       GBLogEx.info(min, `BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
       const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
       child_process.execSync(`${npmPath} install`, { cwd: folder });
-
-      // // Hacks push-rpc to put timeout.
-
-      // const inject1 = `
-      // const { AbortController } = require("node-abort-controller");
-      // var controller_1 = new AbortController();
-      // var signal = controller_1.signal;
-      // setTimeout(function () { controller_1.abort(); }, 24 * 60 * 60 * 1000);`;
-      // const inject2 = `signal: signal,`;
-      // const js = Path.join(process.env.PWD, folder, 'node_modules/@push-rpc/http/dist/client.js');
-
-      // lineReplace({
-      //   file: js,
-      //   line: 75,
-      //   text: inject1,
-      //   addNewLine: true,
-      //   callback: ({ file, line, text, replacedText, error }) => {
-      //     lineReplace({
-      //       file: js,
-      //       line: 82,
-      //       text: inject2,
-      //       addNewLine: true,
-      //       callback: ({ file, line, text, replacedText, error }) => {
-      //         GBLogEx.info(min, `BASIC: Patching node_modules for ${min.botId} done.`);
-      //       }
-      //     });
-      //   }
-      // });
     }
 
     // Hot swap for .vbs files.
     const fullFilename = urlJoin(folder, filename);
     if (process.env.DEV_HOTSWAP) {
       Fs.watchFile(fullFilename, async () => {
-        await this.translateBASIC(fullFilename, mainName, min);
+        await this.translateBASIC(fullFilename, min);
         const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
         min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
       });
@@ -184,17 +156,17 @@ export class GBVMService extends GBService {
       const jsStat = Fs.statSync(jsfile);
       const interval = 30000; // If compiled is older 30 seconds, then recompile.
       if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
-        await this.translateBASIC(fullFilename, mainName, min);
+        await this.translateBASIC(fullFilename, min);
       }
     } else {
-      await this.translateBASIC(fullFilename, mainName, min);
+      await this.translateBASIC(fullFilename, min);
     }
     const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
     min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
     return filename;
   }
 
-  public async translateBASIC(filename: any, mainName: string, min: GBMinInstance) {
+  public async translateBASIC(filename: any, min: GBMinInstance) {
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = Fs.readFileSync(filename, 'utf8');
@@ -264,9 +236,11 @@ export class GBVMService extends GBService {
       let list = this.list;
       let httpUsername = this.httpUsername;
       let httpPs = this.httpPs;
-      let page = null;
       let today = this.today;
       let now = this.now;
+      let page = null;
+      let files = [];
+      let col = 1;
 
       // Transfers NLP auto variables into global object.
 
@@ -351,18 +325,25 @@ export class GBVMService extends GBService {
     var lines = code.split('\n');
     const keywords = KeywordsExpressions.getKeywords();
     let current = 41;
-    const map = {};
+    const map = {}; 
 
     for (let i = 1; i <= lines.length; i++) {
+      let line = lines[i - 1];
+
+      // Remove lines before statments.
+
+      line = line.replace(/^\s*\d+\s*/gi,'');
+
       for (let j = 0; j < keywords.length; j++) {
-        lines[i - 1] = lines[i - 1].replace(keywords[j][0], keywords[j][1]);
+        line = line.replace(keywords[j][0], keywords[j][1]);
       }
 
       //  Add additional lines returned from replacement.
 
-      let add = lines[i - 1].split(/\r\n|\r|\n/).length;
+      let add = line.split(/\r\n|\r|\n/).length;
       current = current + (add ? add : 0);
       map[i] = current;
+      lines[i - 1] = line;
     }
 
     code = `${lines.join('\n')}\n`;
@@ -419,7 +400,8 @@ export class GBVMService extends GBService {
     };
     const dk = new DialogKeywords();
     const sys = new SystemKeywords();
-
+    await dk.setFilter ({pid: pid, value: null });
+    
     sandbox['variables'] = variables;
     sandbox['id'] = sys.getRandomId();
     sandbox['username'] = await dk.userName({ pid });

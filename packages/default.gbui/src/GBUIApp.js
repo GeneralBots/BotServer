@@ -326,7 +326,7 @@ class GBUIApp extends React.Component {
             ref={chat => {
               this.chat = chat;
             }}
-            locale={'pt-br'}
+            locale={'en-us'}
             directLine={this.state.line}
             webSpeechPonyfillFactory={window.WebChat.createCognitiveServicesSpeechServicesPonyfillFactory({
               credentials: { authorizationToken: token, region: 'westus' }

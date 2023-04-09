@@ -559,7 +559,7 @@ export class DialogKeywords {
     // }
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     const sec = new SecService();
-    await sec.setParam(user.userId, name, value);
+    await sec.setParam(user.userId, name  , value);
     GBLog.info(`BASIC: ${name} = ${value} (botId: ${min.botId})`);
     return { min, user, params };
   }

@@ -529,7 +529,7 @@ export class KBService implements IGBKBService {
           const isBasic = answer.toLowerCase().startsWith('/basic');
           if (/TALK\s*\".*\"/gi.test(answer) || isBasic) {
             const code = isBasic ? answer.substr(6) : answer;
-            const path = DialogKeywords.getGBAIPath(min.botId,`gbdialog`);
+            const path = DialogKeywords.getGBAIPath(min.botId, `gbdialog`);
             const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
             const localName = Path.join('work', path, `${scriptName}`);
             Fs.writeFileSync(localName, code, { encoding: null });
@@ -604,17 +604,11 @@ export class KBService implements IGBKBService {
       answer.content.endsWith('.xlsx')
     ) {
       const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
-      const doc = urlJoin(
-        GBServer.globals.publicAddress,
-        'kb',
-        path,
-        'assets',
-        answer.content
-      );
+      const doc = urlJoin(GBServer.globals.publicAddress, 'kb', path, 'assets', answer.content);
       const url = `http://view.officeapps.live.com/op/view.aspx?src=${doc}`;
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.content.endsWith('.pdf')) {
-      const path = DialogKeywords.getGBAIPath(min.botId,`gbkb`);
+      const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
       const url = urlJoin('kb', path, 'assets', answer.content);
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
@@ -625,6 +619,37 @@ export class KBService implements IGBKBService {
       await min.conversationalService.sendText(min, step, answer.content);
       await min.conversationalService.sendEvent(min, step, 'stop', undefined);
     }
+  }
+
+  public async addQA(min, questionText, answerText) {
+    const pkg = await GuaribasPackage.findOne({
+      where: { instanceId: min.instance.instanceId }
+    });
+
+    const question = {
+      from: 'autodialog',
+      to: '',
+      subject1: '',
+      subject2: '',
+      subject3: '',
+      subject4: '',
+      content: questionText.replace(/["]+/g, ''),
+      instanceId: min.instance.instanceId,
+      skipIndex: false,
+      packageId: pkg.packageId
+    };
+    const answer = {
+      instanceId: min.instance.instanceId,
+      content: answerText,
+      format: '.txt',
+      media: null,
+      packageId: pkg.packageId,
+      prevId: 0
+    };
+    const a =await GuaribasAnswer.create(answer);
+    question['answerId'] = a.answerId;
+    const q = await GuaribasQuestion.create(question);
+    
   }
 
   public async importKbPackage(
@@ -692,9 +717,12 @@ export class KBService implements IGBKBService {
               'cache',
               `img-docx${GBAdminService.getRndReadableIdentifier()}.png`
             );
-            const url = urlJoin(GBServer.globals.publicAddress,
-              DialogKeywords.getGBAIPath(instance.botId).replace(/\.[^/.]+$/, "")
-              , 'cache', Path.basename(localName));
+            const url = urlJoin(
+              GBServer.globals.publicAddress,
+              DialogKeywords.getGBAIPath(instance.botId).replace(/\.[^/.]+$/, ''),
+              'cache',
+              Path.basename(localName)
+            );
             const buffer = await image.read();
             Fs.writeFileSync(localName, buffer, { encoding: null });
             return { src: url };
@@ -965,7 +993,7 @@ export class KBService implements IGBKBService {
         let category = categoryReg[1];
 
         if (category === 'number') {
-          min['nerEngine'].addRegexEntity('number','pt', '/d+/gi');
+          min['nerEngine'].addRegexEntity('number', 'pt', '/d+/gi');
         }
         if (nameReg) {
           let name = nameReg[1];
@@ -996,13 +1024,8 @@ export class KBService implements IGBKBService {
 
     GBLog.info(`[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
     const html = await GBSSR.getHTML(min);
-    let path = DialogKeywords.getGBAIPath(min.botId,`gbui`);
-     path = Path.join(
-      process.env.PWD,
-      'work',
-      path,
-      'index.html'
-    );
+    let path = DialogKeywords.getGBAIPath(min.botId, `gbui`);
+    path = Path.join(process.env.PWD, 'work', path, 'index.html');
     GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${path}.`);
     Fs.writeFileSync(path, html, 'utf8');
 

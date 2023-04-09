@@ -279,7 +279,7 @@ export class SecService extends GBService {
     {
       obj = {};
     }
-    obj['name'] = value;
+    obj[name] = value;
     user.params = JSON.stringify(obj);
     return await user.save();
   }

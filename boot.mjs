@@ -6,6 +6,7 @@ import { exec } from 'child_process';
 import pjson from './package.json' assert { type: 'json' };
 
 // Displays version of Node JS being used at runtime and others attributes.
+
 console.log(``);
 console.log(``);
 console.log(` █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ®  `);

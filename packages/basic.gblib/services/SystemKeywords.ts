@@ -58,6 +58,7 @@ import DynamicsWebApi from 'dynamics-web-api';
 import * as MSAL from '@azure/msal-node';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 import { WebAutomationServices } from './WebAutomationServices.js';
+import { KeywordsExpressions } from './KeywordsExpressions.js';
 
 /**
  * @fileoverview General Bots server core.
@@ -471,7 +472,7 @@ export class SystemKeywords {
    * @example SET page, "elementHTMLSelector", "text"
    *
    */
-  public async set({ pid, handle, file, address, value }): Promise<any> {
+  public async set({ pid, handle, file, address, value, name = null }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles calls for HTML stuff
@@ -485,14 +486,6 @@ export class SystemKeywords {
 
     // TODO: Add a semaphore between FILTER and SET.
 
-    // Processes FILTER option to ensure parallel SET calls.
-
-    const filter = await DialogKeywords.getOption({ pid, name });
-    if (filter) {
-      const row = this.find({ pid, handle: null, args: [filter] });
-      address += row['line'];
-    }
-
     // Handles calls for BASIC persistence on sheet files.
 
     GBLog.info(`BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
@@ -501,16 +494,53 @@ export class SystemKeywords {
 
     const botId = min.instance.botId;
     const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
+    let document = await this.internalGetDocument(client, baseUrl, path, file);
+    let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
+    let body = { values: [[]] };
 
+    // Processes FILTER option to ensure parallel SET calls.
+
+    const filter = await DialogKeywords.getOption({ pid, name: 'filter' });
+    let titleAddress;
+
+    if (filter) {
+      // Transforms address number (col index) to letter based.
+      // Eg.: REM This is A column and index automatically specified by filter.
+      //      SET file.xlsx, 1, 4000
+
+      if (KeywordsExpressions.isNumber(address)) {
+        address = `${this.numberToLetters(address)}`;
+        titleAddress = `${address}1:${address}1`;
+      }
+
+      // Processes SET FILTER directive to calculate address.
+
+      body.values[0][0] = 'id';
+      const addressId = 'A1:A1';
+      await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${addressId}')`
+        )
+        .patch(body);
+
+      const row = await this.find({ pid, handle: null, args: [file, filter] });
+      if (row) {
+        address += row['line']; // Eg.: "A" + 1 = "A1".
+      }
+    }
     address = address.indexOf(':') !== -1 ? address : address + ':' + address;
 
-    let document = await this.internalGetDocument(client, baseUrl, path, file);
+    if (titleAddress) {
+      body.values[0][0] = name.trim().replace(/[^a-zA-Z]/gi, '');
 
-    let body = { values: [[]] };
+      await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${titleAddress}')`
+        )
+        .patch(body);
+    }
+
     body.values[0][0] = value;
-
-    let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
-
     await client
       .api(
         `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
@@ -529,7 +559,10 @@ export class SystemKeywords {
     });
 
     if (!documents || documents.length === 0) {
-      throw `File '${file}' specified on GBasic command not found. Check the .gbdata or the .gbdialog associated.`;
+      throw new Error(
+        `File '${file}' specified on GBasic command not found. Check the .gbdata or the .gbdialog associated.`,
+        { cause: 404 }
+      );
     }
 
     return documents[0];
@@ -575,36 +608,84 @@ export class SystemKeywords {
    */
   public async save({ pid, file, args }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    args.shift();
+
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
     const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
 
-    let document = await this.internalGetDocument(client, baseUrl, path, file);
-    let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
+    let sheets;
+    let document;
+    try {
+      document = await this.internalGetDocument(client, baseUrl, path, file);
+      sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
+    } catch (e) {
+      if (e.cause === 404) {
+        // Creates the file.
 
-    await client
-      .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A2:DX2')/insert`
-      )
-      .post({});
+        const blank = Path.join(process.env.PWD, 'blank.xlsx');
+        const data = Fs.readFileSync(blank);
+        await client.api(`${baseUrl}/drive/root:/${path}/${file}:/content`).put(data);
 
-    if (args.length > 128) {
-      throw `File '${file}' has a SAVE call with more than 128 arguments. Check the .gbdialog associated.`;
+        // Tries to open again.
+
+        document = await this.internalGetDocument(client, baseUrl, path, file);
+        sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
+      } else {
+        throw e;
+      }
     }
 
+    let address;
     let body = { values: [[]] };
 
-    const address = `A2:${this.numberToLetters(args.length - 1)}2`;
+    // Processes FILTER option to ensure parallel SET calls.
+
+    const filter = await DialogKeywords.getOption({ pid, name: 'filter' });
+    if (filter) {
+
+      // Creates id row.
+
+      body.values[0][0] = 'id';
+      const addressId = 'A1:A1';
+      await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${addressId}')`
+        )
+        .patch(body);
+      body.values[0][0] = undefined   ;
+
+      // FINDs the filtered row to be updated.
+
+      const row = await this.find({ pid, handle: null, args: [file, filter] });
+      if (row) {
+        address = `A${row['line']}:${this.numberToLetters(args.length)}${row['line']}`;
+      }
+    }
+
+    // Editing or saving detection.
+
+    if (!address) {
+      await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A2:DX2')/insert`
+        )
+        .post({});
+      address = `A2:${this.numberToLetters(args.length - 1)}2`;
+    }
+
+    // Fills rows object to call sheet API.
+
     for (let index = 0; index < args.length; index++) {
       let value = args[index];
       if (value && (await this.isValidDate({ pid, dt: value }))) {
         value = `'${value}`;
       }
-      body.values[0][index] = value;
-    }
 
+      // If  filter is defined, skips id column.
+
+      body.values[0][filter ? index + 1 : index] = value;
+    }
     await client
       .api(
         `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
@@ -675,11 +756,7 @@ export class SystemKeywords {
   }
 
   public async isValidNumber({ pid, number }) {
-    const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    if (number === '') {
-      return false;
-    }
-    return !isNaN(number);
+    return KeywordsExpressions.isNumber(number);
   }
 
   public isValidHour({ pid, value }) {
@@ -1179,6 +1256,33 @@ export class SystemKeywords {
     await client.api(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/invite`).post(body);
   }
 
+  public async internalCreateDocument(min, path, content) {
+    GBLog.info(`BASIC: CREATE DOCUMENT '${path}...'`);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const tmpDocx = urlJoin(gbaiName, path);
+
+    // Templates a blank {content} tag inside the blank.docx.
+
+    const blank = Path.join(process.env.PWD, 'blank.docx');
+    let buf = Fs.readFileSync(blank);
+    let zip = new PizZip(buf);
+    let doc = new Docxtemplater();
+    doc.setOptions({ linebreaks: true });
+    doc.loadZip(zip);
+    doc.setData({ content: content }).render();
+    buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
+
+    // Performs the upload.
+
+    await client.api(`${baseUrl}/drive/root:/${tmpDocx}:/content`).put(buf);
+  }
+
+  public async createDocument({ pid, path, content }) {
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    this.internalCreateDocument(min, path, content);
+  }
+
   /**
    * Copies a drive file from a place to another .
    *
@@ -1224,8 +1328,9 @@ export class SystemKeywords {
         parentReference: { driveId: folder.parentReference.driveId, id: folder.id },
         name: `${Path.basename(dest)}`
       };
-
-      return await client.api(`${baseUrl}/drive/items/${srcFile.id}/copy`).post(destFile);
+      const file = await client.api(`${baseUrl}/drive/items/${srcFile.id}/copy`).post(destFile);
+      GBLog.info(`BASIC: FINISHED COPY '${src}' to '${dest}'`);
+      return file;
     } catch (error) {
       if (error.code === 'itemNotFound') {
         GBLog.info(`BASIC: COPY source file not found: ${srcPath}.`);
@@ -1234,7 +1339,6 @@ export class SystemKeywords {
       }
       throw error;
     }
-    GBLog.info(`BASIC: FINISHED COPY '${src}' to '${dest}'`);
   }
 
   /**
@@ -1468,10 +1572,6 @@ export class SystemKeywords {
     localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
     Fs.writeFileSync(localName, buf, { encoding: null });
 
-    // Loads the file as binary content.
-
-    let zip = new PizZip(buf);
-
     // Replace image path on all elements of data.
 
     const images = [];
@@ -1537,6 +1637,9 @@ export class SystemKeywords {
       }
     };
 
+    // Loads the file as binary content.
+
+    let zip = new PizZip(buf);
     let doc = new Docxtemplater();
     doc.setOptions({ paragraphLoop: true, linebreaks: true });
     doc.loadZip(zip);

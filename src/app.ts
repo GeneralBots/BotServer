@@ -52,11 +52,13 @@ import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer.js';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService.js';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
 import auth from 'basic-auth';
+import { ChatGPTAPIBrowser } from 'chatgpt';
 import child_process from 'child_process';
 import * as winston from 'winston-logs-display';
 import { RootData } from './RootData.js';
 import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
 import { Mutex } from 'async-mutex';
+import { GBVMService } from '../packages/basic.gblib/services/GBVMService.js';
 
 /**
  * General Bots open-core entry point.
@@ -82,7 +84,7 @@ export class GBServer {
         GBLog.error(`Running TEST_SHELL ERROR: ${error}...`);
       }
     }
-
+  
     const server = express();
 
     GBServer.globals.server = server;
@@ -215,6 +217,22 @@ export class GBServer {
           GBServer.globals.minService = minService;
           await minService.buildMin(instances);
 
+          if (process.env.OPENAI_EMAIL) {
+            if (!GBServer.globals.chatGPT) {
+              GBServer.globals.chatGPT = new ChatGPTAPIBrowser({
+                email: process.env.OPENAI_EMAIL,
+                password: process.env.OPENAI_PASSWORD,
+                markdown: false
+              });
+              await GBServer.globals.chatGPT.init();
+            }
+          }
+  
+          // let s = new GBVMService();
+          // await s.translateBASIC('work/gptA.vbs', GBServer.globals.minBoot );
+          // await s.translateBASIC('work/gptB.vbs', GBServer.globals.minBoot );
+          // await s.translateBASIC('work/gptC.vbs', GBServer.globals.minBoot );
+          // process.exit(9);
           if (process.env.ENABLE_WEBLOG) {
             // If global log enabled, reorders transports adding web logging.
 
@@ -256,8 +274,6 @@ export class GBServer {
         }
       })();
     };
-
-    //
 
     if (process.env.CERTIFICATE_PFX) {
       const options1 = {
