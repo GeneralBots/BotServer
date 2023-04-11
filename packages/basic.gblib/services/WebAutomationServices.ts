@@ -53,7 +53,7 @@ import { SystemKeywords } from './SystemKeywords.js';
  */
 export class WebAutomationServices {
   static isSelector(name: any) {
-    return name.startsWith('.') || name.startsWith('#');
+    return name.startsWith('.') || name.startsWith('#') || name.startsWith('[');
   }
   private debugWeb: boolean;
   private lastDebugWeb: Date;

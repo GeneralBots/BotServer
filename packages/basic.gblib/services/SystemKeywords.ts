@@ -508,7 +508,6 @@ export class SystemKeywords {
 
     // Processes FILTER option to ensure parallel SET calls.
 
-    const filter = await DialogKeywords.getOption({ pid, name: 'filter' });
     let titleAddress;
 
     if (filter) {
