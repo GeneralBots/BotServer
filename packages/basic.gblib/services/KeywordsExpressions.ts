@@ -149,7 +149,7 @@ export class KeywordsExpressions {
         $1 = $1.trim();
 
         if ($1.substr(0, 1) === '#') {
-          let sessionName = $1.substr(1, $1.indexOf(',') - 1);
+          sessionName = $1.substr(1, $1.indexOf(',') - 1);
           $1 = $1.replace(/\; \"\,\"/gi, '');
           $1 = $1.substr($1.indexOf(',') + 1);
 
@@ -182,8 +182,6 @@ export class KeywordsExpressions {
         $1 = $1.replace('FOR APPEND', '');
         $1 = $1.replace('FOR OUTPUT', '');
 
-
-
         if ((pos = $1.match(/\s*AS\s*\#/gi))) {
           kind = 'AS';
         } else if ((pos = $1.match(/\s*WITH\s*\#/gi))) {
@@ -215,7 +213,7 @@ export class KeywordsExpressions {
           `;
           return code;
         } else {
-          sessionName = `"${sessionName}"`;
+          sessionName = sessionName?`"${sessionName}"`:null;
           kind = `"${kind}"`;
           return `page = await wa.openPage({pid: pid, handle: page, sessionKind: ${kind}, sessionName: ${sessionName}, ${params}})`;
         }
