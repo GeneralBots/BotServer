@@ -8,6 +8,7 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../../src/app.js';
 import { DebuggerService } from '../DebuggerService.js';
 import finalStream from 'final-stream';
+import { GBLogEx } from '../../../core.gbapp/services/GBLogEx.js';
 
 const waitUntil = condition => {
   if (condition()) {
@@ -119,8 +120,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
                   });
                 }
                 GBServer.globals.debuggers[limits.botId].scope = variablesText;
-                GBLog.info(`BASIC: Breakpoint variables: ${variablesText}`); // (zero-based)
-
+                GBLogEx.info(min,`BASIC: Breakpoint variables: ${variablesText}`); // (zero-based)
                 // Processes breakpoint hits.
 
                 if (hitBreakpoints.length >= 1) {
@@ -142,7 +142,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
                       });
                       GBLog.info(`BASIC break defined ${breakpointId} for ${limits.botId}`);
                     } catch (error) {
-                      GBLog.info(`BASIC error defining defining ${brk} for ${limits.botId}. ${error}`);
+                      GBLog.info(`BASIC error defining ${brk} for ${limits.botId}. ${error}`);
                     }
                   });
                   await client.Debugger.resume();

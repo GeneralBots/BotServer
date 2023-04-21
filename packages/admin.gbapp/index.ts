@@ -40,6 +40,8 @@ import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from '
 import { Sequelize } from 'sequelize-typescript';
 import { AdminDialog } from './dialogs/AdminDialog.js';
 import { GuaribasAdmin } from './models/AdminModel.js';
+import { GBLogEx } from '../core.gbapp/services/GBLogEx.js';
+
 
 /**
  * The package for admin.gbapp.
@@ -48,19 +50,19 @@ export class GBAdminPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
 
   public async getDialogs (min: GBMinInstance) {
-    GBLog.verbose(`getDialogs called.`);
+    GBLogEx.verbose(min,`getDialogs called.`);
   }
   public async unloadPackage (core: IGBCoreService): Promise<void> {
     GBLog.verbose(`unloadPackage called.`);
   }
   public async unloadBot (min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`unloadBot called.`);
+    GBLogEx.verbose(min,`unloadBot called.`);
   }
   public async onNewSession (min: GBMinInstance, step: GBDialogStep): Promise<void> {
-    GBLog.verbose(`onNewSession called.`);
+    GBLogEx.verbose(min, `onNewSession called.`);
   }
   public async onExchangeData (min: GBMinInstance, kind: string, data: any) {
-    GBLog.verbose(`onExchangeData called.`);
+    GBLogEx.verbose(min,`onExchangeData called.`);
   }
 
   public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {

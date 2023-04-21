@@ -39,6 +39,7 @@ import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GuaribasSchedule } from '../../core.gbapp/models/GBModel.js';
 
 import cron from 'node-cron';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * @fileoverview Schedule Services.
@@ -64,7 +65,7 @@ export class ScheduleServices extends GBService {
     });
 
     if (count > 0) {
-      GBLog.info(`BASIC: Removed ${name} SET SCHEDULE and ${count} rows from storage on: ${min.botId}...`);
+      GBLogEx.info(min,`BASIC: Removed ${name} SET SCHEDULE and ${count} rows from storage on: ${min.botId}...`);
     }
   }
 
@@ -118,7 +119,7 @@ export class ScheduleServices extends GBService {
   }
 
   private ScheduleItem (item: GuaribasSchedule, min: GBMinInstance) {
-    GBLog.info(`Scheduling ${item.name} on ${min.botId}...`);
+    GBLogEx.info(min,`Scheduling ${item.name} on ${min.botId}...`);
     try {
       const options = {
         scheduled: true,
@@ -147,7 +148,7 @@ export class ScheduleServices extends GBService {
         },
         options
       );
-      GBLog.info(`Running .gbdialog word ${item.name} on:${item.schedule}...`);
+      GBLogEx.info(min,`Running .gbdialog word ${item.name} on:${item.schedule}...`);
     } catch (error) {}
   }
 }

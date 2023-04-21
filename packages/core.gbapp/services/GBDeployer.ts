@@ -397,7 +397,7 @@ export class GBDeployer implements IGBDeployer {
     const siteId = process.env.STORAGE_SITE_ID;
     const libraryId = process.env.STORAGE_LIBRARY;
 
-    GBLog.info(`Connecting to Config.xslx (siteId: ${siteId}, libraryId: ${libraryId})...`);
+    GBLogEx.info(min, `Connecting to Config.xslx (siteId: ${siteId}, libraryId: ${libraryId})...`);
 
     // Connects to MSFT storage.
 
@@ -414,16 +414,17 @@ export class GBDeployer implements IGBDeployer {
     const path = DialogKeywords.getGBAIPath(botId, 'gbot');
     let url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${path}:/children`;
 
-    GBLog.info(`Loading .gbot from Excel: ${url}`);
+    GBLogEx.info( min ,`Loading .gbot from Excel: ${url}`);
     const res = await client.api(url).get();
 
     // Finds Config.xlsx.
+
 
     const document = res.value.filter(m => {
       return m.name === 'Config.xlsx';
     });
     if (document === undefined || document.length === 0) {
-      GBLog.info(`Config.xlsx not found on .bot folder, check the package.`);
+      GBLogEx.info(min,`Config.xlsx not found on .bot folder, check the package.`);
 
       return null;
     }
@@ -458,7 +459,7 @@ export class GBDeployer implements IGBDeployer {
     baseUrl: string = null,
     client = null
   ): Promise<any> {
-    GBLog.info(`downloadFolder: localPath=${localPath}, remotePath=${remotePath}, baseUrl=${baseUrl}`);
+    GBLogEx.info(min ,`downloadFolder: localPath=${localPath}, remotePath=${remotePath}, baseUrl=${baseUrl}`);
 
     if (!baseUrl) {
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
@@ -487,12 +488,12 @@ export class GBDeployer implements IGBDeployer {
       path = urlJoin(path, remotePath);
       let url = `${baseUrl}/drive/root:/${path}:/children`;
 
-      GBLog.info(`Download URL: ${url}`);
+      GBLogEx.info(min, `Download URL: ${url}`);
 
       const res = await client.api(url).get();
       const documents = res.value;
       if (documents === undefined || documents.length === 0) {
-        GBLog.info(`${remotePath} is an empty folder.`);
+        GBLogEx.info(min, `${remotePath} is an empty folder.`);
         return null;
       }
 
@@ -518,14 +519,14 @@ export class GBDeployer implements IGBDeployer {
           }
 
           if (download) {
-            GBLog.verbose(`Downloading ${itemPath}...`);
+            GBLogEx.verbose(min, `Downloading ${itemPath}...`);
             const url = item['@microsoft.graph.downloadUrl'];
 
             const response = await fetch(url);
             Fs.writeFileSync(itemPath, Buffer.from(await response.arrayBuffer()), { encoding: null });
             Fs.utimesSync(itemPath, new Date(), new Date(item.lastModifiedDateTime));
           } else {
-            GBLog.info(`Local is up to date: ${itemPath}...`);
+            GBLogEx.info(min, `Local is up to date: ${itemPath}...`);
           }
         }
       });
@@ -609,7 +610,7 @@ export class GBDeployer implements IGBDeployer {
 
         if (process.env.ENABLE_PARAMS_ONLINE === 'false') {
           if (Fs.existsSync(localPath)) {
-            GBLog.info(`Loading .gbot from ${localPath}.`);
+            GBLogEx.info(min, `Loading .gbot from ${localPath}.`);
             await this.deployBotFromLocalPath(localPath, GBServer.globals.publicAddress);
           }
         } else {
@@ -635,7 +636,7 @@ export class GBDeployer implements IGBDeployer {
 
         const vm = new GBVMService();
         await vm.loadDialogPackage(localPath, min, this.core, this);
-        GBLog.verbose(`Dialogs (.gbdialog) for ${min.botId} loaded.`);
+        GBLogEx.verbose(min, `Dialogs (.gbdialog) for ${min.botId} loaded.`);
         break;
 
       case '.gbtheme':
@@ -643,7 +644,7 @@ export class GBDeployer implements IGBDeployer {
 
         const packageName = Path.basename(localPath);
         GBServer.globals.server.use(`/themes/${packageName}`, express.static(localPath));
-        GBLog.verbose(`Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
+        GBLogEx.verbose(min, `Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
 
         break;
 
@@ -887,7 +888,7 @@ export class GBDeployer implements IGBDeployer {
       // After compiled, adds the .gbapp to the current server VM context.
 
       if (gbappPath.endsWith('.gbapp') || gbappPath.endsWith('.gblib')) {
-        const m = await import(gbappPath);
+        const m = await import(`file://${gbappPath}/dist/index.js`);
         if (m.Package) {
           const p = new m.Package();
 

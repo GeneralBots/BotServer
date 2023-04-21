@@ -21,7 +21,8 @@
         "node_modules/**/*.js"
       ],
       "outFiles": [
-        "${workspaceRoot}/dist/**/*.js"],
+        "${workspaceRoot}/dist/**/*.js",
+        "D:/VScode/Pragmatismo/GBO.gbai/saas.gbapp/dist/**/*.js"],
       "stopOnEntry": false,
       "console": "integratedTerminal"
     }

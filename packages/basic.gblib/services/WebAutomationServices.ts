@@ -97,8 +97,8 @@ export class WebAutomationServices {
    */
 
   public async openPage({ pid, handle, sessionKind, sessionName, url, username, password }) {
-    GBLog.info(`BASIC: Web Automation OPEN ${sessionName ? sessionName : ''} ${url}.`);
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min,`BASIC: Web Automation OPEN ${sessionName ? sessionName : ''} ${url}.`);
 
     // Try to find an existing handle.
 
@@ -195,9 +195,10 @@ export class WebAutomationServices {
    *
    * @example GET "selector"
    */
-  public async getBySelector({ handle, selector }) {
+  public async getBySelector({ handle, selector, pid }) {
     const page = WebAutomationServices.getPageByHandle(handle);
-    GBLog.info(`BASIC: Web Automation GET element: ${selector}.`);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min,`BASIC: Web Automation GET element: ${selector}.`);
     await page.waitForSelector(selector);
     let elements = await page.$$(selector);
     if (elements && elements.length > 1) {
@@ -241,7 +242,7 @@ export class WebAutomationServices {
   public async hover({ pid, handle, selector }) {
     const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation HOVER element: ${selector}.`);
-    await this.getBySelector({ handle, selector: selector });
+    await this.getBySelector({ handle, selector: selector, pid });
     await page.hover(selector);
     await this.debugStepWeb(pid, page);
   }
@@ -346,7 +347,7 @@ export class WebAutomationServices {
     text = `${text}`;
     const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation TYPE on ${selector}: ${text}.`);
-    const e = await this.getBySelector({ handle, selector });
+    const e = await this.getBySelector({ handle, selector, pid });
     await e.click({ clickCount: 3 });
     await page.keyboard.press('Backspace');
     await e.type(text, { delay: 200 });
@@ -362,7 +363,7 @@ export class WebAutomationServices {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const page = WebAutomationServices.getPageByHandle(handle);
 
-    const element = await this.getBySelector({ handle, selector });
+    const element = await this.getBySelector({ handle, selector, pid });
     // https://github.com/GeneralBots/BotServer/issues/311
     const container = element['_frame'] ? element['_frame'] : element['_page'];
     await page.setRequestInterception(true);

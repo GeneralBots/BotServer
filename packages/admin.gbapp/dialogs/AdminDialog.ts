@@ -39,13 +39,14 @@
 import crypto from 'crypto';
 import urlJoin from 'url-join';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
 import { Messages } from '../strings.js';
 import { GBAdminService } from '../services/GBAdminService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { SecService } from '../../security.gbapp/services/SecService.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * Dialogs for administration tasks.
