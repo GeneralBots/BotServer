@@ -394,7 +394,7 @@ export class GBVMService extends GBService {
     const pid = GBAdminService.getNumberIdentifier();
     GBServer.globals.processes[pid] = {
       pid: pid,
-      userId: user.userId,
+      userId: user? user.userId:0,
       instanceId: min.instance.instanceId,
       channel: channel
     };
