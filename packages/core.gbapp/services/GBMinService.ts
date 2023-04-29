@@ -99,6 +99,7 @@ import { createKoaHttpServer } from '../../basic.gblib/index.js';
 import { DebuggerService } from '../../basic.gblib/services/DebuggerService.js';
 import { ImageProcessingServices } from '../../basic.gblib/services/ImageProcessingServices.js';
 import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices.js';
+import mime from 'mime';
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
  */
@@ -1064,7 +1065,7 @@ export class GBMinService {
           await this.processEventActivity(min, user, context, step);
         }
       } catch (error) {
-        const msg = `ERROR: ${error.message} ${error.error ? error.error.body : ''} ${
+        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${
           error.error ? (error.error.stack ? error.error.stack : '') : ''
         }`;
         GBLog.error(msg);
@@ -1132,45 +1133,46 @@ export class GBMinService {
   /**
    * Private handler which receives the Attachment and persists to disk.
    * during a HEAR attachment AS FILE upload.
-   */
+   */ 
+    // ...
+  
   private static async downloadAttachmentAndWrite(attachment) {
-    const url = attachment.contentUrl;
-    const localFolder = Path.join('work');
-    const path = DialogKeywords.getGBAIPath(this['min'].botId);
-    const localFileName = Path.join(localFolder, path, 'uploads', attachment.name);
-
-    let res;
-    if (url.startsWith('data:')) {
-      var regex = /^data:.+\/(.+);base64,(.*)$/;
-      var matches = url.match(regex);
-      var ext = matches[1];
-      var data = matches[2];
-      res = Buffer.from(data, 'base64');
-    } else {
-      // arraybuffer is necessary for images
-      const options = {
-        method: 'GET',
-        encoding: 'binary'
-      };
-      res = await fetch(url, options);
-      const buffer = arrayBufferToBuffer(await res.arrayBuffer());
+      const url = attachment.contentUrl;
+      const localFolder = Path.join('work');
+      const path = DialogKeywords.getGBAIPath(this['min'].botId);
+      const localFileName = Path.join(localFolder, path, 'uploads', 
+  attachment.name
+  );
+  
+      let buffer;
+      if (url.startsWith('data:')) {
+        const base64Data = url.split(';base64,')[1];
+        buffer = Buffer.from(base64Data, 'base64');
+      } else {
+        const options = {
+          method: 'GET',
+          encoding: 'binary'
+        };
+        const res = await fetch(url, options);
+        buffer = arrayBufferToBuffer(await res.arrayBuffer());
+      }
+  
       Fs.writeFileSync(localFileName, buffer);
+  
+      return {
+        fileName: 
+  attachment.name
+  ,
+        localPath: localFileName
+      };
     }
-
-    // If no error was thrown while writing to disk,return the attachment's name
-    // and localFilePath for the response back to the user.
-    return {
-      fileName: attachment.name,
-      localPath: localFileName
-    };
-  }
+  
 
   /**
    *
    * Checks for global exit kewywords cancelling any active dialogs.
    *
    * */
-
   public static isGlobalQuitUtterance(locale, utterance) {
     return utterance.match(Messages.global_quit);
   }
@@ -1260,6 +1262,7 @@ export class GBMinService {
             filename: successfulSaves[0]['fileName']
           };
           accum.push(result);
+          return accum;
         }, []) as GBFile[];
 
         if (min.cbMap[userId] && min.cbMap[userId].promise == '!GBHEAR') {

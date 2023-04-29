@@ -60,7 +60,7 @@ import QrScanner from 'qr-scanner';
 import pkg from 'whatsapp-web.js';
 import { ActivityTypes } from 'botbuilder';
 const { List, Buttons } = pkg;
-import mime from 'mime-types';
+import mime from 'mime';
 
 /**
  * Default check interval for user replay
@@ -1171,7 +1171,7 @@ export class DialogKeywords {
       if (!filename.startsWith('https://')) {
         url = urlJoin(GBServer.globals.publicAddress, 'kb', gbaiName, 'assets', filename);
       } else {
-        url = filename;
+        url = filename
       }
     }
 
@@ -1180,11 +1180,12 @@ export class DialogKeywords {
 
       const imageData = await (await fetch(url)).arrayBuffer();
       const base64Image = Buffer.from(imageData).toString('base64');
-      const contentType = mime.lookup(url);
+      const contentType = mime.getType(url);  
+      const ext = mime.getExtension(contentType);
       reply['attachments'] = [];
       reply['attachments'].push({
         name: filename,
-        contentType: contentType,
+        contentType: ext,
         contentUrl: `data:${contentType};base64,${base64Image}`
       });
 
