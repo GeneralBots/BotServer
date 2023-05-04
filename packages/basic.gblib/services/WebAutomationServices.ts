@@ -316,6 +316,18 @@ export class WebAutomationServices {
     await els[index - 1].click();
     await this.debugStepWeb(pid, page);
   }
+  
+  public async clickButton({ pid, handle, text, index }) {
+    const page = WebAutomationServices.getPageByHandle(handle);
+    GBLog.info(`BASIC: Web Automation CLICK BUTTON: ${text} ${index}.`);
+    if (!index) {
+      index = 1;
+    }
+    const els = await page.$x(`//button[contains(.,'${text}')]`);
+    await els[index - 1].click();
+    await this.debugStepWeb(pid, page);
+  }
+
 
   /**
    * Returns the screenshot of page or element

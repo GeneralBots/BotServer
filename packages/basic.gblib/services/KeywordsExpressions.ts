@@ -806,6 +806,14 @@ export class KeywordsExpressions {
         return `await wa.linkByText ({pid: pid, handle: page, ${params}})`;
       }
     ];
+    
+    keywords[i++] = [
+      /^\s*(click button)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['text', 'index']);
+        return `await wa.clickButton ({pid: pid, handle: page, ${params}})`;
+      }
+    ];
 
     keywords[i++] = [
       /^\s*(click)(\s*)(.*)/gim,
