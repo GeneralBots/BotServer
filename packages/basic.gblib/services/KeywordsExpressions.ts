@@ -802,11 +802,20 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(click link text)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        const params = this.getParams('page,' + $3, ['text', 'index']);
+        const params = this.getParams($3, ['text', 'index']);
         return `await wa.linkByText ({pid: pid, handle: page, ${params}})`;
       }
     ];
     
+    keywords[i++] = [
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(text of)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['frameOrSelector', 'selector']);
+        return `
+        ${$1} = await wa.getTextOf ({pid: pid, handle: page, ${params}})`;
+      }
+    ];
+
     keywords[i++] = [
       /^\s*(click button)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {

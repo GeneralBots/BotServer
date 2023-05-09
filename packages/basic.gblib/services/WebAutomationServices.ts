@@ -72,7 +72,7 @@ export class WebAutomationServices {
 
     return 4294967296 * (2097151 & h2) + (h1 >>> 0);
   };
-  
+
   public async closeHandles({ pid }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
@@ -98,13 +98,12 @@ export class WebAutomationServices {
 
   public async openPage({ pid, handle, sessionKind, sessionName, url, username, password }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min,`BASIC: Web Automation OPEN ${sessionName ? sessionName : ''} ${url}.`);
+    GBLogEx.info(min, `BASIC: Web Automation OPEN ${sessionName ? sessionName : ''} ${url}.`);
 
     // Try to find an existing handle.
 
     let session;
-    if (handle)
-    {
+    if (handle) {
       session = GBServer.globals.webSessions[handle];
     }
     else if (sessionName) {
@@ -116,7 +115,7 @@ export class WebAutomationServices {
           break;
         }
       }
-    }    
+    }
 
     let page;
     if (session) {
@@ -198,7 +197,7 @@ export class WebAutomationServices {
   public async getBySelector({ handle, selector, pid }) {
     const page = WebAutomationServices.getPageByHandle(handle);
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min,`BASIC: Web Automation GET element: ${selector}.`);
+    GBLogEx.info(min, `BASIC: Web Automation GET element: ${selector}.`);
     await page.waitForSelector(selector);
     let elements = await page.$$(selector);
     if (elements && elements.length > 1) {
@@ -316,7 +315,7 @@ export class WebAutomationServices {
     await els[index - 1].click();
     await this.debugStepWeb(pid, page);
   }
-  
+
   public async clickButton({ pid, handle, text, index }) {
     const page = WebAutomationServices.getPageByHandle(handle);
     GBLog.info(`BASIC: Web Automation CLICK BUTTON: ${text} ${index}.`);
@@ -428,7 +427,7 @@ export class WebAutomationServices {
     folder = folder.replace(/\\/gi, '/');
 
     // Determines full path at source and destination.
-    const path = DialogKeywords.getGBAIPath(min.botId,`gbdrive`);
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
     const root = path;
     const dstPath = urlJoin(root, folder, filename);
 
@@ -464,6 +463,28 @@ export class WebAutomationServices {
         return null;
       })
     );
+
     return results.find(Boolean);
+  }
+
+
+  public async getTextOf({ pid, handle, frameOrSelector, selector }) {
+    const page = WebAutomationServices.getPageByHandle(handle);
+    GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
+    if (frameOrSelector) {
+      const result = await page.$eval(
+        frameOrSelector,
+        (ul) => {
+          let items = "";
+          for (let i = 0; i < ul.children.length; i++) {
+            items = `${items}${ul.children[i].textContent}\n`;
+          }
+          return items;
+        }
+      )
+      await this.debugStepWeb(pid, page);
+
+      return result;
+    }
   }
 }
