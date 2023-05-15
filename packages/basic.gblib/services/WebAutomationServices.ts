@@ -477,7 +477,7 @@ export class WebAutomationServices {
         (ul) => {
           let items = "";
           for (let i = 0; i < ul.children.length; i++) {
-            items = `${items}${ul.children[i].textContent}\n`;
+            items = `${ul.children[i].textContent}\n`;
           }
           return items;
         }
