@@ -383,28 +383,28 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*hear (\w+\$*) as\s*money/gim,
       ($0, $1) => {
-        return `${$1} = await dk.hear({pid: pid, kind:"money")}`;
+        return `${$1} = await dk.hear({pid: pid, kind:"money"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+\$*) as\s*qrcode/gim,
       ($0, $1) => {
-        return `${$1} = await dk.hear({pid: pid, kind:"qrcode")}`;
+        return `${$1} = await dk.hear({pid: pid, kind:"qrcode"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+\$*) as\s*language/gim,
       ($0, $1) => {
-        return `${$1} = await dk.hear({pid: pid, kind:"language")}`;
+        return `${$1} = await dk.hear({pid: pid, kind:"language"})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*hear (\w+\$*) as\s*zipcode/gim,
       ($0, $1) => {
-        return `${$1} = await dk.hear({pid: pid, kind:"zipcode")}`;
+        return `${$1} = await dk.hear({pid: pid, kind:"zipcode"})`;
       }
     ];
 
