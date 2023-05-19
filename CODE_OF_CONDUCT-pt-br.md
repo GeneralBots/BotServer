@@ -19,7 +19,7 @@ Exemplos de comportamento inaceitável por parte dos participantes incluem:
 
 * O uso de linguagem ou imagens sexualizadas e atenção ou avanços sexuais indesejados
 * Trolling, comentários insultuosos/depreciativos e ataques pessoais ou políticos
-* Assédio público ou privado / perseguição / intimidação
+* Assédio (harassment) público ou privado / perseguição (stalking) / intimidação (bullying) / mobbing (group bullying or gang stalking)
 * Publicar informações privadas de outras pessoas, como endereço físico ou eletrônico, sem permissão explícita
 * Outra conduta que possa ser razoavelmente considerada inadequada em um ambiente profissional
 * Chamar uma pessoa de nome diferente do declarado pela pessoa
