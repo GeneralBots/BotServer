@@ -177,7 +177,7 @@
     "vm2-process": "2.1.1",
     "walk-promise": "0.2.0",
     "washyourmouthoutwithsoap": "1.0.2",
-    "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js", 
+    "whatsapp-web.js": "1.20.0", 
     "winston": "3.8.2",
     "winston-logs-display": "1.0.0",
     "ws": "8.12.1",
