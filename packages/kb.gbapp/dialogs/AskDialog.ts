@@ -107,11 +107,9 @@ export class AskDialog extends IGBDialog {
         if (step.options && step.options.firstTime) {
           text = Messages[locale].ask_first_time;
         } 
-    //cut by Matheus Cavalieri (overnetbh)
-    //requested by PH
-    //    else if (step.options && step.options.isReturning && !step.context.activity.group) {
-    //      text = Messages[locale].anything_else;
-    //   }
+       else if (step.options && step.options.isReturning && !step.context.activity.group) {
+         text = Messages[locale].anything_else;
+      }
       else if (step.context.activity.group || (step.options && step.options.emptyPrompt)) {
           text = '';
         } else if (user.subjects.length > 0) {
@@ -337,6 +335,7 @@ export class AskDialog extends IGBDialog {
     const text = answer.content;
     if (text.endsWith('.docx')) {
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
+      await step.endDialog();
       return await GBVMService.callVM(mainName, min, step, user, this.deployer, false);
     } else {
       await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
