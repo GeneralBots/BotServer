@@ -39,13 +39,13 @@
 import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { Messages } from '../strings.js';
-import * as phone from 'google-libphonenumber';   
+import * as phone from 'google-libphonenumber';
 
 /**
  * Dialogs for handling Menu control.
  */
 export class ProfileDialog extends IGBDialog {
-  public static getNameDialog (min: GBMinInstance) {
+  public static getNameDialog(min: GBMinInstance) {
     return {
       id: '/profile_name',
       waterfall: [
@@ -83,7 +83,7 @@ export class ProfileDialog extends IGBDialog {
     };
   }
 
-  public static getMobileDialog (min: GBMinInstance) {
+  public static getMobileDialog(min: GBMinInstance) {
     return {
       id: '/profile_mobile',
       waterfall: [
@@ -126,7 +126,7 @@ export class ProfileDialog extends IGBDialog {
     };
   }
 
-  public static getMobileConfirmDialog (min: GBMinInstance) {
+  public static getMobileConfirmDialog(min: GBMinInstance) {
     return {
       id: '/profile_mobile_confirm',
       waterfall: [
@@ -167,7 +167,7 @@ export class ProfileDialog extends IGBDialog {
     };
   }
 
-  public static getEmailDialog (min: GBMinInstance) {
+  public static getEmailDialog(min: GBMinInstance) {
     return {
       id: '/profile_email',
       waterfall: [

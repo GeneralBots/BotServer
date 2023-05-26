@@ -646,10 +646,10 @@ export class KBService implements IGBKBService {
       packageId: pkg.packageId,
       prevId: 0
     };
-    const a =await GuaribasAnswer.create(answer);
+    const a = await GuaribasAnswer.create(answer);
     question['answerId'] = a.answerId;
     const q = await GuaribasQuestion.create(question);
-    
+
   }
 
   public async importKbPackage(

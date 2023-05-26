@@ -60,7 +60,7 @@ import QrScanner from 'qr-scanner';
 import pkg from 'whatsapp-web.js';
 import { ActivityTypes } from 'botbuilder';
 const { List, Buttons } = pkg;
-import mime from 'mime';
+import mime from 'mime-types';
 
 /**
  * Default check interval for user replay

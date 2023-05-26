@@ -44,7 +44,7 @@ import { Messages } from '../strings.js';
  * Dialogs for handling Menu control.
  */
 export class OAuthDialog extends IGBDialog {
-  public static getOAuthDialog (min: GBMinInstance) {
+  public static getOAuthDialog(min: GBMinInstance) {
     return {
       id: '/auth',
       waterfall: [

@@ -48,26 +48,26 @@ import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from './models/inde
  */
 export class GBKBPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
-  public async getDialogs (min: GBMinInstance) {
+  public async getDialogs(min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);
   }
-  public async unloadPackage (core: IGBCoreService): Promise<void> {
+  public async unloadPackage(core: IGBCoreService): Promise<void> {
     GBLog.verbose(`unloadPackage called.`);
   }
-  public async unloadBot (min: GBMinInstance): Promise<void> {
+  public async unloadBot(min: GBMinInstance): Promise<void> {
     GBLog.verbose(`unloadBot called.`);
   }
-  public async onNewSession (min: GBMinInstance, step: GBDialogStep): Promise<void> {
+  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
     GBLog.verbose(`onNewSession called.`);
   }
-  public async onExchangeData (min: GBMinInstance, kind: string, data: any) {
+  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
     GBLog.verbose(`onExchangeData called.`);
   }
 
-  public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {
+  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     core.sequelize.addModels([GuaribasAnswer, GuaribasQuestion, GuaribasSubject]);
   }
-  public async loadBot (min: GBMinInstance): Promise<void> {
+  public async loadBot(min: GBMinInstance): Promise<void> {
     AskDialog.setup(min.bot, min);
     FaqDialog.setup(min.bot, min);
     MenuDialog.setup(min.bot, min);

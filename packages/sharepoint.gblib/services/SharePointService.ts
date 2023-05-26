@@ -39,4 +39,4 @@
 /**
  * Service facade for SharePoint Online.
  */
-export class GBSharePointService {}
+export class GBSharePointService { }

@@ -192,11 +192,10 @@ export class WhatsappDirectLine extends GBService {
           });
           client.initialize();
         };
-        if (setUrl){
+        if (setUrl) {
           createClient.bind(this)();
         }
-        else
-        {
+        else {
           this.customClient = minBoot.whatsAppDirectLine.customClient;
         }
         setUrl = false;
@@ -998,14 +997,14 @@ export class WhatsappDirectLine extends GBService {
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
-      if  (botNumber){
+      if (botNumber) {
         user = await sec.updateUserInstance(user.userSystemId, urlMin.instance.instanceId);
       }
       let activeMin;
 
       // Processes group behaviour.
 
-        text = text.replace(/\@\d+ /gi, '');
+      text = text.replace(/\@\d+ /gi, '');
 
       let group;
       if (provider === 'chatapi') {

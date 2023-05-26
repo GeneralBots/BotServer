@@ -38,4 +38,4 @@ import * as hubspot from '@hubspot/api-client';
 /**
  * Support for Hub Spot XRM.
  */
-export class HubSpotServices extends GBService {}
+export class HubSpotServices extends GBService { }
