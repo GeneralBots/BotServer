@@ -281,14 +281,13 @@ export class GBServer {
     // Setups unsecure http redirect.
 
     const httpServer = express();
-    httpServer.use(function (request, response, next) {
-      if (process.env.NODE_ENV != 'development' && !request.secure) {
+    httpServer.use( (request, response, next) => {
+      if (request.headers.host != 'localhost' && !request.secure) {
         return response.redirect("https://" + request.headers.host + request.url);
       }
       next();
     });
     
-
 
     if (process.env.CERTIFICATE_PFX) {
       const options1 = {
