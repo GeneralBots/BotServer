@@ -40,7 +40,7 @@ import GBBulletPlayer from './players/GBBulletPlayer.js';
 import SidebarMenu from './components/SidebarMenu.js';
 import SEO from './components/SEO.js';
 import GBCss from './components/GBCss.js';
-import { DirectLine, createCognitiveServicesSpeechServicesPonyfillFactory } from 'botframework-directlinejs';
+import { DirectLine} from 'botframework-directlinejs';
 import { ConnectionStatus } from 'botframework-directlinejs';
 import ReactWebChat from 'botframework-webchat';
 import { UserAgentApplication } from 'msal';
@@ -302,19 +302,6 @@ class GBUIApp extends React.Component {
         <SidebarMenu chat={this.chat} instance={this.state.instanceClient} />
       </div>
     );
-
-    async function fetchCredentials() {
-      const res = await fetch('/api/authorizationtoken');
-
-      if (res.ok) {
-        return {
-          authorizationToken: await res.text(),
-          region: 'westus2'
-        };
-      } else {
-        throw new Error('Failed to retrieve authorization token for Cognitive Services.');
-      }
-    }
 
     if (this.state.line) {
       if (this.state.instanceClient) {
