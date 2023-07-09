@@ -104,15 +104,6 @@ export class GBServer {
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 
-    // Setups unsecure http redirect.
-
-    server.use(function (request, response, next) {
-      if (process.env.NODE_ENV != 'development' && !request.secure) {
-        return response.redirect("https://" + request.headers.host + request.url);
-      }
-      next();
-    });
-
     // Setups global error handlers.
 
     process.on('unhandledRejection', (err, p) => {
@@ -286,6 +277,18 @@ export class GBServer {
         }
       })();
     };
+
+    // Setups unsecure http redirect.
+
+    const httpServer = express();
+    httpServer.use(function (request, response, next) {
+      if (process.env.NODE_ENV != 'development' && !request.secure) {
+        return response.redirect("https://" + request.headers.host + request.url);
+      }
+      next();
+    });
+    
+
 
     if (process.env.CERTIFICATE_PFX) {
       const options1 = {
