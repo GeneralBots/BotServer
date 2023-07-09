@@ -280,13 +280,14 @@ export class GBServer {
 
     // Setups unsecure http redirect.
 
-    const server1 = http.createServer((req,res)=>{
-  
+    const server1 = http.createServer((req, res) => {
+      const host = req.headers.host.startsWith('www.') ?
+        req.headers.host.substring(4) : req.headers.host;
       res.writeHead(301, {
-        Location: "https://" + req.headers.host + req.url
+        Location: "https://" + host + req.url
       }).end();
-      });
-    
+    });
+
     server1.listen(80);
 
     if (process.env.CERTIFICATE_PFX) {
