@@ -64,13 +64,13 @@ export class MenuDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup (bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new KBService(min.core.sequelize);
 
     min.dialogs.add(new WaterfallDialog('/menu', MenuDialog.getMenuDialog(min, service)));
   }
 
-  private static getMenuDialog (min: GBMinInstance, service: KBService) {
+  private static getMenuDialog(min: GBMinInstance, service: KBService) {
     return [
       async step => {
         if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {

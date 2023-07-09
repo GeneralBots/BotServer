@@ -106,11 +106,11 @@ export class AskDialog extends IGBDialog {
 
         if (step.options && step.options.firstTime) {
           text = Messages[locale].ask_first_time;
-        } 
-       else if (step.options && step.options.isReturning && !step.context.activity.group) {
-         text = Messages[locale].anything_else;
-      }
-      else if (step.context.activity.group || (step.options && step.options.emptyPrompt)) {
+        }
+        else if (step.options && step.options.isReturning && !step.context.activity.group) {
+          text = Messages[locale].anything_else;
+        }
+        else if (step.context.activity.group || (step.options && step.options.emptyPrompt)) {
           text = '';
         } else if (user.subjects.length > 0) {
           text = Messages[locale].which_question;
@@ -391,14 +391,14 @@ export class AskDialog extends IGBDialog {
       async step => {
         if (GBServer.globals.chatGPT) {
           let input = `Write a BASIC program that ${step.options.dialog.toLowerCase()}. And does not explain.`;
-          
+
           await min.conversationalService.sendText(min, step, 'Thank you. The dialog is being written right now...');
 
           const CHATGPT_TIMEOUT = 3 * 60 * 1000;
           GBLog.info(`ChatGPT Code: ${input}`);
           let response = await GBServer.globals.chatGPT.sendMessage(input, {
             timeoutMs: CHATGPT_TIMEOUT
-          });         
+          });
 
           // Removes instructions, just code.
 
@@ -409,17 +409,17 @@ export class AskDialog extends IGBDialog {
 
           // Gets dialog name and file handling
 
-          let  dialogName = step.result.replace('.', '');
+          let dialogName = step.result.replace('.', '');
           const docx = urlJoin(`${min.botId}.gbdialog`, `${dialogName}.docx`);
           const sys = new SystemKeywords();
           const document = await sys.internalCreateDocument(min, docx, response);
-          await service.addQA(min, dialogName, dialogName); 
+          await service.addQA(min, dialogName, dialogName);
 
           let message = `Waiting for publishing...`;
           await min.conversationalService.sendText(min, step, message);
 
           await step.replaceDialog('/publish', { confirm: true });
-          
+
           message = `Dialog is ready! Let's run:`;
           await min.conversationalService.sendText(min, step, message);
 
@@ -439,7 +439,7 @@ export class AskDialog extends IGBDialog {
           await step.endDialog();
 
           await GBVMService.callVM(dialogName.toLowerCase(),
-           min, step, user, this.deployer, false);
+            min, step, user, this.deployer, false);
         }
       }
     ];

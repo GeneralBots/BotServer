@@ -53,7 +53,7 @@ export class FaqDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup (bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new KBService(min.core.sequelize);
 
     min.dialogs.add(

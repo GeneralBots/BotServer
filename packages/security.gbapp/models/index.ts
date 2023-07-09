@@ -66,7 +66,7 @@ export class GuaribasUser extends Model<GuaribasUser> {
 
   @Column(DataType.STRING(255))
   declare userSystemId: string;
-  
+
   @Column(DataType.STRING(255))
   declare userName: string;
 

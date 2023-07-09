@@ -84,7 +84,7 @@ export class GBServer {
         GBLog.error(`Running TEST_SHELL ERROR: ${error}...`);
       }
     }
-  
+
     const server = express();
 
     GBServer.globals.server = server;
@@ -227,7 +227,7 @@ export class GBServer {
               await GBServer.globals.chatGPT.init();
             }
           }
-  
+
           // let s = new GBVMService();
           // await s.translateBASIC('work/gptA.vbs', GBServer.globals.minBoot );
           // await s.translateBASIC('work/gptB.vbs', GBServer.globals.minBoot );
@@ -282,15 +282,62 @@ export class GBServer {
       };
       const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
       GBServer.globals.httpsServer = httpsServer;
-      if (process.env.CERTIFICATE2_PFX) {
-        const options2 = {
-          passphrase: process.env.CERTIFICATE2_PASSPHRASE,
-          pfx: Fs.readFileSync(process.env.CERTIFICATE2_PFX)
-        };
-        httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options2);
+
+      for (let i = 2; ; i++) {
+        const certPfxEnv = `CERTIFICATE${i}_PFX`;
+        const certPassphraseEnv = `CERTIFICATE${i}_PASSPHRASE`;
+        const certDomainEnv = `CERTIFICATE${i}_DOMAIN`;
+
+        if (process.env[certPfxEnv] && process.env[certPassphraseEnv] && process.env[certDomainEnv]) {
+          const options = {
+            passphrase: process.env[certPassphraseEnv],
+            pfx: Fs.readFileSync(process.env[certPfxEnv])
+          };
+          httpsServer.addContext(process.env[certDomainEnv], options);
+        } else {
+          break;
+        }
       }
-    } else {
+    }
+    else {
       server.listen(port, mainCallback);
     }
   }
 }
+/*
+--------------------------------------------------------------------------------------------
+if (process.env.CERTIFICATE_PFX) {
+  const options1 = {
+    passphrase: process.env.CERTIFICATE_PASSPHRASE,
+    pfx: Fs.readFileSync(process.env.CERTIFICATE_PFX)
+  };
+  const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
+  GBServer.globals.httpsServer = httpsServer;
+
+  if (process.env.CERTIFICATE2_PFX) {
+    const options2 = {
+      passphrase: process.env.CERTIFICATE2_PASSPHRASE,
+      pfx: Fs.readFileSync(process.env.CERTIFICATE2_PFX)
+    };
+    httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options2);
+  }
+
+  if (process.env.CERTIFICATE3_PFX) {
+    const options3 = {
+      passphrase: process.env.CERTIFICATE3_PASSPHRASE,
+      pfx: Fs.readFileSync(process.env.CERTIFICATE3_PFX)
+    };
+    httpsServer.addContext(process.env.CERTIFICATE3_DOMAIN, options3);
+  }
+
+  if (process.env.CERTIFICATE4_PFX) {
+    const options4 = {
+      passphrase: process.env.CERTIFICATE4_PASSPHRASE,
+      pfx: Fs.readFileSync(process.env.CERTIFICATE4_PFX)
+    };
+    httpsServer.addContext(process.env.CERTIFICATE4_DOMAIN, options4);
+  }
+}
+------------------------------------------------------------------------------------------
+*/
+

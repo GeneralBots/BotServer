@@ -9,7 +9,7 @@ import { FindOptions } from 'sequelize';
  * Security service layer.
  */
 export class SecService extends GBService {
-  public async ensureUser (
+  public async ensureUser(
     instanceId: number,
     userSystemId: string,
     userName: string,
@@ -41,7 +41,7 @@ export class SecService extends GBService {
   /**
    * Retrives a conversation reference from contact phone.
    */
-  public async getConversationReference (phone: string): Promise<ConversationReference> {
+  public async getConversationReference(phone: string): Promise<ConversationReference> {
     const options = <FindOptions>{ rejectOnEmpty: true, where: { phone: phone } };
     const user = await GuaribasUser.findOne(options);
 
@@ -51,7 +51,7 @@ export class SecService extends GBService {
   /**
    * Updates a conversation reference from contact phone.
    */
-  public async updateConversationReference (phone: string, conversationReference: string) {
+  public async updateConversationReference(phone: string, conversationReference: string) {
     const options = <FindOptions>{ where: { phone: phone } };
     const user = await GuaribasUser.findOne(options);
 
@@ -59,7 +59,7 @@ export class SecService extends GBService {
     await user.save();
   }
 
-  public async updateConversationReferenceById (userId: number, conversationReference: string) {
+  public async updateConversationReferenceById(userId: number, conversationReference: string) {
     const options = <FindOptions>{ where: { userId: userId } };
     const user = await GuaribasUser.findOne(options);
 
@@ -67,7 +67,7 @@ export class SecService extends GBService {
     await user.save();
   }
 
-  public async updateUserLocale (userId: number, locale: any): Promise<GuaribasUser> {
+  public async updateUserLocale(userId: number, locale: any): Promise<GuaribasUser> {
     const user = await GuaribasUser.findOne({
       where: {
         userId: userId
@@ -78,7 +78,7 @@ export class SecService extends GBService {
     return await user.save();
   }
 
-  public async updateUserHearOnDialog (userId: number, dialogName: string): Promise<GuaribasUser> {
+  public async updateUserHearOnDialog(userId: number, dialogName: string): Promise<GuaribasUser> {
     const user = await GuaribasUser.findOne({
       where: {
         userId: userId
@@ -89,7 +89,7 @@ export class SecService extends GBService {
     return await user.save();
   }
 
-  public async updateUserInstance (userSystemId: string, instanceId: number): Promise<GuaribasUser> {
+  public async updateUserInstance(userSystemId: string, instanceId: number): Promise<GuaribasUser> {
     const user = await GuaribasUser.findOne({
       where: {
         userSystemId: userSystemId
@@ -103,7 +103,7 @@ export class SecService extends GBService {
   /**
    * Finds and update user agent information to a next available person.
    */
-  public async updateHumanAgent (
+  public async updateHumanAgent(
     userSystemId: string,
     instanceId: number,
     agentSystemId: string
@@ -150,7 +150,7 @@ export class SecService extends GBService {
     return user;
   }
 
-  public async isAgentSystemId (systemId: string): Promise<Boolean> {
+  public async isAgentSystemId(systemId: string): Promise<Boolean> {
     const user = await GuaribasUser.findOne({
       where: {
         userSystemId: systemId
@@ -164,7 +164,7 @@ export class SecService extends GBService {
     return user.agentMode === 'self';
   }
 
-  public async assignHumanAgent (
+  public async assignHumanAgent(
     min: GBMinInstance,
     userSystemId: string,
     agentSystemId: string = null
@@ -194,7 +194,7 @@ export class SecService extends GBService {
     return agentSystemId;
   }
 
-  public async getUserFromId (instanceId: number, userId: string): Promise<GuaribasUser> {
+  public async getUserFromId(instanceId: number, userId: string): Promise<GuaribasUser> {
     return await GuaribasUser.findOne({
       where: {
         instanceId: instanceId,
@@ -203,7 +203,7 @@ export class SecService extends GBService {
     });
   }
 
-  public async getUserFromSystemId (systemId: string): Promise<GuaribasUser> {
+  public async getUserFromSystemId(systemId: string): Promise<GuaribasUser> {
     return await GuaribasUser.findOne({
       where: {
         userSystemId: systemId
@@ -211,7 +211,7 @@ export class SecService extends GBService {
     });
   }
 
-  public async getUserFromAgentSystemId (systemId: string): Promise<GuaribasUser> {
+  public async getUserFromAgentSystemId(systemId: string): Promise<GuaribasUser> {
     return await GuaribasUser.findOne({
       where: {
         agentSystemId: systemId
@@ -219,7 +219,7 @@ export class SecService extends GBService {
     });
   }
 
-  public async getAllUsers (instanceId: number): Promise<GuaribasUser[]> {
+  public async getAllUsers(instanceId: number): Promise<GuaribasUser[]> {
     return await GuaribasUser.findAll({
       where: {
         instanceId: instanceId
@@ -235,7 +235,7 @@ export class SecService extends GBService {
    * @param name Name of param to get from instance.
    * @param defaultValue Value returned when no param is defined.
    */
-   public getParam<T> (user: GuaribasUser, name: string, defaultValue?: T): any {
+  public getParam<T>(user: GuaribasUser, name: string, defaultValue?: T): any {
     let value = null;
     if (user.params) {
       const params = JSON.parse(user.params);
@@ -254,8 +254,7 @@ export class SecService extends GBService {
     if (user['dataValues'] && !value) {
       value = user['dataValues'][name];
       if (value === null) {
-        switch(name)
-        {
+        switch (name) {
           case 'language':
             value = 'en';
             break;
@@ -269,14 +268,13 @@ export class SecService extends GBService {
    * Saves user instance object to the storage handling
    * multi-column JSON based store 'params' field.
    */
-   public async setParam (userId: number, name: string, value:any) {
+  public async setParam(userId: number, name: string, value: any) {
     const options = { where: {} };
     options.where = { userId: userId };
     let user = await GuaribasUser.findOne(options);
     // tslint:disable-next-line:prefer-object-spread
-    let obj =  JSON.parse(user.params);
-    if (!obj)
-    {
+    let obj = JSON.parse(user.params);
+    if (!obj) {
       obj = {};
     }
     obj[name] = value;
