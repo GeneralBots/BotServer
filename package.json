@@ -1,6 +1,6 @@
 {
   "name": "botserver",
-  "version": "2.3.9",
+  "version": "3.0.10",
   "type": "module",
   "description": "General Bot Community Edition open-core server.",
   "main": "./boot.mjs",
@@ -15,7 +15,7 @@
     "Alan Perdomo <alanperdomo@hotmail.com>"
   ],
   "engines": {
-    "node": "=19.7.0"
+    "node": "=20.3.1"
   },
   "license": "AGPL-3.0",
   "preferGlobal": true,

@@ -1,7 +1,7 @@
 dist: focal
 language: node_js
 node_js:
-  - 19.7.0
+  - 20.3.1
 
 
 notifications:

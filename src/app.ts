@@ -39,6 +39,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import https from 'https';
+import http from 'http';
 import mkdirp from 'mkdirp';
 import Path from 'path';
 import * as Fs from 'fs';
@@ -102,6 +103,17 @@ export class GBServer {
 
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
+
+    // Setups unsecure http redirect.
+
+    server.use(function (request, response, next) {
+      if (process.env.NODE_ENV != 'development' && !request.secure) {
+        return response.redirect("https://" + request.headers.host + request.url);
+      }
+      next();
+    });
+
+    // Setups global error handlers.
 
     process.on('unhandledRejection', (err, p) => {
       GBLog.error(`UNHANDLED_REJECTION(promises): ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''}`);
@@ -280,6 +292,7 @@ export class GBServer {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
         pfx: Fs.readFileSync(process.env.CERTIFICATE_PFX)
       };
+
       const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
       GBServer.globals.httpsServer = httpsServer;
 
@@ -304,40 +317,3 @@ export class GBServer {
     }
   }
 }
-/*
---------------------------------------------------------------------------------------------
-if (process.env.CERTIFICATE_PFX) {
-  const options1 = {
-    passphrase: process.env.CERTIFICATE_PASSPHRASE,
-    pfx: Fs.readFileSync(process.env.CERTIFICATE_PFX)
-  };
-  const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
-  GBServer.globals.httpsServer = httpsServer;
-
-  if (process.env.CERTIFICATE2_PFX) {
-    const options2 = {
-      passphrase: process.env.CERTIFICATE2_PASSPHRASE,
-      pfx: Fs.readFileSync(process.env.CERTIFICATE2_PFX)
-    };
-    httpsServer.addContext(process.env.CERTIFICATE2_DOMAIN, options2);
-  }
-
-  if (process.env.CERTIFICATE3_PFX) {
-    const options3 = {
-      passphrase: process.env.CERTIFICATE3_PASSPHRASE,
-      pfx: Fs.readFileSync(process.env.CERTIFICATE3_PFX)
-    };
-    httpsServer.addContext(process.env.CERTIFICATE3_DOMAIN, options3);
-  }
-
-  if (process.env.CERTIFICATE4_PFX) {
-    const options4 = {
-      passphrase: process.env.CERTIFICATE4_PASSPHRASE,
-      pfx: Fs.readFileSync(process.env.CERTIFICATE4_PFX)
-    };
-    httpsServer.addContext(process.env.CERTIFICATE4_DOMAIN, options4);
-  }
-}
-------------------------------------------------------------------------------------------
-*/
-
