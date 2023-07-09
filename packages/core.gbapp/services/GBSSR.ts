@@ -335,6 +335,9 @@ export class GBSSR {
       if (GBServer.globals.wwwroot && url === '/'){
         path = GBServer.globals.wwwroot + "/index.html"; // TODO.
       }
+      if (!min) {
+        path = Path.join(GBServer.globals.wwwroot, url);
+      }
       if (Fs.existsSync(path)) {
         if (min) {
           let html = Fs.readFileSync(path, 'utf8');
