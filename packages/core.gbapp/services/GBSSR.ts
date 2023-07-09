@@ -332,7 +332,7 @@ export class GBSSR {
         'build',
         url === '/' || url === '' ? `index.html` : url
       );
-      if (GBServer.globals.wwwroot && url === '/'){
+      if (GBServer.globals.wwwroot && url === '/') {
         path = GBServer.globals.wwwroot + "/index.html"; // TODO.
       }
       if (!min) {

@@ -23,6 +23,7 @@
   "bin": {
     "gbot": "./boot.cjs"
   },
+  "readme": "README.md",
   "repository": {
     "type": "git",
     "url": "https://github.com/GeneralBots/BotServer.git"
