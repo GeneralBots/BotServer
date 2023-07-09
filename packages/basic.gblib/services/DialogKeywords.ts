@@ -717,7 +717,7 @@ export class DialogKeywords {
    *
    */
   public async hear({ pid, kind, args }) {
-    let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    let { min, user, params } =   await DialogKeywords.getProcessInfo(pid);
 
     // Handles first arg as an array of args.
 

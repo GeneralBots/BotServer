@@ -189,7 +189,7 @@ export class AskDialog extends IGBDialog {
         // When no text is typed, the start dialog is invoked again
         // when people type just the @botName in MSTEAMS for example.
 
-        if (!text) {
+        if (!text && step.context.activity.channelId === 'msteams') {
           const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
           if (startDialog) {
             await GBVMService.callVM(startDialog.toLowerCase().trim(), min, step, user, this.deployer, false);

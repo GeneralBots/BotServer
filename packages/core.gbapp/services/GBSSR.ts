@@ -333,7 +333,7 @@ export class GBSSR {
         url === '/' || url === '' ? `index.html` : url
       );
       if (GBServer.globals.wwwroot && url === '/'){
-        path = GBServer.globals.wwwroot + "\\index.html";
+        path = GBServer.globals.wwwroot + "/index.html"; // TODO.
       }
       if (Fs.existsSync(path)) {
         if (min) {

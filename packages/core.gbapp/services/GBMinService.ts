@@ -201,10 +201,10 @@ export class GBMinService {
       pingSendTimeout: null,
       keepAliveTimeout: null,
       listeners: {
-        unsubscribed(subscriptions: number): void {},
-        subscribed(subscriptions: number): void {},
-        disconnected(remoteId: string, connections: number): void {},
-        connected(remoteId: string, connections: number): void {},
+        unsubscribed(subscriptions: number): void { },
+        subscribed(subscriptions: number): void { },
+        disconnected(remoteId: string, connections: number): void { },
+        connected(remoteId: string, connections: number): void { },
         messageIn(...params): void {
           GBLogEx.info(0, '[IN] ' + params);
         },
@@ -239,7 +239,7 @@ export class GBMinService {
     GBLogEx.info(0, 'API RPC HTTP Server started.');
 
     // Loads schedules.
-    
+
     GBLog.info(`Preparing SET SCHEDULE dialog calls...`);
     const service = new ScheduleServices();
     await service.scheduleAll();
@@ -285,7 +285,7 @@ export class GBMinService {
   /**
    * Unmounts the bot web site (default.gbui) secure domain, if any.
    */
-  public async unloadDomain(instance: IGBInstance) {}
+  public async unloadDomain(instance: IGBInstance) { }
 
   /**
    * Mount the instance by creating an BOT Framework bot object,
@@ -562,9 +562,8 @@ export class GBMinService {
         min.instance.authenticatorTenant,
         '/oauth2/authorize'
       );
-      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
-        min.instance.marketplaceId
-      }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.marketplaceId
+        }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
       GBLog.info(`HandleOAuthRequests: ${authorizationUrl}.`);
       res.redirect(authorizationUrl);
     });
@@ -1040,20 +1039,7 @@ export class GBMinService {
           } else {
             GBLog.info(`Person added to conversation: ${member.name}`);
 
-            if (GBMinService.userMobile(step)) {
-              if (
-                startDialog &&
-                !min['conversationWelcomed'][step.context.activity.conversation.id] &&
-                !step.context.activity['group']
-              ) {
-                await sec.setParam(userId, 'welcomed', 'true');
-                min['conversationWelcomed'][step.context.activity.conversation.id] = true;
-                GBLog.info(
-                  `Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
-                );
-                await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
-              }
-            }
+            return;
           }
         } else if (context.activity.type === 'message') {
           // Processes messages activities.
@@ -1065,9 +1051,8 @@ export class GBMinService {
           await this.processEventActivity(min, user, context, step);
         }
       } catch (error) {
-        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${
-          error.error ? (error.error.stack ? error.error.stack : '') : ''
-        }`;
+        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''
+          }`;
         GBLog.error(msg);
 
         await min.conversationalService.sendText(
@@ -1081,6 +1066,7 @@ export class GBMinService {
     };
 
     try {
+      
       await adapter['processActivity'](req, res, handler);
     } catch (error) {
       if (error.code === 401) {
@@ -1133,40 +1119,40 @@ export class GBMinService {
   /**
    * Private handler which receives the Attachment and persists to disk.
    * during a HEAR attachment AS FILE upload.
-   */ 
-    // ...
-  
+   */
+  // ...
+
   private static async downloadAttachmentAndWrite(attachment) {
-      const url = attachment.contentUrl;
-      const localFolder = Path.join('work');
-      const path = DialogKeywords.getGBAIPath(this['min'].botId);
-      const localFileName = Path.join(localFolder, path, 'uploads', 
-  attachment.name
-  );
-  
-      let buffer;
-      if (url.startsWith('data:')) {
-        const base64Data = url.split(';base64,')[1];
-        buffer = Buffer.from(base64Data, 'base64');
-      } else {
-        const options = {
-          method: 'GET',
-          encoding: 'binary'
-        };
-        const res = await fetch(url, options);
-        buffer = arrayBufferToBuffer(await res.arrayBuffer());
-      }
-  
-      Fs.writeFileSync(localFileName, buffer);
-  
-      return {
-        fileName: 
-  attachment.name
-  ,
-        localPath: localFileName
+    const url = attachment.contentUrl;
+    const localFolder = Path.join('work');
+    const path = DialogKeywords.getGBAIPath(this['min'].botId);
+    const localFileName = Path.join(localFolder, path, 'uploads',
+      attachment.name
+    );
+
+    let buffer;
+    if (url.startsWith('data:')) {
+      const base64Data = url.split(';base64,')[1];
+      buffer = Buffer.from(base64Data, 'base64');
+    } else {
+      const options = {
+        method: 'GET',
+        encoding: 'binary'
       };
+      const res = await fetch(url, options);
+      buffer = arrayBufferToBuffer(await res.arrayBuffer());
     }
-  
+
+    Fs.writeFileSync(localFileName, buffer);
+
+    return {
+      fileName:
+        attachment.name
+      ,
+      localPath: localFileName
+    };
+  }
+
 
   /**
    *
@@ -1233,6 +1219,27 @@ export class GBMinService {
       }
     }
 
+    if (GBMinService.userMobile(step)) {
+      const startDialog = user.hearOnDialog
+        ? user.hearOnDialog
+        : min.core.getParam(min.instance, 'Start Dialog', null);
+
+      if (
+        startDialog &&
+        !min['conversationWelcomed'][step.context.activity.conversation.id] &&
+        !step.context.activity['group']
+      ) {
+        await sec.setParam(userId, 'welcomed', 'true');
+        min['conversationWelcomed'][step.context.activity.conversation.id] = true;
+        GBLog.info(
+          `Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
+        );
+        await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
+
+        return;
+      }
+    }
+
     // Prepare Promises to download each attachment and then execute each Promise.
     if (step.context.activity.attachments) {
       const promises = step.context.activity.attachments.map(
@@ -1264,7 +1271,7 @@ export class GBMinService {
           accum.push(result);
           return accum;
         }, []) as GBFile[];
-
+        
         if (min.cbMap[userId] && min.cbMap[userId].promise == '!GBHEAR') {
           if (results.length > 1) {
             throw new Error('It is only possible to upload one file per message, right now.');
@@ -1465,7 +1472,7 @@ export class GBMinService {
           );
         }
       } else {
-        if (min.cbMap[userId] && min.cbMap[userId].promise == '!GBHEAR') {
+        if (min.cbMap[userId] && min.cbMap[userId].promise === '!GBHEAR') {
           min.cbMap[userId].promise = text;
         }
 
