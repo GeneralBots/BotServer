@@ -74,6 +74,8 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { text } from 'body-parser';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
+import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
 
 /**
  * Result for quey on KB data.
@@ -612,7 +614,8 @@ export class KBService implements IGBKBService {
       const url = urlJoin('kb', path, 'assets', answer.content);
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
-      await min.conversationalService['playMarkdown'](min, answer.content, channel, step, min.conversationalService);
+      await min.conversationalService['playMarkdown'](min, answer.content, channel, step, 
+        GBMinService.userMobile(step));
     } else if (answer.content.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else {
