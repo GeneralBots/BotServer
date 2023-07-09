@@ -287,6 +287,8 @@ export class GBServer {
       }
       next();
     });
+    const httpDefaultPort = 80;
+    httpServer.listen(httpDefaultPort);
     
 
     if (process.env.CERTIFICATE_PFX) {
