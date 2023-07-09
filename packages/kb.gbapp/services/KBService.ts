@@ -68,13 +68,9 @@ import pdf from 'pdf-extraction';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import mammoth from 'mammoth';
-import { url } from 'inspector';
-import { min } from 'lodash';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import { text } from 'body-parser';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
 
 /**

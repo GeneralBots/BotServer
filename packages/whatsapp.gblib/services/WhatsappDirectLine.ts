@@ -937,9 +937,11 @@ export class WhatsappDirectLine extends GBService {
 
       switch (provider) {
         case 'GeneralBots':
-          // Ignore E2E messages used during initialization.
+          
+        // Ignore E2E messages and status updates.       
 
-          if (req.type && req.type === 'e2e_notification') {
+          if (req.type && req.type === 'e2e_notification'
+            || req.isStatus) {
             return;
           }
 
