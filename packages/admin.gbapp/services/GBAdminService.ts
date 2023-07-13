@@ -1,3 +1,5 @@
+
+
 /*****************************************************************************\
 |                                               ( )_  _                       |
 |    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
@@ -88,6 +90,7 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static async getADALCredentialsFromUsername(username: string, password: string) {
+    
     return await msRestAzure.loginWithUsernamePassword(username, password);
   }
 

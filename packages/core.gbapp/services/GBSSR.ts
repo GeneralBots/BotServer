@@ -311,7 +311,8 @@ export class GBSSR {
     if (!Fs.existsSync(path)) {
       path = DialogKeywords.getGBAIPath(minBoot.botId, `gbui`);
     }
-    const url = req.url.replace(`/${botId}`, '');
+    let parts = req.url.replace(`/${botId}`, '').split('?');
+    let url = parts[0];
 
     if (min && req.originalUrl && prerender && exclude) {
 
@@ -335,12 +336,13 @@ export class GBSSR {
       if (GBServer.globals.wwwroot && url === '/') {
         path = GBServer.globals.wwwroot + "/index.html"; // TODO.
       }
-      if (!min) {
+      if (!min && !url.startsWith("/static")) {
         path = Path.join(GBServer.globals.wwwroot, url);
       }
       if (Fs.existsSync(path)) {
         if (min) {
           let html = Fs.readFileSync(path, 'utf8');
+          html = html.replace(/\{p\}/gi, min.botId);
           html = html.replace(/\{botId\}/gi, min.botId);
           html = html.replace(/\{theme\}/gi, min.instance.theme ? min.instance.theme :
             'default.gbtheme');
