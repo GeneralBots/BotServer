@@ -110,7 +110,7 @@ export class ProfileDialog extends IGBDialog {
 
             return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);
           }
-          if (!libphonenumber.phoneUtil.isPossibleNumber(phoneNumber)) {
+          if (!p.isPossibleNumber(phoneNumber)) {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_mobile);
 
             return await step.replaceDialog('/profile_mobile', step.activeDialog.state.options);

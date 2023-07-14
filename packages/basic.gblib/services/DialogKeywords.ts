@@ -46,8 +46,7 @@ import { Messages } from '../strings.js';
 import * as Fs from 'fs';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
-import phoneUtil from 'google-libphonenumber';
-import phone from 'phone';
+import libphonenumber from 'google-libphonenumber';
 import DateDiff from 'date-diff';
 import tesseract from 'node-tesseract-ocr';
 import Path from 'path';
@@ -956,17 +955,17 @@ export class DialogKeywords {
 
         result = value;
       } else if (kind === 'mobile') {
-        let phoneNumber;
+        let phoneNumber = answer;
+        let p = libphonenumber.PhoneNumberUtil.getInstance();
         try {
           // https://github.com/GeneralBots/BotServer/issues/307
-          phoneNumber = phone(answer, { country: 'BRA' })[0];
-          phoneNumber = phoneUtil.parse(phoneNumber);
+          phoneNumber = p.parse(phoneNumber);
         } catch (error) {
           await this.talk({ pid, text: Messages[locale].validation_enter_valid_mobile });
 
           return await this.hear({ pid, kind, args });
         }
-        if (!phoneUtil.isPossibleNumber(phoneNumber)) {
+        if (!p.isPossibleNumber(phoneNumber)) {
           await this.talk({ pid, text: 'Por favor, digite um número de telefone válido.' });
           return await this.hear({ pid, kind, args });
         }
