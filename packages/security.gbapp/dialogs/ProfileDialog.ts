@@ -102,8 +102,8 @@ export class ProfileDialog extends IGBDialog {
         async step => {
           const locale = step.context.activity.locale;
           let phoneNumber = step.context.activity.text;
+          let p = libphonenumber.PhoneNumberUtil.getInstance();
           try {
-            let p = libphonenumber.PhoneNumberUtil.getInstance();
             phoneNumber = p.parse(phoneNumber);
           } catch (error) {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_mobile);
