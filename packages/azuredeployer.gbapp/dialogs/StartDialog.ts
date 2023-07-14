@@ -41,12 +41,13 @@ import * as Fs from 'fs';
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService.js';
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService.js';
 import scanf from 'scanf';
+import { AzureDeployerService } from '../services/AzureDeployerService.js';
 
 /**
  * Handles command-line dialog for getting info for Boot Bot.
  */
 export class StartDialog {
-  public static async createBaseInstance (installationDeployer: IGBInstallationDeployer) {
+  public static async createBaseInstance (deployer, freeTier) {
     // No .env so asks for cloud credentials to start a new farm.
 
     if (!Fs.existsSync(`.env`)) {
@@ -76,9 +77,12 @@ export class StartDialog {
     
     let subscriptionId: string;
     while (subscriptionId === undefined) {
-      const list = await installationDeployer.getSubscriptions(credentials);
+      const list = await (new AzureDeployerService()).getSubscriptions(credentials);
       subscriptionId = this.retrieveSubscriptionId(list);
     }
+
+    const installationDeployer = await AzureDeployerService.createInstanceWithADALCredentials(
+       deployer, freeTier, subscriptionId, credentials);
 
     let location: string;
     while (location === undefined) {
@@ -108,7 +112,7 @@ export class StartDialog {
     instance.marketplacePassword = appPassword;
     instance.adminPass = GBAdminService.getRndPassword();
 
-    return { instance, credentials, subscriptionId };
+    return { instance, credentials, subscriptionId , installationDeployer};
   }
 
   private static retrieveUsername () {

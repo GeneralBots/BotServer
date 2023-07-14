@@ -158,6 +158,15 @@ export class GBConfigService {
         case 'DEV_GBAI':
           value = undefined;
           break;
+        case 'FREE_TIER':
+          value = true;
+          break;
+        case 'BOT_URL':
+          value = undefined;
+          break;
+        case 'STORAGE_SERVER':
+          value = undefined;
+          break;
         default:
           GBLog.warn(`Invalid key on .env file: '${key}'`);
           break;

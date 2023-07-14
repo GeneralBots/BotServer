@@ -50,7 +50,7 @@ import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp
 import { GBKBPackage } from '../../kb.gbapp/index.js';
 import { GBSecurityPackage } from '../../security.gbapp/index.js';
 import { GBWhatsappPackage } from '../../whatsapp.gblib/index.js';
-import { GuaribasInstance, GuaribasLog} from '../models/GBModel.js';
+import { GuaribasInstance, GuaribasLog } from '../models/GBModel.js';
 import { GBConfigService } from './GBConfigService.js';
 import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp/index.js';
 import { GBSharePointPackage } from '../../sharepoint.gblib/index.js';
@@ -105,7 +105,7 @@ export class GBCoreService implements IGBCoreService {
   constructor() {
     this.adminService = new GBAdminService(this);
   }
-  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {}
+  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) { }
 
   /**
    * Gets database config and connect to storage. Currently two databases
@@ -134,8 +134,8 @@ export class GBCoreService implements IGBCoreService {
     const logging: boolean | Function =
       GBConfigService.get('STORAGE_LOGGING') === 'true'
         ? (str: string): void => {
-            GBLog.info(str);
-          }
+          GBLog.info(str);
+        }
         : false;
 
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
@@ -318,10 +318,10 @@ ENDPOINT_UPDATE=true
    */
   public async ensureProxy(port): Promise<string> {
     try {
-      if (Fs.existsSync('node_modules/ngrok/bin/ngrok.exe') || Fs.existsSync('node_modules/ngrok/bin/ngrok')) {
+      if (Fs.existsSync('node_modules/ngrok/bin/ngrok.exe') || Fs.existsSync('node_modules/.bin/ngrok')) {
         return await ngrok.connect({ port: port });
       } else {
-        GBLog.warn('ngrok executable not found (only tested on Windows). Check installation or node_modules folder.');
+        GBLog.warn('ngrok executable not found. Check installation or node_modules folder.');
 
         return 'https://localhost';
       }
@@ -500,20 +500,36 @@ ENDPOINT_UPDATE=true
     }
   }
 
+
+  public async createBootInstance(
+    core: GBCoreService,
+    installationDeployer: IGBInstallationDeployer,
+    proxyAddress: string
+  ) {
+    return await this.createBootInstanceEx(
+      core,
+      installationDeployer,
+      proxyAddress, null,
+      GBConfigService.get('FREE_TIER'));
+
+  }
   /**
    * Creates the first bot instance (boot instance) used to "boot" the server.
    * At least one bot is required to perform conversational administrative tasks.
    * So a base main bot is always deployed and will act as root bot for
    * configuration tree with three levels: .env > root bot > all other bots.
    */
-  public async createBootInstance(
+  public async createBootInstanceEx(
     core: GBCoreService,
     installationDeployer: IGBInstallationDeployer,
-    proxyAddress: string
+    proxyAddress: string,
+    deployer,
+    freeTier
   ) {
     GBLog.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
     try {
-      const { instance, credentials, subscriptionId } = await StartDialog.createBaseInstance(installationDeployer);
+      const { instance, credentials, subscriptionId, installationDeployer }
+        = await StartDialog.createBaseInstance(deployer, freeTier);
       installationDeployer['core'] = this;
       const changedInstance = await installationDeployer.deployFarm(
         proxyAddress,
@@ -528,7 +544,7 @@ ENDPOINT_UPDATE=true
       await this.openStorageFrontier(installationDeployer);
       await this.initStorage();
 
-      return changedInstance;
+      return [changedInstance, installationDeployer];
     } catch (error) {
       GBLog.warn(
         `There is an error being thrown, so please cleanup any infrastructure objects

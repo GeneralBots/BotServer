@@ -84,22 +84,34 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await this.deployer.rebuildIndex(instance, this.getKBSearchSchema(instance.searchIndex));
   }
 
+
   public static async createInstance(deployer: GBDeployer, freeTier: boolean = true): Promise<AzureDeployerService> {
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+    return await this.createInstanceWithCredentials(deployer, freeTier, subscriptionId, username, password);
+  }
+
+  public static async createInstanceWithADALCredentials(deployer: GBDeployer, freeTier: boolean = true,
+    subscriptionId: string, credentials): Promise<AzureDeployerService> {
     const service = new AzureDeployerService();
 
     service.core = deployer.core;
     service.deployer = deployer;
     service.freeTier = freeTier;
 
-    const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
     const token = credentials['tokenCache']._entries[0];
 
     await service.initServices(token.accessToken, token.expiresOn, subscriptionId);
 
     return service;
+  }
+
+  public static async createInstanceWithCredentials(deployer: GBDeployer, freeTier: boolean = true,
+    subscriptionId: string, username: string, password: string): Promise<AzureDeployerService> {
+    const service = new AzureDeployerService();
+    const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
+    return await this.createInstanceWithADALCredentials(deployer, freeTier, subscriptionId, credentials);
   }
 
   private static createRequestObject(url: string, accessToken: string, verb: HttpMethods, body: string) {
@@ -399,24 +411,24 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.searchIndexer = 'azuresql-indexer';
     instance.searchKey = searchKeys.primaryKey;
 
-    GBLog.info(`Deploying Speech...`);
-    const speech = await this.createSpeech(name, `${name}speech`, instance.cloudLocation);
-    keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
-    instance.speechEndpoint = speech.properties.endpoint;
-    instance.speechKey = keys.key1;
+    // GBLog.info(`Deploying Speech...`);
+    // const speech = await this.createSpeech(name, `${name}speech`, instance.cloudLocation);
+    // keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
+    // instance.speechEndpoint = speech.properties.endpoint;
+    // instance.speechKey = keys.key1;
 
-    GBLog.info(`Deploying Text Analytics...`);
-    const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);
-    instance.textAnalyticsEndpoint = textAnalytics.properties.endpoint.replace(`/text/analytics/v2.0`, '');
+    // GBLog.info(`Deploying Text Analytics...`);
+    // const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);
+    // instance.textAnalyticsEndpoint = textAnalytics.properties.endpoint.replace(`/text/analytics/v2.0`, '');
 
     GBLog.info(`Deploying SpellChecker...`);
     const spellChecker = await this.createSpellChecker(name, `${name}-spellchecker`);
     instance.spellcheckerEndpoint = spellChecker.properties.endpoint;
 
-    GBLog.info(`Deploying NLP...`);
-    const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
-    const nlpa = await this.createNLPAuthoring(name, `${name}-nlpa`, instance.cloudLocation);
-    instance.nlpEndpoint = nlp.properties.endpoint;
+    // GBLog.info(`Deploying NLP...`);
+    // const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
+    // const nlpa = await this.createNLPAuthoring(name, `${name}-nlpa`, instance.cloudLocation);
+    // instance.nlpEndpoint = nlp.properties.endpoint;
 
     const sleep = ms => {
       return new Promise(resolve => {
@@ -443,19 +455,19 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       instance.cloudSubscriptionId
     );
 
-    GBLog.info(`Waiting one minute to finishing NLP service and keys creation...`);
+    GBLog.info(`Waiting one minute to finish NLP service and keys creation...`);
     await sleep(60000);
-    keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
-    instance.textAnalyticsKey = keys.key1;
+    // keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
+    // instance.textAnalyticsKey = keys.key1;
     keys = await this.cognitiveClient.accounts.listKeys(name, spellChecker.name);
     instance.spellcheckerKey = keys.key1;
-    let authoringKeys = await this.cognitiveClient.accounts.listKeys(name, nlpa.name);
-    keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
-    instance.nlpKey = keys.key1;
+    // let authoringKeys = await this.cognitiveClient.accounts.listKeys(name, nlpa.name);
+    // keys = await this.cognitiveClient.accounts.listKeys(name, nlp.name);
+    // instance.nlpKey = keys.key1;
 
-    instance.nlpAuthoringKey = authoringKeys.key1;
-    const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
-    instance.nlpAppId = nlpAppId;
+    // instance.nlpAuthoringKey = authoringKeys.key1;
+    // const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
+    // instance.nlpAppId = nlpAppId;
 
     GBLog.info('Updating server environment variables...');
     await this.updateWebisteConfig(name, serverName, serverFarm.id, instance);

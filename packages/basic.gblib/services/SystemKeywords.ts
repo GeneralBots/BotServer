@@ -51,7 +51,7 @@ import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import pptxTemplaterModule from 'pptxtemplater';
 import _ from 'lodash';
-import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
+// TODO: canvas error import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
 import sharp from 'sharp';
 import ImageModule from 'open-docxtemplater-image-module';
 import DynamicsWebApi from 'dynamics-web-api';
@@ -350,14 +350,16 @@ export class SystemKeywords {
 
       // Converts the PDF to PNG.
 
-      const pngPages: PngPageOutput[] = await pdfToPng(gbfile.data, {
-        disableFontFace: false,
-        useSystemFonts: false,
-        viewportScale: 2.0,
-        pagesToProcess: [1],
-        strictPagesToProcess: false,
-        verbosityLevel: 0
-      });
+      const pngPages /*: PngPageOutput*/ = [];
+      // TODO: https://github.com/GeneralBots/BotServer/issues/350
+      //  await pdfToPng(gbfile.data, {
+      //   disableFontFace: false,
+      //   useSystemFonts: false,
+      //   viewportScale: 2.0,
+      //   pagesToProcess: [1],
+      //   strictPagesToProcess: false,
+      //   verbosityLevel: 0
+      // });
 
       // Prepare an image on cache and return the GBFILE information.
 

@@ -182,7 +182,8 @@
     "winston": "3.8.2",
     "winston-logs-display": "1.0.0",
     "ws": "8.12.1",
-    "yarn": "1.22.19"
+    "yarn": "1.22.19",
+    "ngrok": "4.3.3"
   },
   "devDependencies": {
     "@types/qrcode": "1.5.0",
@@ -193,7 +194,6 @@
     "dependency-check": "4.1.0",
     "git-issues": "1.0.0",
     "license-checker": "25.0.1",
-    "ngrok": "4.3.3",
     "prettier-standard": "15.0.1",
     "semantic-release": "17.2.4",
     "simple-commit-message": "4.0.13",

@@ -140,16 +140,16 @@ export class GBServer {
           const core: IGBCoreService = new GBCoreService();
           const importer: GBImporter = new GBImporter(core);
           const deployer: GBDeployer = new GBDeployer(core, importer);
-          const azureDeployer: AzureDeployerService = await AzureDeployerService.createInstance(deployer);
-          const adminService: GBAdminService = new GBAdminService(core);
+          const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+          let azureDeployer: AzureDeployerService;
+
+          // Ensure that local proxy is setup.
 
           if (process.env.NODE_ENV === 'development') {
             const proxy = GBConfigService.get('BOT_URL');
             if (proxy !== undefined) {
               GBServer.globals.publicAddress = proxy;
             } else {
-              // Ensure that local development proxy is setup.
-
               GBLog.info(`Establishing a development local proxy (proxy) on BOT_URL...`);
               GBServer.globals.publicAddress = await core.ensureProxy(port);
             }
@@ -159,16 +159,19 @@ export class GBServer {
             GBServer.globals.publicAddress = serverAddress;
           }
 
+
           // Creates a boot instance or load it from storage.
 
-          try {
+          if (GBConfigService.get('STORAGE_SERVER')) {
+            azureDeployer = await AzureDeployerService.createInstance(deployer);
             await core.initStorage();
-          } catch (error) {
-            GBLog.verbose(`Error initializing storage: ${error}`);
-            GBServer.globals.bootInstance = await core.createBootInstance(
+          } else {
+            [GBServer.globals.bootInstance, azureDeployer] = await core['createBootInstanceEx'](
               core,
-              azureDeployer,
-              GBServer.globals.publicAddress
+              null,
+              GBServer.globals.publicAddress,
+              deployer,
+              GBConfigService.get('FREE_TIER')
             );
           }
 
@@ -216,6 +219,7 @@ export class GBServer {
           // Builds minimal service infrastructure.
 
           const conversationalService: GBConversationalService = new GBConversationalService(core);
+          const adminService: GBAdminService = new GBAdminService(core);
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
           GBServer.globals.minService = minService;
           await minService.buildMin(instances);
@@ -231,11 +235,6 @@ export class GBServer {
             }
           }
 
-          // let s = new GBVMService();
-          // await s.translateBASIC('work/gptA.vbs', GBServer.globals.minBoot );
-          // await s.translateBASIC('work/gptB.vbs', GBServer.globals.minBoot );
-          // await s.translateBASIC('work/gptC.vbs', GBServer.globals.minBoot );
-          // process.exit(9);
           if (process.env.ENABLE_WEBLOG) {
             // If global log enabled, reorders transports adding web logging.
 
@@ -280,15 +279,16 @@ export class GBServer {
 
     // Setups unsecure http redirect.
 
-    const server1 = http.createServer((req, res) => {
-      const host = req.headers.host.startsWith('www.') ?
-        req.headers.host.substring(4) : req.headers.host;
-      res.writeHead(301, {
-        Location: "https://" + host + req.url
-      }).end();
-    });
-
-    server1.listen(80);
+    if (process.env.NODE_ENV === 'production') {
+      const server1 = http.createServer((req, res) => {
+        const host = req.headers.host.startsWith('www.') ?
+          req.headers.host.substring(4) : req.headers.host;
+        res.writeHead(301, {
+          Location: "https://" + host + req.url
+        }).end();
+      });
+      server1.listen(80);
+    }
 
     if (process.env.CERTIFICATE_PFX) {
       const options1 = {

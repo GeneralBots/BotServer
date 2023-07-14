@@ -336,7 +336,7 @@ export class GBSSR {
       if (GBServer.globals.wwwroot && url === '/') {
         path = GBServer.globals.wwwroot + "/index.html"; // TODO.
       }
-      if (!min && !url.startsWith("/static")) {
+      if (!min && !url.startsWith("/static") && GBServer.globals.wwwroot) {
         path = Path.join(GBServer.globals.wwwroot, url);
       }
       if (Fs.existsSync(path)) {
