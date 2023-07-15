@@ -139,7 +139,7 @@ export class ProfileDialog extends IGBDialog {
         async step => {
           step.activeDialog.state.options = step.options;
           const locale = step.context.activity.locale;
-          const from = step.activeDialog.state.options.mobile;
+          const from = step.activeDialog.state.options.mobile.replace ('+', '');
           if (min.whatsAppDirectLine) {
             await min.whatsAppDirectLine.sendToDevice(
               from,
