@@ -393,6 +393,7 @@ export class GBConversationalService {
         return Promise.reject(new Error(msg));
       }
     } else {
+      if (min.instance.smsKey && min.instance.smsSecret) {
       return new Promise((resolve: any, reject: any): any => {
         const nexmo = new Nexmo({
           apiKey: min.instance.smsKey,
@@ -409,6 +410,7 @@ export class GBConversationalService {
           }
         });
       });
+    }
     }
   }
 

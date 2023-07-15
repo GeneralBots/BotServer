@@ -902,6 +902,7 @@ export class WhatsappDirectLine extends GBService {
           };
           break;
         case 'graphapi':
+          break;
       }
 
       if (options) {
