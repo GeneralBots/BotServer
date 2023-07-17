@@ -366,7 +366,7 @@ export class GBMinService {
 
     // Calls the loadBot context.activity for all packages.
 
-    await this.invokeLoadBot(GBServer.globals.appPackages, GBServer.globals.sysPackages, min);
+    await this.invokeLoadBot(min.appPackages, GBServer.globals.sysPackages, min);
 
     // Serves individual URL for each bot conversational interface.
 
@@ -724,7 +724,7 @@ export class GBMinService {
         access_token: min.instance.facebookWorkplaceAccessToken
       });
     }
-    // https://github.com/GeneralBots/BotServer/issues/123
+
     min.appPackages =  await this.core['getApplicationsByInstanceId']  (appPackages, min.instance.instanceId);
 
     // Creates a hub of services available in .gbapps.
