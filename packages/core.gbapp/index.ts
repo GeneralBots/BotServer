@@ -43,7 +43,7 @@ import { LanguageDialog } from './dialogs/LanguageDialog.js';
 import { SwitchBotDialog } from './dialogs/SwitchBot.js';
 import { WelcomeDialog } from './dialogs/WelcomeDialog.js';
 import { WhoAmIDialog } from './dialogs/WhoAmIDialog.js';
-import { GuaribasChannel, GuaribasInstance, GuaribasLog, GuaribasPackage } from './models/GBModel.js';
+import { GuaribasApplications, GuaribasChannel, GuaribasInstance, GuaribasLog, GuaribasPackage } from './models/GBModel.js';
 
 /**
  * Package for core.gbapp.
@@ -53,7 +53,7 @@ export class GBCorePackage implements IGBPackage {
   public CurrentEngineName = 'guaribas-1.0.0';
 
   public async loadPackage (core: IGBCoreService, sequelize: Sequelize): Promise<void> {
-    core.sequelize.addModels([GuaribasInstance, GuaribasPackage, GuaribasChannel, GuaribasLog]);
+    core.sequelize.addModels([GuaribasInstance, GuaribasPackage, GuaribasChannel, GuaribasLog, GuaribasApplications]);
   }
 
   public async getDialogs (min: GBMinInstance) {

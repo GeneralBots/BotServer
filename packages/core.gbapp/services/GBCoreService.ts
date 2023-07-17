@@ -50,7 +50,7 @@ import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp
 import { GBKBPackage } from '../../kb.gbapp/index.js';
 import { GBSecurityPackage } from '../../security.gbapp/index.js';
 import { GBWhatsappPackage } from '../../whatsapp.gblib/index.js';
-import { GuaribasInstance, GuaribasLog } from '../models/GBModel.js';
+import { GuaribasApplications, GuaribasInstance, GuaribasLog } from '../models/GBModel.js';
 import { GBConfigService } from './GBConfigService.js';
 import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp/index.js';
 import { GBSharePointPackage } from '../../sharepoint.gblib/index.js';
@@ -60,6 +60,8 @@ import { GBGoogleChatPackage } from '../../google-chat.gblib/index.js';
 import { GBHubSpotPackage } from '../../hubspot.gblib/index.js';
 import open from 'open';
 import ngrok from 'ngrok';
+import Path from 'path';
+import { file } from 'googleapis/build/src/apis/file/index.js';
 
 /**
  * GBCoreService contains main logic for handling storage services related
@@ -396,6 +398,25 @@ ENDPOINT_UPDATE=true
     return await instance.save();
   }
 
+  /**
+   * Loads all bot instances from object storage, if it's formatted.
+   */
+  public async getApplicationsByInstanceId(appPackages, instanceId: number) {
+    const options = { where: { instanceId: instanceId } };
+    const apps = await GuaribasApplications.findAll(options);
+  
+    let matchingAppPackages = [];
+    await CollectionUtil.asyncForEach(appPackages, async appPackage => {
+      const filenameOnly = Path.basename(appPackage.name);
+      const matchedApp = apps.find(app => app.name === filenameOnly || app.name === filenameOnly);
+      if (matchedApp) {
+        matchingAppPackages.push(appPackage);
+      }
+    });
+    
+    return matchingAppPackages;
+  }
+  
   /**
    * Loads all bot instances from object storage, if it's formatted.
    */

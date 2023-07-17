@@ -707,8 +707,7 @@ export class GBMinService {
     min['scheduleMap'] = {};
     min['conversationWelcomed'] = {};
     min.packages = sysPackages;
-    min.appPackages = appPackages;
-
+    
     // NLP Manager.
 
     const manager = new NlpManager({ languages: ['pt'], forceNER: true });
@@ -726,7 +725,7 @@ export class GBMinService {
       });
     }
     // https://github.com/GeneralBots/BotServer/issues/123
-    // min.appPackages =  core.getPackagesByInstanceId(min.instance.instanceId);
+    min.appPackages =  await this.core['getApplicationsByInstanceId']  (appPackages, min.instance.instanceId);
 
     // Creates a hub of services available in .gbapps.
 
