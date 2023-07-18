@@ -96,7 +96,7 @@ export class GBAdminService implements IGBAdminService {
 
   public static getMobileCode() {
 
-    return Math.trunc(Math.random() * 6);
+    return this.getNumberIdentifier(6);
   }
 
   public static getRndPassword(): string {
