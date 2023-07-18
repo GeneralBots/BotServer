@@ -409,7 +409,7 @@ ENDPOINT_UPDATE=true
     await CollectionUtil.asyncForEach(appPackages, async appPackage => {
       const filenameOnly = Path.basename(appPackage.name);
       const matchedApp = apps.find(app => app.name === filenameOnly);
-      if (matchedApp) {
+      if (matchedApp || filenameOnly.endsWith('.gblib')) {
         matchingAppPackages.push(appPackage);
       }
     });
