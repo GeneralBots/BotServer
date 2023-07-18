@@ -112,8 +112,7 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static getNumberIdentifier(size: number = 14): string {
-
-    return Math.trunc(Math.random() * size).toString();
+    return Math.floor(Math.random() * size).toString();
   }
 
   /**
