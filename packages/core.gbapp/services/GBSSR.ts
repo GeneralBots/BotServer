@@ -353,7 +353,7 @@ export class GBSSR {
         }
         return true;
       } else {
-        GBLogEx.info(min, `HTTP 404: ${req.url}.`);
+        GBLogEx.verbose(min, `HTTP 404: ${req.url}.`);
         res.status(404);
         res.end();
       }
