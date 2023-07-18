@@ -111,8 +111,16 @@ export class GBAdminService implements IGBAdminService {
     return lowercase_PW(14);
   }
 
-  public static getNumberIdentifier(size: number = 14): string {
-    return Math.floor(Math.random() * size).toString();
+  public static getNumberIdentifier(digits: number = 14): string {
+
+      if (digits <= 0) {
+          throw new Error('Number of digits should be greater than 0.');
+      }
+  
+      const min = 10 ** (digits - 1);
+      const max = 10 ** digits - 1;
+      const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+      return randomNumber.toString();
   }
 
   /**
