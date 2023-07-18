@@ -1,3 +1,10 @@
+## [2.4.9](https://github.com/GeneralBots/BotServer/compare/2.4.8...2.4.9) (2023-07-17)
+
+
+### Bug Fixes
+
+* **all:**   [#123](https://github.com/GeneralBots/BotServer/issues/123) done. ([899696d](https://github.com/GeneralBots/BotServer/commit/899696d7e59fbb90964852c3838695ed52815040))
+
 ## [2.4.8](https://github.com/GeneralBots/BotServer/compare/2.4.7...2.4.8) (2023-07-17)
 
 
