@@ -1102,7 +1102,7 @@ export class DialogKeywords {
     const min = GBServer.globals.minInstances.filter(p => p.instance.instanceId == proc.instanceId)[0];
     const sec = new SecService();
     const user = await sec.getUserFromId(min.instance.instanceId, proc.userId);
-    const params = JSON.parse(user.params);
+    const params = user? JSON.parse(user.params): {};
     return {
       min,
       user,
