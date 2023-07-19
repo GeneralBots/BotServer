@@ -114,9 +114,13 @@ export class GBServer {
     });
 
     process.on('uncaughtException', (err, p) => {
-      GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''}`);
+      if (err !== null) {
+        GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''}`);
+      } else {
+        GBLog.error('UNCAUGHT_EXCEPTION: Unknown error (err is null)');
+      }
     });
-
+    
     process.on('SIGTERM', () => {
       GBLog.info('SIGTERM signal received.');
     });
