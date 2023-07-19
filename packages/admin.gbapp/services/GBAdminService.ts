@@ -224,9 +224,12 @@ export class GBAdminService implements IGBAdminService {
     return obj.value;
   }
 
-  public async acquireElevatedToken(instanceId: number): Promise<string> {
-    const minBoot = GBServer.globals.minBoot;
-    instanceId = minBoot.instance.instanceId;
+  public async acquireElevatedToken(instanceId: number, root: boolean = false): Promise<string> {
+
+    if (root){
+      const minBoot = GBServer.globals.minBoot;
+      instanceId = minBoot.instance.instanceId;
+    }
     let expiresOnV;
     try {
       expiresOnV = await this.getValue(instanceId, 'expiresOn');
