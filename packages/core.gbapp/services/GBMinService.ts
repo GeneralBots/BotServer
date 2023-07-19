@@ -707,7 +707,7 @@ export class GBMinService {
     min['scheduleMap'] = {};
     min['conversationWelcomed'] = {};
     min.packages = sysPackages;
-    
+
     // NLP Manager.
 
     const manager = new NlpManager({ languages: ['pt'], forceNER: true });
@@ -725,7 +725,7 @@ export class GBMinService {
       });
     }
 
-    min.appPackages =  await this.core['getApplicationsByInstanceId']  (appPackages, min.instance.instanceId);
+    min.appPackages = await this.core['getApplicationsByInstanceId'](appPackages, min.instance.instanceId);
 
     // Creates a hub of services available in .gbapps.
 
@@ -1050,8 +1050,7 @@ export class GBMinService {
           await this.processEventActivity(min, user, context, step);
         }
       } catch (error) {
-        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''
-          }`;
+        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''          }`;
         GBLog.error(msg);
 
         await min.conversationalService.sendText(
@@ -1065,7 +1064,7 @@ export class GBMinService {
     };
 
     try {
-      
+
       await adapter['processActivity'](req, res, handler);
     } catch (error) {
       if (error.code === 401) {
@@ -1270,7 +1269,7 @@ export class GBMinService {
           accum.push(result);
           return accum;
         }, []) as GBFile[];
-        
+
         if (min.cbMap[userId] && min.cbMap[userId].promise == '!GBHEAR') {
           if (results.length > 1) {
             throw new Error('It is only possible to upload one file per message, right now.');
@@ -1477,7 +1476,21 @@ export class GBMinService {
 
         // If there is a dialog in course, continue to the next step.
         else if (step.activeDialog !== undefined) {
-          await step.continueDialog();
+
+          try {
+            await step.continueDialog();
+            
+          } catch (error) {
+            const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''          }`;
+            GBLog.error(msg);
+            await min.conversationalService.sendText(
+              min,
+              step,
+              Messages[step.context.activity.locale].very_sorry_about_error
+            );
+            await step.beginDialog('/ask', { isReturning: true });
+          }
+
         } else {
           const startDialog = user.hearOnDialog
             ? user.hearOnDialog
