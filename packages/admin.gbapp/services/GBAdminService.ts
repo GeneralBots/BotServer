@@ -90,7 +90,7 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static async getADALCredentialsFromUsername(username: string, password: string) {
-    
+
     return await msRestAzure.loginWithUsernamePassword(username, password);
   }
 
@@ -113,14 +113,14 @@ export class GBAdminService implements IGBAdminService {
 
   public static getNumberIdentifier(digits: number = 14): string {
 
-      if (digits <= 0) {
-          throw new Error('Number of digits should be greater than 0.');
-      }
-  
-      const min = 10 ** (digits - 1);
-      const max = 10 ** digits - 1;
-      const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-      return randomNumber.toString();
+    if (digits <= 0) {
+      throw new Error('Number of digits should be greater than 0.');
+    }
+
+    const min = 10 ** (digits - 1);
+    const max = 10 ** digits - 1;
+    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+    return randomNumber.toString();
   }
 
   /**
@@ -140,7 +140,7 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static async undeployPackageCommand(text: string, min: GBMinInstance) {
-    
+
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
@@ -162,16 +162,16 @@ export class GBAdminService implements IGBAdminService {
       }
       await deployer['deployPackage2'](min, user, urlJoin(additionalPath, packageName));
     } else {
-      const folderName = text.split(' ')[2]; 
+      const folderName = text.split(' ')[2];
       const packageType = Path.extname(folderName).substr(1);
       const gbaiPath = DialogKeywords.getGBAIPath(min.instance.botId, packageType, null);
       const localFolder = Path.join('work', gbaiPath);
 
       // .gbot packages are handled using storage API, so no download
       // of local resources is required.
-      const gbai  = DialogKeywords.getGBAIPath(min.instance.botId);
-      await deployer  ['downloadFolder'](min, 
-        Path.join('work', `${gbai}`), 
+      const gbai = DialogKeywords.getGBAIPath(min.instance.botId);
+      await deployer['downloadFolder'](min,
+        Path.join('work', `${gbai}`),
         Path.basename(localFolder));
       await deployer['deployPackage2'](min, user, localFolder);
     }
@@ -226,7 +226,7 @@ export class GBAdminService implements IGBAdminService {
 
   public async acquireElevatedToken(instanceId: number, root: boolean = false): Promise<string> {
 
-    if (root){
+    if (root) {
       const minBoot = GBServer.globals.minBoot;
       instanceId = minBoot.instance.instanceId;
     }
