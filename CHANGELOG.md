@@ -1,3 +1,10 @@
+## [2.4.15](https://github.com/GeneralBots/BotServer/compare/2.4.14...2.4.15) (2023-07-19)
+
+
+### Bug Fixes
+
+* **all:** Create bot working again. ([4eecd5a](https://github.com/GeneralBots/BotServer/commit/4eecd5acec56547e5b5ab064f52dc81eb451e1a4))
+
 ## [2.4.14](https://github.com/GeneralBots/BotServer/compare/2.4.13...2.4.14) (2023-07-18)
 
 
