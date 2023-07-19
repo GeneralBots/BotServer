@@ -230,6 +230,8 @@ export class GBAdminService implements IGBAdminService {
       const minBoot = GBServer.globals.minBoot;
       instanceId = minBoot.instance.instanceId;
     }
+    GBLog.info(`Acquiring token for instanceId: ${instanceId} (root: ${root}).`);
+
     let expiresOnV;
     try {
       expiresOnV = await this.getValue(instanceId, 'expiresOn');
