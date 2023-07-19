@@ -192,7 +192,7 @@ export class GBAdminService implements IGBAdminService {
 
   public async setValue(instanceId: number, key: string, value: string) {
     const options = <FindOptions>{ where: {} };
-    options.where = { key: key };
+    options.where = { key: key, instanceId: instanceId };
     let admin = await GuaribasAdmin.findOne(options);
     if (admin === null) {
       admin = new GuaribasAdmin();
