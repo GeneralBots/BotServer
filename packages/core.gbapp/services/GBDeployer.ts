@@ -104,7 +104,8 @@ export class GBDeployer implements IGBDeployer {
    * Retrives token and initialize drive client API.
    */
   public static async internalGetDriveClient(min: GBMinInstance) {
-    const token = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, true);
+    const token = await (min.adminService as any)
+      ['acquireElevatedToken'](min.instance.instanceId, true);
     const siteId = process.env.STORAGE_SITE_ID;
     const libraryId = process.env.STORAGE_LIBRARY;
 
@@ -403,7 +404,8 @@ export class GBDeployer implements IGBDeployer {
     // Connects to MSFT storage.
 
     const token = await 
-      (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, true);
+      (min.adminService as any)['acquireElevatedToken']
+        (min.instance.instanceId, true);
 
     const client = MicrosoftGraph.Client.init({
       authProvider: done => {
