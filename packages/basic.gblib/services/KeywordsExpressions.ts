@@ -306,7 +306,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*get config\s*(.*)/gim,
       ($0, $1, $2) => {
-        return `${$1} = await dk.getConfig ({pid: pid, ${$2}})`;
+        return `${$1} = await dk.getConfig ({pid: pid, name: ${$2}})`;
       }
     ];
 
