@@ -34,18 +34,9 @@
 
 import { GBSSR }from '../../core.gbapp/services/GBSSR.js';
 
-export class ChatServices {
+export class CodeServices {
 
-  /**
-   * Generate text
-   * 
-   * CONTINUE keword.
-   * 
-   * result = CONTINUE text
-   * 
-   */
-  public static async continue (text, chatId) {
-
+  public static async refactor (code, whatToDo) {
   }
 
   }

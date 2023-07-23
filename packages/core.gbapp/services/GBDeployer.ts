@@ -937,7 +937,8 @@ export class GBDeployer implements IGBDeployer {
       'kb.gbapp',
       'google-chat.gblib',
       'teams.gblib',
-      'hubspot.gblib'
+      'hubspot.gblib',
+      'gpt.gblib'
     ];
 
     return names.indexOf(name) > -1;
