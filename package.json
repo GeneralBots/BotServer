@@ -1,6 +1,6 @@
 {
   "name": "botserver",
-  "version": "2.4.22",
+  "version": "2.4.23",
   "type": "module",
   "description": "General Bot Community Edition open-core server.",
   "main": "./boot.mjs",
