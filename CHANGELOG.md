@@ -1,3 +1,10 @@
+## [2.4.19](https://github.com/GeneralBots/BotServer/compare/2.4.18...2.4.19) (2023-07-23)
+
+
+### Bug Fixes
+
+* **all:** Fix in DATE filter. ([ad47305](https://github.com/GeneralBots/BotServer/commit/ad47305a025d97e0df77f9995ac44451da21f0e1))
+
 ## [2.4.18](https://github.com/GeneralBots/BotServer/compare/2.4.17...2.4.18) (2023-07-19)
 
 
