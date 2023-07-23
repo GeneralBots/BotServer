@@ -51,7 +51,7 @@ import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import pptxTemplaterModule from 'pptxtemplater';
 import _ from 'lodash';
-// TODO: canvas error import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
+import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
 import sharp from 'sharp';
 import ImageModule from 'open-docxtemplater-image-module';
 import DynamicsWebApi from 'dynamics-web-api';
@@ -182,12 +182,25 @@ export class SystemKeywords {
       if (Array.isArray(data)) {
         isObject = Object.keys(data[1]) !== null;
       }
+      else {
+        isObject = true;
+      }
 
       if (isObject || JSON.parse(data) !== null) {
-        let keys = Object.keys(data[1]);
 
+        // Copies data from JSON format into simple array.
+
+        if (!Array.isArray(data)) {
+          // If data is a single object, wrap it in an array
+          data = [data];
+        }
+        
+        // Ensure that keys is an array of strings representing the object keys
+        const keys = Object.keys(data[0]);
+        
         if (headers) {
           output[0] = [];
+
           // Copies headers as the first element.
 
           for (let i = 0; i < keys.length; i++) {
@@ -197,7 +210,6 @@ export class SystemKeywords {
           output.push({ gbarray: '0' });
         }
 
-        // Copies data from JSON format into simple array.
 
         for (let i = 0; i < data.length; i++) {
           output[i + 1] = [];
@@ -205,7 +217,6 @@ export class SystemKeywords {
             output[i + 1][j] = data[i][keys[j]];
           }
         }
-
         return output;
       }
     } catch (error) {
@@ -217,14 +228,14 @@ export class SystemKeywords {
   /**
    *
    * @param data
-   * @param renderPDF
    * @param renderImage
    * @returns
    *
    * @see http://tabulator.info/examples/5.2
    */
   private async renderTable(pid, data, renderPDF, renderImage) {
-    if (!data[1]) {
+
+    if (data.length && !data[1]) {
       return null;
     }
 
@@ -350,16 +361,14 @@ export class SystemKeywords {
 
       // Converts the PDF to PNG.
 
-      const pngPages /*: PngPageOutput*/ = [];
-      // TODO: https://github.com/GeneralBots/BotServer/issues/350
-      //  await pdfToPng(gbfile.data, {
-      //   disableFontFace: false,
-      //   useSystemFonts: false,
-      //   viewportScale: 2.0,
-      //   pagesToProcess: [1],
-      //   strictPagesToProcess: false,
-      //   verbosityLevel: 0
-      // });
+      const pngPages: PngPageOutput[] = await pdfToPng(gbfile.data, {
+        disableFontFace: false,
+        useSystemFonts: false,
+        viewportScale: 2.0,
+        pagesToProcess: [1],
+        strictPagesToProcess: false,
+        verbosityLevel: 0
+      });
 
       // Prepare an image on cache and return the GBFILE information.
 
@@ -1867,3 +1876,4 @@ export class SystemKeywords {
     GBLog.info(`Twitter Automation: ${text}.`);
   }
 }
+
