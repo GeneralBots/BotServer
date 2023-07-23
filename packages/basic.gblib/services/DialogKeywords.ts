@@ -1180,11 +1180,10 @@ export class DialogKeywords {
       const imageData = await (await fetch(url)).arrayBuffer();
       const base64Image = Buffer.from(imageData).toString('base64');
       const contentType = mime.lookup(url);
-      const ext = mime.extension(contentType);
       reply['attachments'] = [];
       reply['attachments'].push({
         name: filename,
-        contentType: ext,
+        contentType: contentType,
         contentUrl: `data:${contentType};base64,${base64Image}`
       });
 
