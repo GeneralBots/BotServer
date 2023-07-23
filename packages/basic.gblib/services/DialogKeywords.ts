@@ -603,13 +603,14 @@ export class DialogKeywords {
   }
 
   /**
-   * Returns a custom user param persisted on storage.
+   * Returns bot param persisted on storage.
    *
-   * @example GET PARAM name
+   * @example GET CONFIG name
    *
    */
-  public async getUserParam({ pid, name }) {
-    await DialogKeywords.getOption({ pid, name });
+  public async getConfig({ pid, name }) {
+    let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    return min.core.getParam(min.instance, name, null);
   }
 
   /**
