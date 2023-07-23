@@ -583,6 +583,16 @@ export class DialogKeywords {
   }
 
   /**
+   * Define array as output.
+   *
+   * @example SET OUTPUT ARRAY
+   *
+   */
+  public async setOutput({ pid, value }) {
+    await DialogKeywords.setOption({ pid, name: 'output', value: value });
+  }
+
+  /**
    * Defines a custom user param to be persisted to storage.
    *
    * @example SET PARAM name AS value

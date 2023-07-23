@@ -626,6 +626,13 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(set output)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await dk.setOutput ({pid: pid, value: ${$3}})`;
+      }
+    ];
+    
+    keywords[i++] = [
       /^\s*(set max lines)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setMaxLines ({pid: pid, count: ${$3}})`;

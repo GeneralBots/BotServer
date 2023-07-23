@@ -1121,10 +1121,12 @@ export class SystemKeywords {
       }
     }
 
+    const outputArray = await DialogKeywords.getOption({ pid, name:"output" });
+
     if (table.length === 1) {
       GBLog.info(`BASIC: FIND returned no results (zero rows).`);
       return null;
-    } else if (table.length === 2) {
+    } else if (table.length === 2 && !outputArray) {
       GBLog.info(`BASIC: FIND returned single result: ${table[0]}.`);
       return table[1];
     } else {
