@@ -680,32 +680,35 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async printMessage(activity, conversationId, from, fromName) {
+  public async printMessage(activity, conversationId, to, toName) {
     let output = '';
 
     if (activity.text) {
-      GBLog.info(`GBWhatsapp: SND ${from}(${fromName}): ${activity.text}`);
+      GBLog.info(`GBWhatsapp: SND ${to}(${toName}): ${activity.text}`);
       output = activity.text;
     }
 
     if (activity.attachments) {
-      activity.attachments.forEach(attachment => {
+      await CollectionUtil.asyncForEach(activity.attachments, async attachment => {
+      
         switch (attachment.contentType) {
           case 'application/vnd.microsoft.card.hero':
             output += `\n${this.renderHeroCard(attachment)}`;
             break;
 
           case 'image/png':
-            GBLog.info(`Opening the requested image ${attachment.contentUrl}`);
-            output += `\n${attachment.contentUrl}`;
-            break;
+            await this.sendFileToDevice(to, attachment.contentUrl,
+              attachment.name, attachment.name, 0);
+
+            return;   
+
           default:
             GBLog.info(`Unknown content type: ${attachment.contentType}`);
         }
       });
     }
 
-    await this.sendToDevice(from, output, conversationId);
+    await this.sendToDevice(to, output, conversationId);
   }
 
   public renderHeroCard(attachment) {
