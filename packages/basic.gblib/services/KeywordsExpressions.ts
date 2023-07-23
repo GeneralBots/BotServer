@@ -304,6 +304,13 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*get param\s*(.*)/gim,
+      ($0, $1, $2) => {
+        return `${$1} = await dk.getUserParam ({pid: pid, ${$2}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*(set hear on)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `hrOn = ${$3}`;
@@ -578,13 +585,6 @@ export class KeywordsExpressions {
       /^\s*set param \s*(.*)\s*as\s*(.*)/gim,
       ($0, $1, $2) => {
         return `await dk.setUserParam ({pid: pid, ${$1}}, ${$2})`;
-      }
-    ];
-
-    keywords[i++] = [
-      /^\s*get param \s*(.*)/gim,
-      ($0, $1, $2) => {
-        return `await dk.getUserParam ({pid: pid, ${$1}})`;
       }
     ];
 
