@@ -154,22 +154,22 @@ export class SystemKeywords {
     if (date) {
       return array
         ? array.sort((a, b) => {
-            const c = new Date(a[memberName]);
-            const d = new Date(b[memberName]);
-            return c.getTime() - d.getTime();
-          })
+          const c = new Date(a[memberName]);
+          const d = new Date(b[memberName]);
+          return c.getTime() - d.getTime();
+        })
         : null;
     } else {
       return array
         ? array.sort((a, b) => {
-            if (a[memberName] < b[memberName]) {
-              return -1;
-            }
-            if (a[memberName] > b[memberName]) {
-              return 1;
-            }
-            return 0;
-          })
+          if (a[memberName] < b[memberName]) {
+            return -1;
+          }
+          if (a[memberName] > b[memberName]) {
+            return 1;
+          }
+          return 0;
+        })
         : array;
     }
   }
@@ -662,7 +662,7 @@ export class SystemKeywords {
           `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${addressId}')`
         )
         .patch(body);
-      body.values[0][0] = undefined   ;
+      body.values[0][0] = undefined;
 
       // FINDs the filtered row to be updated.
 
@@ -1066,10 +1066,10 @@ export class SystemKeywords {
               result = result.substr(1);
             }
             const resultDate = SystemKeywords.getDateFromLocaleString(pid, result, contentLocale);
-            if (filter.value['dateOnly']) {
-              resultDate.setHours(0, 0, 0, 0);
-            }
             if (resultDate) {
+              if (filter.value['dateOnly']) {
+                resultDate.setHours(0, 0, 0, 0);
+              }
               switch (filter.operator) {
                 case '=':
                   if (resultDate.getTime() == filter.value.getTime()) filterAcceptCount++;
