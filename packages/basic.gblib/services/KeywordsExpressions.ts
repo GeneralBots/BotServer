@@ -628,7 +628,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(set output)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await dk.setOutput ({pid: pid, value: ${$3}})`;
+        return `await dk.setOutput ({pid: pid, value: "${$3}}")`;
       }
     ];
     
