@@ -276,7 +276,9 @@ export class WhatsappDirectLine extends GBService {
   public async check() {
     switch (this.provider) {
       case 'GeneralBots':
-        return this.customClient.getState() === 'CONNECTED';
+        const state = this.customClient.getState();
+        GBLog.verbose(`GBWhatsapp: Status: ${state}`);
+        return state === 'CONNECTED';
 
       default:
         GBLog.verbose(`GBWhatsapp: Checking server...`);
