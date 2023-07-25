@@ -37,6 +37,7 @@ import { GBServer } from '../../../src/app.js';
 import Fs from 'fs';
 import SwaggerClient from 'swagger-client';
 import { spawn } from 'child_process';
+import { CodeServices } from '../../gpt.gblib/services/CodeServices.js';
 
 /**
  * Web Automation services of conversation to be called by BASIC.
@@ -136,6 +137,11 @@ export class DebuggerService {
   public async setBreakpoint({ botId, line }) {
     GBLog.info(`BASIC: Enabled breakpoint for ${botId} on ${line}.`);
     GBServer.globals.debuggers[botId].breaks.push(Number.parseInt(line));
+  }
+
+  public async refactor({ botId, code, change }) {
+    const service = new CodeServices();
+    return await service.refactor(code, change);
   }
 
   public async resume({ botId }) {

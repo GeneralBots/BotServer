@@ -36,7 +36,7 @@ import { GBSSR }from '../../core.gbapp/services/GBSSR.js';
 
 export class CodeServices {
 
-  public static async refactor (code, whatToDo) {
+  public async refactor (code, whatToDo) {
   }
 
   }

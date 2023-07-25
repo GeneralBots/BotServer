@@ -337,6 +337,9 @@ export class AskDialog extends IGBDialog {
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
       await step.endDialog();
       return await GBVMService.callVM(mainName, min, step, user, this.deployer, false);
+    }
+    else if (text.startsWith('/')) {
+      return await step.replaceDialog(text, { answer: answer });
     } else {
       await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
       return await step.replaceDialog('/ask', { isReturning: true });
