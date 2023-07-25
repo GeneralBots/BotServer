@@ -218,6 +218,8 @@ export class GBMinService {
       return '1'; // share a single session for now, real impl could use cookies or some other meaning for HTTP sessions
     }
 
+    GBLogEx.info(0, 'Loading General Bots API...');
+
     let proxies = {};
     await CollectionUtil.asyncForEach(instances, async instance => {
       const proxy = {
@@ -236,11 +238,9 @@ export class GBMinService {
       opts
     );
 
-    GBLogEx.info(0, 'API RPC HTTP Server started.');
-
     // Loads schedules.
 
-    GBLog.info(`Preparing SET SCHEDULE dialog calls...`);
+    GBLog.info(`Loading SET SCHEDULE entries...`);
     const service = new ScheduleServices();
     await service.scheduleAll();
 
