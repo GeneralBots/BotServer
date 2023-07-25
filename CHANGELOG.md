@@ -1,3 +1,11 @@
+## [2.4.26](https://github.com/GeneralBots/BotServer/compare/2.4.25...2.4.26) (2023-07-25)
+
+
+### Bug Fixes
+
+* **all:** Fix answers with dialog id working again. ([2a6f64f](https://github.com/GeneralBots/BotServer/commit/2a6f64f238b6f7088c4a925e0dcd68b705c0e3e8))
+* **all:** Fix answers with dialog id working again. ([ec172b0](https://github.com/GeneralBots/BotServer/commit/ec172b0554bd28ff447c5f8436bb81a9a20ad703))
+
 ## [2.4.25](https://github.com/GeneralBots/BotServer/compare/2.4.24...2.4.25) (2023-07-23)
 
 
