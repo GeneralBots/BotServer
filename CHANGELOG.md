@@ -1,3 +1,12 @@
+## [2.4.25](https://github.com/GeneralBots/BotServer/compare/2.4.24...2.4.25) (2023-07-23)
+
+
+### Bug Fixes
+
+* **all:** Fix in AS IMAGE generation of single row. ([a9256d8](https://github.com/GeneralBots/BotServer/commit/a9256d8ecb2a82c47ccb2765cc2ea66b4a83d30c))
+* **all:** Fix in AS IMAGE generation of single row. ([576e73b](https://github.com/GeneralBots/BotServer/commit/576e73b6258b313962136823b8753f2d10f3a30e))
+* **all:** Fix in AS IMAGE generation of single row. ([4c5ccb2](https://github.com/GeneralBots/BotServer/commit/4c5ccb2fac5d25b95fe4fb1aca08a39d647ecb23))
+
 ## [2.4.24](https://github.com/GeneralBots/BotServer/compare/2.4.23...2.4.24) (2023-07-23)
 
 
