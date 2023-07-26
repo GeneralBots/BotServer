@@ -1,3 +1,10 @@
+## [2.4.32](https://github.com/GeneralBots/BotServer/compare/2.4.31...2.4.32) (2023-07-26)
+
+
+### Bug Fixes
+
+* **core.gbapp:** FIX SSR errors and setOption impersonated. ([ed96440](https://github.com/GeneralBots/BotServer/commit/ed9644089e481834b309f63bfe227ec5e5b0d854))
+
 ## [2.4.31](https://github.com/GeneralBots/BotServer/compare/2.4.30...2.4.31) (2023-07-26)
 
 
