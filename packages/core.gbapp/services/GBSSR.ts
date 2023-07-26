@@ -284,10 +284,14 @@ export class GBSSR {
     // Tries to find botId from URL.
 
     const minBoot = GBServer.globals.minBoot;
-    let botId =
-      req.originalUrl && req.originalUrl === '/' ?
-        minBoot.botId :
-        /\/([A-Za-z0-9\-\_]+)\/*/.exec(req.originalUrl)[1]
+    let botId = minBoot.botId;
+    if (req.originalUrl && req.originalUrl === '/') {
+      let tmp = /\/([A-Za-z0-9\-\_]+)\/*/.exec(req.originalUrl);
+      if (tmp) {
+        botId = tmp[1];
+      }
+    }
+
     let min: GBMinInstance =
       req.url === '/'
         ? minBoot

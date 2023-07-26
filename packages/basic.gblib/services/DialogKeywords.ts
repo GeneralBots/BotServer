@@ -557,10 +557,17 @@ export class DialogKeywords {
     //   throw new Error(`Not possible to define ${name} as it is a reserved system param name.`);
     // }
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    const sec = new SecService();
-    await sec.setParam(user.userId, name  , value);
     GBLog.info(`BASIC: ${name} = ${value} (botId: ${min.botId})`);
-    return { min, user, params };
+    const sec = new SecService();
+    if (user)
+    {
+      await sec.setParam(user.userId, name  , value);
+      return { min, user, params };
+    }
+    else
+    {
+      min[name] = value;
+    }
   }
 
   public static async getOption({ pid, name }) {
@@ -568,8 +575,15 @@ export class DialogKeywords {
       throw new Error(`Not possible to retrieve ${name} system param.`);
     }
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    const sec = new SecService();
-    return await sec.getParam(user, name);
+
+    if (user){
+      const sec = new SecService();
+      return await sec.getParam(user, name);
+    }
+    else
+    {
+      return min[name];
+    }
   }
 
   /**
