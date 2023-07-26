@@ -875,12 +875,14 @@ export class GBConversationalService {
         });
       }
 
-      return await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
+      await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
+      return true;
+
     }
 
     GBLog.info(`NLP NOT called: score: ${score} > required (nlpScore): ${instanceScore}`);
 
-    return null;
+    return false;
   }
 
   public async getLanguage(min: GBMinInstance, text: string): Promise<string> {

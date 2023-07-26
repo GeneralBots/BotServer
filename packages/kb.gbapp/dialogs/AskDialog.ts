@@ -195,7 +195,7 @@ export class AskDialog extends IGBDialog {
             await GBVMService.callVM(startDialog.toLowerCase().trim(), min, step, user, this.deployer, false);
           }
 
-          return step.endDialog();
+          return await step.endDialog();
         }
 
         const locale = step.context.activity.locale;
@@ -270,9 +270,9 @@ export class AskDialog extends IGBDialog {
 
         // Tries to answer by NLP.
 
-        let nextDialog = await min.conversationalService.routeNLP(step, min, text);
-        if (nextDialog) {
-          return nextDialog;
+        let handled = await min.conversationalService.routeNLP(step, min, text);
+        if (handled) {
+          return;
         }
 
         // Tries to answer by Reading Comprehension.

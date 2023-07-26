@@ -807,7 +807,7 @@ export class DialogKeywords {
       };
       min.cbMap[userId] = {};
       min.cbMap[userId]['promise'] = '!GBHEAR';
-
+        
       while (min.cbMap[userId].promise === '!GBHEAR') {
         await sleep(DEFAULT_HEAR_POLL_INTERVAL);
       }
