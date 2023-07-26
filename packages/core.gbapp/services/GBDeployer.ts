@@ -203,12 +203,14 @@ export class GBDeployer implements IGBDeployer {
    * Deploys a new blank bot to the database, cognitive services and other services.
    */
   public async deployBlankBot(botId: string, mobile: string, email: string) {
+    
     // Creates a new row on the GuaribasInstance table.
 
     const instance = await this.importer.createBotInstance(botId);
     const bootInstance = GBServer.globals.bootInstance;
 
     // Gets the access token to perform service operations.
+
     const accessToken = await 
       (GBServer.globals.minBoot.adminService as any)['acquireElevatedToken']
       (bootInstance.instanceId, true);
@@ -276,22 +278,6 @@ export class GBDeployer implements IGBDeployer {
       );
     } else {
       const botId = GBConfigService.get('BOT_ID');
-      const bootInstance = await this.core.loadInstanceByBotId(botId);
-
-      instance.searchHost = bootInstance.searchHost;
-      instance.searchIndex = bootInstance.searchIndex;
-      instance.searchIndexer = bootInstance.searchIndexer;
-      instance.searchKey = bootInstance.searchKey;
-      instance.whatsappServiceKey = bootInstance.whatsappServiceKey;
-      instance.whatsappServiceNumber = bootInstance.whatsappServiceNumber;
-      instance.whatsappServiceUrl = bootInstance.whatsappServiceUrl;
-      instance.storageServer = bootInstance.storageServer;
-      instance.storageName = bootInstance.storageName;
-      instance.storageUsername = bootInstance.storageUsername;
-      instance.storagePassword = bootInstance.storagePassword;
-      instance.cloudLocation = bootInstance.cloudLocation;
-      instance.speechEndpoint = bootInstance.speechEndpoint;
-      instance.speechKey = bootInstance.speechKey;
 
       // Internally create resources on cloud provider.
 
