@@ -120,7 +120,7 @@ export class GBServer {
         GBLog.error('UNCAUGHT_EXCEPTION: Unknown error (err is null)');
       }
     });
-    
+
     process.on('SIGTERM', () => {
       GBLog.info('SIGTERM signal received.');
     });
