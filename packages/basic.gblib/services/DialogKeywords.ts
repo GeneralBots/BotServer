@@ -697,7 +697,10 @@ export class DialogKeywords {
    */
   public async userName({ pid }) {
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    return user.userName;
+    if (user)
+      return user.userName;
+    else
+      return 'unattended';
   }
 
   /**
