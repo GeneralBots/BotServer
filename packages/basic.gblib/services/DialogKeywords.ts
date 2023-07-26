@@ -708,7 +708,10 @@ export class DialogKeywords {
    */
   public async userMobile({ pid }) {
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    return user.userSystemId;
+    if (user)
+      return user.userSystemId;
+    else
+      return 'unattended';
   }
 
   /**
