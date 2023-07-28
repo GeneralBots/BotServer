@@ -125,11 +125,10 @@ export class GBSSR {
     };
   }
 
-
   public static async createBrowser(profilePath): Promise<any> {
     const opts = this.preparePuppeteer(profilePath);
     puppeteer.use(hidden());
-    puppeteer.use(require("puppeteer-extra-plugin-minmax")());
+    puppeteer.use(require('puppeteer-extra-plugin-minmax')());
     const browser = await puppeteer.launch(opts);
     return browser;
   }
@@ -284,25 +283,26 @@ export class GBSSR {
     // Tries to find botId from URL.
 
     const minBoot = GBServer.globals.minBoot;
-    let botId =
-      req.originalUrl && req.originalUrl === '/' ?
-        minBoot.botId :
-        /\/([A-Za-z0-9\-\_]+)\/*/.exec(req.originalUrl)[1]
+
+    const onlyChars = /\/([A-Za-z0-9\-\_]+)\/*/.exec(req.originalUrl);
+
+    let botId = (req.originalUrl && req.originalUrl === '/') || onlyChars.length === 0 ? minBoot.botId : onlyChars[1];
+
     let min: GBMinInstance =
       req.url === '/'
         ? minBoot
         : GBServer.globals.minInstances.filter(p => p.instance.botId.toLowerCase() === botId.toLowerCase())[0];
     if (!min) {
-      min = req.url === '/'
-        ? minBoot
-        : GBServer.globals.minInstances.filter(p =>
-          p.instance.activationCode ? p.instance.activationCode.toLowerCase() === botId.toLowerCase()
-            : null)[0];
+      min =
+        req.url === '/'
+          ? minBoot
+          : GBServer.globals.minInstances.filter(p =>
+              p.instance.activationCode ? p.instance.activationCode.toLowerCase() === botId.toLowerCase() : null
+            )[0];
     }
     if (!min) {
       botId = minBoot.botId;
     }
-
 
     let path = DialogKeywords.getGBAIPath(botId, `gbui`);
 
@@ -315,7 +315,6 @@ export class GBSSR {
     let url = parts[0];
 
     if (min && req.originalUrl && prerender && exclude) {
-
       // Reads from static HTML when a bot is crawling.
 
       path = Path.join(process.env.PWD, 'work', path, 'index.html');
@@ -323,7 +322,6 @@ export class GBSSR {
       res.status(200).send(html);
       return true;
     } else {
-
       // Servers default.gbui web application.
 
       path = Path.join(
@@ -334,18 +332,17 @@ export class GBSSR {
         url === '/' || url === '' ? `index.html` : url
       );
       if (GBServer.globals.wwwroot && url === '/') {
-        path = GBServer.globals.wwwroot + "/index.html"; // TODO.
+        path = GBServer.globals.wwwroot + '/index.html'; // TODO.
       }
-      if (!min && !url.startsWith("/static") && GBServer.globals.wwwroot) {
+      if (!min && !url.startsWith('/static') && GBServer.globals.wwwroot) {
         path = Path.join(GBServer.globals.wwwroot, url);
       }
       if (Fs.existsSync(path)) {
         if (min) {
           let html = Fs.readFileSync(path, 'utf8');
           html = html.replace(/\{p\}/gi, min.botId);
+          html = html.replace(/\{theme\}/gi, min.instance.theme ? min.instance.theme : 'default.gbtheme');
           html = html.replace(/\{botId\}/gi, min.botId);
-          html = html.replace(/\{theme\}/gi, min.instance.theme ? min.instance.theme :
-            'default.gbtheme');
           html = html.replace(/\{title\}/gi, min.instance.title);
           res.send(html).end();
         } else {
