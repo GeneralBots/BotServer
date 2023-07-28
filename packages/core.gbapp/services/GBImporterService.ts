@@ -99,7 +99,7 @@ export class GBImporter {
   }
 
   public async createBotInstance (botId: string) {
-    const fullSettingsJson = <GuaribasInstance>{ ...GBServer.globals.bootInstance };
+    const fullSettingsJson = <GuaribasInstance>{  };
     fullSettingsJson['botId'] = botId;
 
     return await GuaribasInstance.create(fullSettingsJson);

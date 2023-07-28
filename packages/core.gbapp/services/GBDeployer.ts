@@ -205,7 +205,6 @@ export class GBDeployer implements IGBDeployer {
   public async deployBlankBot(botId: string, mobile: string, email: string) {
     
     // Creates a new row on the GuaribasInstance table.
-
     const instance = await this.importer.createBotInstance(botId);
     const bootInstance = GBServer.globals.bootInstance;
 
@@ -230,9 +229,6 @@ export class GBDeployer implements IGBDeployer {
     instance.state = 'active';
     instance.nlpScore = 0.8;
     instance.searchScore = 0.25;
-    instance.whatsappServiceKey = null;
-    instance.whatsappServiceNumber = null;
-    instance.whatsappServiceUrl = null;
     instance.params = JSON.stringify({ 'Can Publish': mobile, 'Admin Notify E-mail': email });
 
     // Saves bot information to the store.

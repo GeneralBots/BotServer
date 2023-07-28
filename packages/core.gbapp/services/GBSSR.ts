@@ -286,7 +286,7 @@ export class GBSSR {
 
     const onlyChars = /\/([A-Za-z0-9\-\_]+)\/*/.exec(req.originalUrl);
 
-    let botId = (req.originalUrl && req.originalUrl === '/') || onlyChars.length === 0 ? minBoot.botId : onlyChars[1];
+    let botId = (req.originalUrl && req.originalUrl === '/') || onlyChars ? onlyChars[1] : minBoot.botId;
 
     let min: GBMinInstance =
       req.url === '/'

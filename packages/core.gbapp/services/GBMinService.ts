@@ -771,7 +771,7 @@ export class GBMinService {
       await min.whatsAppDirectLine.setup(true);
     } else {
       const minBoot = GBServer.globals.minBoot as any;
-      if (min !== minBoot) {
+      if (min !== minBoot && minBoot.instance.whatsappServiceKey) {
         min.whatsAppDirectLine = new WhatsappDirectLine(
           min,
           min.botId,
