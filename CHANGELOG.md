@@ -1,3 +1,10 @@
+## [2.4.39](https://github.com/GeneralBots/BotServer/compare/2.4.38...2.4.39) (2023-07-31)
+
+
+### Bug Fixes
+
+* **all:** Minor changes in PROD. ([e5f41bc](https://github.com/GeneralBots/BotServer/commit/e5f41bca786f1637d1c3d35d5542b062c2372a44))
+
 ## [2.4.38](https://github.com/GeneralBots/BotServer/compare/2.4.37...2.4.38) (2023-07-29)
 
 
