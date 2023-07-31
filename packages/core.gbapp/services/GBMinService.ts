@@ -206,9 +206,11 @@ export class GBMinService {
         disconnected(remoteId: string, connections: number): void { },
         connected(remoteId: string, connections: number): void { },
         messageIn(...params): void {
+          params.shift();
           GBLogEx.info(0, '[IN] ' + params);
         },
         messageOut(...params): void {
+          params.shift();
           GBLogEx.info(0, '[OUT] ' + params);
         }
       }
@@ -1122,7 +1124,7 @@ export class GBMinService {
 
   private static async downloadAttachmentAndWrite(attachment) {
     const url = attachment.contentUrl;
-    const localFolder = Path.join('work');
+    const localFolder = 'work';
     const path = DialogKeywords.getGBAIPath(this['min'].botId);
     const localFileName = Path.join(localFolder, path, 'uploads',
       attachment.name
