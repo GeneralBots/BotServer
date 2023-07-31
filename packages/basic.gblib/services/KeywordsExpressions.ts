@@ -254,6 +254,16 @@ export class KeywordsExpressions {
     keywords[i++] = [/^\s*next *$/gim, '}'];
 
     keywords[i++] = [
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*pay\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($2, ['orderId', 'customerName', 'ammount']);
+        
+        return `
+          ${$1} = await sys.pay({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*do while +(.*)/gim,
       function (input, group1) {
         var condition = convertConditions(group1);

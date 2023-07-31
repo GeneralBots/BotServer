@@ -154,22 +154,22 @@ export class SystemKeywords {
     if (date) {
       return array
         ? array.sort((a, b) => {
-          const c = new Date(a[memberName]);
-          const d = new Date(b[memberName]);
-          return c.getTime() - d.getTime();
-        })
+            const c = new Date(a[memberName]);
+            const d = new Date(b[memberName]);
+            return c.getTime() - d.getTime();
+          })
         : null;
     } else {
       return array
         ? array.sort((a, b) => {
-          if (a[memberName] < b[memberName]) {
-            return -1;
-          }
-          if (a[memberName] > b[memberName]) {
-            return 1;
-          }
-          return 0;
-        })
+            if (a[memberName] < b[memberName]) {
+              return -1;
+            }
+            if (a[memberName] > b[memberName]) {
+              return 1;
+            }
+            return 0;
+          })
         : array;
     }
   }
@@ -181,23 +181,21 @@ export class SystemKeywords {
 
       if (Array.isArray(data)) {
         isObject = Object.keys(data[1]) !== null;
-      }
-      else {
+      } else {
         isObject = true;
       }
 
       if (isObject || JSON.parse(data) !== null) {
-
         // Copies data from JSON format into simple array.
 
         if (!Array.isArray(data)) {
           // If data is a single object, wrap it in an array
           data = [data];
         }
-        
+
         // Ensure that keys is an array of strings representing the object keys
         const keys = Object.keys(data[0]);
-        
+
         if (headers) {
           output[0] = [];
 
@@ -209,7 +207,6 @@ export class SystemKeywords {
         } else {
           output.push({ gbarray: '0' });
         }
-
 
         for (let i = 0; i < data.length; i++) {
           output[i + 1] = [];
@@ -234,7 +231,6 @@ export class SystemKeywords {
    * @see http://tabulator.info/examples/5.2
    */
   private async renderTable(pid, data, renderPDF, renderImage) {
-
     if (data.length && !data[1]) {
       return null;
     }
@@ -661,7 +657,6 @@ export class SystemKeywords {
 
     const filter = await DialogKeywords.getOption({ pid, name: 'filter' });
     if (filter) {
-
       // Creates id row.
 
       body.values[0][0] = 'id';
@@ -1121,7 +1116,7 @@ export class SystemKeywords {
       }
     }
 
-    const outputArray = await DialogKeywords.getOption({ pid, name:"output" });
+    const outputArray = await DialogKeywords.getOption({ pid, name: 'output' });
 
     if (table.length === 1) {
       GBLog.info(`BASIC: FIND returned no results (zero rows).`);
@@ -1877,5 +1872,63 @@ export class SystemKeywords {
     await client.v2.tweet(text);
     GBLog.info(`Twitter Automation: ${text}.`);
   }
-}
 
+  public async pay({ pid, orderId, customerName, ammount }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+
+    const merchantId = min.core.getParam(min.instance, 'Merchant ID', null);
+    const merchantKey = min.core.getParam(min.instance, 'Merchant Key', null);
+
+    if (!merchantId || !merchantKey) {
+      throw new Error('Payment not configured in .gbot.');
+    }
+
+    const apiUrl = 'https://apisandbox.cieloecommerce.cielo.com.br/1/sales/';
+    const requestId = GBAdminService.generateUuid();
+
+    GBLog.info(`GBPay: ${requestId}, ${orderId}, ${ammount}... `);
+
+    const requestData = {
+      MerchantOrderId: orderId,
+      Customer: {
+        Name: customerName
+      },
+      Payment: {
+        Type: 'qrcode',
+        Amount: ammount,
+        Installments: 1,
+        Capture: false,
+        Modality: 'Debit'
+      }
+    };
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      body: JSON.stringify(requestData),
+      headers: {
+        'Content-Type': 'application/json',
+        MerchantId: merchantId,
+        MerchantKey: merchantKey,
+        RequestId: requestId
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    // Prepare an image on cache and return the GBFILE information.
+    
+    const buf = Buffer.from(data.Payment.QrCodeBase64Image, 'base64');
+    const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
+    Fs.writeFileSync(localName, buf, { encoding: null });
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+    
+    GBLog.info(`GBPay: ${data.MerchantOrderId} OK: ${url}.`);
+
+    return { localName: localName, url: url, data: buf, text: data.Payment.QrCodeString };
+  }
+}

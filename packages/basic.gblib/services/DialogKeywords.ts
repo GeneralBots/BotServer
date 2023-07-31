@@ -1171,20 +1171,29 @@ export class DialogKeywords {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const element = filename._page ? filename._page : filename.screenshot ? filename : null;
     let url;
+    let nameOnly;
+
+    // Web automation.
 
     if (element) {
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
       const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
+      nameOnly = Path.basename(localName);
       await element.screenshot({ path: localName, fullPage: true });
 
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
       GBLog.info(`BASIC: WebAutomation: Sending the file ${url} to mobile ${mobile}.`);
-    } else if (filename.url) {
-      url = filename.url;
-    }
+    } 
+    
+    // GBFILE object.
 
+    else if (filename.url) {
+      url = filename.url;
+      nameOnly = Path.basename(filename.localName);
+    }
     // Handles Markdown.
+
     else if (filename.indexOf('.md') > -1) {
       GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
       const md = await min.kbService.getAnswerTextByMediaName(min.instance.instanceId, filename);
@@ -1203,6 +1212,8 @@ export class DialogKeywords {
       } else {
         url = filename
       }
+
+      nameOnly = filename;
     }
 
     if (url) {
@@ -1213,7 +1224,7 @@ export class DialogKeywords {
       const contentType = mime.lookup(url);
       reply['attachments'] = [];
       reply['attachments'].push({
-        name: filename,
+        name: nameOnly,
         contentType: contentType,
         contentUrl: `data:${contentType};base64,${base64Image}`
       });
