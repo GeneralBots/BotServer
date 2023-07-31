@@ -295,6 +295,16 @@ export class GBMinService {
    * installing all BASIC artifacts from .gbdialog and OAuth2.
    */
   public async mountBot(instance: IGBInstance) {
+
+
+    const manifest = `${instance.botId}-Teams.zip`;
+    GBLog.info('Generating MS Teams manifest....');
+    let packageTeams = urlJoin(`work`, DialogKeywords.getGBAIPath(instance.botId), manifest);
+    if (!Fs.existsSync(packageTeams)) {
+      const data = await this.deployer.getBotManifest(instance);
+      Fs.writeFileSync(packageTeams, data);
+    }
+
     // Build bot adapter.
 
     const { min, adapter, conversationState } = await this.buildBotAdapter(
@@ -1241,7 +1251,9 @@ export class GBMinService {
     }
 
     // Prepare Promises to download each attachment and then execute each Promise.
-    if (step.context.activity.attachments) {
+    if (step.context.activity.attachments 
+      && step.context.activity.attachments[0].contentType != 'text/html') {
+
       const promises = step.context.activity.attachments.map(
         GBMinService.downloadAttachmentAndWrite.bind({ min, user, params })
       );

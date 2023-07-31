@@ -338,7 +338,7 @@ export class GBDeployer implements IGBDeployer {
     const s = new TeamsService();
     const manifest = await s.getManifest(
       instance.marketplaceId,
-      instance.title,
+      instance.botId,
       instance.description,
       GBAdminService.generateUuid(),
       instance.botId,
