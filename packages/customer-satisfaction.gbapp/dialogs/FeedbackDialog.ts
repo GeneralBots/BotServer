@@ -104,7 +104,8 @@ export class FeedbackDialog extends IGBDialog {
             
             await min.userProfile.set(step.context, profile);
 
-            if (agentSystemId.charAt(2) === ':' || agentSystemId.indexOf('@') > -1) {
+            if (agentSystemId.indexOf('@') !== -1) {
+              
               // Agent is from Teams or Google Chat.
 
               const agent = await sec.getUserFromSystemId(agentSystemId);
@@ -181,7 +182,7 @@ export class FeedbackDialog extends IGBDialog {
               step.context.activity.conversation.id
             );
 
-            if (user.agentSystemId.charAt(2) === ':' || userSystemId.indexOf('@') > -1) {
+            if (user.agentSystemId.indexOf('@') !== -1) {
               // Agent is from Teams or Google Chat.
               await min.conversationalService.sendText(
                 min,

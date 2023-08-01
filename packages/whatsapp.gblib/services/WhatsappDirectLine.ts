@@ -516,7 +516,8 @@ export class WhatsappDirectLine extends GBService {
             null
           );
 
-          if (user.agentSystemId.charAt(2) === ':') {
+          if (user.agentSystemId.indexOf('@') !== -1) {
+            
             // Agent is from Teams.
             await this.min.conversationalService['sendOnConversation'](
               this.min,
@@ -535,7 +536,7 @@ export class WhatsappDirectLine extends GBService {
           await sec.updateHumanAgent(user.agentSystemId, this.min.instance.instanceId, null);
         } else {
           GBLog.info(`HUMAN AGENT (${manualUser.agentSystemId}) TO USER ${manualUser.userSystemId}: ${text}`);
-          await this.sendToDeviceEx(manualUser.userSystemId, `AGENTE: *${text}*`, locale, null);
+          await this.sendToDeviceEx(manualUser.userSystemId, `AGENT: *${text}*`, locale, null);
         }
       }
     } else if (user.agentMode === 'human') {
@@ -552,7 +553,7 @@ export class WhatsappDirectLine extends GBService {
       } else {
         GBLog.info(`USER (${from}) TO AGENT ${agent.userSystemId}: ${text}`);
 
-        if (user.agentSystemId.charAt(2) === ':' || agent.userSystemId.indexOf('@') > -1) {
+        if (user.agentSystemId.indexOf('@') !== -1) {
           // Agent is from Teams or Google Chat.
           await this.min.conversationalService['sendOnConversation'](this.min, agent, text);
         } else {
@@ -593,16 +594,21 @@ export class WhatsappDirectLine extends GBService {
   }
 
   private async endTransfer(id: string, locale: string, user: GuaribasUser, agent: GuaribasUser, sec: SecService) {
+    
     await this.sendToDeviceEx(id, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale, null);
 
-    if (user.agentSystemId.charAt(2) === ':') {
+    if (user.agentSystemId.indexOf('@') !== -1) {
+      
       // Agent is from Teams.
+      
       await this.min.conversationalService['sendOnConversation'](
         this.min,
         agent,
         Messages[this.locale].notify_end_transfer(this.min.instance.botId)
       );
+
     } else {
+      
       await this.sendToDeviceEx(
         user.agentSystemId,
         Messages[this.locale].notify_end_transfer(this.min.instance.botId),
