@@ -1198,8 +1198,37 @@ export class GBMinService {
     context.activity.text = context.activity.text.trim();
 
     const member = context.activity.from;
+    let memberId, email;
+    
+    // Processes e-mail from id in case of Teams messages.
 
-    let user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name, null);
+    if (member.id.startsWith("29:")){
+      const token = await (min.adminService as any)
+        ['acquireElevatedToken'](min.instance.instanceId, false);
+
+      const url = `https://graph.microsoft.com/v1.0/users/${context.activity.from.aadObjectId}`;
+            const options = {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      };
+  
+      try {
+        const res = await fetch(url, options);
+        const member   = JSON.parse(await res.text());
+        memberId = member.mail;
+        email  = member.mail;
+      } catch (error) {
+        throw `[botId:${min.instance.botId}] Error calling Teams to get user info: ${error}.`;
+      }
+    }
+    else
+    {
+      memberId = member.id;
+    }
+
+    let user = await sec.ensureUser(min.instance.instanceId, memberId, member.name, '', 'web', member.name, email);
 
     const userId = user.userId;
     const params = user.params ? JSON.parse(user.params) : {};
