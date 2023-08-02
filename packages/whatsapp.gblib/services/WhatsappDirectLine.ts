@@ -555,7 +555,7 @@ export class WhatsappDirectLine extends GBService {
         GBLog.info(`USER (${from}) TO AGENT ${agent.userSystemId}: ${text}`);
         
         const prompt = `the person said: ${text}. what can I tell her?`;
-        const answer = ChatServices.continue(this.min, prompt, 0);
+        const answer = await ChatServices.continue(this.min, prompt, 0);
         text = `${text} \n\nGeneral Bots: ${answer}`
 
         if (user.agentSystemId.indexOf('@') !== -1) {
