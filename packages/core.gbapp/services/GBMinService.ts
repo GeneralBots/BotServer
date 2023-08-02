@@ -100,6 +100,7 @@ import { DebuggerService } from '../../basic.gblib/services/DebuggerService.js';
 import { ImageProcessingServices } from '../../basic.gblib/services/ImageProcessingServices.js';
 import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices.js';
 import mime from 'mime';
+import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
  */

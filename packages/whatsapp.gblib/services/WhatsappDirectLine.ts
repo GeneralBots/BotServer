@@ -48,6 +48,7 @@ import express from 'express';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import pkg from 'whatsapp-web.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
+import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 const { List, Buttons, Client, MessageMedia } = pkg;
 
 /**
@@ -552,6 +553,10 @@ export class WhatsappDirectLine extends GBService {
         await this.endTransfer(from, locale, user, agent, sec);
       } else {
         GBLog.info(`USER (${from}) TO AGENT ${agent.userSystemId}: ${text}`);
+        
+        const prompt = `the person said: ${text}. what can I tell her?`;
+        const answer = ChatServices.continue(this.min, prompt, 0);
+        text = `${text} \n\nGeneral Bots: ${answer}`
 
         if (user.agentSystemId.indexOf('@') !== -1) {
           // Agent is from Teams or Google Chat.
