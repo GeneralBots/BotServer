@@ -1,3 +1,10 @@
+## [2.4.42](https://github.com/GeneralBots/BotServer/compare/2.4.41...2.4.42) (2023-08-01)
+
+
+### Bug Fixes
+
+* **whatsapp.gblib:** Now using e-mail instead of Teams ID. ([5860000](https://github.com/GeneralBots/BotServer/commit/58600001c9b7c229ff1ccf3c66ed935a8eaf1986))
+
 ## [2.4.41](https://github.com/GeneralBots/BotServer/compare/2.4.40...2.4.41) (2023-08-01)
 
 
