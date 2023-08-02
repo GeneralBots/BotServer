@@ -60,7 +60,7 @@ export class ChatServices {
       model: "gpt-3.5-turbo",
       messages: [{role: "user", content: text}],
     });
-    return chatCompletion.data.choices[0].message;
+    return chatCompletion.data.choices[0].message.content;
 
   }
 }

@@ -694,6 +694,9 @@ export class DialogKeywords {
 
   /**
    * Returns the name of the user acquired by WhatsApp API.
+   * 
+   * SAVE "file.xlsx", username, now
+   * 
    */
   public async userName({ pid }) {
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
