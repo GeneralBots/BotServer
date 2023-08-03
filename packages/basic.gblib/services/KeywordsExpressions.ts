@@ -328,6 +328,15 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(.*)\=\s*(REWRITE)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['text']);
+        return `await sys.rewrite ({pid: pid, ${params}})`;
+      }
+    ];
+
+
+    keywords[i++] = [
       /^\s*hear (\w+\$*) as (\w+( \w+)*.xlsx)/gim,
       ($0, $1, $2) => {
         return `${$1} = await dk.hear({pid: pid, kind:"sheet", arg: "${$2}"})`;

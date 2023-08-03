@@ -59,6 +59,7 @@ import * as MSAL from '@azure/msal-node';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 import { WebAutomationServices } from './WebAutomationServices.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
+import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 
 /**
  * @fileoverview General Bots server core.
@@ -1873,6 +1874,26 @@ export class SystemKeywords {
     GBLog.info(`Twitter Automation: ${text}.`);
   }
 
+
+  /**
+   * HEAR description 
+   * text = REWRITE description
+   * SAVE "logs.xlsx", username, text
+   */
+  public async rewrite({ pid, text }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const prompt = `rewrite this sentence in a better way: ${text}`;
+    const answer = await ChatServices.continue(min, prompt, 0);
+    GBLog.info(`BASIC: REWRITE ${text} TO ${answer}`);
+    return answer;
+  }
+
+  /**
+   * 
+   * qrcode = PAY "10000", "Name", 100
+   * SEND FILE qrcode
+   * 
+   */
   public async pay({ pid, orderId, customerName, ammount }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
