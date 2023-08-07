@@ -99,8 +99,8 @@ import { createKoaHttpServer } from '../../basic.gblib/index.js';
 import { DebuggerService } from '../../basic.gblib/services/DebuggerService.js';
 import { ImageProcessingServices } from '../../basic.gblib/services/ImageProcessingServices.js';
 import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices.js';
-import mime from 'mime';
-import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
+import mime from 'mime-types';
+
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
  */
@@ -1282,17 +1282,40 @@ export class GBMinService {
 
     // Prepare Promises to download each attachment and then execute each Promise.
     if (step.context.activity.attachments 
+      && step.context.activity.attachments[0]
       && step.context.activity.attachments[0].contentType != 'text/html') {
 
       const promises = step.context.activity.attachments.map(
         GBMinService.downloadAttachmentAndWrite.bind({ min, user, params })
       );
       const successfulSaves = await Promise.all(promises);
-      async function replyForReceivedAttachments(localAttachmentData) {
-        if (localAttachmentData) {
+      async function replyForReceivedAttachments(attachmentData) {
+        if (attachmentData) {
+
           // Because the TurnContext was bound to this function,the bot can call
           // `TurnContext.sendActivity` via `this.sendActivity`;
           await this.sendActivity(`Upload OK.`);
+
+          // In case of not having HEAR activated before, it is 
+          // a upload with no Dialog, so run Auto Save to .gbdrive.
+          
+          if (!min.cbMap[userId])
+          {
+            const t = new SystemKeywords();
+            GBLog.info(`BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
+            const handle = WebAutomationServices.cyrb53(min.botId + attachmentData.fileName);
+            let data = Fs.readFileSync(attachmentData.localPath);
+
+            const gbfile = {
+              filename: attachmentData.localPath,
+              data: data,
+              name: Path.basename(attachmentData.fileName)
+            };
+
+            GBServer.globals.files[handle] = gbfile;
+            await t.internalAutoSave({min: min, handle:handle });
+          }
+
         } else {
           await this.sendActivity('Error uploading file. Please,start again.');
         }
@@ -1320,6 +1343,14 @@ export class GBMinService {
           }
           min.cbMap[userId].promise = results[0];
         }
+        else
+        {
+            // Uploads file to .gbdrive associated folder.
+
+            
+        }
+
+
       }
     }
 

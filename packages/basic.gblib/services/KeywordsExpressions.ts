@@ -326,12 +326,20 @@ export class KeywordsExpressions {
         return `hrOn = ${$3}`;
       }
     ];
-
+    
     keywords[i++] = [
       /^\s*(.*)\=\s*(REWRITE)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['text']);
         return `await sys.rewrite ({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(.*)\=\s*(AUTO SAVE)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['handle']);
+        return `await sys.autoSave ({pid: pid, ${params}})`;
       }
     ];
 

@@ -60,6 +60,7 @@ import { GBConversationalService } from '../../core.gbapp/services/GBConversatio
 import { WebAutomationServices } from './WebAutomationServices.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
+import mime from 'mime-types';
 
 /**
  * @fileoverview General Bots server core.
@@ -1874,9 +1875,8 @@ export class SystemKeywords {
     GBLog.info(`Twitter Automation: ${text}.`);
   }
 
-
   /**
-   * HEAR description 
+   * HEAR description
    * text = REWRITE description
    * SAVE "logs.xlsx", username, text
    */
@@ -1889,10 +1889,10 @@ export class SystemKeywords {
   }
 
   /**
-   * 
+   *
    * qrcode = PAY "10000", "Name", 100
    * SEND FILE qrcode
-   * 
+   *
    */
   public async pay({ pid, orderId, customerName, ammount }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
@@ -1940,16 +1940,56 @@ export class SystemKeywords {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data = await response.json();
-    
+
     // Prepare an image on cache and return the GBFILE information.
-    
+
     const buf = Buffer.from(data.Payment.QrCodeBase64Image, 'base64');
     const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
     Fs.writeFileSync(localName, buf, { encoding: null });
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
-    
+
     GBLog.info(`GBPay: ${data.MerchantOrderId} OK: ${url}.`);
 
-    return { localName: localName, url: url, data: buf, text: data.Payment.QrCodeString };
+    return {
+      name: Path.basename(localName),
+      localName: localName,
+      url: url,
+      data: buf,
+      text: data.Payment.QrCodeString
+    };
+  }
+
+  /**
+   * HEAR logo AS FILE
+   * file = AUTO SAVE logo
+   * TALK "Your " + file.name + " file is saved."
+   */
+  public async autoSave({ pid, handle }) {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    this.internalAutoSave({ min, handle });
+  }
+
+  public async internalAutoSave({ min, handle }) {
+    const file = GBServer.globals.files[handle];
+    GBLog.info(`BASIC: Auto saving '${file.filename}' (SAVE file).`);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+    try {
+      const contentType = mime.lookup(file.url ? file.url : file.name);
+      const kind = await getContentTypeFolder(contentType);
+      await client.api(`${baseUrl}/drive/root:/${path}/${kind}/${file.name}:/content`).put(file.data);
+    } catch (error) {
+      if (error.code === 'itemNotFound') {
+        GBLog.info(`BASIC: BASIC source file not found: ${file}.`);
+      }
+      throw error;
+    }
+  }
+}
+function getContentTypeFolder(contentType: any) {
+  // TODO: DS .jpog ->'image/jpg' ->  IMages
+  // #359
+  if (contentType === 'image/jpg') {
+    return 'Images';
   }
 }
