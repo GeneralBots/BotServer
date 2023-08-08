@@ -61,6 +61,7 @@ import { WebAutomationServices } from './WebAutomationServices.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import mime from 'mime-types';
+import exts from '../../../extensions.json' assert { type: 'json' };
 
 /**
  * @fileoverview General Bots server core.
@@ -1973,23 +1974,23 @@ export class SystemKeywords {
     const file = GBServer.globals.files[handle];
     GBLog.info(`BASIC: Auto saving '${file.filename}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+
     const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
-    try {
-      const contentType = mime.lookup(file.url ? file.url : file.name);
-      const kind = await getContentTypeFolder(contentType);
-      await client.api(`${baseUrl}/drive/root:/${path}/${kind}/${file.name}:/content`).put(file.data);
-    } catch (error) {
-      if (error.code === 'itemNotFound') {
-        GBLog.info(`BASIC: BASIC source file not found: ${file}.`);
-      }
-      throw error;
-    }
+    const fileName =file.url ? file.url : file.name;
+    const contentType = mime.lookup(fileName);
+    const ext = Path.extname(fileName).substring(1);
+    const kind = await this.getExtensionInfo(ext);
+
+    const result = await client.api(`${baseUrl}/drive/root:/${path}/${kind.category}/${fileName}:/content`).put(file.data);
+
+    return {contentType, ext, kind, category: kind['category']};
   }
-}
-function getContentTypeFolder(contentType: any) {
-  // TODO: DS .jpog ->'image/jpg' ->  IMages
-  // #359
-  if (contentType === 'image/jpg') {
-    return 'Images';
+  public async getExtensionInfo(ext: any): Promise<any> {
+    
+    let array = exts.filter((v, i, a) => a[i]['extension'] === ext);
+    if (array[0])    {
+      return array[0];
+    }
+      return {category: 'Other', description: 'General documents'};
   }
 }

@@ -1313,7 +1313,10 @@ export class GBMinService {
             };
 
             GBServer.globals.files[handle] = gbfile;
-            await t.internalAutoSave({min: min, handle:handle });
+            const result = await t.internalAutoSave({min: min, handle:handle });
+            await min.conversationalService.sendText(min, step, 
+              `Seu arquivo ${gbfile.name} foi salvo no .gbdrive (${result.category}).`
+              );
           }
 
         } else {
@@ -1343,14 +1346,6 @@ export class GBMinService {
           }
           min.cbMap[userId].promise = results[0];
         }
-        else
-        {
-            // Uploads file to .gbdrive associated folder.
-
-            
-        }
-
-
       }
     }
 

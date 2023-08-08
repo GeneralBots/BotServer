@@ -1,0 +1,382 @@
+[
+    {
+        "extension": "aac",
+        "description": "AAC audio",
+        "category": "Music"
+    },
+    {
+        "extension": "abw",
+        "description": "AbiWord document",
+        "category": "Document"
+    },
+    {
+        "extension": "arc",
+        "description": "Archive document (multiple files embedded)",
+        "category": "Document"
+    },
+    {
+        "extension": "avif",
+        "description": "AVIF image",
+        "category": "Image"
+    },
+    {
+        "extension": "avi",
+        "description": "AVI: Audio Video Interleave",
+        "category": "Movie"
+    },
+    {
+        "extension": "azw",
+        "description": "Amazon Kindle eBook format",
+        "category": "Document"
+    },
+    {
+        "extension": "bin",
+        "description": "Any kind of binary data",
+        "category": "Other"
+    },
+    {
+        "extension": "bmp",
+        "description": "Windows OS/2 Bitmap Graphics",
+        "category": "Image"
+    },
+    {
+        "extension": "bz",
+        "description": "BZip archive",
+        "category": "Other"
+    },
+    {
+        "extension": "bz2",
+        "description": "BZip2 archive",
+        "category": "Other"
+    },
+    {
+        "extension": "cda",
+        "description": "CD audio",
+        "category": "Music"
+    },
+    {
+        "extension": "csh",
+        "description": "C-Shell script",
+        "category": "Executable"
+    },
+    {
+        "extension": "css",
+        "description": "Cascading Style Sheets (CSS)",
+        "category": "Other"
+    },
+    {
+        "extension": "csv",
+        "description": "Comma-separated values (CSV)",
+        "category": "Document"
+    },
+    {
+        "extension": "doc",
+        "description": "Microsoft Word",
+        "category": "Document"
+    },
+    {
+        "extension": "docx",
+        "description": "Microsoft Word (OpenXML)",
+        "category": "Document"
+    },
+    {
+        "extension": "eot",
+        "description": "MS Embedded OpenType fonts",
+        "category": "Other"
+    },
+    {
+        "extension": "epub",
+        "description": "Electronic publication (EPUB)",
+        "category": "Document"
+    },
+    {
+        "extension": "gz",
+        "description": "GZip Compressed Archive",
+        "category": "Other"
+    },
+    {
+        "extension": "gif",
+        "description": "Graphics Interchange Format (GIF)",
+        "category": "Image"
+    },
+    {
+        "extension": "htm",
+        "description": "HyperText Markup Language (HTML)",
+        "category": "Other"
+    },
+    {
+        "extension": "html",
+        "description": "HyperText Markup Language (HTML)",
+        "category": "Other"
+    },
+    {
+        "extension": "ico",
+        "description": "Icon format",
+        "category": "Image"
+    },
+    {
+        "extension": "ics",
+        "description": "iCalendar format",
+        "category": "Document"
+    },
+    {
+        "extension": "jar",
+        "description": "Java Archive (JAR)",
+        "category": "Executable"
+    },
+    {
+        "extension": "jpeg",
+        "description": "JPEG images",
+        "category": "Image"
+    },
+    {
+        "extension": "jpg",
+        "description": "JPEG images",
+        "category": "Image"
+    },
+    {
+        "extension": "js",
+        "description": "JavaScript",
+        "category": "Other"
+    },
+    {
+        "extension": "json",
+        "description": "JSON format",
+        "category": "Other"
+    },
+    {
+        "extension": "jsonld",
+        "description": "JSON-LD format",
+        "category": "Other"
+    },
+    {
+        "extension": "mid",
+        "description": "Musical Instrument Digital Interface (MIDI)",
+        "category": "Music"
+    },
+    {
+        "extension": "midi",
+        "description": "Musical Instrument Digital Interface (MIDI)",
+        "category": "Music"
+    },
+    {
+        "extension": "mjs",
+        "description": "JavaScript module",
+        "category": "Other"
+    },
+    {
+        "extension": "mp3",
+        "description": "MP3 audio",
+        "category": "Music"
+    },
+    {
+        "extension": "mp4",
+        "description": "MP4 video",
+        "category": "Movie"
+    },
+    {
+        "extension": "mpeg",
+        "description": "MPEG Video",
+        "category": "Movie"
+    },
+    {
+        "extension": "mpkg",
+        "description": "Apple Installer Package",
+        "category": "Application"
+    },
+    {
+        "extension": "odp",
+        "description": "OpenDocument presentation document",
+        "category": "Presentation"
+    },
+    {
+        "extension": "ods",
+        "description": "OpenDocument spreadsheet document",
+        "category": "Document"
+    },
+    {
+        "extension": "odt",
+        "description": "OpenDocument text document",
+        "category": "Document"
+    },
+    {
+        "extension": "oga",
+        "description": "OGG audio",
+        "category": "Music"
+    },
+    {
+        "extension": "ogv",
+        "description": "OGG video",
+        "category": "Movie"
+    },
+    {
+        "extension": "ogx",
+        "description": "OGG",
+        "category": "Other"
+    },
+    {
+        "extension": "opus",
+        "description": "Opus audio",
+        "category": "Music"
+    },
+    {
+        "extension": "otf",
+        "description": "OpenType font",
+        "category": "Other"
+    },
+    {
+        "extension": "png",
+        "description": "Portable Network Graphics",
+        "category": "Image"
+    },
+    {
+        "extension": "pdf",
+        "description": "Adobe Portable Document Format (PDF)",
+        "category": "PDF"
+    },
+    {
+        "extension": "php",
+        "description": "Hypertext Preprocessor (Personal Home Page)",
+        "category": "Other"
+    },
+    {
+        "extension": "ppt",
+        "description": "Microsoft PowerPoint",
+        "category": "Presentation"
+    },
+    {
+        "extension": "pptx",
+        "description": "Microsoft PowerPoint (OpenXML)",
+        "category": "Presentation"
+    },
+    {
+        "extension": "rar",
+        "description": "RAR archive",
+        "category": "Other"
+    },
+    {
+        "extension": "rtf",
+        "description": "Rich Text Format (RTF)",
+        "category": "Document"
+    },
+    {
+        "extension": "sh",
+        "description": "Bourne shell script",
+        "category": "Executable"
+    },
+    {
+        "extension": "svg",
+        "description": "Scalable Vector Graphics (SVG)",
+        "category": "Image"
+    },
+    {
+        "extension": "tar",
+        "description": "Tape Archive (TAR)",
+        "category": "Other"
+    },
+    {
+        "extension": "tif",
+        "description": "Tagged Image File Format (TIFF)",
+        "category": "Image"
+    },
+    {
+        "extension": "tiff",
+        "description": "Tagged Image File Format (TIFF)",
+        "category": "Image"
+    },
+    {
+        "extension": "ts",
+        "description": "MPEG transport stream",
+        "category": "Movie"
+    },
+    {
+        "extension": "ttf",
+        "description": "TrueType Font",
+        "category": "Other"
+    },
+    {
+        "extension": "txt",
+        "description": "Text, (generally ASCII or ISO 8859-n)",
+        "category": "Text"
+    },
+    {
+        "extension": "vsd",
+        "description": "Microsoft Visio",
+        "category": "Application"
+    },
+    {
+        "extension": "wav",
+        "description": "Waveform Audio Format",
+        "category": "Music"
+    },
+    {
+        "extension": "weba",
+        "description": "WEBM audio",
+        "category": "Music"
+    },
+    {
+        "extension": "webm",
+        "description": "WEBM video",
+        "category": "Movie"
+    },
+    {
+        "extension": "webp",
+        "description": "WEBP image",
+        "category": "Image"
+    },
+    {
+        "extension": "woff",
+        "description": "Web Open Font Format (WOFF)",
+        "category": "Other"
+    },
+    {
+        "extension": "woff2",
+        "description": "Web Open Font Format (WOFF)",
+        "category": "Other"
+    },
+    {
+        "extension": "xhtml",
+        "description": "XHTML",
+        "category": "Other"
+    },
+    {
+        "extension": "xls",
+        "description": "Microsoft Excel",
+        "category": "Document"
+    },
+    {
+        "extension": "xlsx",
+        "description": "Microsoft Excel (OpenXML)",
+        "category": "Document"
+    },
+    {
+        "extension": "xml",
+        "description": "XML",
+        "category": "Document"
+    },
+    {
+        "extension": "xul",
+        "description": "XUL",
+        "category": "Application"
+    },
+    {
+        "extension": "zip",
+        "description": "ZIP archive",
+        "category": "Application"
+    },
+    {
+        "extension": "3gp",
+        "description": "3GPP audio/video container",
+        "category": "Movie"
+    },
+    {
+        "extension": "3g2",
+        "description": "3GPP2 audio/video container",
+        "category": "Movie"
+    },
+    {
+        "extension": "7z",
+        "description": "7-zip archive",
+        "category": "Application"
+    }
+]
