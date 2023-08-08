@@ -1292,10 +1292,6 @@ export class GBMinService {
       async function replyForReceivedAttachments(attachmentData) {
         if (attachmentData) {
 
-          // Because the TurnContext was bound to this function,the bot can call
-          // `TurnContext.sendActivity` via `this.sendActivity`;
-          await this.sendActivity(`Upload OK.`);
-
           // In case of not having HEAR activated before, it is 
           // a upload with no Dialog, so run Auto Save to .gbdrive.
           
@@ -1317,6 +1313,9 @@ export class GBMinService {
             await min.conversationalService.sendText(min, step, 
               `Seu arquivo ${gbfile.name} foi salvo no .gbdrive (${result.category}).`
               );
+
+
+            return;
           }
 
         } else {
