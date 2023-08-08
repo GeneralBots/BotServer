@@ -297,15 +297,6 @@ export class GBMinService {
    */
   public async mountBot(instance: IGBInstance) {
 
-
-    const manifest = `${instance.botId}-Teams.zip`;
-    GBLog.info('Generating MS Teams manifest....');
-    let packageTeams = urlJoin(`work`, DialogKeywords.getGBAIPath(instance.botId), manifest);
-    if (!Fs.existsSync(packageTeams)) {
-      const data = await this.deployer.getBotManifest(instance);
-      Fs.writeFileSync(packageTeams, data);
-    }
-
     // Build bot adapter.
 
     const { min, adapter, conversationState } = await this.buildBotAdapter(
@@ -440,6 +431,18 @@ export class GBMinService {
 
         await sleep(3000);
       });
+
+      // Generates MS Teams manifest.
+
+      const manifest = `${instance.botId}-Teams.zip`;
+      const packageTeams = urlJoin(`work`, DialogKeywords.getGBAIPath(instance.botId), manifest);
+      if (!Fs.existsSync(packageTeams)) {
+        GBLog.info('Generating MS Teams manifest....');
+        const data = await this.deployer.getBotManifest(instance);
+        Fs.writeFileSync(packageTeams, data);
+      }
+  
+
     }
 
     // Serves individual URL for each bot user interface.
