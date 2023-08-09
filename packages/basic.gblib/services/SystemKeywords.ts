@@ -181,7 +181,7 @@ export class SystemKeywords {
     try {
       let output = [];
       let isObject = false;
-
+      if (data[0]= 'gb') {return data;} // Already GB Table.
       if (Array.isArray(data)) {
         isObject = Object.keys(data[1]) !== null;
       } else {
