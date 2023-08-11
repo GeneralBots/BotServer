@@ -239,6 +239,7 @@ export class AdminDialog extends IGBDialog {
         },
 
         async step => {
+          step.activeDialog.state.options.confirm = true; // Feature removed.
           if (step.activeDialog.state.options.confirm || process.env.ADMIN_OPEN_PUBLISH === 'true') {
             return await step.next('sim');
           } else {
