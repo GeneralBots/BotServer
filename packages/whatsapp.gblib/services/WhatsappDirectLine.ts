@@ -30,6 +30,7 @@
 |                                                                             |
 \*****************************************************************************/
 
+import mime from 'mime-types';
 import urlJoin from 'url-join';
 import SwaggerClient from 'swagger-client';
 import Path from 'path';
@@ -49,6 +50,7 @@ import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import pkg from 'whatsapp-web.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 const { List, Buttons, Client, MessageMedia } = pkg;
 
 /**
@@ -315,11 +317,19 @@ export class WhatsappDirectLine extends GBService {
 
         if (message.hasMedia) {
           const base64Image = await message.downloadMedia();
+
+          let buf: any = Buffer.from(base64Image.data, "base64");
+          const gbaiName = DialogKeywords.getGBAIPath(this.min.botId);
+          const     localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+          Fs.writeFileSync(localName, buf, { encoding: null });
+          const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
+
           attachments = [];
           attachments.push({
-            name: 'uploaded.png',
+            name: `${new Date().toISOString().replace(/\:/g, '')}.${mime.extension(base64Image.mimetype)}`,
+            noName: true,
             contentType: base64Image.mimetype,
-            contentUrl: `data:${base64Image.mimetype};base64,${base64Image.data}`
+            contentUrl: url
           });
         }
 

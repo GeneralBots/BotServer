@@ -1268,7 +1268,7 @@ export class GBMinService {
         : min.core.getParam(min.instance, 'Start Dialog', null);
 
       if (
-        startDialog &&
+        startDialog && startDialog!=="" &&
         !min['conversationWelcomed'][step.context.activity.conversation.id] &&
         !step.context.activity['group']
       ) {
@@ -1347,6 +1347,10 @@ export class GBMinService {
             throw new Error('It is only possible to upload one file per message, right now.');
           }
           min.cbMap[userId].promise = results[0];
+        }
+        else{
+          
+          return;
         }
       }
     }

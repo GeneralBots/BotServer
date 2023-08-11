@@ -1223,13 +1223,21 @@ export class DialogKeywords {
       const reply = { type: ActivityTypes.Message, text: caption };
 
       const imageData = await (await fetch(url)).arrayBuffer();
-      const base64Image = Buffer.from(imageData).toString('base64');
       const contentType = mime.lookup(url);
       reply['attachments'] = [];
+      
+      // Prepare a cache to be referenced by Bot Framework.
+
+      let buf: any = Buffer.from(imageData);
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const     localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+      Fs.writeFileSync(localName, buf, { encoding: null });
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+      
       reply['attachments'].push({
         name: nameOnly,
         contentType: contentType,
-        contentUrl: `data:${contentType};base64,${base64Image}`
+        contentUrl: url
       });
 
       if (channel === 'omnichannel') {
