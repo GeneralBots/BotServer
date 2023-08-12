@@ -387,6 +387,9 @@ export class SystemKeywords {
   }
 
   public async executeSQL({ pid, data, sql, tableName }) {
+    if (!data && !data[0]){
+      return data;
+    }
     let objectMode = false;
     if (Object.keys(data[0])) {
       objectMode = true;
