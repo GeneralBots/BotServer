@@ -1224,13 +1224,14 @@ export class DialogKeywords {
 
       const imageData = await (await fetch(url)).arrayBuffer();
       const contentType = mime.lookup(url);
+      const ext = mime.extension(url);
       reply['attachments'] = [];
       
       // Prepare a cache to be referenced by Bot Framework.
 
       let buf: any = Buffer.from(imageData);
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-      const     localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+      const localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
       Fs.writeFileSync(localName, buf, { encoding: null });
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
       
