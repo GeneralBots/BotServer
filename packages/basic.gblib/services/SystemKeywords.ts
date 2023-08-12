@@ -387,7 +387,7 @@ export class SystemKeywords {
   }
 
   public async executeSQL({ pid, data, sql, tableName }) {
-    if (!data && !data[0]){
+    if (!data || !data[0]){
       return data;
     }
     let objectMode = false;
