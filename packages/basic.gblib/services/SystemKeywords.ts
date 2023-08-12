@@ -901,7 +901,7 @@ export class SystemKeywords {
 
     let getFilter = async text => {
       let filter;
-      const operators = [/\<\=/, /\>\=/, /\</, /\>/, /\bnot in\b/, /\bin\b/, /\=/];
+      const operators = [/\<\=/, /\<\>/, /\>\=/, /\</, /\>/, /\bnot in\b/, /\bin\b/, /\=/];
       let done = false;
       await CollectionUtil.asyncForEach(operators, async op => {
         var re = new RegExp(op, 'gi');
@@ -993,9 +993,15 @@ export class SystemKeywords {
         if (user && params && params.wholeWord) {
           wholeWord = params.wholeWord;
         }
+        if (!result)
+        {
+            return;
+        }
 
         switch (filter.dataType) {
           case 'string':
+
+
             const v1 = GBConversationalService.removeDiacritics(result.toLowerCase().trim());
             const v2 = GBConversationalService.removeDiacritics(filter.value.toLowerCase().trim());
 
@@ -1007,6 +1013,17 @@ export class SystemKeywords {
                   }
                 } else {
                   if (v1.indexOf(v2) > -1) {
+                    filterAcceptCount++;
+                  }
+                }
+                break;
+              case '<>':
+                if (wholeWord) {
+                  if (v1 !== v2) {
+                    filterAcceptCount++;
+                  }
+                } else {
+                  if (v1.indexOf(v2) === -1) {
                     filterAcceptCount++;
                   }
                 }

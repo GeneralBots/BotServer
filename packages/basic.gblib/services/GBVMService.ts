@@ -241,6 +241,7 @@ export class GBVMService extends GBService {
       let page = null;
       let files = [];
       let col = 1;
+      let index = 1 
 
       // Transfers NLP auto variables into global object.
 
