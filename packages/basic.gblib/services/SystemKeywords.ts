@@ -325,7 +325,7 @@ export class SystemKeywords {
 
   public async asPDF({ pid, data }) {
     let file = await this.renderTable(pid, data, true, false);
-    return file[0];
+    return file;
   }
 
   public async asImage({ pid, data }) {
@@ -382,7 +382,7 @@ export class SystemKeywords {
       }
     } else {
       let file = await this.renderTable(pid, data, false, true);
-      return file[0];
+      return file;
     }
   }
 
