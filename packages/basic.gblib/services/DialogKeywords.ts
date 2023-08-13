@@ -1224,7 +1224,7 @@ export class DialogKeywords {
 
       const imageData = await (await fetch(url)).arrayBuffer();
       const contentType = mime.lookup(url);
-      const ext = mime.extension(filename.localName);
+      const ext = mime.extension( Path.extname(filename.localName));
       reply['attachments'] = [];
       
       // Prepare a cache to be referenced by Bot Framework.
