@@ -789,7 +789,7 @@ export class SystemKeywords {
    *
    *  rows = FIND "file.xlsx", "A2=active", "A2 < 12/06/2010 15:00"
    *  i = 1
-   *  do while i < ubound(row)
+   *  do while i <= ubound(row)
    *    row = rows[i]
    *    send sms to "+" + row.mobile, "Hello " + row.name + "! "
    *  loop

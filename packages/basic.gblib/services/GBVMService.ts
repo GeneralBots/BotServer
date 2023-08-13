@@ -251,8 +251,8 @@ export class GBVMService extends GBService {
 
       // Defines local utility BASIC functions.
 
-      const ubound = (array) => {return array.length};
-      const isarray = (array) => {return Array.isArray(array) };
+      const ubound = (gbarray) => {return gbarray.length - 1};
+      const isarray = (gbarray) => {return Array.isArray(gbarray) };
   
       // Proxies remote functions as BASIC functions.
       
