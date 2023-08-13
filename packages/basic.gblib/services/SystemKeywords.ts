@@ -251,7 +251,7 @@ export class SystemKeywords {
 
     // Includes the associated CSS related to current theme.
 
-    const theme: string =  await DialogKeywords.getOption({ pid, name: 'theme' });
+    const theme: string =  await DialogKeywords.getOption({ pid, name: 'theme', root: true });
     switch (theme) {
       case 'white':
         await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_simple.min.css' });
