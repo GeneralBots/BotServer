@@ -391,16 +391,16 @@ export class SystemKeywords {
       return data;
     }
     let objectMode = false;
-    if (Object.keys(data[0])) {
+    if (data[0].gbarray) {
       objectMode = true;
     }
 
     let first;
-    if (!objectMode) {
+    if (objectMode) {
       first = data.shift();
     }
     data = alasql(sql, [data]);
-    if (!objectMode) {
+    if (objectMode) {
       data.unshift(first);
     }
     return data;
