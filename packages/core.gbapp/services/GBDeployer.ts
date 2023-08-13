@@ -174,7 +174,7 @@ export class GBDeployer implements IGBDeployer {
 
     // Start the process of searching.
 
-    GBLog.info(`Starting looking for packages (.gbot, .gbtheme, .gbkb, .gbapp)...`);
+    GBLog.info(`Deploying Application Packages...`);
     await CollectionUtil.asyncForEach(paths, async e => {
       GBLog.info(`Looking in: ${e}...`);
       await scanPackageDirectory(e);

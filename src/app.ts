@@ -184,7 +184,7 @@ export class GBServer {
 
           // Deploys system and user packages.
 
-          GBLog.info(`Deploying packages...`);
+          GBLog.info(`Deploying System packages...`);
           GBServer.globals.sysPackages = await core.loadSysPackages(core);
           GBLog.info(`Connecting to Bot Storage...`);
           await core.checkStorage(azureDeployer);
