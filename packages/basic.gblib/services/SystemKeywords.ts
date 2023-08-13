@@ -320,7 +320,7 @@ export class SystemKeywords {
     }
 
     await browser.close();
-    return [url, localName];
+    return {url, localName};
   }
 
   public async asPDF({ pid, data }) {
