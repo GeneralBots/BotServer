@@ -1179,13 +1179,15 @@ export class DialogKeywords {
 
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
-      GBLog.info(`BASIC: WebAutomation: Sending the file ${url} to mobile ${mobile}.`);
+      GBLog.info(`BASIC: WebAutomation: Sending ${url} to mobile ${mobile}.`);
     }
 
     // GBFILE object.
     else if (filename.url) {
       url = filename.url;
       nameOnly = Path.basename(filename.localName);
+
+      GBLog.info(`BASIC: Sending the GBFILE ${url} to mobile ${mobile}.`);
     }
     // Handles Markdown.
     else if (filename.indexOf('.md') > -1) {
@@ -1199,7 +1201,7 @@ export class DialogKeywords {
     } else {
       const gbaiName = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
 
-      GBLog.info(`BASIC: Sending the file ${filename} to mobile ${mobile}.`);
+      GBLog.info(`BASIC: Sending the MD ${filename} to mobile ${mobile}.`);
 
       if (!filename.startsWith('https://')) {
         url = urlJoin(GBServer.globals.publicAddress, 'kb', gbaiName, 'assets', filename);
