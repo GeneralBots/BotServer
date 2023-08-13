@@ -568,7 +568,7 @@ export class DialogKeywords {
   }
 
   public static async getOption({ pid, name, root=false }) {
-    if (this.isUserSystemParam(name) || root) {
+    if (this.isUserSystemParam(name) && !root) {
       throw new Error(`Not possible to retrieve ${name} system param.`);
     }
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
