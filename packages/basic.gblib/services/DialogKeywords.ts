@@ -559,13 +559,10 @@ export class DialogKeywords {
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: ${name} = ${value} (botId: ${min.botId})`);
     const sec = new SecService();
-    if (user)
-    {
-      await sec.setParam(user.userId, name  , value);
+    if (user) {
+      await sec.setParam(user.userId, name, value);
       return { min, user, params };
-    }
-    else
-    {
+    } else {
       min[name] = value;
     }
   }
@@ -576,12 +573,10 @@ export class DialogKeywords {
     }
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
-    if (user){
+    if (user) {
       const sec = new SecService();
       return await sec.getParam(user, name);
-    }
-    else
-    {
+    } else {
       return min[name];
     }
   }
@@ -694,16 +689,14 @@ export class DialogKeywords {
 
   /**
    * Returns the name of the user acquired by WhatsApp API.
-   * 
+   *
    * SAVE "file.xlsx", username, now
-   * 
+   *
    */
   public async userName({ pid }) {
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    if (user)
-      return user.userName;
-    else
-      return 'unattended';
+    if (user) return user.userName;
+    else return 'unattended';
   }
 
   /**
@@ -711,10 +704,8 @@ export class DialogKeywords {
    */
   public async userMobile({ pid }) {
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    if (user)
-      return user.userSystemId;
-    else
-      return 'unattended';
+    if (user) return user.userSystemId;
+    else return 'unattended';
   }
 
   /**
@@ -750,7 +741,7 @@ export class DialogKeywords {
    *
    */
   public async hear({ pid, kind, args }) {
-    let { min, user, params } =   await DialogKeywords.getProcessInfo(pid);
+    let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles first arg as an array of args.
 
@@ -816,7 +807,7 @@ export class DialogKeywords {
       };
       min.cbMap[userId] = {};
       min.cbMap[userId]['promise'] = '!GBHEAR';
-        
+
       while (min.cbMap[userId].promise === '!GBHEAR') {
         await sleep(DEFAULT_HEAR_POLL_INTERVAL);
       }
@@ -940,13 +931,15 @@ export class DialogKeywords {
         };
 
         const parseDate = str => {
-          function pad(x){return (((''+x).length==2) ? '' : '0') + x; }
-          var m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-            , d = (m) ? new Date(m[3], m[2]-1, m[1]) : null
-            , matchesPadded = (d&&(str==[pad(d.getDate()),pad(d.getMonth()+1),d.getFullYear()].join('/')))
-            , matchesNonPadded = (d&&(str==[d.getDate(),d.getMonth()+1,d.getFullYear()].join('/')));
-          return (matchesPadded || matchesNonPadded) ? d : null;
-        }
+          function pad(x) {
+            return (('' + x).length == 2 ? '' : '0') + x;
+          }
+          var m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/),
+            d = m ? new Date(m[3], m[2] - 1, m[1]) : null,
+            matchesPadded = d && str == [pad(d.getDate()), pad(d.getMonth() + 1), d.getFullYear()].join('/'),
+            matchesNonPadded = d && str == [d.getDate(), d.getMonth() + 1, d.getFullYear()].join('/');
+          return matchesPadded || matchesNonPadded ? d : null;
+        };
 
         let value = parseDate(answer);
 
@@ -1136,7 +1129,7 @@ export class DialogKeywords {
     const min = GBServer.globals.minInstances.filter(p => p.instance.instanceId == proc.instanceId)[0];
     const sec = new SecService();
     const user = await sec.getUserFromId(min.instance.instanceId, proc.userId);
-    const params = user? JSON.parse(user.params): {};
+    const params = user ? JSON.parse(user.params) : {};
     return {
       min,
       user,
@@ -1187,16 +1180,14 @@ export class DialogKeywords {
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
       GBLog.info(`BASIC: WebAutomation: Sending the file ${url} to mobile ${mobile}.`);
-    } 
-    
-    // GBFILE object.
+    }
 
+    // GBFILE object.
     else if (filename.url) {
       url = filename.url;
       nameOnly = Path.basename(filename.localName);
     }
     // Handles Markdown.
-
     else if (filename.indexOf('.md') > -1) {
       GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
       const md = await min.kbService.getAnswerTextByMediaName(min.instance.instanceId, filename);
@@ -1213,20 +1204,16 @@ export class DialogKeywords {
       if (!filename.startsWith('https://')) {
         url = urlJoin(GBServer.globals.publicAddress, 'kb', gbaiName, 'assets', filename);
       } else {
-        url = filename
+        url = filename;
       }
 
       nameOnly = filename;
     }
 
-    if (url) {
-      const reply = { type: ActivityTypes.Message, text: caption };
-
+    if (!url) {
       const imageData = await (await fetch(url)).arrayBuffer();
-      const contentType = mime.lookup(url);
-      const ext = mime.extension( Path.extname(filename.localName));
-      reply['attachments'] = [];
-      
+      const ext = mime.extension(Path.extname(filename.localName));
+
       // Prepare a cache to be referenced by Bot Framework.
 
       let buf: any = Buffer.from(imageData);
@@ -1234,18 +1221,21 @@ export class DialogKeywords {
       const localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
       Fs.writeFileSync(localName, buf, { encoding: null });
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
-      
-      reply['attachments'].push({
-        name: nameOnly,
-        contentType: contentType,
-        contentUrl: url
-      });
+    }
 
-      if (channel === 'omnichannel') {
-        await min.conversationalService.sendFile(min, null, mobile, url, caption);
-      } else {
-        await min.conversationalService['sendOnConversation'](min, user, reply);
-      }
+    const contentType = mime.lookup(url);
+    const reply = { type: ActivityTypes.Message, text: caption };
+    reply['attachments'] = [];
+    reply['attachments'].push({
+      name: nameOnly,
+      contentType: contentType,
+      contentUrl: url
+    });
+
+    if (channel === 'omnichannel') {
+      await min.conversationalService.sendFile(min, null, mobile, url, caption);
+    } else {
+      await min.conversationalService['sendOnConversation'](min, user, reply);
     }
   }
   /**
