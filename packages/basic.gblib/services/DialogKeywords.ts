@@ -495,8 +495,9 @@ export class DialogKeywords {
    *
    */
   public async sendFileTo({ pid, mobile, filename, caption }) {
+    const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: SEND FILE TO '${mobile}',filename '${filename}'.`);
-    return await this.internalSendFile({ pid, mobile, channel: null, filename, caption });
+    return await this.internalSendFile({ pid, mobile, channel: proc.channel, filename, caption });
   }
 
   /**
