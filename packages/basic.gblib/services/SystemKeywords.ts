@@ -62,6 +62,7 @@ import { KeywordsExpressions } from './KeywordsExpressions.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import mime from 'mime-types';
 import exts from '../../../extensions.json' assert { type: 'json' };
+import { SecService } from '../../security.gbapp/services/SecService.js';
 
 /**
  * @fileoverview General Bots server core.
@@ -463,6 +464,22 @@ export class SystemKeywords {
     GBLog.info(`BASIC: Talking '${message}' to a specific user (${mobile}) (TALK TO). `);
     await min.conversationalService.sendMarkdownToMobile(min, null, mobile, message);
   }
+
+  /**
+   * Get a user object from a alias.
+   *
+   * @example user = USER "someone"
+   *
+   */
+  public async getUser({ pid, username }) {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    let sec = new SecService();
+    const user = await sec.getUserFromUsername(min.instance.instanceId, username);
+
+    return {displayName: user.displayName,
+      mobile: user.userSystemId, email: user.email};
+  }
+
 
   /**
    * Sends a SMS message to the mobile number specified.

@@ -227,6 +227,15 @@ export class SecService extends GBService {
     });
   }
 
+  public async getUserFromUsername(instanceId: number, username: string): Promise<GuaribasUser> {
+    return await GuaribasUser.findOne({
+      where: {
+        instanceId: instanceId,
+        userName: username
+      }
+    });
+  }
+
 
   /**
    * Get a dynamic param from user. Dynamic params are defined in .gbdialog SET

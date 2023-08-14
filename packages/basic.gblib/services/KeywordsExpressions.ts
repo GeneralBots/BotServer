@@ -637,10 +637,18 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(.*)\=\s*(datediff)(\s*)(.*)/gim,
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(datediff)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['date1', 'date2', 'mode']);
-        return `await dk.getDateDiff ({pid: pid, ${params}})`;
+        return `${$1} = await dk.getDateDiff ({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(user of)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['username']);
+        return `${$1} = await sys.getUser ({pid: pid, ${params}})`;
       }
     ];
 
