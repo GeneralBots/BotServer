@@ -466,11 +466,12 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `${$1} = await sys.find({pid: pid, handle: page, args:[${$2}]})\n
+        `${$1} = caseInsensitive(await sys.find({pid: pid, handle: page, args:[${$2}]}))\n
         if (!${$1}) {
           await dk.talk ({pid: pid, text: ${$3}})\n;
           return -1;
         }
+        return ${$1};
         `;
       }
     ];
@@ -486,7 +487,7 @@ export class KeywordsExpressions {
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `
-        ${$1} = await sys.find({pid: pid, handle: page, args: [${$2}]})`;
+        ${$1} = caseInsensitive(await sys.find({pid: pid, handle: page, args: [${$2}]}))`;
       }
     ];
 
