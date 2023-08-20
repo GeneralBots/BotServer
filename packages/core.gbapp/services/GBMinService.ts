@@ -1015,6 +1015,7 @@ export class GBMinService {
 
         // Answer to specific BOT Framework event conversationUpdate to auto start dialogs.
         // Skips if the bot is talking.
+
         const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
 
         if (context.activity.type === 'installationUpdate') {
@@ -1284,6 +1285,7 @@ export class GBMinService {
     }
 
     // Prepare Promises to download each attachment and then execute each Promise.
+
     if (step.context.activity.attachments 
       && step.context.activity.attachments[0]
       && step.context.activity.attachments[0].contentType != 'text/html') {
@@ -1358,6 +1360,7 @@ export class GBMinService {
     // Files in .gbdialog can be called directly by typing its name normalized into JS .
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
+    
     if (/create dialog|creative dialog|create a dialog|criar diálogo|criar diálogo/gi.test(context.activity.text)) {
       await step.beginDialog('/dialog');
     } else if (isVMCall) {

@@ -291,8 +291,8 @@ export class SystemKeywords {
 
     const code = `
         var table = new Tabulator("#table", {
-        height:"311px",
-        layout:"fitColumns",
+        height:"auto",
+        layout:"fitDataStretch",
         data: ${JSON.stringify(data)},
         columns: ${JSON.stringify(fields)}
     });
@@ -2018,10 +2018,17 @@ export class SystemKeywords {
     const ext = Path.extname(fileName).substring(1);
     const kind = await this.getExtensionInfo(ext);
 
-    const result = await client.api(`${baseUrl}/drive/root:/${path}/${kind.category}/${fileName}:/content`).put(file.data);
+    let d = new Date(),
+      month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+    const today=  [day, month, year].join('-')
+    const result = await client.api(`${baseUrl}/drive/root:/${path}/${today}/${kind.category}/${fileName}:/content`).put(file.data);
 
     return {contentType, ext, kind, category: kind['category']};
   }
+  
   public async getExtensionInfo(ext: any): Promise<any> {
     
     let array = exts.filter((v, i, a) => a[i]['extension'] === ext);
