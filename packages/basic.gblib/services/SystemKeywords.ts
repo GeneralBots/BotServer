@@ -1152,6 +1152,21 @@ export class SystemKeywords {
         }
         row['ordinal'] = rowCount;
         row['line'] = foundIndex + 1;
+
+        const lowercase = (oldKey) => {
+          // Check that it's a string.
+          return typeof oldKey === 'string' ? oldKey.toLowerCase() : oldKey;
+        }
+        const propertiesMap = new Map(
+            Object.keys(row).map(propKey => [lowercase(propKey), row[propKey]])
+        );
+        const caseInsensitiveGetHandler = {
+            get: function(target, property, receiver) {
+                return propertiesMap.get(lowercase(property));
+            }
+        };
+        row = new Proxy(row, caseInsensitiveGetHandler);
+      
         table.push(row);
       }
     }
