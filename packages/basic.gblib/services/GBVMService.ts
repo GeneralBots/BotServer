@@ -246,6 +246,12 @@ export class GBVMService extends GBService {
       // Makes objects in BASIC insensitive.
 
       const caseInsensitive = (listOrRow) => {
+        
+        if (!listOrRow) {
+          
+          return listOrRow
+        };
+
         const lowercase = (oldKey) => typeof oldKey === 'string' ? oldKey.toLowerCase() : oldKey;
 
         const createCaseInsensitiveProxy = (obj) => {
