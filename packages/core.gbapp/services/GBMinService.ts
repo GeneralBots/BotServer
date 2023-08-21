@@ -1416,7 +1416,7 @@ export class GBMinService {
 
       // Checks for bad words on input text.
 
-      const hasBadWord = wash.check(step.context.locale, text);
+      const hasBadWord = wash.check(step.context.activity.locale, text);
       if (hasBadWord) {
         return await step.beginDialog('/pleaseNoBadWords');
       }
