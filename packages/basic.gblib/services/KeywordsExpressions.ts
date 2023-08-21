@@ -767,14 +767,14 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(exit)/gim,
+      /^\s*(exit)\s*/gim,
       () => {
         return `return;`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(END)/gim,
+      /^\s*(END)\s*/gim,
       () => {
         return `return;`;
       }
