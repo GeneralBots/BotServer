@@ -644,12 +644,7 @@ export class SystemKeywords {
    *
    */
   public async note({ pid, text }): Promise<any> {
-    const { min } = await DialogKeywords.getProcessInfo(pid);
-    await this.internalNote(min,text );
-  }
-
-  private async internalNote(min, text): Promise<any> {
-    await this.internalSave(min, 'Notes.xlsx', [text]);
+    await this.save({pid, file:"Notes.xlsx", args:[text]} );
   }
 
   /**
@@ -660,17 +655,6 @@ export class SystemKeywords {
    */
   public async save({ pid, file, args }): Promise<any> {
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    await this.internalSave(min, file, args);
-  }
-
-  /**
-   * Saves the content of several variables to a new row in a tabular file.
-   *
-   * @exaple SAVE "customers.xlsx", name, email, phone, address, city, state, country
-   *
-   */
-
-  private async internalSave(min, file, args): Promise<any> {
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;

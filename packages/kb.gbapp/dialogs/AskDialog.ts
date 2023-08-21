@@ -106,14 +106,12 @@ export class AskDialog extends IGBDialog {
 
         if (step.options && step.options.firstTime) {
           text = Messages[locale].ask_first_time;
-        }
-        else if (step.options && step.options.isReturning && !step.context.activity.group) {
+        } else if (step.options && step.options.isReturning && !step.context.activity.group) {
           const askForMore = min.core.getParam(min.instance, 'Ask For More', null);
 
-          text = askForMore?Messages[locale].anything_else: '';
-        }
-        else if (step.context.activity.group || (step.options && step.options.emptyPrompt)) {
-          text = '';
+          text = askForMore ? Messages[locale].anything_else : '';
+        } else if (step.context.activity.group || (step.options && step.options.emptyPrompt)) {
+          return await step.next();
         } else if (user.subjects.length > 0) {
           text = Messages[locale].which_question;
         } else {
@@ -153,14 +151,18 @@ export class AskDialog extends IGBDialog {
               handled = true;
             }
           });
-          data.step = null;
-          GBLog.info(`/answer being called from getAskDialog.`);
-          await step.beginDialog(nextDialog ? nextDialog : '/answer', {
-            data: data,
-            query: text,
-            user: user ? user['dataValues'] : null,
-            message: text
-          });
+          if (!handled) {
+            data.step = null;
+            GBLog.info(`/answer being called from getAskDialog.`);
+            await step.beginDialog(nextDialog ? nextDialog : '/answer', {
+              data: data,
+              query: text,
+              user: user ? user['dataValues'] : null,
+              message: text
+            });
+          } else {
+            return await step.next();
+          }
         } else {
           return await step.next();
         }
@@ -339,8 +341,7 @@ export class AskDialog extends IGBDialog {
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
       await step.endDialog();
       return await GBVMService.callVM(mainName, min, step, user, this.deployer, false);
-    }
-    else if (text.startsWith('/')) {
+    } else if (text.startsWith('/')) {
       return await step.replaceDialog(text, { answer: answer });
     } else {
       await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
@@ -408,8 +409,8 @@ export class AskDialog extends IGBDialog {
           // Removes instructions, just code.
 
           response = response.replace(/Copy code/gim, '\n');
-          let lines = response.split('\n')
-          let filteredLines = lines.filter(line => /\s*\d+\s*.*/.test(line))
+          let lines = response.split('\n');
+          let filteredLines = lines.filter(line => /\s*\d+\s*.*/.test(line));
           response = filteredLines.join('\n');
 
           // Gets dialog name and file handling
@@ -428,7 +429,6 @@ export class AskDialog extends IGBDialog {
           message = `Dialog is ready! Let's run:`;
           await min.conversationalService.sendText(min, step, message);
 
-
           let sec = new SecService();
           const member = step.context.activity.from;
           const user = await sec.ensureUser(
@@ -443,8 +443,7 @@ export class AskDialog extends IGBDialog {
 
           await step.endDialog();
 
-          await GBVMService.callVM(dialogName.toLowerCase(),
-            min, step, user, this.deployer, false);
+          await GBVMService.callVM(dialogName.toLowerCase(), min, step, user, this.deployer, false);
         }
       }
     ];

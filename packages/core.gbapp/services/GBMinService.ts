@@ -950,6 +950,7 @@ export class GBMinService {
 
             const analytics = new AnalyticsService();
             const conversation = await analytics.createConversation(user);
+
           }
 
           await sec.updateConversationReferenceById(userId, conversationReference);
@@ -1058,8 +1059,10 @@ export class GBMinService {
           }
         } else if (context.activity.type === 'message') {
           // Processes messages activities.
+          const pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId);
+          step.context.activity['pid'] = pid;
 
-          await this.processMessageActivity(context, min, step);
+          await this.processMessageActivity(context, min, step, pid);
         } else if (context.activity.type === 'event') {
           // Processes events activities.
 
@@ -1249,7 +1252,7 @@ export class GBMinService {
   /**
    * Called to handle all text messages sent and received by the bot.
    */
-  private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep) {
+  private async processMessageActivity(context, min: GBMinInstance, step: GBDialogStep, pid) {
     const sec = new SecService();
 
     if (!context.activity.text) {
@@ -1406,9 +1409,9 @@ export class GBMinService {
       step.context.activity['text'] = text;
 
       const notes = min.core.getParam(min.instance, 'Notes', null);
-      if (notes) {
+      if (notes) { 
         const sys = new SystemKeywords();
-        await sys['internalNote'](min, text);
+        await sys.note({pid, text});
 
         return;
       }  

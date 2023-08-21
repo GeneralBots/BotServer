@@ -418,13 +418,7 @@ export class GBVMService extends GBService {
 
     let code = min.sandBoxMap[text];
     const channel = step? step.context.activity.channelId : 'web';
-    const pid = GBAdminService.getNumberIdentifier();
-    GBServer.globals.processes[pid] = {
-      pid: pid,
-      userId: user? user.userId:0,
-      instanceId: min.instance.instanceId,
-      channel: channel
-    };
+    const pid = GBVMService.createProcessInfo(user, min, channel);
     const dk = new DialogKeywords();
     const sys = new SystemKeywords();
     await dk.setFilter ({pid: pid, value: null });
@@ -496,5 +490,16 @@ export class GBVMService extends GBService {
     }
 
     return result;
+  }
+
+  public static createProcessInfo(user: GuaribasUser, min: GBMinInstance, channel: any) {
+    const pid = GBAdminService.getNumberIdentifier();
+    GBServer.globals.processes[pid] = {
+      pid: pid,
+      userId: user ? user.userId : 0,
+      instanceId: min.instance.instanceId,
+      channel: channel
+    };
+    return pid;
   }
 }
