@@ -41,7 +41,6 @@ import express from 'express';
 import SwaggerClient from 'swagger-client';
 import removeRoute from 'express-remove-route';
 import AuthenticationContext from 'adal-node';
-import wash from 'washyourmouthoutwithsoap';
 import { FacebookAdapter } from 'botbuilder-adapter-facebook';
 import path from 'path';
 import mkdirp from 'mkdirp';
@@ -53,6 +52,8 @@ import cors from '@koa/cors';
 import { createRpcServer } from '@push-rpc/core';
 import { createHttpKoaMiddleware } from '@push-rpc/http';
 import { HttpServerOptions } from '@push-rpc/http/dist/server.js';
+import { List } from 'whatsapp-web.js';
+import wash from 'washyourmouthoutwithsoap';
 import {
   AutoSaveStateMiddleware,
   BotFrameworkAdapter,
@@ -202,10 +203,10 @@ export class GBMinService {
       pingSendTimeout: null,
       keepAliveTimeout: null,
       listeners: {
-        unsubscribed(subscriptions: number): void { },
-        subscribed(subscriptions: number): void { },
-        disconnected(remoteId: string, connections: number): void { },
-        connected(remoteId: string, connections: number): void { },
+        unsubscribed(subscriptions: number): void {},
+        subscribed(subscriptions: number): void {},
+        disconnected(remoteId: string, connections: number): void {},
+        connected(remoteId: string, connections: number): void {},
         messageIn(...params): void {
           params.shift();
           GBLogEx.info(0, '[IN] ' + params);
@@ -288,7 +289,7 @@ export class GBMinService {
   /**
    * Unmounts the bot web site (default.gbui) secure domain, if any.
    */
-  public async unloadDomain(instance: IGBInstance) { }
+  public async unloadDomain(instance: IGBInstance) {}
 
   /**
    * Mount the instance by creating an BOT Framework bot object,
@@ -296,7 +297,6 @@ export class GBMinService {
    * installing all BASIC artifacts from .gbdialog and OAuth2.
    */
   public async mountBot(instance: IGBInstance) {
-
     // Build bot adapter.
 
     const { min, adapter, conversationState } = await this.buildBotAdapter(
@@ -441,8 +441,6 @@ export class GBMinService {
         const data = await this.deployer.getBotManifest(instance);
         Fs.writeFileSync(packageTeams, data);
       }
-  
-
     }
 
     // Serves individual URL for each bot user interface.
@@ -578,8 +576,9 @@ export class GBMinService {
         min.instance.authenticatorTenant,
         '/oauth2/authorize'
       );
-      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.marketplaceId
-        }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
+        min.instance.marketplaceId
+      }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
       GBLog.info(`HandleOAuthRequests: ${authorizationUrl}.`);
       res.redirect(authorizationUrl);
     });
@@ -1067,7 +1066,9 @@ export class GBMinService {
           await this.processEventActivity(min, user, context, step);
         }
       } catch (error) {
-        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''          }`;
+        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${
+          error.error ? (error.error.stack ? error.error.stack : '') : ''
+        }`;
         GBLog.error(msg);
 
         await min.conversationalService.sendText(
@@ -1081,7 +1082,6 @@ export class GBMinService {
     };
 
     try {
-
       await adapter['processActivity'](req, res, handler);
     } catch (error) {
       if (error.code === 401) {
@@ -1141,9 +1141,7 @@ export class GBMinService {
     const url = attachment.contentUrl;
     const localFolder = 'work';
     const path = DialogKeywords.getGBAIPath(this['min'].botId);
-    const localFileName = Path.join(localFolder, path, 'uploads',
-      attachment.name
-    );
+    const localFileName = Path.join(localFolder, path, 'uploads', attachment.name);
 
     let buffer;
     if (url.startsWith('data:')) {
@@ -1161,13 +1159,10 @@ export class GBMinService {
     Fs.writeFileSync(localFileName, buffer);
 
     return {
-      fileName:
-        attachment.name
-      ,
+      fileName: attachment.name,
       localPath: localFileName
     };
   }
-
 
   /**
    *
@@ -1176,6 +1171,79 @@ export class GBMinService {
    * */
   public static isGlobalQuitUtterance(locale, utterance) {
     return utterance.match(Messages.global_quit);
+  }
+
+  private async handleUploads(min, step, user, params)
+  {
+    // Prepare Promises to download each attachment and then execute each Promise.
+
+    if (
+      step.context.activity.attachments &&
+      step.context.activity.attachments[0] &&
+      step.context.activity.attachments[0].contentType != 'text/html'
+    ) {
+      const promises = step.context.activity.attachments.map(
+        GBMinService.downloadAttachmentAndWrite.bind({ min, user, params })
+      );
+      const successfulSaves = await Promise.all(promises);
+      async function replyForReceivedAttachments(attachmentData) {
+        if (attachmentData) {
+          // In case of not having HEAR activated before, it is
+          // a upload with no Dialog, so run Auto Save to .gbdrive.
+
+          if (!min.cbMap[user.userId]) {
+            const t = new SystemKeywords();
+            GBLog.info(`BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
+            const handle = WebAutomationServices.cyrb53(min.botId + attachmentData.fileName);
+            let data = Fs.readFileSync(attachmentData.localPath);
+
+            const gbfile = {
+              filename: attachmentData.localPath,
+              data: data,
+              name: Path.basename(attachmentData.fileName)
+            };
+
+            GBServer.globals.files[handle] = gbfile;
+            const result = await t['internalAutoSave']({ min: min, handle: handle });
+            await min.conversationalService.sendText(
+              min,
+              step,
+              `Seu arquivo ${gbfile.name} foi salvo no .gbdrive (${result.category}).`
+            );
+
+            return;
+          }
+        } else {
+          await this.sendActivity('Error uploading file. Please,start again.');
+        }
+      }
+      const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
+      await Promise.all(replyPromises);
+      if (successfulSaves.length > 0) {
+        class GBFile {
+          data: Buffer;
+          filename: string;
+        }
+
+        const results = successfulSaves.reduce((accum: GBFile[], item) => {
+          const result: GBFile = {
+            data: Fs.readFileSync(successfulSaves[0]['localPath']),
+            filename: successfulSaves[0]['fileName']
+          };
+          accum.push(result);
+          return accum;
+        }, []) as GBFile[];
+
+        if (min.cbMap[user.userId] && min.cbMap[user.userId].promise == '!GBHEAR') {
+          if (results.length > 1) {
+            throw new Error('It is only possible to upload one file per message, right now.');
+          }
+          min.cbMap[user.userId].promise = results[0];
+        } else {
+          return;
+        }
+      }
+    }
   }
 
   /**
@@ -1204,32 +1272,29 @@ export class GBMinService {
 
     const member = context.activity.from;
     let memberId, email;
-    
+
     // Processes e-mail from id in case of Teams messages.
 
-    if (member.id.startsWith("29:")){
-      const token = await (min.adminService as any)
-        ['acquireElevatedToken'](min.instance.instanceId, false);
+    if (member.id.startsWith('29:')) {
+      const token = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, false);
 
       const url = `https://graph.microsoft.com/v1.0/users/${context.activity.from.aadObjectId}`;
-            const options = {
+      const options = {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`
         }
       };
-  
+
       try {
         const res = await fetch(url, options);
-        const member   = JSON.parse(await res.text());
+        const member = JSON.parse(await res.text());
         memberId = member.mail;
-        email  = member.mail;
+        email = member.mail;
       } catch (error) {
         throw `[botId:${min.instance.botId}] Error calling Teams to get user info: ${error}.`;
       }
-    }
-    else
-    {
+    } else {
       memberId = member.id;
     }
 
@@ -1264,12 +1329,11 @@ export class GBMinService {
     }
 
     if (GBMinService.userMobile(step)) {
-      const startDialog = user.hearOnDialog
-        ? user.hearOnDialog
-        : min.core.getParam(min.instance, 'Start Dialog', null);
+      const startDialog = user.hearOnDialog ? user.hearOnDialog : min.core.getParam(min.instance, 'Start Dialog', null);
 
       if (
-        startDialog && startDialog!=="" &&
+        startDialog &&
+        startDialog !== '' &&
         !min['conversationWelcomed'][step.context.activity.conversation.id] &&
         !step.context.activity['group']
       ) {
@@ -1284,83 +1348,14 @@ export class GBMinService {
       }
     }
 
-    // Prepare Promises to download each attachment and then execute each Promise.
-
-    if (step.context.activity.attachments 
-      && step.context.activity.attachments[0]
-      && step.context.activity.attachments[0].contentType != 'text/html') {
-
-      const promises = step.context.activity.attachments.map(
-        GBMinService.downloadAttachmentAndWrite.bind({ min, user, params })
-      );
-      const successfulSaves = await Promise.all(promises);
-      async function replyForReceivedAttachments(attachmentData) {
-        if (attachmentData) {
-
-          // In case of not having HEAR activated before, it is 
-          // a upload with no Dialog, so run Auto Save to .gbdrive.
-          
-          if (!min.cbMap[userId])
-          {
-            const t = new SystemKeywords();
-            GBLog.info(`BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
-            const handle = WebAutomationServices.cyrb53(min.botId + attachmentData.fileName);
-            let data = Fs.readFileSync(attachmentData.localPath);
-
-            const gbfile = {
-              filename: attachmentData.localPath,
-              data: data,
-              name: Path.basename(attachmentData.fileName)
-            };
-
-            GBServer.globals.files[handle] = gbfile;
-            const result = await t.internalAutoSave({min: min, handle:handle });
-            await min.conversationalService.sendText(min, step, 
-              `Seu arquivo ${gbfile.name} foi salvo no .gbdrive (${result.category}).`
-              );
-
-
-            return;
-          }
-
-        } else {
-          await this.sendActivity('Error uploading file. Please,start again.');
-        }
-      }
-      const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
-      await Promise.all(replyPromises);
-      if (successfulSaves.length > 0) {
-        class GBFile {
-          data: Buffer;
-          filename: string;
-        }
-
-        const results = successfulSaves.reduce((accum: GBFile[], item) => {
-          const result: GBFile = {
-            data: Fs.readFileSync(successfulSaves[0]['localPath']),
-            filename: successfulSaves[0]['fileName']
-          };
-          accum.push(result);
-          return accum;
-        }, []) as GBFile[];
-
-        if (min.cbMap[userId] && min.cbMap[userId].promise == '!GBHEAR') {
-          if (results.length > 1) {
-            throw new Error('It is only possible to upload one file per message, right now.');
-          }
-          min.cbMap[userId].promise = results[0];
-        }
-        else{
-          
-          return;
-        }
-      }
-    }
+    await this.handleUploads(min, step, user, params);
 
     // Files in .gbdialog can be called directly by typing its name normalized into JS .
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
-    
+
+    // TODO: Externalize intents for GPT.
+
     if (/create dialog|creative dialog|create a dialog|criar diálogo|criar diálogo/gi.test(context.activity.text)) {
       await step.beginDialog('/dialog');
     } else if (isVMCall) {
@@ -1404,124 +1399,27 @@ export class GBMinService {
     } else {
       // Removes unwanted chars in input text.
 
-      let text = context.activity.text;
-      const originalText = text;
-      text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
+      
+      step.context.activity['originalText'] = context.activity.text;
+      const text = await GBConversationalService.handleText(min, user, step, context.activity.text);
+      step.context.activity['originalText']
+      step.context.activity['text'] = text;
 
-      // Saves special words (keep text) in tokens to prevent it from
-      // spell checking and translation.
+      const notes = min.core.getParam(min.instance, 'Notes', null);
+      if (notes) {
+        const sys = new SystemKeywords();
+        await sys['internalNote'](min, text);
 
-      const keepText: string = min.core.getParam(min.instance, 'Keep Text', '');
-      let keepTextList = [];
-      if (keepTextList) {
-        keepTextList = keepTextList.concat(keepText.split(';'));
-      }
-      const replacements = [];
-      await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-        const result = await e.onExchangeData(min, 'getKeepText', {});
-        if (result) {
-          keepTextList = keepTextList.concat(result);
-        }
-      });
+        return;
+      }  
 
-      const getNormalizedRegExp = value => {
-        var chars = [
-          { letter: 'a', reg: '[aáàãäâ]' },
-          { letter: 'e', reg: '[eéèëê]' },
-          { letter: 'i', reg: '[iíìïî]' },
-          { letter: 'o', reg: '[oóòõöô]' },
-          { letter: 'u', reg: '[uúùüû]' },
-          { letter: 'c', reg: '[cç]' }
-        ];
-
-        for (var i in chars) {
-          value = value.replace(new RegExp(chars[i].letter, 'gi'), chars[i].reg);
-        }
-        return value;
-      };
-
-      let textProcessed = text;
-      if (keepTextList) {
-        keepTextList = keepTextList.filter(p => p.trim() !== '');
-        let i = 0;
-        await CollectionUtil.asyncForEach(keepTextList, item => {
-          const it = GBConversationalService.removeDiacritics(item);
-          const noAccentText = GBConversationalService.removeDiacritics(textProcessed);
-
-          if (noAccentText.toLowerCase().indexOf(it.toLowerCase()) != -1) {
-            const replacementToken = 'X' + GBAdminService.getNumberIdentifier().substr(0, 4);
-            replacements[i] = { text: item, replacementToken: replacementToken };
-            i++;
-            textProcessed = textProcessed.replace(
-              new RegExp(`\\b${getNormalizedRegExp(it.trim())}\\b`, 'gi'),
-              `${replacementToken}`
-            );
-          }
-        });
-      }
-
-      // Spells check the input text before translating,
-      // keeping fixed tokens as specified in Config.
-
-      text = await min.conversationalService.spellCheck(min, textProcessed);
-
-      // If it is a group, spells and sends them back.
-
-      const group = step.context.activity['group'];
-      if (textProcessed !== text && group) {
-        await min.whatsAppDirectLine.sendToDevice(group, `Spell: ${text}`);
-      }
-
-      // Detects user typed language and updates their locale profile if applies.
-
-      let locale = min.core.getParam<string>(
-        min.instance,
-        'Default User Language',
-        GBConfigService.get('DEFAULT_USER_LANGUAGE')
-      );
-      const detectLanguage =
-        min.core.getParam<boolean>(
-          min.instance,
-          'Language Detector',
-          GBConfigService.getBoolean('LANGUAGE_DETECTOR')
-        ) === 'true';
-      locale = user.locale;
-      if (text != '' && detectLanguage && !locale) {
-        locale = await min.conversationalService.getLanguage(min, text);
-        if (user.locale != locale) {
-          user = await sec.updateUserLocale(user.userId, locale);
-        }
-      }
 
       // Checks for bad words on input text.
 
-      const hasBadWord = wash.check(locale, context.activity.text);
+      const hasBadWord = wash.check(step.context.locale, text);
       if (hasBadWord) {
         return await step.beginDialog('/pleaseNoBadWords');
       }
-
-      // Translates text into content language, keeping
-      // reserved tokens specified in Config.
-
-      const contentLocale = min.core.getParam<string>(
-        min.instance,
-        'Default Content Language',
-        GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
-      );
-      text = await min.conversationalService.translate(min, text, contentLocale);
-      GBLog.verbose(`Translated text (processMessageActivity): ${text}.`);
-
-      // Restores all token text back after spell checking and translation.
-
-      if (keepTextList) {
-        let i = 0;
-        await CollectionUtil.asyncForEach(replacements, item => {
-          i++;
-          text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
-        });
-      }
-      step.context.activity['text'] = text;
-      step.context.activity['originalText'] = originalText;
 
       if (user.agentMode === 'self') {
         const manualUser = await sec.getUserFromAgentSystemId(user.userSystemId);
@@ -1544,7 +1442,7 @@ export class GBMinService {
           await min.whatsAppDirectLine.sendToDeviceEx(
             manualUser.userSystemId,
             `${manualUser.agentSystemId}: ${text}`,
-            locale,
+            step.context.activity.locale,
             step.context.activity.conversation.id
           );
         }
@@ -1555,12 +1453,12 @@ export class GBMinService {
 
         // If there is a dialog in course, continue to the next step.
         else if (step.activeDialog !== undefined) {
-
           try {
             await step.continueDialog();
-            
           } catch (error) {
-            const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''          }`;
+            const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${
+              error.error ? (error.error.stack ? error.error.stack : '') : ''
+            }`;
             GBLog.error(msg);
             await min.conversationalService.sendText(
               min,
@@ -1569,7 +1467,6 @@ export class GBMinService {
             );
             await step.beginDialog('/ask', { isReturning: true });
           }
-
         } else {
           const startDialog = user.hearOnDialog
             ? user.hearOnDialog
@@ -1580,7 +1477,7 @@ export class GBMinService {
             let data = {
               query: text,
               step: step,
-              notTranslatedQuery: originalText,
+              notTranslatedQuery: context.activity.text,
               message: message ? message['dataValues'] : null,
               user: user ? user.dataValues : null
             };

@@ -38,7 +38,7 @@
 
 import { MessageFactory, RecognizerResult, TurnContext } from 'botbuilder';
 import { LuisRecognizer } from 'botbuilder-ai';
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
 import { GBServer } from '../../../src/app.js';
 import { Readable } from 'stream';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
@@ -63,7 +63,6 @@ import TextToSpeechV1 from 'ibm-watson/text-to-speech/v1.js';
 import { IamAuthenticator } from 'ibm-watson/auth/index.js';
 import * as marked from 'marked';
 import Translate from '@google-cloud/translate';
-import { List } from 'whatsapp-web.js';
 
 /**
  * Provides basic services for handling messages and dispatching to back-end
@@ -993,6 +992,120 @@ export class GBConversationalService {
         return Promise.reject(new Error(msg));
       }
     }
+  }
+
+  public static async handleText (min, user, step, text: string){
+    const sec = new SecService();
+
+    text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
+
+    // Saves special words (keep text) in tokens to prevent it from
+    // spell checking and translation.
+
+    const keepText: string = min.core.getParam(min.instance, 'Keep Text', '');
+    let keepTextList = [];
+    if (keepTextList) {
+      keepTextList = keepTextList.concat(keepText.split(';'));
+    }
+    const replacements = [];
+    await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+      const result = await e.onExchangeData(min, 'getKeepText', {});
+      if (result) {
+        keepTextList = keepTextList.concat(result);
+      }
+    });
+
+    const getNormalizedRegExp = value => {
+      var chars = [
+        { letter: 'a', reg: '[aáàãäâ]' },
+        { letter: 'e', reg: '[eéèëê]' },
+        { letter: 'i', reg: '[iíìïî]' },
+        { letter: 'o', reg: '[oóòõöô]' },
+        { letter: 'u', reg: '[uúùüû]' },
+        { letter: 'c', reg: '[cç]' }
+      ];
+
+      for (var i in chars) {
+        value = value.replace(new RegExp(chars[i].letter, 'gi'), chars[i].reg);
+      }
+      return value;
+    };
+
+    let textProcessed = text;
+    if (keepTextList) {
+      keepTextList = keepTextList.filter(p => p.trim() !== '');
+      let i = 0;
+      await CollectionUtil.asyncForEach(keepTextList, item => {
+        const it = GBConversationalService.removeDiacritics(item);
+        const noAccentText = GBConversationalService.removeDiacritics(textProcessed);
+
+        if (noAccentText.toLowerCase().indexOf(it.toLowerCase()) != -1) {
+          const replacementToken = 'X' + GBAdminService.getNumberIdentifier().substr(0, 4);
+          replacements[i] = { text: item, replacementToken: replacementToken };
+          i++;
+          textProcessed = textProcessed.replace(
+            new RegExp(`\\b${getNormalizedRegExp(it.trim())}\\b`, 'gi'),
+            `${replacementToken}`
+          );
+        }
+      });
+    }
+
+    // Spells check the input text before translating,
+    // keeping fixed tokens as specified in Config.
+
+    text = await min.conversationalService.spellCheck(min, textProcessed);
+
+    // If it is a group, spells and sends them back.
+
+    const group = step.context.activity['group'];
+    if (textProcessed !== text && group) {
+      await min.whatsAppDirectLine.sendToDevice(group, `Spell: ${text}`);
+    }
+
+    // Detects user typed language and updates their locale profile if applies.
+
+    let locale = min.core.getParam(
+      min.instance,
+      'Default User Language',
+      GBConfigService.get('DEFAULT_USER_LANGUAGE')
+    );
+    const detectLanguage =
+      min.core.getParam(
+        min.instance,
+        'Language Detector',
+        GBConfigService.getBoolean('LANGUAGE_DETECTOR')
+      ) === 'true';
+    locale = user.locale;
+    if (text != '' && detectLanguage && !locale) {
+      locale = await min.conversationalService.getLanguage(min, text);
+      if (user.locale != locale) {
+        user = await sec.updateUserLocale(user.userId, locale);
+      }
+    }
+
+    // Translates text into content language, keeping
+    // reserved tokens specified in Config.
+
+    const contentLocale = min.core.getParam(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+    text = await min.conversationalService.translate(min, text, contentLocale);
+    GBLog.verbose(`Translated text (processMessageActivity): ${text}.`);
+
+    // Restores all token text back after spell checking and translation.
+
+    if (keepTextList) {
+      let i = 0;
+      await CollectionUtil.asyncForEach(replacements, item => {
+        i++;
+        text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
+      });
+    }
+
+    return text;
   }
 
   public async prompt(min: GBMinInstance, step: GBDialogStep, text: string) {

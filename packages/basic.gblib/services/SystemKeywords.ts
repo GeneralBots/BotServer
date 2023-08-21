@@ -182,7 +182,9 @@ export class SystemKeywords {
     try {
       let output = [];
       let isObject = false;
-      if (data[0].gbarray) {return data;} // Already GB Table.
+      if (data[0].gbarray) {
+        return data;
+      } // Already GB Table.
       if (Array.isArray(data)) {
         isObject = Object.keys(data[1]) !== null;
       } else {
@@ -252,7 +254,7 @@ export class SystemKeywords {
 
     // Includes the associated CSS related to current theme.
 
-    const theme: string =  await DialogKeywords.getOption({ pid, name: 'theme', root: true });
+    const theme: string = await DialogKeywords.getOption({ pid, name: 'theme', root: true });
     switch (theme) {
       case 'white':
         await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_simple.min.css' });
@@ -321,7 +323,7 @@ export class SystemKeywords {
     }
 
     await browser.close();
-    return {url, localName};
+    return { url, localName };
   }
 
   public async asPDF({ pid, data }) {
@@ -388,7 +390,7 @@ export class SystemKeywords {
   }
 
   public async executeSQL({ pid, data, sql, tableName }) {
-    if (!data || !data[0]){
+    if (!data || !data[0]) {
       return data;
     }
     let objectMode = false;
@@ -476,10 +478,8 @@ export class SystemKeywords {
     let sec = new SecService();
     const user = await sec.getUserFromUsername(min.instance.instanceId, username);
 
-    return {displayName: user.displayName,
-      mobile: user.userSystemId, email: user.email};
+    return { displayName: user.displayName, mobile: user.userSystemId, email: user.email };
   }
-
 
   /**
    * Sends a SMS message to the mobile number specified.
@@ -638,14 +638,39 @@ export class SystemKeywords {
   }
 
   /**
+   * Takes note inside a notes.xlsx of .gbdata.
+   *
+   * @exaple NOTE "text"
+   *
+   */
+  public async note({ pid, text }): Promise<any> {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    await this.internalNote(min,text );
+  }
+
+  private async internalNote(min, text): Promise<any> {
+    await this.internalSave(min, 'Notes.xlsx', [text]);
+  }
+
+  /**
    * Saves the content of several variables to a new row in a tabular file.
    *
    * @exaple SAVE "customers.xlsx", name, email, phone, address, city, state, country
    *
    */
   public async save({ pid, file, args }): Promise<any> {
-    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    await this.internalSave(min, file, args);
+  }
 
+  /**
+   * Saves the content of several variables to a new row in a tabular file.
+   *
+   * @exaple SAVE "customers.xlsx", name, email, phone, address, city, state, country
+   *
+   */
+
+  private async internalSave(min, file, args): Promise<any> {
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
@@ -1013,15 +1038,12 @@ export class SystemKeywords {
         if (user && params && params.wholeWord) {
           wholeWord = params.wholeWord;
         }
-        if (!result)
-        {
-            return;
+        if (!result) {
+          return;
         }
 
         switch (filter.dataType) {
           case 'string':
-
-
             const v1 = GBConversationalService.removeDiacritics(result.toLowerCase().trim());
             const v2 = GBConversationalService.removeDiacritics(filter.value.toLowerCase().trim());
 
@@ -1159,7 +1181,7 @@ export class SystemKeywords {
 
     const outputArray = await DialogKeywords.getOption({ pid, name: 'output' });
 
-    if (table.length === 1) { 
+    if (table.length === 1) {
       GBLog.info(`BASIC: FIND returned no results (zero rows).`);
       return null;
     } else if (table.length === 2 && !outputArray) {
@@ -2008,13 +2030,13 @@ export class SystemKeywords {
     this.internalAutoSave({ min, handle });
   }
 
-  public async internalAutoSave({ min, handle }) {
+  private async internalAutoSave({ min, handle }) {
     const file = GBServer.globals.files[handle];
     GBLog.info(`BASIC: Auto saving '${file.filename}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
     const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
-    const fileName =file.url ? file.url : file.name;
+    const fileName = file.url ? file.url : file.name;
     const contentType = mime.lookup(fileName);
     const ext = Path.extname(fileName).substring(1);
     const kind = await this.getExtensionInfo(ext);
@@ -2024,18 +2046,19 @@ export class SystemKeywords {
       day = '' + d.getDate(),
       year = d.getFullYear();
 
-    const today=  [day, month, year].join('-')
-    const result = await client.api(`${baseUrl}/drive/root:/${path}/${today}/${kind.category}/${fileName}:/content`).put(file.data);
+    const today = [day, month, year].join('-');
+    const result = await client
+      .api(`${baseUrl}/drive/root:/${path}/${today}/${kind.category}/${fileName}:/content`)
+      .put(file.data);
 
-    return {contentType, ext, kind, category: kind['category']};
+    return { contentType, ext, kind, category: kind['category'] };
   }
-  
+
   public async getExtensionInfo(ext: any): Promise<any> {
-    
     let array = exts.filter((v, i, a) => a[i]['extension'] === ext);
-    if (array[0])    {
+    if (array[0]) {
       return array[0];
     }
-      return {category: 'Other', description: 'General documents'};
+    return { category: 'Other', description: 'General documents' };
   }
 }

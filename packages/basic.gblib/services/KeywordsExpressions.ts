@@ -479,7 +479,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*CALL\s*(.*)/gim,
       ($0, $1) => {
-        return `await ${$1}`;
+        return `// await ${$1}`;
       }
     ];
 
@@ -539,6 +539,13 @@ export class KeywordsExpressions {
       /^\s*(wait)\s*(\d+)/gim,
       ($0, $1, $2) => {
         return `await sys.wait({pid: pid, seconds:${$2}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(ADD NOTE)\s*(.*)/gim,
+      ($0, $1, $2) => {
+        return `await sys.note({pid: pid, text:${$2}})`;
       }
     ];
 
