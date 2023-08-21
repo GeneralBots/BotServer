@@ -1409,7 +1409,7 @@ export class GBMinService {
       step.context.activity['text'] = text;
 
       const notes = min.core.getParam(min.instance, 'Notes', null);
-      if (notes) { 
+      if (notes && text && text !== "") { 
         const sys = new SystemKeywords();
         await sys.note({pid, text});
 
