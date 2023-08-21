@@ -1180,7 +1180,7 @@ export class DialogKeywords {
 
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
-      GBLog.info(`BASIC: WebAutomation: Sending ${url} to mobile ${mobile}.`);
+      GBLog.info(`BASIC: WebAutomation: Sending ${url} to ${mobile} (${channel}).`);
     }
 
     // GBFILE object.
@@ -1188,7 +1188,7 @@ export class DialogKeywords {
       url = filename.url;
       nameOnly = Path.basename(filename.localName);
 
-      GBLog.info(`BASIC: Sending the GBFILE ${url} to mobile ${mobile}.`);
+      GBLog.info(`BASIC: Sending the GBFILE ${url} to ${mobile} (${channel}).`);
     }
     // Handles Markdown.
     else if (filename.indexOf('.md') > -1) {

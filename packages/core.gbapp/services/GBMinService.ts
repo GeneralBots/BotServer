@@ -908,8 +908,7 @@ export class GBMinService {
 
       const step = await min.dialogs.createContext(context);
       step.context.activity.locale = 'pt-BR';
-      let firstTime = false;
-
+    
       const member = context.activity.from;
       const sec = new SecService();
       const user = await sec.ensureUser(instance.instanceId, member.id, member.name, '', 'web', member.name, null);
@@ -937,9 +936,7 @@ export class GBMinService {
           await sec.setParam(userId, 'wholeWord', true);
           await sec.setParam(userId, 'theme', 'white');
           await sec.setParam(userId, 'maxColumns', 40);
-
-          firstTime = true;
-
+          
           // This same event is dispatched either to all participants
           // including the bot, that is filtered bellow.
 
@@ -949,7 +946,7 @@ export class GBMinService {
             // Stores conversation associated to the user to group each message.
 
             const analytics = new AnalyticsService();
-            const conversation = await analytics.createConversation(user);
+            await analytics.createConversation(user);
 
           }
 
