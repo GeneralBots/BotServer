@@ -1409,7 +1409,7 @@ export class GBMinService {
       if (notes && text && text !== "") { 
         const sys = new SystemKeywords();
         await sys.note({pid, text});
-
+        step.context.sendActivity('OK.');
         return;
       }  
 
