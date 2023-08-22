@@ -1235,7 +1235,7 @@ export class DialogKeywords {
       contentUrl: url
     });
 
-    if (channel === 'omnichannel' || !user.conversationReference) {
+    if (channel === 'omnichannel' || !user) {
       await min.conversationalService.sendFile(min, null, mobile, url, caption);
     } else {
       await min.conversationalService['sendOnConversation'](min, user, reply);
