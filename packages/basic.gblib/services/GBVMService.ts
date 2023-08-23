@@ -208,19 +208,6 @@ export class GBVMService extends GBService {
       require('isomorphic-fetch');
       const createRpcClient = require("@push-rpc/core").createRpcClient;
       const createHttpClient = require("@push-rpc/http").createHttpClient;
-
-      // Setups interprocess communication from .gbdialog run-time to the BotServer API.
-      const optsRPC = {callTimeout: this.callTimeout};
-      let url;
-
-      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/dk';
-      const dk = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
-      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/sys';
-      const sys = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
-      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/wa';
-      const wa = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
-      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/img';
-      const img = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
       
       // Unmarshalls Local variables from server VM.
 
@@ -287,7 +274,23 @@ export class GBVMService extends GBService {
       const base64 =  (v) => { return (async () => { return await dk.getCoded({v}) })(); };
       const tolist =  (v) => { return (async () => { return await dk.getToLst({v}) })(); };
 
+      // Setups interprocess communication from .gbdialog run-time to the BotServer API.
+
+      const optsRPC = {callTimeout: this.callTimeout};
+      let url;
+
+      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/dk';
+      const dk = caseInsensitive ((await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote);
+      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/sys';
+      const sys = caseInsensitive ((await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote);
+      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/wa';
+      const wa = caseInsensitive ((await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote);
+      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/img';
+      const img = caseInsensitive ((await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote);
+  
       ${code}
+
+      // Closes handles if any.
 
       await wa.closeHandles({pid: pid});
 
@@ -498,7 +501,8 @@ export class GBVMService extends GBService {
       pid: pid,
       userId: user ? user.userId : 0,
       instanceId: min.instance.instanceId,
-      channel: channel
+      channel: channel,
+      roles: 'everyone'
     };
     return pid;
   }

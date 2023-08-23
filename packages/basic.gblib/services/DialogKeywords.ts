@@ -32,7 +32,7 @@
 
 'use strict';
 
-import { GBLog, GBMinInstance } from 'botlib';
+import { GBError, GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { ChartServices } from './ChartServices.js';
 import urlJoin from 'url-join';
@@ -60,6 +60,7 @@ import pkg from 'whatsapp-web.js';
 import { ActivityTypes } from 'botbuilder';
 const { List, Buttons } = pkg;
 import mime from 'mime-types';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * Default check interval for user replay
@@ -524,6 +525,33 @@ export class DialogKeywords {
     const sec = new SecService();
     await sec.updateUserLocale(user.userId, language);
   }
+
+  /**
+   * Defines the current security context for dialogs based on roles.
+   *
+   * @example ALLOW ROLE "DevOps"
+   *
+   */
+  public async allowRole({ pid, value }) {
+    const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
+    const sys  = new SystemKeywords();
+
+    // Updates current roles allowed from now on this dialog/process.
+
+    proc.roles = value;
+
+    // Checks access.
+
+    const filters = [`${value}=x`, `id=${user.userSystemId}`];
+    const people = sys.find({pid, handle:"People.xlsx", args:[filters]});
+
+    if (!people){
+      throw new Error(`Invalid access. Check if People sheet has the role ${value} checked.`);
+    }
+
+    GBLogEx.info(min, `Allowed access for ${user.userSystemId} on ${value}`);
+  }
+
 
   /**
    * Defines the id generation policy.

@@ -343,7 +343,6 @@ export class KeywordsExpressions {
       }
     ];
 
-
     keywords[i++] = [
       /^\s*hear (\w+\$*) as (\w+( \w+)*.xlsx)/gim,
       ($0, $1, $2) => {
@@ -606,6 +605,13 @@ export class KeywordsExpressions {
       /^\s*(set language)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setLanguage ({pid: pid, ${$3}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(allow role)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await dk.allowRole ({pid: pid, role: ${$3}})`;
       }
     ];
 
