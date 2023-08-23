@@ -280,13 +280,13 @@ export class GBVMService extends GBService {
       let url;
 
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/dk';
-      const dk = caseInsensitive ((await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote);
+      const dk = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/sys';
-      const sys = caseInsensitive ((await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote);
+      const sys =  (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/wa';
-      const wa = caseInsensitive ((await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote);
+      const wa = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/img';
-      const img = caseInsensitive ((await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote);
+      const img =  (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
   
       ${code}
 
