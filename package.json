@@ -159,7 +159,7 @@
     "rimraf": "3.0.2",
     "safe-buffer": "5.2.1",
     "scanf": "1.1.2",
-    "sequelize": "6.28.2",
+    "sequelize": "6.29.0",
     "sequelize-cli": "6.6.0",
     "sequelize-typescript": "2.1.5",
     "sharp": "0.31.3",
