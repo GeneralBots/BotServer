@@ -104,18 +104,25 @@ export class GBDeployer implements IGBDeployer {
    * Retrives token and initialize drive client API.
    */
   public static async internalGetDriveClient(min: GBMinInstance) {
-    const token = await (min.adminService as any)
-      ['acquireElevatedToken'](min.instance.instanceId, true);
-    const siteId = process.env.STORAGE_SITE_ID;
-    const libraryId = process.env.STORAGE_LIBRARY;
+    let token;
+    if (min['cacheToken']) {
+      return min['cacheToken'];
+    } else {
+      token = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, true);
 
-    const client = MicrosoftGraph.Client.init({
-      authProvider: done => {
-        done(null, token);
-      }
-    });
-    const baseUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}`;
-    return { baseUrl, client };
+      const siteId = process.env.STORAGE_SITE_ID;
+      const libraryId = process.env.STORAGE_LIBRARY;
+
+      const client = MicrosoftGraph.Client.init({
+        authProvider: done => {
+          done(null, token);
+        }
+      });
+      const baseUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}`;
+      min['cacheToken'] = { baseUrl, client };
+
+      return min['cacheToken'];
+    }
   }
 
   /**
@@ -203,16 +210,16 @@ export class GBDeployer implements IGBDeployer {
    * Deploys a new blank bot to the database, cognitive services and other services.
    */
   public async deployBlankBot(botId: string, mobile: string, email: string) {
-    
     // Creates a new row on the GuaribasInstance table.
     const instance = await this.importer.createBotInstance(botId);
     const bootInstance = GBServer.globals.bootInstance;
 
     // Gets the access token to perform service operations.
 
-    const accessToken = await 
-      (GBServer.globals.minBoot.adminService as any)['acquireElevatedToken']
-      (bootInstance.instanceId, true);
+    const accessToken = await (GBServer.globals.minBoot.adminService as any)['acquireElevatedToken'](
+      bootInstance.instanceId,
+      true
+    );
 
     // Creates the MSFT application that will be associated to the bot.
 
@@ -385,9 +392,7 @@ export class GBDeployer implements IGBDeployer {
 
     // Connects to MSFT storage.
 
-    const token = await 
-      (min.adminService as any)['acquireElevatedToken']
-        (min.instance.instanceId, true);
+    const token = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, true);
 
     const client = MicrosoftGraph.Client.init({
       authProvider: done => {
@@ -401,17 +406,16 @@ export class GBDeployer implements IGBDeployer {
     const path = DialogKeywords.getGBAIPath(botId, 'gbot');
     let url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${path}:/children`;
 
-    GBLogEx.info( min ,`Loading .gbot from Excel: ${url}`);
+    GBLogEx.info(min, `Loading .gbot from Excel: ${url}`);
     const res = await client.api(url).get();
 
     // Finds Config.xlsx.
-
 
     const document = res.value.filter(m => {
       return m.name === 'Config.xlsx';
     });
     if (document === undefined || document.length === 0) {
-      GBLogEx.info(min,`Config.xlsx not found on .bot folder, check the package.`);
+      GBLogEx.info(min, `Config.xlsx not found on .bot folder, check the package.`);
 
       return null;
     }
@@ -446,7 +450,7 @@ export class GBDeployer implements IGBDeployer {
     baseUrl: string = null,
     client = null
   ): Promise<any> {
-    GBLogEx.info(min ,`downloadFolder: localPath=${localPath}, remotePath=${remotePath}, baseUrl=${baseUrl}`);
+    GBLogEx.info(min, `downloadFolder: localPath=${localPath}, remotePath=${remotePath}, baseUrl=${baseUrl}`);
 
     if (!baseUrl) {
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
@@ -470,7 +474,6 @@ export class GBDeployer implements IGBDeployer {
 
       // Retrieves all files in remote folder.
 
-    
       let path = DialogKeywords.getGBAIPath(min.botId);
       path = urlJoin(path, remotePath);
       let url = `${baseUrl}/drive/root:/${path}:/children`;
