@@ -532,9 +532,13 @@ export class DialogKeywords {
    * @example ALLOW ROLE "DevOps"
    *
    */
-  public async allowRole({ pid, value: role }) {
+  public async allowRole({ pid, role }) {
     const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
     const sys  = new SystemKeywords();
+
+    if (!role){
+      throw new Error(`Invalid access. NULL role specified.`);
+    }
 
     // Updates current roles allowed from now on this dialog/process.
 
