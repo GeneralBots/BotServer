@@ -532,24 +532,24 @@ export class DialogKeywords {
    * @example ALLOW ROLE "DevOps"
    *
    */
-  public async allowRole({ pid, value }) {
+  public async allowRole({ pid, value: role }) {
     const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
     const sys  = new SystemKeywords();
 
     // Updates current roles allowed from now on this dialog/process.
 
-    proc.roles = value;
+    proc.roles = role;
 
     // Checks access.
 
-    const filters = [`${value}=x`, `id=${user.userSystemId}`];
-    const people = sys.find({pid, handle:"People.xlsx", args:[filters]});
+    const filters = [`${role}=x`, `id=${user.userSystemId}`];
+    const people = await sys.find({pid, handle:"People.xlsx", args:[filters]});
 
     if (!people){
-      throw new Error(`Invalid access. Check if People sheet has the role ${value} checked.`);
+      throw new Error(`Invalid access. Check if People sheet has the role ${role} checked.`);
     }
 
-    GBLogEx.info(min, `Allowed access for ${user.userSystemId} on ${value}`);
+    GBLogEx.info(min, `Allowed access for ${user.userSystemId} on ${role}`);
   }
 
 
