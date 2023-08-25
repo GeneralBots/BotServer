@@ -546,8 +546,8 @@ export class DialogKeywords {
 
     // Checks access.
 
-    const filters = [`${role}=x`, `id=${user.userSystemId}`];
-    const people = await sys.find({pid, handle:null, args:["People.xlsx", filters]});
+    const filters = ["People.xlsx", `${role}=x`, `id=${user.userSystemId}`];
+    const people = await sys.find({pid, handle:null, args: filters});
 
     if (!people){
       throw new Error(`Invalid access. Check if People sheet has the role ${role} checked.`);
