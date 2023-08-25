@@ -166,6 +166,51 @@ export class GBMinService {
 
       GBServer.globals.server.get('/instances/:botId', this.handleGetInstanceForClient.bind(this));
     }
+
+
+    function getRemoteId(ctx: Koa.Context) {
+      return '1'; // share a single session for now, real impl could use cookies or some other meaning for HTTP sessions
+    }
+
+    GBLogEx.info(0, 'Loading General Bots API...');
+
+    let proxies = {};
+    await CollectionUtil.asyncForEach(instances, async instance => {
+      const proxy = {
+        dk: new DialogKeywords(),
+        wa: new WebAutomationServices(),
+        sys: new SystemKeywords(),
+        dbg: new DebuggerService(),
+        img: new ImageProcessingServices()
+      };
+      proxies[instance.botId] = proxy;
+    });
+
+    const opts = {
+      pingSendTimeout: null,
+      keepAliveTimeout: null,
+      listeners: {
+        unsubscribed(subscriptions: number): void {},
+        subscribed(subscriptions: number): void {},
+        disconnected(remoteId: string, connections: number): void {},
+        connected(remoteId: string, connections: number): void {},
+        messageIn(...params): void {
+          params.shift();
+          GBLogEx.verbose(0, '[IN] ' + params);
+        },
+        messageOut(...params): void {
+          params.shift();
+          GBLogEx.verbose(0, '[OUT] ' + params);
+        }
+      }
+    };
+
+    GBServer.globals.server.dk = createRpcServer(
+      proxies,
+      createKoaHttpServer(GBVMService.API_PORT, getRemoteId, { prefix: `api/v3` }),
+      opts
+    );
+
     // Calls mountBot event to all bots.
     let i = 1;
 
@@ -199,48 +244,6 @@ export class GBMinService {
     if (this.bar1) {
       this.bar1.stop();
     }
-    const opts = {
-      pingSendTimeout: null,
-      keepAliveTimeout: null,
-      listeners: {
-        unsubscribed(subscriptions: number): void {},
-        subscribed(subscriptions: number): void {},
-        disconnected(remoteId: string, connections: number): void {},
-        connected(remoteId: string, connections: number): void {},
-        messageIn(...params): void {
-          params.shift();
-          GBLogEx.info(0, '[IN] ' + params);
-        },
-        messageOut(...params): void {
-          params.shift();
-          GBLogEx.info(0, '[OUT] ' + params);
-        }
-      }
-    };
-
-    function getRemoteId(ctx: Koa.Context) {
-      return '1'; // share a single session for now, real impl could use cookies or some other meaning for HTTP sessions
-    }
-
-    GBLogEx.info(0, 'Loading General Bots API...');
-
-    let proxies = {};
-    await CollectionUtil.asyncForEach(instances, async instance => {
-      const proxy = {
-        dk: new DialogKeywords(),
-        wa: new WebAutomationServices(),
-        sys: new SystemKeywords(),
-        dbg: new DebuggerService(),
-        img: new ImageProcessingServices()
-      };
-      proxies[instance.botId] = proxy;
-    });
-
-    GBServer.globals.server.dk = createRpcServer(
-      proxies,
-      createKoaHttpServer(GBVMService.API_PORT, getRemoteId, { prefix: `api/v3` }),
-      opts
-    );
 
     // Loads schedules.
 
