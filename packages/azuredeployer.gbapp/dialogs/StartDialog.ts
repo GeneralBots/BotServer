@@ -100,6 +100,7 @@ export class StartDialog {
     }
 
     // Prepares the first instance on bot farm.
+    
     const instance = <IGBInstance>{};
 
     instance.botId = botId;

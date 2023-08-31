@@ -350,13 +350,23 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     };
     await this.storageClient.firewallRules.createOrUpdate(groupName, serverName, 'gb', params);
   }
-
   public async deployFarm(
     proxyAddress: string,
     instance: IGBInstance,
     credentials: any,
     subscriptionId: string
   ): Promise<IGBInstance> {
+    return await this.deployFarm2(proxyAddress,
+      instance,
+      credentials,
+      subscriptionId);
+  }
+  public async deployFarm2(
+    proxyAddress: string,
+    instance: IGBInstance,
+    credentials: any,
+    subscriptionId: string
+  ){
     const culture = 'en-us';
 
     const token = credentials['tokenCache']._entries[0];
