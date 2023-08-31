@@ -357,6 +357,18 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     credentials: any,
     subscriptionId: string
   ): Promise<IGBInstance> {
+    return await this.deployFarm2(proxyAddress,
+      instance,
+      credentials,
+      subscriptionId);
+  }
+  
+  public async deployFarm2(
+    proxyAddress: string,
+    instance: IGBInstance,
+    credentials: any,
+    subscriptionId: string
+  ){
     const culture = 'en-us';
 
     const token = credentials['tokenCache']._entries[0];
