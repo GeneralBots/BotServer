@@ -552,7 +552,7 @@ ENDPOINT_UPDATE=true
       const { instance, credentials, subscriptionId, installationDeployer }
         = await StartDialog.createBaseInstance(deployer, freeTier);
       installationDeployer['core'] = this;
-      const changedInstance = await installationDeployer.deployFarm(
+      const changedInstance = await installationDeployer['deployFarm2'](
         proxyAddress,
         instance,
         credentials,
