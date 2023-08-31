@@ -350,6 +350,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     };
     await this.storageClient.firewallRules.createOrUpdate(groupName, serverName, 'gb', params);
   }
+
   public async deployFarm(
     proxyAddress: string,
     instance: IGBInstance,
@@ -361,6 +362,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       credentials,
       subscriptionId);
   }
+  
   public async deployFarm2(
     proxyAddress: string,
     instance: IGBInstance,
