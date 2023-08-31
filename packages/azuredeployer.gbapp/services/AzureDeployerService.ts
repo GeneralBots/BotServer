@@ -370,6 +370,8 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const name = instance.botId;
 
     GBLog.info(`Enabling resource providers...`);
+    await this.enableResourceProviders('Microsoft.CognitiveServices');
+    await this.enableResourceProviders('Microsoft.WebTerminal');
     await this.enableResourceProviders('Microsoft.BotService');
     await this.enableResourceProviders('Microsoft.Web');
     await this.enableResourceProviders('Microsoft.Sql');
@@ -377,10 +379,14 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     GBLog.info(`Deploying Deploy Group (It may take a few minutes)...`);
     await this.createDeployGroup(name, instance.cloudLocation);
 
-    GBLog.info(`Deploying Bot Server...`);
-    const serverFarm = await this.createHostingPlan(name, `${name}-server-plan`, instance.cloudLocation);
-    const serverName = `${name}-server`;
-    await this.createServer(serverFarm.id, name, serverName, instance.cloudLocation);
+    let serverFarm;
+    let serverName;
+    if (process.env.DEPLOY_WEB){
+      GBLog.info(`Deploying Bot Server...`);
+      serverFarm = await this.createHostingPlan(name, `${name}-server-plan`, instance.cloudLocation);
+      serverName = `${name}-server`;
+      await this.createServer(serverFarm.id, name, serverName, instance.cloudLocation);
+    };
 
     GBLog.info(`Deploying Bot Storage...`);
     const administratorLogin = `sa${GBAdminService.getRndReadableIdentifier()}`;
@@ -469,9 +475,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     // const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
     // instance.nlpAppId = nlpAppId;
 
-    GBLog.info('Updating server environment variables...');
-    await this.updateWebisteConfig(name, serverName, serverFarm.id, instance);
-
+    if (process.env.DEPLOY_WEB){
+      GBLog.info('Updating server environment variables...');
+      await this.updateWebisteConfig(name, serverName, serverFarm.id, instance);
+    }
     spinner.stop();
 
     return instance;
@@ -502,7 +509,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
     // tslint:disable-next-line:no-http-string
     const url = `https://${instance.botId}.azurewebsites.net`;
-    this.deployFarm(url, instance, credentials, subscriptionId);
+    return await this.deployFarm(url, instance, credentials, subscriptionId);
   }
 
   /**
