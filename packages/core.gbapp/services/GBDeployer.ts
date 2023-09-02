@@ -280,7 +280,6 @@ export class GBDeployer implements IGBDeployer {
         `${publicAddress}/api/messages/${instance.botId}`
       );
     } else {
-      const botId = GBConfigService.get('BOT_ID');
 
       // Internally create resources on cloud provider.
 
