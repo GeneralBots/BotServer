@@ -108,8 +108,14 @@ export class AskDialog extends IGBDialog {
           text = Messages[locale].ask_first_time;
         } else if (step.options && step.options.isReturning && !step.context.activity.group) {
           const askForMore = min.core.getParam(min.instance, 'Ask For More', null);
+          if (askForMore){
+            text =  askForMore ;
+          }
+          else
+          {
 
-          text = askForMore ? Messages[locale].anything_else : '';
+            return await step.endDialog(null);
+          }
         } else if (step.context.activity.group || (step.options && step.options.emptyPrompt)) {
           return await step.next();
         } else if (user.subjects.length > 0) {
