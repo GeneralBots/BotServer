@@ -1026,6 +1026,7 @@ export class WhatsappDirectLine extends GBService {
 
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
       if (botNumber) {
+        GBLog.info(`${user.userSystemId} user changed Bot to: ${botId}.`);
         user = await sec.updateUserInstance(user.userSystemId, urlMin.instance.instanceId);
       }
       let activeMin;
