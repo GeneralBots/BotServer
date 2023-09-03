@@ -108,6 +108,10 @@ export class GBDeployer implements IGBDeployer {
     if (min['cacheToken']) {
       return min['cacheToken'];
     } else {
+
+      // Get token as root only if the bot does not have
+      // an custom tenant for retrieving packages.
+
       token = await (min.adminService as any)['acquireElevatedToken']
         (min.instance.instanceId, min.instance.authenticatorTenant?false:true);
 
