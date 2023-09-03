@@ -108,7 +108,8 @@ export class GBDeployer implements IGBDeployer {
     if (min['cacheToken']) {
       return min['cacheToken'];
     } else {
-      token = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, true);
+      token = await (min.adminService as any)['acquireElevatedToken']
+        (min.instance.instanceId, min.instance.authenticatorTenant?false:true);
 
       const siteId = process.env.STORAGE_SITE_ID;
       const libraryId = process.env.STORAGE_LIBRARY;
