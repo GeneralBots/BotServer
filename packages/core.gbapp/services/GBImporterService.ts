@@ -121,7 +121,7 @@ export class GBImporter {
   ) {
   
     const fullSettingsJson = { ...GBServer.globals.bootInstance, ...settingsJson,
-    description:"General Bot"    
+    description:"General Bot", title:botId    
     };
 
     if (botId !== undefined) {
