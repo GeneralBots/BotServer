@@ -58,6 +58,7 @@ const { List, Buttons, Client, MessageMedia } = pkg;
  */
 export class WhatsappDirectLine extends GBService {
   public static conversationIds = {};
+  public static botsByNumber = {};
   public static mobiles = {};
   public static phones = {};
   public static chatIds = {};
@@ -303,14 +304,31 @@ export class WhatsappDirectLine extends GBService {
   public async received(req, res) {
     const provider = WhatsappDirectLine.providerFromRequest(req);
 
-    let message, from, fromName, text: string;
+    let message, to, from, fromName, text: string;
     let group = '';
     let answerText = null;
     let attachments = null;
+    
 
     switch (provider) {
       case 'GeneralBots':
+        
         message = req;
+        to  = message.to.endsWith('@g.us') ? message.to.split('@')[0] : message.to.split('@')[0];
+        const newThis= WhatsappDirectLine.botsByNumber[to];
+        if (newThis === undefined){
+          throw GBError.create(`Bot Number ${to} not setup for any loaded bot.`);
+        }
+        else
+        {
+          if (newThis.min.botId !== this.min.botId)
+          {
+            await newThis.received (req, res);
+            
+            return;
+          }          
+        }
+
         text = message.body;
         from = message.from.endsWith('@g.us') ? message.author.split('@')[0] : message.from.split('@')[0];
         fromName = message._data.notifyName;

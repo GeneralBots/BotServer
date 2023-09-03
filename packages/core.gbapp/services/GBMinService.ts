@@ -769,12 +769,12 @@ export class GBMinService {
     }
 
     const group = min.core.getParam<string>(min.instance, 'WhatsApp Group ID', null);
-
+    
     WhatsappDirectLine.botGroups[min.botId] = group;
-
+    
     // If there is WhatsApp configuration specified, initialize
     // infrastructure objects.
-
+    
     if (min.instance.whatsappServiceKey) {
       min.whatsAppDirectLine = new WhatsappDirectLine(
         min,
@@ -798,16 +798,21 @@ export class GBMinService {
           minBoot.instance.whatsappServiceNumber,
           minBoot.instance.whatsappServiceUrl,
           group
-        );
-        await min.whatsAppDirectLine.setup(false);
+          );
+          await min.whatsAppDirectLine.setup(false);
+        }
       }
-    }
-
-    // Setups default BOT Framework dialogs.
-
+      
+      const botNumber = min.core.getParam<string>(min.instance, 'Bot Number', null);
+      if (botNumber){
+        WhatsappDirectLine.botsByNumber[botNumber] = min.whatsAppDirectLine;
+      }
+      
+      // Setups default BOT Framework dialogs.
+    
     min.userProfile = conversationState.createProperty('userProfile');
     const dialogState = conversationState.createProperty('dialogState');
-
+    
     min.dialogs = new DialogSet(dialogState);
     min.dialogs.add(new TextPrompt('textPrompt'));
     min.dialogs.add(new AttachmentPrompt('attachmentPrompt'));
