@@ -760,6 +760,7 @@ export class WhatsappDirectLine extends GBService {
     switch (this.provider) {
       case 'GeneralBots':
         const attachment = await MessageMedia.fromUrl(url);
+        to = to.replace('+', '');
         if (to.indexOf('@') == -1) {
           if (to.length == 18) {
             to = to + '@g.us';
