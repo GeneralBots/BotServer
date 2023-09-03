@@ -119,10 +119,8 @@ export class GBImporter {
     localPath: string,
     settingsJson: any
   ) {
-    const packageJson = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
-    const servicesJson = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'services.json'), 'utf8'));
-
-    const fullSettingsJson = { ...GBServer.globals.bootInstance, ...packageJson, ...settingsJson, ...servicesJson };
+  
+    const fullSettingsJson = { ...GBServer.globals.bootInstance, ...settingsJson };
 
     if (botId !== undefined) {
       fullSettingsJson.botId = botId;
