@@ -122,7 +122,7 @@ export class WhatsappDirectLine extends GBService {
     const client = await new SwaggerClient({
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
       requestInterceptor: req => {
-        req.headers['Authorization'] = `Bearer ${this.min.instance.webchatKey}`;
+        req.headers['Authorization'] = `Bearer ${this.min.instance.whatsappBotKey}`;
       }
     });
     this.directLineClient = client;
@@ -677,7 +677,7 @@ export class WhatsappDirectLine extends GBService {
         }
       });
     } catch (e) {
-      GBLog.error(e);
+      GBLog .error(e);
     }
   }
 
