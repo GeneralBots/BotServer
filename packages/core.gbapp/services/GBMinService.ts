@@ -542,7 +542,7 @@ export class GBMinService {
 
       authenticationContext.acquireTokenWithAuthorizationCode(
         req.query.code,
-        urlJoin(instance.botEndpoint, min.instance.botId, '/token'),
+        urlJoin(process.env.BOT_URL, min.instance.botId, '/token'),
         resource,
         instance.marketplaceId,
         instance.marketplacePassword,
@@ -561,7 +561,7 @@ export class GBMinService {
 
             // Inform the home for default .gbui after finishing token retrival.
 
-            res.redirect(min.instance.botEndpoint);
+            res.redirect(process.env.BOT_URL);
           }
         }
       );
@@ -581,7 +581,7 @@ export class GBMinService {
       );
       authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
         min.instance.marketplaceId
-      }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+      }&redirect_uri=${urlJoin(process.env.BOT_URL, min.instance.botId, 'token')}`;
       GBLog.info(`HandleOAuthRequests: ${authorizationUrl}.`);
       res.redirect(authorizationUrl);
     });

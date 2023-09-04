@@ -421,7 +421,7 @@ export class AdminDialog extends IGBDialog {
 
           min.adminService.setValue(min.instance.instanceId, 'AntiCSRFAttackState', state);
 
-          const redirectUri = urlJoin(min.instance.botEndpoint, min.instance.botId, '/token');
+          const redirectUri = urlJoin(process.env.BOT_URL, min.instance.botId, '/token');
           const url = `https://login.microsoftonline.com/${step.activeDialog.state.authenticatorTenant}/oauth2/authorize?client_id=${min.instance.marketplaceId}&response_type=code&redirect_uri=${redirectUri}&scope=https://graph.microsoft.com/.default&state=${state}&response_mode=query`;
 
           await min.conversationalService.sendText(min, step, Messages[locale].consent(url));

@@ -455,7 +455,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     };
 
     GBLog.info(`Deploying Bot...`);
-    instance.botEndpoint = this.defaultEndPoint;
+    instance.botEndpoint = 'TODO: remove this column.';
 
     instance = await this.internalDeployBot(
       instance,
