@@ -266,6 +266,11 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   }
 
   public async updateBotProxy(botId: string, group: string, endpoint: string) {
+    if (!await this.botExists(botId)) {
+      GBLog.error(`Bot ${botId} does not exist on cloud.`);  
+
+      return;
+    }
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');

@@ -433,6 +433,7 @@ ENDPOINT_UPDATE=true
         await CollectionUtil.asyncForEach(instances, async instance => {
           GBLog.info(`Updating bot endpoint for ${instance.botId}...`);
           try {
+            
             await installationDeployer.updateBotProxy(
               instance.botId,
               GBConfigService.get('CLOUD_GROUP'),
