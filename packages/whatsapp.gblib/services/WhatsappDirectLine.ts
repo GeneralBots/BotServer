@@ -1036,7 +1036,7 @@ export class WhatsappDirectLine extends GBService {
 
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
       if (botNumber && GBServer.globals.minBoot.botId !== urlMin.botId) {
-        GBLog.info(`${user.userSystemId} user changed Bot to: ${botId}.`);
+        GBLog.info(`${user.userSystemId} fixed by bot number talked to: ${botId}.`);
         user = await sec.updateUserInstance(user.userSystemId, urlMin.instance.instanceId);
       }
 
@@ -1154,7 +1154,7 @@ export class WhatsappDirectLine extends GBService {
 
           // So gets the new bot instance information and prepares to
           // auto start dialog if any is specified.
-
+          activeMin = toSwitchMin;
           const instance = await this.min.core.loadInstanceByBotId(activeMin.botId);
           await sec.updateUserInstance(id, instance.instanceId);
           await (activeMin as any).whatsAppDirectLine.resetConversationId(activeMin.botId, id, '');
