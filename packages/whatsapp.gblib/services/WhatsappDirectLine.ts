@@ -318,7 +318,7 @@ export class WhatsappDirectLine extends GBService {
         // If there is a number specified, checks if it
         // is related to a custom bot and reroutes immediately.
 
-        if (newThis && newThis.min.botId !== this.min.botId) {
+        if (newThis && newThis.min.botId !== GBServer.globals.minBoot.botId) {
           await newThis.received(req, res);
 
           return;
