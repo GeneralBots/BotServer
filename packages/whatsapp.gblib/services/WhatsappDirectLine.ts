@@ -313,10 +313,17 @@ export class WhatsappDirectLine extends GBService {
         message = req;
         to = message.to.endsWith('@g.us') ? message.to.split('@')[0] : message.to.split('@')[0];
         const newThis = WhatsappDirectLine.botsByNumber[to];
+
+        // Every number must be mapped to a bot, even if shared by boot bot.
+        
         if (newThis === undefined) {
           throw GBError.create(`Bot Number ${to} not setup for any loaded bot.`);
         } else {
-          if (newThis.min.botId !== this.min.botId) {
+
+          // Reroute to custom bot only if it is not boot bot.
+
+          if (newThis.min.botId !== this.min.botId &&
+             GBServer.globals.minBoot.botId !== this.min.botId) {
             await newThis.received(req, res);
 
             return;
