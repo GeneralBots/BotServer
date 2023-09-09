@@ -51,6 +51,7 @@ import pkg from 'whatsapp-web.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import e from 'express';
 const { List, Buttons, Client, MessageMedia } = pkg;
 
 /**
@@ -1210,6 +1211,7 @@ export class WhatsappDirectLine extends GBService {
         }
       }
     } catch (error) {
+      error = error['e'] ? error['e'] : error;
       GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error} ${error.stack}`);
     }
   }
