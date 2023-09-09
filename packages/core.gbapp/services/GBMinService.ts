@@ -771,6 +771,8 @@ export class GBMinService {
     const group = min.core.getParam<string>(min.instance, 'WhatsApp Group ID', null);
     
     WhatsappDirectLine.botGroups[min.botId] = group;
+  
+    const minBoot = GBServer.globals.minBoot as any;
     
     // If there is WhatsApp configuration specified, initialize
     // infrastructure objects.
@@ -788,7 +790,6 @@ export class GBMinService {
 
       await min.whatsAppDirectLine.setup(true);
     } else {
-      const minBoot = GBServer.globals.minBoot as any;
       if (min !== minBoot && minBoot.instance.whatsappServiceKey) {
         min.whatsAppDirectLine = new WhatsappDirectLine(
           min,
@@ -803,11 +804,15 @@ export class GBMinService {
         }
       }
       
-      const botNumber = min.core.getParam<string>(min.instance, 'Bot Number', null);
-      if (botNumber){
-        WhatsappDirectLine.botsByNumber[botNumber] = min.whatsAppDirectLine;
+      // Builds bot numbers map in WhatsAppDirectLine globals.
+
+      let botNumber = min.core.getParam<string>(min.instance, 'Bot Number', null);
+      if (!botNumber){
+        botNumber = minBoot.core.getParam(minBoot.instance, 'Bot Number', null);
       }
-      
+
+      WhatsappDirectLine.botsByNumber[botNumber] = min.whatsAppDirectLine;
+
       // Setups default BOT Framework dialogs.
     
     min.userProfile = conversationState.createProperty('userProfile');
