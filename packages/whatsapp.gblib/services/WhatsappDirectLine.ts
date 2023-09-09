@@ -315,18 +315,13 @@ export class WhatsappDirectLine extends GBService {
         to = message.to.endsWith('@g.us') ? message.to.split('@')[0] : message.to.split('@')[0];
         const newThis = WhatsappDirectLine.botsByNumber[to];
 
-        // Every number must be mapped to a bot, even if shared by boot bot.
-        
-        if (newThis) {
+        // If there is a number specified, checks if it
+        // is related to a custom bot and reroutes immediately.
 
-          // Reroute to custom bot only if it is not boot bot.
+        if (newThis && newThis.min.botId !== this.min.botId) {
+          await newThis.received(req, res);
 
-          if (newThis.min.botId !== this.min.botId &&
-             GBServer.globals.minBoot.botId !== this.min.botId) {
-            await newThis.received(req, res);
-
-            return;
-          }
+          return;
         }
 
         text = message.body;
@@ -1169,7 +1164,7 @@ export class WhatsappDirectLine extends GBService {
           const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
 
           if (startDialog) {
-            
+
             GBLog.info(`Calling /start for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
             if (provider === 'chatapi') {
               req.body.messages[0].body = `/start`;
