@@ -1034,8 +1034,15 @@ export class WhatsappDirectLine extends GBService {
       }
 
       const sec = new SecService();
-
       let user = await sec.getUserFromSystemId(id);
+
+      // Tries to find if user wants to switch bots.
+
+      let toSwitchMin = GBServer.globals.minInstances.filter(
+        p => p.instance.botId.toLowerCase() === text.toLowerCase()
+      )[0];
+
+      
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
 
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
@@ -1101,12 +1108,6 @@ export class WhatsappDirectLine extends GBService {
         return;
       }
 
-      // Tries to find if user wants to switch bots.
-
-      let toSwitchMin = GBServer.globals.minInstances.filter(
-        p => p.instance.botId.toLowerCase() === text.toLowerCase()
-      )[0];
-
       if (!toSwitchMin) {
         toSwitchMin = GBServer.globals.minInstances.filter(p =>
           p.instance.activationCode ? p.instance.activationCode.toLowerCase() === text.toLowerCase() : false
@@ -1160,6 +1161,7 @@ export class WhatsappDirectLine extends GBService {
 
           // So gets the new bot instance information and prepares to
           // auto start dialog if any is specified.
+
           activeMin = toSwitchMin;
           const instance = await this.min.core.loadInstanceByBotId(activeMin.botId);
           await sec.updateUserInstance(id, instance.instanceId);
@@ -1167,6 +1169,7 @@ export class WhatsappDirectLine extends GBService {
           const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
 
           if (startDialog) {
+            
             GBLog.info(`Calling /start for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
             if (provider === 'chatapi') {
               req.body.messages[0].body = `/start`;
