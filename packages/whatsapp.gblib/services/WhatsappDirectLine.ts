@@ -317,9 +317,7 @@ export class WhatsappDirectLine extends GBService {
 
         // Every number must be mapped to a bot, even if shared by boot bot.
         
-        if (newThis === undefined) {
-          throw GBError.create(`Bot Number ${to} not setup for any loaded bot.`);
-        } else {
+        if (newThis) {
 
           // Reroute to custom bot only if it is not boot bot.
 

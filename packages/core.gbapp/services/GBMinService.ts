@@ -807,11 +807,9 @@ export class GBMinService {
       // Builds bot numbers map in WhatsAppDirectLine globals.
 
       let botNumber = min.core.getParam<string>(min.instance, 'Bot Number', null);
-      if (!botNumber){
-        botNumber = minBoot.core.getParam(minBoot.instance, 'Bot Number', null);
+      if (botNumber){
+        WhatsappDirectLine.botsByNumber[botNumber] = min.whatsAppDirectLine;
       }
-
-      WhatsappDirectLine.botsByNumber[botNumber] = min.whatsAppDirectLine;
 
       // Setups default BOT Framework dialogs.
     
