@@ -1043,12 +1043,18 @@ export class WhatsappDirectLine extends GBService {
 
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
+      const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
+      if (botNumber && GBServer.globals.minBoot.botId !== urlMin.botId) {
+        GBLog.info(`${user.userSystemId} user changed Bot to: ${botId}.`);
+        user = await sec.updateUserInstance(user.userSystemId, urlMin.instance.instanceId);
+      }
+      
       let activeMin;
-
+      
       // Processes group behaviour.
 
       text = text.replace(/\@\d+ /gi, '');
-
+      
       let group;
       if (provider === 'chatapi') {
         // Ensures that the bot group is the active bot for the user (like switching).
@@ -1059,7 +1065,7 @@ export class WhatsappDirectLine extends GBService {
         }
       } else if (provider === 'GeneralBots') {
         // Ensures that the bot group is the active bot for the user (like switching).
-
+        
         const message = req;
         if (message.from.endsWith('@g.us')) {
           group = message.from;
@@ -1083,12 +1089,12 @@ export class WhatsappDirectLine extends GBService {
           GBLog.warn(`Group: ${group} not associated with botId:${botId}.`);
         }
       }
-
+      
       // Detects if the welcome message is enabled.
 
       if (process.env.WHATSAPP_WELCOME_DISABLED !== 'true') {
         // Tries to find if user wants to switch bots.
-
+        
         let toSwitchMin = GBServer.globals.minInstances.filter(
           p => p.instance.botId.toLowerCase() === text.toLowerCase()
         )[0];
@@ -1097,15 +1103,10 @@ export class WhatsappDirectLine extends GBService {
             p.instance.activationCode ? p.instance.activationCode.toLowerCase() === text.toLowerCase() : false
           )[0];
         }
-        const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
   
         // If bot has a fixed Find active bot instance.
 
         activeMin = botNumber ? urlMin : toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
-        if (botNumber) {
-          GBLog.info(`${user.userSystemId} user changed Bot to: ${botId}.`);
-          user = await sec.updateUserInstance(user.userSystemId, urlMin.instance.instanceId);
-        }
 
         // If it is the first time for the user, tries to auto-execute
         // start dialog if any is specified in Config.xlsx.
