@@ -1043,11 +1043,6 @@ export class WhatsappDirectLine extends GBService {
 
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
-      const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
-      if (botNumber) {
-        GBLog.info(`${user.userSystemId} user changed Bot to: ${botId}.`);
-        user = await sec.updateUserInstance(user.userSystemId, urlMin.instance.instanceId);
-      }
       let activeMin;
 
       // Processes group behaviour.
@@ -1102,10 +1097,15 @@ export class WhatsappDirectLine extends GBService {
             p.instance.activationCode ? p.instance.activationCode.toLowerCase() === text.toLowerCase() : false
           )[0];
         }
-
+        const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
+  
         // If bot has a fixed Find active bot instance.
 
         activeMin = botNumber ? urlMin : toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
+        if (botNumber) {
+          GBLog.info(`${user.userSystemId} user changed Bot to: ${botId}.`);
+          user = await sec.updateUserInstance(user.userSystemId, urlMin.instance.instanceId);
+        }
 
         // If it is the first time for the user, tries to auto-execute
         // start dialog if any is specified in Config.xlsx.
