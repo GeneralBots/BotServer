@@ -289,8 +289,10 @@ export class KBService implements IGBKBService {
       }
     }
 
-    let key = instance.searchKey ? instance.searchKey: 
+    const key = instance.searchKey ? instance.searchKey: 
       GBServer.globals.minBoot.instance.searchKey;
+    const host = instance.searchHost ? instance.searchHost : 
+    GBServer.globals.minBoot.instance.searchHost;
 
     // No direct match found, so Search is used.
 
@@ -306,7 +308,7 @@ export class KBService implements IGBKBService {
         subject4: string;
       }
 
-      const client = new SearchClient<any>('https://' + instance.searchHost, 'azuresql-index', {
+      const client = new SearchClient<any>('https://' + host, 'azuresql-index', {
         key: key
       } as any);
 
