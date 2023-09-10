@@ -312,7 +312,7 @@ export class KBService implements IGBKBService {
         key: key
       } as any);
 
-      const results = await client.search(query, {
+      const results = await client.search(query.substring(0,499), {
         filter: `instanceId eq ${instance.instanceId} and skipIndex eq false`,
         searchFields: ['content', 'subject1', 'subject2', 'subject3', 'subject4'],
         select: ['instanceId', 'questionId', 'answerId'],

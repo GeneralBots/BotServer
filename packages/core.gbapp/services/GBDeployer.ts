@@ -720,13 +720,21 @@ export class GBDeployer implements IGBDeployer {
       GBLogEx.info(instance.instanceId, `Acquiring rebuildIndex mutex...`);
       release = await GBServer.globals.indexSemaphore.acquire();
       GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
+
+      const key = instance.searchKey ? instance.searchKey : GBServer.globals.minBoot.instance.searchKey;
+      const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
+      const searchIndexer = instance.searchIndexer
+        ? instance.searchIndexer
+        : GBServer.globals.minBoot.instance.searchIndexer;
+      const host = instance.searchHost ? instance.searchHost : GBServer.globals.minBoot.instance.searchHost;
+
       // Prepares search.
 
       const search = new AzureSearch(
-        instance.searchKey,
-        instance.searchHost,
-        instance.searchIndex,
-        instance.searchIndexer
+        key,
+        host,
+        searchIndex,
+        searchIndexer
       );
       const connectionString = GBDeployer.getConnectionStringFromInstance(instance);
       const dsName = 'gb';
