@@ -1151,7 +1151,7 @@ export class WhatsappDirectLine extends GBService {
       } else {
         // User wants to switch bots.
 
-        if (toSwitchMin !== undefined) {
+        if (toSwitchMin) {
           GBLog.info(`Switching bots from ${botId} to ${toSwitchMin.botId}...`);
 
           // So gets the new bot instance information and prepares to
@@ -1203,7 +1203,7 @@ export class WhatsappDirectLine extends GBService {
             }
           }
 
-          t.received(req, res);
+          await t.received(req, res);
         }
       }
     } catch (error) {
