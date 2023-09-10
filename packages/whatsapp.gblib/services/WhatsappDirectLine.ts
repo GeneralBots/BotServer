@@ -1159,7 +1159,7 @@ export class WhatsappDirectLine extends GBService {
 
           activeMin = toSwitchMin;
           const instance = await this.min.core.loadInstanceByBotId(activeMin.botId);
-          await sec.updateUserInstance(id, instance.instanceId);
+          user = await sec.updateUserInstance(id, instance.instanceId);
           await (activeMin as any).whatsAppDirectLine.resetConversationId(activeMin.botId, id, '');
           const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
 
