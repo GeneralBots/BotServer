@@ -289,9 +289,12 @@ export class KBService implements IGBKBService {
       }
     }
 
+    let key = instance.searchKey ? instance.searchKey: 
+      GBServer.globals.minBoot.instance.searchKey;
+
     // No direct match found, so Search is used.
 
-    if (instance.searchKey !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
+    if (key !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
       interface SearchResults {
         instanceId: number;
         questionId: number;
@@ -304,7 +307,7 @@ export class KBService implements IGBKBService {
       }
 
       const client = new SearchClient<any>('https://' + instance.searchHost, 'azuresql-index', {
-        key: instance.searchKey
+        key: key
       } as any);
 
       const results = await client.search(query, {

@@ -105,7 +105,10 @@ export class GBDeployer implements IGBDeployer {
    */
   public static async internalGetDriveClient(min: GBMinInstance) {
     let token;
-    if (min['cacheToken']) {
+
+    // TODO: Add expiration logic.  
+
+    if (min['cacheToken'] && null) {
       return min['cacheToken'];
     } else {
 
