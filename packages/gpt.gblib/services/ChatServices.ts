@@ -33,7 +33,8 @@
 'use strict';
 
 import { GBMinInstance } from 'botlib';
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
+import { ChatGPTAPIBrowser, getOpenAIAuth } from 'chatgpt'
 
 export class ChatServices {
   /**
@@ -45,22 +46,24 @@ export class ChatServices {
    *
    */
   public static async continue(min: GBMinInstance, text: string, chatId) {
-    let key = min.core.getParam(min.instance, 'Open AI Key', null);
+    let key;
+    if (process.env.OPENAI_KEY) {
+      key = process.env.OPENAI_KEY;
+    }
+    else {
+      key = min.core.getParam(min.instance, 'Open AI Key', null);
+    }
 
     if (!key) {
       throw new Error('Open AI Key not configured in .gbot.');
     }
-
-    const configuration = new Configuration({
-      apiKey: key,
+    const openai = new OpenAI({
+      apiKey: key
     });
-    const openai = new OpenAIApi(configuration);
-    
-    const chatCompletion = await openai.createChatCompletion({
+    const chatCompletion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [{role: "user", content: text}],
+      messages: [{ role: "user", content: text }],
     });
-    return chatCompletion.data.choices[0].message.content;
-
+    return chatCompletion.choices[0].message.content;
   }
 }

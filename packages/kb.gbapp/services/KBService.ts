@@ -585,6 +585,16 @@ export class KBService implements IGBKBService {
       }
     });
 
+    await GuaribasQuestion.destroy({
+      where: { instanceId: min.instance.instanceId }
+    });
+    await GuaribasAnswer.destroy({
+      where: { instanceId: min.instance.instanceId }
+    });
+    await GuaribasSubject.destroy({
+      where: { instanceId: min.instance.instanceId}
+    });
+
     const answersCreated = await GuaribasAnswer.bulkCreate(answers);
 
     let i = 0;
