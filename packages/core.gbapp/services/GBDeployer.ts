@@ -736,7 +736,7 @@ export class GBDeployer implements IGBDeployer {
         searchIndex,
         searchIndexer
       );
-      const connectionString = GBDeployer.getConnectionStringFromInstance(instance);
+      const connectionString = GBDeployer.getConnectionStringFromInstance(GBServer.globals.minBoot.instance);
       const dsName = 'gb';
 
       // Removes any previous index.
