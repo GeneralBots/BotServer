@@ -716,8 +716,10 @@ export class GBDeployer implements IGBDeployer {
   public async rebuildIndex(instance: IGBInstance, searchSchema: any) {
     // Prepares search.
     let release;
-    try {
-      // GBLogEx.info(instance.instanceId, `Acquiring rebuildIndex mutex...`);
+
+    // TODO: Semaphore logic.
+    //try {
+      GBLogEx.info(instance.instanceId, `rebuildIndex running...`);
       // release = await GBServer.globals.indexSemaphore.acquire();
       // GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
 
@@ -775,11 +777,11 @@ export class GBDeployer implements IGBDeployer {
 
       // release();
       GBLogEx.info(instance.instanceId, `Released rebuildIndex mutex.`);
-    } catch {
+    //} catch {
       // if (release) {
       //   release();
       // }
-    }
+    //}
   }
 
   /**
