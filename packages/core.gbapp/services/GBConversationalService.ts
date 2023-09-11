@@ -1068,13 +1068,14 @@ export class GBConversationalService {
     let locale = min.core.getParam(
       min.instance,
       'Default User Language',
-      GBConfigService.get('DEFAULT_USER_LANGUAGE')).toLowerCase();
+      GBConfigService.get('DEFAULT_USER_LANGUAGE'));
+
     const detectLanguage =
       min.core.getParam(
         min.instance,
         'Language Detector',
-        GBConfigService.getBoolean('LANGUAGE_DETECTOR')).toLowerCase()
-       === 'true';
+        false) != false;
+
     locale = user.locale;
     if (text != '' && detectLanguage && !locale) {
       locale = await min.conversationalService.getLanguage(min, text);
@@ -1089,7 +1090,7 @@ export class GBConversationalService {
     const contentLocale = min.core.getParam(
       min.instance,
       'Default Content Language',
-      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE').toLowerCase()
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
     text = await min.conversationalService.translate(min, text, contentLocale);
     GBLog.verbose(`Translated text (processMessageActivity): ${text}.`);
