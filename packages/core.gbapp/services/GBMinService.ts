@@ -1184,7 +1184,7 @@ export class GBMinService {
     return utterance.match(Messages.global_quit);
   }
 
-  private async handleUploads(min, step, user, params)
+  private async handleUploads(min, step, user, params, autoSave)
   {
     // Prepare Promises to download each attachment and then execute each Promise.
 
@@ -1358,8 +1358,9 @@ export class GBMinService {
         return;
       }
     }
-
-    await this.handleUploads(min, step, user, params);
+    
+    const notes = min.core.getParam(min.instance, 'Notes', null);
+    await this.handleUploads(min, step, user, params, notes != null);
 
     // Files in .gbdialog can be called directly by typing its name normalized into JS .
 
@@ -1416,7 +1417,7 @@ export class GBMinService {
       step.context.activity['originalText']
       step.context.activity['text'] = text;
 
-      const notes = min.core.getParam(min.instance, 'Notes', null);
+      
       if (notes && text && text !== "") { 
         const sys = new SystemKeywords();
         await sys.note({pid, text});
