@@ -1202,7 +1202,7 @@ export class GBMinService {
           // In case of not having HEAR activated before, it is
           // a upload with no Dialog, so run Auto Save to .gbdrive.
 
-          if (!min.cbMap[user.userId]) {
+          if (!min.cbMap[user.userId] && autoSave) {
             const t = new SystemKeywords();
             GBLog.info(`BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
             const handle = WebAutomationServices.cyrb53(min.botId + attachmentData.fileName);
@@ -1358,7 +1358,7 @@ export class GBMinService {
         return;
       }
     }
-    
+
     const notes = min.core.getParam(min.instance, 'Notes', null);
     await this.handleUploads(min, step, user, params, notes != null);
 
