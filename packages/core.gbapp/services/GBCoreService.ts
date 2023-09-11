@@ -696,9 +696,7 @@ ENDPOINT_UPDATE=true
       value = instance['dataValues'][name];
       if (value === null) {
         const minBoot = GBServer.globals.minBoot as any;
-        if (minBoot.instance && minBoot.instance.datavalues) {
-          value = minBoot.instance.datavalues[name];
-        }
+        value = minBoot.instance[name];
       }
     }
 
