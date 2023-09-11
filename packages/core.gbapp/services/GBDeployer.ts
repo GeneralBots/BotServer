@@ -717,9 +717,9 @@ export class GBDeployer implements IGBDeployer {
     // Prepares search.
     let release;
     try {
-      GBLogEx.info(instance.instanceId, `Acquiring rebuildIndex mutex...`);
-      release = await GBServer.globals.indexSemaphore.acquire();
-      GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
+      // GBLogEx.info(instance.instanceId, `Acquiring rebuildIndex mutex...`);
+      // release = await GBServer.globals.indexSemaphore.acquire();
+      // GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
 
       const key = instance.searchKey ? instance.searchKey : GBServer.globals.minBoot.instance.searchKey;
       const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
@@ -773,12 +773,12 @@ export class GBDeployer implements IGBDeployer {
       }
       await search.createIndex(searchSchema, dsName);
 
-      release();
+      // release();
       GBLogEx.info(instance.instanceId, `Released rebuildIndex mutex.`);
     } catch {
-      if (release) {
-        release();
-      }
+      // if (release) {
+      //   release();
+      // }
     }
   }
 
