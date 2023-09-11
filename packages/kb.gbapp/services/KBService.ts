@@ -1031,7 +1031,8 @@ export class KBService implements IGBKBService {
     await this.importKbPackage(min, localPath, p, instance);
     GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
     const service = await AzureDeployerService.createInstance(deployer);
-    await deployer.rebuildIndex(instance, service.getKBSearchSchema(instance.searchIndex));
+    const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
+    await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));
 
     min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
     await KBService.RefreshNER(min);

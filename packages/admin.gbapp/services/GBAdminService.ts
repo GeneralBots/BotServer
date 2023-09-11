@@ -178,9 +178,10 @@ export class GBAdminService implements IGBAdminService {
   }
   public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: GBDeployer) {
     const service = await AzureDeployerService.createInstance(deployer);
+    const searchIndex = min.instance.searchIndex ? min.instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
     await deployer.rebuildIndex(
       min.instance,
-      service.getKBSearchSchema(min.instance.searchIndex)
+      service.getKBSearchSchema(searchIndex)
     );
   }
 
