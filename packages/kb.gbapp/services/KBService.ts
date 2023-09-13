@@ -585,16 +585,6 @@ export class KBService implements IGBKBService {
       }
     });
 
-    await GuaribasQuestion.destroy({
-      where: { instanceId: min.instance.instanceId }
-    });
-    await GuaribasAnswer.destroy({
-      where: { instanceId: min.instance.instanceId }
-    });
-    await GuaribasSubject.destroy({
-      where: { instanceId: min.instance.instanceId}
-    });
-
     const answersCreated = await GuaribasAnswer.bulkCreate(answers);
 
     let i = 0;
@@ -676,6 +666,20 @@ export class KBService implements IGBKBService {
 
     const subjectFile = urlJoin(localPath, 'subjects.json');
     const menuFile = urlJoin(localPath, 'menu.xlsx');
+
+    // Bot KB store clean up.
+
+    await GuaribasQuestion.destroy({
+      where: { instanceId: min.instance.instanceId }
+    });
+    await GuaribasAnswer.destroy({
+      where: { instanceId: min.instance.instanceId }
+    });
+    await GuaribasSubject.destroy({
+      where: { instanceId: min.instance.instanceId}
+    });
+
+    // Imports menu.xlsx if any.
 
     if (Fs.existsSync(subjectFile) || Fs.existsSync(menuFile)) {
       await this.importSubjectFile(packageStorage.packageId, subjectFile, menuFile, instance);
