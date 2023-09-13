@@ -560,7 +560,7 @@ export class GBDeployer implements IGBDeployer {
     });
   }
   public async deployPackage(min: GBMinInstance, localPath: string) {
-    // TODO: @alanperdomo: Adjust interface mismatch.
+    // TODO:  Adjust interface mismatch.
   }
   /**
    * Deploys a folder into the bot storage.
