@@ -667,18 +667,6 @@ export class KBService implements IGBKBService {
     const subjectFile = urlJoin(localPath, 'subjects.json');
     const menuFile = urlJoin(localPath, 'menu.xlsx');
 
-    // Bot KB store clean up.
-
-    await GuaribasQuestion.destroy({
-      where: { instanceId: min.instance.instanceId }
-    });
-    await GuaribasAnswer.destroy({
-      where: { instanceId: min.instance.instanceId }
-    });
-    await GuaribasSubject.destroy({
-      where: { instanceId: min.instance.instanceId}
-    });
-
     // Imports menu.xlsx if any.
 
     if (Fs.existsSync(subjectFile) || Fs.existsSync(menuFile)) {
@@ -1031,6 +1019,20 @@ export class KBService implements IGBKBService {
     const packageName = Path.basename(localPath);
     const instance = await core.loadInstanceByBotId(min.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
+    
+    // Bot KB store clean up.
+
+    await GuaribasQuestion.destroy({
+      where: { instanceId: min.instance.instanceId }
+    });
+    await GuaribasAnswer.destroy({
+      where: { instanceId: min.instance.instanceId }
+    });
+    await GuaribasSubject.destroy({
+      where: { instanceId: min.instance.instanceId}
+    });
+
+    
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(min, localPath, p, instance);
     GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
