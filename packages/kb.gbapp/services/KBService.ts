@@ -1020,18 +1020,7 @@ export class KBService implements IGBKBService {
     const instance = await core.loadInstanceByBotId(min.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
     
-    // Bot KB store clean up.
-
-    await GuaribasQuestion.destroy({
-      where: { instanceId: min.instance.instanceId }
-    });
-    await GuaribasAnswer.destroy({
-      where: { instanceId: min.instance.instanceId }
-    });
-    await GuaribasSubject.destroy({
-      where: { instanceId: min.instance.instanceId}
-    });
-
+    const p = await deployer.undeployPackageFromLocalPath(instance, packageName);
     
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(min, localPath, p, instance);
