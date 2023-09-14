@@ -662,7 +662,15 @@ export class GBDeployer implements IGBDeployer {
     }
   }
 
-
+    /**
+   * Removes the package local files from cache.
+   */
+    public async cleanupPackage(instance: IGBInstance, packageName: string) {
+      const path = DialogKeywords.getGBAIPath(instance.botId, null, packageName);
+      const localFolder = Path.join('work', path);
+      rimraf.sync(localFolder);
+    }
+  
   /**
    * Removes the package from the storage and local work folders.
    */
