@@ -662,6 +662,22 @@ export class GBDeployer implements IGBDeployer {
     }
   }
 
+
+  /**
+   * Removes the package from the storage and local work folders.
+   */
+  public async undeployPackageFromPackageName(instance: IGBInstance, packageName: string) {
+    // Gets information about the package.
+
+    const packageType = Path.extname(packageName);
+    const p = await this.getStoragePackageByName(instance.instanceId, packageName);
+
+    const path = DialogKeywords.getGBAIPath(instance.botId, null, packageName);
+    const localFolder = Path.join('work', path);
+  
+    return await this.undeployPackageFromLocalPath(instance, localFolder);
+  }
+
   /**
    * Removes the package from the storage and local work folders.
    */

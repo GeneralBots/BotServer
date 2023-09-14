@@ -1019,9 +1019,8 @@ export class KBService implements IGBKBService {
     const packageName = Path.basename(localPath);
     const instance = await core.loadInstanceByBotId(min.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
-    
-    await deployer.undeployPackageFromLocalPath(instance, localPath);
-        
+      
+    await deployer['undeployPackageFromPackageName'](instance, packageName);
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(min, localPath, p, instance);
     GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
