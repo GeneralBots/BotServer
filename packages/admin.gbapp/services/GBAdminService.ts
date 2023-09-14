@@ -170,7 +170,11 @@ export class GBAdminService implements IGBAdminService {
       // .gbot packages are handled using storage API, so no download
       // of local resources is required.
       const gbai = DialogKeywords.getGBAIPath(min.instance.botId);
-      
+
+      if (packageType === 'gbkb') {
+        await deployer['cleanupPackage'](min.instance, packageName);
+      }
+
       await deployer['downloadFolder'](min,
         Path.join('work', `${gbai}`),
         Path.basename(localFolder));
