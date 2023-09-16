@@ -1059,7 +1059,13 @@ export class GBConversationalService {
     // If it is a group, spells and sends them back.
 
     const group = step.context.activity['group'];
-    if (textProcessed !== text && group) {
+
+    const groupSpell = group ? await min.core.getParam(
+      min.instance,
+      'Group Spell',
+      false): false;
+
+    if (textProcessed !== text && group && groupSpell) {
       await min.whatsAppDirectLine.sendToDevice(group, `Spell: ${text}`);
     }
 

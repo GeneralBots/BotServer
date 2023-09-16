@@ -683,13 +683,13 @@ ENDPOINT_UPDATE=true
       value = params ? params[name] : defaultValue;
     }
     if (typeof defaultValue === 'boolean') {
-      return new Boolean(value ? value.toString().toLowerCase() === 'true' : defaultValue);
+      return new Boolean(value ? value.toString().toLowerCase() === 'true' : defaultValue).valueOf();
     }
     if (typeof defaultValue === 'string') {
       return value ? value : defaultValue;
     }
     if (typeof defaultValue === 'number') {
-      return new Number(value ? value : defaultValue ? defaultValue : 0);
+      return new Number(value ? value : defaultValue ? defaultValue : 0).valueOf();
     }
 
     if (instance['dataValues'] && !value) {

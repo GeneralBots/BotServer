@@ -106,10 +106,10 @@ export class WhatsappDirectLine extends GBService {
       whatsappServiceKey === 'internal'
         ? 'GeneralBots'
         : whatsappServiceNumber.indexOf(';') > -1
-        ? 'maytapi'
-        : whatsappServiceKey !== 'internal'
-        ? 'graphapi'
-        : 'chatapi';
+          ? 'maytapi'
+          : whatsappServiceKey !== 'internal'
+            ? 'graphapi'
+            : 'chatapi';
     this.groupId = groupId;
   }
 
@@ -419,10 +419,12 @@ export class WhatsappDirectLine extends GBService {
       // Bot name must be specified on config.
 
       if (botGroupID === group) {
+        
         // Shortcut has been mentioned?
 
         let found = false;
         parts.forEach(e1 => {
+
           botShortcuts.forEach(e2 => {
             if (e1 === e2 && !found) {
               found = true;
@@ -443,17 +445,18 @@ export class WhatsappDirectLine extends GBService {
               }
             });
           }
-
-          // Ignore group messages without the mention to Bot.
-
-          let smsServiceNumber = this.min.core.getParam<string>(this.min.instance, 'whatsappServiceNumber', null);
-          if (smsServiceNumber && !answerText) {
-            smsServiceNumber = smsServiceNumber.replace('+', '');
-            if (!message.body.startsWith('@' + smsServiceNumber)) {
-              return;
-            }
-          }
         });
+
+        // Ignore group messages without the mention to Bot.
+
+        let botNumber = this.min.core.getParam<string>(this.min.instance, 'Bot Number', null);
+        if (botNumber && !answerText && !found) {
+          botNumber = botNumber.replace('+', '');
+          if (!message.body.startsWith('@' + botNumber)) {
+           
+            return;
+          }
+        }
       }
     }
 
@@ -691,8 +694,7 @@ export class WhatsappDirectLine extends GBService {
         await this.printMessages(response.obj.activities, conversationId, from, fromName);
       } catch (err) {
         GBLog.error(
-          `Error calling printMessages on Whatsapp channel ${err.data === undefined ? err : err.data} ${
-            err.errObj ? err.errObj.message : ''
+          `Error calling printMessages on Whatsapp channel ${err.data === undefined ? err : err.data} ${err.errObj ? err.errObj.message : ''
           }`
         );
       }
@@ -1037,7 +1039,7 @@ export class WhatsappDirectLine extends GBService {
         p => p.instance.botId.toLowerCase() === text.toLowerCase()
       )[0];
 
-      
+
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
 
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
