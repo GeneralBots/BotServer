@@ -310,6 +310,7 @@ export class GBDeployer implements IGBDeployer {
       // Makes available bot to the channels and .gbui interfaces.
 
       await GBServer.globals.minService.mountBot(instance);
+      await GBServer.globals.minService.ensureAPI();
     }
 
     // Saves final instance object and returns it.
