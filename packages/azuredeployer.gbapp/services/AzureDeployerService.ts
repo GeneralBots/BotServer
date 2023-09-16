@@ -571,8 +571,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
           luisKey: nlpKey,
           msaAppId: appId,
           msaAppPassword: appPassword,
-          enabledChannels: ['webchat', 'skype'], //, "facebook"],
-          configuredChannels: ['webchat', 'skype'] //, "facebook"]
+          configuredChannels: ['webchat']
         }
       };
 
