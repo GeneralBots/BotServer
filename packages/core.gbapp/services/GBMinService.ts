@@ -172,8 +172,6 @@ export class GBMinService {
       GBServer.globals.server.get('/instances/:botId', this.handleGetInstanceForClient.bind(this));
     }
 
-    await this.ensureAPI();
-    
     // Calls mountBot event to all bots.
 
     let i = 1;
@@ -208,6 +206,10 @@ export class GBMinService {
     if (this.bar1) {
       this.bar1.stop();
     }
+
+    // Loads API.
+    
+    await this.ensureAPI();
 
     // Loads schedules.
 
@@ -1474,9 +1476,8 @@ export class GBMinService {
 
   public async ensureAPI() {
 
-    const instances = GBServer.globals.minInstances;
+    const mins = GBServer.globals.minInstances;
     
-
     function getRemoteId(ctx: Koa.Context) {
       return '1'; // Each bot has its own API.
     }
@@ -1500,16 +1501,35 @@ export class GBMinService {
 
     await close();
 
+
     let proxies = {};
-    await CollectionUtil.asyncForEach(instances, async instance => {
+    await CollectionUtil.asyncForEach(mins, async min => {
+
+      let dialogs = {};
+      await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
+  
+
+        const f = new Function()
+
+        dialogs[script] = async (data)=> {
+          let params;
+          if (data){
+            params = JSON.parse(data);
+          }
+
+          await GBVMService.callVM(script, min, null, null, null, false, params);
+        }      
+        });
+  
       const proxy = {
         dk: new DialogKeywords(),
         wa: new WebAutomationServices(),
         sys: new SystemKeywords(),
         dbg: new DebuggerService(),
-        img: new ImageProcessingServices()
+        img: new ImageProcessingServices(),
+        dialogs: dialogs
       };
-      proxies[instance.botId] = proxy;
+      proxies[min.botId] = proxy;
     });
 
     const opts = {

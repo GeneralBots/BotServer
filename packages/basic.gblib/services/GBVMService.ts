@@ -389,7 +389,8 @@ export class GBVMService extends GBService {
     step,
     user: GuaribasUser,
     deployer: GBDeployer,
-    debug: boolean = false
+    debug: boolean = false, 
+    params = []
   ) {
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
@@ -413,6 +414,14 @@ export class GBVMService extends GBService {
         variables[variableName] = v.option ? v.option : v.sourceText;
       }
     }
+
+    // Adds params as variables to be added later as global objects..
+
+    let keys = Object.keys(params);
+    for (let j = 0; j < keys.length; j++) {
+      variables[keys[j]] =  params[keys[j]];
+    }
+
 
     const botId = min.botId;
     const path = DialogKeywords.getGBAIPath(min.botId, `gbdialog`);
@@ -489,7 +498,6 @@ export class GBVMService extends GBService {
       }
     } catch (error) {
       throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
-    } finally {
     }
 
     return result;

@@ -35,8 +35,55 @@
 import { GBMinInstance } from 'botlib';
 import OpenAI from "openai";
 import { ChatGPTAPIBrowser, getOpenAIAuth } from 'chatgpt'
+import { CollectionUtil } from 'pragmatismo-io-framework';
 
 export class ChatServices {
+
+  public static async sendMessage(min: GBMinInstance, text: string) {
+    let key;
+    if (process.env.OPENAI_KEY) {
+      key = process.env.OPENAI_KEY;
+    }
+    else {
+      key = min.core.getParam(min.instance, 'Open AI Key', null);
+    }
+
+    if (!key) {
+      throw new Error('Open AI Key not configured in .gbot.');
+    }
+    let functions = [];
+    
+    await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
+  
+      functions.push({
+          "name": "get_current_weather",
+          "description": "Get the current weather in a given location",
+          "parameters": {
+              "type": "object",
+              "properties": {
+                  "location": {
+                      "type": "string",
+                      "description": "The city and state, e.g. San Francisco, CA",
+                  },
+                  "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+              },
+              "required": ["location"],
+          } });
+        });
+
+    const openai = new OpenAI({
+      apiKey: key
+    });
+    const chatCompletion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: text }],
+      functions: functions
+    });
+    return chatCompletion.choices[0].message.content;
+  }
+
+
+
   /**
    * Generate text
    *
@@ -62,7 +109,8 @@ export class ChatServices {
     });
     const chatCompletion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: text }],
+      messages: [{ role: "user", content: text }]
+      
     });
     return chatCompletion.choices[0].message.content;
   }
