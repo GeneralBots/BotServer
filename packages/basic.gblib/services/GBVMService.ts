@@ -89,6 +89,7 @@ export class GBVMService extends GBService {
     const docxStat = Fs.statSync(urlJoin(folder, wordFile));
     const interval = 3000; // If compiled is older 30 seconds, then recompile.
     let writeVBS = true;
+
     if (Fs.existsSync(fullVbsFile)) {
       const vbsStat = Fs.statSync(fullVbsFile);
       if (docxStat['mtimeMs'] < vbsStat['mtimeMs'] + interval) {
@@ -102,6 +103,8 @@ export class GBVMService extends GBService {
     if (writeVBS) {
       let text = await this.getTextFromWord(folder, wordFile);
 
+      // Pre process SET SCHEDULE calls.
+
       const schedule = GBVMService.getSetScheduleKeywordArgs(text);
       const s = new ScheduleServices();
       if (schedule) {
@@ -110,10 +113,14 @@ export class GBVMService extends GBService {
         await s.deleteScheduleIfAny(min, mainName);
       }
       text = text.replace(/^\s*SET SCHEDULE (.*)/gim, '');
+
+      // Write VBS file without pragma keywords.
+
       Fs.writeFileSync(urlJoin(folder, vbsFile), text);
     }
 
     // Process node_modules install.
+
     const node_modules = urlJoin(process.env.PWD, folder, 'node_modules');
     if (!Fs.existsSync(node_modules)) {
       const packageJson = `
@@ -143,7 +150,7 @@ export class GBVMService extends GBService {
     const fullFilename = urlJoin(folder, filename);
     if (process.env.DEV_HOTSWAP) {
       Fs.watchFile(fullFilename, async () => {
-        await this.translateBASIC(fullFilename, min);
+        await this.translateBASIC(mainName, fullFilename, min);
         const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
         min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
       });
@@ -156,17 +163,17 @@ export class GBVMService extends GBService {
       const jsStat = Fs.statSync(jsfile);
       const interval = 30000; // If compiled is older 30 seconds, then recompile.
       if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
-        await this.translateBASIC(fullFilename, min);
+        await this.translateBASIC(mainName, fullFilename, min);
       }
     } else {
-      await this.translateBASIC(fullFilename, min);
+      await this.translateBASIC(mainName, fullFilename, min);
     }
     const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
     min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
     return filename;
   }
 
-  public async translateBASIC(filename: any, min: GBMinInstance) {
+  public async translateBASIC(mainName, filename: any, min: GBMinInstance) {
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = Fs.readFileSync(filename, 'utf8');
@@ -191,7 +198,13 @@ export class GBVMService extends GBService {
       }
     } while (include);
 
-    let { code, jsonMap } = await this.convert(basicCode);
+    let { code, map: jsonMap, metadata } = await this.convert(mainName, basicCode);
+
+    // Generates function JSON metadata to be used later.
+
+    const jsonFile = `${filename}.json`;
+    Fs.writeFileSync(jsonFile, JSON.stringify(metadata));
+
     const mapFile = `${filename}.map`;
 
     Fs.writeFileSync(mapFile, JSON.stringify(jsonMap));
@@ -342,27 +355,70 @@ export class GBVMService extends GBService {
     return text;
   }
 
+  public static getMetadata(mainName: string, propertiesText, description) {
+    const properties = [];
+
+    if (propertiesText) {
+      const getType = asClause => {
+        if (asClause.indexOf('AS STRING')) {
+          return 'string';
+        } else {
+          return 'enum';
+        }
+      };
+
+      for (let i = 0; i < propertiesText.length; i++) {
+        const propertiesExp = propertiesText[i];
+        const t = getType(propertiesExp[2]);
+        let element = {};
+        element['type'] = t;
+
+        if (t === 'enum') {
+          element['enum'] =  propertiesExp[2];
+        } else if (t === 'string') {
+          element['description'] = propertiesExp[2];
+        }
+
+        properties.push(element);
+      }
+    }
+
+    let json = {
+      name: `${mainName}`,
+      description: description ? description[1] : '',
+      parameters: {
+        type: 'object',
+        properties: properties ? properties : []
+      }
+    };
+
+    return json;
+  }
+
   /**
    * Converts General Bots BASIC
    *
    *
    * @param code General Bots BASIC
    */
-  public async convert(code: string) {
+  public async convert(mainName: string, code: string) {
+
     // Start and End of VB2TS tags of processing.
 
     code = process.env.ENABLE_AUTH ? `hear GBLogExin as login\n${code}` : code;
     var lines = code.split('\n');
     const keywords = KeywordsExpressions.getKeywords();
     let current = 41;
-    const map = {}; 
+    const map = {};
+    let properties = [];
+    let description;
 
     for (let i = 1; i <= lines.length; i++) {
       let line = lines[i - 1];
 
       // Remove lines before statments.
 
-      line = line.replace(/^\s*\d+\s*/gi,'');
+      line = line.replace(/^\s*\d+\s*/gi, '');
 
       for (let j = 0; j < keywords.length; j++) {
         line = line.replace(keywords[j][0], keywords[j][1]);
@@ -374,10 +430,27 @@ export class GBVMService extends GBService {
       current = current + (add ? add : 0);
       map[i] = current;
       lines[i - 1] = line;
+
+      // Pre-process static KEYWORDS.
+
+      const params = /^\s*PARAM\s*(.*)\s*AS\s*(.*)/gim;
+      const param = params.exec(line);
+      if (param) {
+        properties.push(param);
+      }
+
+      const descriptionKeyword = /^\s*DESCRIPTION\s*\"(.*)\"/gim;
+      let descriptionReg = descriptionKeyword.exec(line);
+      if (descriptionReg) {
+        description = descriptionReg[1];
+      }
     }
 
     code = `${lines.join('\n')}\n`;
-    return { code, jsonMap: map };
+
+    let metadata = GBVMService.getMetadata(mainName, properties, description);
+
+    return { code, map, metadata };
   }
 
   /**
@@ -389,7 +462,7 @@ export class GBVMService extends GBService {
     step,
     user: GuaribasUser,
     deployer: GBDeployer,
-    debug: boolean = false, 
+    debug: boolean = false,
     params = []
   ) {
     // Creates a class DialogKeywords which is the *this* pointer
@@ -419,9 +492,8 @@ export class GBVMService extends GBService {
 
     let keys = Object.keys(params);
     for (let j = 0; j < keys.length; j++) {
-      variables[keys[j]] =  params[keys[j]];
+      variables[keys[j]] = params[keys[j]];
     }
-
 
     const botId = min.botId;
     const path = DialogKeywords.getGBAIPath(min.botId, `gbdialog`);
@@ -429,12 +501,12 @@ export class GBVMService extends GBService {
     const scriptPath = urlJoin(gbdialogPath, `${text}.js`);
 
     let code = min.sandBoxMap[text];
-    const channel = step? step.context.activity.channelId : 'web';
+    const channel = step ? step.context.activity.channelId : 'web';
     const pid = GBVMService.createProcessInfo(user, min, channel);
     const dk = new DialogKeywords();
     const sys = new SystemKeywords();
-    await dk.setFilter ({pid: pid, value: null });
-    
+    await dk.setFilter({ pid: pid, value: null });
+
     sandbox['variables'] = variables;
     sandbox['id'] = sys.getRandomId();
     sandbox['username'] = await dk.userName({ pid });
@@ -448,7 +520,7 @@ export class GBVMService extends GBService {
     sandbox['httpPs'] = '';
     sandbox['pid'] = pid;
     sandbox['contentLocale'] = contentLocale;
-    sandbox['callTimeout'] =  60 * 60 * 24 * 1000;
+    sandbox['callTimeout'] = 60 * 60 * 24 * 1000;
     sandbox['channel'] = channel;
     sandbox['today'] = await dk.getToday({ pid });
     sandbox['now'] = await dk.getNow({ pid });
