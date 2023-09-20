@@ -198,7 +198,7 @@ export class GBVMService extends GBService {
       }
     } while (include);
 
-    let { code, map: jsonMap, metadata } = await this.convert(mainName, basicCode);
+    let { code, map, metadata } = await this.convert(mainName, basicCode);
 
     // Generates function JSON metadata to be used later.
 
@@ -207,7 +207,7 @@ export class GBVMService extends GBService {
 
     const mapFile = `${filename}.map`;
 
-    Fs.writeFileSync(mapFile, JSON.stringify(jsonMap));
+    Fs.writeFileSync(mapFile, JSON.stringify(map));
 
     // Run JS into the GB context.
 
