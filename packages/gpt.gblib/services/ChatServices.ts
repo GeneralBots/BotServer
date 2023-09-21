@@ -36,7 +36,7 @@ import { GBMinInstance } from 'botlib';
 //import OpenAI from "openai";
 import { ChatGPTAPIBrowser, getOpenAIAuth } from 'chatgpt'
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import Path from 'path';
 import * as Fs from 'fs';
 
