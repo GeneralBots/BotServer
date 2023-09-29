@@ -1230,7 +1230,7 @@ export class DialogKeywords {
         GBLog.info(`BASIC: Markdown file ${filename} not found on database for ${min.instance.botId}.`);
       }
 
-      await min.conversationalService['playMarkdown'](min, md, DialogKeywords.getChannel(), mobile);
+      await min.conversationalService['playMarkdown'](min, md, DialogKeywords.getChannel(), null, mobile);
     } else {
       const gbaiName = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
 

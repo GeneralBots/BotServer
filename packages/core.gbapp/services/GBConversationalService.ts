@@ -308,10 +308,10 @@ export class GBConversationalService {
     step: GBDialogStep,
     mobile: string,
     url: string,
-    caption: string, 
+    caption: string,
     channel: string
   ): Promise<any> {
-    return await this.sendFile(min, step, mobile, url , caption);
+    return await this.sendFile(min, step, mobile, url, caption);
   }
 
   public async sendFile(
@@ -393,23 +393,23 @@ export class GBConversationalService {
       }
     } else {
       if (min.instance.smsKey && min.instance.smsSecret) {
-      return new Promise((resolve: any, reject: any): any => {
-        const nexmo = new Nexmo({
-          apiKey: min.instance.smsKey,
-          apiSecret: min.instance.smsSecret
+        return new Promise((resolve: any, reject: any): any => {
+          const nexmo = new Nexmo({
+            apiKey: min.instance.smsKey,
+            apiSecret: min.instance.smsSecret
+          });
+          // tslint:disable-next-line:no-unsafe-any
+          nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, {}, (err, data) => {
+            const message = data.messages ? data.messages[0] : {};
+            if (err || message['error-text']) {
+              GBLog.error(`BASIC: error sending SMS to ${mobile}: ${message['error-text']}`);
+              reject(message['error-text']);
+            } else {
+              resolve(data);
+            }
+          });
         });
-        // tslint:disable-next-line:no-unsafe-any
-        nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, {}, (err, data) => {
-          const message = data.messages ? data.messages[0] : {};
-          if (err || message['error-text']) {
-            GBLog.error(`BASIC: error sending SMS to ${mobile}: ${message['error-text']}`);
-            reject(message['error-text']);
-          } else {
-            resolve(data);
-          }
-        });
-      });
-    }
+      }
     }
   }
 
@@ -462,7 +462,7 @@ export class GBConversationalService {
     return new Promise<string>(async (resolve, reject) => {
       try {
         const oggFile = new Readable();
-        oggFile._read = () => {}; // _read is required but you can noop it
+        oggFile._read = () => { }; // _read is required but you can noop it
         oggFile.push(buffer);
         oggFile.push(null);
 
@@ -526,10 +526,12 @@ export class GBConversationalService {
     });
   }
 
-  public async playMarkdown(min: GBMinInstance, answer: string, channel: string, step: GBDialogStep, mobile: string) {
+  public async playMarkdown(min: GBMinInstance, answer: string, channel: string,
+    step: GBDialogStep, mobile: string) {
+
     const sec = new SecService();
-    const user = await sec.getUserFromSystemId(mobile?mobile:step.context.activity.from.id);
-    
+    const user = await sec.getUserFromSystemId(mobile ? mobile : step.context.activity.from.id);
+
     let text = answer;
 
     // Calls language translator.
@@ -904,7 +906,7 @@ export class GBConversationalService {
     const key = min.core.getParam<string>(min.instance, 'spellcheckerKey', null);
 
     if (key) {
-    text = text.charAt(0).toUpperCase() + text.slice(1);
+      text = text.charAt(0).toUpperCase() + text.slice(1);
       const data = await AzureText.getSpelledText(key, text);
       if (data !== text) {
         GBLog.info(`Spelling>: ${data}`);
@@ -916,7 +918,7 @@ export class GBConversationalService {
   }
 
   public async translate(min: GBMinInstance, text: string, language: string): Promise<string> {
-    
+
     const translatorEnabled = () => {
       if (min.instance.params) {
         const params = JSON.parse(min.instance.params);
@@ -996,7 +998,7 @@ export class GBConversationalService {
     }
   }
 
-  public static async handleText (min, user, step, text: string){
+  public static async handleText(min, user, step, text: string) {
     const sec = new SecService();
 
     text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
@@ -1065,7 +1067,7 @@ export class GBConversationalService {
     const groupSpell = group ? await min.core.getParam(
       min.instance,
       'Group Spell',
-      false): false;
+      false) : false;
 
     if (textProcessed !== text && group && groupSpell) {
       await min.whatsAppDirectLine.sendToDevice(group, `Spell: ${text}`);
@@ -1129,11 +1131,11 @@ export class GBConversationalService {
       GBLog.verbose(`Translated text(prompt): ${text}.`);
     }
     if (step.activeDialog.state.options['kind'] === 'file') {
-      
+
       return await step.prompt('attachmentPrompt', {});
     } else {
       await this.sendText(min, step, text);
-      return await step.prompt('textPrompt',  {});
+      return await step.prompt('textPrompt', {});
     }
   }
 
@@ -1229,8 +1231,8 @@ export class GBConversationalService {
    */
   public async sendOnConversation(min: GBMinInstance, user: GuaribasUser, message: any) {
     if (message['buttons'] || message['sections']) {
-      await min['whatsAppDirectLine'].sendToDevice(user.userSystemId, message, user.conversationReference );
-    } else  if (user.conversationReference.startsWith('spaces')) {
+      await min['whatsAppDirectLine'].sendToDevice(user.userSystemId, message, user.conversationReference);
+    } else if (user.conversationReference.startsWith('spaces')) {
       await min['googleDirectLine'].sendToDevice(user.userSystemId, null, user.conversationReference, message);
     } else {
       const ref = JSON.parse(user.conversationReference);
