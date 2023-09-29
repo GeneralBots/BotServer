@@ -1231,6 +1231,8 @@ export class DialogKeywords {
       }
 
       await min.conversationalService['playMarkdown'](min, md, DialogKeywords.getChannel(), null, mobile);
+      
+      return;
     } else {
       const gbaiName = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
 
