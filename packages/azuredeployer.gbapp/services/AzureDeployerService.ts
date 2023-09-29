@@ -382,8 +382,8 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const name = instance.botId;
 
     GBLog.info(`Enabling resource providers...`);
+
     await this.enableResourceProviders('Microsoft.CognitiveServices');
-    await this.enableResourceProviders('Microsoft.WebTerminal');
     await this.enableResourceProviders('Microsoft.BotService');
     await this.enableResourceProviders('Microsoft.Web');
     await this.enableResourceProviders('Microsoft.Sql');
