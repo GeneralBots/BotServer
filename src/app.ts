@@ -59,7 +59,6 @@ import * as winston from 'winston-logs-display';
 import { RootData } from './RootData.js';
 import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
 import { Mutex } from 'async-mutex';
-import { GBVMService } from '../packages/basic.gblib/services/GBVMService.js';
 
 /**
  * General Bots open-core entry point.
@@ -76,6 +75,8 @@ export class GBServer {
     GBServer.globals = new RootData();
     GBConfigService.init();
     const port = GBConfigService.getServerPort();
+
+    
 
     if (process.env.TEST_SHELL) {
       GBLog.info(`Running TEST_SHELL: ${process.env.TEST_SHELL}...`);
@@ -108,6 +109,7 @@ export class GBServer {
     // Setups global error handlers.
 
     process.on('unhandledRejection', (err, p) => {
+      err = err['e'] ? err['e'] : err;
       GBLog.error(`UNHANDLED_REJECTION(promises): ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''}`);
       if (err['response']?.obj?.httpStatusCode === 404) {
         GBLog.warn(`Check reverse proxy: ${process.env.BOT_URL} as it seems to be invalid.`);
@@ -116,6 +118,7 @@ export class GBServer {
 
     process.on('uncaughtException', (err, p) => {
       if (err !== null) {
+        err = err['e'] ? err['e'] : err;
         GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''}`);
       } else {
         GBLog.error('UNCAUGHT_EXCEPTION: Unknown error (err is null)');
@@ -136,6 +139,7 @@ export class GBServer {
 
     const mainCallback = () => {
       (async () => {
+    
         try {
           GBLog.info(`Now accepting connections on ${port}...`);
           process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';

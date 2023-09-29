@@ -331,7 +331,7 @@ export class KeywordsExpressions {
       /^\s*(.*)\=\s*(REWRITE)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['text']);
-        return `await sys.rewrite ({pid: pid, ${params}})`;
+        return `${$1} = await sys.rewrite ({pid: pid, ${params}})`;
       }
     ];
 

@@ -51,6 +51,7 @@ import pkg from 'whatsapp-web.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import e from 'express';
 const { List, Buttons, Client, MessageMedia } = pkg;
 
 /**
@@ -58,6 +59,7 @@ const { List, Buttons, Client, MessageMedia } = pkg;
  */
 export class WhatsappDirectLine extends GBService {
   public static conversationIds = {};
+  public static botsByNumber = {};
   public static mobiles = {};
   public static phones = {};
   public static chatIds = {};
@@ -121,7 +123,7 @@ export class WhatsappDirectLine extends GBService {
     const client = await new SwaggerClient({
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
       requestInterceptor: req => {
-        req.headers['Authorization'] = `Bearer ${this.min.instance.webchatKey}`;
+        req.headers['Authorization'] = `Bearer ${this.min.instance.whatsappBotKey}`;
       }
     });
     this.directLineClient = client;
@@ -197,8 +199,7 @@ export class WhatsappDirectLine extends GBService {
         };
         if (setUrl) {
           createClient.bind(this)();
-        }
-        else {
+        } else {
           this.customClient = minBoot.whatsAppDirectLine.customClient;
         }
         setUrl = false;
@@ -303,7 +304,7 @@ export class WhatsappDirectLine extends GBService {
   public async received(req, res) {
     const provider = WhatsappDirectLine.providerFromRequest(req);
 
-    let message, from, fromName, text: string;
+    let message, to, from, fromName, text: string;
     let group = '';
     let answerText = null;
     let attachments = null;
@@ -311,6 +312,18 @@ export class WhatsappDirectLine extends GBService {
     switch (provider) {
       case 'GeneralBots':
         message = req;
+        to = message.to.endsWith('@g.us') ? message.to.split('@')[0] : message.to.split('@')[0];
+        const newThis = WhatsappDirectLine.botsByNumber[to];
+
+        // If there is a number specified, checks if it
+        // is related to a custom bot and reroutes immediately.
+
+        if (newThis !== this && newThis.min.botId !== GBServer.globals.minBoot.botId) {
+          await newThis.received(req, res);
+
+          return;
+        }
+
         text = message.body;
         from = message.from.endsWith('@g.us') ? message.author.split('@')[0] : message.from.split('@')[0];
         fromName = message._data.notifyName;
@@ -318,9 +331,14 @@ export class WhatsappDirectLine extends GBService {
         if (message.hasMedia) {
           const base64Image = await message.downloadMedia();
 
-          let buf: any = Buffer.from(base64Image.data, "base64");
+          let buf: any = Buffer.from(base64Image.data, 'base64');
           const gbaiName = DialogKeywords.getGBAIPath(this.min.botId);
-          const     localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+          const localName = Path.join(
+            'work',
+            gbaiName,
+            'cache',
+            `tmp${GBAdminService.getRndReadableIdentifier()}.docx`
+          );
           Fs.writeFileSync(localName, buf, { encoding: null });
           const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
 
@@ -401,10 +419,12 @@ export class WhatsappDirectLine extends GBService {
       // Bot name must be specified on config.
 
       if (botGroupID === group) {
+        
         // Shortcut has been mentioned?
 
         let found = false;
         parts.forEach(e1 => {
+
           botShortcuts.forEach(e2 => {
             if (e1 === e2 && !found) {
               found = true;
@@ -425,17 +445,18 @@ export class WhatsappDirectLine extends GBService {
               }
             });
           }
-
-          // Ignore group messages without the mention to Bot.
-
-          let smsServiceNumber = this.min.core.getParam<string>(this.min.instance, 'whatsappServiceNumber', null);
-          if (smsServiceNumber && !answerText) {
-            smsServiceNumber = smsServiceNumber.replace('+', '');
-            if (!message.body.startsWith('@' + smsServiceNumber)) {
-              return;
-            }
-          }
         });
+
+        // Ignore group messages without the mention to Bot.
+
+        let botNumber = this.min.core.getParam<string>(this.min.instance, 'Bot Number', null);
+        if (botNumber && !answerText && !found) {
+          botNumber = botNumber.replace('+', '');
+          if (!message.body.startsWith('@' + botNumber)) {
+           
+            return;
+          }
+        }
       }
     }
 
@@ -528,7 +549,6 @@ export class WhatsappDirectLine extends GBService {
           );
 
           if (user.agentSystemId.indexOf('@') !== -1) {
-            
             // Agent is from Teams.
             await this.min.conversationalService['sendOnConversation'](
               this.min,
@@ -563,10 +583,10 @@ export class WhatsappDirectLine extends GBService {
         await this.endTransfer(from, locale, user, agent, sec);
       } else {
         GBLog.info(`USER (${from}) TO AGENT ${agent.userSystemId}: ${text}`);
-        
+
         const prompt = `the person said: ${text}. what can I tell her?`;
         const answer = await ChatServices.continue(this.min, prompt, 0);
-        text = `${text} \n\nGeneral Bots: ${answer}`
+        text = `${text} \n\nGeneral Bots: ${answer}`;
 
         if (user.agentSystemId.indexOf('@') !== -1) {
           // Agent is from Teams or Google Chat.
@@ -609,21 +629,17 @@ export class WhatsappDirectLine extends GBService {
   }
 
   private async endTransfer(id: string, locale: string, user: GuaribasUser, agent: GuaribasUser, sec: SecService) {
-    
     await this.sendToDeviceEx(id, Messages[this.locale].notify_end_transfer(this.min.instance.botId), locale, null);
 
     if (user.agentSystemId.indexOf('@') !== -1) {
-      
       // Agent is from Teams.
-      
+
       await this.min.conversationalService['sendOnConversation'](
         this.min,
         agent,
         Messages[this.locale].notify_end_transfer(this.min.instance.botId)
       );
-
     } else {
-      
       await this.sendToDeviceEx(
         user.agentSystemId,
         Messages[this.locale].notify_end_transfer(this.min.instance.botId),
@@ -712,17 +728,15 @@ export class WhatsappDirectLine extends GBService {
 
     if (activity.attachments) {
       await CollectionUtil.asyncForEach(activity.attachments, async attachment => {
-      
         switch (attachment.contentType) {
           case 'application/vnd.microsoft.card.hero':
             output += `\n${this.renderHeroCard(attachment)}`;
             break;
 
           case 'image/png':
-            await this.sendFileToDevice(to, attachment.contentUrl,
-              attachment.name, attachment.name, 0);
+            await this.sendFileToDevice(to, attachment.contentUrl, attachment.name, attachment.name, 0);
 
-            return;   
+            return;
 
           default:
             GBLog.info(`Unknown content type: ${attachment.contentType}`);
@@ -742,6 +756,7 @@ export class WhatsappDirectLine extends GBService {
     switch (this.provider) {
       case 'GeneralBots':
         const attachment = await MessageMedia.fromUrl(url);
+        to = to.replace('+', '');
         if (to.indexOf('@') == -1) {
           if (to.length == 18) {
             to = to + '@g.us';
@@ -885,6 +900,7 @@ export class WhatsappDirectLine extends GBService {
 
       switch (this.provider) {
         case 'GeneralBots':
+          to = to.replace('+', '');
           if (to.indexOf('@') == -1) {
             if (to.length == 18) {
               to = to + '@g.us';
@@ -963,11 +979,9 @@ export class WhatsappDirectLine extends GBService {
 
       switch (provider) {
         case 'GeneralBots':
-          
-        // Ignore E2E messages and status updates.       
+          // Ignore E2E messages and status updates.
 
-          if (req.type && req.type === 'e2e_notification'
-            || req.isStatus) {
+          if ((req.type && req.type === 'e2e_notification') || req.isStatus) {
             return;
           }
 
@@ -1018,16 +1032,25 @@ export class WhatsappDirectLine extends GBService {
       }
 
       const sec = new SecService();
-
       let user = await sec.getUserFromSystemId(id);
+
+      // Tries to find if user wants to switch bots.
+
+      let toSwitchMin = GBServer.globals.minInstances.filter(
+        p => p.instance.botId.toLowerCase() === text.toLowerCase()
+      )[0];
+
+
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
 
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
-      if (botNumber) {
+      if (botNumber && GBServer.globals.minBoot.botId !== urlMin.botId) {
+        GBLog.info(`${user.userSystemId} fixed by bot number talked to: ${botId}.`);
         user = await sec.updateUserInstance(user.userSystemId, urlMin.instance.instanceId);
       }
+
       let activeMin;
 
       // Processes group behaviour.
@@ -1071,34 +1094,81 @@ export class WhatsappDirectLine extends GBService {
 
       // Detects if the welcome message is enabled.
 
-      if (process.env.WHATSAPP_WELCOME_DISABLED !== 'true') {
-        // Tries to find if user wants to switch bots.
-
-        let toSwitchMin = GBServer.globals.minInstances.filter(
-          p => p.instance.botId.toLowerCase() === text.toLowerCase()
+      if (process.env.WHATSAPP_WELCOME_DISABLED === 'true') {
+        let minInstance = GBServer.globals.minInstances.filter(
+          p => p.instance.botId.toLowerCase() === botId.toLowerCase()
         )[0];
-        if (!toSwitchMin) {
-          toSwitchMin = GBServer.globals.minInstances.filter(p =>
-            p.instance.activationCode ? p.instance.activationCode.toLowerCase() === text.toLowerCase() : false
-          )[0];
+
+        // Just pass the message to the receiver.
+
+        await minInstance.whatsAppDirectLine.received(req, res);
+
+        return;
+      }
+
+      if (!toSwitchMin) {
+        toSwitchMin = GBServer.globals.minInstances.filter(p =>
+          p.instance.activationCode ? p.instance.activationCode.toLowerCase() === text.toLowerCase() : false
+        )[0];
+      }
+
+      // If bot has a fixed Find active bot instance.
+
+      activeMin = botNumber ? urlMin : toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
+
+      // If it is the first time for the user, tries to auto-execute
+      // start dialog if any is specified in Config.xlsx.
+
+      if (user === null || user.hearOnDialog) {
+        user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, '', 'whatsapp', senderName, null);
+
+        const startDialog = user.hearOnDialog
+          ? user.hearOnDialog
+          : activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
+
+        if (startDialog) {
+          GBLog.info(`Calling /start to Auto start ${startDialog} for ${activeMin.instance.instanceId}...`);
+          if (provider === 'chatapi') {
+            req.body.messages[0].body = `/start`;
+          } else if (provider === 'maytapi') {
+            req.body.message = `/start`;
+          } else {
+            req.body = `/start`;
+          }
+
+          // Resets HEAR ON DIALOG value to none and passes
+          // current dialog to the direct line.
+
+          await sec.updateUserHearOnDialog(user.userId, null);
+          await (activeMin as any).whatsAppDirectLine.received(req, res);
+        } else {
+          await (activeMin as any).whatsAppDirectLine.sendToDevice(
+            id,
+            `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`,
+            null
+          );
+          if (res) {
+            res.end();
+          }
         }
+      } else {
+        // User wants to switch bots.
 
-        // If bot has a fixed Find active bot instance.
+        if (toSwitchMin) {
+          GBLog.info(`Switching bots from ${botId} to ${toSwitchMin.botId}...`);
 
-        activeMin = botNumber ? urlMin : toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
+          // So gets the new bot instance information and prepares to
+          // auto start dialog if any is specified.
 
-        // If it is the first time for the user, tries to auto-execute
-        // start dialog if any is specified in Config.xlsx.
-
-        if (user === null || user.hearOnDialog) {
-          user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, '', 'whatsapp', senderName, null);
-
-          const startDialog = user.hearOnDialog
-            ? user.hearOnDialog
-            : activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
+          activeMin = toSwitchMin;
+          const instance = await this.min.core.loadInstanceByBotId(activeMin.botId);
+          user = await sec.updateUserInstance(id, instance.instanceId);
+          await (activeMin as any).whatsAppDirectLine.resetConversationId(activeMin.botId, id, '');
+          const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
 
           if (startDialog) {
-            GBLog.info(`Calling /start to Auto start ${startDialog} for ${activeMin.instance.instanceId}...`);
+
+            GBLog.info(`Calling /start for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
             if (provider === 'chatapi') {
               req.body.messages[0].body = `/start`;
             } else if (provider === 'maytapi') {
@@ -1107,86 +1177,40 @@ export class WhatsappDirectLine extends GBService {
               req.body = `/start`;
             }
 
-            // Resets HEAR ON DIALOG value to none and passes
-            // current dialog to the direct line.
-
-            await sec.updateUserHearOnDialog(user.userId, null);
             await (activeMin as any).whatsAppDirectLine.received(req, res);
           } else {
             await (activeMin as any).whatsAppDirectLine.sendToDevice(
               id,
-              `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`,
+              `Agora falando com ${activeMin.instance.title}...`,
               null
             );
-            if (res) {
-              res.end();
-            }
+          }
+          if (res) {
+            res.end();
           }
         } else {
-          // User wants to switch bots.
-
-          if (toSwitchMin !== undefined) {
-            // So gets the new bot instance information and prepares to
-            // auto start dialog if any is specified.
-
-            const instance = await this.min.core.loadInstanceByBotId(activeMin.botId);
-            await sec.updateUserInstance(id, instance.instanceId);
-            await (activeMin as any).whatsAppDirectLine.resetConversationId(activeMin.botId, id, '');
-            const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
-
-            if (startDialog) {
-              GBLog.info(`Calling /start for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
-              if (provider === 'chatapi') {
-                req.body.messages[0].body = `/start`;
-              } else if (provider === 'maytapi') {
-                req.body.message = `/start`;
-              } else {
-                req.body = `/start`;
-              }
-
-              await (activeMin as any).whatsAppDirectLine.received(req, res);
-            } else {
-              await (activeMin as any).whatsAppDirectLine.sendToDevice(
-                id,
-                `Agora falando com ${activeMin.instance.title}...`,
-                null
-              );
-            }
-            if (res) {
-              res.end();
-            }
+          let t;
+          activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
+          if (activeMin === undefined) {
+            activeMin = GBServer.globals.minBoot;
+            t = (activeMin as any).whatsAppDirectLine;
+            await t.sendToDevice(
+              id,
+              `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`
+            );
           } else {
-            let t;
-            activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
-            if (activeMin === undefined) {
-              activeMin = GBServer.globals.minBoot;
+            if ((activeMin as any).whatsAppDirectLine) {
               t = (activeMin as any).whatsAppDirectLine;
-              await t.sendToDevice(
-                id,
-                `O outro Bot que você estava falando(${user.instanceId}), não está mais disponível. Agora você está falando comigo, ${activeMin.instance.title}...`
-              );
+            } else {
+              t = (GBServer.globals.minBoot as any).whatsAppDirectLine;
             }
-            else {
-              if ((activeMin as any).whatsAppDirectLine) {
-                t = (activeMin as any).whatsAppDirectLine;
-              } else {
-                t = (GBServer.globals.minBoot as any).whatsAppDirectLine;
-              }
-            }
-
-            t.received(req, res);
           }
+
+          await t.received(req, res);
         }
-      } else {
-        let minInstance = GBServer.globals.minInstances.filter(
-          p => p.instance.botId.toLowerCase() === botId.toLowerCase()
-        )[0];
-
-        // Just pass the message to the receiver.
-
-        await minInstance.whatsAppDirectLine.received(req, res);
       }
     } catch (error) {
+      error = error['e'] ? error['e'] : error;
       GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error} ${error.stack}`);
     }
   }

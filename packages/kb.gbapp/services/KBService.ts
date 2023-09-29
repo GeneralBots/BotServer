@@ -289,9 +289,14 @@ export class KBService implements IGBKBService {
       }
     }
 
+    const key = instance.searchKey ? instance.searchKey: 
+      GBServer.globals.minBoot.instance.searchKey;
+    const host = instance.searchHost ? instance.searchHost : 
+    GBServer.globals.minBoot.instance.searchHost;
+
     // No direct match found, so Search is used.
 
-    if (instance.searchKey !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
+    if (key !== null && GBConfigService.get('STORAGE_DIALECT') === 'mssql') {
       interface SearchResults {
         instanceId: number;
         questionId: number;
@@ -303,11 +308,11 @@ export class KBService implements IGBKBService {
         subject4: string;
       }
 
-      const client = new SearchClient<any>('https://' + instance.searchHost, 'azuresql-index', {
-        key: instance.searchKey
+      const client = new SearchClient<any>('https://' + host, 'azuresql-index', {
+        key: key
       } as any);
 
-      const results = await client.search(query, {
+      const results = await client.search(query.substring(0,499), {
         filter: `instanceId eq ${instance.instanceId} and skipIndex eq false`,
         searchFields: ['content', 'subject1', 'subject2', 'subject3', 'subject4'],
         select: ['instanceId', 'questionId', 'answerId'],
@@ -662,6 +667,8 @@ export class KBService implements IGBKBService {
     const subjectFile = urlJoin(localPath, 'subjects.json');
     const menuFile = urlJoin(localPath, 'menu.xlsx');
 
+    // Imports menu.xlsx if any.
+
     if (Fs.existsSync(subjectFile) || Fs.existsSync(menuFile)) {
       await this.importSubjectFile(packageStorage.packageId, subjectFile, menuFile, instance);
     }
@@ -1012,11 +1019,13 @@ export class KBService implements IGBKBService {
     const packageName = Path.basename(localPath);
     const instance = await core.loadInstanceByBotId(min.botId);
     GBLog.info(`[GBDeployer] Importing: ${localPath}`);
+   
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(min, localPath, p, instance);
     GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
     const service = await AzureDeployerService.createInstance(deployer);
-    await deployer.rebuildIndex(instance, service.getKBSearchSchema(instance.searchIndex));
+    const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
+    await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));
 
     min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
     await KBService.RefreshNER(min);

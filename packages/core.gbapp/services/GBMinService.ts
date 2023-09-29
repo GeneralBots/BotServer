@@ -148,6 +148,11 @@ export class GBMinService {
     this.deployer = deployer;
   }
 
+
+  public async enableAPI(min: GBMinInstance) {
+
+  }
+
   /**
    * Constructs a new minimal instance for each bot.
    */
@@ -167,51 +172,8 @@ export class GBMinService {
       GBServer.globals.server.get('/instances/:botId', this.handleGetInstanceForClient.bind(this));
     }
 
-
-    function getRemoteId(ctx: Koa.Context) {
-      return '1'; // share a single session for now, real impl could use cookies or some other meaning for HTTP sessions
-    }
-
-    GBLogEx.info(0, 'Loading General Bots API...');
-
-    let proxies = {};
-    await CollectionUtil.asyncForEach(instances, async instance => {
-      const proxy = {
-        dk: new DialogKeywords(),
-        wa: new WebAutomationServices(),
-        sys: new SystemKeywords(),
-        dbg: new DebuggerService(),
-        img: new ImageProcessingServices()
-      };
-      proxies[instance.botId] = proxy;
-    });
-
-    const opts = {
-      pingSendTimeout: null,
-      keepAliveTimeout: null,
-      listeners: {
-        unsubscribed(subscriptions: number): void {},
-        subscribed(subscriptions: number): void {},
-        disconnected(remoteId: string, connections: number): void {},
-        connected(remoteId: string, connections: number): void {},
-        messageIn(...params): void {
-          params.shift();
-          GBLogEx.verbose(0, '[IN] ' + params);
-        },
-        messageOut(...params): void {
-          params.shift();
-          GBLogEx.verbose(0, '[OUT] ' + params);
-        }
-      }
-    };
-
-    GBServer.globals.server.dk = createRpcServer(
-      proxies,
-      createKoaHttpServer(GBVMService.API_PORT, getRemoteId, { prefix: `api/v3` }),
-      opts
-    );
-
     // Calls mountBot event to all bots.
+
     let i = 1;
 
     if (instances.length > 1) {
@@ -244,6 +206,10 @@ export class GBMinService {
     if (this.bar1) {
       this.bar1.stop();
     }
+
+    // Loads API.
+    
+    await this.ensureAPI();
 
     // Loads schedules.
 
@@ -292,7 +258,7 @@ export class GBMinService {
   /**
    * Unmounts the bot web site (default.gbui) secure domain, if any.
    */
-  public async unloadDomain(instance: IGBInstance) {}
+  public async unloadDomain(instance: IGBInstance) { }
 
   /**
    * Mount the instance by creating an BOT Framework bot object,
@@ -542,7 +508,7 @@ export class GBMinService {
 
       authenticationContext.acquireTokenWithAuthorizationCode(
         req.query.code,
-        urlJoin(instance.botEndpoint, min.instance.botId, '/token'),
+        urlJoin(process.env.BOT_URL, min.instance.botId, '/token'),
         resource,
         instance.marketplaceId,
         instance.marketplacePassword,
@@ -561,7 +527,7 @@ export class GBMinService {
 
             // Inform the home for default .gbui after finishing token retrival.
 
-            res.redirect(min.instance.botEndpoint);
+            res.redirect(process.env.BOT_URL);
           }
         }
       );
@@ -579,9 +545,8 @@ export class GBMinService {
         min.instance.authenticatorTenant,
         '/oauth2/authorize'
       );
-      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
-        min.instance.marketplaceId
-      }&redirect_uri=${urlJoin(min.instance.botEndpoint, min.instance.botId, 'token')}`;
+      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.marketplaceId
+        }&redirect_uri=${urlJoin(process.env.BOT_URL, min.instance.botId, 'token')}`;
       GBLog.info(`HandleOAuthRequests: ${authorizationUrl}.`);
       res.redirect(authorizationUrl);
     });
@@ -772,6 +737,8 @@ export class GBMinService {
 
     WhatsappDirectLine.botGroups[min.botId] = group;
 
+    const minBoot = GBServer.globals.minBoot as any;
+
     // If there is WhatsApp configuration specified, initialize
     // infrastructure objects.
 
@@ -788,7 +755,6 @@ export class GBMinService {
 
       await min.whatsAppDirectLine.setup(true);
     } else {
-      const minBoot = GBServer.globals.minBoot as any;
       if (min !== minBoot && minBoot.instance.whatsappServiceKey) {
         min.whatsAppDirectLine = new WhatsappDirectLine(
           min,
@@ -801,6 +767,13 @@ export class GBMinService {
         );
         await min.whatsAppDirectLine.setup(false);
       }
+    }
+
+    // Builds bot numbers map in WhatsAppDirectLine globals.
+
+    let botNumber = min.core.getParam<string>(min.instance, 'Bot Number', null);
+    if (botNumber) {
+      WhatsappDirectLine.botsByNumber[botNumber] = min.whatsAppDirectLine;
     }
 
     // Setups default BOT Framework dialogs.
@@ -911,7 +884,7 @@ export class GBMinService {
 
       const step = await min.dialogs.createContext(context);
       step.context.activity.locale = 'pt-BR';
-    
+
       const member = context.activity.from;
       const sec = new SecService();
       const user = await sec.ensureUser(instance.instanceId, member.id, member.name, '', 'web', member.name, null);
@@ -939,7 +912,7 @@ export class GBMinService {
           await sec.setParam(userId, 'wholeWord', true);
           await sec.setParam(userId, 'theme', 'white');
           await sec.setParam(userId, 'maxColumns', 40);
-          
+
           // This same event is dispatched either to all participants
           // including the bot, that is filtered bellow.
 
@@ -1069,9 +1042,8 @@ export class GBMinService {
           await this.processEventActivity(min, user, context, step);
         }
       } catch (error) {
-        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${
-          error.error ? (error.error.stack ? error.error.stack : '') : ''
-        }`;
+        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''
+          }`;
         GBLog.error(msg);
 
         await min.conversationalService.sendText(
@@ -1176,8 +1148,7 @@ export class GBMinService {
     return utterance.match(Messages.global_quit);
   }
 
-  private async handleUploads(min, step, user, params)
-  {
+  private async handleUploads(min, step, user, params, autoSave) {
     // Prepare Promises to download each attachment and then execute each Promise.
 
     if (
@@ -1194,7 +1165,7 @@ export class GBMinService {
           // In case of not having HEAR activated before, it is
           // a upload with no Dialog, so run Auto Save to .gbdrive.
 
-          if (!min.cbMap[user.userId]) {
+          if (!min.cbMap[user.userId] && autoSave) {
             const t = new SystemKeywords();
             GBLog.info(`BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
             const handle = WebAutomationServices.cyrb53(min.botId + attachmentData.fileName);
@@ -1326,10 +1297,11 @@ export class GBMinService {
           context.activity.text
         );
 
-        const conversationReference = JSON.stringify(TurnContext.getConversationReference(context.activity));
-        await sec.updateConversationReferenceById(userId, conversationReference);
       }
     }
+
+    const conversationReference = JSON.stringify(TurnContext.getConversationReference(context.activity));
+    await sec.updateConversationReferenceById(userId, conversationReference);
 
     if (GBMinService.userMobile(step)) {
       const startDialog = user.hearOnDialog ? user.hearOnDialog : min.core.getParam(min.instance, 'Start Dialog', null);
@@ -1351,7 +1323,8 @@ export class GBMinService {
       }
     }
 
-    await this.handleUploads(min, step, user, params);
+    const notes = min.core.getParam(min.instance, 'Notes', null);
+    await this.handleUploads(min, step, user, params, notes != null);
 
     // Files in .gbdialog can be called directly by typing its name normalized into JS .
 
@@ -1402,19 +1375,19 @@ export class GBMinService {
     } else {
       // Removes unwanted chars in input text.
 
-      
+
       step.context.activity['originalText'] = context.activity.text;
       const text = await GBConversationalService.handleText(min, user, step, context.activity.text);
       step.context.activity['originalText']
       step.context.activity['text'] = text;
 
-      const notes = min.core.getParam(min.instance, 'Notes', null);
-      if (notes && text && text !== "") { 
+
+      if (notes && text && text !== "") {
         const sys = new SystemKeywords();
-        await sys.note({pid, text});
+        await sys.note({ pid, text });
         await step.context.sendActivity('OK.');
         return;
-      }  
+      }
 
 
       // Checks for bad words on input text.
@@ -1459,9 +1432,8 @@ export class GBMinService {
           try {
             await step.continueDialog();
           } catch (error) {
-            const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${
-              error.error ? (error.error.stack ? error.error.stack : '') : ''
-            }`;
+            const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''
+              }`;
             GBLog.error(msg);
             await min.conversationalService.sendText(
               min,
@@ -1502,4 +1474,92 @@ export class GBMinService {
       }
     }
   }
+
+  public async ensureAPI() {
+
+    const mins = GBServer.globals.minInstances;
+    
+    function getRemoteId(ctx: Koa.Context) {
+      return '1'; // Each bot has its own API.
+    }
+
+    const close = async () => {
+      return new Promise(resolve => {
+        if (GBServer.globals.server.apiServer) {
+          GBServer.globals.server.apiServer.close(
+            cb => {
+              resolve(true);
+              GBLogEx.info(0, 'Reloading General Bots API...');
+            }
+          );
+        }
+        else{
+          resolve(true);
+          GBLogEx.info(0, 'Loading General Bots API...');
+        }
+      });
+    };
+
+    await close();
+
+
+    let proxies = {};
+    await CollectionUtil.asyncForEach(mins, async min => {
+
+      let dialogs = {};
+      await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
+  
+
+        const f = new Function()
+
+        dialogs[script] = async (data)=> {
+          let params;
+          if (data){
+            params = JSON.parse(data);
+          }
+
+          await GBVMService.callVM(script, min, null, null, null, false, params);
+        }      
+        });
+  
+      const proxy = {
+        dk: new DialogKeywords(),
+        wa: new WebAutomationServices(),
+        sys: new SystemKeywords(),
+        dbg: new DebuggerService(),
+        img: new ImageProcessingServices(),
+        dialogs: dialogs
+      };
+      proxies[min.botId] = proxy;
+    });
+
+    const opts = {
+      pingSendTimeout: null,
+      keepAliveTimeout: null,
+      listeners: {
+        unsubscribed(subscriptions: number): void { },
+        subscribed(subscriptions: number): void { },
+        disconnected(remoteId: string, connections: number): void { },
+        connected(remoteId: string, connections: number): void { },
+        messageIn(...params): void {
+          params.shift();
+          GBLogEx.verbose(0, '[IN] ' + params);
+        },
+        messageOut(...params): void {
+          params.shift();
+          GBLogEx.verbose(0, '[OUT] ' + params);
+        }
+      }
+    };
+
+    GBServer.globals.server.apiServer = createKoaHttpServer(GBVMService.API_PORT, getRemoteId, { prefix: `api/v3` });
+
+    createRpcServer(
+      proxies,
+      GBServer.globals.server.apiServer,
+      opts
+    );
+
+  }
+
 }

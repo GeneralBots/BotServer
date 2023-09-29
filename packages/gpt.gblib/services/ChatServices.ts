@@ -33,9 +33,57 @@
 'use strict';
 
 import { GBMinInstance } from 'botlib';
-import { Configuration, OpenAIApi } from "openai";
+//import OpenAI from "openai";
+import { ChatGPTAPIBrowser, getOpenAIAuth } from 'chatgpt'
+import { CollectionUtil } from 'pragmatismo-io-framework';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
+import Path from 'path';
+import * as Fs from 'fs';
 
 export class ChatServices {
+
+  public static async sendMessage(min: GBMinInstance, text: string) {
+    let key;
+    if (process.env.OPENAI_KEY) {
+      key = process.env.OPENAI_KEY;
+    }
+    else {
+      key = min.core.getParam(min.instance, 'Open AI Key', null);
+    }
+
+    if (!key) {
+      throw new Error('Open AI Key not configured in .gbot.');
+    }
+    let functions = [];
+
+    // Adds .gbdialog as functions if any to GPT Functions.
+
+    await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
+      const path = DialogKeywords.getGBAIPath(min.botId, "gbdialog", null);
+      const localFolder = Path.join('work', path, `${script}.json`);
+
+      if (Fs.existsSync(localFolder)) {
+        const func = Fs.readFileSync(localFolder).toJSON();
+        functions.push(func);
+      }
+
+    });
+
+    // Calls Model.
+
+    // const openai = new OpenAI({
+    //   apiKey: key
+    // });
+    // const chatCompletion = await openai.chat.completions.create({
+    //   model: "gpt-3.5-turbo",
+    //   messages: [{ role: "user", content: text }],
+    //   functions: functions
+    // });
+    // return chatCompletion.choices[0].message.content;
+  }
+
+
+
   /**
    * Generate text
    *
@@ -45,22 +93,25 @@ export class ChatServices {
    *
    */
   public static async continue(min: GBMinInstance, text: string, chatId) {
-    let key = min.core.getParam(min.instance, 'Open AI Key', null);
+    let key;
+    if (process.env.OPENAI_KEY) {
+      key = process.env.OPENAI_KEY;
+    }
+    else {
+      key = min.core.getParam(min.instance, 'Open AI Key', null);
+    }
 
     if (!key) {
       throw new Error('Open AI Key not configured in .gbot.');
     }
+    // const openai = new OpenAI({
+    //   apiKey: key
+    // });
+    // const chatCompletion = await openai.chat.completions.create({
+    //   model: "gpt-3.5-turbo",
+    //   messages: [{ role: "user", content: text }]
 
-    const configuration = new Configuration({
-      apiKey: key,
-    });
-    const openai = new OpenAIApi(configuration);
-    
-    const chatCompletion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [{role: "user", content: text}],
-    });
-    return chatCompletion.data.choices[0].message.content;
-
+    // });
+    // return chatCompletion.choices[0].message.content;
   }
 }

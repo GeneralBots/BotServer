@@ -48,6 +48,7 @@ export class RootData {
   public publicAddress: string; // URI for BotServer.
   public server: any; // Express reference.
   public httpsServer: any; // Express reference (HTTPS).
+  public apiServer: any; // Koa reference (HTTPS) for GB API (isolated from /).
   public sysPackages: any[]; // Loaded system package list.
   public appPackages: any[]; // Loaded .gbapp package list.
   public minService: GBMinService; // Minimalist service core.

@@ -105,10 +105,18 @@ export class GBDeployer implements IGBDeployer {
    */
   public static async internalGetDriveClient(min: GBMinInstance) {
     let token;
-    if (min['cacheToken']) {
+
+    // TODO: Add expiration logic.  
+
+    if (min['cacheToken'] && null) {
       return min['cacheToken'];
     } else {
-      token = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, true);
+
+      // Get token as root only if the bot does not have
+      // an custom tenant for retrieving packages.
+
+      token = await (min.adminService as any)['acquireElevatedToken']
+        (min.instance.instanceId, min.instance.authenticatorTenant?false:true);
 
       const siteId = process.env.STORAGE_SITE_ID;
       const libraryId = process.env.STORAGE_LIBRARY;
@@ -280,7 +288,6 @@ export class GBDeployer implements IGBDeployer {
         `${publicAddress}/api/messages/${instance.botId}`
       );
     } else {
-      const botId = GBConfigService.get('BOT_ID');
 
       // Internally create resources on cloud provider.
 
@@ -303,6 +310,7 @@ export class GBDeployer implements IGBDeployer {
       // Makes available bot to the channels and .gbui interfaces.
 
       await GBServer.globals.minService.mountBot(instance);
+      await GBServer.globals.minService.ensureAPI();
     }
 
     // Saves final instance object and returns it.
@@ -553,7 +561,7 @@ export class GBDeployer implements IGBDeployer {
     });
   }
   public async deployPackage(min: GBMinInstance, localPath: string) {
-    // TODO: @alanperdomo: Adjust interface mismatch.
+    // TODO:  Adjust interface mismatch.
   }
   /**
    * Deploys a folder into the bot storage.
@@ -655,6 +663,30 @@ export class GBDeployer implements IGBDeployer {
     }
   }
 
+    /**
+   * Removes the package local files from cache.
+   */
+    public async cleanupPackage(instance: IGBInstance, packageName: string) {
+      const path = DialogKeywords.getGBAIPath(instance.botId, null, packageName);
+      const localFolder = Path.join('work', path);
+      rimraf.sync(localFolder);
+    }
+  
+  /**
+   * Removes the package from the storage and local work folders.
+   */
+  public async undeployPackageFromPackageName(instance: IGBInstance, packageName: string) {
+    // Gets information about the package.
+
+    const packageType = Path.extname(packageName);
+    const p = await this.getStoragePackageByName(instance.instanceId, packageName);
+
+    const path = DialogKeywords.getGBAIPath(instance.botId, null, packageName);
+    const localFolder = Path.join('work', path);
+  
+    return await this.undeployPackageFromLocalPath(instance, localFolder);
+  }
+
   /**
    * Removes the package from the storage and local work folders.
    */
@@ -677,8 +709,11 @@ export class GBDeployer implements IGBDeployer {
         const service = new KBService(this.core.sequelize);
         rimraf.sync(localPath);
 
-        return await service.undeployKbFromStorage(instance, this, p.packageId);
+        if (p){
+          await service.undeployKbFromStorage(instance, this, p.packageId);
+        }
 
+        return;
       case '.gbui':
         break;
 
@@ -709,19 +744,29 @@ export class GBDeployer implements IGBDeployer {
   public async rebuildIndex(instance: IGBInstance, searchSchema: any) {
     // Prepares search.
     let release;
-    try {
-      GBLogEx.info(instance.instanceId, `Acquiring rebuildIndex mutex...`);
-      release = await GBServer.globals.indexSemaphore.acquire();
-      GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
+
+    // TODO: Semaphore logic.
+    //try {
+      GBLogEx.info(instance.instanceId, `rebuildIndex running...`);
+      // release = await GBServer.globals.indexSemaphore.acquire();
+      // GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
+
+      const key = instance.searchKey ? instance.searchKey : GBServer.globals.minBoot.instance.searchKey;
+      const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
+      const searchIndexer = instance.searchIndexer
+        ? instance.searchIndexer
+        : GBServer.globals.minBoot.instance.searchIndexer;
+      const host = instance.searchHost ? instance.searchHost : GBServer.globals.minBoot.instance.searchHost;
+
       // Prepares search.
 
       const search = new AzureSearch(
-        instance.searchKey,
-        instance.searchHost,
-        instance.searchIndex,
-        instance.searchIndexer
+        key,
+        host,
+        searchIndex,
+        searchIndexer
       );
-      const connectionString = GBDeployer.getConnectionStringFromInstance(instance);
+      const connectionString = GBDeployer.getConnectionStringFromInstance(GBServer.globals.minBoot.instance);
       const dsName = 'gb';
 
       // Removes any previous index.
@@ -758,13 +803,13 @@ export class GBDeployer implements IGBDeployer {
       }
       await search.createIndex(searchSchema, dsName);
 
-      release();
+      // release();
       GBLogEx.info(instance.instanceId, `Released rebuildIndex mutex.`);
-    } catch {
-      if (release) {
-        release();
-      }
-    }
+    //} catch {
+      // if (release) {
+      //   release();
+      // }
+    //}
   }
 
   /**

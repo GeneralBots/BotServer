@@ -60,10 +60,18 @@ export class GBImporter {
     localPath: string,
     additionalInstance: IGBInstance = null
   ) {
-    const settingsJson = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'settings.json'), 'utf8'));
-    if (botId === undefined) {
-      botId = settingsJson.botId;
+    const file = urlJoin(localPath, 'settings.json');
+
+    let settingsJson = {botId: botId}; 
+    if (Fs.existsSync(file)){
+
+      settingsJson = JSON.parse(Fs.readFileSync(file, 'utf8'));
+      if (botId === undefined) {
+        botId = settingsJson.botId;
+      }
+      
     }
+
     let instance: IGBInstance;
     if (botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
@@ -111,10 +119,10 @@ export class GBImporter {
     localPath: string,
     settingsJson: any
   ) {
-    const packageJson = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
-    const servicesJson = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'services.json'), 'utf8'));
-
-    const fullSettingsJson = { ...GBServer.globals.bootInstance, ...packageJson, ...settingsJson, ...servicesJson };
+  
+    const fullSettingsJson = { ...GBServer.globals.bootInstance, ...settingsJson,
+    description:"General Bot", title:botId    
+    };
 
     if (botId !== undefined) {
       fullSettingsJson.botId = botId;

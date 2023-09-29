@@ -60,7 +60,7 @@ export function createKoaHttpServer(
   app.use(koaBody.koaBody({ multipart: true }));
   app.use(middleware);
   const server =   app.listen(port);
-  const SERVER_TIMEOUT = 60 * 60 * 24 * 1000; // Equals to client RPC set .
+  const SERVER_TIMEOUT = 60 * 60 * 24 * 1000; // Equals to client RPC set.
   server.timeout = SERVER_TIMEOUT;
 
   return {

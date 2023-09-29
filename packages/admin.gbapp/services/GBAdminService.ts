@@ -170,6 +170,11 @@ export class GBAdminService implements IGBAdminService {
       // .gbot packages are handled using storage API, so no download
       // of local resources is required.
       const gbai = DialogKeywords.getGBAIPath(min.instance.botId);
+
+      if (packageType === 'gbkb') {
+        await deployer['cleanupPackage'](min.instance, packageName);
+      }
+
       await deployer['downloadFolder'](min,
         Path.join('work', `${gbai}`),
         Path.basename(localFolder));
@@ -178,9 +183,10 @@ export class GBAdminService implements IGBAdminService {
   }
   public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: GBDeployer) {
     const service = await AzureDeployerService.createInstance(deployer);
+    const searchIndex = min.instance.searchIndex ? min.instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
     await deployer.rebuildIndex(
       min.instance,
-      service.getKBSearchSchema(min.instance.searchIndex)
+      service.getKBSearchSchema(searchIndex)
     );
   }
 

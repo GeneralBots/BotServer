@@ -266,6 +266,11 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   }
 
   public async updateBotProxy(botId: string, group: string, endpoint: string) {
+    if (!await this.botExists(botId)) {
+      GBLog.error(`Bot ${botId} does not exist on cloud.`);  
+
+      return;
+    }
     const baseUrl = `https://management.azure.com/`;
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
@@ -455,7 +460,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     };
 
     GBLog.info(`Deploying Bot...`);
-    instance.botEndpoint = this.defaultEndPoint;
+    instance.botEndpoint = 'TODO: remove this column.';
 
     instance = await this.internalDeployBot(
       instance,
@@ -565,9 +570,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
           luisAppIds: [nlpAppId],
           luisKey: nlpKey,
           msaAppId: appId,
-          msaAppPassword: appPassword,
-          enabledChannels: ['webchat', 'skype'], //, "facebook"],
-          configuredChannels: ['webchat', 'skype'] //, "facebook"]
+          msaAppPassword: appPassword
         }
       };
 

@@ -433,6 +433,7 @@ ENDPOINT_UPDATE=true
         await CollectionUtil.asyncForEach(instances, async instance => {
           GBLog.info(`Updating bot endpoint for ${instance.botId}...`);
           try {
+            
             await installationDeployer.updateBotProxy(
               instance.botId,
               GBConfigService.get('CLOUD_GROUP'),
@@ -682,22 +683,20 @@ ENDPOINT_UPDATE=true
       value = params ? params[name] : defaultValue;
     }
     if (typeof defaultValue === 'boolean') {
-      return new Boolean(value ? value.toString().toLowerCase() === 'true' : defaultValue);
+      return new Boolean(value ? value.toString().toLowerCase() === 'true' : defaultValue).valueOf();
     }
     if (typeof defaultValue === 'string') {
       return value ? value : defaultValue;
     }
     if (typeof defaultValue === 'number') {
-      return new Number(value ? value : defaultValue ? defaultValue : 0);
+      return new Number(value ? value : defaultValue ? defaultValue : 0).valueOf();
     }
 
     if (instance['dataValues'] && !value) {
       value = instance['dataValues'][name];
       if (value === null) {
         const minBoot = GBServer.globals.minBoot as any;
-        if (minBoot.instance && minBoot.instance.datavalues) {
-          value = minBoot.instance.datavalues[name];
-        }
+        value = minBoot.instance[name];
       }
     }
 
