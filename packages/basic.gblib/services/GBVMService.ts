@@ -224,14 +224,14 @@ export class GBVMService extends GBService {
       
       // Unmarshalls Local variables from server VM.
 
-      let pid = this.pid;
+      const pid = this.pid;
       let id = this.id;
       let username = this.username;
       let mobile = this.mobile;
       let from = this.from;
-      let channel = this.channel;
-      let ENTER = this.ENTER;
-      let headers = this.headers;
+      const channel = this.channel;
+      const ENTER = this.ENTER;
+      const headers = this.headers;
       let data = this.data;
       let list = this.list;
       let httpUsername = this.httpUsername;
@@ -239,9 +239,9 @@ export class GBVMService extends GBService {
       let today = this.today;
       let now = this.now;
       let page = null;
-      let files = [];
+      const files = [];
       let col = 1;
-      let index = 1 
+      let index = 1;
 
       // Makes objects in BASIC insensitive.
 
@@ -249,7 +249,7 @@ export class GBVMService extends GBService {
         
         if (!listOrRow) {
           
-          return listOrRow
+          return listOrRow;
         };
 
         const lowercase = (oldKey) => typeof oldKey === 'string' ? oldKey.toLowerCase() : oldKey;

@@ -1297,10 +1297,11 @@ export class GBMinService {
           context.activity.text
         );
 
-        const conversationReference = JSON.stringify(TurnContext.getConversationReference(context.activity));
-        await sec.updateConversationReferenceById(userId, conversationReference);
       }
     }
+
+    const conversationReference = JSON.stringify(TurnContext.getConversationReference(context.activity));
+    await sec.updateConversationReferenceById(userId, conversationReference);
 
     if (GBMinService.userMobile(step)) {
       const startDialog = user.hearOnDialog ? user.hearOnDialog : min.core.getParam(min.instance, 'Start Dialog', null);
