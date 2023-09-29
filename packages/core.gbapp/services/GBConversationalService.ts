@@ -527,7 +527,9 @@ export class GBConversationalService {
   }
 
   public async playMarkdown(min: GBMinInstance, answer: string, channel: string, step: GBDialogStep, mobile: string) {
-    const user = step ? await min.userProfile.get(step.context, {}) : null;
+    const sec = new SecService();
+    let user = await sec.getUserFromSystemId(step?step.context.activity.from.id:mobile);
+    
     let text = answer;
 
     // Calls language translator.
