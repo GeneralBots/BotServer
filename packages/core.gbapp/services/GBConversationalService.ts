@@ -528,7 +528,7 @@ export class GBConversationalService {
 
   public async playMarkdown(min: GBMinInstance, answer: string, channel: string, step: GBDialogStep, mobile: string) {
     const sec = new SecService();
-    let user = await sec.getUserFromSystemId(step?step.context.activity.from.id:mobile);
+    const user = await sec.getUserFromSystemId(mobile?mobile:step.context.activity.from.id);
     
     let text = answer;
 
