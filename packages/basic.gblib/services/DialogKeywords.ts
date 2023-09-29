@@ -1246,12 +1246,12 @@ export class DialogKeywords {
     }
 
     if (!url) {
-      const imageData = await (await fetch(url)).arrayBuffer();
+
       const ext = mime.extension(Path.extname(filename.localName));
-
+      
       // Prepare a cache to be referenced by Bot Framework.
-
-      let buf: any = Buffer.from(imageData);
+      
+      const buf = Fs.readFileSync(filename);
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
       const localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
       Fs.writeFileSync(localName, buf, { encoding: null });
