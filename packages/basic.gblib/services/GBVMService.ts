@@ -198,7 +198,7 @@ export class GBVMService extends GBService {
       }
     } while (include);
 
-    let { code, map, metadata } = await this.convert(mainName, basicCode);
+    let { code, map, metadata, tasks } = await this.convert(mainName, basicCode);
 
     // Generates function JSON metadata to be used later.
 
@@ -208,6 +208,10 @@ export class GBVMService extends GBService {
     const mapFile = `${filename}.map`;
 
     Fs.writeFileSync(mapFile, JSON.stringify(map));
+
+    // Execute off-line code tasks
+
+    await this.executeTasks(tasks);
 
     // Run JS into the GB context.
 
@@ -311,6 +315,31 @@ export class GBVMService extends GBService {
 `;
     Fs.writeFileSync(jsfile, code);
     GBLogEx.info(min, `[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
+
+  }
+
+  private async executeTasks(tasks) {
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
+
+      if (task.kind === 'createTable') {
+        const minBoot = GBServer.globals.minBoot;
+
+        let sql = `CREATE TABLE ${task.name}`;
+
+        const fields = task.fields;
+        fields.forEach(f => {
+
+          const size = f.size ? '(' + f.size + ')' : '';
+          const nullable = f.required ? 'NOT NULL' : 'NULL';
+          sql = `${sql}\n${f.name} ${f.kind} ${size} ${nullable}`
+        });
+
+        await minBoot.core.sequelize.query(sql);
+
+      }
+
+    }
   }
 
   public static getMethodNameFromVBSFilename(filename: string) {
@@ -374,7 +403,7 @@ export class GBVMService extends GBService {
         element['type'] = t;
 
         if (t === 'enum') {
-          element['enum'] =  propertiesExp[2];
+          element['enum'] = propertiesExp[2];
         } else if (t === 'string') {
           element['description'] = propertiesExp[2];
         }
@@ -395,6 +424,36 @@ export class GBVMService extends GBService {
     return json;
   }
 
+  public async parseField(line) {
+
+    let required = line.indexOf('*') !== -1;
+    line = line.replace('*', '');
+
+    const field = /^\s*(\w+)\s*(\w+)(\((\d+)\))?/gim;
+
+    let reg = field.exec(line);
+    const t = reg[2];
+
+    let obj = { required: required, name: reg[1] };
+
+    if (t === 'string') {
+      obj['size'] = eval(reg[3]);
+      obj['kind'] = 'nvarchar';
+    } else if (t === 'key') {
+      obj['kind'] = 'key';
+    } else if (t === 'integer') {
+      obj['kind'] = 'INT';
+    } else if (t === 'double') {
+      obj['kind'] = 'FLOAT';
+    } else if (t === 'date') {
+      obj['kind'] = 'DATETIME';
+    } else if (t === 'boolean') {
+      obj['kind'] = 'BIT';
+    }
+
+    return obj;
+  }
+
   /**
    * Converts General Bots BASIC
    *
@@ -412,6 +471,9 @@ export class GBVMService extends GBService {
     const map = {};
     let properties = [];
     let description;
+    let table = null; // Used for TABLE keyword.
+    const tasks = [];
+    let fields = [];
 
     for (let i = 1; i <= lines.length; i++) {
       let line = lines[i - 1];
@@ -424,25 +486,59 @@ export class GBVMService extends GBService {
         line = line.replace(keywords[j][0], keywords[j][1]);
       }
 
-      //  Add additional lines returned from replacement.
+      // Pre-process "off-line" static KEYWORDS.
 
-      let add = line.split(/\r\n|\r|\n/).length;
-      current = current + (add ? add : 0);
-      map[i] = current;
-      lines[i - 1] = line;
-
-      // Pre-process static KEYWORDS.
-
+      let emmit = true;
       const params = /^\s*PARAM\s*(.*)\s*AS\s*(.*)/gim;
       const param = params.exec(line);
       if (param) {
         properties.push(param);
+        emmit = false;
       }
 
       const descriptionKeyword = /^\s*DESCRIPTION\s*\"(.*)\"/gim;
       let descriptionReg = descriptionKeyword.exec(line);
       if (descriptionReg) {
         description = descriptionReg[1];
+        emmit = false;
+      }
+
+      // Inside BEGIN/END table pair containing FIELDS.
+      if (table) {
+        const field = this.parseField(line);
+        fields.push(field);
+      }
+
+      const tableKeyword = /^\s*TABLE\s*\"(.*)\"/gim;
+      let tableReg = tableKeyword.exec(line);
+      if (tableReg) {
+        table = tableReg[1];
+        emmit = false;
+      }
+
+
+      const endTableKeyword = /^\s*END TABLE"/gim;
+      let endTableReg = endTableKeyword.exec(line);
+      if (endTableReg) {
+
+        tasks.push({
+          kind: 'createTable', name: table, fields: fields
+        });
+
+        fields = [];
+        table = null;
+        emmit = false;
+      }
+
+
+      if (emmit) {
+
+        //  Add additional lines returned from replacement.
+
+        let add = line.split(/\r\n|\r|\n/).length;
+        current = current + (add ? add : 0);
+        map[i] = current;
+        lines[i - 1] = line;
       }
     }
 
@@ -450,7 +546,7 @@ export class GBVMService extends GBService {
 
     let metadata = GBVMService.getMetadata(mainName, properties, description);
 
-    return { code, map, metadata };
+    return { code, map, metadata, tasks };
   }
 
   /**

@@ -1201,11 +1201,11 @@ export class DialogKeywords {
     const element = filename._page ? filename._page : filename.screenshot ? filename : null;
     let url;
     let nameOnly;
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
 
     // Web automation.
 
     if (element) {
-      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
       const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
       nameOnly = Path.basename(localName);
       await element.screenshot({ path: localName, fullPage: true });
@@ -1216,13 +1216,16 @@ export class DialogKeywords {
     }
 
     // GBFILE object.
+
     else if (filename.url) {
       url = filename.url;
       nameOnly = Path.basename(filename.localName);
 
       GBLog.info(`BASIC: Sending the GBFILE ${url} to ${mobile} (${channel}).`);
     }
+
     // Handles Markdown.
+
     else if (filename.indexOf('.md') > -1) {
       GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
       const md = await min.kbService.getAnswerTextByMediaName(min.instance.instanceId, filename);
@@ -1233,7 +1236,10 @@ export class DialogKeywords {
       await min.conversationalService['playMarkdown'](min, md, DialogKeywords.getChannel(), null, mobile);
       
       return;
-    } else {
+
+    // GBDRIVE
+
+    } else if (filename.indexOf('.md') > -1) {
       const gbaiName = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
 
       GBLog.info(`BASIC: Sending the MD ${filename} to mobile ${mobile}.`);
@@ -1245,6 +1251,19 @@ export class DialogKeywords {
       }
 
       nameOnly = filename;
+    }
+
+    // .gbdrive direct sending.
+
+    else {
+      
+      const ext = mime.extension(Path.extname(filename.localName));
+      const buf = Fs.readFileSync(filename);
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
+      Fs.writeFileSync(localName, buf, { encoding: null });
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+    
     }
 
     if (!url) {

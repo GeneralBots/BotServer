@@ -168,11 +168,6 @@ export class GBCoreService implements IGBCoreService {
     };
 
     this.sequelize = new Sequelize(database, username, password, sequelizeOptions);
-
-    // Specifies custom setup for MSFT...
-
-    if (this.dialect === 'mssql') {
-    }
   }
 
   /**
