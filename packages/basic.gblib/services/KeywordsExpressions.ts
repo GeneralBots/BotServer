@@ -1003,7 +1003,7 @@ export class KeywordsExpressions {
         $4 = $4.substr(2);
         const fields = $4.split(',').
 
-        return `await sys.save({pid: pid, file: "${$3}", args: [${$4}]}, fields)`;
+        return `await sys.saveToStorage({pid: pid, file: "${$3}", args: [${$4}]}, fields)`;
       }
     ];
 

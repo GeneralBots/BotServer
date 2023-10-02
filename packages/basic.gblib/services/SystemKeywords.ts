@@ -640,11 +640,40 @@ export class SystemKeywords {
   /**
    * Takes note inside a notes.xlsx of .gbdata.
    *
-   * @exaple NOTE "text"
+   * @example NOTE "text"
    *
    */
   public async note({ pid, text }): Promise<any> {
     await this.save({pid, file:"Notes.xlsx", args:[text]} );
+  }
+
+   /**
+   * Saves variables to storage, not a worksheet.
+   *
+   * @example SAVE "Billing",  columnName1, columnName2
+   * 
+   */
+  public async saveToStorage({pid, table, fields, fieldsNames}){
+
+    const fieldRegExp = /(?:.*\.)(.*)/gim;
+    const minBoot = GBServer.globals.minBoot as any;
+    const definition = minBoot.core.sequelize.models[table];
+
+    let data = {};
+    let index = 0;
+
+    fields.forEach(field => {
+
+      // Extracts only the last part of the variable like 'column' 
+      // from 'row.column'.
+
+      let name = fieldsNames[index];
+      name = fieldRegExp.exec(name)[2];
+
+      data[name] = field;
+    });
+
+    return await definition.create(data);
   }
 
   /**
