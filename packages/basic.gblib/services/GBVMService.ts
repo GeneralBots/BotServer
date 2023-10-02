@@ -53,6 +53,8 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { SystemKeywords } from './SystemKeywords.js';
 import lineReplace from 'line-replace';
+import { Sequelize, DataTypes } from '@sequelize/core';
+import { table } from 'console';
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -147,6 +149,7 @@ export class GBVMService extends GBService {
     }
 
     // Hot swap for .vbs files.
+
     const fullFilename = urlJoin(folder, filename);
     if (process.env.DEV_HOTSWAP) {
       Fs.watchFile(fullFilename, async () => {
@@ -168,9 +171,26 @@ export class GBVMService extends GBService {
     } else {
       await this.translateBASIC(mainName, fullFilename, min);
     }
+    
+    // Syncronizes Database Objects with the ones returned from "Word".
+
+    const tablesFile = urlJoin(folder, 'tables.json');
+    if (Fs.existsSync(tablesFile)) {
+      const minBoot = GBServer.globals.minBoot;
+      GBLogEx.info(min, `BASIC: Reading tables and sync storage for ${min.botId}...`);
+      
+      const tables = JSON.parse(Fs.readFileSync(tablesFile, 'utf8'));    
+      tables.forEach(t => {
+        minBoot.core.sequelize.define(t.name, t.fields);
+      });
+
+      await minBoot.core.sequelize.sync();
+    }
+
     const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
     min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
     return filename;
+
   }
 
   public async translateBASIC(mainName, filename: any, min: GBMinInstance) {
@@ -322,20 +342,25 @@ export class GBVMService extends GBService {
     for (let i = 0; i < tasks.length; i++) {
       const task = tasks[i];
 
-      if (task.kind === 'createTable') {
-        const minBoot = GBServer.globals.minBoot;
+      if (task.kind === 'writeTableDefinition') {
 
-        let sql = `CREATE TABLE ${task.name}`;
+        // Creates an empty object that will receive Sequelize fields.
+        
+        let obj = {name: task.name};
+        obj['fields'] = [];
 
         const fields = task.fields;
         fields.forEach(f => {
 
-          const size = f.size ? '(' + f.size + ')' : '';
-          const nullable = f.required ? 'NOT NULL' : 'NULL';
-          sql = `${sql}\n${f.name} ${f.kind} ${size} ${nullable}`
+          let field = {};
+          field[f.name] = f;
+
+          obj['fields'].push(field);
+
         });
 
-        await minBoot.core.sequelize.query(sql);
+        const jsonFile = `${task.name}.table.json`;
+        Fs.writeFileSync(jsonFile, JSON.stringify(obj));
 
       }
 
@@ -429,26 +454,39 @@ export class GBVMService extends GBService {
     let required = line.indexOf('*') !== -1;
     line = line.replace('*', '');
 
-    const field = /^\s*(\w+)\s*(\w+)(\((\d+)\))?/gim;
+    const fieldRegExp = /^\s*(\w+)\s*(\w+)(\((\d+)\))?/gim;
 
-    let reg = field.exec(line);
+    let reg = fieldRegExp.exec(line);
     const t = reg[2];
+    const n = reg[1];
+    
+    let obj = {};
+    let field =  {allowNull: !required };
+    obj[n] = field; 
 
-    let obj = { required: required, name: reg[1] };
-
-    if (t === 'string') {
-      obj['size'] = eval(reg[3]);
-      obj['kind'] = 'nvarchar';
-    } else if (t === 'key') {
-      obj['kind'] = 'key';
-    } else if (t === 'integer') {
-      obj['kind'] = 'INT';
-    } else if (t === 'double') {
-      obj['kind'] = 'FLOAT';
-    } else if (t === 'date') {
-      obj['kind'] = 'DATETIME';
-    } else if (t === 'boolean') {
-      obj['kind'] = 'BIT';
+    const getTypeBasedOnCondition = (t) => {
+      switch (t) {
+        case 'string':
+          return DataTypes.STRING;
+        case 'key':
+          return DataTypes.STRING; // Assuming key is a string data type
+        case 'integer':
+          return DataTypes.INTEGER;
+        case 'double':
+          return DataTypes.FLOAT;
+        case 'date':
+          return DataTypes.DATE;
+        case 'boolean':
+          return DataTypes.BOOLEAN;
+        default:
+          return DataTypes.STRING; // Default to string if the type is unknown
+      }
+    };
+    
+    field['type'] = getTypeBasedOnCondition(t);
+    
+    if (reg[3]){
+      field['size'] = getTypeBasedOnCondition(t);
     }
 
     return obj;
@@ -504,6 +542,7 @@ export class GBVMService extends GBService {
       }
 
       // Inside BEGIN/END table pair containing FIELDS.
+
       if (table) {
         const field = this.parseField(line);
         fields.push(field);
@@ -516,13 +555,13 @@ export class GBVMService extends GBService {
         emmit = false;
       }
 
-
       const endTableKeyword = /^\s*END TABLE"/gim;
       let endTableReg = endTableKeyword.exec(line);
       if (endTableReg) {
 
+
         tasks.push({
-          kind: 'createTable', name: table, fields: fields
+          kind: 'writeTableDefinition', name: table, fields: fields
         });
 
         fields = [];

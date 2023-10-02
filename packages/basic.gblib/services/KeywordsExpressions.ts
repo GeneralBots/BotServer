@@ -996,6 +996,18 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(save)(\s*)(.*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        $3 = $3.replace(/\'/g, '');
+        $3 = $3.replace(/\"/g, '');
+        $4 = $4.substr(2);
+        const fields = $4.split(',').
+
+        return `await sys.save({pid: pid, file: "${$3}", args: [${$4}]}, fields)`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*set\s*(.*)/gim,
       ($0, $1, $2) => {
         const params = this.getParams($1, ['file', 'address', 'value']);
