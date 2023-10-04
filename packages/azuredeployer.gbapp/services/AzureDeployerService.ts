@@ -267,7 +267,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   public async updateBotProxy(botId: string, group: string, endpoint: string) {
     if (!await this.botExists(botId)) {
-      GBLog.error(`Bot ${botId} does not exist on cloud.`);  
+      GBLog.error(`Bot ${botId} does not exist on cloud.`);
 
       return;
     }
@@ -367,13 +367,13 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       credentials,
       subscriptionId);
   }
-  
+
   public async deployFarm2(
     proxyAddress: string,
     instance: IGBInstance,
     credentials: any,
     subscriptionId: string
-  ){
+  ) {
     const culture = 'en-us';
 
     const token = credentials['tokenCache']._entries[0];
@@ -390,6 +390,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     await this.enableResourceProviders('Microsoft.CognitiveServices');
     await this.enableResourceProviders('Microsoft.BotService');
+    await this.enableResourceProviders('Microsoft.Search');
     await this.enableResourceProviders('Microsoft.Web');
     await this.enableResourceProviders('Microsoft.Sql');
 
@@ -398,12 +399,13 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     let serverFarm;
     let serverName;
-    if (process.env.DEPLOY_WEB){
+
+    if (process.env.DEPLOY_WEB) {
       GBLog.info(`Deploying Bot Server...`);
       serverFarm = await this.createHostingPlan(name, `${name}-server-plan`, instance.cloudLocation);
       serverName = `${name}-server`;
       await this.createServer(serverFarm.id, name, serverName, instance.cloudLocation);
-    };
+    }
 
     GBLog.info(`Deploying Bot Storage...`);
     const administratorLogin = `sa${GBAdminService.getRndReadableIdentifier()}`;
@@ -492,7 +494,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     // const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
     // instance.nlpAppId = nlpAppId;
 
-    if (process.env.DEPLOY_WEB){
+    if (process.env.DEPLOY_WEB) {
       GBLog.info('Updating server environment variables...');
       await this.updateWebisteConfig(name, serverName, serverFarm.id, instance);
     }

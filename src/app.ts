@@ -215,8 +215,11 @@ export class GBServer {
               'packages/boot.gbot',
               GBServer.globals.bootInstance
             );
-            await deployer.deployBotFull(instance, GBServer.globals.publicAddress);
+            
             instances.push(instance);
+            GBServer.globals.minBoot
+            GBServer.globals.bootInstance = instances[0];
+            await deployer.deployBotFull(instance, GBServer.globals.publicAddress);
 
             // Runs the search even with empty content to create structure.
 

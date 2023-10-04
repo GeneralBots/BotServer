@@ -1,11 +1,11 @@
 /*****************************************************************************\
 |                                               ( )_  _                       |
-|    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
+|    _ _    _ __   _ _    __    __ __     _ _ | ,_)(_)  __   __     _     |
 |   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' v `\ /'_`\   |
 |   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__,\| (˅) |( (_) )  |
-|   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
+|   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(___/(_) (_)`\__/'  |
 |   | |                ( )_) |                                                |
-|   (_)                 \___/'                                                |
+|   (_)                 \__/'                                                |
 |                                                                             |
 | General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
 | Licensed under the AGPL-3.0.                                                |
@@ -320,13 +320,78 @@ export class KeywordsExpressions {
       }
     ];
 
+    
     keywords[i++] = [
       /^\s*(set hear on)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `hrOn = ${$3}`;
       }
     ];
+
+    keywords[i++] = [/^\s*for each +(.*to.*)/gim, 'for ($1) {'];
+
+    keywords[i++] = [
+      /^\s*FOR EACH\s*(.*)\s*IN\s*(.*)/gim,
+      ($0, $1, $2) => {
+        
+        return `
     
+        __totalCalls = 10; // TODO: global from Config.
+        __next  = true;
+        __calls = 0;
+        __index = 0;
+
+        __url = $2.links?.next?.uri;
+        __seekToken = $2.links?.self?.headers["MS-ContinuationToken"] 
+        __totalCount = $2["totalCount"];
+ 
+        while (__next) 
+        {
+          let $1 = $2[__index];
+`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*END FOR\s*/gim,
+      ($0, $1, $2) => {
+        
+        return `
+          
+        // TRUE if all items are processed.
+
+        if (__index >= __totalCount) { 
+
+          // Check if HTTP call limit has reached.
+
+          if (__calls < __totalCalls) {
+
+            // Perform GET request using the constructed URL
+
+            $2 = await sys.get ({pid: pid, file: __url, addressOrHeaders: headers, httpUsername, httpPs});
+            
+            // Update current variable handlers.
+            
+            __url = $2.links?.next?.uri;
+            __seekToken = $2.links?.self?.headers["MS-ContinuationToken"] 
+            __totalCount = $2["totalCount"];
+            
+            index = 0;
+            __calls++;
+
+          } else {
+
+            next = false;
+
+          }
+          
+          index = index + 1;
+        }               
+`;
+      }
+    ];
+
+
     keywords[i++] = [
       /^\s*(.*)\=\s*(REWRITE)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
