@@ -688,6 +688,13 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(set page mode)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await dk.setPageMode ({pid: pid, ${$3}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*set param \s*(.*)\s*as\s*(.*)/gim,
       ($0, $1, $2) => {
         return `await dk.setUserParam ({pid: pid, ${$1}}, ${$2})`;
@@ -1066,7 +1073,7 @@ export class KeywordsExpressions {
         $3 = $3.replace(/\'/g, '');
         $3 = $3.replace(/\"/g, '');
         $4 = $4.substr(2);
-        const fields = $4.split(',').
+        const fields = $4.split(',');
 
         return `await sys.saveToStorage({pid: pid, file: "${$3}", args: [${$4}]}, fields)`;
       }

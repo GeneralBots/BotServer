@@ -677,6 +677,19 @@ export class DialogKeywords {
   }
 
   /**
+   * Defines page mode for paged GET calls.
+   *
+   * @example SET PAGE MODE "auto"
+   *          data = GET url 
+   *          FOR EACH item in data
+   *              ...
+   *          END FOR
+   *
+   */
+  public async setPageMode({ pid, value }) {
+    await DialogKeywords.setOption({ pid, name: 'pageMode', value });
+  }
+  /**
    * Defines the FIND behaviour to consider whole words while searching.
    *
    * @example SET WHOLE WORD ON

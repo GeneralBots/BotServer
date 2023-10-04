@@ -63,6 +63,7 @@ import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import mime from 'mime-types';
 import exts from '../../../extensions.json' assert { type: 'json' };
 import { SecService } from '../../security.gbapp/services/SecService.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * @fileoverview General Bots server core.
@@ -158,22 +159,22 @@ export class SystemKeywords {
     if (date) {
       return array
         ? array.sort((a, b) => {
-            const c = new Date(a[memberName]);
-            const d = new Date(b[memberName]);
-            return c.getTime() - d.getTime();
-          })
+          const c = new Date(a[memberName]);
+          const d = new Date(b[memberName]);
+          return c.getTime() - d.getTime();
+        })
         : null;
     } else {
       return array
         ? array.sort((a, b) => {
-            if (a[memberName] < b[memberName]) {
-              return -1;
-            }
-            if (a[memberName] > b[memberName]) {
-              return 1;
-            }
-            return 0;
-          })
+          if (a[memberName] < b[memberName]) {
+            return -1;
+          }
+          if (a[memberName] > b[memberName]) {
+            return 1;
+          }
+          return 0;
+        })
         : array;
     }
   }
@@ -644,16 +645,16 @@ export class SystemKeywords {
    *
    */
   public async note({ pid, text }): Promise<any> {
-    await this.save({pid, file:"Notes.xlsx", args:[text]} );
+    await this.save({ pid, file: "Notes.xlsx", args: [text] });
   }
 
-   /**
-   * Saves variables to storage, not a worksheet.
-   *
-   * @example SAVE "Billing",  columnName1, columnName2
-   * 
-   */
-  public async saveToStorage({pid, table, fields, fieldsNames}){
+  /**
+  * Saves variables to storage, not a worksheet.
+  *
+  * @example SAVE "Billing",  columnName1, columnName2
+  * 
+  */
+  public async saveToStorage({ pid, table, fields, fieldsNames }) {
 
     const fieldRegExp = /(?:.*\.)(.*)/gim;
     const minBoot = GBServer.globals.minBoot as any;
@@ -1517,9 +1518,23 @@ export class SystemKeywords {
    */
   public async getByHttp({ pid, url, headers, username, ps, qs }) {
     let options = {};
+
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `GET: ${url}`);
+
+    const pageMode = await DialogKeywords.getOption({ pid, name: 'pageMode' });
+    let continuationToken = await DialogKeywords.getOption({ pid, name: 'continuationToken' });
+
+    if (pageMode === "auto" && continuationToken) {
+      headers = headers ? headers : {};
+
+      headers['MS-ContinuationToken'] = continuationToken;
+    }
+
     if (headers) {
       options['headers'] = headers;
     }
+
     if (username) {
       options['auth'] = {
         user: username,
@@ -1530,12 +1545,264 @@ export class SystemKeywords {
       options['qs'] = qs;
     }
 
+
+    let r1 = {
+      "totalCount": 2,
+      "items": [
+        {
+          "partnerId": "00083575-bbd0-54de-b2ad-0f5b0e927d71",
+          "partnerName": "MTBC",
+          "customerId": "",
+          "customerName": "",
+          "customerDomainName": "",
+          "invoiceNumber": "",
+          "productId": "",
+          "skuId": "",
+          "availabilityId": "",
+          "skuName": "VM-Series Next-Generation Firewall (Bundle 2 PAYG)",
+          "productName": "VM-Series Next Generation Firewall",
+          "publisherName": "Test Alto Networks, Inc.",
+          "publisherId": "",
+          "subscriptionId": "12345678-04d9-421c-baf8-e3b8dd62ddba",
+          "subscriptionDescription": "Pay-As-You-Go",
+          "chargeStartDate": "2019-01-01T00:00:00Z",
+          "chargeEndDate": "2019-02-01T00:00:00Z",
+          "usageDate": "2019-01-01T00:00:00Z",
+          "meterType": "1 Compute Hour - 4core",
+          "meterCategory": "Virtual Machine Licenses",
+          "meterId": "4core",
+          "meterSubCategory": "VM-Series Next Generation Firewall",
+          "meterName": "VM-Series Next Generation Firewall - VM-Series Next-Generation Firewall (Bundle 2 PAYG) - 4 Core Hours",
+          "meterRegion": "",
+          "unitOfMeasure": "1 Hour",
+          "resourceLocation": "EASTUS",
+          "consumedService": "Microsoft.Compute",
+          "resourceGroup": "ECH-PAN-RG",
+          "resourceUri": "/subscriptions/12345678-04d9-421c-baf8-e3b8dd62ddba/resourceGroups/ECH-PAN-RG/providers/Microsoft.Compute/virtualMachines/echpanfw",
+          "tags": "",
+          "additionalInfo": "{  \"ImageType\": null,  \"ServiceType\": \"Standard_D3_v2\",  \"VMName\": null,  \"VMProperties\": null,  \"UsageType\": \"ComputeHR_SW\"}",
+          "serviceInfo1": "",
+          "serviceInfo2": "",
+          "customerCountry": "",
+          "mpnId": "1234567",
+          "resellerMpnId": "",
+          "chargeType": "",
+          "unitPrice": 1.2799888920023,
+          "quantity": 24.0,
+          "unitType": "",
+          "billingPreTaxTotal": 30.7197334080551,
+          "billingCurrency": "USD",
+          "pricingPreTaxTotal": 30.7197334080551,
+          "pricingCurrency": "USD",
+          "entitlementId": "3f47bcf1-965d-40a1-a2bc-3d5db3653250",
+          "entitlementDescription": "Partner Subscription",
+          "pcToBCExchangeRate": 1,
+          "pcToBCExchangeRateDate": "2019-08-01T00:00:00Z",
+          "effectiveUnitPrice": 0,
+          "rateOfPartnerEarnedCredit": 0,
+          "rateOfCredit": 0,
+          "creditType": "Credit Not Applied",
+          "invoiceLineItemType": "usage_line_items",
+          "billingProvider": "marketplace",
+          "benefitOrderId": "5ea053d6-4a0d-46ef-bc82-15065b475d01",
+          "benefitId": "28ddab06-2c5b-479e-88bb-7b7bfda4e7fd",
+          "benefitType": "SavingsPlan",
+          "attributes": {
+            "objectType": "DailyRatedUsageLineItem"
+          }
+        },
+        {
+          "partnerId": "00083575-bbd0-54de-b2ad-0f5b0e927d71",
+          "partnerName": "MTBC",
+          "customerId": "",
+          "customerName": "",
+          "customerDomainName": "",
+          "invoiceNumber": "",
+          "productId": "",
+          "skuId": "",
+          "availabilityId": "",
+          "skuName": "VM-Series Next-Generation Firewall (Bundle 2 PAYG)",
+          "productName": "VM-Series Next Generation Firewall",
+          "publisherName": "Test Alto Networks, Inc.",
+          "publisherId": "",
+          "subscriptionId": "12345678-04d9-421c-baf8-e3b8dd62ddba",
+          "subscriptionDescription": "Pay-As-You-Go",
+          "chargeStartDate": "2019-01-01T00:00:00Z",
+          "chargeEndDate": "2019-02-01T00:00:00Z",
+          "usageDate": "2019-01-02T00:00:00Z",
+          "meterType": "1 Compute Hour - 4core",
+          "meterCategory": "Virtual Machine Licenses",
+          "meterId": "4core",
+          "meterSubCategory": "VM-Series Next Generation Firewall",
+          "meterName": "VM-Series Next Generation Firewall - VM-Series Next-Generation Firewall (Bundle 2 PAYG) - 4 Core Hours",
+          "meterRegion": "",
+          "unitOfMeasure": "1 Hour",
+          "resourceLocation": "EASTUS",
+          "consumedService": "Microsoft.Compute",
+          "resourceGroup": "ECH-PAN-RG",
+          "resourceUri": "/subscriptions/12345678-04d9-421c-baf8-e3b8dd62ddba/resourceGroups/ECH-PAN-RG/providers/Microsoft.Compute/virtualMachines/echpanfw",
+          "tags": "",
+          "additionalInfo": "{  \"ImageType\": null,  \"ServiceType\": \"Standard_D3_v2\",  \"VMName\": null,  \"VMProperties\": null,  \"UsageType\": \"ComputeHR_SW\"}",
+          "serviceInfo1": "",
+          "serviceInfo2": "",
+          "customerCountry": "",
+          "mpnId": "1234567",
+          "resellerMpnId": "",
+          "chargeType": "",
+          "unitPrice": 1.2799888920023,
+          "quantity": 24.0,
+          "unitType": "",
+          "billingPreTaxTotal": 30.7197334080551,
+          "billingCurrency": "USD",
+          "pricingPreTaxTotal": 30.7197334080551,
+          "pricingCurrency": "USD",
+          "entitlementId": "31cdf47f-b249-4edd-9319-637862d12345",
+          "entitlementDescription": "Partner Subscription",
+          "pcToBCExchangeRate": 1,
+          "pcToBCExchangeRateDate": "2019-08-01T00:00:00Z",
+          "effectiveUnitPrice": 0,
+          "rateOfPartnerEarnedCredit": 0,
+          "rateOfCredit": 1,
+          "creditType": "Azure Credit Applied",
+          "invoiceLineItemTypce": "usage_line_items",
+          "billingProvider": "marketplace",
+          "benefitOrderId": "",
+          "benefitId": "",
+          "benefitType": "Charge",
+          "attributes": {
+            "objectType": "DailyRatedUsageLineItem"
+          }
+        }
+      ],
+      "links": {
+        "self": {
+          "uri": "/invoices/unbilled/lineitems?provider=onetime&invoicelineitemtype=usagelineitems&currencycode=usd&period=previous&size=2000",
+          "method": "GET",
+          "headers": []
+        },
+        "next": {
+          "uri": "/invoices/unbilled/lineitems?provider=onetime&invoicelineitemtype=usagelineitems&currencycode=usd&period=previous&size=2000&seekOperation=Next",
+          "method": "GET",
+          "headers": [
+            {
+              "key": "MS-ContinuationToken",
+              "value": "AQAAAA=="
+            }
+          ]
+        }
+      },
+      "attributes": {
+        "objectType": "Collection"
+      }
+    };
+
+    let r2 =
+    {
+      "totalCount": 1,
+      "items": [
+        {
+          "partnerId": "00083575-bbd0-54de-b2ad-0f5b0e927d71",
+          "partnerName": "MTBC",
+          "customerId": "",
+          "customerName": "",
+          "customerDomainName": "",
+          "invoiceNumber": "",
+          "productId": "",
+          "skuId": "",
+          "availabilityId": "",
+          "skuName": "VM-Series Next-Generation Firewall (Bundle 2 PAYG)",
+          "productName": "VM-Series Next Generation Firewall",
+          "publisherName": "Test Alto Networks, Inc.",
+          "publisherId": "",
+          "subscriptionId": "12345678-04d9-421c-baf8-e3b8dd62ddba",
+          "subscriptionDescription": "Pay-As-You-Go",
+          "chargeStartDate": "2019-01-01T00:00:00Z",
+          "chargeEndDate": "2019-02-01T00:00:00Z",
+          "usageDate": "2019-01-02T00:00:00Z",
+          "meterType": "1 Compute Hour - 4core",
+          "meterCategory": "Virtual Machine Licenses",
+          "meterId": "4core",
+          "meterSubCategory": "VM-Series Next Generation Firewall",
+          "meterName": "VM-Series Next Generation Firewall - VM-Series Next-Generation Firewall (Bundle 2 PAYG) - 4 Core Hours",
+          "meterRegion": "",
+          "unitOfMeasure": "1 Hour",
+          "resourceLocation": "EASTUS",
+          "consumedService": "Microsoft.Compute",
+          "resourceGroup": "ECH-PAN-RG",
+          "resourceUri": "/subscriptions/12345678-04d9-421c-baf8-e3b8dd62ddba/resourceGroups/ECH-PAN-RG/providers/Microsoft.Compute/virtualMachines/echpanfw",
+          "tags": "",
+          "additionalInfo": "{  \"ImageType\": null,  \"ServiceType\": \"Standard_D3_v2\",  \"VMName\": null,  \"VMProperties\": null,  \"UsageType\": \"ComputeHR_SW\"}",
+          "serviceInfo1": "",
+          "serviceInfo2": "",
+          "customerCountry": "",
+          "mpnId": "1234567",
+          "resellerMpnId": "",
+          "chargeType": "",
+          "unitPrice": 1.2799888920023,
+          "quantity": 24.0,
+          "unitType": "",
+          "billingPreTaxTotal": 30.7197334080551,
+          "billingCurrency": "USD",
+          "pricingPreTaxTotal": 30.7197334080551,
+          "pricingCurrency": "USD",
+          "entitlementId": "31cdf47f-b249-4edd-9319-637862d8c0b4",
+          "entitlementDescription": "Partner Subscription",
+          "pcToBCExchangeRate": 1,
+          "pcToBCExchangeRateDate": "2019-08-01T00:00:00Z",
+          "effectiveUnitPrice": 0,
+          "rateOfPartnerEarnedCredit": 0.15,
+          "rateOfCredit": 0.15,
+          "creditType": "Partner Earned Credit Applied",
+          "invoiceLineItemType": "usage_line_items",
+          "billingProvider": "marketplace",
+          "benefitOrderId": "",
+          "benefitId": "",
+          "benefitType": "Charge",
+          "attributes": {
+            "objectType": "DailyRatedUsageLineItem"
+          }
+        }
+      ],
+      "links": {
+        "self": {
+          "uri": "/invoices/unbilled/lineitems?provider=onetime&invoicelineitemtype=usagelineitems&currencycode=usd&period=previous&size=2000",
+          "method": "GET",
+          "headers": []
+        }
+      },
+      "attributes": {
+        "objectType": "Collection"
+      }
+    };
+
     const result = await fetch(url, options);
 
     try {
-      return JSON.parse(await result.text());
+
+      if (result.status === 2000) {
+        // Token expired.
+
+        GBLog.info(`Expired Token for ${url}.`);
+        await DialogKeywords.setOption({ pid, name: 'continuationToken', value: null });
+
+        return null;
+      }
+
+      const res = JSON.parse(await result.text());
+
+      if (pageMode === "auto") {
+
+        continuationToken = res.next?.headers['MS-ContinuationToken'];
+
+        if (continuationToken) {
+          GBLog.info(`Updating continuationToken for ${url}.`);
+          await DialogKeywords.setOption({ pid, name: 'continuationToken', value: continuationToken });
+        }
+      }
+
     } catch (error) {
-      GBLog.info(`[GET]: OK.`);
+
+      // This is not JSON.
 
       return result;
     }
