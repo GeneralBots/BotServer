@@ -610,9 +610,20 @@ export class GBVMService extends GBService {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    // Auto-NLP generates BASIC variables related to entities.
+    // These variables will be automatically be available as normal BASIC variables.
 
     let variables = [];
+
+    // Adds all .gbot params as variables.
+    
+    const gbotConfig = JSON.parse(min.instance.params);
+    let keys = Object.keys(gbotConfig);
+    for (let j = 0; j < keys.length; j++) {
+      variables[keys[j]] = gbotConfig[keys[j]];
+    }
+
+    // Auto-NLP generates BASIC variables related to entities.
+
     if (step ? step.context.activity.originalText : null && min['nerEngine']) {
       const result = await min['nerEngine'].process(step.context.activity.originalText);
 
@@ -625,7 +636,7 @@ export class GBVMService extends GBService {
 
     // Adds params as variables to be added later as global objects..
 
-    let keys = Object.keys(params);
+    keys = Object.keys(params);
     for (let j = 0; j < keys.length; j++) {
       variables[keys[j]] = params[keys[j]];
     }
