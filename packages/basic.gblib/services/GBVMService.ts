@@ -614,6 +614,8 @@ export class GBVMService extends GBService {
 
     let variables = [];
 
+    variables['aadToken'] = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, false);
+
     // Adds all .gbot params as variables.
     
     const gbotConfig = JSON.parse(min.instance.params);
