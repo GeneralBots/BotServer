@@ -654,7 +654,7 @@ export class SystemKeywords {
   * @example SAVE "Billing",  columnName1, columnName2
   * 
   */
-  public async saveToStorage({ pid, table, fields, fieldsNames }) {
+  public async saveToStorage({ pid, table, fields, fieldsNames }) : Promise<any> {
 
     GBLog.info(`BASIC: Saving '${table}' (SAVE). Values: ${fields.join(',')}.`);
     const minBoot = GBServer.globals.minBoot as any;
@@ -664,9 +664,9 @@ export class SystemKeywords {
     let index = 0;
 
     fieldsNames.forEach(field => {
-      data[fieldsNames] = fields[index++];
+      field = field.charAt(0).toUpperCase() + field.slice(1);
+      data[field] = fields[index++];
     });
-
 
     return await definition.create(data);
   }

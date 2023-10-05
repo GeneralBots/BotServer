@@ -177,7 +177,7 @@ export class GBVMService extends GBService {
     const tablesFile = urlJoin(folder, `${filename}.tables.json`);
     if (Fs.existsSync(tablesFile)) {
       const minBoot = GBServer.globals.minBoot;
-      GBLogEx.info(min, `BASIC: Reading tables and sync storage for ${min.botId}...`);
+      GBLogEx.info(min, `BASIC: Sync TABLE keywords storage for ${min.botId}...`);
 
       const t = JSON.parse(Fs.readFileSync(tablesFile, 'utf8'));
 
@@ -207,10 +207,10 @@ export class GBVMService extends GBService {
 
       minBoot.core.sequelize.define(t.name, t.fields);
 
-      // await minBoot.core.sequelize.sync({
-      //   alter: true,
-      //   force: false // Keep it false due to data loss danger.
-      // });
+      await minBoot.core.sequelize.sync({
+        alter: true,
+        force: false // Keep it false due to data loss danger.
+      });
     }
 
     const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
@@ -623,7 +623,8 @@ export class GBVMService extends GBService {
     const gbotConfig = JSON.parse(min.instance.params);
     let keys = Object.keys(gbotConfig);
     for (let j = 0; j < keys.length; j++) {
-      variables[keys[j]] = gbotConfig[keys[j]];
+      const name = keys[j].replace(/\s/gi, '');
+      variables[name] = gbotConfig[keys[j]];
     }
 
     // Auto-NLP generates BASIC variables related to entities.

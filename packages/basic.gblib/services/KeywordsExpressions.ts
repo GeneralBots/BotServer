@@ -343,7 +343,7 @@ export class KeywordsExpressions {
         
         return `
     
-        __totalCalls = 10; // TODO: global from Config.
+        __totalCalls = 10;
         __next  = true;
         __calls = 0;
         __index = 0;
@@ -355,7 +355,7 @@ export class KeywordsExpressions {
  
         while (__next) 
         {
-          let ${$1} = __data[__index];
+          let ${$1} = __data.items[__index];
 `;
       }
     ];
@@ -797,9 +797,12 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*post\s*(.*),\s*(.*)/gim,
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*post\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `${$1} = await sys.postByHttp ({pid: pid, url:${$2}, data:${$3}, headers})`;
+
+        const args = $2.split(',');
+
+        return `${$1} = await sys.postByHttp ({pid: pid, url:${args[0]}, data:${args[1]}, headers})`;
       }
     ];
 
@@ -1098,7 +1101,7 @@ export class KeywordsExpressions {
           const fieldRegExp = /(?:.*\.)(.*)/gim;
           let name = fieldRegExp.exec(field)[1]
     
-          fieldsNamesOnly.push (name);
+          fieldsNamesOnly.push (`'${name}'`);
         });
         let fieldsNames = fieldsNamesOnly.join(',');
 

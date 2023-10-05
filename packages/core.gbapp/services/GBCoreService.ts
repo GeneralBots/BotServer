@@ -152,6 +152,7 @@ export class GBCoreService implements IGBCoreService {
       logging: logging as boolean,
       dialect: this.dialect as Dialect,
       storage: storage,
+      quoteIdentifiers: false, // set case-insensitive
       dialectOptions: {
         options: {
           trustServerCertificate: true,
