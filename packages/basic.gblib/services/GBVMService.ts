@@ -207,7 +207,10 @@ export class GBVMService extends GBService {
 
       minBoot.core.sequelize.define(t.name, t.fields);
 
-      await minBoot.core.sequelize.sync();
+      // await minBoot.core.sequelize.sync({
+      //   alter: true,
+      //   force: false // Keep it false due to data loss danger.
+      // });
     }
 
     const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
@@ -478,7 +481,7 @@ export class GBVMService extends GBService {
     let required = line.indexOf('*') !== -1;
     line = line.replace('*', '');
 
-    const fieldRegExp = /^\s*(\w+)\s*(\w+)(?:\((\d+)\))?/gim;
+    const fieldRegExp = /^\s*(\w+)\s*(\w+)(?:\((.*)\))?/gim;
 
     let reg = fieldRegExp.exec(line);
     const t = reg[2];
@@ -488,7 +491,7 @@ export class GBVMService extends GBService {
     definition['type'] = t;
 
     if (reg[3]) {
-      definition['size'] = Number.parseInt(reg[3]);
+      definition['size'] = Number.parseInt(reg[3] === 'max' ? '4000' : reg[3]);
     }
 
     return { name, definition };
