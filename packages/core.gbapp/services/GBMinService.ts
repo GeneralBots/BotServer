@@ -1031,8 +1031,10 @@ export class GBMinService {
             return;
           }
         } else if (context.activity.type === 'message') {
+          
           // Processes messages activities.
-          const pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId);
+          
+          const pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null);
           step.context.activity['pid'] = pid;
 
           await this.processMessageActivity(context, min, step, pid);

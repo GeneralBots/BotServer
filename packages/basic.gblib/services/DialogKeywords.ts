@@ -644,6 +644,19 @@ export class DialogKeywords {
     await DialogKeywords.setOption({ pid, name, value });
   }
 
+
+  /**
+   * Returns current if any continuation token for paginated HTTP requests.
+   *
+   * @example CONTINUATION TOKEN
+   *
+   */
+  public async getContinuationToken({ pid }) {
+    let { min, user, params, proc } = await DialogKeywords.getProcessInfo(pid);
+
+    return DialogKeywords.getOption({ pid, name: `${proc.executable}-continuationToken` });
+  }
+
   /**
    * Returns bot param persisted on storage.
    *

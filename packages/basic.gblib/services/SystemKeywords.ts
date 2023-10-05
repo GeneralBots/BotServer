@@ -656,23 +656,17 @@ export class SystemKeywords {
   */
   public async saveToStorage({ pid, table, fields, fieldsNames }) {
 
-    const fieldRegExp = /(?:.*\.)(.*)/gim;
+    GBLog.info(`BASIC: Saving '${table}' (SAVE). Values: ${fields.join(',')}.`);
     const minBoot = GBServer.globals.minBoot as any;
     const definition = minBoot.core.sequelize.models[table];
-
+    
     let data = {};
     let index = 0;
 
-    fields.forEach(field => {
-
-      // Extracts only the last part of the variable like 'column' 
-      // from 'row.column'.
-
-      let name = fieldsNames[index];
-      name = fieldRegExp.exec(name)[2];
-
-      data[name] = field;
+    fieldsNames.forEach(field => {
+      data[fieldsNames] = fields[index++];
     });
+
 
     return await definition.create(data);
   }
@@ -1509,7 +1503,7 @@ export class SystemKeywords {
   public generatePassword(pid) {
     return GBAdminService.getRndPassword();
   }
-
+static aa;
   /**
    * Calls any REST API by using GET HTTP method.
    *
@@ -1519,11 +1513,12 @@ export class SystemKeywords {
   public async getByHttp({ pid, url, headers, username, ps, qs }) {
     let options = {};
 
-    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user, params, proc } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `GET: ${url}`);
 
     const pageMode = await DialogKeywords.getOption({ pid, name: 'pageMode' });
-    let continuationToken = await DialogKeywords.getOption({ pid, name: 'continuationToken' });
+    let continuationToken = await 
+      DialogKeywords.getOption({ pid, name: `${proc.executable}-continuationToken` });
 
     if (pageMode === "auto" && continuationToken) {
       headers = headers ? headers : {};
@@ -1775,7 +1770,17 @@ export class SystemKeywords {
       }
     };
 
-    const result = await fetch(url, options);
+
+    let result;
+    if (!SystemKeywords.aa){
+      SystemKeywords.aa = 1;
+      return r1;
+    } else {
+      SystemKeywords.aa = null;
+      return r2;
+    }
+
+    //const result = await fetch(url, options);
 
     try {
 
@@ -1783,7 +1788,7 @@ export class SystemKeywords {
         // Token expired.
 
         GBLog.info(`Expired Token for ${url}.`);
-        await DialogKeywords.setOption({ pid, name: 'continuationToken', value: null });
+        await DialogKeywords.setOption({ pid, name: `${proc.executable}-continuationToken`, value: null });
 
         return null;
       }

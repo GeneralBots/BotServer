@@ -76,11 +76,14 @@ export class GBLogEx {
    * Finds and update user agent information to a next available person.
    */
   public static async log(instance: IGBInstance, kind: string, message: string): Promise<GuaribasLog> {
-    message = message ? message.substring(0, 1023) : null;
-    return await GuaribasLog.create(<GuaribasLog>{
-      instanceId: instance ? instance.instanceId : 1,
-      message: message,
-      kind: kind
-    });
+    if (process.env.LOG_ON_STORAGE) {
+      message = message ? message.substring(0, 1023) : null;
+
+      return await GuaribasLog.create(<GuaribasLog>{
+        instanceId: instance ? instance.instanceId : 1,
+        message: message,
+        kind: kind
+      });
+    }
   }
 }

@@ -93,6 +93,7 @@ export class KeywordsExpressions {
     const convertConditions = input => {
       var result = input.replace(/ +and +/gim, ' && ');
       result = result.replace(/ +or +/gim, ' || ');
+      result = result.replace(/ +not +/gim, ' !');
       result = result.replace(/ +<> +/gim, ' !== ');
       result = result.replace(/ += +/gim, ' === ');
       return result;
@@ -319,8 +320,14 @@ export class KeywordsExpressions {
         return `${$1} = await dk.getConfig ({pid: pid, name: ${$2}})`;
       }
     ];
-
     
+    keywords[i++] = [
+      /\s*CONTINUATION TOKEN\s*/gim,
+      () => {
+        return `await dk.getContinuationToken ({pid: pid})`;
+      }
+    ];
+
     keywords[i++] = [
       /^\s*(set hear on)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
@@ -340,14 +347,15 @@ export class KeywordsExpressions {
         __next  = true;
         __calls = 0;
         __index = 0;
+        __data = ${$2};
 
-        __url = $2.links?.next?.uri;
-        __seekToken = $2.links?.self?.headers["MS-ContinuationToken"] 
-        __totalCount = $2["totalCount"];
+        __url = __data.links?.next?.uri;
+        __seekToken = __data.links?.self?.headers["MS-ContinuationToken"] 
+        __totalCount = __data["totalCount"];
  
         while (__next) 
         {
-          let $1 = $2[__index];
+          let ${$1} = __data[__index];
 `;
       }
     ];
@@ -357,37 +365,37 @@ export class KeywordsExpressions {
       ($0, $1, $2) => {
         
         return `
-          
-        // TRUE if all items are processed.
-
-        if (__index >= __totalCount) { 
-
-          // Check if HTTP call limit has reached.
-
-          if (__calls < __totalCalls) {
-
-            // Perform GET request using the constructed URL
-
-            $2 = await sys.get ({pid: pid, file: __url, addressOrHeaders: headers, httpUsername, httpPs});
             
-            // Update current variable handlers.
+          // TRUE if all items are processed.
+
+          if (__index >= __totalCount) { 
+
+            // Check if HTTP call limit has reached.
+
+            if (__calls < __totalCalls) {
+
+              // Perform GET request using the constructed URL
+
+              __data = await sys.get ({pid: pid, file: __url, addressOrHeaders: headers, httpUsername, httpPs});
+              
+              // Update current variable handlers.
+              
+              __url = __data.links?.next?.uri;
+              __seekToken = __data.links?.self?.headers["MS-ContinuationToken"] 
+              __totalCount = __data["totalCount"];
+              
+              index = 0;
+              __calls++;
+
+            } else {
+
+              next = false;
+
+            }
             
-            __url = $2.links?.next?.uri;
-            __seekToken = $2.links?.self?.headers["MS-ContinuationToken"] 
-            __totalCount = $2["totalCount"];
-            
-            index = 0;
-            __calls++;
-
-          } else {
-
-            next = false;
-
-          }
-          
-          index = index + 1;
-        }               
-`;
+            index = index + 1;
+          }               
+        }`;
       }
     ];
 
@@ -690,7 +698,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(set page mode)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await dk.setPageMode ({pid: pid, ${$3}})`;
+        return `await dk.setPageMode ({pid: pid, value: ${$3}})`;
       }
     ];
 
@@ -704,7 +712,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*set header\s*(.*)\s*as\s*(.*)/gim,
       ($0, $1, $2) => {
-        return `headers[${$1}]=${$2})`;
+        return `headers[${$1.trim()}] = ${$2}`;
       }
     ];
 
@@ -845,14 +853,14 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(\bexit\b)\s*/gim,
+      /^\sEXIT\s*$/gim,
       () => {
         return `return;`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(\bEND\b)\s*/gim,
+      /^\s*END\s*$/gim,
       () => {
         return `return;`;
       }
@@ -1072,10 +1080,29 @@ export class KeywordsExpressions {
       ($0, $1, $2, $3, $4) => {
         $3 = $3.replace(/\'/g, '');
         $3 = $3.replace(/\"/g, '');
-        $4 = $4.substr(2);
-        const fields = $4.split(',');
+        let fields = $3.split(',');
+        const table  = fields[0].trim();
+        fields.shift();
 
-        return `await sys.saveToStorage({pid: pid, file: "${$3}", args: [${$4}]}, fields)`;
+        const fieldsAsText = fields.join(',');
+
+        let fieldsNamesOnly = [];
+        let index = 0;
+        
+        
+        fields.forEach(field => {
+    
+          // Extracts only the last part of the variable like 'column' 
+          // from 'row.column'.
+    
+          const fieldRegExp = /(?:.*\.)(.*)/gim;
+          let name = fieldRegExp.exec(field)[1]
+    
+          fieldsNamesOnly.push (name);
+        });
+        let fieldsNames = fieldsNamesOnly.join(',');
+
+        return `await sys.saveToStorage({pid: pid, table: "${table}", fields: [${fieldsAsText}], fieldsNames: [${fieldsNames}] })`;
       }
     ];
 
