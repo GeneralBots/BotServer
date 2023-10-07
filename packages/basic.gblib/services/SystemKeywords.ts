@@ -654,18 +654,18 @@ export class SystemKeywords {
   * @example SAVE "Billing",  columnName1, columnName2
   * 
   */
-  public async saveToStorage({ pid, table, fields, fieldsNames }) : Promise<any> {
+  public async saveToStorage({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
 
-    GBLog.info(`BASIC: Saving '${table}' (SAVE). Values: ${fields.join(',')}.`);
+    GBLog.info(`BASIC: Saving '${table}' (SAVE). Values: ${fieldsValues.join(',')}.`);
     const minBoot = GBServer.globals.minBoot as any;
     const definition = minBoot.core.sequelize.models[table];
-    
+
     let data = {};
     let index = 0;
 
     fieldsNames.forEach(field => {
       field = field.charAt(0).toUpperCase() + field.slice(1);
-      data[field] = fields[index++];
+      data[field] = fieldsValues[index++];
     });
 
     return await definition.create(data);
@@ -1503,7 +1503,20 @@ export class SystemKeywords {
   public generatePassword(pid) {
     return GBAdminService.getRndPassword();
   }
-static aa;
+
+  private flattenJSON(obj, res, extraKey) {
+    for (let key in obj) {
+      if (typeof obj[key] !== 'object') {
+        res[extraKey + key] = obj[key];
+      } else {
+        this.flattenJSON(obj[key], res, `${extraKey}${key}.`);
+      };
+    };
+    return res;
+  }
+
+
+  static aa;
   /**
    * Calls any REST API by using GET HTTP method.
    *
@@ -1517,7 +1530,7 @@ static aa;
     GBLogEx.info(min, `GET: ${url}`);
 
     const pageMode = await DialogKeywords.getOption({ pid, name: 'pageMode' });
-    let continuationToken = await 
+    let continuationToken = await
       DialogKeywords.getOption({ pid, name: `${proc.executable}-continuationToken` });
 
     if (pageMode === "auto" && continuationToken) {
@@ -1772,7 +1785,7 @@ static aa;
 
 
     let result;
-    if (!SystemKeywords.aa){
+    if (!SystemKeywords.aa) {
       SystemKeywords.aa = 1;
       return r1;
     } else {
@@ -1793,7 +1806,7 @@ static aa;
         return null;
       }
 
-      const res = JSON.parse(await result.text());
+      let res = JSON.parse(await result.text());
 
       if (pageMode === "auto") {
 
@@ -2073,11 +2086,9 @@ static aa;
    *
    */
   public async merge({ pid, file, data, key1, key2 }): Promise<any> {
-    GBLog.info(`BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
 
+    GBLog.info(`BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    const botId = min.instance.botId;
-    const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
 
     // MAX LINES property.
 
@@ -2087,31 +2098,45 @@ static aa;
         maxLines = Number.parseInt(params.maxLines).valueOf();
       }
     }
-
+    
     // Choose data sources based on file type (HTML Table, data variable or sheet file)
-
+    
+    let storage = file.indexOf('.xlsx') !== -1;
     let results;
-    let header, rows;
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    let header = [], rows = [];
+    const minBoot = GBServer.globals.minBoot;
+    let t;
+    
+    if (storage) {
+      t = minBoot.core.sequelize.models[file];
+      rows = await t.findAll({});
+      header = rows['dataNames'];
+    } else {
+      
+      const botId = min.instance.botId;
+      const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
 
-    let document;
-    document = await this.internalGetDocument(client, baseUrl, path, file);
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
-    // Creates workbook session that will be discarded.
+      let document;
+      document = await this.internalGetDocument(client, baseUrl, path, file);
 
-    let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
+      // Creates workbook session that will be discarded.
 
-    results = await client
-      .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:CZ${maxLines}')`
-      )
-      .get();
+      let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
 
-    header = results.text[0];
-    rows = results.text;
-
-    // As BASIC uses arrays starting with 1 (one) as index,
-    // a ghost element is added at 0 (zero) position.
+      results = await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:CZ${maxLines}')`
+          )
+        .get();
+        
+        header = results.text[0];
+        rows = results.text;
+      }
+      
+      // As BASIC uses arrays starting with 1 (one) as index,
+      // a ghost element is added at 0 (zero) position.
 
     let table = [];
     table.push({ gbarray: '0' });
@@ -2152,12 +2177,15 @@ static aa;
     // Scans all items in incoming data.
 
     for (let i = 1; i < data.length; i++) {
+
       // Scans all sheet lines and compare keys.
 
       const row = data[i];
       let found;
+      let key1Value;
+
       if (key1Index) {
-        const key1Value = row[key1];
+        key1Value = row[key1];
         const foundRow = key1Index[key1Value];
         if (foundRow) {
           found = table[foundRow[0]];
@@ -2169,22 +2197,37 @@ static aa;
         for (let j = 0; j < keys.length; j++) {
           const columnName = header[j];
           const value = row[keys[j]];
-          const cell = `${this.numberToLetters(j)}${i + 1}`;
-          const address = `${cell}:${cell}`;
 
-          if (value !== found[columnName]) {
-            await this.set({ pid, handle: null, file, address, value });
-            merges++;
+          if (storage) {
+
+            const obj = { id: keys[j], columnName: value };
+            await t.update(obj, { where: { key1: key1Value } });
+
+          } else {
+            const cell = `${this.numberToLetters(j)}${i + 1}`;
+            const address = `${cell}:${cell}`;
+
+            if (value !== found[columnName]) {
+              await this.set({ pid, handle: null, file, address, value });
+              merges++;
+            }
           }
+
         }
       } else {
-        let args = [];
-        let keys = Object.keys(row);
-        for (let j = 0; j < keys.length; j++) {
-          args.push(row[keys[j]]);
+        let fieldsValues = [];
+        let fieldsNames = Object.keys(row);
+        for (let j = 0; j < fieldsNames.length; j++) {
+          fieldsValues.push(row[fieldsNames[j]]);
         }
 
-        await this.save({ pid, file, args });
+        if (storage) {
+          await this.saveToStorage({ pid, table: file, fieldsValues, fieldsNames });
+        }
+        else {
+          await this.save({ pid, file, args: fieldsValues });
+
+        }
         adds++;
       }
     }

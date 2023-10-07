@@ -1105,7 +1105,7 @@ export class KeywordsExpressions {
         });
         let fieldsNames = fieldsNamesOnly.join(',');
 
-        return `await sys.saveToStorage({pid: pid, table: "${table}", fields: [${fieldsAsText}], fieldsNames: [${fieldsNames}] })`;
+        return `await sys.saveToStorage({pid: pid, table: "${table}", fieldsValues: [${fieldsAsText}], fieldsNames: [${fieldsNames}] })`;
       }
     ];
 
