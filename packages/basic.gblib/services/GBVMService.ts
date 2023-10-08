@@ -185,6 +185,8 @@ export class GBVMService extends GBService {
         switch (t) {
           case 'string':
             return { key: 'STRING' };
+          case 'guid':
+            return { key: 'UUID' };
           case 'key':
             return { key: 'STRING' }; // Assuming key is a string data type
           case 'integer':
@@ -203,6 +205,11 @@ export class GBVMService extends GBService {
       Object.keys(t.fields).forEach(key => {
         let obj = t.fields[key];
         obj.type = getTypeBasedOnCondition(obj.type);
+        if (obj.name.toLowerCase() === 'id')
+        {
+          obj['primaryKey'] = true;        
+        }
+  
       });
 
       minBoot.core.sequelize.define(t.name, t.fields);
