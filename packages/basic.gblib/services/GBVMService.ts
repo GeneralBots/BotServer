@@ -198,18 +198,32 @@ export class GBVMService extends GBService {
           case 'boolean':
             return { key: 'BOOLEAN' };
           default:
-            return { key: 'STRING' }; // Default to string if the type is unknown
+            return { key: 'TABLE' , name: t};
         }
       };
+
+      const associations = [];
 
       Object.keys(t.fields).forEach(key => {
         let obj = t.fields[key];
         obj.type = getTypeBasedOnCondition(obj.type);
+        if (obj.type.key === "TABLE"){
+          associations.push({from: t.name,to: obj.type.name});
+        }
         if (obj.name.toLowerCase() === 'id')
         {
           obj['primaryKey'] = true;        
         }
   
+      });
+
+      associations.forEach(e=>{
+        const from = minBoot.core.sequelize.models[e.from];
+        const to = minBoot.core.sequelize.models[e.to];
+
+        from.hasMany(to);
+        to.belongsTo(from);
+
       });
 
       minBoot.core.sequelize.define(t.name, t.fields);
