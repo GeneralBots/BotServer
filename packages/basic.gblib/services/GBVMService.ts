@@ -179,7 +179,7 @@ export class GBVMService extends GBService {
       const minBoot = GBServer.globals.minBoot;
       GBLogEx.info(min, `BASIC: Sync TABLE keywords storage for ${min.botId}...`);
 
-      const t = JSON.parse(Fs.readFileSync(tablesFile, 'utf8'));
+      const tableDef = JSON.parse(Fs.readFileSync(tablesFile, 'utf8')) as any;
 
       const getTypeBasedOnCondition = (t) => {
         switch (t) {
@@ -198,26 +198,28 @@ export class GBVMService extends GBService {
           case 'boolean':
             return { key: 'BOOLEAN' };
           default:
-            return { key: 'TABLE' , name: t};
+            return { key: 'TABLE', name: t };
         }
       };
 
       const associations = [];
 
-      Object.keys(t.fields).forEach(key => {
-        let obj = t.fields[key];
-        obj.type = getTypeBasedOnCondition(obj.type);
-        if (obj.type.key === "TABLE"){
-          associations.push({from: t.name,to: obj.type.name});
-        }
-        if (obj.name.toLowerCase() === 'id')
-        {
-          obj['primaryKey'] = true;        
-        }
-  
+      Object.keys(tableDef.tables).forEach(tableName => {
+        const t = tableDef[tableName];
+        Object.keys(t.fields).forEach(key => {
+          let obj = t.fields[key];
+          obj.type = getTypeBasedOnCondition(obj.type);
+          if (obj.type.key === "TABLE") {
+            associations.push({ from: t.name, to: obj.type.name });
+          }
+          if (key.toLowerCase() === 'id') {
+            obj['primaryKey'] = true;
+          }
+        });
+        minBoot.core.sequelize.define(t.name, t.fields);
       });
 
-      associations.forEach(e=>{
+      associations.forEach(e => {
         const from = minBoot.core.sequelize.models[e.from];
         const to = minBoot.core.sequelize.models[e.to];
 
@@ -226,7 +228,6 @@ export class GBVMService extends GBService {
 
       });
 
-      minBoot.core.sequelize.define(t.name, t.fields);
 
       await minBoot.core.sequelize.sync({
         alter: true,
@@ -403,12 +404,9 @@ export class GBVMService extends GBService {
 
         // Creates an empty object that will receive Sequelize fields.
 
-        let obj = { name: task.name };
-        obj['fields'] = task.fields;
         const path = DialogKeywords.getGBAIPath(min.botId, `gbdialog`);
         const tablesFile = `${task.file}.tables.json`;
-
-        Fs.writeFileSync(tablesFile, JSON.stringify(obj));
+        Fs.writeFileSync(tablesFile, JSON.stringify(task.tables));
 
       }
 
@@ -538,6 +536,7 @@ export class GBVMService extends GBService {
     let table = null; // Used for TABLE keyword.
     const tasks = [];
     let fields = {};
+    let tables = [];
 
     for (let i = 1; i <= lines.length; i++) {
 
@@ -572,9 +571,10 @@ export class GBVMService extends GBService {
       let endTableReg = endTableKeyword.exec(line);
       if (endTableReg && table) {
 
-        tasks.push({
-          kind: 'writeTableDefinition', file: filename, name: table, fields: fields
+        tables.push({
+          name: table, fields: fields
         });
+  
 
         fields = [];
         table = null;
@@ -602,6 +602,13 @@ export class GBVMService extends GBService {
       current = current + (add ? add : 0);
       map[i] = current;
       lines[i - 1] = emmit ? line : '';
+    }
+
+    if (tables){
+      tasks.push({
+        kind: 'writeTableDefinition', file: filename, tables
+      });
+
     }
 
     code = `${lines.join('\n')}\n`;
