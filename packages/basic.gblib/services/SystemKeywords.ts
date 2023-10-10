@@ -2204,10 +2204,12 @@ export class SystemKeywords {
             await t.update(obj, { where: { key1: key1Value } });
 
           } else {
+
             const cell = `${this.numberToLetters(j)}${i + 1}`;
             const address = `${cell}:${cell}`;
 
             if (value !== found[columnName]) {
+            
               await this.set({ pid, handle: null, file, address, value });
               merges++;
             }

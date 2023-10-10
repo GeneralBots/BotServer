@@ -128,7 +128,7 @@ export class GBCoreService implements IGBCoreService {
       username = GBConfigService.get('STORAGE_USERNAME');
       password = GBConfigService.get('STORAGE_PASSWORD');
     } else if (this.dialect === 'sqlite') {
-      storage = GBConfigService.get('STORAGE_STORAGE');
+      storage = GBConfigService.get('STORAGE_FILE');
     } else {
       throw new Error(`Unknown dialect: ${this.dialect}.`);
     }
