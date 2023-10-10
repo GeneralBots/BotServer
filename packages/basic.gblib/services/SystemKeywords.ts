@@ -1784,16 +1784,8 @@ export class SystemKeywords {
     };
 
 
-    let result;
-    if (!SystemKeywords.aa) {
-      SystemKeywords.aa = 1;
-      return r1;
-    } else {
-      SystemKeywords.aa = null;
-      return r2;
-    }
 
-    //const result = await fetch(url, options);
+    const result = await fetch(url, options);
 
     try {
 
