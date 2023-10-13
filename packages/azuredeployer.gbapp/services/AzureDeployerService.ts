@@ -572,8 +572,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
           luisAppIds: [nlpAppId],
           luisKey: nlpKey,
           msaAppId: appId,
-          msaAppPassword: appPassword,
-          configuredChannels: ['webchat']
+          msaAppPassword: appPassword
         }
       };
 
@@ -588,19 +587,20 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         return;
       }
 
-      try {
-        //tslint:disable-next-line:max-line-length
-        query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${this.apiVersion}`;
-        url = urlJoin(baseUrl, query);
-        req = AzureDeployerService.createRequestObject(url, accessToken, 'POST', JSON.stringify(parameters));
-        const resChannel = await httpClient.sendRequest(req);
-        const key = JSON.parse(resChannel.bodyAsText).properties.properties.sites[0].key;
-        instance.webchatKey = key;
-        instance.whatsappBotKey = key;
-        resolve(instance);
-      } catch (error) {
-        reject(error);
-      }
+      // MSFT has changed without warnings. 
+      // try {
+      //   //tslint:disable-next-line:max-line-length
+      //   query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${this.apiVersion}`;
+      //   url = urlJoin(baseUrl, query);
+      //   req = AzureDeployerService.createRequestObject(url, accessToken, 'POST', JSON.stringify(parameters));
+      //   const resChannel = await httpClient.sendRequest(req);
+      //   const key = JSON.parse(resChannel.bodyAsText).properties.properties.sites[0].key;
+      //   instance.webchatKey = key;
+      //   instance.whatsappBotKey = key;
+      //   resolve(instance);
+      // } catch (error) {
+      //   reject(error);
+      // }
     });
   }
 
