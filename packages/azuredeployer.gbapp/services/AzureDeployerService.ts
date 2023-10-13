@@ -586,7 +586,8 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
         return;
       }
-
+      resolve(instance);
+      
       // MSFT has changed without warnings. 
       // try {
       //   //tslint:disable-next-line:max-line-length
