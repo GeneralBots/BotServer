@@ -573,7 +573,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
           luisKey: nlpKey,
           msaAppId: appId,
           msaAppPassword: appPassword,
-          enabledChannels: ['webchat'],
           configuredChannels: ['webchat']
         }
       };
