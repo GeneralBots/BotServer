@@ -1784,12 +1784,21 @@ export class SystemKeywords {
     };
 
 
+    // let result;
+    // if (!SystemKeywords.aa) {
+    //   SystemKeywords.aa = 1;
+    //   return r1;
+    // } else {
+    //   SystemKeywords.aa = null;
+    //   return r2;
+    // }
 
     const result = await fetch(url, options);
 
     try {
 
       if (result.status === 2000) {
+        
         // Token expired.
 
         GBLog.info(`Expired Token for ${url}.`);
@@ -1809,6 +1818,8 @@ export class SystemKeywords {
           await DialogKeywords.setOption({ pid, name: 'continuationToken', value: continuationToken });
         }
       }
+
+      return res;
 
     } catch (error) {
 

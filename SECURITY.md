@@ -14,7 +14,6 @@ Request your free IT security evaluation
 This IT security policy helps us:
 
 • Rodrigo Rodriguez is the director with overall responsibility for IT security strategy.
-• Dário Vieira has day-to-day operational responsibility for implementing this policy.
 • Microsoft is the IT partner organisation we use to help with our planning and support.
 • Microsoft  is the data protection officer to advise on data protection laws and best practices
 Review process
