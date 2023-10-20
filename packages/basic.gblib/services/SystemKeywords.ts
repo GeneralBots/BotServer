@@ -663,6 +663,8 @@ export class SystemKeywords {
     let data = {};
     let index = 0;
 
+    data = this.flattenJSON(fieldsValues,{}, '')
+
     fieldsNames.forEach(field => {
       field = field.charAt(0).toUpperCase() + field.slice(1);
       data[field] = fieldsValues[index++];
@@ -1504,12 +1506,12 @@ export class SystemKeywords {
     return GBAdminService.getRndPassword();
   }
 
-  private flattenJSON(obj, res, extraKey) {
+  private flattenJSON(obj, res, extraKey, hierarchy=false) {
     for (let key in obj) {
       if (typeof obj[key] !== 'object') {
         res[extraKey + key] = obj[key];
       } else {
-        this.flattenJSON(obj[key], res, `${extraKey}${key}.`);
+        this.flattenJSON(obj[key], res, hierarchy?`${extraKey}${key}.`:'');
       };
     };
     return res;
@@ -2112,7 +2114,7 @@ export class SystemKeywords {
 
     // Choose data sources based on file type (HTML Table, data variable or sheet file)
 
-    let storage = file.indexOf('.xlsx') !== -1;
+    let storage = file.indexOf('.xlsx') === -1;
     let results;
     let header = [], rows = [];
     const minBoot = GBServer.globals.minBoot;
@@ -2120,6 +2122,9 @@ export class SystemKeywords {
 
     if (storage) {
       t = minBoot.core.sequelize.models[file];
+      if (!t) {
+        throw new Error(`TABLE ${file} not found. Check TABLE keywords.`);
+      }
       rows = await t.findAll({});
       header = rows['dataNames'];
     } else {

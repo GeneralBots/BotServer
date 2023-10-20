@@ -53,7 +53,7 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { SystemKeywords } from './SystemKeywords.js';
 import lineReplace from 'line-replace';
-import { Sequelize, DataTypes } from '@sequelize/core';
+import { Sequelize, DataTypes, QueryTypes } from '@sequelize/core';
 import { table } from 'console';
 
 /**
@@ -227,6 +227,13 @@ export class GBVMService extends GBService {
 
       const associations = [];
 
+      const tables = await min.core.sequelize.query(`SELECT table_name, table_schema
+      FROM information_schema.tables
+      WHERE table_type = 'BASE TABLE'
+      ORDER BY table_name ASC`, {
+        type: QueryTypes.RAW
+      })
+
       tableDef.forEach(t => {
         Object.keys(t.fields).forEach(key => {
           let obj = t.fields[key];
@@ -240,7 +247,7 @@ export class GBVMService extends GBService {
           }
         });
 
-        // Only syncs if there is any difference.
+        // Field checking, syncs if there is any difference.
 
         const model = minBoot.core.sequelize.models[t.name];
         if (model) {
@@ -261,20 +268,37 @@ export class GBVMService extends GBService {
           });
           
 
-        if (equals != Object.keys(t.fields).length) {
+          if (equals != Object.keys(t.fields).length) {
             sync = true;
           }
         }
         
         minBoot.core.sequelize.define(t.name, t.fields);
+
+        // New table checking, if needs sync. 
+        let found = false;
+        tables[0].forEach ((storageTable)=>{
+          if (storageTable['table_name'] === t.name)
+          {
+            found = true;
+          }
+        });
+
+        sync = sync? sync: !found;
+
       });
 
       associations.forEach(e => {
         const from = minBoot.core.sequelize.models[e.from];
         const to = minBoot.core.sequelize.models[e.to];
 
-        from.hasMany(to);
-        to.belongsTo(from);
+        try {
+          from.hasMany(to);
+          to.belongsTo(from);
+          
+        } catch (error) {
+          throw new Error(`BASIC: Invalid relationship in ${mainName}: from ${e.from} to ${e.to} (${min.botId})... ${error.message}`);
+        }
 
       });
 
