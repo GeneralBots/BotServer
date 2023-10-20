@@ -30,7 +30,7 @@
 |                                                                             |
 \*****************************************************************************/
 'use strict';
-import { GBLog, GBMinInstance } from 'botlib';
+import { GBError, GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
@@ -1795,38 +1795,33 @@ export class SystemKeywords {
 
     const result = await fetch(url, options);
 
-    try {
+    if (result.status === 2000) {
 
-      if (result.status === 2000) {
-        
-        // Token expired.
+      // Token expired.
 
-        GBLog.info(`Expired Token for ${url}.`);
-        await DialogKeywords.setOption({ pid, name: `${proc.executable}-continuationToken`, value: null });
+      GBLog.info(`Expired Token for ${url}.`);
+      await DialogKeywords.setOption({ pid, name: `${proc.executable}-continuationToken`, value: null });
 
-        return null;
-      }
-
-      let res = JSON.parse(await result.text());
-
-      if (pageMode === "auto") {
-
-        continuationToken = res.next?.headers['MS-ContinuationToken'];
-
-        if (continuationToken) {
-          GBLog.info(`Updating continuationToken for ${url}.`);
-          await DialogKeywords.setOption({ pid, name: 'continuationToken', value: continuationToken });
-        }
-      }
-
-      return res;
-
-    } catch (error) {
-
-      // This is not JSON.
-
-      return result;
+      return null;
     }
+    if (result.status != 200) {
+      throw new Error(`BASIC: GET ${result.status}: ${result.statusText}.`)
+    }
+
+    let res = JSON.parse(await result.text());
+
+    if (pageMode === "auto") {
+
+      continuationToken = res.next?.headers['MS-ContinuationToken'];
+
+      if (continuationToken) {
+        GBLog.info(`Updating continuationToken for ${url}.`);
+        await DialogKeywords.setOption({ pid, name: 'continuationToken', value: continuationToken });
+      }
+    }
+
+    return res;
+
   }
 
   /**
@@ -1860,14 +1855,27 @@ export class SystemKeywords {
    */
   public async postByHttp({ pid, url, data, headers }) {
     const options = {
-      json: data,
-      headers: headers
+      headers: headers,
+      method: 'POST'
     };
 
-    let result = await fetch(url, options);
-    GBLog.info(`[POST]: ${url} (${data}): ${result}`);
+    if (typeof (data) === 'object') {
+      options['json'] = data;
+    }
+    else {
+      options['body'] = data;
+    }
 
-    return result ? (typeof result === 'object' ? result : JSON.parse(result)) : true;
+    let result = await fetch(url, options);
+    const text = await result.text();
+    GBLog.info(`BASIC: POST ${url} (${data}): ${text}`);
+
+    if (result.status != 200) {
+      throw new Error(`BASIC: POST ${result.status}: ${result.statusText}.`)
+    }
+
+    let res = JSON.parse(text);
+    return res;
   }
 
   public async numberOnly({ pid, text }) {
@@ -2101,21 +2109,21 @@ export class SystemKeywords {
         maxLines = Number.parseInt(params.maxLines).valueOf();
       }
     }
-    
+
     // Choose data sources based on file type (HTML Table, data variable or sheet file)
-    
+
     let storage = file.indexOf('.xlsx') !== -1;
     let results;
     let header = [], rows = [];
     const minBoot = GBServer.globals.minBoot;
     let t;
-    
+
     if (storage) {
       t = minBoot.core.sequelize.models[file];
       rows = await t.findAll({});
       header = rows['dataNames'];
     } else {
-      
+
       const botId = min.instance.botId;
       const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
 
@@ -2131,15 +2139,15 @@ export class SystemKeywords {
       results = await client
         .api(
           `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:CZ${maxLines}')`
-          )
+        )
         .get();
-        
-        header = results.text[0];
-        rows = results.text;
-      }
-      
-      // As BASIC uses arrays starting with 1 (one) as index,
-      // a ghost element is added at 0 (zero) position.
+
+      header = results.text[0];
+      rows = results.text;
+    }
+
+    // As BASIC uses arrays starting with 1 (one) as index,
+    // a ghost element is added at 0 (zero) position.
 
     let table = [];
     table.push({ gbarray: '0' });
@@ -2212,7 +2220,7 @@ export class SystemKeywords {
             const address = `${cell}:${cell}`;
 
             if (value !== found[columnName]) {
-            
+
               await this.set({ pid, handle: null, file, address, value });
               merges++;
             }

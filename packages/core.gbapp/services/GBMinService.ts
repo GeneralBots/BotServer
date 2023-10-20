@@ -696,7 +696,7 @@ export class GBMinService {
     const manager = new NlpManager({ languages: ['pt'], forceNER: true });
     min['nerEngine'] = manager;
 
-    if (GBServer.globals.minBoot === undefined) {
+    if (!GBServer.globals.minBoot.botId) {
       GBServer.globals.minBoot = min;
     }
 

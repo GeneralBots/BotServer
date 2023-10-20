@@ -84,6 +84,28 @@ export class GBVMService extends GBService {
     });
   }
 
+  public static compare(obj1, obj2) {
+    //check for obj2 overlapping props
+    if (!Object.keys(obj2).every(key => obj1.hasOwnProperty(key))) {
+      return false;
+    }
+
+    //check every key for being same
+    return Object.keys(obj1).every(function (key) {
+
+      //if object
+      if ((typeof obj1[key] == "object") && (typeof obj2[key] == "object")) {
+
+        //recursively check
+        return GBVMService.compare(obj1[key], obj2[key]);
+      } else {
+
+        //do the normal compare
+        return obj1[key] === obj2[key];
+      }
+    });
+  }
+
   public async loadDialog(filename: string, folder: string, min: GBMinInstance) {
     const wordFile = filename;
     const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
@@ -175,9 +197,10 @@ export class GBVMService extends GBService {
     // Syncronizes Database Objects with the ones returned from "Word".
 
     const tablesFile = urlJoin(folder, `${filename}.tables.json`);
+    let sync = false;
+
     if (Fs.existsSync(tablesFile)) {
       const minBoot = GBServer.globals.minBoot;
-      GBLogEx.info(min, `BASIC: Sync TABLE keywords storage for ${min.botId}...`);
 
       const tableDef = JSON.parse(Fs.readFileSync(tablesFile, 'utf8')) as any;
 
@@ -204,18 +227,45 @@ export class GBVMService extends GBService {
 
       const associations = [];
 
-      Object.keys(tableDef.tables).forEach(tableName => {
-        const t = tableDef[tableName];
+      tableDef.forEach(t => {
         Object.keys(t.fields).forEach(key => {
           let obj = t.fields[key];
           obj.type = getTypeBasedOnCondition(obj.type);
           if (obj.type.key === "TABLE") {
+            obj.type.key = "INTEGER"
             associations.push({ from: t.name, to: obj.type.name });
           }
           if (key.toLowerCase() === 'id') {
             obj['primaryKey'] = true;
           }
         });
+
+        // Only syncs if there is any difference.
+
+        const model = minBoot.core.sequelize.models[t.name];
+        if (model) {
+          
+          // Except Id, checks if has same number of fields.
+
+          let equals = 0;
+          Object.keys(t.fields).forEach(key => {
+            let obj1 = t.fields[key];
+            let obj2 = model['fieldRawAttributesMap'][key];
+
+            if (key !== "id"){
+              if (obj1 && obj2)
+              {
+                equals++;
+              }
+            }
+          });
+          
+
+        if (equals != Object.keys(t.fields).length) {
+            sync = true;
+          }
+        }
+        
         minBoot.core.sequelize.define(t.name, t.fields);
       });
 
@@ -228,17 +278,24 @@ export class GBVMService extends GBService {
 
       });
 
+      if (sync) {
+        GBLogEx.info(min, `BASIC: Syncing changes for TABLE keywords (${min.botId})...`);
 
-      await minBoot.core.sequelize.sync({
-        alter: true,
-        force: false // Keep it false due to data loss danger.
-      });
+        await minBoot.core.sequelize.sync({
+          alter: true,
+          force: false // Keep it false due to data loss danger.
+        });
+        GBLogEx.info(min, `BASIC: Done sync for ${min.botId} storage tables...`);
+      }
+      else
+      {
+        GBLogEx.verbose(min, `BASIC: TABLE keywords already up to date (${min.botId})...`);
+      }
     }
 
     const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
     min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
     return filename;
-
   }
 
   public async translateBASIC(mainName, filename: any, min: GBMinInstance) {
@@ -404,7 +461,6 @@ export class GBVMService extends GBService {
 
         // Creates an empty object that will receive Sequelize fields.
 
-        const path = DialogKeywords.getGBAIPath(min.botId, `gbdialog`);
         const tablesFile = `${task.file}.tables.json`;
         Fs.writeFileSync(tablesFile, JSON.stringify(task.tables));
 
@@ -574,9 +630,9 @@ export class GBVMService extends GBService {
         tables.push({
           name: table, fields: fields
         });
-  
 
-        fields = [];
+
+        fields = {};
         table = null;
         emmit = false;
       }
@@ -604,7 +660,7 @@ export class GBVMService extends GBService {
       lines[i - 1] = emmit ? line : '';
     }
 
-    if (tables){
+    if (tables) {
       tasks.push({
         kind: 'writeTableDefinition', file: filename, tables
       });

@@ -43,7 +43,7 @@ import http from 'http';
 import mkdirp from 'mkdirp';
 import Path from 'path';
 import * as Fs from 'fs';
-import { GBLog, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
+import { GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService.js';
 import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService.js';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
@@ -97,6 +97,7 @@ export class GBServer {
     GBServer.globals.appPackages = [];
     GBServer.globals.sysPackages = [];
     GBServer.globals.minInstances = [];
+    GBServer.globals.minBoot = new GBMinInstance();
     GBServer.globals.wwwroot = null;
     GBServer.globals.entryPointDialog = null;
     GBServer.globals.debuggers = [];
@@ -217,7 +218,7 @@ export class GBServer {
             );
             
             instances.push(instance);
-            GBServer.globals.minBoot
+            GBServer.globals.minBoot.instance = instances[0];
             GBServer.globals.bootInstance = instances[0];
             await deployer.deployBotFull(instance, GBServer.globals.publicAddress);
 
