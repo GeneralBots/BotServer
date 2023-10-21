@@ -656,27 +656,31 @@ export class SystemKeywords {
   */
   public async saveToStorage({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
 
-    GBLog.info(`BASIC: Saving '${table}' (SAVE). Values: ${fieldsValues.join(',')}.`);
+    GBLog.info(`BASIC: Saving to storage '${table}' (SAVE).`);
     const minBoot = GBServer.globals.minBoot as any;
     const definition = minBoot.core.sequelize.models[table];
 
-    let data = {};
-    let index = 0;
+    let out = [];
+    let data = {}, data2 = {};
 
-    data = this.flattenJSON(fieldsValues,{}, '')
+    // Flattern JSON to a table.
 
-    fieldsNames.forEach(field => {
-      field = field.charAt(0).toUpperCase() + field.slice(1);
-      data[field] = fieldsValues[index++];
+    data = this.flattenJSON(fieldsValues, {}, '')
+
+    // Uppercases fields.
+
+    Object.keys(data).forEach(field => {
+      const field2 = field.charAt(0).toUpperCase() + field.slice(1);
+      data2[field2] = data[field];
     });
 
-    return await definition.create(data);
+    return await definition.create(data2);
   }
 
   /**
    * Saves the content of several variables to a new row in a tabular file.
    *
-   * @exaple SAVE "customers.xlsx", name, email, phone, address, city, state, country
+   * @example SAVE "customers.xlsx", name, email, phone, address, city, state, country
    *
    */
   public async save({ pid, file, args }): Promise<any> {
@@ -1506,12 +1510,12 @@ export class SystemKeywords {
     return GBAdminService.getRndPassword();
   }
 
-  private flattenJSON(obj, res, extraKey, hierarchy=false) {
+  private flattenJSON(obj, res, extraKey, hierarchy = false) {
     for (let key in obj) {
       if (typeof obj[key] !== 'object') {
         res[extraKey + key] = obj[key];
       } else {
-        this.flattenJSON(obj[key], res, hierarchy?`${extraKey}${key}.`:'');
+        this.flattenJSON(obj[key], res, hierarchy ? `${extraKey}${key}.` : '');
       };
     };
     return res;
@@ -1554,246 +1558,6 @@ export class SystemKeywords {
     if (qs) {
       options['qs'] = qs;
     }
-
-
-    let r1 = {
-      "totalCount": 2,
-      "items": [
-        {
-          "partnerId": "00083575-bbd0-54de-b2ad-0f5b0e927d71",
-          "partnerName": "MTBC",
-          "customerId": "",
-          "customerName": "",
-          "customerDomainName": "",
-          "invoiceNumber": "",
-          "productId": "",
-          "skuId": "",
-          "availabilityId": "",
-          "skuName": "VM-Series Next-Generation Firewall (Bundle 2 PAYG)",
-          "productName": "VM-Series Next Generation Firewall",
-          "publisherName": "Test Alto Networks, Inc.",
-          "publisherId": "",
-          "subscriptionId": "12345678-04d9-421c-baf8-e3b8dd62ddba",
-          "subscriptionDescription": "Pay-As-You-Go",
-          "chargeStartDate": "2019-01-01T00:00:00Z",
-          "chargeEndDate": "2019-02-01T00:00:00Z",
-          "usageDate": "2019-01-01T00:00:00Z",
-          "meterType": "1 Compute Hour - 4core",
-          "meterCategory": "Virtual Machine Licenses",
-          "meterId": "4core",
-          "meterSubCategory": "VM-Series Next Generation Firewall",
-          "meterName": "VM-Series Next Generation Firewall - VM-Series Next-Generation Firewall (Bundle 2 PAYG) - 4 Core Hours",
-          "meterRegion": "",
-          "unitOfMeasure": "1 Hour",
-          "resourceLocation": "EASTUS",
-          "consumedService": "Microsoft.Compute",
-          "resourceGroup": "ECH-PAN-RG",
-          "resourceUri": "/subscriptions/12345678-04d9-421c-baf8-e3b8dd62ddba/resourceGroups/ECH-PAN-RG/providers/Microsoft.Compute/virtualMachines/echpanfw",
-          "tags": "",
-          "additionalInfo": "{  \"ImageType\": null,  \"ServiceType\": \"Standard_D3_v2\",  \"VMName\": null,  \"VMProperties\": null,  \"UsageType\": \"ComputeHR_SW\"}",
-          "serviceInfo1": "",
-          "serviceInfo2": "",
-          "customerCountry": "",
-          "mpnId": "1234567",
-          "resellerMpnId": "",
-          "chargeType": "",
-          "unitPrice": 1.2799888920023,
-          "quantity": 24.0,
-          "unitType": "",
-          "billingPreTaxTotal": 30.7197334080551,
-          "billingCurrency": "USD",
-          "pricingPreTaxTotal": 30.7197334080551,
-          "pricingCurrency": "USD",
-          "entitlementId": "3f47bcf1-965d-40a1-a2bc-3d5db3653250",
-          "entitlementDescription": "Partner Subscription",
-          "pcToBCExchangeRate": 1,
-          "pcToBCExchangeRateDate": "2019-08-01T00:00:00Z",
-          "effectiveUnitPrice": 0,
-          "rateOfPartnerEarnedCredit": 0,
-          "rateOfCredit": 0,
-          "creditType": "Credit Not Applied",
-          "invoiceLineItemType": "usage_line_items",
-          "billingProvider": "marketplace",
-          "benefitOrderId": "5ea053d6-4a0d-46ef-bc82-15065b475d01",
-          "benefitId": "28ddab06-2c5b-479e-88bb-7b7bfda4e7fd",
-          "benefitType": "SavingsPlan",
-          "attributes": {
-            "objectType": "DailyRatedUsageLineItem"
-          }
-        },
-        {
-          "partnerId": "00083575-bbd0-54de-b2ad-0f5b0e927d71",
-          "partnerName": "MTBC",
-          "customerId": "",
-          "customerName": "",
-          "customerDomainName": "",
-          "invoiceNumber": "",
-          "productId": "",
-          "skuId": "",
-          "availabilityId": "",
-          "skuName": "VM-Series Next-Generation Firewall (Bundle 2 PAYG)",
-          "productName": "VM-Series Next Generation Firewall",
-          "publisherName": "Test Alto Networks, Inc.",
-          "publisherId": "",
-          "subscriptionId": "12345678-04d9-421c-baf8-e3b8dd62ddba",
-          "subscriptionDescription": "Pay-As-You-Go",
-          "chargeStartDate": "2019-01-01T00:00:00Z",
-          "chargeEndDate": "2019-02-01T00:00:00Z",
-          "usageDate": "2019-01-02T00:00:00Z",
-          "meterType": "1 Compute Hour - 4core",
-          "meterCategory": "Virtual Machine Licenses",
-          "meterId": "4core",
-          "meterSubCategory": "VM-Series Next Generation Firewall",
-          "meterName": "VM-Series Next Generation Firewall - VM-Series Next-Generation Firewall (Bundle 2 PAYG) - 4 Core Hours",
-          "meterRegion": "",
-          "unitOfMeasure": "1 Hour",
-          "resourceLocation": "EASTUS",
-          "consumedService": "Microsoft.Compute",
-          "resourceGroup": "ECH-PAN-RG",
-          "resourceUri": "/subscriptions/12345678-04d9-421c-baf8-e3b8dd62ddba/resourceGroups/ECH-PAN-RG/providers/Microsoft.Compute/virtualMachines/echpanfw",
-          "tags": "",
-          "additionalInfo": "{  \"ImageType\": null,  \"ServiceType\": \"Standard_D3_v2\",  \"VMName\": null,  \"VMProperties\": null,  \"UsageType\": \"ComputeHR_SW\"}",
-          "serviceInfo1": "",
-          "serviceInfo2": "",
-          "customerCountry": "",
-          "mpnId": "1234567",
-          "resellerMpnId": "",
-          "chargeType": "",
-          "unitPrice": 1.2799888920023,
-          "quantity": 24.0,
-          "unitType": "",
-          "billingPreTaxTotal": 30.7197334080551,
-          "billingCurrency": "USD",
-          "pricingPreTaxTotal": 30.7197334080551,
-          "pricingCurrency": "USD",
-          "entitlementId": "31cdf47f-b249-4edd-9319-637862d12345",
-          "entitlementDescription": "Partner Subscription",
-          "pcToBCExchangeRate": 1,
-          "pcToBCExchangeRateDate": "2019-08-01T00:00:00Z",
-          "effectiveUnitPrice": 0,
-          "rateOfPartnerEarnedCredit": 0,
-          "rateOfCredit": 1,
-          "creditType": "Azure Credit Applied",
-          "invoiceLineItemTypce": "usage_line_items",
-          "billingProvider": "marketplace",
-          "benefitOrderId": "",
-          "benefitId": "",
-          "benefitType": "Charge",
-          "attributes": {
-            "objectType": "DailyRatedUsageLineItem"
-          }
-        }
-      ],
-      "links": {
-        "self": {
-          "uri": "/invoices/unbilled/lineitems?provider=onetime&invoicelineitemtype=usagelineitems&currencycode=usd&period=previous&size=2000",
-          "method": "GET",
-          "headers": []
-        },
-        "next": {
-          "uri": "/invoices/unbilled/lineitems?provider=onetime&invoicelineitemtype=usagelineitems&currencycode=usd&period=previous&size=2000&seekOperation=Next",
-          "method": "GET",
-          "headers": [
-            {
-              "key": "MS-ContinuationToken",
-              "value": "AQAAAA=="
-            }
-          ]
-        }
-      },
-      "attributes": {
-        "objectType": "Collection"
-      }
-    };
-
-    let r2 =
-    {
-      "totalCount": 1,
-      "items": [
-        {
-          "partnerId": "00083575-bbd0-54de-b2ad-0f5b0e927d71",
-          "partnerName": "MTBC",
-          "customerId": "",
-          "customerName": "",
-          "customerDomainName": "",
-          "invoiceNumber": "",
-          "productId": "",
-          "skuId": "",
-          "availabilityId": "",
-          "skuName": "VM-Series Next-Generation Firewall (Bundle 2 PAYG)",
-          "productName": "VM-Series Next Generation Firewall",
-          "publisherName": "Test Alto Networks, Inc.",
-          "publisherId": "",
-          "subscriptionId": "12345678-04d9-421c-baf8-e3b8dd62ddba",
-          "subscriptionDescription": "Pay-As-You-Go",
-          "chargeStartDate": "2019-01-01T00:00:00Z",
-          "chargeEndDate": "2019-02-01T00:00:00Z",
-          "usageDate": "2019-01-02T00:00:00Z",
-          "meterType": "1 Compute Hour - 4core",
-          "meterCategory": "Virtual Machine Licenses",
-          "meterId": "4core",
-          "meterSubCategory": "VM-Series Next Generation Firewall",
-          "meterName": "VM-Series Next Generation Firewall - VM-Series Next-Generation Firewall (Bundle 2 PAYG) - 4 Core Hours",
-          "meterRegion": "",
-          "unitOfMeasure": "1 Hour",
-          "resourceLocation": "EASTUS",
-          "consumedService": "Microsoft.Compute",
-          "resourceGroup": "ECH-PAN-RG",
-          "resourceUri": "/subscriptions/12345678-04d9-421c-baf8-e3b8dd62ddba/resourceGroups/ECH-PAN-RG/providers/Microsoft.Compute/virtualMachines/echpanfw",
-          "tags": "",
-          "additionalInfo": "{  \"ImageType\": null,  \"ServiceType\": \"Standard_D3_v2\",  \"VMName\": null,  \"VMProperties\": null,  \"UsageType\": \"ComputeHR_SW\"}",
-          "serviceInfo1": "",
-          "serviceInfo2": "",
-          "customerCountry": "",
-          "mpnId": "1234567",
-          "resellerMpnId": "",
-          "chargeType": "",
-          "unitPrice": 1.2799888920023,
-          "quantity": 24.0,
-          "unitType": "",
-          "billingPreTaxTotal": 30.7197334080551,
-          "billingCurrency": "USD",
-          "pricingPreTaxTotal": 30.7197334080551,
-          "pricingCurrency": "USD",
-          "entitlementId": "31cdf47f-b249-4edd-9319-637862d8c0b4",
-          "entitlementDescription": "Partner Subscription",
-          "pcToBCExchangeRate": 1,
-          "pcToBCExchangeRateDate": "2019-08-01T00:00:00Z",
-          "effectiveUnitPrice": 0,
-          "rateOfPartnerEarnedCredit": 0.15,
-          "rateOfCredit": 0.15,
-          "creditType": "Partner Earned Credit Applied",
-          "invoiceLineItemType": "usage_line_items",
-          "billingProvider": "marketplace",
-          "benefitOrderId": "",
-          "benefitId": "",
-          "benefitType": "Charge",
-          "attributes": {
-            "objectType": "DailyRatedUsageLineItem"
-          }
-        }
-      ],
-      "links": {
-        "self": {
-          "uri": "/invoices/unbilled/lineitems?provider=onetime&invoicelineitemtype=usagelineitems&currencycode=usd&period=previous&size=2000",
-          "method": "GET",
-          "headers": []
-        }
-      },
-      "attributes": {
-        "objectType": "Collection"
-      }
-    };
-
-
-    // let result;
-    // if (!SystemKeywords.aa) {
-    //   SystemKeywords.aa = 1;
-    //   return r1;
-    // } else {
-    //   SystemKeywords.aa = null;
-    //   return r2;
-    // }
 
     const result = await fetch(url, options);
 
@@ -2126,7 +1890,9 @@ export class SystemKeywords {
         throw new Error(`TABLE ${file} not found. Check TABLE keywords.`);
       }
       rows = await t.findAll({});
-      header = rows['dataNames'];
+      if (rows.length > 0) {
+        header = Object.keys(rows[0].dataValues)
+      }
     } else {
 
       const botId = min.instance.botId;
@@ -2151,18 +1917,15 @@ export class SystemKeywords {
       rows = results.text;
     }
 
-    // As BASIC uses arrays starting with 1 (one) as index,
-    // a ghost element is added at 0 (zero) position.
-
     let table = [];
-    table.push({ gbarray: '0' });
-    let foundIndex = 1;
+    let foundIndex = 0;
 
     // Fills the row variable.
 
     for (; foundIndex < rows.length; foundIndex++) {
       let row = {};
       const xlRow = rows[foundIndex];
+      row = xlRow.dataValues ? xlRow.dataValues : xlRow;
       for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
         const propertyName = header[colIndex];
         let value = xlRow[colIndex];
@@ -2196,11 +1959,14 @@ export class SystemKeywords {
 
       // Scans all sheet lines and compare keys.
 
-      const row = data[i];
+      let row = data[i];
       let found;
       let key1Value;
 
       if (key1Index) {
+
+        key1 = key1.charAt(0).toLowerCase() + key1.slice(1);
+
         key1Value = row[key1];
         const foundRow = key1Index[key1Value];
         if (foundRow) {
@@ -2209,22 +1975,27 @@ export class SystemKeywords {
       }
 
       if (found) {
+
+        row = this.flattenJSON(row, {}, '')
+
         let keys = Object.keys(row);
-        for (let j = 0; j < keys.length; j++) {
+        for (let j = 0; j < header.length; j++) {
+
           const columnName = header[j];
-          const value = row[keys[j]];
+          const columnNameLower = columnName.charAt(0).toLowerCase() + columnName.slice(1);
+          const value = row[columnNameLower];
 
-          if (storage) {
+          if (value !== found[columnName]) {
 
-            const obj = { id: keys[j], columnName: value };
-            await t.update(obj, { where: { key1: key1Value } });
+            if (storage) {
 
-          } else {
+              const obj = { columnName: value };
+              await t.update(obj, { where: { key1: key1Value } });
 
-            const cell = `${this.numberToLetters(j)}${i + 1}`;
-            const address = `${cell}:${cell}`;
+            } else {
 
-            if (value !== found[columnName]) {
+              const cell = `${this.numberToLetters(j)}${i + 1}`;
+              const address = `${cell}:${cell}`;
 
               await this.set({ pid, handle: null, file, address, value });
               merges++;
@@ -2233,10 +2004,27 @@ export class SystemKeywords {
 
         }
       } else {
+
+        // Check if is a tree or flat object.
+
+        const hasSubObject = (products) => {
+          for (var key in products) {
+            if (!products.hasOwnProperty(key)) continue;
+            if (typeof products[key] === "object") return true;
+          }
+          return false;
+        }
+
         let fieldsValues = [];
-        let fieldsNames = Object.keys(row);
-        for (let j = 0; j < fieldsNames.length; j++) {
-          fieldsValues.push(row[fieldsNames[j]]);
+        const fieldsNames = Object.keys(row);
+
+        if (hasSubObject(row)) {
+          fieldsValues = row;
+        }
+        else {
+          for (let j = 0; j < fieldsNames.length; j++) {
+            fieldsValues.push(row[fieldsNames[j]]);
+          }
         }
 
         if (storage) {
@@ -2250,7 +2038,7 @@ export class SystemKeywords {
       }
     }
 
-    if (table.length === 1) {
+    if (table.length === 0) {
       GBLog.info(`BASIC: MERGE ran but updated zero rows.`);
       return null;
     } else {

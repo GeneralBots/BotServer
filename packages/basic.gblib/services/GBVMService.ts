@@ -373,6 +373,7 @@ export class GBVMService extends GBService {
       // Imports npm packages for this .gbdialog conversational application.
 
       require('isomorphic-fetch');
+      const http = require('node:http');
       const createRpcClient = require("@push-rpc/core").createRpcClient;
       const createHttpClient = require("@push-rpc/http").createHttpClient;
       
@@ -454,15 +455,16 @@ export class GBVMService extends GBService {
 
       const optsRPC = {callTimeout: this.callTimeout};
       let url;
+      const agent = http.Agent({ keepAlive: true });
 
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/dk';
-      const dk = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
+      const dk = (await createRpcClient(0, () => createHttpClient(url, {agent: agent}), optsRPC)).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/sys';
-      const sys =  (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
+      const sys =  (await createRpcClient(0, () => createHttpClient(url, {agent: agent}), optsRPC)).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/wa';
-      const wa = (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
+      const wa = (await createRpcClient(0, () => createHttpClient(url, {agent: agent}), optsRPC)).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/img';
-      const img =  (await createRpcClient(0, () => createHttpClient(url), optsRPC)).remote;
+      const img =  (await createRpcClient(0, () => createHttpClient(url, {agent: agent}), optsRPC)).remote;
   
       ${code}
 

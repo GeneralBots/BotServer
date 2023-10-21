@@ -351,11 +351,11 @@ export class KeywordsExpressions {
 
         __url = __data.links?.next?.uri;
         __seekToken = __data.links?.self?.headers["MS-ContinuationToken"] 
-        __totalCount = __data["totalCount"];
+        __totalCount = __data["totalCount"] ? __data["totalCount"] : __data.length;
  
         while (__next) 
         {
-          let ${$1} = __data.items[__index];
+          let ${$1} = __data?.items ? __data?.items[__index] : __data[__index];
 `;
       }
     ];
@@ -370,21 +370,21 @@ export class KeywordsExpressions {
 
           if (__index >= __totalCount) { 
 
-            // Check if HTTP call limit has reached.
+            // Checks if HTTP call limit has reached.
 
             if (__calls < __totalCalls) {
 
-              // Perform GET request using the constructed URL
+              // Performs GET request using the constructed URL
 
               __data = await sys.get ({pid: pid, file: __url, addressOrHeaders: headers, httpUsername, httpPs});
               
-              // Update current variable handlers.
+              // Updates current variable handlers.
               
               __url = __data.links?.next?.uri;
               __seekToken = __data.links?.self?.headers["MS-ContinuationToken"] 
               __totalCount = __data["totalCount"];
               
-              index = 0;
+              __index = 0;
               __calls++;
 
             } else {
@@ -392,9 +392,8 @@ export class KeywordsExpressions {
               next = false;
 
             }
-            
-            index = index + 1;
           }               
+          __index = __index + 1;
         }`;
       }
     ];
