@@ -348,6 +348,7 @@ export class KeywordsExpressions {
         __calls = 0;
         __index = 0;
         __data = ${$2};
+        __pageMode = __data?.pageMode ? __data.pageMode : "none";
 
         __url = __data.links?.next?.uri;
         __seekToken = __data.links?.self?.headers["MS-ContinuationToken"] 
@@ -366,13 +367,15 @@ export class KeywordsExpressions {
         
         return `
             
-          // TRUE if all items are processed.
+        __index = __index + 1;
 
-          if (__index >= __totalCount) { 
+        // TRUE if all items are processed.
+
+          if (__index === __totalCount) { 
 
             // Checks if HTTP call limit has reached.
 
-            if (__calls < __totalCalls) {
+            if (__calls < __totalCalls && __pageMode === "auto") {
 
               // Performs GET request using the constructed URL
 
@@ -389,11 +392,11 @@ export class KeywordsExpressions {
 
             } else {
 
-              next = false;
+              __next = false;
 
             }
-          }               
-          __index = __index + 1;
+          }
+
         }`;
       }
     ];

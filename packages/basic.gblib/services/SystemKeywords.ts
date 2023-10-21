@@ -1512,8 +1512,20 @@ export class SystemKeywords {
 
   private flattenJSON(obj, res, extraKey, hierarchy = false) {
     for (let key in obj) {
+      if (typeof obj[key] === 'function') {
+        continue;
+      }
       if (typeof obj[key] !== 'object') {
-        res[extraKey + key] = obj[key];
+
+        // If not defined already add the flattened field.
+
+        if (!res[extraKey + key]){
+          res[extraKey + key] = obj[key];
+        }
+        else{
+          GBLog.info(`Ignoring duplicated field in flatten operation to storage: ${key}.`);
+        }
+        
       } else {
         this.flattenJSON(obj[key], res, hierarchy ? `${extraKey}${key}.` : '');
       };
@@ -1535,7 +1547,7 @@ export class SystemKeywords {
     const { min, user, params, proc } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `GET: ${url}`);
 
-    const pageMode = await DialogKeywords.getOption({ pid, name: 'pageMode' });
+    let pageMode = await DialogKeywords.getOption({ pid, name: 'pageMode' });
     let continuationToken = await
       DialogKeywords.getOption({ pid, name: `${proc.executable}-continuationToken` });
 
@@ -1585,6 +1597,11 @@ export class SystemKeywords {
         await DialogKeywords.setOption({ pid, name: 'continuationToken', value: continuationToken });
       }
     }
+    else {
+      pageMode = "none";
+    }
+
+    if (res) { res['pageMode'] = pageMode; }
 
     return res;
 
@@ -1966,7 +1983,6 @@ export class SystemKeywords {
       if (key1Index) {
 
         key1 = key1.charAt(0).toLowerCase() + key1.slice(1);
-
         key1Value = row[key1];
         const foundRow = key1Index[key1Value];
         if (foundRow) {
@@ -1977,13 +1993,12 @@ export class SystemKeywords {
       if (found) {
 
         row = this.flattenJSON(row, {}, '')
-
-        let keys = Object.keys(row);
         for (let j = 0; j < header.length; j++) {
 
           const columnName = header[j];
           const columnNameLower = columnName.charAt(0).toLowerCase() + columnName.slice(1);
-          const value = row[columnNameLower];
+          let value = row[columnNameLower];
+          if (value === undefined) { value = null; }
 
           if (value !== found[columnName]) {
 
