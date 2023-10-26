@@ -1445,6 +1445,7 @@ export class SystemKeywords {
    *
    */
   public async convert({ pid, src, dest }) {
+    
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: CONVERT '${src}' to '${dest}'`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
@@ -1523,7 +1524,7 @@ export class SystemKeywords {
           res[extraKey + key] = obj[key];
         }
         else{
-          GBLog.info(`Ignoring duplicated field in flatten operation to storage: ${key}.`);
+          GBLog.verbose(`Ignoring duplicated field in flatten operation to storage: ${key}.`);
         }
         
       } else {

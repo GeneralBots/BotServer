@@ -354,7 +354,7 @@ export class KeywordsExpressions {
         __seekToken = __data.links?.self?.headers["MS-ContinuationToken"] 
         __totalCount = __data["totalCount"] ? __data["totalCount"] : __data.length;
  
-        while (__next) 
+        while (__next && __totalCount) 
         {
           let ${$1} = __data?.items ? __data?.items[__index] : __data[__index];
 `;
