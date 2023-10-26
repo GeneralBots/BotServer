@@ -958,12 +958,12 @@ export class DialogKeywords {
         result = value;
       } else if (kind === 'name') {
         const extractEntity = text => {
-          return text.match(/[_a-zA-Z][_a-zA-Z0-9]{0,16}/gi);
+          return text.match(/[_a-zA-Z][_a-zA-Z0-9]{0,30}/gi);
         };
 
         const value = extractEntity(answer);
 
-        if (value === null || value.length != 1) {
+        if (value === null || value.length == 1) {
           await this.talk({ pid, text: 'Por favor, digite um nome válido.' });
           return await this.hear({ pid, kind, args });
         }

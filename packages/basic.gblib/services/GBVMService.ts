@@ -251,7 +251,7 @@ export class GBVMService extends GBService {
 
         const model = minBoot.core.sequelize.models[t.name];
         if (model) {
-          
+
           // Except Id, checks if has same number of fields.
 
           let equals = 0;
@@ -259,32 +259,30 @@ export class GBVMService extends GBService {
             let obj1 = t.fields[key];
             let obj2 = model['fieldRawAttributesMap'][key];
 
-            if (key !== "id"){
-              if (obj1 && obj2)
-              {
+            if (key !== "id") {
+              if (obj1 && obj2) {
                 equals++;
               }
             }
           });
-          
+
 
           if (equals != Object.keys(t.fields).length) {
             sync = true;
           }
         }
-        
+
         minBoot.core.sequelize.define(t.name, t.fields);
 
         // New table checking, if needs sync. 
         let found = false;
-        tables[0].forEach ((storageTable)=>{
-          if (storageTable['table_name'] === t.name)
-          {
+        tables[0].forEach((storageTable) => {
+          if (storageTable['table_name'] === t.name) {
             found = true;
           }
         });
 
-        sync = sync? sync: !found;
+        sync = sync ? sync : !found;
 
       });
 
@@ -295,7 +293,7 @@ export class GBVMService extends GBService {
         try {
           from.hasMany(to);
           to.belongsTo(from);
-          
+
         } catch (error) {
           throw new Error(`BASIC: Invalid relationship in ${mainName}: from ${e.from} to ${e.to} (${min.botId})... ${error.message}`);
         }
@@ -311,8 +309,7 @@ export class GBVMService extends GBService {
         });
         GBLogEx.info(min, `BASIC: Done sync for ${min.botId} storage tables...`);
       }
-      else
-      {
+      else {
         GBLogEx.verbose(min, `BASIC: TABLE keywords already up to date (${min.botId})...`);
       }
     }
