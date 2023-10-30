@@ -320,7 +320,7 @@ export class GBSSR {
     let parts = req.url.replace(`/${botId}`, '').split('?');
     let url = parts[0];
 
-    if (min && req.originalUrl && prerender && exclude) {
+    if (min && req.originalUrl && prerender && exclude && Fs.existsSync(path)) {
 
       // Reads from static HTML when a bot is crawling.
 

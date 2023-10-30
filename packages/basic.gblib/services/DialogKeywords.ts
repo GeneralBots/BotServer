@@ -800,6 +800,7 @@ export class DialogKeywords {
    *
    */
   public async hear({ pid, kind, args }) {
+    
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles first arg as an array of args.
@@ -955,7 +956,7 @@ export class DialogKeywords {
           return await this.hear({ pid, kind, args });
         }
 
-        result = value;
+        result = answer;
       } else if (kind === 'name') {
         const extractEntity = text => {
           return text.match(/[_a-zA-Z][_a-zA-Z0-9]{0,30}/gi);
@@ -968,7 +969,7 @@ export class DialogKeywords {
           return await this.hear({ pid, kind, args });
         }
 
-        result = value;
+        result = answer;
       } else if (kind === 'integer') {
         const extractEntity = text => {
           return text.match(/\d+/gi);
@@ -981,13 +982,8 @@ export class DialogKeywords {
           return await this.hear({ pid, kind, args });
         }
 
-        result = value;
+        result = answer;
       } else if (kind === 'date') {
-        const extractEntity = text => {
-          return text.match(
-            /(^(((0[1-9]|1[0-9]|2[0-8])[\/](0[1-9]|1[012]))|((29|30|31)[\/](0[13578]|1[02]))|((29|30)[\/](0[4,6,9]|11)))[\/](19|[2-9][0-9])\d\d$)|(^29[\/]02[\/](19|[2-9][0-9])(00|04|08|12|16|20|24|28|32|36|40|44|48|52|56|60|64|68|72|76|80|84|88|92|96)$)/gi
-          );
-        };
 
         const parseDate = str => {
           function pad(x) {
@@ -1020,7 +1016,7 @@ export class DialogKeywords {
           return await this.hear({ pid, kind, args });
         }
 
-        result = value;
+        result = answer;
       } else if (kind === 'money') {
         const extractEntity = (text: string) => {
           // https://github.com/GeneralBots/BotServer/issues/307
@@ -1084,7 +1080,7 @@ export class DialogKeywords {
           return await this.hear({ pid, kind, args });
         }
 
-        result = value[0];
+        result = answer;
       } else if (kind === 'menu') {
         const list = args;
         result = null;
