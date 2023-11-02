@@ -586,22 +586,32 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
         return;
       }
-      resolve(instance);
       
+      const sleep = ms => {
+        return new Promise(resolve => {
+          setTimeout(resolve, ms);
+        });
+      };
+
+      await sleep(30000);
+
       // MSFT has changed without warnings. 
-      // try {
-      //   //tslint:disable-next-line:max-line-length
-      //   query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${this.apiVersion}`;
-      //   url = urlJoin(baseUrl, query);
-      //   req = AzureDeployerService.createRequestObject(url, accessToken, 'POST', JSON.stringify(parameters));
-      //   const resChannel = await httpClient.sendRequest(req);
-      //   const key = JSON.parse(resChannel.bodyAsText).properties.properties.sites[0].key;
-      //   instance.webchatKey = key;
-      //   instance.whatsappBotKey = key;
-      //   resolve(instance);
-      // } catch (error) {
-      //   reject(error);
-      // }
+
+      try {
+
+        //tslint:disable-next-line:max-line-length.
+        
+        query = `subscriptions/${subscriptionId}/resourceGroups/${group}/providers/Microsoft.BotService/botServices/${botId}/channels/WebChatChannel/listChannelWithKeys?api-version=${this.apiVersion}`;
+        url = urlJoin(baseUrl, query);
+        req = AzureDeployerService.createRequestObject(url, accessToken, 'POST', JSON.stringify(parameters));
+        const resChannel = await httpClient.sendRequest(req);
+        const key = JSON.parse(resChannel.bodyAsText).properties.properties.sites[0].key;
+        instance.webchatKey = key;
+        instance.whatsappBotKey = key;
+        resolve(instance);
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
