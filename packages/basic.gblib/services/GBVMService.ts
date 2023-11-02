@@ -723,7 +723,11 @@ export class GBVMService extends GBService {
 
     let variables = [];
 
-    variables['aadToken'] = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, false);
+    try {
+      variables['aadToken'] = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, false);
+    } catch (error) {
+      variables['aadToken'] = 'ERROR: Configure /setupSecurity before using aadToken variable.';
+    }   
 
     // Adds all .gbot params as variables.
 
