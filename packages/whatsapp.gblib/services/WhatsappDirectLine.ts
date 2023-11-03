@@ -123,7 +123,7 @@ export class WhatsappDirectLine extends GBService {
     const client = await new SwaggerClient({
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
       requestInterceptor: req => {
-        req.headers['Authorization'] = `Bearer ${this.min.instance.whatsappBotKey}`;
+        req.headers['Authorization'] = `Bearer ${this.min.instance.webchatKey}`;
       }
     });
     this.directLineClient = client;
@@ -318,7 +318,7 @@ export class WhatsappDirectLine extends GBService {
         // If there is a number specified, checks if it
         // is related to a custom bot and reroutes immediately.
 
-        if (newThis !== this && newThis.min.botId !== GBServer.globals.minBoot.botId) {
+        if (newThis && newThis !== this && newThis.min.botId !== GBServer.globals.minBoot.botId) {
           await newThis.received(req, res);
 
           return;

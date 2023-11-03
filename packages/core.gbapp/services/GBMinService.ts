@@ -746,7 +746,7 @@ export class GBMinService {
       min.whatsAppDirectLine = new WhatsappDirectLine(
         min,
         min.botId,
-        min.instance.whatsappBotKey,
+        min.instance.webchatKey,
         min.instance.whatsappServiceKey,
         min.instance.whatsappServiceNumber,
         min.instance.whatsappServiceUrl,
@@ -759,7 +759,7 @@ export class GBMinService {
         min.whatsAppDirectLine = new WhatsappDirectLine(
           min,
           min.botId,
-          min.instance.whatsappBotKey,
+          min.instance.webchatKey,
           minBoot.instance.whatsappServiceKey,
           minBoot.instance.whatsappServiceNumber,
           minBoot.instance.whatsappServiceUrl,
