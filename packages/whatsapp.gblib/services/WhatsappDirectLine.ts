@@ -47,12 +47,12 @@ import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import qrcode from 'qrcode-terminal';
 import express from 'express';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
-import pkg, { WAState } from 'whatsapp-web.js';
+import pkg from 'whatsapp-web.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import e from 'express';
-const { List, Buttons, Client, MessageMedia } = pkg;
+const { WAState, List, Buttons, Client, MessageMedia } = pkg;
 
 /**
  * Support for Whatsapp.
