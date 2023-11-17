@@ -719,15 +719,36 @@ export class GBVMService extends GBService {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    // These variables will be automatically be available as normal BASIC variables.
-
     let variables = [];
 
+    // Find all tokens in .gbot Config.
+
+    const strFind = ' Client ID';
+    const tokens = await min.core['findParam'](min.instance, strFind);
+    await CollectionUtil.asyncForEach(tokens,async t => {
+      const tokenName = t.replace(strFind, '');
+      try {
+        variables[t] = await (min.adminService as any)['acquireElevatedToken']
+          (min.instance.instanceId, false,
+            min.core.getParam<string>(min.instance, `${tokenName} Client ID`, null),
+            min.core.getParam<string>(min.instance, `${tokenName} Client Secret`, null),
+            min.core.getParam<string>(min.instance, `${tokenName} Host`, null),
+            min.core.getParam<string>(min.instance, `${tokenName} Tenant`, null)
+
+          );
+      } catch (error) {
+        variables[t] = 'ERROR: Configure /setupSecurity before using token variables.';
+      }
+    });
+
+    // These variables will be automatically be available as normal BASIC variables.
+
     try {
-      variables['aadToken'] = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, false);
+      variables['aadToken'] = await (min.adminService as any)['acquireElevatedToken']
+        (min.instance.instanceId, false);
     } catch (error) {
       variables['aadToken'] = 'ERROR: Configure /setupSecurity before using aadToken variable.';
-    }   
+    }
 
     // Adds all .gbot params as variables.
 

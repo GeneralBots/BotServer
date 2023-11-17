@@ -230,17 +230,23 @@ export class GBAdminService implements IGBAdminService {
     return obj.value;
   }
 
-  public async acquireElevatedToken(instanceId: number, root: boolean = false): Promise<string> {
+  public async acquireElevatedToken(instanceId: number, root: boolean = false,
+    tokenName: string = null,
+    clientId: string = null,
+    clientSecret: string = null,
+    host: string = null,
+    tenant: string = null
+  ): Promise<string> {
 
     if (root) {
       const minBoot = GBServer.globals.minBoot;
       instanceId = minBoot.instance.instanceId;
     }
-    GBLog.info(`Acquiring token for instanceId: ${instanceId} (root: ${root}).`);
+    GBLog.info(`Acquiring token for instanceId: ${instanceId} ${tokenName} (root: ${root}).`);
 
     let expiresOnV;
     try {
-      expiresOnV = await this.getValue(instanceId, 'expiresOn');
+      expiresOnV = await this.getValue(instanceId, `${tokenName}expiresOn`);
     } catch (error) {
       throw new Error(`/setupSecurity is required before running /publish.`);
     }
@@ -250,23 +256,23 @@ export class GBAdminService implements IGBAdminService {
 
       const expiresOn = new Date(expiresOnV);
       if (expiresOn.getTime() > new Date().getTime()) {
-        const accessToken = await this.getValue(instanceId, 'accessToken');
+        const accessToken = await this.getValue(instanceId, `${tokenName}accessToken`);
         resolve(accessToken);
       } else {
         const authorizationUrl = urlJoin(
-          instance.authenticatorAuthorityHostUrl,
-          instance.authenticatorTenant,
+          host ? host : instance.authenticatorAuthorityHostUrl,
+          tenant ? tenant : instance.authenticatorTenant,
           '/oauth2/authorize'
         );
 
-        const refreshToken = await this.getValue(instanceId, 'refreshToken');
-        const resource = 'https://graph.microsoft.com';
+        const refreshToken = await this.getValue(instanceId, `${tokenName}refreshToken`);
+        const resource = clientId? '': 'https://graph.microsoft.com';
         const authenticationContext = new AuthenticationContext(authorizationUrl);
 
         authenticationContext.acquireTokenWithRefreshToken(
           refreshToken,
-          instance.marketplaceId,
-          instance.marketplacePassword,
+          clientId ? clientId : instance.marketplaceId,
+          clientId ? clientSecret : instance.marketplacePassword,
           resource,
           async (err, res) => {
             if (err !== null) {
@@ -274,9 +280,9 @@ export class GBAdminService implements IGBAdminService {
             } else {
               const token = res as TokenResponse;
               try {
-                await this.setValue(instanceId, 'accessToken', token.accessToken);
-                await this.setValue(instanceId, 'refreshToken', token.refreshToken);
-                await this.setValue(instanceId, 'expiresOn', token.expiresOn.toString());
+                await this.setValue(instanceId, `${tokenName}accessToken`, token.accessToken);
+                await this.setValue(instanceId, `${tokenName}refreshToken`, token.refreshToken);
+                await this.setValue(instanceId, `${tokenName}expiresOn`, token.expiresOn.toString());
                 resolve(token.accessToken);
               } catch (error) {
                 reject(err);

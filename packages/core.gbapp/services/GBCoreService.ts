@@ -400,7 +400,7 @@ ENDPOINT_UPDATE=true
   public async getApplicationsByInstanceId(appPackages, instanceId: number) {
     const options = { where: { instanceId: instanceId } };
     const apps = await GuaribasApplications.findAll(options);
-  
+
     let matchingAppPackages = [];
     await CollectionUtil.asyncForEach(appPackages, async appPackage => {
       const filenameOnly = Path.basename(appPackage.name);
@@ -409,10 +409,10 @@ ENDPOINT_UPDATE=true
         matchingAppPackages.push(appPackage);
       }
     });
-    
+
     return matchingAppPackages;
   }
-  
+
   /**
    * Loads all bot instances from object storage, if it's formatted.
    */
@@ -429,7 +429,7 @@ ENDPOINT_UPDATE=true
         await CollectionUtil.asyncForEach(instances, async instance => {
           GBLog.info(`Updating bot endpoint for ${instance.botId}...`);
           try {
-            
+
             await installationDeployer.updateBotProxy(
               instance.botId,
               GBConfigService.get('CLOUD_GROUP'),
@@ -698,4 +698,25 @@ ENDPOINT_UPDATE=true
 
     return value;
   }
+
+  /**
+   * Finds a dynamic param from instance.    *
+   */
+  public async findParam<T>(instance: IGBInstance, criteria: string) {
+    let params = null;
+    const list = [];
+    if (instance.params) {
+      params = JSON.parse(instance.params);
+    }
+
+    Object.keys(params).forEach(e => {
+      if (criteria.toLowerCase().indexOf(e.toLowerCase())) {
+        list.push(e);
+      }
+    });
+
+    return list;
+  }
+
+
 }

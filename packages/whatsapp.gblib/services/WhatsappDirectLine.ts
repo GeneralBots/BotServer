@@ -1149,11 +1149,6 @@ export class WhatsappDirectLine extends GBService {
           await sec.updateUserHearOnDialog(user.userId, null);
           await (activeMin as any).whatsAppDirectLine.received(req, res);
         } else {
-          await (activeMin as any).whatsAppDirectLine.sendToDevice(
-            id,
-            `Olá! Seja bem-vinda(o)!\nMe chamo ${activeMin.instance.title}. Como posso ajudar? Pode me falar que eu te ouço, me manda um aúdio.`,
-            null
-          );
           if (res) {
             res.end();
           }

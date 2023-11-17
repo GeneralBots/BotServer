@@ -491,16 +491,27 @@ export class GBMinService {
    */
   private handleOAuthTokenRequests(server: any, min: GBMinInstance, instance: IGBInstance) {
     server.get(`/${min.instance.botId}/token`, async (req, res) => {
+
+      const tokenName = req.params['value'];
+
       // Checks request state by reading AntiCSRFAttackState from GB Admin infrastructure.
 
-      const state = await min.adminService.getValue(instance.instanceId, 'AntiCSRFAttackState');
+      const state = await min.adminService.getValue(instance.instanceId, `${tokenName}AntiCSRFAttackState`);
       if (req.query.state !== state) {
         const msg = 'WARNING: state field was not provided as anti-CSRF token';
         GBLog.error(msg);
         throw new Error(msg);
       }
+
+      const clientId  = min.core.getParam<string>(min.instance, `${tokenName} Client ID`, null),
+      const clientSecret  = min.core.getParam<string>(min.instance, `${tokenName} Client Secret`, null),
+      const host = min.core.getParam<string>(min.instance, `${tokenName} Host`, null),
+      const tenant = min.core.getParam<string>(min.instance, `${tokenName} Tenant`, null)
+
       const authenticationContext = new AuthenticationContext.AuthenticationContext(
-        urlJoin(min.instance.authenticatorAuthorityHostUrl, min.instance.authenticatorTenant)
+        urlJoin(
+          tokenName? host: min.instance.authenticatorAuthorityHostUrl, 
+          tokenName? tenant: min.instance.authenticatorTenant)
       );
       const resource = 'https://graph.microsoft.com';
 
@@ -510,20 +521,21 @@ export class GBMinService {
         req.query.code,
         urlJoin(process.env.BOT_URL, min.instance.botId, '/token'),
         resource,
-        instance.marketplaceId,
-        instance.marketplacePassword,
+        tokenName? clientId: instance.marketplaceId,
+        tokenName? clientSecret: instance.marketplacePassword,
         async (err, token) => {
           if (err) {
             const msg = `handleOAuthTokenRequests: Error acquiring token: ${err}`;
             GBLog.error(msg);
             res.send(msg);
           } else {
+            
             // Saves token to the database.
 
-            await this.adminService.setValue(instance.instanceId, 'accessToken', token['accessToken']);
-            await this.adminService.setValue(instance.instanceId, 'refreshToken', token['refreshToken']);
-            await this.adminService.setValue(instance.instanceId, 'expiresOn', token['expiresOn'].toString());
-            await this.adminService.setValue(instance.instanceId, 'AntiCSRFAttackState', null);
+            await this.adminService.setValue(instance.instanceId, `${tokenName}accessToken`, token['accessToken']);
+            await this.adminService.setValue(instance.instanceId, `${tokenName}refreshToken`, token['refreshToken']);
+            await this.adminService.setValue(instance.instanceId, `${tokenName}expiresOn`, token['expiresOn'].toString());
+            await this.adminService.setValue(instance.instanceId, `${tokenName}AntiCSRFAttackState`, null);
 
             // Inform the home for default .gbui after finishing token retrival.
 
