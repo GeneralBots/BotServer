@@ -208,7 +208,7 @@ export class GBMinService {
     }
 
     // Loads API.
-    
+
     await this.ensureAPI();
 
     // Loads schedules.
@@ -503,17 +503,17 @@ export class GBMinService {
         throw new Error(msg);
       }
 
-      const clientId  = min.core.getParam<string>(min.instance, `${tokenName} Client ID`, null),
-      const clientSecret  = min.core.getParam<string>(min.instance, `${tokenName} Client Secret`, null),
+      const clientId = min.core.getParam<string>(min.instance, `${tokenName} Client ID`, null),
+      const clientSecret = min.core.getParam<string>(min.instance, `${tokenName} Client Secret`, null),
       const host = min.core.getParam<string>(min.instance, `${tokenName} Host`, null),
       const tenant = min.core.getParam<string>(min.instance, `${tokenName} Tenant`, null)
 
       const authenticationContext = new AuthenticationContext.AuthenticationContext(
         urlJoin(
-          tokenName? host: min.instance.authenticatorAuthorityHostUrl, 
-          tokenName? tenant: min.instance.authenticatorTenant)
+          tokenName ? host : min.instance.authenticatorAuthorityHostUrl,
+          tokenName ? tenant : min.instance.authenticatorTenant)
       );
-      const resource = 'https://graph.microsoft.com';
+      const resource = tokenName ? '' : 'https://graph.microsoft.com';
 
       // Calls MSFT to get token.
 
@@ -521,15 +521,18 @@ export class GBMinService {
         req.query.code,
         urlJoin(process.env.BOT_URL, min.instance.botId, '/token'),
         resource,
-        tokenName? clientId: instance.marketplaceId,
-        tokenName? clientSecret: instance.marketplacePassword,
+        tokenName ? clientId : instance.marketplaceId,
+        tokenName ? clientSecret : instance.marketplacePassword,
         async (err, token) => {
           if (err) {
+            
             const msg = `handleOAuthTokenRequests: Error acquiring token: ${err}`;
+            
             GBLog.error(msg);
             res.send(msg);
+
           } else {
-            
+
             // Saves token to the database.
 
             await this.adminService.setValue(instance.instanceId, `${tokenName}accessToken`, token['accessToken']);
@@ -1043,9 +1046,9 @@ export class GBMinService {
             return;
           }
         } else if (context.activity.type === 'message') {
-          
+
           // Processes messages activities.
-          
+
           const pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null);
           step.context.activity['pid'] = pid;
 
@@ -1492,7 +1495,7 @@ export class GBMinService {
   public async ensureAPI() {
 
     const mins = GBServer.globals.minInstances;
-    
+
     function getRemoteId(ctx: Koa.Context) {
       return '1'; // Each bot has its own API.
     }
@@ -1507,7 +1510,7 @@ export class GBMinService {
             }
           );
         }
-        else{
+        else {
           resolve(true);
           GBLogEx.info(0, 'Loading General Bots API...');
         }
@@ -1522,20 +1525,20 @@ export class GBMinService {
 
       let dialogs = {};
       await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
-  
+
 
         const f = new Function()
 
-        dialogs[script] = async (data)=> {
+        dialogs[script] = async (data) => {
           let params;
-          if (data){
+          if (data) {
             params = JSON.parse(data);
           }
 
           await GBVMService.callVM(script, min, null, null, null, false, params);
-        }      
-        });
-  
+        }
+      });
+
       const proxy = {
         dk: new DialogKeywords(),
         wa: new WebAutomationServices(),
