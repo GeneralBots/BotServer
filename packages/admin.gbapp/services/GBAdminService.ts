@@ -231,7 +231,7 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public async acquireElevatedToken(instanceId: number, root: boolean = false,
-    tokenName: string = null,
+    tokenName: string = '',
     clientId: string = null,
     clientSecret: string = null,
     host: string = null,
@@ -259,20 +259,21 @@ export class GBAdminService implements IGBAdminService {
         const accessToken = await this.getValue(instanceId, `${tokenName}accessToken`);
         resolve(accessToken);
       } else {
+        const oauth2 = tokenName ? 'oauth' : 'oauth2';
         const authorizationUrl = urlJoin(
-          host ? host : instance.authenticatorAuthorityHostUrl,
-          tenant ? tenant : instance.authenticatorTenant,
-          '/oauth2/authorize'
+          tokenName ? host : instance.authenticatorAuthorityHostUrl,
+          tokenName ? tenant : instance.authenticatorTenant,
+          `/${oauth2}/authorize`
         );
 
         const refreshToken = await this.getValue(instanceId, `${tokenName}refreshToken`);
-        const resource = clientId? '': 'https://graph.microsoft.com';
+        const resource = tokenName ? '' : 'https://graph.microsoft.com';
         const authenticationContext = new AuthenticationContext(authorizationUrl);
 
         authenticationContext.acquireTokenWithRefreshToken(
           refreshToken,
-          clientId ? clientId : instance.marketplaceId,
-          clientId ? clientSecret : instance.marketplacePassword,
+          tokenName ? clientId : instance.marketplaceId,
+          tokenName ? clientSecret : instance.marketplacePassword,
           resource,
           async (err, res) => {
             if (err !== null) {

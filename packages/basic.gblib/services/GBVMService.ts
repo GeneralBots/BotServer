@@ -728,8 +728,9 @@ export class GBVMService extends GBService {
     await CollectionUtil.asyncForEach(tokens,async t => {
       const tokenName = t.replace(strFind, '');
       try {
-        variables[t] = await (min.adminService as any)['acquireElevatedToken']
+        variables[tokenName] = await (min.adminService as any)['acquireElevatedToken']
           (min.instance.instanceId, false,
+            tokenName,
             min.core.getParam<string>(min.instance, `${tokenName} Client ID`, null),
             min.core.getParam<string>(min.instance, `${tokenName} Client Secret`, null),
             min.core.getParam<string>(min.instance, `${tokenName} Host`, null),

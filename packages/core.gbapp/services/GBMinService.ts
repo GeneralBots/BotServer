@@ -490,9 +490,13 @@ export class GBMinService {
    * on https://<gbhost>/<BotId>/token URL.
    */
   private handleOAuthTokenRequests(server: any, min: GBMinInstance, instance: IGBInstance) {
+
     server.get(`/${min.instance.botId}/token`, async (req, res) => {
 
-      const tokenName = req.params['value'];
+      let tokenName = req.query['value'];
+      if (!tokenName) {
+        tokenName = '';
+      }
 
       // Checks request state by reading AntiCSRFAttackState from GB Admin infrastructure.
 
@@ -503,49 +507,93 @@ export class GBMinService {
         throw new Error(msg);
       }
 
-      const clientId = min.core.getParam<string>(min.instance, `${tokenName} Client ID`, null),
-      const clientSecret = min.core.getParam<string>(min.instance, `${tokenName} Client Secret`, null),
-      const host = min.core.getParam<string>(min.instance, `${tokenName} Host`, null),
-      const tenant = min.core.getParam<string>(min.instance, `${tokenName} Tenant`, null)
+      const clientId = min.core.getParam<string>(min.instance, `${tokenName} Client ID`, null);
+      const clientSecret = min.core.getParam<string>(min.instance, `${tokenName} Client Secret`, null);
+      const host = min.core.getParam<string>(min.instance, `${tokenName} Host`, null);
+      const tenant = min.core.getParam<string>(min.instance, `${tokenName} Tenant`, null);
 
-      const authenticationContext = new AuthenticationContext.AuthenticationContext(
-        urlJoin(
-          tokenName ? host : min.instance.authenticatorAuthorityHostUrl,
-          tokenName ? tenant : min.instance.authenticatorTenant)
-      );
-      const resource = tokenName ? '' : 'https://graph.microsoft.com';
+      if (tokenName) {
+        const code = req?.query?.code;
 
-      // Calls MSFT to get token.
+        let url = urlJoin(
+          host,
+          tenant, 'oauth/token');
+        let buff = new Buffer(`${clientId}:${clientSecret}`);
+        const base64 = buff.toString('base64');
 
-      authenticationContext.acquireTokenWithAuthorizationCode(
-        req.query.code,
-        urlJoin(process.env.BOT_URL, min.instance.botId, '/token'),
-        resource,
-        tokenName ? clientId : instance.marketplaceId,
-        tokenName ? clientSecret : instance.marketplacePassword,
-        async (err, token) => {
-          if (err) {
-            
-            const msg = `handleOAuthTokenRequests: Error acquiring token: ${err}`;
-            
-            GBLog.error(msg);
-            res.send(msg);
+        const options = {
+          method: 'POST',
+          headers: {  
+            Accept: '1.0',
+            Authorization: `Basic ${base64}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({
+            'grant_type': 'authorization_code',
+            'code': code
+          })
+        };
+        const result = await fetch(url, options);
 
-          } else {
-
-            // Saves token to the database.
-
-            await this.adminService.setValue(instance.instanceId, `${tokenName}accessToken`, token['accessToken']);
-            await this.adminService.setValue(instance.instanceId, `${tokenName}refreshToken`, token['refreshToken']);
-            await this.adminService.setValue(instance.instanceId, `${tokenName}expiresOn`, token['expiresOn'].toString());
-            await this.adminService.setValue(instance.instanceId, `${tokenName}AntiCSRFAttackState`, null);
-
-            // Inform the home for default .gbui after finishing token retrival.
-
-            res.redirect(process.env.BOT_URL);
-          }
+        if (result.status != 200) {
+          throw new Error(`handleOAuthTokenRequests error: ${result.status}: ${result.statusText}.`)
         }
-      );
+
+        const text = await result.text();
+        const token = JSON.parse(text);
+
+        // Saves token to the database.
+
+        await this.adminService.setValue(instance.instanceId, 
+          `${tokenName}accessToken`, token['accessToken']?token['accessToken']:token['access_token']);
+        await this.adminService.setValue(instance.instanceId, 
+          `${tokenName}refreshToken`, token['refreshToken']?token['refreshToken']:token['refresh_token']);
+        await this.adminService.setValue(instance.instanceId, 
+          `${tokenName}expiresOn`, token['expiresOn']?token['expiresOn'].toString():token['expires_in'].toString());
+        await this.adminService.setValue(instance.instanceId, `${tokenName}AntiCSRFAttackState`, null);
+
+
+      }
+      else {
+        const authenticationContext = new AuthenticationContext.AuthenticationContext(
+          urlJoin(
+            tokenName ? host : min.instance.authenticatorAuthorityHostUrl,
+            tokenName ? tenant : min.instance.authenticatorTenant)
+        );
+        const resource = 'https://graph.microsoft.com';
+
+        // Calls MSFT to get token.
+
+        authenticationContext.acquireTokenWithAuthorizationCode(
+          req.query.code,
+          urlJoin(process.env.BOT_URL, min.instance.botId, '/token'),
+          resource,
+          tokenName ? clientId : instance.marketplaceId,
+          tokenName ? clientSecret : instance.marketplacePassword,
+          async (err, token) => {
+            if (err) {
+
+              const msg = `handleOAuthTokenRequests: Error acquiring token: ${err}`;
+
+              GBLog.error(msg);
+              res.send(msg);
+
+            } else {
+
+              // Saves token to the database.
+
+              await this.adminService.setValue(instance.instanceId, `${tokenName}accessToken`, token['accessToken']);
+              await this.adminService.setValue(instance.instanceId, `${tokenName}refreshToken`, token['refreshToken']);
+              await this.adminService.setValue(instance.instanceId, `${tokenName}expiresOn`, token['expiresOn'].toString());
+              await this.adminService.setValue(instance.instanceId, `${tokenName}AntiCSRFAttackState`, null);
+
+              // Inform the home for default .gbui after finishing token retrival.
+
+              res.redirect(process.env.BOT_URL);
+            }
+          }
+        );
+      }
     });
   }
 

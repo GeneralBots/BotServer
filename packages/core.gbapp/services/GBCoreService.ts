@@ -695,6 +695,9 @@ ENDPOINT_UPDATE=true
         value = minBoot.instance[name];
       }
     }
+    if (value === undefined) {
+       value = null; 
+    }
 
     return value;
   }
@@ -710,7 +713,7 @@ ENDPOINT_UPDATE=true
     }
 
     Object.keys(params).forEach(e => {
-      if (criteria.toLowerCase().indexOf(e.toLowerCase())) {
+      if (e.toLowerCase().indexOf(criteria.toLowerCase()) !== -1) {
         list.push(e);
       }
     });
