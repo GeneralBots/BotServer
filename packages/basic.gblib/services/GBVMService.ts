@@ -213,7 +213,7 @@ export class GBVMService extends GBService {
           case 'key':
             return { key: 'STRING' }; // Assuming key is a string data type
           case 'number':
-              return { key: 'INTEGER' };
+              return { key: 'BIGINT' };
           case 'integer':
             return { key: 'INTEGER' };
           case 'double':
@@ -295,9 +295,7 @@ export class GBVMService extends GBService {
         const to = minBoot.core.sequelize.models[e.to];
 
         try {
-          from.hasMany(to);
-          to.belongsTo(from);
-
+          to.hasMany(from);
         } catch (error) {
           throw new Error(`BASIC: Invalid relationship in ${mainName}: from ${e.from} to ${e.to} (${min.botId})... ${error.message}`);
         }

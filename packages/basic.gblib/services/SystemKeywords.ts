@@ -661,11 +661,36 @@ export class SystemKeywords {
     const definition = minBoot.core.sequelize.models[table];
 
     let out = [];
+    let src = {}, dst = {};
+
+    // Flattern JSON to a table.
+
+    src = this.flattenJSON(fieldsValues,  {}, '_')
+
+    // Uppercases fields.
+    let i = 0;
+    Object.keys(src).forEach(fieldSrc => {
+      const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
+      
+      dst[field] = src[fieldSrc];
+      i++;
+    });
+
+    return await definition.create(dst);
+  }
+
+  public async saveToStorageWithJSON({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
+
+    GBLog.info(`BASIC: Saving to storage '${table}' (SAVE).`);
+    const minBoot = GBServer.globals.minBoot as any;
+    const definition = minBoot.core.sequelize.models[table];
+
+    let out = [];
     let data = {}, data2 = {};
 
     // Flattern JSON to a table.
 
-    data = this.flattenJSON(fieldsValues, {}, '')
+    data = this.flattenJSON(fieldsValues,  {}, '_')
 
     // Uppercases fields.
 
@@ -1993,7 +2018,7 @@ export class SystemKeywords {
 
       if (found) {
 
-        row = this.flattenJSON(row, {}, '')
+        row = this.flattenJSON(row, {}, '_')
         for (let j = 0; j < header.length; j++) {
 
           const columnName = header[j];
@@ -2023,10 +2048,10 @@ export class SystemKeywords {
 
         // Check if is a tree or flat object.
 
-        const hasSubObject = (products) => {
-          for (var key in products) {
-            if (!products.hasOwnProperty(key)) continue;
-            if (typeof products[key] === "object") return true;
+        const hasSubObject = (t) => {
+          for (var key in t) {
+            if (!t.hasOwnProperty(key)) continue;
+            if (typeof t[key] === "object") return true;
           }
           return false;
         }
