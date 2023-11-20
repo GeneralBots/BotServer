@@ -548,8 +548,11 @@ export class GBMinService {
           `${tokenName}accessToken`, token['accessToken']?token['accessToken']:token['access_token']);
         await this.adminService.setValue(instance.instanceId, 
           `${tokenName}refreshToken`, token['refreshToken']?token['refreshToken']:token['refresh_token']);
+
         await this.adminService.setValue(instance.instanceId, 
-          `${tokenName}expiresOn`, token['expiresOn']?token['expiresOn'].toString():token['expires_in'].toString());
+          `${tokenName}expiresOn`, token['expiresOn'] ?
+          token['expiresOn'].toString():
+          new Date (Date.now() + token['expires_in']));
         await this.adminService.setValue(instance.instanceId, `${tokenName}AntiCSRFAttackState`, null);
 
 

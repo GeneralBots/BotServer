@@ -212,10 +212,14 @@ export class GBVMService extends GBService {
             return { key: 'UUID' };
           case 'key':
             return { key: 'STRING' }; // Assuming key is a string data type
+          case 'number':
+              return { key: 'INTEGER' };
           case 'integer':
             return { key: 'INTEGER' };
           case 'double':
             return { key: 'FLOAT' };
+          case 'float':
+              return { key: 'FLOAT' };
           case 'date':
             return { key: 'DATE' };
           case 'boolean':
@@ -525,9 +529,10 @@ export class GBVMService extends GBService {
   }
 
   public static normalizeQuotes(text: any) {
-    text = text.replace(/\¨/gm, '"');
-    text = text.replace(/\“/gm, '"');
-    text = text.replace(/\”/gm, '"');
+    text = text.replace(/\"/gm, '`');
+    text = text.replace(/\¨/gm, '`');
+    text = text.replace(/\“/gm, '`');
+    text = text.replace(/\”/gm, '`');
     text = text.replace(/\‘/gm, "'");
     text = text.replace(/\’/gm, "'");
 

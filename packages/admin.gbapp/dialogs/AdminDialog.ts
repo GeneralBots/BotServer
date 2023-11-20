@@ -425,14 +425,14 @@ export class AdminDialog extends IGBDialog {
           if (!tokenName) {
             min.instance.authenticatorAuthorityHostUrl = step.activeDialog.state.authenticatorAuthorityHostUrl;
             min.instance.authenticatorTenant = step.activeDialog.state.authenticatorTenant;
-          }
+          
 
           await min.adminService.updateSecurityInfo(
             min.instance.instanceId,
             tokenName ? step.activeDialog.state.tenant : step.activeDialog.state.authenticatorTenant,
             tokenName ? step.activeDialog.state.host : step.activeDialog.state.authenticatorAuthorityHostUrl
           );
-
+          }
           const locale = step.context.activity.locale;
           const buf = Buffer.alloc(16);
           const state = `${min.instance.instanceId}${crypto.randomFillSync(buf).toString('hex')}`;

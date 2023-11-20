@@ -238,6 +238,7 @@ export class GBAdminService implements IGBAdminService {
     tenant: string = null
   ): Promise<string> {
 
+
     if (root) {
       const minBoot = GBServer.globals.minBoot;
       instanceId = minBoot.instance.instanceId;
@@ -251,6 +252,7 @@ export class GBAdminService implements IGBAdminService {
       throw new Error(`/setupSecurity is required before running /publish.`);
     }
 
+
     return new Promise<string>(async (resolve, reject) => {
       const instance = await this.core.loadInstanceById(instanceId);
 
@@ -259,38 +261,84 @@ export class GBAdminService implements IGBAdminService {
         const accessToken = await this.getValue(instanceId, `${tokenName}accessToken`);
         resolve(accessToken);
       } else {
-        const oauth2 = tokenName ? 'oauth' : 'oauth2';
-        const authorizationUrl = urlJoin(
-          tokenName ? host : instance.authenticatorAuthorityHostUrl,
-          tokenName ? tenant : instance.authenticatorTenant,
-          `/${oauth2}/authorize`
-        );
 
-        const refreshToken = await this.getValue(instanceId, `${tokenName}refreshToken`);
-        const resource = tokenName ? '' : 'https://graph.microsoft.com';
-        const authenticationContext = new AuthenticationContext(authorizationUrl);
+        if (tokenName && !root) {
 
-        authenticationContext.acquireTokenWithRefreshToken(
-          refreshToken,
-          tokenName ? clientId : instance.marketplaceId,
-          tokenName ? clientSecret : instance.marketplacePassword,
-          resource,
-          async (err, res) => {
-            if (err !== null) {
-              reject(err);
-            } else {
-              const token = res as TokenResponse;
-              try {
-                await this.setValue(instanceId, `${tokenName}accessToken`, token.accessToken);
-                await this.setValue(instanceId, `${tokenName}refreshToken`, token.refreshToken);
-                await this.setValue(instanceId, `${tokenName}expiresOn`, token.expiresOn.toString());
-                resolve(token.accessToken);
-              } catch (error) {
+          const refreshToken = await this.getValue(instanceId, `${tokenName}refreshToken`);
+
+          let url = urlJoin(
+            host,
+            tenant, 'oauth/token');
+          let buff = new Buffer(`${clientId}:${clientSecret}`);
+          const base64 = buff.toString('base64');
+
+          const options = {
+            method: 'POST',
+            headers: {
+              Accept: '1.0',
+              Authorization: `Basic ${base64}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+              'grant_type': 'refresh_token',
+              'refresh_token': refreshToken
+            })
+          };
+          const result = await fetch(url, options);
+
+          if (result.status != 200) {
+            throw new Error(`acquireElevatedToken error: ${result.status}: ${result.statusText}.`)
+          }
+
+          const text = await result.text();
+          const token = JSON.parse(text);
+
+          // Saves token to the database.
+
+          await this.setValue(instanceId, `${tokenName}accessToken`, token['access_token']);
+          await this.setValue(instanceId, `${tokenName}refreshToken`, token['refresh_token']);
+          await this.setValue(instanceId, `${tokenName}expiresOn`,
+            new Date(Date.now() + token['expires_in']).toString());
+          await this.setValue(instanceId, `${tokenName}AntiCSRFAttackState`, null);
+
+          resolve(token['access_token']);
+
+        }
+        else {
+
+          const oauth2 = tokenName ? 'oauth' : 'oauth2';
+          const authorizationUrl = urlJoin(
+            tokenName ? host : instance.authenticatorAuthorityHostUrl,
+            tokenName ? tenant : instance.authenticatorTenant,
+            `/${oauth2}/authorize`
+          );
+
+          const refreshToken = await this.getValue(instanceId, `${tokenName}refreshToken`);
+          const resource = tokenName ? '' : 'https://graph.microsoft.com';
+          const authenticationContext = new AuthenticationContext(authorizationUrl);
+
+          authenticationContext.acquireTokenWithRefreshToken(
+            refreshToken,
+            tokenName ? clientId : instance.marketplaceId,
+            tokenName ? clientSecret : instance.marketplacePassword,
+            resource,
+            async (err, res) => {
+              if (err !== null) {
                 reject(err);
+              } else {
+                const token = res as TokenResponse;
+                try {
+                  await this.setValue(instanceId, `${tokenName}accessToken`, token.accessToken);
+                  await this.setValue(instanceId, `${tokenName}refreshToken`, token.refreshToken);
+                  await this.setValue(instanceId, `${tokenName}expiresOn`, token.expiresOn.toString());
+                  resolve(token.accessToken);
+                } catch (error) {
+                  reject(err);
+                }
               }
             }
-          }
-        );
+          );
+        }
       }
     });
   }
