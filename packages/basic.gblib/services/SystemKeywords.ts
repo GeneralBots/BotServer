@@ -660,19 +660,15 @@ export class SystemKeywords {
     const minBoot = GBServer.globals.minBoot as any;
     const definition = minBoot.core.sequelize.models[table];
 
-    let out = [];
-    let src = {}, dst = {};
-
-    // Flattern JSON to a table.
-
-    src = this.flattenJSON(fieldsValues,  {}, '_')
+    let dst = {};
 
     // Uppercases fields.
     let i = 0;
-    Object.keys(src).forEach(fieldSrc => {
+    Object.keys(fieldsValues).forEach(fieldSrc => {
       const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
-      
-      dst[field] = src[fieldSrc];
+    
+        dst[field] = fieldsValues[fieldSrc];
+    
       i++;
     });
 
@@ -690,7 +686,7 @@ export class SystemKeywords {
 
     // Flattern JSON to a table.
 
-    data = this.flattenJSON(fieldsValues,  {}, '_')
+    data = this.flattenJSON(fieldsValues, {}, '_')
 
     // Uppercases fields.
 
@@ -1470,7 +1466,7 @@ export class SystemKeywords {
    *
    */
   public async convert({ pid, src, dest }) {
-    
+
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: CONVERT '${src}' to '${dest}'`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
@@ -1545,15 +1541,16 @@ export class SystemKeywords {
 
         // If not defined already add the flattened field.
 
-        if (!res[extraKey + key]){
-          res[extraKey + key] = obj[key];
+        const newKey = `${hierarchy ? extraKey : ''}${key}`;
+        if (!res[newKey]) {
+          res[newKey] = obj[key];
         }
-        else{
+        else {
           GBLog.verbose(`Ignoring duplicated field in flatten operation to storage: ${key}.`);
         }
-        
+
       } else {
-        this.flattenJSON(obj[key], res, hierarchy ? `${extraKey}${key}.` : '');
+        this.flattenJSON(obj[key], res, `${key}${extraKey}`, true);
       };
     };
     return res;
@@ -1910,6 +1907,16 @@ export class SystemKeywords {
     GBLog.info(`BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
+    // Check if is a tree or flat object.
+
+    const hasSubObject = (t) => {
+      for (var key in t) {
+        if (!t.hasOwnProperty(key)) continue;
+        if (typeof t[key] === "object") return true;
+      }
+      return false;
+    }
+
     // MAX LINES property.
 
     let maxLines = 1000;
@@ -1926,12 +1933,18 @@ export class SystemKeywords {
     let header = [], rows = [];
     const minBoot = GBServer.globals.minBoot;
     let t;
+    let fieldsNames = [];
 
     if (storage) {
       t = minBoot.core.sequelize.models[file];
       if (!t) {
         throw new Error(`TABLE ${file} not found. Check TABLE keywords.`);
       }
+
+      Object.keys(t.fieldRawAttributesMap).forEach(e => {
+        fieldsNames.push(e);
+      })
+
       rows = await t.findAll({});
       if (rows.length > 0) {
         header = Object.keys(rows[0].dataValues)
@@ -1994,7 +2007,7 @@ export class SystemKeywords {
     }
 
     let merges = 0,
-      adds = 0;
+      adds = 0, skipped = 0;
 
     // Scans all items in incoming data.
 
@@ -2003,13 +2016,24 @@ export class SystemKeywords {
       // Scans all sheet lines and compare keys.
 
       let row = data[i];
+
+      if (hasSubObject(row)) {
+        row = this.flattenJSON(row, {}, '_', false);
+      }
+
       let found;
       let key1Value;
-
+      let key1Original = key1;
       if (key1Index) {
 
         key1 = key1.charAt(0).toLowerCase() + key1.slice(1);
-        key1Value = row[key1];
+
+        Object.keys(row).forEach(e=>{
+          if (e.toLowerCase().indexOf(key1.toLowerCase()) !== -1){
+            key1Value = row[e];
+          }
+        });
+
         const foundRow = key1Index[key1Value];
         if (foundRow) {
           found = table[foundRow[0]];
@@ -2018,20 +2042,36 @@ export class SystemKeywords {
 
       if (found) {
 
-        row = this.flattenJSON(row, {}, '_')
         for (let j = 0; j < header.length; j++) {
 
           const columnName = header[j];
-          const columnNameLower = columnName.charAt(0).toLowerCase() + columnName.slice(1);
-          let value = row[columnNameLower];
+          
+
+          let value;
+          Object.keys(row).forEach(e=>{
+            if (columnName.toLowerCase().indexOf(e.toLowerCase()) !== -1){
+              value = row[e];
+            }
+          });
+
           if (value === undefined) { value = null; }
 
-          if (value !== found[columnName]) {
+          let valueFound;
+          Object.keys(found).forEach(e=>{
+            if (columnName.toLowerCase().indexOf(e.toLowerCase()) !== -1){
+              valueFound = found[e];
+            }
+          });
+
+          if (value != valueFound) {
 
             if (storage) {
 
-              const obj = { columnName: value };
-              await t.update(obj, { where: { key1: key1Value } });
+              let obj = {};
+              obj[columnName]= value;
+              let criteria  = {};
+              criteria[ key1Original] = key1Value;
+              await t.update(obj, { where: criteria });
 
             } else {
 
@@ -2039,34 +2079,31 @@ export class SystemKeywords {
               const address = `${cell}:${cell}`;
 
               await this.set({ pid, handle: null, file, address, value });
-              merges++;
             }
+            merges++;
+          }
+          else
+          {
+            skipped++;
           }
 
         }
       } else {
 
-        // Check if is a tree or flat object.
-
-        const hasSubObject = (t) => {
-          for (var key in t) {
-            if (!t.hasOwnProperty(key)) continue;
-            if (typeof t[key] === "object") return true;
-          }
-          return false;
-        }
-
         let fieldsValues = [];
-        const fieldsNames = Object.keys(row);
 
-        if (hasSubObject(row)) {
-          fieldsValues = row;
-        }
-        else {
-          for (let j = 0; j < fieldsNames.length; j++) {
-            fieldsValues.push(row[fieldsNames[j]]);
+        for (let j = 0; j < fieldsNames.length; j++) {
+          let add = false;
+          Object.keys(row).forEach(p=>{
+            if (fieldsNames[j].toLowerCase().indexOf(p.toLowerCase()) !== -1){
+              fieldsValues.push(row[p]);
+              add = true;
+            }
+          });
+          if (!add){
+            fieldsValues.push(null);
           }
-        }
+      }
 
         if (storage) {
           await this.saveToStorage({ pid, table: file, fieldsValues, fieldsNames });
@@ -2083,7 +2120,7 @@ export class SystemKeywords {
       GBLog.info(`BASIC: MERGE ran but updated zero rows.`);
       return null;
     } else {
-      GBLog.info(`BASIC: MERGE updated (merges:${merges}, additions:${adds}.`);
+      GBLog.info(`BASIC: MERGE updated (merges:${merges}, additions:${adds}, skipped: ${skipped}.`);
       return table;
     }
   }
