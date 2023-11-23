@@ -243,7 +243,7 @@ export class GBVMService extends GBService {
           let obj = t.fields[key];
           obj.type = getTypeBasedOnCondition(obj.type);
           if (obj.type.key === "TABLE") {
-            obj.type.key = "INTEGER"
+            obj.type.key = "BIGINT"
             associations.push({ from: t.name, to: obj.type.name });
           }
           if (key.toLowerCase() === 'id') {
