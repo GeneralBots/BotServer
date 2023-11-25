@@ -1611,6 +1611,26 @@ export class SystemKeywords {
 
     let res = JSON.parse(await result.text());
 
+
+    function process(key,value,o) {
+      if (value === '0000-00-00'){
+        o[key]  =  '01-01-1970'
+      }
+
+    }
+
+    function traverse(o,func) {
+      for (var i in o) {
+          func.apply(this,[i,o[i], o]);  
+          if (o[i] !== null && typeof(o[i])=="object") {
+              traverse(o[i],func);
+          }
+      }
+    }
+
+    traverse(res,process);    
+
+
     if (pageMode === "auto") {
 
       continuationToken = res.next?.headers['MS-ContinuationToken'];
@@ -2034,7 +2054,7 @@ export class SystemKeywords {
         key1 = key1.charAt(0).toLowerCase() + key1.slice(1);
 
         Object.keys(row).forEach(e => {
-          if (e.toLowerCase().indexOf(key1.toLowerCase()) !== -1) {
+          if (e.toLowerCase() === key1.toLowerCase()) {
             key1Value = row[e];
           }
         });
@@ -2054,7 +2074,7 @@ export class SystemKeywords {
 
           let value;
           Object.keys(row).forEach(e => {
-            if (columnName.toLowerCase().indexOf(e.toLowerCase()) !== -1) {
+            if (columnName.toLowerCase() === e.toLowerCase()) {
               value = row[e];
               columnNameFound = true;
             }
@@ -2064,7 +2084,7 @@ export class SystemKeywords {
 
           let valueFound;
           Object.keys(found).forEach(e => {
-            if (columnName.toLowerCase().indexOf(e.toLowerCase()) !== -1) {
+            if (columnName.toLowerCase() === e.toLowerCase()) {
               valueFound = found[e];
             }
           });
@@ -2100,7 +2120,7 @@ export class SystemKeywords {
         for (let j = 0; j < fieldsNames.length; j++) {
           let add = false;
           Object.keys(row).forEach(p => {
-            if (fieldsNames[j].toLowerCase().indexOf(p.toLowerCase()) !== -1) {
+            if (fieldsNames[j].toLowerCase() === p.toLowerCase()) {
 
               let value = row[p];
               if (typeof (value) === 'string') {
