@@ -1537,7 +1537,7 @@ export class SystemKeywords {
       if (typeof obj[key] === 'function') {
         continue;
       }
-      if (typeof obj[key] !== 'object') {
+      if (typeof obj[key] !== 'object' || obj[key] instanceof Date) {
 
         // If not defined already add the flattened field.
 
@@ -1550,7 +1550,7 @@ export class SystemKeywords {
         }
 
       } else {
-        this.flattenJSON(obj[key], res, `${key}${extraKey}`, true);
+        obj[key] = this.flattenJSON(obj[key], res, `${key}${extraKey}`, true);
       };
     };
     return res;
