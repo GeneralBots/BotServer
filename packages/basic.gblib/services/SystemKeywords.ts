@@ -666,9 +666,9 @@ export class SystemKeywords {
     let i = 0;
     Object.keys(fieldsValues).forEach(fieldSrc => {
       const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
-    
-        dst[field] = fieldsValues[fieldSrc];
-    
+
+      dst[field] = fieldsValues[fieldSrc];
+
       i++;
     });
 
@@ -1934,6 +1934,7 @@ export class SystemKeywords {
     const minBoot = GBServer.globals.minBoot;
     let t;
     let fieldsNames = [];
+    let fieldsSizes = [];
 
     if (storage) {
       t = minBoot.core.sequelize.models[file];
@@ -1943,6 +1944,10 @@ export class SystemKeywords {
 
       Object.keys(t.fieldRawAttributesMap).forEach(e => {
         fieldsNames.push(e);
+      })
+
+      Object.keys(t.fieldRawAttributesMap).forEach(e => {
+        fieldsSizes.push(t.fieldRawAttributesMap[e].size);
       })
 
       rows = await t.findAll({});
@@ -2011,7 +2016,7 @@ export class SystemKeywords {
 
     // Scans all items in incoming data.
 
-    for (let i = 1; i < data.length; i++) {
+    for (let i = 0; i < data.length; i++) {
 
       // Scans all sheet lines and compare keys.
 
@@ -2028,8 +2033,8 @@ export class SystemKeywords {
 
         key1 = key1.charAt(0).toLowerCase() + key1.slice(1);
 
-        Object.keys(row).forEach(e=>{
-          if (e.toLowerCase().indexOf(key1.toLowerCase()) !== -1){
+        Object.keys(row).forEach(e => {
+          if (e.toLowerCase().indexOf(key1.toLowerCase()) !== -1) {
             key1Value = row[e];
           }
         });
@@ -2041,36 +2046,37 @@ export class SystemKeywords {
       }
 
       if (found) {
-
+        let merge = false;
         for (let j = 0; j < header.length; j++) {
 
           const columnName = header[j];
-          
+          let columnNameFound = false;
 
           let value;
-          Object.keys(row).forEach(e=>{
-            if (columnName.toLowerCase().indexOf(e.toLowerCase()) !== -1){
+          Object.keys(row).forEach(e => {
+            if (columnName.toLowerCase().indexOf(e.toLowerCase()) !== -1) {
               value = row[e];
+              columnNameFound = true;
             }
           });
 
           if (value === undefined) { value = null; }
 
           let valueFound;
-          Object.keys(found).forEach(e=>{
-            if (columnName.toLowerCase().indexOf(e.toLowerCase()) !== -1){
+          Object.keys(found).forEach(e => {
+            if (columnName.toLowerCase().indexOf(e.toLowerCase()) !== -1) {
               valueFound = found[e];
             }
           });
 
-          if (value != valueFound) {
+          if (value != valueFound && columnNameFound) {
 
             if (storage) {
 
               let obj = {};
-              obj[columnName]= value;
-              let criteria  = {};
-              criteria[ key1Original] = key1Value;
+              obj[columnName] = value;
+              let criteria = {};
+              criteria[key1Original] = key1Value;
               await t.update(obj, { where: criteria });
 
             } else {
@@ -2080,30 +2086,35 @@ export class SystemKeywords {
 
               await this.set({ pid, handle: null, file, address, value });
             }
-            merges++;
-          }
-          else
-          {
-            skipped++;
+            merge = true;
           }
 
         }
+
+        merge ? merges++ : skipped++;
+
       } else {
 
         let fieldsValues = [];
 
         for (let j = 0; j < fieldsNames.length; j++) {
           let add = false;
-          Object.keys(row).forEach(p=>{
-            if (fieldsNames[j].toLowerCase().indexOf(p.toLowerCase()) !== -1){
-              fieldsValues.push(row[p]);
+          Object.keys(row).forEach(p => {
+            if (fieldsNames[j].toLowerCase().indexOf(p.toLowerCase()) !== -1) {
+
+              let value = row[p];
+              if (typeof (value) === 'string') {
+                value = value.substr(0, fieldsSizes[j]);
+              }
+
+              fieldsValues.push(value);
               add = true;
             }
           });
-          if (!add){
+          if (!add) {
             fieldsValues.push(null);
           }
-      }
+        }
 
         if (storage) {
           await this.saveToStorage({ pid, table: file, fieldsValues, fieldsNames });
@@ -2120,7 +2131,7 @@ export class SystemKeywords {
       GBLog.info(`BASIC: MERGE ran but updated zero rows.`);
       return null;
     } else {
-      GBLog.info(`BASIC: MERGE updated (merges:${merges}, additions:${adds}, skipped: ${skipped}.`);
+      GBLog.info(`BASIC: MERGE updated (merges:${merges}, additions:${adds}, skipped: ${skipped}).`);
       return table;
     }
   }

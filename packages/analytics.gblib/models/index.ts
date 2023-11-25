@@ -96,6 +96,10 @@ export class GuaribasConversation extends Model<GuaribasConversation> {
   @Column(DataType.DATE)
   declare createdAt: Date;
 
+  @Column(DataType.DATE)
+  @UpdatedAt
+  declare updatedAt: Date;
+
   @Column(DataType.STRING(255))
   declare text: string;
 
