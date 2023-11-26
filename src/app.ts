@@ -160,8 +160,9 @@ export class GBServer {
             if (proxy !== undefined) {
               GBServer.globals.publicAddress = proxy;
             } else {
-              GBLog.info(`Establishing a development local proxy (proxy) on BOT_URL...`);
               GBServer.globals.publicAddress = await core.ensureProxy(port);
+              process.env.BOT_URL = GBServer.globals.publicAddress;
+              GBLog.info(`Auto local proxy address defined at: ${process.env.BOT_URL}...`);
             }
           } else {
             const serverAddress = process.env.BOT_URL;
