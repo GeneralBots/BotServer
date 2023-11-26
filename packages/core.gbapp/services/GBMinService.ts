@@ -590,13 +590,15 @@ export class GBMinService {
               await this.adminService.setValue(instance.instanceId, `${tokenName}expiresOn`, token['expiresOn'].toString());
               await this.adminService.setValue(instance.instanceId, `${tokenName}AntiCSRFAttackState`, null);
 
-              // Inform the home for default .gbui after finishing token retrival.
-
-              res.redirect(process.env.BOT_URL);
             }
           }
         );
+
+
       }
+      // Inform the home for default .gbui after finishing token retrival.
+
+      res.redirect(process.env.BOT_URL);
     });
   }
 
