@@ -1064,13 +1064,6 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*save\s*(\w+\$*)\s*as\s*(.*)/gim,
-      ($0, $1, $2, $3) => {
-        return `await sys.saveFile({pid: pid, file: ${$2}, data: ${$1}})`;
-      }
-    ];
-
-    keywords[i++] = [
       /^\s*(save)(\s*)(.*\.xlsx)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         $3 = $3.replace(/\'/g, '');
@@ -1081,12 +1074,30 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*save\s*(\w+\$*)\s*as\s*(.*)/gim,
+      ($0, $1, $2, $3) => {
+        return `await sys.saveFile({pid: pid, file: ${$2}, data: ${$1}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*(save)(\s*)(.*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         $3 = $3.replace(/\'/g, '');
         $3 = $3.replace(/\"/g, '');
         let fields = $3.split(',');
         const table  = fields[0].trim();
+
+        if (table.indexOf('.xlsx') !== -1)
+        { // Same as SAVE above.
+          $3 = $3.replace(/\'/g, '');
+          $3 = $3.replace(/\"/g, '');
+          $4 = $4.substr(2);
+          return `await sys.save({pid: pid, file: "${$3}", args: [${$4}]})`;
+ 
+        }
+
+
         fields.shift();
 
         const fieldsAsText = fields.join(',');
