@@ -1278,13 +1278,21 @@ export class DialogKeywords {
     // .gbdrive direct sending.
 
     else {
-      
-      const ext = mime.extension(Path.extname(filename.localName));
-      const buf = Fs.readFileSync(filename);
+
+      const ext = mime.extension(Path.extname(filename));
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-      const localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
-      Fs.writeFileSync(localName, buf, { encoding: null });
-      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+      
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+      let path = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
+      const sys = new SystemKeywords();
+      let template = await sys.internalGetDocument(client, baseUrl, path, filename);
+      let url = template['@microsoft.graph.downloadUrl'];
+      const res = await fetch(url);
+      let buf: any = Buffer.from(await res.arrayBuffer());
+      let localName1 = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+      Fs.writeFileSync(localName1, buf, { encoding: null });
+
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName1));
     
     }
 

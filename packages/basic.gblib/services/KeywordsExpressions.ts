@@ -1087,17 +1087,6 @@ export class KeywordsExpressions {
         $3 = $3.replace(/\"/g, '');
         let fields = $3.split(',');
         const table  = fields[0].trim();
-
-        if (table.indexOf('.xlsx') !== -1)
-        { // Same as SAVE above.
-          $3 = $3.replace(/\'/g, '');
-          $3 = $3.replace(/\"/g, '');
-          $4 = $4.substr(2);
-          return `await sys.save({pid: pid, file: "${$3}", args: [${$4}]})`;
- 
-        }
-
-
         fields.shift();
 
         const fieldsAsText = fields.join(',');
