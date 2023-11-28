@@ -32,7 +32,7 @@
 
 'use strict';
 
-import { GBMinInstance, GBService, IGBCoreService, GBDialogStep } from 'botlib';
+import { GBMinInstance, GBService, IGBCoreService, GBDialogStep, GBLog } from 'botlib';
 import * as Fs from 'fs';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
@@ -55,6 +55,7 @@ import { SystemKeywords } from './SystemKeywords.js';
 import lineReplace from 'line-replace';
 import { Sequelize, DataTypes, QueryTypes } from '@sequelize/core';
 import { table } from 'console';
+import { SequelizeOptions } from 'sequelize-typescript';
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -213,13 +214,13 @@ export class GBVMService extends GBService {
           case 'key':
             return { key: 'STRING' }; // Assuming key is a string data type
           case 'number':
-              return { key: 'BIGINT' };
+            return { key: 'BIGINT' };
           case 'integer':
             return { key: 'INTEGER' };
           case 'double':
             return { key: 'FLOAT' };
           case 'float':
-              return { key: 'FLOAT' };
+            return { key: 'FLOAT' };
           case 'date':
             return { key: 'DATE' };
           case 'boolean':
@@ -238,7 +239,16 @@ export class GBVMService extends GBService {
         type: QueryTypes.RAW
       })
 
+      // Loads storage custom connections.
+
+      const path = DialogKeywords.getGBAIPath(min.botId, null);
+      const localFolder = Path.join('work', path, 'connections.json');
+      const connections = Fs.readFileSync(localFolder, 'utf8');
+
       tableDef.forEach(t => {
+
+        // Determines autorelationship.
+
         Object.keys(t.fields).forEach(key => {
           let obj = t.fields[key];
           obj.type = getTypeBasedOnCondition(obj.type);
@@ -251,9 +261,60 @@ export class GBVMService extends GBService {
           }
         });
 
+        // Cutom connection for TABLE.
+
+        const connectionName = t.connectionName;
+        if (connectionName) {
+
+          const con = connections[connectionName];
+
+          const dialect = con['storageDialect'];
+          const host = con['storageHost'];
+          const port = con['storagePort'];
+          const storageName = con['storageName'];
+          const username = con['storageUsername'];
+          const password = con['password'];
+
+          const logging: boolean | Function =
+            GBConfigService.get('STORAGE_LOGGING') === 'true'
+              ? (str: string): void => {
+                GBLog.info(str);
+              }
+              : false;
+
+          const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
+          const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
+          const sequelizeOptions = {
+            define: {
+              freezeTableName: true,
+              timestamps: false
+            },
+            host: host,
+            port: port,
+            logging: logging as boolean,
+            dialect: dialect,
+            quoteIdentifiers: false, // set case-insensitive
+            dialectOptions: {
+              options: {
+                trustServerCertificate: true,
+                encrypt: encrypt
+              }
+            },
+            pool: {
+              max: 32,
+              min: 8,
+              idle: 40000,
+              evict: 40000,
+              acquire: acquire
+            }
+          };
+
+          min[connectionName] = new Sequelize(storageName, username, password, sequelizeOptions);
+        }
+
         // Field checking, syncs if there is any difference.
 
-        const model = minBoot.core.sequelize.models[t.name];
+        const model = min[connectionName] ? min[connectionName].models[t.name] : minBoot.core.sequelize;
         if (model) {
 
           // Except Id, checks if has same number of fields.
@@ -527,7 +588,7 @@ export class GBVMService extends GBService {
   }
 
   public static normalizeQuotes(text: any) {
-    
+
     text = text.replace(/\"/gm, '"');
     text = text.replace(/\¨/gm, '"');
     text = text.replace(/\“/gm, '"');
@@ -729,7 +790,7 @@ export class GBVMService extends GBService {
 
     const strFind = ' Client ID';
     const tokens = await min.core['findParam'](min.instance, strFind);
-    await CollectionUtil.asyncForEach(tokens,async t => {
+    await CollectionUtil.asyncForEach(tokens, async t => {
       const tokenName = t.replace(strFind, '');
       try {
         variables[tokenName] = await (min.adminService as any)['acquireElevatedToken']

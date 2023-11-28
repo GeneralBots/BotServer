@@ -615,6 +615,27 @@ export class GBDeployer implements IGBDeployer {
           min.instance.params = await this.loadParamsFromTabular(min);
         }
 
+        let connections = [];
+
+        // Find all tokens in .gbot Config.
+        const strFind = ' Driver';
+        const tokens = await min.core['findParam'](min.instance, strFind);
+        await CollectionUtil.asyncForEach(tokens,async t => {
+          const connectionName = t.replace(strFind, '');
+          let con = {};
+          con['storageServer']= min.core.getParam<string>(min.instance, `${connectionName} Server`, null),
+          con['storageName']= min.core.getParam<string>(min.instance, `${connectionName} Name`, null),
+          con['storageUsername']= min.core.getParam<string>(min.instance, `${connectionName} Username`, null),
+          con['storagePort']= min.core.getParam<string>(min.instance, `${connectionName} Port`, null),
+          con['storagePassword']= min.core.getParam<string>(min.instance, `${connectionName} Password`, null),
+          con['storageDriver']= min.core.getParam<string>(min.instance, `${connectionName} Driver`, null)
+          connections.push(con);
+        });
+
+        const path = DialogKeywords.getGBAIPath(min.botId, null);
+        const localFolder = Path.join('work', path, 'connections.json');
+        Fs.writeFileSync(localFolder, JSON.stringify(connections), { encoding: null });
+  
         // Updates instance object.
 
         await this.core.saveInstance(min.instance);
