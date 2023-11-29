@@ -642,10 +642,10 @@ export class GBVMService extends GBService {
 
   public static normalizeQuotes(text: any) {
 
-    text = text.replace(/\"/gm, '"');
-    text = text.replace(/\¨/gm, '"');
-    text = text.replace(/\“/gm, '"');
-    text = text.replace(/\”/gm, '"');
+    text = text.replace(/\"/gm, '`');
+    text = text.replace(/\¨/gm, '`');
+    text = text.replace(/\“/gm, '`');
+    text = text.replace(/\”/gm, '`');
     text = text.replace(/\‘/gm, "'");
     text = text.replace(/\’/gm, "'");
 

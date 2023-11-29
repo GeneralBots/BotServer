@@ -292,10 +292,10 @@ export class AdminDialog extends IGBDialog {
           let skipError = false;
           if (filename === null || filename === '') {
             await min.conversationalService.sendText(min, step, `Starting publishing for ${botId} packages...`);
-            packages.push(`${botId}.gbkb`);
-            packages.push(`${botId}.gbtheme`);
-            packages.push(`${botId}.gbdialog`);
             packages.push(`${botId}.gbot`);
+            packages.push(`${botId}.gbtheme`);
+            packages.push(`${botId}.gbkb`);
+            packages.push(`${botId}.gbdialog`);
             skipError = true;
           } else {
             packages.push(filename);
