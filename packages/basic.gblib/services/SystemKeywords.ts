@@ -655,10 +655,11 @@ export class SystemKeywords {
   * 
   */
   public async saveToStorage({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
-
+    const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Saving to storage '${table}' (SAVE).`);
     const minBoot = GBServer.globals.minBoot as any;
-    const definition = minBoot.core.sequelize.models[table];
+
+    const definition = this.getTableFromName(table, min);
 
     let dst = {};
 
@@ -1612,23 +1613,23 @@ export class SystemKeywords {
     let res = JSON.parse(await result.text());
 
 
-    function process(key,value,o) {
-      if (value === '0000-00-00'){
-        o[key]  =  '01-01-1970'
+    function process(key, value, o) {
+      if (value === '0000-00-00') {
+        o[key] = '01-01-1970'
       }
 
     }
 
-    function traverse(o,func) {
+    function traverse(o, func) {
       for (var i in o) {
-          func.apply(this,[i,o[i], o]);  
-          if (o[i] !== null && typeof(o[i])=="object") {
-              traverse(o[i],func);
-          }
+        func.apply(this, [i, o[i], o]);
+        if (o[i] !== null && typeof (o[i]) == "object") {
+          traverse(o[i], func);
+        }
       }
     }
 
-    traverse(res,process);    
+    traverse(res, process);
 
 
     if (pageMode === "auto") {
@@ -1913,6 +1914,18 @@ export class SystemKeywords {
     return letters;
   }
 
+  private getTableFromName(file, min){
+    const minBoot = GBServer.globals.minBoot;
+    const parts = file.split('.');
+    const con = min[parts[0]];
+    if (con) {
+      return con.models[parts[1]];
+    } else {
+      return minBoot.core.sequelize.models[file];
+    }
+
+  }
+
   /**
    * Merges a multi-value with a tabular file using BY field as key.
    *
@@ -1957,7 +1970,9 @@ export class SystemKeywords {
     let fieldsSizes = [];
 
     if (storage) {
-      t = minBoot.core.sequelize.models[file];
+
+      t = this.getTableFromName(file, min);
+
       if (!t) {
         throw new Error(`TABLE ${file} not found. Check TABLE keywords.`);
       }

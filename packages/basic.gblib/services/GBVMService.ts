@@ -340,6 +340,7 @@ export class GBVMService extends GBService {
         minBoot.core.sequelize.define(t.name, t.fields);
 
         // New table checking, if needs sync. 
+
         let found = false;
         tables[0].forEach((storageTable) => {
           if (storageTable['table_name'] === t.name) {
@@ -678,6 +679,7 @@ export class GBVMService extends GBService {
     let properties = [];
     let description;
     let table = null; // Used for TABLE keyword.
+    let connection = null;
     const tasks = [];
     let fields = {};
     let tables = [];
@@ -716,12 +718,13 @@ export class GBVMService extends GBService {
       if (endTableReg && table) {
 
         tables.push({
-          name: table, fields: fields
+          name: table, fields: fields, connection:connection
         });
 
 
         fields = {};
         table = null;
+        connection = null;
         emmit = false;
       }
 
@@ -733,10 +736,11 @@ export class GBVMService extends GBService {
         emmit = false;
       }
 
-      const tableKeyword = /^\s*TABLE\s*(.*)/gim;
+      const tableKeyword = /^\s*TABLE\s*(.*)\s*ON\s*(.*)/gim;
       let tableReg = tableKeyword.exec(line);
       if (tableReg && !table) {
         table = tableReg[1];
+        connection= tableReg[2];
         emmit = false;
       }
 
