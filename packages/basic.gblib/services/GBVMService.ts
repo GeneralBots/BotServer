@@ -313,6 +313,8 @@ export class GBVMService extends GBService {
           const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
           const sequelizeOptions = {
             define: {
+              charset: 'utf8',
+              collate: 'utf8_general_ci', 
               freezeTableName: true,
               timestamps: false
             },
