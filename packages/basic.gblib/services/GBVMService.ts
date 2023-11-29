@@ -242,11 +242,14 @@ export class GBVMService extends GBService {
       // Loads storage custom connections.
 
       const path = DialogKeywords.getGBAIPath(min.botId, null);
-      const localFolder = Path.join('work', path, 'connections.json');
-      const connections = Fs.readFileSync(localFolder, 'utf8');
-
+      const filePath = Path.join('work', path, 'connections.json');
+      let connections = null;
+      if(Fs.existsSync(filePath)){
+        connections = Fs.readFileSync(filePath, 'utf8');
+      }
       tableDef.forEach(t => {
-
+        const tableName = t.name;
+        
         // Determines autorelationship.
 
         Object.keys(t.fields).forEach(key => {
@@ -254,7 +257,7 @@ export class GBVMService extends GBService {
           obj.type = getTypeBasedOnCondition(obj.type);
           if (obj.type.key === "TABLE") {
             obj.type.key = "BIGINT"
-            associations.push({ from: t.name, to: obj.type.name });
+            associations.push({ from: tableName, to: obj.type.name });
           }
           if (key.toLowerCase() === 'id') {
             obj['primaryKey'] = true;
@@ -263,7 +266,7 @@ export class GBVMService extends GBService {
 
         // Cutom connection for TABLE.
 
-        const connectionName = t.connectionName;
+        const connectionName = t.connection;
         if (connectionName) {
 
           const con = connections[connectionName];
@@ -314,7 +317,7 @@ export class GBVMService extends GBService {
 
         // Field checking, syncs if there is any difference.
 
-        const model = min[connectionName] ? min[connectionName].models[t.name] : minBoot.core.sequelize;
+        const model = min[connectionName] ? min[connectionName].models[tableName] : minBoot.core.sequelize;
         if (model) {
 
           // Except Id, checks if has same number of fields.
@@ -337,13 +340,13 @@ export class GBVMService extends GBService {
           }
         }
 
-        minBoot.core.sequelize.define(t.name, t.fields);
+        minBoot.core.sequelize.define(tableName, t.fields);
 
         // New table checking, if needs sync. 
 
         let found = false;
         tables[0].forEach((storageTable) => {
-          if (storageTable['table_name'] === t.name) {
+          if (storageTable['table_name'] === tableName) {
             found = true;
           }
         });
@@ -648,14 +651,14 @@ export class GBVMService extends GBService {
     const fieldRegExp = /^\s*(\w+)\s*(\w+)(?:\((.*)\))?/gim;
 
     let reg = fieldRegExp.exec(line);
-    const t = reg[2];
     const name = reg[1];
+    const t = reg[2];
 
     let definition = { allowNull: !required };
     definition['type'] = t;
 
     if (reg[3]) {
-      definition['size'] = Number.parseInt(reg[3] === 'max' ? '4000' : reg[3]);
+      definition['size'] = Number.parseInt(reg[3] === 'max' ? '4000' : reg[3]); 
     }
 
     return { name, definition };
@@ -732,7 +735,7 @@ export class GBVMService extends GBService {
 
       if (table && line.trim() !== '') {
         const field = await this.parseField(line);
-        fields[field.name] = field.definition;
+        fields[field['name']] = field.definition;
         emmit = false;
       }
 
@@ -825,8 +828,8 @@ export class GBVMService extends GBService {
     const gbotConfig = JSON.parse(min.instance.params);
     let keys = Object.keys(gbotConfig);
     for (let j = 0; j < keys.length; j++) {
-      const name = keys[j].replace(/\s/gi, '');
-      variables[name] = gbotConfig[keys[j]];
+      const v = keys[j].replace(/\s/gi, '');
+      variables[v] = gbotConfig[keys[j]];
     }
 
     // Auto-NLP generates BASIC variables related to entities.
