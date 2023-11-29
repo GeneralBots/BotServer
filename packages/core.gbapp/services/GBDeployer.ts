@@ -619,10 +619,11 @@ export class GBDeployer implements IGBDeployer {
 
         // Find all tokens in .gbot Config.
         const strFind = ' Driver';
-        const tokens = await min.core['findParam'](min.instance, strFind);
-        await CollectionUtil.asyncForEach(tokens,async t => {
+        const conns = await min.core['findParam'](min.instance, strFind);
+        await CollectionUtil.asyncForEach(conns, async t => {
           const connectionName = t.replace(strFind, '');
           let con = {};
+          con['name'] = connectionName;
           con['storageServer']= min.core.getParam<string>(min.instance, `${connectionName} Server`, null),
           con['storageName']= min.core.getParam<string>(min.instance, `${connectionName} Name`, null),
           con['storageUsername']= min.core.getParam<string>(min.instance, `${connectionName} Username`, null),

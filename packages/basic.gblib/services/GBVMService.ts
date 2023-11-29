@@ -32,7 +32,7 @@
 
 'use strict';
 
-import { GBMinInstance, GBService, IGBCoreService, GBDialogStep, GBLog } from 'botlib';
+import { GBMinInstance, GBService, IGBCoreService, GBDialogStep, GBLog, GBError } from 'botlib';
 import * as Fs from 'fs';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
@@ -205,56 +205,79 @@ export class GBVMService extends GBService {
 
       const tableDef = JSON.parse(Fs.readFileSync(tablesFile, 'utf8')) as any;
 
-      const getTypeBasedOnCondition = (t) => {
-        switch (t) {
-          case 'string':
-            return { key: 'STRING' };
-          case 'guid':
-            return { key: 'UUID' };
-          case 'key':
-            return { key: 'STRING' }; // Assuming key is a string data type
-          case 'number':
-            return { key: 'BIGINT' };
-          case 'integer':
-            return { key: 'INTEGER' };
-          case 'double':
-            return { key: 'FLOAT' };
-          case 'float':
-            return { key: 'FLOAT' };
-          case 'date':
-            return { key: 'DATE' };
-          case 'boolean':
-            return { key: 'BOOLEAN' };
-          default:
-            return { key: 'TABLE', name: t };
+      const getTypeBasedOnCondition = (t, size) => {
+
+        if (1) {
+          switch (t) {
+            case 'string':
+              return `varchar(${size})`;
+            case 'guid':
+              return 'UUID';
+            case 'key':
+              return `varchar(${size})`;
+            case 'number':
+              return 'BIGINT';
+            case 'integer':
+              return 'INTEGER';
+            case 'double':
+              return 'FLOAT';
+            case 'float':
+              return 'FLOAT';
+            case 'date':
+              return 'DATE';
+            case 'boolean':
+              return 'BOOLEAN';
+            default:
+              return { type: 'TABLE', name: t };
+          }
+
+        } else {
+          switch (t) {
+            case 'string':
+              return { key: 'STRING' };
+            case 'guid':
+              return { key: 'UUID' };
+            case 'key':
+              return { key: 'STRING' }; // Assuming key is a string data type
+            case 'number':
+              return { key: 'BIGINT' };
+            case 'integer':
+              return { key: 'INTEGER' };
+            case 'double':
+              return { key: 'FLOAT' };
+            case 'float':
+              return { key: 'FLOAT' };
+            case 'date':
+              return { key: 'DATE' };
+            case 'boolean':
+              return { key: 'BOOLEAN' };
+            default:
+              return { key: 'TABLE', name: t };
+          }
+
         }
       };
 
       const associations = [];
-
-      const tables = await min.core.sequelize.query(`SELECT table_name, table_schema
-      FROM information_schema.tables
-      WHERE table_type = 'BASE TABLE'
-      ORDER BY table_name ASC`, {
-        type: QueryTypes.RAW
-      })
 
       // Loads storage custom connections.
 
       const path = DialogKeywords.getGBAIPath(min.botId, null);
       const filePath = Path.join('work', path, 'connections.json');
       let connections = null;
-      if(Fs.existsSync(filePath)){
-        connections = Fs.readFileSync(filePath, 'utf8');
+      if (Fs.existsSync(filePath)) {
+        connections = JSON.parse(Fs.readFileSync(filePath, 'utf8'));
+
       }
-      tableDef.forEach(t => {
-        const tableName = t.name;
-        
+      tableDef.forEach(async t => {
+
+        const tableName = t.name.trim();
+
         // Determines autorelationship.
 
         Object.keys(t.fields).forEach(key => {
           let obj = t.fields[key];
-          obj.type = getTypeBasedOnCondition(obj.type);
+          obj.type = getTypeBasedOnCondition(obj.type, obj.size);
           if (obj.type.key === "TABLE") {
             obj.type.key = "BIGINT"
             associations.push({ from: tableName, to: obj.type.name });
@@ -267,16 +290,17 @@ export class GBVMService extends GBService {
         // Cutom connection for TABLE.
 
         const connectionName = t.connection;
-        if (connectionName) {
+        let con;
 
-          const con = connections[connectionName];
+        if (connectionName && connections) {
+          con = connections.filter(p => p.name === connectionName)[0];
 
-          const dialect = con['storageDialect'];
-          const host = con['storageHost'];
+          const dialect = con['storageDriver'];
+          const host = con['storageServer'];
           const port = con['storagePort'];
           const storageName = con['storageName'];
           const username = con['storageUsername'];
-          const password = con['password'];
+          const password = con['storagePassword'];
 
           const logging: boolean | Function =
             GBConfigService.get('STORAGE_LOGGING') === 'true'
@@ -312,73 +336,98 @@ export class GBVMService extends GBService {
             }
           };
 
-          min[connectionName] = new Sequelize(storageName, username, password, sequelizeOptions);
+          if (!min[connectionName]) {
+            GBLogEx.info(min, `Loading custom connection ${connectionName}...`);
+            min[connectionName] = new Sequelize(storageName, username, password, sequelizeOptions);
+          }
+        }
+
+        if (!con) {
+          throw new Error(`Invalid connection specified: ${connectionName}.`);
         }
 
         // Field checking, syncs if there is any difference.
 
-        const model = min[connectionName] ? min[connectionName].models[tableName] : minBoot.core.sequelize;
-        if (model) {
+        const seq = min[connectionName] ? min[connectionName]
+          : minBoot.core.sequelize;
 
-          // Except Id, checks if has same number of fields.
+        if (seq) {
 
-          let equals = 0;
-          Object.keys(t.fields).forEach(key => {
-            let obj1 = t.fields[key];
-            let obj2 = model['fieldRawAttributesMap'][key];
+          const model = seq.models[tableName];
+          if (model) {
+            // Except Id, checks if has same number of fields.
 
-            if (key !== "id") {
-              if (obj1 && obj2) {
-                equals++;
+            let equals = 0;
+            Object.keys(t.fields).forEach(key => {
+              let obj1 = t.fields[key];
+              let obj2 = model['fieldRawAttributesMap'][key];
+
+              if (key !== "id") {
+                if (obj1 && obj2) {
+                  equals++;
+                }
               }
+            });
+
+
+            if (equals != Object.keys(t.fields).length) {
+              sync = true;
+            }
+          }
+
+          seq.define(tableName, t.fields);
+
+          // New table checking, if needs sync. 
+          let tables;
+
+          if (con.storageDriver === 'mssql') {
+            tables = await seq.query(`SELECT table_name, table_schema
+          FROM information_schema.tables
+          WHERE table_type = 'BASE TABLE'
+          ORDER BY table_name ASC`, {
+              type: QueryTypes.RAW
+            })[0]
+          }
+          else if (con.storageDriver === 'mariadb') {
+            tables = await seq.getQueryInterface().showAllTables();
+          }
+
+          let found = false;
+          tables.forEach((storageTable) => {
+            if (storageTable['table_name'] === tableName) {
+              found = true;
             }
           });
 
+          sync = sync ? sync : !found;
 
-          if (equals != Object.keys(t.fields).length) {
-            sync = true;
+
+          associations.forEach(e => {
+            const from = seq.models[e.from];
+            const to = seq.models[e.to];
+
+            try {
+              to.hasMany(from);
+            } catch (error) {
+              throw new Error(`BASIC: Invalid relationship in ${mainName}: from ${e.from} to ${e.to} (${min.botId})... ${error.message}`);
+            }
+
+          });
+
+          if (sync) {
+            GBLogEx.info(min, `BASIC: Syncing changes for TABLE ${connectionName} ${tableName} keyword (${min.botId})...`);
+
+            await seq.sync({
+              alter: true,
+              force: false // Keep it false due to data loss danger.
+            });
+            GBLogEx.info(min, `BASIC: Done sync for ${min.botId} ${connectionName} ${tableName} storage table...`);
+          }
+          else {
+            GBLogEx.verbose(min, `BASIC: TABLE ${tableName} keywords already up to date  ${connectionName} (${min.botId})...`);
           }
         }
-
-        minBoot.core.sequelize.define(tableName, t.fields);
-
-        // New table checking, if needs sync. 
-
-        let found = false;
-        tables[0].forEach((storageTable) => {
-          if (storageTable['table_name'] === tableName) {
-            found = true;
-          }
-        });
-
-        sync = sync ? sync : !found;
-
       });
-
-      associations.forEach(e => {
-        const from = minBoot.core.sequelize.models[e.from];
-        const to = minBoot.core.sequelize.models[e.to];
-
-        try {
-          to.hasMany(from);
-        } catch (error) {
-          throw new Error(`BASIC: Invalid relationship in ${mainName}: from ${e.from} to ${e.to} (${min.botId})... ${error.message}`);
-        }
-
-      });
-
-      if (sync) {
-        GBLogEx.info(min, `BASIC: Syncing changes for TABLE keywords (${min.botId})...`);
-
-        await minBoot.core.sequelize.sync({
-          alter: true,
-          force: false // Keep it false due to data loss danger.
-        });
-        GBLogEx.info(min, `BASIC: Done sync for ${min.botId} storage tables...`);
-      }
-      else {
-        GBLogEx.verbose(min, `BASIC: TABLE keywords already up to date (${min.botId})...`);
-      }
     }
 
     const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
@@ -658,7 +707,7 @@ export class GBVMService extends GBService {
     definition['type'] = t;
 
     if (reg[3]) {
-      definition['size'] = Number.parseInt(reg[3] === 'max' ? '4000' : reg[3]); 
+      definition['size'] = Number.parseInt(reg[3] === 'max' ? '4000' : reg[3]);
     }
 
     return { name, definition };
@@ -721,7 +770,7 @@ export class GBVMService extends GBService {
       if (endTableReg && table) {
 
         tables.push({
-          name: table, fields: fields, connection:connection
+          name: table, fields: fields, connection: connection
         });
 
 
@@ -743,7 +792,7 @@ export class GBVMService extends GBService {
       let tableReg = tableKeyword.exec(line);
       if (tableReg && !table) {
         table = tableReg[1];
-        connection= tableReg[2];
+        connection = tableReg[2];
         emmit = false;
       }
 

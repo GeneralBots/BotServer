@@ -675,7 +675,8 @@ ENDPOINT_UPDATE=true
   public getParam<T>(instance: IGBInstance, name: string, defaultValue?: T): any {
     let value = null;
     if (instance.params) {
-      const params = JSON.parse(instance.params);
+      
+      const params = typeof (instance.params) === 'object' ? instance.params: JSON.parse(instance.params);
       value = params ? params[name] : defaultValue;
     }
     if (typeof defaultValue === 'boolean') {
@@ -696,7 +697,7 @@ ENDPOINT_UPDATE=true
       }
     }
     if (value === undefined) {
-       value = null; 
+      value = null;
     }
 
     return value;
@@ -709,7 +710,7 @@ ENDPOINT_UPDATE=true
     let params = null;
     const list = [];
     if (instance.params) {
-      params = JSON.parse(instance.params);
+      params = typeof (instance.params) === 'object' ? instance.params : JSON.parse(instance.params);
     }
 
     Object.keys(params).forEach(e => {
