@@ -258,7 +258,7 @@ export class GBServer {
 
           server.get('*', async (req, res, next) => {
             if (req.originalUrl.startsWith('/logs')) {
-              if (process.env.ENABLE_WEBLOG) {
+              if (process.env.ENABLE_WEBLOG === "true") {
                 const admins = {
                   admin: { password: process.env.ADMIN_PASS }
                 };

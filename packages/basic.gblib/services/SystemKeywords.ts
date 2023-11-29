@@ -1615,7 +1615,7 @@ export class SystemKeywords {
 
     function process(key, value, o) {
       if (value === '0000-00-00') {
-        o[key] = '01-01-1970'
+        o[key] = '01-01-1970 00:00:00.000'
       }
 
     }
