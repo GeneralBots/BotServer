@@ -662,22 +662,20 @@ export class SystemKeywords {
   public async saveToStorage({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Saving to storage '${table}' (SAVE).`);
-    const minBoot = GBServer.globals.minBoot as any;
 
     const definition = this.getTableFromName(table, min);
 
     let dst = {};
+      // Uppercases fields.
+      let i = 0;
+      Object.keys(fieldsValues).forEach(fieldSrc => {
+        const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
 
-    // Uppercases fields.
-    let i = 0;
-    Object.keys(fieldsValues).forEach(fieldSrc => {
-      const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
+        dst[field] = fieldsValues[fieldSrc];
 
-      dst[field] = fieldsValues[fieldSrc];
-
-      i++;
-    });
-
+        i++;
+      });
+    
     let item;
     await retry(
       async (bail) => {
@@ -685,6 +683,7 @@ export class SystemKeywords {
       },
       {
         retries: 5,
+        onRetry: (err)=>{GBLog.error(`Retrying due to: ${err.message}.`);}
       }
 
     );
@@ -2230,10 +2229,21 @@ export class SystemKeywords {
           }
         }
 
-        this.cachedMerge[pid][file].push(row);
-
         if (storage) {
+
+          let dst={};
+              // Uppercases fields.
+          let i = 0;
+          Object.keys(fieldsValues).forEach(fieldSrc => {
+            const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
+
+            dst[field] = fieldsValues[fieldSrc];
+
+            i++;
+          });
+
           await this.saveToStorage({ pid, table: file, fieldsValues, fieldsNames });
+          this.cachedMerge[pid][file].push(dst);
         }
         else {
           await this.save({ pid, file, args: fieldsValues });
