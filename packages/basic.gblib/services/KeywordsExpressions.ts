@@ -610,7 +610,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(wait)\s*(\d+)/gim,
+      /^\s*(wait)\s*(.*)/gim,
       ($0, $1, $2) => {
         return `await sys.wait({pid: pid, seconds:${$2}})`;
       }

@@ -1938,6 +1938,12 @@ export class SystemKeywords {
   public async merge({ pid, file, data, key1, key2 }): Promise<any> {
 
     GBLog.info(`BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
+
+    if (!data){
+      GBLog.info(`BASIC: MERGE running on ${file}: NO DATA.`);
+      return data;
+    }
+
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
     // Check if is a tree or flat object.
