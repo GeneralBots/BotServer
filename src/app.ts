@@ -93,6 +93,7 @@ export class GBServer {
         runGC();
       }, 5 * 60 * 1000);
     }
+    runGC();
 
 
     if (process.env.TEST_SHELL) {
