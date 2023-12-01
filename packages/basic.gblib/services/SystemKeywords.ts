@@ -2010,7 +2010,6 @@ export class SystemKeywords {
     let storage = file.indexOf('.xlsx') === -1;
     let results;
     let header = [], rows = [];
-    const minBoot = GBServer.globals.minBoot;
     let t;
     let fieldsNames = [];
     let fieldsSizes = [];
