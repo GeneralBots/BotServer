@@ -80,18 +80,18 @@ export class GBServer {
     const port = GBConfigService.getServerPort();
 
     setFlagsFromString('--expose_gc');
-  
-    const runGC = () {
-    
-      setTimeout(function() {
-    
+
+    const runGC = () => {
+
+      setTimeout(() => {
+
         // Do something here
         GBLog.info('Running GC...');
-        
+
         const gc = runInNewContext('gc'); // nocommit
         gc();
         runGC();
-      }, 5* 60 *1000);
+      }, 5 * 60 * 1000);
     }
 
 
@@ -121,9 +121,9 @@ export class GBServer {
     GBServer.globals.indexSemaphore = new Mutex();
 
     server.use(bodyParser.json());
-    server.use(bodyParser.json({limit: '100mb'}));
-    server.use(bodyParser.urlencoded({limit: '100mb', extended: true}));
-    
+    server.use(bodyParser.json({ limit: '100mb' }));
+    server.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
+
     // Setups global error handlers.
 
     // process.on('unhandledRejection', (err, p) => {
@@ -157,7 +157,7 @@ export class GBServer {
 
     const mainCallback = () => {
       (async () => {
-    
+
         try {
           GBLog.info(`Now accepting connections on ${port}...`);
           process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
@@ -234,7 +234,7 @@ export class GBServer {
               'packages/boot.gbot',
               GBServer.globals.bootInstance
             );
-            
+
             instances.push(instance);
             GBServer.globals.minBoot.instance = instances[0];
             GBServer.globals.bootInstance = instances[0];
