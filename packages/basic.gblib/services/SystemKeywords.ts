@@ -1623,7 +1623,7 @@ export class SystemKeywords {
             });
           };
           GBLog.info(`Waiting 1min. before retrynig GET: ${url}.`);
-          sleep(60 * 1000);
+          await sleep(60 * 1000);
           throw new Error(`BASIC: TOO MANY REQUESTS retrying after 1(one) minute now: ${result.statusText}.`);
 
         }
