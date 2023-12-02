@@ -59,9 +59,6 @@ import * as winston from 'winston-logs-display';
 import { RootData } from './RootData.js';
 import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
 import { Mutex } from 'async-mutex';
-import { setFlagsFromString } from 'v8';
-import { runInNewContext } from 'vm';
-
 
 /**
  * General Bots open-core entry point.
@@ -78,23 +75,6 @@ export class GBServer {
     GBServer.globals = new RootData();
     GBConfigService.init();
     const port = GBConfigService.getServerPort();
-
-    setFlagsFromString('--expose_gc');
-
-    const runGC = () => {
-
-      setTimeout(() => {
-
-        // Do something here
-        GBLog.info('Running GC...');
-
-        const gc = runInNewContext('gc'); // nocommit
-        gc();
-        runGC();
-      }, 5 * 60 * 1000);
-    }
-    runGC();
-
 
     if (process.env.TEST_SHELL) {
       GBLog.info(`Running TEST_SHELL: ${process.env.TEST_SHELL}...`);

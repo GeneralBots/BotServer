@@ -666,16 +666,16 @@ export class SystemKeywords {
     const definition = this.getTableFromName(table, min);
 
     let dst = {};
-      // Uppercases fields.
-      let i = 0;
-      Object.keys(fieldsValues).forEach(fieldSrc => {
-        const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
+    // Uppercases fields.
+    let i = 0;
+    Object.keys(fieldsValues).forEach(fieldSrc => {
+      const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
 
-        dst[field] = fieldsValues[fieldSrc];
+      dst[field] = fieldsValues[fieldSrc];
 
-        i++;
-      });
-    
+      i++;
+    });
+
     let item;
     await retry(
       async (bail) => {
@@ -683,7 +683,7 @@ export class SystemKeywords {
       },
       {
         retries: 5,
-        onRetry: (err)=>{GBLog.error(`Retrying due to: ${err.message}.`);}
+        onRetry: (err) => { GBLog.error(`Retrying due to: ${err.message}.`); }
       }
 
     );
@@ -811,7 +811,7 @@ export class SystemKeywords {
    * @example value = GET "file.xlsx", "A2"
    *
    */
-  public async get({ pid, file, addressOrHeaders, httpUsername, httpPs, qs, streaming }): Promise<any> {
+  public async getHttp({ pid, file, addressOrHeaders, httpUsername, httpPs, qs, streaming }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     if (file.startsWith('http')) {
       return await this.getByHttp({
@@ -1682,7 +1682,7 @@ export class SystemKeywords {
     }
 
     if (res) { res['pageMode'] = pageMode; }
-
+    
     return res;
 
   }
@@ -2102,8 +2102,7 @@ export class SystemKeywords {
     else {
       table = this.cachedMerge[pid][file];
     }
-
-
+    
     let key1Index, key2Index;
 
     if (key1) {
@@ -2230,8 +2229,9 @@ export class SystemKeywords {
 
         if (storage) {
 
-          let dst={};
-              // Uppercases fields.
+          let dst = {};
+
+          // Uppercases fields.
           let i = 0;
           Object.keys(fieldsValues).forEach(fieldSrc => {
             const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);

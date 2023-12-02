@@ -159,8 +159,8 @@ export class GBVMService extends GBService {
                 "encoding": "0.1.13",
                 "isomorphic-fetch": "3.0.0",
                 "punycode": "2.1.1",
-                "@push-rpc/core": "1.1.5",
-                "@push-rpc/http": "1.1.5",
+                "@push-rpc/core": "1.8.2",
+                "@push-rpc/http": "1.8.2",
                 "vm2": "3.9.11"
               }
             }`;
@@ -572,14 +572,14 @@ export class GBVMService extends GBService {
       let url;
       const agent = http.Agent({ keepAlive: true });
 
-      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/dk';
-      const dk = (await createRpcClient(0, () => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/sys';
-      const sys =  (await createRpcClient(0, () => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/wa';
-      const wa = (await createRpcClient(0, () => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-      url = 'http://localhost:${GBVMService.API_PORT}/api/v3/${min.botId}/img';
-      const img =  (await createRpcClient(0, () => createHttpClient(url, {agent: agent}), optsRPC)).remote;
+      url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/dk';
+      const dk = (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
+      url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/sys';
+      const sys =  (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
+      url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/wa';
+      const wa = (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
+      url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/img';
+      const img =  (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
   
       ${code}
 

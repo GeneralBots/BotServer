@@ -37,22 +37,16 @@
 'use strict';
 import cliProgress from 'cli-progress';
 import { DialogSet, TextPrompt } from 'botbuilder-dialogs';
-import express from 'express';
 import SwaggerClient from 'swagger-client';
 import removeRoute from 'express-remove-route';
 import AuthenticationContext from 'adal-node';
 import { FacebookAdapter } from 'botbuilder-adapter-facebook';
-import path from 'path';
 import mkdirp from 'mkdirp';
 import Fs from 'fs';
 import arrayBufferToBuffer from 'arraybuffer-to-buffer';
 import { NlpManager } from 'node-nlp';
 import Koa from 'koa';
-import cors from '@koa/cors';
 import { createRpcServer } from '@push-rpc/core';
-import { createHttpKoaMiddleware } from '@push-rpc/http';
-import { HttpServerOptions } from '@push-rpc/http/dist/server.js';
-import { List } from 'whatsapp-web.js';
 import wash from 'washyourmouthoutwithsoap';
 import {
   AutoSaveStateMiddleware,
@@ -100,7 +94,6 @@ import { createKoaHttpServer } from '../../basic.gblib/index.js';
 import { DebuggerService } from '../../basic.gblib/services/DebuggerService.js';
 import { ImageProcessingServices } from '../../basic.gblib/services/ImageProcessingServices.js';
 import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices.js';
-import mime from 'mime-types';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -1613,11 +1606,9 @@ export class GBMinService {
         connected(remoteId: string, connections: number): void { },
         messageIn(...params): void {
           params.shift();
-          GBLogEx.verbose(0, '[IN] ' + params);
         },
         messageOut(...params): void {
           params.shift();
-          GBLogEx.verbose(0, '[OUT] ' + params);
         }
       }
     };

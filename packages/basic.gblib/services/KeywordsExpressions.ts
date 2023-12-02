@@ -379,7 +379,7 @@ export class KeywordsExpressions {
 
               // Performs GET request using the constructed URL
 
-              __data = await sys.get ({pid: pid, file: __url, addressOrHeaders: headers, httpUsername, httpPs});
+              __data = await sys.getHttp ({pid: pid, file: __url, addressOrHeaders: headers, httpUsername, httpPs});
               
               // Updates current variable handlers.
               
@@ -649,7 +649,7 @@ export class KeywordsExpressions {
 
         // Handles the GET http version.
         else {
-          return `${$1} = await sys.get ({pid: pid, file: ${$2}, addressOrHeaders: headers, httpUsername, httpPs})`;
+          return `${$1} = await sys.getHttp ({pid: pid, file: ${$2}, addressOrHeaders: headers, httpUsername, httpPs})`;
         }
       }
     ];

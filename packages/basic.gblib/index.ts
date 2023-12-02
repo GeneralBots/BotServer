@@ -41,8 +41,7 @@ import { GuaribasSchedule } from '../core.gbapp/models/GBModel.js';
 import { Sequelize } from 'sequelize-typescript';
 import Koa from 'koa';
 import cors from '@koa/cors';
-import { createHttpKoaMiddleware } from '@push-rpc/http';
-import { HttpServerOptions } from '@push-rpc/http/dist/server.js';
+import { createKoaHttpMiddleware } from '@push-rpc/http';
 import { GBServer } from '../../src/app.js';
 import { SocketServer } from '@push-rpc/core';
 import * as koaBody from 'koa-body';
@@ -50,10 +49,10 @@ import * as koaBody from 'koa-body';
 export function createKoaHttpServer(
   port: number,
   getRemoteId: (ctx: Koa.Context) => string,
-  opts: Partial<HttpServerOptions> = {}
+  opts:{}
 ): SocketServer {
   const { onError, onConnection, middleware } = 
-    createHttpKoaMiddleware(getRemoteId, opts);
+  createKoaHttpMiddleware(getRemoteId);
 
   const app = new Koa();
   app.use(cors({ origin: '*' }));
