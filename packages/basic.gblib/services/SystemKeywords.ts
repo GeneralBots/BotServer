@@ -656,6 +656,28 @@ export class SystemKeywords {
   /**
   * Saves variables to storage, not a worksheet.
   *
+  */
+  public async saveToStorageBatch({ pid, table, rows }): Promise<void> {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    GBLog.info(`BASIC: Saving to storage '${table}' (SAVE).`);
+
+    const definition = this.getTableFromName(table, min);
+
+    await retry(
+      async (bail) => {
+        await definition.bulkCreate(rows);
+      },
+      {
+        retries: 5,
+        onRetry: (err) => { GBLog.error(`Retrying SaveToStorageBatch due to: ${err.message}.`); }
+      }
+    );
+  }
+
+
+  /**
+  * Saves variables to storage, not a worksheet.
+  *
   * @example SAVE "Billing",  columnName1, columnName2
   * 
   */
@@ -683,7 +705,7 @@ export class SystemKeywords {
       },
       {
         retries: 5,
-        onRetry: (err) => { GBLog.error(`Retrying due to: ${err.message}.`); }
+        onRetry: (err) => { GBLog.error(`Retrying SaveToStorage due to: ${err.message}.`); }
       }
 
     );
@@ -1644,6 +1666,7 @@ export class SystemKeywords {
       },
       {
         retries: 5,
+        onRetry: (err) => { GBLog.error(`Retrying HTTP GET due to: ${err.message}.`); }
       }
     );
     let res = JSON.parse(await result.text());
@@ -2013,6 +2036,7 @@ export class SystemKeywords {
     let t;
     let fieldsNames = [];
     let fieldsSizes = [];
+    let fieldsValuesList = [];
 
     if (storage) {
 
@@ -2030,19 +2054,14 @@ export class SystemKeywords {
         fieldsSizes.push(t.fieldRawAttributesMap[e].size);
       })
 
+      header = Object.keys(t.fieldRawAttributesMap);
       if (!this.cachedMerge[pid][file]) {
-        rows = await t.findAll({});
-        header = Object.keys(rows[0].dataValues)
-
+          rows = await t.findAll({});
       }
       else {
-        rows = this.cachedMerge[pid][file];
-
-        header = Object.keys(rows[0])
+          rows = this.cachedMerge[pid][file];              
       }
 
-      if (rows.length > 0) {
-      }
     } else {
 
       const botId = min.instance.botId;
@@ -2232,6 +2251,7 @@ export class SystemKeywords {
           let dst = {};
 
           // Uppercases fields.
+          
           let i = 0;
           Object.keys(fieldsValues).forEach(fieldSrc => {
             const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
@@ -2241,7 +2261,7 @@ export class SystemKeywords {
             i++;
           });
 
-          await this.saveToStorage({ pid, table: file, fieldsValues, fieldsNames });
+          fieldsValuesList.push(dst);
           this.cachedMerge[pid][file].push(dst);
         }
         else {
@@ -2250,6 +2270,12 @@ export class SystemKeywords {
         }
         adds++;
       }
+    }
+
+    // In case of storage, persist to DB in batch.
+
+    if (fieldsValuesList.length){
+      await this.saveToStorageBatch({ pid, table: file, rows:fieldsValuesList });
     }
 
     GBLog.info(`BASIC: MERGE updated (merges:${merges}, additions:${adds}, skipped: ${skipped}).`);
