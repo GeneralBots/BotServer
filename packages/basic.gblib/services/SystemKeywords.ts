@@ -1637,17 +1637,16 @@ export class SystemKeywords {
 
         result = await fetch(url, options);
 
-        if (result.status === 429) {
+        const sleep = ms => {
+          return new Promise(resolve => {
+            setTimeout(resolve, ms);
+          });
+        };
 
-          const sleep = ms => {
-            return new Promise(resolve => {
-              setTimeout(resolve, ms);
-            });
-          };
+        if (result.status === 429 || result.status === 401) {
           GBLog.info(`Waiting 1min. before retrynig GET: ${url}.`);
           await sleep(60 * 1000);
-          throw new Error(`BASIC: TOO MANY REQUESTS retrying after 1(one) minute now: ${result.statusText}.`);
-
+          throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
         }
 
         if (result.status === 2000) {
