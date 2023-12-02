@@ -314,7 +314,7 @@ export class GBVMService extends GBService {
           const sequelizeOptions = {
             define: {
               charset: 'utf8',
-              collate: 'utf8_general_ci', 
+              collate: 'utf8_general_ci',
               freezeTableName: true,
               timestamps: false
             },
@@ -326,7 +326,8 @@ export class GBVMService extends GBService {
             dialectOptions: {
               options: {
                 trustServerCertificate: true,
-                encrypt: encrypt
+                encrypt: encrypt,
+                requestTimeout: 120 * 1000
               }
             },
             pool: {

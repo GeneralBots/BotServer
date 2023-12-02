@@ -659,7 +659,7 @@ export class SystemKeywords {
   */
   public async saveToStorageBatch({ pid, table, rows }): Promise<void> {
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLog.info(`BASIC: Saving to storage '${table}' (SAVE).`);
+    GBLog.info(`BASIC: Saving batch to storage '${table}' (SAVE).`);
 
     const definition = this.getTableFromName(table, min);
 
@@ -2056,7 +2056,16 @@ export class SystemKeywords {
 
       header = Object.keys(t.fieldRawAttributesMap);
       if (!this.cachedMerge[pid][file]) {
-          rows = await t.findAll({});
+        await retry(
+          async (bail) => {
+            rows = await t.findAll({});
+          },
+          {
+            retries: 5,
+            onRetry: (err) => { GBLog.error(`MERGE: Retrying SELECT ALL on table: ${err.message}.`); }
+          }
+        );   
+
       }
       else {
           rows = this.cachedMerge[pid][file];              
