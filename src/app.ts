@@ -105,25 +105,6 @@ export class GBServer {
     server.use(bodyParser.json({ limit: '100mb' }));
     server.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 
-    // Setups global error handlers.
-
-    // process.on('unhandledRejection', (err, p) => {
-    //   err = err['e'] ? err['e'] : err;
-    //   GBLog.error(`UNHANDLED_REJECTION(promises): ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''} ${err['cause'] ? '\n' + err['cause']?.message : ''}`);
-    //   if (err['response']?.obj?.httpStatusCode === 404) {
-    //     GBLog.warn(`Check reverse proxy: ${process.env.BOT_URL} as it seems to be invalid.`);
-    //   }
-    // });
-
-    process.on('uncaughtException', (err, p) => {
-      if (err !== null) {
-        err = err['e'] ? err['e'] : err;
-        GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''}`);
-      } else {
-        GBLog.error('UNCAUGHT_EXCEPTION: Unknown error (err is null)');
-      }
-    });
-
     process.on('SIGTERM', () => {
       GBLog.info('SIGTERM signal received.');
     });
