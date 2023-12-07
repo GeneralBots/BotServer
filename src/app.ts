@@ -109,6 +109,14 @@ export class GBServer {
       GBLog.info('SIGTERM signal received.');
     });
 
+    process.on('uncaughtException', (err, p) => {
+      if (err !== null) {
+        err = err['e'] ? err['e'] : err;
+        GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''}`);
+      } else {
+        GBLog.error('UNCAUGHT_EXCEPTION: Unknown error (err is null)');
+      }
+    });
     // Creates working directory.
 
     process.env.PWD = process.cwd();
