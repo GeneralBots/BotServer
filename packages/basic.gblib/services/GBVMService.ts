@@ -590,8 +590,9 @@ export class GBVMService extends GBService {
       const tokenStops = {};
       
       // Setups refresh token mechanism.
-
-      const tokens = this.variables['tokens'];
+      console.log(1);
+      console.log(this.variables['tokens']);
+      const tokens = this.variables['tokens'].split(',');
       const interval = 60000; // 1 hour.
 
       for(i in tokens) { 
@@ -944,8 +945,10 @@ export class GBVMService extends GBService {
     
     const strFind = ' Client ID';
     const tokens = await min.core['findParam'](min.instance, strFind);
+    let tokensList = [];
     await CollectionUtil.asyncForEach(tokens, async t => {
       const tokenName = t.replace(strFind, '');
+      tokensList.push(tokenName);
       try {
         variables[tokenName] = await sys.getCustomToken({pid, tokenName});
       } catch (error) {
@@ -953,7 +956,7 @@ export class GBVMService extends GBService {
       }
     });
 
-    sandbox['tokens'] = tokens;
+    sandbox['tokens'] = tokensList.join(',');
     sandbox['variables'] = variables;
     sandbox['id'] = sys.getRandomId();
     sandbox['username'] = await dk.userName({ pid });
