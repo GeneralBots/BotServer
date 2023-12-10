@@ -592,7 +592,7 @@ export class GBVMService extends GBService {
       // Setups refresh token mechanism.
 
       const tokens = this.variables['tokens'];
-      const interval = 60; // 1 hour.
+      const interval = 60000; // 1 hour.
 
       for(i in tokens) { 
 
@@ -601,14 +601,19 @@ export class GBVMService extends GBService {
 
           const waitAndRefreshToken = async (token) => {
             await timeout(interval);
+            console.log('geting token');
             global[i] = await sys.getCustomToken({pid, token});            
 
             if (!tokenStops[token]) {
               await waitAndRefreshToken(token);
             }
           };
+          console.log('b1');
+          (async () => {
+              await waitAndRefreshToken(token);
+          })();
+          console.log('b2');
 
-          await waitAndRefreshToken(token);
       }   
 
       ${code}
