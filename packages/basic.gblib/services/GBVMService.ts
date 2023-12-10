@@ -591,8 +591,8 @@ export class GBVMService extends GBService {
       
       // Setups refresh token mechanism.
       console.log(1);
-      console.log(this.variables['tokens']);
-      const tokens = this.variables['tokens'].split(',');
+      console.log(this.tokens);
+      const tokens = this.tokens??.split(',');
       const interval = 60000; // 1 hour.
 
       for(i in tokens) { 
