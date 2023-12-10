@@ -546,6 +546,7 @@ export class GBVMService extends GBService {
           global[i] = this.variables[i];
       }   
 
+
       // Defines local utility BASIC functions.
 
       const ubound = (gbarray) => {return gbarray ? gbarray.length - 1: 0};
@@ -581,13 +582,50 @@ export class GBVMService extends GBService {
       const wa = (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
       url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/img';
       const img =  (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-  
+
+      const timeout = (ms)=>  {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+    
+      const tokenStops = {};
+      
+      // Setups refresh token mechanism.
+
+      const tokens = this.variables['tokens'];
+      const interval = 60; // 1 hour.
+
+      for(i in tokens) { 
+
+          const token = tokens[i];
+          tokenStops[token] = false;
+
+          const waitAndRefreshToken = async (token) => {
+            await timeout(interval);
+            global[i] = await sys.getCustomToken({pid, token});            
+
+            if (!tokenStops[token]) {
+              await waitAndRefreshToken(token);
+            }
+          };
+
+          await waitAndRefreshToken(token);
+      }   
+
       ${code}
 
       // Closes handles if any.
 
       await wa.closeHandles({pid: pid});
       await sys.closeHandles({pid: pid});
+
+      // Signals token refresh job to stop.
+
+      for(i in tokens) { 
+        const token = tokens[i];
+        tokenStops[token] = true;
+      }
+
+
 
     })(); 
 `;
@@ -846,26 +884,6 @@ export class GBVMService extends GBService {
 
     let variables = [];
 
-    // Find all tokens in .gbot Config.
-
-    const strFind = ' Client ID';
-    const tokens = await min.core['findParam'](min.instance, strFind);
-    await CollectionUtil.asyncForEach(tokens, async t => {
-      const tokenName = t.replace(strFind, '');
-      try {
-        variables[tokenName] = await (min.adminService as any)['acquireElevatedToken']
-          (min.instance.instanceId, false,
-            tokenName,
-            min.core.getParam<string>(min.instance, `${tokenName} Client ID`, null),
-            min.core.getParam<string>(min.instance, `${tokenName} Client Secret`, null),
-            min.core.getParam<string>(min.instance, `${tokenName} Host`, null),
-            min.core.getParam<string>(min.instance, `${tokenName} Tenant`, null)
-
-          );
-      } catch (error) {
-        variables[t] = 'ERROR: Configure /setupSecurity before using token variables.';
-      }
-    });
 
     // These variables will be automatically be available as normal BASIC variables.
 
@@ -916,6 +934,21 @@ export class GBVMService extends GBService {
     const sys = new SystemKeywords();
     await dk.setFilter({ pid: pid, value: null });
 
+
+    // Find all tokens in .gbot Config.
+    
+    const strFind = ' Client ID';
+    const tokens = await min.core['findParam'](min.instance, strFind);
+    await CollectionUtil.asyncForEach(tokens, async t => {
+      const tokenName = t.replace(strFind, '');
+      try {
+        variables[tokenName] = await sys.getCustomToken({pid, tokenName});
+      } catch (error) {
+        variables[t] = 'ERROR: Configure /setupSecurity before using token variables.';
+      }
+    });
+
+    sandbox['tokens'] = tokens;
     sandbox['variables'] = variables;
     sandbox['id'] = sys.getRandomId();
     sandbox['username'] = await dk.userName({ pid });

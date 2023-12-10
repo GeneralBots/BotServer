@@ -1594,6 +1594,21 @@ export class SystemKeywords {
     return res;
   }
 
+  public async getCustomToken({pid, tokenName}) :Promise<string>{
+
+    const { min, user, params, proc } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `GET TOKEN: ${tokenName}`);
+
+    return await (min.adminService as any)['acquireElevatedToken']
+    (min.instance.instanceId, false,
+      tokenName,
+      min.core.getParam(min.instance, `${tokenName} Client ID`, null),
+      min.core.getParam(min.instance, `${tokenName} Client Secret`, null),
+      min.core.getParam(min.instance, `${tokenName} Host`, null),
+      min.core.getParam(min.instance, `${tokenName} Tenant`, null)
+    );
+  }
+
 
   static aa;
   /**
