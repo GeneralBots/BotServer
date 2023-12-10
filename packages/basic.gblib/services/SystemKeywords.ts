@@ -1610,7 +1610,6 @@ export class SystemKeywords {
   }
 
 
-  static aa;
   /**
    * Calls any REST API by using GET HTTP method.
    *

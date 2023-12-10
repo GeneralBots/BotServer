@@ -592,7 +592,7 @@ export class GBVMService extends GBService {
       // Setups refresh token mechanism.
       console.log(1);
       console.log(this.tokens);
-      const tokens = this.tokens??.split(',');
+      const tokens = this.tokens ? this.tokens.split(',') : [];
       const interval = 60000; // 1 hour.
 
       for(i in tokens) { 
@@ -890,7 +890,6 @@ export class GBVMService extends GBService {
 
     let variables = [];
 
-
     // These variables will be automatically be available as normal BASIC variables.
 
     try {
@@ -957,6 +956,7 @@ export class GBVMService extends GBService {
     });
 
     sandbox['tokens'] = tokensList.join(',');
+    console.log(sandbox['tokens']);
     sandbox['variables'] = variables;
     sandbox['id'] = sys.getRandomId();
     sandbox['username'] = await dk.userName({ pid });
