@@ -620,7 +620,7 @@ export class GBVMService extends GBService {
 
       // Signals token refresh job to stop.
 
-      for(i in tokens) { 
+      for(let i in tokens) { 
         const token = tokens[i];
         tokenStops[token] = true;
       }
