@@ -940,10 +940,10 @@ export class GBVMService extends GBService {
     const tokens = await min.core['findParam'](min.instance, strFind);
     let tokensList = [];
     await CollectionUtil.asyncForEach(tokens, async t => {
-      const tokenName = t.replace(strFind, '');
-      tokensList.push(tokenName);
+      const token = t.replace(strFind, '');
+      tokensList.push(token);
       try {
-        variables[tokenName] = await sys.getCustomToken({pid, tokenName});
+        variables[token] = await sys.getCustomToken({pid, token});
       } catch (error) {
         variables[t] = 'ERROR: Configure /setupSecurity before using token variables.';
       }
