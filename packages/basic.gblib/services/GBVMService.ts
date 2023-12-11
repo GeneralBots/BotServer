@@ -601,7 +601,7 @@ export class GBVMService extends GBService {
           const waitAndRefreshToken = async (token) => {
             await timeout(interval);
             global[i] = await sys.getCustomToken({pid, token});            
-
+            console.log('Token refreshed: '+ i +  global[i]);
             if (!tokenStops[token]) {
               await waitAndRefreshToken(token);
             }

@@ -1594,18 +1594,18 @@ export class SystemKeywords {
     return res;
   }
 
-  public async getCustomToken({pid, tokenName}) :Promise<string>{
+  public async getCustomToken({pid, token}) :Promise<string>{
 
-    const { min, user, params, proc } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `GET TOKEN: ${tokenName}`);
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `GET TOKEN: ${token}`);
 
     return await (min.adminService as any)['acquireElevatedToken']
     (min.instance.instanceId, false,
-      tokenName,
-      min.core.getParam(min.instance, `${tokenName} Client ID`, null),
-      min.core.getParam(min.instance, `${tokenName} Client Secret`, null),
-      min.core.getParam(min.instance, `${tokenName} Host`, null),
-      min.core.getParam(min.instance, `${tokenName} Tenant`, null)
+      token,
+      min.core.getParam(min.instance, `${token} Client ID`, null),
+      min.core.getParam(min.instance, `${token} Client Secret`, null),
+      min.core.getParam(min.instance, `${token} Host`, null),
+      min.core.getParam(min.instance, `${token} Tenant`, null)
     );
   }
 
