@@ -549,7 +549,18 @@ export class GBVMService extends GBService {
 
       // Defines local utility BASIC functions.
 
-      const ubound = (gbarray) => {return gbarray ? gbarray.length - 1: 0};
+      const ubound = (gbarray) => {
+        if (gbarray){
+          let length = gbarray.length;
+          if (length > 0){
+            if(gbarray[0].gbarray){
+              return length - 1;
+            }
+          }
+        }
+        return length;
+      }
+        
       const isarray = (gbarray) => {return Array.isArray(gbarray) };
   
       // Proxies remote functions as BASIC functions.
@@ -782,7 +793,7 @@ export class GBVMService extends GBService {
 
       let line = lines[i - 1];
 
-      // Remove lines before statments.
+      // Remove lines before statements.
 
       line = line.replace(/^\s*\d+\s*/gi, '');
 

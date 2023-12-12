@@ -112,7 +112,8 @@ export class GBServer {
     process.on('uncaughtException', (err, p) => {
       if (err !== null) {
         err = err['e'] ? err['e'] : err;
-        GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''}`);
+        const msg = `${err['code']?err['code']:''} ${err.message?err.message:''} ${err['description']?err['description']:''}`
+        GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''} ${msg}`);
       } else {
         GBLog.error('UNCAUGHT_EXCEPTION: Unknown error (err is null)');
       }
