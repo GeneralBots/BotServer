@@ -65,6 +65,14 @@ import exts from '../../../extensions.json' assert { type: 'json' };
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import retry from 'async-retry';
+import {
+  BlobServiceClient,
+  BlockBlobClient,
+  ContainerClient,
+  StoragePipelineOptions
+} from '@azure/storage-blob';
+
+import { md5 } from 'js-md5';
 
 /**
  * @fileoverview General Bots server core.
@@ -642,6 +650,63 @@ export class SystemKeywords {
       throw error;
     }
   }
+
+  /**
+   * Saves the content of variable into the file in .gbdata default folder.
+   *
+   * @exaple SAVE file AS "blob/my.txt"
+   *
+   */
+  public async saveBlob({ pid, file, data }): Promise<any> {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLog.info(`BASIC: Saving Blob'${file}' (SAVE file).`);
+
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+
+    // Checks if it is a GB FILE object.
+
+    if (data.data && data.filename) {
+      data = data.data;
+    }
+
+    try {
+      data = GBServer.globals.files[data].data;
+      
+      const blobName = min.getParam('Blob Name');
+      const connString = min.getParam('Blob ConnectionString');
+      const containerName = min.getParam('Blob Container Name');
+      const storagePipelineOptions: StoragePipelineOptions = {};
+    
+      const client: BlobServiceClient = BlobServiceClient.fromConnectionString(
+        connString,
+        storagePipelineOptions
+      );
+      const container = client.getContainerClient(containerName);
+      const blockBlobClient: BlockBlobClient = container.getBlockBlobClient(blobName);
+      
+      const hash = new Uint8Array(md5.array(data));
+
+      await blockBlobClient.uploadFile(data.filename,
+        {blobHTTPHeaders:{
+          blobContentMD5:hash}});
+        
+      const tmpFile = '';
+      await blockBlobClient.downloadToFile(tmpFile);
+
+      Fs.rmSync(tmpFile);
+
+      
+    } catch (error) {
+      if (error.code === 'itemNotFound') {
+        GBLog.info(`BASIC: BASIC source file not found: ${file}.`);
+      } else if (error.code === 'nameAlreadyExists') {
+        GBLog.info(`BASIC: BASIC destination file already exists: ${file}.`);
+      }
+      throw error;
+    }
+  }
+
 
   /**
    * Takes note inside a notes.xlsx of .gbdata.
@@ -2452,4 +2517,6 @@ export class SystemKeywords {
     }
     return { category: 'Other', description: 'General documents' };
   }
+
+  
 }
