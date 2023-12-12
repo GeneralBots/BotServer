@@ -287,7 +287,8 @@ export class GBAdminService implements IGBAdminService {
           const result = await fetch(url, options);
 
           if (result.status != 200) {
-            throw new Error(`acquireElevatedToken error: ${result.status}: ${result.statusText}.`)
+            const text = await result.text();
+            throw new Error(`acquireElevatedToken error: ${result.status}: ${result.statusText} ${text}.`);
           }
 
           const text = await result.text();
