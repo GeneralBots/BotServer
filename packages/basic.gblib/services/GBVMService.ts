@@ -786,8 +786,10 @@ export class GBVMService extends GBService {
 
       line = line.replace(/^\s*\d+\s*/gi, '');
 
-      for (let j = 0; j < keywords.length; j++) {
-        line = line.replace(keywords[j][0], keywords[j][1]);
+      if (!table){
+        for (let j = 0; j < keywords.length; j++) {
+          line = line.replace(keywords[j][0], keywords[j][1]); // TODO: Investigate delay here.
+        }
       }
 
       // Pre-process "off-line" static KEYWORDS.
