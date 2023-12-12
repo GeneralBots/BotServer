@@ -550,8 +550,9 @@ export class GBVMService extends GBService {
       // Defines local utility BASIC functions.
 
       const ubound = (gbarray) => {
+        let length = 0;
         if (gbarray){
-          let length = gbarray.length;
+          length = gbarray.length;
           if (length > 0){
             if(gbarray[0].gbarray){
               return length - 1;
@@ -602,7 +603,7 @@ export class GBVMService extends GBService {
       
       // Setups refresh token mechanism.
       const tokens = this.tokens ? this.tokens.split(',') : [];
-      const interval = 60000; // 1 hour.
+      const interval = 60000 * 60;
 
       for(i in tokens) { 
 
@@ -612,7 +613,6 @@ export class GBVMService extends GBService {
           const waitAndRefreshToken = async (token) => {
             await timeout(interval);
             global[i] = await sys.getCustomToken({pid, token});            
-            console.log('Token refreshed: '+ i +  global[i]);
             if (!tokenStops[token]) {
               await waitAndRefreshToken(token);
             }
@@ -622,21 +622,27 @@ export class GBVMService extends GBService {
           })(token);
       }   
 
-      ${code}
-
-      // Closes handles if any.
-
-      await wa.closeHandles({pid: pid});
-      await sys.closeHandles({pid: pid});
-
-      // Signals token refresh job to stop.
-
-      for(let i in tokens) { 
-        const token = tokens[i];
-        tokenStops[token] = true;
+      try{
+        ${code}
       }
+      catch(e){
+        console.log(e);
+      }
+      finally{
 
+          // Signals token refresh jobs to stop.
+        
+          for(let i in tokens) { 
+            const token = tokens[i];
+            tokenStops[token] = true;
+          }
+    
+          // Closes handles if any.
 
+          await wa.closeHandles({pid: pid});
+          await sys.closeHandles({pid: pid});
+
+      }
 
     })(); 
 `;
