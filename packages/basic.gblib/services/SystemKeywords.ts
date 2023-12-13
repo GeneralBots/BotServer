@@ -30,7 +30,7 @@
 |                                                                             |
 \*****************************************************************************/
 'use strict';
-import { GBError, GBLog, GBMinInstance } from 'botlib';
+import { GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
@@ -68,8 +68,6 @@ import retry from 'async-retry';
 import {
   BlobServiceClient,
   BlockBlobClient,
-  ContainerClient,
-  StoragePipelineOptions,
   StorageSharedKeyCredential
 } from '@azure/storage-blob';
 
@@ -653,12 +651,12 @@ export class SystemKeywords {
   }
 
   /**
-   * Saves the content of variable into the file in .gbdata default folder.
+   * Saves the content of variable into BLOB storage.
    *
-   * @exaple SAVE file AS "blob/my.txt"
+   * @exaple UPLOAD file.
    *
    */
-  public async saveBlob({ pid, file, data }): Promise<any> {
+  public async uploadFile({ pid, file, data }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Saving Blob'${file}' (SAVE file).`);
 
@@ -2514,6 +2512,25 @@ export class SystemKeywords {
 
     return { contentType, ext, kind, category: kind['category'] };
   }
+
+  private async deleteFile({ min, file }) {
+    // const file = GBServer.globals.files[handle];
+    GBLog.info(`BASIC: Auto saving '${file.filename}' (SAVE file).`);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+    const fileName = file.url ? file.url : file.name;
+    const contentType = mime.lookup(fileName);
+    const ext = Path.extname(fileName).substring(1);
+    const kind = await this.getExtensionInfo(ext);
+
+    const result = await client
+      .api(`${baseUrl}/drive/root:/${path}/${file}`)
+      .delete(file.data);
+
+    return { contentType, ext, kind, category: kind['category'] };
+  }
+
 
   public async getExtensionInfo(ext: any): Promise<any> {
     let array = exts.filter((v, i, a) => a[i]['extension'] === ext);

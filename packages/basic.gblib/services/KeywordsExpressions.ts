@@ -419,6 +419,30 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(.*)\=\s*(DIR)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['path']);
+        return `await sys.dirFolder ({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(DELETE)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['file']);
+        return `await sys.deleteFile ({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(.*)\=\s*(UPLOAD)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['file']);
+        return `await sys.uploadFile ({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*hear (\w+\$*) as (\w+( \w+)*.xlsx)/gim,
       ($0, $1, $2) => {
         return `${$1} = await dk.hear({pid: pid, kind:"sheet", arg: "${$2}"})`;
