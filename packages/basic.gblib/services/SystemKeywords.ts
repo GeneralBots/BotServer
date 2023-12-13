@@ -662,9 +662,6 @@ export class SystemKeywords {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Saving Blob'${file}' (SAVE file).`);
 
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
-
     // Checks if it is a GB FILE object.
 
     if (data.data && data.filename) {
@@ -681,7 +678,7 @@ export class SystemKeywords {
         accountKey
       );
       const baseUrl = `https://${accountName}.blob.core.windows.net`;
-      
+
       const blobServiceClient = new BlobServiceClient(
         `${baseUrl}`,
         sharedKeyCredential
@@ -697,14 +694,13 @@ export class SystemKeywords {
           }
         });
 
-      if (res._response.status===200 && res.contentMD5 === hash) {
+      if (res._response.status === 200 && res.contentMD5 === hash) {
         const tmpFile = '';
         Fs.rmSync(tmpFile);
       }
-      else{
+      else {
         GBLog.error(`BASIC: BLOB HTTP ${res.errorCode} ${res._response.status} .`);
       }
-
 
     } catch (error) {
       if (error.code === 'itemNotFound') {
