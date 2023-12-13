@@ -69,7 +69,8 @@ import {
   BlobServiceClient,
   BlockBlobClient,
   ContainerClient,
-  StoragePipelineOptions
+  StoragePipelineOptions,
+  StorageSharedKeyCredential
 } from '@azure/storage-blob';
 
 import { md5 } from 'js-md5';
@@ -672,31 +673,39 @@ export class SystemKeywords {
 
     try {
       data = GBServer.globals.files[data].data;
-      
+      const accountName = min.getParam('Blob Account');
+      const accountKey = min.getParam('Blob Key');
       const blobName = min.getParam('Blob Name');
-      const connString = min.getParam('Blob ConnectionString');
-      const containerName = min.getParam('Blob Container Name');
-      const storagePipelineOptions: StoragePipelineOptions = {};
-    
-      const client: BlobServiceClient = BlobServiceClient.fromConnectionString(
-        connString,
-        storagePipelineOptions
+      const sharedKeyCredential = new StorageSharedKeyCredential(
+        accountName,
+        accountKey
       );
-      const container = client.getContainerClient(containerName);
-      const blockBlobClient: BlockBlobClient = container.getBlockBlobClient(blobName);
+      const baseUrl = `https://${accountName}.blob.core.windows.net`;
       
+      const blobServiceClient = new BlobServiceClient(
+        `${baseUrl}`,
+        sharedKeyCredential
+      );
+      const container = blobServiceClient.getContainerClient(accountName);
       const hash = new Uint8Array(md5.array(data));
+      const blockBlobClient: BlockBlobClient = container.getBlockBlobClient(blobName);
 
-      await blockBlobClient.uploadFile(data.filename,
-        {blobHTTPHeaders:{
-          blobContentMD5:hash}});
-        
-      const tmpFile = '';
-      await blockBlobClient.downloadToFile(tmpFile);
+      const res = await blockBlobClient.uploadFile(data.filename,
+        {
+          blobHTTPHeaders: {
+            blobContentMD5: hash
+          }
+        });
 
-      Fs.rmSync(tmpFile);
+      if (res._response.status===200 && res.contentMD5 === hash) {
+        const tmpFile = '';
+        Fs.rmSync(tmpFile);
+      }
+      else{
+        GBLog.error(`BASIC: BLOB HTTP ${res.errorCode} ${res._response.status} .`);
+      }
 
-      
+
     } catch (error) {
       if (error.code === 'itemNotFound') {
         GBLog.info(`BASIC: BASIC source file not found: ${file}.`);
@@ -1659,19 +1668,19 @@ export class SystemKeywords {
     return res;
   }
 
-  public async getCustomToken({pid, token}) :Promise<string>{
+  public async getCustomToken({ pid, token }): Promise<string> {
 
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `GET TOKEN: ${token}`);
 
     return await (min.adminService as any)['acquireElevatedToken']
-    (min.instance.instanceId, false,
-      token,
-      min.core.getParam(min.instance, `${token} Client ID`, null),
-      min.core.getParam(min.instance, `${token} Client Secret`, null),
-      min.core.getParam(min.instance, `${token} Host`, null),
-      min.core.getParam(min.instance, `${token} Tenant`, null)
-    );
+      (min.instance.instanceId, false,
+        token,
+        min.core.getParam(min.instance, `${token} Client ID`, null),
+        min.core.getParam(min.instance, `${token} Client Secret`, null),
+        min.core.getParam(min.instance, `${token} Host`, null),
+        min.core.getParam(min.instance, `${token} Tenant`, null)
+      );
   }
 
 
@@ -1783,7 +1792,7 @@ export class SystemKeywords {
     }
 
     if (res) { res['pageMode'] = pageMode; }
-    
+
     return res;
 
   }
@@ -2142,11 +2151,11 @@ export class SystemKeywords {
             retries: 5,
             onRetry: (err) => { GBLog.error(`MERGE: Retrying SELECT ALL on table: ${err.message}.`); }
           }
-        );   
+        );
 
       }
       else {
-          rows = this.cachedMerge[pid][file];              
+        rows = this.cachedMerge[pid][file];
       }
 
     } else {
@@ -2208,7 +2217,7 @@ export class SystemKeywords {
     else {
       table = this.cachedMerge[pid][file];
     }
-    
+
     let key1Index, key2Index;
 
     if (key1) {
@@ -2338,7 +2347,7 @@ export class SystemKeywords {
           let dst = {};
 
           // Uppercases fields.
-          
+
           let i = 0;
           Object.keys(fieldsValues).forEach(fieldSrc => {
             const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
@@ -2361,8 +2370,8 @@ export class SystemKeywords {
 
     // In case of storage, persist to DB in batch.
 
-    if (fieldsValuesList.length){
-      await this.saveToStorageBatch({ pid, table: file, rows:fieldsValuesList });
+    if (fieldsValuesList.length) {
+      await this.saveToStorageBatch({ pid, table: file, rows: fieldsValuesList });
     }
 
     GBLog.info(`BASIC: MERGE updated (merges:${merges}, additions:${adds}, skipped: ${skipped}).`);
@@ -2518,58 +2527,58 @@ export class SystemKeywords {
     return { category: 'Other', description: 'General documents' };
   }
 
-    /**
-   * Loads all para from tabular file Config.xlsx.
-   */
-    public async dirFolder(
-      min: GBMinInstance,
-      remotePath: string,
-      baseUrl: string = null, 
-      array = null
-    ): Promise<any> {
-      GBLogEx.info(min, `dirFolder: remotePath=${remotePath}, baseUrl=${baseUrl}`);
-  
-      if (!baseUrl) {
-        let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-  
-        remotePath = remotePath.replace(/\\/gi, '/');
- 
-        // Retrieves all files in remote folder.
-  
-        let path = DialogKeywords.getGBAIPath(min.botId);
-        path = urlJoin(path, remotePath);
-        let url = `${baseUrl}/drive/root:/${path}:/children`;
+  /**
+ * Loads all para from tabular file Config.xlsx.
+ */
+  public async dirFolder(
+    min: GBMinInstance,
+    remotePath: string,
+    baseUrl: string = null,
+    array = null
+  ): Promise<any> {
+    GBLogEx.info(min, `dirFolder: remotePath=${remotePath}, baseUrl=${baseUrl}`);
 
-        const res = await client.api(url).get();
-        const documents = res.value;
-        if (documents === undefined || documents.length === 0) {
-          GBLogEx.info(min, `${remotePath} is an empty folder.`);
+    if (!baseUrl) {
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+
+      remotePath = remotePath.replace(/\\/gi, '/');
+
+      // Retrieves all files in remote folder.
+
+      let path = DialogKeywords.getGBAIPath(min.botId);
+      path = urlJoin(path, remotePath);
+      let url = `${baseUrl}/drive/root:/${path}:/children`;
+
+      const res = await client.api(url).get();
+      const documents = res.value;
+      if (documents === undefined || documents.length === 0) {
+        GBLogEx.info(min, `${remotePath} is an empty folder.`);
+        return array;
+      }
+
+      // Navigate files / directory to recurse.
+
+      await CollectionUtil.asyncForEach(documents, async item => {
+
+        if (item.folder) {
+          const nextFolder = urlJoin(remotePath, item.name);
+          array = [array, ... await this.dirFolder(min, null, nextFolder, array)];
+        } else {
+
+          // TODO:  https://raw.githubusercontent.com/ishanarora04/quickxorhash/master/quickxorhash.js
+
+          let obj = {};
+          obj['modified'] = item.lastModifiedDateTime;
+          obj['name'] = item.name;
+          obj['size'] = item.size;
+          obj['hash'] = item.file?.hashes?.quickXorHash;
+          obj['path'] = Path.join(remotePath, item.name);
+
+          array.push(obj);
+
           return array;
         }
-  
-        // Navigate files / directory to recurse.
-  
-        await CollectionUtil.asyncForEach(documents, async item => {
-  
-          if (item.folder) {
-            const nextFolder = urlJoin(remotePath, item.name);
-            array = [array, ... await this.dirFolder(min, null, nextFolder, array)];
-          } else {
-  
-            // TODO:  https://raw.githubusercontent.com/ishanarora04/quickxorhash/master/quickxorhash.js
-            
-            let obj = {};
-            obj['modified'] = item.lastModifiedDateTime;
-            obj['name'] = item.name;
-            obj['size'] = item.size;
-            obj['hash'] = item.file?.hashes?.quickXorHash;
-            obj['path'] = Path.join(remotePath, item.name);
-
-            array.push(obj);
-
-            return array;
-          }
-        });
-      }
+      });
     }
+  }
 }
