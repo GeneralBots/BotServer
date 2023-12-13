@@ -102,8 +102,8 @@ export class GBServer {
     GBServer.globals.indexSemaphore = new Mutex();
 
     server.use(bodyParser.json());
-    server.use(bodyParser.json({ limit: '100mb' }));
-    server.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
+    server.use(bodyParser.json({ limit: '1mb' }));
+    server.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
 
     process.on('SIGTERM', () => {
       GBLog.info('SIGTERM signal received.');

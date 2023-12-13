@@ -56,7 +56,8 @@ export function createKoaHttpServer(
 
   const app = new Koa();
   app.use(cors({ origin: '*' }));
-  app.use(koaBody.koaBody({ multipart: true }));
+  app.use(koaBody.koaBody({jsonLimit:'1024mb',textLimit:'1024mb', formLimit:'1024mb', 
+     multipart: true }));
   app.use(middleware);
   const server =   app.listen(port);
   const SERVER_TIMEOUT = 60 * 60 * 24 * 1000; // Equals to client RPC set.
