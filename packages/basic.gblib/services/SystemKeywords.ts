@@ -2518,5 +2518,58 @@ export class SystemKeywords {
     return { category: 'Other', description: 'General documents' };
   }
 
+    /**
+   * Loads all para from tabular file Config.xlsx.
+   */
+    public async dirFolder(
+      min: GBMinInstance,
+      remotePath: string,
+      baseUrl: string = null, 
+      array = null
+    ): Promise<any> {
+      GBLogEx.info(min, `dirFolder: remotePath=${remotePath}, baseUrl=${baseUrl}`);
   
+      if (!baseUrl) {
+        let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+  
+        remotePath = remotePath.replace(/\\/gi, '/');
+ 
+        // Retrieves all files in remote folder.
+  
+        let path = DialogKeywords.getGBAIPath(min.botId);
+        path = urlJoin(path, remotePath);
+        let url = `${baseUrl}/drive/root:/${path}:/children`;
+
+        const res = await client.api(url).get();
+        const documents = res.value;
+        if (documents === undefined || documents.length === 0) {
+          GBLogEx.info(min, `${remotePath} is an empty folder.`);
+          return array;
+        }
+  
+        // Navigate files / directory to recurse.
+  
+        await CollectionUtil.asyncForEach(documents, async item => {
+  
+          if (item.folder) {
+            const nextFolder = urlJoin(remotePath, item.name);
+            array = [array, ... await this.dirFolder(min, null, nextFolder, array)];
+          } else {
+  
+            // TODO:  https://raw.githubusercontent.com/ishanarora04/quickxorhash/master/quickxorhash.js
+            
+            let obj = {};
+            obj['modified'] = item.lastModifiedDateTime;
+            obj['name'] = item.name;
+            obj['size'] = item.size;
+            obj['hash'] = item.file?.hashes?.quickXorHash;
+            obj['path'] = Path.join(remotePath, item.name);
+
+            array.push(obj);
+
+            return array;
+          }
+        });
+      }
+    }
 }
