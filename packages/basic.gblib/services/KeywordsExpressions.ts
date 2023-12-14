@@ -41,7 +41,6 @@ import Path from 'path';
  */
 export class KeywordsExpressions {
   private static getParams = (text: string, names) => {
-    let ret = {};
     const splitParamsButIgnoreCommasInDoublequotes = (str: string) => {
       return str.split(',').reduce(
         (accum, curr) => {
@@ -424,20 +423,20 @@ export class KeywordsExpressions {
         const params = this.getParams($4, ['path']);
         return `await sys.dirFolder ({pid: pid, ${params}})`;
       }
-    ];
+    ];  
 
     keywords[i++] = [
       /^\s*(DELETE)(\s*)(.*)/gim,
-      ($0, $1, $2, $3, $4) => {
-        const params = this.getParams($4, ['file']);
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['file']);
         return `await sys.deleteFile ({pid: pid, ${params}})`;
       }
     ];
 
     keywords[i++] = [
       /^\s*(.*)\=\s*(UPLOAD)(\s*)(.*)/gim,
-      ($0, $1, $2, $3, $4) => {
-        const params = this.getParams($4, ['file']);
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['file']);
         return `await sys.uploadFile ({pid: pid, ${params}})`;
       }
     ];

@@ -2139,7 +2139,37 @@ export class SystemKeywords {
       if (!this.cachedMerge[pid][file]) {
         await retry(
           async (bail) => {
-            rows = await t.findAll({});
+            let rows = [];
+
+            const paginate = (query, { page, pageSize }) => {
+              const offset = page * pageSize;
+              const limit = pageSize;
+
+              return {
+                ...query,
+                offset,
+                limit,
+              };
+            };
+
+            let page = 0, pageSize = 1000;
+            let count = 0;
+
+            do {
+              
+              rows = [
+                t.findAll(
+                  paginate(
+                    {
+                      where: {},
+                    },
+                    { page, pageSize },
+                  ),
+                ), ...rows];
+
+              count = rows.length;
+
+            } while (count !== 1000)
           },
           {
             retries: 5,
@@ -2543,16 +2573,14 @@ export class SystemKeywords {
   /**
  * Loads all para from tabular file Config.xlsx.
  */
-  public async dirFolder(
-    min: GBMinInstance,
-    remotePath: string,
-    baseUrl: string = null,
-    array = null
-  ): Promise<any> {
+  public async dirFolder({ pid, remotePath, baseUrl = null, array = null }) {
+
+    const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `dirFolder: remotePath=${remotePath}, baseUrl=${baseUrl}`);
 
     if (!baseUrl) {
-      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+      let client;
+      [baseUrl, client] = await GBDeployer.internalGetDriveClient(min);
 
       remotePath = remotePath.replace(/\\/gi, '/');
 
@@ -2574,8 +2602,8 @@ export class SystemKeywords {
       await CollectionUtil.asyncForEach(documents, async item => {
 
         if (item.folder) {
-          const nextFolder = urlJoin(remotePath, item.name);
-          array = [array, ... await this.dirFolder(min, null, nextFolder, array)];
+          remotePath = urlJoin(remotePath, item.name);
+          array = [array, ... await this.dirFolder({ pid, remotePath, baseUrl, array })];
         } else {
 
           // TODO:  https://raw.githubusercontent.com/ishanarora04/quickxorhash/master/quickxorhash.js

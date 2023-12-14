@@ -106,17 +106,11 @@ export class GBDeployer implements IGBDeployer {
   public static async internalGetDriveClient(min: GBMinInstance) {
     let token;
 
-    // TODO: Add expiration logic.  
-
-    if (min['cacheToken'] && null) {
-      return min['cacheToken'];
-    } else {
-
       // Get token as root only if the bot does not have
       // an custom tenant for retrieving packages.
 
       token = await (min.adminService as any)['acquireElevatedToken']
-        (min.instance.instanceId, min.instance.authenticatorTenant?false:true);
+        (min.instance.instanceId, min.instance.authenticatorTenant ? false : true);
 
       const siteId = process.env.STORAGE_SITE_ID;
       const libraryId = process.env.STORAGE_LIBRARY;
@@ -130,7 +124,7 @@ export class GBDeployer implements IGBDeployer {
       min['cacheToken'] = { baseUrl, client };
 
       return min['cacheToken'];
-    }
+
   }
 
   /**
@@ -624,19 +618,19 @@ export class GBDeployer implements IGBDeployer {
           const connectionName = t.replace(strFind, '');
           let con = {};
           con['name'] = connectionName;
-          con['storageServer']= min.core.getParam<string>(min.instance, `${connectionName} Server`, null),
-          con['storageName']= min.core.getParam<string>(min.instance, `${connectionName} Name`, null),
-          con['storageUsername']= min.core.getParam<string>(min.instance, `${connectionName} Username`, null),
-          con['storagePort']= min.core.getParam<string>(min.instance, `${connectionName} Port`, null),
-          con['storagePassword']= min.core.getParam<string>(min.instance, `${connectionName} Password`, null),
-          con['storageDriver']= min.core.getParam<string>(min.instance, `${connectionName} Driver`, null)
+          con['storageServer'] = min.core.getParam<string>(min.instance, `${connectionName} Server`, null),
+            con['storageName'] = min.core.getParam<string>(min.instance, `${connectionName} Name`, null),
+            con['storageUsername'] = min.core.getParam<string>(min.instance, `${connectionName} Username`, null),
+            con['storagePort'] = min.core.getParam<string>(min.instance, `${connectionName} Port`, null),
+            con['storagePassword'] = min.core.getParam<string>(min.instance, `${connectionName} Password`, null),
+            con['storageDriver'] = min.core.getParam<string>(min.instance, `${connectionName} Driver`, null)
           connections.push(con);
         });
 
         const path = DialogKeywords.getGBAIPath(min.botId, null);
         const localFolder = Path.join('work', path, 'connections.json');
         Fs.writeFileSync(localFolder, JSON.stringify(connections), { encoding: null });
-  
+
         // Updates instance object.
 
         await this.core.saveInstance(min.instance);
@@ -685,15 +679,15 @@ export class GBDeployer implements IGBDeployer {
     }
   }
 
-    /**
-   * Removes the package local files from cache.
-   */
-    public async cleanupPackage(instance: IGBInstance, packageName: string) {
-      const path = DialogKeywords.getGBAIPath(instance.botId, null, packageName);
-      const localFolder = Path.join('work', path);
-      rimraf.sync(localFolder);
-    }
-  
+  /**
+ * Removes the package local files from cache.
+ */
+  public async cleanupPackage(instance: IGBInstance, packageName: string) {
+    const path = DialogKeywords.getGBAIPath(instance.botId, null, packageName);
+    const localFolder = Path.join('work', path);
+    rimraf.sync(localFolder);
+  }
+
   /**
    * Removes the package from the storage and local work folders.
    */
@@ -705,7 +699,7 @@ export class GBDeployer implements IGBDeployer {
 
     const path = DialogKeywords.getGBAIPath(instance.botId, null, packageName);
     const localFolder = Path.join('work', path);
-  
+
     return await this.undeployPackageFromLocalPath(instance, localFolder);
   }
 
@@ -731,7 +725,7 @@ export class GBDeployer implements IGBDeployer {
         const service = new KBService(this.core.sequelize);
         rimraf.sync(localPath);
 
-        if (p){
+        if (p) {
           await service.undeployKbFromStorage(instance, this, p.packageId);
         }
 
@@ -769,68 +763,68 @@ export class GBDeployer implements IGBDeployer {
 
     // TODO: Semaphore logic.
     //try {
-      GBLogEx.info(instance.instanceId, `rebuildIndex running...`);
-      // release = await GBServer.globals.indexSemaphore.acquire();
-      // GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
+    GBLogEx.info(instance.instanceId, `rebuildIndex running...`);
+    // release = await GBServer.globals.indexSemaphore.acquire();
+    // GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
 
-      const key = instance.searchKey ? instance.searchKey : GBServer.globals.minBoot.instance.searchKey;
-      const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
-      const searchIndexer = instance.searchIndexer
-        ? instance.searchIndexer
-        : GBServer.globals.minBoot.instance.searchIndexer;
-      const host = instance.searchHost ? instance.searchHost : GBServer.globals.minBoot.instance.searchHost;
+    const key = instance.searchKey ? instance.searchKey : GBServer.globals.minBoot.instance.searchKey;
+    const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
+    const searchIndexer = instance.searchIndexer
+      ? instance.searchIndexer
+      : GBServer.globals.minBoot.instance.searchIndexer;
+    const host = instance.searchHost ? instance.searchHost : GBServer.globals.minBoot.instance.searchHost;
 
-      // Prepares search.
+    // Prepares search.
 
-      const search = new AzureSearch(
-        key,
-        host,
-        searchIndex,
-        searchIndexer
-      );
-      const connectionString = GBDeployer.getConnectionStringFromInstance(GBServer.globals.minBoot.instance);
-      const dsName = 'gb';
+    const search = new AzureSearch(
+      key,
+      host,
+      searchIndex,
+      searchIndexer
+    );
+    const connectionString = GBDeployer.getConnectionStringFromInstance(GBServer.globals.minBoot.instance);
+    const dsName = 'gb';
 
-      // Removes any previous index.
+    // Removes any previous index.
 
-      try {
-        await search.deleteDataSource(dsName);
-      } catch (err) {
-        // If it is a 404 there is nothing to delete as it is the first creation.
+    try {
+      await search.deleteDataSource(dsName);
+    } catch (err) {
+      // If it is a 404 there is nothing to delete as it is the first creation.
 
-        if (err.code !== 404) {
-          throw err;
-        }
-      }
-
-      // Removes the index.
-
-      try {
-        await search.deleteIndex();
-      } catch (err) {
-        // If it is a 404 there is nothing to delete as it is the first creation.
-
-        if (err.code !== 404 && err.code !== 'OperationNotAllowed') {
-          throw err;
-        }
-      }
-
-      // Creates the data source and index on the cloud.
-
-      try {
-        await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
-      } catch (err) {
-        GBLog.error(err);
+      if (err.code !== 404) {
         throw err;
       }
-      await search.createIndex(searchSchema, dsName);
+    }
 
-      // release();
-      GBLogEx.info(instance.instanceId, `Released rebuildIndex mutex.`);
+    // Removes the index.
+
+    try {
+      await search.deleteIndex();
+    } catch (err) {
+      // If it is a 404 there is nothing to delete as it is the first creation.
+
+      if (err.code !== 404 && err.code !== 'OperationNotAllowed') {
+        throw err;
+      }
+    }
+
+    // Creates the data source and index on the cloud.
+
+    try {
+      await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
+    } catch (err) {
+      GBLog.error(err);
+      throw err;
+    }
+    await search.createIndex(searchSchema, dsName);
+
+    // release();
+    GBLogEx.info(instance.instanceId, `Released rebuildIndex mutex.`);
     //} catch {
-      // if (release) {
-      //   release();
-      // }
+    // if (release) {
+    //   release();
+    // }
     //}
   }
 
