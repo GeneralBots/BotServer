@@ -2158,7 +2158,7 @@ export class SystemKeywords {
             do {
               
               rows = [
-                t.findAll(
+                await t.findAll(
                   paginate(
                     {
                       where: {},
