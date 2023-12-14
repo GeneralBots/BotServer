@@ -2166,9 +2166,8 @@ export class SystemKeywords {
                     { page, pageSize },
                   ),
                 ), ...rows];
-
+              page++;
               count = rows.length;
-
             }
           },
           {
