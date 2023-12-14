@@ -2155,8 +2155,8 @@ export class SystemKeywords {
             let page = 0, pageSize = 1000;
             let count = 0;
 
-            do {
-              
+            while (page === 0 || count !== pageSize) {
+
               rows = [
                 await t.findAll(
                   paginate(
@@ -2169,7 +2169,7 @@ export class SystemKeywords {
 
               count = rows.length;
 
-            } while (count !== 1000)
+            }
           },
           {
             retries: 5,
