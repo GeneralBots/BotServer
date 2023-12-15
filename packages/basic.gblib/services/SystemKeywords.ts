@@ -656,18 +656,13 @@ export class SystemKeywords {
    * @exaple UPLOAD file.
    *
    */
-  public async uploadFile({ pid, file, data }): Promise<any> {
+  public async uploadFile({ pid, file }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Saving Blob'${file}' (SAVE file).`);
 
     // Checks if it is a GB FILE object.
 
-    if (data.data && data.filename) {
-      data = data.data;
-    }
-
     try {
-      data = GBServer.globals.files[data].data;
       const accountName = min.getParam('Blob Account');
       const accountKey = min.getParam('Blob Key');
       const blobName = min.getParam('Blob Name');
@@ -681,11 +676,23 @@ export class SystemKeywords {
         `${baseUrl}`,
         sharedKeyCredential
       );
+      
+
+      let data;
+
+      // It is an SharePoint object that needs to be downloaded.
+
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const localName = Path.join('work', gbaiName, 'cache', `${GBAdminService.getRndReadableIdentifier()}.tmp`);
+      const url = file['url'];
+      const response = await fetch(url);
+      Fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });  
+    
       const container = blobServiceClient.getContainerClient(accountName);
       const hash = new Uint8Array(md5.array(data));
       const blockBlobClient: BlockBlobClient = container.getBlockBlobClient(blobName);
 
-      const res = await blockBlobClient.uploadFile(data.filename,
+      const res = await blockBlobClient.uploadFile(localName,
         {
           blobHTTPHeaders: {
             blobContentMD5: hash
@@ -693,8 +700,7 @@ export class SystemKeywords {
         });
 
       if (res._response.status === 200 && res.contentMD5 === hash) {
-        const tmpFile = '';
-        Fs.rmSync(tmpFile);
+        Fs.rmSync(localName);
       }
       else {
         GBLog.error(`BASIC: BLOB HTTP ${res.errorCode} ${res._response.status} .`);
@@ -2613,6 +2619,7 @@ export class SystemKeywords {
           obj['size'] = item.size;
           obj['hash'] = item.file?.hashes?.quickXorHash;
           obj['path'] = Path.join(remotePath, item.name);
+          obj['url'] = item['@microsoft.graph.downloadUrl'];
 
           array.push(obj);
 

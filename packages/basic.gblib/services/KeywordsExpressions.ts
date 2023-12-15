@@ -420,8 +420,8 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(.*)\=\s*(DIR)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
-        const params = this.getParams($4, ['path']);
-        return `await sys.dirFolder ({pid: pid, ${params}})`;
+        const params = this.getParams($4, ['remotePath']);
+        return `${$1} = await sys.dirFolder ({pid: pid, ${params}})`;
       }
     ];  
 
@@ -435,8 +435,8 @@ export class KeywordsExpressions {
 
     keywords[i++] = [
       /^\s*(.*)\=\s*(UPLOAD)(\s*)(.*)/gim,
-      ($0, $1, $2, $3) => {
-        const params = this.getParams($3, ['file']);
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['file']);
         return `await sys.uploadFile ({pid: pid, ${params}})`;
       }
     ];

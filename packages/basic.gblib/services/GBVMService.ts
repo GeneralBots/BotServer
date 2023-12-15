@@ -540,7 +540,7 @@ export class GBVMService extends GBService {
         }
       };
 
-      // Transfers NLP auto variables into global object.
+      // Transfers auto variables into global object.
 
       for(i in this.variables) { 
           global[i] = this.variables[i];
@@ -933,7 +933,7 @@ export class GBVMService extends GBService {
       }
     }
 
-    // Adds params as variables to be added later as global objects..
+    // Adds params as variables to be added later as global objects.
 
     keys = Object.keys(params);
     for (let j = 0; j < keys.length; j++) {
