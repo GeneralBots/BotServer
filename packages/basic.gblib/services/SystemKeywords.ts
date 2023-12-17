@@ -2085,13 +2085,15 @@ export class SystemKeywords {
    */
   public async merge({ pid, file, data, key1, key2 }): Promise<any> {
 
+    if (!data || data.length === 0) {
+      GBLog.verbose(`BASIC: MERGE running on ${file}: NO DATA.`);
+      return data;
+    }
+
+
     GBLog.info(`BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
     if (!this.cachedMerge[pid]) {
       this.cachedMerge[pid] = { file: {} }
-    }
-    if (!data) {
-      GBLog.info(`BASIC: MERGE running on ${file}: NO DATA.`);
-      return data;
     }
 
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
@@ -2398,7 +2400,7 @@ export class SystemKeywords {
       await this.saveToStorageBatch({ pid, table: file, rows: fieldsValuesList });
     }
 
-    GBLog.info(`BASIC: MERGE updated (merges:${merges}, additions:${adds}, skipped: ${skipped}).`);
+    GBLog.info(`BASIC: MERGE results: merges:${merges}, additions:${adds}, skipped: ${skipped}.`);
     return table;
   }
 
