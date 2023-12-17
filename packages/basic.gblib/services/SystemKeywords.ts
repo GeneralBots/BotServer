@@ -2156,7 +2156,7 @@ export class SystemKeywords {
               const paged = await t.findAll(
                 {offset:page * pageSize, limit:pageSize, subquery:false, where:{}}
               );
-              rows = [paged, ...rows];
+              rows = [...paged, ...rows];
               page++;
               count = paged.length;
             }
