@@ -579,6 +579,8 @@ export class GBVMService extends GBService {
           });
           return uuid;
       };
+      const random =  () => { return Number.parseInt((Math.random() * 8) % 8 * 100000000)};
+    
 
       // Setups interprocess communication from .gbdialog run-time to the BotServer API.
 
