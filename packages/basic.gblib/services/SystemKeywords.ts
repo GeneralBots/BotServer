@@ -2145,7 +2145,6 @@ export class SystemKeywords {
       if (!this.cachedMerge[pid][file]) {
         await retry(
           async (bail) => {
-            let rows = [];
             let page = 0, pageSize = 1000;
             let count = 0;
 
