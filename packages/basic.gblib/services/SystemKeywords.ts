@@ -2146,18 +2146,6 @@ export class SystemKeywords {
         await retry(
           async (bail) => {
             let rows = [];
-
-            const paginate = (query, { page, pageSize }) => {
-              const offset = page * pageSize;
-              const limit = pageSize;
-
-              return {
-                ...query,
-                offset,
-                limit,
-              };
-            };
-
             let page = 0, pageSize = 1000;
             let count = 0;
 
@@ -2165,12 +2153,7 @@ export class SystemKeywords {
 
               rows = [
                 await t.findAll(
-                  paginate(
-                    {
-                      where: {},
-                    },
-                    { page, pageSize },
-                  ),
+                  {offset:page * pageSize, limit:pageSize, subquery:false, where:{}}
                 ), ...rows];
               page++;
               count = rows.length;
@@ -2181,6 +2164,8 @@ export class SystemKeywords {
             onRetry: (err) => { GBLog.error(`MERGE: Retrying SELECT ALL on table: ${err.message}.`); }
           }
         );
+
+        GBLog.info(`cached: ${rows.length}.`);
 
       }
       else {
