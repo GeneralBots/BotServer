@@ -2346,7 +2346,7 @@ export class SystemKeywords {
 
               let value = row[p];
               if (typeof (value) === 'string') {
-                value = value.substr(0, fieldsSizes[j]);
+                value = value.substr(0, fieldsSizes[j]-1);
               }
 
               fieldsValues.push(value);
