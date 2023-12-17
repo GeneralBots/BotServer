@@ -2287,8 +2287,13 @@ export class SystemKeywords {
 
           let value;
           Object.keys(row).forEach(e => {
+            
             if (columnName.toLowerCase() === e.toLowerCase()) {
               value = row[e];
+              if (typeof (value) === 'string') {
+                value = value.substring(0, fieldsSizes[j]);
+              }
+
               columnNameFound = true;
             }
           });
@@ -2346,7 +2351,7 @@ export class SystemKeywords {
 
               let value = row[p];
               if (typeof (value) === 'string') {
-                value = value.substring(0, fieldsSizes[j]-1);
+                value = value.substring(0, fieldsSizes[j]);
               }
 
               fieldsValues.push(value);
