@@ -2152,14 +2152,13 @@ export class SystemKeywords {
             let page = 0, pageSize = 1000;
             let count = 0;
 
-            while (page === 0 || count !== pageSize) {
-
-              rows = [
-                await t.findAll(
-                  {offset:page * pageSize, limit:pageSize, subquery:false, where:{}}
-                ), ...rows];
+            while (page === 0 || count === pageSize) {
+              const paged = await t.findAll(
+                {offset:page * pageSize, limit:pageSize, subquery:false, where:{}}
+              );
+              rows = [paged, ...rows];
               page++;
-              count = rows.length;
+              count = paged.length;
             }
           },
           {
