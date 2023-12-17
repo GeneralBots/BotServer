@@ -2159,6 +2159,9 @@ export class SystemKeywords {
               rows = [...paged, ...rows];
               page++;
               count = paged.length;
+
+              GBLog.info(`page: ${page}, cached: ${rows.length}.`);
+
             }
           },
           {
@@ -2167,7 +2170,7 @@ export class SystemKeywords {
           }
         );
 
-        GBLog.info(`cached: ${rows.length}.`);
+        
 
       }
       else {
