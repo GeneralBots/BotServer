@@ -2142,6 +2142,10 @@ export class SystemKeywords {
       })
 
       header = Object.keys(t.fieldRawAttributesMap);
+
+      // In a single execution, several MERGE calls will benift
+      // from caching results across calls.
+
       if (!this.cachedMerge[pid][file]) {
         await retry(
           async (bail) => {
@@ -2211,7 +2215,7 @@ export class SystemKeywords {
           const propertyName = header[colIndex];
           let value = tmpRow[colIndex];
 
-          if (value && value.charAt(0) === "'") {
+          if (value && typeof value === 'string' && value.charAt(0) === "'") {
             if (await this.isValidDate({ pid, dt: value.substr(1) })) {
               value = value.substr(1);
             }
