@@ -509,6 +509,7 @@ export class GBVMService extends GBService {
       let httpPs = this.httpPs;
       let today = this.today;
       let now = this.now;
+      let date = new Date();
       let page = null;
       const files = [];
       let col = 1;

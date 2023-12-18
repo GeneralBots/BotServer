@@ -103,20 +103,19 @@ export class KeywordsExpressions {
       ($0, $1, $2) => {
 
         let separator;
-        if ($1.indexOf(',')  > -1){
-          separator  = ',';
+        if ($1.indexOf(',') > -1) {
+          separator = ',';
         }
-        else if ($1.indexOf(';')  > -1){
-          separator  = ';';
+        else if ($1.indexOf(';') > -1) {
+          separator = ';';
         }
-        let parts; 
-        if ( separator && (parts = $1.split(separator)) && parts.length > 1){
+        let parts;
+        if (separator && (parts = $1.split(separator)) && parts.length > 1) {
           return `
           TALK ${parts[0]}
           HEAR ${parts[1]}`;
         }
-        else
-        {
+        else {
           return `
           HEAR ${$1}`;
         }
@@ -154,11 +153,11 @@ export class KeywordsExpressions {
           $1 = $1.substr($1.indexOf(',') + 1);
 
           let separator;
-          if ($1.indexOf(',')  > -1){
-            separator  = ',';
+          if ($1.indexOf(',') > -1) {
+            separator = ',';
           }
-          else if ($1.indexOf(';')  > -1){
-            separator  = ';';
+          else if ($1.indexOf(';') > -1) {
+            separator = ';';
           }
           let items;
           if (separator && (items = $1.split(separator)) && items.length > 1) {
@@ -204,8 +203,8 @@ export class KeywordsExpressions {
         if (kind === 'AS' && KeywordsExpressions.isNumber(sessionName)) {
           const jParams = JSON.parse(`{${params}}`);
           const filename = `${jParams.url.substr(0, jParams.url.lastIndexOf("."))}.xlsx`;
-          let code = 
-          `
+          let code =
+            `
            col = 1
            await sys.save({pid: pid,file: "${filename}", args: [id] })
            await dk.setFilter ({pid: pid, value:  "id=" + id })
@@ -213,7 +212,7 @@ export class KeywordsExpressions {
           `;
           return code;
         } else {
-          sessionName = sessionName?`"${sessionName}"`:null;
+          sessionName = sessionName ? `"${sessionName}"` : null;
           kind = `"${kind}"`;
           return `page = await wa.openPage({pid: pid, handle: page, sessionKind: ${kind}, sessionName: ${sessionName}, ${params}})`;
         }
@@ -251,13 +250,12 @@ export class KeywordsExpressions {
 
     keywords[i++] = [/^\s*for +(.*to.*)/gim, 'for ($1) {'];
 
-    keywords[i++] = [/^\s*next *$/gim, '}'];
 
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*pay\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($2, ['orderId', 'customerName', 'ammount']);
-        
+
         return `
           ${$1} = await sys.pay({pid: pid, ${params}})`;
       }
@@ -319,7 +317,7 @@ export class KeywordsExpressions {
         return `${$1} = await dk.getConfig ({pid: pid, name: ${$2}})`;
       }
     ];
-    
+
     keywords[i++] = [
       /\s*CONTINUATION TOKEN\s*/gim,
       () => {
@@ -339,7 +337,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*FOR EACH\s*(.*)\s*IN\s*(.*)/gim,
       ($0, $1, $2) => {
-        
+
         return `
     
         __totalCalls = 10;
@@ -349,9 +347,9 @@ export class KeywordsExpressions {
         __data = ${$2};
         __pageMode = __data?.pageMode ? __data.pageMode : "none";
 
-        __url = __data.links?.next?.uri;
-        __seekToken = __data.links?.self?.headers["MS-ContinuationToken"] 
-        __totalCount = __data["totalCount"] ? __data["totalCount"] : __data.length;
+        __url = __data?.links?.next?.uri;
+        __seekToken = __data?.links?.self?.headers["MS-ContinuationToken"] 
+        __totalCount = __data?.totalCount ? __data.totalCount : __data.length;
  
         while (__next && __totalCount) 
         {
@@ -360,10 +358,9 @@ export class KeywordsExpressions {
       }
     ];
 
-    keywords[i++] = [
-      /^\s*END FOR\s*/gim,
+    keywords[i++] = [/^\s*next *$/gim,
       ($0, $1, $2) => {
-        
+
         return `
             
         __index = __index + 1;
@@ -382,9 +379,9 @@ export class KeywordsExpressions {
               
               // Updates current variable handlers.
               
-              __url = __data.links?.next?.uri;
-              __seekToken = __data.links?.self?.headers["MS-ContinuationToken"] 
-              __totalCount = __data["totalCount"];
+              __url = __data?.links?.next?.uri;
+              __seekToken = __data?.links?.self?.headers["MS-ContinuationToken"] 
+              __totalCount = __data?.totalCount ? __data.totalCount : __data.length;
               
               __index = 0;
               __calls++;
@@ -423,7 +420,7 @@ export class KeywordsExpressions {
         const params = this.getParams($4, ['remotePath']);
         return `${$1} = await sys.dirFolder ({pid: pid, ${params}})`;
       }
-    ];  
+    ];
 
     keywords[i++] = [
       /^\s*(DELETE)(\s*)(.*)/gim,
@@ -785,7 +782,7 @@ export class KeywordsExpressions {
         return `await dk.setOutput ({pid: pid, value: "${$3}"})`;
       }
     ];
-    
+
     keywords[i++] = [
       /^\s*(set max lines)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
@@ -970,7 +967,7 @@ export class KeywordsExpressions {
         return `await wa.linkByText ({pid: pid, handle: page, ${params}})`;
       }
     ];
-    
+
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(text of)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
@@ -1091,6 +1088,7 @@ export class KeywordsExpressions {
       ($0, $1, $2, $3, $4) => {
         $3 = $3.replace(/\'/g, '');
         $3 = $3.replace(/\"/g, '');
+        $3 = $3.replace(/\`/g, '');
         $4 = $4.substr(2);
         return `await sys.save({pid: pid, file: "${$3}", args: [${$4}]})`;
       }
@@ -1109,24 +1107,24 @@ export class KeywordsExpressions {
         $3 = $3.replace(/\'/g, '');
         $3 = $3.replace(/\"/g, '');
         let fields = $3.split(',');
-        const table  = fields[0].trim();
+        const table = fields[0].trim();
         fields.shift();
 
         const fieldsAsText = fields.join(',');
 
         let fieldsNamesOnly = [];
         let index = 0;
-        
-        
+
+
         fields.forEach(field => {
-    
+
           // Extracts only the last part of the variable like 'column' 
           // from 'row.column'.
-    
+
           const fieldRegExp = /(?:.*\.)(.*)/gim;
           let name = fieldRegExp.exec(field)[1]
-    
-          fieldsNamesOnly.push (`'${name}'`);
+
+          fieldsNamesOnly.push(`'${name}'`);
         });
         let fieldsNames = fieldsNamesOnly.join(',');
 

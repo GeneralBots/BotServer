@@ -47,7 +47,7 @@ import * as Fs from 'fs';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 import libphonenumber from 'google-libphonenumber';
-import DateDiff from 'date-diff';
+import * as df from 'date-diff';
 import tesseract from 'node-tesseract-ocr';
 import Path from 'path';
 import sgMail from '@sendgrid/mail';
@@ -288,7 +288,7 @@ export class DialogKeywords {
    * @example days = DATEDIFF date1,date2,mode
    *
    */
-  public async dateDiff(date1, date2, mode) {
+  public async getDateDiff({pid, date1, date2, mode}) {
     let dt1 = date1;
     let dt2 = date2;
     if (!(dt1 instanceof Date)) {
@@ -297,7 +297,9 @@ export class DialogKeywords {
     if (!(dt2 instanceof Date)) {
       dt2 = new Date(dt2);
     }
-    const diff = new DateDiff(date1, date2);
+    const diff1 = df.default.constructor(date1, date2);
+    const diff = Date['diff'](date1, date2);
+    
     switch (mode) {
       case 'year':
         return diff.years();

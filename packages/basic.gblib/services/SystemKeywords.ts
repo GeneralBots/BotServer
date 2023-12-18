@@ -658,62 +658,63 @@ export class SystemKeywords {
    */
   public async uploadFile({ pid, file }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLog.info(`BASIC: Saving Blob'${file}' (SAVE file).`);
+    GBLog.info(`BASIC: UPLOAD '${file.name}' ${file.size} bytes.`);
 
     // Checks if it is a GB FILE object.
 
-    try {
-      const accountName = min.getParam('Blob Account');
-      const accountKey = min.getParam('Blob Key');
-      const blobName = min.getParam('Blob Name');
-      const sharedKeyCredential = new StorageSharedKeyCredential(
-        accountName,
-        accountKey
-      );
-      const baseUrl = `https://${accountName}.blob.core.windows.net`;
+    const accountName = min.core.getParam(min.instance, 'Blob Account');
+    const accountKey = min.core.getParam(min.instance, 'Blob Key');
+    const blobName = min.core.getParam(min.instance, 'Blob Name');
+    const sharedKeyCredential = new StorageSharedKeyCredential(
+      accountName,
+      accountKey
+    );
+    const baseUrl = `https://${accountName}.blob.core.windows.net`;
 
-      const blobServiceClient = new BlobServiceClient(
-        `${baseUrl}`,
-        sharedKeyCredential
-      );
-      
+    const blobServiceClient = new BlobServiceClient(
+      `${baseUrl}`,
+      sharedKeyCredential
+    );
 
-      let data;
 
-      // It is an SharePoint object that needs to be downloaded.
+    // It is an SharePoint object that needs to be downloaded.
 
-      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-      const localName = Path.join('work', gbaiName, 'cache', `${GBAdminService.getRndReadableIdentifier()}.tmp`);
-      const url = file['url'];
-      const response = await fetch(url);
-      Fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });  
-    
-      const container = blobServiceClient.getContainerClient(accountName);
-      const hash = new Uint8Array(md5.array(data));
-      const blockBlobClient: BlockBlobClient = container.getBlockBlobClient(blobName);
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const localName = Path.join('work', gbaiName, 'cache', `${GBAdminService.getRndReadableIdentifier()}.tmp`);
+    const url = file['url'];
+    const response = await fetch(url);
 
-      const res = await blockBlobClient.uploadFile(localName,
-        {
-          blobHTTPHeaders: {
-            blobContentMD5: hash
-          }
-        });
+    // Writes it to disk and calculate hash.
 
-      if (res._response.status === 200 && res.contentMD5 === hash) {
-        Fs.rmSync(localName);
-      }
-      else {
-        GBLog.error(`BASIC: BLOB HTTP ${res.errorCode} ${res._response.status} .`);
-      }
+    const data = await response.arrayBuffer();
+    Fs.writeFileSync(localName, Buffer.from(data), { encoding: null });
+    const hash = new Uint8Array(md5.array(data));
 
-    } catch (error) {
-      if (error.code === 'itemNotFound') {
-        GBLog.info(`BASIC: BASIC source file not found: ${file}.`);
-      } else if (error.code === 'nameAlreadyExists') {
-        GBLog.info(`BASIC: BASIC destination file already exists: ${file}.`);
-      }
-      throw error;
+    // Performs uploading passing local hash.
+
+    const container = blobServiceClient.getContainerClient(accountName);
+    const blockBlobClient: BlockBlobClient = container.getBlockBlobClient(blobName);
+    const res = await blockBlobClient.uploadFile(localName,
+      {
+        blobHTTPHeaders: {
+          blobContentMD5: hash
+        }
+      });
+
+    // If upload is OK including hash check, removes the temporary file.
+
+    if ((res._response.status === 200 || res._response.status === 201) && res.contentMD5 === hash) {
+      Fs.rmSync(localName);
+
+      file['md5'] = res.contentMD5;
+
+      return file;
+
     }
+    else {
+      GBLog.error(`BASIC: BLOB HTTP ${res.errorCode} ${res._response.status} .`);
+    }
+
   }
 
 
@@ -2156,7 +2157,7 @@ export class SystemKeywords {
 
             while (page === 0 || count === pageSize) {
               const paged = await t.findAll(
-                {offset:page * pageSize, limit:pageSize, subquery:false, where:{}}
+                { offset: page * pageSize, limit: pageSize, subquery: false, where: {} }
               );
               rows = [...paged, ...rows];
               page++;
@@ -2172,7 +2173,7 @@ export class SystemKeywords {
           }
         );
 
-        
+
 
       }
       else {
@@ -2292,7 +2293,7 @@ export class SystemKeywords {
 
           let value;
           Object.keys(row).forEach(e => {
-            
+
             if (columnName.toLowerCase() === e.toLowerCase()) {
               value = row[e];
               if (typeof (value) === 'string') {
@@ -2580,9 +2581,13 @@ export class SystemKeywords {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `dirFolder: remotePath=${remotePath}, baseUrl=${baseUrl}`);
 
+    if (!array) {
+      array = [];
+    }
+
     if (!baseUrl) {
-      let client;
-      [baseUrl, client] = await GBDeployer.internalGetDriveClient(min);
+
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
       remotePath = remotePath.replace(/\\/gi, '/');
 
@@ -2619,10 +2624,10 @@ export class SystemKeywords {
           obj['url'] = item['@microsoft.graph.downloadUrl'];
 
           array.push(obj);
-
-          return array;
         }
       });
+
+      return array;
     }
   }
 }
