@@ -123,7 +123,7 @@ export class GBDeployer implements IGBDeployer {
       const baseUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}`;
       min['cacheToken'] = { baseUrl, client };
 
-      return min['cacheToken'];
+      return { baseUrl, client };
 
   }
 

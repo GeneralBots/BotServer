@@ -434,7 +434,7 @@ export class KeywordsExpressions {
       /^\s*(.*)\=\s*(UPLOAD)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['file']);
-        return `await sys.uploadFile ({pid: pid, ${params}})`;
+        return `${$1} = await sys.uploadFile ({pid: pid, ${params}})`;
       }
     ];
 
@@ -909,13 +909,14 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(talk)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        $3 = GBVMService.normalizeQuotes($3);
+        // Issue: #395
+        // $3 = GBVMService.normalizeQuotes($3);
 
-        // Uses auto quote if this is a frase with more then one word.
+        // // Uses auto quote if this is a phrase with more then one word.
 
-        if (/\s/.test($3) && $3.substr(0, 1) !== '"') {
-          $3 = `"${$3}"`;
-        }
+        // if (/\s/.test($3) && $3.substr(0, 1) !== '`') {
+        //   $3 = "`" + $3 + "`";
+        // }
         return `await dk.talk ({pid: pid, text: ${$3}})`;
       }
     ];

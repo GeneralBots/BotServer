@@ -664,7 +664,7 @@ export class SystemKeywords {
 
     const accountName = min.core.getParam(min.instance, 'Blob Account');
     const accountKey = min.core.getParam(min.instance, 'Blob Key');
-    const blobName = min.core.getParam(min.instance, 'Blob Name');
+
     const sharedKeyCredential = new StorageSharedKeyCredential(
       accountName,
       accountKey
@@ -693,7 +693,7 @@ export class SystemKeywords {
     // Performs uploading passing local hash.
 
     const container = blobServiceClient.getContainerClient(accountName);
-    const blockBlobClient: BlockBlobClient = container.getBlockBlobClient(blobName);
+    const blockBlobClient: BlockBlobClient = container.getBlockBlobClient(file.path);
     const res = await blockBlobClient.uploadFile(localName,
       {
         blobHTTPHeaders: {
@@ -703,10 +703,11 @@ export class SystemKeywords {
 
     // If upload is OK including hash check, removes the temporary file.
 
-    if ((res._response.status === 200 || res._response.status === 201) && res.contentMD5 === hash) {
+    if (res._response.status === 201 &&
+      (new Uint8Array(res.contentMD5)).toString() === hash.toString()) {
       Fs.rmSync(localName);
 
-      file['md5'] = res.contentMD5;
+      file['md5'] = hash.toString();
 
       return file;
 
@@ -2546,20 +2547,20 @@ export class SystemKeywords {
     return { contentType, ext, kind, category: kind['category'] };
   }
 
-  private async deleteFile({ min, file }) {
-    // const file = GBServer.globals.files[handle];
-    GBLog.info(`BASIC: Auto saving '${file.filename}' (SAVE file).`);
+  public async deleteFile({ pid, file }) {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    GBLog.info(`BASIC: DELETE '${file.name}'.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
-    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
-    const fileName = file.url ? file.url : file.name;
+    const gbaiPath = DialogKeywords.getGBAIPath(min.botId);
+    const fileName = file.name;
     const contentType = mime.lookup(fileName);
     const ext = Path.extname(fileName).substring(1);
     const kind = await this.getExtensionInfo(ext);
 
-    const result = await client
-      .api(`${baseUrl}/drive/root:/${path}/${file}`)
-      .delete(file.data);
+    await client
+      .api(`${baseUrl}/drive/root:/${gbaiPath}/${file.path}`)
+      .delete();
 
     return { contentType, ext, kind, category: kind['category'] };
   }
@@ -2576,7 +2577,7 @@ export class SystemKeywords {
   /**
  * Loads all para from tabular file Config.xlsx.
  */
-  public async dirFolder({ pid, remotePath, baseUrl = null, array = null }) {
+  public async dirFolder({ pid, remotePath, baseUrl = null, client = null, array = null }) {
 
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `dirFolder: remotePath=${remotePath}, baseUrl=${baseUrl}`);
@@ -2585,49 +2586,51 @@ export class SystemKeywords {
       array = [];
     }
 
-    if (!baseUrl) {
+    if (!baseUrl){
+      let obj = await GBDeployer.internalGetDriveClient(min);
+      baseUrl = obj.baseUrl;
+      client = obj.client;
+    }
 
-      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    remotePath = remotePath.replace(/\\/gi, '/');
 
-      remotePath = remotePath.replace(/\\/gi, '/');
+    // Retrieves all files in remote folder.
 
-      // Retrieves all files in remote folder.
+    let path = DialogKeywords.getGBAIPath(min.botId);
+    path = urlJoin(path, remotePath);
+    let url = `${baseUrl}/drive/root:/${path}:/children`;
 
-      let path = DialogKeywords.getGBAIPath(min.botId);
-      path = urlJoin(path, remotePath);
-      let url = `${baseUrl}/drive/root:/${path}:/children`;
-
-      const res = await client.api(url).get();
-      const documents = res.value;
-      if (documents === undefined || documents.length === 0) {
-        GBLogEx.info(min, `${remotePath} is an empty folder.`);
-        return array;
-      }
-
-      // Navigate files / directory to recurse.
-
-      await CollectionUtil.asyncForEach(documents, async item => {
-
-        if (item.folder) {
-          remotePath = urlJoin(remotePath, item.name);
-          array = [array, ... await this.dirFolder({ pid, remotePath, baseUrl, array })];
-        } else {
-
-          // TODO:  https://raw.githubusercontent.com/ishanarora04/quickxorhash/master/quickxorhash.js
-
-          let obj = {};
-          obj['modified'] = item.lastModifiedDateTime;
-          obj['name'] = item.name;
-          obj['size'] = item.size;
-          obj['hash'] = item.file?.hashes?.quickXorHash;
-          obj['path'] = Path.join(remotePath, item.name);
-          obj['url'] = item['@microsoft.graph.downloadUrl'];
-
-          array.push(obj);
-        }
-      });
-
+    const res = await client.api(url).get();
+    const documents = res.value;
+    if (documents === undefined || documents.length === 0) {
+      GBLogEx.info(min, `${remotePath} is an empty folder.`);
       return array;
     }
+
+    // Navigate files / directory to recurse.
+
+    await CollectionUtil.asyncForEach(documents, async item => {
+
+      if (item.folder) {
+        remotePath = urlJoin(remotePath, item.name);
+        array = [...array, ... await this.dirFolder({ pid, remotePath, baseUrl, client, array })];
+
+      } else {
+
+        // TODO:  https://raw.githubusercontent.com/ishanarora04/quickxorhash/master/quickxorhash.js
+
+        let obj = {};
+        obj['modified'] = item.lastModifiedDateTime;
+        obj['name'] = item.name;
+        obj['size'] = item.size;
+        obj['hash'] = item.file?.hashes?.quickXorHash;
+        obj['path'] = Path.join(remotePath, item.name);
+        obj['url'] = item['@microsoft.graph.downloadUrl'];
+
+        array.push(obj);
+      }
+    });
+
+    return array;
   }
 }
