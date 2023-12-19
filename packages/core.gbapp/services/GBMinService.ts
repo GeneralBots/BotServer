@@ -1212,6 +1212,7 @@ export class GBMinService {
   }
 
   private async handleUploads(min, step, user, params, autoSave) {
+    
     // Prepare Promises to download each attachment and then execute each Promise.
 
     if (
@@ -1228,19 +1229,21 @@ export class GBMinService {
           // In case of not having HEAR activated before, it is
           // a upload with no Dialog, so run Auto Save to .gbdrive.
 
+          const t = new SystemKeywords();
+          GBLog.info(`BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
+          const handle = WebAutomationServices.cyrb53(min.botId + attachmentData.fileName);
+          let data = Fs.readFileSync(attachmentData.localPath);
+
+          const gbfile = {
+            filename: attachmentData.localPath,
+            data: data,
+            name: Path.basename(attachmentData.fileName)
+          };
+
+          GBServer.globals.files[handle] = gbfile;
+
           if (!min.cbMap[user.userId] && autoSave) {
-            const t = new SystemKeywords();
-            GBLog.info(`BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
-            const handle = WebAutomationServices.cyrb53(min.botId + attachmentData.fileName);
-            let data = Fs.readFileSync(attachmentData.localPath);
-
-            const gbfile = {
-              filename: attachmentData.localPath,
-              data: data,
-              name: Path.basename(attachmentData.fileName)
-            };
-
-            GBServer.globals.files[handle] = gbfile;
+           
             const result = await t['internalAutoSave']({ min: min, handle: handle });
             await min.conversationalService.sendText(
               min,
@@ -1250,6 +1253,12 @@ export class GBMinService {
 
             return;
           }
+          else
+          {
+            return gbfile;
+          }
+
+
         } else {
           await this.sendActivity('Error uploading file. Please,start again.');
         }
