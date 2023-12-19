@@ -1291,7 +1291,7 @@ export class DialogKeywords {
       let url = template['@microsoft.graph.downloadUrl'];
       const res = await fetch(url);
       let buf: any = Buffer.from(await res.arrayBuffer());
-      let localName1 = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+      let localName1 = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
       Fs.writeFileSync(localName1, buf, { encoding: null });
 
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName1));
