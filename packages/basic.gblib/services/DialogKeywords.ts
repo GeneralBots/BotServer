@@ -1250,36 +1250,24 @@ export class DialogKeywords {
 
     // Handles Markdown.
 
-    else if (filename.indexOf('.md') > -1) {
+    else if (filename.indexOf('.md') !== -1) {
+
       GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
       const md = await min.kbService.getAnswerTextByMediaName(min.instance.instanceId, filename);
       if (!md) {
         GBLog.info(`BASIC: Markdown file ${filename} not found on database for ${min.instance.botId}.`);
       }
-
       await min.conversationalService['playMarkdown'](min, md, DialogKeywords.getChannel(), null, mobile);
       
       return;
 
-    // GBDRIVE
-
-    } else if (filename.indexOf('.md') > -1) {
-      const gbaiName = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
-
-      GBLog.info(`BASIC: Sending the MD ${filename} to mobile ${mobile}.`);
-
-      if (!filename.startsWith('https://')) {
-        url = urlJoin(GBServer.globals.publicAddress, 'kb', gbaiName, 'assets', filename);
-      } else {
-        url = filename;
-      }
-
-      nameOnly = filename;
     }
 
     // .gbdrive direct sending.
 
     else {
+
+      GBLog.info(`BASIC: Direct send from .gbdrive: ${filename} to ${mobile}.`);
 
       const ext = mime.extension(Path.extname(filename));
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
