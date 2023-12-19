@@ -1093,7 +1093,7 @@ export class DialogKeywords {
         });
 
         if (result === null) {
-          await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos (${args.join(',')}).` });
+          await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos (${args.join(', ')}).` });
           return await this.hear({ pid, kind, args });
         }
       } else if (kind === 'language') {
