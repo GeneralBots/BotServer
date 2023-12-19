@@ -1276,8 +1276,9 @@ export class DialogKeywords {
       let path = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
       const sys = new SystemKeywords();
       let template = await sys.internalGetDocument(client, baseUrl, path, filename);
-      let url = template['@microsoft.graph.downloadUrl'];
-      const res = await fetch(url);
+      
+      const driveUrl = template['@microsoft.graph.downloadUrl'];
+      const res = await fetch(driveUrl);
       let buf: any = Buffer.from(await res.arrayBuffer());
       let localName1 = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
       Fs.writeFileSync(localName1, buf, { encoding: null });
