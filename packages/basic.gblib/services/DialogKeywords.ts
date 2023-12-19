@@ -1269,7 +1269,7 @@ export class DialogKeywords {
 
       GBLog.info(`BASIC: Direct send from .gbdrive: ${filename} to ${mobile}.`);
 
-      const ext = mime.extension(Path.extname(filename));
+      const ext = Path.extname(filename);
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
       
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
@@ -1289,7 +1289,7 @@ export class DialogKeywords {
 
     if (!url) {
 
-      const ext = mime.extension(Path.extname(filename.localName));
+      const ext = Path.extname(filename.localName);
       
       // Prepare a cache to be referenced by Bot Framework.
       
