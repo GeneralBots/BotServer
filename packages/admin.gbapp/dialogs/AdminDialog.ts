@@ -39,14 +39,14 @@
 import crypto from 'crypto';
 import urlJoin from 'url-join';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
 import { Messages } from '../strings.js';
 import { GBAdminService } from '../services/GBAdminService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { SecService } from '../../security.gbapp/services/SecService.js';
-import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 
 /**
  * Dialogs for administration tasks.
@@ -444,7 +444,8 @@ export class AdminDialog extends IGBDialog {
           const scope = tokenName ? '' : 'https://graph.microsoft.com/.default';
           const host = tokenName ? step.activeDialog.state.host : 'https://login.microsoftonline.com'
           const tenant = tokenName ? step.activeDialog.state.tenant : min.instance.authenticatorTenant;
-          const clientId = tokenName ? step.activeDialog.state.clientId : min.instance.marketplaceId;
+          const clientId = tokenName ? step.activeDialog.state.clientId : (min.instance.marketplaceId ? 
+              min.instance.marketplaceId : GBConfigService.get('MARKETPLACE_ID'));
           const oauth2 = tokenName ? 'oauth' : 'oauth2';
           const url = `${host}/${tenant}/${oauth2}/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&state=${state}&response_mode=query`;
 

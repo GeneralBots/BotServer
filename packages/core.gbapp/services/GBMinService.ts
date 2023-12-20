@@ -516,7 +516,7 @@ export class GBMinService {
 
         const options = {
           method: 'POST',
-          headers: {  
+          headers: {
             Accept: '1.0',
             Authorization: `Basic ${base64}`,
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -537,15 +537,15 @@ export class GBMinService {
 
         // Saves token to the database.
 
-        await this.adminService.setValue(instance.instanceId, 
-          `${tokenName}accessToken`, token['accessToken']?token['accessToken']:token['access_token']);
-        await this.adminService.setValue(instance.instanceId, 
-          `${tokenName}refreshToken`, token['refreshToken']?token['refreshToken']:token['refresh_token']);
+        await this.adminService.setValue(instance.instanceId,
+          `${tokenName}accessToken`, token['accessToken'] ? token['accessToken'] : token['access_token']);
+        await this.adminService.setValue(instance.instanceId,
+          `${tokenName}refreshToken`, token['refreshToken'] ? token['refreshToken'] : token['refresh_token']);
 
-        await this.adminService.setValue(instance.instanceId, 
+        await this.adminService.setValue(instance.instanceId,
           `${tokenName}expiresOn`, token['expiresOn'] ?
-          token['expiresOn'].toString():
-          new Date (Date.now() + token['expires_in']).toString());
+          token['expiresOn'].toString() :
+          new Date(Date.now() + token['expires_in']).toString());
         await this.adminService.setValue(instance.instanceId, `${tokenName}AntiCSRFAttackState`, null);
 
 
@@ -721,8 +721,10 @@ export class GBMinService {
     // MSFT stuff.
 
     const adapter = new BotFrameworkAdapter({
-      appId: instance.marketplaceId,
+      appId: instance.marketplaceId ? instance.marketplaceId : GBConfigService.get('MARKETPLACE_ID'),
       appPassword: instance.marketplacePassword
+        ? instance.marketplacePassword
+        : GBConfigService.get('MARKETPLACE_SECRET')
     });
     const storage = new MemoryStorage();
     const conversationState = new ConversationState(storage);
@@ -759,6 +761,9 @@ export class GBMinService {
 
     if (!GBServer.globals.minBoot.botId) {
       GBServer.globals.minBoot = min;
+      GBServer.globals.minBoot.instance.marketplaceId = GBConfigService.get('MARKETPLACE_ID');
+      GBServer.globals.minBoot.instance.marketplacePassword = GBConfigService.get('MARKETPLACE_SECRET');
+
     }
 
     if (min.instance.facebookWorkplaceVerifyToken) {
@@ -1212,7 +1217,7 @@ export class GBMinService {
   }
 
   private async handleUploads(min, step, user, params, autoSave) {
-    
+
     // Prepare Promises to download each attachment and then execute each Promise.
 
     if (
@@ -1243,7 +1248,7 @@ export class GBMinService {
           GBServer.globals.files[handle] = gbfile;
 
           if (!min.cbMap[user.userId] && autoSave) {
-           
+
             const result = await t['internalAutoSave']({ min: min, handle: handle });
             await min.conversationalService.sendText(
               min,
@@ -1253,8 +1258,7 @@ export class GBMinService {
 
             return;
           }
-          else
-          {
+          else {
             return gbfile;
           }
 

@@ -97,7 +97,7 @@ export class GBDeployer implements IGBDeployer {
    * use to database like the Indexer (Azure Search).
    */
   public static getConnectionStringFromInstance(instance: IGBInstance) {
-    return `Server=tcp:${instance.storageServer},1433;Database=${instance.storageName};User ID=${instance.storageUsername};Password=${instance.storagePassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
+    return `Server=tcp:${GBConfigService.get("STORAGE_SERVER")},1433;Database=${GBConfigService.get("STORAGE_NAME")};User ID=${GBConfigService.get("STORAGE_USERNAME")};Password=${GBConfigService.get("STORAGE_PASSWORD")};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
   }
 
   /**
@@ -819,13 +819,7 @@ export class GBDeployer implements IGBDeployer {
     }
     await search.createIndex(searchSchema, dsName);
 
-    // release();
     GBLogEx.info(instance.instanceId, `Released rebuildIndex mutex.`);
-    //} catch {
-    // if (release) {
-    //   release();
-    // }
-    //}
   }
 
   /**

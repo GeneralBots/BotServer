@@ -100,10 +100,26 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static getRndPassword(): string {
+    
     let password = caseSensitive_Numbs_SpecialCharacters_PW(15);
     password = password.replace(/[\@\[\=\:\;\?\"\'\#]/gi, '*');
 
-    return password;
+    const removeRepeatedChars = (s, r) => {
+      let res = '', last = null, counter = 0;
+      s.split('').forEach(char => {
+          if (char == last)
+              counter++;
+          else {
+              counter = 0;
+              last = char;
+          }
+          if (counter < r)
+              res += char;
+      });    
+      return res;
+    }
+
+    return removeRepeatedChars(password, 1);
   }
 
   public static getRndReadableIdentifier(): string {
