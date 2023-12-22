@@ -120,7 +120,7 @@ export class GBSSR {
       ignoreHTTPSErrors: true,
       headless: false,
       defaultViewport: null,
-      executablePath: executablePath(),
+      executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath(),
       ignoreDefaultArgs: ['--enable-automation', '--enable-blink-features=IdleDetection']
     };
   }
@@ -285,8 +285,8 @@ export class GBSSR {
 
     const minBoot = GBServer.globals.minBoot;
 
-    let onlyChars:any = /\/([A-Za-z0-9\-\_]+)\/*/.exec(req.originalUrl);
-    onlyChars = onlyChars? onlyChars[1]: minBoot.botId;
+    let onlyChars: any = /\/([A-Za-z0-9\-\_]+)\/*/.exec(req.originalUrl);
+    onlyChars = onlyChars ? onlyChars[1] : minBoot.botId;
 
     let botId =
       req.originalUrl && req.originalUrl === '/' ?
