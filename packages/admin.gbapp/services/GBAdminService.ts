@@ -304,7 +304,7 @@ export class GBAdminService implements IGBAdminService {
 
           if (result.status != 200) {
             const text = await result.text();
-            throw new Error(`acquireElevatedToken error: ${result.status}: ${result.statusText} ${text}.`);
+            throw new Error(`acquireElevatedToken refreshing token: ${result.status}: ${result.statusText} ${text}.`);
           }
 
           const text = await result.text();
@@ -315,7 +315,7 @@ export class GBAdminService implements IGBAdminService {
           await this.setValue(instanceId, `${tokenName}accessToken`, token['access_token']);
           await this.setValue(instanceId, `${tokenName}refreshToken`, token['refresh_token']);
           await this.setValue(instanceId, `${tokenName}expiresOn`,
-            new Date(Date.now() + token['expires_in']).toString());
+            new Date(Date.now() + (token['expires_in'] * 1000)).toString());
           await this.setValue(instanceId, `${tokenName}AntiCSRFAttackState`, null);
 
           resolve(token['access_token']);
