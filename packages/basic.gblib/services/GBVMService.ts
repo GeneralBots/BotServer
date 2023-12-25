@@ -606,12 +606,12 @@ export class GBVMService extends GBService {
         const tokens = this.tokens ? this.tokens.split(',') : [];
         
         for(i in tokens) { 
-          const token = tokens[i];
+          const tokenName = tokens[i];
           const expiresOn = new Date(global[i + "_expiresOn"]);
 
           if (expiresOn.getTime() > new Date().getTime()) {
             
-            {token, expiresOn} = await sys.getCustomToken({pid, token});            
+            const {token, expiresOn} = await sys.getCustomToken({pid, tokenName});
 
             global[i] = token;
             global[i + "_expiresOn"]= expiresOn; 
