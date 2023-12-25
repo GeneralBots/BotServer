@@ -617,7 +617,7 @@ export class GBVMService extends GBService {
             global[i + "_expiresOn"]= expiresOn; 
           }
         }            
-      });
+      };
 
       try{
         ${code}
@@ -627,13 +627,6 @@ export class GBVMService extends GBService {
       }
       finally{
 
-          // Signals token refresh jobs to stop.
-        
-          for(let i in tokens) { 
-            const token = tokens[i];
-            tokenStops[token] = true;
-          }
-    
           // Closes handles if any.
 
           await wa.closeHandles({pid: pid});
