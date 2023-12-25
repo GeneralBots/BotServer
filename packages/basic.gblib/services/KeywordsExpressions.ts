@@ -374,7 +374,8 @@ export class KeywordsExpressions {
             if (__calls < __totalCalls && __pageMode === "auto") {
 
               // Performs GET request using the constructed URL
-
+              
+              await ensureTokens();
               __data = await sys.getHttp ({pid: pid, file: __url, addressOrHeaders: headers, httpUsername, httpPs});
               
               // Updates current variable handlers.
@@ -669,7 +670,10 @@ export class KeywordsExpressions {
 
         // Handles the GET http version.
         else {
-          return `${$1} = await sys.getHttp ({pid: pid, file: ${$2}, addressOrHeaders: headers, httpUsername, httpPs})`;
+          return `
+            await ensureTokens();
+            ${$1} = await sys.getHttp ({pid: pid, file: ${$2}, addressOrHeaders: headers, httpUsername, httpPs})
+          `;
         }
       }
     ];
@@ -824,14 +828,20 @@ export class KeywordsExpressions {
 
         const args = $2.split(',');
 
-        return `${$1} = await sys.postByHttp ({pid: pid, url:${args[0]}, data:${args[1]}, headers})`;
+        return `
+          await ensureTokens();
+          ${$1} = await sys.postByHttp ({pid: pid, url:${args[0]}, data:${args[1]}, headers})
+        `;
       }
     ];
 
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*put\s*(.*),\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `${$1} = await sys.putByHttp ({pid: pid, url:${$2}, data:${$3}, headers})`;
+        return `
+          await ensureTokens();
+          ${$1} = await sys.putByHttp ({pid: pid, url:${$2}, data:${$3}, headers})
+        `;
       }
     ];
 

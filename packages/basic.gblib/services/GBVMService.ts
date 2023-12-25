@@ -602,28 +602,22 @@ export class GBVMService extends GBService {
         return new Promise(resolve => setTimeout(resolve, ms));
       }
     
-      const tokenStops = {};
-      
-      // Setups refresh token mechanism.
-      const tokens = this.tokens ? this.tokens.split(',') : [];
-      const interval = 60000 * 60;
-
-      for(i in tokens) { 
-
+      const ensureTokens = async () => {
+        const tokens = this.tokens ? this.tokens.split(',') : [];
+        
+        for(i in tokens) { 
           const token = tokens[i];
-          tokenStops[token] = false;
+          const expiresOn = new Date(global[i + "_expiresOn"]);
 
-          const waitAndRefreshToken = async (token) => {
-            await timeout(interval);
-            global[i] = await sys.getCustomToken({pid, token});            
-            if (!tokenStops[token]) {
-              await waitAndRefreshToken(token);
-            }
-          };
-          (async (token) => {
-              await waitAndRefreshToken(token);
-          })(token);
-      }   
+          if (expiresOn.getTime() > new Date().getTime()) {
+            
+            {token, expiresOn} = await sys.getCustomToken({pid, token});            
+
+            global[i] = token;
+            global[i + "_expiresOn"]= expiresOn; 
+          }
+        }            
+      });
 
       try{
         ${code}
@@ -962,10 +956,15 @@ export class GBVMService extends GBService {
     const tokens = await min.core['findParam'](min.instance, strFind);
     let tokensList = [];
     await CollectionUtil.asyncForEach(tokens, async t => {
-      const token = t.replace(strFind, '');
-      tokensList.push(token);
+      const tokenName = t.replace(strFind, '');
+      tokensList.push(tokenName);
       try {
-        variables[token] = await sys.getCustomToken({pid, token});
+        let {token, expiresOn} = await sys.getCustomToken({pid, tokenName});
+
+        variables[token] = token;
+        variables[token + '_expiresOn'] = expiresOn;
+
+
       } catch (error) {
         variables[t] = 'ERROR: Configure /setupSecurity before using token variables.';
       }

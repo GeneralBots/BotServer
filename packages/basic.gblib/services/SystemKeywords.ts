@@ -1670,19 +1670,22 @@ export class SystemKeywords {
     return res;
   }
 
-  public async getCustomToken({ pid, token }): Promise<string> {
+  public async getCustomToken({ pid, token: tokenName }) {
 
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `GET TOKEN: ${token}`);
+    GBLogEx.info(min, `GET TOKEN: ${tokenName}`);
 
-    return await (min.adminService as any)['acquireElevatedToken']
+    const token = await (min.adminService as any)['acquireElevatedToken']
       (min.instance.instanceId, false,
-        token,
-        min.core.getParam(min.instance, `${token} Client ID`, null),
-        min.core.getParam(min.instance, `${token} Client Secret`, null),
-        min.core.getParam(min.instance, `${token} Host`, null),
-        min.core.getParam(min.instance, `${token} Tenant`, null)
+        tokenName,
+        min.core.getParam(min.instance, `${tokenName} Client ID`, null),
+        min.core.getParam(min.instance, `${tokenName} Client Secret`, null),
+        min.core.getParam(min.instance, `${tokenName} Host`, null),
+        min.core.getParam(min.instance, `${tokenName} Tenant`, null)
       );
+    const expiresOn = await min.adminService.getValue(min.instanceId, `${tokenName}expiresOn`);
+
+    return { token, expiresOn };
   }
 
 
@@ -2586,7 +2589,7 @@ export class SystemKeywords {
       array = [];
     }
 
-    if (!baseUrl){
+    if (!baseUrl) {
       let obj = await GBDeployer.internalGetDriveClient(min);
       baseUrl = obj.baseUrl;
       client = obj.client;
