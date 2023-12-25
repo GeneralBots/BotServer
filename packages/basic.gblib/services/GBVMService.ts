@@ -620,6 +620,7 @@ export class GBVMService extends GBService {
       };
 
       try{
+        await ensureTokens();
         ${code}
       }
       catch(e){
@@ -954,8 +955,8 @@ export class GBVMService extends GBService {
       try {
         let {token, expiresOn} = await sys.getCustomToken({pid, tokenName});
 
-        variables[token] = token;
-        variables[token + '_expiresOn'] = expiresOn;
+        variables[tokenName] = token;
+        variables[tokenName + '_expiresOn'] = expiresOn;
 
 
       } catch (error) {

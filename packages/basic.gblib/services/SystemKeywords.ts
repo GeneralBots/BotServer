@@ -1670,10 +1670,10 @@ export class SystemKeywords {
     return res;
   }
 
-  public async getCustomToken({ pid, token: tokenName }) {
+  public async getCustomToken({ pid, tokenName }) {
 
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `GET TOKEN: ${tokenName}`);
+    GBLogEx.info(min, `BASIC internal getCustomToken: ${tokenName}`);
 
     const token = await (min.adminService as any)['acquireElevatedToken']
       (min.instance.instanceId, false,
