@@ -606,6 +606,7 @@ export class GBVMService extends GBService {
         const tokens = this.tokens ? this.tokens.split(',') : [];
         
         for(i in tokens) { 
+          const tokenNAme = tokens[i];
           const expiresOn = new Date(global[tokenName + "_expiresOn"]);
 
           if (expiresOn.getTime() > new Date().getTime()) {
@@ -614,6 +615,8 @@ export class GBVMService extends GBService {
 
             global[tokenName] = token;
             global[tokenName + "_expiresOn"]= expiresOn; 
+
+            console.log(tokenName + ' updated.');
           }
         }            
       };
