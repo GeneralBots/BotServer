@@ -605,7 +605,7 @@ export class GBVMService extends GBService {
       const ensureTokens = async () => {
         const tokens = this.tokens ? this.tokens.split(',') : [];
         
-        for(tokenName in tokens) { 
+        for(i in tokens) { 
           const expiresOn = new Date(global[tokenName + "_expiresOn"]);
 
           if (expiresOn.getTime() > new Date().getTime()) {
@@ -619,8 +619,7 @@ export class GBVMService extends GBService {
       };
 
       try{
-        await ensureTokens();
-        ${code}
+        ${code} // ISSUE: #339, tabify this.
       }
       catch(e){
         console.log(e);
@@ -959,7 +958,7 @@ export class GBVMService extends GBService {
 
 
       } catch (error) {
-        variables[t] = 'ERROR: Configure /setupSecurity before using token variables.';
+        variables[t] = `${error}: Configure /setupSecurity before using token variables.`;
       }
     });
 

@@ -1683,7 +1683,7 @@ export class SystemKeywords {
         min.core.getParam(min.instance, `${tokenName} Host`, null),
         min.core.getParam(min.instance, `${tokenName} Tenant`, null)
       );
-    const expiresOn = await min.adminService.getValue(min.instanceId, `${tokenName}expiresOn`);
+    const expiresOn = await min.adminService.getValue(min.instance.instanceId, `${tokenName}expiresOn`);
 
     return { token, expiresOn };
   }
