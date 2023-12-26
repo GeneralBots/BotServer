@@ -609,7 +609,7 @@ export class GBVMService extends GBService {
           const tokenName = tokens[i];
           const expiresOn = new Date(global[tokenName + "_expiresOn"]);
 
-          if (expiresOn.getTime() > new Date().getTime()) {
+          if (expiresOn.getTime() < new Date().getTime()) {
             
             const {token, expiresOn} = await sys.getCustomToken({pid, tokenName});
 
