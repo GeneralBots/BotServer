@@ -602,14 +602,16 @@ export class GBVMService extends GBService {
         return new Promise(resolve => setTimeout(resolve, ms));
       }
     
-      const ensureTokens = async () => {
+      const ensureTokens = async (firstTime) => {
         const tokens = this.tokens ? this.tokens.split(',') : [];
         
         for(i in tokens) { 
           const tokenName = tokens[i];
-          const expiresOn = new Date(global[tokenName + "_expiresOn"]);
+          
+          // Auto update Bearar authentication for the first token.
 
-          if (expiresOn.getTime() < new Date().getTime()) {
+          const expiresOn = new Date(global[tokenName + "_expiresOn"]);
+          if (expiresOn.getTime() < new Date().getTime() || firstTime) {
             
             const {token, expiresOn} = await sys.getCustomToken({pid, tokenName});
 
@@ -618,10 +620,17 @@ export class GBVMService extends GBService {
 
             console.log(tokenName + ' updated.');
           }
+
+          if (i === 0) {
+            headers['Authorization'] = 'Bearer ' + global[tokenName];
+          }
         }            
       };
 
       try{
+
+        await ensureTokens(true);
+
         ${code} // ISSUE: #339, tabify this.
       }
       catch(e){
@@ -953,16 +962,6 @@ export class GBVMService extends GBService {
     await CollectionUtil.asyncForEach(tokens, async t => {
       const tokenName = t.replace(strFind, '');
       tokensList.push(tokenName);
-      try {
-        let {token, expiresOn} = await sys.getCustomToken({pid, tokenName});
-
-        variables[tokenName] = token;
-        variables[tokenName + '_expiresOn'] = expiresOn;
-
-
-      } catch (error) {
-        variables[t] = `${error}: Configure /setupSecurity before using token variables.`;
-      }
     });
 
     sandbox['tokens'] = tokensList.join(',');
