@@ -617,12 +617,8 @@ export class GBVMService extends GBService {
 
             global[tokenName] = token;
             global[tokenName + "_expiresOn"]= expiresOn; 
-
-            console.log(tokenName + ' updated.');
           }
-          console.log(i);
-          if (i === 0) {
-            console.log('auth defined bear OK: ' + global[tokenName]);
+          if (i == 0) {
             headers['Authorization'] = 'Bearer ' + global[tokenName];
           }
         }            
