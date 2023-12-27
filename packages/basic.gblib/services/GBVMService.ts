@@ -620,8 +620,9 @@ export class GBVMService extends GBService {
 
             console.log(tokenName + ' updated.');
           }
-
+          console.log(i);
           if (i === 0) {
+            console.log('auth defined bear OK: ' + global[tokenName]);
             headers['Authorization'] = 'Bearer ' + global[tokenName];
           }
         }            
@@ -965,7 +966,6 @@ export class GBVMService extends GBService {
     });
 
     sandbox['tokens'] = tokensList.join(',');
-    console.log(sandbox['tokens']);
     sandbox['variables'] = variables;
     sandbox['id'] = sys.getRandomId();
     sandbox['username'] = await dk.userName({ pid });

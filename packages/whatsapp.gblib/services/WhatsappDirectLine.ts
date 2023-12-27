@@ -155,9 +155,9 @@ export class WhatsappDirectLine extends GBService {
               const adminEmail = this.min.core.getParam(this.min.instance, 'Bot Admin E-mail', null);
               // Sends QR Code to boot bot admin.
               const msg = `Please, scan QR Code with for bot ${this.botId}.`;
-              GBLog.info(msg);
               qrcode.generate(qr, { small: true, scale: 0.5 });
-              // While handling other bots uses boot instance of this class to send QR Codes.
+              
+              // TODO: While handling other bots uses boot instance of this class to send QR Codes.
               // const s = new DialogKeywords(min., null, null, null);
               // const qrBuf = await s.getQRCode(qr);
               // const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
@@ -170,6 +170,7 @@ export class WhatsappDirectLine extends GBService {
               // );
               // GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
               // s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, msg);
+              
             }).bind(this)
           );
           client.on('authenticated', async () => {
