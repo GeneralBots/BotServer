@@ -611,8 +611,12 @@ export class GBVMService extends GBService {
           // Auto update Bearar authentication for the first token.
 
           const expiresOn = new Date(global[tokenName + "_expiresOn"]);
-          if (expiresOn.getTime() < new Date().getTime() || firstTime) {
-            
+          const expiration  = expiresOn.getTime() - (10 * 60 * 1000);
+
+          // Expires token 10min. before or if it the first time, load it.
+
+          if (expiration < new Date().getTime() || firstTime) {
+            console.log ('Expired. Refreshing token...');
             const {token, expiresOn} = await sys.getCustomToken({pid, tokenName});
 
             global[tokenName] = token;
