@@ -543,8 +543,8 @@ export class GBVMService extends GBService {
 
       // Transfers auto variables into global object.
 
-      for(i in this.variables) { 
-          global[i] = this.variables[i];
+      for(__indexer in this.variables) { 
+          global[__indexer] = this.variables[i];
       }   
 
 
@@ -605,8 +605,8 @@ export class GBVMService extends GBService {
       const ensureTokens = async (firstTime) => {
         const tokens = this.tokens ? this.tokens.split(',') : [];
         
-        for(tokenIndexer in tokens) { 
-          const tokenName = tokens[tokenIndexer];
+        for(__indexer in tokens) { 
+          const tokenName = tokens[__indexer];
           
           // Auto update Bearar authentication for the first token.
 
@@ -623,7 +623,7 @@ export class GBVMService extends GBService {
             global[tokenName + "_expiresOn"]= expiresOn; 
           }
 
-          if (tokenIndexer == 0) {
+          if (__indexer == 0) {
             headers['Authorization'] = 'Bearer ' + global[tokenName];
           }
         }            

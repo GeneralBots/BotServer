@@ -2409,6 +2409,11 @@ export class SystemKeywords {
     return table;
   }
 
+  /**
+   * Publishs a tweet to X.
+   *
+   * TWEET "My tweet text"
+   */
   public async tweet({ pid, text }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
