@@ -605,8 +605,8 @@ export class GBVMService extends GBService {
       const ensureTokens = async (firstTime) => {
         const tokens = this.tokens ? this.tokens.split(',') : [];
         
-        for(i in tokens) { 
-          const tokenName = tokens[i];
+        for(tokenIndexer in tokens) { 
+          const tokenName = tokens[tokenIndexer];
           
           // Auto update Bearar authentication for the first token.
 
@@ -622,7 +622,8 @@ export class GBVMService extends GBService {
             global[tokenName] = token;
             global[tokenName + "_expiresOn"]= expiresOn; 
           }
-          if (i == 0) {
+
+          if (tokenIndexer == 0) {
             headers['Authorization'] = 'Bearer ' + global[tokenName];
           }
         }            
