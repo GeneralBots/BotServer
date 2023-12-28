@@ -375,9 +375,14 @@ export class KeywordsExpressions {
 
               // Performs GET request using the constructed URL
               
-              await ensureTokens();
-              __data = await sys.getHttp ({pid: pid, file: __url, addressOrHeaders: headers, httpUsername, httpPs});
-              
+              await retry(
+                async (bail) => {
+                    await ensureTokens();
+                    ___data = await sys.getHttp ({pid: pid, file: __url, addressOrHeaders: headers, httpUsername, httpPs});
+                },{ retries: 5});         
+
+              __data = ___data
+                      
               // Updates current variable handlers.
               
               __url = __data?.links?.next?.uri;
@@ -671,8 +676,14 @@ export class KeywordsExpressions {
         // Handles the GET http version.
         else {
           return `
-            await ensureTokens();
-            ${$1} = await sys.getHttp ({pid: pid, file: ${$2}, addressOrHeaders: headers, httpUsername, httpPs})
+          await retry(
+            async (bail) => {
+              await ensureTokens();
+              __${$1} = await sys.getHttp ({pid: pid, file: ${$2}, addressOrHeaders: headers, httpUsername, httpPs})
+            },{ retries: 5});         
+
+            ${$1} = __${$1} 
+    
           `;
         }
       }
@@ -829,8 +840,14 @@ export class KeywordsExpressions {
         const args = $2.split(',');
 
         return `
-          await ensureTokens();
-          ${$1} = await sys.postByHttp ({pid: pid, url:${args[0]}, data:${args[1]}, headers})
+        await retry(
+          async (bail) => {
+            await ensureTokens();
+
+            __${$1} = await sys.postByHttp ({pid: pid, url:${args[0]}, data:${args[1]}, headers})
+          },{ retries: 5});         
+
+          ${$1} = __${$1} 
         `;
       }
     ];
@@ -839,8 +856,15 @@ export class KeywordsExpressions {
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*put\s*(.*),\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `
-          await ensureTokens();
-          ${$1} = await sys.putByHttp ({pid: pid, url:${$2}, data:${$3}, headers})
+
+        await retry(
+          async (bail) => {
+            await ensureTokens();
+            __${$1} = await sys.putByHttp ({pid: pid, url:${$2}, data:${$3}, headers})
+          },{ retries: 5});         
+
+        ${$1} = __${$1} 
+
         `;
       }
     ];

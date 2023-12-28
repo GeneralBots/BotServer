@@ -161,7 +161,8 @@ export class GBVMService extends GBService {
                 "punycode": "2.1.1",
                 "@push-rpc/core": "1.8.2",
                 "@push-rpc/http": "1.8.2",
-                "vm2": "3.9.11"
+                "vm2": "3.9.11",
+                "async-retry": "1.3.3"
               }
             }`;
       Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
@@ -490,6 +491,7 @@ export class GBVMService extends GBService {
 
       require('isomorphic-fetch');
       const http = require('node:http');
+      const retry = require('async-retry');
       const createRpcClient = require("@push-rpc/core").createRpcClient;
       const createHttpClient = require("@push-rpc/http").createHttpClient;
       
