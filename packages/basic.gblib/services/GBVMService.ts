@@ -544,7 +544,7 @@ export class GBVMService extends GBService {
       // Transfers auto variables into global object.
 
       for(__indexer in this.variables) { 
-          global[__indexer] = this.variables[i];
+          global[__indexer] = this.variables[__indexer];
       }   
 
 
