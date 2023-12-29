@@ -421,7 +421,11 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       instance.cloudLocation
     );
     await this.createStorage(name, storageServer, storageName, instance.cloudLocation);
-
+    instance.storageUsername = administratorLogin;
+    instance.storagePassword = administratorPassword;
+    instance.storageName = storageName;
+    instance.storageDialect = 'mssql';
+    instance.storageServer = `${storageServer}.database.windows.net`;
 
     GBLog.info(`Deploying Search...`);
     const searchName = `${name}-search`.toLowerCase();
