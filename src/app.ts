@@ -161,10 +161,12 @@ export class GBServer {
 
           // Creates a boot instance or load it from storage.
 
+          let runOnce =  false;
           if (GBConfigService.get('STORAGE_SERVER')) {
             azureDeployer = await AzureDeployerService.createInstance(deployer);
             await core.initStorage();
           } else {
+            runOnce = true;
             [GBServer.globals.bootInstance, azureDeployer] = await core['createBootInstanceEx'](
               core,
               null,
@@ -184,6 +186,10 @@ export class GBServer {
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
           await core.syncDatabaseStructure();
+          
+          if (runOnce){
+            await core.saveInstance(GBServer.globals.bootInstance);
+          }
 
           // Deployment of local applications for the first time.
 
