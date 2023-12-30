@@ -32,8 +32,9 @@
 
 'use strict';
 
-import { GBMinInstance, GBService, IGBCoreService, GBDialogStep, GBLog, GBError } from 'botlib';
+import { GBMinInstance, GBService, IGBCoreService, GBLog } from 'botlib';
 import * as Fs from 'fs';
+import * as ji from 'just-indent'
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -52,10 +53,9 @@ import { KeywordsExpressions } from './KeywordsExpressions.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { SystemKeywords } from './SystemKeywords.js';
-import lineReplace from 'line-replace';
-import { Sequelize, DataTypes, QueryTypes } from '@sequelize/core';
-import { table } from 'console';
-import { SequelizeOptions } from 'sequelize-typescript';
+import { Sequelize, QueryTypes } from '@sequelize/core';
+
+
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -485,172 +485,171 @@ export class GBVMService extends GBService {
     const jsfile: string = `${filename}.js`;
 
     code = `
-    return (async () => {
+        return (async () => { 
 
-      // Imports npm packages for this .gbdialog conversational application.
+          // Imports npm packages for this .gbdialog conversational application.
 
-      require('isomorphic-fetch');
-      const http = require('node:http');
-      const retry = require('async-retry');
-      const createRpcClient = require("@push-rpc/core").createRpcClient;
-      const createHttpClient = require("@push-rpc/http").createHttpClient;
-      
-      // Unmarshalls Local variables from server VM.
-
-      const pid = this.pid;
-      let id = this.id;
-      let username = this.username;
-      let mobile = this.mobile;
-      let from = this.from;
-      const channel = this.channel;
-      const ENTER = this.ENTER;
-      const headers = this.headers;
-      let data = this.data;
-      let list = this.list;
-      let httpUsername = this.httpUsername;
-      let httpPs = this.httpPs;
-      let today = this.today;
-      let now = this.now;
-      let date = new Date();
-      let page = null;
-      const files = [];
-      let col = 1;
-      let index = 1;
-
-      // Makes objects in BASIC insensitive.
-
-      const caseInsensitive = (listOrRow) => {
-        
-        if (!listOrRow) {
+          require('isomorphic-fetch');
+          const http = require('node:http');
+          const retry = require('async-retry');
+          const createRpcClient = require("@push-rpc/core").createRpcClient;
+          const createHttpClient = require("@push-rpc/http").createHttpClient;
           
-          return listOrRow;
-        };
+          // Unmarshalls Local variables from server VM.
 
-        const lowercase = (oldKey) => typeof oldKey === 'string' ? oldKey.toLowerCase() : oldKey;
+          const pid = this.pid;
+          let id = this.id;
+          let username = this.username;
+          let mobile = this.mobile;
+          let from = this.from;
+          const channel = this.channel;
+          const ENTER = this.ENTER;
+          const headers = this.headers;
+          let data = this.data;
+          let list = this.list;
+          let httpUsername = this.httpUsername;
+          let httpPs = this.httpPs;
+          let today = this.today;
+          let now = this.now;
+          let date = new Date();
+          let page = null;
+          const files = [];
+          let col = 1;
+          let index = 1;
 
-        const createCaseInsensitiveProxy = (obj) => {
-            const propertiesMap = new Map(Object.keys(obj).map(propKey => [lowercase(propKey), obj[propKey]]));
-            const caseInsensitiveGetHandler = {
-                get: (target, property) => propertiesMap.get(lowercase(property))
+          // Makes objects in BASIC insensitive.
+
+          const caseInsensitive = (listOrRow) => {
+            
+            if (!listOrRow) {
+              
+              return listOrRow;
             };
-            return new Proxy(obj, caseInsensitiveGetHandler);
-        };
 
-        if (listOrRow.length) {
-            return listOrRow.map(row => createCaseInsensitiveProxy(row));
-        } else {
-            return createCaseInsensitiveProxy(listOrRow);
-        }
-      };
+            const lowercase = (oldKey) => typeof oldKey === 'string' ? oldKey.toLowerCase() : oldKey;
 
-      // Transfers auto variables into global object.
+            const createCaseInsensitiveProxy = (obj) => {
+                const propertiesMap = new Map(Object.keys(obj).map(propKey => [lowercase(propKey), obj[propKey]]));
+                const caseInsensitiveGetHandler = {
+                    get: (target, property) => propertiesMap.get(lowercase(property))
+                };
+                return new Proxy(obj, caseInsensitiveGetHandler);
+            };
 
-      for(__indexer in this.variables) { 
-          global[__indexer] = this.variables[__indexer];
-      }   
-
-
-      // Defines local utility BASIC functions.
-
-      const ubound = (gbarray) => {
-        let length = 0;
-        if (gbarray){
-          length = gbarray.length;
-          if (length > 0){
-            if(gbarray[0].gbarray){
-              return length - 1;
+            if (listOrRow.length) {
+                return listOrRow.map(row => createCaseInsensitiveProxy(row));
+            } else {
+                return createCaseInsensitiveProxy(listOrRow);
             }
+          };
+
+          // Transfers auto variables into global object.
+
+          for(__indexer in this.variables) { 
+              global[__indexer] = this.variables[__indexer];
+          }   
+
+
+          // Defines local utility BASIC functions.
+
+          const ubound = (gbarray) => {
+            let length = 0;
+            if (gbarray){
+              length = gbarray.length;
+              if (length > 0){
+                if(gbarray[0].gbarray){
+                  return length - 1;
+                }
+              }
+            }
+            return length;
           }
-        }
-        return length;
-      }
-        
-      const isarray = (gbarray) => {return Array.isArray(gbarray) };
-  
-      // Proxies remote functions as BASIC functions.
-      
-      const weekday = (v) => { return (async () => { return await dk.getWeekFromDate({v}) })(); };
-      const hour = (v) => { return (async () => { return await dk.getHourFromDate({v}) })(); };
-      const base64 =  (v) => { return (async () => { return await dk.getCoded({v}) })(); };
-      const tolist =  (v) => { return (async () => { return await dk.getToLst({v}) })(); };
-      const uuid =  () => { 
-          var dt = new Date().getTime();
-          var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-              var r = (dt + Math.random()*16)%16 | 0;
-              dt = Math.floor(dt/16);
-              return (c=='x' ? r :(r&0x3|0x8)).toString(16);
-          });
-          return uuid;
-      };
-      const random =  () => { return Number.parseInt((Math.random() * 8) % 8 * 100000000)};
-    
+            
+          const isarray = (gbarray) => {return Array.isArray(gbarray) };
 
-      // Setups interprocess communication from .gbdialog run-time to the BotServer API.
-
-      const optsRPC = {callTimeout: this.callTimeout};
-      let url;
-      const agent = http.Agent({ keepAlive: true });
-
-      url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/dk';
-      const dk = (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-      url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/sys';
-      const sys =  (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-      url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/wa';
-      const wa = (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-      url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/img';
-      const img =  (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-
-      const timeout = (ms)=>  {
-        return new Promise(resolve => setTimeout(resolve, ms));
-      }
-    
-      const ensureTokens = async (firstTime) => {
-        const tokens = this.tokens ? this.tokens.split(',') : [];
-        
-        for(__indexer in tokens) { 
-          const tokenName = tokens[__indexer];
+          // Proxies remote functions as BASIC functions.
           
-          // Auto update Bearar authentication for the first token.
+          const weekday = (v) => { return (async () => { return await dk.getWeekFromDate({v}) })(); };
+          const hour = (v) => { return (async () => { return await dk.getHourFromDate({v}) })(); };
+          const base64 =  (v) => { return (async () => { return await dk.getCoded({v}) })(); };
+          const tolist =  (v) => { return (async () => { return await dk.getToLst({v}) })(); };
+          const uuid =  () => { 
+              var dt = new Date().getTime();
+              var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                  var r = (dt + Math.random()*16)%16 | 0;
+                  dt = Math.floor(dt/16);
+                  return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+              });
+              return uuid;
+          };
+          const random =  () => { return Number.parseInt((Math.random() * 8) % 8 * 100000000)};
 
-          const expiresOn = new Date(global[tokenName + "_expiresOn"]);
-          const expiration  = expiresOn.getTime() - (10 * 60 * 1000);
 
-          // Expires token 10min. before or if it the first time, load it.
+          // Setups interprocess communication from .gbdialog run-time to the BotServer API.
 
-          if (expiration < new Date().getTime() || firstTime) {
-            console.log ('Expired. Refreshing token...');
-            const {token, expiresOn} = await sys.getCustomToken({pid, tokenName});
+          const optsRPC = {callTimeout: this.callTimeout};
+          let url;
+          const agent = http.Agent({ keepAlive: true });
 
-            global[tokenName] = token;
-            global[tokenName + "_expiresOn"]= expiresOn; 
+          url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/dk';
+          const dk = (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
+          url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/sys';
+          const sys =  (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
+          url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/wa';
+          const wa = (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
+          url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/img';
+          const img =  (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
+
+          const timeout = (ms)=>  {
+            return new Promise(resolve => setTimeout(resolve, ms));
           }
 
-          if (__indexer == 0) {
-            headers['Authorization'] = 'Bearer ' + global[tokenName];
+          const ensureTokens = async (firstTime) => {
+            const tokens = this.tokens ? this.tokens.split(',') : [];
+            
+            for(__indexer in tokens) { 
+              const tokenName = tokens[__indexer];
+              
+              // Auto update Bearar authentication for the first token.
+
+              const expiresOn = new Date(global[tokenName + "_expiresOn"]);
+              const expiration  = expiresOn.getTime() - (10 * 60 * 1000);
+
+              // Expires token 10min. before or if it the first time, load it.
+
+              if (expiration < new Date().getTime() || firstTime) {
+                console.log ('Expired. Refreshing token...');
+                const {token, expiresOn} = await sys.getCustomToken({pid, tokenName});
+
+                global[tokenName] = token;
+                global[tokenName + "_expiresOn"]= expiresOn; 
+              }
+
+              if (__indexer == 0) {
+                headers['Authorization'] = 'Bearer ' + global[tokenName];
+              }
+            }            
+          };
+
+          try{
+            await ensureTokens(true);
+            ${ code } 
           }
-        }            
-      };
+          catch(e){
+            console.log(e);
+          }
+          finally{
 
-      try{
+              // Closes handles if any.
 
-        await ensureTokens(true);
-
-        ${code} // ISSUE: #339, tabify this.
-      }
-      catch(e){
-        console.log(e);
-      }
-      finally{
-
-          // Closes handles if any.
-
-          await wa.closeHandles({pid: pid});
-          await sys.closeHandles({pid: pid});
-
-      }
-
-    })(); 
+              await wa.closeHandles({pid: pid});
+              await sys.closeHandles({pid: pid});
+          }
+        })(); 
 `;
+
+    code = ji.default(code, '  ');
+
     Fs.writeFileSync(jsfile, code);
     GBLogEx.info(min, `[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
 
@@ -800,6 +799,8 @@ export class GBVMService extends GBService {
     let fields = {};
     let tables = [];
 
+    const outputLines = [];
+    let emmitIndex = 1;
     for (let i = 1; i <= lines.length; i++) {
 
       let line = lines[i - 1];
@@ -866,8 +867,12 @@ export class GBVMService extends GBService {
 
       let add = emmit ? line.split(/\r\n|\r|\n/).length : 0;
       current = current + (add ? add : 0);
-      map[i] = current;
-      lines[i - 1] = emmit ? line : '';
+
+      if (emmit){
+        emmitIndex ++;
+        map[emmitIndex] = current;
+        outputLines[emmitIndex - 1] = line;
+      }
     }
 
     if (tables) {
@@ -877,7 +882,7 @@ export class GBVMService extends GBService {
 
     }
 
-    code = `${lines.join('\n')}\n`;
+    code = `${outputLines.join('\n')}\n`;
 
     let metadata = GBVMService.getMetadata(mainName, properties, description);
 
