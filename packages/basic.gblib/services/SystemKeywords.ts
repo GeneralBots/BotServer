@@ -2406,7 +2406,7 @@ export class SystemKeywords {
     }
 
     GBLog.info(`BASIC: MERGE results: merges:${merges}, additions:${adds}, skipped: ${skipped}.`);
-    return table;
+
   }
 
   /**
