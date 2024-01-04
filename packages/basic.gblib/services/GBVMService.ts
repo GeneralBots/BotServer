@@ -332,10 +332,10 @@ export class GBVMService extends GBService {
               }
             },
             pool: {
-              max: 32,
-              min: 8,
-              idle: 40000,
-              evict: 40000,
+              max: 5,
+              min: 0,
+              idle: 10000,
+              evict: 10000,
               acquire: acquire
             }
           };
