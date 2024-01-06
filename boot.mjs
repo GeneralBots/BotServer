@@ -13,7 +13,7 @@ console.log(` █████  █████ ██    █ █████ █
 console.log(`██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █       `);
 console.log(`██  ███ ████  █ ██  █ ████  █████  ██████ ██      ████   █   █   █    ██     `);
 console.log(`██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █    `);
-console.log(` █████  █████ █   ███ █████ ██  ██ ██  ██ ██████  ████   █████   █   ███  3.0`);
+console.log(` █████  █████ █   ███ █████ ██  ██ ██  ██ ██████  ████   █████   █   ███  3.1`);
 process.stdout.write(`   botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
 
 var now = () => {

@@ -758,6 +758,7 @@ export class GBVMService extends GBService {
   public async parseField(line) {
 
     let required = line.indexOf('*') !== -1;
+    let unique = /\bunique\b/gi.test(line);
     line = line.replace('*', '');
 
     const fieldRegExp = /^\s*(\w+)\s*(\w+)(?:\((.*)\))?/gim;
@@ -766,7 +767,7 @@ export class GBVMService extends GBService {
     const name = reg[1];
     const t = reg[2];
 
-    let definition = { allowNull: !required };
+    let definition = { allowNull: !required, unique: unique };
     definition['type'] = t;
 
     if (reg[3]) {
