@@ -421,6 +421,14 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(DEBUG)(\s*)(.*)/gim,
+      ($0, $1, $2, $3 ) => {
+        const params = this.getParams($3, ['text']);
+        return `await sys.log ({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*(.*)\=\s*(DIR)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['remotePath']);

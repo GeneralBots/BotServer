@@ -800,7 +800,7 @@ export class SystemKeywords {
 
     // Flattern JSON to a table.
 
-    data = this.flattenJSON(fieldsValues, {}, '_')
+    data = this.flattenJSON(fieldsValues);
 
     // Uppercases fields.
 
@@ -1646,7 +1646,7 @@ export class SystemKeywords {
     return GBAdminService.getRndPassword();
   }
 
-  private flattenJSON(obj, res, extraKey, hierarchy = false) {
+  private flattenJSON(obj, res = {}, separator = '_', parent = null) {
     for (let key in obj) {
       if (typeof obj[key] === 'function') {
         continue;
@@ -1655,7 +1655,7 @@ export class SystemKeywords {
 
         // If not defined already add the flattened field.
 
-        const newKey = `${hierarchy ? extraKey : ''}${key}`;
+        const newKey = `${parent ? (parent + separator) : ''}${key}`;
         if (!res[newKey]) {
           res[newKey] = obj[key];
         }
@@ -1664,7 +1664,7 @@ export class SystemKeywords {
         }
 
       } else {
-        obj[key] = this.flattenJSON(obj[key], res, `${key}${extraKey}`, true);
+        obj[key] = this.flattenJSON(obj[key], res, separator, `${parent ? parent + separator : ''}${key}`);
       };
     };
     return res;
@@ -2167,7 +2167,7 @@ export class SystemKeywords {
               page++;
               count = paged.length;
 
-              GBLog.info(`page: ${page}, cached: ${rows.length}.`);
+              GBLog.info(`BASIC: MERGE cached: ${rows.length} from page: ${page}.`);
 
             }
           },
@@ -2266,7 +2266,7 @@ export class SystemKeywords {
       let row = data[i];
 
       if (hasSubObject(row)) {
-        row = this.flattenJSON(row, {}, '_', false);
+        row = this.flattenJSON(row);
       }
 
       let found;
@@ -2641,4 +2641,38 @@ export class SystemKeywords {
 
     return array;
   }
+
+  public async log({ pid, text: obj }) {
+
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+
+    let level = 0;
+    const mydump = (text, level) => {
+
+      var dumped_text = "";
+
+      var level_padding = "";
+      for (var j = 0; j < level + 1; j++) level_padding += "    ";
+
+      if (typeof (text) == 'object') {
+        for (var item in text) {
+          var value = text[item];
+
+          if (typeof (value) == 'object') {
+            dumped_text += level_padding + "'" + item + "' ...\n";
+            dumped_text += mydump(value, level + 1);
+          } else {
+            dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
+          }
+        }
+      } else {
+        dumped_text = text + "(" + typeof (text) + ")";
+      }
+      return dumped_text;
+    };
+
+    GBLogEx.info(min, mydump(obj, level));
+
+  }
+
 }
