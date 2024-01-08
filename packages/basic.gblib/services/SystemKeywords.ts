@@ -1736,9 +1736,19 @@ export class SystemKeywords {
           });
         };
 
-        if (result.status === 429 || result.status === 401) {
-          GBLog.info(`Waiting 1min. before retrynig GET: ${url}.`);
+        if (result.status === 401) {
+          GBLog.info(`Waiting 5 secs. before retrynig HTTP 401 GET: ${url}`);
+          await sleep(5 * 1000);
+          throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
+        }
+        if (result.status === 429) {
+          GBLog.info(`Waiting 1min. before retrying HTTP 429 GET: ${url}`);
           await sleep(60 * 1000);
+          throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
+        }
+        if (result.status === 503) {
+          GBLog.info(`Waiting 1h before retrynig GET 503: ${url}`);
+          await sleep(60 * 60 * 1000);
           throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
         }
 
