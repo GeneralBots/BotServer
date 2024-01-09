@@ -2327,7 +2327,12 @@ export class SystemKeywords {
             }
           });
 
-          if (value != valueFound && columnNameFound) {
+            const equals =
+            typeof (value) === 'string' && typeof (valueFound) === 'string' ?
+              value?.toLowerCase() != valueFound?.toLowerCase() :
+              value != valueFound;
+
+          if (equals && columnNameFound) {
 
             if (storage) {
 
