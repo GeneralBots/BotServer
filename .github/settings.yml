@@ -1,7 +1,7 @@
 repository:
   name: botserver
   description: botserver
-  homepage: http://pragmatismo.io/general-bots
+  homepage: http://pragmatismo.com.br/general-bots
   topics: node-module
   private: false
   has_issues: true

@@ -7,7 +7,7 @@
       "children": [
         {
           "title": "General Bots",
-          "description": "Plataforma de bots da Pragmatismo.io.",
+          "description": "Plataforma de bots da pragmatismo.com.br.",
           "id": "general-bots"
         },
         {
@@ -51,7 +51,7 @@
     },
     {
       "title": "Sobre",
-      "description": "Artigos sobre o Bot da Pragmatismo.io",
+      "description": "Artigos sobre o Bot da pragmatismo.com.br",
       "id": "sobre"
     }
   ]

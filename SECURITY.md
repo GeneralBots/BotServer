@@ -20,7 +20,7 @@ Review process
 
 We will review this policy yearly.
 In the meantime, if you have any questions, suggestions
-or feedback, please contact security@pragmatismo.io
+or feedback, please contact security@pragmatismo.com.br
 
 
 We will only classify information which is necessary for the completion of our duties. We will also limit
@@ -58,4 +58,4 @@ any other tasks that could result in a conflict of interest.
 ## Reporting a Vulnerability
 
 You can expect to get an update on a reported vulnerability in a day or two.
-security@pragmatismo.io
+security@pragmatismo.com.br
