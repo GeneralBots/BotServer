@@ -1,11 +1,9 @@
 /*****************************************************************************\
-|                                               ( )_  _                       |
-|    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___  _   _    _     |
-|   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/ \ /`\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__, \| |*| |( (_) )  |
-|   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
-|   | |                ( )_) |                                                |
-|   (_)                 \___/'                                                |
+|  █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ® |
+| ██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █      |
+| ██  ███ ████  █ ██  █ ████  █████  ██████ ██      ████   █   █   █    ██    |
+| ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
+|  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
 | General Bots Copyright (c) Pragmatismo.io. All rights reserved.             |
 | Licensed under the AGPL-3.0.                                                |
@@ -664,6 +662,9 @@ ENDPOINT_UPDATE=true
     const serverName = GBConfigService.get('STORAGE_SERVER').split('.database.windows.net')[0];
     await installationDeployer.openStorageFirewall(group, serverName);
   }
+
+
+
 
   /**
    * Get a dynamic param from instance. Dynamic params are defined in Config.xlsx
