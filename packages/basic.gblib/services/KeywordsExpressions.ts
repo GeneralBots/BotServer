@@ -348,7 +348,8 @@ export class KeywordsExpressions {
         __pageMode = __data?.pageMode ? __data.pageMode : "none";
 
         __url = __data?.links?.next?.uri;
-        __seekToken = __data?.links?.self?.headers["MS-ContinuationToken"] 
+        __seekToken = __data?.links?.self?.headers["
+        "] 
         __totalCount = __data?.totalCount ? __data.totalCount : __data.length;
  
         while (__next && __totalCount) 
@@ -951,14 +952,15 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(talk)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        // Issue: #395
-        // $3 = GBVMService.normalizeQuotes($3);
+        
+        $3 = GBVMService.normalizeQuotes($3);
 
         // // Uses auto quote if this is a phrase with more then one word.
 
-        // if (/\s/.test($3) && $3.substr(0, 1) !== '`') {
-        //   $3 = "`" + $3 + "`";
-        // }
+        if (/\s/.test($3) && 
+        ($3.trim().substr(0, 1) !== '`' || $3.trim().substr(0, 1) !== "'")) {
+           $3 = "`" + $3 + "`";
+        }
         return `await dk.talk ({pid: pid, text: ${$3}})`;
       }
     ];

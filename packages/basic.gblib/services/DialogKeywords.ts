@@ -32,7 +32,7 @@
 
 'use strict';
 
-import { GBError, GBLog, GBMinInstance } from 'botlib';
+import { GBLog } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { ChartServices } from './ChartServices.js';
 import urlJoin from 'url-join';
@@ -40,7 +40,6 @@ import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { SystemKeywords } from './SystemKeywords.js';
-import * as wpp from 'whatsapp-web.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { Messages } from '../strings.js';
 import * as Fs from 'fs';
