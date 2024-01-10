@@ -60,6 +60,7 @@ import open from 'open';
 import ngrok from 'ngrok';
 import Path from 'path';
 import { file } from 'googleapis/build/src/apis/file/index.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * GBCoreService contains main logic for handling storage services related
@@ -675,26 +676,32 @@ ENDPOINT_UPDATE=true
    */
   public getParam<T>(instance: IGBInstance, name: string, defaultValue?: T): any {
     let value = null;
+    let params;
+    name = name.trim();
+
     if (instance.params) {
       
-      const params = typeof (instance.params) === 'object' ? instance.params: JSON.parse(instance.params);
+      params = typeof (instance.params) === 'object' ? instance.params: JSON.parse(instance.params);
+      params = GBUtil.caseInsensitive(params);
       value = params ? params[name] : defaultValue;
     }
-    if (typeof defaultValue === 'boolean') {
+    if (value && typeof defaultValue === 'boolean') {
       return new Boolean(value ? value.toString().toLowerCase() === 'true' : defaultValue).valueOf();
     }
-    if (typeof defaultValue === 'string') {
+    if (value && typeof defaultValue === 'string') {
       return value ? value : defaultValue;
     }
-    if (typeof defaultValue === 'number') {
+    if (value && typeof defaultValue === 'number') {
       return new Number(value ? value : defaultValue ? defaultValue : 0).valueOf();
     }
 
-    if (instance['dataValues'] && !value) {
+    params = GBUtil.caseInsensitive(instance['dataValues']);
+    if (params && !value) {
       value = instance['dataValues'][name];
       if (value === null) {
         const minBoot = GBServer.globals.minBoot as any;
-        value = minBoot.instance[name];
+        params = GBUtil.caseInsensitive(minBoot.instance);
+        value = params[name];
       }
     }
     if (value === undefined) {
