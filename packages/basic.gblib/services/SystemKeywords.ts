@@ -6,7 +6,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.             |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.         |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -71,6 +71,7 @@ import {
 } from '@azure/storage-blob';
 
 import { md5 } from 'js-md5';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * @fileoverview General Bots server core.
@@ -1729,25 +1730,20 @@ export class SystemKeywords {
 
         result = await fetch(url, options);
 
-        const sleep = ms => {
-          return new Promise(resolve => {
-            setTimeout(resolve, ms);
-          });
-        };
 
         if (result.status === 401) {
           GBLog.info(`Waiting 5 secs. before retrynig HTTP 401 GET: ${url}`);
-          await sleep(5 * 1000);
+          await GBUtil.sleep(5 * 1000);
           throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
         }
         if (result.status === 429) {
           GBLog.info(`Waiting 1min. before retrying HTTP 429 GET: ${url}`);
-          await sleep(60 * 1000);
+          await GBUtil.sleep(60 * 1000);
           throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
         }
         if (result.status === 503) {
           GBLog.info(`Waiting 1h before retrynig GET 503: ${url}`);
-          await sleep(60 * 60 * 1000);
+          await GBUtil.sleep(60 * 60 * 1000);
           throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
         }
 

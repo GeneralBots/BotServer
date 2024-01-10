@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.             |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.         |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -92,6 +92,7 @@ import { createKoaHttpServer } from '../../basic.gblib/index.js';
 import { DebuggerService } from '../../basic.gblib/services/DebuggerService.js';
 import { ImageProcessingServices } from '../../basic.gblib/services/ImageProcessingServices.js';
 import { ScheduleServices } from '../../basic.gblib/services/ScheduleServices.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -369,11 +370,6 @@ export class GBMinService {
       GBServer.globals.debugConversationId = conversationId;
 
       const steps = process.env.TEST_MESSAGE.split(';');
-      const sleep = ms => {
-        return new Promise(resolve => {
-          setTimeout(resolve, ms);
-        });
-      };
 
       await CollectionUtil.asyncForEach(steps, async step => {
         client.apis.Conversations.Conversations_PostActivity({
@@ -389,7 +385,7 @@ export class GBMinService {
           }
         });
 
-        await sleep(3000);
+        await GBUtil.sleep(3000);
       });
 
       // Generates MS Teams manifest.

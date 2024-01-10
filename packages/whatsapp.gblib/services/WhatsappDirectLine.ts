@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.             |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.         |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -50,6 +50,7 @@ import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import e from 'express';
+import { GBUtil } from '../../../src/util.js';
 const { WAState, List, Buttons, Client, MessageMedia } = pkg;
 
 /**
@@ -180,13 +181,8 @@ export class WhatsappDirectLine extends GBService {
             // Keeps the chat list cleaned.
             const chats = await client.getChats();
             await CollectionUtil.asyncForEach(chats, async chat => {
-              const sleep = ms => {
-                return new Promise(resolve => {
-                  setTimeout(resolve, ms);
-                });
-              };
               const wait = Math.floor(Math.random() * 5000) + 1000;
-              await sleep(wait);
+              await GBUtil.sleep(wait);
               if (chat.isGroup) {
                 // await chat.clearMessages();
               } else if (!chat.pinned) {

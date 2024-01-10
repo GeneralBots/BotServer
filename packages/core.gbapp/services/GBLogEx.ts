@@ -7,7 +7,7 @@
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.             |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.         |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |

@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.             |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.         |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -48,6 +48,7 @@ import urlJoin from 'url-join';
 import { GBDeployer } from './GBDeployer.js';
 import { GBMinService } from './GBMinService.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
+import { GBUtil } from '../../../src/util.js';
 const puppeteer = require('puppeteer-extra');
 const hidden = require('puppeteer-extra-plugin-stealth');
 const { executablePath } = require('puppeteer');
@@ -178,13 +179,7 @@ export class GBSSR {
         waitUntil: 'networkidle0'
       });
 
-      const sleep = ms => {
-        return new Promise(resolve => {
-          setTimeout(resolve, ms);
-        });
-      };
-
-      await sleep(6000);
+      await GBUtil.sleep(6000);
 
       // Inject <base> on page to relative resources load properly.
 

@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.             |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.         |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -38,8 +38,6 @@ import Path from 'path';
 import express from 'express';
 import child_process from 'child_process';
 import rimraf from 'rimraf';
-
-import vhost from 'vhost';
 import urlJoin from 'url-join';
 import Fs from 'fs';
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
@@ -57,6 +55,7 @@ import { TeamsService } from '../../teams.gblib/services/TeamsService.js';
 import MicrosoftGraph from '@microsoft/microsoft-graph-client';
 import { GBLogEx } from './GBLogEx.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Deployer service for bots, themes, ai and more.
@@ -330,12 +329,7 @@ export class GBDeployer implements IGBDeployer {
     if (res.status !== 200 && res.status !== 202) {
       throw res.bodyAsText;
     }
-    const sleep = ms => {
-      return new Promise(resolve => {
-        setTimeout(resolve, ms);
-      });
-    };
-    sleep(5000);
+    GBUtil.sleep(5000);
   }
 
   /**

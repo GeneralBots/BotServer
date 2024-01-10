@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.             |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.         |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -61,6 +61,7 @@ import TextToSpeechV1 from 'ibm-watson/text-to-speech/v1.js';
 import { IamAuthenticator } from 'ibm-watson/auth/index.js';
 import * as marked from 'marked';
 import Translate from '@google-cloud/translate';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Provides basic services for handling messages and dispatching to back-end
@@ -613,11 +614,6 @@ export class GBConversationalService {
   // tslint:enable:no-unsafe-any
 
   public async sendMarkdownToMobile(min: GBMinInstance, step: GBDialogStep, mobile: string, text: string) {
-    let sleep = ms => {
-      return new Promise(resolve => {
-        setTimeout(resolve, ms);
-      });
-    };
     enum State {
       InText,
       InImage,
@@ -681,7 +677,7 @@ export class GBConversationalService {
             } else {
               await this.sendToMobile(min, mobile, currentText, conversationId);
             }
-            await sleep(3000);
+            await GBUtil.sleep(3000);
             currentText = '';
             state = State.InText;
           } else if (c === '!') {
@@ -701,7 +697,7 @@ export class GBConversationalService {
               } else {
                 await this.sendToMobile(min, mobile, currentText, conversationId);
               }
-              await sleep(3000);
+              await GBUtil.sleep(3000);
             }
             currentText = '';
             state = State.InEmbedAddressBegin;
@@ -715,7 +711,7 @@ export class GBConversationalService {
               ? currentEmbedUrl
               : urlJoin(GBServer.globals.publicAddress, currentEmbedUrl);
             await this.sendFile(min, step, mobile, url, null);
-            await sleep(5000);
+            await GBUtil.sleep(5000);
             currentEmbedUrl = '';
           } else {
             currentEmbedUrl = currentEmbedUrl.concat(c);
@@ -734,7 +730,7 @@ export class GBConversationalService {
               } else {
                 await this.sendToMobile(min, mobile, currentText, conversationId);
               }
-              await sleep(2900);
+              await GBUtil.sleep(2900);
             }
             currentText = '';
             state = State.InImageCaption;
@@ -763,7 +759,7 @@ export class GBConversationalService {
               : urlJoin(GBServer.globals.publicAddress, currentImage);
             await this.sendFile(min, step, mobile, url, currentCaption);
             currentCaption = '';
-            await sleep(4500);
+            await GBUtil.sleep(4500);
             currentImage = '';
           } else {
             currentImage = currentImage.concat(c);
@@ -1205,12 +1201,6 @@ export class GBConversationalService {
   }
   public async broadcast(min: GBMinInstance, message: string) {
     GBLog.info(`Sending broadcast notifications...`);
-
-    let sleep = ms => {
-      return new Promise(resolve => {
-        setTimeout(resolve, ms);
-      });
-    };
 
     const service = new SecService();
     const users = await service.getAllUsers(min.instance.instanceId);

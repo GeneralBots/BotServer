@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.             |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.         |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -53,6 +53,7 @@ import MicrosoftGraph from '@microsoft/microsoft-graph-client';
 import { Spinner } from 'cli-spinner';
 import * as publicIp from 'public-ip';
 import { AccessToken, TokenCredential } from '@azure/core-auth';
+import { GBUtil } from '../../../src/util.js';
 
 const WebSiteResponseTimeout = 900;
 const iconUrl = 'https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png';
@@ -453,11 +454,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     // const nlpa = await this.createNLPAuthoring(name, `${name}-nlpa`, instance.cloudLocation);
     // instance.nlpEndpoint = nlp.properties.endpoint;
 
-    const sleep = ms => {
-      return new Promise(resolve => {
-        setTimeout(resolve, ms);
-      });
-    };
 
     GBLog.info(`Deploying Bot...`);
     instance.botEndpoint = 'TODO: remove this column.';
@@ -479,7 +475,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     );
 
     GBLog.info(`Waiting one minute to finish NLP service and keys creation...`);
-    await sleep(60000);
+    await GBUtil.sleep(60000);
     // keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
     // instance.textAnalyticsKey = keys.key1;
     keys = await this.cognitiveClient.accounts.listKeys(name, spellChecker.name);
@@ -585,13 +581,8 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         return;
       }
       
-      const sleep = ms => {
-        return new Promise(resolve => {
-          setTimeout(resolve, ms);
-        });
-      };
 
-      await sleep(30000);
+      await GBUtil.sleep(30000);
 
       // MSFT has changed without warnings. 
 

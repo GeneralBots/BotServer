@@ -7,7 +7,7 @@
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.             |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.         |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model,this program can be used either      |
@@ -60,6 +60,7 @@ import { ActivityTypes } from 'botbuilder';
 const { List, Buttons } = pkg;
 import mime from 'mime-types';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Default check interval for user replay
@@ -861,16 +862,11 @@ export class DialogKeywords {
 
       // Wait for the user to answer.
 
-      let sleep = ms => {
-        return new Promise(resolve => {
-          setTimeout(resolve, ms);
-        });
-      };
       min.cbMap[userId] = {};
       min.cbMap[userId]['promise'] = '!GBHEAR';
 
       while (min.cbMap[userId].promise === '!GBHEAR') {
-        await sleep(DEFAULT_HEAR_POLL_INTERVAL);
+        await GBUtil.sleep(DEFAULT_HEAR_POLL_INTERVAL);
       }
 
       const answer = min.cbMap[userId].promise;

@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.             |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.         |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -86,12 +86,6 @@ export class QualityDialog extends IGBDialog {
                 content: Messages[locale].great_thanks
               }
             });
-            let sleep = ms => {
-              return new Promise(resolve => {
-                setTimeout(resolve, ms);
-              });
-            };
-
             await service.insertQuestionAlternate(min.instance.instanceId, user.lastQuestion, user.lastQuestionId);
 
             // Updates values to perform Bot Analytics.
