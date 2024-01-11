@@ -206,28 +206,28 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit({}) {}
+  public async exit({ }) { }
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ pid }) {}
+  public async getActiveTasks({ pid }) { }
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ pid, dealName, contact, company, amount }) {}
+  public async createDeal({ pid, dealName, contact, company, amount }) { }
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ pid, name }) {}
+  public async fndContact({ pid, name }) { }
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -288,7 +288,7 @@ export class DialogKeywords {
    * @example days = DATEDIFF date1,date2,mode
    *
    */
-  public async getDateDiff({pid, date1, date2, mode}) {
+  public async getDateDiff({ pid, date1, date2, mode }) {
     let dt1 = date1;
     let dt2 = date2;
     if (!(dt1 instanceof Date)) {
@@ -299,7 +299,7 @@ export class DialogKeywords {
     }
     const diff1 = df.default.constructor(date1, date2);
     const diff = Date['diff'](date1, date2);
-    
+
     switch (mode) {
       case 'year':
         return diff.years();
@@ -314,6 +314,46 @@ export class DialogKeywords {
       case 'minute':
         return diff.minutes();
     }
+  }
+
+  // https://weblog.west-wind.com/posts/2008/Mar/18/A-simple-formatDate-function-for-JavaScript
+  public async format(value, format) {
+
+    var date = value;
+    if (!format)
+      format = "MM/dd/yyyy";
+
+    var month = date.getMonth() + 1;
+    var year = date.getFullYear();
+
+    format = format.replace("MM", month.toString().padL(2, "0"));
+
+    if (format.indexOf("yyyy") > -1)
+      format = format.replace("yyyy", year.toString());
+    else if (format.indexOf("yy") > -1)
+      format = format.replace("yy", year.toString().substr(2, 2));
+
+    format = format.replace("dd", date.getDate().toString().padL(2, "0"));
+
+    var hours = date.getHours();
+    if (format.indexOf("t") > -1) {
+      if (hours > 11)
+        format = format.replace("t", "pm")
+      else
+        format = format.replace("t", "am")
+    }
+    if (format.indexOf("HH") > -1)
+      format = format.replace("HH", hours.toString().padL(2, "0"));
+    if (format.indexOf("hh") > -1) {
+      if (hours > 12) hours - 12;
+      if (hours == 0) hours = 12;
+      format = format.replace("hh", hours.toString().padL(2, "0"));
+    }
+    if (format.indexOf("mm") > -1)
+      format = format.replace("mm", date.getMinutes().toString().padL(2, "0"));
+    if (format.indexOf("ss") > -1)
+      format = format.replace("ss", date.getSeconds().toString().padL(2, "0"));
+    return format;
   }
 
   /**
@@ -349,6 +389,8 @@ export class DialogKeywords {
         ret.setDate(ret.getDate() + 7 * units);
         break;
       case 'day':
+      case 'days':
+      case 'd':
         ret.setDate(ret.getDate() + units);
         break;
       case 'hour':
@@ -536,9 +578,9 @@ export class DialogKeywords {
    */
   public async allowRole({ pid, role }) {
     const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
-    const sys  = new SystemKeywords();
+    const sys = new SystemKeywords();
 
-    if (!role){
+    if (!role) {
       throw new Error(`Invalid access. NULL role specified.`);
     }
 
@@ -549,9 +591,9 @@ export class DialogKeywords {
     // Checks access.
 
     const filters = ["People.xlsx", `${role}=x`, `id=${user.userSystemId}`];
-    const people = await sys.find({pid, handle:null, args: filters});
+    const people = await sys.find({ pid, handle: null, args: filters });
 
-    if (!people){
+    if (!people) {
       throw new Error(`Invalid access. Check if People sheet has the role ${role} checked.`);
     }
 
@@ -602,7 +644,7 @@ export class DialogKeywords {
     }
   }
 
-  public static async getOption({ pid, name, root=false }) {
+  public static async getOption({ pid, name, root = false }) {
     if (this.isUserSystemParam(name) && !root) {
       throw new Error(`Not possible to retrieve ${name} system param.`);
     }
@@ -775,7 +817,7 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu({}) {
+  public async showMenu({ }) {
     // https://github.com/GeneralBots/BotServer/issues/237
     // return await beginDialog('/menu');
   }
@@ -802,7 +844,7 @@ export class DialogKeywords {
    *
    */
   public async hear({ pid, kind, args }) {
-    
+
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles first arg as an array of args.
@@ -1253,7 +1295,7 @@ export class DialogKeywords {
         GBLog.info(`BASIC: Markdown file ${filename} not found on database for ${min.instance.botId}.`);
       }
       await min.conversationalService['playMarkdown'](min, md, DialogKeywords.getChannel(), null, mobile);
-      
+
       return;
 
     }
@@ -1266,12 +1308,12 @@ export class DialogKeywords {
 
       const ext = Path.extname(filename);
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-      
+
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       let path = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
       const sys = new SystemKeywords();
       let template = await sys.internalGetDocument(client, baseUrl, path, filename);
-      
+
       const driveUrl = template['@microsoft.graph.downloadUrl'];
       const res = await fetch(driveUrl);
       let buf: any = Buffer.from(await res.arrayBuffer());
@@ -1279,15 +1321,15 @@ export class DialogKeywords {
       Fs.writeFileSync(localName1, buf, { encoding: null });
 
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName1));
-    
+
     }
 
     if (!url) {
 
       const ext = Path.extname(filename.localName);
-      
+
       // Prepare a cache to be referenced by Bot Framework.
-      
+
       const buf = Fs.readFileSync(filename);
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
       const localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);

@@ -416,11 +416,18 @@ export class GBVMService extends GBService {
 
           });
 
-          if (sync) {
+          const shouldSync = min.core.getParam<boolean>(
+            min.instance,
+            'Synchronize Database',
+            false
+          );      
+
+          if (sync && shouldSync) {
+
             GBLogEx.info(min, `BASIC: Syncing changes for TABLE ${connectionName} ${tableName} keyword (${min.botId})...`);
 
             await seq.sync({
-              alter: true,
+              alter: false,
               force: false // Keep it false due to data loss danger.
             });
             GBLogEx.info(min, `BASIC: Done sync for ${min.botId} ${connectionName} ${tableName} storage table...`);

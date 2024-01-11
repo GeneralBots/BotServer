@@ -974,6 +974,14 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(FORMAT)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['value', 'format']);
+        return `await dk.format({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*(send email)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['to', 'subject', 'body']);
