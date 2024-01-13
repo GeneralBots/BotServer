@@ -592,7 +592,7 @@ export class GBVMService extends GBService {
 
           // Setups interprocess communication from .gbdialog run-time to the BotServer API.
 
-          const optsRPC = {callTimeout: this.callTimeout};
+          const optsRPC = {callTimeout: this.callTimeout, messageParser: data => {return JSON.parse(data)}};
           let url;
           const agent = http.Agent({ keepAlive: true });
 

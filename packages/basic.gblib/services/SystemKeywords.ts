@@ -513,7 +513,7 @@ export class SystemKeywords {
    * @example SET "file.xlsx", "A2", 4500
    *
    * @example SET page, "elementHTMLSelector", "text"
-   *
+
    */
   public async set({ pid, handle, file, address, value, name = null }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
@@ -973,6 +973,38 @@ export class SystemKeywords {
     return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value);
   }
 
+  public static async getFilter(text) {
+    let filter;
+    const operators = [/\<\=/, /\<\>/, /\>\=/, /\</, /\>/, /\bnot in\b/, /\bin\b/, /\=/];
+    let done = false;
+    await CollectionUtil.asyncForEach(operators, async op => {
+      var re = new RegExp(op, 'gi');
+      const parts = text.split(re);
+
+      if (parts.length === 2 && !done) {
+        filter = {
+          columnName: parts[0].trim(),
+          operator: op.toString().replace(/\\b/g, '').replace(/\//g, '').replace(/\\/g, '').replace(/\b/g, ''),
+          value: parts[1].trim()
+        };
+
+        // Swaps values and names in case of IN operators.
+
+        if (filter.operator === 'not in' || filter.operator === 'in') {
+          const columnName = filter.columnName;
+          filter.columnName = filter.value;
+          filter.value = columnName;
+        }
+
+        done = true;
+      }
+    });
+
+    return filter;
+  };
+
+
+
   /**
    * Finds a value or multi-value results in a tabular file.
    *
@@ -1093,35 +1125,6 @@ export class SystemKeywords {
       rows = results.text;
     }
 
-    let getFilter = async text => {
-      let filter;
-      const operators = [/\<\=/, /\<\>/, /\>\=/, /\</, /\>/, /\bnot in\b/, /\bin\b/, /\=/];
-      let done = false;
-      await CollectionUtil.asyncForEach(operators, async op => {
-        var re = new RegExp(op, 'gi');
-        const parts = text.split(re);
-
-        if (parts.length === 2 && !done) {
-          filter = {
-            columnName: parts[0].trim(),
-            operator: op.toString().replace(/\\b/g, '').replace(/\//g, '').replace(/\\/g, '').replace(/\b/g, ''),
-            value: parts[1].trim()
-          };
-
-          // Swaps values and names in case of IN operators.
-
-          if (filter.operator === 'not in' || filter.operator === 'in') {
-            const columnName = filter.columnName;
-            filter.columnName = filter.value;
-            filter.value = columnName;
-          }
-
-          done = true;
-        }
-      });
-
-      return filter;
-    };
 
     const contentLocale = min.core.getParam(
       min.instance,
@@ -1139,7 +1142,7 @@ export class SystemKeywords {
 
     let filterIndex = 0;
     await CollectionUtil.asyncForEach(args, async arg => {
-      const filter = await getFilter(arg);
+      const filter = await SystemKeywords.getFilter(arg);
       if (!filter) {
         throw new Error(`BASIC: FIND filter has an error: ${arg} check this and publish .gbdialog again.`);
       }
@@ -2322,7 +2325,7 @@ export class SystemKeywords {
             }
           });
 
-            const equals =
+          const equals =
             typeof (value) === 'string' && typeof (valueFound) === 'string' ?
               value?.toLowerCase() != valueFound?.toLowerCase() :
               value != valueFound;
@@ -2335,16 +2338,12 @@ export class SystemKeywords {
               obj[columnName] = value;
               let criteria = {};
               criteria[key1Original] = key1Value;
-              let item;
+
               await retry(
                 async (bail) => {
                   await t.update(obj, { where: criteria });
-                },
-                {
-                  retries: 5,
-                }
+                }, { retries: 5 }
               );
-              return item;
 
             } else {
 
@@ -2563,6 +2562,30 @@ export class SystemKeywords {
       .put(file.data);
 
     return { contentType, ext, kind, category: kind['category'] };
+  }
+
+  public async deleteFromStorage({ pid, table, criteria }) {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    GBLog.info(`BASIC: DELETE (storage) '${table}' where ${criteria}.`);
+
+    const definition = this.getTableFromName(table, min);
+    const filter = await SystemKeywords.getFilter(criteria);
+
+    await retry(
+      async (bail) => {
+        const options = { where: {} };
+        options.where = {};
+
+        options.where[filter['columnName']] = filter['value'];
+        await definition.destroy(options);
+
+      },
+      {
+        retries: 5,
+        onRetry: (err) => { GBLog.error(`Retrying SaveToStorageBatch due to: ${err.message}.`); }
+      }
+    );
+
   }
 
   public async deleteFile({ pid, file }) {

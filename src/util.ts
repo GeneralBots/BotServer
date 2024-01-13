@@ -36,6 +36,34 @@
 
 export class GBUtil {
 
+  public static repeat = function (chr, count) {
+    var str = "";
+    for (var x = 0; x < count; x++) { str += chr };
+    return str;
+  }
+
+  public static padL = function (value, width, pad) {
+    if (!width || width < 1)
+      return value;
+
+    if (!pad) pad = " ";
+    var length = width - value.length
+    if (length < 1) return value.substr(0, width);
+
+    return (GBUtil.repeat(pad, length) + value).substr(0, width);
+  }
+  public static padR = function (value, width, pad) {
+    if (!width || width < 1)
+      return value;
+
+    if (!pad) pad = " ";
+    var length = width - value.length
+    if (length < 1) value.substr(0, width);
+
+    return (value + GBUtil.repeat(pad, length)).substr(0, width);
+  }
+
+
   public static sleep(ms) {
     return new Promise(resolve => {
       setTimeout(resolve, ms);

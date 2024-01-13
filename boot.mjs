@@ -1,27 +1,32 @@
 #!/usr/bin/env node
 
+import chalkAnimation from 'chalk-animation';
 import Fs from 'fs';
 import Path from 'path';
 import { exec } from 'child_process';
 import pjson from './package.json' assert { type: 'json' };
+import { GBUtil } from './dist/src/util.js';
 
 // Displays version of Node JS being used at runtime and others attributes.
 
 console.log(``);
 console.log(``);
 console.log(``);
-console.log(``);
-console.log(``);
-console.log(`General Bots Open-core Server 3.1 is initializing...`);
-console.log(`Visit: https://github.com/generalbots.`);
-console.log(``);
-process.stdout.write(`Enviroment: botserver@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
-console.log(``);
-console.log(``);
+chalkAnimation.karaoke(`
+ █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ®
+██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █     
+██  ███ ████  █ ██  █ ████  █████  ██████ ██      ████   █   █   █    ██   
+██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █  
+ █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███   
+`,1000);
+await GBUtil.sleep(80);
 var __dirname = process.env.PWD || process.cwd();
 try {
   var run = () => {
+
     import('./dist/src/app.js').then((gb)=> {
+      console.log(`\n`);
+      process.stdout.write(`${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
       console.log(`\n`);
       gb.GBServer.run()
     });

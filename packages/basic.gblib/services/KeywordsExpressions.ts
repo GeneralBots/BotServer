@@ -40,28 +40,31 @@ import Path from 'path';
  * Image processing services of conversation to be called by BASIC.
  */
 export class KeywordsExpressions {
-  private static getParams = (text: string, names) => {
-    const splitParamsButIgnoreCommasInDoublequotes = (str: string) => {
-      return str.split(',').reduce(
-        (accum, curr) => {
-          if (accum.isConcatting) {
-            accum.soFar[accum.soFar.length - 1] += ',' + curr;
-          } else {
-            if (curr === '') {
-              curr = null;
-            }
-            accum.soFar.push(curr);
-          }
-          if (curr.split('"').length % 2 == 0) {
-            accum.isConcatting = !accum.isConcatting;
-          }
-          return accum;
-        },
-        { soFar: [], isConcatting: false }
-      ).soFar;
-    };
 
-    const items = splitParamsButIgnoreCommasInDoublequotes(text);
+  public static splitParamsButIgnoreCommasInDoublequotes = (str: string) => {
+    return str.split(',').reduce(
+      (accum, curr) => {
+        if (accum.isConcatting) {
+          accum.soFar[accum.soFar.length - 1] += ',' + curr;
+        } else {
+          if (curr === '') {
+            curr = null;
+          }
+          accum.soFar.push(curr);
+        }
+        if (curr.split('"').length % 2 == 0) {
+          accum.isConcatting = !accum.isConcatting;
+        }
+        return accum;
+      },
+      { soFar: [], isConcatting: false }
+    ).soFar;
+  };
+
+
+  private static getParams = (text: string, names) => {
+    
+    const items = KeywordsExpressions.splitParamsButIgnoreCommasInDoublequotes(text);
 
     let i = 0;
     let json = '';
@@ -440,8 +443,14 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(DELETE)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        const params = this.getParams($3, ['file']);
-        return `await sys.deleteFile ({pid: pid, ${params}})`;
+        const params = this.getParams($3, ['table', 'criteria']);
+
+        if (params[1]){
+          return `await sys.deleteFromStorage ({pid: pid, ${params}})`;
+        }
+        else        {
+          return `await sys.deleteFile ({pid: pid, ${params}})`;
+        }
       }
     ];
 
@@ -796,7 +805,7 @@ export class KeywordsExpressions {
       /^\s*(.*)\=\s*(dateadd)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['date', 'mode', 'units']);
-        return `await dk.dateAdd ({pid: pid, ${params}})`;
+        return `${$1} = await dk.dateAdd ({pid: pid, ${params}})`;
       }
     ];
 
@@ -974,10 +983,10 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(FORMAT)(\s*)(.*)/gim,
-      ($0, $1, $2, $3) => {
-        const params = this.getParams($3, ['value', 'format']);
-        return `await dk.format({pid: pid, ${params}})`;
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(FORMAT)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['value', 'format']);
+        return `${$1} = await dk.format({pid: pid, ${params}})`;
       }
     ];
 
@@ -1161,27 +1170,34 @@ export class KeywordsExpressions {
         $3 = $3.replace(/\"/g, '');
         let fields = $3.split(',');
         const table = fields[0].trim();
+        
         fields.shift();
 
         const fieldsAsText = fields.join(',');
-
         let fieldsNamesOnly = [];
         let index = 0;
-
 
         fields.forEach(field => {
 
           // Extracts only the last part of the variable like 'column' 
           // from 'row.column'.
 
-          const fieldRegExp = /(?:.*\.)(.*)/gim;
-          let name = fieldRegExp.exec(field)[1]
+          const fieldRegExp = /(?:.*\.)*(.*)/gim;
+          let name = fieldRegExp.exec(field.trim())[1]
 
           fieldsNamesOnly.push(`'${name}'`);
         });
         let fieldsNames = fieldsNamesOnly.join(',');
 
-        return `await sys.saveToStorage({pid: pid, table: "${table}", fieldsValues: [${fieldsAsText}], fieldsNames: [${fieldsNames}] })`;
+        // Checks if it is a collection or series of params.
+        return `
+        
+        if (${fields[0]}[0]){
+          await sys.saveToStorageBatch({pid: pid, table: ${table}, rows:${fields[0]} })
+        }else{
+          await sys.saveToStorage({pid: pid, table: ${table}, fieldsValues: [${fieldsAsText}], fieldsNames: [${fieldsNames}] })
+        }
+      `;
       }
     ];
 
@@ -1189,7 +1205,8 @@ export class KeywordsExpressions {
       /^\s*set\s*(.*)/gim,
       ($0, $1, $2) => {
         const params = this.getParams($1, ['file', 'address', 'value']);
-        return `await sys.set ({pid: pid, handle: page, ${params}})`;
+        const items = KeywordsExpressions.splitParamsButIgnoreCommasInDoublequotes($1);
+        return `${items[0]} = await sys.set ({pid: pid, handle: page, ${params}})`;
       }
     ];
     keywords[i++] = [

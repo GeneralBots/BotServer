@@ -317,23 +317,34 @@ export class DialogKeywords {
   }
 
   // https://weblog.west-wind.com/posts/2008/Mar/18/A-simple-formatDate-function-for-JavaScript
-  public async format(value, format) {
+  public async format({pid, value, format}) {
 
-    var date = value;
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const contentLocale = min.core.getParam(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+    if (!(value instanceof Date)) {
+      value = SystemKeywords.getDateFromLocaleString(pid,value, contentLocale);
+    }
+    var date:any = new Date(value); //don't change original date
+    
     if (!format)
       format = "MM/dd/yyyy";
 
     var month = date.getMonth() + 1;
     var year = date.getFullYear();
 
-    format = format.replace("MM", month.toString().padL(2, "0"));
+    format = format.replace("MM", GBUtil.padL(month.toString(), 2, "0"));
 
     if (format.indexOf("yyyy") > -1)
       format = format.replace("yyyy", year.toString());
     else if (format.indexOf("yy") > -1)
       format = format.replace("yy", year.toString().substr(2, 2));
 
-    format = format.replace("dd", date.getDate().toString().padL(2, "0"));
+    format = format.replace("dd", GBUtil.padL(date.getDate().toString(), 2, "0"));
 
     var hours = date.getHours();
     if (format.indexOf("t") > -1) {
@@ -343,16 +354,17 @@ export class DialogKeywords {
         format = format.replace("t", "am")
     }
     if (format.indexOf("HH") > -1)
-      format = format.replace("HH", hours.toString().padL(2, "0"));
+      format = format.replace("HH", GBUtil.padL(hours.toString(), 2, "0"));
     if (format.indexOf("hh") > -1) {
       if (hours > 12) hours - 12;
       if (hours == 0) hours = 12;
       format = format.replace("hh", hours.toString().padL(2, "0"));
     }
     if (format.indexOf("mm") > -1)
-      format = format.replace("mm", date.getMinutes().toString().padL(2, "0"));
+      format = format.replace("mm", GBUtil.padL(date.getMinutes().toString(), 2, "0"));
     if (format.indexOf("ss") > -1)
-      format = format.replace("ss", date.getSeconds().toString().padL(2, "0"));
+      format = format.replace("ss", GBUtil.padL(date.getSeconds().toString(), 2, "0"));
+
     return format;
   }
 
@@ -363,10 +375,18 @@ export class DialogKeywords {
    *
    * https://stackoverflow.com/a/1214753/18511
    */
-  public dateAdd(date, mode, units) {
+  public async dateAdd({pid, date, mode, units}) {
+
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const contentLocale = min.core.getParam(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
     let dateCopy = date;
     if (!(dateCopy instanceof Date)) {
-      dateCopy = new Date(dateCopy);
+      dateCopy = SystemKeywords.getDateFromLocaleString(pid,dateCopy, contentLocale);
     }
     var ret = new Date(dateCopy); //don't change original date
     var checkRollover = function () {
