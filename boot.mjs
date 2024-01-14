@@ -9,10 +9,11 @@ import { GBUtil } from './dist/src/util.js';
 
 // Displays version of Node JS being used at runtime and others attributes.
 
+await GBUtil.sleep(80);
 console.log(``);
 console.log(``);
 console.log(``);
-chalkAnimation.karaoke(`
+await chalkAnimation.karaoke(`
  █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ®
 ██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █     
 ██  ███ ████  █ ██  █ ████  █████  ██████ ██      ████   █   █   █    ██   

@@ -738,10 +738,23 @@ export class SystemKeywords {
     GBLog.info(`BASIC: Saving batch to storage '${table}' (SAVE).`);
 
     const definition = this.getTableFromName(table, min);
+    const rowsDest = [];
+
+    rows.forEach(row => {
+      
+      const dst = {};
+      let i = 0;
+      Object.keys(row).forEach(column => {
+        const field = column.charAt(0).toUpperCase() + column.slice(1);
+        dst[field] = row[column];
+        i++;
+      });
+      rowsDest.push(dst);
+    });          
 
     await retry(
       async (bail) => {
-        await definition.bulkCreate(rows);
+        await definition.bulkCreate(GBUtil.caseInsensitive(rowsDest));
       },
       {
         retries: 5,
@@ -2384,16 +2397,15 @@ export class SystemKeywords {
 
         if (storage) {
 
-          let dst = {};
-
+          
           // Uppercases fields.
-
+          
+          const dst = {};
           let i = 0;
           Object.keys(fieldsValues).forEach(fieldSrc => {
-            const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
-
+            const name = fieldsNames[i];
+            const field = name.charAt(0).toUpperCase() + name.slice(1);
             dst[field] = fieldsValues[fieldSrc];
-
             i++;
           });
 

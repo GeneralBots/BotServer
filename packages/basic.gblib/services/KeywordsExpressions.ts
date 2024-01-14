@@ -1205,8 +1205,7 @@ export class KeywordsExpressions {
       /^\s*set\s*(.*)/gim,
       ($0, $1, $2) => {
         const params = this.getParams($1, ['file', 'address', 'value']);
-        const items = KeywordsExpressions.splitParamsButIgnoreCommasInDoublequotes($1);
-        return `${items[0]} = await sys.set ({pid: pid, handle: page, ${params}})`;
+        return `await sys.set ({pid: pid, handle: page, ${params}})`;
       }
     ];
     keywords[i++] = [
