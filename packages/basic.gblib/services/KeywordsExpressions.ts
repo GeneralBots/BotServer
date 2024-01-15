@@ -1192,7 +1192,7 @@ export class KeywordsExpressions {
         // Checks if it is a collection or series of params.
         return `
         
-        if (${fields[0]}[0]){
+        if (Array.isArray(${fields[0]})){
           await sys.saveToStorageBatch({pid: pid, table: ${table}, rows:${fields[0]} })
         }else{
           await sys.saveToStorage({pid: pid, table: ${table}, fieldsValues: [${fieldsAsText}], fieldsNames: [${fieldsNames}] })

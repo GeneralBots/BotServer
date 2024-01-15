@@ -281,9 +281,6 @@ export class GBVMService extends GBService {
             obj.type.key = "BIGINT"
             associations.push({ from: tableName, to: obj.type.name });
           }
-          if (key.toLowerCase() === 'id') {
-            obj['primaryKey'] = true;
-          }
         });
 
         // Cutom connection for TABLE.
@@ -672,7 +669,6 @@ export class GBVMService extends GBService {
         Fs.writeFileSync(tablesFile, JSON.stringify(task.tables));
 
       }
-
     }
   }
 
@@ -764,6 +760,15 @@ export class GBVMService extends GBService {
 
     let required = line.indexOf('*') !== -1;
     let unique = /\bunique\b/gi.test(line);
+    let primaryKey  = /\bkey\b/gi.test(line);
+    let autoIncrement  = /\bauto\b/gi.test(line);
+
+    if (primaryKey){
+      autoIncrement = true;
+      unique = true;
+      required = true;
+    }
+    
     line = line.replace('*', '');
 
     const fieldRegExp = /^\s*(\w+)\s*(\w+)(?:\((.*)\))?/gim;
@@ -772,7 +777,9 @@ export class GBVMService extends GBService {
     const name = reg[1];
     const t = reg[2];
 
-    let definition = { allowNull: !required, unique: unique };
+    let definition = { allowNull: !required,
+       unique: unique, primaryKey: primaryKey,
+       autoIncrement: autoIncrement };
     definition['type'] = t;
 
     if (reg[3]) {

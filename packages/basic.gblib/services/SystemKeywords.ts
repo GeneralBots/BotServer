@@ -737,6 +737,12 @@ export class SystemKeywords {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Saving batch to storage '${table}' (SAVE).`);
 
+    if (rows.length === 0) 
+    {
+      
+      return;
+    }
+
     const definition = this.getTableFromName(table, min);
     const rowsDest = [];
 
@@ -750,7 +756,7 @@ export class SystemKeywords {
         i++;
       });
       rowsDest.push(dst);
-    });          
+    });
 
     await retry(
       async (bail) => {
