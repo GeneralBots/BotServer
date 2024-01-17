@@ -1230,7 +1230,7 @@ export class GBMinService {
 
           const t = new SystemKeywords();
           GBLog.info(`BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
-          const handle = WebAutomationServices.cyrb53(min.botId + attachmentData.fileName);
+          const handle = WebAutomationServices.cyrb53({pid:0,  str:min.botId + attachmentData.fileName});
           let data = Fs.readFileSync(attachmentData.localPath);
 
           const gbfile = {

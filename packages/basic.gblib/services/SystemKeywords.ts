@@ -81,6 +81,10 @@ import { GBUtil } from '../../../src/util.js';
  * BASIC system class for extra manipulation of bot behaviour.
  */
 export class SystemKeywords {
+
+  /**
+   * @tags System
+   */
   public async callVM({ pid, text }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const step = null;
@@ -2104,7 +2108,7 @@ export class SystemKeywords {
 
   }
 
-  private cachedMerge = {};
+  private cachedMerge:any = {};
 
   /**
    * Merges a multi-value with a tabular file using BY field as key.

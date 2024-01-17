@@ -1,0 +1,14 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "General Bots API",
+      "description": "General Bots API description in Swagger format",
+      "version": "1.0"
+    },
+    "servers": [
+      {
+        "url": "https://gb.pragmatismo.com.br/api",
+        "description": "General Bots Online"
+      }
+    ]
+  }

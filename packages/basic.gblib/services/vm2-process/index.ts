@@ -27,6 +27,98 @@ const waitUntil = condition => {
   });
 };
 
+const systemVariables = [
+  'AggregateError',
+  'Array',
+  'ArrayBuffer',
+  'Atomics',
+  'BigInt',
+  'BigInt64Array',
+  'BigUint64Array',
+  'Boolean',
+  'DataView',
+  'Date',
+  'Error',
+  'EvalError',
+  'FinalizationRegistry',
+  'Float32Array',
+  'Float64Array',
+  'Function',
+  'Headers',
+  'Infinity',
+  'Int16Array',
+  'Int32Array',
+  'Int8Array',
+  'Intl',
+  'JSON',
+  'Map',
+  'Math',
+  'NaN',
+  'Number',
+  'Object',
+  'Promise',
+  'Proxy',
+  'RangeError',
+  'ReferenceError',
+  'Reflect',
+  'RegExp',
+  'Request',
+  'Response',
+  'Set',
+  'SharedArrayBuffer',
+  'String',
+  'Symbol',
+  'SyntaxError',
+  'TypeError',
+  'URIError',
+  'Uint16Array',
+  'Uint32Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'VM2_INTERNAL_STATE_DO_NOT_USE_OR_PROGRAM_WILL_FAIL',
+  'WeakMap',
+  'WeakRef',
+  'WeakSet',
+  'WebAssembly',
+  '__defineGetter__',
+  '__defineSetter__',
+  '__lookupGetter__',
+  '__lookupSetter__',
+  '__proto__',
+  'clearImmediate',
+  'clearInterval',
+  'clearTimeout',
+  'console',
+  'constructor',
+  'decodeURI',
+  'decodeURIComponent',
+  'dss',
+  'encodeURI',
+  'encodeURIComponent',
+  'escape',
+  'eval',
+  'fetch',
+  'global',
+  'globalThis',
+  'hasOwnProperty',
+  'isFinite',
+  'isNaN',
+  'isPrototypeOf',
+  'parseFloat',
+  'parseInt',
+  'process',
+  'propertyIsEnumerable',
+  'setImmediate',
+  'setInterval',
+  'setTimeout',
+  'toLocaleString',
+  'toString',
+  'undefined',
+  'unescape',
+  'valueOf'
+];
+
+
 export const createVm2Pool = ({ min, max, ...limits }) => {
   limits = Object.assign(
     {
@@ -112,7 +204,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
                 let variablesText = '';
                 if (variables && variables.result) {
                   await CollectionUtil.asyncForEach(variables.result, async v => {
-                    if (!DebuggerService.systemVariables.filter(x => x === v.name)[0]) {
+                    if (!systemVariables.filter(x => x === v.name)[0]) {
                       if (v.value.value) {
                         variablesText = `${variablesText} \n ${v.name}: ${v.value.value}`;
                       }

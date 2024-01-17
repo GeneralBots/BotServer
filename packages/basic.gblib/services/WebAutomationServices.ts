@@ -37,11 +37,10 @@ import Fs from 'fs';
 import Path from 'path';
 import url from 'url';
 
-import { GBLog, GBMinInstance } from 'botlib';
+import { GBLog } from 'botlib';
 import { GBServer } from '../../../src/app.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
-import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { DialogKeywords } from './DialogKeywords.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { Mutex } from 'async-mutex';
@@ -55,10 +54,8 @@ export class WebAutomationServices {
   static isSelector(name: any) {
     return name.startsWith('.') || name.startsWith('#') || name.startsWith('[');
   }
-  private debugWeb: boolean;
-  private lastDebugWeb: Date;
-
-  public static cyrb53 = (str, seed = 0) => {
+  
+  public static cyrb53 ({pid, str, seed = 0}) {
     let h1 = 0xdeadbeef ^ seed,
       h2 = 0x41c6ce57 ^ seed;
     for (let i = 0, ch; i < str.length; i++) {
@@ -152,7 +149,7 @@ export class WebAutomationServices {
     if ((!session && sessionKind === 'AS') || !sessionName) {
       // A new web session is being created.
 
-      handle = WebAutomationServices.cyrb53(min.botId + url);
+      handle = WebAutomationServices.cyrb53({pid,  str:min.botId + url});
 
       session = {};
       session.sessionName = sessionName;
@@ -269,18 +266,21 @@ export class WebAutomationServices {
 
   private async debugStepWeb(pid, page) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
+    let debugWeb, lastDebugWeb; // TODO: Add this to pid bag.
+
     let refresh = true;
-    if (this.lastDebugWeb) {
-      refresh = new Date().getTime() - this.lastDebugWeb.getTime() > 5000;
+    if (lastDebugWeb) {
+      refresh = new Date().getTime() - lastDebugWeb.getTime() > 5000;
     }
 
-    if (this.debugWeb && refresh) {
+    if (debugWeb && refresh) {
       const mobile = min.core.getParam(min.instance, 'Bot Admin Number', null);
       const filename = page;
       if (mobile) {
         await new DialogKeywords().sendFileTo({ pid: pid, mobile, filename, caption: 'General Bots Debugger' });
       }
-      this.lastDebugWeb = new Date();
+      lastDebugWeb = new Date();
     }
   }
 

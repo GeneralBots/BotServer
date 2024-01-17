@@ -40,7 +40,9 @@ import https from 'https';
 import http from 'http';
 import mkdirp from 'mkdirp';
 import Path from 'path';
-import * as Fs from 'fs';
+import swaggerUI from 'swagger-ui-dist';
+import path from 'path';
+import fs from 'fs';
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService.js';
 import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService.js';
@@ -84,6 +86,7 @@ export class GBServer {
     }
 
     const server = express();
+    this.initEndpointsDocs(server);
 
     GBServer.globals.server = server;
     GBServer.globals.httpsServer = null;
@@ -120,7 +123,7 @@ export class GBServer {
 
     process.env.PWD = process.cwd();
     const workDir = Path.join(process.env.PWD, 'work');
-    if (!Fs.existsSync(workDir)) {
+    if (!fs.existsSync(workDir)) {
       mkdirp.sync(workDir);
     }
 
@@ -299,7 +302,7 @@ export class GBServer {
     if (process.env.CERTIFICATE_PFX) {
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
-        pfx: Fs.readFileSync(process.env.CERTIFICATE_PFX)
+        pfx: fs.readFileSync(process.env.CERTIFICATE_PFX)
       };
 
       const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
@@ -313,7 +316,7 @@ export class GBServer {
         if (process.env[certPfxEnv] && process.env[certPassphraseEnv] && process.env[certDomainEnv]) {
           const options = {
             passphrase: process.env[certPassphraseEnv],
-            pfx: Fs.readFileSync(process.env[certPfxEnv])
+            pfx: fs.readFileSync(process.env[certPfxEnv])
           };
           httpsServer.addContext(process.env[certDomainEnv], options);
         } else {
@@ -325,4 +328,25 @@ export class GBServer {
       server.listen(port, mainCallback);
     }
   }
+
+  public static initEndpointsDocs(app: express.Application) {
+    const ENDPOINT = '/docs';
+    const SWAGGER_FILE_NAME = 'swagger.yaml';
+    const swaggerUiAssetPath = swaggerUI.getAbsoluteFSPath();
+
+    // A workaround for swagger-ui-dist not being able to set custom swagger URL
+    const indexContent = fs
+        .readFileSync(path.join(swaggerUiAssetPath, 'swagger-initializer.js'))
+        .toString()
+        .replace('https://petstore.swagger.io/v2/swagger.json', `/${SWAGGER_FILE_NAME}`);
+    app.get(`${ENDPOINT}/swagger-initializer.js`, (req, res) => res.send(indexContent));
+
+    // Serve the swagger-ui assets
+    app.use(ENDPOINT, express.static(swaggerUiAssetPath));
+
+    // Serve the swagger file
+    app.get(`/${SWAGGER_FILE_NAME}`, (req, res) => {
+        res.sendFile(path.join(process.env.PWD,SWAGGER_FILE_NAME));
+    });
+}
 }

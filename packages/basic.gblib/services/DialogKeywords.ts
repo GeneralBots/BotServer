@@ -994,7 +994,7 @@ export class DialogKeywords {
         }
       } else if (kind === 'file') {
         GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
-        const handle = WebAutomationServices.cyrb53(min.botId + answer.filename);
+        const handle = WebAutomationServices.cyrb53({pid, str: min.botId + answer.filename});
         GBServer.globals.files[handle] = answer;
         result = handle;
       } else if (kind === 'boolean') {
@@ -1115,7 +1115,7 @@ export class DialogKeywords {
       } else if (kind === 'qr-scanner') {
         //https://github.com/GeneralBots/BotServer/issues/171
         GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
-        const handle = WebAutomationServices.cyrb53(min.botId + answer.filename);
+        const handle = WebAutomationServices.cyrb53({pid, str: min.botId + answer.filename});
         GBServer.globals.files[handle] = answer;
         QrScanner.scanImage(GBServer.globals.files[handle])
           .then(result => console.log(result))

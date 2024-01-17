@@ -1,0 +1,2956 @@
+openapi: 3.0.0
+info:
+  title: General Bots API
+  description: General Bots API description in Swagger format
+  version: '1.0'
+servers:
+  - url: 'https://gb.pragmatismo.com.br/api'
+    description: General Bots Online
+paths:
+  /systemKeywords/callVM:
+    post:
+      summary: Method callVM
+      description: '@tags System'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                text: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/append:
+    post:
+      summary: Method append
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                args: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {}
+  /systemKeywords/seeCaption:
+    post:
+      summary: Method seeCaption
+      description: |
+
+        @example SEE CAPTION OF url AS variable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                url: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/seeText:
+    post:
+      summary: Method seeText
+      description: |
+
+        @example SEE TEXT OF url AS variable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                url: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+  /systemKeywords/sortBy:
+    post:
+      summary: Method sortBy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                array: {}
+                memberName: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/JSONAsGBTable:
+    post:
+      summary: Method JSONAsGBTable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/renderTable:
+    post:
+      summary: Method renderTable
+      description: |-
+
+        @param data
+        @param renderImage
+        @returns
+
+        @see http://tabulator.info/examples/5.2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /systemKeywords/closeHandles:
+    post:
+      summary: Method closeHandles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/asPDF:
+    post:
+      summary: Method asPDF
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                data: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /systemKeywords/asImage:
+    post:
+      summary: Method asImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                data: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    properties: {}
+                  - type: object
+                    properties: {}
+  /systemKeywords/executeSQL:
+    post:
+      summary: Method executeSQL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                data: {}
+                sql: {}
+                tableName: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/getFileContents:
+    post:
+      summary: Method getFileContents
+      description: Retrives the content of a given URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                url: {}
+                headers: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /systemKeywords/getRandomId:
+    post:
+      summary: Method getRandomId
+      description: 'Retrives a random id with a length of five, every time it is called.'
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/getStock:
+    post:
+      summary: Method getStock
+      description: Retrives stock inforation for a given symbol.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                symbol: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /systemKeywords/wait:
+    post:
+      summary: Method wait
+      description: |
+        Holds script execution for the number of seconds specified.
+
+        @example WAIT 5 ' This will wait five seconds.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                seconds: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/talkTo:
+    post:
+      summary: Method talkTo
+      description: |
+        Sends a text message to the mobile number specified.
+
+        @example TALK TO "+199988887777", "Message text here"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                mobile: {}
+                message: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/getUser:
+    post:
+      summary: Method getUser
+      description: |
+        Get a user object from a alias.
+
+        @example user = USER "someone"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                username: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /systemKeywords/sendSmsTo:
+    post:
+      summary: Method sendSmsTo
+      description: |
+        Sends a SMS message to the mobile number specified.
+
+        @example SEND SMS TO "+199988887777", "Message text here"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                mobile: {}
+                message: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/set:
+    post:
+      summary: Method set
+      description: |
+        1. Defines a cell value in the tabular file.
+        2. Defines an element text on HTML page.
+
+        @example SET "file.xlsx", "A2", 4500
+
+        @example SET page, "elementHTMLSelector", "text"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+                file: {}
+                address: {}
+                value: {}
+                name: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/internalGetDocument:
+    post:
+      summary: Method internalGetDocument
+      description: 'Retrives a document from the drive, given a path and filename.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/saveFile:
+    post:
+      summary: Method saveFile
+      description: |
+        Saves the content of variable into the file in .gbdata default folder.
+
+        @exaple SAVE variable as "my.txt"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                file: {}
+                data: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/uploadFile:
+    post:
+      summary: Method uploadFile
+      description: |
+        Saves the content of variable into BLOB storage.
+
+        @exaple UPLOAD file.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                file: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/note:
+    post:
+      summary: Method note
+      description: |
+        Takes note inside a notes.xlsx of .gbdata.
+
+        @example NOTE "text"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                text: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/saveToStorageBatch:
+    post:
+      summary: Method saveToStorageBatch
+      description: |
+        Saves variables to storage, not a worksheet.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                table: {}
+                rows: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/saveToStorage:
+    post:
+      summary: Method saveToStorage
+      description: |
+        Saves variables to storage, not a worksheet.
+
+        @example SAVE "Billing",  columnName1, columnName2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                table: {}
+                fieldsValues: {}
+                fieldsNames: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/saveToStorageWithJSON:
+    post:
+      summary: Method saveToStorageWithJSON
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                table: {}
+                fieldsValues: {}
+                fieldsNames: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/save:
+    post:
+      summary: Method save
+      description: >
+        Saves the content of several variables to a new row in a tabular file.
+
+
+        @example SAVE "customers.xlsx", name, email, phone, address, city,
+        state, country
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                file: {}
+                args: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/getHttp:
+    post:
+      summary: Method getHttp
+      description: |
+        Retrives the content of a cell in a tabular file.
+
+        @example value = GET "file.xlsx", "A2"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                file: {}
+                addressOrHeaders: {}
+                httpUsername: {}
+                httpPs: {}
+                qs: {}
+                streaming: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/isValidDate:
+    post:
+      summary: Method isValidDate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                dt: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: boolean
+  /systemKeywords/isValidNumber:
+    post:
+      summary: Method isValidNumber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                number: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: boolean
+  /systemKeywords/isValidHour:
+    post:
+      summary: Method isValidHour
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                value: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/getFilter:
+    post:
+      summary: Method getFilter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/find:
+    post:
+      summary: Method find
+      description: |
+        Finds a value or multi-value results in a tabular file.
+
+        @example
+
+         rows = FIND "file.xlsx", "A2=active", "A2 < 12/06/2010 15:00"
+         i = 1
+         do while i <= ubound(row)
+           row = rows[i]
+           send sms to "+" + row.mobile, "Hello " + row.name + "! "
+         loop
+        @see NPM package data-forge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+                args: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/getDateFromLocaleString:
+    post:
+      summary: Method getDateFromLocaleString
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/createFolder:
+    post:
+      summary: Method createFolder
+      description: |
+        Creates a folder in the bot instance drive.
+
+        @example folder = CREATE FOLDER "notes\01"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                name: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/shareFolder:
+    post:
+      summary: Method shareFolder
+      description: |
+        Shares a folder from the drive to a e-mail recipient.
+
+        @example
+
+        folder = CREATE FOLDER "notes\10"
+        SHARE FOLDER folder, "nome@domain.com", "E-mail message"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                folder: {}
+                email: {}
+                message: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/internalCreateDocument:
+    post:
+      summary: Method internalCreateDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/createDocument:
+    post:
+      summary: Method createDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                path: {}
+                content: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/copyFile:
+    post:
+      summary: Method copyFile
+      description: |
+        Copies a drive file from a place to another .
+
+        @example
+
+        COPY "template.xlsx", "reports\" + customerName + "\final.xlsx"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                src: {}
+                dest: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/convert:
+    post:
+      summary: Method convert
+      description: |
+        Converts a drive file from a place to another .
+
+        Supported sources csv, doc, docx, odp, ods, odt, pot, potm, potx, pps,
+        ppsx, ppsxm, ppt, pptm, pptx, rtf, xls, xlsx
+
+        @example
+
+        CONVERT "customers.xlsx" TO "reports\" + today + ".pdf"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                src: {}
+                dest: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/generatePassword:
+    post:
+      summary: Method generatePassword
+      description: |
+        Generate a secure and unique password.
+
+        @example pass = PASSWORD
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/flattenJSON:
+    post:
+      summary: Method flattenJSON
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/getCustomToken:
+    post:
+      summary: Method getCustomToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                tokenName: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /systemKeywords/getByHttp:
+    post:
+      summary: Method getByHttp
+      description: |
+        Calls any REST API by using GET HTTP method.
+
+        @example user = get "http://server/users/1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                url: {}
+                headers: {}
+                username: {}
+                ps: {}
+                qs: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/putByHttp:
+    post:
+      summary: Method putByHttp
+      description: |
+        Calls any REST API by using POST HTTP method.
+
+        @example
+
+        user = put "http://server/path", "data"
+        talk "The updated user area is" + area
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                url: {}
+                data: {}
+                headers: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/postByHttp:
+    post:
+      summary: Method postByHttp
+      description: |
+        Calls any REST API by using POST HTTP method.
+
+        @example
+
+        user = post "http://server/path", "data"
+        talk "The updated user area is" + area
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                url: {}
+                data: {}
+                headers: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/numberOnly:
+    post:
+      summary: Method numberOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                text: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/createLead:
+    post:
+      summary: Method createLead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                templateName: {}
+                data: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/fill:
+    post:
+      summary: Method fill
+      description: |
+
+        Fills a .docx or .pptx with template data.
+
+        doc = FILL "templates/template.docx", data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                templateName: {}
+                data: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /systemKeywords/screenCapture:
+    post:
+      summary: Method screenCapture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/numberToLetters:
+    post:
+      summary: Method numberToLetters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/getTableFromName:
+    post:
+      summary: Method getTableFromName
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/merge:
+    post:
+      summary: Method merge
+      description: |
+        Merges a multi-value with a tabular file using BY field as key.
+
+        @example
+
+         data = FIND first.xlsx
+         MERGE "second.xlsx" WITH data BY customer_id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                file: {}
+                data: {}
+                key1: {}
+                key2: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/tweet:
+    post:
+      summary: Method tweet
+      description: |-
+        Publishs a tweet to X.
+
+        TWEET "My tweet text"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                text: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/rewrite:
+    post:
+      summary: Method rewrite
+      description: |-
+        HEAR description
+        text = REWRITE description
+        SAVE "logs.xlsx", username, text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                text: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/pay:
+    post:
+      summary: Method pay
+      description: |
+
+        qrcode = PAY "10000", "Name", 100
+        SEND FILE qrcode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                orderId: {}
+                customerName: {}
+                ammount: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /systemKeywords/autoSave:
+    post:
+      summary: Method autoSave
+      description: |-
+        HEAR logo AS FILE
+        file = AUTO SAVE logo
+        TALK "Your " + file.name + " file is saved."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/internalAutoSave:
+    post:
+      summary: Method internalAutoSave
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                min: {}
+                handle: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /systemKeywords/deleteFromStorage:
+    post:
+      summary: Method deleteFromStorage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                table: {}
+                criteria: {}
+      responses:
+        '204':
+          description: Success
+  /systemKeywords/deleteFile:
+    post:
+      summary: Method deleteFile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                file: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /systemKeywords/getExtensionInfo:
+    post:
+      summary: Method getExtensionInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/dirFolder:
+    post:
+      summary: Method dirFolder
+      description: Loads all para from tabular file Config.xlsx.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                remotePath: {}
+                baseUrl: {}
+                client: {}
+                array: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /systemKeywords/log:
+    post:
+      summary: Method log
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                text: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/chart:
+    post:
+      summary: Method chart
+      description: |-
+
+        Data = [10,20,30]
+        Legends = "Steve;Yui;Carlos"
+        img = CHART "pie",data,legends
+
+        https://c3js.org/examples.html
+        https://c3js.org/samples/timeseries.html (used here)
+
+        @param data
+        @param legends
+        @see https://www.npmjs.com/package/plot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                type: {}
+                data: {}
+                legends: {}
+                transpose: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+  /dialogKeywords/getOCR:
+    post:
+      summary: Method getOCR
+      description: |
+        Returns the OCR of image file.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                localFile: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+  /dialogKeywords/getToday:
+    post:
+      summary: Method getToday
+      description: |-
+        Returns the today data filled in dd/mm/yyyy or mm/dd/yyyy.
+
+        @example x = TODAY
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+  /dialogKeywords/exit:
+    post:
+      summary: Method exit
+      description: |-
+        Quits the dialog,currently required to get out of VM context.
+
+        @example EXIT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/getActiveTasks:
+    post:
+      summary: Method getActiveTasks
+      description: |-
+        Get active tasks.
+
+        @example list = ACTIVE TASKS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/createDeal:
+    post:
+      summary: Method createDeal
+      description: |-
+        Creates a new deal.
+
+        @example CREATE DEAL dealname,contato,empresa,amount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                dealName: {}
+                contact: {}
+                company: {}
+                amount: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/fndContact:
+    post:
+      summary: Method fndContact
+      description: |-
+        Finds contacts in XRM.
+
+        @example list = FIND CONTACT "Sandra"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                name: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/getContentLocaleWithCulture:
+    post:
+      summary: Method getContentLocaleWithCulture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/getCoded:
+    post:
+      summary: Method getCoded
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                value: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+  /dialogKeywords/getWeekFromDate:
+    post:
+      summary: Method getWeekFromDate
+      description: |
+        Returns specified date week day in format 'Mon'.
+
+        @example day = WEEKDAY (date)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                date: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /dialogKeywords/getDateDiff:
+    post:
+      summary: Method getDateDiff
+      description: >
+        Returns an object ready to get information about difference in several
+        ways
+
+        like years,months or days.
+
+
+        @example days = DATEDIFF date1,date2,mode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                date1: {}
+                date2: {}
+                mode: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /dialogKeywords/format:
+    post:
+      summary: Method format
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                value: {}
+                format: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /dialogKeywords/dateAdd:
+    post:
+      summary: Method dateAdd
+      description: |-
+        Returns specified date week day in format 'Mon'.
+
+        @example DATEADD date,"minute",60
+
+        https://stackoverflow.com/a/1214753/18511
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                date: {}
+                mode: {}
+                units: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Date'
+  /dialogKeywords/getToLst:
+    post:
+      summary: Method getToLst
+      description: |
+        Returns specified list member separated by comma.
+
+        @example TALK TOLIST (array,member)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /dialogKeywords/getHourFromDate:
+    post:
+      summary: Method getHourFromDate
+      description: |
+        Returns the specified time in format hh:dd.
+
+        @example hour = HOUR (date)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+  /dialogKeywords/getNow:
+    post:
+      summary: Method getNow
+      description: |
+        Returns current time in format hh:mm.
+
+        @example NOW
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+  /dialogKeywords/sendEmail:
+    post:
+      summary: Method sendEmail
+      description: |
+        Sends an e-mail.
+
+        @example
+
+        SEND MAIL "email@domain.com","Subject", "Message text."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                to: {}
+                subject: {}
+                body: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /dialogKeywords/sendFileTo:
+    post:
+      summary: Method sendFileTo
+      description: |
+        Sends a file to a given mobile.
+
+        @example SEND FILE TO "+199988887777","image.jpg",caption
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                mobile: {}
+                filename: {}
+                caption: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/sendFile:
+    post:
+      summary: Method sendFile
+      description: |
+        Sends a file to the current user.
+
+        @example SEND FILE "image.jpg"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                filename: {}
+                caption: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/setLanguage:
+    post:
+      summary: Method setLanguage
+      description: |
+        Defines the current language of the bot conversation.
+
+        @example SET LANGUAGE "pt"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                language: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/allowRole:
+    post:
+      summary: Method allowRole
+      description: |
+        Defines the current security context for dialogs based on roles.
+
+        @example ALLOW ROLE "DevOps"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                role: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/setIdGeneration:
+    post:
+      summary: Method setIdGeneration
+      description: |
+        Defines the id generation policy.
+
+        @example SET ID NUMBER
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mode: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/isUserSystemParam:
+    post:
+      summary: Method isUserSystemParam
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/setOption:
+    post:
+      summary: Method setOption
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                name: {}
+                value: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /dialogKeywords/getOption:
+    post:
+      summary: Method getOption
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                name: {}
+                root: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /dialogKeywords/setMaxLines:
+    post:
+      summary: Method setMaxLines
+      description: |
+        Defines the maximum lines to scan in spreedsheets.
+
+        @example SET MAX LINES 5000
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                count: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/setOutput:
+    post:
+      summary: Method setOutput
+      description: |
+        Define array as output.
+
+        @example SET OUTPUT ARRAY
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                value: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/setUserParam:
+    post:
+      summary: Method setUserParam
+      description: |
+        Defines a custom user param to be persisted to storage.
+
+        @example SET PARAM name AS value
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                name: {}
+                value: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/getContinuationToken:
+    post:
+      summary: Method getContinuationToken
+      description: |
+        Returns current if any continuation token for paginated HTTP requests.
+
+        @example CONTINUATION TOKEN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /dialogKeywords/getConfig:
+    post:
+      summary: Method getConfig
+      description: |
+        Returns bot param persisted on storage.
+
+        @example GET CONFIG name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                name: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /dialogKeywords/setMaxColumns:
+    post:
+      summary: Method setMaxColumns
+      description: |
+        Defines the maximum lines to scan in spreedsheets.
+
+        @example SET MAX COLUMNS 5000
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                count: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/setFilter:
+    post:
+      summary: Method setFilter
+      description: |
+        Defines a custom user filter for SET calls.
+
+        @example SET FILTER "ColumnName=33"
+                 SET "file.xlsx", "C", "200000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                value: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/setPageMode:
+    post:
+      summary: Method setPageMode
+      description: |
+        Defines page mode for paged GET calls.
+
+        @example SET PAGE MODE "auto"
+                 data = GET url 
+                 FOR EACH item in data
+                     ...
+                 END FOR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                value: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/setWholeWord:
+    post:
+      summary: Method setWholeWord
+      description: |
+        Defines the FIND behaviour to consider whole words while searching.
+
+        @example SET WHOLE WORD ON
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                'on': {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/setFilterTypes:
+    post:
+      summary: Method setFilterTypes
+      description: |
+        Defines the FIND behaviour to consider whole words while searching.
+
+        @example SET FILTER TYPE date, string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                types: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/setTheme:
+    post:
+      summary: Method setTheme
+      description: |
+        Defines the theme for assets generation.
+
+        @example SET THEME "themename"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                theme: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/setTranslatorOn:
+    post:
+      summary: Method setTranslatorOn
+      description: |
+        Defines translator behaviour.
+
+        @example SET TRANSLATOR ON | OFF
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                'on': {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/userName:
+    post:
+      summary: Method userName
+      description: |
+        Returns the name of the user acquired by WhatsApp API.
+
+        SAVE "file.xlsx", username, now
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+  /dialogKeywords/userMobile:
+    post:
+      summary: Method userMobile
+      description: Returns current mobile number from user in conversation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+  /dialogKeywords/showMenu:
+    post:
+      summary: Method showMenu
+      description: |
+        Shows the subject menu to the user
+
+        @example MENU
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/transferTo:
+    post:
+      summary: Method transferTo
+      description: |
+        Performs the transfer of the conversation to a human agent.
+
+        @example TRANSFER
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                to: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/getFileByHandle:
+    post:
+      summary: Method getFileByHandle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/hear:
+    post:
+      summary: Method hear
+      description: |
+        Hears something from user and put it in a variable
+
+        @example HEAR name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                kind: {}
+                args: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/getGBAIPath:
+    post:
+      summary: Method getGBAIPath
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/gotoDialog:
+    post:
+      summary: Method gotoDialog
+      description: Prepares the next dialog to be shown to the specified user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                fromOrDialogName: {}
+                dialogName: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/getProcessInfo:
+    post:
+      summary: Method getProcessInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: number
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /dialogKeywords/talk:
+    post:
+      summary: Method talk
+      description: Talks to the user by using the specified text.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                text: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /dialogKeywords/getChannel:
+    post:
+      summary: Method getChannel
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/internalSendFile:
+    post:
+      summary: Method internalSendFile
+      description: Processes the sending of the file.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                channel: {}
+                mobile: {}
+                filename: {}
+                caption: {}
+      responses:
+        '204':
+          description: Success
+  /dialogKeywords/getQRCode:
+    post:
+      summary: Method getQRCode
+      description: |
+        Generates a new QRCode.
+
+        file = QRCODE "data"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                text: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /imageProcessing/sharpen:
+    post:
+      summary: Method sharpen
+      description: |-
+        Sharpen the image.
+
+        @example file = SHARPEN file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                file: {}
+      responses:
+        '204':
+          description: Success
+  /imageProcessing/mergeImage:
+    post:
+      summary: Method mergeImage
+      description: |-
+        SET ORIENTATION VERTICAL
+
+        file = MERGE file1, file2, file3 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                files: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /imageProcessing/blur:
+    post:
+      summary: Method blur
+      description: |-
+        Sharpen the image.
+
+        @example file = BLUR file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                file: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/isSelector:
+    post:
+      summary: Method isSelector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/cyrb53:
+    post:
+      summary: Method cyrb53
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                str: {}
+                seed: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/closeHandles:
+    post:
+      summary: Method closeHandles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/openPage:
+    post:
+      summary: Method openPage
+      description: |-
+        Returns the page object.
+
+        @example OPEN "https://wikipedia.org"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+                sessionKind: {}
+                sessionName: {}
+                url: {}
+                username: {}
+                password: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /webAutomation/getPageByHandle:
+    post:
+      summary: Method getPageByHandle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/getBySelector:
+    post:
+      summary: Method getBySelector
+      description: |-
+        Find element on page DOM.
+
+        @example GET "selector"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                handle: {}
+                selector: {}
+                pid: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /webAutomation/getByFrame:
+    post:
+      summary: Method getByFrame
+      description: |-
+        Find element on page DOM.
+
+        @example GET page,"frameSelector,"elementSelector"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                handle: {}
+                frame: {}
+                selector: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /webAutomation/hover:
+    post:
+      summary: Method hover
+      description: Simulates a mouse hover an web page element.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+                selector: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/click:
+    post:
+      summary: Method click
+      description: |-
+        Clicks on an element in a web page.
+
+        @example CLICK "#idElement"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+                frameOrSelector: {}
+                selector: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/debugStepWeb:
+    post:
+      summary: Method debugStepWeb
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/pressKey:
+    post:
+      summary: Method pressKey
+      description: |-
+        Press ENTER in a web page,useful for logins.
+
+        @example PRESS ENTER ON page
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                handle: {}
+                char: {}
+                frame: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/linkByText:
+    post:
+      summary: Method linkByText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+                text: {}
+                index: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/clickButton:
+    post:
+      summary: Method clickButton
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+                text: {}
+                index: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/screenshot:
+    post:
+      summary: Method screenshot
+      description: |-
+        Returns the screenshot of page or element
+
+        @example file = SCREENSHOT "#selector"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+                selector: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /webAutomation/setElementText:
+    post:
+      summary: Method setElementText
+      description: |-
+        Types the text into the text field.
+
+        @example SET page,"selector","text"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+                selector: {}
+                text: {}
+      responses:
+        '204':
+          description: Success
+  /webAutomation/download:
+    post:
+      summary: Method download
+      description: |-
+        Performs the download to the .gbdrive Download folder.
+
+        @example file = DOWNLOAD element, folder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+                selector: {}
+                folder: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /webAutomation/recursiveFindInFrames:
+    post:
+      summary: Method recursiveFindInFrames
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /webAutomation/getTextOf:
+    post:
+      summary: Method getTextOf
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pid: {}
+                handle: {}
+                frameOrSelector: {}
+                selector: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema: {}
+  /debuggerService/setBreakpoint:
+    post:
+      summary: Method setBreakpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                botId: {}
+                line: {}
+      responses:
+        '204':
+          description: Success
+  /debuggerService/refactor:
+    post:
+      summary: Method refactor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                botId: {}
+                code: {}
+                change: {}
+      responses:
+        '204':
+          description: Success
+  /debuggerService/resume:
+    post:
+      summary: Method resume
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                botId: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    properties: {}
+                  - type: object
+                    properties: {}
+  /debuggerService/stop:
+    post:
+      summary: Method stop
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                botId: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /debuggerService/step:
+    post:
+      summary: Method step
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                botId: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    properties: {}
+                  - type: object
+                    properties: {}
+  /debuggerService/getContext:
+    post:
+      summary: Method getContext
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                botId: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /debuggerService/start:
+    post:
+      summary: Method start
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                botId: {}
+                botApiKey: {}
+                scriptName: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    properties: {}
+                  - type: object
+                    properties: {}
+  /debuggerService/sendMessage:
+    post:
+      summary: Method sendMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                botId: {}
+                botApiKey: {}
+                text: {}
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    properties: {}
+                  - type: object
+                    properties: {}
+components:
+  schemas:
+    Response:
+      type: object
+      description: |-
+        This Fetch API interface represents the response to a request.
+
+        [MDN Reference](https://developer.mozilla.org/docs/Web/API/Response)
+      properties:
+        headers:
+          $ref: '#/components/schemas/Headers'
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Response/headers)
+        ok:
+          type: boolean
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Response/ok)
+        redirected:
+          type: boolean
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Response/redirected)
+        status:
+          type: number
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Response/status)
+        statusText:
+          type: string
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Response/statusText)
+        type:
+          $ref: '#/components/schemas/ResponseType'
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Response/type)
+        url:
+          type: string
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Response/url)
+        clone:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Response/clone)
+          properties: {}
+        body:
+          $ref: '#/components/schemas/ReadableStreamOf_Uint8Array'
+        bodyUsed:
+          type: boolean
+        arrayBuffer:
+          type: object
+          properties: {}
+        blob:
+          type: object
+          properties: {}
+        formData:
+          type: object
+          properties: {}
+        json:
+          type: object
+          properties: {}
+        text:
+          type: object
+          properties: {}
+    Date:
+      type: string
+      format: date-time
+    Headers:
+      type: object
+      description: "This Fetch API interface allows you to perform various actions on HTTP request and response headers. These actions include retrieving, setting, adding to, and removing. A Headers object has an associated header list, which is initially empty and consists\_of zero or more name and value pairs. \_You can add to this using methods like append() (see Examples.)\_In all methods of this interface, header names are matched by case-insensitive byte sequence.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Headers)"
+      properties:
+        append:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Headers/append)
+          properties: {}
+        delete:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Headers/delete)
+          properties: {}
+        get:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Headers/get)
+          properties: {}
+        getSetCookie:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Headers/getSetCookie)
+          properties: {}
+        has:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Headers/has)
+          properties: {}
+        set:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/Headers/set)
+          properties: {}
+        forEach:
+          type: object
+          properties: {}
+        entries:
+          type: object
+          properties: {}
+        keys:
+          type: object
+          properties: {}
+        values:
+          type: object
+          properties: {}
+        __@iterator@433:
+          type: object
+          properties: {}
+    ResponseType:
+      type: string
+      enum:
+        - default
+        - error
+        - basic
+        - cors
+        - opaque
+        - opaqueredirect
+    ReadableStreamOf_Uint8Array:
+      type: object
+      description: >-
+        This Streams API interface represents a readable stream of byte data.
+        The Fetch API offers a concrete instance of a ReadableStream through the
+        body property of a Response object.
+
+
+        [MDN
+        Reference](https://developer.mozilla.org/docs/Web/API/ReadableStream)
+      properties:
+        locked:
+          type: boolean
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/ReadableStream/locked)
+        cancel:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/ReadableStream/cancel)
+          properties: {}
+        getReader:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/ReadableStream/getReader)
+          properties: {}
+        pipeThrough:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/ReadableStream/pipeThrough)
+          properties: {}
+        pipeTo:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/ReadableStream/pipeTo)
+          properties: {}
+        tee:
+          type: object
+          description: >-
+            [MDN
+            Reference](https://developer.mozilla.org/docs/Web/API/ReadableStream/tee)
+          properties: {}

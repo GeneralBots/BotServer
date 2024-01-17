@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "strict": false,
+    "allowJs": true,
+    "downlevelIteration": true,
+    "baseUrl": "./",
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "mapRoot": "./dist/",
+    "moduleResolution": "Node",
+    "module": "ESNext",
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "paths": {
+      "*": [
+        "types/*"
+      ],
+      "botlib/*": [
+        "node_modules/botlib/*"
+      ],
+      "pragmatismo-io-framework/*": [
+        "node_modules/pragmatismo-io-framework/*"
+      ]
+    },
+    "sourceMap": true,
+    "target": "ESNext",
+    "typeRoots": [
+      "node_modules/@types"
+    ]
+  },
+  "include": [    
+    "src/api.ts",
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
+}
