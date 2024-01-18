@@ -139,7 +139,6 @@ export class GBServer {
           const core: IGBCoreService = new GBCoreService();
           const importer: GBImporter = new GBImporter(core);
           const deployer: GBDeployer = new GBDeployer(core, importer);
-          const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
           let azureDeployer: AzureDeployerService;
 
           // Ensure that local proxy is setup.

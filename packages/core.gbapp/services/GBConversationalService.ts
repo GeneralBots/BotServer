@@ -1002,7 +1002,7 @@ export class GBConversationalService {
 
     const keepText: string = min.core.getParam(min.instance, 'Keep Text', '');
     let keepTextList = [];
-    if (keepTextList) {
+    if (keepTextList && keepText) {
       keepTextList = keepTextList.concat(keepText.split(';'));
     }
     const replacements = [];

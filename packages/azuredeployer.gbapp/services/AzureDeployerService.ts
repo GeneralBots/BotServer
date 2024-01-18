@@ -108,7 +108,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   public static async createInstanceWithCredentials(deployer: GBDeployer, freeTier: boolean = true,
     subscriptionId: string, username: string, password: string): Promise<AzureDeployerService> {
-    const service = new AzureDeployerService();
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
     return await this.createInstanceWithADALCredentials(deployer, freeTier, subscriptionId, credentials);
   }
