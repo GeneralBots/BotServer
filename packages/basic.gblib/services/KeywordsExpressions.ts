@@ -966,8 +966,7 @@ export class KeywordsExpressions {
 
         // // Uses auto quote if this is a phrase with more then one word.
 
-        if (/\s/.test($3) && 
-        ($3.trim().substr(0, 1) !== '`' || $3.trim().substr(0, 1) !== "'")) {
+        if (!($3.trim().substr(0, 1) === '`' || $3.trim().substr(0, 1) === "'")) {
            $3 = "`" + $3 + "`";
         }
         return `await dk.talk ({pid: pid, text: ${$3}})`;

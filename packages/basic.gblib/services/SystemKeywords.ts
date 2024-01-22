@@ -657,6 +657,8 @@ export class SystemKeywords {
   /**
    * Saves the content of variable into BLOB storage.
    *
+   * MSFT uses MD5, see https://katelynsills.com/law/the-curious-case-of-md5.
+   * 
    * @exaple UPLOAD file.
    *
    */
@@ -701,7 +703,7 @@ export class SystemKeywords {
     const res = await blockBlobClient.uploadFile(localName,
       {
         blobHTTPHeaders: {
-          blobContentMD5: hash
+          blobContentMD5: hash 
         }
       });
 
