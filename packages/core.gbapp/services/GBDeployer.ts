@@ -56,7 +56,7 @@ import MicrosoftGraph from '@microsoft/microsoft-graph-client';
 import { GBLogEx } from './GBLogEx.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBUtil } from '../../../src/util.js';
-import { HNSWLib } from 'langchain/vectorstores/hnswlib.js';
+import { HNSWLib } from 'langchain/vectorstores/hnswlib';
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 
 /**

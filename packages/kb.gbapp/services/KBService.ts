@@ -357,22 +357,20 @@ export class KBService implements IGBKBService {
 
             return { answer: undefined, questionId: 0 };
           }
-        } else {
-
-          GBLog.info(
-            `SEARCH called but returned LOW level score,
-              returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
-          );
-
-          return await this.answerByGPT(min,
-            query,
-            searchScore,
-            subjects
-          );
         }
       }
 
-      return { answer: undefined, questionId: 0 };
+      GBLog.info(
+        `SEARCH returned LOW level score, calling GPT
+          returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
+      );
+
+      return await this.answerByGPT(min,
+        query,
+        searchScore,
+        subjects
+      );
+     
     }
   }
 
@@ -395,7 +393,7 @@ export class KBService implements IGBKBService {
     searchScore: number,
     subjects: GuaribasSubject[]
   ) {
-    const contextVectorStore = min['VectorStore'];
+    const contextVectorStore = min['vectorStore'];
     const question = query.trim().replaceAll('\n', ' ');
     const context = await this.getRelevantContext(contextVectorStore, question, 1);
 
@@ -404,7 +402,18 @@ export class KBService implements IGBKBService {
   
     const chatPrompt = ChatPromptTemplate.fromPromptMessages([
       systemPrompt,
-      HumanMessagePromptTemplate.fromTemplate('QUESTION: """{input}"""'),
+      HumanMessagePromptTemplate.fromTemplate(`Answer in pt-br. 
+      You have access to the context (RELEVANTDOCS) provided by the user.
+      
+      When answering think about whether the question in RELEVANTDOCS, but never mention
+      to user about the source.
+      Don’t justify your answers. Don't refer to yourself in any of the created content.
+      Don´t prefix RESPONSE: when answering the user.
+      RELEVANTDOCS: {context}
+
+      QUESTION: """{input}"""
+
+      `),
     ]);
     const windowMemory = new BufferWindowMemory({
       returnMessages: false,
@@ -440,7 +449,7 @@ export class KBService implements IGBKBService {
     });
     if (response) {
 
-      return { answer: response.response, questionId: 0 };
+      return { answer: response.text, questionId: 0 };
     }
 
     return { answer: undefined, questionId: 0 };
@@ -686,32 +695,33 @@ export class KBService implements IGBKBService {
     return await GuaribasQuestion.bulkCreate(questions);
   }
 
-  public async sendAnswer(min: GBMinInstance, channel: string, step: GBDialogStep, answer: GuaribasAnswer) {
-    if (answer.content.endsWith('.mp4')) {
+  public async sendAnswer(min: GBMinInstance, channel: string, step: GBDialogStep, answer) {
+    answer = typeof (answer) === 'string' ? answer : answer.content;
+    if (answer.endsWith('.mp4')) {
       await this.playVideo(min, min.conversationalService, step, answer, channel);
     } else if (
-      answer.content.endsWith('.ppt') ||
-      answer.content.endsWith('.pptx') ||
-      answer.content.endsWith('.doc') ||
-      answer.content.endsWith('.docx') ||
-      answer.content.endsWith('.xls') ||
-      answer.content.endsWith('.xlsx')
+      answer.endsWith('.ppt') ||
+      answer.endsWith('.pptx') ||
+      answer.endsWith('.doc') ||
+      answer.endsWith('.docx') ||
+      answer.endsWith('.xls') ||
+      answer.endsWith('.xlsx')
     ) {
       const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
-      const doc = urlJoin(GBServer.globals.publicAddress, 'kb', path, 'assets', answer.content);
+      const doc = urlJoin(GBServer.globals.publicAddress, 'kb', path, 'assets', answer);
       const url = `http://view.officeapps.live.com/op/view.aspx?src=${doc}`;
       await this.playUrl(min, min.conversationalService, step, url, channel);
-    } else if (answer.content.endsWith('.pdf')) {
+    } else if (answer.endsWith('.pdf')) {
       const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
-      const url = urlJoin('kb', path, 'assets', answer.content);
+      const url = urlJoin('kb', path, 'assets', answer);
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
-      await min.conversationalService['playMarkdown'](min, answer.content, channel, step,
+      await min.conversationalService['playMarkdown'](min, answer, channel, step,
         GBMinService.userMobile(step));
-    } else if (answer.content.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
+    } else if (answer.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else {
-      await min.conversationalService.sendText(min, step, answer.content);
+      await min.conversationalService.sendText(min, step, answer);
       await min.conversationalService.sendEvent(min, step, 'stop', undefined);
     }
   }
@@ -934,13 +944,13 @@ export class KBService implements IGBKBService {
   }
 
    defaultRecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1024,
-    chunkOverlap: 1024,
+    chunkSize: 700,
+    chunkOverlap: 50,
   });
   
    markdownRecursiveCharacterTextSplitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
-    chunkSize: 1024,
-    chunkOverlap: 1024,
+    chunkSize: 700,
+    chunkOverlap: 50,
   });
   
 

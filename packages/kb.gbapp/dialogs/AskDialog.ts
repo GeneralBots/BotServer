@@ -340,7 +340,7 @@ export class AskDialog extends IGBDialog {
   }
 
   private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, user, answer: GuaribasAnswer) {
-    const text = answer.content;
+    const text = typeof(answer)==='string'? answer:answer.content;
     if (text.endsWith('.docx')) {
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
       await step.endDialog();
