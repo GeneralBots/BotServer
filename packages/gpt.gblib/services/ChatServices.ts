@@ -31,7 +31,7 @@
 'use strict';
 
 import { GBMinInstance } from 'botlib';
-//import OpenAI from "openai";
+import OpenAI from "openai";
 import { ChatGPTAPIBrowser, getOpenAIAuth } from 'chatgpt'
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
@@ -69,15 +69,15 @@ export class ChatServices {
 
     // Calls Model.
 
-    // const openai = new OpenAI({
-    //   apiKey: key
-    // });
-    // const chatCompletion = await openai.chat.completions.create({
-    //   model: "gpt-3.5-turbo",
-    //   messages: [{ role: "user", content: text }],
-    //   functions: functions
-    // });
-    // return chatCompletion.choices[0].message.content;
+    const openai = new OpenAI({
+      apiKey: key
+    });
+    const chatCompletion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: text }],
+      functions: functions
+    });
+    return chatCompletion.choices[0].message.content;
   }
 
 

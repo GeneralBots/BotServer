@@ -312,6 +312,10 @@ export class GBMinService {
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
+    dir = `work/${gbai}/${botId}.gbkb/docs-vectorized`;
+    if (!Fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
     dir = `work/${gbai}/${botId}.gbdialog`;
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
@@ -746,6 +750,9 @@ export class GBMinService {
     min.sandBoxMap = {};
     min['scheduleMap'] = {};
     min['conversationWelcomed'] = {};
+    min['vectorStore']= await this.deployer.loadOrCreateEmptyVectorStore(min);
+    const gbkbPath = DialogKeywords.getGBAIPath(min.botId, 'gbkb');
+    min['vectorStorePath']= Path.join('work', gbkbPath, 'docs-vectorized');
     min.packages = sysPackages;
 
     // NLP Manager.

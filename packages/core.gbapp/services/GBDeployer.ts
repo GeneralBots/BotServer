@@ -309,6 +309,21 @@ export class GBDeployer implements IGBDeployer {
     return await this.core.saveInstance(instance);
   }
 
+  public async loadOrCreateEmptyVectorStore(min: GBMinInstance): Promise<HNSWLib> {
+    let vectorStore: HNSWLib;
+          
+    try {
+      vectorStore = await HNSWLib.load(min['vectorStorePath'], new OpenAIEmbeddings({ maxConcurrency: 5 }));
+    } catch {
+      vectorStore = new HNSWLib(new OpenAIEmbeddings({ maxConcurrency: 5 }), {
+        space: 'cosine',
+        numDimensions: 1536,
+      });
+    }
+    return vectorStore;
+  }
+  
+
   /**
    * Performs the NLP publishing process on remote service.
    */

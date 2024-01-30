@@ -35,13 +35,24 @@
 import Path from 'path';
 import Fs from 'fs';
 import urlJoin from 'url-join';
-import path from 'path';
 import asyncPromise from 'async-promises';
 import walkPromise from 'walk-promise';
 import { SearchClient } from '@azure/search-documents';
 import Excel from 'exceljs';
 import getSlug from 'speakingurl';
 import { GBServer } from '../../../src/app.js';
+import { HNSWLib } from 'langchain/vectorstores/hnswlib';
+import { JSONLoader } from 'langchain/document_loaders/fs/json';
+import { TextLoader } from 'langchain/document_loaders/fs/text';
+import { PDFLoader } from 'langchain/document_loaders/fs/pdf';
+import { DocxLoader } from 'langchain/document_loaders/fs/docx';
+import { EPubLoader } from 'langchain/document_loaders/fs/epub';
+import { CSVLoader } from 'langchain/document_loaders/fs/csv';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { Document } from 'langchain/document';
+import path from 'path';
+import { YoutubeTranscript } from 'youtube-transcript';
+
 import {
   GBDialogStep,
   GBLog,
@@ -257,7 +268,7 @@ export class KBService implements IGBKBService {
   }
 
   public async ask(
-    instance: IGBInstance,
+    min: GBMinInstance,
     query: string,
     searchScore: number,
     subjects: GuaribasSubject[]
@@ -271,6 +282,8 @@ export class KBService implements IGBKBService {
     query = query.replace('/', ' ');
     query = query.replace('\\', ' ');
     query = query.replace('\r\n', ' ');
+
+    const instance = min.instance;
 
     // Try simple search first.
 
@@ -287,10 +300,10 @@ export class KBService implements IGBKBService {
       }
     }
 
-    const key = instance.searchKey ? instance.searchKey: 
+    const key = instance.searchKey ? instance.searchKey :
       GBServer.globals.minBoot.instance.searchKey;
-    const host = instance.searchHost ? instance.searchHost : 
-    GBServer.globals.minBoot.instance.searchHost;
+    const host = instance.searchHost ? instance.searchHost :
+      GBServer.globals.minBoot.instance.searchHost;
 
     // No direct match found, so Search is used.
 
@@ -310,7 +323,7 @@ export class KBService implements IGBKBService {
         key: key
       } as any);
 
-      const results = await client.search(query.substring(0,499), {
+      const results = await client.search(query.substring(0, 499), {
         filter: `instanceId eq ${instance.instanceId} and skipIndex eq false`,
         searchFields: ['content', 'subject1', 'subject2', 'subject3', 'subject4'],
         select: ['instanceId', 'questionId', 'answerId'],
@@ -341,18 +354,61 @@ export class KBService implements IGBKBService {
             return { answer: undefined, questionId: 0 };
           }
         } else {
+
           GBLog.info(
             `SEARCH called but returned LOW level score,
               returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
           );
 
-          return { answer: undefined, questionId: 0 };
+          return await this.answerByGPT(min,
+            query,
+            searchScore,
+            subjects
+          );
         }
       }
 
       return { answer: undefined, questionId: 0 };
     }
   }
+
+  private async getRelevantContext(
+    vectorStore: HNSWLib,
+    sanitizedQuestion: string,
+    numDocuments: number
+  ): Promise<string> {
+    const documents = await vectorStore.similaritySearch(sanitizedQuestion, numDocuments);
+    return documents
+      .map((doc) => doc.pageContent)
+      .join(', ')
+      .trim()
+      .replaceAll('\n', ' ');
+  }
+
+
+  public async answerByGPT(min: GBMinInstance,
+    query: string,
+    searchScore: number,
+    subjects: GuaribasSubject[]
+  ) {
+    const contextVectorStore = min['VectorStore'];
+    const question = query.trim().replaceAll('\n', ' ');
+    const context = await this.getRelevantContext(contextVectorStore, question, 1);
+
+    const response = await chain.call({
+      input: question,
+      context,
+      history: '',
+      immediate_history: '',
+    });
+    if (response) {
+
+      return { answer: response.response, questionId: 0 };
+    }
+
+    return { answer: undefined, questionId: 0 };
+  }
+
 
   public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {
     const where = { parentSubjectId: parentId, instanceId: instanceId };
@@ -613,7 +669,7 @@ export class KBService implements IGBKBService {
       const url = urlJoin('kb', path, 'assets', answer.content);
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
-      await min.conversationalService['playMarkdown'](min, answer.content, channel, step, 
+      await min.conversationalService['playMarkdown'](min, answer.content, channel, step,
         GBMinService.userMobile(step));
     } else if (answer.content.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
@@ -830,183 +886,221 @@ export class KBService implements IGBKBService {
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
         let filePath = Path.join(file.root, file.name);
-        if (file !== null) {
-          if (file.name.endsWith('.docx')) {
-            content = await this.getTextFromFile(filePath);
-          } else if (file.name.endsWith('.pdf')) {
-            const read = await pdf(Fs.readFileSync(filePath));
-            content = read.text;
-          }
-        }
 
-        if (content) {
-          content = await min.conversationalService.translate(min, content, 'en');
-          await GuaribasAnswer.create(<GuaribasAnswer>{
-            instanceId: instance.instanceId,
-            content: content,
-            format: '.docx',
-            media: file.name,
-            packageId: packageId
-          });
-        }
+        const document = await this.loadAndSplitFile(filePath);
+        const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
+        const vectorStore = min['vectorStore'];
+        await vectorStore.addDocuments(flattenedDocuments);
+        await vectorStore.save(min['vectorStorePath']);
       });
     }
   }
 
-  public async importKbTabularDirectory(localPath: string, min: GBMinInstance, packageId: number): Promise<any> {
-    const files = await walkPromise(localPath);
+   defaultRecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 1024,
+    chunkOverlap: 1024,
+  });
+  
+   markdownRecursiveCharacterTextSplitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
+    chunkSize: 1024,
+    chunkOverlap: 1024,
+  });
+  
 
-    await CollectionUtil.asyncForEach(files, async file => {
-      if (file !== null && file.name.endsWith('.xlsx')) {
-        return await this.importKbTabularFile(urlJoin(file.root, file.name), min, packageId);
-      }
-    });
+  private async loadAndSplitFile(filePath: string): Promise<Document<Record<string, unknown>>[]> {
+  const fileExtension = path.extname(filePath);
+  let loader;
+  let documents: Document<Record<string, unknown>>[];
+  switch (fileExtension) {
+    case '.json':
+      loader = new JSONLoader(filePath);
+      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+      break;
+    case '.txt':
+      loader = new TextLoader(filePath);
+      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+      break;
+    case '.md':
+      loader = new TextLoader(filePath);
+      documents = await loader.loadAndSplit(this.markdownRecursiveCharacterTextSplitter);
+      break;
+    case '.pdf':
+      loader = new PDFLoader(filePath, { splitPages: false });
+      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+      break;
+    case '.docx':
+      loader = new DocxLoader(filePath);
+      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+      break;
+    case '.csv':
+      loader = new CSVLoader(filePath);
+      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+      break;
+    case '.epub':
+      loader = new EPubLoader(filePath, { splitChapters: false });
+      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+      break;
+    default:
+      throw new Error(`Unsupported file extension: ${fileExtension}`);
   }
+  return documents;
+}
+  
+
+  public async importKbTabularDirectory(localPath: string, min: GBMinInstance, packageId: number): Promise < any > {
+  const files = await walkPromise(localPath);
+
+  await CollectionUtil.asyncForEach(files, async file => {
+    if (file !== null && file.name.endsWith('.xlsx')) {
+      return await this.importKbTabularFile(urlJoin(file.root, file.name), min, packageId);
+    }
+  });
+}
 
   public async importSubjectFile(
-    packageId: number,
-    filename: string,
-    menuFile: string,
-    instance: IGBInstance
-  ): Promise<any> {
-    let subjectsLoaded;
-    if (menuFile) {
-      // Loads menu.xlsx and finds worksheet.
+  packageId: number,
+  filename: string,
+  menuFile: string,
+  instance: IGBInstance
+): Promise < any > {
+  let subjectsLoaded;
+  if(menuFile) {
+    // Loads menu.xlsx and finds worksheet.
 
-      const workbook = new Excel.Workbook();
-      const data = await workbook.xlsx.readFile(menuFile);
-      let worksheet: any;
-      for (let t = 0; t < data.worksheets.length; t++) {
-        worksheet = data.worksheets[t];
-        if (worksheet) {
+    const workbook = new Excel.Workbook();
+    const data = await workbook.xlsx.readFile(menuFile);
+    let worksheet: any;
+    for (let t = 0; t < data.worksheets.length; t++) {
+      worksheet = data.worksheets[t];
+      if (worksheet) {
+        break;
+      }
+    }
+
+    const MAX_LEVEL = 4; // Max column level to reach menu items in plan.
+    // Iterates over all items.
+
+    let rows = worksheet._rows;
+    rows.length = 24;
+    let lastLevel = 0;
+    let subjects = { children: [] };
+    let childrenNode = subjects.children;
+    let activeObj = null;
+
+    let activeChildrenGivenLevel = [childrenNode];
+
+    await asyncPromise.eachSeries(rows, async row => {
+      if (!row) return;
+      let menu;
+
+      // Detect menu level by skipping blank cells on left.
+
+      let level;
+      for (level = 0; level < MAX_LEVEL; level++) {
+        const cell = row._cells[level];
+        if (cell && cell.text) {
+          menu = cell.text;
           break;
         }
       }
 
-      const MAX_LEVEL = 4; // Max column level to reach menu items in plan.
-      // Iterates over all items.
+      // Tree hierarchy calculation.
 
-      let rows = worksheet._rows;
-      rows.length = 24;
-      let lastLevel = 0;
-      let subjects = { children: [] };
-      let childrenNode = subjects.children;
-      let activeObj = null;
+      if (level > lastLevel) {
+        childrenNode = activeObj.children;
+      } else if (level < lastLevel) {
+        childrenNode = activeChildrenGivenLevel[level];
+      }
 
-      let activeChildrenGivenLevel = [childrenNode];
+      /// Keeps the record of last subroots for each level, to
+      // changel levels greater than one (return to main menu),
+      // can exists between leaf nodes and roots.
 
-      await asyncPromise.eachSeries(rows, async row => {
-        if (!row) return;
-        let menu;
+      activeChildrenGivenLevel[level] = childrenNode;
 
-        // Detect menu level by skipping blank cells on left.
+      // Insert the object into JSON.
+      const description = row._cells[level + 1] ? row._cells[level + 1].text : null;
+      activeObj = {
+        title: menu,
+        description: description,
+        id: menu,
+        children: []
+      };
+      activeChildrenGivenLevel[level].push(activeObj);
 
-        let level;
-        for (level = 0; level < MAX_LEVEL; level++) {
-          const cell = row._cells[level];
-          if (cell && cell.text) {
-            menu = cell.text;
-            break;
-          }
-        }
+      lastLevel = level;
+    });
 
-        // Tree hierarchy calculation.
-
-        if (level > lastLevel) {
-          childrenNode = activeObj.children;
-        } else if (level < lastLevel) {
-          childrenNode = activeChildrenGivenLevel[level];
-        }
-
-        /// Keeps the record of last subroots for each level, to
-        // changel levels greater than one (return to main menu),
-        // can exists between leaf nodes and roots.
-
-        activeChildrenGivenLevel[level] = childrenNode;
-
-        // Insert the object into JSON.
-        const description = row._cells[level + 1] ? row._cells[level + 1].text : null;
-        activeObj = {
-          title: menu,
-          description: description,
-          id: menu,
-          children: []
-        };
-        activeChildrenGivenLevel[level].push(activeObj);
-
-        lastLevel = level;
-      });
-
-      subjectsLoaded = subjects;
-    } else {
-      subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
-    }
+    subjectsLoaded = subjects;
+  } else {
+    subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
+  }
 
     const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
-      return asyncPromise.eachSeries(subjects, async item => {
-        const value = await GuaribasSubject.create(<GuaribasSubject>{
-          internalId: item.id,
-          parentSubjectId: parentSubjectId,
-          instanceId: instance.instanceId,
-          from: item.from,
-          to: item.to,
-          title: item.title,
-          description: item.description,
-          packageId: packageId
-        });
-
-        if (item.children) {
-          return doIt(item.children, value.subjectId);
-        } else {
-          return item;
-        }
+    return asyncPromise.eachSeries(subjects, async item => {
+      const value = await GuaribasSubject.create(<GuaribasSubject>{
+        internalId: item.id,
+        parentSubjectId: parentSubjectId,
+        instanceId: instance.instanceId,
+        from: item.from,
+        to: item.to,
+        title: item.title,
+        description: item.description,
+        packageId: packageId
       });
-    };
 
-    return doIt(subjectsLoaded.children, undefined);
-  }
-
-  public async undeployKbFromStorage(instance: IGBInstance, deployer: GBDeployer, packageId: number) {
-    await GuaribasQuestion.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
-    await GuaribasAnswer.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
-    await GuaribasSubject.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
-    await this.undeployPackageFromStorage(instance, packageId);
-  }
-
-  public static async RefreshNER(min: GBMinInstance) {
-    const questions = await KBService.getQuestionsNER(min.instance.instanceId);
-    const contentLocale = min.core.getParam<string>(
-      min.instance,
-      'Default Content Language',
-      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
-    );
-
-    await CollectionUtil.asyncForEach(questions, async question => {
-      const text = question.content;
-
-      const categoryReg = /.*\((.*)\).*/gi.exec(text);
-      const nameReg = /(\w+)\(.*\).*/gi.exec(text);
-
-      if (categoryReg) {
-        let category = categoryReg[1];
-
-        if (category === 'number') {
-          min['nerEngine'].addRegexEntity('number', 'pt', '/d+/gi');
-        }
-        if (nameReg) {
-          let name = nameReg[1];
-
-          min['nerEngine'].addNamedEntityText(category, name, [contentLocale], [name]);
-        }
+      if (item.children) {
+        return doIt(item.children, value.subjectId);
+      } else {
+        return item;
       }
     });
-  }
+  };
+
+  return doIt(subjectsLoaded.children, undefined);
+}
+
+  public async undeployKbFromStorage(instance: IGBInstance, deployer: GBDeployer, packageId: number) {
+  await GuaribasQuestion.destroy({
+    where: { instanceId: instance.instanceId, packageId: packageId }
+  });
+  await GuaribasAnswer.destroy({
+    where: { instanceId: instance.instanceId, packageId: packageId }
+  });
+  await GuaribasSubject.destroy({
+    where: { instanceId: instance.instanceId, packageId: packageId }
+  });
+  await this.undeployPackageFromStorage(instance, packageId);
+}
+
+  public static async RefreshNER(min: GBMinInstance) {
+  const questions = await KBService.getQuestionsNER(min.instance.instanceId);
+  const contentLocale = min.core.getParam<string>(
+    min.instance,
+    'Default Content Language',
+    GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+  );
+
+  await CollectionUtil.asyncForEach(questions, async question => {
+    const text = question.content;
+
+    const categoryReg = /.*\((.*)\).*/gi.exec(text);
+    const nameReg = /(\w+)\(.*\).*/gi.exec(text);
+
+    if (categoryReg) {
+      let category = categoryReg[1];
+
+      if (category === 'number') {
+        min['nerEngine'].addRegexEntity('number', 'pt', '/d+/gi');
+      }
+      if (nameReg) {
+        let name = nameReg[1];
+
+        min['nerEngine'].addNamedEntityText(category, name, [contentLocale], [name]);
+      }
+    }
+  });
+}
 
   /**
    * Deploys a knowledge base to the storage using the .gbkb format.
@@ -1014,103 +1108,103 @@ export class KBService implements IGBKBService {
    * @param localPath Path to the .gbkb folder.
    */
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
-    const packageName = Path.basename(localPath);
-    const instance = await core.loadInstanceByBotId(min.botId);
-    GBLog.info(`[GBDeployer] Importing: ${localPath}`);
-   
-    const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
-    await this.importKbPackage(min, localPath, p, instance);
-    GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
-    const service = await AzureDeployerService.createInstance(deployer);
-    const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
-    await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));
+  const packageName = Path.basename(localPath);
+  const instance = await core.loadInstanceByBotId(min.botId);
+  GBLog.info(`[GBDeployer] Importing: ${localPath}`);
 
-    min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
-    await KBService.RefreshNER(min);
+  const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
+  await this.importKbPackage(min, localPath, p, instance);
+  GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
+  const service = await AzureDeployerService.createInstance(deployer);
+  const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
+  await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));
 
-    GBLog.info(`[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
-    const html = await GBSSR.getHTML(min);
-    let path = DialogKeywords.getGBAIPath(min.botId, `gbui`);
-    path = Path.join(process.env.PWD, 'work', path, 'index.html');
-    GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${path}.`);
-    Fs.writeFileSync(path, html, 'utf8');
+  min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
+  await KBService.RefreshNER(min);
 
-    GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
-  }
+  GBLog.info(`[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
+  const html = await GBSSR.getHTML(min);
+  let path = DialogKeywords.getGBAIPath(min.botId, `gbui`);
+  path = Path.join(process.env.PWD, 'work', path, 'index.html');
+  GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${path}.`);
+  Fs.writeFileSync(path, html, 'utf8');
+
+  GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
+}
 
   private async playAudio(
-    min: GBMinInstance,
-    answer: GuaribasAnswer,
-    channel: string,
-    step: GBDialogStep,
-    conversationalService: IGBConversationalService
-  ) {
-    conversationalService.sendAudio(min, step, answer.content);
-  }
+  min: GBMinInstance,
+  answer: GuaribasAnswer,
+  channel: string,
+  step: GBDialogStep,
+  conversationalService: IGBConversationalService
+) {
+  conversationalService.sendAudio(min, step, answer.content);
+}
 
   private async playUrl(
-    min,
-    conversationalService: IGBConversationalService,
-    step: GBDialogStep,
-    url: string,
-    channel: string
-  ) {
-    if (channel === 'whatsapp') {
-      await min.conversationalService.sendFile(min, step, null, url, '');
-    } else {
-      await conversationalService.sendEvent(min, step, 'play', {
-        playerType: 'url',
-        data: url
-      });
-    }
+  min,
+  conversationalService: IGBConversationalService,
+  step: GBDialogStep,
+  url: string,
+  channel: string
+) {
+  if (channel === 'whatsapp') {
+    await min.conversationalService.sendFile(min, step, null, url, '');
+  } else {
+    await conversationalService.sendEvent(min, step, 'play', {
+      playerType: 'url',
+      data: url
+    });
   }
+}
 
   private async playVideo(
-    min,
-    conversationalService: IGBConversationalService,
-    step: GBDialogStep,
-    answer: GuaribasAnswer,
-    channel: string
-  ) {
-    if (channel === 'whatsapp') {
-      await min.conversationalService.sendFile(min, step, null, answer.content, '');
-    } else {
-      const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
-      await conversationalService.sendEvent(min, step, 'play', {
-        playerType: 'video',
-        data: urlJoin(path, 'videos', answer.content)
-      });
-    }
+  min,
+  conversationalService: IGBConversationalService,
+  step: GBDialogStep,
+  answer: GuaribasAnswer,
+  channel: string
+) {
+  if (channel === 'whatsapp') {
+    await min.conversationalService.sendFile(min, step, null, answer.content, '');
+  } else {
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
+    await conversationalService.sendEvent(min, step, 'play', {
+      playerType: 'video',
+      data: urlJoin(path, 'videos', answer.content)
+    });
   }
+}
 
   private async undeployPackageFromStorage(instance: any, packageId: number) {
-    await GuaribasPackage.destroy({
-      where: { instanceId: instance.instanceId, packageId: packageId }
-    });
-  }
+  await GuaribasPackage.destroy({
+    where: { instanceId: instance.instanceId, packageId: packageId }
+  });
+}
 
   public async readComprehension(instanceId: number, doc: string, question: string) {
-    const url =
-      `http://${process.env.GBMODELS_SERVER}/reading-comprehension` +
-      new URLSearchParams({ question: question, key: process.env.GBMODELS_KEY });
-    const form = new FormData();
-    form.append('content', doc);
-    const options = {
-      body: form
-    };
-    GBLog.info(`[General Bots Models]: ReadComprehension for ${question}.`);
-    return await fetch(url, options);
-  }
+  const url =
+    `http://${process.env.GBMODELS_SERVER}/reading-comprehension` +
+    new URLSearchParams({ question: question, key: process.env.GBMODELS_KEY });
+  const form = new FormData();
+  form.append('content', doc);
+  const options = {
+    body: form
+  };
+  GBLog.info(`[General Bots Models]: ReadComprehension for ${question}.`);
+  return await fetch(url, options);
+}
 
   private async getTextFromFile(filename: string) {
-    return new Promise<string>(async (resolve, reject) => {
-      textract.fromFileWithPath(filename, { preserveLineBreaks: true }, (error, text) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(text);
-        }
-      });
+  return new Promise<string>(async (resolve, reject) => {
+    textract.fromFileWithPath(filename, { preserveLineBreaks: true }, (error, text) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(text);
+      }
     });
-  }
+  });
+}
 }
