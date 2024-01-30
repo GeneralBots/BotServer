@@ -230,7 +230,7 @@ export class AskDialog extends IGBDialog {
 
         // TODO: https://github.com/GeneralBots/BotServer/issues/9 user.lastQuestion = text;
 
-        const resultsA = await service.ask(min.instance, text, searchScore, null /* user.subjects */);
+        const resultsA = await service.ask(min, text, searchScore, null /* user.subjects */);
 
         // If there is some result, answer immediately.
 

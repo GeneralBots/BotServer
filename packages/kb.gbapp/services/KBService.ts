@@ -34,12 +34,16 @@
 
 import Path from 'path';
 import Fs from 'fs';
+import { OpenAIChat } from 'langchain/llms/openai';
+import { CallbackManager } from 'langchain/callbacks';
 import urlJoin from 'url-join';
 import asyncPromise from 'async-promises';
 import walkPromise from 'walk-promise';
 import { SearchClient } from '@azure/search-documents';
 import Excel from 'exceljs';
 import getSlug from 'speakingurl';
+import { ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate } from 'langchain/prompts';
+import { LLMChain } from 'langchain/chains';
 import { GBServer } from '../../../src/app.js';
 import { HNSWLib } from 'langchain/vectorstores/hnswlib';
 import { JSONLoader } from 'langchain/document_loaders/fs/json';
@@ -49,9 +53,9 @@ import { DocxLoader } from 'langchain/document_loaders/fs/docx';
 import { EPubLoader } from 'langchain/document_loaders/fs/epub';
 import { CSVLoader } from 'langchain/document_loaders/fs/csv';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { BufferWindowMemory } from 'langchain/memory';
 import { Document } from 'langchain/document';
 import path from 'path';
-import { YoutubeTranscript } from 'youtube-transcript';
 
 import {
   GBDialogStep,
@@ -394,6 +398,39 @@ export class KBService implements IGBKBService {
     const contextVectorStore = min['VectorStore'];
     const question = query.trim().replaceAll('\n', ' ');
     const context = await this.getRelevantContext(contextVectorStore, question, 1);
+
+    const systemPrompt = SystemMessagePromptTemplate.fromTemplate(
+    "You are General Bots");
+  
+    const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+      systemPrompt,
+      HumanMessagePromptTemplate.fromTemplate('QUESTION: """{input}"""'),
+    ]);
+    const windowMemory = new BufferWindowMemory({
+      returnMessages: false,
+      memoryKey: 'immediate_history',
+      inputKey: 'input',
+      k: 2,
+    });
+
+    const callbackManager = CallbackManager.fromHandlers({
+      // This function is called when the LLM generates a new token (i.e., a prediction for the next word)
+      async handleLLMNewToken(token: string) {
+        
+      },
+    });
+        
+    const llm = new OpenAIChat({
+      streaming: true,
+      callbackManager,
+      modelName: 'gpt-3.5-turbo',
+    });
+    
+    const chain = new LLMChain({
+      prompt: chatPrompt,
+      memory: windowMemory,
+      llm,
+    });
 
     const response = await chain.call({
       input: question,
