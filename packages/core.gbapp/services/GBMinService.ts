@@ -543,7 +543,7 @@ export class GBMinService {
         await this.adminService.setValue(instance.instanceId,
           `${tokenName}expiresOn`, token['expiresOn'] ?
           token['expiresOn'].toString() :
-          new Date(Date.now() + (token['expires_in']*1000)).toString());
+          new Date(Date.now() + (token['expires_in'] * 1000)).toString());
         await this.adminService.setValue(instance.instanceId, `${tokenName}AntiCSRFAttackState`, null);
 
 
@@ -750,9 +750,11 @@ export class GBMinService {
     min.sandBoxMap = {};
     min['scheduleMap'] = {};
     min['conversationWelcomed'] = {};
-    min['vectorStore']= await this.deployer.loadOrCreateEmptyVectorStore(min);
-    const gbkbPath = DialogKeywords.getGBAIPath(min.botId, 'gbkb');
-    min['vectorStorePath']= Path.join('work', gbkbPath, 'docs-vectorized');
+    if (process.env.OPENAI_API_KEY) {
+      min['vectorStore'] = await this.deployer.loadOrCreateEmptyVectorStore(min);
+      const gbkbPath = DialogKeywords.getGBAIPath(min.botId, 'gbkb');
+      min['vectorStorePath'] = Path.join('work', gbkbPath, 'docs-vectorized');
+    }
     min.packages = sysPackages;
 
     // NLP Manager.
@@ -1237,7 +1239,7 @@ export class GBMinService {
 
           const t = new SystemKeywords();
           GBLog.info(`BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
-          const handle = WebAutomationServices.cyrb53({pid:0,  str:min.botId + attachmentData.fileName});
+          const handle = WebAutomationServices.cyrb53({ pid: 0, str: min.botId + attachmentData.fileName });
           let data = Fs.readFileSync(attachmentData.localPath);
 
           const gbfile = {
