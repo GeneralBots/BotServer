@@ -424,7 +424,7 @@ export class GBVMService extends GBService {
             GBLogEx.info(min, `BASIC: Syncing changes for TABLE ${connectionName} ${tableName} keyword (${min.botId})...`);
 
             await seq.sync({
-              alter: false,
+              alter: true,
               force: false // Keep it false due to data loss danger.
             });
             GBLogEx.info(min, `BASIC: Done sync for ${min.botId} ${connectionName} ${tableName} storage table...`);
