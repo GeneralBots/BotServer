@@ -137,7 +137,7 @@ export class GoogleChatDirectLine extends GBService {
     message.ack();
 
     const sec = new SecService();
-    const user = await sec.ensureUser(this.min.instance.instanceId, from, from, '', 'googlechat', fromName, from);
+    const user = await sec.ensureUser(this.min, from, from, '', 'googlechat', fromName, from);
 
     await sec.updateConversationReferenceById(user.userId, threadName);
 

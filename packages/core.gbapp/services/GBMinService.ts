@@ -328,6 +328,10 @@ export class GBMinService {
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
+    dir = `work/${gbai}/users`;
+    if (!Fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
 
     // Loads Named Entity data for this bot.
 
@@ -956,7 +960,7 @@ export class GBMinService {
 
       const member = context.activity.from;
       const sec = new SecService();
-      const user = await sec.ensureUser(instance.instanceId, member.id, member.name, '', 'web', member.name, null);
+      const user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
       const userId = user.userId;
       const params = user.params ? JSON.parse(user.params) : {};
 
@@ -1351,7 +1355,7 @@ export class GBMinService {
       memberId = member.id;
     }
 
-    let user = await sec.ensureUser(min.instance.instanceId, memberId, member.name, '', 'web', member.name, email);
+    let user = await sec.ensureUser(min, memberId, member.name, '', 'web', member.name, email);
 
     const userId = user.userId;
     const params = user.params ? JSON.parse(user.params) : {};

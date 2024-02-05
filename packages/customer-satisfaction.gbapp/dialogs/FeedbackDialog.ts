@@ -88,7 +88,7 @@ export class FeedbackDialog extends IGBDialog {
           if (args && args.to) {
             // An user from Teams willing to transfer to a WhatsApp user.
 
-            await sec.ensureUser(min.instance.instanceId, args.to, 'Name', '', 'whatsapp', 'Name', null);
+            await sec.ensureUser(min, args.to, 'Name', '', 'whatsapp', 'Name', null);
 
             await sec.assignHumanAgent(min, args.to, profile.userSystemId);
             await min.conversationalService.sendText(

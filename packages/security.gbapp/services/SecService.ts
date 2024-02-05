@@ -1,16 +1,18 @@
-import { GBServer } from '../../../src/app.js';
 import { ConversationReference } from 'botbuilder';
 import { GBLog, GBMinInstance, GBService, IGBInstance } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GuaribasUser } from '../models/index.js';
 import { FindOptions } from 'sequelize';
+import { DialogKeywords } from '../../../packages/basic.gblib/services/DialogKeywords.js';
+import * as Fs from 'fs';
+import mkdirp from 'mkdirp';
 
 /**
  * Security service layer.
  */
 export class SecService extends GBService {
   public async ensureUser(
-    instanceId: number,
+    min: GBMinInstance,
     userSystemId: string,
     userName: string,
     address: string,
@@ -26,9 +28,18 @@ export class SecService extends GBService {
 
     if (!user) {
       user = GuaribasUser.build();
+      const gbaiPath = DialogKeywords.getGBAIPath(min.botId);
+
+      const dir = `work/${gbaiPath}/users/${userSystemId}`;
+      if (!Fs.existsSync(dir)) {
+        mkdirp.sync(dir);
+      }
+
+
+      
     }
 
-    user.instanceId = instanceId;
+    user.instanceId = min.instance.instanceId;
     user.userSystemId = userSystemId;
     user.userName = userName;
     user.displayName = displayName;

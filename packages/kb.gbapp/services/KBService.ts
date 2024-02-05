@@ -34,28 +34,22 @@
 
 import Path from 'path';
 import Fs from 'fs';
-import { OpenAIChat } from 'langchain/llms/openai';
-import { CallbackManager } from 'langchain/callbacks';
 import urlJoin from 'url-join';
 import asyncPromise from 'async-promises';
 import walkPromise from 'walk-promise';
 import { SearchClient } from '@azure/search-documents';
 import Excel from 'exceljs';
 import getSlug from 'speakingurl';
-import { ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate } from 'langchain/prompts';
-import { LLMChain } from 'langchain/chains';
 import { GBServer } from '../../../src/app.js';
-import { HNSWLib } from 'langchain/vectorstores/hnswlib';
 import { JSONLoader } from 'langchain/document_loaders/fs/json';
 import { TextLoader } from 'langchain/document_loaders/fs/text';
 import { PDFLoader } from 'langchain/document_loaders/fs/pdf';
 import { DocxLoader } from 'langchain/document_loaders/fs/docx';
 import { EPubLoader } from 'langchain/document_loaders/fs/epub';
 import { CSVLoader } from 'langchain/document_loaders/fs/csv';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { BufferWindowMemory } from 'langchain/memory';
-import { Document } from 'langchain/document';
 import path from 'path';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { Document } from 'langchain/document';
 
 import {
   GBDialogStep,
@@ -85,6 +79,8 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
+import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
+
 
 /**
  * Result for quey on KB data.
@@ -365,7 +361,7 @@ export class KBService implements IGBKBService {
           returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
       );
 
-      return await this.answerByGPT(min,
+      return await ChatServices.answerByGPT(min,
         query,
         searchScore,
         subjects
@@ -374,86 +370,8 @@ export class KBService implements IGBKBService {
     }
   }
 
-  private async getRelevantContext(
-    vectorStore: HNSWLib,
-    sanitizedQuestion: string,
-    numDocuments: number
-  ): Promise<string> {
-    const documents = await vectorStore.similaritySearch(sanitizedQuestion, numDocuments);
-    return documents
-      .map((doc) => doc.pageContent)
-      .join(', ')
-      .trim()
-      .replaceAll('\n', ' ');
-  }
 
 
-  public async answerByGPT(min: GBMinInstance,
-    query: string,
-    searchScore: number,
-    subjects: GuaribasSubject[]
-  ) {
-    const contextVectorStore = min['vectorStore'];
-    const question = query.trim().replaceAll('\n', ' ');
-    const context = await this.getRelevantContext(contextVectorStore, question, 1);
-
-    const systemPrompt = SystemMessagePromptTemplate.fromTemplate(
-    "You are General Bots");
-  
-    const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-      systemPrompt,
-      HumanMessagePromptTemplate.fromTemplate(`Answer in pt-br. 
-      You have access to the context (RELEVANTDOCS) provided by the user.
-      
-      When answering think about whether the question in RELEVANTDOCS, but never mention
-      to user about the source.
-      Don’t justify your answers. Don't refer to yourself in any of the created content.
-      Don´t prefix RESPONSE: when answering the user.
-      RELEVANTDOCS: {context}
-
-      QUESTION: """{input}"""
-
-      `),
-    ]);
-    const windowMemory = new BufferWindowMemory({
-      returnMessages: false,
-      memoryKey: 'immediate_history',
-      inputKey: 'input',
-      k: 2,
-    });
-
-    const callbackManager = CallbackManager.fromHandlers({
-      // This function is called when the LLM generates a new token (i.e., a prediction for the next word)
-      async handleLLMNewToken(token: string) {
-        
-      },
-    });
-        
-    const llm = new OpenAIChat({
-      streaming: true,
-      callbackManager,
-      modelName: 'gpt-3.5-turbo',
-    });
-    
-    const chain = new LLMChain({
-      prompt: chatPrompt,
-      memory: windowMemory,
-      llm,
-    });
-
-    const response = await chain.call({
-      input: question,
-      context,
-      history: '',
-      immediate_history: '',
-    });
-    if (response) {
-
-      return { answer: response.text, questionId: 0 };
-    }
-
-    return { answer: undefined, questionId: 0 };
-  }
 
 
   public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {

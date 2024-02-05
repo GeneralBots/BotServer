@@ -132,7 +132,7 @@ export class AskDialog extends IGBDialog {
           let sec = new SecService();
           const member = step.context.activity.from;
           const user = await sec.ensureUser(
-            min.instance.instanceId,
+            min,
             member.id,
             member.name,
             '',
@@ -187,7 +187,7 @@ export class AskDialog extends IGBDialog {
         let answer: GuaribasAnswer = null;
         const member = step.context.activity.from;
         const sec = new SecService();
-        let user = await sec.ensureUser(min.instance.instanceId, member.id, member.name, '', 'web', member.name, null);
+        let user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
 
         const minBoot = GBServer.globals.minBoot as any;
 
@@ -436,7 +436,7 @@ export class AskDialog extends IGBDialog {
           let sec = new SecService();
           const member = step.context.activity.from;
           const user = await sec.ensureUser(
-            min.instance.instanceId,
+            min,
             member.id,
             member.name,
             '',

@@ -472,7 +472,7 @@ export class WhatsappDirectLine extends GBService {
     });
 
     const sec = new SecService();
-    const user = await sec.ensureUser(this.min.instance.instanceId, from, fromName, '', 'whatsapp', fromName, null);
+    const user = await sec.ensureUser(this.min, from, fromName, '', 'whatsapp', fromName, null);
     const locale = user.locale ? user.locale : 'pt';
 
     if (answerText) {
@@ -1083,7 +1083,7 @@ export class WhatsappDirectLine extends GBService {
         }
         const botId = getKeyByValue(WhatsappDirectLine.botGroups, group);
         if ((botId && user.instanceId !== this.min.instance.instanceId) || !user) {
-          user = await sec.ensureUser(this.min.instance.instanceId, id, senderName, '', 'whatsApp', senderName, null);
+          user = await sec.ensureUser(this.min, id, senderName, '', 'whatsApp', senderName, null);
         }
         if (botId) {
           activeMin = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
@@ -1122,7 +1122,7 @@ export class WhatsappDirectLine extends GBService {
       // start dialog if any is specified in Config.xlsx.
 
       if (user === null || user.hearOnDialog) {
-        user = await sec.ensureUser(activeMin.instance.instanceId, id, senderName, '', 'whatsapp', senderName, null);
+        user = await sec.ensureUser(activeMin, id, senderName, '', 'whatsapp', senderName, null);
 
         const startDialog = user.hearOnDialog
           ? user.hearOnDialog

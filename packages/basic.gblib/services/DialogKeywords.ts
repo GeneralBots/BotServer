@@ -1220,7 +1220,7 @@ export class DialogKeywords {
         let user = await sec.getUserFromSystemId(fromOrDialogName);
         if (!user) {
           user = await sec.ensureUser(
-            min.instance.instanceId,
+            min,
             fromOrDialogName,
             fromOrDialogName,
             null,

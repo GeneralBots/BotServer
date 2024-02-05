@@ -327,7 +327,7 @@ export class AdminDialog extends IGBDialog {
             let sec = new SecService();
             const member = step.context.activity.from;
             const user = await sec.ensureUser(
-              min.instance.instanceId,
+              min,
               member.id,
               member.name,
               '',
