@@ -1034,8 +1034,7 @@ export class WhatsappDirectLine extends GBService {
       }
 
       const sec = new SecService();
-      let user = await sec.getUserFromSystemId(id);
-
+      
       // Tries to find if user wants to switch bots.
 
       let toSwitchMin = GBServer.globals.minInstances.filter(
@@ -1044,8 +1043,10 @@ export class WhatsappDirectLine extends GBService {
 
 
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
+      
 
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
+      let user = await sec.ensureUser(urlMin, id, '', '', 'omnichannel', '','');
 
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
       if (botNumber && GBServer.globals.minBoot.botId !== urlMin.botId) {
