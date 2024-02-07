@@ -1046,13 +1046,17 @@ export class WhatsappDirectLine extends GBService {
       
 
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
-      let user = await sec.ensureUser(urlMin, id, '', '', 'omnichannel', '','');
+      
+      let user = await sec.getUserFromSystemId(id);
 
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
       if (botNumber && GBServer.globals.minBoot.botId !== urlMin.botId) {
-        GBLog.info(`${user.userSystemId} fixed by bot number talked to: ${botId}.`);
-        user = await sec.updateUserInstance(user.userSystemId, urlMin.instance.instanceId);
+        GBLog.info(`${id} fixed by bot number talked to: ${botId}.`);
+        
+        user = await sec.ensureUser(urlMin, id, '', '', 'omnichannel', '','');
+        user = await sec.updateUserInstance(id, urlMin.instance.instanceId);
       }
+      
 
       let activeMin;
 
