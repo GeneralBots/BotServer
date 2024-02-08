@@ -223,9 +223,9 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*SELECT\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*SELECT\s+(.*)/gim,
       ($0, $1, $2) => {
-        let tableName = /\s*FROM\s*(\w+\$*)/.exec($2)[1];
+        let tableName = /\s*FROM\s+(\w+\$*)/.exec($2)[1];
         let sql = `SELECT ${$2}`.replace(tableName, '?');
         return `${$1} = await sys.executeSQL({pid: pid, data:${tableName}, sql:"${sql}"})\n`;
       }
@@ -255,7 +255,7 @@ export class KeywordsExpressions {
 
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*pay\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*pay\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($2, ['orderId', 'customerName', 'ammount']);
 
@@ -315,7 +315,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*get config\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*get config\s+(.*)/gim,
       ($0, $1, $2) => {
         return `${$1} = await dk.getConfig ({pid: pid, name: ${$2}})`;
       }
@@ -329,7 +329,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(set hear on)(\s*)(.*)/gim,
+      /^\s+(set hear on)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `hrOn = ${$3}`;
       }
@@ -338,7 +338,7 @@ export class KeywordsExpressions {
     keywords[i++] = [/^\s*for each +(.*to.*)/gim, 'for ($1) {'];
 
     keywords[i++] = [
-      /^\s*FOR EACH\s*(.*)\s*IN\s*(.*)/gim,
+      /^\s*FOR EACH\s+(.*)\s*IN\s+(.*)/gim,
       ($0, $1, $2) => {
 
         return `
@@ -409,7 +409,7 @@ export class KeywordsExpressions {
 
 
     keywords[i++] = [
-      /^\s*(.*)\=\s*(REWRITE)(\s*)(.*)/gim,
+      /^\s+(.*)\=\s+(REWRITE)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['text']);
         return `${$1} = await sys.rewrite ({pid: pid, ${params}})`;
@@ -417,7 +417,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(.*)\=\s*(AUTO SAVE)(\s*)(.*)/gim,
+      /^\s+(.*)\=\s+(AUTO SAVE)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['handle']);
         return `await sys.autoSave ({pid: pid, ${params}})`;
@@ -425,7 +425,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(DEBUG)(\s*)(.*)/gim,
+      /^\s+(DEBUG)(\s*)(.*)/gim,
       ($0, $1, $2, $3 ) => {
         const params = this.getParams($3, ['text']);
         return `await sys.log ({pid: pid, ${params}})`;
@@ -433,7 +433,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(.*)\=\s*(DIR)(\s*)(.*)/gim,
+      /^\s+(.*)\=\s+(DIR)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['remotePath']);
         return `${$1} = await sys.dirFolder ({pid: pid, ${params}})`;
@@ -441,7 +441,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(DELETE)(\s*)(.*)/gim,
+      /^\s+(DELETE)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['table', 'criteria']);
 
@@ -455,7 +455,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(.*)\=\s*(UPLOAD)(\s*)(.*)/gim,
+      /^\s+(.*)\=\s+(UPLOAD)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['file']);
         return `${$1} = await sys.uploadFile ({pid: pid, ${params}})`;
@@ -561,28 +561,28 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*hear (\w+\$*) as\s*(.*)/gim,
+      /^\s*hear (\w+\$*) as\s+(.*)/gim,
       ($0, $1, $2) => {
         return `${$1} = await dk.hear({pid: pid, kind:"menu", args: [${$2}]})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(hear)\s*(\w+\$*)/gim,
+      /^\s+(hear)\s+(\w+\$*)/gim,
       ($0, $1, $2) => {
         return `${$2} = await dk.hear({pid: pid})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find contact\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find contact\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         return `${$1} = await dk.fndContact({pid: pid, ${$2}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find\s*(.*)\s*or talk\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find\s+(.*)\s*or talk\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         `${$1} = caseInsensitive(await sys.find({pid: pid, handle: page, args:[${$2}]}))\n
         if (!${$1}) {
@@ -595,14 +595,14 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*CALL\s*(.*)/gim,
+      /^\s*CALL\s+(.*)/gim,
       ($0, $1) => {
         return `// await ${$1}`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*find\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         return `
         ${$1} = caseInsensitive(await sys.find({pid: pid, handle: page, args: [${$2}]}))`;
@@ -610,7 +610,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*create deal(\s*)(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*create deal(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['dealName', 'contact', 'company', 'amount']);
 
@@ -619,63 +619,63 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*active tasks/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*active tasks/gim,
       ($0, $1) => {
         return `${$1} = await dk.getActiveTasks({pid: pid})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*append\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*append\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         return `${$1} = await sys.append({pid: pid, args:[${$2}]})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*sort\s*(\w+\$*)\s*by(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*sort\s+(\w+\$*)\s*by(.*)/gim,
       ($0, $1, $2, $3) => {
         return `${$1} = await sys.sortBy({pid: pid, array: ${$2}, memberName: "${$3}"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*see\s*text\s*of\s*(\w+\$*)\s*as\s*(\w+\$*)\s*/gim,
+      /^\s*see\s*text\s*of\s+(\w+\$*)\s*as\s+(\w+\$*)\s*/gim,
       ($0, $1, $2, $3) => {
         return `${$2} = await sys.seeText({pid: pid, url: ${$1})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*see\s*caption\s*of\s*(\w+\$*)\s*as(.*)/gim,
+      /^\s*see\s*caption\s*of\s+(\w+\$*)\s*as(.*)/gim,
       ($0, $1, $2, $3) => {
         return `${$2} = await sys.seeCaption({pid: pid, url: ${$1})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(wait)\s*(.*)/gim,
+      /^\s+(wait)\s+(.*)/gim,
       ($0, $1, $2) => {
         return `await sys.wait({pid: pid, seconds:${$2}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(ADD NOTE)\s*(.*)/gim,
+      /^\s+(ADD NOTE)\s+(.*)/gim,
       ($0, $1, $2) => {
         return `await sys.note({pid: pid, text:${$2}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(get stock for )(.*)/gim,
+      /^\s+(get stock for )(.*)/gim,
       ($0, $1, $2) => {
         return `stock = await sys.getStock({pid: pid, symbol: ${$2})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*get\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*get\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         const count = ($2.match(/\,/g) || []).length;
         const values = $2.split(',');
@@ -722,7 +722,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(go to)(\s*)(.*)/gim,
+      /^\s+(go to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['fromOrDialogName', 'dialogName']);
         return `await dk.gotoDialog({pid: pid, ${params}})`;
@@ -730,63 +730,63 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(set language)(\s*)(.*)/gim,
+      /^\s+(set language)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setLanguage ({pid: pid, ${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(allow role)(\s*)(.*)/gim,
+      /^\s+(allow role)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.allowRole ({pid: pid, role: ${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(set filter)(\s*)(.*)/gim,
+      /^\s+(set filter)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setFilter ({pid: pid, ${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(set page mode)(\s*)(.*)/gim,
+      /^\s+(set page mode)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setPageMode ({pid: pid, value: ${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*set param \s*(.*)\s*as\s*(.*)/gim,
+      /^\s*set param \s+(.*)\s*as\s+(.*)/gim,
       ($0, $1, $2) => {
         return `await dk.setUserParam ({pid: pid, ${$1}}, ${$2})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*set header\s*(.*)\s*as\s*(.*)/gim,
+      /^\s*set header\s+(.*)\s*as\s+(.*)/gim,
       ($0, $1, $2) => {
         return `headers[${$1.trim()}] = ${$2}`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*set http username\s*\=\s*(.*)/gim,
+      /^\s*set http username\s*\=\s+(.*)/gim,
       ($0, $1) => {
         return `httpUsername = ${$1}`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*set http password\s*\=\s*(.*)/gim,
+      /^\s*set http password\s*\=\s+(.*)/gim,
       ($0, $1) => {
         return `httpPs = ${$1}`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(datediff)(\s*)(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s+(datediff)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['date1', 'date2', 'mode']);
         return `${$1} = await dk.getDateDiff ({pid: pid, ${params}})`;
@@ -794,7 +794,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(user of)(\s*)(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s+(user of)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['username']);
         return `${$1} = await sys.getUser ({pid: pid, ${params}})`;
@@ -802,7 +802,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(.*)\=\s*(dateadd)(\s*)(.*)/gim,
+      /^\s+(.*)\=\s+(dateadd)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['date', 'mode', 'units']);
         return `${$1} = await dk.dateAdd ({pid: pid, ${params}})`;
@@ -810,49 +810,49 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(set output)(\s*)(.*)/gim,
+      /^\s+(set output)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setOutput ({pid: pid, value: "${$3}"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(set max lines)(\s*)(.*)/gim,
+      /^\s+(set max lines)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setMaxLines ({pid: pid, count: ${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(set max columns)(\s*)(.*)/gim,
+      /^\s+(set max columns)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setMaxColumns ({pid: pid, count: ${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(set translator)(\s*)(.*)/gim,
+      /^\s+(set translator)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setTranslatorOn ({pid: pid, on: "${$3.toLowerCase()}"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(set theme)(\s*)(.*)/gim,
+      /^\s+(set theme)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setTheme ({pid: pid, theme: "${$3.toLowerCase()}"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(set whole word)(\s*)(.*)/gim,
+      /^\s+(set whole word)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setWholeWord ({pid: pid, on: "${$3.toLowerCase()}"})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*post\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*post\s+(.*)/gim,
       ($0, $1, $2, $3) => {
 
         const args = $2.split(',');
@@ -871,7 +871,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*put\s*(.*),\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*put\s+(.*),\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         return `
 
@@ -888,42 +888,42 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*download\s*(.*),\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*download\s+(.*),\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         return `${$1} = await sys.download ({pid: pid, handle:page, selector: ${$2}, folder:${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*CREATE FOLDER\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*CREATE FOLDER\s+(.*)/gim,
       ($0, $1, $2) => {
         return `${$1} = await sys.createFolder ({pid: pid, name:${$2}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*SHARE FOLDER\s*(.*)/gim,
+      /^\s*SHARE FOLDER\s+(.*)/gim,
       ($0, $1) => {
         return `await sys.shareFolder ({pid: pid, name: ${$1}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(create a bot farm using)(\s*)(.*)/gim,
+      /^\s+(create a bot farm using)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.createABotFarmUsing ({pid: pid, ${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(transfer to)(\s*)(.*)/gim,
+      /^\s+(transfer to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.transferTo ({pid: pid, to:${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gim,
+      /^\s+(\btransfer\b)(?=(?:[^"]|"[^"]*")*$)/gim,
       () => {
         return `await dk.transferTo ({pid: pid})`;
       }
@@ -944,14 +944,14 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(show menu)/gim,
+      /^\s+(show menu)/gim,
       () => {
         return `await dk.showMenu ({pid: pid, })`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(talk to)(\s*)(.*)/gim,
+      /^\s+(talk to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['mobile', 'message']);
         return `await sys.talkTo({pid: pid, ${params}})`;
@@ -959,7 +959,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(talk)(\s*)(.*)/gim,
+      /^\s+(talk)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         
         $3 = GBVMService.normalizeQuotes($3);
@@ -974,7 +974,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(send sms to)(\s*)(.*)/gim,
+      /^\s+(send sms to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['mobile', 'message']);
         return `await sys.sendSmsTo({pid: pid, ${params}})`;
@@ -982,7 +982,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(FORMAT)(\s*)(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s+(FORMAT)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['value', 'format']);
         return `${$1} = await dk.format({pid: pid, ${params}})`;
@@ -990,7 +990,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(send email)(\s*)(.*)/gim,
+      /^\s+(send email)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['to', 'subject', 'body']);
         return `await dk.sendEmail({pid: pid, ${params}})`;
@@ -998,7 +998,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(send mail)(\s*)(.*)/gim,
+      /^\s+(send mail)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['to', 'subject', 'body']);
         return `await dk.sendEmail({pid: pid, ${params}})`;
@@ -1006,7 +1006,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(send file to)(\s*)(.*)/gim,
+      /^\s+(send file to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['mobile', 'filename', 'caption']);
         return `await dk.sendFileTo({pid: pid, ${params}})`;
@@ -1014,7 +1014,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(hover)(\s*)(.*)/gim,
+      /^\s+(hover)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['selector']);
         return `await wa.hover ({pid: pid, handle: page, ${params}})`;
@@ -1022,7 +1022,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(click link text)(\s*)(.*)/gim,
+      /^\s+(click link text)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['text', 'index']);
         return `await wa.linkByText ({pid: pid, handle: page, ${params}})`;
@@ -1030,7 +1030,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(text of)(\s*)(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s+(text of)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['frameOrSelector', 'selector']);
         return `
@@ -1039,7 +1039,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(click button)(\s*)(.*)/gim,
+      /^\s+(click button)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['text', 'index']);
         return `await wa.clickButton ({pid: pid, handle: page, ${params}})`;
@@ -1047,7 +1047,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(click)(\s*)(.*)/gim,
+      /^\s+(click)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         // page is not string.
         // https://github.com/GeneralBots/BotServer/issues/310
@@ -1057,7 +1057,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(send file)(\s*)(.*)/gim,
+      /^\s+(send file)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['filename', 'caption']);
         return `await dk.sendFile({pid: pid, ${params}})`;
@@ -1065,7 +1065,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(copy)(\s*)(.*)/gim,
+      /^\s+(copy)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['src', 'dest']);
         return `await sys.copyFile ({pid: pid, ${params}})`;
@@ -1073,7 +1073,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(convert)(\s*)(.*)/gim,
+      /^\s+(convert)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['src', 'dest']);
         return `await sys.convert ({pid: pid, ${params}})`;
@@ -1081,7 +1081,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*chart(\s*)(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*chart(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['type', 'data', 'legends', 'transpose']);
         return `${$1} = await dk.chart ({pid: pid, ${params}})`;
@@ -1089,63 +1089,63 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*MERGE\s*(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
+      /^\s*MERGE\s+(.*)\s*WITH\s+(.*)BY\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.merge({pid: pid, file: ${$1}, data: ${$2}, key1: ${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*MERGE\s*(.*)/gim,
+      /^\s*MERGE\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await img.mergeImage({pid: pid, files: [${$2}]})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*PRESS\s*(.*)/gim,
+      /^\s*PRESS\s+(.*)/gim,
       ($0, $1, $2) => {
         return `await wa.pressKey({pid: pid, handle: page, char: ${$1}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*SCREENSHOT\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*SCREENSHOT\s+(.*)/gim,
       ($0, $1, $2) => {
         return `${$1} = await wa.screenshot({pid: pid, handle: page, selector: ${$1}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*TWEET\s*(.*)/gim,
+      /^\s*TWEET\s+(.*)/gim,
       ($0, $1, $2) => {
         return `await sys.tweet({pid: pid, text: ${$1}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(.*)\s*as\s*image/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s+(.*)\s*as\s*image/gim,
       ($0, $1, $2) => {
         return `${$1} = await sys.asImage({pid: pid, data: ${$2}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(.*)\s*as\s*pdf/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s+(.*)\s*as\s*pdf/gim,
       ($0, $1, $2) => {
         return `${$1} = await sys.asPdf({pid: pid, data: ${$2})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*FILL\s*(.*)\s*WITH\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*FILL\s+(.*)\s*WITH\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         return `${$1} = await sys.fill({pid: pid, templateName: ${$2}, data: ${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(save)(\s*)(.*\.xlsx)(.*)/gim,
+      /^\s+(save)(\s*)(.*\.xlsx)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         $3 = $3.replace(/\'/g, '');
         $3 = $3.replace(/\"/g, '');
@@ -1156,14 +1156,14 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*save\s*(\w+\$*)\s*as\s*(.*)/gim,
+      /^\s*save\s+(\w+\$*)\s*as\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.saveFile({pid: pid, file: ${$2}, data: ${$1}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*(save)(\s*)(.*)(.*)/gim,
+      /^\s+(save)(\s*)(.*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         $3 = $3.replace(/\'/g, '');
         $3 = $3.replace(/\"/g, '');
@@ -1201,21 +1201,21 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*set\s*(.*)/gim,
+      /^\s*set\s+(.*)/gim,
       ($0, $1, $2) => {
         const params = this.getParams($1, ['file', 'address', 'value']);
         return `await sys.set ({pid: pid, handle: page, ${params}})`;
       }
     ];
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*BLUR\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*BLUR\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         return `${$1} = await img.blur({pid: pid, args: [${$2}]})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*SHARPEN\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*SHARPEN\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         return `
         ${$1} = await img.sharpen({pid: pid, args: [${$2}]})`;
@@ -1223,7 +1223,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*CARD\s*(.*)/gim,
+      /^\s+((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*CARD\s+(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($1, ['doc', 'data']);
         return `
