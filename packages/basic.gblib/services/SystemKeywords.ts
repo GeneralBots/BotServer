@@ -703,7 +703,7 @@ export class SystemKeywords {
     const res = await blockBlobClient.uploadFile(localName,
       {
         blobHTTPHeaders: {
-          blobContentMD5: hash 
+          blobContentMD5: hash
         }
       });
 
@@ -743,9 +743,8 @@ export class SystemKeywords {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Saving batch to storage '${table}' (SAVE).`);
 
-    if (rows.length === 0) 
-    {
-      
+    if (rows.length === 0) {
+
       return;
     }
 
@@ -753,7 +752,7 @@ export class SystemKeywords {
     const rowsDest = [];
 
     rows.forEach(row => {
-      
+
       const dst = {};
       let i = 0;
       Object.keys(row).forEach(column => {
@@ -2110,7 +2109,7 @@ export class SystemKeywords {
 
   }
 
-  private cachedMerge:any = {};
+  private cachedMerge: any = {};
 
   /**
    * Merges a multi-value with a tabular file using BY field as key.
@@ -2409,9 +2408,9 @@ export class SystemKeywords {
 
         if (storage) {
 
-          
+
           // Uppercases fields.
-          
+
           const dst = {};
           let i = 0;
           Object.keys(fieldsValues).forEach(fieldSrc => {
@@ -2439,7 +2438,7 @@ export class SystemKeywords {
     }
 
     GBLog.info(`BASIC: MERGE results: merges:${merges}, additions:${adds}, skipped: ${skipped}.`);
-
+    return { merges, adds, skipped };
   }
 
   /**
