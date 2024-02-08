@@ -52,7 +52,7 @@ export class KeywordsExpressions {
           }
           accum.soFar.push(curr);
         }
-        if (curr.split('"').length % 2 == 0) {
+        if (curr.split('`').length % 2 == 0) {
           accum.isConcatting = !accum.isConcatting;
         }
         return accum;
