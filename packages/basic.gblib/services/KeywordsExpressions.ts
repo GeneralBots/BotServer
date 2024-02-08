@@ -1089,6 +1089,13 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*MERGE\s+(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        return `${$1} = await sys.merge({pid: pid, file: ${$2}, data: ${$3}, key1: ${$4}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*MERGE\s+(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.merge({pid: pid, file: ${$1}, data: ${$2}, key1: ${$3}})`;
