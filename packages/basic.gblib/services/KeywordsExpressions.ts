@@ -1096,7 +1096,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*MERGE(\s*)(.*)/gim,
+      /^\s*MERGE IMAGE(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await img.mergeImage({pid: pid, files: [${$3}]})`;
       }
