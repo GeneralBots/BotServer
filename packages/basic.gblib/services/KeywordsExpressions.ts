@@ -1089,28 +1089,21 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*MERGE\s+(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
-      ($0, $1, $2, $3, $4) => {
-        return `${$1} = await sys.merge({pid: pid, file: ${$2}, data: ${$3}, key1: ${$4}})`;
-      }
-    ];
-
-    keywords[i++] = [
-      /^\s*MERGE\s+(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
+      /^\s*MERGE\s*(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.merge({pid: pid, file: ${$1}, data: ${$2}, key1: ${$3}})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*MERGE\s+(.*)/gim,
+      /^\s*MERGE(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await img.mergeImage({pid: pid, files: [${$2}]})`;
+        return `await img.mergeImage({pid: pid, files: [${$3}]})`;
       }
     ];
 
     keywords[i++] = [
-      /^\s*PRESS\s+(.*)/gim,
+      /^\s*PRESS\s*(.*)/gim,
       ($0, $1, $2) => {
         return `await wa.pressKey({pid: pid, handle: page, char: ${$1}})`;
       }
