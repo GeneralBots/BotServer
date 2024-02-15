@@ -767,16 +767,14 @@ export class GBDeployer implements IGBDeployer {
    * its index based on .gbkb structure.
    */
   public async rebuildIndex(instance: IGBInstance, searchSchema: any) {
-    // Prepares search.
-    let release;
 
-    // TODO: Semaphore logic.
-    //try {
+   const key = instance.searchKey ? instance.searchKey : GBServer.globals.minBoot.instance.searchKey;
     GBLogEx.info(instance.instanceId, `rebuildIndex running...`);
-    // release = await GBServer.globals.indexSemaphore.acquire();
-    // GBLogEx.info(instance.instanceId, `Acquire rebuildIndex done.`);
 
-    const key = instance.searchKey ? instance.searchKey : GBServer.globals.minBoot.instance.searchKey;
+    if  (!key){
+
+      return;
+    }
     const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
     const searchIndexer = instance.searchIndexer
       ? instance.searchIndexer
