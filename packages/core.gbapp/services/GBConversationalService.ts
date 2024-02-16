@@ -960,28 +960,30 @@ export class GBConversationalService {
         return Promise.reject(new Error(msg));
       }
     } else {
-      const url = urlJoin(
+      let url = urlJoin(
         endPoint,
-        'translate',
+        'translate');
+      url += "?" +
         new URLSearchParams({
           'api-version': '3.0',
           to: language
         }).toString()
-      );
+      
       let options = {
         method: 'POST',
         headers: {
           'Ocp-Apim-Subscription-Key': key,
-          'Ocp-Apim-Subscription-Region': 'westeurope',
+          'Ocp-Apim-Subscription-Region': process.env.TRANSLATOR_REGION,
           'Content-type': 'application/json',
           'X-ClientTraceId': GBAdminService.generateUuid()
         },
-        body: text,
-        json: true
+        body: `[{'Text':'${text}'}]`,
+        json: false
       };
 
       try {
-        const results = await fetch(url, options);
+        let results = await fetch(url, options);
+        results = await results.json();
 
         return results[0].translations[0].text;
       } catch (error) {
@@ -1084,6 +1086,8 @@ export class GBConversationalService {
     if (text != '' && detectLanguage && !locale) {
       locale = await min.conversationalService.getLanguage(min, text);
       if (user.locale != locale) {
+
+        GBLog.info(`Changed language to: ${locale}`);
         user = await sec.updateUserLocale(user.userId, locale);
       }
     }
