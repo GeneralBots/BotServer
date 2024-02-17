@@ -499,7 +499,7 @@ export class GBConversationalService {
               url: process.env.WATSON_STT_URL
             });
 
-            locale = GBUtil.getLocaleLanguageAndCountry(locale);
+            locale = this.getFullLocale(locale);
 
             const params = {
               audio: data,
@@ -526,6 +526,25 @@ export class GBConversationalService {
       }
     });
   }
+  public static getFullLocale = locale => {
+    const locales = {
+        "ar": "ar-MS_BroadbandModel",
+        "zh": "zh-CN_BroadbandModel",
+        "nl": "nl-NL_BroadbandModel",
+        "en": "en-US_BroadbandModel",
+        "fr": "fr-FR_BroadbandModel",
+        "de": "de-DE_BroadbandModel",
+        "it": "it-IT_BroadbandModel",
+        "ja": "ja-JP_BroadbandModel",
+        "ko": "ko-KR_BroadbandModel",
+        "pt": "pt-BR_BroadbandModel",
+        "es": "es-ES_BroadbandModel"
+    };
+
+    const languageCode = locale.substring(0, 2);
+    return locales[languageCode] || "Locale não encontrado";
+};
+
 
   public async playMarkdown(min: GBMinInstance, answer: string, channel: string,
     step: GBDialogStep, mobile: string) {
