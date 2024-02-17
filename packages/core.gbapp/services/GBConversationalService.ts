@@ -499,12 +499,12 @@ export class GBConversationalService {
               url: process.env.WATSON_STT_URL
             });
 
-            locale = this.getFullLocale(locale);
+            const model = this.getIBMAudioModelNameFromLocale(locale);
 
             const params = {
               audio: data,
               contentType: 'audio/l16; rate=44100',
-              model: `${locale}_BroadbandModel`
+              model: model
             };
 
             speechToText
@@ -526,7 +526,7 @@ export class GBConversationalService {
       }
     });
   }
-  public static getFullLocale = locale => {
+  public static getIBMAudioModelNameFromLocale = locale => {
     const locales = {
         "ar": "ar-MS_BroadbandModel",
         "zh": "zh-CN_BroadbandModel",
