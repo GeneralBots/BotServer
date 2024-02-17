@@ -285,6 +285,20 @@ export class KBService implements IGBKBService {
 
     const instance = min.instance;
 
+    const contentLocale = min.core.getParam<string>(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+  
+    query = await min.conversationalService.translate(
+      min,
+      query,
+      contentLocale
+    );
+    
+    GBLog.info(`Translated query (prompt): ${query}.`);
+
     // Try simple search first.
 
     const data = await this.getAnswerByText(instance.instanceId, query.trim());
@@ -639,6 +653,7 @@ export class KBService implements IGBKBService {
     } else if (answer.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else {
+      
       await min.conversationalService.sendText(min, step, answer);
       await min.conversationalService.sendEvent(min, step, 'stop', undefined);
     }

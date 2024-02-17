@@ -472,7 +472,7 @@ export class GBConversationalService {
         Fs.writeFileSync(src, oggFile.read());
 
         const makeMp3 = shell([
-          'node_modules/ffmpeg-static/ffmpeg.exe',
+          'node_modules/ffmpeg-static/ffmpeg', // TODO: .exe on MSWin.
           '-y',
           '-v',
           'error',
@@ -985,7 +985,12 @@ export class GBConversationalService {
         let results = await fetch(url, options);
         results = await results.json();
 
-        return results[0].translations[0].text;
+        if (results[0]){
+          return results[0].translations[0].text;
+        }
+        else{
+          return text;
+        }
       } catch (error) {
         const msg = `Error calling MSFT Translator service layer. Error is: ${error}.`;
 
@@ -1082,8 +1087,8 @@ export class GBConversationalService {
         'Language Detector',
         false) != false;
 
-    locale = user.locale;
-    if (text != '' && detectLanguage && !locale) {
+    
+    if (text != '' && detectLanguage) {
       locale = await min.conversationalService.getLanguage(min, text);
       if (user.locale != locale) {
 
@@ -1095,12 +1100,7 @@ export class GBConversationalService {
     // Translates text into content language, keeping
     // reserved tokens specified in Config.
 
-    const contentLocale = min.core.getParam(
-      min.instance,
-      'Default Content Language',
-      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
-    );
-    text = await min.conversationalService.translate(min, text, contentLocale);
+    text = await min.conversationalService.translate(min, text, locale);
     GBLog.verbose(`Translated text (processMessageActivity): ${text}.`);
 
     // Restores all token text back after spell checking and translation.

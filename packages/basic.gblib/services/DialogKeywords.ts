@@ -1261,7 +1261,14 @@ export class DialogKeywords {
 
     if (user) {
       // TODO: const translate = user ? user.basicOptions.translatorOn : false;
-
+      text = await min.conversationalService.translate(
+        min,
+        text,
+        user.locale ? user.locale : min.core.getParam(min.instance, 'Locale',
+         GBConfigService.get('LOCALE'))
+      );
+      GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
+      
       await min.conversationalService['sendOnConversation'](min, user, text);
     }
     return { status: 0 };

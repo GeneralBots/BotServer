@@ -482,16 +482,10 @@ export class WhatsappDirectLine extends GBService {
     }
 
     if (message.type === 'ptt') {
-      let url = provider ? message.body : message.text;
       if (process.env.AUDIO_DISABLED !== 'true') {
-        const options = {
-          url: url,
-          method: 'GET',
-          encoding: 'binary'
-        };
-
-        const res = await fetch(url, options);
-        const buf = Buffer.from(await res.arrayBuffer());
+        const media = await message.downloadMedia();
+        const buf = Buffer.from(media.data, 'base64');
+        
         text = await GBConversationalService.getTextFromAudioBuffer(
           this.min.instance.speechKey,
           this.min.instance.cloudLocation,

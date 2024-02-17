@@ -106,11 +106,10 @@ export class AskDialog extends IGBDialog {
           text = Messages[locale].ask_first_time;
         } else if (step.options && step.options.isReturning && !step.context.activity.group) {
           const askForMore = min.core.getParam(min.instance, 'Ask For More', null);
-          if (askForMore){
-            text =  askForMore ;
+          if (askForMore) {
+            text = askForMore;
           }
-          else
-          {
+          else {
 
             return await step.endDialog(null);
           }
@@ -340,7 +339,7 @@ export class AskDialog extends IGBDialog {
   }
 
   private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, user, answer: GuaribasAnswer) {
-    const text = typeof(answer)==='string'? answer:answer.content;
+    let text = typeof (answer) === 'string' ? answer : answer.content;
     if (text.endsWith('.docx')) {
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
       await step.endDialog();
@@ -348,7 +347,7 @@ export class AskDialog extends IGBDialog {
     } else if (text.startsWith('/')) {
       return await step.replaceDialog(text, { answer: answer });
     } else {
-      await service.sendAnswer(min, AskDialog.getChannel(step), step, answer);
+      await service.sendAnswer(min, AskDialog.getChannel(step), step, text);
       return await step.replaceDialog('/ask', { isReturning: true });
     }
   }
