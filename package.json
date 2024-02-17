@@ -35,7 +35,7 @@
     "build-server": "tsc",
     "build-gbui": "cd packages/default.gbui && echo SKIP_PREFLIGHT_CHECK=true >.env &&  npm install && npm run build",
     "build-docs": "typedoc --options typedoc.json src/",
-    "test": "node test.js",
+    "test": "vitest",
     "start": "NODE_NO_WARNINGS=1 node ./boot.mjs --loader ts-node/esm --require ./suppress-node-warnings.cjs",
     "debug": "NODE_NO_WARNINGS=1 node ./boot.mjs --loader ts-node/esm --require ./suppress-node-warnings.cjs --inspect",
     "reverse-proxy": "node_modules/.bin/ngrok http 4242",
@@ -51,6 +51,19 @@
     "travis-deploy-once": "travis-deploy-once --pro",
     "semantic-release": "semantic-release",
     "commit": "git-cz"
+  },
+  "jest": {
+    "workerIdleMemoryLimit": "4096MB",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ]
   },
   "dependencies": {
     "@azure/arm-appservice": "13.0.3",
@@ -121,7 +134,7 @@
     "google-libphonenumber": "3.2.31",
     "googleapis": "126.0.1",
     "ibm-watson": "7.1.2",
-    "iso-639-1": "^3.1.1",
+    "iso-639-1": "3.1.1",
     "join-images-updated": "1.1.4",
     "js-md5": "0.8.3",
     "just-indent": "0.0.1",
@@ -130,6 +143,7 @@
     "koa-body": "6.0.1",
     "koa-router": "12.0.0",
     "langchain": "^0.0.163",
+    "language-tags": "^1.0.9",
     "line-replace": "2.0.1",
     "lodash": "4.17.21",
     "luxon": "3.1.0",
@@ -214,8 +228,8 @@
     "super-strong-password-generator": "2.0.2",
     "super-strong-password-generator-es": "2.0.2",
     "travis-deploy-once": "5.0.11",
-    "ts-node": "10.9.1",
-    "tslint": "6.1.3"
+    "tslint": "6.1.3",
+    "vitest": "^1.3.0"
   },
   "eslintConfig": {
     "env": {

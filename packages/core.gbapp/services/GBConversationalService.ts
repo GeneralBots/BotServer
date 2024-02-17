@@ -1155,38 +1155,34 @@ export class GBConversationalService {
 
     let replacements = [];
 
-    if (translate) {
-      // To fix MSFT bug.
+    // To fix MSFT bug.
 
-      if (keepTextList) {
-        keepTextList = keepTextList.filter(p => p.trim() !== '');
-        let i = 0;
-        await CollectionUtil.asyncForEach(keepTextList, item => {
-          if (text.toLowerCase().indexOf(item.toLowerCase()) != -1) {
-            const replacementToken = GBAdminService['getNumberIdentifier']();
-            replacements[i] = { text: item, replacementToken: replacementToken };
-            i++;
-            text = text.replace(new RegExp(item.trim(), 'gi'), `${replacementToken}`);
-          }
-        });
-      }
-
-      const locale = user.locale;
-      text = await min.conversationalService.translate(
-        min,
-        text,
-        locale ? locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
-      );
-
-      if (keepTextList) {
-        let i = 0;
-        await CollectionUtil.asyncForEach(replacements, item => {
+    if (keepTextList) {
+      keepTextList = keepTextList.filter(p => p.trim() !== '');
+      let i = 0;
+      await CollectionUtil.asyncForEach(keepTextList, item => {
+        if (text.toLowerCase().indexOf(item.toLowerCase()) != -1) {
+          const replacementToken = GBAdminService['getNumberIdentifier']();
+          replacements[i] = { text: item, replacementToken: replacementToken };
           i++;
-          text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
-        });
-      }
+          text = text.replace(new RegExp(item.trim(), 'gi'), `${replacementToken}`);
+        }
+      });
+    }
 
-      GBLog.verbose(`Translated text(sendText): ${text}.`);
+    const locale = user.locale;
+    text = await min.conversationalService.translate(
+      min,
+      text,
+      locale ? locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
+    );
+
+    if (keepTextList) {
+      let i = 0;
+      await CollectionUtil.asyncForEach(replacements, item => {
+        i++;
+        text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
+      });
     }
 
     const analytics = new AnalyticsService();

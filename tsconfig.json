@@ -33,14 +33,14 @@
     ]
   },
   "include": [    
-    "test/**/*",
     "src/**/*",
     "packages/*.gbapp/**/*",
     "packages/*.gblib/**/*",
-    "packages/*.gbtheme/**/*",
+    "packages/*.gbtheme/**/*"
   ],
   "exclude": [
     "dist",
-    "node_modules"
-  ]
+    "node_modules",
+    "**/*.test.ts"
+    ]
 }

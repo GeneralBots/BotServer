@@ -33,17 +33,17 @@
  */
 
 'use strict';
-import  iso6391 from 'iso-639-1';
+import tags from 'language-tags';
 
 export class GBUtil {
 
-  public static repeat = function (chr, count) {
+  public static repeat (chr, count) {
     var str = "";
     for (var x = 0; x < count; x++) { str += chr };
     return str;
   }
 
-  public static padL = function (value, width, pad) {
+  public static padL  (value, width, pad) {
     if (!width || width < 1)
       return value;
 
@@ -53,7 +53,7 @@ export class GBUtil {
 
     return (GBUtil.repeat(pad, length) + value).substr(0, width);
   }
-  public static padR = function (value, width, pad) {
+  public static padR  (value, width, pad) {
     if (!width || width < 1)
       return value;
 
@@ -95,12 +95,4 @@ export class GBUtil {
     }
   };
 
-  public static getLocaleLanguageAndCountry(locale) {
-        const iso6393Language = iso6391.getCode(locale);
-        if (iso6393Language) {
-            return iso6393Language + '-' + locale.toLowerCase();
-        } else {
-            return null;
-        }
-    }
 }
