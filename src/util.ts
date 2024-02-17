@@ -33,6 +33,7 @@
  */
 
 'use strict';
+import  iso6391 from 'iso-639-1';
 
 export class GBUtil {
 
@@ -94,4 +95,12 @@ export class GBUtil {
     }
   };
 
+  public static getLocaleLanguageAndCountry(locale) {
+        const iso6393Language = iso6391.getCode(locale);
+        if (iso6393Language) {
+            return iso6393Language + '-' + locale.toLowerCase();
+        } else {
+            return null;
+        }
+    }
 }

@@ -499,10 +499,12 @@ export class GBConversationalService {
               url: process.env.WATSON_STT_URL
             });
 
+            locale = GBUtil.getLocaleLanguageAndCountry(locale);
+
             const params = {
               audio: data,
               contentType: 'audio/l16; rate=44100',
-              model: 'pt-BR_BroadbandModel'
+              model: `${locale}_BroadbandModel`
             };
 
             speechToText
