@@ -1109,12 +1109,12 @@ export class GBConversationalService {
         false) != false;
 
     
-    if (text != '' && detectLanguage) {
+    if (text.indexOf(' ') !== -1  && detectLanguage) {
       locale = await min.conversationalService.getLanguage(min, text);
       if (user.locale != locale) {
-
-        GBLog.info(`Changed language to: ${locale}`);
         user = await sec.updateUserLocale(user.userId, locale);
+        await min.conversationalService.sendText(min,
+           step, `Changed language to: ${locale}`);
       }
     }
 
@@ -1163,7 +1163,6 @@ export class GBConversationalService {
   }
 
   public async sendTextWithOptions(min: GBMinInstance, step, text, translate, keepTextList) {
-    const member = step.context.activity.from;
     let sec = new SecService();
     let user = await sec.getUserFromSystemId(step.context.activity.from.id);
     await this['sendTextWithOptionsAndUser'](min, user, step, text, true, null);

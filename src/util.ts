@@ -33,7 +33,7 @@
  */
 
 'use strict';
-import tags from 'language-tags';
+
 
 export class GBUtil {
 

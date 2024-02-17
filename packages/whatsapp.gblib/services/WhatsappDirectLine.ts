@@ -155,7 +155,7 @@ export class WhatsappDirectLine extends GBService {
               // Sends QR Code to boot bot admin.
               const msg = `Please, scan QR Code with for bot ${this.botId}.`;
               qrcode.generate(qr, { small: true, scale: 0.5 });
-              
+
               // TODO: While handling other bots uses boot instance of this class to send QR Codes.
               // const s = new DialogKeywords(min., null, null, null);
               // const qrBuf = await s.getQRCode(qr);
@@ -169,7 +169,7 @@ export class WhatsappDirectLine extends GBService {
               // );
               // GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
               // s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, msg);
-              
+
             }).bind(this)
           );
           client.on('authenticated', async () => {
@@ -414,7 +414,7 @@ export class WhatsappDirectLine extends GBService {
       // Bot name must be specified on config.
 
       if (botGroupID === group) {
-        
+
         // Shortcut has been mentioned?
 
         let found = false;
@@ -448,7 +448,7 @@ export class WhatsappDirectLine extends GBService {
         if (botNumber && !answerText && !found) {
           botNumber = botNumber.replace('+', '');
           if (!message.body.startsWith('@' + botNumber)) {
-           
+
             return;
           }
         }
@@ -485,7 +485,7 @@ export class WhatsappDirectLine extends GBService {
       if (process.env.AUDIO_DISABLED !== 'true') {
         const media = await message.downloadMedia();
         const buf = Buffer.from(media.data, 'base64');
-        
+
         text = await GBConversationalService.getTextFromAudioBuffer(
           this.min.instance.speechKey,
           this.min.instance.cloudLocation,
@@ -897,12 +897,10 @@ export class WhatsappDirectLine extends GBService {
               to = to + '@c.us';
             }
           }
-          if (await this.customClient.getState() === WAState.CONNECTED)
-          {
+          if (await this.customClient.getState() === WAState.CONNECTED) {
             await this.customClient.sendMessage(to, msg);
           }
-          else
-          {
+          else {
             GBLog.info(`WhatsApp OFFLINE ${to}: ${msg}`);
           }
 
@@ -1028,7 +1026,7 @@ export class WhatsappDirectLine extends GBService {
       }
 
       const sec = new SecService();
-      
+
       // Tries to find if user wants to switch bots.
 
       let toSwitchMin = GBServer.globals.minInstances.filter(
@@ -1037,20 +1035,45 @@ export class WhatsappDirectLine extends GBService {
 
 
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
-      
+
 
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
-      
+
       let user = await sec.getUserFromSystemId(id);
 
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
       if (botNumber && GBServer.globals.minBoot.botId !== urlMin.botId) {
         GBLog.info(`${id} fixed by bot number talked to: ${botId}.`);
-        
-        user = await sec.ensureUser(urlMin, id, '', '', 'omnichannel', '','');
+        let locale;
+        if (!user) {
+
+          // Detects user typed language and updates their locale profile if applies.
+          const min = urlMin;
+
+          locale = min.core.getParam(
+            min.instance,
+            'Default User Language',
+            GBConfigService.get('DEFAULT_USER_LANGUAGE'));
+
+          const detectLanguage =
+            min.core.getParam(
+              min.instance,
+              'Language Detector',
+              false) != false;
+
+
+          if (text != '' && detectLanguage) {
+            locale = await min.conversationalService.getLanguage(min, text);
+          }
+
+        }
+
+
+        user = await sec.ensureUser(urlMin, id, '', '', 'omnichannel', '', '');
         user = await sec.updateUserInstance(id, urlMin.instance.instanceId);
+        user = await sec.updateUserLocale(user.userId, locale);
       }
-      
+
 
       let activeMin;
 
@@ -1116,11 +1139,12 @@ export class WhatsappDirectLine extends GBService {
       // If bot has a fixed Find active bot instance.
 
       activeMin = botNumber ? urlMin : toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
-
+      const min = activeMin;
       // If it is the first time for the user, tries to auto-execute
       // start dialog if any is specified in Config.xlsx.
 
       if (user === null || user.hearOnDialog) {
+        
         user = await sec.ensureUser(activeMin, id, senderName, '', 'whatsapp', senderName, null);
 
         const startDialog = user.hearOnDialog

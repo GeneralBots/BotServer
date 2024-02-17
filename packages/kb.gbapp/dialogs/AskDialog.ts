@@ -351,7 +351,7 @@ export class AskDialog extends IGBDialog {
       return await step.replaceDialog('/ask', { isReturning: true });
     }
   }
-
+  
   private static getChannel(step): string {
     return !isNaN(step.context.activity['mobile']) ? 'whatsapp' : step.context.activity.channelId;
   }
