@@ -113,7 +113,7 @@ export class GBServer {
     process.on('uncaughtException', (err, p) => {
       if (err !== null) {
         err = err['e'] ? err['e'] : err;
-        const msg = `${err['code']?err['code']:''} ${err.message?err.message:''} ${err['description']?err['description']:''}`
+        const msg = `${err['code'] ? err['code'] : ''} ${err?.['response']?.['data'] ? err?.['response']?.['data']: ''} ${err.message ? err.message : ''} ${err['description'] ? err['description'] : ''}`
         GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''} ${msg}`);
       } else {
         GBLog.error('UNCAUGHT_EXCEPTION: Unknown error (err is null)');
@@ -161,7 +161,7 @@ export class GBServer {
 
           // Creates a boot instance or load it from storage.
 
-          let runOnce =  false;
+          let runOnce = false;
           if (GBConfigService.get('STORAGE_SERVER')) {
             azureDeployer = await AzureDeployerService.createInstance(deployer);
             await core.initStorage();
@@ -186,8 +186,8 @@ export class GBServer {
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
           await core.syncDatabaseStructure();
-          
-          if (runOnce){
+
+          if (runOnce) {
             await core.saveInstance(GBServer.globals.bootInstance);
           }
 
@@ -335,9 +335,9 @@ export class GBServer {
 
     // A workaround for swagger-ui-dist not being able to set custom swagger URL
     const indexContent = fs
-        .readFileSync(path.join(swaggerUiAssetPath, 'swagger-initializer.js'))
-        .toString()
-        .replace('https://petstore.swagger.io/v2/swagger.json', `/${SWAGGER_FILE_NAME}`);
+      .readFileSync(path.join(swaggerUiAssetPath, 'swagger-initializer.js'))
+      .toString()
+      .replace('https://petstore.swagger.io/v2/swagger.json', `/${SWAGGER_FILE_NAME}`);
     app.get(`${ENDPOINT}/swagger-initializer.js`, (req, res) => res.send(indexContent));
 
     // Serve the swagger-ui assets
@@ -345,7 +345,7 @@ export class GBServer {
 
     // Serve the swagger file
     app.get(`/${SWAGGER_FILE_NAME}`, (req, res) => {
-        res.sendFile(path.join(process.env.PWD,SWAGGER_FILE_NAME));
+      res.sendFile(path.join(process.env.PWD, SWAGGER_FILE_NAME));
     });
-}
+  }
 }
