@@ -542,7 +542,7 @@ export class GBConversationalService {
     };
 
     const languageCode = locale.substring(0, 2);
-    return locales[languageCode] || "Locale não encontrado";
+    return locales[languageCode] || "en-US_BroadbandModel";
 };
 
 

@@ -186,7 +186,7 @@ export class WhatsappDirectLine extends GBService {
               if (chat.isGroup) {
                 // await chat.clearMessages();
               } else if (!chat.pinned) {
-                // await chat.delete();
+                await chat.delete();
               }
             });
           });
@@ -1033,9 +1033,7 @@ export class WhatsappDirectLine extends GBService {
         p => p.instance.botId.toLowerCase() === text.toLowerCase()
       )[0];
 
-
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
-
 
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
@@ -1064,10 +1062,9 @@ export class WhatsappDirectLine extends GBService {
 
           if (text != '' && detectLanguage) {
             locale = await min.conversationalService.getLanguage(min, text);
+            GBLog.info(`${locale} defined for first time mobile: ${id}.`);
           }
-
         }
-
 
         user = await sec.ensureUser(urlMin, id, '', '', 'omnichannel', '', '');
         user = await sec.updateUserInstance(id, urlMin.instance.instanceId);
