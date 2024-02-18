@@ -53,8 +53,6 @@ import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { SystemKeywords } from './SystemKeywords.js';
 import { Sequelize, QueryTypes } from '@sequelize/core';
 
-
-
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
  * over a beautiful BASIC transpiler (to be done).
@@ -807,6 +805,7 @@ export class GBVMService extends GBService {
     let properties = [];
     let description;
     let table = null; // Used for TABLE keyword.
+    let talk = null;
     let connection = null;
     const tasks = [];
     let fields = {};
@@ -822,7 +821,7 @@ export class GBVMService extends GBService {
 
       line = line.replace(/^\s*\d+\s*/gi, '');
 
-      if (!table){
+      if (!table && !talk){
         for (let j = 0; j < keywords.length; j++) {
           line = line.replace(keywords[j][0], keywords[j][1]); // TODO: Investigate delay here.
         }
@@ -845,6 +844,16 @@ export class GBVMService extends GBService {
         emmit = false;
       }
 
+      const endTalkKeyword = /^\s*END TALK\s*/gim;
+      let endTalkReg = endTalkKeyword.exec(line);
+      if (endTalkReg && talk) {
+        line = talk + '`})';
+        
+        talk = null;
+        emmit = true;
+      }
+
+
       const endTableKeyword = /^\s*END TABLE\s*/gim;
       let endTableReg = endTableKeyword.exec(line);
       if (endTableReg && table) {
@@ -857,6 +866,13 @@ export class GBVMService extends GBService {
         fields = {};
         table = null;
         connection = null;
+        emmit = false;
+      }
+
+      // Inside BEGIN TALK
+
+      if (talk) {
+        talk += line + '\\n';
         emmit = false;
       }
 
@@ -873,6 +889,13 @@ export class GBVMService extends GBService {
       if (tableReg && !table) {
         table = tableReg[1];
         connection = tableReg[2];
+        emmit = false;
+      }
+
+      const talkKeyword = /^\s*BEGIN TALK\s*/gim;
+      let talkReg = talkKeyword.exec(line);
+      if (talkReg && !talk) {
+        talk = "await dk.talk ({pid: pid, text: `";
         emmit = false;
       }
 

@@ -481,22 +481,6 @@ export class WhatsappDirectLine extends GBService {
       return; // Exit here.
     }
 
-    if (message.type === 'ptt') {
-      if (process.env.AUDIO_DISABLED !== 'true') {
-        const media = await message.downloadMedia();
-        const buf = Buffer.from(media.data, 'base64');
-
-        text = await GBConversationalService.getTextFromAudioBuffer(
-          this.min.instance.speechKey,
-          this.min.instance.cloudLocation,
-          buf,
-          locale
-        );
-      } else {
-        await this.sendToDevice(user.userSystemId, `No momento estou apenas conseguindo ler mensagens de texto.`, null);
-      }
-    }
-
     const conversationId = WhatsappDirectLine.conversationIds[botId + from + group];
     const client = await this.directLineClient;
     WhatsappDirectLine.lastMessage[botId + from] = message;
@@ -958,7 +942,7 @@ export class WhatsappDirectLine extends GBService {
 
   private async WhatsAppCallback(req, res) {
     try {
-      if (!req.body) {
+      if (!req.body && req.type !== 'ptt') {
         return;
       }
 
@@ -1033,22 +1017,22 @@ export class WhatsappDirectLine extends GBService {
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
 
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
+      // Detects user typed language and updates their locale profile if applies.
+      let min = urlMin;
 
       let user = await sec.getUserFromSystemId(id);
 
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
       if (botNumber && GBServer.globals.minBoot.botId !== urlMin.botId) {
         GBLog.info(`${id} fixed by bot number talked to: ${botId}.`);
-        let locale;
+        let locale = user?.locale ? user.locale: min.core.getParam(
+          min.instance,
+          'Default User Language',
+          GBConfigService.get('DEFAULT_USER_LANGUAGE'));
+        ;
+
         if (!user) {
 
-          // Detects user typed language and updates their locale profile if applies.
-          const min = urlMin;
-
-          locale = min.core.getParam(
-            min.instance,
-            'Default User Language',
-            GBConfigService.get('DEFAULT_USER_LANGUAGE'));
 
           const detectLanguage =
             min.core.getParam(
@@ -1065,10 +1049,29 @@ export class WhatsappDirectLine extends GBService {
 
         user = await sec.ensureUser(urlMin, id, '', '', 'omnichannel', '', '');
         user = await sec.updateUserInstance(id, urlMin.instance.instanceId);
-        if (locale){
+        if (locale) {
           user = await sec.updateUserLocale(user.userId, locale);
         }
       }
+      if (req.type === 'ptt') {
+        if (process.env.AUDIO_DISABLED !== 'true') {
+          const media = await req.downloadMedia();
+          const buf = Buffer.from(media.data, 'base64');
+
+          text = await GBConversationalService.getTextFromAudioBuffer(
+            this.min.instance.speechKey,
+            this.min.instance.cloudLocation,
+            buf,
+            user.locale
+          );
+          
+          req.body = text;
+
+        } else {
+          await this.sendToDevice(user.userSystemId, `No momento estou apenas conseguindo ler mensagens de texto.`, null);
+        }
+      }
+
 
 
       let activeMin;
@@ -1135,12 +1138,12 @@ export class WhatsappDirectLine extends GBService {
       // If bot has a fixed Find active bot instance.
 
       activeMin = botNumber ? urlMin : toSwitchMin ? toSwitchMin : GBServer.globals.minBoot;
-      const min = activeMin;
+      min = activeMin;
       // If it is the first time for the user, tries to auto-execute
       // start dialog if any is specified in Config.xlsx.
 
       if (user === null || user.hearOnDialog) {
-        
+
         user = await sec.ensureUser(activeMin, id, senderName, '', 'whatsapp', senderName, null);
 
         const startDialog = user.hearOnDialog
