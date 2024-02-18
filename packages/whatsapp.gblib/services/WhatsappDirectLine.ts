@@ -958,10 +958,7 @@ export class WhatsappDirectLine extends GBService {
 
   private async WhatsAppCallback(req, res) {
     try {
-      if (req.body && req.body.webhook) {
-        res.status(200);
-        res.end();
-
+      if (!req.body) {
         return;
       }
 
@@ -1068,7 +1065,9 @@ export class WhatsappDirectLine extends GBService {
 
         user = await sec.ensureUser(urlMin, id, '', '', 'omnichannel', '', '');
         user = await sec.updateUserInstance(id, urlMin.instance.instanceId);
-        user = await sec.updateUserLocale(user.userId, locale);
+        if (locale){
+          user = await sec.updateUserLocale(user.userId, locale);
+        }
       }
 
 

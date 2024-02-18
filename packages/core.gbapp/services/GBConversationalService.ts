@@ -528,22 +528,22 @@ export class GBConversationalService {
   }
   public static getIBMAudioModelNameFromLocale = locale => {
     const locales = {
-        "ar": "ar-MS_BroadbandModel",
-        "zh": "zh-CN_BroadbandModel",
-        "nl": "nl-NL_BroadbandModel",
-        "en": "en-US_BroadbandModel",
-        "fr": "fr-FR_BroadbandModel",
-        "de": "de-DE_BroadbandModel",
-        "it": "it-IT_BroadbandModel",
-        "ja": "ja-JP_BroadbandModel",
-        "ko": "ko-KR_BroadbandModel",
-        "pt": "pt-BR_BroadbandModel",
-        "es": "es-ES_BroadbandModel"
+      "ar": "ar-MS_BroadbandModel",
+      "zh": "zh-CN_BroadbandModel",
+      "nl": "nl-NL_BroadbandModel",
+      "en": "en-US_BroadbandModel",
+      "fr": "fr-FR_BroadbandModel",
+      "de": "de-DE_BroadbandModel",
+      "it": "it-IT_BroadbandModel",
+      "ja": "ja-JP_BroadbandModel",
+      "ko": "ko-KR_BroadbandModel",
+      "pt": "pt-BR_BroadbandModel",
+      "es": "es-ES_BroadbandModel"
     };
 
     const languageCode = locale.substring(0, 2);
     return locales[languageCode] || "en-US_BroadbandModel";
-};
+  };
 
 
   public async playMarkdown(min: GBMinInstance, answer: string, channel: string,
@@ -989,7 +989,7 @@ export class GBConversationalService {
           'api-version': '3.0',
           to: language
         }).toString()
-      
+
       let options = {
         method: 'POST',
         headers: {
@@ -1006,10 +1006,10 @@ export class GBConversationalService {
         let results = await fetch(url, options);
         results = await results.json();
 
-        if (results[0]){
+        if (results[0]) {
           return results[0].translations[0].text;
         }
-        else{
+        else {
           return text;
         }
       } catch (error) {
@@ -1097,7 +1097,7 @@ export class GBConversationalService {
 
     // Detects user typed language and updates their locale profile if applies.
 
-    let locale = min.core.getParam(
+    let locale = user.locale ? user.locale : min.core.getParam(
       min.instance,
       'Default User Language',
       GBConfigService.get('DEFAULT_USER_LANGUAGE'));
@@ -1108,13 +1108,13 @@ export class GBConversationalService {
         'Language Detector',
         false) != false;
 
-    
-    if (text.indexOf(' ') !== -1  && detectLanguage) {
+
+    if (text.indexOf(' ') !== -1 && detectLanguage) {
       locale = await min.conversationalService.getLanguage(min, text);
       if (user.locale != locale) {
         user = await sec.updateUserLocale(user.userId, locale);
         await min.conversationalService.sendText(min,
-           step, `Changed language to: ${locale}`);
+          step, `Changed language to: ${locale}`);
       }
     }
 
