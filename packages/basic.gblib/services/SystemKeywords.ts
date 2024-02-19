@@ -1129,7 +1129,7 @@ export class SystemKeywords {
           rows.push(outRow);
         }
       }
-    } else {
+    } else if (file.indexOf('.xlsx') !== -1) {
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
       let document;
@@ -1147,6 +1147,19 @@ export class SystemKeywords {
 
       header = results.text[0];
       rows = results.text;
+    } else {
+      const t = this.getTableFromName(file, min);
+
+      if (!t) {
+        throw new Error(`TABLE ${file} not found. Check TABLE keywords.`);
+      }
+
+      const systemFilter = await SystemKeywords.getFilter(args[0]);
+      let filter = {};
+      filter[systemFilter.columnName] = systemFilter.value;
+      const res = await t.findAll({ where: filter });
+
+      return res.length > 1 ? res : res[0];
     }
 
 
@@ -1846,12 +1859,27 @@ export class SystemKeywords {
   public async putByHttp({ pid, url, data, headers }) {
     const options = {
       json: data,
-      headers: headers
+      headers: headers,
+      method: 'PUT'
     };
 
+    if (typeof (data) === 'object') {
+      options['json'] = data;
+    }
+    else {
+      options['body'] = data;
+    }
+
     let result = await fetch(url, options);
-    GBLog.info(`[PUT]: ${url} (${data}): ${result}`);
-    return typeof result === 'object' ? result : JSON.parse(result);
+    const text = await result.text();
+    GBLog.info(`BASIC: PUT ${url} (${data}): ${text}`);
+
+    if (result.status != 200) {
+      throw new Error(`BASIC: PUT ${result.status}: ${result.statusText}.`)
+    }
+
+    let res = JSON.parse(text);
+    return res;
   }
 
   /**
