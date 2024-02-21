@@ -1864,7 +1864,7 @@ export class SystemKeywords {
     };
 
     if (typeof (data) === 'object') {
-      options['json'] = data;
+      options['body'] = JSON.stringify(data);
     }
     else {
       options['body'] = data;
@@ -1898,7 +1898,7 @@ export class SystemKeywords {
     };
 
     if (typeof (data) === 'object') {
-      options['json'] = data;
+      options['body'] = JSON.stringify(data);
     }
     else {
       options['body'] = data;
