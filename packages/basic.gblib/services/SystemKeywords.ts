@@ -1875,7 +1875,7 @@ export class SystemKeywords {
     const text = await result.text();
     GBLog.info(`BASIC: PUT ${url} (${data}): ${text}`);
 
-    if (result.status != 200) {
+    if (result.status != 200 && result.status != 201) {
       throw new Error(`BASIC: PUT ${result.status}: ${result.statusText}.`)
     }
 
@@ -1910,7 +1910,7 @@ export class SystemKeywords {
     const text = await result.text();
     GBLog.info(`BASIC: POST ${url} (${data}): ${text}`);
 
-    if (result.status != 200) {
+    if (result.status != 200 && result.status != 201) {
       throw new Error(`BASIC: POST ${result.status}: ${result.statusText}.`)
     }
 
