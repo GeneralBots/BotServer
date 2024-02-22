@@ -782,6 +782,12 @@ export class SystemKeywords {
   * 
   */
   public async saveToStorage({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
+
+    if (!fieldsValues){
+      
+      return;
+    }
+
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Saving to storage '${table}' (SAVE).`);
 
