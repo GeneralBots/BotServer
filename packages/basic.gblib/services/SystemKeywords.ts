@@ -843,6 +843,11 @@ export class SystemKeywords {
    *
    */
   public async save({ pid, file, args }): Promise<any> {
+
+    if (!args){
+      return;
+    }
+
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLog.info(`BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
