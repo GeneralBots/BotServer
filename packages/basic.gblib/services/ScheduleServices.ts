@@ -138,6 +138,7 @@ export class ScheduleServices extends GBService {
             let min: GBMinInstance = GBServer.globals.minInstances.filter(
               p => p.instance.instanceId === item.instanceId
             )[0];
+            GBLogEx.info(min,`Running .gbdialog word ${item.name} on:${item.schedule}...`);
             await GBVMService.callVM(script, min, null, null, null, false);
           };
           (async () => {
@@ -146,7 +147,9 @@ export class ScheduleServices extends GBService {
         },
         options
       );
-      GBLogEx.info(min,`Running .gbdialog word ${item.name} on:${item.schedule}...`);
-    } catch (error) {}
+      
+    } catch (error) {
+      GBLogEx.error(min,`Running .gbdialog word ${item.name} : ${error}...`);
+    }
   }
 }
