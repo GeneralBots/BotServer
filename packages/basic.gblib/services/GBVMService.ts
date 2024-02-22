@@ -635,7 +635,7 @@ export class GBVMService extends GBService {
           
           let __reportMerge = {adds:  0, updates: 0, skipped: 0};
           let __report = () => {
-            return 'Adds: ' + __reportMerge.adds + '. Updates: ' + __reportMerge.updates + '. Skipped: ' + __reportMerge.skipped + '.';
+            return __reportMerge.title + ' adds: ' + __reportMerge.adds + ', updates: ' + __reportMerge.updates + ' and skipped: ' + __reportMerge.skipped + '.';
           };
           let REPORT = 'No report yet';
 

@@ -2327,7 +2327,7 @@ export class SystemKeywords {
       key2Index = _.invertBy(table, key2);
     }
 
-    let merges = 0,
+    let updates = 0,
       adds = 0, skipped = 0;
 
     // Scans all items in incoming data.
@@ -2422,7 +2422,7 @@ export class SystemKeywords {
 
         }
 
-        merge ? merges++ : skipped++;
+        merge ? updates++ : skipped++;
 
       } else {
 
@@ -2478,8 +2478,8 @@ export class SystemKeywords {
       await this.saveToStorageBatch({ pid, table: file, rows: fieldsValuesList });
     }
 
-    GBLog.info(`BASIC: MERGE results: merges:${merges}, additions:${adds}, skipped: ${skipped}.`);
-    return { merges, adds, skipped };
+    GBLog.info(`BASIC: MERGE results: adds:${adds}, updates:${updates} , skipped: ${skipped}.`);
+    return { title:file, adds, updates, skipped };
   }
 
   /**
