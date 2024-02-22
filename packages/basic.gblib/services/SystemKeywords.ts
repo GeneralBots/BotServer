@@ -783,8 +783,8 @@ export class SystemKeywords {
   */
   public async saveToStorage({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
 
-    if (!fieldsValues){
-      
+    if (!fieldsValues  || fieldsValues.length===0 || !fieldsValues[0]){
+
       return;
     }
 
