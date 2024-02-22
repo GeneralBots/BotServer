@@ -63,7 +63,7 @@ export class KeywordsExpressions {
 
 
   private static getParams = (text: string, names) => {
-    
+
     const items = KeywordsExpressions.splitParamsButIgnoreCommasInDoublequotes(text);
 
     let i = 0;
@@ -249,7 +249,7 @@ export class KeywordsExpressions {
 
     keywords[i++] = [/^\s*end function/gim, '}'];
 
-    keywords[i++] = [/^\s*function +(.*)\((.*)\)/gim, '$1 = ($2) => {\n'];
+    keywords[i++] = [/^\s*function +(.*)\((.*)\)/gim, '$1 = async ($2) => {\n'];
 
     keywords[i++] = [/^\s*for +(.*to.*)/gim, 'for ($1) {'];
 
@@ -426,7 +426,7 @@ export class KeywordsExpressions {
 
     keywords[i++] = [
       /^\s*(DEBUG)(\s*)(.*)/gim,
-      ($0, $1, $2, $3 ) => {
+      ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['text']);
         return `await sys.log ({pid: pid, ${params}})`;
       }
@@ -445,10 +445,10 @@ export class KeywordsExpressions {
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['table', 'criteria']);
 
-        if (params[1]){
+        if (params[1]) {
           return `await sys.deleteFromStorage ({pid: pid, ${params}})`;
         }
-        else        {
+        else {
           return `await sys.deleteFile ({pid: pid, ${params}})`;
         }
       }
@@ -597,7 +597,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*CALL\s*(.*)/gim,
       ($0, $1) => {
-        return `// await ${$1}`;
+        return ` await ${$1}`;
       }
     ];
 
@@ -961,13 +961,13 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(talk)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        
+
         $3 = GBVMService.normalizeQuotes($3);
 
         // // Uses auto quote if this is a phrase with more then one word.
 
         if (!($3.trim().substr(0, 1) === '`' || $3.trim().substr(0, 1) === "'")) {
-           $3 = "`" + $3 + "`";
+          $3 = "`" + $3 + "`";
         }
         return `await dk.talk ({pid: pid, text: ${$3}})`;
       }
@@ -1091,7 +1091,24 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*MERGE\s*(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await sys.merge({pid: pid, file: ${$1}, data: ${$2}, key1: ${$3}})`;
+        return `__reportMerge1 = await sys.merge({pid: pid, file: ${$1}, data: ${$2}, key1: ${$3}})
+        __reportMerge.adds += __reportMerge1.adds;
+        __reportMerge.updates += __reportMerge1.updates;
+        __reportMerge.skipped += __reportMerge1.skipped;
+        REPORT = __report();
+
+        `;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*RESET REPORT\s*/gim,
+      ($0, $1, $2, $3) => {
+        return `
+          __reportMerge.adds = 0;
+          __reportMerge.updates = 0;
+          __reportMerge.skipped = 0;
+          `;
       }
     ];
 
@@ -1169,7 +1186,7 @@ export class KeywordsExpressions {
         $3 = $3.replace(/\"/g, '');
         let fields = $3.split(',');
         const table = fields[0].trim();
-        
+
         fields.shift();
 
         const fieldsAsText = fields.join(',');

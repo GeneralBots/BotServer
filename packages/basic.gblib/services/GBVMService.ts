@@ -631,6 +631,14 @@ export class GBVMService extends GBService {
             }            
           };
 
+          // Line of Business logic.
+          
+          let __reportMerge = {adds:  0, updates: 0, skipped: 0};
+          let __report = () => {
+            return 'Adds: ' + __reportMerge.adds + '. Updates: ' + __reportMerge.updates + '. Skipped: ' + __reportMerge.skipped + '.';
+          };
+          let REPORT = 'No report yet';
+
           try{
             await ensureTokens(true);
             ${ code } 
