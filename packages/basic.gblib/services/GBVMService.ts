@@ -687,7 +687,7 @@ export class GBVMService extends GBService {
     if (!code) return null;
     const keyword = /^\s*SET SCHEDULE (.*)/gim;
     const result = keyword.exec(code);
-    return result ? result[1] : null;
+    return result ? result[1].replace(/\`/, '') : null;
   }
 
   private async getTextFromWord(folder: string, filename: string) {
