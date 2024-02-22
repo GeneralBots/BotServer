@@ -1095,6 +1095,7 @@ export class KeywordsExpressions {
         __reportMerge.adds += __reportMerge1.adds;
         __reportMerge.updates += __reportMerge1.updates;
         __reportMerge.skipped += __reportMerge1.skipped;
+        __reportMerge.title = __reportMerge1.title;
         REPORT = __report();
 
         `;
