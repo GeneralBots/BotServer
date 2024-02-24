@@ -1340,13 +1340,13 @@ export class DialogKeywords {
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
       
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-      let url = urlJoin('/', gbaiName, `${min.botId}.gbdrive`, filename);
-      GBLog.info(`BASIC: Direct send from .gbdrive: ${url} to ${mobile}.`);
+      const fileUrl = urlJoin('/', gbaiName, `${min.botId}.gbdrive`, filename);
+      GBLog.info(`BASIC: Direct send from .gbdrive: ${fileUrl} to ${mobile}.`);
       
       const sys = new SystemKeywords();
       
-      const pathOnly = url.substring(0, url.lastIndexOf('/'));
-      const fileOnly = url.substring(url.lastIndexOf('/') + 1);
+      const pathOnly = fileUrl.substring(0, fileUrl.lastIndexOf('/'));
+      const fileOnly = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
       
       let template = await sys.internalGetDocument(client, baseUrl, pathOnly, fileOnly);
 
