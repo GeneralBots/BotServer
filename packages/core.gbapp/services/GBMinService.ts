@@ -1585,22 +1585,17 @@ export class GBMinService {
 
     await close();
 
-
     let proxies = {};
     await CollectionUtil.asyncForEach(mins, async min => {
 
       let dialogs = {};
       await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
 
-
-        const f = new Function()
-
         dialogs[script] = async (data) => {
           let params;
           if (data) {
             params = JSON.parse(data);
           }
-
           await GBVMService.callVM(script, min, null, null, null, false, params);
         }
       });

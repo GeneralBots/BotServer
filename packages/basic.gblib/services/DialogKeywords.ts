@@ -616,8 +616,12 @@ export class DialogKeywords {
     if (!people) {
       throw new Error(`Invalid access. Check if People sheet has the role ${role} checked.`);
     }
+    else
+    {
+      GBLogEx.info(min, `Allowed access for ${user.userSystemId} on ${role}`);
+      return people;
+    }
 
-    GBLogEx.info(min, `Allowed access for ${user.userSystemId} on ${role}`);
   }
 
 
@@ -1331,15 +1335,20 @@ export class DialogKeywords {
 
     else {
 
-      GBLog.info(`BASIC: Direct send from .gbdrive: ${filename} to ${mobile}.`);
-
+      
       const ext = Path.extname(filename);
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-
+      
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-      let path = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
+      let url = urlJoin('/', gbaiName, `${min.botId}.gbdrive`, filename);
+      GBLog.info(`BASIC: Direct send from .gbdrive: ${url} to ${mobile}.`);
+      
       const sys = new SystemKeywords();
-      let template = await sys.internalGetDocument(client, baseUrl, path, filename);
+      
+      const pathOnly = url.substring(0, url.lastIndexOf('/'));
+      const fileOnly = url.substring(url.lastIndexOf('/') + 1);
+      
+      let template = await sys.internalGetDocument(client, baseUrl, pathOnly, fileOnly);
 
       const driveUrl = template['@microsoft.graph.downloadUrl'];
       const res = await fetch(driveUrl);
