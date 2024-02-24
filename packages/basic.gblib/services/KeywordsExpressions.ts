@@ -346,8 +346,11 @@ export class KeywordsExpressions {
         __totalCalls = 10;
         __next  = true;
         __calls = 0;
-        __index = 0;
         __data = ${$2};
+        __index = 0;
+        if (__data[0] && __data[0]['gbarray']) {
+          __data = __data.slice(1);
+        }        
         __pageMode = __data?.pageMode ? __data.pageMode : "none";
 
         __url = __data?.links?.next?.uri;
