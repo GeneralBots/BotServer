@@ -744,6 +744,13 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(ALLOW ROLE)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        return `${$1} =  await dk.allowRole ({pid: pid, role: ${$4}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*(set filter)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setFilter ({pid: pid, ${$3}})`;
