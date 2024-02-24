@@ -351,8 +351,7 @@ export class KeywordsExpressions {
         __pageMode = __data?.pageMode ? __data.pageMode : "none";
 
         __url = __data?.links?.next?.uri;
-        __seekToken = __data?.links?.self?.headers["
-        "] 
+        __seekToken = __data.links?.self?.headers["MS-ContinuationToken"]; 
         __totalCount = __data?.totalCount ? __data.totalCount : __data.length;
  
         while (__next && __totalCount) 
