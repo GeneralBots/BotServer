@@ -1249,14 +1249,8 @@ export class SystemKeywords {
 
             switch (filter.operator) {
               case '=':
-                if (wholeWord) {
-                  if (v1 === v2) {
-                    filterAcceptCount++;
-                  }
-                } else {
-                  if (v2.indexOf(v1) > -1) {
-                    filterAcceptCount++;
-                  }
+                if (v1 === v2) {
+                  filterAcceptCount++;
                 }
                 break;
               case '<>':
@@ -1265,14 +1259,8 @@ export class SystemKeywords {
                 }
                 break;
               case 'not in':
-                if (wholeWord) {
-                  if (v1 !== v2) {
-                    filterAcceptCount++;
-                  }
-                } else {
-                  if (v2.indexOf(v1) === -1) {
-                    filterAcceptCount++;
-                  }
+                if (v1.indexOf(v2) === -1) {
+                  filterAcceptCount++;
                 }
                 break;
               case 'in':
@@ -1281,7 +1269,7 @@ export class SystemKeywords {
                     filterAcceptCount++;
                   }
                 } else {
-                  if (v2.indexOf(v1) > -1) {
+                  if (v1.indexOf(v2) > -1) {
                     filterAcceptCount++;
                   }
                 }
