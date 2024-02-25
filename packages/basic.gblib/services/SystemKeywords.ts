@@ -1254,20 +1254,14 @@ export class SystemKeywords {
                     filterAcceptCount++;
                   }
                 } else {
-                  if (v1.indexOf(v2) > -1) {
+                  if (v2.indexOf(v1) > -1) {
                     filterAcceptCount++;
                   }
                 }
                 break;
               case '<>':
-                if (wholeWord) {
-                  if (v1 !== v2) {
-                    filterAcceptCount++;
-                  }
-                } else {
-                  if (v1.indexOf(v2) === -1) {
-                    filterAcceptCount++;
-                  }
+                if (v1 !== v2) {
+                  filterAcceptCount++;
                 }
                 break;
               case 'not in':
@@ -1276,7 +1270,7 @@ export class SystemKeywords {
                     filterAcceptCount++;
                   }
                 } else {
-                  if (v1.indexOf(v2) === -1) {
+                  if (v2.indexOf(v1) === -1) {
                     filterAcceptCount++;
                   }
                 }
@@ -1287,7 +1281,7 @@ export class SystemKeywords {
                     filterAcceptCount++;
                   }
                 } else {
-                  if (v1.indexOf(v2) > -1) {
+                  if (v2.indexOf(v1) > -1) {
                     filterAcceptCount++;
                   }
                 }
