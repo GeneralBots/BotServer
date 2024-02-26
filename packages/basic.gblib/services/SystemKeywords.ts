@@ -1259,7 +1259,7 @@ export class SystemKeywords {
                 }
                 break;
               case 'not in':
-                if (v2.indexOf(v1) === -1) {
+                if (v1.indexOf(v2) === -1) {
                   filterAcceptCount++;
                 }
                 break;
@@ -1269,7 +1269,7 @@ export class SystemKeywords {
                     filterAcceptCount++;
                   }
                 } else {
-                  if (v2.indexOf(v1) > -1) {
+                  if (v1.indexOf(v2) > -1) {
                     filterAcceptCount++;
                   }
                 }
