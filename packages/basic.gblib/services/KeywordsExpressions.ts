@@ -734,7 +734,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(set language)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        return `await dk.setLanguage ({pid: pid, ido${$3}})`;
+        return `await dk.setLanguage ({pid: pid, language: ${$3}})`;
       }
     ];
 
