@@ -1246,6 +1246,7 @@ export class SystemKeywords {
           case 'string':
             const v1 = GBConversationalService.removeDiacritics(result.toLowerCase().trim());
             const v2 = GBConversationalService.removeDiacritics(filter.value.toLowerCase().trim());
+            GBLog.info(`FIND filter: ${v1} ${filter.operator} ${v2}.`);
 
             switch (filter.operator) {
               case '=':

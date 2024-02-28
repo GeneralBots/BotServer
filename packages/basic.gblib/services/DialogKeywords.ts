@@ -588,6 +588,7 @@ export class DialogKeywords {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const sec = new SecService();
     await sec.updateUserLocale(user.userId, language);
+    GBLogEx.info(min, `SET LANGUAGE: ${language}.`);
   }
 
   /**
