@@ -1076,6 +1076,7 @@ export class GBConversationalService {
         }
       });
     }
+    GBLog.info(`Tokens (processMessageActivity): ${textProcessed}.`);
 
     // Spells check the input text before translating,
     // keeping fixed tokens as specified in Config.
@@ -1122,8 +1123,7 @@ export class GBConversationalService {
     // reserved tokens specified in Config.
 
     text = await min.conversationalService.translate(min, text, locale);
-    GBLog.verbose(`Translated text (processMessageActivity): ${text}.`);
-
+    
     // Restores all token text back after spell checking and translation.
 
     if (keepTextList) {
@@ -1133,6 +1133,7 @@ export class GBConversationalService {
         text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
       });
     }
+    GBLog.info(`After (processMessageActivity): ${text}.`);
 
     return text;
   }
