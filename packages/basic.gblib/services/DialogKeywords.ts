@@ -32,7 +32,7 @@
 
 'use strict';
 
-import { GBLog } from 'botlib';
+import { GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { ChartServices } from './ChartServices.js';
 import urlJoin from 'url-join';
@@ -61,6 +61,10 @@ const { List, Buttons } = pkg;
 import mime from 'mime-types';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GBUtil } from '../../../src/util.js';
+import SwaggerClient from 'swagger-client';
+import { GBVMService } from './GBVMService.js';
+
+
 
 /**
  * Default check interval for user replay
@@ -317,7 +321,7 @@ export class DialogKeywords {
   }
 
   // https://weblog.west-wind.com/posts/2008/Mar/18/A-simple-formatDate-function-for-JavaScript
-  public async format({pid, value, format}) {
+  public async format({ pid, value, format }) {
 
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const contentLocale = min.core.getParam(
@@ -327,10 +331,10 @@ export class DialogKeywords {
     );
 
     if (!(value instanceof Date)) {
-      value = SystemKeywords.getDateFromLocaleString(pid,value, contentLocale);
+      value = SystemKeywords.getDateFromLocaleString(pid, value, contentLocale);
     }
-    var date:any = new Date(value); //don't change original date
-    
+    var date: any = new Date(value); //don't change original date
+
     if (!format)
       format = "MM/dd/yyyy";
 
@@ -375,7 +379,7 @@ export class DialogKeywords {
    *
    * https://stackoverflow.com/a/1214753/18511
    */
-  public async dateAdd({pid, date, mode, units}) {
+  public async dateAdd({ pid, date, mode, units }) {
 
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const contentLocale = min.core.getParam(
@@ -386,7 +390,7 @@ export class DialogKeywords {
 
     let dateCopy = date;
     if (!(dateCopy instanceof Date)) {
-      dateCopy = SystemKeywords.getDateFromLocaleString(pid,dateCopy, contentLocale);
+      dateCopy = SystemKeywords.getDateFromLocaleString(pid, dateCopy, contentLocale);
     }
     var ret = new Date(dateCopy); //don't change original date
     var checkRollover = function () {
@@ -617,8 +621,7 @@ export class DialogKeywords {
     if (!people) {
       throw new Error(`Invalid access. Check if People sheet has the role ${role} checked.`);
     }
-    else
-    {
+    else {
       GBLogEx.info(min, `Allowed access for ${user.userSystemId} on ${role}`);
       return people;
     }
@@ -948,7 +951,7 @@ export class DialogKeywords {
         const path = DialogKeywords.getGBAIPath(botId);
         let url = `${baseUrl}/drive/root:/${path}:/children`;
 
-        GBLog.info(`Loading HEAR AS .xlsx options from Sheet: ${url}`);
+        GBLogEx.info(min, `Loading HEAR AS .xlsx options from Sheet: ${url}`);
         const res = await client.api(url).get();
 
         // Finds .xlsx specified by arg.
@@ -999,7 +1002,7 @@ export class DialogKeywords {
         }
       } else if (kind === 'file') {
         GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
-        const handle = WebAutomationServices.cyrb53({pid, str: min.botId + answer.filename});
+        const handle = WebAutomationServices.cyrb53({ pid, str: min.botId + answer.filename });
         GBServer.globals.files[handle] = answer;
         result = handle;
       } else if (kind === 'boolean') {
@@ -1120,7 +1123,7 @@ export class DialogKeywords {
       } else if (kind === 'qr-scanner') {
         //https://github.com/GeneralBots/BotServer/issues/171
         GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
-        const handle = WebAutomationServices.cyrb53({pid, str: min.botId + answer.filename});
+        const handle = WebAutomationServices.cyrb53({ pid, str: min.botId + answer.filename });
         GBServer.globals.files[handle] = answer;
         QrScanner.scanImage(GBServer.globals.files[handle])
           .then(result => console.log(result))
@@ -1242,6 +1245,88 @@ export class DialogKeywords {
     }
   }
 
+  public async messageBot({ pid, text }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min,`MESSAGE BOT: ${text}.`);
+
+    const conversation = min['apiConversations'][pid];
+
+    conversation.client.apis.Conversations.Conversations_PostActivity({
+      conversationId: conversation.conversationId,
+      activity: {
+        textFormat: 'plain',
+        text: text,
+        type: 'message',
+        from: {
+          id: 'word',
+          name: 'word'
+        }
+      }
+    });
+    const watermarkMap = conversation.watermarkMap;
+
+    let messages = [];
+
+    const response = await conversation.client.apis.Conversations.Conversations_GetActivities({
+      conversationId: conversation.conversationId,
+      watermark: conversation.watermark
+    });
+    conversation.watermarkMap = response.obj.watermark;
+    let activities = response.obj.activites;
+
+
+    if (activities && activities.length) {
+      activities = activities.filter(m => m.from.id === min.botId && m.type === 'message');
+      if (activities.length) {
+        activities.forEach(activity => {
+          messages.push({ text: activity.text });
+          GBLogEx.info(min, `MESSAGE BOT answer from bot: ${activity.text}`);
+        });
+      }
+    }
+
+    return messages.join('\n');
+  }
+
+
+  public async start({ botId, botApiKey, userSystemId, text }) {
+
+    let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
+    let sec = new SecService();
+    let user = await sec.getUserFromSystemId(userSystemId);
+    if (!user) {
+      user = await sec.ensureUser(
+        min,
+        userSystemId,
+        userSystemId,
+        null,
+        'api',
+        'API User',
+        null
+      );
+    }
+
+
+    const pid = GBVMService.createProcessInfo(user, min, 'api', null);
+    
+    const conversation = min['apiConversations'][pid];
+
+    const client = await new SwaggerClient({
+      spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
+      requestInterceptor: req => {
+        req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
+      }
+    });
+    conversation.client = client;
+    const response = await client.apis.Conversations.Conversations_StartConversation();
+    conversation.conversationId = response.obj.conversationId;
+
+    return  await GBVMService.callVM('start', min, null, pid);
+
+  }
+
+
+
   public static async getProcessInfo(pid: number) {
     const proc = GBServer.globals.processes[pid];
 
@@ -1270,10 +1355,10 @@ export class DialogKeywords {
         min,
         text,
         user.locale ? user.locale : min.core.getParam(min.instance, 'Locale',
-         GBConfigService.get('LOCALE'))
+          GBConfigService.get('LOCALE'))
       );
       GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
-      
+
       await min.conversationalService['sendOnConversation'](min, user, text);
     }
     return { status: 0 };
@@ -1336,19 +1421,19 @@ export class DialogKeywords {
 
     else {
 
-      
+
       const ext = Path.extname(filename);
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-      
+
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const fileUrl = urlJoin('/', gbaiName, `${min.botId}.gbdrive`, filename);
       GBLog.info(`BASIC: Direct send from .gbdrive: ${fileUrl} to ${mobile}.`);
-      
+
       const sys = new SystemKeywords();
-      
+
       const pathOnly = fileUrl.substring(0, fileUrl.lastIndexOf('/'));
       const fileOnly = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
-      
+
       let template = await sys.internalGetDocument(client, baseUrl, pathOnly, fileOnly);
 
       const driveUrl = template['@microsoft.graph.downloadUrl'];

@@ -157,6 +157,9 @@ export class ChatServices {
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
+
+
+    const tools = ""// TODO: add func  list.
  
     const chatPrompt = ChatPromptTemplate.fromPromptMessages([
       systemPrompt,
@@ -171,8 +174,17 @@ export class ChatServices {
 
       QUESTION: """{input}"""
 
+      You have the following tools that you can invoke based on the user inquiry. 
+      Tools: 
+
+        ${tools}
+
       `),
     ]);
+
+
+
+
     const windowMemory = new BufferWindowMemory({
       returnMessages: false,
       memoryKey: 'immediate_history',

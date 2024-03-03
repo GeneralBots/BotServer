@@ -759,6 +759,7 @@ export class GBMinService {
       const gbkbPath = DialogKeywords.getGBAIPath(min.botId, 'gbkb');
       min['vectorStorePath'] = Path.join('work', gbkbPath, 'docs-vectorized');
     }
+    min['apiConversations'] = {};
     min.packages = sysPackages;
 
     // NLP Manager.
@@ -942,7 +943,7 @@ export class GBMinService {
 
     req.body.channelId = req.body.from.channelIdEx === 'whatsapp' ? 'omnichannel' : req.body.channelId;
     req.body.group = req.body.from.group;
-
+    
     // Default activity processing and handler.
 
     const handler = async context => {
@@ -1048,7 +1049,7 @@ export class GBMinService {
             if (startDialog) {
               await sec.setParam(userId, 'welcomed', 'true');
               GBLog.info(`Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
-              await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
+              await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
             }
           }
         }
@@ -1063,6 +1064,12 @@ export class GBMinService {
         // Skips if the bot is talking.
 
         const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
+
+        let pid = step.context.activity['pid'];
+        if (!pid){
+          pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null);
+        }
+        step.context.activity['pid'] = pid;
 
         if (context.activity.type === 'installationUpdate') {
           GBLog.info(`Bot installed on Teams.`);
@@ -1095,7 +1102,7 @@ export class GBMinService {
                 GBLog.info(
                   `Auto start (web 1) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
                 );
-                await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
+                await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
               }
             }
           } else {
@@ -1104,11 +1111,8 @@ export class GBMinService {
             return;
           }
         } else if (context.activity.type === 'message') {
-
           // Processes messages activities.
 
-          const pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null);
-          step.context.activity['pid'] = pid;
 
           await this.processMessageActivity(context, min, step, pid);
         } else if (context.activity.type === 'event') {
@@ -1171,7 +1175,7 @@ export class GBMinService {
       if (startDialog && !min['conversationWelcomed'][step.context.activity.conversation.id]) {
         user.welcomed = true;
         GBLog.info(`Auto start (web 2) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
-        await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
+        await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
       }
     } else if (context.activity.name === 'updateToken') {
       const token = context.activity.data;
@@ -1400,7 +1404,7 @@ export class GBMinService {
         GBLog.info(
           `Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
         );
-        await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, this.deployer, false);
+        await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, pid);
 
         return;
       }
@@ -1418,7 +1422,7 @@ export class GBMinService {
     if (/create dialog|creative dialog|create a dialog|criar diálogo|criar diálogo/gi.test(context.activity.text)) {
       await step.beginDialog('/dialog');
     } else if (isVMCall) {
-      await GBVMService.callVM(context.activity.text, min, step, user, this.deployer, false);
+      await GBVMService.callVM(context.activity.text, min, step, pid);
     } else if (context.activity.text.charAt(0) === '/') {
       const text = context.activity.text;
       const parts = text.split(' ');
@@ -1430,11 +1434,11 @@ export class GBMinService {
 
         await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
       } else if (cmdOrDialogName === '/call') {
-        await GBVMService.callVM(args, min, step, user, this.deployer, false);
+        await GBVMService.callVM(args, min, step, pid);
       } else if (cmdOrDialogName === '/callsch') {
-        await GBVMService.callVM(args, min, null, null, null, false);
+        await GBVMService.callVM(args, min, null, pid);
       } else if (cmdOrDialogName === '/calldbg') {
-        await GBVMService.callVM(args, min, step, user, this.deployer, true);
+        await GBVMService.callVM(args, min, step, pid,  true);
       } else {
         await step.beginDialog(cmdOrDialogName, { args: args });
       }
@@ -1592,11 +1596,8 @@ export class GBMinService {
       await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
 
         dialogs[script] = async (data) => {
-          let params;
-          if (data) {
-            params = JSON.parse(data);
-          }
-          await GBVMService.callVM(script, min, null, null, null, false, params);
+          let params = JSON.parse(data);
+          return await GBVMService.callVM(script, min, null, params.pid, false, params);
         }
       });
 

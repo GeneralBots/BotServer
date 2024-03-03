@@ -940,8 +940,7 @@ export class GBVMService extends GBService {
     text: string,
     min: GBMinInstance,
     step,
-    user: GuaribasUser,
-    deployer: GBDeployer,
+    pid,
     debug: boolean = false,
     params = []
   ) {
@@ -1001,7 +1000,8 @@ export class GBVMService extends GBService {
 
     let code = min.sandBoxMap[text];
     const channel = step ? step.context.activity.channelId : 'web';
-    const pid = GBVMService.createProcessInfo(user, min, channel, text);
+    
+    
     const dk = new DialogKeywords();
     const sys = new SystemKeywords();
     await dk.setFilter({ pid: pid, value: null });

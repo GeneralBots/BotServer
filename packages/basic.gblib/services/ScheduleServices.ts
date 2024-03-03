@@ -139,7 +139,9 @@ export class ScheduleServices extends GBService {
               p => p.instance.instanceId === item.instanceId
             )[0];
             GBLogEx.info(min,`Running .gbdialog word ${item.name} on:${item.schedule}...`);
-            await GBVMService.callVM(script, min, null, null, null, false);
+    
+            const pid = GBVMService.createProcessInfo(null, min, 'batch', null);
+            await GBVMService.callVM(script, min, null, pid);
           };
           (async () => {
             await finalData();
