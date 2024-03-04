@@ -52,6 +52,8 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { SystemKeywords } from './SystemKeywords.js';
 import { Sequelize, QueryTypes } from '@sequelize/core';
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -415,7 +417,7 @@ export class GBVMService extends GBService {
             min.instance,
             'Synchronize Database',
             false
-          );      
+          );
 
           if (sync && shouldSync) {
 
@@ -641,7 +643,7 @@ export class GBVMService extends GBService {
 
           try{
             await ensureTokens(true);
-            ${ code } 
+            ${code} 
           }
           catch(e){
             console.log(e);
@@ -723,41 +725,54 @@ export class GBVMService extends GBService {
   }
 
   public static getMetadata(mainName: string, propertiesText, description) {
-    const properties = [];
+    let properties;
+    if (!propertiesText) {
 
-    if (propertiesText) {
-      const getType = asClause => {
-        if (asClause.indexOf('AS STRING')) {
-          return 'string';
-        } else {
-          return 'enum';
-        }
-      };
-
-      for (let i = 0; i < propertiesText.length; i++) {
-        const propertiesExp = propertiesText[i];
-        const t = getType(propertiesExp[2]);
-        let element = {};
-        element['type'] = t;
-
-        if (t === 'enum') {
-          element['enum'] = propertiesExp[2];
-        } else if (t === 'string') {
-          element['description'] = propertiesExp[2];
-        }
-
-        properties.push(element);
-      }
+      return {}
     }
-
-    let json = {
-      name: `${mainName}`,
-      description: description ? description[1] : '',
-      parameters: {
-        type: 'object',
-        properties: properties ? properties : []
+    const getType = asClause => {
+      if (asClause.indexOf('AS STRING') !== -1) {
+        return 'string';
+      }
+      else if (asClause.indexOf('AS OBJECT') !== -1) {
+        return 'object';
+      }
+      else if (asClause.indexOf('AS INTEGER') !== -1 || asClause.indexOf('AS NUMBER') !== -1) {
+        return 'number';
+      } else {
+        return 'enum';
       }
     };
+
+
+    for (let i = 0; i < propertiesText.length; i++) {
+      const propertiesExp = propertiesText[i];
+      const t = getType(propertiesExp[2]);
+      let element;
+
+      if (t === 'enum') {
+        element = z.enum(propertiesExp[2].split(','));
+      } else if (t === 'string') {
+        element = z.string();
+      } else if (t === 'object') {
+        element = z.quotelessJson({});
+      } else if (t === 'number') {
+        element = z.number();
+      }
+      element.describe(propertiesExp[3]);
+      element['type'] = t;
+      properties[propertiesExp[1]] = element;
+    }
+
+
+    let json = {
+      type: "function",
+      function: {
+        name: `${mainName}`,
+        description: description ? description[1] : '',
+        parameters: zodToJsonSchema(z.object(properties))
+      }
+    }
 
     return json;
   }
@@ -766,15 +781,15 @@ export class GBVMService extends GBService {
 
     let required = line.indexOf('*') !== -1;
     let unique = /\bunique\b/gi.test(line);
-    let primaryKey  = /\bkey\b/gi.test(line);
-    let autoIncrement  = /\bauto\b/gi.test(line);
+    let primaryKey = /\bkey\b/gi.test(line);
+    let autoIncrement = /\bauto\b/gi.test(line);
 
-    if (primaryKey){
+    if (primaryKey) {
       autoIncrement = true;
       unique = true;
       required = true;
     }
-    
+
     line = line.replace('*', '');
 
     const fieldRegExp = /^\s*(\w+)\s*(\w+)(?:\((.*)\))?/gim;
@@ -783,9 +798,11 @@ export class GBVMService extends GBService {
     const name = reg[1];
     const t = reg[2];
 
-    let definition = { allowNull: !required,
-       unique: unique, primaryKey: primaryKey,
-       autoIncrement: autoIncrement };
+    let definition = {
+      allowNull: !required,
+      unique: unique, primaryKey: primaryKey,
+      autoIncrement: autoIncrement
+    };
     definition['type'] = t;
 
     if (reg[3]) {
@@ -829,7 +846,7 @@ export class GBVMService extends GBService {
 
       line = line.replace(/^\s*\d+\s*/gi, '');
 
-      if (!table && !talk){
+      if (!table && !talk) {
         for (let j = 0; j < keywords.length; j++) {
           line = line.replace(keywords[j][0], keywords[j][1]); // TODO: Investigate delay here.
         }
@@ -838,7 +855,7 @@ export class GBVMService extends GBService {
       // Pre-process "off-line" static KEYWORDS.
 
       let emmit = true;
-      const params = /^\s*PARAM\s*(.*)\s*AS\s*(.*)/gim;
+      const params = /^\s*PARAM\s*(.*)\s*AS\s*(.*)\s*LIKE\s*(.*)/gim;
       const param = params.exec(line);
       if (param) {
         properties.push(param);
@@ -856,7 +873,7 @@ export class GBVMService extends GBService {
       let endTalkReg = endTalkKeyword.exec(line);
       if (endTalkReg && talk) {
         line = talk + '`})';
-        
+
         talk = null;
         emmit = true;
       }
@@ -912,8 +929,8 @@ export class GBVMService extends GBService {
       let add = emmit ? line.split(/\r\n|\r|\n/).length : 0;
       current = current + (add ? add : 0);
 
-      if (emmit){
-        emmitIndex ++;
+      if (emmit) {
+        emmitIndex++;
         map[emmitIndex] = current;
         outputLines[emmitIndex - 1] = line;
       }
@@ -1000,15 +1017,15 @@ export class GBVMService extends GBService {
 
     let code = min.sandBoxMap[text];
     const channel = step ? step.context.activity.channelId : 'web';
-    
-    
+
+
     const dk = new DialogKeywords();
     const sys = new SystemKeywords();
     await dk.setFilter({ pid: pid, value: null });
 
 
     // Find all tokens in .gbot Config.
-    
+
     const strFind = ' Client ID';
     const tokens = await min.core['findParam'](min.instance, strFind);
     let tokensList = [];

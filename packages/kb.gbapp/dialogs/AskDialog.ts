@@ -199,7 +199,8 @@ export class AskDialog extends IGBDialog {
         if (!text && step.context.activity.channelId === 'msteams') {
           const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
           if (startDialog) {
-            await GBVMService.callVM(startDialog.toLowerCase().trim(), min, step, user, this.deployer, false);
+            const pid = step.context.activity['pid'];
+            await GBVMService.callVM(startDialog.toLowerCase().trim(), min, step, pid);
           }
 
           return await step.endDialog();
@@ -229,7 +230,7 @@ export class AskDialog extends IGBDialog {
 
         // TODO: https://github.com/GeneralBots/BotServer/issues/9 user.lastQuestion = text;
 
-        const resultsA = await service.ask(min, text, searchScore, null /* user.subjects */);
+        const resultsA = await service.ask(min,step.context.activity['pid'], text, searchScore, null /* user.subjects */);
 
         // If there is some result, answer immediately.
 
@@ -343,7 +344,8 @@ export class AskDialog extends IGBDialog {
     if (text.endsWith('.docx')) {
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
       await step.endDialog();
-      return await GBVMService.callVM(mainName, min, step, user, this.deployer, false);
+      const pid = step.context.activity['pid'];
+      return await GBVMService.callVM(mainName, min, step, pid);
     } else if (text.startsWith('/')) {
       return await step.replaceDialog(text, { answer: answer });
     } else {
@@ -445,8 +447,9 @@ export class AskDialog extends IGBDialog {
           );
 
           await step.endDialog();
+          const pid = step.context.activity['pid'];
 
-          await GBVMService.callVM(dialogName.toLowerCase(), min, step, user, this.deployer, false);
+          await GBVMService.callVM(dialogName.toLowerCase(), min, step, pid);
         }
       }
     ];

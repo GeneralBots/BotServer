@@ -1011,6 +1011,13 @@ export class GBMinService {
             });
           }
         }
+
+        let pid = step.context.activity['pid'];
+        if (!pid){
+          pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null);
+        }
+        step.context.activity['pid'] = pid;
+
         // Required for MSTEAMS handling of persisted conversations.
 
         if (step.context.activity.channelId === 'msteams') {
@@ -1065,12 +1072,7 @@ export class GBMinService {
 
         const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
 
-        let pid = step.context.activity['pid'];
-        if (!pid){
-          pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null);
-        }
-        step.context.activity['pid'] = pid;
-
+        
         if (context.activity.type === 'installationUpdate') {
           GBLog.info(`Bot installed on Teams.`);
         } else if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {
@@ -1151,6 +1153,7 @@ export class GBMinService {
    * Called to handle all event sent by .gbui clients.
    */
   private async processEventActivity(min, user, context, step: GBDialogStep) {
+    const pid = step.context.activity['pid'];
     if (context.activity.name === 'whoAmI') {
       await step.beginDialog('/whoAmI');
     } else if (context.activity.name === 'showSubjects') {

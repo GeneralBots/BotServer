@@ -425,14 +425,15 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.storageDialect = 'mssql';
     instance.storageServer = `${storageServer}.database.windows.net`;
 
-    GBLog.info(`Deploying Search...`);
-    const searchName = `${name}-search`.toLowerCase();
-    await this.createSearch(name, searchName, instance.cloudLocation);
-    const searchKeys = await this.searchClient.adminKeys.get(name, searchName);
-    instance.searchHost = `${searchName}.search.windows.net`;
-    instance.searchIndex = 'azuresql-index';
-    instance.searchIndexer = 'azuresql-indexer';
-    instance.searchKey = searchKeys.primaryKey;
+    // TODO: Enable in .env
+    // GBLog.info(`Deploying Search...`);
+    // const searchName = `${name}-search`.toLowerCase();
+    // await this.createSearch(name, searchName, instance.cloudLocation);
+    // const searchKeys = await this.searchClient.adminKeys.get(name, searchName);
+    // instance.searchHost = `${searchName}.search.windows.net`;
+    // instance.searchIndex = 'azuresql-index';
+    // instance.searchIndexer = 'azuresql-indexer';
+    // instance.searchKey = searchKeys.primaryKey;
 
     // GBLog.info(`Deploying Speech...`);
     // const speech = await this.createSpeech(name, `${name}speech`, instance.cloudLocation);

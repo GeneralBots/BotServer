@@ -269,6 +269,7 @@ export class KBService implements IGBKBService {
 
   public async ask(
     min: GBMinInstance,
+    pid, 
     query: string,
     searchScore: number,
     subjects: GuaribasSubject[]
@@ -375,7 +376,7 @@ export class KBService implements IGBKBService {
           returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
       );
 
-      return await ChatServices.answerByGPT(min,
+      return await ChatServices.answerByGPT(min,pid,
         query,
         searchScore,
         subjects

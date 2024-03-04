@@ -31,11 +31,9 @@
 'use strict';
 
 import { GBMinInstance } from 'botlib';
-import OpenAI from "openai";
-import { OpenAIChat } from 'langchain/llms/openai';
 import { CallbackManager } from 'langchain/callbacks';
 import { ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate } from 'langchain/prompts';
-import { LLMChain } from 'langchain/chains';
+import { ConversationChain, LLMChain } from 'langchain/chains';
 import { BufferWindowMemory } from 'langchain/memory';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
@@ -44,6 +42,10 @@ import * as Fs from 'fs';
 import { HNSWLib } from 'langchain/vectorstores/hnswlib';
 import { GuaribasSubject } from '../../kb.gbapp/models/index.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
+import { ChatOpenAI } from "@langchain/openai";
+import { JsonOutputFunctionsParser } from 'langchain/dist/output_parsers/openai_functions.js';
+import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
+
 
 export class ChatServices {
 
@@ -60,19 +62,39 @@ export class ChatServices {
       .replaceAll('\n', ' ');
   }
 
+  /**
+   * Generate text
+   *
+   * CONTINUE keword.
+   *
+   * result = CONTINUE text
+   *
+   */
+  public static async continue(min: GBMinInstance, text: string, chatId) {
 
-  public static async sendMessage(min: GBMinInstance, text: string) {
-    let key;
-    if (process.env.OPENAI_KEY) {
-      key = process.env.OPENAI_KEY;
-    }
-    else {
-      key = min.core.getParam(min.instance, 'Open AI Key', null);
+  }
+
+
+  public static async answerByGPT(min: GBMinInstance, pid,
+    query: string,
+    searchScore: number,
+    subjects: GuaribasSubject[]
+  ) {
+
+    if (!process.env.OPENAI_KEY) {
+      return { answer: undefined, questionId: 0 };
     }
 
-    if (!key) {
-      throw new Error('Open AI Key not configured in .gbot.');
-    }
+    const systemPrompt = SystemMessagePromptTemplate.fromTemplate(
+      `You are $${min.botId}`);
+
+    const contentLocale = min.core.getParam(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+
     let functions = [];
 
     // Adds .gbdialog as functions if any to GPT Functions.
@@ -88,82 +110,17 @@ export class ChatServices {
 
     });
 
-    // Calls Model.
 
-    const openai = new OpenAI({
-      apiKey: key
-    });
-    const chatCompletion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: text }],
-      functions: functions
-    });
-    return chatCompletion.choices[0].message.content;
-  }
+    let SystemPromptTailored = ''; // TODO: Load from user context.
 
+    // Generates function definition for each function
+    // in plain text to be used in system prompt.
 
+    let functionDef = Object.keys(functions)
+      .map((toolname) => `${toolname}: ${functions[toolname].description}`)
+      .join("\n");
 
-  /**
-   * Generate text
-   *
-   * CONTINUE keword.
-   *
-   * result = CONTINUE text
-   *
-   */
-  public static async continue(min: GBMinInstance, text: string, chatId) {
-    let key;
-    if (process.env.OPENAI_KEY) {
-      key = process.env.OPENAI_KEY;
-    }
-    else {
-      key = min.core.getParam(min.instance, 'Open AI Key', null);
-    }
-
-    if (!key) {
-      throw new Error('Open AI Key not configured in .gbot.');
-    }
-    // const openai = new OpenAI({
-    //   apiKey: key
-    // });
-    // const chatCompletion = await openai.chat.completions.create({
-    //   model: "gpt-3.5-turbo",
-    //   messages: [{ role: "user", content: text }]
-
-    // });
-    // return chatCompletion.choices[0].message.content;
-  }
-
-  public static async answerByGPT(min: GBMinInstance,
-    query: string,
-    searchScore: number,
-    subjects: GuaribasSubject[]
-  ) {
-
-    if (!process.env.OPENAI_KEY) {
-      return { answer: undefined, questionId: 0 };
-    }
-
-
-    const contextVectorStore = min['vectorStore'];
-    const question = query.trim().replaceAll('\n', ' ');
-    const context = await this.getRelevantContext(contextVectorStore, question, 1);
-
-    const systemPrompt = SystemMessagePromptTemplate.fromTemplate(
-    `You are $${min.botId}`);
-
-    const contentLocale = min.core.getParam(
-      min.instance,
-      'Default Content Language',
-      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
-    );
-
-
-    const tools = ""// TODO: add func  list.
- 
-    const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-      systemPrompt,
-      HumanMessagePromptTemplate.fromTemplate(`Answer in ${contentLocale}. 
+    let promptTemplate = `Answer in ${contentLocale}. 
       You have access to the context (RELEVANTDOCS) provided by the user.
       
       When answering think about whether the question in RELEVANTDOCS, but never mention
@@ -174,16 +131,18 @@ export class ChatServices {
 
       QUESTION: """{input}"""
 
+      ${SystemPromptTailored}
+
       You have the following tools that you can invoke based on the user inquiry. 
       Tools: 
 
-        ${tools}
+      ${functionDef}
 
-      `),
-    ]);
+      `;
 
-
-
+    const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+      systemPrompt,
+      HumanMessagePromptTemplate.fromTemplate(promptTemplate),]);
 
     const windowMemory = new BufferWindowMemory({
       returnMessages: false,
@@ -192,36 +151,53 @@ export class ChatServices {
       k: 2,
     });
 
-    const callbackManager = CallbackManager.fromHandlers({
-      // This function is called when the LLM generates a new token (i.e., a prediction for the next word)
-      async handleLLMNewToken(token: string) {
-        
-      },
+    const llm = new ChatOpenAI({
+      modelName: "gpt-3.5-turbo-0125",
+      temperature: 0,
     });
-        
-    const llm = new OpenAIChat({
-      streaming: true,
-      callbackManager,
-      modelName: 'gpt-3.5-turbo',
+
+    const llmWithTools = llm.bind({
+      tools: functions
     });
-    
+
     const chain = new LLMChain({
-      prompt: chatPrompt,
       memory: windowMemory,
-      llm,
+      prompt: chatPrompt,
+      llm: llmWithTools as any,
     });
 
-    const response = await chain.call({
-      input: question,
-      context,
-      history: '',
-      immediate_history: '',
-    });
-    if (response) {
+    const contextVectorStore = min['vectorStore'];
+    const question = query.trim().replaceAll('\n', ' ');
+    const context = await this.getRelevantContext(contextVectorStore, question, 1);
 
-      return { answer: response.text, questionId: 0 };
+    let prompt;
+
+    // allow the LLM to iterate until it finds a final answer
+    while (true) {
+      const response = await chain.call({
+        input: question,
+        context,
+        history: '',
+        immediate_history: '',
+      });
+
+      // add this to the prompt
+      prompt += response;
+
+      const action = response.match(/Action: (.*)/)?.[1];
+      if (action) {
+        // execute the action specified by the LLMs
+        const actionInput = response.match(/Action Input: "?(.*)"?/)?.[1];
+        const text = '';
+            
+        const result =  await GBVMService.callVM(actionInput, min, false, pid,false, [text]);
+
+
+        prompt += `Observation: ${result}\n`;
+      } else {
+        return response.match(/Final Answer: (.*)/)?.[1];
+      }
     }
-
     return { answer: undefined, questionId: 0 };
   }
 
