@@ -81,7 +81,7 @@ export class ChatServices {
     subjects: GuaribasSubject[]
   ) {
 
-    if (!process.env.OPENAI_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       return { answer: undefined, questionId: 0 };
     }
 
@@ -99,12 +99,13 @@ export class ChatServices {
 
     // Adds .gbdialog as functions if any to GPT Functions.
 
-    await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
+    await CollectionUtil.asyncForEach(Object.keys(min.scriptMap), async script => {
       const path = DialogKeywords.getGBAIPath(min.botId, "gbdialog", null);
-      const localFolder = Path.join('work', path, `${script}.json`);
+      const functionJSON = Path.join('work', path, `${script}.json`);
 
-      if (Fs.existsSync(localFolder)) {
-        const func = Fs.readFileSync(localFolder).toJSON();
+      if (Fs.existsSync(functionJSON)) {
+        const func = JSON.parse(Fs.readFileSync(functionJSON, 'utf8'));
+        
         functions.push(func);
       }
 
@@ -117,7 +118,7 @@ export class ChatServices {
     // in plain text to be used in system prompt.
 
     let functionDef = Object.keys(functions)
-      .map((toolname) => `${toolname}: ${functions[toolname].description}`)
+      .map((toolname) => `${functions[toolname].function.name}: ${functions[toolname].function.description}`)
       .join("\n");
 
     let promptTemplate = `Answer in ${contentLocale}. 
@@ -152,6 +153,7 @@ export class ChatServices {
     });
 
     const llm = new ChatOpenAI({
+      openAIApiKey: process.env.OPENAI_API_KEY,
       modelName: "gpt-3.5-turbo-0125",
       temperature: 0,
     });

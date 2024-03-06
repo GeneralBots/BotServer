@@ -266,7 +266,6 @@ export class GBVMService extends GBService {
       let connections = null;
       if (Fs.existsSync(filePath)) {
         connections = JSON.parse(Fs.readFileSync(filePath, 'utf8'));
-
       }
       tableDef.forEach(async t => {
 
@@ -725,19 +724,22 @@ export class GBVMService extends GBService {
   }
 
   public static getMetadata(mainName: string, propertiesText, description) {
-    let properties;
-    if (!propertiesText) {
-
+    let properties = {};
+    if (!propertiesText || !description) {
+      
       return {}
     }
     const getType = asClause => {
-      if (asClause.indexOf('AS STRING') !== -1) {
+
+      asClause = asClause.trim().toUpperCase();
+
+      if (asClause.indexOf('STRING') !== -1) {
         return 'string';
       }
-      else if (asClause.indexOf('AS OBJECT') !== -1) {
+      else if (asClause.indexOf('OBJECT') !== -1) {
         return 'object';
       }
-      else if (asClause.indexOf('AS INTEGER') !== -1 || asClause.indexOf('AS NUMBER') !== -1) {
+      else if (asClause.indexOf('INTEGER') !== -1 || asClause.indexOf('NUMBER') !== -1) {
         return 'number';
       } else {
         return 'enum';
@@ -755,13 +757,16 @@ export class GBVMService extends GBService {
       } else if (t === 'string') {
         element = z.string();
       } else if (t === 'object') {
-        element = z.quotelessJson({});
+        element = z.string();
       } else if (t === 'number') {
         element = z.number();
+      } else {
+        GBLog.warn(`Element type invalid specified on .docx: ${propertiesExp[0]}`);
       }
+
       element.describe(propertiesExp[3]);
       element['type'] = t;
-      properties[propertiesExp[1]] = element;
+      properties[propertiesExp[1].trim()] = element;
     }
 
 
@@ -862,7 +867,7 @@ export class GBVMService extends GBService {
         emmit = false;
       }
 
-      const descriptionKeyword = /^\s*DESCRIPTION\s*\"(.*)\"/gim;
+      const descriptionKeyword = /^\s*DESCRIPTION\s(.*)/gim;
       let descriptionReg = descriptionKeyword.exec(line);
       if (descriptionReg) {
         description = descriptionReg[1];

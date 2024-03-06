@@ -314,7 +314,7 @@ export class KBService implements IGBKBService {
         query = `${query} ${text}`;
       }
     }
-
+    let returnedScore = 0;
     const key = instance.searchKey ? instance.searchKey :
       GBServer.globals.minBoot.instance.searchKey;
     const host = instance.searchHost ? instance.searchHost :
@@ -346,7 +346,7 @@ export class KBService implements IGBKBService {
         top: 1
       });
 
-      let returnedScore = 0;
+      
 
       // Searches via Search (Azure Search).
 
@@ -370,19 +370,18 @@ export class KBService implements IGBKBService {
           }
         }
       }
-
-      GBLog.info(
-        `SEARCH returned LOW level score, calling GPT
-          returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
-      );
-
-      return await ChatServices.answerByGPT(min,pid,
-        query,
-        searchScore,
-        subjects
-      );
-     
     }
+    GBLog.info(
+      `SEARCH returned LOW level score, calling GPT
+        returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
+    );
+
+    return await ChatServices.answerByGPT(min,pid,
+      query,
+      searchScore,
+      subjects
+    );
+
   }
 
 
