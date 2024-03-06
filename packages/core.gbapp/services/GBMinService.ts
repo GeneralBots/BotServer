@@ -1407,7 +1407,7 @@ export class GBMinService {
         GBLog.info(
           `Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
         );
-        await GBVMService.callVM(startDialog.toLowerCase(), min, step, user, pid);
+        await GBVMService.callVM(startDialog.toLowerCase(), min, step,pid);
 
         return;
       }
