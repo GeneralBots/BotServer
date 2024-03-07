@@ -1112,6 +1112,7 @@ export class WhatsappDirectLine extends GBService {
           return; // EXIT HERE.
         } else {
           GBLog.warn(`Group: ${group} not associated with botId:${botId}.`);
+          return;
         }
       }
 
