@@ -446,6 +446,10 @@ export class GBMinService {
     if (!res) {
       return 'GeneralBots';
     }
+    if (req.NumMedia)
+    {
+      return 'Official';
+    }
     return req.body.phone_id ? 'maytapi' : 'chatapi';
   }
 

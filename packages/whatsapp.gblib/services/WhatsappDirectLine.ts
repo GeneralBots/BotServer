@@ -52,6 +52,8 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import e from 'express';
 import { GBUtil } from '../../../src/util.js';
 const { WAState, List, Buttons, Client, MessageMedia } = pkg;
+import twilio from 'twilio';
+const { MessagingResponse } = twilio.twiml;
 
 /**
  * Support for Whatsapp.
@@ -104,8 +106,8 @@ export class WhatsappDirectLine extends GBService {
     this.provider =
       whatsappServiceKey === 'internal'
         ? 'GeneralBots'
-        : whatsappServiceNumber.indexOf(';') > -1
-          ? 'maytapi'
+        : whatsappServiceKey.indexOf('official') > -1
+          ? 'official'
           : whatsappServiceKey !== 'internal'
             ? 'graphapi'
             : 'chatapi';
@@ -132,6 +134,12 @@ export class WhatsappDirectLine extends GBService {
     let options: any;
 
     switch (this.provider) {
+      case 'Official':
+        const accountSid = process.env.TWILIO_ACCOUNT_SID;
+        const authToken = process.env.TWILIO_AUTH_TOKEN;
+        this.customClient = twilio(accountSid, authToken);
+
+      break;
       case 'GeneralBots':
         const minBoot = GBServer.globals.minBoot;
         // Initialize the browser using a local profile for each bot.
@@ -872,6 +880,21 @@ export class WhatsappDirectLine extends GBService {
       let options;
 
       switch (this.provider) {
+
+        case 'Official':
+          const botNumber = this.min.core.getParam(this.min.instance, 'Bot Number', null);
+          if (to.charAt(0) !== '+')          {
+            to = `+${to}`
+          }
+          await this.customClient.messages
+            .create({
+               body: msg,
+               from: `whatsapp:${botNumber}`,
+               to: `whatsapp:${to}`
+               // TODO: mediaUrl.
+             });
+            
+
         case 'GeneralBots':
           to = to.replace('+', '');
           if (to.indexOf('@') == -1) {
@@ -953,6 +976,15 @@ export class WhatsappDirectLine extends GBService {
       let text;
 
       switch (provider) {
+
+        case 'Official':
+
+        const { body } = req;
+
+        let message;
+      
+        break;
+
         case 'GeneralBots':
           // Ignore E2E messages and status updates.
 

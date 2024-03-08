@@ -165,7 +165,7 @@ export class ChatServices {
     const chain = new LLMChain({
       memory: windowMemory,
       prompt: chatPrompt,
-      llm: llmWithTools as any,
+      llm: llm as any,
     });
 
     const contextVectorStore = min['vectorStore'];
