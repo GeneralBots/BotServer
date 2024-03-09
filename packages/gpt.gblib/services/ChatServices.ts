@@ -81,6 +81,8 @@ export class ChatServices {
     subjects: GuaribasSubject[]
   ) {
 
+    return { answer: undefined, questionId: 0 };
+
     if (!process.env.OPENAI_API_KEY) {
       return { answer: undefined, questionId: 0 };
     }

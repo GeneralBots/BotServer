@@ -105,12 +105,7 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceUrl = whatsappServiceUrl;
     this.provider =
       whatsappServiceKey === 'internal'
-        ? 'GeneralBots'
-        : whatsappServiceKey.indexOf('official') > -1
-          ? 'official'
-          : whatsappServiceKey !== 'internal'
-            ? 'graphapi'
-            : 'chatapi';
+        ? 'GeneralBots' : 'official';
     this.groupId = groupId;
   }
 
@@ -134,12 +129,12 @@ export class WhatsappDirectLine extends GBService {
     let options: any;
 
     switch (this.provider) {
-      case 'Official':
+      case 'official':
         const accountSid = process.env.TWILIO_ACCOUNT_SID;
         const authToken = process.env.TWILIO_AUTH_TOKEN;
-        this.customClient = twilio(accountSid, authToken);
+        this.customClient = twilio(null, authToken, { accountSid: accountSid });
 
-      break;
+        break;
       case 'GeneralBots':
         const minBoot = GBServer.globals.minBoot;
         // Initialize the browser using a local profile for each bot.
@@ -208,59 +203,6 @@ export class WhatsappDirectLine extends GBService {
         setUrl = false;
 
         break;
-      case 'chatapi':
-        options = {
-          method: 'POST',
-          url: urlJoin(this.whatsappServiceUrl, 'webhook'),
-          timeout: 10000,
-          qs: {
-            token: this.whatsappServiceKey,
-            webhookUrl: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`,
-            set: true
-          },
-          headers: {
-            'cache-control': 'no-cache'
-          }
-        };
-        break;
-      case 'official':
-        url = urlJoin(this.whatsappServiceUrl, 'webhook');
-        options = {
-          method: 'POST',
-          url: url,
-          timeout: 10000,
-          qs: {
-            token: this.whatsappServiceKey,
-            webhookUrl: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`,
-            set: true
-          },
-          headers: {
-            'cache-control': 'no-cache'
-          }
-        };
-
-        break;
-      case 'maytapi':
-        const phoneId = this.whatsappServiceNumber.split(';')[0];
-        let productId = this.whatsappServiceNumber.split(';')[1];
-        url = `${this.INSTANCE_URL}/${productId}/${phoneId}/config`;
-        body = {
-          webhook: `${GBServer.globals.publicAddress}/webhooks/whatsapp/${this.botId}`,
-          ack_delivery: false
-        };
-        WhatsappDirectLine.phones[phoneId] = this.botId;
-
-        options = {
-          url: url,
-          method: 'POST',
-          body: body,
-          headers: {
-            'x-maytapi-key': this.whatsappServiceKey,
-            'Content-Type': 'application/json'
-          },
-          json: true
-        };
-        break;
     }
 
     if (setUrl && options && this.whatsappServiceUrl) {
@@ -301,7 +243,7 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public static providerFromRequest(req: any) {
-    return req.body.messages ? 'chatapi' : req.body.message ? 'maytapi' : req.body.message ? 'graphapi' : 'GeneralBots';
+    return req.body.ProfileName ? 'official' : 'GeneralBots';
   }
 
   public async received(req, res) {
@@ -313,6 +255,14 @@ export class WhatsappDirectLine extends GBService {
     let attachments = null;
 
     switch (provider) {
+
+      case 'official':
+        message = req.body;
+        from = req.body.From.replace(/whatsapp\:\+/gi, '');
+        to = req.body.To.replace(/whatsapp\:\+/gi, '');
+        text = req.body.Body;
+        fromName = req.body.ProfileName;
+        break;
       case 'GeneralBots':
         message = req;
         to = message.to.endsWith('@g.us') ? message.to.split('@')[0] : message.to.split('@')[0];
@@ -355,44 +305,6 @@ export class WhatsappDirectLine extends GBService {
         }
 
         break;
-
-      case 'chatapi':
-        message = req.body.messages[0];
-        text = message.body;
-        from = req.body.messages[0].author.split('@')[0];
-        fromName = req.body.messages[0].senderName;
-
-        if (message.type !== 'chat') {
-          attachments = [];
-          attachments.push({
-            name: 'uploaded',
-            contentType: 'application/octet-stream',
-            contentUrl: message.body
-          });
-        }
-
-        if (req.body.messages[0].fromMe) {
-          res.end();
-
-          return; // Exit here.
-        }
-
-        break;
-      case 'graphapi':
-        break;
-
-      case 'maytapi':
-        message = req.body.message;
-        text = message.text;
-        from = req.body.user.phone;
-        fromName = req.body.user.name;
-
-        if (req.body.message.fromMe) {
-          res.end();
-
-          return; // Exit here.
-        }
-        break;
     }
 
     text = text.replace(/\@\d+ /gi, '');
@@ -406,11 +318,7 @@ export class WhatsappDirectLine extends GBService {
       botShortcuts = botShortcuts.split(' ');
     }
 
-    if (provider === 'chatapi') {
-      if (message.chatName.charAt(0) !== '+') {
-        group = message.chatName;
-      }
-    } else if (provider === 'GeneralBots') {
+    if (provider === 'GeneralBots') {
       if (message.from.endsWith('@g.us')) {
         group = message.from;
       }
@@ -749,66 +657,6 @@ export class WhatsappDirectLine extends GBService {
         await this.customClient.sendMessage(to, attachment, { caption: caption });
         break;
 
-      case 'chatapi':
-        options = {
-          method: 'POST',
-          url: urlJoin(this.whatsappServiceUrl, 'sendFile'),
-          qs: {
-            token: this.whatsappServiceKey
-          },
-          json: true,
-          body: {
-            phone: to,
-            body: url,
-            filename: filename,
-            caption: caption
-          },
-          headers: {
-            'cache-control': 'no-cache'
-          }
-        };
-
-        break;
-      case 'maytapi':
-        let contents = 0;
-        let body = {
-          to_number: to,
-          type: 'media',
-          message: url,
-          text: caption
-        };
-
-        let phoneId = this.whatsappServiceNumber.split(';')[0];
-        let productId = this.whatsappServiceNumber.split(';')[1];
-
-        options = {
-          url: `${this.INSTANCE_URL}/${productId}/${phoneId}/sendMessage`,
-          method: 'post',
-          json: true,
-          body,
-          headers: {
-            'Content-Type': 'application/json',
-            'x-maytapi-key': this.whatsappServiceKey
-          }
-        };
-
-        break;
-
-      case 'graphapi':
-        url = `https://graph.facebook.com/v15.0/${phoneId}/messages`;
-        options = {
-          method: 'POST',
-          timeout: 10000,
-          headers: {
-            token: `Bearer `,
-            'Content-Type': 'application/json'
-          },
-          body: {
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: phoneId
-          }
-        };
     }
 
     if (options) {
@@ -831,24 +679,6 @@ export class WhatsappDirectLine extends GBService {
 
         break;
 
-      case 'chatapi':
-        options = {
-          method: 'POST',
-          url: urlJoin(this.whatsappServiceUrl, 'sendPTT'),
-          qs: {
-            token: this.whatsappServiceKey,
-            phone: chatId ? null : to,
-            chatId: chatId,
-            body: url
-          },
-          headers: {
-            'cache-control': 'no-cache'
-          }
-        };
-
-        break;
-      case 'maytapi':
-        throw GBError.create('Sending audio in Maytapi not supported.');
     }
 
     if (options) {
@@ -881,19 +711,27 @@ export class WhatsappDirectLine extends GBService {
 
       switch (this.provider) {
 
-        case 'Official':
+        case 'official':
           const botNumber = this.min.core.getParam(this.min.instance, 'Bot Number', null);
-          if (to.charAt(0) !== '+')          {
+          if (to.charAt(0) !== '+') {
             to = `+${to}`
           }
-          await this.customClient.messages
-            .create({
-               body: msg,
-               from: `whatsapp:${botNumber}`,
-               to: `whatsapp:${to}`
-               // TODO: mediaUrl.
-             });
-            
+
+          let messages = msg.match(/(.|[\r\n]){1,1000}/g)
+
+          await CollectionUtil.asyncForEach(messages, async msg => {
+            await GBUtil.sleep(3000);
+            await this.customClient.messages
+              .create({
+                body: msg,
+                from: `whatsapp:${botNumber}`,
+                to: `whatsapp:${to}`
+                // TODO: mediaUrl.
+              });
+
+          });
+        
+        break;
 
         case 'GeneralBots':
           to = to.replace('+', '');
@@ -913,38 +751,6 @@ export class WhatsappDirectLine extends GBService {
 
           break;
 
-        case 'chatapi':
-          options = {
-            method: 'POST',
-            url: urlJoin(this.whatsappServiceUrl, 'message'),
-            qs: {
-              token: this.whatsappServiceKey,
-              phone: chatId ? null : to,
-              chatId: chatId,
-              body: msg
-            },
-            headers: {
-              'cache-control': 'no-cache'
-            }
-          };
-          break;
-        case 'maytapi':
-          let phoneId = this.whatsappServiceNumber.split(';')[0];
-          let productId = this.whatsappServiceNumber.split(';')[1];
-          url = `${this.INSTANCE_URL}/${productId}/${phoneId}/sendMessage`;
-
-          options = {
-            method: 'post',
-            json: true,
-            body: { type: 'text', message: msg, to_number: to },
-            headers: {
-              'Content-Type': 'application/json',
-              'x-maytapi-key': this.whatsappServiceKey
-            }
-          };
-          break;
-        case 'graphapi':
-          break;
       }
 
       if (options) {
@@ -963,27 +769,28 @@ export class WhatsappDirectLine extends GBService {
     await this.sendToDevice(to, text, conversationId);
   }
 
-  private async WhatsAppCallback(req, res) {
+  private async WhatsAppCallback(req, res, botId = null) {
     try {
       if (!req.body && req.type !== 'ptt') {
         return;
       }
 
-      let provider = GBMinService.isChatAPI(req, res);
+      let provider = GBMinService.getProviderName(req, res);
       let id;
       let senderName;
-      let botId;
       let text;
 
       switch (provider) {
 
-        case 'Official':
+        case 'official':
 
-        const { body } = req;
+          const { body } = req;
 
-        let message;
-      
-        break;
+          id = body.From.replace(/whatsapp\:\+/, '');
+          senderName = body.ProfileName;
+          text = body.Body;
+
+          break;
 
         case 'GeneralBots':
           // Ignore E2E messages and status updates.
@@ -995,47 +802,8 @@ export class WhatsappDirectLine extends GBService {
           id = req.from.split('@')[0];
           senderName = req._data.notifyName;
           text = req.body;
-          botId = this.botId;
           break;
 
-        case 'chatapi':
-          if (req.body.ack) {
-            res.status(200);
-            res.end();
-
-            return;
-          }
-          if (req.body.messages[0].fromMe) {
-            res.end();
-
-            return; // Exit here.
-          }
-          id = req.body.messages[0].author.split('@')[0];
-          senderName = req.body.messages[0].senderName;
-          text = req.body.messages[0].body;
-          botId = req.params.botId;
-          if (botId === '[default]' || botId === undefined) {
-            botId = GBConfigService.get('BOT_ID');
-          }
-          break;
-        case 'maytapi':
-          if (req.body.type !== 'message') {
-            res.status(200);
-            res.end();
-
-            return;
-          }
-          if (req.body.message.fromMe) {
-            res.end();
-
-            return; // Exit here.
-          }
-          id = req.body.user.phone;
-          senderName = req.body.user.name;
-          text = req.body.message.text;
-
-          botId = WhatsappDirectLine.phones[req.body.phoneId];
-          break;
       }
 
       const sec = new SecService();
@@ -1057,7 +825,7 @@ export class WhatsappDirectLine extends GBService {
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
       if (botNumber && GBServer.globals.minBoot.botId !== urlMin.botId) {
         GBLog.info(`${id} fixed by bot number talked to: ${botId}.`);
-        let locale = user?.locale ? user.locale: min.core.getParam(
+        let locale = user?.locale ? user.locale : min.core.getParam(
           min.instance,
           'Default User Language',
           GBConfigService.get('DEFAULT_USER_LANGUAGE'));
@@ -1096,7 +864,7 @@ export class WhatsappDirectLine extends GBService {
             buf,
             user.locale
           );
-          
+
           req.body = text;
 
         } else {
@@ -1113,14 +881,7 @@ export class WhatsappDirectLine extends GBService {
       text = text.replace(/\@\d+ /gi, '');
 
       let group;
-      if (provider === 'chatapi') {
-        // Ensures that the bot group is the active bot for the user (like switching).
-
-        const message = req.body.messages[0];
-        if (message.chatName.charAt(0) !== '+') {
-          group = message.chatName;
-        }
-      } else if (provider === 'GeneralBots') {
+      if (provider === 'GeneralBots') {
         // Ensures that the bot group is the active bot for the user (like switching).
 
         const message = req;
@@ -1185,11 +946,7 @@ export class WhatsappDirectLine extends GBService {
 
         if (startDialog) {
           GBLog.info(`Calling /start to Auto start ${startDialog} for ${activeMin.instance.instanceId}...`);
-          if (provider === 'chatapi') {
-            req.body.messages[0].body = `/start`;
-          } else if (provider === 'maytapi') {
-            req.body.message = `/start`;
-          } else {
+          if (provider === 'GeneralBots') {
             req.body = `/start`;
           }
 
@@ -1221,11 +978,7 @@ export class WhatsappDirectLine extends GBService {
           if (startDialog) {
 
             GBLog.info(`Calling /start for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
-            if (provider === 'chatapi') {
-              req.body.messages[0].body = `/start`;
-            } else if (provider === 'maytapi') {
-              req.body.message = `/start`;
-            } else {
+            if (provider === 'GeneralBots') {
               req.body = `/start`;
             }
 

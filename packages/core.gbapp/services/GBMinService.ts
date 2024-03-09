@@ -258,6 +258,7 @@ export class GBMinService {
    * installing all BASIC artifacts from .gbdialog and OAuth2.
    */
   public async mountBot(instance: IGBInstance) {
+
     // Build bot adapter.
 
     const { min, adapter, conversationState } = await this.buildBotAdapter(
@@ -439,16 +440,24 @@ export class GBMinService {
 
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
 
+    // Setups official handler for WhatsApp.
+
+    GBServer.globals.server.post(`/${min.instance.botId}/whatsapp`, async (req, res) => {
+      const to = req.body.To.replace(/whatsapp\:\+/gi, '');
+      const whatsAppDirectLine = WhatsappDirectLine.botsByNumber[to];
+      await whatsAppDirectLine.WhatsAppCallback(req, res, whatsAppDirectLine.botId);
+    }).bind(min);
+
     GBDeployer.mountGBKBAssets(`${botId}.gbkb`, botId, `${botId}.gbkb`);
   }
 
-  public static isChatAPI(req: any, res: any) {
+  public static getProviderName(req: any, res: any) {
     if (!res) {
       return 'GeneralBots';
     }
-    if (req.NumMedia)
+    if (req.body?.AccountSid)
     {
-      return 'Official';
+      return 'official';
     }
     return req.body.phone_id ? 'maytapi' : 'chatapi';
   }
@@ -833,7 +842,8 @@ export class GBMinService {
 
       await min.whatsAppDirectLine.setup(true);
     } else {
-      if (min !== minBoot && minBoot.instance.whatsappServiceKey) {
+      if (min !== minBoot && minBoot.instance.whatsappServiceKey 
+        && min.instance.webchatKey) { 
         min.whatsAppDirectLine = new WhatsappDirectLine(
           min,
           min.botId,

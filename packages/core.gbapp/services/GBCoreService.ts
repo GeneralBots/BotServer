@@ -680,8 +680,8 @@ ENDPOINT_UPDATE=true
     name = name.trim();
 
     if (instance.params) {
-      
-      params = typeof (instance.params) === 'object' ? instance.params: JSON.parse(instance.params);
+
+      params = typeof (instance.params) === 'object' ? instance.params : JSON.parse(instance.params);
       params = GBUtil.caseInsensitive(params);
       value = params ? params[name] : defaultValue;
     }
@@ -708,7 +708,7 @@ ENDPOINT_UPDATE=true
       value = null;
     }
 
-    return value;
+    return value ?? defaultValue;
   }
 
   /**

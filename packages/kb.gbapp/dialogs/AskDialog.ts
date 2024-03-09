@@ -228,112 +228,27 @@ export class AskDialog extends IGBDialog {
           min.instance.searchScore ? min.instance.searchScore : minBoot.instance.searchScore
         );
 
-        // TODO: https://github.com/GeneralBots/BotServer/issues/9 user.lastQuestion = text;
-
-        const resultsA = await service.ask(min,step.context.activity['pid'], text, searchScore, null /* user.subjects */);
+        const results = await service.ask(min,step.context.activity['pid'], text, searchScore, null /* user.subjects */);
 
         // If there is some result, answer immediately.
 
-        if (resultsA !== undefined && resultsA.answer !== undefined) {
-          // Saves some context info.
-
-          // user.isAsking = false;
-          // user.lastQuestionId = resultsA.questionId;
+        if (results !== undefined && results.answer !== undefined) {
 
           // Sends the answer to all outputs, including projector.
 
-          answer = resultsA.answer;
+          answer = results.answer;
 
-          // If this search was restricted to some subjects...
-        }
-        // TODO: https://github.com/GeneralBots/BotServer/issues/9
-        // else if (user.subjects && user.subjects.length > 0) {
-        //   // ..second time running Search, now with no filter.
-
-        //   const resultsB = await service.ask(min.instance, text, searchScore, undefined);
-
-        //   // If there is some result, answer immediately.
-
-        //   if (resultsB !== undefined && resultsB.answer !== undefined) {
-        //     // Saves some context info.
-
-        //     // user2.isAsking = false;
-        //     // user2.lastQuestionId = resultsB.questionId;
-
-        //     // Informs user that a broader search will be used.
-
-        //     if (user2.subjects.length > 0) {
-        //       await min.conversationalService.sendText(min, step, Messages[locale].wider_answer);
-        //     }
-
-        //     answer = resultsB.answer;
-        //   }
-        // }
-
-        // Try to answer by search.
-
-        if (answer) {
           return await AskDialog.handleAnswer(service, min, step, user, answer);
         }
 
-        // Tries to answer by NLP.
-
-        let handled = await min.conversationalService.routeNLP(step, min, text);
-        if (handled) {
-          return;
-        }
-
-        // Tries to answer by Reading Comprehension.
-
-        if (process.env.GBMODELS_SERVER) {
-          text = await min.conversationalService.translate(min, text, 'en');
-          let answered = false;
-
-          const docs = await min.kbService['getDocs'](min.instance.instanceId);
-
-          await CollectionUtil.asyncForEach(docs, async (doc: GuaribasAnswer) => {
-            if (!answered) {
-              const answerText = await min.kbService['readComprehension'](min.instance.instanceId, doc.content, text);
-              answered = true;
-              text = await min.conversationalService.translate(
-                min,
-                text,
-                user.locale
-                  ? user.locale
-                  : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
-              );
-              await min.conversationalService.sendText(min, step, answerText);
-              await min.conversationalService.sendEvent(min, step, 'stop', undefined);
-            }
-          });
-          return await step.replaceDialog('/ask', { isReturning: true });
-        }
-        if (process.env.OPENAI_EMAIL) {
-          if (!GBServer.globals.chatGPT) {
-            GBServer.globals.chatGPT = new ChatGPTAPIBrowser({
-              email: process.env.OPENAI_EMAIL,
-              password: process.env.OPENAI_PASSWORD
-            });
-            await GBServer.globals.chatGPT.init();
-          }
-          const CHATGPT_TIMEOUT = 60 * 1000;
-          GBLog.info(`ChatGPT being used...`);
-
-          const response = await GBServer.globals.chatGPT.sendMessage(text, { timeoutMs: CHATGPT_TIMEOUT });
-
-          if (!response) {
-            GBLog.info(`SEARCH called but NO answer could be found (zero results).`);
-          } else {
-            await min.conversationalService.sendText(min, step, response);
-          }
-          return await step.replaceDialog('/ask', { isReturning: true });
-        }
+        GBLog.info(`SEARCH called but NO answer could be found (zero results).`);
 
         // Not found.
 
         const message = min.core.getParam<string>(min.instance, 'Not Found Message', Messages[locale].did_not_find);
 
         await min.conversationalService.sendText(min, step, message);
+        
         return await step.replaceDialog('/ask', { isReturning: true });
       }
     ];
