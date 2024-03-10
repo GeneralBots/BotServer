@@ -86,7 +86,7 @@ import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
  * Result for quey on KB data.
  */
 export class KBServiceSearchResults {
-  public answer: GuaribasAnswer;
+  public answer: string | GuaribasAnswer;
   public questionId: number;
 }
 
