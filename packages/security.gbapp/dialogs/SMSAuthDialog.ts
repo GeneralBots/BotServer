@@ -74,6 +74,8 @@ export class SMSAuthDialog extends IGBDialog {
             mobile,
             Messages[locale].please_use_code(code)
           );
+          await min.conversationalService.sendSms(min, mobile, Messages[locale].please_use_code(code));
+
           return await min.conversationalService.prompt(min, step, Messages[locale].confirm_mobile);
         },
         async (step) => {

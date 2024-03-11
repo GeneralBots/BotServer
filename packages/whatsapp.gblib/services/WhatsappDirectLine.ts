@@ -53,7 +53,7 @@ import e from 'express';
 import { GBUtil } from '../../../src/util.js';
 const { WAState, List, Buttons, Client, MessageMedia } = pkg;
 import twilio from 'twilio';
-const { MessagingResponse } = twilio.twiml;
+
 
 /**
  * Support for Whatsapp.
