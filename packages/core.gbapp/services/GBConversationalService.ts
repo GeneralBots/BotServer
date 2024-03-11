@@ -372,927 +372,927 @@ export class GBConversationalService {
       })
 
     GBLogEx.info(min, `SMS sent, return: ${msg.sid}.`);
-  }
-  return;
 
-  if(!min.instance.smsKey && min.instance.smsSecret) {
-  const url = 'http://sms-api.megaconecta.com.br/mt';
-  let options = {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${min.instance.smsSecret}`
-    },
-    body: JSON.stringify({
-      numero: `${mobile}`,
-      servico: 'short',
-      mensagem: text,
-      parceiro_id: '',
-      codificacao: '0'
-    })
-  };
+    return;
 
-  try {
-    const results = await fetch(url, options);
+    if (!min.instance.smsKey && min.instance.smsSecret) {
+      const url = 'http://sms-api.megaconecta.com.br/mt';
+      let options = {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${min.instance.smsSecret}`
+        },
+        body: JSON.stringify({
+          numero: `${mobile}`,
+          servico: 'short',
+          mensagem: text,
+          parceiro_id: '',
+          codificacao: '0'
+        })
+      };
 
-    return results;
-  } catch (error) {
-    const msg = `Error calling SMS service. Error is: ${error}.`;
+      try {
+        const results = await fetch(url, options);
 
-    return Promise.reject(new Error(msg));
-  }
-} else {
-  if (min.instance.smsKey && min.instance.smsSecret) {
-    return new Promise((resolve: any, reject: any): any => {
-      const nexmo = new Nexmo({
-        apiKey: min.instance.smsKey,
-        apiSecret: min.instance.smsSecret
-      });
-      // tslint:disable-next-line:no-unsafe-any
-      nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, {}, (err, data) => {
-        const message = data.messages ? data.messages[0] : {};
-        if (err || message['error-text']) {
-          GBLog.error(`BASIC: error sending SMS to ${mobile}: ${message['error-text']}`);
-          reject(message['error-text']);
-        } else {
-          resolve(data);
-        }
-      });
-    });
-  }
-}
+        return results;
+      } catch (error) {
+        const msg = `Error calling SMS service. Error is: ${error}.`;
+
+        return Promise.reject(new Error(msg));
+      }
+    } else {
+      if (min.instance.smsKey && min.instance.smsSecret) {
+        return new Promise((resolve: any, reject: any): any => {
+          const nexmo = new Nexmo({
+            apiKey: min.instance.smsKey,
+            apiSecret: min.instance.smsSecret
+          });
+          // tslint:disable-next-line:no-unsafe-any
+          nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, {}, (err, data) => {
+            const message = data.messages ? data.messages[0] : {};
+            if (err || message['error-text']) {
+              GBLog.error(`BASIC: error sending SMS to ${mobile}: ${message['error-text']}`);
+              reject(message['error-text']);
+            } else {
+              resolve(data);
+            }
+          });
+        });
+      }
+    }
   }
 
   public async sendToMobile(min: GBMinInstance, mobile: string, message: string, conversationId) {
-  GBLog.info(`Sending message ${message} to ${mobile}...`);
-  await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId);
-}
+    GBLog.info(`Sending message ${message} to ${mobile}...`);
+    await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId);
+  }
 
-  public static async getAudioBufferFromText(text): Promise < string > {
-  return new Promise<string>(async (resolve, reject) => {
-    const name = GBAdminService.getRndReadableIdentifier();
-
-    try {
-      const textToSpeech = new TextToSpeechV1({
-        authenticator: new IamAuthenticator({ apikey: process.env.WATSON_TTS_KEY }),
-        url: process.env.WATSON_TTS_URL
-      });
-
-      const params = {
-        text: text,
-        accept: 'audio/wav; rate=44100',
-        voice: 'pt-BR_IsabelaVoice'
-      };
-
-      // Migrated to IBM from MSFT, as it own package do not compile on Azure Web App.
-
-      let res = await textToSpeech.synthesize(params);
-      const waveFilename = `work/tmp${name}.pcm`;
-
-      let audio = await textToSpeech.repairWavHeaderStream(res.result as any);
-      Fs.writeFileSync(waveFilename, audio);
-
-      const oggFilenameOnly = `tmp${name}.ogg`;
-      const oggFilename = `work/${oggFilenameOnly}`;
-      const output = Fs.createWriteStream(oggFilename);
-      const transcoder = new prism.FFmpeg({
-        args: ['-analyzeduration', '0', '-loglevel', '0', '-f', 'opus', '-ar', '16000', '-ac', '1']
-      });
-      Fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
-
-      let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
-      resolve(url);
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
-
-  public static async getTextFromAudioBuffer(speechKey, cloudRegion, buffer, locale): Promise < string > {
-  return new Promise<string>(async (resolve, reject) => {
-    try {
-      const oggFile = new Readable();
-      oggFile._read = () => { }; // _read is required but you can noop it
-      oggFile.push(buffer);
-      oggFile.push(null);
-
+  public static async getAudioBufferFromText(text): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
       const name = GBAdminService.getRndReadableIdentifier();
 
-      const dest = `work/tmp${name}.wav`;
-      const src = `work/tmp${name}.ogg`;
-      Fs.writeFileSync(src, oggFile.read());
+      try {
+        const textToSpeech = new TextToSpeechV1({
+          authenticator: new IamAuthenticator({ apikey: process.env.WATSON_TTS_KEY }),
+          url: process.env.WATSON_TTS_URL
+        });
 
-      const makeMp3 = shell([
-        'node_modules/ffmpeg-static/ffmpeg', // TODO: .exe on MSWin.
-        '-y',
-        '-v',
-        'error',
-        '-i',
-        join(process.cwd(), src),
-        '-ar',
-        '44100',
-        '-ac',
-        '1',
-        '-acodec',
-        'pcm_s16le',
-        join(process.cwd(), dest)
-      ]);
+        const params = {
+          text: text,
+          accept: 'audio/wav; rate=44100',
+          voice: 'pt-BR_IsabelaVoice'
+        };
 
-      exec(makeMp3, error => {
-        if (error) {
-          GBLog.error(error);
-          return Promise.reject(error);
-        } else {
-          let data = Fs.readFileSync(dest);
+        // Migrated to IBM from MSFT, as it own package do not compile on Azure Web App.
 
-          const speechToText = new SpeechToTextV1({
-            authenticator: new IamAuthenticator({ apikey: process.env.WATSON_STT_KEY }),
-            url: process.env.WATSON_STT_URL
-          });
+        let res = await textToSpeech.synthesize(params);
+        const waveFilename = `work/tmp${name}.pcm`;
 
-          const model = this.getIBMAudioModelNameFromLocale(locale);
+        let audio = await textToSpeech.repairWavHeaderStream(res.result as any);
+        Fs.writeFileSync(waveFilename, audio);
 
-          const params = {
-            audio: data,
-            contentType: 'audio/l16; rate=44100',
-            model: model
-          };
+        const oggFilenameOnly = `tmp${name}.ogg`;
+        const oggFilename = `work/${oggFilenameOnly}`;
+        const output = Fs.createWriteStream(oggFilename);
+        const transcoder = new prism.FFmpeg({
+          args: ['-analyzeduration', '0', '-loglevel', '0', '-f', 'opus', '-ar', '16000', '-ac', '1']
+        });
+        Fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
 
-          speechToText
-            .recognize(params)
-            .then(response => {
-              if (response.result.results.length > 0) {
-                resolve(response.result.results[0].alternatives[0].transcript);
-              }
-            })
-            .catch(error => {
-              GBLog.error(error);
-              return Promise.reject(error);
+        let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
+        resolve(url);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  public static async getTextFromAudioBuffer(speechKey, cloudRegion, buffer, locale): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+      try {
+        const oggFile = new Readable();
+        oggFile._read = () => { }; // _read is required but you can noop it
+        oggFile.push(buffer);
+        oggFile.push(null);
+
+        const name = GBAdminService.getRndReadableIdentifier();
+
+        const dest = `work/tmp${name}.wav`;
+        const src = `work/tmp${name}.ogg`;
+        Fs.writeFileSync(src, oggFile.read());
+
+        const makeMp3 = shell([
+          'node_modules/ffmpeg-static/ffmpeg', // TODO: .exe on MSWin.
+          '-y',
+          '-v',
+          'error',
+          '-i',
+          join(process.cwd(), src),
+          '-ar',
+          '44100',
+          '-ac',
+          '1',
+          '-acodec',
+          'pcm_s16le',
+          join(process.cwd(), dest)
+        ]);
+
+        exec(makeMp3, error => {
+          if (error) {
+            GBLog.error(error);
+            return Promise.reject(error);
+          } else {
+            let data = Fs.readFileSync(dest);
+
+            const speechToText = new SpeechToTextV1({
+              authenticator: new IamAuthenticator({ apikey: process.env.WATSON_STT_KEY }),
+              url: process.env.WATSON_STT_URL
             });
-        }
-      });
-    } catch (error) {
-      GBLog.error(error);
-      return Promise.reject(error);
-    }
-  });
-}
-  public static getIBMAudioModelNameFromLocale = locale => {
-  const locales = {
-    "ar": "ar-MS_BroadbandModel",
-    "zh": "zh-CN_BroadbandModel",
-    "nl": "nl-NL_BroadbandModel",
-    "en": "en-US_BroadbandModel",
-    "fr": "fr-FR_BroadbandModel",
-    "de": "de-DE_BroadbandModel",
-    "it": "it-IT_BroadbandModel",
-    "ja": "ja-JP_BroadbandModel",
-    "ko": "ko-KR_BroadbandModel",
-    "pt": "pt-BR_BroadbandModel",
-    "es": "es-ES_BroadbandModel"
-  };
 
-  const languageCode = locale.substring(0, 2);
-  return locales[languageCode] || "en-US_BroadbandModel";
-};
+            const model = this.getIBMAudioModelNameFromLocale(locale);
+
+            const params = {
+              audio: data,
+              contentType: 'audio/l16; rate=44100',
+              model: model
+            };
+
+            speechToText
+              .recognize(params)
+              .then(response => {
+                if (response.result.results.length > 0) {
+                  resolve(response.result.results[0].alternatives[0].transcript);
+                }
+              })
+              .catch(error => {
+                GBLog.error(error);
+                return Promise.reject(error);
+              });
+          }
+        });
+      } catch (error) {
+        GBLog.error(error);
+        return Promise.reject(error);
+      }
+    });
+  }
+  public static getIBMAudioModelNameFromLocale = locale => {
+    const locales = {
+      "ar": "ar-MS_BroadbandModel",
+      "zh": "zh-CN_BroadbandModel",
+      "nl": "nl-NL_BroadbandModel",
+      "en": "en-US_BroadbandModel",
+      "fr": "fr-FR_BroadbandModel",
+      "de": "de-DE_BroadbandModel",
+      "it": "it-IT_BroadbandModel",
+      "ja": "ja-JP_BroadbandModel",
+      "ko": "ko-KR_BroadbandModel",
+      "pt": "pt-BR_BroadbandModel",
+      "es": "es-ES_BroadbandModel"
+    };
+
+    const languageCode = locale.substring(0, 2);
+    return locales[languageCode] || "en-US_BroadbandModel";
+  };
 
 
   public async playMarkdown(min: GBMinInstance, answer: string, channel: string,
-  step: GBDialogStep, mobile: string) {
+    step: GBDialogStep, mobile: string) {
 
-  const sec = new SecService();
-  const user = await sec.getUserFromSystemId(mobile ? mobile : step.context.activity.from.id);
+    const sec = new SecService();
+    const user = await sec.getUserFromSystemId(mobile ? mobile : step.context.activity.from.id);
 
-  let text = answer;
+    let text = answer;
 
-  // Calls language translator.
-  if (user) {
-    text = await min.conversationalService.translate(
-      min,
-      answer,
-      user.locale ? user.locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
-    );
-    GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
-  }
-
-  var renderer = new marked.marked.Renderer();
-  renderer.oldImage = renderer.image;
-  renderer.image = function (href, title, text) {
-    var videos = ['webm', 'mp4', 'mov'];
-    var filetype = href.split('.').pop();
-    if (videos.indexOf(filetype) > -1) {
-      var out =
-        '<video autoplay loop alt="' +
-        text +
-        '">' +
-        '  <source src="' +
-        href +
-        '" type="video/' +
-        filetype +
-        '">' +
-        '</video>';
-      return out;
-    } else {
-      return renderer.oldImage(href, title, text);
+    // Calls language translator.
+    if (user) {
+      text = await min.conversationalService.translate(
+        min,
+        answer,
+        user.locale ? user.locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
+      );
+      GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
     }
-  };
 
-  // Converts from Markdown to HTML.
+    var renderer = new marked.marked.Renderer();
+    renderer.oldImage = renderer.image;
+    renderer.image = function (href, title, text) {
+      var videos = ['webm', 'mp4', 'mov'];
+      var filetype = href.split('.').pop();
+      if (videos.indexOf(filetype) > -1) {
+        var out =
+          '<video autoplay loop alt="' +
+          text +
+          '">' +
+          '  <source src="' +
+          href +
+          '" type="video/' +
+          filetype +
+          '">' +
+          '</video>';
+        return out;
+      } else {
+        return renderer.oldImage(href, title, text);
+      }
+    };
 
-  marked.setOptions({
-    renderer: renderer,
-    gfm: true,
-    tables: true,
-    breaks: false,
-    pedantic: false,
-    sanitize: false,
-    smartLists: true,
-    smartypants: false,
-    xhtml: false
-  });
+    // Converts from Markdown to HTML.
 
-  // MSFT Translator breaks markdown, so we need to manually fix it:
+    marked.setOptions({
+      renderer: renderer,
+      gfm: true,
+      tables: true,
+      breaks: false,
+      pedantic: false,
+      sanitize: false,
+      smartLists: true,
+      smartypants: false,
+      xhtml: false
+    });
 
-  text = text.replace('! [', '![').replace('] (', '](');
-  text = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', '');
-  text = text.replace(`](kb`, '](' + process.env.BOT_URL + '/kb');
+    // MSFT Translator breaks markdown, so we need to manually fix it:
 
-  if (mobile) {
-    await this.sendMarkdownToMobile(min, step, mobile, text);
-  } else if (GBConfigService.get('DISABLE_WEB') !== 'true') {
-    const html = marked(text);
-    await this.sendHTMLToWeb(min, step, html, answer);
-  } else {
-    const html = marked(text);
-    await min.conversationalService.sendText(min, step, html);
+    text = text.replace('! [', '![').replace('] (', '](');
+    text = text.replace(`[[embed url=`, process.env.BOT_URL + '/').replace(']]', '');
+    text = text.replace(`](kb`, '](' + process.env.BOT_URL + '/kb');
+
+    if (mobile) {
+      await this.sendMarkdownToMobile(min, step, mobile, text);
+    } else if (GBConfigService.get('DISABLE_WEB') !== 'true') {
+      const html = marked(text);
+      await this.sendHTMLToWeb(min, step, html, answer);
+    } else {
+      const html = marked(text);
+      await min.conversationalService.sendText(min, step, html);
+    }
   }
-}
 
   private async sendHTMLToWeb(min, step: GBDialogStep, html: string, answer: string) {
-  const locale = step.context.activity.locale;
+    const locale = step.context.activity.locale;
 
-  html = html.replace(/src\=\"kb\//gi, `src=\"../kb/`);
-  await this.sendEvent(min, step, 'play', {
-    playerType: 'markdown',
-    data: {
-      content: html,
-      answer: answer,
-      prevId: 0, // https://github.com/GeneralBots/BotServer/issues/312
-      nextId: 0
-    }
-  });
-}
+    html = html.replace(/src\=\"kb\//gi, `src=\"../kb/`);
+    await this.sendEvent(min, step, 'play', {
+      playerType: 'markdown',
+      data: {
+        content: html,
+        answer: answer,
+        prevId: 0, // https://github.com/GeneralBots/BotServer/issues/312
+        nextId: 0
+      }
+    });
+  }
 
   // tslint:enable:no-unsafe-any
 
   public async sendMarkdownToMobile(min: GBMinInstance, step: GBDialogStep, mobile: string, text: string) {
-  enum State {
-    InText,
-    InImage,
-    InImageBegin,
-    InImageCaption,
-    InImageAddressBegin,
-    InImageAddressBody,
-    InEmbedBegin,
-    InEmbedEnd,
-    InEmbedAddressBegin,
-    InEmbedAddressEnd,
-    InLineBreak,
-    InLineBreak1,
-    InLineBreak2
-  }
-  let state = State.InText;
-  let currentImage = '';
-  let currentText = '';
-  let currentCaption = '';
-  let currentEmbedUrl = '';
+    enum State {
+      InText,
+      InImage,
+      InImageBegin,
+      InImageCaption,
+      InImageAddressBegin,
+      InImageAddressBody,
+      InEmbedBegin,
+      InEmbedEnd,
+      InEmbedAddressBegin,
+      InEmbedAddressEnd,
+      InLineBreak,
+      InLineBreak1,
+      InLineBreak2
+    }
+    let state = State.InText;
+    let currentImage = '';
+    let currentText = '';
+    let currentCaption = '';
+    let currentEmbedUrl = '';
 
-  let conversationId = null;
+    let conversationId = null;
 
-  if (step) {
-    conversationId = step.context.activity.conversation.id;
-  }
+    if (step) {
+      conversationId = step.context.activity.conversation.id;
+    }
 
-  //![General Bots](/instance/images/gb.png)
-  for (let i = 0; i < text.length; i++) {
-    const c = text.charAt(i);
+    //![General Bots](/instance/images/gb.png)
+    for (let i = 0; i < text.length; i++) {
+      const c = text.charAt(i);
 
-    switch (state) {
-      case State.InText:
-        if (c === '!') {
-          state = State.InImageBegin;
-        } else if (c === '[') {
-          state = State.InEmbedBegin;
-        } else if (c === '\n') {
-          state = State.InLineBreak;
-        } else {
-          state = State.InText;
-          currentText = currentText.concat(c);
-        }
-        break;
-      case State.InLineBreak:
-        if (c === '\n') {
-          state = State.InLineBreak1;
-        } else if (c === '!') {
-          state = State.InImageBegin;
-        } else if (c === '[') {
-          state = State.InEmbedBegin;
-        } else {
-          currentText = currentText.concat('\n', c);
-          state = State.InText;
-        }
-        break;
-      case State.InLineBreak1:
-        if (c === '\n') {
-          if (!mobile) {
-            await step.context.sendActivity(currentText);
+      switch (state) {
+        case State.InText:
+          if (c === '!') {
+            state = State.InImageBegin;
+          } else if (c === '[') {
+            state = State.InEmbedBegin;
+          } else if (c === '\n') {
+            state = State.InLineBreak;
           } else {
-            await this.sendToMobile(min, mobile, currentText, conversationId);
+            state = State.InText;
+            currentText = currentText.concat(c);
           }
-          await GBUtil.sleep(3000);
-          currentText = '';
-          state = State.InText;
-        } else if (c === '!') {
-          state = State.InImageBegin;
-        } else if (c === '[') {
-          state = State.InEmbedBegin;
-        } else {
-          currentText = currentText.concat('\n', '\n', c);
-          state = State.InText;
-        }
-        break;
-      case State.InEmbedBegin:
-        if (c === '=') {
-          if (currentText !== '') {
+          break;
+        case State.InLineBreak:
+          if (c === '\n') {
+            state = State.InLineBreak1;
+          } else if (c === '!') {
+            state = State.InImageBegin;
+          } else if (c === '[') {
+            state = State.InEmbedBegin;
+          } else {
+            currentText = currentText.concat('\n', c);
+            state = State.InText;
+          }
+          break;
+        case State.InLineBreak1:
+          if (c === '\n') {
             if (!mobile) {
               await step.context.sendActivity(currentText);
             } else {
               await this.sendToMobile(min, mobile, currentText, conversationId);
             }
             await GBUtil.sleep(3000);
+            currentText = '';
+            state = State.InText;
+          } else if (c === '!') {
+            state = State.InImageBegin;
+          } else if (c === '[') {
+            state = State.InEmbedBegin;
+          } else {
+            currentText = currentText.concat('\n', '\n', c);
+            state = State.InText;
           }
-          currentText = '';
-          state = State.InEmbedAddressBegin;
-        }
-
-        break;
-      case State.InEmbedAddressBegin:
-        if (c === ']') {
-          state = State.InEmbedEnd;
-          let url = currentEmbedUrl.startsWith('http')
-            ? currentEmbedUrl
-            : urlJoin(GBServer.globals.publicAddress, currentEmbedUrl);
-          await this.sendFile(min, step, mobile, url, null);
-          await GBUtil.sleep(5000);
-          currentEmbedUrl = '';
-        } else {
-          currentEmbedUrl = currentEmbedUrl.concat(c);
-        }
-        break;
-      case State.InEmbedEnd:
-        if (c === ']') {
-          state = State.InText;
-        }
-        break;
-      case State.InImageBegin:
-        if (c === '[') {
-          if (currentText !== '') {
-            if (!mobile) {
-              await step.context.sendActivity(currentText);
-            } else {
-              await this.sendToMobile(min, mobile, currentText, conversationId);
+          break;
+        case State.InEmbedBegin:
+          if (c === '=') {
+            if (currentText !== '') {
+              if (!mobile) {
+                await step.context.sendActivity(currentText);
+              } else {
+                await this.sendToMobile(min, mobile, currentText, conversationId);
+              }
+              await GBUtil.sleep(3000);
             }
-            await GBUtil.sleep(2900);
+            currentText = '';
+            state = State.InEmbedAddressBegin;
           }
-          currentText = '';
-          state = State.InImageCaption;
-        } else {
-          state = State.InText;
-          currentText = currentText.concat('!').concat(c);
-        }
-        break;
-      case State.InImageCaption:
-        if (c === ']') {
-          state = State.InImageAddressBegin;
-        } else {
-          currentCaption = currentCaption.concat(c);
-        }
-        break;
-      case State.InImageAddressBegin:
-        if (c === '(') {
-          state = State.InImageAddressBody;
-        }
-        break;
-      case State.InImageAddressBody:
-        if (c === ')') {
-          state = State.InText;
-          let url = currentImage.startsWith('http')
-            ? currentImage
-            : urlJoin(GBServer.globals.publicAddress, currentImage);
-          await this.sendFile(min, step, mobile, url, currentCaption);
-          currentCaption = '';
-          await GBUtil.sleep(4500);
-          currentImage = '';
-        } else {
-          currentImage = currentImage.concat(c);
-        }
-        break;
+
+          break;
+        case State.InEmbedAddressBegin:
+          if (c === ']') {
+            state = State.InEmbedEnd;
+            let url = currentEmbedUrl.startsWith('http')
+              ? currentEmbedUrl
+              : urlJoin(GBServer.globals.publicAddress, currentEmbedUrl);
+            await this.sendFile(min, step, mobile, url, null);
+            await GBUtil.sleep(5000);
+            currentEmbedUrl = '';
+          } else {
+            currentEmbedUrl = currentEmbedUrl.concat(c);
+          }
+          break;
+        case State.InEmbedEnd:
+          if (c === ']') {
+            state = State.InText;
+          }
+          break;
+        case State.InImageBegin:
+          if (c === '[') {
+            if (currentText !== '') {
+              if (!mobile) {
+                await step.context.sendActivity(currentText);
+              } else {
+                await this.sendToMobile(min, mobile, currentText, conversationId);
+              }
+              await GBUtil.sleep(2900);
+            }
+            currentText = '';
+            state = State.InImageCaption;
+          } else {
+            state = State.InText;
+            currentText = currentText.concat('!').concat(c);
+          }
+          break;
+        case State.InImageCaption:
+          if (c === ']') {
+            state = State.InImageAddressBegin;
+          } else {
+            currentCaption = currentCaption.concat(c);
+          }
+          break;
+        case State.InImageAddressBegin:
+          if (c === '(') {
+            state = State.InImageAddressBody;
+          }
+          break;
+        case State.InImageAddressBody:
+          if (c === ')') {
+            state = State.InText;
+            let url = currentImage.startsWith('http')
+              ? currentImage
+              : urlJoin(GBServer.globals.publicAddress, currentImage);
+            await this.sendFile(min, step, mobile, url, currentCaption);
+            currentCaption = '';
+            await GBUtil.sleep(4500);
+            currentImage = '';
+          } else {
+            currentImage = currentImage.concat(c);
+          }
+          break;
+      }
+    }
+    if (currentText !== '') {
+      if (!mobile) {
+        GBLog.info(`Sending .MD file to Web.`);
+        await step.context.sendActivity(currentText);
+      } else {
+        GBLog.info(`Sending .MD file to mobile: ${mobile}.`);
+        await this.sendToMobile(min, mobile, currentText, null);
+      }
     }
   }
-  if (currentText !== '') {
-    if (!mobile) {
-      GBLog.info(`Sending .MD file to Web.`);
-      await step.context.sendActivity(currentText);
-    } else {
-      GBLog.info(`Sending .MD file to mobile: ${mobile}.`);
-      await this.sendToMobile(min, mobile, currentText, null);
-    }
-  }
-}
 
   public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string) {
-  if (min.instance.nlpAppId === null || min.instance.nlpAppId === undefined) {
+    if (min.instance.nlpAppId === null || min.instance.nlpAppId === undefined) {
+      return false;
+    }
+
+    text = text.toLowerCase();
+    text = text.replace('who´s', 'who is');
+    text = text.replace("who's", 'who is');
+    text = text.replace('what´s', 'what is');
+    text = text.replace("what's", 'what is');
+    text = text.replace('?', ' ');
+    text = text.replace('¿', ' ');
+    text = text.replace('!', ' ');
+    text = text.replace('.', ' ');
+    text = text.replace('/', ' ');
+    text = text.replace('\\', ' ');
+    text = text.replace('\r\n', ' ');
+
+    const model = new LuisRecognizer({
+      applicationId: min.instance.nlpAppId,
+      endpointKey: min.instance.nlpKey,
+      endpoint: min.instance.nlpEndpoint
+    });
+
+    let nlp: RecognizerResult;
+    try {
+      const saved = step.context.activity.text;
+      step.context.activity.text = text;
+      nlp = await model.recognize(
+        step.context,
+        {},
+        {},
+        { IncludeAllIntents: false, IncludeInstanceData: false, includeAPIResults: true }
+      );
+      step.context.activity.text = saved;
+    } catch (error) {
+      // tslint:disable:no-unsafe-any
+      if (error.statusCode === 404 || error.statusCode === 400) {
+        GBLog.warn('NLP application still not publish and there are no other options for answering.');
+
+        return false;
+      } else {
+        const msg = `Error calling NLP, check if you have a published model and assigned keys.
+        Error: ${error.statusCode ? error.statusCode : ''} ${error.message}`;
+
+        throw new Error(msg);
+      }
+      // tslint:enable:no-unsafe-any
+    }
+
+    const minBoot = GBServer.globals.minBoot as any;
+    let nlpActive = false;
+    let score = 0;
+    const instanceScore = min.core.getParam(
+      min.instance,
+      'NLP Score',
+      min.instance.nlpScore ? min.instance.nlpScore : minBoot.instance.nlpScore
+    );
+
+    Object.keys(nlp.intents).forEach(name => {
+      score = nlp.intents[name].score;
+      if (score > instanceScore) {
+        nlpActive = true;
+      }
+    });
+
+    // Resolves intents returned from LUIS.
+
+    const topIntent = LuisRecognizer.topIntent(nlp);
+    if (topIntent !== undefined && nlpActive) {
+      const intent = topIntent;
+      if (intent === 'None') {
+        return false;
+      }
+
+      GBLog.info(
+        `NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${instanceScore}`
+      );
+
+      step.activeDialog.state.options.entities = nlp.entities;
+
+      // FIX MSFT NLP issue.
+
+      if (nlp.entities) {
+        await CollectionUtil.asyncForEach(Object.keys(nlp.entities), async key => {
+          if (key !== '$instance') {
+            let entity = nlp.entities[key];
+            if (Array.isArray(entity[0])) {
+              nlp.entities[key] = entity.slice(1);
+            }
+          }
+        });
+      }
+
+      await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
+      return true;
+
+    }
+
+    GBLog.info(`NLP NOT called: score: ${score} > required (nlpScore): ${instanceScore}`);
+
     return false;
   }
 
-  text = text.toLowerCase();
-  text = text.replace('who´s', 'who is');
-  text = text.replace("who's", 'who is');
-  text = text.replace('what´s', 'what is');
-  text = text.replace("what's", 'what is');
-  text = text.replace('?', ' ');
-  text = text.replace('¿', ' ');
-  text = text.replace('!', ' ');
-  text = text.replace('.', ' ');
-  text = text.replace('/', ' ');
-  text = text.replace('\\', ' ');
-  text = text.replace('\r\n', ' ');
-
-  const model = new LuisRecognizer({
-    applicationId: min.instance.nlpAppId,
-    endpointKey: min.instance.nlpKey,
-    endpoint: min.instance.nlpEndpoint
-  });
-
-  let nlp: RecognizerResult;
-  try {
-    const saved = step.context.activity.text;
-    step.context.activity.text = text;
-    nlp = await model.recognize(
-      step.context,
-      {},
-      {},
-      { IncludeAllIntents: false, IncludeInstanceData: false, includeAPIResults: true }
-    );
-    step.context.activity.text = saved;
-  } catch (error) {
-    // tslint:disable:no-unsafe-any
-    if (error.statusCode === 404 || error.statusCode === 400) {
-      GBLog.warn('NLP application still not publish and there are no other options for answering.');
-
-      return false;
-    } else {
-      const msg = `Error calling NLP, check if you have a published model and assigned keys.
-        Error: ${error.statusCode ? error.statusCode : ''} ${error.message}`;
-
-      throw new Error(msg);
+  public async getLanguage(min: GBMinInstance, text: string): Promise<string> {
+    const key = min.core.getParam<string>(min.instance, 'textAnalyticsKey', null);
+    if (!key) {
+      return process.env.DEFAULT_USER_LANGUAGE;
     }
-    // tslint:enable:no-unsafe-any
+    let language = await AzureText.getLocale(
+      key,
+      min.core.getParam<string>(min.instance, 'textAnalyticsEndpoint', null),
+      text
+    );
+
+    return language === '(Unknown)' ? 'en' : language;
   }
 
-  const minBoot = GBServer.globals.minBoot as any;
-  let nlpActive = false;
-  let score = 0;
-  const instanceScore = min.core.getParam(
-    min.instance,
-    'NLP Score',
-    min.instance.nlpScore ? min.instance.nlpScore : minBoot.instance.nlpScore
-  );
+  public async spellCheck(min: GBMinInstance, text: string): Promise<string> {
+    const key = min.core.getParam<string>(min.instance, 'spellcheckerKey', null);
 
-  Object.keys(nlp.intents).forEach(name => {
-    score = nlp.intents[name].score;
-    if (score > instanceScore) {
-      nlpActive = true;
+    if (key) {
+      text = text.charAt(0).toUpperCase() + text.slice(1);
+      const data = await AzureText.getSpelledText(key, text);
+      if (data !== text) {
+        GBLog.info(`Spelling>: ${data}`);
+        text = data;
+      }
     }
-  });
 
-  // Resolves intents returned from LUIS.
+    return text;
+  }
 
-  const topIntent = LuisRecognizer.topIntent(nlp);
-  if (topIntent !== undefined && nlpActive) {
-    const intent = topIntent;
-    if (intent === 'None') {
+  public async translate(min: GBMinInstance, text: string, language: string): Promise<string> {
+
+    const translatorEnabled = () => {
+      if (min.instance.params) {
+        const params = JSON.parse(min.instance.params);
+        return params ? params['Enable Worldwide Translator'] === 'TRUE' : false;
+      }
       return false;
+    };
+    const endPoint = min.core.getParam<string>(min.instance, 'translatorEndpoint', null);
+    const key = min.core.getParam<string>(min.instance, 'translatorKey', null);
+
+    if (
+      (endPoint === null && !min.instance.googleProjectId) ||
+      !translatorEnabled() ||
+      process.env.TRANSLATOR_DISABLED === 'true'
+    ) {
+      return text;
     }
 
-    GBLog.info(
-      `NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${instanceScore}`
-    );
+    if (text.length > 5000) {
+      text = text.substr(0, 4999);
+      GBLog.warn(`Text that bot will translate will be truncated due to MSFT service limitations.`);
+    } else if (text.length == 2) {
+      return text;
+    }
+    text = text.replace('¿', '');
 
-    step.activeDialog.state.options.entities = nlp.entities;
+    if (min.instance.googleProjectId) {
+      // Instantiates a client
 
-    // FIX MSFT NLP issue.
+      const translate = new Translate.v2.Translate({
+        projectId: min.instance.googleProjectId,
+        credentials: {
+          client_email: min.instance.googleClientEmail,
+          private_key: min.instance.googlePrivateKey.replace(/\\n/gm, '\n')
+        }
+      });
 
-    if (nlp.entities) {
-      await CollectionUtil.asyncForEach(Object.keys(nlp.entities), async key => {
-        if (key !== '$instance') {
-          let entity = nlp.entities[key];
-          if (Array.isArray(entity[0])) {
-            nlp.entities[key] = entity.slice(1);
-          }
+      try {
+        const [translation] = await translate.translate(text, language);
+
+        return translation;
+      } catch (error) {
+        const msg = `Error calling Google Translator service layer. Error is: ${error}.`;
+
+        return Promise.reject(new Error(msg));
+      }
+    } else {
+      let url = urlJoin(
+        endPoint,
+        'translate');
+      url += "?" +
+        new URLSearchParams({
+          'api-version': '3.0',
+          to: language
+        }).toString()
+
+      let options = {
+        method: 'POST',
+        headers: {
+          'Ocp-Apim-Subscription-Key': key,
+          'Ocp-Apim-Subscription-Region': process.env.TRANSLATOR_REGION,
+          'Content-type': 'application/json',
+          'X-ClientTraceId': GBAdminService.generateUuid()
+        },
+        body: `[{'Text':'${text}'}]`,
+        json: false
+      };
+
+      try {
+        let results = await fetch(url, options);
+        results = await results.json();
+
+        if (results[0]) {
+          return results[0].translations[0].text;
+        }
+        else {
+          return text;
+        }
+      } catch (error) {
+        const msg = `Error calling MSFT Translator service layer. Error is: ${error}.`;
+
+        return Promise.reject(new Error(msg));
+      }
+    }
+  }
+
+  public static async handleText(min, user, step, text: string) {
+    const sec = new SecService();
+
+    text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
+
+    // Saves special words (keep text) in tokens to prevent it from
+    // spell checking and translation.
+
+    const keepText: string = min.core.getParam(min.instance, 'Keep Text', '');
+    let keepTextList = [];
+    if (keepTextList && keepText) {
+      keepTextList = keepTextList.concat(keepText.split(';'));
+    }
+    const replacements = [];
+    await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+      const result = await e.onExchangeData(min, 'getKeepText', {});
+      if (result) {
+        keepTextList = keepTextList.concat(result);
+      }
+    });
+
+    const getNormalizedRegExp = value => {
+      var chars = [
+        { letter: 'a', reg: '[aáàãäâ]' },
+        { letter: 'e', reg: '[eéèëê]' },
+        { letter: 'i', reg: '[iíìïî]' },
+        { letter: 'o', reg: '[oóòõöô]' },
+        { letter: 'u', reg: '[uúùüû]' },
+        { letter: 'c', reg: '[cç]' }
+      ];
+
+      for (var i in chars) {
+        value = value.replace(new RegExp(chars[i].letter, 'gi'), chars[i].reg);
+      }
+      return value;
+    };
+
+    let textProcessed = text;
+    if (keepTextList) {
+      keepTextList = keepTextList.filter(p => p.trim() !== '');
+      let i = 0;
+      await CollectionUtil.asyncForEach(keepTextList, item => {
+        const it = GBConversationalService.removeDiacritics(item);
+        const noAccentText = GBConversationalService.removeDiacritics(textProcessed);
+
+        if (noAccentText.toLowerCase().indexOf(it.toLowerCase()) != -1) {
+          const replacementToken = 'X' + GBAdminService.getNumberIdentifier().substr(0, 4);
+          replacements[i] = { text: item, replacementToken: replacementToken };
+          i++;
+          textProcessed = textProcessed.replace(
+            new RegExp(`\\b${getNormalizedRegExp(it.trim())}\\b`, 'gi'),
+            `${replacementToken}`
+          );
+        }
+      });
+    }
+    GBLog.info(`Tokens (processMessageActivity): ${textProcessed}.`);
+
+    // Spells check the input text before translating,
+    // keeping fixed tokens as specified in Config.
+
+    text = await min.conversationalService.spellCheck(min, textProcessed);
+
+    // If it is a group, spells and sends them back.
+
+    const group = step.context.activity['group'];
+
+    const groupSpell = group ? await min.core.getParam(
+      min.instance,
+      'Group Spell',
+      false) : false;
+
+    if (textProcessed !== text && group && groupSpell) {
+      await min.whatsAppDirectLine.sendToDevice(group, `Spell: ${text}`);
+    }
+
+    // Detects user typed language and updates their locale profile if applies.
+
+    let locale = user.locale ? user.locale : min.core.getParam(
+      min.instance,
+      'Default User Language',
+      GBConfigService.get('DEFAULT_USER_LANGUAGE'));
+
+    const detectLanguage =
+      min.core.getParam(
+        min.instance,
+        'Language Detector',
+        false) != false;
+
+
+    if (text.indexOf(' ') !== -1 && detectLanguage) {
+      locale = await min.conversationalService.getLanguage(min, text);
+      if (user.locale != locale) {
+        user = await sec.updateUserLocale(user.userId, locale);
+        await min.conversationalService.sendText(min,
+          step, `Changed language to: ${locale}`);
+      }
+    }
+
+    // Translates text into content language, keeping
+    // reserved tokens specified in Config.
+
+    text = await min.conversationalService.translate(min, text, locale);
+
+    // Restores all token text back after spell checking and translation.
+
+    if (keepTextList) {
+      let i = 0;
+      await CollectionUtil.asyncForEach(replacements, item => {
+        i++;
+        text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
+      });
+    }
+    GBLog.info(`After (processMessageActivity): ${text}.`);
+
+    return text;
+  }
+
+  public async prompt(min: GBMinInstance, step: GBDialogStep, text: string) {
+    let sec = new SecService();
+    let user = await sec.getUserFromSystemId(step.context.activity.from.id);
+
+    if (text && text !== '') {
+      text = await min.conversationalService.translate(
+        min,
+        text,
+        user.locale ? user.locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
+      );
+      GBLog.verbose(`Translated text(prompt): ${text}.`);
+    }
+    if (step.activeDialog.state.options['kind'] === 'file') {
+
+      return await step.prompt('attachmentPrompt', {});
+    } else {
+      await this.sendText(min, step, text);
+      return await step.prompt('textPrompt', {});
+    }
+  }
+
+  public async sendText(min: GBMinInstance, step, text) {
+    await this['sendTextWithOptions'](min, step, text, true, null);
+  }
+
+  public async sendTextWithOptions(min: GBMinInstance, step, text, translate, keepTextList) {
+    let sec = new SecService();
+    let user = await sec.getUserFromSystemId(step.context.activity.from.id);
+    await this['sendTextWithOptionsAndUser'](min, user, step, text, true, null);
+  }
+
+  public async sendTextWithOptionsAndUser(min: GBMinInstance, user, step, text, translate, keepTextList) {
+    const member = step ? step.context.activity.from : null;
+
+    let replacements = [];
+
+    // To fix MSFT bug.
+
+    if (keepTextList) {
+      keepTextList = keepTextList.filter(p => p.trim() !== '');
+      let i = 0;
+      await CollectionUtil.asyncForEach(keepTextList, item => {
+        if (text.toLowerCase().indexOf(item.toLowerCase()) != -1) {
+          const replacementToken = GBAdminService['getNumberIdentifier']();
+          replacements[i] = { text: item, replacementToken: replacementToken };
+          i++;
+          text = text.replace(new RegExp(item.trim(), 'gi'), `${replacementToken}`);
         }
       });
     }
 
-    await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
-    return true;
-
-  }
-
-  GBLog.info(`NLP NOT called: score: ${score} > required (nlpScore): ${instanceScore}`);
-
-  return false;
-}
-
-  public async getLanguage(min: GBMinInstance, text: string): Promise < string > {
-  const key = min.core.getParam<string>(min.instance, 'textAnalyticsKey', null);
-  if(!key) {
-    return process.env.DEFAULT_USER_LANGUAGE;
-  }
-    let language = await AzureText.getLocale(
-    key,
-    min.core.getParam<string>(min.instance, 'textAnalyticsEndpoint', null),
-    text
-  );
-
-  return language === '(Unknown)' ? 'en' : language;
-}
-
-  public async spellCheck(min: GBMinInstance, text: string): Promise < string > {
-  const key = min.core.getParam<string>(min.instance, 'spellcheckerKey', null);
-
-  if(key) {
-    text = text.charAt(0).toUpperCase() + text.slice(1);
-    const data = await AzureText.getSpelledText(key, text);
-    if (data !== text) {
-      GBLog.info(`Spelling>: ${data}`);
-      text = data;
-    }
-  }
-
-    return text;
-}
-
-  public async translate(min: GBMinInstance, text: string, language: string): Promise < string > {
-
-  const translatorEnabled = () => {
-    if (min.instance.params) {
-      const params = JSON.parse(min.instance.params);
-      return params ? params['Enable Worldwide Translator'] === 'TRUE' : false;
-    }
-    return false;
-  };
-  const endPoint = min.core.getParam<string>(min.instance, 'translatorEndpoint', null);
-  const key = min.core.getParam<string>(min.instance, 'translatorKey', null);
-
-  if(
-      (endPoint === null && !min.instance.googleProjectId) ||
-  !translatorEnabled() ||
-  process.env.TRANSLATOR_DISABLED === 'true'
-    ) {
-  return text;
-}
-
-if (text.length > 5000) {
-  text = text.substr(0, 4999);
-  GBLog.warn(`Text that bot will translate will be truncated due to MSFT service limitations.`);
-} else if (text.length == 2) {
-  return text;
-}
-text = text.replace('¿', '');
-
-if (min.instance.googleProjectId) {
-  // Instantiates a client
-
-  const translate = new Translate.v2.Translate({
-    projectId: min.instance.googleProjectId,
-    credentials: {
-      client_email: min.instance.googleClientEmail,
-      private_key: min.instance.googlePrivateKey.replace(/\\n/gm, '\n')
-    }
-  });
-
-  try {
-    const [translation] = await translate.translate(text, language);
-
-    return translation;
-  } catch (error) {
-    const msg = `Error calling Google Translator service layer. Error is: ${error}.`;
-
-    return Promise.reject(new Error(msg));
-  }
-} else {
-  let url = urlJoin(
-    endPoint,
-    'translate');
-  url += "?" +
-    new URLSearchParams({
-      'api-version': '3.0',
-      to: language
-    }).toString()
-
-  let options = {
-    method: 'POST',
-    headers: {
-      'Ocp-Apim-Subscription-Key': key,
-      'Ocp-Apim-Subscription-Region': process.env.TRANSLATOR_REGION,
-      'Content-type': 'application/json',
-      'X-ClientTraceId': GBAdminService.generateUuid()
-    },
-    body: `[{'Text':'${text}'}]`,
-    json: false
-  };
-
-  try {
-    let results = await fetch(url, options);
-    results = await results.json();
-
-    if (results[0]) {
-      return results[0].translations[0].text;
-    }
-    else {
-      return text;
-    }
-  } catch (error) {
-    const msg = `Error calling MSFT Translator service layer. Error is: ${error}.`;
-
-    return Promise.reject(new Error(msg));
-  }
-}
-  }
-
-  public static async handleText(min, user, step, text: string) {
-  const sec = new SecService();
-
-  text = text.replace(/<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi, '');
-
-  // Saves special words (keep text) in tokens to prevent it from
-  // spell checking and translation.
-
-  const keepText: string = min.core.getParam(min.instance, 'Keep Text', '');
-  let keepTextList = [];
-  if (keepTextList && keepText) {
-    keepTextList = keepTextList.concat(keepText.split(';'));
-  }
-  const replacements = [];
-  await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
-    const result = await e.onExchangeData(min, 'getKeepText', {});
-    if (result) {
-      keepTextList = keepTextList.concat(result);
-    }
-  });
-
-  const getNormalizedRegExp = value => {
-    var chars = [
-      { letter: 'a', reg: '[aáàãäâ]' },
-      { letter: 'e', reg: '[eéèëê]' },
-      { letter: 'i', reg: '[iíìïî]' },
-      { letter: 'o', reg: '[oóòõöô]' },
-      { letter: 'u', reg: '[uúùüû]' },
-      { letter: 'c', reg: '[cç]' }
-    ];
-
-    for (var i in chars) {
-      value = value.replace(new RegExp(chars[i].letter, 'gi'), chars[i].reg);
-    }
-    return value;
-  };
-
-  let textProcessed = text;
-  if (keepTextList) {
-    keepTextList = keepTextList.filter(p => p.trim() !== '');
-    let i = 0;
-    await CollectionUtil.asyncForEach(keepTextList, item => {
-      const it = GBConversationalService.removeDiacritics(item);
-      const noAccentText = GBConversationalService.removeDiacritics(textProcessed);
-
-      if (noAccentText.toLowerCase().indexOf(it.toLowerCase()) != -1) {
-        const replacementToken = 'X' + GBAdminService.getNumberIdentifier().substr(0, 4);
-        replacements[i] = { text: item, replacementToken: replacementToken };
-        i++;
-        textProcessed = textProcessed.replace(
-          new RegExp(`\\b${getNormalizedRegExp(it.trim())}\\b`, 'gi'),
-          `${replacementToken}`
-        );
-      }
-    });
-  }
-  GBLog.info(`Tokens (processMessageActivity): ${textProcessed}.`);
-
-  // Spells check the input text before translating,
-  // keeping fixed tokens as specified in Config.
-
-  text = await min.conversationalService.spellCheck(min, textProcessed);
-
-  // If it is a group, spells and sends them back.
-
-  const group = step.context.activity['group'];
-
-  const groupSpell = group ? await min.core.getParam(
-    min.instance,
-    'Group Spell',
-    false) : false;
-
-  if (textProcessed !== text && group && groupSpell) {
-    await min.whatsAppDirectLine.sendToDevice(group, `Spell: ${text}`);
-  }
-
-  // Detects user typed language and updates their locale profile if applies.
-
-  let locale = user.locale ? user.locale : min.core.getParam(
-    min.instance,
-    'Default User Language',
-    GBConfigService.get('DEFAULT_USER_LANGUAGE'));
-
-  const detectLanguage =
-    min.core.getParam(
-      min.instance,
-      'Language Detector',
-      false) != false;
-
-
-  if (text.indexOf(' ') !== -1 && detectLanguage) {
-    locale = await min.conversationalService.getLanguage(min, text);
-    if (user.locale != locale) {
-      user = await sec.updateUserLocale(user.userId, locale);
-      await min.conversationalService.sendText(min,
-        step, `Changed language to: ${locale}`);
-    }
-  }
-
-  // Translates text into content language, keeping
-  // reserved tokens specified in Config.
-
-  text = await min.conversationalService.translate(min, text, locale);
-
-  // Restores all token text back after spell checking and translation.
-
-  if (keepTextList) {
-    let i = 0;
-    await CollectionUtil.asyncForEach(replacements, item => {
-      i++;
-      text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
-    });
-  }
-  GBLog.info(`After (processMessageActivity): ${text}.`);
-
-  return text;
-}
-
-  public async prompt(min: GBMinInstance, step: GBDialogStep, text: string) {
-  let sec = new SecService();
-  let user = await sec.getUserFromSystemId(step.context.activity.from.id);
-
-  if (text && text !== '') {
+    const locale = user.locale;
     text = await min.conversationalService.translate(
       min,
       text,
-      user.locale ? user.locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
+      locale ? locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
     );
-    GBLog.verbose(`Translated text(prompt): ${text}.`);
-  }
-  if (step.activeDialog.state.options['kind'] === 'file') {
 
-    return await step.prompt('attachmentPrompt', {});
-  } else {
-    await this.sendText(min, step, text);
-    return await step.prompt('textPrompt', {});
-  }
-}
-
-  public async sendText(min: GBMinInstance, step, text) {
-  await this['sendTextWithOptions'](min, step, text, true, null);
-}
-
-  public async sendTextWithOptions(min: GBMinInstance, step, text, translate, keepTextList) {
-  let sec = new SecService();
-  let user = await sec.getUserFromSystemId(step.context.activity.from.id);
-  await this['sendTextWithOptionsAndUser'](min, user, step, text, true, null);
-}
-
-  public async sendTextWithOptionsAndUser(min: GBMinInstance, user, step, text, translate, keepTextList) {
-  const member = step ? step.context.activity.from : null;
-
-  let replacements = [];
-
-  // To fix MSFT bug.
-
-  if (keepTextList) {
-    keepTextList = keepTextList.filter(p => p.trim() !== '');
-    let i = 0;
-    await CollectionUtil.asyncForEach(keepTextList, item => {
-      if (text.toLowerCase().indexOf(item.toLowerCase()) != -1) {
-        const replacementToken = GBAdminService['getNumberIdentifier']();
-        replacements[i] = { text: item, replacementToken: replacementToken };
+    if (keepTextList) {
+      let i = 0;
+      await CollectionUtil.asyncForEach(replacements, item => {
         i++;
-        text = text.replace(new RegExp(item.trim(), 'gi'), `${replacementToken}`);
+        text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
+      });
+    }
+
+    const analytics = new AnalyticsService();
+    const conversation = null;
+    if (!user.conversationId) {
+      const conversation = await analytics.createConversation(user);
+      user.conversationId = conversation.conversationId;
+    }
+    analytics.createMessage(min.instance.instanceId, conversation, null, text);
+
+    if (member && !isNaN(member.id) && !member.id.startsWith('1000')) {
+      const to = step.context.activity.group ? step.context.activity.group : member.id;
+
+      await min.whatsAppDirectLine.sendToDevice(to, text, step.context.activity.conversation.id);
+    } else {
+      await step.context.sendActivity(text);
+    }
+  }
+  public async broadcast(min: GBMinInstance, message: string) {
+    GBLog.info(`Sending broadcast notifications...`);
+
+    const service = new SecService();
+    const users = await service.getAllUsers(min.instance.instanceId);
+    await CollectionUtil.asyncForEach(users, async user => {
+      if (user.conversationReference) {
+        await this.sendOnConversation(min, user, message);
+      } else {
+        GBLog.info(`User: ${user.Id} with no conversation ID while broadcasting.`);
       }
     });
   }
-
-  const locale = user.locale;
-  text = await min.conversationalService.translate(
-    min,
-    text,
-    locale ? locale : min.core.getParam<string>(min.instance, 'Locale', GBConfigService.get('LOCALE'))
-  );
-
-  if (keepTextList) {
-    let i = 0;
-    await CollectionUtil.asyncForEach(replacements, item => {
-      i++;
-      text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
-    });
-  }
-
-  const analytics = new AnalyticsService();
-  const conversation = null;
-  if (!user.conversationId) {
-    const conversation = await analytics.createConversation(user);
-    user.conversationId = conversation.conversationId;
-  }
-  analytics.createMessage(min.instance.instanceId, conversation, null, text);
-
-  if (member && !isNaN(member.id) && !member.id.startsWith('1000')) {
-    const to = step.context.activity.group ? step.context.activity.group : member.id;
-
-    await min.whatsAppDirectLine.sendToDevice(to, text, step.context.activity.conversation.id);
-  } else {
-    await step.context.sendActivity(text);
-  }
-}
-  public async broadcast(min: GBMinInstance, message: string) {
-  GBLog.info(`Sending broadcast notifications...`);
-
-  const service = new SecService();
-  const users = await service.getAllUsers(min.instance.instanceId);
-  await CollectionUtil.asyncForEach(users, async user => {
-    if (user.conversationReference) {
-      await this.sendOnConversation(min, user, message);
-    } else {
-      GBLog.info(`User: ${user.Id} with no conversation ID while broadcasting.`);
-    }
-  });
-}
 
   /**
    *
    * Sends a message in a user with an already started conversation (got ConversationReference set)
    */
   public async sendOnConversation(min: GBMinInstance, user: GuaribasUser, message: any) {
-  if (message['buttons'] || message['sections']) {
-    await min['whatsAppDirectLine'].sendToDevice(user.userSystemId, message, user.conversationReference);
-  } else if (user.conversationReference.startsWith('spaces')) {
-    await min['googleDirectLine'].sendToDevice(user.userSystemId, null, user.conversationReference, message);
-  } else {
-    const ref = JSON.parse(user.conversationReference);
-    MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
-    try {
-      await min.bot['continueConversation'](ref, async t1 => {
-        const ref2 = TurnContext.getConversationReference(t1.activity);
-        await min.bot.continueConversation(ref2, async t2 => {
-          await t2.sendActivity(message);
+    if (message['buttons'] || message['sections']) {
+      await min['whatsAppDirectLine'].sendToDevice(user.userSystemId, message, user.conversationReference);
+    } else if (user.conversationReference.startsWith('spaces')) {
+      await min['googleDirectLine'].sendToDevice(user.userSystemId, null, user.conversationReference, message);
+    } else {
+      const ref = JSON.parse(user.conversationReference);
+      MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
+      try {
+        await min.bot['continueConversation'](ref, async t1 => {
+          const ref2 = TurnContext.getConversationReference(t1.activity);
+          await min.bot.continueConversation(ref2, async t2 => {
+            await t2.sendActivity(message);
+          });
         });
-      });
-    } catch (error) {
-      console.log(error);
+      } catch (error) {
+        console.log(error);
+      }
     }
   }
-}
 
   public static kmpSearch(pattern, text) {
-  pattern = pattern.toLowerCase();
-  text = text.toLowerCase();
-  if (pattern.length == 0) return 0; // Immediate match
+    pattern = pattern.toLowerCase();
+    text = text.toLowerCase();
+    if (pattern.length == 0) return 0; // Immediate match
 
-  // Compute longest suffix-prefix table
-  var lsp = [0]; // Base case
-  for (var i = 1; i < pattern.length; i++) {
-    var j = lsp[i - 1]; // Start by assuming we're extending the previous LSP
-    while (j > 0 && pattern.charAt(i) != pattern.charAt(j)) j = lsp[j - 1];
-    if (pattern.charAt(i) == pattern.charAt(j)) j++;
-    lsp.push(j);
-  }
-
-  // Walk through text string
-  var j = 0; // Number of chars matched in pattern
-  for (var i = 0; i < text.length; i++) {
-    while (j > 0 && text.charAt(i) != pattern.charAt(j)) j = lsp[j - 1]; // Fall back in the pattern
-    if (text.charAt(i) == pattern.charAt(j)) {
-      j++; // Next char matched, increment position
-      if (j == pattern.length) return i - (j - 1);
+    // Compute longest suffix-prefix table
+    var lsp = [0]; // Base case
+    for (var i = 1; i < pattern.length; i++) {
+      var j = lsp[i - 1]; // Start by assuming we're extending the previous LSP
+      while (j > 0 && pattern.charAt(i) != pattern.charAt(j)) j = lsp[j - 1];
+      if (pattern.charAt(i) == pattern.charAt(j)) j++;
+      lsp.push(j);
     }
+
+    // Walk through text string
+    var j = 0; // Number of chars matched in pattern
+    for (var i = 0; i < text.length; i++) {
+      while (j > 0 && text.charAt(i) != pattern.charAt(j)) j = lsp[j - 1]; // Fall back in the pattern
+      if (text.charAt(i) == pattern.charAt(j)) {
+        j++; // Next char matched, increment position
+        if (j == pattern.length) return i - (j - 1);
+      }
+    }
+    return -1; // Not found
   }
-  return -1; // Not found
-}
 }
