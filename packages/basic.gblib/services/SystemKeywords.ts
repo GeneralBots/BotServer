@@ -1440,6 +1440,20 @@ export class SystemKeywords {
     return ret;
   }
 
+  public static async setSystemPrompt({ pid, systemPrompt }) {
+
+    let { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const sec = new SecService();
+
+    if (user) {
+      user['systemPrompt'] = systemPrompt;
+      const path = DialogKeywords.getGBAIPath(min.botId);
+      const systemPromptFile = urlJoin(process.cwd(), 'work', path, 'users',user.userSystemId, 'systemPrompt.txt');
+      Fs.writeFileSync(systemPromptFile, systemPrompt);
+    }
+  }
+
+
   /**
    * Creates a folder in the bot instance drive.
    *

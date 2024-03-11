@@ -466,7 +466,7 @@ export class GBVMService extends GBService {
       }
     } while (include);
 
-    let { code, map, metadata, tasks } = await this.convert(filename, mainName, basicCode);
+    let { code, map, metadata, tasks, systemPrompt } = await this.convert(filename, mainName, basicCode);
 
     // Generates function JSON metadata to be used later.
 
@@ -474,7 +474,6 @@ export class GBVMService extends GBService {
     Fs.writeFileSync(jsonFile, JSON.stringify(metadata));
 
     const mapFile = `${filename}.map`;
-
     Fs.writeFileSync(mapFile, JSON.stringify(map));
 
     // Execute off-line code tasks
@@ -836,6 +835,7 @@ export class GBVMService extends GBService {
     let description;
     let table = null; // Used for TABLE keyword.
     let talk = null;
+    let systemPrompt = null;
     let connection = null;
     const tasks = [];
     let fields = {};
@@ -851,7 +851,7 @@ export class GBVMService extends GBService {
 
       line = line.replace(/^\s*\d+\s*/gi, '');
 
-      if (!table && !talk) {
+      if (!table && !talk && !systemPrompt) {
         for (let j = 0; j < keywords.length; j++) {
           line = line.replace(keywords[j][0], keywords[j][1]); // TODO: Investigate delay here.
         }
@@ -874,6 +874,15 @@ export class GBVMService extends GBService {
         emmit = false;
       }
 
+      const endSystemPromptKeyword = /^\s*END SYSTEM PROMPT\s*/gim;
+      let endSystemPromptReg = endSystemPromptKeyword.exec(line);
+      if (endSystemPromptReg && systemPrompt) {
+        line = systemPrompt + '`})';
+        
+        systemPrompt = null;
+        emmit = true;
+      }
+
       const endTalkKeyword = /^\s*END TALK\s*/gim;
       let endTalkReg = endTalkKeyword.exec(line);
       if (endTalkReg && talk) {
@@ -882,7 +891,6 @@ export class GBVMService extends GBService {
         talk = null;
         emmit = true;
       }
-
 
       const endTableKeyword = /^\s*END TABLE\s*/gim;
       let endTableReg = endTableKeyword.exec(line);
@@ -903,6 +911,13 @@ export class GBVMService extends GBService {
 
       if (talk) {
         talk += line + '\\n';
+        emmit = false;
+      }
+
+      // Inside BEGIN SYSTEM PROMPT
+
+      if (systemPrompt) {
+        systemPrompt += line + '\\n';
         emmit = false;
       }
 
@@ -929,6 +944,13 @@ export class GBVMService extends GBService {
         emmit = false;
       }
 
+      const systemPromptKeyword = /^\s*BEGIN SYSTEM PROMPT\s*/gim;
+      let systemPromptReg = systemPromptKeyword.exec(line);
+      if (systemPromptReg && !systemPrompt) {
+        systemPrompt = "await sys.setSystemPrompt ({pid: pid, text: `";
+        emmit = false;
+      }
+
       //  Add additional lines returned from replacement.
 
       let add = emmit ? line.split(/\r\n|\r|\n/).length : 0;
@@ -952,7 +974,7 @@ export class GBVMService extends GBService {
 
     let metadata = GBVMService.getMetadata(mainName, properties, description);
 
-    return { code, map, metadata, tasks };
+    return { code, map, metadata, tasks, systemPrompt };
   }
 
   /**

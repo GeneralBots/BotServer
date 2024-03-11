@@ -29,54 +29,75 @@
 \*****************************************************************************/
 
 /**
- * @fileoverview General Bots server core.
+ * @fileoverview Dialog for handling OAuth scenarios.
  */
 
 'use strict';
 
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
-import { Sequelize } from 'sequelize-typescript';
-import { OAuthDialog } from './dialogs/OAuthDialog.js';
-import { ProfileDialog } from './dialogs/ProfileDialog.js';
-import { GuaribasGroup, GuaribasUser, GuaribasUserGroup } from './models/index.js';
-import { SMSAuthDialog } from './dialogs/SMSAuthDialog.js';
-
+import { TokenResponse } from 'botbuilder';
+import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
+import { Messages } from '../strings.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { SecService } from '../services/SecService.js';
 /**
- * Package for the security module.
+ * Dialogs for handling Menu control.
  */
-export class GBSecurityPackage implements IGBPackage {
-  public sysPackages: IGBPackage[];
-  public async getDialogs(min: GBMinInstance) {
-    const out = [
-      ProfileDialog.getNameDialog(min),
-      ProfileDialog.getEmailDialog(min),
-      ProfileDialog.getMobileDialog(min),
-      ProfileDialog.getMobileConfirmDialog(min),
-      SMSAuthDialog.getSMSAuthDialog(min)
-    ];
-    
-    if (process.env.ENABLE_AUTH) {
-      out.push(OAuthDialog.getOAuthDialog(min));
-    }
-    return out;
-  }
-  public async unloadPackage(core: IGBCoreService): Promise<void> {
-    GBLog.verbose(`unloadPackage called.`);
-  }
-  public async loadBot(min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`loadBot called.`);
-  }
-  public async unloadBot(min: GBMinInstance): Promise<void> {
-    GBLog.verbose(`unloadBot called.`);
-  }
-  public async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
-    GBLog.verbose(`onNewSession called.`);
-  }
-  public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
-    GBLog.verbose(`onExchangeData called.`);
-  }
+export class SMSAuthDialog extends IGBDialog {
+  public static getSMSAuthDialog(min: GBMinInstance) {
+    return {
+      id: '/smsauth',
+      waterfall: [
+        async (step) => {
+          const msg = 'Por favor, qual o seu celular? Ex: 55 21 99999-0000.';
+          step.activeDialog.state.resetInfo = {};
+          return await min.conversationalService.prompt(min, step, msg);
 
-  public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
-    core.sequelize.addModels([GuaribasGroup, GuaribasUser, GuaribasUserGroup]);
+        },
+        async (step) => {
+
+          await step.context.sendActivity('Por favor, digite o código enviado para seu celular.');
+
+          const mobile = step.result.replace(/\+|\s|\-/g, '');
+          const locale = step.context.activity.locale;
+          step.activeDialog.state.resetInfo.mobile = mobile;
+
+          // Generates a new mobile code.
+
+          let code = GBAdminService.getMobileCode();
+          GBLog.info(`SMS Auth: Generated new code: ${code} is being sent.`);
+          step.activeDialog.state.resetInfo.sentCode = code;
+          step.activeDialog.state.resetInfo.mobile = mobile;
+
+          // Sends a confirmation SMS.
+
+          await min.whatsAppDirectLine.sendToDevice(
+            mobile,
+            Messages[locale].please_use_code(code)
+          );
+          return await min.conversationalService.prompt(min, step, Messages[locale].confirm_mobile);
+        },
+        async (step) => {
+          const typed = step.result;
+          const locale = step.context.activity.locale;
+
+          // Checks if the typed code is equal to the one
+          // sent to the registered mobile.
+
+          if (typed == step.activeDialog.state.resetInfo.sentCode) {
+            let sec = new SecService();
+            const member = step.context.activity.from;
+
+            GBLog.info(`SMS Auth: User Authenticated.`);
+            await step.context.sendActivity(Messages[locale].authenticated);
+
+            return await step.endDialog(step.activeDialog.state.resetInfo.mobile);
+          }
+          else {
+            await step.context.sendActivity(Messages[locale].not_authorized);
+            return await step.endDialog(false);
+          }
+        }
+      ]
+    };
   }
 }

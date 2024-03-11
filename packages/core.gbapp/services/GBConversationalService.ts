@@ -68,6 +68,11 @@ import { GBUtil } from '../../../src/util.js';
  * services like NLP or Search.
  */
 export class GBConversationalService {
+
+  public async getNewMobileCode(){
+    throw new Error('Method removed.');
+  }
+
   /**
    * Reference to the core service.
    */
@@ -278,20 +283,6 @@ export class GBConversationalService {
       return diacriticsMap[a] || a;
     });
     return str;
-  }
-
-  public getNewMobileCode() {
-    const passwordGenerator = new PasswordGenerator();
-    const options = {
-      upperCaseAlpha: false,
-      lowerCaseAlpha: false,
-      number: true,
-      specialCharacter: false,
-      minimumLength: 4,
-      maximumLength: 4
-    };
-    let code = passwordGenerator.generatePassword(options);
-    return code;
   }
 
   public getCurrentLanguage(step: GBDialogStep) {

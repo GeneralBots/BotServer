@@ -269,6 +269,8 @@ export class KBService implements IGBKBService {
 
   public async ask(
     min: GBMinInstance,
+    user,
+    step,
     pid, 
     query: string,
     searchScore: number,
@@ -372,21 +374,17 @@ export class KBService implements IGBKBService {
       }
     }
     GBLog.info(
-      `SEARCH returned LOW level score, calling GPT
+      `SEARCH returned LOW level score, calling NLP if any,
         returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
     );
 
-    return await ChatServices.answerByGPT(min,pid,
+    return await ChatServices.answerByGPT(min, user, pid,
       query,
       searchScore,
       subjects
     );
 
   }
-
-
-
-
 
   public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {
     const where = { parentSubjectId: parentId, instanceId: instanceId };

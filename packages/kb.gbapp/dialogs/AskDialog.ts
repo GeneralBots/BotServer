@@ -228,7 +228,14 @@ export class AskDialog extends IGBDialog {
           min.instance.searchScore ? min.instance.searchScore : minBoot.instance.searchScore
         );
 
-        const results = await service.ask(min,step.context.activity['pid'], text, searchScore, null /* user.subjects */);
+        // Tries to answer by NLP.
+
+        let handled = await min.conversationalService.routeNLP(step, min, text);
+        if (handled) {
+          return;
+        }
+
+        const results = await service.ask(min, user, step, step.context.activity['pid'], text, searchScore, null /* user.subjects */);
 
         // If there is some result, answer immediately.
 

@@ -116,7 +116,7 @@
     "botframework-connector": "4.18.0",
     "botlib": "3.0.11",
     "c3-chart-maker": "0.2.8",
-    "cd": "0.3.3",
+    "cd": "^0.3.3",
     "chalk-animation": "^2.0.3",
     "chatgpt": "2.4.2",
     "chrome-remote-interface": "0.31.3",

@@ -6,7 +6,11 @@ export const Messages = {
     whats_email: "What's your E-mail address?",
     validation_enter_name: 'Please enter your full name.',
     validation_enter_valid_mobile: 'Please enter a valid mobile number.',
-    validation_enter_valid_email: 'Please enter a valid e-mail.'
+    validation_enter_valid_email: 'Please enter a valid e-mail.',
+    authenticated: 'You are now authenticated.',
+    not_authorized: 'Wrong verification code. Not authenticated yet. Try again, please.',
+    please_use_code:(code)=> `Please, answer the Bot with the code: ${code}.`
+    
   },
   'pt-BR': {
     whats_name: 'Qual o seu nome?',
@@ -18,6 +22,10 @@ export const Messages = {
       código enviado para seu celular.`,
     validation_enter_valid_email: 'Por favor, digite um e-mail válido no formato nome@domínio.com.br.',
     validation_enter_name: 'Por favor, digite seu nome completo',
-    validation_enter_valid_mobile: 'Por favor, insira um número de celular válido (ex.: +55 21 98888-7766).'
+    validation_enter_valid_mobile: 'Por favor, insira um número de celular válido (ex.: +55 21 98888-7766).',
+    authenticated: 'Você está autenticada(o).',
+    not_authorized: 'Código de identificação inválido. Não autorizado, tente novamente, por favor.',
+    please_use_code:(code)=> `Por favor, responda ao bot com o código: ${code}.`
+
   }
 };

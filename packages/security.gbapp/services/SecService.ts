@@ -6,6 +6,8 @@ import { FindOptions } from 'sequelize';
 import { DialogKeywords } from '../../../packages/basic.gblib/services/DialogKeywords.js';
 import * as Fs from 'fs';
 import mkdirp from 'mkdirp';
+import urlJoin from 'url-join';
+
 
 /**
  * Security service layer.
@@ -26,17 +28,19 @@ export class SecService extends GBService {
       }
     });
 
+    const gbaiPath = DialogKeywords.getGBAIPath(min.botId);
+    const dir = urlJoin ('work',gbaiPath, 'users', userSystemId);
+
     if (!user) {
       user = GuaribasUser.build();
-      const gbaiPath = DialogKeywords.getGBAIPath(min.botId);
-
-      const dir = `work/${gbaiPath}/users/${userSystemId}`;
       if (!Fs.existsSync(dir)) {
         mkdirp.sync(dir);
       }
+    }
 
-
-      
+    const systemPromptFile = urlJoin(dir, 'systemPrompt.txt');
+    if (Fs.existsSync(systemPromptFile)) {
+      user[ 'systemPrompt'] = Fs.readFileSync(systemPromptFile);
     }
 
     user.instanceId = min.instance.instanceId;
