@@ -359,10 +359,7 @@ export class GBConversationalService {
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const client = twilio(null, authToken, { accountSid: accountSid });
 
-    let botNumber = min.core.getParam<string>(min.instance, 'Bot Number', null);
-    if (!botNumber) {
-      botNumber = process.env.BOT_NUMBER;
-    }
+    let botNumber = process.env.BOT_NUMBER;
 
     const msg = await client.messages
       .create({
