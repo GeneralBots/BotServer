@@ -354,12 +354,13 @@ export class GBConversationalService {
 
   // tslint:disable:no-unsafe-any due to Nexmo.
   public async sendSms(min: GBMinInstance, mobile: string, text: string): Promise<any> {
-    GBLog.info(`Sending SMS to ${mobile} with text: '${text}'.`);
+    let botNumber = process.env.BOT_NUMBER;
+
+    GBLog.info(`Sending SMS from ${botNumber} to ${mobile} with text: '${text}'.`);
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const client = twilio(null, authToken, { accountSid: accountSid });
 
-    let botNumber = process.env.BOT_NUMBER;
 
     const msg = await client.messages
       .create({
