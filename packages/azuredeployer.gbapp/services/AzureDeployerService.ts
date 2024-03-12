@@ -995,7 +995,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
           { name: 'BOT_ID', value: `${instance.botId}` },
           { name: 'CLOUD_SUBSCRIPTIONID', value: `${instance.cloudSubscriptionId}` },
           { name: 'CLOUD_LOCATION', value: `${instance.cloudLocation}` },
-          { name: 'CLOUD_GROUP', value: `${instance.botId}` },
           { name: 'CLOUD_USERNAME', value: `${instance.cloudUsername}` },
           { name: 'CLOUD_PASSWORD', value: `${instance.cloudPassword}` },
           { name: 'MARKETPLACE_ID', value: `${instance.marketplaceId}` },

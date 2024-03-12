@@ -290,7 +290,6 @@ ADMIN_PASS=${instance.adminPass}
 BOT_ID=${instance.botId}
 CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}
 CLOUD_LOCATION=${instance.cloudLocation}
-CLOUD_GROUP=${instance.botId}
 CLOUD_USERNAME=${instance.cloudUsername}
 CLOUD_PASSWORD=${instance.cloudPassword}
 MARKETPLACE_ID=${instance.marketplaceId}
@@ -431,12 +430,12 @@ ENDPOINT_UPDATE=true
 
             await installationDeployer.updateBotProxy(
               instance.botId,
-              GBConfigService.get('CLOUD_GROUP'),
+              GBConfigService.get('BOT_ID'),
               `${proxyAddress}/api/messages/${instance.botId}`
             );
           } catch (error) {
             if (error.code === 'ResourceNotFound') {
-              GBLog.warn(`Bot ${instance.botId} not found on resource group ${GBConfigService.get('CLOUD_GROUP')}.`);
+              GBLog.warn(`Bot ${instance.botId} not found on resource group ${GBConfigService.get('BOT_ID')}.`);
             } else {
               throw new Error(`Error updating bot proxy, details: ${error}.`);
             }
@@ -659,7 +658,7 @@ ENDPOINT_UPDATE=true
    * Opens storage firewall used by the server when starting to get root bot instance.
    */
   private async openStorageFrontier(installationDeployer: IGBInstallationDeployer) {
-    const group = GBConfigService.get('CLOUD_GROUP');
+    const group = GBConfigService.get('BOT_ID');
     const serverName = GBConfigService.get('STORAGE_SERVER').split('.database.windows.net')[0];
     await installationDeployer.openStorageFirewall(group, serverName);
   }
