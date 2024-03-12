@@ -393,7 +393,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await this.enableResourceProviders('Microsoft.Sql');
 
     GBLog.info(`Deploying Deploy Group (It may take a few minutes)...`);
-    await this.createDeployGroup(process.env.CLOUD_GROUP, instance.cloudLocation);
+    await this.createDeployGroup(name, instance.cloudLocation);
 
     let serverFarm;
     let serverName;
