@@ -6,6 +6,7 @@
       "request": "launch",
       "sourceMaps": true,
       "name": "Debug Program",
+      "runtimeExecutable": "/root/.nvm/versions/node/v19.9.0/bin/node",
       "program": "${workspaceRoot}/boot.mjs",
       "cwd": "${workspaceRoot}",
       "env": {

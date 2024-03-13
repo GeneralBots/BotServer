@@ -48,16 +48,6 @@ import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { GuaribasSubject } from '../../kb.gbapp/models/index.js';
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import { JsonOutputToolsParser } from "langchain/output_parsers";
-import {
-  RunnableLambda,
-  RunnablePassthrough,
-} from "@langchain/core/runnables";
-import {
-  CombiningOutputParser,
-} from "langchain/output_parsers";
-
-
 import {
   BaseLLMOutputParser,
   OutputParserException,
@@ -65,8 +55,6 @@ import {
 import { ChatGeneration, Generation } from "@langchain/core/outputs";
 
 export interface CustomOutputParserFields { }
-
-// This can be more generic, like Record<string, string>
 export type ExpectedOutput = string;
 
 function isChatGeneration(
@@ -78,8 +66,13 @@ function isChatGeneration(
 export class CustomLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
   lc_namespace = ["langchain", "output_parsers"];
 
-  constructor(fields?: CustomOutputParserFields) {
-    super(fields);
+  private toolChain: RunnableSequence
+  private documentChain: RunnableSequence;
+
+  constructor( toolChain: RunnableSequence,  documentChain: RunnableSequence) {
+    super();
+    this.toolChain = toolChain;
+    this.documentChain = documentChain;
   }
 
   async parseResult(
@@ -92,15 +85,19 @@ export class CustomLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     }
     let parsedOutput;
 
+    if (llmOutputs[0]['message'].lc_kwargs.additional_kwargs.tool_calls) {
+      this.toolChain.invoke({func: llmOutputs[0]['message'].lc_kwargs.additional_kwargs.tool_calls});
+    }
 
     if (isChatGeneration(llmOutputs[0])) {
       parsedOutput = llmOutputs[0].message.content;
     } else {
       parsedOutput = llmOutputs[0].text;
     }
-    let parsedText;
-    parsedText = parsedOutput;
-    return parsedText;
+
+    this.documentChain.invoke(parsedOutput);
+
+    return ``;
   }
 }
 
@@ -153,12 +150,8 @@ export class ChatServices {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    let tools = await ChatServices.getTools(min);
-    let toolsAsText = ChatServices.getToolsAsText(tools);
 
-    const toolMap: Record<string, any> = {
-      multiply: tools[0]
-    };
+    const context = min['vectorStore'];
 
     const memory = new BufferWindowMemory({
       returnMessages: true,
@@ -173,41 +166,17 @@ export class ChatServices {
       temperature: 0,
     });
 
-    const context = min['vectorStore'];
 
+    let tools = await ChatServices.getTools(min);
+    let toolsAsText = ChatServices.getToolsAsText(tools);
     const modelWithTools = model.bind({
       tools: tools.map(convertToOpenAITool)
     });
 
-    // Function for dynamically constructing the end of the chain based on the model-selected tool.
-    const callSelectedTool = RunnableLambda.from(
-      (toolInvocation: Record<string, any>) => {
-        const selectedTool = toolMap[toolInvocation.type];
-        if (!selectedTool) {
-          throw new Error(
-            `No matching tool available for requested type "${toolInvocation.type}".`
-          );
-        }
-        const toolCallChain = RunnableSequence.from([
-          (toolInvocation) => toolInvocation.args,
-          selectedTool,
-        ]);
-        // We use `RunnablePassthrough.assign` here to return the intermediate `toolInvocation` params
-        // as well, but you can omit if you only care about the answer.
-        return RunnablePassthrough.assign({
-          output: toolCallChain,
-        });
-      },
-
-    );
-
     const questionGeneratorTemplate = ChatPromptTemplate.fromMessages([
       AIMessagePromptTemplate.fromTemplate(
         `Answer the question without calling any tool, but if there is a need to call:
-
-
-        You have access to the following set of tools. Here are the names and descriptions for each tool:
-
+         You have access to the following set of tools. Here are the names and descriptions for each tool:
           ${toolsAsText}
         `
       ),
@@ -227,6 +196,26 @@ export class ChatServices {
       HumanMessagePromptTemplate.fromTemplate("Question: {question}"),
     ]);
 
+    const callToolChain = RunnableSequence.from([
+      {
+        func: async (output: object) =>{
+
+          const pid = 1;
+          const name = output['func'][0].function.name;
+          const args = JSON.parse(output['func'][0].function.arguments);
+          return await GBVMService.callVM(name, min, false, pid, false, args);
+
+        },
+        chat_history: async () => {
+          const { chat_history } = await memory.loadMemoryVariables({});
+          return chat_history;
+        },
+      },
+      new StringOutputParser()
+    ]);
+
+
+
     const combineDocumentsChain = RunnableSequence.from([
       {
         question: (output: string) => output,
@@ -236,14 +225,14 @@ export class ChatServices {
         },
         context: async (output: string) => {
           return await ChatServices.getRelevantContext(context, output, 1);
-          
+
         },
       },
       combineDocumentsPrompt,
       modelWithTools,
-      
+
     ]);
-    
+
     const conversationalQaChain = RunnableSequence.from([
       {
         question: (i: { question: string }) => i.question,
@@ -254,7 +243,7 @@ export class ChatServices {
       },
       questionGeneratorTemplate,
       modelWithTools,
-      new  CustomLLMOutputParser()
+      new CustomLLMOutputParser(callToolChain, combineDocumentsChain)
     ]);
 
     const systemPrompt = user['systemPrompt'];
@@ -262,19 +251,27 @@ export class ChatServices {
     let result = await conversationalQaChain.invoke({
       question,
     });
-    // await memory.saveContext(
-    //   {
-    //     input: query,
-    //   },
-    //   {
-    //     output: result,
-    //   }
-    // ); 
-    GBLog.info(`GPT Result: ${result.toString()}`);
-    return { answer: result.toString(), questionId: 0 };
 
+    if (result['name']) {
+      const func = result['func'];
+      await func.func(min, result['args']);
+
+    } else {
+
+      // await memory.saveContext(
+      //   {
+      //     input: query,
+      //   },
+      //   {
+      //     output: result,
+      //   }
+      // ); 
+
+      GBLog.info(`GPT Result: ${result.toString()}`);
+      return { answer: result.toString(), questionId: 0 };
+
+    }
   }
-
 
   private static getToolsAsText(tools) {
     return Object.keys(tools)
@@ -293,14 +290,6 @@ export class ChatServices {
       if (Fs.existsSync(functionJSON)) {
         const func = JSON.parse(Fs.readFileSync(functionJSON, 'utf8'));
         func.schema = jsonSchemaToZod(func.properties, { module: "esm" });
-        func.func = async () => {
-          const name = '';
-          const pid = 1;
-          const text = ''; // TODO:
-          const result = await GBVMService.callVM(name, min, false, pid, false, [text]);
-
-        }
-
         functions.push(func);
       }
 
