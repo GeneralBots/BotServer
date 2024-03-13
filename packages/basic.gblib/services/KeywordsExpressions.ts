@@ -241,6 +241,8 @@ export class KeywordsExpressions {
       }
     ];
 
+    keywords[i++] = [/^\s*return +(.*)/gim, 'resolve($1);'];
+
     keywords[i++] = [/^\s*else(?!{)/gim, '}\nelse {'];
 
     keywords[i++] = [/^\s*select case +(.*)/gim, 'switch ($1) {'];

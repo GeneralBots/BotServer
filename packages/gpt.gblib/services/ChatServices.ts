@@ -95,9 +95,8 @@ export class CustomLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
       parsedOutput = llmOutputs[0].text;
     }
 
-    this.documentChain.invoke(parsedOutput);
+    return this.documentChain.invoke(parsedOutput);
 
-    return ``;
   }
 }
 
@@ -200,11 +199,14 @@ export class ChatServices {
       {
         func: async (output: object) =>{
 
-          const pid = 1;
           const name = output['func'][0].function.name;
           const args = JSON.parse(output['func'][0].function.arguments);
-          return await GBVMService.callVM(name, min, false, pid, false, args);
 
+          GBLog.info(`Running .gbdialog '${name}' as GPT tool...`);
+    
+          const pid = GBVMService.createProcessInfo(null, min, 'gpt', null);
+
+          return await GBVMService.callVM(name, min, false, pid, false, args);
         },
         chat_history: async () => {
           const { chat_history } = await memory.loadMemoryVariables({});
@@ -229,8 +231,8 @@ export class ChatServices {
         },
       },
       combineDocumentsPrompt,
-      modelWithTools,
-
+      model,
+      new StringOutputParser()
     ]);
 
     const conversationalQaChain = RunnableSequence.from([
@@ -285,12 +287,19 @@ export class ChatServices {
     // Adds .gbdialog as functions if any to GPT Functions.
     await CollectionUtil.asyncForEach(Object.keys(min.scriptMap), async (script) => {
       const path = DialogKeywords.getGBAIPath(min.botId, "gbdialog", null);
-      const functionJSON = Path.join('work', path, `${script}.json`);
+      const jsonFile = Path.join('work', path, `${script}.json`);
 
-      if (Fs.existsSync(functionJSON)) {
-        const func = JSON.parse(Fs.readFileSync(functionJSON, 'utf8'));
-        func.schema = jsonSchemaToZod(func.properties, { module: "esm" });
-        functions.push(func);
+      if (Fs.existsSync(jsonFile)) {
+        const funcJSON = JSON.parse(Fs.readFileSync(jsonFile, 'utf8'));
+        const funcObj = funcJSON?.function;
+
+        if (funcObj){
+          
+          // TODO: Use ajv.
+          funcObj.schema = eval(jsonSchemaToZod(funcObj.parameters));
+          functions.push(new DynamicStructuredTool(funcObj));
+        }
+        
       }
 
     });

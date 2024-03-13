@@ -485,7 +485,7 @@ export class GBVMService extends GBService {
     const jsfile: string = `${filename}.js`;
 
     code = `
-        return (async () => { 
+        module.exports = (async () => { 
 
           // Imports npm packages for this .gbdialog conversational application.
 
@@ -725,7 +725,7 @@ export class GBVMService extends GBService {
   public static getMetadata(mainName: string, propertiesText, description) {
     let properties = {};
     if (!propertiesText || !description) {
-      
+
       return {}
     }
     const getType = asClause => {
@@ -773,7 +773,7 @@ export class GBVMService extends GBService {
       type: "function",
       function: {
         name: `${mainName}`,
-        description: description ? description[1] : '',
+        description: description ? description : '',
         parameters: zodToJsonSchema(z.object(properties))
       }
     }
@@ -878,7 +878,7 @@ export class GBVMService extends GBService {
       let endSystemPromptReg = endSystemPromptKeyword.exec(line);
       if (endSystemPromptReg && systemPrompt) {
         line = systemPrompt + '`})';
-        
+
         systemPrompt = null;
         emmit = true;
       }
@@ -1079,24 +1079,31 @@ export class GBVMService extends GBService {
     sandbox['channel'] = channel;
     sandbox['today'] = await dk.getToday({ pid });
     sandbox['now'] = await dk.getNow({ pid });
+    sandbox['returnValue'] = null;
     let result;
 
     try {
       if (GBConfigService.get('GBVM') === 'false') {
-        const vm1 = new NodeVM({
-          allowAsync: true,
-          sandbox: sandbox,
-          console: 'inherit',
-          wrapper: 'commonjs',
-          require: {
-            builtin: ['stream', 'http', 'https', 'url', 'zlib', 'net', 'tls', 'crypto'],
-            root: ['./'],
-            external: true,
-            context: 'sandbox'
-          }
-        });
-        const s = new VMScript(code, { filename: scriptPath });
-        result = vm1.run(s);
+        return await (async () => {
+          return await new Promise(resolve => {
+            sandbox['resolve'] = resolve;
+            const vm1 = new NodeVM({
+              allowAsync: true,
+              sandbox: sandbox,
+              console: 'inherit',
+              wrapper: 'commonjs',
+              require: {
+                builtin: ['stream', 'http', 'https', 'url', 'zlib', 'net', 'tls', 'crypto'],
+                root: ['./'],
+                external: true,
+                context: 'sandbox'
+              }
+            });
+            const s = new VMScript(code, { filename: scriptPath });
+            result = vm1.run(s);
+          });
+
+        })();
       } else {
         const runnerPath = urlJoin(
           process.cwd(),
@@ -1127,7 +1134,6 @@ export class GBVMService extends GBService {
       throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
     }
 
-    return result;
   }
 
   public static createProcessInfo(user: GuaribasUser, min: GBMinInstance, channel: any, executable: string) {
