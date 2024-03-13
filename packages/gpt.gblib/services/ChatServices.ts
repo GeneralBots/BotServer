@@ -67,9 +67,7 @@ import { ChatGeneration, Generation } from "@langchain/core/outputs";
 export interface CustomOutputParserFields { }
 
 // This can be more generic, like Record<string, string>
-export type ExpectedOutput = {
-  greeting: string;
-};
+export type ExpectedOutput = string;
 
 function isChatGeneration(
   llmOutput: ChatGeneration | Generation
@@ -178,11 +176,7 @@ export class ChatServices {
     const context = min['vectorStore'];
 
     const modelWithTools = model.bind({
-      tools: tools.map(convertToOpenAITool),
-      tool_choice: {
-        type: "function",
-        function: { name: "multiply" },
-      },
+      tools: tools.map(convertToOpenAITool)
     });
 
     // Function for dynamically constructing the end of the chain based on the model-selected tool.
@@ -209,7 +203,13 @@ export class ChatServices {
 
     const questionGeneratorTemplate = ChatPromptTemplate.fromMessages([
       AIMessagePromptTemplate.fromTemplate(
-        "Given the following conversation about a codebase and a follow up question, rephrase the follow up question to be a standalone question."
+        `Answer the question without calling any tool, but if there is a need to call:
+
+
+        You have access to the following set of tools. Here are the names and descriptions for each tool:
+
+          ${toolsAsText}
+        `
       ),
       new MessagesPlaceholder("chat_history"),
       AIMessagePromptTemplate.fromTemplate(`Follow Up Input: {question}
@@ -221,9 +221,7 @@ export class ChatServices {
         `Use the following pieces of context to answer the question at the end. 
         If you don't know the answer, just say that you don't know, don't try to make up an answer.
         \n\n{context}\n\n
-        You have the following tools to call: 
-        ${toolsAsText}`
-        
+        `
       ),
       new MessagesPlaceholder("chat_history"),
       HumanMessagePromptTemplate.fromTemplate("Question: {question}"),
@@ -243,7 +241,7 @@ export class ChatServices {
       },
       combineDocumentsPrompt,
       modelWithTools,
-      new CustomLLMOutputParser(),
+      
     ]);
     
     const conversationalQaChain = RunnableSequence.from([
@@ -256,11 +254,8 @@ export class ChatServices {
       },
       questionGeneratorTemplate,
       modelWithTools,
-      new StringOutputParser(),
-      combineDocumentsChain,
+      new  CustomLLMOutputParser()
     ]);
-    
-    
 
     const systemPrompt = user['systemPrompt'];
 
@@ -283,7 +278,7 @@ export class ChatServices {
 
   private static getToolsAsText(tools) {
     return Object.keys(tools)
-      .map((toolname) => `${tools[toolname].name}: ${tools[toolname].description}`)
+      .map((toolname) => `- ${tools[toolname].name}: ${tools[toolname].description}`)
       .join("\n");
   }
 

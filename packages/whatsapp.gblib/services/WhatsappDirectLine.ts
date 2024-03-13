@@ -802,6 +802,7 @@ export class WhatsappDirectLine extends GBService {
           id = req.from.split('@')[0];
           senderName = req._data.notifyName;
           text = req.body;
+          botId=botId?? this.botId;
           break;
 
       }
@@ -813,9 +814,11 @@ export class WhatsappDirectLine extends GBService {
       let toSwitchMin = GBServer.globals.minInstances.filter(
         p => p.instance.botId.toLowerCase() === text.toLowerCase()
       )[0];
+      
 
+      botId = botId??GBServer.globals.minBoot.botId;
       GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
-
+        
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
       // Detects user typed language and updates their locale profile if applies.
       let min = urlMin;

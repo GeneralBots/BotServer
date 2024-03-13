@@ -9,18 +9,8 @@ import { GBUtil } from './dist/src/util.js';
 
 // Displays version of Node JS being used at runtime and others attributes.
 
-await GBUtil.sleep(80);
-console.log(``);
-console.log(``);
-console.log(``);
-await chalkAnimation.karaoke(`
- █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ®
-██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █     
-██  ███ ████  █ ██  █ ████  █████  ██████ ██      ████   █   █   █    ██   
-██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █  
- █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███   
-`,1000);
-await GBUtil.sleep(80);
+console.log(`General Bots is loading source code files...`);
+
 var __dirname = process.env.PWD || process.cwd();
 try {
   var run = () => {
