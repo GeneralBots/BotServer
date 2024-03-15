@@ -714,7 +714,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /\= NEW OBJECT/gim,
       ($0, $1, $2, $3) => {
-        return ` = {pid: pid}`;
+        return ` = {}`;
       }
     ];
 

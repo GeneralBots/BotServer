@@ -455,8 +455,7 @@ export class GBMinService {
     if (!res) {
       return 'GeneralBots';
     }
-    if (req.body?.AccountSid)
-    {
+    if (req.body?.AccountSid) {
       return 'official';
     }
     return req.body.phone_id ? 'maytapi' : 'chatapi';
@@ -842,8 +841,8 @@ export class GBMinService {
 
       await min.whatsAppDirectLine.setup(true);
     } else {
-      if (min !== minBoot && minBoot.instance.whatsappServiceKey 
-        && min.instance.webchatKey) { 
+      if (min !== minBoot && minBoot.instance.whatsappServiceKey
+        && min.instance.webchatKey) {
         min.whatsAppDirectLine = new WhatsappDirectLine(
           min,
           min.botId,
@@ -957,7 +956,7 @@ export class GBMinService {
 
     req.body.channelId = req.body.from.channelIdEx === 'whatsapp' ? 'omnichannel' : req.body.channelId;
     req.body.group = req.body.from.group;
-    
+
     // Default activity processing and handler.
 
     const handler = async context => {
@@ -1027,7 +1026,7 @@ export class GBMinService {
         }
 
         let pid = step.context.activity['pid'];
-        if (!pid){
+        if (!pid) {
           pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null);
         }
         step.context.activity['pid'] = pid;
@@ -1086,7 +1085,7 @@ export class GBMinService {
 
         const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
 
-        
+
         if (context.activity.type === 'installationUpdate') {
           GBLog.info(`Bot installed on Teams.`);
         } else if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {
@@ -1421,7 +1420,7 @@ export class GBMinService {
         GBLog.info(
           `Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
         );
-        await GBVMService.callVM(startDialog.toLowerCase(), min, step,pid);
+        await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
 
         return;
       }
@@ -1455,7 +1454,7 @@ export class GBMinService {
       } else if (cmdOrDialogName === '/callsch') {
         await GBVMService.callVM(args, min, null, pid);
       } else if (cmdOrDialogName === '/calldbg') {
-        await GBVMService.callVM(args, min, step, pid,  true);
+        await GBVMService.callVM(args, min, step, pid, true);
       } else {
         await step.beginDialog(cmdOrDialogName, { args: args });
       }
@@ -1613,8 +1612,40 @@ export class GBMinService {
       await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
 
         dialogs[script] = async (data) => {
-          let params = JSON.parse(data);
-          return await GBVMService.callVM(script, min, null, params.pid, false, params);
+          let sec = new SecService();
+          const user = await sec.ensureUser(
+            min,
+            data.userSystemId,
+            data.userSystemId,
+            '',
+            'api',
+            data.userSystemId,
+            null
+          );
+
+          let pid = data?.pid;
+          if (script === 'start'){
+            pid = GBVMService.createProcessInfo(user, min, 'api', null);
+            
+          
+          const client = await new SwaggerClient({
+            spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
+            requestInterceptor: req => {
+              req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
+            }
+          });
+          const response = await client.apis.Conversations.Conversations_StartConversation();
+          
+          min['apiConversations'][pid] = {conversation: response.obj, client: client};
+        }
+
+          let ret =  await GBVMService.callVM(script, min, null, pid, false, data);
+
+          if (script === 'start')
+          {
+            ret = pid;
+          }
+          return ret;
         }
       });
 

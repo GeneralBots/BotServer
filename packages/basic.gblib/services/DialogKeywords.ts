@@ -1249,43 +1249,60 @@ export class DialogKeywords {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min,`MESSAGE BOT: ${text}.`);
 
-    const conversation = min['apiConversations'][pid];
+    const { conversation, client} = min['apiConversations'][pid];
 
-    conversation.client.apis.Conversations.Conversations_PostActivity({
+    await client.apis.Conversations.Conversations_PostActivity({
       conversationId: conversation.conversationId,
       activity: {
         textFormat: 'plain',
         text: text,
         type: 'message',
         from: {
-          id: 'word',
-          name: 'word'
+          id: user.userSystemId,
+          name: user.userName
         }
       }
     });
-    const watermarkMap = conversation.watermarkMap;
+    
 
     let messages = [];
 
-    const response = await conversation.client.apis.Conversations.Conversations_GetActivities({
-      conversationId: conversation.conversationId,
-      watermark: conversation.watermark
-    });
-    conversation.watermarkMap = response.obj.watermark;
-    let activities = response.obj.activites;
 
+    GBLog.info(`MessageBot: Starting message polling ${conversation.conversationId}).`);
 
-    if (activities && activities.length) {
-      activities = activities.filter(m => m.from.id === min.botId && m.type === 'message');
-      if (activities.length) {
-        activities.forEach(activity => {
-          messages.push({ text: activity.text });
-          GBLogEx.info(min, `MESSAGE BOT answer from bot: ${activity.text}`);
+    
+
+    const worker = async () => {
+      try {
+        
+        const response = await client.apis.Conversations.Conversations_GetActivities({
+          conversationId: conversation.conversationId,
+          watermark: conversation.watermark
         });
+        conversation.watermarkMap = response.obj.watermark;
+        let activities = response.obj.activites;
+    
+    
+        if (activities && activities.length) {
+          activities = activities.filter(m => m.from.id === min.botId && m.type === 'message');
+          if (activities.length) {
+            activities.forEach(activity => {
+              messages.push({ text: activity.text });
+              GBLogEx.info(min, `MESSAGE BOT answer from bot: ${activity.text}`);
+            });
+          }
+        }
+    
+        return messages.join('\n');
+    
+      } catch (err) {
+        GBLog.error(
+          `Error calling printMessages API ${err.data === undefined ? err : err.data} ${err.errObj ? err.errObj.message : ''
+          }`
+        );
       }
-    }
-
-    return messages.join('\n');
+    };
+    setInterval(worker, DEFAULT_HEAR_POLL_INTERVAL);
   }
 
 

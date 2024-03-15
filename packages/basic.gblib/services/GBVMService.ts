@@ -645,6 +645,8 @@ export class GBVMService extends GBService {
           }
           catch(e){
             console.log(e);
+
+            reject ({message: e.message, name: e.name});
           }
           finally{
 
@@ -652,6 +654,8 @@ export class GBVMService extends GBService {
 
               await wa.closeHandles({pid: pid});
               await sys.closeHandles({pid: pid});
+
+              resolve(true);
           }
         })(); 
 `;
@@ -1085,8 +1089,9 @@ export class GBVMService extends GBService {
     try {
       if (GBConfigService.get('GBVM') === 'false') {
         return await (async () => {
-          return await new Promise(resolve => {
+          return await new Promise((resolve, reject) => {
             sandbox['resolve'] = resolve;
+            sandbox['reject'] = reject;
             const vm1 = new NodeVM({
               allowAsync: true,
               sandbox: sandbox,

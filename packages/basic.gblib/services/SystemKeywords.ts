@@ -1440,16 +1440,19 @@ export class SystemKeywords {
     return ret;
   }
 
-  public static async setSystemPrompt({ pid, systemPrompt }) {
+  public async setSystemPrompt({ pid, text }) {
 
     let { min, user } = await DialogKeywords.getProcessInfo(pid);
     const sec = new SecService();
 
+
+
     if (user) {
-      user['systemPrompt'] = systemPrompt;
+      ChatServices.userSystemPrompt[user.userSystemId] = text;
+
       const path = DialogKeywords.getGBAIPath(min.botId);
       const systemPromptFile = urlJoin(process.cwd(), 'work', path, 'users',user.userSystemId, 'systemPrompt.txt');
-      Fs.writeFileSync(systemPromptFile, systemPrompt);
+      Fs.writeFileSync(systemPromptFile, text);
     }
   }
 

@@ -69,7 +69,7 @@ export class CustomLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
   private toolChain: RunnableSequence
   private documentChain: RunnableSequence;
 
-  constructor( toolChain: RunnableSequence,  documentChain: RunnableSequence) {
+  constructor(toolChain: RunnableSequence, documentChain: RunnableSequence) {
     super();
     this.toolChain = toolChain;
     this.documentChain = documentChain;
@@ -83,19 +83,19 @@ export class CustomLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
         "Output parser did not receive any generations."
       );
     }
-    let parsedOutput;
+    let result;
 
     if (llmOutputs[0]['message'].lc_kwargs.additional_kwargs.tool_calls) {
-      this.toolChain.invoke({func: llmOutputs[0]['message'].lc_kwargs.additional_kwargs.tool_calls});
+      return this.toolChain.invoke({ func: llmOutputs[0]['message'].lc_kwargs.additional_kwargs.tool_calls });
     }
 
     if (isChatGeneration(llmOutputs[0])) {
-      parsedOutput = llmOutputs[0].message.content;
+      result = llmOutputs[0].message.content;
     } else {
-      parsedOutput = llmOutputs[0].text;
+      result = llmOutputs[0].text;
     }
 
-    return this.documentChain.invoke(parsedOutput);
+    return this.documentChain ? this.documentChain.invoke(result) : result;
 
   }
 }
@@ -131,6 +131,8 @@ export class ChatServices {
 
   }
 
+  private static memoryMap = {};
+  public static userSystemPrompt = {};
 
   public static async answerByGPT(min: GBMinInstance, user, pid,
     question: string,
@@ -142,22 +144,24 @@ export class ChatServices {
       return { answer: undefined, questionId: 0 };
     }
 
-
     const contentLocale = min.core.getParam(
       min.instance,
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
+    const docsContext = min['vectorStore'];
 
-    const context = min['vectorStore'];
-
-    const memory = new BufferWindowMemory({
-      returnMessages: true,
-      memoryKey: 'chat_history',
-      inputKey: 'input',
-      k: 2,
-    });
+    if (!this.memoryMap[user.userSystemId]) {
+      this.memoryMap[user.userSystemId] = new BufferWindowMemory({
+        returnMessages: true,
+        memoryKey: 'chat_history',
+        inputKey: 'input',
+        k: 2,
+      })
+    }
+    const memory = this.memoryMap[user.userSystemId];
+    const systemPrompt = this.userSystemPrompt[user.userSystemId];
 
     const model = new ChatOpenAI({
       openAIApiKey: process.env.OPENAI_API_KEY,
@@ -168,15 +172,19 @@ export class ChatServices {
 
     let tools = await ChatServices.getTools(min);
     let toolsAsText = ChatServices.getToolsAsText(tools);
+
     const modelWithTools = model.bind({
       tools: tools.map(convertToOpenAITool)
     });
 
     const questionGeneratorTemplate = ChatPromptTemplate.fromMessages([
       AIMessagePromptTemplate.fromTemplate(
-        `Answer the question without calling any tool, but if there is a need to call:
+        `
+        Answer the question without calling any tool, but if there is a need to call:
          You have access to the following set of tools. Here are the names and descriptions for each tool:
           ${toolsAsText}
+
+          Do not use any previous tools output in the chat_history. 
         `
       ),
       new MessagesPlaceholder("chat_history"),
@@ -184,10 +192,22 @@ export class ChatServices {
     Standalone question:`),
     ]);
 
+    const toolsResultPrompt = ChatPromptTemplate.fromMessages([
+      AIMessagePromptTemplate.fromTemplate(
+        `The tool just returned value in last call. Using {chat_history}
+        rephrase the answer to the user using this tool output.
+        `
+      ),
+      new MessagesPlaceholder("chat_history"),
+      AIMessagePromptTemplate.fromTemplate(`Tool output: {tool_output} 
+    Standalone question:`),
+    ]);
+
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
       AIMessagePromptTemplate.fromTemplate(
-        `Use the following pieces of context to answer the question at the end. 
+        `
         If you don't know the answer, just say that you don't know, don't try to make up an answer.
+        Use the following pieces, if any, of context to answer the question at the end. 
         \n\n{context}\n\n
         `
       ),
@@ -197,13 +217,11 @@ export class ChatServices {
 
     const callToolChain = RunnableSequence.from([
       {
-        func: async (output: object) =>{
+        tool_output: async (output: object) => {
 
           const name = output['func'][0].function.name;
           const args = JSON.parse(output['func'][0].function.arguments);
-
           GBLog.info(`Running .gbdialog '${name}' as GPT tool...`);
-    
           const pid = GBVMService.createProcessInfo(null, min, 'gpt', null);
 
           return await GBVMService.callVM(name, min, false, pid, false, args);
@@ -212,11 +230,12 @@ export class ChatServices {
           const { chat_history } = await memory.loadMemoryVariables({});
           return chat_history;
         },
+
       },
+      toolsResultPrompt,
+      model,
       new StringOutputParser()
     ]);
-
-
 
     const combineDocumentsChain = RunnableSequence.from([
       {
@@ -226,7 +245,8 @@ export class ChatServices {
           return chat_history;
         },
         context: async (output: string) => {
-          return await ChatServices.getRelevantContext(context, output, 1);
+          const c = await ChatServices.getRelevantContext(docsContext, output, 1);
+          return c ?? 'answer just with user question.';
 
         },
       },
@@ -245,34 +265,63 @@ export class ChatServices {
       },
       questionGeneratorTemplate,
       modelWithTools,
-      new CustomLLMOutputParser(callToolChain, combineDocumentsChain)
+      new CustomLLMOutputParser(callToolChain, docsContext?.docstore?._docs.length > 0 ? combineDocumentsChain : null),
+      new StringOutputParser()
     ]);
 
-    const systemPrompt = user['systemPrompt'];
+    const directChain = RunnableSequence.from([
+      {
+        question: (i: { question: string }) => {
+          return `
+          ${systemPrompt}
+          
+          ${i.question}`
+        },
+        chat_history: async () => {
+          const { chat_history } = await memory.loadMemoryVariables({});
+          return chat_history;
+        },
+      },
+      modelWithTools,
+      new CustomLLMOutputParser(callToolChain, docsContext?.docstore?._docs.length > 0 ? combineDocumentsChain : null),
+      new StringOutputParser()
+    ]);
 
-    let result = await conversationalQaChain.invoke({
-      question,
-    });
+    const direct = true;
+    let result;
 
-    if (result['name']) {
-      const func = result['func'];
-      await func.func(min, result['args']);
+    if (direct) {
+      result = await (tools.length > 0 ? modelWithTools : model).invoke(`
+      ${systemPrompt}
+      
+      ${question}`);
 
-    } else {
+      result = result.content;
+    }
+    else {
 
-      // await memory.saveContext(
-      //   {
-      //     input: query,
-      //   },
-      //   {
-      //     output: result,
-      //   }
-      // ); 
-
-      GBLog.info(`GPT Result: ${result.toString()}`);
-      return { answer: result.toString(), questionId: 0 };
+      result = await (directChain ?? conversationalQaChain).invoke({
+        question,
+      });
 
     }
+
+    
+    
+
+    await memory.saveContext(
+      {
+        input: question,
+      },
+      {
+        output: result,
+      }
+    );
+
+    GBLog.info(`GPT Result: ${result.toString()}`);
+    return { answer: result.toString(), questionId: 0 };
+
+
   }
 
   private static getToolsAsText(tools) {
@@ -286,38 +335,26 @@ export class ChatServices {
 
     // Adds .gbdialog as functions if any to GPT Functions.
     await CollectionUtil.asyncForEach(Object.keys(min.scriptMap), async (script) => {
+
+
       const path = DialogKeywords.getGBAIPath(min.botId, "gbdialog", null);
       const jsonFile = Path.join('work', path, `${script}.json`);
 
-      if (Fs.existsSync(jsonFile)) {
+      if (Fs.existsSync(jsonFile) && script.toLowerCase() !== 'start.vbs') {
+
         const funcJSON = JSON.parse(Fs.readFileSync(jsonFile, 'utf8'));
         const funcObj = funcJSON?.function;
 
-        if (funcObj){
-          
+        if (funcObj) {
+
           // TODO: Use ajv.
           funcObj.schema = eval(jsonSchemaToZod(funcObj.parameters));
           functions.push(new DynamicStructuredTool(funcObj));
         }
-        
+
       }
 
     });
-
-    const multiplyTool = new DynamicStructuredTool({
-      name: "multiply",
-      description: "Multiply two integers together.",
-      schema: z.object({
-        firstInt: z.number(),
-        secondInt: z.number(),
-      }),
-      func: async ({ firstInt, secondInt }) => {
-        return (firstInt * secondInt).toString();
-      },
-    });
-
-    functions.push(multiplyTool);
-
 
     return functions;
   }
