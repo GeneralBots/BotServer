@@ -1027,7 +1027,7 @@ export class GBMinService {
 
         let pid = step.context.activity['pid'];
         if (!pid) {
-          pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null);
+          pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null, step);
         }
         step.context.activity['pid'] = pid;
 

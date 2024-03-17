@@ -1346,7 +1346,7 @@ export class DialogKeywords {
 
   public static async getProcessInfo(pid: number) {
     const proc = GBServer.globals.processes[pid];
-
+    const step = proc.step;
     const min = GBServer.globals.minInstances.filter(p => p.instance.instanceId == proc.instanceId)[0];
     const sec = new SecService();
     const user = await sec.getUserFromId(min.instance.instanceId, proc.userId);
@@ -1355,7 +1355,8 @@ export class DialogKeywords {
       min,
       user,
       params,
-      proc
+      proc,
+      step
     };
   }
 
@@ -1363,8 +1364,8 @@ export class DialogKeywords {
    * Talks to the user by using the specified text.
    */
   public async talk({ pid, text }) {
-    GBLog.info(`BASIC: TALK '${text}'.`);
-    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const { min, user, step } = await DialogKeywords.getProcessInfo(pid);
+    GBLog.info(`BASIC: TALK '${text} step:${step}'.`);
 
     if (user) {
       // TODO: const translate = user ? user.basicOptions.translatorOn : false;
@@ -1376,7 +1377,12 @@ export class DialogKeywords {
       );
       GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
 
-      await min.conversationalService['sendOnConversation'](min, user, text);
+      if (step){
+        await min.conversationalService.sendText(min, step, text);
+      }
+      else{
+        await min.conversationalService['sendOnConversation'](min, user, text);
+      }
     }
     return { status: 0 };
   }

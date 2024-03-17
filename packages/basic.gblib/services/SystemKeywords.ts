@@ -1443,9 +1443,6 @@ export class SystemKeywords {
   public async setSystemPrompt({ pid, text }) {
 
     let { min, user } = await DialogKeywords.getProcessInfo(pid);
-    const sec = new SecService();
-
-
 
     if (user) {
       ChatServices.userSystemPrompt[user.userSystemId] = text;

@@ -128,13 +128,19 @@ export class GBVMService extends GBService {
 
       // Pre process SET SCHEDULE calls.
 
-      const schedule = GBVMService.getSetScheduleKeywordArgs(text);
+      const schedules = GBVMService.getSetScheduleKeywordArgs(text);
+
       const s = new ScheduleServices();
-      if (schedule) {
-        await s.createOrUpdateSchedule(min, schedule, mainName);
-      } else {
-        await s.deleteScheduleIfAny(min, mainName);
-      }
+      await s.deleteScheduleIfAny(min, mainName);
+
+      let i = 1;
+      await CollectionUtil.asyncForEach(schedules, async (syntax) => {
+
+        if (s) {
+            await s.createOrUpdateSchedule(min, syntax, `${mainName};${i++}`);
+        }
+      });
+
       text = text.replace(/^\s*SET SCHEDULE (.*)/gim, '');
 
       // Write VBS file without pragma keywords.
@@ -687,13 +693,27 @@ export class GBVMService extends GBService {
     return mainName.toLowerCase();
   }
 
-  public static getSetScheduleKeywordArgs(code: string) {
-    if (!code) return null;
-    const keyword = /^\s*SET SCHEDULE (.*)/gim;
-    const result = keyword.exec(code);
-    return result ? result[1].replace(/\`/, '') : null;
-  }
+  public static getSetScheduleKeywordArgs(code) {
+    if (!code) return [];
 
+    const lines = code.split(/\n/);
+    const results = [];
+
+    lines.forEach(line => {
+      if (line.trim()) {
+        console.log(line);
+        const keyword = /\s*SET SCHEDULE (.*)/gi;
+        let result: any = keyword.exec(line);
+        if (result) {
+          result = result[1].replace(/\`|\"|\'/, '')
+          result = result.trim();
+          results.push(result);
+        }
+      }
+    });
+
+    return results;
+  }
   private async getTextFromWord(folder: string, filename: string) {
     return new Promise<string>(async (resolve, reject) => {
       const path = urlJoin(folder, filename);
@@ -1141,7 +1161,7 @@ export class GBVMService extends GBService {
 
   }
 
-  public static createProcessInfo(user: GuaribasUser, min: GBMinInstance, channel: any, executable: string) {
+  public static createProcessInfo(user: GuaribasUser, min: GBMinInstance, channel: any, executable: string, step = null) {
     const pid = GBAdminService.getNumberIdentifier();
     GBServer.globals.processes[pid] = {
       pid: pid,
@@ -1149,6 +1169,7 @@ export class GBVMService extends GBService {
       instanceId: min.instance.instanceId,
       channel: channel,
       roles: 'everyone',
+      step: step,
       executable: executable
     };
     return pid;

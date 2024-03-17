@@ -9,8 +9,6 @@ import pjson from './package.json' assert { type: 'json' };
 // Displays version of Node JS being used at runtime and others attributes.
 
 process.stdout.write(`General Bots. BotServer@${pjson.version}, botlib@${pjson.dependencies.botlib}, botbuilder@${pjson.dependencies.botbuilder}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
-os.setPriority(process.pid, os.constants.priority.PRIORITY_HIGHEST);
-
 console.log(`\nLoading virtual machine source code files...`);
 
 var __dirname = process.env.PWD || process.cwd();

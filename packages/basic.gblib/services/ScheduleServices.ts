@@ -47,30 +47,38 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
  * Basic services for BASIC manipulation.
  */
 export class ScheduleServices extends GBService {
-  public async deleteScheduleIfAny (min: GBMinInstance, name: string) {
-    const task = min['scheduleMap'] ? min['scheduleMap'][name] : null;
+  public async deleteScheduleIfAny(min: GBMinInstance, name: string) {
 
-    if (task) {
-      task.destroy();
-      delete min['scheduleMap'][name];
-    }
+    let i = 1;
+    while (i <= 10) {
+      const task = min['scheduleMap'] ? min['scheduleMap'][name + i] : null;
 
-    const count = await GuaribasSchedule.destroy({
-      where: {
-        instanceId: min.instance.instanceId,
-        name: name
+      if (task) {
+        task.destroy();
+        const id = `${name};${i}`;
+
+        delete min['scheduleMap'][id];
+        const count = await GuaribasSchedule.destroy({
+          where: {
+            instanceId: min.instance.instanceId,
+            name: id 
+          }
+        });
+
+        if (count > 0) {
+          GBLogEx.info(min, `BASIC: Removed ${name} SET SCHEDULE and ${count} rows from storage on: ${min.botId}...`);
+        }
       }
-    });
+      i++;
 
-    if (count > 0) {
-      GBLogEx.info(min,`BASIC: Removed ${name} SET SCHEDULE and ${count} rows from storage on: ${min.botId}...`);
     }
+
   }
 
   /**
    * Finds and update user agent information to a next available person.
    */
-  public async createOrUpdateSchedule (min: GBMinInstance, schedule: string, name: string): Promise<GuaribasSchedule> {
+  public async createOrUpdateSchedule(min: GBMinInstance, schedule: string, name: string): Promise<GuaribasSchedule> {
     let record = await GuaribasSchedule.findOne({
       where: {
         instanceId: min.instance.instanceId,
@@ -97,11 +105,22 @@ export class ScheduleServices extends GBService {
   /**
    * Load all cached schedule from BASIC SET SCHEDULE keyword.
    */
-  public async scheduleAll () {
+  public async scheduleAll() {
     let schedules;
     try {
       schedules = await GuaribasSchedule.findAll();
-      await CollectionUtil.asyncForEach(schedules, async item => {
+      let i = 0;
+      let lastName = '';
+
+      await CollectionUtil.asyncForEach(schedules, async (item) => {
+
+        if (item.name === lastName) {
+          item.name = item.name + ++i;
+        }
+        else {
+          i = 0;
+        }
+
         let min: GBMinInstance = GBServer.globals.minInstances.filter(
           p => p.instance.instanceId === item.instanceId
         )[0];
@@ -116,8 +135,8 @@ export class ScheduleServices extends GBService {
     return schedules;
   }
 
-  private ScheduleItem (item: GuaribasSchedule, min: GBMinInstance) {
-    GBLogEx.info(min,`Scheduling ${item.name} on ${min.botId}...`);
+  private ScheduleItem(item: GuaribasSchedule, min: GBMinInstance) {
+    GBLogEx.info(min, `Scheduling ${item.name} on ${min.botId}...`);
     try {
       const options = {
         scheduled: true,
@@ -134,12 +153,12 @@ export class ScheduleServices extends GBService {
         item.schedule,
         function () {
           const finalData = async () => {
-            let script = item.name;
+            let script = item.name.split(';')[0];
             let min: GBMinInstance = GBServer.globals.minInstances.filter(
               p => p.instance.instanceId === item.instanceId
             )[0];
-            GBLogEx.info(min,`Running .gbdialog word ${item.name} on:${item.schedule}...`);
-    
+            GBLogEx.info(min, `Running .gbdialog word ${item.name} on:${item.schedule}...`);
+
             const pid = GBVMService.createProcessInfo(null, min, 'batch', null);
             await GBVMService.callVM(script, min, null, pid);
           };
@@ -149,9 +168,9 @@ export class ScheduleServices extends GBService {
         },
         options
       );
-      
+
     } catch (error) {
-      GBLogEx.error(min,`Running .gbdialog word ${item.name} : ${error}...`);
+      GBLogEx.error(min, `Running .gbdialog word ${item.name} : ${error}...`);
     }
   }
 }

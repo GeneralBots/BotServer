@@ -46,13 +46,15 @@ import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { GuaribasSubject } from '../../kb.gbapp/models/index.js';
-import { z } from "zod";
+import { Serialized } from "@langchain/core/load/serializable";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import {
   BaseLLMOutputParser,
   OutputParserException,
 } from "@langchain/core/output_parsers";
 import { ChatGeneration, Generation } from "@langchain/core/outputs";
+import { LunaryHandler } from "@langchain/community/callbacks/handlers/lunary";
 
 export interface CustomOutputParserFields { }
 export type ExpectedOutput = string;
@@ -62,6 +64,28 @@ function isChatGeneration(
 ): llmOutput is ChatGeneration {
   return "message" in llmOutput;
 }
+
+class CustomHandler extends BaseCallbackHandler {
+  name = "custom_handler";
+
+  handleLLMNewToken(token: string) {
+    GBLog.info(`LLM: token: ${JSON.stringify(token)}`);
+  }
+
+  handleLLMStart(llm: Serialized, _prompts: string[]) {
+    GBLog.info(`LLM: handleLLMStart ${JSON.stringify(llm)}, Prompts: ${_prompts.join('\n')}`);
+  }
+
+  handleChainStart(chain: Serialized) {
+    GBLog.info(`LLM: handleChainStart: ${JSON.stringify(chain)}`);
+  }
+
+  handleToolStart(tool: Serialized) {
+    GBLog.info(`LLM: handleToolStart: ${JSON.stringify(tool)}`);
+  }
+}
+
+const logHandler = new CustomHandler();
 
 export class CustomLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
   lc_namespace = ["langchain", "output_parsers"];
@@ -105,7 +129,7 @@ export class ChatServices {
   private static async getRelevantContext(
     vectorStore: HNSWLib,
     sanitizedQuestion: string,
-    numDocuments: number
+    numDocuments: number = 10
   ): Promise<string> {
     if (sanitizedQuestion === '') {
       return '';
@@ -149,7 +173,10 @@ export class ChatServices {
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
-
+    const LLMMode = min.core.getParam(
+      min.instance,
+      'Answer Mode', 'direct'
+    );
     const docsContext = min['vectorStore'];
 
     if (!this.memoryMap[user.userSystemId]) {
@@ -167,6 +194,7 @@ export class ChatServices {
       openAIApiKey: process.env.OPENAI_API_KEY,
       modelName: "gpt-3.5-turbo-0125",
       temperature: 0,
+      callbacks: [logHandler],
     });
 
 
@@ -206,9 +234,13 @@ export class ChatServices {
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
       AIMessagePromptTemplate.fromTemplate(
         `
+        \n\n{context}\n\n
+
+        And using \n\n{chat_history}\n\n
+        rephrase the answer to the user using this context already spoken.
         If you don't know the answer, just say that you don't know, don't try to make up an answer.
         Use the following pieces, if any, of context to answer the question at the end. 
-        \n\n{context}\n\n
+
         `
       ),
       new MessagesPlaceholder("chat_history"),
@@ -239,14 +271,14 @@ export class ChatServices {
 
     const combineDocumentsChain = RunnableSequence.from([
       {
-        question: (output: string) => output,
+        question: (question: string) => question,
         chat_history: async () => {
           const { chat_history } = await memory.loadMemoryVariables({});
           return chat_history;
         },
         context: async (output: string) => {
-          const c = await ChatServices.getRelevantContext(docsContext, output, 1);
-          return c ?? 'answer just with user question.';
+          const c = await ChatServices.getRelevantContext(docsContext, output);
+          return  `${systemPrompt} \n ${c ? 'Use this context to answer:\n' + c: 'answer just with user question.'}`;
 
         },
       },
@@ -269,28 +301,23 @@ export class ChatServices {
       new StringOutputParser()
     ]);
 
-    const directChain = RunnableSequence.from([
+    const conversationalToolChain = RunnableSequence.from([
       {
-        question: (i: { question: string }) => {
-          return `
-          ${systemPrompt}
-          
-          ${i.question}`
-        },
+        question: (i: { question: string }) => i.question,
         chat_history: async () => {
           const { chat_history } = await memory.loadMemoryVariables({});
           return chat_history;
         },
       },
+      questionGeneratorTemplate,
       modelWithTools,
       new CustomLLMOutputParser(callToolChain, docsContext?.docstore?._docs.length > 0 ? combineDocumentsChain : null),
       new StringOutputParser()
     ]);
 
-    const direct = true;
     let result;
 
-    if (direct) {
+    if (LLMMode === "direct") {
       result = await (tools.length > 0 ? modelWithTools : model).invoke(`
       ${systemPrompt}
       
@@ -298,16 +325,18 @@ export class ChatServices {
 
       result = result.content;
     }
-    else {
+    else if (LLMMode === "document") {
+      result = await combineDocumentsChain.invoke(question);
 
-      result = await (directChain ?? conversationalQaChain).invoke({
+    } else if (LLMMode === "function") {
+
+      result = await conversationalToolChain.invoke({
         question,
       });
-
     }
-
-    
-    
+    else {
+      GBLog.info(`Invalid Answer Mode in Config.xlsx: ${LLMMode}.`);
+    }
 
     await memory.saveContext(
       {
