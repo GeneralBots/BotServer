@@ -423,7 +423,8 @@ export class GBConversationalService {
 
   public async sendToMobile(min: GBMinInstance, mobile: string, message: string, conversationId) {
     GBLog.info(`Sending message ${message} to ${mobile}...`);
-    await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId);
+    return min.whatsAppDirectLine ? await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId):
+    null;
   }
 
   public static async getAudioBufferFromText(text): Promise<string> {
