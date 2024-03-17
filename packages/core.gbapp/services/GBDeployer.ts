@@ -267,7 +267,7 @@ export class GBDeployer implements IGBDeployer {
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
     const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
-    const group = GBConfigService.get('CLOUD_GROUP');
+    const group = GBConfigService.get('CLOUD_GROUP')??GBConfigService.get('BOT_ID');
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
 
     // If the bot already exists, just update the endpoint.

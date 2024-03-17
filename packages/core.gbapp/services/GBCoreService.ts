@@ -423,6 +423,7 @@ ENDPOINT_UPDATE=true
     let instances: IGBInstance[];
     try {
       instances = await core.loadInstances();
+      const group = GBConfigService.get('CLOUD_GROUP')??GBConfigService.get('BOT_ID');
       if (process.env.ENDPOINT_UPDATE === 'true') {
         await CollectionUtil.asyncForEach(instances, async instance => {
           GBLog.info(`Updating bot endpoint for ${instance.botId}...`);
@@ -430,7 +431,7 @@ ENDPOINT_UPDATE=true
 
             await installationDeployer.updateBotProxy(
               instance.botId,
-              GBConfigService.get('BOT_ID'),
+              group,
               `${proxyAddress}/api/messages/${instance.botId}`
             );
           } catch (error) {
