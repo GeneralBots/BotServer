@@ -354,23 +354,26 @@ export class GBConversationalService {
 
   // tslint:disable:no-unsafe-any due to Nexmo.
   public async sendSms(min: GBMinInstance, mobile: string, text: string): Promise<any> {
-    let botNumber = process.env.BOT_NUMBER;
-
-    GBLog.info(`Sending SMS from ${botNumber} to ${mobile} with text: '${text}'.`);
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const client = twilio(null, authToken, { accountSid: accountSid });
+    
+    let botNumber = min.core.getParam<string>(min.instance, 'Bot Number', null);
+    if (botNumber) {
 
 
-    const msg = await client.messages
-      .create({
-        body: text,
-        from: '+' + botNumber,
-        to: '+' + mobile
-      })
+      GBLog.info(`Sending SMS from ${botNumber} to ${mobile} with text: '${text}'.`);
+      const accountSid = process.env.TWILIO_ACCOUNT_SID;
+      const authToken = process.env.TWILIO_AUTH_TOKEN;
+      const client = twilio(null, authToken, { accountSid: accountSid });
 
-    GBLogEx.info(min, `SMS sent, return: ${msg.sid}.`);
 
+      const msg = await client.messages
+        .create({
+          body: text,
+          from: '+' + botNumber,
+          to: '+' + mobile
+        })
+
+      GBLogEx.info(min, `SMS sent, return: ${msg.sid}.`);
+    }
     return;
 
     if (!min.instance.smsKey && min.instance.smsSecret) {
@@ -423,8 +426,8 @@ export class GBConversationalService {
 
   public async sendToMobile(min: GBMinInstance, mobile: string, message: string, conversationId) {
     GBLog.info(`Sending message ${message} to ${mobile}...`);
-    return min.whatsAppDirectLine ? await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId):
-    await this.sendSms(min, mobile, message);
+    return min.whatsAppDirectLine ? await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId) :
+      await this.sendSms(min, mobile, message);
   }
 
   public static async getAudioBufferFromText(text): Promise<string> {
