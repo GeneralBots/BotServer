@@ -273,6 +273,12 @@ export class GBVMService extends GBService {
       if (Fs.existsSync(filePath)) {
         connections = JSON.parse(Fs.readFileSync(filePath, 'utf8'));
       }
+      const shouldSync = min.core.getParam<boolean>(
+        min.instance,
+        'Synchronize Database',
+        false
+      );
+
       tableDef.forEach(async t => {
 
         const tableName = t.name.trim();
@@ -371,8 +377,8 @@ export class GBVMService extends GBService {
                   equals++;
                 }
               }
-            });
 
+            });
 
             if (equals != Object.keys(t.fields).length) {
               sync = true;
@@ -405,7 +411,6 @@ export class GBVMService extends GBService {
 
           sync = sync ? sync : !found;
 
-
           associations.forEach(e => {
             const from = seq.models[e.from];
             const to = seq.models[e.to];
@@ -418,11 +423,6 @@ export class GBVMService extends GBService {
 
           });
 
-          const shouldSync = min.core.getParam<boolean>(
-            min.instance,
-            'Synchronize Database',
-            false
-          );
 
           if (sync && shouldSync) {
 
@@ -433,9 +433,6 @@ export class GBVMService extends GBService {
               force: false // Keep it false due to data loss danger.
             });
             GBLogEx.info(min, `BASIC: Done sync for ${min.botId} ${connectionName} ${tableName} storage table...`);
-          }
-          else {
-            GBLogEx.verbose(min, `BASIC: TABLE ${tableName} keywords already up to date  ${connectionName} (${min.botId})...`);
           }
         }
       });
