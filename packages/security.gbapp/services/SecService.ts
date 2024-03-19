@@ -22,20 +22,22 @@ export class SecService extends GBService {
     displayName: string,
     email: string
   ): Promise<GuaribasUser> {
+
+    const gbaiPath = DialogKeywords.getGBAIPath(min.botId);
+    const dir = urlJoin ('work',gbaiPath, 'users', userSystemId);
+
+    if (!Fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
+
     let user = await GuaribasUser.findOne({
       where: {
         userSystemId: userSystemId
       }
     });
 
-    const gbaiPath = DialogKeywords.getGBAIPath(min.botId);
-    const dir = urlJoin ('work',gbaiPath, 'users', userSystemId);
-
     if (!user) {
       user = GuaribasUser.build();
-      if (!Fs.existsSync(dir)) {
-        mkdirp.sync(dir);
-      }
     }
 
     const systemPromptFile = urlJoin(dir, 'systemPrompt.txt');

@@ -47,6 +47,7 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
  * Basic services for BASIC manipulation.
  */
 export class ScheduleServices extends GBService {
+  
   public async deleteScheduleIfAny(min: GBMinInstance, name: string) {
 
     let i = 1;
