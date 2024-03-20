@@ -48,13 +48,18 @@ import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { GuaribasSubject } from '../../kb.gbapp/models/index.js';
 import { Serialized } from "@langchain/core/load/serializable";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import {
   BaseLLMOutputParser,
   OutputParserException,
 } from "@langchain/core/output_parsers";
 import { ChatGeneration, Generation } from "@langchain/core/outputs";
-import { LunaryHandler } from "@langchain/community/callbacks/handlers/lunary";
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { GBServer } from '../../../src/app.js';
+import urlJoin from 'url-join';
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+
 
 export interface CustomOutputParserFields { }
 export type ExpectedOutput = string;
@@ -126,23 +131,85 @@ export class CustomLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
 
 export class ChatServices {
 
+  private async pdfPageAsImage(min, filename, pageNumber) {
+
+    const data = Fs.readFileSync(filename);
+
+    // Converts the PDF to PNG.
+
+    const pngPages: PngPageOutput[] = await pdfToPng(data, {
+      disableFontFace: false,
+      useSystemFonts: false,
+      viewportScale: 2.0,
+      pagesToProcess: [1],
+      strictPagesToProcess: false,
+      verbosityLevel: 0
+    });
+
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId, 'gbdata');
+
+    // Prepare an image on cache and return the GBFILE information.
+
+    const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
+    if (pngPages.length > 0) {
+      const buffer = pngPages[pageNumber - 1].content;
+      const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+      Fs.writeFileSync(localName, buffer, { encoding: null });
+      return { localName: localName, url: url, data: buffer };
+    }
+  }
+
   private static async getRelevantContext(
     vectorStore: HNSWLib,
     sanitizedQuestion: string,
     numDocuments: number = 10
   ): Promise<string> {
+
     if (sanitizedQuestion === '') {
       return '';
     }
 
     const documents = await vectorStore.similaritySearch(sanitizedQuestion, numDocuments);
-    return documents
-      .map((doc) => doc.pageContent)
-      .join(', ')
-      .trim()
-      .replaceAll('\n', ' ');
+    let output = '';
+
+    await CollectionUtil.asyncForEach(documents, async (doc) => {
+
+      const metadata = doc.metadata;
+      const filename = Path.basename(metadata.source);
+      const page = await ChatServices.findPageForTextInterval(doc.metadata.source,
+        metadata.loc.lines.from, metadata.loc.lines.to);
+
+      output = `${output}\n\n\n\nThe following context is coming from ${filename} at page: ${page}, 
+      memorize this block among document information and return when you are refering this part of content:\n\n\n\n ${doc.pageContent} \n\n\n\n.`;
+    });
+    return output;
   }
 
+  public static async findPageForTextInterval(pdfPath, startLine, endLine) {
+    const data = new Uint8Array(Fs.readFileSync(pdfPath));
+    const pdf = await getDocument({ data }).promise;
+
+    // Loop através de cada página para encontrar o intervalo de texto
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const text = textContent.items.map(item => item['str']).join('\n');
+
+      const lines = text.split('\n');
+      const numLines = lines.length;
+
+      // Verificar se o intervalo de texto está nesta página
+      const nextPageLine = (i === pdf.numPages) ? numLines : endLine;
+      if (startLine <= numLines && endLine >= 0 && startLine <= nextPageLine) {
+        return i;
+      }
+
+      startLine -= numLines;
+      endLine -= numLines;
+    }
+
+    return -1; // Intervalo de texto não encontrado
+  }
   /**
    * Generate text
    *
@@ -234,6 +301,11 @@ export class ChatServices {
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
       AIMessagePromptTemplate.fromTemplate(
         `
+        This is a sectioned context. 
+        
+        Very important: When answering, *mention in the answer* the PDF filename and page number related to each block of information used to answer.
+        Eg.: filename.pdf, page 3 - filename2.pdf, page 55.
+
         \n\n{context}\n\n
 
         And using \n\n{chat_history}\n\n
@@ -278,7 +350,7 @@ export class ChatServices {
         },
         context: async (output: string) => {
           const c = await ChatServices.getRelevantContext(docsContext, output);
-          return  `${systemPrompt} \n ${c ? 'Use this context to answer:\n' + c: 'answer just with user question.'}`;
+          return `${systemPrompt} \n ${c ? 'Use this context to answer:\n' + c : 'answer just with user question.'}`;
 
         },
       },

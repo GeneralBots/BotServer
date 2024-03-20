@@ -170,6 +170,7 @@
     "pdf-extraction": "1.0.2",
     "pdf-parse": "1.1.1",
     "pdf-to-png-converter": "3.1.0",
+    "pdfjs-dist": "4.0.379",
     "pdfkit": "0.13.0",
     "phone": "3.1.30",
     "pizzip": "3.1.3",
