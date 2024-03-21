@@ -50,6 +50,7 @@ import { Serialized } from "@langchain/core/load/serializable";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
 import { DynamicStructuredTool } from "@langchain/core/tools";
+import { WikipediaQueryRun } from "@langchain/community/tools/wikipedia_query_run";
 import {
   BaseLLMOutputParser,
   OutputParserException,
@@ -276,7 +277,9 @@ export class ChatServices {
       AIMessagePromptTemplate.fromTemplate(
         `
         Answer the question without calling any tool, but if there is a need to call:
-         You have access to the following set of tools. Here are the names and descriptions for each tool:
+        You have access to the following set of tools. 
+        Here are the names and descriptions for each tool:
+        
           ${toolsAsText}
 
           Do not use any previous tools output in the chat_history. 
@@ -456,6 +459,12 @@ export class ChatServices {
       }
 
     });
+
+    const tool = new WikipediaQueryRun({
+      topKResults: 3,
+      maxDocContentLength: 4000,
+    });
+    functions.push(tool);
 
     return functions;
   }
