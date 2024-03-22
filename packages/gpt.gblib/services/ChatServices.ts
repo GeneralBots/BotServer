@@ -327,7 +327,7 @@ export class ChatServices {
         \n\n{context}\n\n
         
         And based on \n\n{chat_history}\n\n
-        rephrase the response to the user using the aforementioned context. If you're unsure of the answer, utilize any relevant context provided to answer the question effectively.
+        rephrase the response to the user using the aforementioned context. If you're unsure of the answer, utilize any relevant context provided to answer the question effectively. Don´t output MD images tags url previously shown.
         `
       ),
       new MessagesPlaceholder("chat_history"),
@@ -435,12 +435,13 @@ export class ChatServices {
       GBLog.info(`Invalid Answer Mode in Config.xlsx: ${LLMMode}.`);
     }
 
+    const resultToPersist = result.replace(/\!\[.*\)/gi, ''); // Removes .MD url.
     await memory.saveContext(
       {
         input: question,
       },
       {
-        output: result,
+        output: resultToPersist
       }
     );
 
