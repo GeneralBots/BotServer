@@ -141,7 +141,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     if (result) {
       const metadata = naiveJSONFromText(result);
 
-      if (metadata) {
+      if (metadata  && metadata.filename) {
         const {url} = await ChatServices.pdfPageAsImage(this.min, metadata.filename,
           metadata.page);
         result = `![alt text](${url})
