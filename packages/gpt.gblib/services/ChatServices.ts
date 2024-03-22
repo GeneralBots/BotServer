@@ -132,18 +132,20 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
       if (!match) return null;
 
       try {
-        return JSON.parse(match[0]);
+        return {metadata: JSON.parse(match[0]),
+           text: text.replace(match, '')};
       } catch {
         return null;
       }
     };
 
     if (result) {
-      const metadata = naiveJSONFromText(result);
+       const res = naiveJSONFromText(result);
 
-      if (metadata  && metadata.filename) {
+      if (res) {
+        const {metadata, text} = res;
         const {url} = await ChatServices.pdfPageAsImage(this.min, metadata.filename,
-          metadata.page);
+          text);
         result = `![alt text](${url})
          ${result}`;
       }
@@ -163,8 +165,8 @@ export class ChatServices {
     // Converts the PDF to PNG.
 
     const pngPages: PngPageOutput[] = await pdfToPng(localName, {
-      disableFontFace: false,
-      useSystemFonts: false,
+      disableFontFace: true,
+      useSystemFonts: true,
       viewportScale: 2.0,
       pagesToProcess: [pageNumber],
       strictPagesToProcess: false,
@@ -201,8 +203,8 @@ export class ChatServices {
 
       const metadata = doc.metadata;
       const filename = Path.basename(metadata.source);
-      const page = await ChatServices.findPageForTextInterval(doc.metadata.source,
-        metadata.loc.lines.from, metadata.loc.lines.to);
+      const page = await ChatServices.findPageForText(doc.metadata.source,
+        doc.pageContent);
 
       output = `${output}\n\n\n\nThe following context is coming from ${filename} at page: ${page}, 
       memorize this block among document information and return when you are refering this part of content:\n\n\n\n ${doc.pageContent} \n\n\n\n.`;
@@ -210,32 +212,25 @@ export class ChatServices {
     return output;
   }
 
-  public static async findPageForTextInterval(pdfPath, startLine, endLine) {
+
+  private static async findPageForText(pdfPath, searchText) {
     const data = new Uint8Array(Fs.readFileSync(pdfPath));
     const pdf = await getDocument({ data }).promise;
 
-    // Loop através de cada página para encontrar o intervalo de texto
+    searchText = searchText.replace(/\s/g, '')
+
     for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const text = textContent.items.map(item => item['str']).join('\n');
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const text = textContent.items.map(item => item['str']).join('').replace(/\s/g, '');
 
-      const lines = text.split('\n');
-      const numLines = lines.length;
-
-      // Verificar se o intervalo de texto está nesta página
-      const nextPageLine = (i === pdf.numPages) ? numLines : endLine;
-      if (startLine <= numLines && endLine >= 0 && startLine <= nextPageLine) {
-        return i;
-      }
-
-      startLine -= numLines;
-      endLine -= numLines;
+        if (text.includes(searchText)) return i;
     }
 
-    return -1; // Intervalo de texto não encontrado
-  }
-  /**
+    return -1; // Texto não encontrado
+}
+
+/**
    * Generate text
    *
    * CONTINUE keword.
@@ -324,20 +319,14 @@ export class ChatServices {
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
       AIMessagePromptTemplate.fromTemplate(
         `
-        This is a sectioned context. 
-        
-        Very important: When answering, besides the answer, at the end of the message, return this information as JSON
-        containing two fields file as PDF 'filename' and 'page' as the page number.
-        Eg. of JSON generated: file: filename.pdf, page: 3. 
-        Never explain the context to the user, just reference the source of the document.
+        This is a segmented context.
+
+        VERY IMPORTANT: When responding, include the following information at the end of your message as JSON: 'file' indicating the PDF filename and 'page' indicating the page number. Example JSON format: "file": "filename.pdf", "page": 3, return valid JSON with brackets. Avoid explaining the context directly to the user; instead, refer to the document source.
         
         \n\n{context}\n\n
-
-        And using \n\n{chat_history}\n\n
-        rephrase the answer to the user using this context already spoken.
-        If you don't know the answer, just say that you don't know, don't try to make up an answer.
-        Use the following pieces, if any, of context to answer the question at the end. 
-
+        
+        And based on \n\n{chat_history}\n\n
+        rephrase the response to the user using the aforementioned context. If you're unsure of the answer, simply state that you don't know. Do not invent an answer. Utilize any relevant context provided to answer the question effectively.
         `
       ),
       new MessagesPlaceholder("chat_history"),
