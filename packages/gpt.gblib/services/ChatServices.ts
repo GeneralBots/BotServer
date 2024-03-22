@@ -144,8 +144,8 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
 
       if (res) {
         const {metadata, text} = res;
-        const {url} = await ChatServices.pdfPageAsImage(this.min, metadata.filename,
-          text);
+        const {url} = await ChatServices.pdfPageAsImage(this.min, metadata.file,
+          metadata.page);
         result = `![alt text](${url})
          ${result}`;
       }
@@ -321,12 +321,12 @@ export class ChatServices {
         `
         This is a segmented context.
 
-        VERY IMPORTANT: When responding, include the following information at the end of your message as JSON: 'file' indicating the PDF filename and 'page' indicating the page number. Example JSON format: "file": "filename.pdf", "page": 3, return valid JSON with brackets. Avoid explaining the context directly to the user; instead, refer to the document source.
+        VERY IMPORTANT: When responding, ALWAYS, I said, You must always include the following information at the end of your message as a VALID standard JSON: 'file' indicating the PDF filename and 'page' indicating the page number. Example JSON format: "file": "filename.pdf", "page": 3, return valid JSON with brackets. Avoid explaining the context directly to the user; instead, refer to the document source.
         
         \n\n{context}\n\n
         
         And based on \n\n{chat_history}\n\n
-        rephrase the response to the user using the aforementioned context. If you're unsure of the answer, simply state that you don't know. Do not invent an answer. Utilize any relevant context provided to answer the question effectively.
+        rephrase the response to the user using the aforementioned context. If you're unsure of the answer, utilize any relevant context provided to answer the question effectively.
         `
       ),
       new MessagesPlaceholder("chat_history"),
