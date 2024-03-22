@@ -60,6 +60,7 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBServer } from '../../../src/app.js';
 import urlJoin from 'url-join';
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 
 export interface CustomOutputParserFields { }
@@ -163,7 +164,7 @@ export class ChatServices {
     const localName = Path.join('work', gbaiName, 'docs', filename);
 
     // Converts the PDF to PNG.
-
+    GBLogEx.info(min, `Converting ${filename}, page: ${pageNumber}...`);
     const pngPages: PngPageOutput[] = await pdfToPng(localName, {
       disableFontFace: true,
       useSystemFonts: true,
@@ -321,7 +322,7 @@ export class ChatServices {
         `
         This is a segmented context.
 
-        VERY IMPORTANT: When responding, ALWAYS, I said, You must always include the following information at the end of your message as a VALID standard JSON: 'file' indicating the PDF filename and 'page' indicating the page number. Example JSON format: "file": "filename.pdf", "page": 3, return valid JSON with brackets. Avoid explaining the context directly to the user; instead, refer to the document source.
+        VERY IMPORTANT: When responding, ALWAYS, I said, You must always both include the text and the following information at the end of your message as a VALID standard JSON, just after the text answer: 'file' indicating the PDF filename and 'page' indicating the page number. Example JSON format: "file": "filename.pdf", "page": 3, return valid JSON with brackets. Avoid explaining the context directly to the user; instead, refer to the document source. Double check if the output JSON has brackets.
         
         \n\n{context}\n\n
         
