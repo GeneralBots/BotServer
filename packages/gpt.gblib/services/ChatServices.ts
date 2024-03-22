@@ -93,16 +93,18 @@ class CustomHandler extends BaseCallbackHandler {
 
 const logHandler = new CustomHandler();
 
-export class CustomLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
+export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
   lc_namespace = ["langchain", "output_parsers"];
 
   private toolChain: RunnableSequence
   private documentChain: RunnableSequence;
+  private min;
 
-  constructor(toolChain: RunnableSequence, documentChain: RunnableSequence) {
+  constructor(min, toolChain: RunnableSequence, documentChain: RunnableSequence) {
     super();
+    this.min = min;
     this.toolChain = toolChain;
-    this.documentChain = documentChain;
+
   }
 
   async parseResult(
@@ -125,35 +127,57 @@ export class CustomLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
       result = llmOutputs[0].text;
     }
 
-    return this.documentChain ? this.documentChain.invoke(result) : result;
+    const naiveJSONFromText = (text) => {
+      const match = text.match(/\{[\s\S]*\}/);
+      if (!match) return null;
 
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        return null;
+      }
+    };
+
+    if (result) {
+      const metadata = naiveJSONFromText(result);
+
+      if (metadata) {
+        const {url} = await ChatServices.pdfPageAsImage(this.min, metadata.filename,
+          metadata.page);
+        result = `![alt text](${url})
+         ${result}`;
+      }
+    }
+
+    return result;
   }
 }
 
 export class ChatServices {
-
-  private async pdfPageAsImage(min, filename, pageNumber) {
-
-    const data = Fs.readFileSync(filename);
+  
+  public static async pdfPageAsImage(min, filename, pageNumber) {
+    
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId, 'gbkb');
+    const localName = Path.join('work', gbaiName, 'docs', filename);
 
     // Converts the PDF to PNG.
 
-    const pngPages: PngPageOutput[] = await pdfToPng(data, {
-      disableFontFace: false,
-      useSystemFonts: false,
+    const pngPages: PngPageOutput[] = await pdfToPng(localName, {
+      disableFontFace: true,
+      useSystemFonts: true,
       viewportScale: 2.0,
-      pagesToProcess: [1],
+      pagesToProcess: [pageNumber],
       strictPagesToProcess: false,
       verbosityLevel: 0
     });
 
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId, 'gbdata');
 
     // Prepare an image on cache and return the GBFILE information.
 
-    const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
     if (pngPages.length > 0) {
-      const buffer = pngPages[pageNumber - 1].content;
+      const buffer = pngPages[0].content;
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId, null);
+      const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
       Fs.writeFileSync(localName, buffer, { encoding: null });
       return { localName: localName, url: url, data: buffer };
@@ -236,15 +260,11 @@ export class ChatServices {
       return { answer: undefined, questionId: 0 };
     }
 
-    const contentLocale = min.core.getParam(
-      min.instance,
-      'Default Content Language',
-      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
-    );
     const LLMMode = min.core.getParam(
       min.instance,
       'Answer Mode', 'direct'
     );
+
     const docsContext = min['vectorStore'];
 
     if (!this.memoryMap[user.userSystemId]) {
@@ -279,7 +299,7 @@ export class ChatServices {
         Answer the question without calling any tool, but if there is a need to call:
         You have access to the following set of tools. 
         Here are the names and descriptions for each tool:
-        
+
           ${toolsAsText}
 
           Do not use any previous tools output in the chat_history. 
@@ -306,9 +326,10 @@ export class ChatServices {
         `
         This is a sectioned context. 
         
-        Very important: When answering, *mention in the answer* the PDF filename and page number related to each block of information used to answer.
-        Eg.: filename.pdf, page 3 - filename2.pdf, page 55.
-
+        Very important: When answering, besides the answer, at the end of the message, return this information as JSON
+        containing two fields file as PDF 'filename' and 'page' as the page number.
+        Eg. of JSON generated: file: filename.pdf, page: 3.
+        
         \n\n{context}\n\n
 
         And using \n\n{chat_history}\n\n
@@ -359,7 +380,7 @@ export class ChatServices {
       },
       combineDocumentsPrompt,
       model,
-      new StringOutputParser()
+      new GBLLMOutputParser(min, null, null)
     ]);
 
     const conversationalQaChain = RunnableSequence.from([
@@ -372,7 +393,7 @@ export class ChatServices {
       },
       questionGeneratorTemplate,
       modelWithTools,
-      new CustomLLMOutputParser(callToolChain, docsContext?.docstore?._docs.length > 0 ? combineDocumentsChain : null),
+      new GBLLMOutputParser(min, callToolChain, docsContext?.docstore?._docs.length > 0 ? combineDocumentsChain : null),
       new StringOutputParser()
     ]);
 
@@ -386,11 +407,15 @@ export class ChatServices {
       },
       questionGeneratorTemplate,
       modelWithTools,
-      new CustomLLMOutputParser(callToolChain, docsContext?.docstore?._docs.length > 0 ? combineDocumentsChain : null),
+      new GBLLMOutputParser(min, callToolChain, docsContext?.docstore?._docs.length > 0 ? combineDocumentsChain : null),
       new StringOutputParser()
     ]);
 
     let result;
+
+
+    // Choose the operation mode of answer generation, based on 
+    // .gbot switch LLMMode and choose the corresponding chain.
 
     if (LLMMode === "direct") {
       result = await (tools.length > 0 ? modelWithTools : model).invoke(`
@@ -401,6 +426,7 @@ export class ChatServices {
       result = result.content;
     }
     else if (LLMMode === "document") {
+
       result = await combineDocumentsChain.invoke(question);
 
     } else if (LLMMode === "function") {
@@ -409,6 +435,11 @@ export class ChatServices {
         question,
       });
     }
+    else if (LLMMode === "full") {
+
+      throw new Error('Not implemented.'); // TODO: #407.
+    }
+
     else {
       GBLog.info(`Invalid Answer Mode in Config.xlsx: ${LLMMode}.`);
     }
