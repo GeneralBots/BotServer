@@ -163,8 +163,8 @@ export class ChatServices {
     // Converts the PDF to PNG.
 
     const pngPages: PngPageOutput[] = await pdfToPng(localName, {
-      disableFontFace: true,
-      useSystemFonts: true,
+      disableFontFace: false,
+      useSystemFonts: false,
       viewportScale: 2.0,
       pagesToProcess: [pageNumber],
       strictPagesToProcess: false,
@@ -328,7 +328,8 @@ export class ChatServices {
         
         Very important: When answering, besides the answer, at the end of the message, return this information as JSON
         containing two fields file as PDF 'filename' and 'page' as the page number.
-        Eg. of JSON generated: file: filename.pdf, page: 3.
+        Eg. of JSON generated: file: filename.pdf, page: 3. 
+        Never explain the context to the user, just reference the source of the document.
         
         \n\n{context}\n\n
 
