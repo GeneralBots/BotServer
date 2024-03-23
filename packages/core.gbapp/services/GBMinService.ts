@@ -717,9 +717,9 @@ export class GBMinService {
         'Ocp-Apim-Subscription-Key': instance.speechKey
       }
     };
-
+    const url = urlJoin(instance.speechEndpoint, '/sts/v1.0/issueToken');
     try {
-      const res = await fetch(instance.speechEndpoint, options);
+      const res = await fetch(url, options);
       return res.text();
     } catch (error) {
       const msg = `Error calling Speech to Text client. Error is: ${error}.`;

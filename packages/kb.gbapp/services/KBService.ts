@@ -653,7 +653,7 @@ export class KBService implements IGBKBService {
     } else {
       
       await min.conversationalService.sendText(min, step, answer);
-      await min.conversationalService.sendEvent(min, step, 'stop', undefined);
+
     }
   }
 

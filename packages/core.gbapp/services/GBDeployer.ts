@@ -892,6 +892,10 @@ export class GBDeployer implements IGBDeployer {
       express.static(urlJoin('work', gbaiName, filename, 'images'))
     );
     GBServer.globals.server.use(
+      `/kb/${gbaiName}/${packageName}/docs`,
+      express.static(urlJoin('work', gbaiName, filename, 'docs'))
+    );
+    GBServer.globals.server.use(
       `/kb/${gbaiName}/${packageName}/audios`,
       express.static(urlJoin('work', gbaiName, filename, 'audios'))
     );

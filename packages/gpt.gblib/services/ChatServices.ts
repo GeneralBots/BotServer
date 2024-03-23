@@ -64,7 +64,7 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 
 export interface CustomOutputParserFields { }
-export type ExpectedOutput = string;
+export type ExpectedOutput = any;
 
 function isChatGeneration(
   llmOutput: ChatGeneration | Generation
@@ -94,7 +94,8 @@ class CustomHandler extends BaseCallbackHandler {
 
 const logHandler = new CustomHandler();
 
-export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
+export class GBLLMOutputParser extends 
+  BaseLLMOutputParser<ExpectedOutput> {
   lc_namespace = ["langchain", "output_parsers"];
 
   private toolChain: RunnableSequence
@@ -148,7 +149,9 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
         const {url} = await ChatServices.pdfPageAsImage(this.min, metadata.file,
           metadata.page);
         result = `![alt text](${url})
-         ${result}`;
+         ${text}`;
+
+         return [ result, metadata.file, metadata.page];
       }
     }
 
@@ -403,6 +406,7 @@ export class ChatServices {
     ]);
 
     let result;
+    let text, file, page;
 
 
     // Choose the operation mode of answer generation, based on 
@@ -418,7 +422,8 @@ export class ChatServices {
     }
     else if (LLMMode === "document") {
 
-      result = await combineDocumentsChain.invoke(question);
+      [text, file, page] = await combineDocumentsChain.invoke(question);
+      result = text;
 
     } else if (LLMMode === "function") {
 
@@ -435,18 +440,18 @@ export class ChatServices {
       GBLog.info(`Invalid Answer Mode in Config.xlsx: ${LLMMode}.`);
     }
 
-    const resultToPersist = result.replace(/\!\[.*\)/gi, ''); // Removes .MD url.
+    
     await memory.saveContext(
       {
         input: question,
       },
       {
-        output: resultToPersist
+        output: result.replace(/\!\[.*\)/gi, '') // Removes .MD url beforing adding to history. 
       }
     );
 
     GBLog.info(`GPT Result: ${result.toString()}`);
-    return { answer: result.toString(), questionId: 0 };
+    return { answer: result.toString(), file,  questionId: 0, page };
 
 
   }

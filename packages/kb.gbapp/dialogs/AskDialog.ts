@@ -37,20 +37,18 @@
 import { GBServer } from '../../../src/app.js';
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { ChatGPTAPIBrowser } from 'chatgpt';
 import { GBLog, GBMinInstance, IGBDialog, IGBPackage } from 'botlib';
 import { Messages } from '../strings.js';
 import { KBService } from './../services/KBService.js';
 import { GuaribasAnswer } from '../models/index.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
-import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
-import Fs from 'fs';
 import urlJoin from 'url-join';
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 
 /**
  * Dialog arguments.
@@ -235,18 +233,31 @@ export class AskDialog extends IGBDialog {
           return;
         }
 
-        const results = await service.ask(min, user, step, step.context.activity['pid'], text, searchScore, null /* user.subjects */);
+        const results:any = await service.ask(min, user, step, step.context.activity['pid'], text, searchScore, null /* user.subjects */);
 
         // If there is some result, answer immediately.
 
         if (results !== undefined && results.answer !== undefined) {
 
+          if (results.file){
+            const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
+            const url = urlJoin('kb', path, 'docs', results.file);
+      
+            await min.conversationalService.sendEvent(
+              min, step,  'play', {
+                playerType: 'url',
+                data: `${url}#page=${results.page}&toolbar=0&messages=0&statusbar=0&navpanes=0`
+              });
+          }
+
           // Sends the answer to all outputs, including projector.
 
-          answer = results.answer;
+          answer = results.answer.trim();
 
           return await AskDialog.handleAnswer(service, min, step, user, answer);
         }
+
+
 
         GBLog.info(`SEARCH called but NO answer could be found (zero results).`);
 
