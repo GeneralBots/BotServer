@@ -252,7 +252,7 @@ export class AskDialog extends IGBDialog {
 
           // Sends the answer to all outputs, including projector.
 
-          answer = results.answer.trim();
+          answer = results.answer;
 
           return await AskDialog.handleAnswer(service, min, step, user, answer);
         }
@@ -274,6 +274,7 @@ export class AskDialog extends IGBDialog {
 
   private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, user, answer: GuaribasAnswer) {
     let text = typeof (answer) === 'string' ? answer : answer.content;
+    text = text.trim();
     if (text.endsWith('.docx')) {
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
       await step.endDialog();
