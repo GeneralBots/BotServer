@@ -673,24 +673,19 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   }
 
   public async createApplication(token: string, name: string) {
-    return new Promise<string>((resolve, reject) => {
       let client = MicrosoftGraph.Client.init({
         authProvider: done => {
           done(null, token);
         }
       });
-      const app = {
-        displayName: name
+      let app:any = {
+        displayName: name,
+        signInAudience: "AzureADandPersonalMicrosoftAccount",
       };
 
-      client.api(`/applications`).post(app, (err, res) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(res);
-        }
-      });
-    });
+      const res = await client.api(`/applications`).post(app);
+
+      return  res;
   }
 
   public async createApplicationSecret(token: string, appId: string) {
