@@ -139,11 +139,13 @@ export class WhatsappDirectLine extends GBService {
         const minBoot = GBServer.globals.minBoot;
         // Initialize the browser using a local profile for each bot.
         const path = DialogKeywords.getGBAIPath(this.min.botId);
+        const webVersion  = '2.2411.2';
         const localName = Path.join('work', path, 'profile');
         const createClient = () => {
           const client = (this.customClient = new Client({
             puppeteer: GBSSR.preparePuppeteer(localName)
-            
+            , webVersionCache: { type: 'remote', 
+            remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${webVersion}.html` } 
           }));
           client.on(
             'message',
