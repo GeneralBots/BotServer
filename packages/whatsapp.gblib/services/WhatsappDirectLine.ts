@@ -142,8 +142,8 @@ export class WhatsappDirectLine extends GBService {
         const localName = Path.join('work', path, 'profile');
         const createClient = () => {
           const client = (this.customClient = new Client({
-            puppeteer: GBSSR.preparePuppeteer(localName),
-            webVersion: '2.2412.50'
+            puppeteer: GBSSR.preparePuppeteer(localName)
+            
           }));
           client.on(
             'message',
