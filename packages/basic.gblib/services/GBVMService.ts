@@ -113,6 +113,22 @@ export class GBVMService extends GBService {
     const interval = 3000; // If compiled is older 30 seconds, then recompile.
     let writeVBS = true;
 
+
+    const subscription = {
+      changeType: 'created,updated',
+      notificationUrl: 'https://webhook.azurewebsites.net/notificationClient',
+      lifecycleNotificationUrl: 'https://webhook.azurewebsites.net/api/lifecycleNotifications',
+      resource: '/me/mailfolders(\'inbox\')/messages',
+      expirationDateTime: '2016-03-20T11:00:00.0000000Z',
+      clientState: 'SecretClientState'
+    };
+
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    
+    await client.api('/subscriptions')
+      .post(subscription);
+
+
     if (Fs.existsSync(fullVbsFile)) {
       const vbsStat = Fs.statSync(fullVbsFile);
       if (docxStat['mtimeMs'] < vbsStat['mtimeMs'] + interval) {
@@ -1108,7 +1124,9 @@ export class GBVMService extends GBService {
         return await (async () => {
           return await new Promise((resolve, reject) => {
             sandbox['resolve'] = resolve;
-            sandbox['reject'] = reject;
+            // TODO: #411 sandbox['reject'] = reject;
+            sandbox['reject'] = ()=>{};
+
             const vm1 = new NodeVM({
               allowAsync: true,
               sandbox: sandbox,
