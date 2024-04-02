@@ -526,6 +526,11 @@ export class DialogKeywords {
    *
    */
   public async sendEmail({ pid, to, subject, body }) {
+
+    if (!body) {
+      body = "";
+    };
+
     // tslint:disable-next-line:no-console
 
     GBLog.info(`[E-mail]: to:${to},subject: ${subject},body: ${body}.`);
@@ -1247,9 +1252,9 @@ export class DialogKeywords {
 
   public async messageBot({ pid, text }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min,`MESSAGE BOT: ${text}.`);
+    GBLogEx.info(min, `MESSAGE BOT: ${text}.`);
 
-    const { conversation, client} = min['apiConversations'][pid];
+    const { conversation, client } = min['apiConversations'][pid];
 
     await client.apis.Conversations.Conversations_PostActivity({
       conversationId: conversation.conversationId,
@@ -1263,26 +1268,26 @@ export class DialogKeywords {
         }
       }
     });
-    
+
 
     let messages = [];
 
 
     GBLog.info(`MessageBot: Starting message polling ${conversation.conversationId}).`);
 
-    
+
 
     const worker = async () => {
       try {
-        
+
         const response = await client.apis.Conversations.Conversations_GetActivities({
           conversationId: conversation.conversationId,
           watermark: conversation.watermark
         });
         conversation.watermarkMap = response.obj.watermark;
         let activities = response.obj.activites;
-    
-    
+
+
         if (activities && activities.length) {
           activities = activities.filter(m => m.from.id === min.botId && m.type === 'message');
           if (activities.length) {
@@ -1292,9 +1297,9 @@ export class DialogKeywords {
             });
           }
         }
-    
+
         return messages.join('\n');
-    
+
       } catch (err) {
         GBLog.error(
           `Error calling printMessages API ${err.data === undefined ? err : err.data} ${err.errObj ? err.errObj.message : ''
@@ -1325,7 +1330,7 @@ export class DialogKeywords {
 
 
     const pid = GBVMService.createProcessInfo(user, min, 'api', null);
-    
+
     const conversation = min['apiConversations'][pid];
 
     const client = await new SwaggerClient({
@@ -1338,7 +1343,7 @@ export class DialogKeywords {
     const response = await client.apis.Conversations.Conversations_StartConversation();
     conversation.conversationId = response.obj.conversationId;
 
-    return  await GBVMService.callVM('start', min, null, pid);
+    return await GBVMService.callVM('start', min, null, pid);
 
   }
 
@@ -1377,10 +1382,10 @@ export class DialogKeywords {
       );
       GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
 
-      if (step){
+      if (step) {
         await min.conversationalService.sendText(min, step, text);
       }
-      else{
+      else {
         await min.conversationalService['sendOnConversation'](min, user, text);
       }
     }
