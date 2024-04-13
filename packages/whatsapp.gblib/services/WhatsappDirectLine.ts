@@ -50,7 +50,7 @@ import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBUtil } from '../../../src/util.js';
-const { WAState, List, Buttons, Client, MessageMedia } = pkg;
+const { WAState, Client, MessageMedia } = pkg;
 import twilio from 'twilio';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 
@@ -83,7 +83,6 @@ export class WhatsappDirectLine extends GBService {
   provider: any;
   INSTANCE_URL = 'https://api.maytapi.com/api';
   private customClient: any;
-  private browserWSEndpoint: any;
   private groupId;
 
   constructor(
@@ -125,7 +124,6 @@ export class WhatsappDirectLine extends GBService {
     this.directLineClient = client;
 
     let url: string;
-    let body: any;
     let options: any;
 
     switch (this.provider) {
@@ -223,7 +221,6 @@ export class WhatsappDirectLine extends GBService {
 
       if (options) {
         try {
-          const response: Response = await fetch(url, options);
         } catch (error) {
           GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
         }
@@ -683,7 +680,7 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public async sendAudioToDevice(to, url, chatId) {
+  public async sendAudioToDevice(to, url) {
     let options;
     switch (this.provider) {
       case 'GeneralBots':
