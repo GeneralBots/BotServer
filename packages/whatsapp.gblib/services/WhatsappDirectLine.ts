@@ -156,6 +156,7 @@ export class WhatsappDirectLine extends GBService {
             (async qr => {
               const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
               const adminEmail = this.min.core.getParam(this.min.instance, 'Bot Admin E-mail', null);
+              const pid = GBVMService.createProcessInfo(null, this.min, 'wppboot', null);
               
               // Sends QR Code to boot bot admin.
               
@@ -163,7 +164,7 @@ export class WhatsappDirectLine extends GBService {
               qrcode.generate(qr, { small: true, scale: 0.5 });
 
               const s = new DialogKeywords();
-              const qrBuf = await s.getQRCode(qr);
+              const qrBuf = await s.getQRCode({pid, text: qr});
               const localName = Path.join('work', gbaiPath, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
               Fs.writeFileSync(localName, qrBuf.data);
               const url = urlJoin(
@@ -178,7 +179,6 @@ export class WhatsappDirectLine extends GBService {
               }
                             
               if (adminEmail){
-                const pid = GBVMService.createProcessInfo(null, this.min, 'wppboot', null);
                 await s.sendEmail({pid, to: adminEmail, subject: `Check your WhatsApp for bot ${this.min.botId}`,
                   body: msg
                 });
