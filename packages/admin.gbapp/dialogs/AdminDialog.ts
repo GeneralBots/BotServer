@@ -408,7 +408,7 @@ export class AdminDialog extends IGBDialog {
           if (step.activeDialog.state.tokenName) {
             return await step.next(step.options);
           }
-          step.activeDialog.state.authenticatorTenant = step.result;
+          step.activeDialog.state.authenticatorTenant = step.context.activity['originalText'];
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].enter_authenticator_authority_host_url;
 
@@ -416,7 +416,7 @@ export class AdminDialog extends IGBDialog {
         },
         async step => {
 
-          step.activeDialog.state.authenticatorAuthorityHostUrl = step.result;
+          step.activeDialog.state.authenticatorAuthorityHostUrl = step.context.activity['originalText'];
 
           const tokenName = step.activeDialog.state.tokenName;
 
