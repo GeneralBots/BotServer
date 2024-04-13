@@ -33,7 +33,7 @@ import urlJoin from 'url-join';
 import SwaggerClient from 'swagger-client';
 import Path from 'path';
 import Fs from 'fs';
-import { GBError, GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
+import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app.js';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
@@ -49,11 +49,10 @@ import pkg from 'whatsapp-web.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import e from 'express';
 import { GBUtil } from '../../../src/util.js';
 const { WAState, List, Buttons, Client, MessageMedia } = pkg;
 import twilio from 'twilio';
-import { GBVMService } from 'packages/basic.gblib/services/GBVMService.js';
+import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 
 
 /**
