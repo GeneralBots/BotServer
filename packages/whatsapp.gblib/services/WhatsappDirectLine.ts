@@ -53,6 +53,7 @@ import e from 'express';
 import { GBUtil } from '../../../src/util.js';
 const { WAState, List, Buttons, Client, MessageMedia } = pkg;
 import twilio from 'twilio';
+import { GBVMService } from 'packages/basic.gblib/services/GBVMService.js';
 
 
 /**
@@ -180,7 +181,7 @@ export class WhatsappDirectLine extends GBService {
               }
                             
               if (adminEmail){
-                const pid = GBAdminService.getNumberIdentifier();
+                const pid = GBVMService.createProcessInfo(null, this.min, 'wppboot', null);
                 await s.sendEmail({pid, to: adminEmail, subject: `Check your WhatsApp for bot ${this.min.botId}`,
                   body: msg
                 });
