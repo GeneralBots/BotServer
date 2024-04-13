@@ -138,9 +138,9 @@ export class WhatsappDirectLine extends GBService {
       case 'GeneralBots':
         const minBoot = GBServer.globals.minBoot;
         // Initialize the browser using a local profile for each bot.
-        const path = DialogKeywords.getGBAIPath(this.min.botId);
+        const gbaiPath = DialogKeywords.getGBAIPath(this.min.botId);
         const webVersion  = '2.2411.2';
-        const localName = Path.join('work', path, 'profile');
+        const localName = Path.join('work', gbaiPath, 'profile');
         const createClient = () => {
           const client = (this.customClient = new Client({
             puppeteer: GBSSR.preparePuppeteer(localName)
@@ -158,23 +158,33 @@ export class WhatsappDirectLine extends GBService {
             (async qr => {
               const adminNumber = this.min.core.getParam(this.min.instance, 'Bot Admin Number', null);
               const adminEmail = this.min.core.getParam(this.min.instance, 'Bot Admin E-mail', null);
+              
               // Sends QR Code to boot bot admin.
+              
               const msg = `Please, scan QR Code with for bot ${this.botId}.`;
               qrcode.generate(qr, { small: true, scale: 0.5 });
 
-              // TODO: While handling other bots uses boot instance of this class to send QR Codes.
-              // const s = new DialogKeywords(min., null, null, null);
-              // const qrBuf = await s.getQRCode(qr);
-              // const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-              // fs.writeFileSync(localName, qrBuf);
-              // const url = urlJoin(
-              //   GBServer.globals.publicAddress,
-              //   this.min.botId,
-              //   'cache',
-              //   Path.basename(localName)
-              // );
-              // GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
-              // s.sendEmail(adminEmail, `Check your WhatsApp for bot ${this.botId}`, msg);
+              const s = new DialogKeywords();
+              const qrBuf = await s.getQRCode(qr);
+              const localName = Path.join('work', gbaiPath, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
+              Fs.writeFileSync(localName, qrBuf.data);
+              const url = urlJoin(
+                GBServer.globals.publicAddress,
+                this.min.botId,
+                'cache',
+                Path.basename(localName)
+              );
+              
+              if (adminNumber){
+                await GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(adminNumber, url, Path.basename(localName), msg);
+              }
+                            
+              if (adminEmail){
+                const pid = GBAdminService.getNumberIdentifier();
+                await s.sendEmail({pid, to: adminEmail, subject: `Check your WhatsApp for bot ${this.min.botId}`,
+                  body: msg
+                });
+              }
 
             }).bind(this)
           );

@@ -2684,6 +2684,8 @@ export class SystemKeywords {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `dirFolder: remotePath=${remotePath}, baseUrl=${baseUrl}`);
 
+    // In case of empty files, build an zero element array.
+
     if (!array) {
       array = [];
     }
