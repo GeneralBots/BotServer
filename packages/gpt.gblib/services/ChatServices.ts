@@ -94,24 +94,23 @@ class CustomHandler extends BaseCallbackHandler {
 
 const logHandler = new CustomHandler();
 
-export class GBLLMOutputParser extends 
+export class GBLLMOutputParser extends
   BaseLLMOutputParser<ExpectedOutput> {
   lc_namespace = ["langchain", "output_parsers"];
 
   private toolChain: RunnableSequence
-  private documentChain: RunnableSequence;
   private min;
 
   constructor(min, toolChain: RunnableSequence, documentChain: RunnableSequence) {
     super();
     this.min = min;
     this.toolChain = toolChain;
-
   }
 
   async parseResult(
     llmOutputs: ChatGeneration[] | Generation[]
   ): Promise<ExpectedOutput> {
+
     if (!llmOutputs.length) {
       throw new OutputParserException(
         "Output parser did not receive any generations."
@@ -129,44 +128,32 @@ export class GBLLMOutputParser extends
       result = llmOutputs[0].text;
     }
 
-    const naiveJSONFromText = (text) => {
-      const match = text.match(/\{[\s\S]*\}/);
-      if (!match) return null;
-
-      try {
-        return {metadata: JSON.parse(match[0]),
-           text: text.replace(match, '')};
-      } catch {
-        return null;
-      }
-    };
-
-    if (result) {
-       const res = naiveJSONFromText(result);
-
-      if (res) {
-        const {metadata, text} = res;
-        const {url} = await ChatServices.pdfPageAsImage(this.min, metadata.file,
-          metadata.page);
-        result = `![alt text](${url})
-         ${text}`;
-
-         return [ result, metadata.file, metadata.page];
-      }
+    let res;
+    try {
+      result = result.replace(/\\n/g, '');
+      res = JSON.parse(result);
+    } catch {
+      return result;
     }
 
-    return result;
+    let { file, page, text } = res;
+    const { url } = await ChatServices.pdfPageAsImage(this.min, file, page);
+    text = `![alt text](${url})
+      ${text}`;
+
+    return {text, file, page};
   }
 }
 
 export class ChatServices {
-  
+
   public static async pdfPageAsImage(min, filename, pageNumber) {
-    
+
     const gbaiName = DialogKeywords.getGBAIPath(min.botId, 'gbkb');
     const localName = Path.join('work', gbaiName, 'docs', filename);
 
     // Converts the PDF to PNG.
+
     GBLogEx.info(min, `Converting ${filename}, page: ${pageNumber}...`);
     const pngPages: PngPageOutput[] = await pdfToPng(localName, {
       disableFontFace: true,
@@ -216,7 +203,6 @@ export class ChatServices {
     return output;
   }
 
-
   private static async findPageForText(pdfPath, searchText) {
     const data = new Uint8Array(Fs.readFileSync(pdfPath));
     const pdf = await getDocument({ data }).promise;
@@ -224,24 +210,24 @@ export class ChatServices {
     searchText = searchText.replace(/\s/g, '')
 
     for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const text = textContent.items.map(item => item['str']).join('').replace(/\s/g, '');
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const text = textContent.items.map(item => item['str']).join('').replace(/\s/g, '');
 
-        if (text.includes(searchText)) return i;
+      if (text.includes(searchText)) return i;
     }
 
-    return -1; // Texto não encontrado
-}
+    return -1; 
+  }
 
-/**
-   * Generate text
-   *
-   * CONTINUE keword.
-   *
-   * result = CONTINUE text
-   *
-   */
+  /**
+     * Generate text
+     *
+     * CONTINUE keword.
+     *
+     * result = CONTINUE text
+     *
+     */
   public static async continue(min: GBMinInstance, question: string, chatId) {
 
   }
@@ -324,13 +310,20 @@ export class ChatServices {
       AIMessagePromptTemplate.fromTemplate(
         `
         This is a segmented context.
-
-        VERY IMPORTANT: When responding, ALWAYS, I said, You must always both include the text and the following information at the end of your message as a VALID standard JSON, just after the text answer: 'file' indicating the PDF filename and 'page' indicating the page number. Example JSON format: "file": "filename.pdf", "page": 3, return valid JSON with brackets. Avoid explaining the context directly to the user; instead, refer to the document source. Double check if the output JSON has brackets.
         
         \n\n{context}\n\n
         
         And based on \n\n{chat_history}\n\n
         rephrase the response to the user using the aforementioned context. If you're unsure of the answer, utilize any relevant context provided to answer the question effectively. Don´t output MD images tags url previously shown.
+
+        VERY IMPORTANT: ALWAYS return VALID standard JSON with the folowing structure: 'text' as answer, 
+          'file' indicating the PDF filename and 'page' indicating the page number. 
+        Example JSON format: "text": "this is the answer, anything LLM output as text answer shoud be here.", 
+          "file": "filename.pdf", "page": 3,
+         return valid JSON with brackets. Avoid explaining the context directly
+          to the user; instead, refer to the document source. 
+          
+        Double check if the output is a valid JSON with brackets. all fields are required: text, file, page.
         `
       ),
       new MessagesPlaceholder("chat_history"),
@@ -377,20 +370,6 @@ export class ChatServices {
       new GBLLMOutputParser(min, null, null)
     ]);
 
-    const conversationalQaChain = RunnableSequence.from([
-      {
-        question: (i: { question: string }) => i.question,
-        chat_history: async () => {
-          const { chat_history } = await memory.loadMemoryVariables({});
-          return chat_history;
-        },
-      },
-      questionGeneratorTemplate,
-      modelWithTools,
-      new GBLLMOutputParser(min, callToolChain, docsContext?.docstore?._docs.length > 0 ? combineDocumentsChain : null),
-      new StringOutputParser()
-    ]);
-
     const conversationalToolChain = RunnableSequence.from([
       {
         question: (i: { question: string }) => i.question,
@@ -422,7 +401,7 @@ export class ChatServices {
     }
     else if (LLMMode === "document") {
 
-      [text, file, page] = await combineDocumentsChain.invoke(question);
+      const {text, file, page} = await combineDocumentsChain.invoke(question);
       result = text;
 
     } else if (LLMMode === "function") {
@@ -440,7 +419,6 @@ export class ChatServices {
       GBLog.info(`Invalid Answer Mode in Config.xlsx: ${LLMMode}.`);
     }
 
-    
     await memory.saveContext(
       {
         input: question,
@@ -451,9 +429,7 @@ export class ChatServices {
     );
 
     GBLog.info(`GPT Result: ${result.toString()}`);
-    return { answer: result.toString(), file,  questionId: 0, page };
-
-
+    return { answer: result.toString(), file, questionId: 0, page };
   }
 
   private static getToolsAsText(tools) {
@@ -483,7 +459,6 @@ export class ChatServices {
           funcObj.schema = eval(jsonSchemaToZod(funcObj.parameters));
           functions.push(new DynamicStructuredTool(funcObj));
         }
-
       }
 
     });
