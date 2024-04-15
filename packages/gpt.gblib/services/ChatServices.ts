@@ -130,18 +130,37 @@ export class GBLLMOutputParser extends
 
     let res;
     try {
+      GBLogEx.info(this.min, result);
       result = result.replace(/\\n/g, '');
       res = JSON.parse(result);
     } catch {
       return result;
     }
 
-    let { file, page, text } = res;
-    const { url } = await ChatServices.pdfPageAsImage(this.min, file, page);
-    text = `![alt text](${url})
-      ${text}`;
+    let { sources, text } = res;
+    
+    await CollectionUtil.asyncForEach(sources, async (source) => {
+      let found = false;
+      if (source) {
+        
+        const gbaiName = DialogKeywords.getGBAIPath(this.min.botId, 'gbkb');
+        const localName = Path.join('work', gbaiName, 'docs', source.file);
 
-    return {text, file, page};
+        if (localName) {
+          const { url } = await ChatServices.pdfPageAsImage(this.min, localName, source.page);
+          text = `![alt text](${url})
+          ${text}`;
+          found = true;
+          source.file = localName;
+        }
+      }
+
+      if (found) {
+        GBLogEx.info(this.min, `File not found referenced in other .pdf: ${source.file}`);
+      }
+    });
+
+    return { text, sources };
   }
 }
 
@@ -149,13 +168,10 @@ export class ChatServices {
 
   public static async pdfPageAsImage(min, filename, pageNumber) {
 
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId, 'gbkb');
-    const localName = Path.join('work', gbaiName, 'docs', filename);
-
     // Converts the PDF to PNG.
 
     GBLogEx.info(min, `Converting ${filename}, page: ${pageNumber}...`);
-    const pngPages: PngPageOutput[] = await pdfToPng(localName, {
+    const pngPages: PngPageOutput[] = await pdfToPng(filename, {
       disableFontFace: true,
       useSystemFonts: true,
       viewportScale: 2.0,
@@ -187,19 +203,27 @@ export class ChatServices {
       return '';
     }
 
-    const documents = await vectorStore.similaritySearch(sanitizedQuestion, numDocuments);
+    let documents = await vectorStore.similaritySearch(sanitizedQuestion, numDocuments);
+    const uniqueDocuments = {};
+
+    for (const document of documents) {
+      if (!uniqueDocuments[document.metadata.source]) {
+        uniqueDocuments[document.metadata.source] = document;
+      }
+    }
+
     let output = '';
 
-    await CollectionUtil.asyncForEach(documents, async (doc) => {
-
+    for(const filePaths of Object.keys(uniqueDocuments)) {
+      const doc = uniqueDocuments[filePaths];
       const metadata = doc.metadata;
       const filename = Path.basename(metadata.source);
-      const page = await ChatServices.findPageForText(doc.metadata.source,
+      const page = await ChatServices.findPageForText(metadata.source,
         doc.pageContent);
 
       output = `${output}\n\n\n\nThe following context is coming from ${filename} at page: ${page}, 
       memorize this block among document information and return when you are refering this part of content:\n\n\n\n ${doc.pageContent} \n\n\n\n.`;
-    });
+    }
     return output;
   }
 
@@ -217,7 +241,7 @@ export class ChatServices {
       if (text.includes(searchText)) return i;
     }
 
-    return -1; 
+    return -1;
   }
 
   /**
@@ -314,12 +338,13 @@ export class ChatServices {
         \n\n{context}\n\n
         
         And based on \n\n{chat_history}\n\n
-        rephrase the response to the user using the aforementioned context. If you're unsure of the answer, utilize any relevant context provided to answer the question effectively. Don´t output MD images tags url previously shown.
+        rephrase the response to the user using the aforementioned context. If you're unsure of the answer, 
+        utilize any relevant context provided to answer the question effectively. Don´t output MD images tags url previously shown.
 
         VERY IMPORTANT: ALWAYS return VALID standard JSON with the folowing structure: 'text' as answer, 
-          'file' indicating the PDF filename and 'page' indicating the page number. 
+          sources as an array of ('file' indicating the PDF filename and 'page' indicating the page number) listing all segmented context. 
         Example JSON format: "text": "this is the answer, anything LLM output as text answer shoud be here.", 
-          "file": "filename.pdf", "page": 3,
+          "sources": [{{"file": "filename.pdf", "page": 3}}, {{"file": "filename2.pdf", "page": 1}}],
          return valid JSON with brackets. Avoid explaining the context directly
           to the user; instead, refer to the document source. 
           
@@ -384,7 +409,7 @@ export class ChatServices {
       new StringOutputParser()
     ]);
 
-    let result;
+    let result, sources;
     let text, file, page;
 
 
@@ -401,8 +426,9 @@ export class ChatServices {
     }
     else if (LLMMode === "document") {
 
-      const {text, file, page} = await combineDocumentsChain.invoke(question);
-      result = text;
+      const res = await combineDocumentsChain.invoke(question);
+      result = res.text;
+      sources = res.sources;
 
     } else if (LLMMode === "function") {
 
@@ -429,7 +455,7 @@ export class ChatServices {
     );
 
     GBLog.info(`GPT Result: ${result.toString()}`);
-    return { answer: result.toString(), file, questionId: 0, page };
+    return { answer: result.toString(), sources, questionId: 0, page };
   }
 
   private static getToolsAsText(tools) {

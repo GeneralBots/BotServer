@@ -49,6 +49,7 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import urlJoin from 'url-join';
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
+import Path from 'path';
 
 /**
  * Dialog arguments.
@@ -233,21 +234,29 @@ export class AskDialog extends IGBDialog {
           return;
         }
 
-        const results:any = await service.ask(min, user, step, step.context.activity['pid'], text, searchScore, null /* user.subjects */);
+        const results: any = await service.ask(min, user, step, step.context.activity['pid'], text, searchScore, null /* user.subjects */);
 
         // If there is some result, answer immediately.
 
         if (results !== undefined && results.answer !== undefined) {
+          let urls = [];
+          if (results.sources) {
 
-          if (results.file){
-            const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
-            const url = urlJoin('kb', path, 'docs', results.file);
-      
-            await min.conversationalService.sendEvent(
-              min, step,  'play', {
-                playerType: 'url',
-                data: `${url}#page=${results.page}&toolbar=0&messages=0&statusbar=0&navpanes=0`
+            for (const key in results.sources) {
+              const source = results.sources[key];
+              const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
+              let url = urlJoin('kb', path, 'docs', Path.basename(source.file));
+              url = `${url}#page=${source.page}&toolbar=0&messages=0&statusbar=0&navpanes=0`;
+              urls.push({ url: url });
+            }
+
+            if (urls.length > 0) {
+              await min.conversationalService.sendEvent(
+                min, step, 'play', {
+                playerType: 'multiurl',
+                data: urls
               });
+            }
           }
 
           // Sends the answer to all outputs, including projector.
@@ -266,7 +275,7 @@ export class AskDialog extends IGBDialog {
         const message = min.core.getParam<string>(min.instance, 'Not Found Message', Messages[locale].did_not_find);
 
         await min.conversationalService.sendText(min, step, message);
-        
+
         return await step.replaceDialog('/ask', { isReturning: true });
       }
     ];
@@ -287,7 +296,7 @@ export class AskDialog extends IGBDialog {
       return await step.replaceDialog('/ask', { isReturning: true });
     }
   }
-  
+
   private static getChannel(step): string {
     return !isNaN(step.context.activity['mobile']) ? 'whatsapp' : step.context.activity.channelId;
   }

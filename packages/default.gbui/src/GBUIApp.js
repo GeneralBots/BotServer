@@ -33,6 +33,7 @@ import GBMarkdownPlayer from './players/GBMarkdownPlayer.js';
 import GBImagePlayer from './players/GBImagePlayer.js';
 import GBVideoPlayer from './players/GBVideoPlayer.js';
 import GBUrlPlayer from './players/GBUrlPlayer.js';
+import GBMultiUrlPlayer from './players/GBMultiUrlPlayer.js';
 import GBLoginPlayer from './players/GBLoginPlayer.js';
 import GBBulletPlayer from './players/GBBulletPlayer.js';
 import SidebarMenu from './components/SidebarMenu.js';
@@ -255,7 +256,17 @@ class GBUIApp extends React.Component {
             />
           );
           break;
-        case 'image':
+        case 'multiurl':
+            playerComponent = (
+              <GBMultiUrlPlayer
+                app={this}
+                ref={player => {
+                  this.player = player;
+                }}
+              />
+            );
+            break;
+          case 'image':
           playerComponent = (
             <GBImagePlayer
               app={this}
