@@ -1413,6 +1413,7 @@ export class GBMinService {
         startDialog &&
         startDialog !== '' &&
         !min['conversationWelcomed'][step.context.activity.conversation.id] &&
+        !min['apiConversations'][pid]  &&
         !step.context.activity['group']
       ) {
         await sec.setParam(userId, 'welcomed', 'true');
