@@ -256,8 +256,9 @@ export class GBServer {
             const host = req.headers.host;
 
             // Roteamento com base no domínio.
-            
+
             if (host === process.env.API_HOST) {
+              GBLog.info(`Redirecting to API...`);
               return httpProxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
             }
 
