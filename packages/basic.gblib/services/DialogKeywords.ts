@@ -1284,14 +1284,14 @@ export class DialogKeywords {
           conversationId: conversation.conversationId,
           watermark: conversation.watermark
         });
-        conversation.watermarkMap = response.obj.watermark;
+        conversation.watermark = response.obj.watermark;
         let activities = response.obj.activities;
 
         if (activities && activities.length) {
           activities = activities.filter(m => m.from.id === min.botId && m.type === 'message');
           if (activities.length) {
             activities.forEach(activity => {
-              messages.push({ text: activity.text });
+              messages.push( activity.text );
               GBLogEx.info(min, `MESSAGE BOT answer from bot: ${activity.text}`);
             });
           }
