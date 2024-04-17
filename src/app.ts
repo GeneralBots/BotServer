@@ -114,7 +114,7 @@ export class GBServer {
     process.on('uncaughtException', (err, p) => {
       if (err !== null) {
         err = err['e'] ? err['e'] : err;
-        const msg = `${err['code'] ? err['code'] : ''} ${err?.['response']?.['data'] ? err?.['response']?.['data']: ''} ${err.message ? err.message : ''} ${err['description'] ? err['description'] : ''}`
+        const msg = `${err['code'] ? err['code'] : ''} ${err?.['response']?.['data'] ? err?.['response']?.['data'] : ''} ${err.message ? err.message : ''} ${err['description'] ? err['description'] : ''}`
         GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''} ${msg}`);
       } else {
         GBLog.error('UNCAUGHT_EXCEPTION: Unknown error (err is null)');
@@ -252,31 +252,9 @@ export class GBServer {
           }
 
 
-          server.post('*', async (req, res, next) => {
-
-            const host = req.headers.host;
-
-            // Roteamento com base no domínio.
-
-            if (host === process.env.API_HOST) {
-              GBLog.info(`Redirecting to API...`);
-              return httpProxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
-            }
-
-            await GBSSR.ssrFilter(req, res, next);
-
-          });
-
           server.get('*', async (req, res, next) => {
 
             const host = req.headers.host;
-
-            // Roteamento com base no domínio.
-
-            if (host === process.env.API_HOST) {
-              GBLog.info(`Redirecting to API...`);
-              return httpProxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
-            }
 
             if (req.originalUrl.startsWith('/logs')) {
               if (process.env.ENABLE_WEBLOG === "true") {
@@ -312,17 +290,27 @@ export class GBServer {
       })();
     };
 
-    
+
     if (process.env.CERTIFICATE_PFX) {
-      
+
       // Setups unsecure http redirect.
-      
+      const proxy = httpProxy.createProxyServer({});
+
       const server1 = http.createServer((req, res) => {
         const host = req.headers.host.startsWith('www.') ?
           req.headers.host.substring(4) : req.headers.host;
-        res.writeHead(301, {
-          Location: "https://" + host + req.url
-        }).end();
+
+        if (host === process.env.API_HOST) {
+          GBLog.info(`Redirecting to API...`);
+          return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
+        }
+        else {
+
+          res.writeHead(301, {
+            Location: "https://" + host + req.url
+
+          }).end();
+        }
       });
       server1.listen(80);
 
