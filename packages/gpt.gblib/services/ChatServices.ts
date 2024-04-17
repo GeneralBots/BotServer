@@ -138,13 +138,13 @@ export class GBLLMOutputParser extends
     }
 
     let { sources, text } = res;
-    
+
     await CollectionUtil.asyncForEach(sources, async (source) => {
       let found = false;
       if (source) {
-        
+
         const gbaiName = DialogKeywords.getGBAIPath(this.min.botId, 'gbkb');
-        const localName = Path.join(process.env.PWD,'work', gbaiName, 'docs', source.file);
+        const localName = Path.join(process.env.PWD, 'work', gbaiName, 'docs', source.file);
 
         if (localName) {
           const { url } = await ChatServices.pdfPageAsImage(this.min, localName, source.page);
@@ -214,7 +214,7 @@ export class ChatServices {
 
     let output = '';
 
-    for(const filePaths of Object.keys(uniqueDocuments)) {
+    for (const filePaths of Object.keys(uniqueDocuments)) {
       const doc = uniqueDocuments[filePaths];
       const metadata = doc.metadata;
       const filename = Path.basename(metadata.source);
@@ -492,12 +492,14 @@ export class ChatServices {
 
     });
 
-    const tool = new WikipediaQueryRun({
-      topKResults: 3,
-      maxDocContentLength: 4000,
-    });
-    functions.push(tool);
+    if (process.env.WIKIPEDIA_TOOL) {
 
+      const tool = new WikipediaQueryRun({
+        topKResults: 3,
+        maxDocContentLength: 4000,
+      });
+      functions.push(tool);
+    }
     return functions;
   }
 }
