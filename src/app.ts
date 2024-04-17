@@ -59,7 +59,7 @@ import * as winston from 'winston-logs-display';
 import { RootData } from './RootData.js';
 import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
 import { Mutex } from 'async-mutex';
-import {httpProxy} from 'http-proxy';
+import httpProxy from 'http-proxy';
 
 /**
  * General Bots open-core entry point.
@@ -310,14 +310,6 @@ export class GBServer {
     }
 
     if (process.env.CERTIFICATE_PFX) {
-
-      // var options = {
-      //   changeOrigin: true,
-      //   target: {
-      //       https: true
-      //   }
-      // }
-      // httpProxy.createServer(443, 'www.google.com', options).listen(8001);      
 
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
