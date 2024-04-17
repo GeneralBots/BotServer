@@ -1419,7 +1419,7 @@ export class GBMinService {
         await sec.setParam(userId, 'welcomed', 'true');
         min['conversationWelcomed'][step.context.activity.conversation.id] = true;
         GBLog.info(
-          `Auto start (whatsapp) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
+          `Auto start (4) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
         );
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
 

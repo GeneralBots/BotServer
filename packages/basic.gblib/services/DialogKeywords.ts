@@ -1259,6 +1259,7 @@ export class DialogKeywords {
     await client.apis.Conversations.Conversations_PostActivity({
       conversationId: conversation.conversationId,
       activity: {
+        pid: pid,
         textFormat: 'plain',
         text: text,
         type: 'message',
@@ -1272,10 +1273,7 @@ export class DialogKeywords {
 
     let messages = [];
 
-
     GBLog.info(`MessageBot: Starting message polling ${conversation.conversationId}).`);
-
-
 
     const worker = async () => {
       try {
