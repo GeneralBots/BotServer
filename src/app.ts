@@ -252,7 +252,7 @@ export class GBServer {
           }
 
 
-          server.get('*', async (req, res, next) => {
+          server.all('*', async (req, res, next) => {
 
             const host = req.headers.host;
 
@@ -272,7 +272,16 @@ export class GBServer {
                 await GBSSR.ssrFilter(req, res, next);
               }
             } else {
-              await GBSSR.ssrFilter(req, res, next);
+
+              // Setups unsecure http redirect.
+              const proxy = httpProxy.createProxyServer({});
+
+              if (host === process.env.API_HOST) {
+                GBLog.info(`Redirecting to API...`);
+                return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
+              } else {
+                await GBSSR.ssrFilter(req, res, next);
+              }
             }
           });
 
@@ -293,24 +302,14 @@ export class GBServer {
 
     if (process.env.CERTIFICATE_PFX) {
 
-      // Setups unsecure http redirect.
-      const proxy = httpProxy.createProxyServer({});
-
       const server1 = http.createServer((req, res) => {
         const host = req.headers.host.startsWith('www.') ?
           req.headers.host.substring(4) : req.headers.host;
 
-        if (host === process.env.API_HOST) {
-          GBLog.info(`Redirecting to API...`);
-          return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
-        }
-        else {
+        res.writeHead(301, {
+          Location: "https://" + host + req.url
 
-          res.writeHead(301, {
-            Location: "https://" + host + req.url
-
-          }).end();
-        }
+        }).end();
       });
       server1.listen(80);
 
