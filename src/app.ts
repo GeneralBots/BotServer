@@ -114,7 +114,7 @@ export class GBServer {
     process.on('uncaughtException', (err, p) => {
       if (err !== null) {
         err = err['e'] ? err['e'] : err;
-        const msg = `${err['code'] ? err['code'] : ''} ${err?.['response']?.['data'] ? err?.['response']?.['data']: ''} ${err.message ? err.message : ''} ${err['description'] ? err['description'] : ''}`
+        const msg = `${err['code'] ? err['code'] : ''} ${err?.['response']?.['data'] ? err?.['response']?.['data'] : ''} ${err.message ? err.message : ''} ${err['description'] ? err['description'] : ''}`
         GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''} ${msg}`);
       } else {
         GBLog.error('UNCAUGHT_EXCEPTION: Unknown error (err is null)');
@@ -251,6 +251,22 @@ export class GBServer {
             winston.default(server, loggers[1]);
           }
 
+
+          server.post('*', async (req, res, next) => {
+
+            const host = req.headers.host;
+
+            // Roteamento com base no domínio.
+
+            if (host === process.env.API_HOST) {
+              GBLog.info(`Redirecting to API...`);
+              return httpProxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
+            }
+
+            await GBSSR.ssrFilter(req, res, next);
+
+          });
+
           server.get('*', async (req, res, next) => {
 
             const host = req.headers.host;
@@ -282,6 +298,49 @@ export class GBServer {
             }
           });
 
+          // Setups unsecure http redirect.
+
+          if (process.env.NODE_ENV === 'production') {
+            const server1 = http.createServer((req, res) => {
+              const host = req.headers.host.startsWith('www.') ?
+                req.headers.host.substring(4) : req.headers.host;
+              res.writeHead(301, {
+                Location: "https://" + host + req.url
+              }).end();
+            });
+            server1.listen(80);
+          }
+
+          if (process.env.CERTIFICATE_PFX) {
+
+            const options1 = {
+              passphrase: process.env.CERTIFICATE_PASSPHRASE,
+              pfx: fs.readFileSync(process.env.CERTIFICATE_PFX)
+            };
+
+            const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
+            GBServer.globals.httpsServer = httpsServer;
+
+            for (let i = 2; ; i++) {
+              const certPfxEnv = `CERTIFICATE${i}_PFX`;
+              const certPassphraseEnv = `CERTIFICATE${i}_PASSPHRASE`;
+              const certDomainEnv = `CERTIFICATE${i}_DOMAIN`;
+
+              if (process.env[certPfxEnv] && process.env[certPassphraseEnv] && process.env[certDomainEnv]) {
+                const options = {
+                  passphrase: process.env[certPassphraseEnv],
+                  pfx: fs.readFileSync(process.env[certPfxEnv])
+                };
+                httpsServer.addContext(process.env[certDomainEnv], options);
+              } else {
+                break;
+              }
+            }
+          }
+          else {
+            server.listen(port, mainCallback);
+          }
+
           GBLog.info(`The Bot Server is in RUNNING mode...`);
 
           // Opens Navigator.
@@ -296,48 +355,6 @@ export class GBServer {
       })();
     };
 
-    // Setups unsecure http redirect.
-
-    if (process.env.NODE_ENV === 'production') {
-      const server1 = http.createServer((req, res) => {
-        const host = req.headers.host.startsWith('www.') ?
-          req.headers.host.substring(4) : req.headers.host;
-        res.writeHead(301, {
-          Location: "https://" + host + req.url
-        }).end();
-      });
-      server1.listen(80);
-    }
-
-    if (process.env.CERTIFICATE_PFX) {
-
-      const options1 = {
-        passphrase: process.env.CERTIFICATE_PASSPHRASE,
-        pfx: fs.readFileSync(process.env.CERTIFICATE_PFX)
-      };
-
-      const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
-      GBServer.globals.httpsServer = httpsServer;
-
-      for (let i = 2; ; i++) {
-        const certPfxEnv = `CERTIFICATE${i}_PFX`;
-        const certPassphraseEnv = `CERTIFICATE${i}_PASSPHRASE`;
-        const certDomainEnv = `CERTIFICATE${i}_DOMAIN`;
-
-        if (process.env[certPfxEnv] && process.env[certPassphraseEnv] && process.env[certDomainEnv]) {
-          const options = {
-            passphrase: process.env[certPassphraseEnv],
-            pfx: fs.readFileSync(process.env[certPfxEnv])
-          };
-          httpsServer.addContext(process.env[certDomainEnv], options);
-        } else {
-          break;
-        }
-      }
-    }
-    else {
-      server.listen(port, mainCallback);
-    }
   }
 
   public static initEndpointsDocs(app: express.Application) {
