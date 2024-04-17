@@ -1285,7 +1285,7 @@ export class DialogKeywords {
           watermark: conversation.watermark
         });
         conversation.watermarkMap = response.obj.watermark;
-        let activities = response.obj.activites;
+        let activities = response.obj.activities;
 
         if (activities && activities.length) {
           activities = activities.filter(m => m.from.id === min.botId && m.type === 'message');
