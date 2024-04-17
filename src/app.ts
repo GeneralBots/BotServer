@@ -312,9 +312,11 @@ export class GBServer {
       })();
     };
 
-    // Setups unsecure http redirect.
-
-    if (process.env.NODE_ENV === 'production') {
+    
+    if (process.env.CERTIFICATE_PFX) {
+      
+      // Setups unsecure http redirect.
+      
       const server1 = http.createServer((req, res) => {
         const host = req.headers.host.startsWith('www.') ?
           req.headers.host.substring(4) : req.headers.host;
@@ -323,9 +325,6 @@ export class GBServer {
         }).end();
       });
       server1.listen(80);
-    }
-
-    if (process.env.CERTIFICATE_PFX) {
 
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
