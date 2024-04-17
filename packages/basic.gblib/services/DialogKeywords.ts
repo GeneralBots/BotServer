@@ -70,6 +70,7 @@ import { GBVMService } from './GBVMService.js';
  * Default check interval for user replay
  */
 const DEFAULT_HEAR_POLL_INTERVAL = 500;
+const API_RETRIES = 120;
 
 /**
  * Base services of conversation to be called by BASIC.
@@ -1270,21 +1271,21 @@ export class DialogKeywords {
       }
     });
 
-
     let messages = [];
-
     GBLog.info(`MessageBot: Starting message polling ${conversation.conversationId}).`);
 
-    const worker = async () => {
+    let count = API_RETRIES;
+    while (count--) {
+      
+      await GBUtil.sleep(DEFAULT_HEAR_POLL_INTERVAL);
+      
       try {
-
         const response = await client.apis.Conversations.Conversations_GetActivities({
           conversationId: conversation.conversationId,
           watermark: conversation.watermark
         });
         conversation.watermarkMap = response.obj.watermark;
         let activities = response.obj.activites;
-
 
         if (activities && activities.length) {
           activities = activities.filter(m => m.from.id === min.botId && m.type === 'message');
@@ -1294,18 +1295,16 @@ export class DialogKeywords {
               GBLogEx.info(min, `MESSAGE BOT answer from bot: ${activity.text}`);
             });
           }
+          return messages.join('\n');
         }
-
-        return messages.join('\n');
-
       } catch (err) {
         GBLog.error(
-          `Error calling printMessages API ${err.data === undefined ? err : err.data} ${err.errObj ? err.errObj.message : ''
+          `Error calling printMessages in messageBot API ${err.data === undefined ? err : err.data} ${err.errObj ? err.errObj.message : ''
           }`
         );
+        return err;
       }
     };
-    setInterval(worker, DEFAULT_HEAR_POLL_INTERVAL);
   }
 
 
