@@ -1677,7 +1677,9 @@ export class GBMinService {
       }
     };
 
-    GBServer.globals.server.apiServer = createKoaHttpServer(GBVMService.API_PORT, getRemoteId, { prefix: `api/v3` });
+    GBServer.globals.server.apiServer = createKoaHttpServer(
+      GBVMService.API_PORT, 
+      getRemoteId, { prefix: `api/v3` });
 
     createRpcServer(
       proxies,

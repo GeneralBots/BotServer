@@ -144,7 +144,7 @@ export class GBLLMOutputParser extends
       if (source) {
         
         const gbaiName = DialogKeywords.getGBAIPath(this.min.botId, 'gbkb');
-        const localName = Path.join('work', gbaiName, 'docs', source.file);
+        const localName = Path.join(process.env.PWD,'work', gbaiName, 'docs', source.file);
 
         if (localName) {
           const { url } = await ChatServices.pdfPageAsImage(this.min, localName, source.page);
@@ -196,7 +196,7 @@ export class ChatServices {
   private static async getRelevantContext(
     vectorStore: HNSWLib,
     sanitizedQuestion: string,
-    numDocuments: number = 10
+    numDocuments: number = 100
   ): Promise<string> {
 
     if (sanitizedQuestion === '') {
@@ -221,7 +221,8 @@ export class ChatServices {
       const page = await ChatServices.findPageForText(metadata.source,
         doc.pageContent);
 
-      output = `${output}\n\n\n\nThe following context is coming from ${filename} at page: ${page}, 
+      output = `${output}\n\n\n\nUse also the following context which is coming from Source Document: ${filename} at page: ${page} 
+      (you will fill the JSON sources collection field later), 
       memorize this block among document information and return when you are refering this part of content:\n\n\n\n ${doc.pageContent} \n\n\n\n.`;
     }
     return output;
@@ -346,7 +347,9 @@ export class ChatServices {
         Example JSON format: "text": "this is the answer, anything LLM output as text answer shoud be here.", 
           "sources": [{{"file": "filename.pdf", "page": 3}}, {{"file": "filename2.pdf", "page": 1}}],
          return valid JSON with brackets. Avoid explaining the context directly
-          to the user; instead, refer to the document source. 
+          to the user; instead, refer to the document source, always return more than one source document
+          and check if the answer can be extended by using additional contexts in 
+          other files, as specified before.
           
         Double check if the output is a valid JSON with brackets. all fields are required: text, file, page.
         `

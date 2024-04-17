@@ -59,6 +59,7 @@ import * as winston from 'winston-logs-display';
 import { RootData } from './RootData.js';
 import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
 import { Mutex } from 'async-mutex';
+import {httpProxy} from 'http-proxy';
 
 /**
  * General Bots open-core entry point.
@@ -251,6 +252,15 @@ export class GBServer {
           }
 
           server.get('*', async (req, res, next) => {
+
+            const host = req.headers.host;
+
+            // Roteamento com base no domínio.
+            
+            if (host === process.env.API_HOST) {
+              return httpProxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
+            }
+
             if (req.originalUrl.startsWith('/logs')) {
               if (process.env.ENABLE_WEBLOG === "true") {
                 const admins = {
@@ -299,6 +309,15 @@ export class GBServer {
     }
 
     if (process.env.CERTIFICATE_PFX) {
+
+      // var options = {
+      //   changeOrigin: true,
+      //   target: {
+      //       https: true
+      //   }
+      // }
+      // httpProxy.createServer(443, 'www.google.com', options).listen(8001);      
+
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
         pfx: fs.readFileSync(process.env.CERTIFICATE_PFX)
