@@ -1637,6 +1637,7 @@ export class GBMinService {
           const response = await client.apis.Conversations.Conversations_StartConversation();
           
           min['apiConversations'][pid] = {conversation: response.obj, client: client};
+          min['conversationWelcomed'][response.obj.id] = true;
         }
 
           let ret =  await GBVMService.callVM(script, min, null, pid, false, data);
