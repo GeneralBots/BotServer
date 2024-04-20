@@ -32,7 +32,7 @@ In general, things we find useful when reviewing suggestions are:
 ## Contributing bug fixes
 
 General Bots is current in early preview. We're still accepting contributions in the form of bug fixes. 
-A bug must have an issue tracking it in the issue tracker that has been approved by the pragmatismo.com.br team. Your pull request should include a link to the bug that you are fixing. If you've submitted a PR for a bug, please post a comment in the bug to avoid duplication of effort.
+A bug must have an issue tracking it in the issue tracker that has been approved by the pragmatismo.cloud team. Your pull request should include a link to the bug that you are fixing. If you've submitted a PR for a bug, please post a comment in the bug to avoid duplication of effort.
 
 ## Contributing features
 
@@ -40,7 +40,7 @@ Please open an issue with the `Schema` label to get a discussion started.
 
 ## Legal
 
-We appreciate community contributions to code repositories open sourced by pragmatismo.com.br. By signing a contributor license agreement, we ensure that the community is free to use your contributions. 
+We appreciate community contributions to code repositories open sourced by pragmatismo.cloud. By signing a contributor license agreement, we ensure that the community is free to use your contributions. 
 
 ## Housekeeping
 

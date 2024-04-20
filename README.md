@@ -87,14 +87,14 @@ See our [Contribution Guidelines](https://github.com/pragmatismo-io/BotServer/bl
 
 # Reporting Security Issues
 
-Security issues and bugs should be reported privately, via email, to the pragmatismo.com.br Security
-team at [security@pragmatismo.com.br](mailto:security@pragmatismo.com.br). You should
+Security issues and bugs should be reported privately, via email, to the pragmatismo.cloud Security
+team at [security@pragmatismo.cloud](mailto:security@pragmatismo.cloud). You should
 receive a response within 24 hours. If for some reason you do not, please follow up via
 email to ensure we received your original message. 
 
 # License & Warranty
 
-General Bot Copyright (c) pragmatismo.com.br. All rights reserved.
+General Bot Copyright (c) pragmatismo.cloud. All rights reserved.
 Licensed under the AGPL-3.0.       
                                                             
 According to our dual licensing model, this program can be used either
@@ -110,7 +110,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
                                                         
-"General Bot" is a registered trademark of pragmatismo.com.br.
+"General Bot" is a registered trademark of pragmatismo.cloud.
 The licensing of the program under the AGPLv3 does not imply a
 trademark license. Therefore any rights, title and interest in
 our trademarks remain entirely with us.

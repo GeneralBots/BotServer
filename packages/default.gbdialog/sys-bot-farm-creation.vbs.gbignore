@@ -1,4 +1,4 @@
-' General Bots Copyright (c) pragmatismo.com.br. All rights reserved. Licensed under the AGPL-3.0. 
+' General Bots Copyright (c) pragmatismo.cloud. All rights reserved. Licensed under the AGPL-3.0. 
 
 talk "Please, tell me what is the Bot name?"
 hear title

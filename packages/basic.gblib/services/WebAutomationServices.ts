@@ -7,7 +7,7 @@
 |   | |                ( )_) |                                                |
 |   (_)                 \___/'                                                |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model,this program can be used either      |
@@ -23,7 +23,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.com.br.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.             |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights,title and interest in              |
 | our trademarks remain entirely with us.                                     |

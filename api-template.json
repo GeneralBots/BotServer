@@ -7,7 +7,7 @@
     },
     "servers": [
       {
-        "url": "https://gb.pragmatismo.com.br/api",
+        "url": "https://gb.pragmatismo.cloud/api",
         "description": "General Bots Online"
       }
     ]

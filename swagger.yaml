@@ -4,7 +4,7 @@ info:
   description: General Bots API description in Swagger format
   version: '1.0'
 servers:
-  - url: 'https://gb.pragmatismo.com.br/api'
+  - url: 'https://gb.pragmatismo.cloud/api'
     description: General Bots Online
 paths:
   /systemKeywords/callVM:
