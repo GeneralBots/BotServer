@@ -55,6 +55,7 @@ import Fs from 'fs';
 import { GBServer } from '../../../src/app.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * Services for server administration.
@@ -257,7 +258,7 @@ export class GBAdminService implements IGBAdminService {
       const minBoot = GBServer.globals.minBoot;
       instanceId = minBoot.instance.instanceId;
     }
-    GBLog.info(`Acquiring token for instanceId: ${instanceId} ${tokenName} (root: ${root}).`);
+    GBLogEx.info(instanceId, `Acquiring token for instanceId: ${instanceId} ${tokenName} (root: ${root}).`);
 
     let expiresOnV;
     try {

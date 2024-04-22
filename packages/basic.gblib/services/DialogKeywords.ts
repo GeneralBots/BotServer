@@ -148,7 +148,7 @@ export class DialogKeywords {
 
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
-    GBLog.info(`BASIC: Visualization: Chart generated at ${url}.`);
+    GBLogEx.info(min, `BASIC: Visualization: Chart generated at ${url}.`);
 
     return url;
   }
@@ -157,8 +157,9 @@ export class DialogKeywords {
    * Returns the OCR of image file.
    *
    */
-  public async getOCR({ localFile }) {
-    GBLog.info(`BASIC: OCR processing on ${localFile}.`);
+  public async getOCR({pid, localFile }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: OCR processing on ${localFile}.`);
 
     const config = {
       lang: 'eng',
@@ -272,9 +273,9 @@ export class DialogKeywords {
     );
 
     let dt = SystemKeywords.getDateFromLocaleString(pid, date, contentLocale);
-    GBLog.info(`BASIC WEEKDAY contentLocale: ${this.getContentLocaleWithCulture(contentLocale)}`);
-    GBLog.info(`BASIC WEEKDAY date: ${dt}`);
-    GBLog.info(dt.toLocaleString(this.getContentLocaleWithCulture(contentLocale), { weekday: 'short' }));
+    GBLogEx.info(min, `BASIC WEEKDAY contentLocale: ${this.getContentLocaleWithCulture(contentLocale)}`);
+    GBLogEx.info(min, `BASIC WEEKDAY date: ${dt}`);
+    GBLogEx.info(min, dt.toLocaleString(this.getContentLocaleWithCulture(contentLocale), { weekday: 'short' }));
 
     if (dt) {
       if (!(dt instanceof Date)) {
@@ -527,14 +528,14 @@ export class DialogKeywords {
    *
    */
   public async sendEmail({ pid, to, subject, body }) {
-
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     if (!body) {
       body = "";
     };
 
     // tslint:disable-next-line:no-console
 
-    GBLog.info(`[E-mail]: to:${to},subject: ${subject},body: ${body}.`);
+    GBLogEx.info(min, `[E-mail]: to:${to},subject: ${subject},body: ${body}.`);
     const emailToken = process.env.EMAIL_API_KEY;
 
     // Inline word document used as e-mail body.
@@ -571,7 +572,7 @@ export class DialogKeywords {
    */
   public async sendFileTo({ pid, mobile, filename, caption }) {
     const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
-    GBLog.info(`BASIC: SEND FILE TO '${mobile}',filename '${filename}'.`);
+    GBLogEx.info(min, `BASIC: SEND FILE TO '${mobile}',filename '${filename}'.`);
     return await this.internalSendFile({ pid, mobile, channel: proc.channel, filename, caption });
   }
 
@@ -583,7 +584,7 @@ export class DialogKeywords {
    */
   public async sendFile({ pid, filename, caption }) {
     const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
-    GBLog.info(`BASIC: SEND FILE (to: ${user.userSystemId},filename '${filename}'.`);
+    GBLogEx.info(min, `BASIC: SEND FILE (to: ${user.userSystemId},filename '${filename}'.`);
     const mobile = await this.userMobile({ pid });
     return await this.internalSendFile({ pid, channel: proc.channel, mobile, filename, caption });
   }
@@ -668,7 +669,7 @@ export class DialogKeywords {
     //   throw new Error(`Not possible to define ${name} as it is a reserved system param name.`);
     // }
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    GBLog.info(`BASIC: ${name} = ${value} (botId: ${min.botId})`);
+    GBLogEx.info(min, `BASIC: ${name} = ${value} (botId: ${min.botId})`);
     const sec = new SecService();
     if (user) {
       await sec.setParam(user.userId, name, value);
@@ -931,9 +932,9 @@ export class DialogKeywords {
           await this.talk({ pid: pid, text: button });
         }
 
-        GBLog.info(`BASIC: HEAR with [${args.toString()}] (Asking for input).`);
+        GBLogEx.info(min, `BASIC: HEAR with [${args.toString()}] (Asking for input).`);
       } else {
-        GBLog.info('BASIC: HEAR (Asking for input).');
+        GBLogEx.info(min, 'BASIC: HEAR (Asking for input).');
       }
 
       // Wait for the user to answer.
@@ -966,7 +967,7 @@ export class DialogKeywords {
           return m.name === args;
         });
         if (document === undefined || document.length === 0) {
-          GBLog.info(`${args} not found on .gbdata folder, check the package.`);
+          GBLogEx.info(min, `${args} not found on .gbdata folder, check the package.`);
           return null;
         }
 
@@ -1007,7 +1008,7 @@ export class DialogKeywords {
           return await this.hear({ pid, kind, args });
         }
       } else if (kind === 'file') {
-        GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
+        GBLogEx.info(min, `BASIC (${min.botId}): Upload done for ${answer.filename}.`);
         const handle = WebAutomationServices.cyrb53({ pid, str: min.botId + answer.filename });
         GBServer.globals.files[handle] = answer;
         result = handle;
@@ -1128,7 +1129,7 @@ export class DialogKeywords {
         result = phoneNumber;
       } else if (kind === 'qr-scanner') {
         //https://github.com/GeneralBots/BotServer/issues/171
-        GBLog.info(`BASIC (${min.botId}): Upload done for ${answer.filename}.`);
+        GBLogEx.info(min, `BASIC (${min.botId}): Upload done for ${answer.filename}.`);
         const handle = WebAutomationServices.cyrb53({ pid, str: min.botId + answer.filename });
         GBServer.globals.files[handle] = answer;
         QrScanner.scanImage(GBServer.globals.files[handle])
@@ -1272,7 +1273,7 @@ export class DialogKeywords {
     });
 
     let messages = [];
-    GBLog.info(`MessageBot: Starting message polling ${conversation.conversationId}).`);
+    GBLogEx.info(min, `MessageBot: Starting message polling ${conversation.conversationId}).`);
 
     let count = API_RETRIES;
     while (count--) {
@@ -1367,7 +1368,7 @@ export class DialogKeywords {
    */
   public async talk({ pid, text }) {
     const { min, user, step } = await DialogKeywords.getProcessInfo(pid);
-    GBLog.info(`BASIC: TALK '${text} step:${step}'.`);
+    GBLogEx.info(min, `BASIC: TALK '${text} step:${step}'.`);
 
     if (user) {
       // TODO: const translate = user ? user.basicOptions.translatorOn : false;
@@ -1415,7 +1416,7 @@ export class DialogKeywords {
 
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
 
-      GBLog.info(`BASIC: WebAutomation: Sending ${url} to ${mobile} (${channel}).`);
+      GBLogEx.info(min, `BASIC: WebAutomation: Sending ${url} to ${mobile} (${channel}).`);
     }
 
     // GBFILE object.
@@ -1424,17 +1425,17 @@ export class DialogKeywords {
       url = filename.url;
       nameOnly = Path.basename(filename.localName);
 
-      GBLog.info(`BASIC: Sending the GBFILE ${url} to ${mobile} (${channel}).`);
+      GBLogEx.info(min, `BASIC: Sending the GBFILE ${url} to ${mobile} (${channel}).`);
     }
 
     // Handles Markdown.
 
     else if (filename.indexOf('.md') !== -1) {
 
-      GBLog.info(`BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
+      GBLogEx.info(min, `BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
       const md = await min.kbService.getAnswerTextByMediaName(min.instance.instanceId, filename);
       if (!md) {
-        GBLog.info(`BASIC: Markdown file ${filename} not found on database for ${min.instance.botId}.`);
+        GBLogEx.info(min, `BASIC: Markdown file ${filename} not found on database for ${min.instance.botId}.`);
       }
       await min.conversationalService['playMarkdown'](min, md, DialogKeywords.getChannel(), null, mobile);
 
@@ -1452,7 +1453,7 @@ export class DialogKeywords {
 
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const fileUrl = urlJoin('/', gbaiName, `${min.botId}.gbdrive`, filename);
-      GBLog.info(`BASIC: Direct send from .gbdrive: ${fileUrl} to ${mobile}.`);
+      GBLogEx.info(min, `BASIC: Direct send from .gbdrive: ${fileUrl} to ${mobile}.`);
 
       const sys = new SystemKeywords();
 

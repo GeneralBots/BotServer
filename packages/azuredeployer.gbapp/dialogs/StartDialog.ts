@@ -40,6 +40,7 @@ import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminSe
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService.js';
 import scanf from 'scanf';
 import { AzureDeployerService } from '../services/AzureDeployerService.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * Handles command-line dialog for getting info for Boot Bot.
@@ -188,7 +189,7 @@ generate manually an App ID and App Secret.\n`
     const map = {};
     let index = 1;
     list.forEach(element => {
-      GBLog.info(`${index}: ${element.displayName} (${element.subscriptionId})`);
+      GBLogEx.info(0, `${index}: ${element.displayName} (${element.subscriptionId})`);
       map[index++] = element;
     });
     let subscriptionIndex;

@@ -60,6 +60,7 @@ import { RootData } from './RootData.js';
 import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
 import { Mutex } from 'async-mutex';
 import httpProxy from 'http-proxy';
+import { GBLogEx } from '../packages/core.gbapp/services/GBLogEx.js';
 
 /**
  * General Bots open-core entry point.
@@ -72,13 +73,13 @@ export class GBServer {
    */
 
   public static run() {
-    GBLog.info(`The Bot Server is in STARTING mode...`);
+    GBLogEx.info(0, `The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
     GBConfigService.init();
     const port = GBConfigService.getServerPort();
 
     if (process.env.TEST_SHELL) {
-      GBLog.info(`Running TEST_SHELL: ${process.env.TEST_SHELL}...`);
+      GBLogEx.info(0, `Running TEST_SHELL: ${process.env.TEST_SHELL}...`);
       try {
         child_process.execSync(process.env.TEST_SHELL);
       } catch (error) {
@@ -108,7 +109,7 @@ export class GBServer {
     server.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
 
     process.on('SIGTERM', () => {
-      GBLog.info('SIGTERM signal received.');
+      GBLogEx.info(0, 'SIGTERM signal received.');
     });
 
     process.on('uncaughtException', (err, p) => {
@@ -132,7 +133,7 @@ export class GBServer {
       (async () => {
 
         try {
-          GBLog.info(`Now accepting connections on ${port}...`);
+          GBLogEx.info(0, `Now accepting connections on ${port}...`);
           process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
           // Reads basic configuration, initialize minimal services.
@@ -151,11 +152,11 @@ export class GBServer {
             } else {
               GBServer.globals.publicAddress = await core.ensureProxy(port);
               process.env.BOT_URL = GBServer.globals.publicAddress;
-              GBLog.info(`Auto-proxy address at: ${process.env.BOT_URL}...`);
+              GBLogEx.info(0, `Auto-proxy address at: ${process.env.BOT_URL}...`);
             }
           } else {
             const serverAddress = process.env.BOT_URL;
-            GBLog.info(`.env address at ${serverAddress}...`);
+            GBLogEx.info(0, `.env address at ${serverAddress}...`);
             GBServer.globals.publicAddress = serverAddress;
           }
 
@@ -181,9 +182,9 @@ export class GBServer {
 
           // Deploys system and user packages.
 
-          GBLog.info(`Deploying System packages...`);
+          GBLogEx.info(0, `Deploying System packages...`);
           GBServer.globals.sysPackages = await core.loadSysPackages(core);
-          GBLog.info(`Connecting to Bot Storage...`);
+          GBLogEx.info(0, `Connecting to Bot Storage...`);
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
           await core.syncDatabaseStructure();
@@ -198,7 +199,7 @@ export class GBServer {
             deployer.setupDefaultGBUI();
           }
 
-          GBLog.info(`Publishing instances...`);
+          GBLogEx.info(0, `Publishing instances...`);
           const instances: IGBInstance[] = await core.loadAllInstances(
             core,
             azureDeployer,
@@ -277,7 +278,7 @@ export class GBServer {
               const proxy = httpProxy.createProxyServer({});
 
               if (host === process.env.API_HOST) {
-                GBLog.info(`Redirecting to API...`);
+                GBLogEx.info(0, `Redirecting to API...`);
                 return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
               } else {
                 await GBSSR.ssrFilter(req, res, next);
@@ -285,7 +286,7 @@ export class GBServer {
             }
           });
 
-          GBLog.info(`The Bot Server is in RUNNING mode...`);
+          GBLogEx.info(0, `The Bot Server is in RUNNING mode...`);
 
           // Opens Navigator.
 

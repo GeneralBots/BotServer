@@ -39,6 +39,7 @@ import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { SecService } from '../services/SecService.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 /**
  * Dialogs for handling Menu control.
  */
@@ -64,7 +65,7 @@ export class SMSAuthDialog extends IGBDialog {
           // Generates a new mobile code.
 
           let code = GBAdminService.getMobileCode();
-          GBLog.info(`SMS Auth: Generated new code: ${code} is being sent.`);
+          GBLogEx.info(min, `SMS Auth: Generated new code: ${code} is being sent.`);
           step.activeDialog.state.resetInfo.sentCode = code;
           step.activeDialog.state.resetInfo.mobile = mobile;
 
@@ -86,7 +87,7 @@ export class SMSAuthDialog extends IGBDialog {
             let sec = new SecService();
             const member = step.context.activity.from;
 
-            GBLog.info(`SMS Auth: User Authenticated.`);
+            GBLogEx.info(min, `SMS Auth: User Authenticated.`);
             await step.context.sendActivity(Messages[locale].authenticated);
 
             return await step.endDialog(step.activeDialog.state.resetInfo.mobile);

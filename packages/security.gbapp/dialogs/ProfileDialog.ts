@@ -38,6 +38,7 @@ import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { Messages } from '../strings.js';
 import libphonenumber from 'google-libphonenumber';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * Dialogs for handling Menu control.
@@ -144,7 +145,7 @@ export class ProfileDialog extends IGBDialog {
               `${step.activeDialog.state.options.mobileCode} is your General Bots creation code.`
             );
           } else {
-            GBLog.info(`WhatsApp not configured. Here is the code: ${step.activeDialog.state.options.mobileCode}.`);
+            GBLogEx.info(min, `WhatsApp not configured. Here is the code: ${step.activeDialog.state.options.mobileCode}.`);
           }
 
           await step.prompt('textPrompt', Messages[locale].confirm_mobile);

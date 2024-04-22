@@ -7,6 +7,7 @@ import { DialogKeywords } from '../../../packages/basic.gblib/services/DialogKey
 import * as Fs from 'fs';
 import mkdirp from 'mkdirp';
 import urlJoin from 'url-join';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 
 /**
@@ -204,9 +205,9 @@ export class SecService extends GBService {
         }
       });
     }
-    GBLog.info(`Selected agentId: ${agentSystemId}`);
+    GBLogEx.info(min, `Selected agentId: ${agentSystemId}`);
     await this.updateHumanAgent(userSystemId, min.instance.instanceId, agentSystemId);
-    GBLog.info(`Updated agentId to: ${agentSystemId}`);
+    GBLogEx.info(min, `Updated agentId to: ${agentSystemId}`);
 
     return agentSystemId;
   }

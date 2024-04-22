@@ -300,13 +300,13 @@ export class KBService implements IGBKBService {
       contentLocale
     );
     
-    GBLog.info(`Translated query (prompt): ${query}.`);
+    GBLogEx.info(min, `Translated query (prompt): ${query}.`);
 
     // Try simple search first.
 
     const data = await this.getAnswerByText(instance.instanceId, query.trim());
     if (data) {
-      GBLog.info(`Simple SEARCH called.`);
+      GBLogEx.info(min, `Simple SEARCH called.`);
       return { answer: data.answer, questionId: data.question.questionId };
     }
 
@@ -359,11 +359,11 @@ export class KBService implements IGBKBService {
         if (returnedScore >= searchScore) {
           const value = await this.getAnswerById(instance.instanceId, result.document.answerId);
           if (value !== null) {
-            GBLog.info(`SEARCH WILL BE USED with score: ${returnedScore} > required (searchScore): ${searchScore}`);
+            GBLogEx.info(min, `SEARCH WILL BE USED with score: ${returnedScore} > required (searchScore): ${searchScore}`);
 
             return { answer: value, questionId: result.document.questionId };
           } else {
-            GBLog.info(
+            GBLogEx.info(min, 
               `Index problem. SEARCH WILL NOT be used as answerId ${result.document.answerId} was not found in database,
                 returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
             );
@@ -373,7 +373,7 @@ export class KBService implements IGBKBService {
         }
       }
     }
-    GBLog.info(
+    GBLogEx.info(min, 
       `SEARCH returned LOW level score, calling NLP if any,
         returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
     );
@@ -447,7 +447,7 @@ export class KBService implements IGBKBService {
     min: GBMinInstance,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
-    GBLog.info(`Now reading file ${filePath}...`);
+    GBLogEx.info(min, `Now reading file ${filePath}...`);
     const workbook = new Excel.Workbook();
     const data = await workbook.xlsx.readFile(filePath);
 
@@ -469,7 +469,7 @@ export class KBService implements IGBKBService {
     const answers = [];
     const questions = [];
 
-    GBLog.info(`Processing ${rows.length} rows from tabular file ${filePath}...`);
+    GBLogEx.info(min, `Processing ${rows.length} rows from tabular file ${filePath}...`);
     await asyncPromise.eachSeries(rows, async line => {
       // Skips the first line.
 
@@ -503,7 +503,7 @@ export class KBService implements IGBKBService {
           let media = null;
 
           if (typeof answer !== 'string') {
-            GBLog.info(`[GBImporter] Answer is NULL related to Question '${question}'.`);
+            GBLogEx.info(min, `[GBImporter] Answer is NULL related to Question '${question}'.`);
             answer =
               'Existe um problema na base de conhecimento. Fui treinado para entender sua pergunta, avise a quem me criou que a resposta não foi informada para esta pergunta.';
           } else if (answer.indexOf('.md') > -1 || answer.indexOf('.docx') > -1) {
@@ -522,7 +522,7 @@ export class KBService implements IGBKBService {
               media = path.basename(mediaFilename);
             } else {
               if (answer.indexOf('.md') > -1) {
-                GBLog.info(`[GBImporter] File not found: ${mediaFilename}.`);
+                GBLogEx.info(min, `[GBImporter] File not found: ${mediaFilename}.`);
                 answer = '';
               }
             }
@@ -857,7 +857,7 @@ export class KBService implements IGBKBService {
   ): Promise<any> {
     const files = await walkPromise(urlJoin(localPath, 'docs'));
     if (!files[0]) {
-      GBLog.info(
+      GBLogEx.info(min, 
         `[GBDeployer] docs folder not created yet in .gbkb. To use Reading Comprehension, create this folder at root and put a document to get read by the.`
       );
     } else {
@@ -1088,7 +1088,7 @@ export class KBService implements IGBKBService {
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
   const packageName = Path.basename(localPath);
   const instance = await core.loadInstanceByBotId(min.botId);
-  GBLog.info(`[GBDeployer] Importing: ${localPath}`);
+  GBLogEx.info(min, `[GBDeployer] Importing: ${localPath}`);
 
   const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
   await this.importKbPackage(min, localPath, p, instance);
@@ -1100,14 +1100,14 @@ export class KBService implements IGBKBService {
   min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
   await KBService.RefreshNER(min);
 
-  GBLog.info(`[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
+  GBLogEx.info(min, `[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
   const html = await GBSSR.getHTML(min);
   let path = DialogKeywords.getGBAIPath(min.botId, `gbui`);
   path = Path.join(process.env.PWD, 'work', path, 'index.html');
   GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${path}.`);
   Fs.writeFileSync(path, html, 'utf8');
 
-  GBLog.info(`[GBDeployer] Finished import of ${localPath}`);
+  GBLogEx.info(min, `[GBDeployer] Finished import of ${localPath}`);
 }
 
   private async playAudio(
@@ -1161,20 +1161,7 @@ export class KBService implements IGBKBService {
   });
 }
 
-  public async readComprehension(instanceId: number, doc: string, question: string) {
-  const url =
-    `http://${process.env.GBMODELS_SERVER}/reading-comprehension` +
-    new URLSearchParams({ question: question, key: process.env.GBMODELS_KEY });
-  const form = new FormData();
-  form.append('content', doc);
-  const options = {
-    body: form
-  };
-  GBLog.info(`[General Bots Models]: ReadComprehension for ${question}.`);
-  return await fetch(url, options);
-}
-
-  private async getTextFromFile(filename: string) {
+ private async getTextFromFile(filename: string) {
   return new Promise<string>(async (resolve, reject) => {
     textract.fromFileWithPath(filename, { preserveLineBreaks: true }, (error, text) => {
       if (error) {

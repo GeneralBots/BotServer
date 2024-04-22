@@ -53,6 +53,7 @@ import { GBUtil } from '../../../src/util.js';
 const { WAState, Client, MessageMedia } = pkg;
 import twilio from 'twilio';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 
 /**
@@ -318,7 +319,7 @@ export class WhatsappDirectLine extends GBService {
     }
 
     text = text.replace(/\@\d+ /gi, '');
-    GBLog.info(`GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
+    GBLogEx.info(0, `GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
 
     let botGroupID = WhatsappDirectLine.botGroups[this.min.botId];
     let botShortcuts = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Shortcuts', null);
@@ -465,7 +466,7 @@ export class WhatsappDirectLine extends GBService {
           await sec.updateHumanAgent(manualUser.userSystemId, this.min.instance.instanceId, null);
           await sec.updateHumanAgent(user.agentSystemId, this.min.instance.instanceId, null);
         } else {
-          GBLog.info(`HUMAN AGENT (${manualUser.agentSystemId}) TO USER ${manualUser.userSystemId}: ${text}`);
+          GBLogEx.info(this.min, `HUMAN AGENT (${manualUser.agentSystemId}) TO USER ${manualUser.userSystemId}: ${text}`);
           await this.sendToDeviceEx(manualUser.userSystemId, `AGENT: *${text}*`, locale, null);
         }
       }
@@ -481,7 +482,7 @@ export class WhatsappDirectLine extends GBService {
       } else if (text === '/qt' || GBMinService.isGlobalQuitUtterance(locale, text)) {
         await this.endTransfer(from, locale, user, agent, sec);
       } else {
-        GBLog.info(`USER (${from}) TO AGENT ${agent.userSystemId}: ${text}`);
+        GBLogEx.info(this.min, `USER (${from}) TO AGENT ${agent.userSystemId}: ${text}`);
 
         const prompt = `the person said: ${text}. what can I tell her?`;
         const answer = await ChatServices.continue(this.min, prompt, 0);
@@ -501,7 +502,7 @@ export class WhatsappDirectLine extends GBService {
       }
     } else if (user.agentMode === 'bot' || user.agentMode === null || user.agentMode === undefined) {
       if (WhatsappDirectLine.conversationIds[botId + from + group] === undefined) {
-        GBLog.info(`GBWhatsapp: Starting new conversation on Bot.`);
+        GBLogEx.info(this.min, `GBWhatsapp: Starting new conversation on Bot.`);
         const response = await client.apis.Conversations.Conversations_StartConversation();
         const generatedConversationId = response.obj.conversationId;
 
@@ -579,7 +580,7 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public pollMessages(client, conversationId, from, fromName) {
-    GBLog.info(`GBWhatsapp: Starting message polling(${from}, ${conversationId}).`);
+    GBLogEx.info(this.min, `GBWhatsapp: Starting message polling(${from}, ${conversationId}).`);
 
     let watermark: any;
 
@@ -621,7 +622,7 @@ export class WhatsappDirectLine extends GBService {
     let output = '';
 
     if (activity.text) {
-      GBLog.info(`GBWhatsapp: SND ${to}(${toName}): ${activity.text}`);
+      GBLogEx.info(this.min, `GBWhatsapp: SND ${to}(${toName}): ${activity.text}`);
       output = activity.text;
     }
 
@@ -638,7 +639,7 @@ export class WhatsappDirectLine extends GBService {
             return;
 
           default:
-            GBLog.info(`Unknown content type: ${attachment.contentType}`);
+            GBLogEx.info(this.min, `Unknown content type: ${attachment.contentType}`);
         }
       });
     }
@@ -673,7 +674,7 @@ export class WhatsappDirectLine extends GBService {
       try {
         // tslint:disable-next-line: await-promise
         const result = await fetch(url, options);
-        GBLog.info(`File ${url} sent to ${to}: ${result}`);
+        GBLogEx.info(this.min, `File ${url} sent to ${to}: ${result}`);
       } catch (error) {
         GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
       }
@@ -694,7 +695,7 @@ export class WhatsappDirectLine extends GBService {
     if (options) {
       try {
         const result = await fetch(url, options);
-        GBLog.info(`Audio ${url} sent to ${to}: ${result}`);
+        GBLogEx.info(this.min, `Audio ${url} sent to ${to}: ${result}`);
       } catch (error) {
         GBLog.error(`Error sending audio message to Whatsapp provider ${error.message}`);
       }
@@ -756,7 +757,7 @@ export class WhatsappDirectLine extends GBService {
             await this.customClient.sendMessage(to, msg);
           }
           else {
-            GBLog.info(`WhatsApp OFFLINE ${to}: ${msg}`);
+            GBLogEx.info(this.min, `WhatsApp OFFLINE ${to}: ${msg}`);
           }
 
           break;
@@ -765,7 +766,7 @@ export class WhatsappDirectLine extends GBService {
 
       if (options) {
         try {
-          GBLog.info(`Message [${msg}] is being sent to ${to}...`);
+          GBLogEx.info(this.min, `Message [${msg}] is being sent to ${to}...`);
           await fetch(url, options);
         } catch (error) {
           GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
@@ -827,7 +828,7 @@ export class WhatsappDirectLine extends GBService {
       
 
       botId = botId??GBServer.globals.minBoot.botId;
-      GBLog.info(`A WhatsApp mobile requested instance for: ${botId}.`);
+      GBLogEx.info(this.min, `A WhatsApp mobile requested instance for: ${botId}.`);
         
       let urlMin: any = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
       // Detects user typed language and updates their locale profile if applies.
@@ -837,7 +838,7 @@ export class WhatsappDirectLine extends GBService {
 
       const botNumber = urlMin ? urlMin.core.getParam(urlMin.instance, 'Bot Number', null) : null;
       if (botNumber && GBServer.globals.minBoot.botId !== urlMin.botId) {
-        GBLog.info(`${id} fixed by bot number talked to: ${botId}.`);
+        GBLogEx.info(this.min, `${id} fixed by bot number talked to: ${botId}.`);
         let locale = user?.locale ? user.locale : min.core.getParam(
           min.instance,
           'Default User Language',
@@ -856,7 +857,7 @@ export class WhatsappDirectLine extends GBService {
 
           if (text != '' && detectLanguage) {
             locale = await min.conversationalService.getLanguage(min, text);
-            GBLog.info(`${locale} defined for first time mobile: ${id}.`);
+            GBLogEx.info(this.min, `${locale} defined for first time mobile: ${id}.`);
           }
         }
 
@@ -904,7 +905,7 @@ export class WhatsappDirectLine extends GBService {
       }
 
       if (group) {
-        GBLog.info(`Group: ${group}`);
+        GBLogEx.info(this.min, `Group: ${group}`);
         function getKeyByValue(object, value) {
           return Object.keys(object).find(key => object[key] === value);
         }
@@ -958,7 +959,7 @@ export class WhatsappDirectLine extends GBService {
           : activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
 
         if (startDialog) {
-          GBLog.info(`Calling /start to Auto start ${startDialog} for ${activeMin.instance.instanceId}...`);
+          GBLogEx.info(this.min, `Calling /start to Auto start ${startDialog} for ${activeMin.instance.instanceId}...`);
           if (provider === 'GeneralBots') {
             req.body = `/start`;
           }
@@ -977,7 +978,7 @@ export class WhatsappDirectLine extends GBService {
         // User wants to switch bots.
 
         if (toSwitchMin) {
-          GBLog.info(`Switching bots from ${botId} to ${toSwitchMin.botId}...`);
+          GBLogEx.info(this.min, `Switching bots from ${botId} to ${toSwitchMin.botId}...`);
 
           // So gets the new bot instance information and prepares to
           // auto start dialog if any is specified.
@@ -990,7 +991,7 @@ export class WhatsappDirectLine extends GBService {
 
           if (startDialog) {
 
-            GBLog.info(`Calling /start for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
+            GBLogEx.info(this.min, `Calling /start for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);
             if (provider === 'GeneralBots') {
               req.body = `/start`;
             }

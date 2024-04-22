@@ -175,7 +175,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
         GBServer.globals.debuggers[limits.botId].state = 0;
         GBServer.globals.debuggers[limits.botId].stateInfo = 'Fail';
       } else if (stderrCache.includes('Debugger attached.')) {
-        GBLog.info(`BASIC: General Bots Debugger attached to Node .gbdialog process for ${limits.botId}.`);
+        GBLogEx.info(min, `BASIC: General Bots Debugger attached to Node .gbdialog process for ${limits.botId}.`);
       }
     });
 
@@ -216,7 +216,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
                 // Processes breakpoint hits.
 
                 if (hitBreakpoints.length >= 1) {
-                  GBLog.info(`BASIC: Break at line ${frame.location.lineNumber + 1}`); // (zero-based)
+                  GBLogEx.info(min, `BASIC: Break at line ${frame.location.lineNumber + 1}`); // (zero-based)
 
                   GBServer.globals.debuggers[limits.botId].state = 2;
                   GBServer.globals.debuggers[limits.botId].stateInfo = 'Break';
@@ -232,9 +232,9 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
                           lineNumber: brk
                         }
                       });
-                      GBLog.info(`BASIC break defined ${breakpointId} for ${limits.botId}`);
+                      GBLogEx.info(min, `BASIC break defined ${breakpointId} for ${limits.botId}`);
                     } catch (error) {
-                      GBLog.info(`BASIC error defining ${brk} for ${limits.botId}. ${error}`);
+                      GBLogEx.info(min, `BASIC error defining ${brk} for ${limits.botId}. ${error}`);
                     }
                   });
                   await client.Debugger.resume();

@@ -61,6 +61,7 @@ import ngrok from 'ngrok';
 import Path from 'path';
 import { file } from 'googleapis/build/src/apis/file/index.js';
 import { GBUtil } from '../../../src/util.js';
+import { GBLogEx } from './GBLogEx.js';
 
 /**
  * GBCoreService contains main logic for handling storage services related
@@ -135,7 +136,7 @@ export class GBCoreService implements IGBCoreService {
     const logging: boolean | Function =
       GBConfigService.get('STORAGE_LOGGING') === 'true'
         ? (str: string): void => {
-          GBLog.info(str);
+          GBLogEx.info(0, str);
         }
         : false;
 
@@ -178,7 +179,7 @@ export class GBCoreService implements IGBCoreService {
     try {
       await this.sequelize.authenticate();
     } catch (error) {
-      GBLog.info('Opening storage firewall on infrastructure...');
+      GBLogEx.info(0, 'Opening storage firewall on infrastructure...');
       // tslint:disable:no-unsafe-any
       if (error.parent.code === 'ELOGIN') {
         await this.openStorageFrontier(installationDeployer);
@@ -195,7 +196,7 @@ export class GBCoreService implements IGBCoreService {
   public async syncDatabaseStructure() {
     if (GBConfigService.get('STORAGE_SYNC') === 'true') {
       const alter = GBConfigService.get('STORAGE_SYNC_ALTER') === 'true';
-      GBLog.info('Syncing database...');
+      GBLogEx.info(0, 'Syncing database...');
 
       return await this.sequelize.sync({
         alter: alter,
@@ -203,7 +204,7 @@ export class GBCoreService implements IGBCoreService {
       });
     } else {
       const msg = `Database synchronization is disabled.`;
-      GBLog.info(msg);
+      GBLogEx.info(0, msg);
     }
   }
 
@@ -419,14 +420,14 @@ ENDPOINT_UPDATE=true
     installationDeployer: IGBInstallationDeployer,
     proxyAddress: string
   ) {
-    GBLog.info(`Loading instances from storage...`);
+    GBLogEx.info(0, `Loading instances from storage...`);
     let instances: IGBInstance[];
     try {
       instances = await core.loadInstances();
       const group = GBConfigService.get('CLOUD_GROUP')??GBConfigService.get('BOT_ID');
       if (process.env.ENDPOINT_UPDATE === 'true') {
         await CollectionUtil.asyncForEach(instances, async instance => {
-          GBLog.info(`Updating bot endpoint for ${instance.botId}...`);
+          GBLogEx.info(instance.instanceId, `Updating bot endpoint for ${instance.botId}...`);
           try {
 
             await installationDeployer.updateBotProxy(
@@ -456,7 +457,7 @@ ENDPOINT_UPDATE=true
             Try setting STORAGE_SYNC to true in .env file. Error: ${error.message}.`
             );
           } else {
-            GBLog.info(`Storage is empty. After collecting storage structure from all .gbapps it will get synced.`);
+            GBLogEx.info(0, `Storage is empty. After collecting storage structure from all .gbapps it will get synced.`);
           }
         } else {
           throw new Error(`Cannot connect to operating storage: ${error.message}.`);
@@ -492,7 +493,7 @@ ENDPOINT_UPDATE=true
         GBHubSpotPackage
       ],
       async e => {
-        GBLog.info(`Loading sys package: ${e.name}...`);
+        GBLogEx.info(0, `Loading sys package: ${e.name}...`);
 
         const p = Object.create(e.prototype) as IGBPackage;
         sysPackages.push(p);
@@ -543,7 +544,7 @@ ENDPOINT_UPDATE=true
     deployer,
     freeTier
   ) {
-    GBLog.info(`Deploying cognitive infrastructure (on the cloud / on premises)...`);
+    GBLogEx.info(0, `Deploying cognitive infrastructure (on the cloud / on premises)...`);
     try {
       const { instance, credentials, subscriptionId, installationDeployer }
         = await StartDialog.createBaseInstance(deployer, freeTier);
@@ -557,7 +558,7 @@ ENDPOINT_UPDATE=true
       await this.writeEnv(changedInstance);
       GBConfigService.init();
 
-      GBLog.info(`File .env written. Preparing storage and search for the first time...`);
+      GBLogEx.info(0, `File .env written. Preparing storage and search for the first time...`);
       await this.openStorageFrontier(installationDeployer);
       await this.initStorage();
 

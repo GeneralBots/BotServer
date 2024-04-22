@@ -316,17 +316,17 @@ export class GBConversationalService {
       mobile = this.userMobile(step);
 
       if (mobile) {
-        GBLog.info(`Sending file ${url} to ${mobile}...`);
+        GBLogEx.info(min, `Sending file ${url} to ${mobile}...`);
         const filename = url.substring(url.lastIndexOf('/') + 1);
         await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
       } else {
-        GBLog.info(
+        GBLogEx.info(min, 
           `Sending ${url} as file attachment not available in this channel ${step.context.activity['mobile']}...`
         );
         await min.conversationalService.sendText(min, step, url);
       }
     } else {
-      GBLog.info(`Sending file ${url} to ${mobile}...`);
+      GBLogEx.info(min, `Sending file ${url} to ${mobile}...`);
       const filename = url.substring(url.lastIndexOf('/') + 1);
       await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
     }
@@ -334,14 +334,14 @@ export class GBConversationalService {
 
   public async sendAudio(min: GBMinInstance, step: GBDialogStep, url: string): Promise<any> {
     const mobile = step.context.activity['mobile'];
-    GBLog.info(`Sending audio to ${mobile} in URL: ${url}.`);
+    GBLogEx.info(min, `Sending audio to ${mobile} in URL: ${url}.`);
     await min.whatsAppDirectLine.sendAudioToDevice(mobile, url);
   }
 
   public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
     if ( step.context.activity.channelId !== 'msteams' &&
     step.context.activity.channelId !== 'omnichannel') {
-      GBLog.info(
+      GBLogEx.info(min, 
         `Sending event ${name}:${typeof value === 'object' ? JSON.stringify(value) : value ? value : ''} to client...`
       );
       const msg = MessageFactory.text('');
@@ -360,7 +360,7 @@ export class GBConversationalService {
     if (botNumber) {
 
 
-      GBLog.info(`Sending SMS from ${botNumber} to ${mobile} with text: '${text}'.`);
+      GBLogEx.info(min, `Sending SMS from ${botNumber} to ${mobile} with text: '${text}'.`);
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
       const authToken = process.env.TWILIO_AUTH_TOKEN;
       const client = twilio(null, authToken, { accountSid: accountSid });
@@ -426,7 +426,7 @@ export class GBConversationalService {
   }
 
   public async sendToMobile(min: GBMinInstance, mobile: string, message: string, conversationId) {
-    GBLog.info(`Sending message ${message} to ${mobile}...`);
+    GBLogEx.info(min, `Sending message ${message} to ${mobile}...`);
     return min.whatsAppDirectLine ? await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId) :
       await this.sendSms(min, mobile, message);
   }
@@ -804,10 +804,10 @@ export class GBConversationalService {
     }
     if (currentText !== '') {
       if (!mobile) {
-        GBLog.info(`Sending .MD file to Web.`);
+        GBLogEx.info(min, `Sending .MD file to Web.`);
         await step.context.sendActivity(currentText);
       } else {
-        GBLog.info(`Sending .MD file to mobile: ${mobile}.`);
+        GBLogEx.info(min, `Sending .MD file to mobile: ${mobile}.`);
         await this.sendToMobile(min, mobile, currentText, null);
       }
     }
@@ -888,7 +888,7 @@ export class GBConversationalService {
         return false;
       }
 
-      GBLog.info(
+      GBLogEx.info(min, 
         `NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${instanceScore}`
       );
 
@@ -912,7 +912,7 @@ export class GBConversationalService {
 
     }
 
-    GBLog.info(`NLP NOT called: score: ${score} > required (nlpScore): ${instanceScore}`);
+    GBLogEx.info(min, `NLP NOT called: score: ${score} > required (nlpScore): ${instanceScore}`);
 
     return false;
   }
@@ -938,7 +938,7 @@ export class GBConversationalService {
       text = text.charAt(0).toUpperCase() + text.slice(1);
       const data = await AzureText.getSpelledText(key, text);
       if (data !== text) {
-        GBLog.info(`Spelling>: ${data}`);
+        GBLogEx.info(min, `Spelling>: ${data}`);
         text = data;
       }
     }
@@ -1090,7 +1090,7 @@ export class GBConversationalService {
         }
       });
     }
-    GBLog.info(`Tokens (processMessageActivity): ${textProcessed}.`);
+    GBLogEx.info(min, `Tokens (processMessageActivity): ${textProcessed}.`);
 
     // Spells check the input text before translating,
     // keeping fixed tokens as specified in Config.
@@ -1147,7 +1147,7 @@ export class GBConversationalService {
         text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
       });
     }
-    GBLog.info(`After (processMessageActivity): ${text}.`);
+    GBLogEx.info(min, `After (processMessageActivity): ${text}.`);
 
     return text;
   }
@@ -1235,7 +1235,7 @@ export class GBConversationalService {
     }
   }
   public async broadcast(min: GBMinInstance, message: string) {
-    GBLog.info(`Sending broadcast notifications...`);
+    GBLogEx.info(min, `Sending broadcast notifications...`);
 
     const service = new SecService();
     const users = await service.getAllUsers(min.instance.instanceId);
@@ -1243,7 +1243,7 @@ export class GBConversationalService {
       if (user.conversationReference) {
         await this.sendOnConversation(min, user, message);
       } else {
-        GBLog.info(`User: ${user.Id} with no conversation ID while broadcasting.`);
+        GBLogEx.info(min, `User: ${user.Id} with no conversation ID while broadcasting.`);
       }
     });
   }

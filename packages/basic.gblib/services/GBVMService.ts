@@ -329,7 +329,7 @@ export class GBVMService extends GBService {
           const logging: boolean | Function =
             GBConfigService.get('STORAGE_LOGGING') === 'true'
               ? (str: string): void => {
-                GBLog.info(str);
+                GBLogEx.info(min, str);
               }
               : false;
 

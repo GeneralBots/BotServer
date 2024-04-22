@@ -40,6 +40,7 @@ import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { GBServer } from '../../../src/app.js';
 import { GBConversationalService } from '../services/GBConversationalService.js';
 import { Messages } from '../strings.js';
+import { GBLogEx } from '../services/GBLogEx.js';
 
 /**
  *  Dialog for Welcoming people.
@@ -96,7 +97,7 @@ export class WelcomeDialog extends IGBDialog {
               step.context.activity.type === 'message' &&
               step.context.activity.text !== ''
             ) {
-              GBLog.info(`/answer being called from WelcomeDialog.`);
+              GBLogEx.info(min, `/answer being called from WelcomeDialog.`);
               await step.replaceDialog('/answer', { query: step.context.activity.text });
             }
           }

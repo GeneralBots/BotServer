@@ -205,11 +205,11 @@ export class GBMinService {
 
     // Loads schedules.
 
-    GBLog.info(`Loading SET SCHEDULE entries...`);
+    GBLogEx.info(0, `Loading SET SCHEDULE entries...`);
     const service = new ScheduleServices();
     await service.scheduleAll();
 
-    GBLog.info(`All Bot instances loaded.`);
+    GBLogEx.info(0, `All Bot instances loaded.`);
   }
 
   /**
@@ -365,7 +365,7 @@ export class GBMinService {
 
     // Test code.
     if (process.env.TEST_MESSAGE) {
-      GBLog.info(`Starting auto test with '${process.env.TEST_MESSAGE}'.`);
+      GBLogEx.info(min, `Starting auto test with '${process.env.TEST_MESSAGE}'.`);
 
       const client = await new SwaggerClient({
         spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
@@ -402,7 +402,7 @@ export class GBMinService {
       const manifest = `${instance.botId}-Teams.zip`;
       const packageTeams = urlJoin(`work`, DialogKeywords.getGBAIPath(instance.botId), manifest);
       if (!Fs.existsSync(packageTeams)) {
-        GBLog.info('Generating MS Teams manifest....');
+        GBLogEx.info(min, 'Generating MS Teams manifest....');
         const data = await this.deployer.getBotManifest(instance);
         Fs.writeFileSync(packageTeams, data);
       }
@@ -622,7 +622,7 @@ export class GBMinService {
       );
       authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.marketplaceId
         }&redirect_uri=${urlJoin(process.env.BOT_URL, min.instance.botId, 'token')}`;
-      GBLog.info(`HandleOAuthRequests: ${authorizationUrl}.`);
+      GBLogEx.info(min, `HandleOAuthRequests: ${authorizationUrl}.`);
       res.redirect(authorizationUrl);
     });
   }
@@ -637,15 +637,15 @@ export class GBMinService {
     if (botId === '[default]' || botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
     }
-
-    GBLog.info(`Client requested instance for: ${botId}.`);
-
+    
+    
     // Loads by the botId itself or by the activationCode field.
-
+    
     let instance = await this.core.loadInstanceByBotId(botId);
     if (instance === null) {
       instance = await this.core.loadInstanceByActivationCode(botId);
     }
+    GBLogEx.info(instance.instanceId, `Client requested instance for: ${botId}.`);
 
     if (instance !== null) {
       // Gets the webchat token, speech token and theme.
@@ -1068,7 +1068,7 @@ export class GBMinService {
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
             if (startDialog) {
               await sec.setParam(userId, 'welcomed', 'true');
-              GBLog.info(`Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
+              GBLogEx.info(min, `Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
             }
           }
@@ -1076,7 +1076,7 @@ export class GBMinService {
 
         // Required for F0 handling of persisted conversations.
 
-        GBLog.info(
+        GBLogEx.info(min, 
           `Input> ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
         );
 
@@ -1087,13 +1087,13 @@ export class GBMinService {
 
 
         if (context.activity.type === 'installationUpdate') {
-          GBLog.info(`Bot installed on Teams.`);
+          GBLogEx.info(min, `Bot installed on Teams.`);
         } else if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {
           // Check if a bot or a human participant is being added to the conversation.
 
           const member = context.activity.membersAdded[0];
           if (context.activity.membersAdded[0].id === context.activity.recipient.id) {
-            GBLog.info(`Bot added to conversation, starting chat...`);
+            GBLogEx.info(min, `Bot added to conversation, starting chat...`);
 
             // Calls onNewSession event on each .gbapp package.
 
@@ -1114,14 +1114,14 @@ export class GBMinService {
               ) {
                 min['conversationWelcomed'][step.context.activity.conversation.id] = true;
 
-                GBLog.info(
+                GBLogEx.info(min, 
                   `Auto start (web 1) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
                 );
                 await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
               }
             }
           } else {
-            GBLog.info(`Person added to conversation: ${member.name}`);
+            GBLogEx.info(min, `Person added to conversation: ${member.name}`);
 
             return;
           }
@@ -1190,7 +1190,7 @@ export class GBMinService {
       const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
       if (startDialog && !min['conversationWelcomed'][step.context.activity.conversation.id]) {
         user.welcomed = true;
-        GBLog.info(`Auto start (web 2) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
+        GBLogEx.info(min, `Auto start (web 2) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
       }
     } else if (context.activity.name === 'updateToken') {
@@ -1262,7 +1262,7 @@ export class GBMinService {
           // a upload with no Dialog, so run Auto Save to .gbdrive.
 
           const t = new SystemKeywords();
-          GBLog.info(`BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
+          GBLogEx.info(min, `BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
           const handle = WebAutomationServices.cyrb53({ pid: 0, str: min.botId + attachmentData.fileName });
           let data = Fs.readFileSync(attachmentData.localPath);
 
@@ -1418,7 +1418,7 @@ export class GBMinService {
       ) {
         await sec.setParam(userId, 'welcomed', 'true');
         min['conversationWelcomed'][step.context.activity.conversation.id] = true;
-        GBLog.info(
+        GBLogEx.info(min, 
           `Auto start (4) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
         );
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
@@ -1504,7 +1504,7 @@ export class GBMinService {
       if (user.agentMode === 'self') {
         const manualUser = await sec.getUserFromAgentSystemId(user.userSystemId);
 
-        GBLog.info(`HUMAN AGENT (${user.userId}) TO USER ${manualUser.userSystemId}: ${text}`);
+        GBLogEx.info(min, `HUMAN AGENT (${user.userId}) TO USER ${manualUser.userSystemId}: ${text}`);
 
         const cmd = 'SEND FILE ';
         if (text.startsWith(cmd)) {
@@ -1566,7 +1566,7 @@ export class GBMinService {
               }
             });
             data.step = null;
-            GBLog.info(`/answer being called from processMessageActivity (nextDialog=${nextDialog}).`);
+            GBLogEx.info(min, `/answer being called from processMessageActivity (nextDialog=${nextDialog}).`);
             await step.beginDialog(nextDialog ? nextDialog : '/answer', {
               data: data,
               query: text,

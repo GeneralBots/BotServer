@@ -36,6 +36,7 @@ import Fs from 'fs';
 import { GBLog, GBMinInstance, GBService } from 'botlib';
 import { GBServer } from '../../../src/app.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * Support for Google Chat.
@@ -116,7 +117,7 @@ export class GoogleChatDirectLine extends GBService {
   }
 
   public async check () {
-    GBLog.info(`GBGoogleChat: Checking server...`);
+    GBLogEx.info(0, `GBGoogleChat: Checking server...`);
   }
 
   public async receiver (message) {
@@ -132,7 +133,7 @@ export class GoogleChatDirectLine extends GBService {
       text = event.message.text;
       fromName = event.message.sender.displayName;
       from = event.message.sender.email;
-      GBLog.info(`Received message from ${from} (${fromName}): ${text}.`);
+      GBLogEx.info(0, `Received message from ${from} (${fromName}): ${text}.`);
     }
     message.ack();
 
@@ -141,13 +142,13 @@ export class GoogleChatDirectLine extends GBService {
 
     await sec.updateConversationReferenceById(user.userId, threadName);
 
-    GBLog.info(`GBGoogleChat: RCV ${from}: ${text})`);
+    GBLogEx.info(0, `GBGoogleChat: RCV ${from}: ${text})`);
 
     const client = await this.directLineClient;
     const conversationId = GoogleChatDirectLine.conversationIds[from];
 
     if (GoogleChatDirectLine.conversationIds[from] === undefined) {
-      GBLog.info(`GBGoogleChat: Starting new conversation on Bot.`);
+      GBLogEx.info(0, `GBGoogleChat: Starting new conversation on Bot.`);
       const response = await client.Conversations.Conversations_StartConversation();
       const generatedConversationId = response.obj.conversationId;
 
@@ -178,7 +179,7 @@ export class GoogleChatDirectLine extends GBService {
   }
 
   public pollMessages (client, conversationId, threadName, from, fromName) {
-    GBLog.info(`GBGoogleChat: Starting message polling(${from}, ${conversationId}).`);
+    GBLogEx.info(0, `GBGoogleChat: Starting message polling(${from}, ${conversationId}).`);
 
     let watermark: any;
 
@@ -217,7 +218,7 @@ export class GoogleChatDirectLine extends GBService {
     let output = '';
 
     if (activity.text) {
-      GBLog.info(`GBGoogleChat: SND ${from}(${fromName}): ${activity.text}`);
+      GBLogEx.info(0, `GBGoogleChat: SND ${from}(${fromName}): ${activity.text}`);
       output = activity.text;
     }
 
@@ -225,11 +226,11 @@ export class GoogleChatDirectLine extends GBService {
       activity.attachments.forEach(attachment => {
         switch (attachment.contentType) {
           case 'image/png':
-            GBLog.info(`Opening the requested image ${attachment.contentUrl}`);
+            GBLogEx.info(0, `Opening the requested image ${attachment.contentUrl}`);
             output += `\n${attachment.contentUrl}`;
             break;
           default:
-            GBLog.info(`Unknown content type: ${attachment.contentType}`);
+            GBLogEx.info(0, `Unknown content type: ${attachment.contentType}`);
         }
       });
     }
@@ -255,8 +256,8 @@ export class GoogleChatDirectLine extends GBService {
           text: msg
         }
       });
-      GBLog.info(res);
-      GBLog.info(`Message [${msg}] sent to ${from}: `);
+    
+      GBLogEx.info(0, `Message [${msg}] sent to ${from}: `);
     } catch (error) {
       GBLog.error(`Error sending message to GoogleChat provider ${error.message}`);
     }

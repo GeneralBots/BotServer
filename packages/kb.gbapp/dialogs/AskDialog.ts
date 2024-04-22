@@ -50,6 +50,7 @@ import urlJoin from 'url-join';
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import Path from 'path';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * Dialog arguments.
@@ -155,7 +156,7 @@ export class AskDialog extends IGBDialog {
           });
           if (!handled) {
             data.step = null;
-            GBLog.info(`/answer being called from getAskDialog.`);
+            GBLogEx.info(min, `/answer being called from getAskDialog.`);
             await step.beginDialog(nextDialog ? nextDialog : '/answer', {
               data: data,
               query: text,
@@ -268,7 +269,7 @@ export class AskDialog extends IGBDialog {
 
 
 
-        GBLog.info(`SEARCH called but NO answer could be found (zero results).`);
+        GBLogEx.info(min, `SEARCH called but NO answer could be found (zero results).`);
 
         // Not found.
 
@@ -349,7 +350,7 @@ export class AskDialog extends IGBDialog {
           await min.conversationalService.sendText(min, step, 'Thank you. The dialog is being written right now...');
 
           const CHATGPT_TIMEOUT = 3 * 60 * 1000;
-          GBLog.info(`ChatGPT Code: ${input}`);
+          GBLogEx.info(min, `ChatGPT Code: ${input}`);
           let response = await GBServer.globals.chatGPT.sendMessage(input, {
             timeoutMs: CHATGPT_TIMEOUT
           });

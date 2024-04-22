@@ -38,6 +38,7 @@ import Fs from 'fs';
 import SwaggerClient from 'swagger-client';
 import { spawn } from 'child_process';
 import { CodeServices } from '../../gpt.gblib/services/CodeServices.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * Web Automation services of conversation to be called by BASIC.
@@ -45,7 +46,7 @@ import { CodeServices } from '../../gpt.gblib/services/CodeServices.js';
 export class DebuggerService {
 
   public async setBreakpoint({ botId, line }) {
-    GBLog.info(`BASIC: Enabled breakpoint for ${botId} on ${line}.`);
+    GBLogEx.info(botId, `BASIC: Enabled breakpoint for ${botId} on ${line}.`);
     GBServer.globals.debuggers[botId].breaks.push(Number.parseInt(line));
   }
 
@@ -112,7 +113,7 @@ export class DebuggerService {
         if (activities.length) {
           activities.forEach(activity => {
             messages.push({ text: activity.text });
-            GBLog.info(`Debugger sending text to API: ${activity.text}`);
+            GBLogEx.info(botId, `Debugger sending text to API: ${activity.text}`);
           });
         }
       }
@@ -145,11 +146,11 @@ export class DebuggerService {
       error = `Cannot DEBUG an already running process. ${botId}`;
       return { error: error };
     } else if (GBServer.globals.debuggers[botId].state === 2) {
-      GBLog.info(`BASIC: Releasing execution ${botId} in DEBUG mode.`);
+      GBLogEx.info(botId, `BASIC: Releasing execution ${botId} in DEBUG mode.`);
       await this.resume({ botId });
       return { status: 'OK' };
     } else {
-      GBLog.info(`BASIC: Running ${botId} in DEBUG mode.`);
+      GBLogEx.info(botId, `BASIC: Running ${botId} in DEBUG mode.`);
       GBServer.globals.debuggers[botId].state = 1;
       GBServer.globals.debuggers[botId].stateInfo = 'Running (Debug)';
 

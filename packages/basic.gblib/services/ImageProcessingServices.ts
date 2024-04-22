@@ -41,6 +41,7 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import urlJoin from 'url-join';
 import { GBServer } from '../../../src/app.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * Image processing services of conversation to be called by BASIC.
@@ -52,7 +53,8 @@ export class ImageProcessingServices {
    * @example file = SHARPEN file
    */
   public async sharpen({ pid, file: file }) {
-    GBLog.info(`BASIC: Image Processing SHARPEN ${file}.`);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: Image Processing SHARPEN ${file}.`);
 
     const gbfile = DialogKeywords.getFileByHandle(file);
     const data = await sharp(gbfile.data)
@@ -106,7 +108,8 @@ export class ImageProcessingServices {
    * @example file = BLUR file
    */
    public async blur({ pid, file: file }) {
-    GBLog.info(`BASIC: Image Processing SHARPEN ${file}.`);
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: Image Processing SHARPEN ${file}.`);
 
     const gbfile = DialogKeywords.getFileByHandle(file);
     const data = await sharp(gbfile.data)

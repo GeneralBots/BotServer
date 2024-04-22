@@ -215,9 +215,11 @@ export class WebAutomationServices {
    *
    * @example GET page,"frameSelector,"elementSelector"
    */
-  public async getByFrame({ handle, frame, selector }) {
+  public async getByFrame({pid, handle, frame, selector }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
     const page = WebAutomationServices.getPageByHandle(handle);
-    GBLog.info(`BASIC: Web Automation GET element by frame: ${selector}.`);
+    GBLogEx.info(min, `BASIC: Web Automation GET element by frame: ${selector}.`);
     await page.waitForSelector(frame);
     let frameHandle = await page.$(frame);
     const f = await frameHandle.contentFrame();
@@ -236,8 +238,10 @@ export class WebAutomationServices {
    * Simulates a mouse hover an web page element.
    */
   public async hover({ pid, handle, selector }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
     const page = WebAutomationServices.getPageByHandle(handle);
-    GBLog.info(`BASIC: Web Automation HOVER element: ${selector}.`);
+    GBLogEx.info(min, `BASIC: Web Automation HOVER element: ${selector}.`);
     await this.getBySelector({ handle, selector: selector, pid });
     await page.hover(selector);
     await this.debugStepWeb(pid, page);
@@ -249,8 +253,10 @@ export class WebAutomationServices {
    * @example CLICK "#idElement"
    */
   public async click({ pid, handle, frameOrSelector, selector }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
     const page = WebAutomationServices.getPageByHandle(handle);
-    GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
+    GBLogEx.info(min, `BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
     if (selector) {
       await page.waitForSelector(frameOrSelector);
       let frameHandle = await page.$(frameOrSelector);
@@ -289,9 +295,11 @@ export class WebAutomationServices {
    *
    * @example PRESS ENTER ON page
    */
-  public async pressKey({ handle, char, frame }) {
+  public async pressKey({pid, handle, char, frame }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
     const page = WebAutomationServices.getPageByHandle(handle);
-    GBLog.info(`BASIC: Web Automation PRESS ${char} ON element: ${frame}.`);
+    GBLogEx.info(min, `BASIC: Web Automation PRESS ${char} ON element: ${frame}.`);
     if (char.toLowerCase() === 'enter') {
       char = '\n';
     }
@@ -306,8 +314,10 @@ export class WebAutomationServices {
   }
 
   public async linkByText({ pid, handle, text, index }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
     const page = WebAutomationServices.getPageByHandle(handle);
-    GBLog.info(`BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
+    GBLogEx.info(min, `BASIC: Web Automation CLICK LINK TEXT: ${text} ${index}.`);
     if (!index) {
       index = 1;
     }
@@ -317,8 +327,10 @@ export class WebAutomationServices {
   }
 
   public async clickButton({ pid, handle, text, index }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
     const page = WebAutomationServices.getPageByHandle(handle);
-    GBLog.info(`BASIC: Web Automation CLICK BUTTON: ${text} ${index}.`);
+    GBLogEx.info(min, `BASIC: Web Automation CLICK BUTTON: ${text} ${index}.`);
     if (!index) {
       index = 1;
     }
@@ -336,7 +348,7 @@ export class WebAutomationServices {
   public async screenshot({ pid, handle, selector }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const page = WebAutomationServices.getPageByHandle(handle);
-    GBLog.info(`BASIC: Web Automation SCREENSHOT ${selector}.`);
+    GBLogEx.info(min, `BASIC: Web Automation SCREENSHOT ${selector}.`);
 
     const gbaiName = DialogKeywords.getGBAIPath(min.botId);
     const localName = Path.join('work', gbaiName, 'cache', `screen-${GBAdminService.getRndReadableIdentifier()}.jpg`);
@@ -344,7 +356,7 @@ export class WebAutomationServices {
     await page.screenshot({ path: localName });
 
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
-    GBLog.info(`BASIC: WebAutomation: Screenshot captured at ${url}.`);
+    GBLogEx.info(min, `BASIC: WebAutomation: Screenshot captured at ${url}.`);
 
     return { data: null, localName: localName, url: url };
   }
@@ -355,9 +367,11 @@ export class WebAutomationServices {
    * @example SET page,"selector","text"
    */
   public async setElementText({ pid, handle, selector, text }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    
     text = `${text}`;
     const page = WebAutomationServices.getPageByHandle(handle);
-    GBLog.info(`BASIC: Web Automation TYPE on ${selector}: ${text}.`);
+    GBLogEx.info(min, `BASIC: Web Automation TYPE on ${selector}: ${text}.`);
     const e = await this.getBySelector({ handle, selector, pid });
     await e.click({ clickCount: 3 });
     await page.keyboard.press('Backspace');
@@ -397,7 +411,7 @@ export class WebAutomationServices {
 
     const cookies = await page.cookies();
     options.headers.Cookie = cookies.map(ck => ck.name + '=' + ck.value).join(';');
-    GBLog.info(`BASIC: DOWNLOADING '${options.uri}...'`);
+    GBLogEx.info(min, `BASIC: DOWNLOADING '${options.uri}...'`);
 
     let local;
     let filename;
@@ -443,7 +457,7 @@ export class WebAutomationServices {
       file = await client.api(`${baseUrl}/drive/root:/${dstPath}:/content`).put(result);
     } catch (error) {
       if (error.code === 'nameAlreadyExists') {
-        GBLog.info(`BASIC: DOWNLOAD destination file already exists: ${dstPath}.`);
+        GBLogEx.info(min, `BASIC: DOWNLOAD destination file already exists: ${dstPath}.`);
       }
       throw error;
     }
@@ -469,8 +483,10 @@ export class WebAutomationServices {
 
 
   public async getTextOf({ pid, handle, frameOrSelector, selector }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
     const page = WebAutomationServices.getPageByHandle(handle);
-    GBLog.info(`BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
+    GBLogEx.info(min, `BASIC: Web Automation CLICK element: ${frameOrSelector}.`);
     if (frameOrSelector) {
       const result = await page.$eval(
         frameOrSelector,

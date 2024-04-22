@@ -74,21 +74,22 @@ function isChatGeneration(
 
 class CustomHandler extends BaseCallbackHandler {
   name = "custom_handler";
+  
 
   handleLLMNewToken(token: string) {
-    GBLog.info(`LLM: token: ${JSON.stringify(token)}`);
+    GBLogEx.info(0, `LLM: token: ${JSON.stringify(token)}`);
   }
 
   handleLLMStart(llm: Serialized, _prompts: string[]) {
-    GBLog.info(`LLM: handleLLMStart ${JSON.stringify(llm)}, Prompts: ${_prompts.join('\n')}`);
+    GBLogEx.info(0, `LLM: handleLLMStart ${JSON.stringify(llm)}, Prompts: ${_prompts.join('\n')}`);
   }
 
   handleChainStart(chain: Serialized) {
-    GBLog.info(`LLM: handleChainStart: ${JSON.stringify(chain)}`);
+    GBLogEx.info(0, `LLM: handleChainStart: ${JSON.stringify(chain)}`);
   }
 
   handleToolStart(tool: Serialized) {
-    GBLog.info(`LLM: handleToolStart: ${JSON.stringify(tool)}`);
+    GBLogEx.info(0, `LLM: handleToolStart: ${JSON.stringify(tool)}`);
   }
 }
 
@@ -364,7 +365,7 @@ export class ChatServices {
 
           const name = output['func'][0].function.name;
           const args = JSON.parse(output['func'][0].function.arguments);
-          GBLog.info(`Running .gbdialog '${name}' as GPT tool...`);
+          GBLogEx.info(min, `Running .gbdialog '${name}' as GPT tool...`);
           const pid = GBVMService.createProcessInfo(null, min, 'gpt', null);
 
           return await GBVMService.callVM(name, min, false, pid, false, args);
@@ -445,7 +446,7 @@ export class ChatServices {
     }
 
     else {
-      GBLog.info(`Invalid Answer Mode in Config.xlsx: ${LLMMode}.`);
+      GBLogEx.info(min, `Invalid Answer Mode in Config.xlsx: ${LLMMode}.`);
     }
 
     await memory.saveContext(
@@ -457,7 +458,7 @@ export class ChatServices {
       }
     );
 
-    GBLog.info(`GPT Result: ${result.toString()}`);
+    GBLogEx.info(min, `GPT Result: ${result.toString()}`);
     return { answer: result.toString(), sources, questionId: 0, page };
   }
 

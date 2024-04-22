@@ -57,6 +57,7 @@ export class GBLogEx {
   }
 
   public static async info(minOrInstanceId: any, message: string) {
+
     if (typeof minOrInstanceId === 'object') {
       minOrInstanceId = minOrInstanceId.instance.instanceId;
     }

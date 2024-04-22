@@ -154,7 +154,7 @@ export class GBDeployer implements IGBDeployer {
         // For each folder, checks its extensions looking for valid packages.
 
         if (element === '.') {
-          GBLog.info(`Ignoring ${element}...`);
+          GBLogEx.info(0, `Ignoring ${element}...`);
         } else {
           const name = Path.basename(element);
 
@@ -182,9 +182,9 @@ export class GBDeployer implements IGBDeployer {
 
     // Start the process of searching.
 
-    GBLog.info(`Deploying Application packages...`);
+    GBLogEx.info(0, `Deploying Application packages...`);
     await CollectionUtil.asyncForEach(paths, async e => {
-      GBLog.info(`Looking in: ${e}...`);
+      GBLogEx.info(0, `Looking in: ${e}...`);
       await scanPackageDirectory(e);
     });
 
@@ -204,7 +204,7 @@ export class GBDeployer implements IGBDeployer {
     }
     await this.deployAppPackages(list, core, appPackages);
 
-    GBLog.info(`App Package deployment done.`);
+    GBLogEx.info(0, `App Package deployment done.`);
   }
 
   /**
@@ -859,11 +859,11 @@ export class GBDeployer implements IGBDeployer {
 
       // Install modules and compiles the web app.
 
-      GBLog.info(`Installing modules default.gbui (It may take a few minutes)...`);
+      GBLogEx.info(0, `Installing modules default.gbui (It may take a few minutes)...`);
 
       child_process.execSync(`${npm} install`, { cwd: root });
 
-      GBLog.info(`Transpiling default.gbui...`);
+      GBLogEx.info(0, `Transpiling default.gbui...`);
       child_process.execSync(`${npm} run build`, { cwd: root });
     }
   }
@@ -923,11 +923,11 @@ export class GBDeployer implements IGBDeployer {
   ) {
     // Runs `npm install` for the package.
 
-    GBLog.info(`Deploying General Bots Application (.gbapp) or Library (.gblib): ${Path.basename(gbappPath)}...`);
+    GBLogEx.info(0, `Deploying General Bots Application (.gbapp) or Library (.gblib): ${Path.basename(gbappPath)}...`);
     let folder = Path.join(gbappPath, 'node_modules');
     if (process.env.GBAPP_DISABLE_COMPILE !== 'true') {
       if (!Fs.existsSync(folder)) {
-        GBLog.info(`Installing modules for ${gbappPath}...`);
+        GBLogEx.info(0, `Installing modules for ${gbappPath}...`);
         child_process.execSync('npm install', { cwd: gbappPath });
       }
     }
@@ -937,7 +937,7 @@ export class GBDeployer implements IGBDeployer {
       // Runs TSC in .gbapp folder.
 
       if (process.env.GBAPP_DISABLE_COMPILE !== 'true') {
-        GBLog.info(`Compiling: ${gbappPath}.`);
+        GBLogEx.info(0, `Compiling: ${gbappPath}.`);
         child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: gbappPath });
       }
 
@@ -957,7 +957,7 @@ export class GBDeployer implements IGBDeployer {
           }
         }
       }
-      GBLog.info(`.gbapp or .gblib deployed: ${gbappPath}.`);
+      GBLogEx.info(0, `.gbapp or .gblib deployed: ${gbappPath}.`);
       appPackagesProcessed++;
     } catch (error) {
       GBLog.error(`Error compiling package, message:  ${error.message}\n${error.stack}`);

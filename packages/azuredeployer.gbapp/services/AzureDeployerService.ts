@@ -54,6 +54,7 @@ import { Spinner } from 'cli-spinner';
 import * as publicIp from 'public-ip';
 import { AccessToken, TokenCredential } from '@azure/core-auth';
 import { GBUtil } from '../../../src/util.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 const WebSiteResponseTimeout = 900;
 const iconUrl = 'https://github.com/pragmatismo-io/BotServer/blob/master/docs/images/generalbots-logo-squared.png';
@@ -291,7 +292,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     if (!JSON.parse(res.bodyAsText).id) {
       throw res.bodyAsText;
     }
-    GBLog.info(`Bot proxy updated at: ${endpoint}.`);
+    GBLogEx.info(0, `Bot proxy updated at: ${endpoint}.`);
   }
 
   public async updateBot(botId: string, group: string, name: string, description: string, endpoint: string) {
@@ -320,7 +321,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     if (!JSON.parse(res.bodyAsText).id) {
       throw res.bodyAsText;
     }
-    GBLog.info(`Bot updated at: ${endpoint}.`);
+    GBLogEx.info(0, `Bot updated at: ${endpoint}.`);
   }
 
   public async deleteBot(botId: string, group: string) {
@@ -340,7 +341,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     if (res.bodyAsText !== '') {
       throw res.bodyAsText;
     }
-    GBLog.info(`Bot ${botId} was deleted from the provider.`);
+    GBLogEx.info(0, `Bot ${botId} was deleted from the provider.`);
   }
 
   public async openStorageFirewall(groupName: string, serverName: string) {
@@ -384,7 +385,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     let keys: any;
     const name = instance.botId;
 
-    GBLog.info(`Enabling resource providers...`);
+    GBLogEx.info(0, `Enabling resource providers...`);
 
     await this.enableResourceProviders('Microsoft.CognitiveServices');
     await this.enableResourceProviders('Microsoft.BotService');
@@ -392,20 +393,20 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await this.enableResourceProviders('Microsoft.Web');
     await this.enableResourceProviders('Microsoft.Sql');
 
-    GBLog.info(`Deploying Deploy Group (It may take a few minutes)...`);
+    GBLogEx.info(0, `Deploying Deploy Group (It may take a few minutes)...`);
     await this.createDeployGroup(name, instance.cloudLocation);
 
     let serverFarm;
     let serverName;
 
     if (process.env.DEPLOY_WEB) {
-      GBLog.info(`Deploying Bot Server...`);
+      GBLogEx.info(0, `Deploying Bot Server...`);
       serverFarm = await this.createHostingPlan(name, `${name}-server-plan`, instance.cloudLocation);
       serverName = `${name}-server`;
       await this.createServer(serverFarm.id, name, serverName, instance.cloudLocation);
     }
 
-    GBLog.info(`Deploying Bot Storage...`);
+    GBLogEx.info(0, `Deploying Bot Storage...`);
     const administratorLogin = `sa${GBAdminService.getRndReadableIdentifier()}`;
     const administratorPassword = GBAdminService.getRndPassword();
     const storageServer = `${name.toLowerCase()}-storage-server`;
@@ -426,7 +427,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.storageServer = `${storageServer}.database.windows.net`;
 
     // TODO: Enable in .env
-    // GBLog.info(`Deploying Search...`);
+    // GBLogEx.info(min, `Deploying Search...`);
     // const searchName = `${name}-search`.toLowerCase();
     // await this.createSearch(name, searchName, instance.cloudLocation);
     // const searchKeys = await this.searchClient.adminKeys.get(name, searchName);
@@ -435,27 +436,27 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     // instance.searchIndexer = 'azuresql-indexer';
     // instance.searchKey = searchKeys.primaryKey;
 
-    // GBLog.info(`Deploying Speech...`);
+    // GBLogEx.info(min, `Deploying Speech...`);
     // const speech = await this.createSpeech(name, `${name}speech`, instance.cloudLocation);
     // keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
     // instance.speechEndpoint = speech.properties.endpoint;
     // instance.speechKey = keys.key1;
 
-    // GBLog.info(`Deploying Text Analytics...`);
+    // GBLogEx.info(min, `Deploying Text Analytics...`);
     // const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);
     // instance.textAnalyticsEndpoint = textAnalytics.properties.endpoint.replace(`/text/analytics/v2.0`, '');
 
-    GBLog.info(`Deploying SpellChecker...`);
+    GBLogEx.info(0, `Deploying SpellChecker...`);
     const spellChecker = await this.createSpellChecker(name, `${name}-spellchecker`);
     instance.spellcheckerEndpoint = spellChecker.properties.endpoint;
 
-    // GBLog.info(`Deploying NLP...`);
+    // GBLogEx.info(min, `Deploying NLP...`);
     // const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
     // const nlpa = await this.createNLPAuthoring(name, `${name}-nlpa`, instance.cloudLocation);
     // instance.nlpEndpoint = nlp.properties.endpoint;
 
 
-    GBLog.info(`Deploying Bot...`);
+    GBLogEx.info(0, `Deploying Bot...`);
     instance.botEndpoint = 'TODO: remove this column.';
 
     instance = await this.internalDeployBot(
@@ -474,7 +475,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       instance.cloudSubscriptionId
     );
 
-    GBLog.info(`Waiting one minute to finish NLP service and keys creation...`);
+    GBLogEx.info(0, `Waiting one minute to finish NLP service and keys creation...`);
     await GBUtil.sleep(60000);
     // keys = await this.cognitiveClient.accounts.listKeys(name, textAnalytics.name);
     // instance.textAnalyticsKey = keys.key1;
@@ -489,7 +490,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     // instance.nlpAppId = nlpAppId;
 
     if (process.env.DEPLOY_WEB) {
-      GBLog.info('Updating server environment variables...');
+      GBLogEx.info(0, 'Updating server environment variables...');
       await this.updateWebisteConfig(name, serverName, serverFarm.id, instance);
     }
     spinner.stop();
@@ -656,7 +657,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       database = await this.storageClient.servers.beginCreateOrUpdateAndWait(group, name, params);
     } catch (error) {
       // Try again (MSFT issues).
-      GBLog.info('Storage (server) creation failed. Retrying...');
+      GBLogEx.info(0, 'Storage (server) creation failed. Retrying...');
       database = await this.storageClient.servers.beginCreateOrUpdateAndWait(group, name, params);
     }
 
@@ -848,7 +849,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     } catch (error) {
 
       // Try again (MSFT issues).
-      GBLog.info('Storage (database) creation failed. Retrying...');
+      GBLogEx.info(0, 'Storage (database) creation failed. Retrying...');
       database = await this.storageClient.databases.beginCreateOrUpdateAndWait(group, serverName, name, params);
     }
     return database;
@@ -966,11 +967,11 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     } catch (e) {
       if (!tryed) {
         tryed = true;
-        GBLog.info('Retrying Deploying Bot Server...');
+        GBLogEx.info(0, 'Retrying Deploying Bot Server...');
         try {
           return await create();
         } catch (error) {
-          GBLog.info('Server creation failed at all on MSAzure, stopping...');
+          GBLogEx.info(0, 'Server creation failed at all on MSAzure, stopping...');
           throw error;
         }
       }

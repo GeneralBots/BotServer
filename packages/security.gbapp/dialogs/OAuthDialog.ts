@@ -37,6 +37,7 @@
 import { TokenResponse } from 'botbuilder';
 import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
 import { Messages } from '../strings.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
 /**
  * Dialogs for handling Menu control.
@@ -54,7 +55,7 @@ export class OAuthDialog extends IGBDialog {
         async step => {
           const tokenResponse: TokenResponse = step.result;
           if (tokenResponse) {
-            GBLog.info('Token acquired.');
+            GBLogEx.info(min, 'Token acquired.');
 
             return await step.endDialog(tokenResponse);
           } else {
