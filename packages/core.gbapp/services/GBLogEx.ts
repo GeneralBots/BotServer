@@ -38,6 +38,7 @@
 
 import { GBLog, IGBInstance } from 'botlib';
 import { GuaribasLog } from '../models/GBModel.js';
+import { GBServer } from '../../../src/app.js';
 
 export class GBLogEx {
   public static async error(minOrInstanceId: any, message: string) {
@@ -81,7 +82,7 @@ export class GBLogEx {
       message = message ? message.substring(0, 1023) : null;
 
       return await GuaribasLog.create(<GuaribasLog>{
-        instanceId: instance ? instance.instanceId : 1,
+        instanceId: instance ? instance.instanceId : GBServer.globals,
         message: message,
         kind: kind
       });

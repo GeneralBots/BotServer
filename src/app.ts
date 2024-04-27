@@ -53,9 +53,7 @@ import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer.js';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService.js';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
 import auth from 'basic-auth';
-import { ChatGPTAPIBrowser } from 'chatgpt';
 import child_process from 'child_process';
-import * as winston from 'winston-logs-display';
 import { RootData } from './RootData.js';
 import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
 import { Mutex } from 'async-mutex';
@@ -233,24 +231,6 @@ export class GBServer {
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
           GBServer.globals.minService = minService;
           await minService.buildMin(instances);
-
-          if (process.env.OPENAI_EMAIL) {
-            if (!GBServer.globals.chatGPT) {
-              GBServer.globals.chatGPT = new ChatGPTAPIBrowser({
-                email: process.env.OPENAI_EMAIL,
-                password: process.env.OPENAI_PASSWORD,
-                markdown: false
-              });
-              await GBServer.globals.chatGPT.init();
-            }
-          }
-
-          if (process.env.ENABLE_WEBLOG) {
-            // If global log enabled, reorders transports adding web logging.
-
-            const loggers = GBLog.getLogger();
-            winston.default(server, loggers[1]);
-          }
 
 
           server.all('*', async (req, res, next) => {

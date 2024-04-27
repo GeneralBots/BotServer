@@ -227,7 +227,7 @@ export class KeywordsExpressions {
       ($0, $1, $2) => {
         let tableName = /\s*FROM\s*(\w+\$*)/.exec($2)[1];
         let sql = `SELECT ${$2}`.replace(tableName, '?');
-        return `${$1} = await sys.executeSQL({pid: pid, data:${tableName}, sql:"${sql}"})\n`;
+        return `${$1} = await sys.executeSQL({pid: pid, data:${tableName}, sql:\`${sql}\`})\n`;
       }
     ];
 
