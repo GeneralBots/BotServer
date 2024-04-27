@@ -407,7 +407,8 @@ export class SystemKeywords {
     }
   }
 
-  public async executeSQL({ pid, data, sql, tableName }) {
+  public async executeSQL({ pid, data, sql }) {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
     if (!data || !data[0]) {
       return data;
     }
@@ -420,6 +421,7 @@ export class SystemKeywords {
     if (objectMode) {
       first = data.shift();
     }
+    GBLogEx.info(min, `Executing SQL: ${sql}`);
     data = alasql(sql, [data]);
     if (objectMode) {
       data.unshift(first);
