@@ -745,6 +745,26 @@ export class KBService implements IGBKBService {
       } else if (file !== null && file.name.endsWith('.docx')) {
         const path = DialogKeywords.getGBAIPath(instance.botId, `gbkb`);
         const localName = Path.join('work', path, 'articles', file.name);
+        let loader = new DocxLoader(localName);
+        let doc = await loader.load();
+        
+        const answer = {
+          instanceId: instance.instanceId,
+          content: doc[0].pageContent,
+          format: '.md',
+          media: file.name,
+          packageId: packageId,
+          prevId: 0
+        };
+
+        data.answers.push(answer);
+
+
+
+      
+      } else if (file !== null && file.name.endsWith('.toc.docx')) {
+        const path = DialogKeywords.getGBAIPath(instance.botId, `gbkb`);
+        const localName = Path.join('work', path, 'articles', file.name);
         const buffer = Fs.readFileSync(localName, { encoding: null });
         var options = {
           buffer: buffer,

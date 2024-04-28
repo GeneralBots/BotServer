@@ -63,6 +63,8 @@ import * as marked from 'marked';
 import Translate from '@google-cloud/translate';
 import { GBUtil } from '../../../src/util.js';
 import { GBLogEx } from './GBLogEx.js';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
+
 
 /**
  * Provides basic services for handling messages and dispatching to back-end
@@ -320,7 +322,7 @@ export class GBConversationalService {
         const filename = url.substring(url.lastIndexOf('/') + 1);
         await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
       } else {
-        GBLogEx.info(min, 
+        GBLogEx.info(min,
           `Sending ${url} as file attachment not available in this channel ${step.context.activity['mobile']}...`
         );
         await min.conversationalService.sendText(min, step, url);
@@ -339,9 +341,9 @@ export class GBConversationalService {
   }
 
   public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
-    if ( step.context.activity.channelId !== 'msteams' &&
-    step.context.activity.channelId !== 'omnichannel') {
-      GBLogEx.info(min, 
+    if (step.context.activity.channelId !== 'msteams' &&
+      step.context.activity.channelId !== 'omnichannel') {
+      GBLogEx.info(min,
         `Sending event ${name}:${typeof value === 'object' ? JSON.stringify(value) : value ? value : ''} to client...`
       );
       const msg = MessageFactory.text('');
@@ -355,7 +357,7 @@ export class GBConversationalService {
 
   // tslint:disable:no-unsafe-any due to Nexmo.
   public async sendSms(min: GBMinInstance, mobile: string, text: string): Promise<any> {
-    
+
     let botNumber = min.core.getParam<string>(min.instance, 'Bot Number', null);
     if (botNumber) {
 
@@ -425,7 +427,7 @@ export class GBConversationalService {
     }
   }
 
-  public async sendToMobile(min: GBMinInstance, mobile: string, message: string, conversationId) {
+  public async sendToMobile(min: GBMinInstance, mobile: string, message: any, conversationId) {
     GBLogEx.info(min, `Sending message ${message} to ${mobile}...`);
     return min.whatsAppDirectLine ? await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId) :
       await this.sendSms(min, mobile, message);
@@ -646,6 +648,47 @@ export class GBConversationalService {
     });
   }
 
+  public async fillAndBroadcastTemplate(min: GBMinInstance, step: GBDialogStep, mobile: string, text) {
+
+    let image = /(.*)\n/gmi.exec(text)[0].trim();
+
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+
+    const fileUrl = urlJoin(process.env.BOT_URL,'kb', gbaiName, `${min.botId}.gbkb`, 'images', image);
+
+    let urlImage = image.startsWith('http')
+      ? image
+      : fileUrl;
+
+    text = text.substring(image.length).trim();
+    let data = {
+      name: 'broadcast', components: [
+        {
+          type: "header",
+          parameters: [
+            {
+              type: "image",
+              image: {
+                link: urlImage,
+              },
+            },
+          ],
+        },
+        {
+          type: "body",
+          parameters: [
+            {
+              type: "text",
+              text: text,
+            }
+          ]
+        }
+      ]
+    };
+
+    GBLogEx.info(min, `Sending answer file to mobile: ${mobile}.`);
+    await this.sendToMobile(min, mobile, data, null);
+  }
   // tslint:enable:no-unsafe-any
 
   public async sendMarkdownToMobile(min: GBMinInstance, step: GBDialogStep, mobile: string, text: string) {
@@ -888,7 +931,7 @@ export class GBConversationalService {
         return false;
       }
 
-      GBLogEx.info(min, 
+      GBLogEx.info(min,
         `NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${instanceScore}`
       );
 
