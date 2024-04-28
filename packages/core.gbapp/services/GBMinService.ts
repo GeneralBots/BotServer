@@ -442,9 +442,24 @@ export class GBMinService {
 
     // Setups official handler for WhatsApp.
 
-    GBServer.globals.server.post(`/${min.instance.botId}/whatsapp`, async (req, res) => {
-      const to = req.body.To.replace(/whatsapp\:\+/gi, '');
-      const whatsAppDirectLine = WhatsappDirectLine.botsByNumber[to];
+    GBServer.globals.server.all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
+
+      if (req.query['hub.mode'] === 'subscribe') {
+        const val = req.query['hub.challenge'];
+        res.send(val);
+
+        return;
+      }
+
+      let whatsAppDirectLine = min.whatsAppDirectLine;
+
+      // Not meta, multiples bots on root bot.
+
+      if (!req.body.object) {
+        const to = req.body.To.replace(/whatsapp\:\+/gi, '');
+        whatsAppDirectLine = WhatsappDirectLine.botsByNumber[to];
+      }
+
       await whatsAppDirectLine.WhatsAppCallback(req, res, whatsAppDirectLine.botId);
     }).bind(min);
 
@@ -455,6 +470,11 @@ export class GBMinService {
     if (!res) {
       return 'GeneralBots';
     }
+
+    if (req.body.entry) {
+      return 'meta';
+    }
+
     if (req.body?.AccountSid) {
       return 'official';
     }
@@ -637,10 +657,10 @@ export class GBMinService {
     if (botId === '[default]' || botId === undefined) {
       botId = GBConfigService.get('BOT_ID');
     }
-    
-    
+
+
     // Loads by the botId itself or by the activationCode field.
-    
+
     let instance = await this.core.loadInstanceByBotId(botId);
     if (instance === null) {
       instance = await this.core.loadInstanceByActivationCode(botId);
@@ -1076,7 +1096,7 @@ export class GBMinService {
 
         // Required for F0 handling of persisted conversations.
 
-        GBLogEx.info(min, 
+        GBLogEx.info(min,
           `Input> ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
         );
 
@@ -1114,7 +1134,7 @@ export class GBMinService {
               ) {
                 min['conversationWelcomed'][step.context.activity.conversation.id] = true;
 
-                GBLogEx.info(min, 
+                GBLogEx.info(min,
                   `Auto start (web 1) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
                 );
                 await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
@@ -1413,12 +1433,12 @@ export class GBMinService {
         startDialog &&
         startDialog !== '' &&
         !min['conversationWelcomed'][step.context.activity.conversation.id] &&
-        !min['apiConversations'][pid]  &&
+        !min['apiConversations'][pid] &&
         !step.context.activity['group']
       ) {
         await sec.setParam(userId, 'welcomed', 'true');
         min['conversationWelcomed'][step.context.activity.conversation.id] = true;
-        GBLogEx.info(min, 
+        GBLogEx.info(min,
           `Auto start (4) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
         );
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
@@ -1625,26 +1645,25 @@ export class GBMinService {
           );
 
           let pid = data?.pid;
-          if (script === 'start'){
+          if (script === 'start') {
             pid = GBVMService.createProcessInfo(user, min, 'api', null);
-            
-          
-          const client = await new SwaggerClient({
-            spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-            requestInterceptor: req => {
-              req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
-            }
-          });
-          const response = await client.apis.Conversations.Conversations_StartConversation();
-          
-          min['apiConversations'][pid] = {conversation: response.obj, client: client};
-          min['conversationWelcomed'][response.obj.id] = true;
-        }
 
-          let ret =  await GBVMService.callVM(script, min, null, pid, false, data);
 
-          if (script === 'start')
-          {
+            const client = await new SwaggerClient({
+              spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
+              requestInterceptor: req => {
+                req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
+              }
+            });
+            const response = await client.apis.Conversations.Conversations_StartConversation();
+
+            min['apiConversations'][pid] = { conversation: response.obj, client: client };
+            min['conversationWelcomed'][response.obj.id] = true;
+          }
+
+          let ret = await GBVMService.callVM(script, min, null, pid, false, data);
+
+          if (script === 'start') {
             ret = pid;
           }
           return ret;
@@ -1680,7 +1699,7 @@ export class GBMinService {
     };
 
     GBServer.globals.server.apiServer = createKoaHttpServer(
-      GBVMService.API_PORT, 
+      GBVMService.API_PORT,
       getRemoteId, { prefix: `api/v3` });
 
     createRpcServer(

@@ -54,7 +54,7 @@ const { WAState, Client, MessageMedia } = pkg;
 import twilio from 'twilio';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
-
+import { createBot } from 'whatsapp-cloud-api';
 
 /**
  * Support for Whatsapp.
@@ -103,9 +103,8 @@ export class WhatsappDirectLine extends GBService {
     this.whatsappServiceKey = whatsappServiceKey;
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
-    this.provider =
-      whatsappServiceKey === 'internal'
-        ? 'GeneralBots' : 'official';
+    this.provider = whatsappServiceKey === 'internal'
+        ? 'GeneralBots' : 'meta';
     this.groupId = groupId;
   }
 
@@ -253,12 +252,8 @@ export class WhatsappDirectLine extends GBService {
     }
   }
 
-  public static providerFromRequest(req: any) {
-    return req.body.ProfileName ? 'official' : 'GeneralBots';
-  }
-
   public async received(req, res) {
-    const provider = WhatsappDirectLine.providerFromRequest(req);
+    const provider = GBMinService.getProviderName(req, res);
 
     let message, to, from, fromName, text: string;
     let group = '';
@@ -266,7 +261,13 @@ export class WhatsappDirectLine extends GBService {
     let attachments = null;
 
     switch (provider) {
-
+      case 'meta':
+        from = req.body.entry[0].changes[0].value.messages[0].from;
+        text = req.body.entry[0].changes[0].value.messages[0].text.body
+        to = this.min.core.getParam<string>(this.min.instance, 'Bot Number', null);
+        fromName = req.body.entry[0].changes[0].value.contacts[0].profile.name;
+        
+        break;
       case 'official':
         message = req.body;
         from = req.body.From.replace(/whatsapp\:\+/gi, '');
@@ -512,7 +513,7 @@ export class WhatsappDirectLine extends GBService {
         }
         WhatsappDirectLine.mobiles[generatedConversationId] = from;
         WhatsappDirectLine.usernames[from] = fromName;
-        WhatsappDirectLine.chatIds[generatedConversationId] = message.chatId;
+        WhatsappDirectLine.chatIds[generatedConversationId] = message?.chatId;
 
         this.pollMessages(client, generatedConversationId, from, fromName);
         this.inputMessage(client, generatedConversationId, text, from, fromName, group, attachments);
@@ -594,7 +595,8 @@ export class WhatsappDirectLine extends GBService {
         await this.printMessages(response.obj.activities, conversationId, from, fromName);
       } catch (err) {
         GBLog.error(
-          `Error calling printMessages on Whatsapp channel ${err.data === undefined ? err : err.data} ${err.errObj ? err.errObj.message : ''
+          `Error calling printMessages on Whatsapp channel ${err.data === undefined ? 
+            err : err.data} ${err.errObj ? err.errObj.message : ''
           }`
         );
       }
@@ -718,17 +720,27 @@ export class WhatsappDirectLine extends GBService {
 
       return await this.sendTextAsAudioToDevice(to, msg, chatId);
     } else {
-      let options;
+      let options, messages;
+      const botNumber = this.min.core.getParam(this.min.instance, 'Bot Number', null);
 
       switch (this.provider) {
+        case 'meta':
+          const bot = createBot(this.min.instance.whatsappServiceNumber,
+             this.min.instance.whatsappServiceKey);
+             messages = msg.match(/(.|[\r\n]){1,4096}/g)
 
+             await CollectionUtil.asyncForEach(messages, async msg => {
+               await GBUtil.sleep(3000);
+               await bot.sendText(to, msg);
+             });
+
+          break;
         case 'official':
-          const botNumber = this.min.core.getParam(this.min.instance, 'Bot Number', null);
           if (to.charAt(0) !== '+') {
             to = `+${to}`
           }
 
-          let messages = msg.match(/(.|[\r\n]){1,1000}/g)
+           messages = msg.match(/(.|[\r\n]){1,1000}/g)
 
           await CollectionUtil.asyncForEach(messages, async msg => {
             await GBUtil.sleep(3000);
@@ -792,6 +804,19 @@ export class WhatsappDirectLine extends GBService {
       let text;
 
       switch (provider) {
+
+        case 'meta':
+          if (req.body.entry[0].changes[0].value.statuses){
+            GBLogEx.info(this.min, `WhatsApp: ${req.body.entry[0].changes[0].value.statuses[0].status}.`);
+
+            return;
+          }
+          id = req.body.entry[0].changes[0].value.messages[0].from;
+          text = req.body.entry[0].changes[0].value.messages[0].text.body
+          senderName = req.body.entry[0].changes[0].value.contacts[0].profile.name;
+          botId = this.botId;
+
+          break;
 
         case 'official':
 
