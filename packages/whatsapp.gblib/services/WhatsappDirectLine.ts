@@ -826,7 +826,12 @@ export class WhatsappDirectLine extends GBService {
         case 'meta':
           
           if (req.body.entry[0].changes[0].value.statuses) {
-            GBLogEx.info(this.min, `WhatsApp:${id} ${senderName} ${req.body.entry[0].changes[0].value.statuses[0].status}.`);
+            if (req.body.entry[0].changes[0].value.statuses[0].status === 'failed'){
+              id = req.body.entry[0].changes[0].value.messages[0].from;
+              senderName = req.body.entry[0].changes[0].value.contacts[0].profile.name;
+    
+              GBLogEx.error(this.min, `WhatsApp:${id} ${senderName} ${JSON.stringify(req.body.entry[0].changes[0])}.`);
+            }
             res.status(200);
             res.end();
 
