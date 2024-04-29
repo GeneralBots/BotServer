@@ -659,6 +659,8 @@ export class GBConversationalService {
       : fileUrl;
 
     text = text.substring(image.length).trim();
+    text = text.replace(/\n/g, "\\n");
+
     let data = {
       name: 'broadcast', components: [
         {
