@@ -268,8 +268,16 @@ export class WhatsappDirectLine extends GBService {
         if (req.body.entry[0].changes[0].value.messages[0].text) {
           text = req.body.entry[0].changes[0].value.messages[0].text.body;
         }
-        else {
+        else if (req.body.entry[0].changes[0].value.messages[0].button) {
           text = req.body.entry[0].changes[0].value.messages[0].button.text;
+        }
+        else
+        {
+          res.status(200);
+          res.end();
+
+          return;
+
         }
         
         from = req.body.entry[0].changes[0].value.messages[0].from;
@@ -835,11 +843,20 @@ export class WhatsappDirectLine extends GBService {
 
             return;
           }
+          
           if (req.body.entry[0].changes[0].value.messages[0].text) {
             text = req.body.entry[0].changes[0].value.messages[0].text.body;
           }
-          else {
+          else if (req.body.entry[0].changes[0].value.messages[0].button) {
             text = req.body.entry[0].changes[0].value.messages[0].button.text;
+          }
+          else
+          {
+            res.status(200);
+            res.end();
+
+            return;
+
           }
           id = req.body.entry[0].changes[0].value.messages[0].from;
           senderName = req.body.entry[0].changes[0].value.contacts[0].profile.name;
