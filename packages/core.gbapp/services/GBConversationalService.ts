@@ -651,11 +651,9 @@ export class GBConversationalService {
   public async fillAndBroadcastTemplate(min: GBMinInstance, step: GBDialogStep, mobile: string, text) {
 
     let image = /(.*)\n/gmi.exec(text)[0].trim();
-
     const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-
     const fileUrl = urlJoin(process.env.BOT_URL,'kb', gbaiName, `${min.botId}.gbkb`, 'images', image);
-
+    
     let urlImage = image.startsWith('http')
       ? image
       : fileUrl;
@@ -686,7 +684,7 @@ export class GBConversationalService {
       ]
     };
 
-    GBLogEx.info(min, `Sending answer file to mobile: ${mobile}.`);
+    GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlImage}`);
     await this.sendToMobile(min, mobile, data, null);
   }
   // tslint:enable:no-unsafe-any
