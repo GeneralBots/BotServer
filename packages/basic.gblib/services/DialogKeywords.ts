@@ -157,7 +157,7 @@ export class DialogKeywords {
    * Returns the OCR of image file.
    *
    */
-  public async getOCR({pid, localFile }) {
+  public async getOCR({ pid, localFile }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `BASIC: OCR processing on ${localFile}.`);
 
@@ -529,6 +529,7 @@ export class DialogKeywords {
    */
   public async sendEmail({ pid, to, subject, body }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
     if (!body) {
       body = "";
     };
@@ -545,23 +546,58 @@ export class DialogKeywords {
       body = result.value;
     }
 
-    return new Promise<any>((resolve, reject) => {
-      sgMail.setApiKey(emailToken);
-      const msg = {
-        to: to,
-        from: process.env.EMAIL_FROM,
-        subject: subject,
-        text: body,
-        html: body
-      };
-      sgMail.send(msg, false, (err, res) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(res);
-        }
+
+    if (emailToken) {
+      return new Promise<any>((resolve, reject) => {
+        sgMail.setApiKey(emailToken);
+        const msg = {
+          to: to,
+          from: process.env.EMAIL_FROM,
+          subject: subject,
+          text: body,
+          html: body
+        };
+        sgMail.send(msg, false, (err, res) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(res);
+          }
+        });
       });
-    });
+    }
+    else {
+      let { client } = await GBDeployer.internalGetDriveClient(min);
+
+      const data = {
+        "message": {
+          "subject": subject,
+          "body": {
+            "contentType": "Text",
+            "content": body
+          },
+          "toRecipients": [
+            {
+              "emailAddress": {
+                "address": to
+              }
+            }
+          ],
+          "from": {
+            "emailAddress": {
+              "address": process.env.EMAIL_FROM
+            }
+          }
+        }
+      };
+
+      await client.api('/me/sendMail')
+        .post(data);
+        
+      GBLogEx.info(min, `E-mail para ${to} (${subject}) enviado.`);
+
+    }
+
   }
 
   /**
@@ -1277,9 +1313,9 @@ export class DialogKeywords {
 
     let count = API_RETRIES;
     while (count--) {
-      
+
       await GBUtil.sleep(DEFAULT_HEAR_POLL_INTERVAL);
-      
+
       try {
         const response = await client.apis.Conversations.Conversations_GetActivities({
           conversationId: conversation.conversationId,
@@ -1292,7 +1328,7 @@ export class DialogKeywords {
           activities = activities.filter(m => m.from.id === min.botId && m.type === 'message');
           if (activities.length) {
             activities.forEach(activity => {
-              messages.push( activity.text );
+              messages.push(activity.text);
               GBLogEx.info(min, `MESSAGE BOT answer from bot: ${activity.text}`);
             });
           }
