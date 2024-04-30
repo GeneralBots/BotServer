@@ -807,7 +807,7 @@ export class WhatsappDirectLine extends GBService {
           GBLogEx.info(this.min, `Message [${msg}] is being sent to ${to}...`);
           await fetch(url, options);
         } catch (error) {
-          GBLog.error(`Error sending message to Whatsapp provider ${c}`);
+          GBLog.error(`Error sending message to Whatsapp provider ${JSON.stringify(error)}`);
         }
       }
     }
