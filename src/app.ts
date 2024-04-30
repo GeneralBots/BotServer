@@ -111,15 +111,13 @@ export class GBServer {
     });
 
     process.on('uncaughtException', (err, p) => {
-      if (err !== null) {
-        err = err['e'] ? err['e'] : err;
-        const msg = `${err['code'] ? err['code'] : ''} ${err?.['response']?.['data'] ? err?.['response']?.['data'] : ''} ${err.message ? err.message : ''} ${err['description'] ? err['description'] : ''}`
-        GBLog.error(`UNCAUGHT_EXCEPTION:  ${err.toString()} ${err['stack'] ? '\n' + err['stack'] : ''} ${msg}`);
-      } else {
-        GBLog.error('UNCAUGHT_EXCEPTION: Unknown error (err is null)');
-      }
+        GBLog.error(`UNCAUGHT_EXCEPTION: ${JSON.stringify(err).}`);
     });
-    // Creates working directory.
+
+    process.on('unhandledRejection', (err, p) => {
+      GBLog.error(`UNHANDLED_REJECTION: ${JSON.stringify(err).}`);
+  });
+  // Creates working directory.
 
     process.env.PWD = process.cwd();
     const workDir = Path.join(process.env.PWD, 'work');

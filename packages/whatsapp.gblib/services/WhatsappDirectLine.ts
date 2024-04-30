@@ -610,11 +610,9 @@ export class WhatsappDirectLine extends GBService {
         });
         watermark = response.obj.watermark;
         await this.printMessages(response.obj.activities, conversationId, from, fromName);
-      } catch (err) {
+      } catch (error) {
         GBLog.error(
-          `Error calling printMessages on Whatsapp channel ${err.data === undefined ?
-            err : err.data} ${err.errObj ? err.errObj.message : ''
-          }`
+          `Error calling printMessages on Whatsapp channel ${JSON.stringify(error)}`
         );
       }
     };
