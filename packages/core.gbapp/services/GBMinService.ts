@@ -450,6 +450,7 @@ export class GBMinService {
         const val = req.query['hub.verify_token'];
 
         if (val === process.env.META_CHALLENGE) {
+          res.send(req.query['hub.challenge']);
           res.status(200);
         } else {
           res.status(401);
