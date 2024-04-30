@@ -297,7 +297,7 @@ export class GBServer {
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
         pfx: fs.readFileSync(process.env.CERTIFICATE_PFX),
-        ca: fs.readFileSync(process.env.CERTIFICATE_CA)
+        ca: fs.existsSync(process.env.CERTIFICATE_CA)? fs.readFileSync(process.env.CERTIFICATE_CA):null
       };
 
       const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
