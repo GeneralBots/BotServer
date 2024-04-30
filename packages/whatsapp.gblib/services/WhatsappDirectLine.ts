@@ -747,16 +747,16 @@ export class WhatsappDirectLine extends GBService {
 
           if (msg['name']) {
             const res = await driver.sendTemplate(to, msg['name'], 'pt_br', msg['components']);
-            console.log(JSON.stringify(res));
+            
           }
           else {
 
             messages = msg.match(/(.|[\r\n]){1,4096}/g)
 
             await CollectionUtil.asyncForEach(messages, async msg => {
+              await driver.sendText(to, msg);
+              
               await GBUtil.sleep(3000);
-              const res =await driver.sendText(to, msg);
-              console.log(JSON.stringify(res));
             });
           }
 
@@ -807,7 +807,7 @@ export class WhatsappDirectLine extends GBService {
           GBLogEx.info(this.min, `Message [${msg}] is being sent to ${to}...`);
           await fetch(url, options);
         } catch (error) {
-          GBLog.error(`Error sending message to Whatsapp provider ${error.message}`);
+          GBLog.error(`Error sending message to Whatsapp provider ${c}`);
         }
       }
     }
@@ -1101,8 +1101,7 @@ export class WhatsappDirectLine extends GBService {
         }
       }
     } catch (error) {
-      error = error['e'] ? error['e'] : error;
-      GBLog.error(`Error on Whatsapp callback: ${error.data ? error.data : error} ${error.stack}`);
+      GBLog.error(`Error on Whatsapp callback: ${JSON.stringify(error)}`);
     }
   }
 }
