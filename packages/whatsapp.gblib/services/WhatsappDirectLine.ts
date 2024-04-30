@@ -740,8 +740,20 @@ export class WhatsappDirectLine extends GBService {
 
       switch (this.provider) {
         case 'meta':
-          const driver = createBot(this.min.instance.whatsappServiceNumber,
-            this.min.instance.whatsappServiceKey);
+
+          let whatsappServiceNumber, whatsappServiceKey;
+          if (botNumber){
+            whatsappServiceNumber = this.min.instance.whatsappServiceNumber;
+            whatsappServiceKey = this.min.instance.whatsappServiceKey
+          }
+          else{
+            whatsappServiceNumber = GBServer.globals.minBoot.instance.whatsappServiceNumber;
+            whatsappServiceKey = GBServer.globals.minBoot.instance.whatsappServiceKey
+          }
+
+
+          const driver = createBot(whatsappServiceNumber,
+            whatsappServiceKey);
 
           if (msg['name']) {
             const res = await driver.sendTemplate(to, msg['name'], 'pt_br', msg['components']);
