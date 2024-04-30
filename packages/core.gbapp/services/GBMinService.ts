@@ -444,14 +444,14 @@ export class GBMinService {
 
     GBServer.globals.server.all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
 
-      GBLogEx.info(min, `Meta callback OK. ${JSON.stringify(req.query)}`);
-
+      
       if (req.query['hub.mode'] === 'subscribe') {
         const val = req.query['hub.verify_token'];
-
+        
         if (val === process.env.META_CHALLENGE) {
           res.send(req.query['hub.challenge']);
           res.status(200);
+          GBLogEx.info(min, `Meta callback OK. ${JSON.stringify(req.query)}`);
         } else {
           res.status(401);
         }
