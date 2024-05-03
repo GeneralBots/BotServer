@@ -649,28 +649,28 @@ export class GBConversationalService {
   }
 
   public async fillAndBroadcastTemplate(min: GBMinInstance, mobile: string, text) {
-    
-    let isMedia = text.toLowerCase().endsWith('.jpg') || text.toLowerCase().endsWith('.jpeg') 
+
+    let isMedia = text.toLowerCase().endsWith('.jpg') || text.toLowerCase().endsWith('.jpeg')
       || text.toLowerCase().endsWith('.png');
-      
-    let image = isMedia ? 
-      /(.*)\n/gmi.exec(text)[0].trim():
+
+    let image = isMedia ?
+      /(.*)\n/gmi.exec(text)[0].trim() :
       text;
 
     const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-    const fileUrl = urlJoin(process.env.BOT_URL,'kb', gbaiName, `${min.botId}.gbkb`, 'images', image);
-    
+    const fileUrl = urlJoin(process.env.BOT_URL, 'kb', gbaiName, `${min.botId}.gbkb`, 'images', image);
+
     let urlImage = image.startsWith('http')
       ? image
       : fileUrl;
 
-    if (!isMedia){
+    if (!isMedia) {
       text = text.substring(image.length).trim();
       text = text.replace(/\n/g, "\\n");
     }
 
-    let data = {
-      name: isMedia?'broadcast_notext':'broadcast', components: [
+    let data:any = {
+      name: isMedia ? 'broadcast_notext' : 'broadcast', components: [
         {
           type: "header",
           parameters: [
@@ -678,21 +678,24 @@ export class GBConversationalService {
               type: "image",
               image: {
                 link: urlImage,
-              },
+              }
             },
           ],
-        },
-        {
-          type: "body",
-          parameters: [
-            {
-              type: "text",
-              text: text,
-            }
-          ]
         }
       ]
     };
+
+    if (!isMedia) {
+      data.components.push({
+        type: "body",
+        parameters: [
+          {
+            type: "text",
+            text: text,
+          }
+        ]
+      });
+    }
 
     GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlImage}`);
     await this.sendToMobile(min, mobile, data, null);
