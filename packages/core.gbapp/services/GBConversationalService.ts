@@ -653,7 +653,7 @@ export class GBConversationalService {
     let isMedia = text.toLowerCase().endsWith('.jpg') || text.toLowerCase().endsWith('.jpeg')
       || text.toLowerCase().endsWith('.png');
 
-    let image = isMedia ?
+    let image = !isMedia ?
       /(.*)\n/gmi.exec(text)[0].trim() :
       text;
 
