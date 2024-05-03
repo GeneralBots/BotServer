@@ -525,8 +525,6 @@ export class GBVMService extends GBService {
           const channel = this.channel;
           const ENTER = this.ENTER;
           const headers = this.headers;
-          let data = this.data;
-          let list = this.list;
           let httpUsername = this.httpUsername;
           let httpPs = this.httpPs;
           let today = this.today;
@@ -1107,8 +1105,6 @@ export class GBVMService extends GBService {
     sandbox['from'] = await dk.userMobile({ pid });
     sandbox['ENTER'] = String.fromCharCode(13);
     sandbox['headers'] = {};
-    sandbox['data'] = {};
-    sandbox['list'] = [];
     sandbox['httpUsername'] = '';
     sandbox['httpPs'] = '';
     sandbox['pid'] = pid;

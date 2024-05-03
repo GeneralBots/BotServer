@@ -648,9 +648,15 @@ export class GBConversationalService {
     });
   }
 
-  public async fillAndBroadcastTemplate(min: GBMinInstance, step: GBDialogStep, mobile: string, text) {
+  public async fillAndBroadcastTemplate(min: GBMinInstance, mobile: string, text) {
+    
+    let isMedia = text.toLowerCase().endsWith('.jpg') || text.toLowerCase().endsWith('.jpeg') 
+      || text.toLowerCase().endsWith('.png');
+      
+    let image = isMedia ? 
+      /(.*)\n/gmi.exec(text)[0].trim():
+      text;
 
-    let image = /(.*)\n/gmi.exec(text)[0].trim();
     const gbaiName = DialogKeywords.getGBAIPath(min.botId);
     const fileUrl = urlJoin(process.env.BOT_URL,'kb', gbaiName, `${min.botId}.gbkb`, 'images', image);
     
@@ -658,11 +664,13 @@ export class GBConversationalService {
       ? image
       : fileUrl;
 
-    text = text.substring(image.length).trim();
-    text = text.replace(/\n/g, "\\n");
+    if (!isMedia){
+      text = text.substring(image.length).trim();
+      text = text.replace(/\n/g, "\\n");
+    }
 
     let data = {
-      name: 'broadcast', components: [
+      name: isMedia?'broadcast_notext':'broadcast', components: [
         {
           type: "header",
           parameters: [
