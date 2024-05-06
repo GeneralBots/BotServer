@@ -1027,7 +1027,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(send template to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        const params = this.getParams($3, ['mobile', 'text']);
+        const params = this.getParams($3, ['mobile', 'filename']);
         return `await dk.sendTemplateTo({pid: pid, ${params}})`;
       }
     ];

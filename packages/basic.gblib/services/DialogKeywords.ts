@@ -618,11 +618,22 @@ export class DialogKeywords {
    * @example SEND TEMPLATE TO "+199988887777","image.jpg"
    *
    */
-  public async sendTemplateTo({ pid, mobile, filename: text}) {
+  public async sendTemplateTo({ pid, mobile, filename}) {
     const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: SEND TEMPLATE TO '${mobile}',filename '${text}'.`);
+    GBLogEx.info(min, `BASIC: SEND TEMPLATE TO '${mobile}',filename '${filename}'.`);
     const service = new GBConversationalService(min.core);
+
+    let text;
+    if (filename.endsWith('.docx')) {
+      text = await min.kbService.getAnswerTextByMediaName(min.instance.instanceId, filename);
+    }
+    else{
+      text = filename;
+    }
+    
+
     return await service.fillAndBroadcastTemplate(min, mobile, text);
+   
   }
 
   /**
