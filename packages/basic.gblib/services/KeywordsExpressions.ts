@@ -1028,7 +1028,7 @@ export class KeywordsExpressions {
       /^\s*(send template to)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['mobile', 'text']);
-        return `await dk.fillAndBroadcastTemplate({pid: pid, ${params}})`;
+        return `await dk.sendTemplateTo({pid: pid, ${params}})`;
       }
     ];
 

@@ -613,6 +613,19 @@ export class DialogKeywords {
   }
 
   /**
+   * Sends a template to a given mobile.
+   *
+   * @example SEND TEMPLATE TO "+199988887777","image.jpg"
+   *
+   */
+  public async sendTemplateTo({ pid, mobile, filename: text}) {
+    const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: SEND TEMPLATE TO '${mobile}',filename '${text}'.`);
+    const service = new GBConversationalService(min.core);
+    return await service.fillAndBroadcastTemplate(min, mobile, text);
+  }
+
+  /**
    * Sends a file to the current user.
    *
    * @example SEND FILE "image.jpg"
