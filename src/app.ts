@@ -105,6 +105,13 @@ export class GBServer {
     server.use(bodyParser.json());
     server.use(bodyParser.json({ limit: '1mb' }));
     server.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
+    server.use(function(req, res, next) {
+      for (var key in req.query)
+      { 
+        req.query[key.toLowerCase()] = req.query[key];
+      }
+      next();
+    });
 
     process.on('SIGTERM', () => {
       GBLogEx.info(0, 'SIGTERM signal received.');
