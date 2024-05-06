@@ -1557,7 +1557,7 @@ export class GBMinService {
         }
       } else {
         if (min.cbMap[userId] && min.cbMap[userId].promise === '!GBHEAR') {
-          min.cbMap[userId].promise = text;
+          min.cbMap[userId].promise = step.context.activity['originalText'];;
         }
 
         // If there is a dialog in course, continue to the next step.
