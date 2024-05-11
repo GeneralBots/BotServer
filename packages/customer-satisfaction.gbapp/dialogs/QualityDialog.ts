@@ -39,7 +39,6 @@ import { GBMinInstance, IGBDialog } from 'botlib';
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService.js';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 import { CSService } from '../services/CSService.js';
 import { Messages } from '../strings.js';
 
@@ -53,7 +52,7 @@ export class QualityDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup (bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new CSService();
 
     min.dialogs.add(
@@ -89,15 +88,15 @@ export class QualityDialog extends IGBDialog {
             await service.insertQuestionAlternate(min.instance.instanceId, user.lastQuestion, user.lastQuestionId);
 
             // Updates values to perform Bot Analytics.
-
-            const analytics = new AnalyticsService();
-            analytics.updateConversationSuggestion(
-              min.instance.instanceId,
-              user.conversation,
-              step.result,
-              user.locale
-            );
-
+            if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
+              const analytics = new AnalyticsService();
+              analytics.updateConversationSuggestion(
+                min.instance.instanceId,
+                user.conversation,
+                step.result,
+                user.locale
+              );
+            }
             // Goes to the ask loop.
 
             return await step.replaceDialog('/ask', { emptyPrompt: true });

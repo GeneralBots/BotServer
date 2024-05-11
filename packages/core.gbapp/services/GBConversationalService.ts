@@ -1272,14 +1272,15 @@ export class GBConversationalService {
       });
     }
 
-    const analytics = new AnalyticsService();
-    const conversation = null;
-    if (!user.conversationId) {
-      const conversation = await analytics.createConversation(user);
-      user.conversationId = conversation.conversationId;
+    if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
+      const analytics = new AnalyticsService();
+      const conversation = null;
+      if (!user.conversationId) {
+        const conversation = await analytics.createConversation(user);
+        user.conversationId = conversation.conversationId;
+      }
+      analytics.createMessage(min.instance.instanceId, conversation, null, text);
     }
-    analytics.createMessage(min.instance.instanceId, conversation, null, text);
-
     if (!step && member && !isNaN(member.id) && !member.id.startsWith('1000')) {
       const to = step.context.activity.group ? step.context.activity.group : member.id;
 

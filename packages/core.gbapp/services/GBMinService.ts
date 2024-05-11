@@ -444,10 +444,10 @@ export class GBMinService {
 
     GBServer.globals.server.all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
 
-      
+
       if (req.query['hub.mode'] === 'subscribe') {
         const val = req.query['hub.verify_token'];
-        
+
         if (val === process.env.META_CHALLENGE) {
           res.send(req.query['hub.challenge']);
           res.status(200);
@@ -1034,12 +1034,12 @@ export class GBMinService {
 
           if (context.activity.from.id !== min.botId) {
             // Creates a new row in user table if it does not exists.
+            if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
+              // Stores conversation associated to the user to group each message.
 
-            // Stores conversation associated to the user to group each message.
-
-            const analytics = new AnalyticsService();
-            await analytics.createConversation(user);
-
+              const analytics = new AnalyticsService();
+              await analytics.createConversation(user);
+            }
           }
 
           await sec.updateConversationReferenceById(userId, conversationReference);
@@ -1409,8 +1409,10 @@ export class GBMinService {
     const userId = user.userId;
     const params = user.params ? JSON.parse(user.params) : {};
 
+    
     let message: GuaribasConversationMessage;
     if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
+      
       // Adds message to the analytics layer.
 
       const analytics = new AnalyticsService();

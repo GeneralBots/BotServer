@@ -53,7 +53,7 @@ export class FeedbackDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup (bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
     const service = new CSService();
 
     min.dialogs.add(
@@ -99,11 +99,11 @@ export class FeedbackDialog extends IGBDialog {
           } else {
             await min.conversationalService.sendText(min, step, Messages[locale].please_wait_transfering);
             const agentSystemId = await sec.assignHumanAgent(min, from);
-            
+
             await min.userProfile.set(step.context, profile);
 
             if (agentSystemId.indexOf('@') !== -1) {
-              
+
               // Agent is from Teams or Google Chat.
 
               const agent = await sec.getUserFromSystemId(agentSystemId);
@@ -169,7 +169,7 @@ export class FeedbackDialog extends IGBDialog {
             await sec.updateHumanAgent(userSystemId, min.instance.instanceId, null);
             await sec.updateHumanAgent(manualUser.userSystemId, min.instance.instanceId, null);
 
-            
+
           } else if (user.agentMode === 'human') {
             const agent = await sec.getUserFromSystemId(user.agentSystemId);
 
@@ -198,7 +198,7 @@ export class FeedbackDialog extends IGBDialog {
 
             await sec.updateHumanAgent(user.userSystemId, min.instance.instanceId, null);
             await sec.updateHumanAgent(agent.userSystemId, min.instance.instanceId, null);
-            
+
           } else {
             if (user.userSystemId.charAt(2) === ':' || userSystemId.indexOf('@') > -1) {
               // Agent is from Teams or Google Chat.
@@ -264,16 +264,19 @@ export class FeedbackDialog extends IGBDialog {
         async step => {
           const fixedLocale = 'en-US';
           const user = await min.userProfile.get(step.context, {});
+          let rate = 1;
 
-          // Updates values to perform Bot Analytics.
+          if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
+            // Updates values to perform Bot Analytics.
 
-          const analytics = new AnalyticsService();
-          const rate = await analytics.updateConversationSuggestion(
-            min.instance.instanceId,
-            user.conversation.conversationId,
-            step.result,
-            user.locale
-          );
+            const analytics = new AnalyticsService();
+            let rate = await analytics.updateConversationSuggestion(
+              min.instance.instanceId,
+              user.conversation.conversationId,
+              step.result,
+              user.locale
+            );
+          }
 
           if (rate > 0.5) {
             await min.conversationalService.sendText(min, step, Messages[fixedLocale].glad_you_liked);
