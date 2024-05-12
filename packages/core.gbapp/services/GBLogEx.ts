@@ -45,7 +45,7 @@ export class GBLogEx {
     if (typeof minOrInstanceId === 'object') {
       minOrInstanceId = minOrInstanceId.instance.instanceId;
     }
-    GBLog.error(`${minOrInstanceId}: ${message}.`);
+    GBLog.error(`${minOrInstanceId}: ${message}`);
     await this.log(minOrInstanceId, 'e', message);
   }
 
@@ -53,7 +53,7 @@ export class GBLogEx {
     if (typeof minOrInstanceId === 'object') {
       minOrInstanceId = minOrInstanceId.instance.instanceId;
     }
-    GBLog.debug(`${minOrInstanceId}: ${message}.`);
+    GBLog.debug(`${minOrInstanceId}: ${message}`);
     await this.log(minOrInstanceId, 'd', message);
   }
 
@@ -62,7 +62,7 @@ export class GBLogEx {
     if (typeof minOrInstanceId === 'object') {
       minOrInstanceId = minOrInstanceId.instance.instanceId;
     }
-    GBLog.info(`${minOrInstanceId}: ${message}.`);
+    GBLog.info(`${minOrInstanceId}: ${message}`);
     await this.log(minOrInstanceId, 'i', message);
   }
 
@@ -70,7 +70,7 @@ export class GBLogEx {
     if (typeof minOrInstanceId === 'object') {
       minOrInstanceId = minOrInstanceId.instance.instanceId;
     }
-    GBLog.verbose(`${minOrInstanceId}: ${message}.`);
+    GBLog.verbose(`${minOrInstanceId}: ${message}`);
     await this.log(minOrInstanceId, 'v', message);
   }
 

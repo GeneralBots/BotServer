@@ -594,7 +594,7 @@ export class DialogKeywords {
       await client.api('/me/sendMail')
         .post(data);
         
-      GBLogEx.info(min, `E-mail para ${to} (${subject}) enviado.`);
+      GBLogEx.info(min, `E-mail ${to} (${subject}) sent.`);
 
     }
 
