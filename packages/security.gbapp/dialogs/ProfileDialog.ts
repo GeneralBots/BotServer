@@ -139,14 +139,14 @@ export class ProfileDialog extends IGBDialog {
           step.activeDialog.state.options = step.options;
           const locale = step.context.activity.locale;
           const from = step.activeDialog.state.options.mobile.replace ('+', '');
-          if (min.whatsAppDirectLine) {
-            await min.whatsAppDirectLine.sendToDevice(
-              from,
-              `${step.activeDialog.state.options.mobileCode} is your General Bots creation code.`
-            );
-          } else {
-            GBLogEx.info(min, `WhatsApp not configured. Here is the code: ${step.activeDialog.state.options.mobileCode}.`);
-          }
+          return await step.replaceDialog('/profile_email', step.activeDialog.state.options);
+          // DISABLED: sif (min.whatsAppDirectLine) {
+          //   await min.whatsAppDirectLine.sendToDevice(
+          //     from,
+          //     `${step.activeDialog.state.options.mobileCode} is your General Bots creation code.`
+          //   );
+          // } else {
+          // }
 
           await step.prompt('textPrompt', Messages[locale].confirm_mobile);
         },
