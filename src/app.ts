@@ -118,11 +118,11 @@ export class GBServer {
     });
 
     process.on('uncaughtException', (err, p) => {
-        GBLog.error(`UNCAUGHT_EXCEPTION: ${JSON.stringify(err)}`);
+        GBLog.error(`UNCAUGHT_EXCEPTION: ${JSON.stringify(err, Object.getOwnPropertyNames(err))}`);
     });
 
     process.on('unhandledRejection', (err, p) => {
-      GBLog.error(`UNHANDLED_REJECTION: ${JSON.stringify(err)}`);
+      GBLog.error(`UNHANDLED_REJECTION: ${JSON.stringify(err, Object.getOwnPropertyNames(err))}`);
   });
   // Creates working directory.
 
