@@ -31,14 +31,19 @@
 'use strict';
 
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
-import { StringOutputParser } from "@langchain/core/output_parsers";
-import { AIMessagePromptTemplate, ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
-import { RunnableSequence } from "@langchain/core/runnables";
-import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
-import { ChatOpenAI } from "@langchain/openai";
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import {
+  AIMessagePromptTemplate,
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  MessagesPlaceholder
+} from '@langchain/core/prompts';
+import { RunnableSequence } from '@langchain/core/runnables';
+import { convertToOpenAITool } from '@langchain/core/utils/function_calling';
+import { ChatOpenAI } from '@langchain/openai';
 import { GBLog, GBMinInstance } from 'botlib';
 import * as Fs from 'fs';
-import { jsonSchemaToZod } from "json-schema-to-zod";
+import { jsonSchemaToZod } from 'json-schema-to-zod';
 import { BufferWindowMemory } from 'langchain/memory';
 import Path from 'path';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -46,35 +51,28 @@ import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { GuaribasSubject } from '../../kb.gbapp/models/index.js';
-import { Serialized } from "@langchain/core/load/serializable";
-import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import { Serialized } from '@langchain/core/load/serializable';
+import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
-import { DynamicStructuredTool } from "@langchain/core/tools";
-import { WikipediaQueryRun } from "@langchain/community/tools/wikipedia_query_run";
-import {
-  BaseLLMOutputParser,
-  OutputParserException,
-} from "@langchain/core/output_parsers";
-import { ChatGeneration, Generation } from "@langchain/core/outputs";
+import { DynamicStructuredTool } from '@langchain/core/tools';
+import { WikipediaQueryRun } from '@langchain/community/tools/wikipedia_query_run';
+import { BaseLLMOutputParser, OutputParserException } from '@langchain/core/output_parsers';
+import { ChatGeneration, Generation } from '@langchain/core/outputs';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBServer } from '../../../src/app.js';
 import urlJoin from 'url-join';
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
-
-export interface CustomOutputParserFields { }
+export interface CustomOutputParserFields {}
 export type ExpectedOutput = any;
 
-function isChatGeneration(
-  llmOutput: ChatGeneration | Generation
-): llmOutput is ChatGeneration {
-  return "message" in llmOutput;
+function isChatGeneration(llmOutput: ChatGeneration | Generation): llmOutput is ChatGeneration {
+  return 'message' in llmOutput;
 }
 
 class CustomHandler extends BaseCallbackHandler {
-  name = "custom_handler";
-  
+  name = 'custom_handler';
 
   handleLLMNewToken(token: string) {
     GBLogEx.info(0, `LLM: token: ${JSON.stringify(token)}`);
@@ -95,11 +93,10 @@ class CustomHandler extends BaseCallbackHandler {
 
 const logHandler = new CustomHandler();
 
-export class GBLLMOutputParser extends
-  BaseLLMOutputParser<ExpectedOutput> {
-  lc_namespace = ["langchain", "output_parsers"];
+export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
+  lc_namespace = ['langchain', 'output_parsers'];
 
-  private toolChain: RunnableSequence
+  private toolChain: RunnableSequence;
   private min;
 
   constructor(min, toolChain: RunnableSequence, documentChain: RunnableSequence) {
@@ -108,14 +105,9 @@ export class GBLLMOutputParser extends
     this.toolChain = toolChain;
   }
 
-  async parseResult(
-    llmOutputs: ChatGeneration[] | Generation[]
-  ): Promise<ExpectedOutput> {
-
+  async parseResult(llmOutputs: ChatGeneration[] | Generation[]): Promise<ExpectedOutput> {
     if (!llmOutputs.length) {
-      throw new OutputParserException(
-        "Output parser did not receive any generations."
-      );
+      throw new OutputParserException('Output parser did not receive any generations.');
     }
     let result;
 
@@ -140,10 +132,9 @@ export class GBLLMOutputParser extends
 
     let { sources, text } = res;
 
-    await CollectionUtil.asyncForEach(sources, async (source) => {
+    await CollectionUtil.asyncForEach(sources, async source => {
       let found = false;
-      if (source) {
-
+      if (source && source.file.endsWith('.pdf')) {
         const gbaiName = DialogKeywords.getGBAIPath(this.min.botId, 'gbkb');
         const localName = Path.join(process.env.PWD, 'work', gbaiName, 'docs', source.file);
 
@@ -166,9 +157,7 @@ export class GBLLMOutputParser extends
 }
 
 export class ChatServices {
-
   public static async pdfPageAsImage(min, filename, pageNumber) {
-
     // Converts the PDF to PNG.
 
     GBLogEx.info(min, `Converting ${filename}, page: ${pageNumber}...`);
@@ -180,7 +169,6 @@ export class ChatServices {
       strictPagesToProcess: false,
       verbosityLevel: 0
     });
-
 
     // Prepare an image on cache and return the GBFILE information.
 
@@ -199,7 +187,6 @@ export class ChatServices {
     sanitizedQuestion: string,
     numDocuments: number = 100
   ): Promise<string> {
-
     if (sanitizedQuestion === '') {
       return '';
     }
@@ -219,10 +206,12 @@ export class ChatServices {
       const doc = uniqueDocuments[filePaths];
       const metadata = doc.metadata;
       const filename = Path.basename(metadata.source);
-      const page = await ChatServices.findPageForText(metadata.source,
-        doc.pageContent);
+      let page = 0;
+      if (metadata.source.endsWith('.pdf')) {
+        page = await ChatServices.findPageForText(metadata.source, doc.pageContent);
+      }
 
-      output = `${output}\n\n\n\nUse also the following context which is coming from Source Document: ${filename} at page: ${page} 
+      output = `${output}\n\n\n\nUse also the following context which is coming from Source Document: ${filename} at page: ${page?page:'entire document'} 
       (you will fill the JSON sources collection field later), 
       memorize this block among document information and return when you are refering this part of content:\n\n\n\n ${doc.pageContent} \n\n\n\n.`;
     }
@@ -233,12 +222,15 @@ export class ChatServices {
     const data = new Uint8Array(Fs.readFileSync(pdfPath));
     const pdf = await getDocument({ data }).promise;
 
-    searchText = searchText.replace(/\s/g, '')
+    searchText = searchText.replace(/\s/g, '');
 
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      const text = textContent.items.map(item => item['str']).join('').replace(/\s/g, '');
+      const text = textContent.items
+        .map(item => item['str'])
+        .join('')
+        .replace(/\s/g, '');
 
       if (text.includes(searchText)) return i;
     }
@@ -247,34 +239,31 @@ export class ChatServices {
   }
 
   /**
-     * Generate text
-     *
-     * CONTINUE keword.
-     *
-     * result = CONTINUE text
-     *
-     */
-  public static async continue(min: GBMinInstance, question: string, chatId) {
-
-  }
+   * Generate text
+   *
+   * CONTINUE keword.
+   *
+   * result = CONTINUE text
+   *
+   */
+  public static async continue(min: GBMinInstance, question: string, chatId) {}
 
   private static memoryMap = {};
   public static userSystemPrompt = {};
 
-  public static async answerByGPT(min: GBMinInstance, user, pid,
+  public static async answerByGPT(
+    min: GBMinInstance,
+    user,
+    pid,
     question: string,
     searchScore: number,
     subjects: GuaribasSubject[]
   ) {
-
     if (!process.env.OPENAI_API_KEY) {
       return { answer: undefined, questionId: 0 };
     }
 
-    const LLMMode = min.core.getParam(
-      min.instance,
-      'Answer Mode', 'direct'
-    );
+    const LLMMode = min.core.getParam(min.instance, 'Answer Mode', 'direct');
 
     const docsContext = min['vectorStore'];
 
@@ -283,19 +272,18 @@ export class ChatServices {
         returnMessages: true,
         memoryKey: 'chat_history',
         inputKey: 'input',
-        k: 2,
-      })
+        k: 2
+      });
     }
     const memory = this.memoryMap[user.userSystemId];
     const systemPrompt = this.userSystemPrompt[user.userSystemId];
 
     const model = new ChatOpenAI({
       openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: "gpt-3.5-turbo-0125",
+      modelName: 'gpt-3.5-turbo-0125',
       temperature: 0,
-      callbacks: [logHandler],
+      callbacks: [logHandler]
     });
-
 
     let tools = await ChatServices.getTools(min);
     let toolsAsText = ChatServices.getToolsAsText(tools);
@@ -316,9 +304,9 @@ export class ChatServices {
           Do not use any previous tools output in the chat_history. 
         `
       ),
-      new MessagesPlaceholder("chat_history"),
+      new MessagesPlaceholder('chat_history'),
       AIMessagePromptTemplate.fromTemplate(`Follow Up Input: {question}
-    Standalone question:`),
+    Standalone question:`)
     ]);
 
     const toolsResultPrompt = ChatPromptTemplate.fromMessages([
@@ -327,9 +315,9 @@ export class ChatServices {
         rephrase the answer to the user using this tool output.
         `
       ),
-      new MessagesPlaceholder("chat_history"),
+      new MessagesPlaceholder('chat_history'),
       AIMessagePromptTemplate.fromTemplate(`Tool output: {tool_output} 
-    Standalone question:`),
+    Standalone question:`)
     ]);
 
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
@@ -355,14 +343,13 @@ export class ChatServices {
         Double check if the output is a valid JSON with brackets. all fields are required: text, file, page.
         `
       ),
-      new MessagesPlaceholder("chat_history"),
-      HumanMessagePromptTemplate.fromTemplate("Question: {question}"),
+      new MessagesPlaceholder('chat_history'),
+      HumanMessagePromptTemplate.fromTemplate('Question: {question}')
     ]);
 
     const callToolChain = RunnableSequence.from([
       {
         tool_output: async (output: object) => {
-
           const name = output['func'][0].function.name;
           const args = JSON.parse(output['func'][0].function.arguments);
           GBLogEx.info(min, `Running .gbdialog '${name}' as GPT tool...`);
@@ -373,8 +360,7 @@ export class ChatServices {
         chat_history: async () => {
           const { chat_history } = await memory.loadMemoryVariables({});
           return chat_history;
-        },
-
+        }
       },
       toolsResultPrompt,
       model,
@@ -391,8 +377,7 @@ export class ChatServices {
         context: async (output: string) => {
           const c = await ChatServices.getRelevantContext(docsContext, output);
           return `${systemPrompt} \n ${c ? 'Use this context to answer:\n' + c : 'answer just with user question.'}`;
-
-        },
+        }
       },
       combineDocumentsPrompt,
       model,
@@ -405,7 +390,7 @@ export class ChatServices {
         chat_history: async () => {
           const { chat_history } = await memory.loadMemoryVariables({});
           return chat_history;
-        },
+        }
       },
       questionGeneratorTemplate,
       modelWithTools,
@@ -416,45 +401,36 @@ export class ChatServices {
     let result, sources;
     let text, file, page;
 
-
-    // Choose the operation mode of answer generation, based on 
+    // Choose the operation mode of answer generation, based on
     // .gbot switch LLMMode and choose the corresponding chain.
 
-    if (LLMMode === "direct") {
+    if (LLMMode === 'direct') {
       result = await (tools.length > 0 ? modelWithTools : model).invoke(`
       ${systemPrompt}
       
       ${question}`);
 
       result = result.content;
-    }
-    else if (LLMMode === "document") {
-
+    } else if (LLMMode === 'document') {
       const res = await combineDocumentsChain.invoke(question);
       result = res.text;
       sources = res.sources;
-
-    } else if (LLMMode === "function") {
-
+    } else if (LLMMode === 'function') {
       result = await conversationalToolChain.invoke({
-        question,
+        question
       });
-    }
-    else if (LLMMode === "full") {
-
+    } else if (LLMMode === 'full') {
       throw new Error('Not implemented.'); // TODO: #407.
-    }
-
-    else {
+    } else {
       GBLogEx.info(min, `Invalid Answer Mode in Config.xlsx: ${LLMMode}.`);
     }
 
     await memory.saveContext(
       {
-        input: question,
+        input: question
       },
       {
-        output: result.replace(/\!\[.*\)/gi, '') // Removes .MD url beforing adding to history. 
+        output: result?result.replace(/\!\[.*\)/gi, ''): 'no answer' // Removes .MD url beforing adding to history.
       }
     );
 
@@ -464,40 +440,34 @@ export class ChatServices {
 
   private static getToolsAsText(tools) {
     return Object.keys(tools)
-      .map((toolname) => `- ${tools[toolname].name}: ${tools[toolname].description}`)
-      .join("\n");
+      .map(toolname => `- ${tools[toolname].name}: ${tools[toolname].description}`)
+      .join('\n');
   }
 
   private static async getTools(min: GBMinInstance) {
     let functions = [];
 
     // Adds .gbdialog as functions if any to GPT Functions.
-    await CollectionUtil.asyncForEach(Object.keys(min.scriptMap), async (script) => {
-
-
-      const path = DialogKeywords.getGBAIPath(min.botId, "gbdialog", null);
+    await CollectionUtil.asyncForEach(Object.keys(min.scriptMap), async script => {
+      const path = DialogKeywords.getGBAIPath(min.botId, 'gbdialog', null);
       const jsonFile = Path.join('work', path, `${script}.json`);
 
       if (Fs.existsSync(jsonFile) && script.toLowerCase() !== 'start.vbs') {
-
         const funcJSON = JSON.parse(Fs.readFileSync(jsonFile, 'utf8'));
         const funcObj = funcJSON?.function;
 
         if (funcObj) {
-
           // TODO: Use ajv.
           funcObj.schema = eval(jsonSchemaToZod(funcObj.parameters));
           functions.push(new DynamicStructuredTool(funcObj));
         }
       }
-
     });
 
     if (process.env.WIKIPEDIA_TOOL) {
-
       const tool = new WikipediaQueryRun({
         topKResults: 3,
-        maxDocContentLength: 4000,
+        maxDocContentLength: 4000
       });
       functions.push(tool);
     }

@@ -2055,7 +2055,9 @@ export class SystemKeywords {
               return (orientation || 0) >= 5 ? [height, width] : [width, height];
             };
 
-            const size = getNormalSize(await sharp(buf).metadata());
+            const metadata = await sharp(buf).metadata();
+            const size = getNormalSize({width:metadata['width'], 
+            height:metadata['height'], orientation: metadata['orientation'] });
             url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(imageName));
             images[index++] = { url: url, size: size, buf: buf };
           }

@@ -48,8 +48,11 @@ import { DocxLoader } from 'langchain/document_loaders/fs/docx';
 import { EPubLoader } from 'langchain/document_loaders/fs/epub';
 import { CSVLoader } from 'langchain/document_loaders/fs/csv';
 import path from 'path';
+import puppeteer, { Page } from 'puppeteer';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from 'langchain/document';
+import getColors from 'get-image-colors';
+
 
 import {
   GBDialogStep,
@@ -80,7 +83,6 @@ import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
-
 
 /**
  * Result for quey on KB data.
@@ -271,7 +273,7 @@ export class KBService implements IGBKBService {
     min: GBMinInstance,
     user,
     step,
-    pid, 
+    pid,
     query: string,
     searchScore: number,
     subjects: GuaribasSubject[]
@@ -293,13 +295,9 @@ export class KBService implements IGBKBService {
       'Default Content Language',
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
-  
-    query = await min.conversationalService.translate(
-      min,
-      query,
-      contentLocale
-    );
-    
+
+    query = await min.conversationalService.translate(min, query, contentLocale);
+
     GBLogEx.info(min, `Translated query (prompt): ${query}.`);
 
     // Try simple search first.
@@ -317,10 +315,8 @@ export class KBService implements IGBKBService {
       }
     }
     let returnedScore = 0;
-    const key = instance.searchKey ? instance.searchKey :
-      GBServer.globals.minBoot.instance.searchKey;
-    const host = instance.searchHost ? instance.searchHost :
-      GBServer.globals.minBoot.instance.searchHost;
+    const key = instance.searchKey ? instance.searchKey : GBServer.globals.minBoot.instance.searchKey;
+    const host = instance.searchHost ? instance.searchHost : GBServer.globals.minBoot.instance.searchHost;
 
     // No direct match found, so Search is used.
 
@@ -348,8 +344,6 @@ export class KBService implements IGBKBService {
         top: 1
       });
 
-      
-
       // Searches via Search (Azure Search).
 
       let found = false;
@@ -359,11 +353,15 @@ export class KBService implements IGBKBService {
         if (returnedScore >= searchScore) {
           const value = await this.getAnswerById(instance.instanceId, result.document.answerId);
           if (value !== null) {
-            GBLogEx.info(min, `SEARCH WILL BE USED with score: ${returnedScore} > required (searchScore): ${searchScore}`);
+            GBLogEx.info(
+              min,
+              `SEARCH WILL BE USED with score: ${returnedScore} > required (searchScore): ${searchScore}`
+            );
 
             return { answer: value, questionId: result.document.questionId };
           } else {
-            GBLogEx.info(min, 
+            GBLogEx.info(
+              min,
               `Index problem. SEARCH WILL NOT be used as answerId ${result.document.answerId} was not found in database,
                 returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
             );
@@ -373,17 +371,13 @@ export class KBService implements IGBKBService {
         }
       }
     }
-    GBLogEx.info(min, 
+    GBLogEx.info(
+      min,
       `SEARCH returned LOW level score, calling NLP if any,
         returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
     );
 
-    return await ChatServices.answerByGPT(min, user, pid,
-      query,
-      searchScore,
-      subjects
-    );
-
+    return await ChatServices.answerByGPT(min, user, pid, query, searchScore, subjects);
   }
 
   public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {
@@ -626,7 +620,7 @@ export class KBService implements IGBKBService {
   }
 
   public async sendAnswer(min: GBMinInstance, channel: string, step: GBDialogStep, answer) {
-    answer = typeof (answer) === 'string' ? answer : answer.content;
+    answer = typeof answer === 'string' ? answer : answer.content;
     if (answer.endsWith('.mp4')) {
       await this.playVideo(min, min.conversationalService, step, answer, channel);
     } else if (
@@ -646,14 +640,11 @@ export class KBService implements IGBKBService {
       const url = urlJoin('kb', path, 'assets', answer);
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
-      await min.conversationalService['playMarkdown'](min, answer, channel, step,
-        GBMinService.userMobile(step));
+      await min.conversationalService['playMarkdown'](min, answer, channel, step, GBMinService.userMobile(step));
     } else if (answer.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else {
-      
       await min.conversationalService.sendText(min, step, answer);
-
     }
   }
 
@@ -685,7 +676,6 @@ export class KBService implements IGBKBService {
     const a = await GuaribasAnswer.create(answer);
     question['answerId'] = a.answerId;
     const q = await GuaribasQuestion.create(question);
-
   }
 
   public async importKbPackage(
@@ -747,7 +737,7 @@ export class KBService implements IGBKBService {
         const localName = Path.join('work', path, 'articles', file.name);
         let loader = new DocxLoader(localName);
         let doc = await loader.load();
-        
+
         const answer = {
           instanceId: instance.instanceId,
           content: doc[0].pageContent,
@@ -758,10 +748,6 @@ export class KBService implements IGBKBService {
         };
 
         data.answers.push(answer);
-
-
-
-      
       } else if (file !== null && file.name.endsWith('.toc.docx')) {
         const path = DialogKeywords.getGBAIPath(instance.botId, `gbkb`);
         const localName = Path.join('work', path, 'articles', file.name);
@@ -866,6 +852,103 @@ export class KBService implements IGBKBService {
     });
   }
 
+  async saveHtmlPage(min, url: string, page: Page): Promise<string | null> {
+    const response = await page.goto(url);
+    
+
+    if (response.headers && response.status() === 200) {
+      const contentType = response.headers()['content-type'];
+      if (contentType && contentType.includes('text/html')) {
+        const buffer = await response.buffer();
+        const urlObj = new URL(url);
+        const urlPath = urlObj.pathname.endsWith('/') ? urlObj.pathname.slice(0, -1) : urlObj.pathname; // Remove trailing slash if present
+        let filename = urlPath.split('/').pop() || 'index'; // Get the filename from the URL path or set it to 'index.html' as default
+        filename = `${filename}.html`;
+        let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
+        const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
+        const filePath = Path.join(directoryPath, filename);
+
+        GBLogEx.info(min, `[GBDeployer] Saving Website file in ${filePath}.`);
+
+        Fs.mkdirSync(directoryPath, { recursive: true }); // Create directory recursively if it doesn't exist
+        Fs.writeFileSync(filePath, buffer);
+        return filePath;
+      }
+    }
+    return null;
+  }
+
+  async crawl(min, url: string, visited: Set<string>, depth: number, maxDepth: number, page: Page): Promise<string[]> {
+    try {
+      if (
+        depth > maxDepth ||
+        (visited.has(url) ||
+          url.endsWith('.jpg') ||
+          url.endsWith('.pdf') ||
+          url.endsWith('.jpg') ||
+          url.endsWith('.png') ||
+          url.endsWith('.mp4'))
+      ) {
+        return [];
+      }
+
+      await GBLogEx.info(min, `Processing URL: ${url}.`);
+
+      visited.add(url);
+
+      const filename = await this.saveHtmlPage(min, url, page);
+
+      if (!filename) {
+        // If the URL doesn't represent an HTML page, skip crawling its links
+        return [];
+      }
+      const currentDomain = new URL(page.url()).hostname;
+      let links = await page.evaluate(currentDomain => {
+        const anchors = Array.from(document.querySelectorAll('a')).filter(p => {
+          try {
+            return currentDomain == new URL(p.href).hostname;
+          } catch (err) {
+            return false;
+          }
+        });
+
+        return anchors.map(anchor => {
+          return anchor.href.replace(/#.*/, '');
+        });
+      }, currentDomain);
+
+      if (!Array.isArray(links)) {
+        links = [];
+      }
+
+      let filteredLinks = [];
+
+      if (links && typeof links[Symbol.iterator] === 'function') {
+        filteredLinks = links.filter(l => {
+          try {
+            new URL(l); // Check if the link is a valid URL
+            return !visited.has(l);
+          } catch (error) {
+            // Ignore invalid URLs
+            return false;
+          }
+        });
+      }
+
+      const childLinks = [];
+      for (const link of filteredLinks) {
+        const links = await this.crawl(min, link, visited, depth + 1, maxDepth, page);
+        if (links){
+          childLinks.push(...links);
+        }
+      }
+
+      return [filename, ...childLinks]; // Include the filename of the cached file
+    } catch (error) {
+      await GBLogEx.info(min, error);
+    }
+  }
+
   /**
    * Import all .docx files in reading comprehension folder.
    */
@@ -875,11 +958,52 @@ export class KBService implements IGBKBService {
     instance: IGBInstance,
     packageId: number
   ): Promise<any> {
-    const files = await walkPromise(urlJoin(localPath, 'docs'));
+    let files = [];
+
+    const website = min.core.getParam<string>(min.instance, 'Website', null);
+
+    if (website) {
+      const browser = await puppeteer.launch({ headless: false });
+      const page = await browser.newPage();
+      const response = await page.goto(website);
+
+      await page.screenshot({ path: 'screenshot.png' });
+
+      // Extract dominant colors from the screenshot
+      const colors = await getColors('screenshot.png');
+
+      // Assuming you want the two most dominant colors
+      const mainColor1 = colors[0].hex();
+      const mainColor2 = colors[1].hex();
+
+      console.log('Main Color 1:', mainColor1);
+      console.log('Main Color 2:', mainColor2);
+
+
+      const maxDepth = 1; // Maximum depth of recursion
+      const visited = new Set<string>();
+      files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page));
+      
+      await browser.close();
+      
+      files.shift();
+
+      await CollectionUtil.asyncForEach(files, async file => {
+        let content = null;
+
+        const document = await this.loadAndSplitFile(file);
+        const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
+        const vectorStore = min['vectorStore'];
+        await vectorStore.addDocuments(flattenedDocuments);
+        await vectorStore.save(min['vectorStorePath']);
+      });
+
+    }
+
+    files = await walkPromise(urlJoin(localPath, 'docs'));
+
     if (!files[0]) {
-      GBLogEx.info(min, 
-        `[GBDeployer] docs folder not created yet in .gbkb. To use Reading Comprehension, create this folder at root and put a document to get read by the.`
-      );
+      GBLogEx.info(min, `[GBDeployer] docs folder not created yet in .gbkb neither a website in .gbot.`);
     } else {
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
@@ -894,211 +1018,217 @@ export class KBService implements IGBKBService {
     }
   }
 
-   defaultRecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter({
+  defaultRecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter({
     chunkSize: 700,
-    chunkOverlap: 50,
+    chunkOverlap: 50
   });
-  
-   markdownRecursiveCharacterTextSplitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
+
+  markdownRecursiveCharacterTextSplitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
     chunkSize: 700,
-    chunkOverlap: 50,
+    chunkOverlap: 50
   });
-  
 
   private async loadAndSplitFile(filePath: string): Promise<Document<Record<string, unknown>>[]> {
-  const fileExtension = path.extname(filePath);
-  let loader;
-  let documents: Document<Record<string, unknown>>[];
-  switch (fileExtension) {
-    case '.json':
-      loader = new JSONLoader(filePath);
-      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
-      break;
-    case '.txt':
-      loader = new TextLoader(filePath);
-      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
-      break;
-    case '.md':
-      loader = new TextLoader(filePath);
-      documents = await loader.loadAndSplit(this.markdownRecursiveCharacterTextSplitter);
-      break;
-    case '.pdf':
-      loader = new PDFLoader(filePath, { splitPages: false });
-      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
-      break;
-    case '.docx':
-      loader = new DocxLoader(filePath);
-      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
-      break;
-    case '.csv':
-      loader = new CSVLoader(filePath);
-      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
-      break;
-    case '.epub':
-      loader = new EPubLoader(filePath, { splitChapters: false });
-      documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
-      break;
-    default:
-      throw new Error(`Unsupported file extension: ${fileExtension}`);
-  }
-  return documents;
-}
-  
-
-  public async importKbTabularDirectory(localPath: string, min: GBMinInstance, packageId: number): Promise < any > {
-  const files = await walkPromise(localPath);
-
-  await CollectionUtil.asyncForEach(files, async file => {
-    if (file !== null && file.name.endsWith('.xlsx')) {
-      return await this.importKbTabularFile(urlJoin(file.root, file.name), min, packageId);
+    const fileExtension = path.extname(filePath);
+    let loader;
+    let documents: Document<Record<string, unknown>>[];
+    switch (fileExtension) {
+      case '.json':
+        loader = new JSONLoader(filePath);
+        documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+        break;
+      case '.txt':
+        loader = new TextLoader(filePath);
+        documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+        break;
+      case '.txt':
+        loader = new TextLoader(filePath);
+        documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+        break;
+      case '.html':
+        loader = new TextLoader(filePath);
+        documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+        break;
+      case '.md':
+        loader = new TextLoader(filePath);
+        documents = await loader.loadAndSplit(this.markdownRecursiveCharacterTextSplitter);
+        break;
+      case '.pdf':
+        loader = new PDFLoader(filePath, { splitPages: false });
+        documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+        break;
+      case '.docx':
+        loader = new DocxLoader(filePath);
+        documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+        break;
+      case '.csv':
+        loader = new CSVLoader(filePath);
+        documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+        break;
+      case '.epub':
+        loader = new EPubLoader(filePath, { splitChapters: false });
+        documents = await loader.loadAndSplit(this.defaultRecursiveCharacterTextSplitter);
+        break;
+      default:
+        throw new Error(`Unsupported file extension: ${fileExtension}`);
     }
-  });
-}
+    return documents;
+  }
+
+  public async importKbTabularDirectory(localPath: string, min: GBMinInstance, packageId: number): Promise<any> {
+    const files = await walkPromise(localPath);
+
+    await CollectionUtil.asyncForEach(files, async file => {
+      if (file !== null && file.name.endsWith('.xlsx')) {
+        return await this.importKbTabularFile(urlJoin(file.root, file.name), min, packageId);
+      }
+    });
+  }
 
   public async importSubjectFile(
-  packageId: number,
-  filename: string,
-  menuFile: string,
-  instance: IGBInstance
-): Promise < any > {
-  let subjectsLoaded;
-  if(menuFile) {
-    // Loads menu.xlsx and finds worksheet.
+    packageId: number,
+    filename: string,
+    menuFile: string,
+    instance: IGBInstance
+  ): Promise<any> {
+    let subjectsLoaded;
+    if (menuFile) {
+      // Loads menu.xlsx and finds worksheet.
 
-    const workbook = new Excel.Workbook();
-    const data = await workbook.xlsx.readFile(menuFile);
-    let worksheet: any;
-    for (let t = 0; t < data.worksheets.length; t++) {
-      worksheet = data.worksheets[t];
-      if (worksheet) {
-        break;
-      }
-    }
-
-    const MAX_LEVEL = 4; // Max column level to reach menu items in plan.
-    // Iterates over all items.
-
-    let rows = worksheet._rows;
-    rows.length = 24;
-    let lastLevel = 0;
-    let subjects = { children: [] };
-    let childrenNode = subjects.children;
-    let activeObj = null;
-
-    let activeChildrenGivenLevel = [childrenNode];
-
-    await asyncPromise.eachSeries(rows, async row => {
-      if (!row) return;
-      let menu;
-
-      // Detect menu level by skipping blank cells on left.
-
-      let level;
-      for (level = 0; level < MAX_LEVEL; level++) {
-        const cell = row._cells[level];
-        if (cell && cell.text) {
-          menu = cell.text;
+      const workbook = new Excel.Workbook();
+      const data = await workbook.xlsx.readFile(menuFile);
+      let worksheet: any;
+      for (let t = 0; t < data.worksheets.length; t++) {
+        worksheet = data.worksheets[t];
+        if (worksheet) {
           break;
         }
       }
 
-      // Tree hierarchy calculation.
+      const MAX_LEVEL = 4; // Max column level to reach menu items in plan.
+      // Iterates over all items.
 
-      if (level > lastLevel) {
-        childrenNode = activeObj.children;
-      } else if (level < lastLevel) {
-        childrenNode = activeChildrenGivenLevel[level];
-      }
+      let rows = worksheet._rows;
+      rows.length = 24;
+      let lastLevel = 0;
+      let subjects = { children: [] };
+      let childrenNode = subjects.children;
+      let activeObj = null;
 
-      /// Keeps the record of last subroots for each level, to
-      // changel levels greater than one (return to main menu),
-      // can exists between leaf nodes and roots.
+      let activeChildrenGivenLevel = [childrenNode];
 
-      activeChildrenGivenLevel[level] = childrenNode;
+      await asyncPromise.eachSeries(rows, async row => {
+        if (!row) return;
+        let menu;
 
-      // Insert the object into JSON.
-      const description = row._cells[level + 1] ? row._cells[level + 1].text : null;
-      activeObj = {
-        title: menu,
-        description: description,
-        id: menu,
-        children: []
-      };
-      activeChildrenGivenLevel[level].push(activeObj);
+        // Detect menu level by skipping blank cells on left.
 
-      lastLevel = level;
-    });
+        let level;
+        for (level = 0; level < MAX_LEVEL; level++) {
+          const cell = row._cells[level];
+          if (cell && cell.text) {
+            menu = cell.text;
+            break;
+          }
+        }
 
-    subjectsLoaded = subjects;
-  } else {
-    subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
-  }
+        // Tree hierarchy calculation.
 
-    const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
-    return asyncPromise.eachSeries(subjects, async item => {
-      const value = await GuaribasSubject.create(<GuaribasSubject>{
-        internalId: item.id,
-        parentSubjectId: parentSubjectId,
-        instanceId: instance.instanceId,
-        from: item.from,
-        to: item.to,
-        title: item.title,
-        description: item.description,
-        packageId: packageId
+        if (level > lastLevel) {
+          childrenNode = activeObj.children;
+        } else if (level < lastLevel) {
+          childrenNode = activeChildrenGivenLevel[level];
+        }
+
+        /// Keeps the record of last subroots for each level, to
+        // changel levels greater than one (return to main menu),
+        // can exists between leaf nodes and roots.
+
+        activeChildrenGivenLevel[level] = childrenNode;
+
+        // Insert the object into JSON.
+        const description = row._cells[level + 1] ? row._cells[level + 1].text : null;
+        activeObj = {
+          title: menu,
+          description: description,
+          id: menu,
+          children: []
+        };
+        activeChildrenGivenLevel[level].push(activeObj);
+
+        lastLevel = level;
       });
 
-      if (item.children) {
-        return doIt(item.children, value.subjectId);
-      } else {
-        return item;
-      }
-    });
-  };
+      subjectsLoaded = subjects;
+    } else {
+      subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
+    }
 
-  return doIt(subjectsLoaded.children, undefined);
-}
+    const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
+      return asyncPromise.eachSeries(subjects, async item => {
+        const value = await GuaribasSubject.create(<GuaribasSubject>{
+          internalId: item.id,
+          parentSubjectId: parentSubjectId,
+          instanceId: instance.instanceId,
+          from: item.from,
+          to: item.to,
+          title: item.title,
+          description: item.description,
+          packageId: packageId
+        });
+
+        if (item.children) {
+          return doIt(item.children, value.subjectId);
+        } else {
+          return item;
+        }
+      });
+    };
+
+    return doIt(subjectsLoaded.children, undefined);
+  }
 
   public async undeployKbFromStorage(instance: IGBInstance, deployer: GBDeployer, packageId: number) {
-  await GuaribasQuestion.destroy({
-    where: { instanceId: instance.instanceId, packageId: packageId }
-  });
-  await GuaribasAnswer.destroy({
-    where: { instanceId: instance.instanceId, packageId: packageId }
-  });
-  await GuaribasSubject.destroy({
-    where: { instanceId: instance.instanceId, packageId: packageId }
-  });
-  await this.undeployPackageFromStorage(instance, packageId);
-}
+    await GuaribasQuestion.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
+    });
+    await GuaribasAnswer.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
+    });
+    await GuaribasSubject.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
+    });
+    await this.undeployPackageFromStorage(instance, packageId);
+  }
 
   public static async RefreshNER(min: GBMinInstance) {
-  const questions = await KBService.getQuestionsNER(min.instance.instanceId);
-  const contentLocale = min.core.getParam<string>(
-    min.instance,
-    'Default Content Language',
-    GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
-  );
+    const questions = await KBService.getQuestionsNER(min.instance.instanceId);
+    const contentLocale = min.core.getParam<string>(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
 
-  await CollectionUtil.asyncForEach(questions, async question => {
-    const text = question.content;
+    await CollectionUtil.asyncForEach(questions, async question => {
+      const text = question.content;
 
-    const categoryReg = /.*\((.*)\).*/gi.exec(text);
-    const nameReg = /(\w+)\(.*\).*/gi.exec(text);
+      const categoryReg = /.*\((.*)\).*/gi.exec(text);
+      const nameReg = /(\w+)\(.*\).*/gi.exec(text);
 
-    if (categoryReg) {
-      let category = categoryReg[1];
+      if (categoryReg) {
+        let category = categoryReg[1];
 
-      if (category === 'number') {
-        min['nerEngine'].addRegexEntity('number', 'pt', '/d+/gi');
+        if (category === 'number') {
+          min['nerEngine'].addRegexEntity('number', 'pt', '/d+/gi');
+        }
+        if (nameReg) {
+          let name = nameReg[1];
+
+          min['nerEngine'].addNamedEntityText(category, name, [contentLocale], [name]);
+        }
       }
-      if (nameReg) {
-        let name = nameReg[1];
-
-        min['nerEngine'].addNamedEntityText(category, name, [contentLocale], [name]);
-      }
-    }
-  });
-}
+    });
+  }
 
   /**
    * Deploys a knowledge base to the storage using the .gbkb format.
@@ -1106,90 +1236,90 @@ export class KBService implements IGBKBService {
    * @param localPath Path to the .gbkb folder.
    */
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
-  const packageName = Path.basename(localPath);
-  const instance = await core.loadInstanceByBotId(min.botId);
-  GBLogEx.info(min, `[GBDeployer] Importing: ${localPath}`);
+    const packageName = Path.basename(localPath);
+    const instance = await core.loadInstanceByBotId(min.botId);
+    GBLogEx.info(min, `[GBDeployer] Importing: ${localPath}`);
 
-  const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
-  await this.importKbPackage(min, localPath, p, instance);
-  GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
-  const service = await AzureDeployerService.createInstance(deployer);
-  const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
-  await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));
+    const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
+    await this.importKbPackage(min, localPath, p, instance);
+    GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
+    const service = await AzureDeployerService.createInstance(deployer);
+    const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
+    await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));
 
-  min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
-  await KBService.RefreshNER(min);
+    min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
+    await KBService.RefreshNER(min);
 
-  GBLogEx.info(min, `[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
-  const html = await GBSSR.getHTML(min);
-  let path = DialogKeywords.getGBAIPath(min.botId, `gbui`);
-  path = Path.join(process.env.PWD, 'work', path, 'index.html');
-  GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${path}.`);
-  Fs.writeFileSync(path, html, 'utf8');
+    GBLogEx.info(min, `[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
+    const html = await GBSSR.getHTML(min);
+    let path = DialogKeywords.getGBAIPath(min.botId, `gbui`);
+    path = Path.join(process.env.PWD, 'work', path, 'index.html');
+    GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${path}.`);
+    Fs.writeFileSync(path, html, 'utf8');
 
-  GBLogEx.info(min, `[GBDeployer] Finished import of ${localPath}`);
-}
+    GBLogEx.info(min, `[GBDeployer] Finished import of ${localPath}`);
+  }
 
   private async playAudio(
-  min: GBMinInstance,
-  answer: GuaribasAnswer,
-  channel: string,
-  step: GBDialogStep,
-  conversationalService: IGBConversationalService
-) {
-  conversationalService.sendAudio(min, step, answer.content);
-}
+    min: GBMinInstance,
+    answer: GuaribasAnswer,
+    channel: string,
+    step: GBDialogStep,
+    conversationalService: IGBConversationalService
+  ) {
+    conversationalService.sendAudio(min, step, answer.content);
+  }
 
   private async playUrl(
-  min,
-  conversationalService: IGBConversationalService,
-  step: GBDialogStep,
-  url: string,
-  channel: string
-) {
-  if (channel === 'whatsapp') {
-    await min.conversationalService.sendFile(min, step, null, url, '');
-  } else {
-    await conversationalService.sendEvent(min, step, 'play', {
-      playerType: 'url',
-      data: url
-    });
+    min,
+    conversationalService: IGBConversationalService,
+    step: GBDialogStep,
+    url: string,
+    channel: string
+  ) {
+    if (channel === 'whatsapp') {
+      await min.conversationalService.sendFile(min, step, null, url, '');
+    } else {
+      await conversationalService.sendEvent(min, step, 'play', {
+        playerType: 'url',
+        data: url
+      });
+    }
   }
-}
 
   private async playVideo(
-  min,
-  conversationalService: IGBConversationalService,
-  step: GBDialogStep,
-  answer: GuaribasAnswer,
-  channel: string
-) {
-  if (channel === 'whatsapp') {
-    await min.conversationalService.sendFile(min, step, null, answer.content, '');
-  } else {
-    const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
-    await conversationalService.sendEvent(min, step, 'play', {
-      playerType: 'video',
-      data: urlJoin(path, 'videos', answer.content)
-    });
+    min,
+    conversationalService: IGBConversationalService,
+    step: GBDialogStep,
+    answer: GuaribasAnswer,
+    channel: string
+  ) {
+    if (channel === 'whatsapp') {
+      await min.conversationalService.sendFile(min, step, null, answer.content, '');
+    } else {
+      const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
+      await conversationalService.sendEvent(min, step, 'play', {
+        playerType: 'video',
+        data: urlJoin(path, 'videos', answer.content)
+      });
+    }
   }
-}
 
   private async undeployPackageFromStorage(instance: any, packageId: number) {
-  await GuaribasPackage.destroy({
-    where: { instanceId: instance.instanceId, packageId: packageId }
-  });
-}
-
- private async getTextFromFile(filename: string) {
-  return new Promise<string>(async (resolve, reject) => {
-    textract.fromFileWithPath(filename, { preserveLineBreaks: true }, (error, text) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(text);
-      }
+    await GuaribasPackage.destroy({
+      where: { instanceId: instance.instanceId, packageId: packageId }
     });
-  });
-}
+  }
+
+  private async getTextFromFile(filename: string) {
+    return new Promise<string>(async (resolve, reject) => {
+      textract.fromFileWithPath(filename, { preserveLineBreaks: true }, (error, text) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(text);
+        }
+      });
+    });
+  }
 }

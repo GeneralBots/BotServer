@@ -169,35 +169,19 @@ export class GBMinService {
     let i = 1;
 
     if (instances.length > 1) {
-      this.bar1 = new cliProgress.SingleBar(
-        {
-          format: '[{bar}] ({value}/{total}) Loading {botId} ...',
-          barsize: 40,
-          forceRedraw: true
-        },
-        cliProgress.Presets.rect
-      );
-      this.bar1.start(instances.length, i, { botId: 'Boot' });
     }
 
     await CollectionUtil.asyncForEach(
       instances,
       (async instance => {
         try {
+          GBLog.info(`Mounting ${instance.botId}...`)
           await this['mountBot'](instance);
         } catch (error) {
           GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
-        } finally {
-          if (this.bar1) {
-            this.bar1.update(i++, { botId: instance.botId });
-          }
         }
       }).bind(this)
     );
-
-    if (this.bar1) {
-      this.bar1.stop();
-    }
 
     // Loads API.
 
