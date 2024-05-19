@@ -13,6 +13,7 @@
     "PH <ph.an@outlook.com>",
     "Dário Vieira <dario.junior3@gmail.com>",
     "Alan Perdomo <alanperdomo@hotmail.com>"
+
   ],
   "engines": {
     "node": "=21.7.3"
@@ -239,6 +240,10 @@
     "travis-deploy-once": "5.0.11",
     "tslint": "6.1.3",
     "vitest": "^1.3.0"
+  },
+  "optionalDependencies": {
+    "@img/sharp-win32-x64": "0.33.3",
+    "@img/sharp-linux-arm": "0.33.3"
   },
   "eslintConfig": {
     "env": {
