@@ -415,7 +415,8 @@ export class ChatServices {
       result = result.content;
     } else if (LLMMode === 'document-ref' || LLMMode === 'document')  {
       const res = await combineDocumentsChain.invoke(question);
-      result = res.text;
+      
+      result = res.text? res.text: res;
       sources = res.sources;
     } else if (LLMMode === 'function') {
       result = await conversationalToolChain.invoke({
