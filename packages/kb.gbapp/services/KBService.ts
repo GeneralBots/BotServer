@@ -1002,15 +1002,6 @@ export class KBService implements IGBKBService {
     if (website) {
       const browser = await puppeteer.launch({ headless: false });
       const page = await browser.newPage();
-      await page.setRequestInterception(true);
-
-      page.on('request', req => {
-        if (req.resourceType() === 'image' || req.resourceType() === 'stylesheet') {
-          req.abort();
-        } else {
-          req.continue();
-        }
-      });
       await page.goto(website);
 
       const logo = await this.getLogoByPage(page);
@@ -1030,7 +1021,18 @@ export class KBService implements IGBKBService {
       await min.core['setConfig'](min, 'Color1', colors[0].hex());
       await min.core['setConfig'](min, 'Color2', colors[1].hex());
 
-      const maxDepth = 2; // Maximum depth of recursion
+      // Disables images in crawling.
+
+      await page.setRequestInterception(true);
+      page.on('request', req => {
+        if (req.resourceType() === 'image' || req.resourceType() === 'stylesheet') {
+          req.abort();
+        } else {
+          req.continue();
+        }
+      });
+
+      const maxDepth = 3; // Maximum depth of recursion
       const visited = new Set<string>();
       files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page));
 

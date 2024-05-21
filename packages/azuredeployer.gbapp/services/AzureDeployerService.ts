@@ -597,7 +597,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         const resChannel = await httpClient.sendRequest(req);
         const key = JSON.parse(resChannel.bodyAsText).properties.properties.sites[0].key;
         instance.webchatKey = key;
-        instance.webchatKey = key;
+
         resolve(instance);
       } catch (error) {
         reject(error);
