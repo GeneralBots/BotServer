@@ -211,9 +211,13 @@ export class ChatServices {
         page = await ChatServices.findPageForText(metadata.source, doc.pageContent);
       }
 
-      output = `${output}\n\n\n\nUse also the following context which is coming from Source Document: ${filename} at page: ${page?page:'entire document'} 
+      output = `${output}\n\n\n\nUse also the following context which is coming from Source Document: ${filename} at page: ${
+        page ? page : 'entire document'
+      } 
       (you will fill the JSON sources collection field later), 
-      memorize this block among document information and return when you are refering this part of content:\n\n\n\n ${doc.pageContent} \n\n\n\n.`;
+      memorize this block among document information and return when you are refering this part of content:\n\n\n\n ${
+        doc.pageContent
+      } \n\n\n\n.`;
     }
     return output;
   }
@@ -251,16 +255,12 @@ export class ChatServices {
   private static memoryMap = {};
   public static userSystemPrompt = {};
 
-  public static async answerByGPT(
-    min: GBMinInstance,
-    user,
-    question: string, mode=null
-  ) {
+  public static async answerByGPT(min: GBMinInstance, user, question: string, mode = null) {
     if (!process.env.OPENAI_API_KEY) {
       return { answer: undefined, questionId: 0 };
     }
 
-    const LLMMode = mode??min.core.getParam(min.instance, 'Answer Mode', 'direct');
+    const LLMMode = mode ?? min.core.getParam(min.instance, 'Answer Mode', 'direct');
 
     const docsContext = min['vectorStore'];
 
@@ -274,8 +274,8 @@ export class ChatServices {
     if (user && !this.memoryMap[user.userSystemId]) {
       this.memoryMap[user.userSystemId] = memory;
     }
-  
-    const systemPrompt = user?this.userSystemPrompt[user.userSystemId]:'';
+
+    const systemPrompt = user ? this.userSystemPrompt[user.userSystemId] : '';
 
     const model = new ChatOpenAI({
       openAIApiKey: process.env.OPENAI_API_KEY,
@@ -319,6 +319,18 @@ export class ChatServices {
     Standalone question:`)
     ]);
 
+    const jsonInformation = `VERY IMPORTANT: ALWAYS return VALID standard JSON with the folowing structure: 'text' as answer, 
+    sources as an array of ('file' indicating the PDF filename and 'page' indicating the page number) listing all segmented context. 
+    Example JSON format: "text": "this is the answer, anything LLM output as text answer shoud be here.", 
+    "sources": [{{"file": "filename.pdf", "page": 3}}, {{"file": "filename2.pdf", "page": 1}}],
+    return valid JSON with brackets. Avoid explaining the context directly
+    to the user; instead, refer to the document source, always return more than one source document
+    and check if the answer can be extended by using additional contexts in 
+    other files, as specified before.
+    
+    Double check if the output is a valid JSON with brackets. all fields are required: text, file, page.
+  `;
+
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
       AIMessagePromptTemplate.fromTemplate(
         `
@@ -330,16 +342,7 @@ export class ChatServices {
         rephrase the response to the user using the aforementioned context. If you're unsure of the answer, 
         utilize any relevant context provided to answer the question effectively. Don´t output MD images tags url previously shown.
 
-        VERY IMPORTANT: ALWAYS return VALID standard JSON with the folowing structure: 'text' as answer, 
-          sources as an array of ('file' indicating the PDF filename and 'page' indicating the page number) listing all segmented context. 
-        Example JSON format: "text": "this is the answer, anything LLM output as text answer shoud be here.", 
-          "sources": [{{"file": "filename.pdf", "page": 3}}, {{"file": "filename2.pdf", "page": 1}}],
-         return valid JSON with brackets. Avoid explaining the context directly
-          to the user; instead, refer to the document source, always return more than one source document
-          and check if the answer can be extended by using additional contexts in 
-          other files, as specified before.
-          
-        Double check if the output is a valid JSON with brackets. all fields are required: text, file, page.
+        ${LLMMode==='document-ref'? jsonInformation: ''}
         `
       ),
       new MessagesPlaceholder('chat_history'),
@@ -410,7 +413,7 @@ export class ChatServices {
       ${question}`);
 
       result = result.content;
-    } else if (LLMMode === 'document') {
+    } else if (LLMMode === 'document-ref' || LLMMode === 'document')  {
       const res = await combineDocumentsChain.invoke(question);
       result = res.text;
       sources = res.sources;
@@ -429,7 +432,7 @@ export class ChatServices {
         input: question
       },
       {
-        output: result?result.replace(/\!\[.*\)/gi, ''): 'no answer' // Removes .MD url beforing adding to history.
+        output: result ? result.replace(/\!\[.*\)/gi, '') : 'no answer' // Removes .MD url beforing adding to history.
       }
     );
 

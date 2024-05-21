@@ -856,7 +856,7 @@ export class KBService implements IGBKBService {
     page.setCacheEnabled(false);
     const response = await page.goto(url);
 
-    if (response.headers && (response.status() === 200 || response.status() === 304)) {
+    if (response.headers && response.status() === 200) {
       const contentType = response.headers()['content-type'];
       if (contentType && contentType.includes('text/html')) {
         const buffer = await page.content();
@@ -983,6 +983,21 @@ export class KBService implements IGBKBService {
     return await checkPossibilities(page, possibilities);
   }
 
+  async  getFreshPage(browser, url) {
+    try {
+      if (!browser || browser.isConnected() === false) {
+        browser = await puppeteer.launch({ headless: false }); // Change headless to true if you don't want to see the browser window
+      }
+      const page = await browser.newPage();
+      await page.goto(url);
+      return page;
+    } catch (error) {
+      console.error('An error occurred while getting fresh page:', error);
+      throw error;
+    }
+  }
+  
+
   /**
    * Import all .docx files in reading comprehension folder.
    */
@@ -1002,9 +1017,8 @@ export class KBService implements IGBKBService {
     const website = min.core.getParam<string>(min.instance, 'Website', null);
 
     if (website) {
-      const browser = await puppeteer.launch({ headless: false });
-      const page = await browser.newPage();
-      await page.goto(website);
+      let browser = await puppeteer.launch({ headless: false});
+      const page = await this.getFreshPage(browser, website);
 
       const logo = await this.getLogoByPage(page);
       let path = DialogKeywords.getGBAIPath(min.botId);
