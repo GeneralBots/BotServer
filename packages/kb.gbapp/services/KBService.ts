@@ -52,6 +52,7 @@ import puppeteer, { Page } from 'puppeteer';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from 'langchain/document';
 import getColors from 'get-image-colors';
+import sharp from 'sharp';
 
 import {
   GBDialogStep,
@@ -905,7 +906,6 @@ export class KBService implements IGBKBService {
       }
       const currentDomain = new URL(page.url()).hostname;
       let links = await page.evaluate(currentDomain => {
-        
         const anchors = Array.from(document.querySelectorAll('a')).filter(p => {
           try {
             return currentDomain == new URL(p.href).hostname;
@@ -983,7 +983,7 @@ export class KBService implements IGBKBService {
     return await checkPossibilities(page, possibilities);
   }
 
-  async  getFreshPage(browser, url) {
+  async getFreshPage(browser, url) {
     try {
       if (!browser || browser.isConnected() === false) {
         browser = await puppeteer.launch({ headless: false }); // Change headless to true if you don't want to see the browser window
@@ -996,7 +996,6 @@ export class KBService implements IGBKBService {
       throw error;
     }
   }
-  
 
   /**
    * Import all .docx files in reading comprehension folder.
@@ -1017,7 +1016,7 @@ export class KBService implements IGBKBService {
     const website = min.core.getParam<string>(min.instance, 'Website', null);
 
     if (website) {
-      let browser = await puppeteer.launch({ headless: false});
+      let browser = await puppeteer.launch({ headless: false });
       const page = await this.getFreshPage(browser, website);
 
       const logo = await this.getLogoByPage(page);
@@ -1027,7 +1026,15 @@ export class KBService implements IGBKBService {
       const logoBinary = await page.goto(urlJoin(baseUrl, logo));
       const buffer = await logoBinary.buffer();
       const logoFilename = Path.basename(logo);
-      Fs.writeFileSync(Path.join(logoPath, logoFilename), buffer);
+      sharp(buffer)
+        .resize({
+          width: 48,
+          height: 48,
+          fit: 'inside', // Resize the image to fit within the specified dimensions
+          withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
+        })
+        .toFile(Path.join(logoPath, logoFilename));
+
       await min.core['setConfig'](min, 'Logo', logoFilename);
 
       // Extract dominant colors from the screenshot
