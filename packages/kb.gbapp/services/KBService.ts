@@ -82,6 +82,7 @@ import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Result for quey on KB data.
@@ -871,6 +872,7 @@ export class KBService implements IGBKBService {
 
         Fs.mkdirSync(directoryPath, { recursive: true }); // Create directory recursively if it doesn't exist
         Fs.writeFileSync(filePath, buffer);
+        await GBUtil.sleep(400);
         return filePath;
       }
     }
@@ -1032,7 +1034,7 @@ export class KBService implements IGBKBService {
         }
       });
 
-      const maxDepth = 3; // Maximum depth of recursion
+      const maxDepth = 2; // Maximum depth of recursion
       const visited = new Set<string>();
       files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page));
 
