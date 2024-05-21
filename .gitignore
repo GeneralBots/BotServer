@@ -28,3 +28,5 @@ yarn-error.log
 package-lock.json
 yarn-lock.json
 packages/saas.gbapp.zip
+logo.svg
+screenshot.png

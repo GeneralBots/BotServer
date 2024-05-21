@@ -59,9 +59,11 @@ import { GBHubSpotPackage } from '../../hubspot.gblib/index.js';
 import open from 'open';
 import ngrok from 'ngrok';
 import Path from 'path';
-import { file } from 'googleapis/build/src/apis/file/index.js';
 import { GBUtil } from '../../../src/util.js';
 import { GBLogEx } from './GBLogEx.js';
+import { GBDeployer } from './GBDeployer.js';
+import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 
 /**
  * GBCoreService contains main logic for handling storage services related
@@ -665,6 +667,50 @@ ENDPOINT_UPDATE=true
     await installationDeployer.openStorageFirewall(group, serverName);
   }
 
+  public async setConfig(min, name: string, value: any): Promise<any> {
+
+    // Handles calls for BASIC persistence on sheet files.
+
+    GBLog.info( `Defining Config.xlsx variable ${name}= '${value}'...`);
+
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+
+    const maxLines = 512;
+    const file = "Config.xlsx";
+      const path = DialogKeywords.getGBAIPath(min.botId, `gbot`);;
+
+    let document = await (new SystemKeywords()).internalGetDocument(client, baseUrl, path, file);
+
+    // Creates workbook session that will be discarded.
+
+    let sheets = await client
+      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
+      .get();
+
+    let results = await client
+      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A${maxLines}')`)
+      .get();
+
+    const rows = results.text;
+    let address = '';
+
+    // Fills the row variable.
+
+    for (let i = 1; i <= rows.length; i++) {
+      let result = rows[i - 1][0];
+      if (result && result.toLowerCase() === name.toLowerCase()) {
+        address = `B${i}:B${i}`;
+        break;
+      }
+    }
+
+    let body = { values: [[]] };
+    body.values[0][0] = value;
+
+    await client
+      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
+      .patch(body);
+  }
 
 
 

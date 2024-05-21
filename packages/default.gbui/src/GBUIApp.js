@@ -39,7 +39,7 @@ import GBBulletPlayer from './players/GBBulletPlayer.js';
 import SidebarMenu from './components/SidebarMenu.js';
 import SEO from './components/SEO.js';
 import GBCss from './components/GBCss.js';
-import { DirectLine} from 'botframework-directlinejs';
+import { DirectLine } from 'botframework-directlinejs';
 import { ConnectionStatus } from 'botframework-directlinejs';
 import ReactWebChat from 'botframework-webchat';
 import { UserAgentApplication } from 'msal';
@@ -257,16 +257,16 @@ class GBUIApp extends React.Component {
           );
           break;
         case 'multiurl':
-            playerComponent = (
-              <GBMultiUrlPlayer
-                app={this}
-                ref={player => {
-                  this.player = player;
-                }}
-              />
-            );
-            break;
-          case 'image':
+          playerComponent = (
+            <GBMultiUrlPlayer
+              app={this}
+              ref={player => {
+                this.player = player;
+              }}
+            />
+          );
+          break;
+        case 'image':
           playerComponent = (
             <GBImagePlayer
               app={this}
@@ -305,18 +305,17 @@ class GBUIApp extends React.Component {
     let chat = <div />;
     let gbCss = <div />;
     let seo = <div />;
-
-    let sideBar = (
-      <div className="sidebar">
-        <SidebarMenu chat={this.chat} instance={this.state.instanceClient} />
-      </div>
-    );
+    let sideBar = <div />;
 
     if (this.state.line) {
       if (this.state.instanceClient) {
+        let color1 = this.state.instanceClient.color1;
         gbCss = <GBCss instance={this.state.instanceClient} />;
         seo = <SEO instance={this.state.instanceClient} />;
         const token = this.state.instanceClient.speechToken;
+        
+        document.body.style.setProperty('background-color', this.state.instanceClient.color2, 'important');
+        
         chat = (
           <ReactWebChat
             ref={chat => {
@@ -329,15 +328,25 @@ class GBUIApp extends React.Component {
             })}
           />
         );
+
+        sideBar = (
+          <div
+            className="sidebar"
+            ref={node => {
+              if (node) {
+                node.style.setProperty('background-color', this.state.instanceClient.color1, 'important');
+              }
+            }}
+          >
+            <SidebarMenu chat={this.chat} instance={this.state.instanceClient} />
+          </div>
+        );
+    
       }
     }
-
-    if (!this.state.instanceClient) {
-      sideBar = '';
-    }
-
     return (
       <StaticContent>
+
         {seo}
         <div>
           {gbCss}

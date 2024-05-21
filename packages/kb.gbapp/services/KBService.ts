@@ -53,7 +53,6 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from 'langchain/document';
 import getColors from 'get-image-colors';
 
-
 import {
   GBDialogStep,
   GBLog,
@@ -377,7 +376,7 @@ export class KBService implements IGBKBService {
         returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
     );
 
-    return await ChatServices.answerByGPT(min, user, pid, query, searchScore, subjects);
+    return await ChatServices.answerByGPT(min, user, query);
   }
 
   public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {
@@ -853,13 +852,13 @@ export class KBService implements IGBKBService {
   }
 
   async saveHtmlPage(min, url: string, page: Page): Promise<string | null> {
+    page.setCacheEnabled(false);
     const response = await page.goto(url);
-    
 
-    if (response.headers && response.status() === 200) {
+    if (response.headers && (response.status() === 200 || response.status() === 304)) {
       const contentType = response.headers()['content-type'];
       if (contentType && contentType.includes('text/html')) {
-        const buffer = await response.buffer();
+        const buffer = await page.content();
         const urlObj = new URL(url);
         const urlPath = urlObj.pathname.endsWith('/') ? urlObj.pathname.slice(0, -1) : urlObj.pathname; // Remove trailing slash if present
         let filename = urlPath.split('/').pop() || 'index'; // Get the filename from the URL path or set it to 'index.html' as default
@@ -882,12 +881,12 @@ export class KBService implements IGBKBService {
     try {
       if (
         depth > maxDepth ||
-        (visited.has(url) ||
-          url.endsWith('.jpg') ||
-          url.endsWith('.pdf') ||
-          url.endsWith('.jpg') ||
-          url.endsWith('.png') ||
-          url.endsWith('.mp4'))
+        visited.has(url) ||
+        url.endsWith('.jpg') ||
+        url.endsWith('.pdf') ||
+        url.endsWith('.jpg') ||
+        url.endsWith('.png') ||
+        url.endsWith('.mp4')
       ) {
         return [];
       }
@@ -904,6 +903,7 @@ export class KBService implements IGBKBService {
       }
       const currentDomain = new URL(page.url()).hostname;
       let links = await page.evaluate(currentDomain => {
+        
         const anchors = Array.from(document.querySelectorAll('a')).filter(p => {
           try {
             return currentDomain == new URL(p.href).hostname;
@@ -938,7 +938,7 @@ export class KBService implements IGBKBService {
       const childLinks = [];
       for (const link of filteredLinks) {
         const links = await this.crawl(min, link, visited, depth + 1, maxDepth, page);
-        if (links){
+        if (links) {
           childLinks.push(...links);
         }
       }
@@ -946,7 +946,39 @@ export class KBService implements IGBKBService {
       return [filename, ...childLinks]; // Include the filename of the cached file
     } catch (error) {
       await GBLogEx.info(min, error);
+      return []; // Include the filename of the cached file
     }
+  }
+
+  async getLogoByPage(page) {
+    const checkPossibilities = async (page, possibilities) => {
+      for (const possibility of possibilities) {
+        const { tag, attributes } = possibility;
+
+        for (const attribute of attributes) {
+          const selector = `${tag}[${attribute}*="logo"]`;
+          const elements = await page.$$(selector);
+
+          for (const element of elements) {
+            const src = await page.evaluate(el => el.getAttribute('src'), element);
+            if (src) {
+              return src;
+            }
+          }
+        }
+      }
+
+      return null;
+    };
+
+    // Array of possibilities to check for the logo
+    const possibilities = [
+      { tag: 'img', attributes: ['src', 'alt', 'class'] }, // Check for img elements with specific attributes
+      { tag: 'svg', attributes: ['class', 'aria-label'] } // Check for svg elements with specific attributes
+      // Add more possibilities as needed
+    ];
+
+    return await checkPossibilities(page, possibilities);
   }
 
   /**
@@ -960,32 +992,50 @@ export class KBService implements IGBKBService {
   ): Promise<any> {
     let files = [];
 
+    Fs.rmSync(min['vectorStorePath'], { recursive: true, force: true });
+    let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
+    const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
+    Fs.rmSync(directoryPath, { recursive: true, force: true });
+
     const website = min.core.getParam<string>(min.instance, 'Website', null);
 
     if (website) {
       const browser = await puppeteer.launch({ headless: false });
       const page = await browser.newPage();
-      const response = await page.goto(website);
+      await page.setRequestInterception(true);
 
-      await page.screenshot({ path: 'screenshot.png' });
+      page.on('request', req => {
+        if (req.resourceType() === 'image' || req.resourceType() === 'stylesheet') {
+          req.abort();
+        } else {
+          req.continue();
+        }
+      });
+      await page.goto(website);
+
+      const logo = await this.getLogoByPage(page);
+      let path = DialogKeywords.getGBAIPath(min.botId);
+      const logoPath = Path.join(process.env.PWD, 'work', path, 'cache');
+      const baseUrl = page.url().split('/').slice(0, 3).join('/');
+      const logoBinary = await page.goto(urlJoin(baseUrl, logo));
+      const buffer = await logoBinary.buffer();
+      const logoFilename = Path.basename(logo);
+      Fs.writeFileSync(Path.join(logoPath, logoFilename), buffer);
+      await min.core['setConfig'](min, 'Logo', logoFilename);
 
       // Extract dominant colors from the screenshot
+
+      await page.screenshot({ path: 'screenshot.png' });
       const colors = await getColors('screenshot.png');
+      await min.core['setConfig'](min, 'Color1', colors[0].hex());
+      await min.core['setConfig'](min, 'Color2', colors[1].hex());
 
-      // Assuming you want the two most dominant colors
-      const mainColor1 = colors[0].hex();
-      const mainColor2 = colors[1].hex();
-
-      console.log('Main Color 1:', mainColor1);
-      console.log('Main Color 2:', mainColor2);
-
-
-      const maxDepth = 1; // Maximum depth of recursion
+      const maxDepth = 2; // Maximum depth of recursion
       const visited = new Set<string>();
       files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page));
-      
+
       await browser.close();
-      
+
       files.shift();
 
       await CollectionUtil.asyncForEach(files, async file => {
@@ -997,7 +1047,6 @@ export class KBService implements IGBKBService {
         await vectorStore.addDocuments(flattenedDocuments);
         await vectorStore.save(min['vectorStorePath']);
       });
-
     }
 
     files = await walkPromise(urlJoin(localPath, 'docs'));

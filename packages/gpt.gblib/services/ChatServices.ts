@@ -254,29 +254,28 @@ export class ChatServices {
   public static async answerByGPT(
     min: GBMinInstance,
     user,
-    pid,
-    question: string,
-    searchScore: number,
-    subjects: GuaribasSubject[]
+    question: string, mode=null
   ) {
     if (!process.env.OPENAI_API_KEY) {
       return { answer: undefined, questionId: 0 };
     }
 
-    const LLMMode = min.core.getParam(min.instance, 'Answer Mode', 'direct');
+    const LLMMode = mode??min.core.getParam(min.instance, 'Answer Mode', 'direct');
 
     const docsContext = min['vectorStore'];
 
-    if (!this.memoryMap[user.userSystemId]) {
-      this.memoryMap[user.userSystemId] = new BufferWindowMemory({
-        returnMessages: true,
-        memoryKey: 'chat_history',
-        inputKey: 'input',
-        k: 2
-      });
+    const memory = new BufferWindowMemory({
+      returnMessages: true,
+      memoryKey: 'chat_history',
+      inputKey: 'input',
+      k: 2
+    });
+
+    if (user && !this.memoryMap[user.userSystemId]) {
+      this.memoryMap[user.userSystemId] = memory;
     }
-    const memory = this.memoryMap[user.userSystemId];
-    const systemPrompt = this.userSystemPrompt[user.userSystemId];
+  
+    const systemPrompt = user?this.userSystemPrompt[user.userSystemId]:'';
 
     const model = new ChatOpenAI({
       openAIApiKey: process.env.OPENAI_API_KEY,
