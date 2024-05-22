@@ -879,7 +879,7 @@ export class KBService implements IGBKBService {
     return null;
   }
 
-  async crawl(min, url: string, visited: Set<string>, depth: number, maxDepth: number, page: Page): Promise<string[]> {
+  async crawl(min, url: string, visited: Set<string>, depth: number, maxDepth: number, page: Page, websiteIgnoreUrls): Promise<string[]> {
     try {
       if (
         depth > maxDepth ||
@@ -904,10 +904,18 @@ export class KBService implements IGBKBService {
         return [];
       }
       const currentDomain = new URL(page.url()).hostname;
-      let links = await page.evaluate(currentDomain => {
+
+
+      let links = await page.evaluate(({currentDomain, websiteIgnoreUrls}) => {
         const anchors = Array.from(document.querySelectorAll('a')).filter(p => {
           try {
-            return currentDomain == new URL(p.href).hostname;
+            
+            // Check if urlToCheck contains any of the ignored URLs
+
+            const isIgnored = websiteIgnoreUrls.split(";").some(ignoredUrl => p.href.includes(ignoredUrl));
+            
+            return !isIgnored && currentDomain == new URL(p.href).hostname;
+            
           } catch (err) {
             return false;
           }
@@ -916,7 +924,7 @@ export class KBService implements IGBKBService {
         return anchors.map(anchor => {
           return anchor.href.replace(/#.*/, '');
         });
-      }, currentDomain);
+      }, {currentDomain, websiteIgnoreUrls});
 
       if (!Array.isArray(links)) {
         links = [];
@@ -1009,7 +1017,8 @@ export class KBService implements IGBKBService {
 
 
     const website = min.core.getParam<string>(min.instance, 'Website', null);
-
+    const websiteIgnoreUrls = min.core.getParam<string>(min.instance, 'Website Ignore URLs', null);
+    
     if (website) {
 
       Fs.rmSync(min['vectorStorePath'], { recursive: true, force: true });
@@ -1063,10 +1072,10 @@ export class KBService implements IGBKBService {
       
       page.setDefaultTimeout(15000);
       page.setCacheEnabled(false);
-      
+
       const maxDepth = 2; // Maximum depth of recursion
       const visited = new Set<string>();
-      files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page));
+      files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page, websiteIgnoreUrls));
 
       await browser.close();
 
