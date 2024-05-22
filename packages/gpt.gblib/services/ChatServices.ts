@@ -264,15 +264,18 @@ export class ChatServices {
 
     const docsContext = min['vectorStore'];
 
-    const memory = new BufferWindowMemory({
-      returnMessages: true,
-      memoryKey: 'chat_history',
-      inputKey: 'input',
-      k: 2
-    });
-
+    let memory;
     if (user && !this.memoryMap[user.userSystemId]) {
-      this.memoryMap[user.userSystemId] = memory;
+      this.memoryMap[user.userSystemId] = new BufferWindowMemory({
+        returnMessages: true,
+        memoryKey: 'chat_history',
+        inputKey: 'input',
+        k: 2
+      });  
+    }
+    else
+    {
+      memory = this.memoryMap[user.userSystemId]
     }
 
     const systemPrompt = user ? this.userSystemPrompt[user.userSystemId] : '';
