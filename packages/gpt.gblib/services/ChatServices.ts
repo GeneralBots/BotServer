@@ -329,7 +329,7 @@ export class ChatServices {
     Example JSON format: "text": "this is the answer, anything LLM output as text answer shoud be here.", 
     "sources": [{{"file": "filename.pdf", "page": 3}}, {{"file": "filename2.pdf", "page": 1}}],
     return valid JSON with brackets. Avoid explaining the context directly
-    to the user; instead, refer to the document source, always return more than one source document
+    to the Human; instead, refer to the document source, always return more than one source document
     and check if the answer can be extended by using additional contexts in 
     other files, as specified before.
     
@@ -339,13 +339,19 @@ export class ChatServices {
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
       AIMessagePromptTemplate.fromTemplate(
         `
-        This is a segmented context.
-        
+        This is a segmented context:
+        ***********************
         \n\n{context}\n\n
-        
-        And based on \n\n{chat_history}\n\n
-        rephrase the response to the user using the aforementioned context. If you're unsure of the answer, 
-        utilize any relevant context provided to answer the question effectively. Don´t output MD images tags url previously shown.
+        ***********************
+
+        AND based on this chat history:
+        ************************
+           \n\n{chat_history}\n\n
+        ************************   
+        Rephrase the response to the Human using the aforementioned context, considering this a high 
+        attention in answers, to give meaning with everything that has been said. If you're unsure 
+        of the answer, utilize any relevant context provided to answer the question effectively. 
+        Don´t output MD images tags url previously shown.
 
         ${LLMMode==='document-ref'? jsonInformation: ''}
         `
