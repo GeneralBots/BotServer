@@ -859,8 +859,7 @@ export class KBService implements IGBKBService {
     if (response.headers && response.status() === 200) {
       const contentType = response.headers()['content-type'];
       if (contentType && contentType.includes('text/html')) {
-        let buffer = await page.content();
-        buffer = buffer?.replace(/<[^>]*>/g, '');
+        const buffer = await page.$eval('*', el => el[ 'innerText']);
         const urlObj = new URL(url);
         const urlPath = urlObj.pathname.endsWith('/') ? urlObj.pathname.slice(0, -1) : urlObj.pathname; // Remove trailing slash if present
         let filename = urlPath.split('/').pop() || 'index'; // Get the filename from the URL path or set it to 'index.html' as default
