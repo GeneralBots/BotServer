@@ -1019,8 +1019,6 @@ export class KBService implements IGBKBService {
   
       let browser = await puppeteer.launch({ headless: false });
       const page = await this.getFreshPage(browser, website);
-      page.setDefaultTimeout(2000);
-      page.setCacheEnabled(false);
   
       const logo = await this.getLogoByPage(page);
       path = DialogKeywords.getGBAIPath(min.botId);
@@ -1058,7 +1056,15 @@ export class KBService implements IGBKBService {
         }
       });
 
-      const maxDepth = 1; // Maximum depth of recursion
+      page.on('dialog', async dialog => {
+        console.log(dialog.message());
+        await dialog.dismiss();
+      });
+      
+      page.setDefaultTimeout(15000);
+      page.setCacheEnabled(false);
+      
+      const maxDepth = 2; // Maximum depth of recursion
       const visited = new Set<string>();
       files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page));
 
