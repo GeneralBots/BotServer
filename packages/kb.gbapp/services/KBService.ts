@@ -1073,7 +1073,7 @@ export class KBService implements IGBKBService {
       page.setDefaultTimeout(15000);
       page.setCacheEnabled(false);
 
-      const maxDepth = 2; // Maximum depth of recursion
+      const maxDepth = 1; // Maximum depth of recursion
       const visited = new Set<string>();
       files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page, websiteIgnoreUrls));
 
