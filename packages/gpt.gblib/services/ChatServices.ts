@@ -266,12 +266,14 @@ export class ChatServices {
 
     let memory;
     if (user && !this.memoryMap[user.userSystemId]) {
-      this.memoryMap[user.userSystemId] = new BufferWindowMemory({
+      memory = new BufferWindowMemory({
         returnMessages: true,
         memoryKey: 'chat_history',
         inputKey: 'input',
         k: 2
       });  
+
+      this.memoryMap[user.userSystemId] = memory;
     }
     else
     {
