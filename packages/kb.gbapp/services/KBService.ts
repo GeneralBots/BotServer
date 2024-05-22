@@ -1007,21 +1007,23 @@ export class KBService implements IGBKBService {
   ): Promise<any> {
     let files = [];
 
-    Fs.rmSync(min['vectorStorePath'], { recursive: true, force: true });
-    let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
-    const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
-    Fs.rmSync(directoryPath, { recursive: true, force: true });
 
     const website = min.core.getParam<string>(min.instance, 'Website', null);
 
     if (website) {
+
+      Fs.rmSync(min['vectorStorePath'], { recursive: true, force: true });
+      let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
+      const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
+      Fs.rmSync(directoryPath, { recursive: true, force: true });
+  
       let browser = await puppeteer.launch({ headless: false });
       const page = await this.getFreshPage(browser, website);
       page.setDefaultTimeout(2000);
       page.setCacheEnabled(false);
   
       const logo = await this.getLogoByPage(page);
-      let path = DialogKeywords.getGBAIPath(min.botId);
+      path = DialogKeywords.getGBAIPath(min.botId);
       const logoPath = Path.join(process.env.PWD, 'work', path, 'cache');
       const baseUrl = page.url().split('/').slice(0, 3).join('/');
       const logoBinary = await page.goto(urlJoin(baseUrl, logo));
