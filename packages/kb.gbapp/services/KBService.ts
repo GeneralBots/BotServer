@@ -971,7 +971,7 @@ export class KBService implements IGBKBService {
           for (const element of elements) {
             const src = await page.evaluate(el => el.getAttribute('src'), element);
             if (src) {
-              return src;
+              return src.split('?')[0];
             }
           }
         }
@@ -1029,23 +1029,25 @@ export class KBService implements IGBKBService {
       let browser = await puppeteer.launch({ headless: false });
       const page = await this.getFreshPage(browser, website);
   
-      const logo = await this.getLogoByPage(page);
-      path = DialogKeywords.getGBAIPath(min.botId);
-      const logoPath = Path.join(process.env.PWD, 'work', path, 'cache');
-      const baseUrl = page.url().split('/').slice(0, 3).join('/');
-      const logoBinary = await page.goto(urlJoin(baseUrl, logo));
-      const buffer = await logoBinary.buffer();
-      const logoFilename = Path.basename(logo);
-      sharp(buffer)
-        .resize({
-          width: 48,
-          height: 48,
-          fit: 'inside', // Resize the image to fit within the specified dimensions
-          withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
-        })
-        .toFile(Path.join(logoPath, logoFilename));
-
-      await min.core['setConfig'](min, 'Logo', logoFilename);
+      let logo = await this.getLogoByPage(page);
+      if (logo){
+        path = DialogKeywords.getGBAIPath(min.botId);
+        const logoPath = Path.join(process.env.PWD, 'work', path, 'cache');
+        const baseUrl = page.url().split('/').slice(0, 3).join('/');
+        const logoBinary = await page.goto(urlJoin(baseUrl, logo));
+        const buffer = await logoBinary.buffer();
+        const logoFilename = Path.basename(logo);
+        sharp(buffer)
+          .resize({
+            width: 48,
+            height: 48,
+            fit: 'inside', // Resize the image to fit within the specified dimensions
+            withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
+          })
+          .toFile(Path.join(logoPath, logoFilename));
+          
+        await min.core['setConfig'](min, 'Logo', logoFilename);
+      }
 
       // Extract dominant colors from the screenshot
 
