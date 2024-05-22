@@ -854,7 +854,6 @@ export class KBService implements IGBKBService {
   }
 
   async saveHtmlPage(min, url: string, page: Page): Promise<string | null> {
-    page.setCacheEnabled(false);
     const response = await page.goto(url);
 
     if (response.headers && response.status() === 200) {
@@ -1018,7 +1017,9 @@ export class KBService implements IGBKBService {
     if (website) {
       let browser = await puppeteer.launch({ headless: false });
       const page = await this.getFreshPage(browser, website);
-
+      page.setDefaultTimeout(2000);
+      page.setCacheEnabled(false);
+  
       const logo = await this.getLogoByPage(page);
       let path = DialogKeywords.getGBAIPath(min.botId);
       const logoPath = Path.join(process.env.PWD, 'work', path, 'cache');
