@@ -915,7 +915,7 @@ export class KBService implements IGBKBService {
             const isIgnored = websiteIgnoreUrls.split(";").some(ignoredUrl => p.href.includes(ignoredUrl));
             
             return !isIgnored && currentDomain == new URL(p.href).hostname;
-            
+
           } catch (err) {
             return false;
           }
@@ -946,7 +946,7 @@ export class KBService implements IGBKBService {
 
       const childLinks = [];
       for (const link of filteredLinks) {
-        const links = await this.crawl(min, link, visited, depth + 1, maxDepth, page);
+        const links = await this.crawl(min, link, visited, depth + 1, maxDepth, page, websiteIgnoreUrls);
         if (links) {
           childLinks.push(...links);
         }
