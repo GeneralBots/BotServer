@@ -872,7 +872,7 @@ export class KBService implements IGBKBService {
 
         Fs.mkdirSync(directoryPath, { recursive: true }); // Create directory recursively if it doesn't exist
         Fs.writeFileSync(filePath, buffer);
-        await GBUtil.sleep(400);
+
         return filePath;
       }
     }
@@ -911,7 +911,7 @@ export class KBService implements IGBKBService {
         // If the URL doesn't represent an HTML page, skip crawling its links
         return [];
       }
-      const currentDomain = new URL(page.url()).hostname;
+      const currentDomain = new URL(page.url()).hostname.toLocaleLowerCase();
 
       let links = await page.evaluate(
         ({ currentDomain, websiteIgnoreUrls }) => {
@@ -920,8 +920,10 @@ export class KBService implements IGBKBService {
               // Check if urlToCheck contains any of the ignored URLs
 
               const isIgnored = websiteIgnoreUrls.split(';').some(ignoredUrl => p.href.includes(ignoredUrl));
+              console.log(currentDomain);
+              console.log(new URL(p.href).hostname);
 
-              return !isIgnored && currentDomain == new URL(p.href).hostname;
+              return !isIgnored && currentDomain == new URL(p.href).hostname.toLocaleLowerCase();
             } catch (err) {
               return false;
             }
@@ -1023,10 +1025,15 @@ export class KBService implements IGBKBService {
   ): Promise<any> {
     let files = [];
 
-    const website = min.core.getParam<string>(min.instance, 'Website', null);
+    let website = min.core.getParam<string>(min.instance, 'Website', null);
     const websiteIgnoreUrls = min.core.getParam<string>(min.instance, 'Website Ignore URLs', null);
 
     if (website) {
+
+      // Removes last slash if any.
+
+      website =website.replace(/\/(?=[^\/]*$)/, ""); 
+
       Fs.rmSync(min['vectorStorePath'], { recursive: true, force: true });
       let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
       const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
@@ -1075,11 +1082,9 @@ export class KBService implements IGBKBService {
       });
 
       page.on('dialog', async dialog => {
-        console.log(dialog.message());
         await dialog.dismiss();
       });
 
-      page.setDefaultTimeout(15000);
       page.setCacheEnabled(false);
 
       const maxDepth = 1; // Maximum depth of recursion
