@@ -859,7 +859,7 @@ export class KBService implements IGBKBService {
     if (response.headers && response.status() === 200) {
       const contentType = response.headers()['content-type'];
       if (contentType && contentType.includes('text/html')) {
-        const buffer = await page.$eval('*', el => el[ 'innerText']);
+        const buffer = await page.$eval('*', el => el['innerText']);
         const urlObj = new URL(url);
         const urlPath = urlObj.pathname.endsWith('/') ? urlObj.pathname.slice(0, -1) : urlObj.pathname; // Remove trailing slash if present
         let filename = urlPath.split('/').pop() || 'index'; // Get the filename from the URL path or set it to 'index.html' as default
@@ -879,7 +879,15 @@ export class KBService implements IGBKBService {
     return null;
   }
 
-  async crawl(min, url: string, visited: Set<string>, depth: number, maxDepth: number, page: Page, websiteIgnoreUrls): Promise<string[]> {
+  async crawl(
+    min,
+    url: string,
+    visited: Set<string>,
+    depth: number,
+    maxDepth: number,
+    page: Page,
+    websiteIgnoreUrls
+  ): Promise<string[]> {
     try {
       if (
         depth > maxDepth ||
@@ -905,26 +913,26 @@ export class KBService implements IGBKBService {
       }
       const currentDomain = new URL(page.url()).hostname;
 
+      let links = await page.evaluate(
+        ({ currentDomain, websiteIgnoreUrls }) => {
+          const anchors = Array.from(document.querySelectorAll('a')).filter(p => {
+            try {
+              // Check if urlToCheck contains any of the ignored URLs
 
-      let links = await page.evaluate(({currentDomain, websiteIgnoreUrls}) => {
-        const anchors = Array.from(document.querySelectorAll('a')).filter(p => {
-          try {
-            
-            // Check if urlToCheck contains any of the ignored URLs
+              const isIgnored = websiteIgnoreUrls.split(';').some(ignoredUrl => p.href.includes(ignoredUrl));
 
-            const isIgnored = websiteIgnoreUrls.split(";").some(ignoredUrl => p.href.includes(ignoredUrl));
-            
-            return !isIgnored && currentDomain == new URL(p.href).hostname;
+              return !isIgnored && currentDomain == new URL(p.href).hostname;
+            } catch (err) {
+              return false;
+            }
+          });
 
-          } catch (err) {
-            return false;
-          }
-        });
-
-        return anchors.map(anchor => {
-          return anchor.href.replace(/#.*/, '');
-        });
-      }, {currentDomain, websiteIgnoreUrls});
+          return anchors.map(anchor => {
+            return anchor.href.replace(/#.*/, '');
+          });
+        },
+        { currentDomain, websiteIgnoreUrls }
+      );
 
       if (!Array.isArray(links)) {
         links = [];
@@ -1015,26 +1023,25 @@ export class KBService implements IGBKBService {
   ): Promise<any> {
     let files = [];
 
-
     const website = min.core.getParam<string>(min.instance, 'Website', null);
     const websiteIgnoreUrls = min.core.getParam<string>(min.instance, 'Website Ignore URLs', null);
-    
-    if (website) {
 
+    if (website) {
       Fs.rmSync(min['vectorStorePath'], { recursive: true, force: true });
       let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
       const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
       Fs.rmSync(directoryPath, { recursive: true, force: true });
-  
+
       let browser = await puppeteer.launch({ headless: false });
       const page = await this.getFreshPage(browser, website);
-  
+
       let logo = await this.getLogoByPage(page);
-      if (logo){
+      if (logo) {
         path = DialogKeywords.getGBAIPath(min.botId);
         const logoPath = Path.join(process.env.PWD, 'work', path, 'cache');
         const baseUrl = page.url().split('/').slice(0, 3).join('/');
-        const logoBinary = await page.goto(urlJoin(baseUrl, logo));
+        logo = logo.startsWith('https') ? logo : urlJoin(baseUrl, logo);
+        const logoBinary = await page.goto(logo);
         const buffer = await logoBinary.buffer();
         const logoFilename = Path.basename(logo);
         sharp(buffer)
@@ -1045,7 +1052,7 @@ export class KBService implements IGBKBService {
             withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
           })
           .toFile(Path.join(logoPath, logoFilename));
-          
+
         await min.core['setConfig'](min, 'Logo', logoFilename);
       }
 
@@ -1071,7 +1078,7 @@ export class KBService implements IGBKBService {
         console.log(dialog.message());
         await dialog.dismiss();
       });
-      
+
       page.setDefaultTimeout(15000);
       page.setCacheEnabled(false);
 
