@@ -1070,7 +1070,7 @@ export class WhatsappDirectLine extends GBService {
           user = await sec.updateUserInstance(id, instance.instanceId);
           await (activeMin as any).whatsAppDirectLine.resetConversationId(activeMin.botId, id, '');
           const startDialog = activeMin.core.getParam(activeMin.instance, 'Start Dialog', null);
-
+          ChatServices.memoryMap [user.userSystemId] = null;
           if (startDialog) {
 
             GBLogEx.info(this.min, `Calling /start for Auto start : ${startDialog} for ${activeMin.instance.botId}...`);

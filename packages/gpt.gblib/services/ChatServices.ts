@@ -41,7 +41,7 @@ import {
 import { RunnableSequence } from '@langchain/core/runnables';
 import { convertToOpenAITool } from '@langchain/core/utils/function_calling';
 import { ChatOpenAI } from '@langchain/openai';
-import { GBLog, GBMinInstance } from 'botlib';
+import { GBMinInstance } from 'botlib';
 import * as Fs from 'fs';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
 import { BufferWindowMemory } from 'langchain/memory';
@@ -49,8 +49,6 @@ import Path from 'path';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
-import { GuaribasSubject } from '../../kb.gbapp/models/index.js';
 import { Serialized } from '@langchain/core/load/serializable';
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
@@ -252,7 +250,7 @@ export class ChatServices {
    */
   public static async continue(min: GBMinInstance, question: string, chatId) {}
 
-  private static memoryMap = {};
+  public static memoryMap = {};
   public static userSystemPrompt = {};
 
   public static async answerByGPT(min: GBMinInstance, user, question: string, mode = null) {
@@ -269,7 +267,8 @@ export class ChatServices {
       memory = new BufferWindowMemory({
         returnMessages: true,
         memoryKey: 'chat_history',
-        inputKey: 'input',
+        humanPrefix: 'input',
+        aiPrefix: 'output',
         k: 2
       });  
 
@@ -305,7 +304,7 @@ export class ChatServices {
 
           ${toolsAsText}
 
-          Do not use any previous tools output in the chat_history. 
+          Do not use any previous tools output in the {chat_history}. 
         `
       ),
       new MessagesPlaceholder('chat_history'),
@@ -343,17 +342,15 @@ export class ChatServices {
         ***********************
         \n\n{context}\n\n
         ***********************
-
-        AND based on this chat history:
-        ************************
-           \n\n{chat_history}\n\n
-        ************************   
-        Rephrase the response to the Human using the aforementioned context, considering this a high 
+                
+        rephrase the response to the Human using the aforementioned context, considering this a high 
         attention in answers, to give meaning with everything that has been said. If you're unsure 
         of the answer, utilize any relevant context provided to answer the question effectively. 
         Don´t output MD images tags url previously shown.
 
         ${LLMMode==='document-ref'? jsonInformation: ''}
+        
+        And based on this chat history and question, answer combined.
         `
       ),
       new MessagesPlaceholder('chat_history'),
