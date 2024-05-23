@@ -213,7 +213,7 @@ export class ChatServices {
         page ? page : 'entire document'
       } 
       (you will fill the JSON sources collection field later), 
-      memorize this block among document information and return when you are refering this part of content:\n\n\n\n ${
+      memorize this block among document information and return when you are referring this part of content:\n\n\n\n ${
         doc.pageContent
       } \n\n\n\n.`;
     }
