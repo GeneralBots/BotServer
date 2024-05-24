@@ -1,4 +1,3 @@
-
 /*****************************************************************************\
 |  █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ® |
 | ██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █      |
@@ -64,11 +63,7 @@ import exts from '../../../extensions.json' assert { type: 'json' };
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import retry from 'async-retry';
-import {
-  BlobServiceClient,
-  BlockBlobClient,
-  StorageSharedKeyCredential
-} from '@azure/storage-blob';
+import { BlobServiceClient, BlockBlobClient, StorageSharedKeyCredential } from '@azure/storage-blob';
 
 import { md5 } from 'js-md5';
 import { GBUtil } from '../../../src/util.js';
@@ -81,7 +76,6 @@ import { GBUtil } from '../../../src/util.js';
  * BASIC system class for extra manipulation of bot behaviour.
  */
 export class SystemKeywords {
-
   /**
    * @tags System
    */
@@ -90,7 +84,7 @@ export class SystemKeywords {
     const step = null;
     const deployer = null;
 
-    return await GBVMService.callVM(text, min, step, pid,false, [text]);
+    return await GBVMService.callVM(text, min, step, pid, false, [text]);
   }
 
   public async append({ pid, args }) {
@@ -172,22 +166,22 @@ export class SystemKeywords {
     if (date) {
       return array
         ? array.sort((a, b) => {
-          const c = new Date(a[memberName]);
-          const d = new Date(b[memberName]);
-          return c.getTime() - d.getTime();
-        })
+            const c = new Date(a[memberName]);
+            const d = new Date(b[memberName]);
+            return c.getTime() - d.getTime();
+          })
         : null;
     } else {
       return array
         ? array.sort((a, b) => {
-          if (a[memberName] < b[memberName]) {
-            return -1;
-          }
-          if (a[memberName] > b[memberName]) {
-            return 1;
-          }
-          return 0;
-        })
+            if (a[memberName] < b[memberName]) {
+              return -1;
+            }
+            if (a[memberName] > b[memberName]) {
+              return 1;
+            }
+            return 0;
+          })
         : array;
     }
   }
@@ -662,7 +656,7 @@ export class SystemKeywords {
    * Saves the content of variable into BLOB storage.
    *
    * MSFT uses MD5, see https://katelynsills.com/law/the-curious-case-of-md5.
-   * 
+   *
    * @exaple UPLOAD file.
    *
    */
@@ -675,17 +669,10 @@ export class SystemKeywords {
     const accountName = min.core.getParam(min.instance, 'Blob Account');
     const accountKey = min.core.getParam(min.instance, 'Blob Key');
 
-    const sharedKeyCredential = new StorageSharedKeyCredential(
-      accountName,
-      accountKey
-    );
+    const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
     const baseUrl = `https://${accountName}.blob.core.windows.net`;
 
-    const blobServiceClient = new BlobServiceClient(
-      `${baseUrl}`,
-      sharedKeyCredential
-    );
-
+    const blobServiceClient = new BlobServiceClient(`${baseUrl}`, sharedKeyCredential);
 
     // It is an SharePoint object that needs to be downloaded.
 
@@ -704,30 +691,24 @@ export class SystemKeywords {
 
     const container = blobServiceClient.getContainerClient(accountName);
     const blockBlobClient: BlockBlobClient = container.getBlockBlobClient(file.path);
-    const res = await blockBlobClient.uploadFile(localName,
-      {
-        blobHTTPHeaders: {
-          blobContentMD5: hash
-        }
-      });
+    const res = await blockBlobClient.uploadFile(localName, {
+      blobHTTPHeaders: {
+        blobContentMD5: hash
+      }
+    });
 
     // If upload is OK including hash check, removes the temporary file.
 
-    if (res._response.status === 201 &&
-      (new Uint8Array(res.contentMD5)).toString() === hash.toString()) {
+    if (res._response.status === 201 && new Uint8Array(res.contentMD5).toString() === hash.toString()) {
       Fs.rmSync(localName);
 
       file['md5'] = hash.toString();
 
       return file;
-
-    }
-    else {
+    } else {
       GBLog.error(`BASIC: BLOB HTTP ${res.errorCode} ${res._response.status} .`);
     }
-
   }
-
 
   /**
    * Takes note inside a notes.xlsx of .gbdata.
@@ -736,19 +717,18 @@ export class SystemKeywords {
    *
    */
   public async note({ pid, text }): Promise<any> {
-    await this.save({ pid, file: "Notes.xlsx", args: [text] });
+    await this.save({ pid, file: 'Notes.xlsx', args: [text] });
   }
 
   /**
-  * Saves variables to storage, not a worksheet.
-  *
-  */
+   * Saves variables to storage, not a worksheet.
+   *
+   */
   public async saveToStorageBatch({ pid, table, rows }): Promise<void> {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `BASIC: Saving batch to storage '${table}' (SAVE).`);
 
     if (rows.length === 0) {
-
       return;
     }
 
@@ -756,7 +736,6 @@ export class SystemKeywords {
     const rowsDest = [];
 
     rows.forEach(row => {
-
       const dst = {};
       let i = 0;
       Object.keys(row).forEach(column => {
@@ -768,27 +747,26 @@ export class SystemKeywords {
     });
 
     await retry(
-      async (bail) => {
+      async bail => {
         await definition.bulkCreate(GBUtil.caseInsensitive(rowsDest));
       },
       {
         retries: 5,
-        onRetry: (err) => { GBLog.error(`Retrying SaveToStorageBatch due to: ${err.message}.`); }
+        onRetry: err => {
+          GBLog.error(`Retrying SaveToStorageBatch due to: ${err.message}.`);
+        }
       }
     );
   }
 
-
   /**
-  * Saves variables to storage, not a worksheet.
-  *
-  * @example SAVE "Billing",  columnName1, columnName2
-  * 
-  */
+   * Saves variables to storage, not a worksheet.
+   *
+   * @example SAVE "Billing",  columnName1, columnName2
+   *
+   */
   public async saveToStorage({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
-
-    if (!fieldsValues  || fieldsValues.length===0 || !fieldsValues[0]){
-
+    if (!fieldsValues || fieldsValues.length === 0 || !fieldsValues[0]) {
       return;
     }
 
@@ -810,17 +788,17 @@ export class SystemKeywords {
 
     let item;
     await retry(
-      async (bail) => {
+      async bail => {
         item = await definition.create(dst);
       },
       {
         retries: 5,
-        onRetry: (err) => { GBLog.error(`Retrying SaveToStorage due to: ${err.message}.`); }
+        onRetry: err => {
+          GBLog.error(`Retrying SaveToStorage due to: ${err.message}.`);
+        }
       }
-
     );
     return item;
-
   }
 
   public async saveToStorageWithJSON({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
@@ -830,7 +808,8 @@ export class SystemKeywords {
     const definition = minBoot.core.sequelize.models[table];
 
     let out = [];
-    let data = {}, data2 = {};
+    let data = {},
+      data2 = {};
 
     // Flattern JSON to a table.
 
@@ -853,8 +832,7 @@ export class SystemKeywords {
    *
    */
   public async save({ pid, file, args }): Promise<any> {
-
-    if (!args){
+    if (!args) {
       return;
     }
 
@@ -1040,9 +1018,7 @@ export class SystemKeywords {
     });
 
     return filter;
-  };
-
-
+  }
 
   /**
    * Finds a value or multi-value results in a tabular file.
@@ -1134,13 +1110,18 @@ export class SystemKeywords {
       for (let i = 0; i < worksheet.rowCount; i++) {
         const r = worksheet.getRow(i + 1);
         let outRow = [];
+        let hasValue = false;
         for (let j = 0; j < r.cellCount; j++) {
-          outRow.push(r.getCell(j + 1).text);
+          const value = r.getCell(j + 1).text;
+          if (value) {
+            hasValue = true;
+          }
+          outRow.push(value);
         }
 
         if (i == 0) {
           header = outRow;
-        } else {
+        } else if (hasValue) {
           rows.push(outRow);
         }
       }
@@ -1176,7 +1157,6 @@ export class SystemKeywords {
 
       return res.length > 1 ? res : res[0];
     }
-
 
     const contentLocale = min.core.getParam(
       min.instance,
@@ -1349,20 +1329,27 @@ export class SystemKeywords {
         rowCount++;
         let row = {};
         const xlRow = rows[foundIndex];
+        let hasValue = false;
         for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
           const propertyName = header[colIndex];
+
           let value = xlRow[colIndex];
-          if (value && value.charAt(0) === "'") {
-            if (await this.isValidDate({ pid, dt: value.substr(1) })) {
-              value = value.substr(1);
+          if (value) {
+            hasValue = true;
+            if (value.charAt(0) === "'") {
+              if (await this.isValidDate({ pid, dt: value.substr(1) })) {
+                value = value.substr(1);
+              }
             }
           }
+
           row[propertyName] = value;
         }
         row['ordinal'] = rowCount;
         row['line'] = foundIndex + 1;
-
-        table.push(row);
+        if (hasValue) {
+          table.push(row);
+        }
       }
     }
 
@@ -1445,18 +1432,16 @@ export class SystemKeywords {
   }
 
   public async setSystemPrompt({ pid, text }) {
-
     let { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     if (user) {
       ChatServices.userSystemPrompt[user.userSystemId] = text;
 
       const path = DialogKeywords.getGBAIPath(min.botId);
-      const systemPromptFile = urlJoin(process.cwd(), 'work', path, 'users',user.userSystemId, 'systemPrompt.txt');
+      const systemPromptFile = urlJoin(process.cwd(), 'work', path, 'users', user.userSystemId, 'systemPrompt.txt');
       Fs.writeFileSync(systemPromptFile, text);
     }
   }
-
 
   /**
    * Creates a folder in the bot instance drive.
@@ -1632,7 +1617,6 @@ export class SystemKeywords {
    *
    */
   public async convert({ pid, src, dest }) {
-
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `BASIC: CONVERT '${src}' to '${dest}'`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
@@ -1704,42 +1688,38 @@ export class SystemKeywords {
         continue;
       }
       if (typeof obj[key] !== 'object' || obj[key] instanceof Date) {
-
         // If not defined already add the flattened field.
 
-        const newKey = `${parent ? (parent + separator) : ''}${key}`;
+        const newKey = `${parent ? parent + separator : ''}${key}`;
         if (!res[newKey]) {
           res[newKey] = obj[key];
-        }
-        else {
+        } else {
           GBLog.verbose(`Ignoring duplicated field in flatten operation to storage: ${key}.`);
         }
-
       } else {
         obj[key] = this.flattenJSON(obj[key], res, separator, `${parent ? parent + separator : ''}${key}`);
-      };
-    };
+      }
+    }
     return res;
   }
 
   public async getCustomToken({ pid, tokenName }) {
-
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `BASIC internal getCustomToken: ${tokenName}`);
 
-    const token = await (min.adminService as any)['acquireElevatedToken']
-      (min.instance.instanceId, false,
-        tokenName,
-        min.core.getParam(min.instance, `${tokenName} Client ID`, null),
-        min.core.getParam(min.instance, `${tokenName} Client Secret`, null),
-        min.core.getParam(min.instance, `${tokenName} Host`, null),
-        min.core.getParam(min.instance, `${tokenName} Tenant`, null)
-      );
+    const token = await (min.adminService as any)['acquireElevatedToken'](
+      min.instance.instanceId,
+      false,
+      tokenName,
+      min.core.getParam(min.instance, `${tokenName} Client ID`, null),
+      min.core.getParam(min.instance, `${tokenName} Client Secret`, null),
+      min.core.getParam(min.instance, `${tokenName} Host`, null),
+      min.core.getParam(min.instance, `${tokenName} Tenant`, null)
+    );
     const expiresOn = await min.adminService.getValue(min.instance.instanceId, `${tokenName}expiresOn`);
 
     return { token, expiresOn };
   }
-
 
   /**
    * Calls any REST API by using GET HTTP method.
@@ -1754,10 +1734,9 @@ export class SystemKeywords {
     GBLogEx.info(min, `GET: ${url}`);
 
     let pageMode = await DialogKeywords.getOption({ pid, name: 'pageMode' });
-    let continuationToken = await
-      DialogKeywords.getOption({ pid, name: `${proc.executable}-continuationToken` });
+    let continuationToken = await DialogKeywords.getOption({ pid, name: `${proc.executable}-continuationToken` });
 
-    if (pageMode === "auto" && continuationToken) {
+    if (pageMode === 'auto' && continuationToken) {
       headers = headers ? headers : {};
 
       headers['MS-ContinuationToken'] = continuationToken;
@@ -1778,10 +1757,8 @@ export class SystemKeywords {
     }
     let result;
     await retry(
-      async (bail) => {
-
+      async bail => {
         result = await fetch(url, options);
-
 
         if (result.status === 401) {
           GBLogEx.info(min, `Waiting 5 secs. before retrynig HTTP 401 GET: ${url}`);
@@ -1800,38 +1777,34 @@ export class SystemKeywords {
         }
 
         if (result.status === 2000) {
-
           // Token expired.
 
           await DialogKeywords.setOption({ pid, name: `${proc.executable}-continuationToken`, value: null });
           bail(new Error(`Expired Token for ${url}.`));
-
-
         }
         if (result.status != 200) {
           throw new Error(`BASIC: GET ${result.status}: ${result.statusText}.`);
         }
-
       },
       {
         retries: 5,
-        onRetry: (err) => { GBLog.error(`Retrying HTTP GET due to: ${err.message}.`); }
+        onRetry: err => {
+          GBLog.error(`Retrying HTTP GET due to: ${err.message}.`);
+        }
       }
     );
     let res = JSON.parse(await result.text());
-
 
     function process(key, value, o) {
       if (value === '0000-00-00') {
         o[key] = null;
       }
-
     }
 
     function traverse(o, func) {
       for (var i in o) {
         func.apply(this, [i, o[i], o]);
-        if (o[i] !== null && typeof (o[i]) == "object") {
+        if (o[i] !== null && typeof o[i] == 'object') {
           traverse(o[i], func);
         }
       }
@@ -1839,24 +1812,22 @@ export class SystemKeywords {
 
     traverse(res, process);
 
-
-    if (pageMode === "auto") {
-
+    if (pageMode === 'auto') {
       continuationToken = res.next?.headers['MS-ContinuationToken'];
 
       if (continuationToken) {
         GBLogEx.info(min, `Updating continuationToken for ${url}.`);
         await DialogKeywords.setOption({ pid, name: 'continuationToken', value: continuationToken });
       }
-    }
-    else {
-      pageMode = "none";
+    } else {
+      pageMode = 'none';
     }
 
-    if (res) { res['pageMode'] = pageMode; }
+    if (res) {
+      res['pageMode'] = pageMode;
+    }
 
     return res;
-
   }
 
   /**
@@ -1876,11 +1847,10 @@ export class SystemKeywords {
       method: 'PUT'
     };
 
-    if (typeof (data) === 'object') {
+    if (typeof data === 'object') {
       options['body'] = JSON.stringify(data);
       options.headers['Content-Type'] = 'application/json';
-    }
-    else {
+    } else {
       options['body'] = data;
     }
 
@@ -1889,7 +1859,7 @@ export class SystemKeywords {
     GBLogEx.info(min, `BASIC: PUT ${url} (${data}): ${text}`);
 
     if (result.status != 200 && result.status != 201) {
-      throw new Error(`BASIC: PUT ${result.status}: ${result.statusText}.`)
+      throw new Error(`BASIC: PUT ${result.status}: ${result.statusText}.`);
     }
 
     let res = JSON.parse(text);
@@ -1912,11 +1882,10 @@ export class SystemKeywords {
       method: 'POST'
     };
 
-    if (typeof (data) === 'object') {
+    if (typeof data === 'object') {
       options['body'] = JSON.stringify(data);
       options.headers['Content-Type'] = 'application/json';
-    }
-    else {
+    } else {
       options['body'] = data;
     }
 
@@ -1925,7 +1894,7 @@ export class SystemKeywords {
     GBLogEx.info(min, `BASIC: POST ${url} (${data}): ${text}`);
 
     if (result.status != 200 && result.status != 201) {
-      throw new Error(`BASIC: POST ${result.status}: ${result.statusText}.`)
+      throw new Error(`BASIC: POST ${result.status}: ${result.statusText}.`);
     }
 
     let res = JSON.parse(text);
@@ -2056,8 +2025,11 @@ export class SystemKeywords {
             };
 
             const metadata = await sharp(buf).metadata();
-            const size = getNormalSize({width:metadata['width'], 
-            height:metadata['height'], orientation: metadata['orientation'] });
+            const size = getNormalSize({
+              width: metadata['width'],
+              height: metadata['height'],
+              orientation: metadata['orientation']
+            });
             url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(imageName));
             images[index++] = { url: url, size: size, buf: buf };
           }
@@ -2152,7 +2124,6 @@ export class SystemKeywords {
     } else {
       return minBoot.core.sequelize.models[file];
     }
-
   }
 
   private cachedMerge: any = {};
@@ -2173,22 +2144,20 @@ export class SystemKeywords {
       return data;
     }
 
-
     GBLogEx.info(min, `BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
     if (!this.cachedMerge[pid]) {
-      this.cachedMerge[pid] = { file: {} }
+      this.cachedMerge[pid] = { file: {} };
     }
-
 
     // Check if is a tree or flat object.
 
-    const hasSubObject = (t) => {
+    const hasSubObject = t => {
       for (var key in t) {
         if (!t.hasOwnProperty(key)) continue;
-        if (typeof t[key] === "object") return true;
+        if (typeof t[key] === 'object') return true;
       }
       return false;
-    }
+    };
 
     // MAX LINES property.
 
@@ -2203,14 +2172,14 @@ export class SystemKeywords {
 
     let storage = file.indexOf('.xlsx') === -1;
     let results;
-    let header = [], rows = [];
+    let header = [],
+      rows = [];
     let t;
     let fieldsNames = [];
     let fieldsSizes = [];
     let fieldsValuesList = [];
 
     if (storage) {
-
       t = this.getTableFromName(file, min);
 
       if (!t) {
@@ -2219,11 +2188,11 @@ export class SystemKeywords {
 
       Object.keys(t.fieldRawAttributesMap).forEach(e => {
         fieldsNames.push(e);
-      })
+      });
 
       Object.keys(t.fieldRawAttributesMap).forEach(e => {
         fieldsSizes.push(t.fieldRawAttributesMap[e].size);
-      })
+      });
 
       header = Object.keys(t.fieldRawAttributesMap);
 
@@ -2232,37 +2201,31 @@ export class SystemKeywords {
 
       if (!this.cachedMerge[pid][file]) {
         await retry(
-          async (bail) => {
-            let page = 0, pageSize = 1000;
+          async bail => {
+            let page = 0,
+              pageSize = 1000;
             let count = 0;
 
             while (page === 0 || count === pageSize) {
-              const paged = await t.findAll(
-                { offset: page * pageSize, limit: pageSize, subquery: false, where: {} }
-              );
+              const paged = await t.findAll({ offset: page * pageSize, limit: pageSize, subquery: false, where: {} });
               rows = [...paged, ...rows];
               page++;
               count = paged.length;
 
               GBLogEx.info(min, `BASIC: MERGE cached: ${rows.length} from page: ${page}.`);
-
             }
           },
           {
             retries: 5,
-            onRetry: (err) => { GBLog.error(`MERGE: Retrying SELECT ALL on table: ${err.message}.`); }
+            onRetry: err => {
+              GBLog.error(`MERGE: Retrying SELECT ALL on table: ${err.message}.`);
+            }
           }
         );
-
-
-
-      }
-      else {
+      } else {
         rows = this.cachedMerge[pid][file];
       }
-
     } else {
-
       const botId = min.instance.botId;
       const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
 
@@ -2297,7 +2260,6 @@ export class SystemKeywords {
         row = tmpRow.dataValues ? tmpRow.dataValues : tmpRow;
 
         for (let colIndex = 0; colIndex < tmpRow.length; colIndex++) {
-
           const propertyName = header[colIndex];
           let value = tmpRow[colIndex];
 
@@ -2316,8 +2278,7 @@ export class SystemKeywords {
       if (storage) {
         this.cachedMerge[pid][file] = table;
       }
-    }
-    else {
+    } else {
       table = this.cachedMerge[pid][file];
     }
 
@@ -2332,12 +2293,12 @@ export class SystemKeywords {
     }
 
     let updates = 0,
-      adds = 0, skipped = 0;
+      adds = 0,
+      skipped = 0;
 
     // Scans all items in incoming data.
 
     for (let i = 0; i < data.length; i++) {
-
       // Scans all sheet lines and compare keys.
 
       let row = data[i];
@@ -2350,7 +2311,6 @@ export class SystemKeywords {
       let key1Value;
       let key1Original = key1;
       if (key1Index) {
-
         key1 = key1.charAt(0).toLowerCase() + key1.slice(1);
 
         Object.keys(row).forEach(e => {
@@ -2368,16 +2328,14 @@ export class SystemKeywords {
       if (found) {
         let merge = false;
         for (let j = 0; j < header.length; j++) {
-
           const columnName = header[j];
           let columnNameFound = false;
 
           let value;
           Object.keys(row).forEach(e => {
-
             if (columnName.toLowerCase() === e.toLowerCase()) {
               value = row[e];
-              if (typeof (value) === 'string') {
+              if (typeof value === 'string') {
                 value = value.substring(0, fieldsSizes[j]);
               }
 
@@ -2385,7 +2343,9 @@ export class SystemKeywords {
             }
           });
 
-          if (value === undefined) { value = null; }
+          if (value === undefined) {
+            value = null;
+          }
 
           let valueFound;
           Object.keys(found).forEach(e => {
@@ -2395,27 +2355,24 @@ export class SystemKeywords {
           });
 
           const equals =
-            typeof (value) === 'string' && typeof (valueFound) === 'string' ?
-              value?.toLowerCase() != valueFound?.toLowerCase() :
-              value != valueFound;
+            typeof value === 'string' && typeof valueFound === 'string'
+              ? value?.toLowerCase() != valueFound?.toLowerCase()
+              : value != valueFound;
 
           if (equals && columnNameFound) {
-
             if (storage) {
-
               let obj = {};
               obj[columnName] = value;
               let criteria = {};
               criteria[key1Original] = key1Value;
 
               await retry(
-                async (bail) => {
+                async bail => {
                   await t.update(obj, { where: criteria });
-                }, { retries: 5 }
+                },
+                { retries: 5 }
               );
-
             } else {
-
               const cell = `${this.numberToLetters(j)}${i + 1}`;
               const address = `${cell}:${cell}`;
 
@@ -2423,22 +2380,18 @@ export class SystemKeywords {
             }
             merge = true;
           }
-
         }
 
         merge ? updates++ : skipped++;
-
       } else {
-
         let fieldsValues = [];
 
         for (let j = 0; j < fieldsNames.length; j++) {
           let add = false;
           Object.keys(row).forEach(p => {
             if (fieldsNames[j].toLowerCase() === p.toLowerCase()) {
-
               let value = row[p];
-              if (typeof (value) === 'string') {
+              if (typeof value === 'string') {
                 value = value.substring(0, fieldsSizes[j]);
               }
 
@@ -2452,8 +2405,6 @@ export class SystemKeywords {
         }
 
         if (storage) {
-
-
           // Uppercases fields.
 
           const dst = {};
@@ -2467,10 +2418,8 @@ export class SystemKeywords {
 
           fieldsValuesList.push(dst);
           this.cachedMerge[pid][file].push(dst);
-        }
-        else {
+        } else {
           await this.save({ pid, file, args: fieldsValues });
-
         }
         adds++;
       }
@@ -2483,7 +2432,7 @@ export class SystemKeywords {
     }
 
     GBLogEx.info(min, `BASIC: MERGE results: adds:${adds}, updates:${updates} , skipped: ${skipped}.`);
-    return { title:file, adds, updates, skipped };
+    return { title: file, adds, updates, skipped };
   }
 
   /**
@@ -2640,20 +2589,20 @@ export class SystemKeywords {
     const filter = await SystemKeywords.getFilter(criteria);
 
     await retry(
-      async (bail) => {
+      async bail => {
         const options = { where: {} };
         options.where = {};
 
         options.where[filter['columnName']] = filter['value'];
         await definition.destroy(options);
-
       },
       {
         retries: 5,
-        onRetry: (err) => { GBLog.error(`Retrying SaveToStorageBatch due to: ${err.message}.`); }
+        onRetry: err => {
+          GBLog.error(`Retrying SaveToStorageBatch due to: ${err.message}.`);
+        }
       }
     );
-
   }
 
   public async deleteFile({ pid, file }) {
@@ -2667,13 +2616,10 @@ export class SystemKeywords {
     const ext = Path.extname(fileName).substring(1);
     const kind = await this.getExtensionInfo(ext);
 
-    await client
-      .api(`${baseUrl}/drive/root:/${gbaiPath}/${file.path}`)
-      .delete();
+    await client.api(`${baseUrl}/drive/root:/${gbaiPath}/${file.path}`).delete();
 
     return { contentType, ext, kind, category: kind['category'] };
   }
-
 
   public async getExtensionInfo(ext: any): Promise<any> {
     let array = exts.filter((v, i, a) => a[i]['extension'] === ext);
@@ -2684,10 +2630,9 @@ export class SystemKeywords {
   }
 
   /**
- * Loads all para from tabular file Config.xlsx.
- */
+   * Loads all para from tabular file Config.xlsx.
+   */
   public async dirFolder({ pid, remotePath, baseUrl = null, client = null, array = null }) {
-
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `dirFolder: remotePath=${remotePath}, baseUrl=${baseUrl}`);
 
@@ -2721,13 +2666,10 @@ export class SystemKeywords {
     // Navigate files / directory to recurse.
 
     await CollectionUtil.asyncForEach(documents, async item => {
-
       if (item.folder) {
         remotePath = urlJoin(remotePath, item.name);
-        array = [...array, ... await this.dirFolder({ pid, remotePath, baseUrl, client, array })];
-
+        array = [...array, ...(await this.dirFolder({ pid, remotePath, baseUrl, client, array }))];
       } else {
-
         // TODO:  https://raw.githubusercontent.com/ishanarora04/quickxorhash/master/quickxorhash.js
 
         let obj = {};
@@ -2746,36 +2688,32 @@ export class SystemKeywords {
   }
 
   public async log({ pid, text: obj }) {
-
     const { min } = await DialogKeywords.getProcessInfo(pid);
 
     let level = 0;
     const mydump = (text, level) => {
+      var dumped_text = '';
 
-      var dumped_text = "";
+      var level_padding = '';
+      for (var j = 0; j < level + 1; j++) level_padding += '    ';
 
-      var level_padding = "";
-      for (var j = 0; j < level + 1; j++) level_padding += "    ";
-
-      if (typeof (text) == 'object') {
+      if (typeof text == 'object') {
         for (var item in text) {
           var value = text[item];
 
-          if (typeof (value) == 'object') {
+          if (typeof value == 'object') {
             dumped_text += level_padding + "'" + item + "' ...\n";
             dumped_text += mydump(value, level + 1);
           } else {
-            dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
+            dumped_text += level_padding + "'" + item + '\' => "' + value + '"\n';
           }
         }
       } else {
-        dumped_text = text + "(" + typeof (text) + ")";
+        dumped_text = text + '(' + typeof text + ')';
       }
       return dumped_text;
     };
 
     GBLogEx.info(min, mydump(obj, level));
-
   }
-
 }
