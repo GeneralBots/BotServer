@@ -267,16 +267,13 @@ export class ChatServices {
       memory = new BufferWindowMemory({
         returnMessages: true,
         memoryKey: 'chat_history',
-        humanPrefix: 'input',
-        aiPrefix: 'output',
+        inputKey: 'input',
         k: 2
-      });  
+      });
 
       this.memoryMap[user.userSystemId] = memory;
-    }
-    else
-    {
-      memory = this.memoryMap[user.userSystemId]
+    } else {
+      memory = this.memoryMap[user.userSystemId];
     }
 
     const systemPrompt = user ? this.userSystemPrompt[user.userSystemId] : '';
@@ -310,6 +307,13 @@ export class ChatServices {
       new MessagesPlaceholder('chat_history'),
       AIMessagePromptTemplate.fromTemplate(`Follow Up Input: {question}
     Standalone question:`)
+    ]);
+
+    const directPrompt = ChatPromptTemplate.fromMessages([
+      ['system', systemPrompt],
+      new MessagesPlaceholder('chat_history'),
+      HumanMessagePromptTemplate.fromTemplate(`Follow Up Input: {question}
+      Standalone question:`)
     ]);
 
     const toolsResultPrompt = ChatPromptTemplate.fromMessages([
@@ -348,13 +352,26 @@ export class ChatServices {
         of the answer, utilize any relevant context provided to answer the question effectively. 
         Don´t output MD images tags url previously shown.
 
-        ${LLMMode==='document-ref'? jsonInformation: ''}
+        ${LLMMode === 'document-ref' ? jsonInformation : ''}
         
         And based on this chat history and question, answer combined.
         `
       ),
       new MessagesPlaceholder('chat_history'),
       HumanMessagePromptTemplate.fromTemplate('Question: {question}')
+    ]);
+
+    const directChain = RunnableSequence.from([
+      {
+        question: (question: string) => question,
+        chat_history: async () => {
+          const { chat_history } = await memory.loadMemoryVariables({});
+          return chat_history;
+        }
+      },
+      directPrompt,
+      model,
+      new StringOutputParser()
     ]);
 
     const callToolChain = RunnableSequence.from([
@@ -415,16 +432,13 @@ export class ChatServices {
     // .gbot switch LLMMode and choose the corresponding chain.
 
     if (LLMMode === 'direct') {
-      result = await (tools.length > 0 ? modelWithTools : model).invoke(`
-      ${systemPrompt}
-      
-      ${question}`);
 
-      result = result.content;
-    } else if (LLMMode === 'document-ref' || LLMMode === 'document')  {
-      const res = await combineDocumentsChain.invoke(question);
+      result = directChain.invoke(question);
       
-      result = res.text? res.text: res;
+    } else if (LLMMode === 'document-ref' || LLMMode === 'document') {
+      const res = await combineDocumentsChain.invoke(question);
+
+      result = res.text ? res.text : res;
       sources = res.sources;
     } else if (LLMMode === 'function') {
       result = await conversationalToolChain.invoke({
