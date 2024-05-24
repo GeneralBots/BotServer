@@ -918,7 +918,7 @@ export class KBService implements IGBKBService {
           const anchors = Array.from(document.querySelectorAll('a')).filter(p => {
             try {
 
-              return currentDomain == new URL(p.href).hostname;
+              return currentDomain == new URL(p.href).hostname.toLocaleLowerCase();
             } catch (err) {
               return false;
             }
@@ -1023,6 +1023,7 @@ export class KBService implements IGBKBService {
     let website = min.core.getParam<string>(min.instance, 'Website', null);
     const websiteIgnoreUrls = min.core.getParam<string>(min.instance, 'Website Ignore URLs', null);
 
+    if (website) {
 
       // Removes last slash if any.
 
