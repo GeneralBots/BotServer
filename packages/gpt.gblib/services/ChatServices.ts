@@ -280,7 +280,7 @@ export class ChatServices {
 
     const model = new ChatOpenAI({
       openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: 'gpt-3.5-turbo-0125',
+      modelName: 'gpt-4o',
       temperature: 0,
       callbacks: [logHandler]
     });
@@ -433,7 +433,7 @@ export class ChatServices {
 
     if (LLMMode === 'direct') {
 
-      result = directChain.invoke(question);
+      result = await directChain.invoke(question);
       
     } else if (LLMMode === 'document-ref' || LLMMode === 'document') {
       const res = await combineDocumentsChain.invoke(question);
@@ -444,8 +444,14 @@ export class ChatServices {
       result = await conversationalToolChain.invoke({
         question
       });
-    } else if (LLMMode === 'full') {
-      throw new Error('Not implemented.'); // TODO: #407.
+    } else if (LLMMode === 'nochain') {
+      result = await (tools.length > 0 ? modelWithTools : model).invoke(`
+      ${systemPrompt}
+      
+      ${question}`);
+
+      result = result.content;
+
     } else {
       GBLogEx.info(min, `Invalid Answer Mode in Config.xlsx: ${LLMMode}.`);
     }

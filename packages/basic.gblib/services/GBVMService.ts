@@ -177,6 +177,7 @@ export class GBVMService extends GBService {
               "author": "${min.botId} owner.",
               "license": "ISC",
               "dependencies": {
+                "yaml": "2.4.2",
                 "encoding": "0.1.13",
                 "isomorphic-fetch": "3.0.0",
                 "punycode": "2.1.1",
@@ -510,6 +511,7 @@ export class GBVMService extends GBService {
           // Imports npm packages for this .gbdialog conversational application.
 
           require('isomorphic-fetch');
+          const YAML = require('yaml');
           const http = require('node:http');
           const retry = require('async-retry');
           const createRpcClient = require("@push-rpc/core").createRpcClient;
@@ -648,6 +650,12 @@ export class GBVMService extends GBService {
               }
             }            
           };
+
+          const TOYAML = (json) => {
+             const doc = new YAML.Document();
+             doc.contents = json;
+             return doc.toString();
+          }       
 
           // Line of Business logic.
           

@@ -1331,11 +1331,12 @@ export class SystemKeywords {
         const xlRow = rows[foundIndex];
         let hasValue = false;
         for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
-          const propertyName = header[colIndex];
+          const propertyName = header[colIndex].trim();
 
           let value = xlRow[colIndex];
           if (value) {
             hasValue = true;
+            value = value.trim();
             if (value.charAt(0) === "'") {
               if (await this.isValidDate({ pid, dt: value.substr(1) })) {
                 value = value.substr(1);

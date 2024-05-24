@@ -911,19 +911,14 @@ export class KBService implements IGBKBService {
         // If the URL doesn't represent an HTML page, skip crawling its links
         return [];
       }
-      const currentDomain = new URL(page.url()).hostname.toLocaleLowerCase();
+      const currentDomain = new URL(page.url()).hostname;
 
       let links = await page.evaluate(
         ({ currentDomain, websiteIgnoreUrls }) => {
           const anchors = Array.from(document.querySelectorAll('a')).filter(p => {
             try {
-              // Check if urlToCheck contains any of the ignored URLs
 
-              const isIgnored = websiteIgnoreUrls.split(';').some(ignoredUrl => p.href.includes(ignoredUrl));
-              console.log(currentDomain);
-              console.log(new URL(p.href).hostname);
-
-              return !isIgnored && currentDomain == new URL(p.href).hostname.toLocaleLowerCase();
+              return currentDomain == new URL(p.href).hostname;
             } catch (err) {
               return false;
             }
@@ -1028,7 +1023,6 @@ export class KBService implements IGBKBService {
     let website = min.core.getParam<string>(min.instance, 'Website', null);
     const websiteIgnoreUrls = min.core.getParam<string>(min.instance, 'Website Ignore URLs', null);
 
-    if (website) {
 
       // Removes last slash if any.
 
