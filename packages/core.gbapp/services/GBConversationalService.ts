@@ -665,6 +665,7 @@ export class GBConversationalService {
       : fileUrl;
 
     if (!isMedia) {
+      text = `\n${text}`;
       text = text.substring(image.length).trim();
       text = text.replace(/\n/g, "\\n");
     }
