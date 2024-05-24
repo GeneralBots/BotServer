@@ -280,7 +280,7 @@ export class ChatServices {
 
     const model = new ChatOpenAI({
       openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: 'gpt-4o',
+      modelName: 'gpt-3.5-turbo-0125',
       temperature: 0,
       callbacks: [logHandler]
     });
