@@ -732,6 +732,26 @@ ENDPOINT_UPDATE=true
       params = GBUtil.caseInsensitive(params);
       value = params ? params[name] : defaultValue;
     }
+
+    params = GBUtil.caseInsensitive(instance['dataValues']);
+    if (params && !value) {
+      value = instance['dataValues'][name];
+      const minBoot = GBServer.globals.minBoot as any;
+      if (value === null && instance != minBoot.instance) {
+        params = GBUtil.caseInsensitive(minBoot.instance.dataValues);
+        value = params[name];
+
+        if(minBoot.instance.params){
+          instance = minBoot.instance;
+          params = typeof (instance.params) === 'object' ? instance.params : JSON.parse(instance.params);
+          params = GBUtil.caseInsensitive(params);
+          value = params ? params[name] : defaultValue;
+        }
+      }
+    }
+    if (value === undefined) {
+      value = null;
+    }
     if (value && typeof defaultValue === 'boolean') {
       return new Boolean(value ? value.toString().toLowerCase() === 'true' : defaultValue).valueOf();
     }
@@ -740,19 +760,6 @@ ENDPOINT_UPDATE=true
     }
     if (value && typeof defaultValue === 'number') {
       return new Number(value ? value : defaultValue ? defaultValue : 0).valueOf();
-    }
-
-    params = GBUtil.caseInsensitive(instance['dataValues']);
-    if (params && !value) {
-      value = instance['dataValues'][name];
-      if (value === null) {
-        const minBoot = GBServer.globals.minBoot as any;
-        params = GBUtil.caseInsensitive(minBoot.instance.dataValues);
-        value = params[name];
-      }
-    }
-    if (value === undefined) {
-      value = null;
     }
 
     return value ?? defaultValue;

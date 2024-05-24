@@ -785,7 +785,7 @@ export class GBMinService {
     min.sandBoxMap = {};
     min['scheduleMap'] = {};
     min['conversationWelcomed'] = {};
-    if (process.env.OPENAI_API_KEY) {
+    if (await min.core.getParam(min.instance, 'Azure Open AI Key', null)) {
       const gbkbPath = DialogKeywords.getGBAIPath(min.botId, 'gbkb');
       min['vectorStorePath'] = Path.join('work', gbkbPath, 'docs-vectorized');
       min['vectorStore'] = await this.deployer.loadOrCreateEmptyVectorStore(min);
