@@ -314,10 +314,25 @@ export class GBDeployer implements IGBDeployer {
   public async loadOrCreateEmptyVectorStore(min: GBMinInstance): Promise<HNSWLib> {
     let vectorStore: HNSWLib;
           
+    const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
+    const azureOpenAIEndpoint = await min.core.getParam(min.instance, 'Azure Open AI Endpoint', null);
+    const azureOpenAIDeployment = await min.core.getParam(min.instance, 'Azure Open AI Deployment', null);
+
+    let embedding;
+    if (azureOpenAIKey) {
+      embedding = new OpenAIEmbeddings({ maxConcurrency: 5,
+        azureOpenAIApiKey: azureOpenAIKey,
+        azureOpenAIApiDeploymentName: azureOpenAIDeployment
+      });
+    }else{
+      embedding = new OpenAIEmbeddings({ maxConcurrency: 5 })
+    }
+
+    
     try {
-      vectorStore = await HNSWLib.load(min['vectorStorePath'], new OpenAIEmbeddings({ maxConcurrency: 5 }));
+      vectorStore = await HNSWLib.load(min['vectorStorePath'], embedding);
     } catch {
-      vectorStore = new HNSWLib(new OpenAIEmbeddings({ maxConcurrency: 5 }), {
+      vectorStore = new HNSWLib(embedding, {
         space: 'cosine',
         numDimensions: 1536,
       });

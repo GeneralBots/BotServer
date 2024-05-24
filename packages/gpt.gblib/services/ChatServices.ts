@@ -293,8 +293,8 @@ export class ChatServices {
 
     if (azureOpenAIKey) {
       model = new AzureOpenAI({
-        azureOpenAIEndpoint: azureOpenAIKey,
-        apiKey: azureOpenAIEndpoint,
+        azureOpenAIEndpoint: azureOpenAIEndpoint,
+        apiKey: azureOpenAIKey,
         azureOpenAIApiDeploymentName: azureOpenAIDeployment
       });
     } else {
