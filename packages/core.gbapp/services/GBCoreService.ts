@@ -748,7 +748,11 @@ ENDPOINT_UPDATE=true
       // If still not found, get from boot bot params.
 
       const minBoot = GBServer.globals.minBoot as any;
-      if (!value  && instance.botId != minBoot.instance.botId) {
+
+      if (
+        minBoot.instance &&
+        !value  && instance.botId != minBoot.instance.botId) {
+      
         instance = minBoot.instance;
         
         if(instance.params){
@@ -769,7 +773,7 @@ ENDPOINT_UPDATE=true
     if (value === undefined) {
       value = null;
     }
-    
+
     if (value && typeof defaultValue === 'boolean') {
       return new Boolean(value ? value.toString().toLowerCase() === 'true' : defaultValue).valueOf();
     }
