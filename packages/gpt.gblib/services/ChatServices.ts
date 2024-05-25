@@ -286,7 +286,7 @@ export class ChatServices {
     let model;
 
     const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
-    const azureOpenAIGPTModel = await min.core.getParam(min.instance, 'Azure Open GPT Model', null);
+    const azureOpenAIGPTModel = await min.core.getParam(min.instance, 'Azure Open AI GPT Model', null);
     const azureOpenAIVersion = await min.core.getParam(min.instance, 'Azure Open AI Version', null);
     const azureOpenAIApiInstanceName = await min.core.getParam(min.instance, 'Azure Open AI Instance', null);
 

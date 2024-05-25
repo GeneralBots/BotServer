@@ -10,5 +10,5 @@ export interface GBAPI
     dialogKeywords: DialogKeywords;
     imageProcessing: ImageProcessingServices;
     webAutomation: WebAutomationServices;
-    debuggerService: DebuggerService;    
+    debuggerService: DebuggerService;
 }

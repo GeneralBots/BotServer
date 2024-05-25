@@ -12,7 +12,7 @@
     "mapRoot": "./dist/",
     "moduleResolution": "Node",
     "module": "ESNext",
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames": false,
     "resolveJsonModule": true,
     "outDir": "./dist",
     "paths": {

@@ -10,7 +10,7 @@ export const Messages = {
     authenticated: 'You are now authenticated.',
     not_authorized: 'Wrong verification code. Not authenticated yet. Try again, please.',
     please_use_code:(code)=> `Please, answer the Bot with the code: ${code}.`
-    
+
   },
   'pt-BR': {
     whats_name: 'Qual o seu nome?',

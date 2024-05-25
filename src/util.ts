@@ -38,8 +38,8 @@
 export class GBUtil {
 
   public static repeat (chr, count) {
-    var str = "";
-    for (var x = 0; x < count; x++) { str += chr };
+    let str = "";
+    for (let x = 0; x < count; x++) { str += chr };
     return str;
   }
 
@@ -48,7 +48,7 @@ export class GBUtil {
       return value;
 
     if (!pad) pad = " ";
-    var length = width - value.length
+    const length = width - value.length
     if (length < 1) return value.substr(0, width);
 
     return (GBUtil.repeat(pad, length) + value).substr(0, width);
@@ -58,7 +58,7 @@ export class GBUtil {
       return value;
 
     if (!pad) pad = " ";
-    var length = width - value.length
+    const length = width - value.length
     if (length < 1) value.substr(0, width);
 
     return (value + GBUtil.repeat(pad, length)).substr(0, width);

@@ -37,7 +37,7 @@
 import Path from 'path';
 import express from 'express';
 import child_process from 'child_process';
-import rimraf from 'rimraf';
+import { rimraf } from 'rimraf';
 import urlJoin from 'url-join';
 import Fs from 'fs';
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
@@ -96,7 +96,11 @@ export class GBDeployer implements IGBDeployer {
    * use to database like the Indexer (Azure Search).
    */
   public static getConnectionStringFromInstance(instance: IGBInstance) {
-    return `Server=tcp:${GBConfigService.get("STORAGE_SERVER")},1433;Database=${GBConfigService.get("STORAGE_NAME")};User ID=${GBConfigService.get("STORAGE_USERNAME")};Password=${GBConfigService.get("STORAGE_PASSWORD")};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
+    return `Server=tcp:${GBConfigService.get('STORAGE_SERVER')},1433;Database=${GBConfigService.get(
+      'STORAGE_NAME'
+    )};User ID=${GBConfigService.get('STORAGE_USERNAME')};Password=${GBConfigService.get(
+      'STORAGE_PASSWORD'
+    )};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;`;
   }
 
   /**
@@ -105,25 +109,26 @@ export class GBDeployer implements IGBDeployer {
   public static async internalGetDriveClient(min: GBMinInstance) {
     let token;
 
-      // Get token as root only if the bot does not have
-      // an custom tenant for retrieving packages.
+    // Get token as root only if the bot does not have
+    // an custom tenant for retrieving packages.
 
-      token = await (min.adminService as any)['acquireElevatedToken']
-        (min.instance.instanceId, min.instance.authenticatorTenant ? false : true);
+    token = await (min.adminService as any)['acquireElevatedToken'](
+      min.instance.instanceId,
+      min.instance.authenticatorTenant ? false : true
+    );
 
-      const siteId = process.env.STORAGE_SITE_ID;
-      const libraryId = process.env.STORAGE_LIBRARY;
+    const siteId = process.env.STORAGE_SITE_ID;
+    const libraryId = process.env.STORAGE_LIBRARY;
 
-      const client = MicrosoftGraph.Client.init({
-        authProvider: done => {
-          done(null, token);
-        }
-      });
-      const baseUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}`;
-      min['cacheToken'] = { baseUrl, client };
+    const client = MicrosoftGraph.Client.init({
+      authProvider: done => {
+        done(null, token);
+      }
+    });
+    const baseUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}`;
+    min['cacheToken'] = { baseUrl, client };
 
-      return { baseUrl, client };
-
+    return { baseUrl, client };
   }
 
   /**
@@ -233,7 +238,7 @@ export class GBDeployer implements IGBDeployer {
     instance.marketplacePassword = await service.createApplicationSecret(accessToken, (application as any).id);
     instance.adminPass = GBAdminService.getRndPassword();
     instance.title = botId;
-    instance.activationCode = instance.botId.substring(0,15);
+    instance.activationCode = instance.botId.substring(0, 15);
     instance.state = 'active';
     instance.nlpScore = 0.8;
     instance.searchScore = 0.25;
@@ -267,7 +272,7 @@ export class GBDeployer implements IGBDeployer {
     const username = GBConfigService.get('CLOUD_USERNAME');
     const password = GBConfigService.get('CLOUD_PASSWORD');
     const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
-    const group = GBConfigService.get('CLOUD_GROUP')??GBConfigService.get('BOT_ID');
+    const group = GBConfigService.get('CLOUD_GROUP') ?? GBConfigService.get('BOT_ID');
     const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
 
     // If the bot already exists, just update the endpoint.
@@ -281,7 +286,7 @@ export class GBDeployer implements IGBDeployer {
         `${publicAddress}/api/messages/${instance.botId}`
       );
     } else {
-
+      
       // Internally create resources on cloud provider.
 
       instance = await service.internalDeployBot(
@@ -313,36 +318,36 @@ export class GBDeployer implements IGBDeployer {
 
   public async loadOrCreateEmptyVectorStore(min: GBMinInstance): Promise<HNSWLib> {
     let vectorStore: HNSWLib;
-          
+
     const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
     const azureOpenAIVersion = await min.core.getParam(min.instance, 'Azure Open AI Version', null);
     const azureOpenAIApiInstanceName = await min.core.getParam(min.instance, 'Azure Open AI Instance', null);
     const azureOpenAIEmbeddingModel = await min.core.getParam(min.instance, 'Azure Open AI Embedding Model', null);
 
     let embedding;
-    if (azureOpenAIKey) {
-      embedding = new OpenAIEmbeddings({ maxConcurrency: 5,
-        azureOpenAIApiKey: azureOpenAIKey,
-        azureOpenAIApiDeploymentName: azureOpenAIEmbeddingModel,
-        azureOpenAIApiVersion: azureOpenAIVersion,
-        azureOpenAIApiInstanceName: azureOpenAIApiInstanceName
-      });
-    }else{
-      embedding = new OpenAIEmbeddings({ maxConcurrency: 5 })
+    if (!azureOpenAIEmbeddingModel) {
+    
+      return;
     }
 
-    
+    embedding = new OpenAIEmbeddings({
+      maxConcurrency: 5,
+      azureOpenAIApiKey: azureOpenAIKey,
+      azureOpenAIApiDeploymentName: azureOpenAIEmbeddingModel,
+      azureOpenAIApiVersion: azureOpenAIVersion,
+      azureOpenAIApiInstanceName: azureOpenAIApiInstanceName
+    });
+
     try {
       vectorStore = await HNSWLib.load(min['vectorStorePath'], embedding);
     } catch {
       vectorStore = new HNSWLib(embedding, {
         space: 'cosine',
-        numDimensions: 1536,
+        numDimensions: 1536
       });
     }
     return vectorStore;
   }
-  
 
   /**
    * Performs the NLP publishing process on remote service.
@@ -645,12 +650,12 @@ export class GBDeployer implements IGBDeployer {
           const connectionName = t.replace(strFind, '');
           let con = {};
           con['name'] = connectionName;
-          con['storageServer'] = min.core.getParam<string>(min.instance, `${connectionName} Server`, null),
-            con['storageName'] = min.core.getParam<string>(min.instance, `${connectionName} Name`, null),
-            con['storageUsername'] = min.core.getParam<string>(min.instance, `${connectionName} Username`, null),
-            con['storagePort'] = min.core.getParam<string>(min.instance, `${connectionName} Port`, null),
-            con['storagePassword'] = min.core.getParam<string>(min.instance, `${connectionName} Password`, null),
-            con['storageDriver'] = min.core.getParam<string>(min.instance, `${connectionName} Driver`, null)
+          (con['storageServer'] = min.core.getParam<string>(min.instance, `${connectionName} Server`, null)),
+            (con['storageName'] = min.core.getParam<string>(min.instance, `${connectionName} Name`, null)),
+            (con['storageUsername'] = min.core.getParam<string>(min.instance, `${connectionName} Username`, null)),
+            (con['storagePort'] = min.core.getParam<string>(min.instance, `${connectionName} Port`, null)),
+            (con['storagePassword'] = min.core.getParam<string>(min.instance, `${connectionName} Password`, null)),
+            (con['storageDriver'] = min.core.getParam<string>(min.instance, `${connectionName} Driver`, null));
           connections.push(con);
         });
 
@@ -707,8 +712,8 @@ export class GBDeployer implements IGBDeployer {
   }
 
   /**
- * Removes the package local files from cache.
- */
+   * Removes the package local files from cache.
+   */
   public async cleanupPackage(instance: IGBInstance, packageName: string) {
     const path = DialogKeywords.getGBAIPath(instance.botId, null, packageName);
     const localFolder = Path.join('work', path);
@@ -785,12 +790,10 @@ export class GBDeployer implements IGBDeployer {
    * its index based on .gbkb structure.
    */
   public async rebuildIndex(instance: IGBInstance, searchSchema: any) {
-
-   const key = instance.searchKey ? instance.searchKey : GBServer.globals.minBoot.instance.searchKey;
+    const key = instance.searchKey ? instance.searchKey : GBServer.globals.minBoot.instance.searchKey;
     GBLogEx.info(instance.instanceId, `rebuildIndex running...`);
 
-    if  (!key){
-
+    if (!key) {
       return;
     }
     const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
@@ -801,12 +804,7 @@ export class GBDeployer implements IGBDeployer {
 
     // Prepares search.
 
-    const search = new AzureSearch(
-      key,
-      host,
-      searchIndex,
-      searchIndexer
-    );
+    const search = new AzureSearch(key, host, searchIndex, searchIndexer);
     const connectionString = GBDeployer.getConnectionStringFromInstance(GBServer.globals.minBoot.instance);
     const dsName = 'gb';
 

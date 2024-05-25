@@ -47,9 +47,9 @@ export class GBGPTPackage implements IGBPackage {
   public CurrentEngineName = 'guaribas-1.0.0';
 
   public async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
-    
+
   }
- 
+
   public async getDialogs(min: GBMinInstance) {
     GBLog.verbose(`getDialogs called.`);
   }

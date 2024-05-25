@@ -50,12 +50,12 @@ export function createKoaHttpServer(
   getRemoteId: (ctx: Koa.Context) => string,
   opts:{}
 ): SocketServer {
-  const { onError, onConnection, middleware } = 
+  const { onError, onConnection, middleware } =
   createKoaHttpMiddleware(getRemoteId);
 
   const app = new Koa();
   app.use(cors({ origin: '*' }));
-  app.use(koaBody.koaBody({jsonLimit:'1024mb',textLimit:'1024mb', formLimit:'1024mb', 
+  app.use(koaBody.koaBody({jsonLimit:'1024mb',textLimit:'1024mb', formLimit:'1024mb',
      multipart: true }));
   app.use(middleware);
   const server =   app.listen(port);

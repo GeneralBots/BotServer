@@ -54,7 +54,7 @@ export class GBSecurityPackage implements IGBPackage {
       ProfileDialog.getMobileConfirmDialog(min),
       SMSAuthDialog.getSMSAuthDialog(min)
     ];
-    
+
     if (process.env.ENABLE_AUTH) {
       out.push(OAuthDialog.getOAuthDialog(min));
     }
