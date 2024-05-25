@@ -293,6 +293,7 @@ export class ChatServices {
 
     if (azureOpenAIKey) {
       model = new AzureOpenAI({
+        modelName: 'gpt-4o',
         azureOpenAIEndpoint: azureOpenAIEndpoint,
         apiKey: azureOpenAIKey,
         azureOpenAIApiDeploymentName: azureOpenAIDeployment
