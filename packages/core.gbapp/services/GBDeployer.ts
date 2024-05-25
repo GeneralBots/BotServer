@@ -317,13 +317,13 @@ export class GBDeployer implements IGBDeployer {
     const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
     const azureOpenAIVersion = await min.core.getParam(min.instance, 'Azure Open AI Version', null);
     const azureOpenAIApiInstanceName = await min.core.getParam(min.instance, 'Azure Open AI Instance', null);
-    const azureOpenAIDeployment = await min.core.getParam(min.instance, 'Azure Open AI Deployment', null);
+    const azureOpenAIEmbeddingModel = await min.core.getParam(min.instance, 'Azure Open AI Embedding Model', null);
 
     let embedding;
     if (azureOpenAIKey) {
       embedding = new OpenAIEmbeddings({ maxConcurrency: 5,
         azureOpenAIApiKey: azureOpenAIKey,
-        azureOpenAIApiDeploymentName: azureOpenAIDeployment,
+        azureOpenAIApiDeploymentName: azureOpenAIEmbeddingModel,
         azureOpenAIApiVersion: azureOpenAIVersion,
         azureOpenAIApiInstanceName: azureOpenAIApiInstanceName
       });

@@ -32,22 +32,29 @@
 
 'use strict';
 
-import Path from 'path';
-import { GBLog, GBMinInstance } from 'botlib';
-import sharp from 'sharp';
-import joinImages from 'join-images-updated';
-import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import urlJoin from 'url-join';
-import { GBServer } from '../../../src/app.js';
+// import { GBMinInstance } from 'botlib';
+// import {DallEAPIWrapper} from '@langchain/openai';
 
-/**
- * Image processing services of conversation to be called by BASIC.
- */
-export class ImageServices {
+// /**
+//  * Image processing services of conversation to be called by BASIC.
+//  */
+// export class ImageServices {
+//   public async getImageFromDescription(min: GBMinInstance, text: string): Promise<string> {
+//     const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
+//     const azureOpenAIImageModel = await min.core.getParam(min.instance, 'Azure Open Image Model', null);
+//     const azureOpenAIVersion = await min.core.getParam(min.instance, 'Azure Open AI Version', null);
+//     const azureOpenAIApiInstanceName = await min.core.getParam(min.instance, 'Azure Open AI Instance', null);
 
-  public async getImageFromDescription(text: string): Promise<string> {
-    const url = "https://";
-    return url;
-  }
-}
+//     if (azureOpenAIKey) {
+//       const tool = new DallEAPIWrapper({
+//         n: 1,
+//         model: 'dall-e-3',
+//         apiKey: azureOpenAIKey
+//       });
+
+//       const imageURL = await tool.invoke('a painting of a cat');
+
+//       return imageURL;
+//     }
+//   }
+// }
