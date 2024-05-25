@@ -316,7 +316,7 @@ export class GBDeployer implements IGBDeployer {
           
     const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
     const azureOpenAIVersion = await min.core.getParam(min.instance, 'Azure Open AI Version', null);
-    const azureOpenAIApiInstanceName = await min.core.getParam(min.instance, 'Azure Open AI Instance Name', null);
+    const azureOpenAIApiInstanceName = await min.core.getParam(min.instance, 'Azure Open AI Instance', null);
     const azureOpenAIDeployment = await min.core.getParam(min.instance, 'Azure Open AI Deployment', null);
 
     let embedding;

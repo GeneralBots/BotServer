@@ -184,7 +184,8 @@ export class ChatServices {
     sanitizedQuestion: string,
     numDocuments: number = 100
   ): Promise<string> {
-    if (sanitizedQuestion === '') {
+    
+    if (sanitizedQuestion === '' || !vectorStore) {
       return '';
     }
 
