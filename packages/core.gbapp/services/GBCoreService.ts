@@ -726,6 +726,8 @@ ENDPOINT_UPDATE=true
     let params;
     name = name.trim();
 
+    // Gets .gbot Params from specified bot.
+
     if (instance.params) {
 
       params = typeof (instance.params) === 'object' ? instance.params : JSON.parse(instance.params);
@@ -733,25 +735,41 @@ ENDPOINT_UPDATE=true
       value = params ? params[name] : defaultValue;
     }
 
-    params = GBUtil.caseInsensitive(instance['dataValues']);
-    if (params && !value) {
-      value = instance['dataValues'][name];
-      const minBoot = GBServer.globals.minBoot as any;
-      if (!value  && instance != minBoot.instance) {
-        params = GBUtil.caseInsensitive(minBoot.instance.dataValues);
-        value = params[name];
+    // Gets specified bot instance values.
 
-        if(minBoot.instance.params){
-          instance = minBoot.instance;
+    params = GBUtil.caseInsensitive(instance['dataValues']);
+
+    if (params && !value) {
+
+      // Retrieves the value from specified bot instance (no params collection).
+
+      value = instance['dataValues'][name];
+
+      // If still not found, get from boot bot params.
+
+      const minBoot = GBServer.globals.minBoot as any;
+      if (!value  && instance.botId != minBoot.instance.botId) {
+        instance = minBoot.instance;
+        
+        if(instance.params){
           params = typeof (instance.params) === 'object' ? instance.params : JSON.parse(instance.params);
           params = GBUtil.caseInsensitive(params);
           value = params ? params[name] : defaultValue;
         }
+
+        // If still did not found in boot bot params, try instance fields.
+
+        if (!value){
+          value = instance['dataValues'][name];
+        }
+
       }
     }
+    
     if (value === undefined) {
       value = null;
     }
+    
     if (value && typeof defaultValue === 'boolean') {
       return new Boolean(value ? value.toString().toLowerCase() === 'true' : defaultValue).valueOf();
     }
