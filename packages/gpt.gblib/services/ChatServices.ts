@@ -290,13 +290,15 @@ export class ChatServices {
     const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
     const azureOpenAIEndpoint = await min.core.getParam(min.instance, 'Azure Open AI Endpoint', null);
     const azureOpenAIDeployment = await min.core.getParam(min.instance, 'Azure Open AI Deployment', null);
+    const azureOpenAIVersion = await min.core.getParam(min.instance, 'Azure Open AI Version', null);
 
     if (azureOpenAIKey) {
       model = new AzureOpenAI({
         modelName: 'gpt-4o',
+        azureOpenAIApiVersion: azureOpenAIVersion,
         azureOpenAIEndpoint: azureOpenAIEndpoint,
-        apiKey: azureOpenAIKey,
-        azureOpenAIApiDeploymentName: azureOpenAIDeployment
+        azureOpenAIApiKey: azureOpenAIKey,
+        azureOpenAIApiDeploymentName: azureOpenAIDeployment   
       });
     } else {
       model = new ChatOpenAI({
