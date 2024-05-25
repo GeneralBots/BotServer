@@ -288,7 +288,7 @@ export class AdminDialog extends IGBDialog {
 
           const packages = [];
           let skipError = false;
-          if (filename === null || filename === '') {
+          if (!filename || filename === '') {
             await min.conversationalService.sendText(min, step, `Starting publishing for ${botId} packages...`);
             packages.push(`${botId}.gbot`);
             packages.push(`${botId}.gbtheme`);

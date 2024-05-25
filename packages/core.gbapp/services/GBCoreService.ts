@@ -737,7 +737,7 @@ ENDPOINT_UPDATE=true
     if (params && !value) {
       value = instance['dataValues'][name];
       const minBoot = GBServer.globals.minBoot as any;
-      if (value === null && instance != minBoot.instance) {
+      if (!value  && instance != minBoot.instance) {
         params = GBUtil.caseInsensitive(minBoot.instance.dataValues);
         value = params[name];
 

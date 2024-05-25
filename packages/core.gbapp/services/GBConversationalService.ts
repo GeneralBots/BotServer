@@ -868,7 +868,7 @@ export class GBConversationalService {
   }
 
   public async routeNLP(step: GBDialogStep, min: GBMinInstance, text: string) {
-    if (min.instance.nlpAppId === null || min.instance.nlpAppId === undefined) {
+    if (!min.instance.nlpAppId) {
       return false;
     }
 
@@ -1013,7 +1013,7 @@ export class GBConversationalService {
     const key = min.core.getParam<string>(min.instance, 'translatorKey', null);
 
     if (
-      (endPoint === null && !min.instance.googleProjectId) ||
+      (!endPoint && !min.instance.googleProjectId) ||
       !translatorEnabled() ||
       process.env.TRANSLATOR_DISABLED === 'true'
     ) {
