@@ -742,7 +742,7 @@ export class WhatsappDirectLine extends GBService {
         case 'meta':
 
           let whatsappServiceNumber, whatsappServiceKey;
-          if (botNumber){
+          if (botNumber && this.min.instance.whatsappServiceNumber){
             whatsappServiceNumber = this.min.instance.whatsappServiceNumber;
             whatsappServiceKey = this.min.instance.whatsappServiceKey
           }
