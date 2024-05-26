@@ -19,8 +19,9 @@
         "--require ${workspaceRoot}/suppress-node-warnings.cjs", 
       ],
       "skipFiles": [
-        "node_modules/**/*.js"
-      ],
+        "node_modules/**/*.js",
+        "<node_internals>/**"
+      ],        
       "outFiles": [
         "${workspaceRoot}/dist/**/*.js"],
       "stopOnEntry": false,
