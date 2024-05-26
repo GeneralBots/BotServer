@@ -766,6 +766,9 @@ ENDPOINT_UPDATE=true
         if (!value){
           value = instance['dataValues'][name];
         }
+        if (!value){
+          value = instance[name];
+        }
 
       }
     }
@@ -784,6 +787,7 @@ ENDPOINT_UPDATE=true
       return new Number(value ? value : defaultValue ? defaultValue : 0).valueOf();
     }
 
+        
     return value ?? defaultValue;
   }
 
