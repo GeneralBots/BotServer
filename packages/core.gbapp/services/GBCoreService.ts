@@ -786,9 +786,10 @@ ENDPOINT_UPDATE=true
     if (value && typeof defaultValue === 'number') {
       return new Number(value ? value : defaultValue ? defaultValue : 0).valueOf();
     }
-
-        
-    return value ?? defaultValue;
+  
+    const ret =  value ?? defaultValue;
+    console.log(`getParam: ${ret}`);
+    return ret; 
   }
 
   /**
