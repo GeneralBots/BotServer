@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -33,66 +33,65 @@
  */
 
 'use strict';
-
+import * as YAML from 'yaml';
 
 export class GBUtil {
-
-  public static repeat (chr, count) {
-    let str = "";
-    for (let x = 0; x < count; x++) { str += chr };
+  public static repeat(chr, count) {
+    let str = '';
+    for (let x = 0; x < count; x++) {
+      str += chr;
+    }
     return str;
   }
 
-  public static padL  (value, width, pad) {
-    if (!width || width < 1)
-      return value;
+  public static padL(value, width, pad) {
+    if (!width || width < 1) return value;
 
-    if (!pad) pad = " ";
-    const length = width - value.length
+    if (!pad) pad = ' ';
+    const length = width - value.length;
     if (length < 1) return value.substr(0, width);
 
     return (GBUtil.repeat(pad, length) + value).substr(0, width);
   }
-  public static padR  (value, width, pad) {
-    if (!width || width < 1)
-      return value;
+  
+  public static padR(value, width, pad) {
+    if (!width || width < 1) return value;
 
-    if (!pad) pad = " ";
-    const length = width - value.length
+    if (!pad) pad = ' ';
+    const length = width - value.length;
     if (length < 1) value.substr(0, width);
 
     return (value + GBUtil.repeat(pad, length)).substr(0, width);
   }
 
+  public static toYAML(json) {
+    const doc = new YAML.Document();
+    doc.contents = json;
+    return doc.toString();
+  }
 
   public static sleep(ms) {
     return new Promise(resolve => {
       setTimeout(resolve, ms);
     });
-  };
+  }
 
   public static caseInsensitive(listOrRow) {
-
-    if (!listOrRow) {
-
+    if (!listOrRow || typeof listOrRow !== 'object') {
       return listOrRow;
-    };
-
-    const lowercase = (oldKey) => typeof oldKey === 'string' ? oldKey.toLowerCase() : oldKey;
-
-    const createCaseInsensitiveProxy = (obj) => {
+    }
+    const lowercase = oldKey => (typeof oldKey === 'string' ? oldKey.toLowerCase() : oldKey);
+    const createCaseInsensitiveProxy = obj => {
       const propertiesMap = new Map(Object.keys(obj).map(propKey => [lowercase(propKey), obj[propKey]]));
       const caseInsensitiveGetHandler = {
         get: (target, property) => propertiesMap.get(lowercase(property))
       };
       return new Proxy(obj, caseInsensitiveGetHandler);
     };
-
-    if (listOrRow.length) {
+    if (Array.isArray(listOrRow)) {
       return listOrRow.map(row => createCaseInsensitiveProxy(row));
     } else {
       return createCaseInsensitiveProxy(listOrRow);
     }
-  };
-
+  }
 }

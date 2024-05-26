@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -34,16 +34,19 @@
 
 'use strict';
 
-import express from 'express';
+import { Mutex } from 'async-mutex';
+import auth from 'basic-auth';
 import bodyParser from 'body-parser';
-import https from 'https';
-import http from 'http';
-import mkdirp from 'mkdirp';
-import Path from 'path';
-import swaggerUI from 'swagger-ui-dist';
-import path from 'path';
+import { GBLog, GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
+import child_process from 'child_process';
+import express from 'express';
 import fs from 'fs';
-import { GBLog, GBMinInstance, IGBCoreService, IGBInstance, IGBPackage } from 'botlib';
+import http from 'http';
+import httpProxy from 'http-proxy';
+import https from 'https';
+import mkdirp from 'mkdirp';
+import { default as Path, default as path } from 'path';
+import swaggerUI from 'swagger-ui-dist';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService.js';
 import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService.js';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
@@ -51,14 +54,11 @@ import { GBConversationalService } from '../packages/core.gbapp/services/GBConve
 import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService.js';
 import { GBDeployer } from '../packages/core.gbapp/services/GBDeployer.js';
 import { GBImporter } from '../packages/core.gbapp/services/GBImporterService.js';
-import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
-import auth from 'basic-auth';
-import child_process from 'child_process';
-import { RootData } from './RootData.js';
-import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
-import { Mutex } from 'async-mutex';
-import httpProxy from 'http-proxy';
 import { GBLogEx } from '../packages/core.gbapp/services/GBLogEx.js';
+import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
+import { GBSSR } from '../packages/core.gbapp/services/GBSSR.js';
+import { RootData } from './RootData.js';
+import { GBUtil } from './util.js';
 
 /**
  * General Bots open-core entry point.
@@ -105,9 +105,8 @@ export class GBServer {
     server.use(bodyParser.json());
     server.use(bodyParser.json({ limit: '1mb' }));
     server.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
-    server.use(function(req, res, next) {
-      for (const key in req.query)
-      {
+    server.use(function (req, res, next) {
+      for (const key in req.query) {
         req.query[key.toLowerCase()] = req.query[key];
       }
       next();
@@ -118,13 +117,14 @@ export class GBServer {
     });
 
     process.on('uncaughtException', (err, p) => {
-        GBLog.error(`UNCAUGHT_EXCEPTION: ${JSON.stringify(err, Object.getOwnPropertyNames(err))}`);
+      GBLogEx.error(0, `GBEXCEPTION: ${GBUtil.toYAML(JSON.stringify(err, Object.getOwnPropertyNames(err)))}`);
     });
 
     process.on('unhandledRejection', (err, p) => {
-      GBLog.error(`UNHANDLED_REJECTION: ${JSON.stringify(err, Object.getOwnPropertyNames(err))}`);
-  });
-  // Creates working directory.
+      GBLogEx.error(0,`GBREJECTION: ${GBUtil.toYAML(JSON.stringify(err, Object.getOwnPropertyNames(err)))}`);
+    });
+
+    // Creates working directory.
 
     process.env.PWD = process.cwd();
     const workDir = Path.join(process.env.PWD, 'work');
@@ -134,7 +134,6 @@ export class GBServer {
 
     const mainCallback = () => {
       (async () => {
-
         try {
           GBLogEx.info(0, `Now accepting connections on ${port}...`);
           process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
@@ -162,7 +161,6 @@ export class GBServer {
             GBLogEx.info(0, `.env address at ${serverAddress}...`);
             GBServer.globals.publicAddress = serverAddress;
           }
-
 
           // Creates a boot instance or load it from storage.
 
@@ -237,13 +235,11 @@ export class GBServer {
           GBServer.globals.minService = minService;
           await minService.buildMin(instances);
 
-
           server.all('*', async (req, res, next) => {
-
             const host = req.headers.host;
 
             if (req.originalUrl.startsWith('/logs')) {
-              if (process.env.ENABLE_WEBLOG === "true") {
+              if (process.env.ENABLE_WEBLOG === 'true') {
                 const admins = {
                   admin: { password: process.env.ADMIN_PASS }
                 };
@@ -258,7 +254,6 @@ export class GBServer {
                 await GBSSR.ssrFilter(req, res, next);
               }
             } else {
-
               // Setups unsecure http redirect.
               const proxy = httpProxy.createProxyServer({});
 
@@ -285,24 +280,22 @@ export class GBServer {
       })();
     };
 
-
     if (process.env.CERTIFICATE_PFX) {
-
       const server1 = http.createServer((req, res) => {
-        const host = req.headers.host.startsWith('www.') ?
-          req.headers.host.substring(4) : req.headers.host;
+        const host = req.headers.host.startsWith('www.') ? req.headers.host.substring(4) : req.headers.host;
 
-        res.writeHead(301, {
-          Location: "https://" + host + req.url
-
-        }).end();
+        res
+          .writeHead(301, {
+            Location: 'https://' + host + req.url
+          })
+          .end();
       });
       server1.listen(80);
 
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
         pfx: fs.readFileSync(process.env.CERTIFICATE_PFX),
-        ca: fs.existsSync(process.env.CERTIFICATE_CA)? fs.readFileSync(process.env.CERTIFICATE_CA):null
+        ca: fs.existsSync(process.env.CERTIFICATE_CA) ? fs.readFileSync(process.env.CERTIFICATE_CA) : null
       };
 
       const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
@@ -323,8 +316,7 @@ export class GBServer {
           break;
         }
       }
-    }
-    else {
+    } else {
       server.listen(port, mainCallback);
     }
   }
