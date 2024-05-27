@@ -337,14 +337,14 @@ export class GBDeployer implements IGBDeployer {
       azureOpenAIApiVersion: azureOpenAIVersion,
       azureOpenAIApiInstanceName: azureOpenAIApiInstanceName
     });
-
+    
     try {
       vectorStore = await HNSWLib.load(min['vectorStorePath'], embedding);
     } catch {
       vectorStore = new HNSWLib(embedding, {
-        space: 'cosine',
-        numDimensions: 1536
+        space: 'cosine'
       });
+      
     }
     return vectorStore;
   }

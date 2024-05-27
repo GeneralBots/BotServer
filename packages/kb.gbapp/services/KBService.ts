@@ -917,7 +917,6 @@ export class KBService implements IGBKBService {
         ({ currentDomain, websiteIgnoreUrls }) => {
           const anchors = Array.from(document.querySelectorAll('a')).filter(p => {
             try {
-
               return currentDomain == new URL(p.href).hostname.toLocaleLowerCase();
             } catch (err) {
               return false;
@@ -1024,12 +1023,10 @@ export class KBService implements IGBKBService {
     const websiteIgnoreUrls = min.core.getParam<string>(min.instance, 'Website Ignore URLs', null);
 
     if (website) {
-
       // Removes last slash if any.
 
-      website =website.replace(/\/(?=[^\/]*$)/, ""); 
+      website = website.replace(/\/(?=[^\/]*$)/, '');
 
-      Fs.rmSync(min['vectorStorePath'], { recursive: true, force: true });
       let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
       const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
       Fs.rmSync(directoryPath, { recursive: true, force: true });
