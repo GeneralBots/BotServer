@@ -788,7 +788,6 @@ ENDPOINT_UPDATE=true
     }
   
     const ret =  value ?? defaultValue;
-    console.log(`getParam: ${ret}`);
     return ret; 
   }
 
