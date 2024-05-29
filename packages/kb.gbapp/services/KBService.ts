@@ -917,7 +917,11 @@ export class KBService implements IGBKBService {
         ({ currentDomain, websiteIgnoreUrls }) => {
           const anchors = Array.from(document.querySelectorAll('a')).filter(p => {
             try {
-              return currentDomain == new URL(p.href).hostname.toLocaleLowerCase();
+              // Check if urlToCheck contains any of the ignored URLs
+
+              const isIgnored = websiteIgnoreUrls.split(';').some(ignoredUrl => p.href.includes(ignoredUrl));
+
+              return !isIgnored && currentDomain == new URL(p.href).hostname;
             } catch (err) {
               return false;
             }
