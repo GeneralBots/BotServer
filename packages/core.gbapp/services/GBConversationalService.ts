@@ -691,7 +691,7 @@ export class GBConversationalService {
         parameters: [
           {
             type: "text",
-            text: "\n" + text,
+            text: text,
           }
         ]
       });
