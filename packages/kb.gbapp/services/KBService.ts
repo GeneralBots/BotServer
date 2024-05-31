@@ -919,7 +919,10 @@ export class KBService implements IGBKBService {
             try {
               // Check if urlToCheck contains any of the ignored URLs
 
-              const isIgnored = websiteIgnoreUrls.split(';').some(ignoredUrl => p.href.includes(ignoredUrl));
+              var isIgnored = false;
+              if (websiteIgnoreUrls){
+                websiteIgnoreUrls.split(';').some(ignoredUrl => p.href.includes(ignoredUrl));
+              }
 
               return !isIgnored && currentDomain == new URL(p.href).hostname;
             } catch (err) {
@@ -1024,7 +1027,7 @@ export class KBService implements IGBKBService {
     let files = [];
 
     let website = min.core.getParam<string>(min.instance, 'Website', null);
-    const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', []);
+    const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
 
     if (website) {
       // Removes last slash if any.
