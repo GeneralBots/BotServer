@@ -1024,7 +1024,7 @@ export class KBService implements IGBKBService {
     let files = [];
 
     let website = min.core.getParam<string>(min.instance, 'Website', null);
-    const websiteIgnoreUrls = min.core.getParam<string>(min.instance, 'Website Ignore URLs', null);
+    const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', []);
 
     if (website) {
       // Removes last slash if any.
