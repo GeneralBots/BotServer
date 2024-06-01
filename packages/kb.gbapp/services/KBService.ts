@@ -1047,19 +1047,24 @@ export class KBService implements IGBKBService {
         const logoPath = Path.join(process.env.PWD, 'work', path, 'cache');
         const baseUrl = page.url().split('/').slice(0, 3).join('/');
         logo = logo.startsWith('https') ? logo : urlJoin(baseUrl, logo);
-        const logoBinary = await page.goto(logo);
-        const buffer = await logoBinary.buffer();
-        const logoFilename = Path.basename(logo);
-        sharp(buffer)
-          .resize({
-            width: 48,
-            height: 48,
-            fit: 'inside', // Resize the image to fit within the specified dimensions
-            withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
-          })
-          .toFile(Path.join(logoPath, logoFilename));
+        
+        try {
+            const logoBinary = await page.goto(logo);
+            const buffer = await logoBinary.buffer();
+            const logoFilename = Path.basename(logo);
+            sharp(buffer)
+                .resize({
+                width: 48,
+                height: 48,
+                fit: 'inside', // Resize the image to fit within the specified dimensions
+                withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
+            })
+                .toFile(Path.join(logoPath, logoFilename));
+            await min.core['setConfig'](min, 'Logo', logoFilename);
+        } catch (error) {
+            GBLogEx.debug(min, error);
+        }
 
-        await min.core['setConfig'](min, 'Logo', logoFilename);
       }
 
       // Extract dominant colors from the screenshot
