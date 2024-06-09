@@ -638,11 +638,12 @@ export class GBVMService extends GBService {
               // Expires token 10min. before or if it the first time, load it.
 
               if (expiration < new Date().getTime() || firstTime) {
-                console.log ('Expired. Refreshing token...');
+                console.log (Expired. Refreshing token...' + expiration);
                 const {token, expiresOn} = await sys.getCustomToken({pid, tokenName});
 
                 global[tokenName] = token;
                 global[tokenName + "_expiresOn"]= expiresOn; 
+                console.log (DONE:' + new Date(global[tokenName + "_expiresOn"]);;
               }
 
               if (__indexer == 0) {

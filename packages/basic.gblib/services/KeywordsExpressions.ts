@@ -40,7 +40,6 @@ import Path from 'path';
  * Image processing services of conversation to be called by BASIC.
  */
 export class KeywordsExpressions {
-
   public static splitParamsButIgnoreCommasInDoublequotes = (str: string) => {
     return str.split(',').reduce(
       (accum, curr) => {
@@ -50,7 +49,7 @@ export class KeywordsExpressions {
           if (curr === '') {
             curr = null;
           }
-          accum.soFar.push(curr);
+          accum.soFar.push(curr?curr.trim(): '');
         }
         if (curr.split('`').length % 2 == 0) {
           accum.isConcatting = !accum.isConcatting;
@@ -61,9 +60,7 @@ export class KeywordsExpressions {
     ).soFar;
   };
 
-
   private static getParams = (text: string, names) => {
-
     const items = KeywordsExpressions.splitParamsButIgnoreCommasInDoublequotes(text);
 
     let i = 0;
@@ -104,12 +101,10 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*INPUT(.*)/gim,
       ($0, $1, $2) => {
-
         let separator;
         if ($1.indexOf(',') > -1) {
           separator = ',';
-        }
-        else if ($1.indexOf(';') > -1) {
+        } else if ($1.indexOf(';') > -1) {
           separator = ';';
         }
         let parts;
@@ -117,8 +112,7 @@ export class KeywordsExpressions {
           return `
           TALK ${parts[0]}
           HEAR ${parts[1]}`;
-        }
-        else {
+        } else {
           return `
           HEAR ${$1}`;
         }
@@ -158,8 +152,7 @@ export class KeywordsExpressions {
           let separator;
           if ($1.indexOf(',') > -1) {
             separator = ',';
-          }
-          else if ($1.indexOf(';') > -1) {
+          } else if ($1.indexOf(';') > -1) {
             separator = ';';
           }
           let items;
@@ -205,9 +198,8 @@ export class KeywordsExpressions {
 
         if (kind === 'AS' && KeywordsExpressions.isNumber(sessionName)) {
           const jParams = JSON.parse(`{${params}}`);
-          const filename = `${jParams.url.substr(0, jParams.url.lastIndexOf("."))}.xlsx`;
-          let code =
-            `
+          const filename = `${jParams.url.substr(0, jParams.url.lastIndexOf('.'))}.xlsx`;
+          let code = `
            col = 1
            await sys.save({pid: pid,file: "${filename}", args: [id] })
            await dk.setFilter ({pid: pid, value:  "id=" + id })
@@ -254,7 +246,6 @@ export class KeywordsExpressions {
     keywords[i++] = [/^\s*function +(.*)\((.*)\)/gim, '$1 = async ($2) => {\n'];
 
     keywords[i++] = [/^\s*for +(.*to.*)/gim, 'for ($1) {'];
-
 
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*pay\s*(.*)/gim,
@@ -342,7 +333,6 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*FOR EACH\s*(.*)\s*IN\s*(.*)/gim,
       ($0, $1, $2) => {
-
         return `
     
         __totalCalls = 10;
@@ -366,9 +356,9 @@ export class KeywordsExpressions {
       }
     ];
 
-    keywords[i++] = [/^\s*next *$/gim,
+    keywords[i++] = [
+      /^\s*next *$/gim,
       ($0, $1, $2) => {
-
         return `
             
         __index = __index + 1;
@@ -411,6 +401,64 @@ export class KeywordsExpressions {
       }
     ];
 
+    keywords[i++] = [
+      /^\s*synchronize\s*(.*)/gim,
+      ($0, $1) => {
+        const items = KeywordsExpressions.splitParamsButIgnoreCommasInDoublequotes($1);
+        const [url, tableName, key1, pageVariable, limitVariable] = items;
+      
+        return `
+         
+            if (!limit) limit = 100;
+            __page = 1
+            while (__page > 0 && __page < pages) {
+
+              await retry(
+                async (bail) => {
+                  await ensureTokens();
+                  __res  = await sys.getHttp ({pid: pid, file: host + '${url}' + '?' + pageVariable + '=' + __page + '&' + limitVariable + '=' +  limit, addressOrHeaders: headers, httpUsername, httpPs})
+                },{ retries: 5});
+              
+              res  = __res
+              list1 = res.data
+
+
+              let j1 = 0
+              items1  = []
+              while (j1 < ubound(list1)) {
+                detail_id = caseInsensitive(list1[j1])['${key1}']
+
+                await retry(
+                  async (bail) => {
+                    await ensureTokens();
+                    __res  = await sys.getHttp ({pid: pid, file: host + '${url}' + '/' + detail_id, addressOrHeaders: headers, httpUsername, httpPs})
+                  },{ retries: 5});
+                
+                res  = __res
+
+                items1[j1] = res.data
+
+                j1 = j1 + 1
+              }
+              __reportMerge1 = await sys.merge({pid: pid, file: '${tableName}' , data: items1 , key1: '${key1}'})
+
+              __reportMerge.adds += __reportMerge1.adds;
+              __reportMerge.updates += __reportMerge1.updates;
+              __reportMerge.skipped += __reportMerge1.skipped;
+              __reportMerge.title = __reportMerge1.title;
+              REPORT = __report();
+
+              __page = __page + 1
+
+              if (list1?.length < limit) {
+                __page = 0
+              }
+            }
+
+
+         `;
+      }
+    ];
 
     keywords[i++] = [
       /^\s*(.*)\=\s*(REWRITE)(\s*)(.*)/gim,
@@ -451,8 +499,7 @@ export class KeywordsExpressions {
 
         if (params[1]) {
           return `await sys.deleteFromStorage ({pid: pid, ${params}})`;
-        }
-        else {
+        } else {
           return `await sys.deleteFile ({pid: pid, ${params}})`;
         }
       }
@@ -865,7 +912,6 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*post\s*(.*)/gim,
       ($0, $1, $2, $3) => {
-
         const args = $2.split(',');
 
         return `
@@ -972,13 +1018,12 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(talk)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-
         $3 = GBVMService.normalizeQuotes($3);
 
         // // Uses auto quote if this is a phrase with more then one word.
 
         if (!($3.trim().substr(0, 1) === '`' || $3.trim().substr(0, 1) === "'")) {
-          $3 = "`" + $3 + "`";
+          $3 = '`' + $3 + '`';
         }
         return `await dk.talk ({pid: pid, text: ${$3}})`;
       }
@@ -1214,12 +1259,11 @@ export class KeywordsExpressions {
         let index = 0;
 
         fields.forEach(field => {
-
-          // Extracts only the last part of the variable like 'column' 
+          // Extracts only the last part of the variable like 'column'
           // from 'row.column'.
 
           const fieldRegExp = /(?:.*\.)*(.*)/gim;
-          let name = fieldRegExp.exec(field.trim())[1]
+          let name = fieldRegExp.exec(field.trim())[1];
 
           fieldsNamesOnly.push(`'${name}'`);
         });

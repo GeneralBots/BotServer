@@ -530,7 +530,11 @@ export class DialogKeywords {
   public async sendEmail({ pid, to, subject, body }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
-    if (!body) {
+    if (!process.env.EMAIL_FROM){
+      return;                            
+    }
+
+    if (!body ) {
       body = "";
     };
 

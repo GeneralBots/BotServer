@@ -751,7 +751,7 @@ export class SystemKeywords {
       {
         retries: 5,
         onRetry: err => {
-          GBLog.error(`Retrying SaveToStorageBatch due to: ${err.message}.`);
+          GBLog.error(`Retrying SaveToStorageBatch due to: ${JSON.stringify(err)}.`);
         }
       }
     );
