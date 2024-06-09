@@ -643,7 +643,7 @@ export class GBVMService extends GBService {
 
                 global[tokenName] = token;
                 global[tokenName + "_expiresOn"]= expiresOn; 
-                console.log ('DONE:' + new Date(global[tokenName + "_expiresOn"]);
+                console.log ('DONE:' + new Date(global[tokenName + "_expiresOn"]) );
               }
 
               if (__indexer == 0) {
