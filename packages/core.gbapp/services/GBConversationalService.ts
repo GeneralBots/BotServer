@@ -670,7 +670,7 @@ export class GBConversationalService {
     }
 
     let data:any = {
-      name: isMedia ? 'broadcast_notext' : 'broadcast', components: [
+      name: isMedia ? 'broadcast_notext' : 'broadcast1', components: [
         {
           type: "header",
           parameters: [
