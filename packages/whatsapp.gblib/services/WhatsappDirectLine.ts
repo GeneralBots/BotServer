@@ -226,13 +226,6 @@ export class WhatsappDirectLine extends GBService {
 
     if (setUrl && options && this.whatsappServiceUrl) {
       GBServer.globals.server.use(`/audios`, express.static('work'));
-
-      if (options) {
-        try {
-        } catch (error) {
-          GBLog.error(`Error initializing 3rd party Whatsapp provider(1) ${error.message}`);
-        }
-      }
     }
   }
 
@@ -612,7 +605,7 @@ export class WhatsappDirectLine extends GBService {
         watermark = response.obj.watermark;
         await this.printMessages(response.obj.activities, conversationId, from, fromName);
       } catch (error) {
-        GBLog.error(`Error calling printMessages on Whatsapp channel ${JSON.stringify(error)}`);
+        GBLog.error(`Error calling printMessages on Whatsapp channel ${GBUtil.toYAML(error)}`);
       }
     };
     setInterval(worker, this.pollInterval);
@@ -739,6 +732,7 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async sendToDevice(to: any, msg: string, conversationId) {
+    try{
     const cmd = '/audio ';
     let url;
     let chatId = WhatsappDirectLine.chatIds[conversationId];
@@ -823,6 +817,11 @@ export class WhatsappDirectLine extends GBService {
         }
       }
     }
+    try {
+    } catch (error) {
+      GBLog.error(`GBWhatsApp ERR: ${GBUtil.toYAML(error)}`);
+    }
+
   }
 
   public async sendToDeviceEx(to, text, locale, conversationId) {
@@ -1092,7 +1091,7 @@ export class WhatsappDirectLine extends GBService {
         }
       }
     } catch (error) {
-      GBLog.error(`Error on Whatsapp callback: ${JSON.stringify(error)}`);
+      GBLog.error(`Error on Whatsapp callback: ${GBUtil.toYAML(error)}`);
     }
   }
 }

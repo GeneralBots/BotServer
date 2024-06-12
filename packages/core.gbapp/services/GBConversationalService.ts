@@ -698,7 +698,9 @@ export class GBConversationalService {
     }
 
     GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlImage}`);
+    
     await this.sendToMobile(min, mobile, data, null);
+
   }
   // tslint:enable:no-unsafe-any
 
