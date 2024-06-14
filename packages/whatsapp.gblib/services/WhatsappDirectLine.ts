@@ -732,96 +732,94 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async sendToDevice(to: any, msg: string, conversationId) {
-    try{
-    const cmd = '/audio ';
-    let url;
-    let chatId = WhatsappDirectLine.chatIds[conversationId];
+    try {
+      const cmd = '/audio ';
+      let url;
+      let chatId = WhatsappDirectLine.chatIds[conversationId];
 
-    if (typeof msg !== 'object' && msg.startsWith(cmd)) {
-      msg = msg.substr(cmd.length);
+      if (typeof msg !== 'object' && msg.startsWith(cmd)) {
+        msg = msg.substr(cmd.length);
 
-      return await this.sendTextAsAudioToDevice(to, msg, chatId);
-    } else {
-      let options, messages;
-      const botNumber = this.min.core.getParam(this.min.instance, 'Bot Number', null);
+        return await this.sendTextAsAudioToDevice(to, msg, chatId);
+      } else {
+        let options, messages;
+        const botNumber = this.min.core.getParam(this.min.instance, 'Bot Number', null);
 
-      switch (this.provider) {
-        case 'meta':
-          let whatsappServiceNumber, whatsappServiceKey;
-          if (botNumber && this.min.instance.whatsappServiceNumber) {
-            whatsappServiceNumber = this.min.instance.whatsappServiceNumber;
-            whatsappServiceKey = this.min.instance.whatsappServiceKey;
-          } else {
-            whatsappServiceNumber = GBServer.globals.minBoot.instance.whatsappServiceNumber;
-            whatsappServiceKey = GBServer.globals.minBoot.instance.whatsappServiceKey;
-          }
+        switch (this.provider) {
+          case 'meta':
+            let whatsappServiceNumber, whatsappServiceKey;
+            if (botNumber && this.min.instance.whatsappServiceNumber) {
+              whatsappServiceNumber = this.min.instance.whatsappServiceNumber;
+              whatsappServiceKey = this.min.instance.whatsappServiceKey;
+            } else {
+              whatsappServiceNumber = GBServer.globals.minBoot.instance.whatsappServiceNumber;
+              whatsappServiceKey = GBServer.globals.minBoot.instance.whatsappServiceKey;
+            }
 
-          const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
+            const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
 
-          if (msg['name']) {
-            const res = await driver.sendTemplate(to, msg['name'], 'pt_br', msg['components']);
-          } else {
-            messages = msg.match(/(.|[\r\n]){1,4096}/g);
+            if (msg['name']) {
+              const res = await driver.sendTemplate(to, msg['name'], 'pt_br', msg['components']);
+            } else {
+              messages = msg.match(/(.|[\r\n]){1,4096}/g);
+
+              await CollectionUtil.asyncForEach(messages, async msg => {
+                await driver.sendText(to, msg);
+
+                await GBUtil.sleep(3000);
+              });
+            }
+
+            break;
+          case 'official':
+            if (to.charAt(0) !== '+') {
+              to = `+${to}`;
+            }
+
+            messages = msg.match(/(.|[\r\n]){1,1000}/g);
 
             await CollectionUtil.asyncForEach(messages, async msg => {
-              await driver.sendText(to, msg);
-
               await GBUtil.sleep(3000);
+              await this.customClient.messages.create({
+                body: msg,
+                from: `whatsapp:${botNumber}`,
+                to: `whatsapp:${to}`
+                // TODO: mediaUrl.
+              });
             });
-          }
 
-          break;
-        case 'official':
-          if (to.charAt(0) !== '+') {
-            to = `+${to}`;
-          }
+            break;
 
-          messages = msg.match(/(.|[\r\n]){1,1000}/g);
-
-          await CollectionUtil.asyncForEach(messages, async msg => {
-            await GBUtil.sleep(3000);
-            await this.customClient.messages.create({
-              body: msg,
-              from: `whatsapp:${botNumber}`,
-              to: `whatsapp:${to}`
-              // TODO: mediaUrl.
-            });
-          });
-
-          break;
-
-        case 'GeneralBots':
-          to = to.replace('+', '');
-          if (to.indexOf('@') == -1) {
-            if (to.length == 18) {
-              to = to + '@g.us';
-            } else {
-              to = to + '@c.us';
+          case 'GeneralBots':
+            to = to.replace('+', '');
+            if (to.indexOf('@') == -1) {
+              if (to.length == 18) {
+                to = to + '@g.us';
+              } else {
+                to = to + '@c.us';
+              }
             }
-          }
-          if ((await this.customClient.getState()) === WAState.CONNECTED) {
-            await this.customClient.sendMessage(to, msg);
-          } else {
-            GBLogEx.info(this.min, `WhatsApp OFFLINE ${to}: ${msg}`);
-          }
+            if ((await this.customClient.getState()) === WAState.CONNECTED) {
+              await this.customClient.sendMessage(to, msg);
+            } else {
+              GBLogEx.info(this.min, `WhatsApp OFFLINE ${to}: ${msg}`);
+            }
 
-          break;
-      }
+            break;
+        }
 
-      if (options) {
-        try {
-          GBLogEx.info(this.min, `Message [${msg}] is being sent to ${to}...`);
-          await fetch(url, options);
-        } catch (error) {
-          GBLog.error(`Error sending message to Whatsapp provider ${JSON.stringify(error)}`);
+        if (options) {
+          try {
+            GBLogEx.info(this.min, `Message [${msg}] is being sent to ${to}...`);
+            await fetch(url, options);
+          } catch (error) {
+            GBLog.error(`Error sending message to Whatsapp provider ${JSON.stringify(error)}`);
+          }
         }
       }
-    }
-    try {
     } catch (error) {
       GBLog.error(`GBWhatsApp ERR: ${GBUtil.toYAML(error)}`);
     }
-
   }
 
   public async sendToDeviceEx(to, text, locale, conversationId) {
