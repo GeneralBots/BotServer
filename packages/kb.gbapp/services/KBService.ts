@@ -1032,7 +1032,7 @@ export class KBService implements IGBKBService {
     if (website) {
       // Removes last slash if any.
 
-      website = website.replace(/\/(?=[^\/]*$)/, '');
+      website.endsWith('/')?website.substring(0, website.length-1):website;
 
       let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
       const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
