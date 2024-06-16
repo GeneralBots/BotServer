@@ -854,8 +854,10 @@ export class KBService implements IGBKBService {
   }
 
   async saveHtmlPage(min, url: string, page: Page): Promise<string | null> {
-    const response = await page.goto(url);
-
+    let response = await page.goto(url);
+    if (!response) {
+      response = await page.waitForResponse(() => true);
+    }
     if (response && response.headers && response.status() === 200) {
       const contentType = response.headers()['content-type'];
       if (contentType && contentType.includes('text/html')) {
