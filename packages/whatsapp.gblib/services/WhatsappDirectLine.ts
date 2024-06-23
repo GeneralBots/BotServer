@@ -136,7 +136,7 @@ export class WhatsappDirectLine extends GBService {
         const minBoot = GBServer.globals.minBoot;
         // Initialize the browser using a local profile for each bot.
         const gbaiPath = DialogKeywords.getGBAIPath(this.min.botId);
-        const webVersion = '2.2411.2';
+        const webVersion = '2.2412.51';
         const localName = Path.join('work', gbaiPath, 'profile');
         const createClient = () => {
           const client = (this.customClient = new Client({
