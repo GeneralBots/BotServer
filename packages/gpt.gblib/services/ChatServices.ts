@@ -60,6 +60,7 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { pagespeedonline } from 'googleapis/build/src/apis/pagespeedonline/index.js';
 
 export interface CustomOutputParserFields {}
 export type ExpectedOutput = any;
@@ -220,6 +221,7 @@ export class ChatServices {
     return output;
   }
 
+  
   private static async findPageForText(pdfPath, searchText) {
     const data = new Uint8Array(Fs.readFileSync(pdfPath));
     const pdf = await getDocument({ data }).promise;

@@ -49,7 +49,7 @@ export class KeywordsExpressions {
           if (curr === '') {
             curr = null;
           }
-          accum.soFar.push(curr?curr.trim(): '');
+          accum.soFar.push(curr ? curr.trim() : '');
         }
         if (curr.split('`').length % 2 == 0) {
           accum.isConcatting = !accum.isConcatting;
@@ -406,7 +406,7 @@ export class KeywordsExpressions {
       ($0, $1) => {
         const items = KeywordsExpressions.splitParamsButIgnoreCommasInDoublequotes($1);
         const [url, tableName, key1, pageVariable, limitVariable] = items;
-      
+
         return `
          
             if (!limit) limit = 100;
@@ -744,7 +744,10 @@ export class KeywordsExpressions {
 
         // Handles the GET http version.
         else {
-          return `
+          if ($2.endsWith('.pdf') && !$2.startsWith('https')) {
+            return `${$1} = await sys.getPdf({pid: pid, file: ${$2});`;
+          } else {
+            return `
           await retry(
             async (bail) => {
               await ensureTokens();
@@ -754,6 +757,7 @@ export class KeywordsExpressions {
             ${$1} = __${$1} 
     
           `;
+          }
         }
       }
     ];
@@ -777,6 +781,14 @@ export class KeywordsExpressions {
       ($0, $1, $2, $3) => {
         const params = this.getParams($3, ['fromOrDialogName', 'dialogName']);
         return `await dk.gotoDialog({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
+      /^\s*(SET CONTEXT)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['text']);
+        return `await sys.setContext({pid: pid, ${params}})`;
       }
     ];
 

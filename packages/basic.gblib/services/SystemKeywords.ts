@@ -28,6 +28,8 @@
 |                                                                             |
 \*****************************************************************************/
 'use strict';
+
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -40,6 +42,7 @@ import Fs from 'fs';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import urlJoin from 'url-join';
 import Excel from 'exceljs';
+import { BufferWindowMemory } from 'langchain/memory';
 import { TwitterApi } from 'twitter-api-v2';
 import Path from 'path';
 import ComputerVisionClient from '@azure/cognitiveservices-computervision';
@@ -2662,4 +2665,39 @@ export class SystemKeywords {
 
     GBLogEx.info(min, mydump(obj, level));
   }
+
+  public async getPdfContents({ pid, pdfName }) {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC GET (pdf): ${pdfName}`);
+
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    let path = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
+    let template = await this.internalGetDocument(client, baseUrl, path, pdfName);
+    let url = template['@microsoft.graph.downloadUrl'];
+    const res = await fetch(url);
+    let data: any = Buffer.from(await res.arrayBuffer());
+
+    const pdf = await getDocument({ data }).promise;
+    let pages = []
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const text = textContent.items
+        .map(item => item['str'])
+        .join('')
+        .replace(/\s/g, '');
+      pages.push(text)
+      
+    }
+
+    return pages.join("");
+  }
+
+  public async setContext({pid, text}){
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    ChatServices.userSystemPrompt[user.userSystemId] = text;
+  }
+
 }
