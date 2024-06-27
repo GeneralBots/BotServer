@@ -32,6 +32,7 @@
  * @fileoverview Knowledge base services and logic.
  */
 
+import html2md from 'html-to-md'
 import Path from 'path';
 import Fs from 'fs';
 import urlJoin from 'url-join';
@@ -861,7 +862,7 @@ export class KBService implements IGBKBService {
     if (response && response.headers && response.status() === 200) {
       const contentType = response.headers()['content-type'];
       if (contentType && contentType.includes('text/html')) {
-        const buffer = await page.$eval('*', el => el['innerText']);
+        const buffer = html2md(await response.text());
         const urlObj = new URL(url);
         const urlPath = urlObj.pathname.endsWith('/') ? urlObj.pathname.slice(0, -1) : urlObj.pathname; // Remove trailing slash if present
         let filename = urlPath.split('/').pop() || 'index'; // Get the filename from the URL path or set it to 'index.html' as default
