@@ -1029,6 +1029,7 @@ export class KBService implements IGBKBService {
     let files = [];
 
     let website = min.core.getParam<string>(min.instance, 'Website', null);
+    const maxDepth  = min.core.getParam<number>(min.instance, 'Website Depth', 1);
     const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
 
     if (website) {
@@ -1093,7 +1094,6 @@ export class KBService implements IGBKBService {
 
       page.setCacheEnabled(false);
 
-      const maxDepth = 1; // Maximum depth of recursion
       const visited = new Set<string>();
       files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page, websiteIgnoreUrls));
 
