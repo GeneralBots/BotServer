@@ -2666,14 +2666,14 @@ export class SystemKeywords {
     GBLogEx.info(min, mydump(obj, level));
   }
 
-  public async getPdf({ pid, pdfName }) {
+  public async getPdf({ pid, file }) {
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC GET (pdf): ${pdfName}`);
+    GBLogEx.info(min, `BASIC GET (pdf): ${file}`);
 
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const gbaiName = DialogKeywords.getGBAIPath(min.botId);
     let path = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
-    let template = await this.internalGetDocument(client, baseUrl, path, pdfName);
+    let template = await this.internalGetDocument(client, baseUrl, path, file);
     let url = template['@microsoft.graph.downloadUrl'];
     const res = await fetch(url);
     let data: any = Buffer.from(await res.arrayBuffer());
