@@ -2676,8 +2676,8 @@ export class SystemKeywords {
     let template = await this.internalGetDocument(client, baseUrl, path, file);
     let url = template['@microsoft.graph.downloadUrl'];
     const res = await fetch(url);
-    let data: any = Buffer.from(await res.arrayBuffer());
-
+    let buf: any = Buffer.from(await res.arrayBuffer());
+    const data = new Uint8Array(buf);
     const pdf = await getDocument({ data }).promise;
     let pages = []
 
