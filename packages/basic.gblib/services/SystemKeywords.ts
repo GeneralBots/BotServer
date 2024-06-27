@@ -2666,7 +2666,7 @@ export class SystemKeywords {
     GBLogEx.info(min, mydump(obj, level));
   }
 
-  public async getPdfContents({ pid, pdfName }) {
+  public async getPdf({ pid, pdfName }) {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `BASIC GET (pdf): ${pdfName}`);
 
