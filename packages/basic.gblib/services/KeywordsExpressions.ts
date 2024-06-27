@@ -744,7 +744,10 @@ export class KeywordsExpressions {
 
         // Handles the GET http version.
         else {
-          if ($2.endsWith('.pdf') && !$2.startsWith('https')) {
+
+          const value = $2.replace(/\`/gi, '');
+
+          if (value.endsWith('.pdf') && !value.startsWith('https')) {
             return `${$1} = await sys.getPdf({pid: pid, file: ${$2});`;
           } else {
             return `
