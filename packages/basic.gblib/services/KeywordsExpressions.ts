@@ -748,7 +748,7 @@ export class KeywordsExpressions {
           const value = $2.replace(/\`/gi, '');
 
           if (value.endsWith('.pdf') && !value.startsWith('https')) {
-            return `${$1} = await sys.getPdf({pid: pid, file: ${$2});`;
+            return `${$1} = await sys.getPdf({pid: pid, file: ${$2}});`;
           } else {
             return `
           await retry(
