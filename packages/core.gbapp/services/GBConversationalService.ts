@@ -65,13 +65,11 @@ import { GBUtil } from '../../../src/util.js';
 import { GBLogEx } from './GBLogEx.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 
-
 /**
  * Provides basic services for handling messages and dispatching to back-end
  * services like NLP or Search.
  */
 export class GBConversationalService {
-
   public async getNewMobileCode() {
     throw new Error('Method removed.');
   }
@@ -322,7 +320,8 @@ export class GBConversationalService {
         const filename = url.substring(url.lastIndexOf('/') + 1);
         await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
       } else {
-        GBLogEx.info(min,
+        GBLogEx.info(
+          min,
           `Sending ${url} as file attachment not available in this channel ${step.context.activity['mobile']}...`
         );
         await min.conversationalService.sendText(min, step, url);
@@ -341,9 +340,9 @@ export class GBConversationalService {
   }
 
   public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
-    if (step.context.activity.channelId !== 'msteams' &&
-      step.context.activity.channelId !== 'omnichannel') {
-      GBLogEx.info(min,
+    if (step.context.activity.channelId !== 'msteams' && step.context.activity.channelId !== 'omnichannel') {
+      GBLogEx.info(
+        min,
         `Sending event ${name}:${typeof value === 'object' ? JSON.stringify(value) : value ? value : ''} to client...`
       );
       const msg = MessageFactory.text('');
@@ -357,23 +356,18 @@ export class GBConversationalService {
 
   // tslint:disable:no-unsafe-any due to Nexmo.
   public async sendSms(min: GBMinInstance, mobile: string, text: string): Promise<any> {
-
     let botNumber = min.core.getParam<string>(min.instance, 'Bot Number', null);
     if (botNumber) {
-
-
       GBLogEx.info(min, `Sending SMS from ${botNumber} to ${mobile} with text: '${text}'.`);
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
       const authToken = process.env.TWILIO_AUTH_TOKEN;
       const client = twilio(null, authToken, { accountSid: accountSid });
 
-
-      const msg = await client.messages
-        .create({
-          body: text,
-          from: '+' + botNumber,
-          to: '+' + mobile
-        })
+      const msg = await client.messages.create({
+        body: text,
+        from: '+' + botNumber,
+        to: '+' + mobile
+      });
 
       GBLogEx.info(min, `SMS sent, return: ${msg.sid}.`);
     }
@@ -429,8 +423,9 @@ export class GBConversationalService {
 
   public async sendToMobile(min: GBMinInstance, mobile: string, message: any, conversationId) {
     GBLogEx.info(min, `Sending message ${message} to ${mobile}...`);
-    return min.whatsAppDirectLine ? await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId) :
-      await this.sendSms(min, mobile, message);
+    return min.whatsAppDirectLine
+      ? await min.whatsAppDirectLine.sendToDevice(mobile, message, conversationId)
+      : await this.sendSms(min, mobile, message);
   }
 
   public static async getAudioBufferFromText(text): Promise<string> {
@@ -477,7 +472,7 @@ export class GBConversationalService {
     return new Promise<string>(async (resolve, reject) => {
       try {
         const oggFile = new Readable();
-        oggFile._read = () => { }; // _read is required but you can noop it
+        oggFile._read = () => {}; // _read is required but you can noop it
         oggFile.push(buffer);
         oggFile.push(null);
 
@@ -544,27 +539,24 @@ export class GBConversationalService {
   }
   public static getIBMAudioModelNameFromLocale = locale => {
     const locales = {
-      "ar": "ar-MS_BroadbandModel",
-      "zh": "zh-CN_BroadbandModel",
-      "nl": "nl-NL_BroadbandModel",
-      "en": "en-US_BroadbandModel",
-      "fr": "fr-FR_BroadbandModel",
-      "de": "de-DE_BroadbandModel",
-      "it": "it-IT_BroadbandModel",
-      "ja": "ja-JP_BroadbandModel",
-      "ko": "ko-KR_BroadbandModel",
-      "pt": "pt-BR_BroadbandModel",
-      "es": "es-ES_BroadbandModel"
+      ar: 'ar-MS_BroadbandModel',
+      zh: 'zh-CN_BroadbandModel',
+      nl: 'nl-NL_BroadbandModel',
+      en: 'en-US_BroadbandModel',
+      fr: 'fr-FR_BroadbandModel',
+      de: 'de-DE_BroadbandModel',
+      it: 'it-IT_BroadbandModel',
+      ja: 'ja-JP_BroadbandModel',
+      ko: 'ko-KR_BroadbandModel',
+      pt: 'pt-BR_BroadbandModel',
+      es: 'es-ES_BroadbandModel'
     };
 
     const languageCode = locale.substring(0, 2);
-    return locales[languageCode] || "en-US_BroadbandModel";
+    return locales[languageCode] || 'en-US_BroadbandModel';
   };
 
-
-  public async playMarkdown(min: GBMinInstance, answer: string, channel: string,
-    step: GBDialogStep, mobile: string) {
-
+  public async playMarkdown(min: GBMinInstance, answer: string, channel: string, step: GBDialogStep, mobile: string) {
     const sec = new SecService();
     const user = await sec.getUserFromSystemId(mobile ? mobile : step.context.activity.from.id);
 
@@ -649,58 +641,57 @@ export class GBConversationalService {
   }
 
   public async fillAndBroadcastTemplate(min: GBMinInstance, mobile: string, text) {
+    if (text.startsWith('broadcastx')) {
+      await this.sendToMobile(min, mobile, { name: text }, null);
+    } else {
+      let isMedia =
+        text.toLowerCase().endsWith('.jpg') ||
+        text.toLowerCase().endsWith('.jpeg') ||
+        text.toLowerCase().endsWith('.png');
 
-    let isMedia = text.toLowerCase().endsWith('.jpg') || text.toLowerCase().endsWith('.jpeg')
-      || text.toLowerCase().endsWith('.png');
+      let image = !isMedia ? /(.*)\n/gim.exec(text)[0].trim() : text;
 
-    let image = !isMedia ?
-      /(.*)\n/gmi.exec(text)[0].trim() :
-      text;
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const fileUrl = urlJoin(process.env.BOT_URL, 'kb', gbaiName, `${min.botId}.gbkb`, 'images', image);
 
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-    const fileUrl = urlJoin(process.env.BOT_URL, 'kb', gbaiName, `${min.botId}.gbkb`, 'images', image);
+      let urlImage = image.startsWith('http') ? image : fileUrl;
 
-    let urlImage = image.startsWith('http')
-      ? image
-      : fileUrl;
+      if (!isMedia) {
+        text = text.substring(image.length + 1).trim();
+        text = text.replace(/\n/g, '\\n');
+      }
 
-    if (!isMedia) {
-      text = text.substring(image.length + 1).trim();
-      text = text.replace(/\n/g, "\\n");
-    }
-
-    let data:any = {
-      name: isMedia ? 'broadcast_notext' : 'broadcast1', components: [
-        {
-          type: "header",
-          parameters: [
-            {
-              type: "image",
-              image: {
-                link: urlImage,
-              }
-            },
-          ],
-        }
-      ]
-    };
-
-    if (!isMedia) {
-      data.components.push({
-        type: "body",
-        parameters: [
+      let data: any = {
+        name: isMedia ? 'broadcast_notext' : 'broadcast1',
+        components: [
           {
-            type: "text",
-            text: text,
+            type: 'header',
+            parameters: [
+              {
+                type: 'image',
+                image: {
+                  link: urlImage
+                }
+              }
+            ]
           }
         ]
-      });
+      };
+
+      if (!isMedia) {
+        data.components.push({
+          type: 'body',
+          parameters: [
+            {
+              type: 'text',
+              text: text
+            }
+          ]
+        });
+      }
+      await this.sendToMobile(min, mobile, data, null);
     }
-
     GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlImage}`);
-    
-    await this.sendToMobile(min, mobile, data, null);
-
   }
   // tslint:enable:no-unsafe-any
 
@@ -944,7 +935,8 @@ export class GBConversationalService {
         return false;
       }
 
-      GBLogEx.info(min,
+      GBLogEx.info(
+        min,
         `NLP called: ${intent}, entities: ${nlp.entities.length}, score: ${score} > required (nlpScore): ${instanceScore}`
       );
 
@@ -965,7 +957,6 @@ export class GBConversationalService {
 
       await step.replaceDialog(`/${intent}`, step.activeDialog.state.options);
       return true;
-
     }
 
     GBLogEx.info(min, `NLP NOT called: score: ${score} > required (nlpScore): ${instanceScore}`);
@@ -1003,7 +994,6 @@ export class GBConversationalService {
   }
 
   public async translate(min: GBMinInstance, text: string, language: string): Promise<string> {
-
     const translatorEnabled = () => {
       if (min.instance.params) {
         const params = JSON.parse(min.instance.params);
@@ -1051,14 +1041,13 @@ export class GBConversationalService {
         return Promise.reject(new Error(msg));
       }
     } else {
-      let url = urlJoin(
-        endPoint,
-        'translate');
-      url += "?" +
+      let url = urlJoin(endPoint, 'translate');
+      url +=
+        '?' +
         new URLSearchParams({
           'api-version': '3.0',
           to: language
-        }).toString()
+        }).toString();
 
       let options = {
         method: 'POST',
@@ -1078,8 +1067,7 @@ export class GBConversationalService {
 
         if (results[0]) {
           return results[0].translations[0].text;
-        }
-        else {
+        } else {
           return text;
         }
       } catch (error) {
@@ -1157,10 +1145,7 @@ export class GBConversationalService {
 
     const group = step.context.activity['group'];
 
-    const groupSpell = group ? await min.core.getParam(
-      min.instance,
-      'Group Spell',
-      false) : false;
+    const groupSpell = group ? await min.core.getParam(min.instance, 'Group Spell', false) : false;
 
     if (textProcessed !== text && group && groupSpell) {
       await min.whatsAppDirectLine.sendToDevice(group, `Spell: ${text}`);
@@ -1168,24 +1153,17 @@ export class GBConversationalService {
 
     // Detects user typed language and updates their locale profile if applies.
 
-    let locale = user.locale ? user.locale : min.core.getParam(
-      min.instance,
-      'Default User Language',
-      GBConfigService.get('DEFAULT_USER_LANGUAGE'));
+    let locale = user.locale
+      ? user.locale
+      : min.core.getParam(min.instance, 'Default User Language', GBConfigService.get('DEFAULT_USER_LANGUAGE'));
 
-    const detectLanguage =
-      min.core.getParam(
-        min.instance,
-        'Language Detector',
-        false) != false;
-
+    const detectLanguage = min.core.getParam(min.instance, 'Language Detector', false) != false;
 
     if (text.indexOf(' ') !== -1 && detectLanguage) {
       locale = await min.conversationalService.getLanguage(min, text);
       if (user.locale != locale) {
         user = await sec.updateUserLocale(user.userId, locale);
-        await min.conversationalService.sendText(min,
-          step, `Changed language to: ${locale}`);
+        await min.conversationalService.sendText(min, step, `Changed language to: ${locale}`);
       }
     }
 
@@ -1221,7 +1199,6 @@ export class GBConversationalService {
       GBLog.verbose(`Translated text(prompt): ${text}.`);
     }
     if (step.activeDialog.state.options['kind'] === 'file') {
-
       return await step.prompt('attachmentPrompt', {});
     } else {
       await this.sendText(min, step, text);

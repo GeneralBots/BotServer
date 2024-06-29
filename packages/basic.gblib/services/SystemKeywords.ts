@@ -2700,4 +2700,34 @@ export class SystemKeywords {
     ChatServices.userSystemPrompt[user.userSystemId] = text;
   }
 
+  public async setMemoryContext({pid, input, output, erase}){
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    let memory;
+    if (erase || !ChatServices.memoryMap[user.userSystemId]) {
+      memory = new BufferWindowMemory({
+        returnMessages: true,
+        memoryKey: 'chat_history',
+        inputKey: 'input',
+        k: 2
+      });
+
+      ChatServices.memoryMap[user.userSystemId] = memory;
+    } else {
+      memory = ChatServices.memoryMap[user.userSystemId];
+    }
+
+    if (memory)
+    await memory.saveContext(
+      {
+        input: input
+      },
+      {
+        output: output
+      }
+    );
+
+
+  }
+
+
 }
