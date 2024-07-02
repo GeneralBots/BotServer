@@ -690,8 +690,8 @@ export class GBConversationalService {
         });
       }
       await this.sendToMobile(min, mobile, data, null);
-    }
     GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlImage}`);
+    }
   }
   // tslint:enable:no-unsafe-any
 
