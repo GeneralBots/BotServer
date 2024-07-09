@@ -52,6 +52,7 @@ import Fs from 'fs';
 import twilio from 'twilio';
 import Nexmo from 'nexmo';
 import { join } from 'path';
+import Path from 'path';
 import shell from 'any-shell-escape';
 import { exec } from 'child_process';
 import prism from 'prism-media';
@@ -661,8 +662,10 @@ export class GBConversationalService {
         text = text.replace(/\n/g, '\\n');
       }
 
+      let template = isMedia ? Path.basename(image) : 'broadcast1'
+
       let data: any = {
-        name: isMedia ? 'broadcast_notext' : 'broadcast1',
+        name: template ,
         components: [
           {
             type: 'header',
