@@ -662,7 +662,7 @@ export class GBConversationalService {
         text = text.replace(/\n/g, '\\n');
       }
 
-      let template = isMedia ? Path.basename(image) : 'broadcast1'
+      let template = isMedia ? image.replace(/\.[^/.]+$/, "") : 'broadcast1'
 
       let data: any = {
         name: template ,
