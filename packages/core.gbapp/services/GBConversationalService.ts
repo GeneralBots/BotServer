@@ -642,59 +642,55 @@ export class GBConversationalService {
   }
 
   public async fillAndBroadcastTemplate(min: GBMinInstance, mobile: string, text) {
-    if (text.startsWith('broadcastx')) {
-      await this.sendToMobile(min, mobile, { name: text }, null);
-    } else {
-      let isMedia =
-        text.toLowerCase().endsWith('.jpg') ||
-        text.toLowerCase().endsWith('.jpeg') ||
-        text.toLowerCase().endsWith('.png');
+    let isMedia =
+      text.toLowerCase().endsWith('.jpg') ||
+      text.toLowerCase().endsWith('.jpeg') ||
+      text.toLowerCase().endsWith('.png');
 
-      let image = !isMedia ? /(.*)\n/gim.exec(text)[0].trim() : text;
+    let image = !isMedia ? /(.*)\n/gim.exec(text)[0].trim() : text;
 
-      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-      const fileUrl = urlJoin(process.env.BOT_URL, 'kb', gbaiName, `${min.botId}.gbkb`, 'images', image);
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const fileUrl = urlJoin(process.env.BOT_URL, 'kb', gbaiName, `${min.botId}.gbkb`, 'images', image);
 
-      let urlImage = image.startsWith('http') ? image : fileUrl;
+    let urlImage = image.startsWith('http') ? image : fileUrl;
 
-      if (!isMedia) {
-        text = text.substring(image.length + 1).trim();
-        text = text.replace(/\n/g, '\\n');
-      }
+    if (!isMedia) {
+      text = text.substring(image.length + 1).trim();
+      text = text.replace(/\n/g, '\\n');
+    }
 
-      let template = isMedia ? image.replace(/\.[^/.]+$/, "") : 'broadcast1'
+    let template = isMedia ? image.replace(/\.[^/.]+$/, '') : 'broadcast1';
 
-      let data: any = {
-        name: template ,
-        components: [
-          {
-            type: 'header',
-            parameters: [
-              {
-                type: 'image',
-                image: {
-                  link: urlImage
-                }
-              }
-            ]
-          }
-        ]
-      };
-
-      if (!isMedia) {
-        data.components.push({
-          type: 'body',
+    let data: any = {
+      name: template,
+      components: [
+        {
+          type: 'header',
           parameters: [
             {
-              type: 'text',
-              text: text
+              type: 'image',
+              image: {
+                link: urlImage
+              }
             }
           ]
-        });
-      }
-      await this.sendToMobile(min, mobile, data, null);
-    GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlImage}`);
+        }
+      ]
+    };
+
+    if (!isMedia) {
+      data.components.push({
+        type: 'body',
+        parameters: [
+          {
+            type: 'text',
+            text: text
+          }
+        ]
+      });
     }
+    await this.sendToMobile(min, mobile, data, null);
+    GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlImage}`);
   }
   // tslint:enable:no-unsafe-any
 
