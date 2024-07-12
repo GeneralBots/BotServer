@@ -759,7 +759,7 @@ export class WhatsappDirectLine extends GBService {
             const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
 
             if (msg['name']) {
-              const res = await driver.sendTemplate(to, msg['name'], 'pt_PT', msg['components']);
+              const res = await driver.sendTemplate(to, msg['name'], 'pt_BR', msg['components']);
             } else {
               messages = msg.match(/(.|[\r\n]){1,4096}/g);
 
