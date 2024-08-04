@@ -117,11 +117,11 @@ export class GBServer {
     });
 
     process.on('uncaughtException', (err, p) => {
-      GBLogEx.error(0, `GBEXCEPTION: ${GBUtil.toYAML(JSON.stringify(err, Object.getOwnPropertyNames(err)))}`);
+      GBLogEx.error(0, `GBEXCEPTION: ${GBUtil.toYAML(err)}`);
     });
 
     process.on('unhandledRejection', (err, p) => {
-      GBLogEx.error(0,`GBREJECTION: ${GBUtil.toYAML(JSON.stringify(err, Object.getOwnPropertyNames(err)))}`);
+      GBLogEx.error(0,`GBREJECTION: ${GBUtil.toYAML(err)}`);
     });
 
     // Creates working directory.

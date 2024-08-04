@@ -255,7 +255,7 @@ export class ChatServices {
   public static memoryMap = {};
   public static userSystemPrompt = {};
 
-  public static async answerByGPT(min: GBMinInstance, user, question: string, mode = null) {
+  public static async answerByLLM(min: GBMinInstance, user, question: string, mode = null) {
     const answerMode = min.core.getParam(min.instance, 'Answer Mode', null);
 
     if (!answerMode || answerMode === 'nollm') {

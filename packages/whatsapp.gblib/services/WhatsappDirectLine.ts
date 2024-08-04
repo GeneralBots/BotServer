@@ -46,6 +46,7 @@ import qrcode from 'qrcode-terminal';
 import express from 'express';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import pkg from 'whatsapp-web.js';
+import fetch, { Response } from 'node-fetch';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
@@ -55,6 +56,8 @@ import twilio from 'twilio';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { createBot } from 'whatsapp-cloud-api';
+import { promisify } from 'util';
+const stat = promisify(Fs.stat);
 
 /**
  * Support for Whatsapp.
@@ -77,7 +80,10 @@ export class WhatsappDirectLine extends GBService {
   public whatsappServiceKey: string;
   public whatsappServiceNumber: string;
   public whatsappServiceUrl: string;
+  public whatsappBusinessManagerId: string;
+  public whatsappFBAppId: string;
   public botId: string;
+  public botNumber: string;
   public min: GBMinInstance;
   private directLineSecret: string;
   private locale: string = 'pt-BR';
@@ -126,6 +132,26 @@ export class WhatsappDirectLine extends GBService {
     let options: any;
 
     switch (this.provider) {
+      case 'meta':
+        this.botNumber = this.min.core.getParam<string>(this.min.instance, 'Bot Number', null);
+        let whatsappServiceNumber, whatsappServiceKey, url;
+        if (this.botNumber && this.min.instance.whatsappServiceNumber) {
+          whatsappServiceNumber = this.min.instance.whatsappServiceNumber;
+          whatsappServiceKey = this.min.instance.whatsappServiceKey;
+          url = this.min.instance.whatsappServiceUrl;
+        } else {
+          whatsappServiceNumber = GBServer.globals.minBoot.instance.whatsappServiceNumber;
+          whatsappServiceKey = GBServer.globals.minBoot.instance.whatsappServiceKey;
+          url = GBServer.globals.minBoot.instance.whatsappServiceUrl;
+        }
+        if (url) {
+          const parts = url.split(';');
+          this.whatsappBusinessManagerId = parts[0];
+          this.whatsappFBAppId = parts[1];
+        }
+
+        this.customClient = createBot(whatsappServiceNumber, whatsappServiceKey);
+        break;
       case 'official':
         const accountSid = process.env.TWILIO_ACCOUNT_SID;
         const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -381,10 +407,9 @@ export class WhatsappDirectLine extends GBService {
 
         // Ignore group messages without the mention to Bot.
 
-        let botNumber = this.min.core.getParam<string>(this.min.instance, 'Bot Number', null);
-        if (botNumber && !answerText && !found) {
-          botNumber = botNumber.replace('+', '');
-          if (!message.body.startsWith('@' + botNumber)) {
+        if (this.botNumber && !answerText && !found) {
+          let n = this.botNumber.replace('+', '');
+          if (!message.body.startsWith('@' + n)) {
             return;
           }
         }
@@ -731,6 +756,119 @@ export class WhatsappDirectLine extends GBService {
     await this.sendFileToDevice(to, url, 'Audio', msg, chatId);
   }
 
+  // Function to create or update a template using WhatsApp Business API
+
+  public async createOrUpdateTemplate(min: GBMinInstance, template, text) {
+
+    template = template.replace(/\-/gi, '_')
+    template = template.replace(/\./gi, '_')
+
+    let image = /(.*)\n/gim.exec(text)[0].trim();
+
+    let path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
+    path = Path.join(process.env.PWD, 'work', path, 'images', image);
+
+    text = text.substring(image.length + 1).trim();
+    text = text.replace(/\n/g, '\\n');
+
+    const handleImage = await min.whatsAppDirectLine.uploadLargeFile(min, path);
+
+    let data: any = {
+      name: template,
+      components: [
+        {
+          type: 'HEADER',
+          format: 'IMAGE',
+          example: { header_handle: [handleImage] }
+        },
+        {
+          type: 'BODY',
+          text: text
+        }
+      ]
+    };
+
+    const name = data.name;
+
+    // Define the API base URL and endpoints
+
+    const baseUrl = 'https://graph.facebook.com/v20.0'; // API version 20.0
+    const businessAccountId = this.whatsappBusinessManagerId;
+    const accessToken = this.whatsappServiceKey;
+
+    // Endpoint for listing templates
+
+    const listTemplatesEndpoint = `${baseUrl}/${businessAccountId}/message_templates?access_token=${accessToken}`;
+
+    // Step 1: Check if the template exists
+
+    const listResponse = await fetch(listTemplatesEndpoint, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    if (!listResponse.ok) {
+      throw new Error('Failed to list templates');
+    }
+
+    const templates = await listResponse.json();
+    const templateExists = templates.data.find(template => template.name === name);
+
+    if (templateExists) {
+      // Step 2: Update the template
+      const updateTemplateEndpoint = `${baseUrl}/${templateExists.id}`;
+
+      // Removes the first HEADER element.
+
+      data.components.shift();
+
+      const updateResponse = await fetch(updateTemplateEndpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          components: data.components
+        })
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error(`Failed to update template: ${name} ${await updateResponse.text()}`);
+      }
+
+      GBLogEx.info(min, `Template updated: ${name}`);
+    } else {
+      // Step 3: Create the template
+      const createTemplateEndpoint = `${baseUrl}/${businessAccountId}/message_templates`;
+
+      const createResponse = await fetch(createTemplateEndpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: data['name'],
+          language: 'pt_BR',
+          category: 'MARKETING',
+          components: data.components
+        })
+      });
+
+      if (!createResponse.ok) {
+        const body = await createResponse.text();
+        throw new Error(`Failed to create template: ${name} ${body}`);
+      }
+
+      GBLogEx.info(min, `Template created: ${name}`);
+    }
+
+    await GBUtil.sleep(20 * 1000);
+  }
+
   public async sendToDevice(to: any, msg: string, conversationId) {
     try {
       const cmd = '/audio ';
@@ -747,26 +885,17 @@ export class WhatsappDirectLine extends GBService {
 
         switch (this.provider) {
           case 'meta':
-            let whatsappServiceNumber, whatsappServiceKey;
-            if (botNumber && this.min.instance.whatsappServiceNumber) {
-              whatsappServiceNumber = this.min.instance.whatsappServiceNumber;
-              whatsappServiceKey = this.min.instance.whatsappServiceKey;
-            } else {
-              whatsappServiceNumber = GBServer.globals.minBoot.instance.whatsappServiceNumber;
-              whatsappServiceKey = GBServer.globals.minBoot.instance.whatsappServiceKey;
-            }
-
-            const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
-
             if (msg['name']) {
-              const res = await driver.sendTemplate(to, msg['name'], 'pt_BR', msg['components']);
+              await this.customClient.sendTemplate(to, msg['name'], 'pt_BR', msg['components']);
             } else {
               messages = msg.match(/(.|[\r\n]){1,4096}/g);
 
               await CollectionUtil.asyncForEach(messages, async msg => {
-                await driver.sendText(to, msg);
+                await this.customClient.sendText(to, msg);
 
-                await GBUtil.sleep(3000);
+                if (messages.length > 1) {
+                  await GBUtil.sleep(3000);
+                }
               });
             }
 
@@ -1090,6 +1219,84 @@ export class WhatsappDirectLine extends GBService {
       }
     } catch (error) {
       GBLog.error(`Error on Whatsapp callback: ${GBUtil.toYAML(error)}`);
+    }
+  }
+
+  public async uploadLargeFile(min, filePath) {
+    const CHUNK_SIZE = 4 * 1024 * 1024; // 4MB chunks
+    let uploadSessionId;
+    const fileSize = (await stat(filePath)).size;
+    const fileName = filePath.split('/').pop();
+    const fileType = mime.lookup(filePath);
+    const appId = this.whatsappFBAppId;
+    const userAccessToken = this.whatsappServiceKey;
+    let h;
+
+    try {
+      if (!fileType) {
+        throw new Error('Unsupported file type');
+      }
+
+      // Step 1: Start an upload session
+      const startResponse = await fetch(
+        `https://graph.facebook.com/v20.0/${appId}/uploads?file_name=${fileName}&file_length=${fileSize}&file_type=${fileType}&access_token=${userAccessToken}`,
+        {
+          method: 'POST'
+        }
+      );
+
+      const startData = await startResponse.json();
+      if (!startResponse.ok) {
+        throw new Error(startData.error.message);
+      }
+      uploadSessionId = startData.id.split(':')[1];
+
+      // Step 2: Upload the file in chunks
+      let startOffset = 0;
+
+      while (startOffset < fileSize) {
+        const endOffset = Math.min(startOffset + CHUNK_SIZE, fileSize);
+        const fileStream = Fs.createReadStream(filePath, { start: startOffset, end: endOffset - 1 });
+        const chunkSize = endOffset - startOffset;
+
+        const uploadResponse = await fetch(`https://graph.facebook.com/v20.0/upload:${uploadSessionId}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `OAuth ${userAccessToken}`,
+            file_offset: startOffset.toString(),
+            'Content-Length': chunkSize.toString()
+          },
+          body: fileStream
+        });
+
+        const uploadData = await uploadResponse.json();
+        if (!h) {
+          h = uploadData.h;
+        }
+        if (!uploadResponse.ok) {
+          throw new Error(uploadData.error.message);
+        }
+
+        startOffset = endOffset;
+      }
+
+      // Step 3: Get the file handle
+      const finalizeResponse = await fetch(`https://graph.facebook.com/v20.0/upload:${uploadSessionId}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `OAuth ${userAccessToken}`
+        }
+      });
+
+      const finalizeData = await finalizeResponse.json();
+      if (!finalizeResponse.ok) {
+        throw new Error(finalizeData.error.message);
+      }
+
+      console.log('Upload completed successfully with file handle:', finalizeData.h);
+      return h;
+    } catch (error) {
+      console.error('Error during file upload:', error);
     }
   }
 }

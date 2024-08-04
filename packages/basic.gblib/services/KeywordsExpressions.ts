@@ -128,6 +128,7 @@ export class KeywordsExpressions {
 
     keywords[i++] = [/^\s*REM.*/gim, ''];
 
+
     keywords[i++] = [/^\s*CLOSE.*/gim, ''];
 
     // Always autoclose keyword.

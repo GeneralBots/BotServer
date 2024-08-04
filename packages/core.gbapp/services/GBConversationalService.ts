@@ -641,7 +641,12 @@ export class GBConversationalService {
     });
   }
 
-  public async fillAndBroadcastTemplate(min: GBMinInstance, mobile: string, text) {
+
+  public async fillAndBroadcastTemplate(min: GBMinInstance, template, mobile: string, text) {
+
+    template = template.replace(/\-/gi, '_')
+    template = template.replace(/\./gi, '_')
+
     let isMedia =
       text.toLowerCase().endsWith('.jpg') ||
       text.toLowerCase().endsWith('.jpeg') ||
@@ -659,7 +664,7 @@ export class GBConversationalService {
       text = text.replace(/\n/g, '\\n');
     }
 
-    let template = isMedia ? image.replace(/\.[^/.]+$/, '') : 'broadcast1';
+    template = isMedia ? image.replace(/\.[^/.]+$/, '') : template;
 
     let data: any = {
       name: template,
@@ -678,17 +683,6 @@ export class GBConversationalService {
       ]
     };
 
-    if (!isMedia) {
-      data.components.push({
-        type: 'body',
-        parameters: [
-          {
-            type: 'text',
-            text: text
-          }
-        ]
-      });
-    }
     await this.sendToMobile(min, mobile, data, null);
     GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlImage}`);
   }

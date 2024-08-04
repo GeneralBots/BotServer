@@ -914,11 +914,28 @@ export class SystemKeywords {
 
       body.values[0][filter ? index + 1 : index] = value;
     }
-    await client
-      .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
-      )
-      .patch(body);
+
+    await retry(
+      async bail => {
+        const result = await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
+        )
+        .patch(body);
+
+        if (result.status != 200) {
+          GBLogEx.info(min, `Waiting 5 secs. before retrying HTTP ${result.status} GET: ${result.url}`);
+          await GBUtil.sleep(5 * 1000);
+          throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
+        }
+      },
+      {
+        retries: 5,
+        onRetry: err => {
+          GBLog.error(`Retrying HTTP GET due to: ${err.message}.`);
+        }
+      });
+
   }
 
   /**
@@ -1763,7 +1780,7 @@ export class SystemKeywords {
         result = await fetch(url, options);
 
         if (result.status === 401) {
-          GBLogEx.info(min, `Waiting 5 secs. before retrynig HTTP 401 GET: ${url}`);
+          GBLogEx.info(min, `Waiting 5 secs. before retrying HTTP 401 GET: ${url}`);
           await GBUtil.sleep(5 * 1000);
           throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
         }
@@ -1773,7 +1790,7 @@ export class SystemKeywords {
           throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
         }
         if (result.status === 503) {
-          GBLogEx.info(min, `Waiting 1h before retrynig GET 503: ${url}`);
+          GBLogEx.info(min, `Waiting 1h before retrying GET 503: ${url}`);
           await GBUtil.sleep(60 * 60 * 1000);
           throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
         }
@@ -2679,7 +2696,7 @@ export class SystemKeywords {
     let buf: any = Buffer.from(await res.arrayBuffer());
     const data = new Uint8Array(buf);
     const pdf = await getDocument({ data }).promise;
-    let pages = []
+    let pages = [];
 
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
@@ -2688,19 +2705,20 @@ export class SystemKeywords {
         .map(item => item['str'])
         .join('')
         .replace(/\s/g, '');
-      pages.push(text)
-      
+      pages.push(text);
     }
 
-    return pages.join("");
+    return pages.join('');
   }
 
-  public async setContext({pid, text}){
+  public async setContext({ pid, text }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     ChatServices.userSystemPrompt[user.userSystemId] = text;
+    
+    await this.setMemoryContext({ pid, erase: true });
   }
 
-  public async setMemoryContext({pid, input, output, erase}){
+  public async setMemoryContext({ pid, input = null, output = null, erase }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     let memory;
     if (erase || !ChatServices.memoryMap[user.userSystemId]) {
@@ -2716,18 +2734,14 @@ export class SystemKeywords {
       memory = ChatServices.memoryMap[user.userSystemId];
     }
 
-    if (memory)
-    await memory.saveContext(
-      {
-        input: input
-      },
-      {
-        output: output
-      }
-    );
-
-
+    if (memory && input)
+      await memory.saveContext(
+        {
+          input: input
+        },
+        {
+          output: output
+        }
+      );
   }
-
-
 }

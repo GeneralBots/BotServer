@@ -32,7 +32,7 @@
  * @fileoverview Knowledge base services and logic.
  */
 
-import html2md from 'html-to-md'
+import html2md from 'html-to-md';
 import Path from 'path';
 import Fs from 'fs';
 import urlJoin from 'url-join';
@@ -379,7 +379,7 @@ export class KBService implements IGBKBService {
         returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
     );
 
-    return await ChatServices.answerByGPT(min, user, query);
+    return await ChatServices.answerByLLM(min, user, query);
   }
 
   public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {
@@ -703,7 +703,7 @@ export class KBService implements IGBKBService {
 
     // Import remaining .md files in articles directory.
 
-    await this.importRemainingArticles(localPath, instance, packageStorage.packageId);
+    await this.importRemainingArticles(min, localPath, instance, packageStorage.packageId);
 
     // Import docs files in .docx directory.
 
@@ -713,7 +713,12 @@ export class KBService implements IGBKBService {
   /**
    * Import all .md files in articles folder that has not been referenced by tabular files.
    */
-  public async importRemainingArticles(localPath: string, instance: IGBInstance, packageId: number): Promise<any> {
+  public async importRemainingArticles(
+    min: GBMinInstance,
+    localPath: string,
+    instance: IGBInstance,
+    packageId: number
+  ): Promise<any> {
     const files = await walkPromise(urlJoin(localPath, 'articles'));
     const data = { questions: [], answers: [] };
 
@@ -735,14 +740,19 @@ export class KBService implements IGBKBService {
           });
         }
       } else if (file !== null && file.name.endsWith('.docx')) {
-        const path = DialogKeywords.getGBAIPath(instance.botId, `gbkb`);
+        let path = DialogKeywords.getGBAIPath(instance.botId, `gbkb`);
         const localName = Path.join('work', path, 'articles', file.name);
         let loader = new DocxLoader(localName);
         let doc = await loader.load();
+        let content = doc[0].pageContent;
 
-        const answer = {
+        if (file.name.endsWith('zap.docx')){
+          await min.whatsAppDirectLine.createOrUpdateTemplate(min, file.name, content);
+        }
+        
+        const answer =  {
           instanceId: instance.instanceId,
-          content: doc[0].pageContent,
+          content: content,
           format: '.md',
           media: file.name,
           packageId: packageId,
@@ -923,7 +933,7 @@ export class KBService implements IGBKBService {
               // Check if urlToCheck contains any of the ignored URLs
 
               var isIgnored = false;
-              if (websiteIgnoreUrls){
+              if (websiteIgnoreUrls) {
                 websiteIgnoreUrls.split(';').some(ignoredUrl => p.href.includes(ignoredUrl));
               }
 
@@ -973,22 +983,26 @@ export class KBService implements IGBKBService {
     }
   }
 
-  async getLogoByPage(page) {
+  async getLogoByPage(min, page) {
     const checkPossibilities = async (page, possibilities) => {
-      for (const possibility of possibilities) {
-        const { tag, attributes } = possibility;
+      try {
+        for (const possibility of possibilities) {
+          const { tag, attributes } = possibility;
 
-        for (const attribute of attributes) {
-          const selector = `${tag}[${attribute}*="logo"]`;
-          const elements = await page.$$(selector);
+          for (const attribute of attributes) {
+            const selector = `${tag}[${attribute}*="logo"]`;
+            const elements = await page.$$(selector);
 
-          for (const element of elements) {
-            const src = await page.evaluate(el => el.getAttribute('src'), element);
-            if (src) {
-              return src.split('?')[0];
+            for (const element of elements) {
+              const src = await page.evaluate(el => el.getAttribute('src'), element);
+              if (src) {
+                return src.split('?')[0];
+              }
             }
           }
         }
+      } catch (error) {
+        await GBLogEx.info(min, error);
       }
 
       return null;
@@ -1030,13 +1044,13 @@ export class KBService implements IGBKBService {
     let files = [];
 
     let website = min.core.getParam<string>(min.instance, 'Website', null);
-    const maxDepth  = min.core.getParam<number>(min.instance, 'Website Depth', 1);
+    const maxDepth = min.core.getParam<number>(min.instance, 'Website Depth', 1);
     const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
 
     if (website) {
       // Removes last slash if any.
 
-      website.endsWith('/')?website.substring(0, website.length-1):website;
+      website.endsWith('/') ? website.substring(0, website.length - 1) : website;
 
       let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
       const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
@@ -1045,30 +1059,29 @@ export class KBService implements IGBKBService {
       let browser = await puppeteer.launch({ headless: false });
       const page = await this.getFreshPage(browser, website);
 
-      let logo = await this.getLogoByPage(page);
+      let logo = await this.getLogoByPage(min, page);
       if (logo) {
         path = DialogKeywords.getGBAIPath(min.botId);
         const logoPath = Path.join(process.env.PWD, 'work', path, 'cache');
         const baseUrl = page.url().split('/').slice(0, 3).join('/');
         logo = logo.startsWith('https') ? logo : urlJoin(baseUrl, logo);
-        
-        try {
-            const logoBinary = await page.goto(logo);
-            const buffer = await logoBinary.buffer();
-            const logoFilename = Path.basename(logo);
-            sharp(buffer)
-                .resize({
-                width: 48,
-                height: 48,
-                fit: 'inside', // Resize the image to fit within the specified dimensions
-                withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
-            })
-                .toFile(Path.join(logoPath, logoFilename));
-            await min.core['setConfig'](min, 'Logo', logoFilename);
-        } catch (error) {
-            GBLogEx.debug(min, error);
-        }
 
+        try {
+          const logoBinary = await page.goto(logo);
+          const buffer = await logoBinary.buffer();
+          const logoFilename = Path.basename(logo);
+          sharp(buffer)
+            .resize({
+              width: 48,
+              height: 48,
+              fit: 'inside', // Resize the image to fit within the specified dimensions
+              withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
+            })
+            .toFile(Path.join(logoPath, logoFilename));
+          await min.core['setConfig'](min, 'Logo', logoFilename);
+        } catch (error) {
+          GBLogEx.debug(min, error);
+        }
       }
 
       // Extract dominant colors from the screenshot

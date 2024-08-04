@@ -30,7 +30,6 @@
 
 import Swagger from 'swagger-client';
 import { google } from 'googleapis';
-import { promisify } from 'util';
 import { PubSub } from '@google-cloud/pubsub';
 import Fs from 'fs';
 import { GBLog, GBMinInstance, GBService } from 'botlib';

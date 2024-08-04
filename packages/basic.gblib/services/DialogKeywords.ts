@@ -64,8 +64,6 @@ import { GBUtil } from '../../../src/util.js';
 import SwaggerClient from 'swagger-client';
 import { GBVMService } from './GBVMService.js';
 
-
-
 /**
  * Default check interval for user replay
  */
@@ -212,28 +210,28 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit({ }) { }
+  public async exit({}) {}
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ pid }) { }
+  public async getActiveTasks({ pid }) {}
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ pid, dealName, contact, company, amount }) { }
+  public async createDeal({ pid, dealName, contact, company, amount }) {}
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ pid, name }) { }
+  public async fndContact({ pid, name }) {}
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -324,7 +322,6 @@ export class DialogKeywords {
 
   // https://weblog.west-wind.com/posts/2008/Mar/18/A-simple-formatDate-function-for-JavaScript
   public async format({ pid, value, format }) {
-
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const contentLocale = min.core.getParam(
       min.instance,
@@ -337,39 +334,31 @@ export class DialogKeywords {
     }
     var date: any = new Date(value); //don't change original date
 
-    if (!format)
-      format = "MM/dd/yyyy";
+    if (!format) format = 'MM/dd/yyyy';
 
     var month = date.getMonth() + 1;
     var year = date.getFullYear();
 
-    format = format.replace("MM", GBUtil.padL(month.toString(), 2, "0"));
+    format = format.replace('MM', GBUtil.padL(month.toString(), 2, '0'));
 
-    if (format.indexOf("yyyy") > -1)
-      format = format.replace("yyyy", year.toString());
-    else if (format.indexOf("yy") > -1)
-      format = format.replace("yy", year.toString().substr(2, 2));
+    if (format.indexOf('yyyy') > -1) format = format.replace('yyyy', year.toString());
+    else if (format.indexOf('yy') > -1) format = format.replace('yy', year.toString().substr(2, 2));
 
-    format = format.replace("dd", GBUtil.padL(date.getDate().toString(), 2, "0"));
+    format = format.replace('dd', GBUtil.padL(date.getDate().toString(), 2, '0'));
 
     var hours = date.getHours();
-    if (format.indexOf("t") > -1) {
-      if (hours > 11)
-        format = format.replace("t", "pm")
-      else
-        format = format.replace("t", "am")
+    if (format.indexOf('t') > -1) {
+      if (hours > 11) format = format.replace('t', 'pm');
+      else format = format.replace('t', 'am');
     }
-    if (format.indexOf("HH") > -1)
-      format = format.replace("HH", GBUtil.padL(hours.toString(), 2, "0"));
-    if (format.indexOf("hh") > -1) {
+    if (format.indexOf('HH') > -1) format = format.replace('HH', GBUtil.padL(hours.toString(), 2, '0'));
+    if (format.indexOf('hh') > -1) {
       if (hours > 12) hours - 12;
       if (hours == 0) hours = 12;
-      format = format.replace("hh", hours.toString().padL(2, "0"));
+      format = format.replace('hh', hours.toString().padL(2, '0'));
     }
-    if (format.indexOf("mm") > -1)
-      format = format.replace("mm", GBUtil.padL(date.getMinutes().toString(), 2, "0"));
-    if (format.indexOf("ss") > -1)
-      format = format.replace("ss", GBUtil.padL(date.getSeconds().toString(), 2, "0"));
+    if (format.indexOf('mm') > -1) format = format.replace('mm', GBUtil.padL(date.getMinutes().toString(), 2, '0'));
+    if (format.indexOf('ss') > -1) format = format.replace('ss', GBUtil.padL(date.getSeconds().toString(), 2, '0'));
 
     return format;
   }
@@ -382,7 +371,6 @@ export class DialogKeywords {
    * https://stackoverflow.com/a/1214753/18511
    */
   public async dateAdd({ pid, date, mode, units }) {
-
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const contentLocale = min.core.getParam(
       min.instance,
@@ -530,13 +518,13 @@ export class DialogKeywords {
   public async sendEmail({ pid, to, subject, body }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
-    if (!process.env.EMAIL_FROM){
-      return;                            
+    if (!process.env.EMAIL_FROM) {
+      return;
     }
 
-    if (!body ) {
-      body = "";
-    };
+    if (!body) {
+      body = '';
+    }
 
     // tslint:disable-next-line:no-console
 
@@ -549,7 +537,6 @@ export class DialogKeywords {
       const result = await mammoth.convertToHtml({ buffer: body });
       body = result.value;
     }
-
 
     if (emailToken) {
       return new Promise<any>((resolve, reject) => {
@@ -569,39 +556,35 @@ export class DialogKeywords {
           }
         });
       });
-    }
-    else {
+    } else {
       let { client } = await GBDeployer.internalGetDriveClient(min);
 
       const data = {
-        "message": {
-          "subject": subject,
-          "body": {
-            "contentType": "Text",
-            "content": body
+        message: {
+          subject: subject,
+          body: {
+            contentType: 'Text',
+            content: body
           },
-          "toRecipients": [
+          toRecipients: [
             {
-              "emailAddress": {
-                "address": to
+              emailAddress: {
+                address: to
               }
             }
           ],
-          "from": {
-            "emailAddress": {
-              "address": process.env.EMAIL_FROM
+          from: {
+            emailAddress: {
+              address: process.env.EMAIL_FROM
             }
           }
         }
       };
 
-      await client.api('/me/sendMail')
-        .post(data);
-        
+      await client.api('/me/sendMail').post(data);
+
       GBLogEx.info(min, `E-mail ${to} (${subject}) sent.`);
-
     }
-
   }
 
   /**
@@ -622,7 +605,7 @@ export class DialogKeywords {
    * @example SEND TEMPLATE TO "+199988887777","image.jpg"
    *
    */
-  public async sendTemplateTo({ pid, mobile, filename}) {
+  public async sendTemplateTo({ pid, mobile, filename }) {
     const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `BASIC: SEND TEMPLATE TO '${mobile}',filename '${filename}'.`);
     const service = new GBConversationalService(min.core);
@@ -630,14 +613,11 @@ export class DialogKeywords {
     let text;
     if (filename.endsWith('.docx')) {
       text = await min.kbService.getAnswerTextByMediaName(min.instance.instanceId, filename);
-    }
-    else{
+    } else {
       text = filename;
     }
-    
 
-    return await service.fillAndBroadcastTemplate(min, mobile, text);
-   
+    return await service.fillAndBroadcastTemplate(min, filename, mobile, text);
   }
 
   /**
@@ -686,19 +666,16 @@ export class DialogKeywords {
 
     // Checks access.
 
-    const filters = ["People.xlsx", `${role}=x`, `id=${user.userSystemId}`];
+    const filters = ['People.xlsx', `${role}=x`, `id=${user.userSystemId}`];
     const people = await sys.find({ pid, handle: null, args: filters });
 
     if (!people) {
       throw new Error(`Invalid access. Check if People sheet has the role ${role} checked.`);
-    }
-    else {
+    } else {
       GBLogEx.info(min, `Allowed access for ${user.userSystemId} on ${role}`);
       return people;
     }
-
   }
-
 
   /**
    * Defines the id generation policy.
@@ -787,7 +764,6 @@ export class DialogKeywords {
     await DialogKeywords.setOption({ pid, name, value });
   }
 
-
   /**
    * Returns current if any continuation token for paginated HTTP requests.
    *
@@ -836,7 +812,7 @@ export class DialogKeywords {
    * Defines page mode for paged GET calls.
    *
    * @example SET PAGE MODE "auto"
-   *          data = GET url 
+   *          data = GET url
    *          FOR EACH item in data
    *              ...
    *          END FOR
@@ -916,7 +892,7 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu({ }) {
+  public async showMenu({}) {
     // https://github.com/GeneralBots/BotServer/issues/237
     // return await beginDialog('/menu');
   }
@@ -943,7 +919,6 @@ export class DialogKeywords {
    *
    */
   public async hear({ pid, kind, args }) {
-
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
     // Handles first arg as an array of args.
@@ -1122,7 +1097,6 @@ export class DialogKeywords {
 
         result = answer;
       } else if (kind === 'date') {
-
         const parseDate = str => {
           function pad(x) {
             return (('' + x).length == 2 ? '' : '0') + x;
@@ -1298,15 +1272,7 @@ export class DialogKeywords {
         let sec = new SecService();
         let user = await sec.getUserFromSystemId(fromOrDialogName);
         if (!user) {
-          user = await sec.ensureUser(
-            min,
-            fromOrDialogName,
-            fromOrDialogName,
-            null,
-            'whatsapp',
-            'from',
-            null
-          );
+          user = await sec.ensureUser(min, fromOrDialogName, fromOrDialogName, null, 'whatsapp', 'from', null);
         }
         await sec.updateUserHearOnDialog(user.userId, dialogName);
       }
@@ -1341,7 +1307,6 @@ export class DialogKeywords {
 
     let count = API_RETRIES;
     while (count--) {
-
       await GBUtil.sleep(DEFAULT_HEAR_POLL_INTERVAL);
 
       try {
@@ -1364,32 +1329,22 @@ export class DialogKeywords {
         }
       } catch (err) {
         GBLog.error(
-          `Error calling printMessages in messageBot API ${err.data === undefined ? err : err.data} ${err.errObj ? err.errObj.message : ''
+          `Error calling printMessages in messageBot API ${err.data === undefined ? err : err.data} ${
+            err.errObj ? err.errObj.message : ''
           }`
         );
         return err;
       }
-    };
+    }
   }
 
-
   public async start({ botId, botApiKey, userSystemId, text }) {
-
     let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
     let sec = new SecService();
     let user = await sec.getUserFromSystemId(userSystemId);
     if (!user) {
-      user = await sec.ensureUser(
-        min,
-        userSystemId,
-        userSystemId,
-        null,
-        'api',
-        'API User',
-        null
-      );
+      user = await sec.ensureUser(min, userSystemId, userSystemId, null, 'api', 'API User', null);
     }
-
 
     const pid = GBVMService.createProcessInfo(user, min, 'api', null);
 
@@ -1406,10 +1361,7 @@ export class DialogKeywords {
     conversation.conversationId = response.obj.conversationId;
 
     return await GBVMService.callVM('start', min, null, pid);
-
   }
-
-
 
   public static async getProcessInfo(pid: number) {
     const proc = GBServer.globals.processes[pid];
@@ -1439,15 +1391,13 @@ export class DialogKeywords {
       text = await min.conversationalService.translate(
         min,
         text,
-        user.locale ? user.locale : min.core.getParam(min.instance, 'Locale',
-          GBConfigService.get('LOCALE'))
+        user.locale ? user.locale : min.core.getParam(min.instance, 'Locale', GBConfigService.get('LOCALE'))
       );
       GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
 
       if (step) {
         await min.conversationalService.sendText(min, step, text);
-      }
-      else {
+      } else {
         await min.conversationalService['sendOnConversation'](min, user, text);
       }
     }
@@ -1484,7 +1434,6 @@ export class DialogKeywords {
     }
 
     // GBFILE object.
-
     else if (filename.url) {
       url = filename.url;
       nameOnly = Path.basename(filename.localName);
@@ -1493,9 +1442,7 @@ export class DialogKeywords {
     }
 
     // Handles Markdown.
-
     else if (filename.indexOf('.md') !== -1) {
-
       GBLogEx.info(min, `BASIC: Sending the contents of ${filename} markdown to mobile ${mobile}.`);
       const md = await min.kbService.getAnswerTextByMediaName(min.instance.instanceId, filename);
       if (!md) {
@@ -1504,14 +1451,10 @@ export class DialogKeywords {
       await min.conversationalService['playMarkdown'](min, md, DialogKeywords.getChannel(), null, mobile);
 
       return;
-
     }
 
     // .gbdrive direct sending.
-
     else {
-
-
       const ext = Path.extname(filename);
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
 
@@ -1529,15 +1472,18 @@ export class DialogKeywords {
       const driveUrl = template['@microsoft.graph.downloadUrl'];
       const res = await fetch(driveUrl);
       let buf: any = Buffer.from(await res.arrayBuffer());
-      let localName1 = Path.join('work', gbaiName, 'cache', `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`);
+      let localName1 = Path.join(
+        'work',
+        gbaiName,
+        'cache',
+        `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
+      );
       Fs.writeFileSync(localName1, buf, { encoding: null });
 
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName1));
-
     }
 
     if (!url) {
-
       const ext = Path.extname(filename.localName);
 
       // Prepare a cache to be referenced by Bot Framework.
