@@ -652,6 +652,12 @@ export class GBVMService extends GBService {
             }            
           };
 
+          const sleep =  async (ms) => {
+            return new Promise(resolve => {
+              setTimeout(resolve, ms);
+            });
+          }
+
           const TOYAML = (json) => {
              const doc = new YAML.Document();
              doc.contents = json;
