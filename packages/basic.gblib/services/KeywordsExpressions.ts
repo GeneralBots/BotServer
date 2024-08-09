@@ -420,7 +420,7 @@ export class KeywordsExpressions {
                   __res  = await sys.getHttp ({pid: pid, file: host + '${url}' + '?' + pageVariable + '=' + __page + '&' + limitVariable + '=' +  limit, addressOrHeaders: headers, httpUsername, httpPs})
                 },{ retries: 5});
               
-              await sleep(100);
+              await sleep(330);
 
               res  = __res
               list1 = res.data
@@ -437,7 +437,7 @@ export class KeywordsExpressions {
                     __res  = await sys.getHttp ({pid: pid, file: host + '${url}' + '/' + detail_id, addressOrHeaders: headers, httpUsername, httpPs})
                   },{ retries: 5});
                 
-                await sleep(200);
+                await sleep(330);
                  
                 res  = __res
 
