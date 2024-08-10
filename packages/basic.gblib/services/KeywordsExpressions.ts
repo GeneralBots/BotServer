@@ -446,7 +446,7 @@ export class KeywordsExpressions {
                 j1 = j1 + 1
               }
               __reportMerge1 = await sys.merge({pid: pid, file: '${tableName}' , data: items1 , key1: '${key1}'})
-
+              items1 = null;
               __reportMerge.adds += __reportMerge1.adds;
               __reportMerge.updates += __reportMerge1.updates;
               __reportMerge.skipped += __reportMerge1.skipped;
@@ -1176,7 +1176,7 @@ export class KeywordsExpressions {
       /^\s*MERGE\s*(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `__reportMerge1 = await sys.merge({pid: pid, file: ${$1}, data: ${$2}, key1: ${$3}})
-        ${$2} = null;
+        ${$2.replace(/\`/g, '')} = null;
         __reportMerge.adds += __reportMerge1.adds;
         __reportMerge.updates += __reportMerge1.updates;
         __reportMerge.skipped += __reportMerge1.skipped;
@@ -1298,7 +1298,7 @@ export class KeywordsExpressions {
         }else{
           await sys.saveToStorage({pid: pid, table: ${table}, fieldsValues: [${fieldsAsText}], fieldsNames: [${fieldsNames}] })
         }
-        ${table} = null;
+        ${table.replace(/\`/g, '')} = null;
       `;
       }
     ];
