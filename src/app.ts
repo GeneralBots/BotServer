@@ -121,10 +121,24 @@ export class GBServer {
     });
 
     process.on('unhandledRejection', (err, p) => {
-      GBLogEx.error(0,`GBREJECTION: ${GBUtil.toYAML(err)}`);
+
+      let bypass = false;
+      let res = err['response'];
+      if (res) {
+        if (res?.body?.error?.messages?.startsWith('Failed to send activity: bot timed out')){
+            bypass  = true;
+        }
+      }
+
+      if(!bypass){
+        GBLogEx.error(0,`GBREJECTION: ${GBUtil.toYAML(err)}`);
+      }
     });
 
     // Creates working directory.
+
+
+
 
     process.env.PWD = process.cwd();
     const workDir = Path.join(process.env.PWD, 'work');
