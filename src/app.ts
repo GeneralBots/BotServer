@@ -125,7 +125,7 @@ export class GBServer {
       let bypass = false;
       let res = err['response'];
       if (res) {
-        if (res?.body?.error?.messages?.startsWith('Failed to send activity: bot timed out')){
+        if (res?.body?.error?.message?.startsWith('Failed to send activity: bot timed out')){
             bypass  = true;
         }
       }
