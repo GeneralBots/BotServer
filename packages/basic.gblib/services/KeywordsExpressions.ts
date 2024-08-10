@@ -1298,7 +1298,7 @@ export class KeywordsExpressions {
         }else{
           await sys.saveToStorage({pid: pid, table: ${table}, fieldsValues: [${fieldsAsText}], fieldsNames: [${fieldsNames}] })
         }
-        ${table.replace(/\`/g, '')} = null;
+        ${fields[0].replace(/\`/g, '')} = null;
       `;
       }
     ];
