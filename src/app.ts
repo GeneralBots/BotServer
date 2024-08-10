@@ -117,7 +117,7 @@ export class GBServer {
     });
 
     process.on('uncaughtException', (err, p) => {
-      GBLogEx.error(0, `GBEXCEPTION: ${GBUtil.toYAML(err)}`);
+      GBLogEx.error(0, `GBEXCEPTION: ${GBUtil.toYAML(err)} ${GBUtil.toYAML(p)}`);
     });
 
     process.on('unhandledRejection', (err, p) => {
@@ -131,14 +131,11 @@ export class GBServer {
       }
 
       if(!bypass){
-        GBLogEx.error(0,`GBREJECTION: ${GBUtil.toYAML(err)}`);
+        GBLogEx.error(0,`GBREJECTION: ${GBUtil.toYAML(err)} ${GBUtil.toYAML(p)}`);
       }
     });
 
     // Creates working directory.
-
-
-
 
     process.env.PWD = process.cwd();
     const workDir = Path.join(process.env.PWD, 'work');

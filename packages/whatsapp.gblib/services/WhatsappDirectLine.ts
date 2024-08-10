@@ -126,7 +126,12 @@ export class WhatsappDirectLine extends GBService {
         req.headers['Authorization'] = `Bearer ${this.min.instance.webchatKey}`;
       }
     });
+    
     this.directLineClient = client;
+    
+    // Warms up MSBF.
+    
+    await client.apis.Conversations.Conversations_StartConversation();
 
     let url: string;
     let options: any;
@@ -617,7 +622,7 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public pollMessages(client, conversationId, from, fromName) {
-    GBLogEx.info(this.min, `GBWhatsapp: Starting message polling(${from}, ${conversationId}).`);
+    GBLogEx.info(this.min, `GBWhatsapp: Starting timer of message polling(${from}, ${conversationId}).`);
 
     let watermark: any;
 
@@ -630,7 +635,7 @@ export class WhatsappDirectLine extends GBService {
         watermark = response.obj.watermark;
         await this.printMessages(response.obj.activities, conversationId, from, fromName);
       } catch (error) {
-        GBLog.error(`Error calling printMessages on Whatsapp channel ${GBUtil.toYAML(error)}`);
+        GBLog.error(`Error pooling messages from Whatsapp channel ${GBUtil.toYAML(error)}`);
       }
     };
     setInterval(worker, this.pollInterval);
@@ -1199,7 +1204,7 @@ export class WhatsappDirectLine extends GBService {
         } else {
           let t;
           activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
-          if (activeMin === undefined) {
+          if (activeMin === undefined) {      
             activeMin = GBServer.globals.minBoot;
             t = (activeMin as any).whatsAppDirectLine;
             await t.sendToDevice(
