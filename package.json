@@ -207,6 +207,7 @@
     "textract": "2.5.0",
     "twilio": "5.1.0",
     "twitter-api-v2": "1.17.0",
+    "typeorm": "^0.3.20",
     "typescript": "5.4.5",
     "url-join": "5.0.0",
     "vhost": "3.0.2",

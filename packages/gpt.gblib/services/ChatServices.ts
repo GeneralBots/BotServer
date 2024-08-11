@@ -47,7 +47,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { convertToOpenAITool } from '@langchain/core/utils/function_calling';
 import { ChatOpenAI, OpenAI } from '@langchain/openai';
 import { SqlDatabaseChain } from 'langchain/chains/sql_db';
-
+import type { DataSource, DataSourceOptions } from "typeorm";
 import { GBMinInstance } from 'botlib';
 import * as Fs from 'fs';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
