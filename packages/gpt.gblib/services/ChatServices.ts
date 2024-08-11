@@ -46,6 +46,8 @@ import { RunnableSequence } from '@langchain/core/runnables';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { convertToOpenAITool } from '@langchain/core/utils/function_calling';
 import { ChatOpenAI, OpenAI } from '@langchain/openai';
+import { SqlDatabaseChain } from 'langchain/chains/sql_db';
+
 import { GBMinInstance } from 'botlib';
 import * as Fs from 'fs';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
@@ -61,6 +63,7 @@ import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { pagespeedonline } from 'googleapis/build/src/apis/pagespeedonline/index.js';
+import { SqlDatabase } from 'langchain/dist/sql_db.js';
 
 export interface CustomOutputParserFields {}
 export type ExpectedOutput = any;
@@ -467,6 +470,19 @@ export class ChatServices {
       result = await conversationalToolChain.invoke({
         question
       });
+    } else if (LLMMode === 'sql') {
+
+      const db = await SqlDatabase.fromDataSourceParams({
+        appDataSource: min[`llmconnection`],
+      });
+
+       const chain = new SqlDatabaseChain({
+         llm: model,
+         database: db
+       });
+      
+       result = await chain.run(question);
+     
     } else if (LLMMode === 'nochain') {
       result = await (tools.length > 0 ? modelWithTools : model).invoke(`
       ${systemPrompt}
