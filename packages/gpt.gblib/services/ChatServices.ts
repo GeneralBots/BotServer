@@ -47,7 +47,8 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { convertToOpenAITool } from '@langchain/core/utils/function_calling';
 import { ChatOpenAI, OpenAI } from '@langchain/openai';
 import { SqlDatabaseChain } from 'langchain/chains/sql_db';
-import type { DataSource, DataSourceOptions } from "typeorm";
+import { SqlDatabase } from 'langchain/sql_db';
+import  {DataSource } from 'typeorm';
 import { GBMinInstance } from 'botlib';
 import * as Fs from 'fs';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
@@ -62,8 +63,6 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
-import { pagespeedonline } from 'googleapis/build/src/apis/pagespeedonline/index.js';
-import { SqlDatabase } from 'langchain/dist/sql_db.js';
 
 export interface CustomOutputParserFields {}
 export type ExpectedOutput = any;
@@ -188,7 +187,6 @@ export class ChatServices {
     sanitizedQuestion: string,
     numDocuments: number = 3
   ): Promise<string> {
-    
     if (sanitizedQuestion === '' || !vectorStore) {
       return '';
     }
@@ -224,7 +222,6 @@ export class ChatServices {
     return output;
   }
 
-  
   private static async findPageForText(pdfPath, searchText) {
     const data = new Uint8Array(Fs.readFileSync(pdfPath));
     const pdf = await getDocument({ data }).promise;
@@ -471,18 +468,35 @@ export class ChatServices {
         question
       });
     } else if (LLMMode === 'sql') {
-
-      const db = await SqlDatabase.fromDataSourceParams({
-        appDataSource: min[`llmconnection`],
+      const con = min[`llmconnection`];
+      const dialect = con['storageDriver'];
+      const host = con['storageServer'];
+      const port = con['storagePort'];
+      const storageName = con['storageName'];
+      const username = con['storageUsername'];
+      const password = con['storagePassword'];
+      
+      const dataSource = new DataSource({
+        type: dialect as any,
+        host: host,
+        port: port,
+        database: storageName,
+        username: username,
+        password: password,
+        synchronize: false, 
+        logging: true,
       });
 
-       const chain = new SqlDatabaseChain({
-         llm: model,
-         database: db
-       });
-      
-       result = await chain.run(question);
-     
+      const db = await SqlDatabase.fromDataSourceParams({
+        appDataSource: dataSource
+      });
+
+      const chain = new SqlDatabaseChain({
+        llm: model,
+        database: db
+      });
+
+      result = await chain.run(question);
     } else if (LLMMode === 'nochain') {
       result = await (tools.length > 0 ? modelWithTools : model).invoke(`
       ${systemPrompt}
