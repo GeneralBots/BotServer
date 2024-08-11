@@ -630,33 +630,35 @@ export class GBVMService extends GBService {
           }
 
           const ensureTokens = async (firstTime) => {
+            const REFRESH_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
             const tokens = this.tokens ? this.tokens.split(',') : [];
             
-            for(__indexer in tokens) { 
-              const tokenName = tokens[__indexer];
+            for (let i = 0; i < tokens.length; i++) { 
+              const tokenName = tokens[i];
               
-              // Auto update Bearar authentication for the first token.
-
-              const expiresOn = new Date(global[tokenName + "_expiresOn"]);
-              const expiration  = expiresOn.getTime() - (10 * 60 * 1000);
+              // Auto update Bearer authentication for the first token.
+              const expiresOn = new Date(global[tokenName + '_expiresOn']);
+              const expiration = expiresOn.getTime() - REFRESH_THRESHOLD_MS;
 
               // Expires token 10min. before or if it the first time, load it.
-
-              if (expiration < new Date().getTime() || firstTime) {
-                console.log ('Expired. Refreshing token...' + expiration);
-                const {token, expiresOn} = await sys.getCustomToken({pid, tokenName});
-
-                global[tokenName] = token;
-                global[tokenName + "_expiresOn"]= expiresOn; 
-                console.log ('DONE:' + new Date(global[tokenName + "_expiresOn"]) );
+              if (expiration < Date.now() || firstTime) {
+                console.log('Expired. Refreshing token...' + expiration);
+                try {
+                  const result = await sys.getCustomToken({pid: this.pid, tokenName: tokenName});
+                  global[tokenName] = result.token;
+                  global[tokenName + '_expiresOn'] = result.expiresOn; 
+                  console.log('DONE:' + new Date(global[tokenName + '_expiresOn']));
+                } catch (error) {
+                  console.error('Failed to refresh token for ' + tokenName + ':', error);
+                  continue;
+                }
               }
 
-              if (__indexer == 0) {
+              if (i == 0) {
                 headers['Authorization'] = 'Bearer ' + global[tokenName];
               }
-            }            
+            }
           };
-
           const sleep =  async (ms) => {
             return new Promise(resolve => {
               setTimeout(resolve, ms);

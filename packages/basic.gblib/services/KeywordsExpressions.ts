@@ -244,7 +244,7 @@ export class KeywordsExpressions {
 
     keywords[i++] = [/^\s*end function/gim, '}'];
 
-    keywords[i++] = [/^\s*function +(.*)\((.*)\)/gim, '$1 = async ($2) => {\n'];
+    keywords[i++] = [/^\s*function +(.*)\((.*)\)/gim, 'const $1 = async ($2) => {\n'];
 
     keywords[i++] = [/^\s*for +(.*to.*)/gim, 'for ($1) {'];
 
