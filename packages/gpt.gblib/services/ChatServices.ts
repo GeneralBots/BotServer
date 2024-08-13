@@ -506,7 +506,8 @@ export class ChatServices {
 
       const prompt = 
         PromptTemplate.fromTemplate(`Based on the provided SQL table schema below, write a SQL query that would answer the user's question.
-    ------------
+          VERY IMPORTANT: Return just the  generated SQL command, nothing else.
+          ------------
     SCHEMA: {schema}
     ------------
     QUESTION: {question}
@@ -525,7 +526,7 @@ export class ChatServices {
           question: (input: { question: string }) => input.question
         },
         prompt,
-        model.bind({ stop: ['\nSQLResult:'] }),
+        model,
         new StringOutputParser()
       ]);
 
