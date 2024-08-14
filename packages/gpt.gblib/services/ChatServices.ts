@@ -562,12 +562,12 @@ export class ChatServices {
        */
       const finalChain = RunnableSequence.from([
         {
-          input: input => input.question,
+          question: input => input.question,
           query: sqlQueryChain
         },
         {
           schema: async () => db.getTableInfo(),
-          input: input => input.question,
+          question: input => input.question,
           query: input => input.query,
           response: input => db.run(input.query),
           top_k: () => 10,
