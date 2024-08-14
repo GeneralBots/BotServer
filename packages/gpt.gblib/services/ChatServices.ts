@@ -506,6 +506,11 @@ export class ChatServices {
 
       const prompt = 
         PromptTemplate.fromTemplate(`Based on the provided SQL table schema below, write a SQL query that would answer the user's question.
+            You are a SQL expert. Given an input question, first create a syntactically correct SQLite query to run, then look at the results of the query and return the answer to the input question.
+            Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} results using the LIMIT clause as per SQL. You can order the results to return the most informative data in the database.
+            Never query for all columns from a table. You must query only the columns that are needed to answer the question. Wrap each column name in double quotes (") to denote them as delimited identifiers.
+            Pay attention to use only the column names you can see in the tables below. Be careful to not query for columns that do not exist. Also, pay attention to which column is in which table.
+
           VERY IMPORTANT: Return just the  generated SQL command as plain text with no Markdown or formmating.
           ------------
     SCHEMA: {schema}
@@ -533,13 +538,9 @@ export class ChatServices {
        * Create the final prompt template which is tasked with getting the natural
        * language response to the SQL query.
        */
-      const finalResponsePrompt = SQL_SQLITE_PROMPT
+      const finalResponsePrompt = SQL_SQLITE_PROMPT;
         PromptTemplate.fromTemplate(`Based on the table schema below, question, SQL query, and SQL response, write a natural language response:
-          You are a SQLite expert. Given an input question, first create a syntactically correct SQLite query to run, then look at the results of the query and return the answer to the input question.
-Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} results using the LIMIT clause as per SQLite. You can order the results to return the most informative data in the database.
-Never query for all columns from a table. You must query only the columns that are needed to answer the question. Wrap each column name in double quotes (") to denote them as delimited identifiers.
-Pay attention to use only the column names you can see in the tables below. Be careful to not query for columns that do not exist. Also, pay attention to which column is in which table.
-
+Optimize answers for KPI people.
     ------------
     SCHEMA: {schema}
     ------------
@@ -561,12 +562,12 @@ Pay attention to use only the column names you can see in the tables below. Be c
        */
       const finalChain = RunnableSequence.from([
         {
-          question: input => input.question,
+          input: input => input.question,
           query: sqlQueryChain,
         },
         {
           schema: async () => db.getTableInfo(),
-          question: input => input.question,
+          input: input => input.question,
           query: input => input.query,
           response: input => db.run(input.query),
           top_k: ()=>10, table_info: ()=>'any'
