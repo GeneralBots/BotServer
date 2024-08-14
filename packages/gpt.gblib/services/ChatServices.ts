@@ -583,6 +583,9 @@ export class ChatServices {
       result = await finalChain.invoke({
         question: question
       });
+      GBLogEx.info(min, `LLM SQL: ${result.sql}`);
+      result = result.result;
+
     } else if (LLMMode === 'nochain') {
       result = await (tools.length > 0 ? modelWithTools : model).invoke(`
       ${systemPrompt}
