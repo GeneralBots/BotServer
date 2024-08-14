@@ -521,7 +521,8 @@ export class ChatServices {
         {
           schema: async () => db.getTableInfo(),
           question: (input: { question: string }) => input.question          ,          
-          top_k: ()=>10
+          top_k: ()=>10,
+          table_info: ()=>'any'
         },
         prompt,
         model,
@@ -568,7 +569,7 @@ Pay attention to use only the column names you can see in the tables below. Be c
           question: input => input.question,
           query: input => input.query,
           response: input => db.run(input.query),
-          top_k: ()=>10
+          top_k: ()=>10, table_info: ()=>'any'
         },
         {
           result: finalResponsePrompt.pipe(model).pipe(new StringOutputParser()),
