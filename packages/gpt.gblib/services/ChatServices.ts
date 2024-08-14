@@ -64,13 +64,13 @@ import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import {
-     DEFAULT_SQL_DATABASE_PROMPT,
-     SQL_POSTGRES_PROMPT,
-     SQL_SQLITE_PROMPT,
-     SQL_MSSQL_PROMPT,
-     SQL_MYSQL_PROMPT
-   } from "langchain/chains/sql_db";
-   
+  DEFAULT_SQL_DATABASE_PROMPT,
+  SQL_POSTGRES_PROMPT,
+  SQL_SQLITE_PROMPT,
+  SQL_MSSQL_PROMPT,
+  SQL_MYSQL_PROMPT
+} from 'langchain/chains/sql_db';
+
 export interface CustomOutputParserFields {}
 export type ExpectedOutput = any;
 
@@ -504,7 +504,7 @@ export class ChatServices {
         appDataSource: dataSource
       });
 
-      const prompt = 
+      const prompt =
         PromptTemplate.fromTemplate(`Based on the provided SQL table schema below, write a SQL query that would answer the user's question.
             You are a SQL expert. Given an input question, first create a syntactically correct SQLite query to run, then look at the results of the query and return the answer to the input question.
             Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} results using the LIMIT clause as per SQL. You can order the results to return the most informative data in the database.
@@ -525,9 +525,9 @@ export class ChatServices {
       const sqlQueryChain = RunnableSequence.from([
         {
           schema: async () => db.getTableInfo(),
-          question: (input: { question: string }) => input.question          ,          
-          top_k: ()=>10,
-          table_info: ()=>'any'
+          question: (input: { question: string }) => input.question,
+          top_k: () => 10,
+          table_info: () => 'any'
         },
         prompt,
         model,
@@ -538,19 +538,19 @@ export class ChatServices {
        * Create the final prompt template which is tasked with getting the natural
        * language response to the SQL query.
        */
-      const finalResponsePrompt = SQL_SQLITE_PROMPT;
+      const finalResponsePrompt =
         PromptTemplate.fromTemplate(`Based on the table schema below, question, SQL query, and SQL response, write a natural language response:
-Optimize answers for KPI people.
-    ------------
-    SCHEMA: {schema}
-    ------------
-    QUESTION: {question}
-    ------------
-    SQL QUERY: {query}
-    ------------
-    SQL RESPONSE: {response}
-    ------------
-    NATURAL LANGUAGE RESPONSE:`);
+          Optimize answers for KPI people. ${systemPrompt}
+              ------------
+              SCHEMA: {schema}
+              ------------
+              QUESTION: {question}
+              ------------
+              SQL QUERY: {query}
+              ------------
+              SQL RESPONSE: {response}
+              ------------
+              NATURAL LANGUAGE RESPONSE:`);
 
       /**
        * Create a new RunnableSequence where we pipe the output from the previous chain, the users question,
@@ -563,14 +563,15 @@ Optimize answers for KPI people.
       const finalChain = RunnableSequence.from([
         {
           input: input => input.question,
-          query: sqlQueryChain,
+          query: sqlQueryChain
         },
         {
           schema: async () => db.getTableInfo(),
           input: input => input.question,
           query: input => input.query,
           response: input => db.run(input.query),
-          top_k: ()=>10, table_info: ()=>'any'
+          top_k: () => 10,
+          table_info: () => 'any'
         },
         {
           result: finalResponsePrompt.pipe(model).pipe(new StringOutputParser()),
@@ -582,7 +583,6 @@ Optimize answers for KPI people.
       result = await finalChain.invoke({
         question: question
       });
-
     } else if (LLMMode === 'nochain') {
       result = await (tools.length > 0 ? modelWithTools : model).invoke(`
       ${systemPrompt}
