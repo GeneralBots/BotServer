@@ -542,7 +542,7 @@ export class GBVMService extends GBService {
           let col = 1;
           let index = 1;
 
-          const mid(str, start, length) {
+          const mid = (str, start, length) => {
               start = start - 1;
               if (length === undefined) {
                   return str.substring(start);
