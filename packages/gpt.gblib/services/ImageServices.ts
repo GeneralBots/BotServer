@@ -32,29 +32,52 @@
 
 'use strict';
 
-// import { GBMinInstance } from 'botlib';
-// import {DallEAPIWrapper} from '@langchain/openai';
+import { GBMinInstance } from 'botlib';
+import { OpenAIClient } from '@azure/openai';
+import { AzureKeyCredential } from '@azure/core-auth';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords';
+import Path from 'path';
+import { GBServer } from '../../../src/app.js';
+import Fs from 'fs';
+import urlJoin from 'url-join';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx';
 
-// /**
-//  * Image processing services of conversation to be called by BASIC.
-//  */
-// export class ImageServices {
-//   public async getImageFromDescription(min: GBMinInstance, text: string): Promise<string> {
-//     const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
-//     const azureOpenAIImageModel = await min.core.getParam(min.instance, 'Azure Open Image Model', null);
-//     const azureOpenAIVersion = await min.core.getParam(min.instance, 'Azure Open AI Version', null);
-//     const azureOpenAIApiInstanceName = await min.core.getParam(min.instance, 'Azure Open AI Instance', null);
+/**
+ * Image processing services of conversation to be called by BASIC.
+ */
+export class ImageServices {
 
-//     if (azureOpenAIKey) {
-//       const tool = new DallEAPIWrapper({
-//         n: 1,
-//         model: 'dall-e-3',
-//         apiKey: azureOpenAIKey
-//       });
+  public async getImageFromPrompt({ pid, prompt }) {
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
-//       const imageURL = await tool.invoke('a painting of a cat');
+    const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
+    const azureOpenAIImageModel = await min.core.getParam(min.instance, 'Azure Open Image Model', null);
+    const azureOpenAIEndpoint = await min.core.getParam(min.instance, 'Azure Open AI Endpoint', null);
 
-//       return imageURL;
-//     }
-//   }
-// }
+    if (azureOpenAIKey) {
+      // Initialize the Azure OpenAI client
+      const client = new OpenAIClient(azureOpenAIEndpoint, new AzureKeyCredential(azureOpenAIKey));
+
+      // Make a request to the image generation endpoint
+
+      const response = await client.getImageGeneration(azureOpenAIImageModel, {
+        prompt: prompt,
+        n: 1,
+        size: '1024x1024'
+      });
+
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
+
+      const url = response.data[0].url;
+      const res = await fetch(url);
+      let buf: any = Buffer.from(await res.arrayBuffer());
+      Fs.writeFileSync(localName, buf, { encoding: null });
+
+      GBLogEx.info(min, `BASIC: DALL-E image generated at ${url}.`);
+
+      return {localName, url};
+    }
+  }
+}

@@ -474,6 +474,14 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(.*)\=\s*(GET IMAGE)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['text']);
+        return `${$1} = await img.getImageFromPrompt({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*(.*)\=\s*(AUTO SAVE)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['handle']);

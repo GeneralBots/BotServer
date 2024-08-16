@@ -29,6 +29,9 @@
 \*****************************************************************************/
 'use strict';
 
+import { IgApiClient } from 'instagram-private-api';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
@@ -918,10 +921,10 @@ export class SystemKeywords {
     await retry(
       async bail => {
         const result = await client
-        .api(
-          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
-        )
-        .patch(body);
+          .api(
+            `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
+          )
+          .patch(body);
 
         if (result.status != 200) {
           GBLogEx.info(min, `Waiting 5 secs. before retrying HTTP ${result.status} GET: ${result.url}`);
@@ -934,8 +937,8 @@ export class SystemKeywords {
         onRetry: err => {
           GBLog.error(`Retrying HTTP GET due to: ${err.message}.`);
         }
-      });
-
+      }
+    );
   }
 
   /**
@@ -2714,7 +2717,7 @@ export class SystemKeywords {
   public async setContext({ pid, text }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     ChatServices.userSystemPrompt[user.userSystemId] = text;
-    
+
     await this.setMemoryContext({ pid, erase: true });
   }
 
@@ -2743,5 +2746,20 @@ export class SystemKeywords {
           output: output
         }
       );
+  }
+
+  public async postToInstagram({ pid, username, password, imagePath, caption }) {
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+
+    const ig = new IgApiClient();
+    ig.state.generateDevice(username);
+    await ig.account.login(username, password);
+    const imageBuffer = readFileSync(resolve(imagePath));
+    const publishResult = await ig.publish.photo({
+      file: imageBuffer,
+      caption
+    });
+
+    GBLogEx.info(min, `Image posted on IG: ${publishResult}`);
   }
 }

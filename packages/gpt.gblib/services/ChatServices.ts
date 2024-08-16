@@ -575,6 +575,7 @@ export class ChatServices {
         },
         {
           result: finalResponsePrompt.pipe(model).pipe(new StringOutputParser()),
+          
           // Pipe the query through here unchanged so it gets logged alongside the result.
           sql: previousStepResult => previousStepResult.query
         }
