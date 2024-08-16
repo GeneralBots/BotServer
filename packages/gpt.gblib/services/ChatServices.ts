@@ -475,31 +475,33 @@ export class ChatServices {
         question
       });
     } else if (LLMMode === 'sql') {
-      // const con = min[`llmconnection`];
+      const con = min[`llmconnection`];
 
-      // const dialect = con['storageDriver'];
-      // const host = con['storageServer'];
-      // const port = con['storagePort'];
-      // const storageName = con['storageName'];
-      // const username = con['storageUsername'];
-      // const password = con['storagePassword'];
+      const dialect = con['storageDriver'];
+      const host = con['storageServer'];
+      const port = con['storagePort'];
+      const storageName = con['storageName'];
+      const username = con['storageUsername'];
+      const password = con['storagePassword'];
 
-      const dataSource = new DataSource({
-        type: 'sqlite',
-        database: '/home/gbadmin3910/DATA/BotServer/work/frukigbot1.gbai/data.db'
-      });
-
-      // const dataSource = new DataSource({
-      //   type: dialect as any,
-      //   host: host,
-      //   port: port,
-      //   database: storageName,
-      //   username: username,
-      //   password: password,
-      //   synchronize: false,
-      //   logging: true,
-      // });
-
+      let dataSource;
+      if (dialect === 'sqlite') {
+        dataSource = new DataSource({
+          type: 'sqlite',
+          database: storageName
+        });
+      } else {
+        dataSource = new DataSource({
+          type: dialect as any,
+          host: host,
+          port: port,
+          database: storageName,
+          username: username,
+          password: password,
+          synchronize: false,
+          logging: true
+        });
+      }
       const db = await SqlDatabase.fromDataSourceParams({
         appDataSource: dataSource
       });
@@ -575,7 +577,7 @@ export class ChatServices {
         },
         {
           result: finalResponsePrompt.pipe(model).pipe(new StringOutputParser()),
-          
+
           // Pipe the query through here unchanged so it gets logged alongside the result.
           sql: previousStepResult => previousStepResult.query
         }
@@ -586,7 +588,6 @@ export class ChatServices {
       });
       GBLogEx.info(min, `LLM SQL: ${result.sql}`);
       result = result.result;
-
     } else if (LLMMode === 'nochain') {
       result = await (tools.length > 0 ? modelWithTools : model).invoke(`
       ${systemPrompt}
