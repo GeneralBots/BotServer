@@ -80,6 +80,1378 @@ import { GBUtil } from '../../../src/util.js';
  * BASIC system class for extra manipulation of bot behaviour.
  */
 export class SystemKeywords {
+  /**
+   * @tags System
+   */
+  public async callVM({ pid, text }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const step = null;
+    const deployer = null;
+
+    return await GBVMService.callVM(text, min, step, pid, false, [text]);
+  }
+
+  public async append({ pid, args }) {
+    let array = [].concat(...args);
+    return array.filter(function (item, pos) {
+      return item;
+    });
+  }
+
+  /**
+   *
+   * @example SEE CAPTION OF url AS variable
+   *
+   */
+  public async seeCaption({ pid, url }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const computerVisionClient = new ComputerVisionClient.ComputerVisionClient(
+      new ApiKeyCredentials.ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
+      process.env.VISION_ENDPOINT
+    );
+
+    let caption = (await computerVisionClient.describeImage(url)).captions[0];
+
+    const contentLocale = min.core.getParam(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+    GBLogEx.info(min, `GBVision (caption): '${caption.text}' (Confidence: ${caption.confidence.toFixed(2)})`);
+
+    return await min.conversationalService.translate(min, caption.text, contentLocale);
+  }
+
+  /**
+   *
+   * @example SEE TEXT OF url AS variable
+   *
+   */
+  public async seeText({ pid, url }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const computerVisionClient = new ComputerVisionClient.ComputerVisionClient(
+      new ApiKeyCredentials.ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': process.env.VISION_KEY } }),
+      process.env.VISION_ENDPOINT
+    );
+
+    const result = await computerVisionClient.recognizePrintedText(true, url);
+    const text = result.regions[0].lines[0].words[0].text;
+    let final = '';
+
+    for (let i = 0; i < result.regions.length; i++) {
+      const region = result.regions[i];
+
+      for (let j = 0; j < region.lines.length; j++) {
+        const line = region.lines[j];
+
+        for (let k = 0; k < line.words.length; k++) {
+          final += `${line.words[k].text} `;
+        }
+      }
+    }
+
+    GBLogEx.info(min, `GBVision (text): '${final}'`);
+    return final;
+  }
+
+  public async sortBy({ pid, array, memberName }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    memberName = memberName.trim();
+    const contentLocale = min.core.getParam(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+    // Detects data type from the first element of array.
+
+    let dt = array[0] ? array[0][memberName] : null;
+    let date = SystemKeywords.getDateFromLocaleString(pid, dt, contentLocale);
+    if (date) {
+      return array
+        ? array.sort((a, b) => {
+            const c = new Date(a[memberName]);
+            const d = new Date(b[memberName]);
+            return c.getTime() - d.getTime();
+          })
+        : null;
+    } else {
+      return array
+        ? array.sort((a, b) => {
+            if (a[memberName] < b[memberName]) {
+              return -1;
+            }
+            if (a[memberName] > b[memberName]) {
+              return 1;
+            }
+            return 0;
+          })
+        : array;
+    }
+  }
+
+  public static JSONAsGBTable(data, headers) {
+    try {
+      let output = [];
+      let isObject = false;
+      if (data[0].gbarray) {
+        return data;
+      } // Already GB Table.
+      if (Array.isArray(data)) {
+        isObject = Object.keys(data[1]) !== null;
+      } else {
+        isObject = true;
+      }
+
+      if (isObject || JSON.parse(data) !== null) {
+        // Copies data from JSON format into simple array.
+
+        if (!Array.isArray(data)) {
+          // If data is a single object, wrap it in an array
+          data = [data];
+        }
+
+        // Ensure that keys is an array of strings representing the object keys
+        const keys = Object.keys(data[0]);
+
+        if (headers) {
+          output[0] = [];
+
+          // Copies headers as the first element.
+
+          for (let i = 0; i < keys.length; i++) {
+            output[0][i] = keys[i];
+          }
+        } else {
+          output.push({ gbarray: '0' });
+        }
+
+        for (let i = 0; i < data.length; i++) {
+          output[i + 1] = [];
+          for (let j = 0; j < keys.length; j++) {
+            output[i + 1][j] = data[i][keys[j]];
+          }
+        }
+        return output;
+      }
+    } catch (error) {
+      GBLog.error(error);
+      return data;
+    }
+  }
+
+  /**
+   *
+   * @param data
+   * @param renderImage
+   * @returns
+   *
+   * @see http://tabulator.info/examples/5.2
+   */
+  private async renderTable(pid, data, renderPDF, renderImage) {
+    if (data.length && !data[1]) {
+      return null;
+    }
+
+    data = SystemKeywords.JSONAsGBTable(data, true);
+
+    // Detects if it is a collection with repeated
+    // headers.
+
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const browser = await GBSSR.createBrowser(null);
+    const page = await browser.newPage();
+    await page.minimize();
+
+    // Includes the associated CSS related to current theme.
+
+    const theme: string = await DialogKeywords.getOption({ pid, name: 'theme', root: true });
+    switch (theme) {
+      case 'white':
+        await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_simple.min.css' });
+        break;
+      case 'dark':
+        await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_midnight.min.css' });
+        break;
+      case 'blue':
+        await page.addStyleTag({ path: 'node_modules/tabulator-tables/dist/css/tabulator_modern.min.css' });
+        break;
+      default:
+        break;
+    }
+
+    await page.addScriptTag({ path: 'node_modules/tabulator-tables/dist/js/tabulator.min.js' });
+
+    // Removes internal hidden element used to hold one-based index arrays.
+
+    data.shift();
+
+    // Guess fields from data variable into Tabulator fields collection.
+
+    let fields = [];
+    let keys = Object.keys(data[0]);
+    for (let i = 0; i < keys.length; i++) {
+      fields.push({ field: keys[i], title: keys[i] });
+    }
+
+    // Adds DIV for Tabulator.
+
+    await page.evaluate(() => {
+      const el = document.createElement('div');
+      el.setAttribute('id', 'table');
+      document.body.appendChild(el);
+    });
+
+    const code = `
+        var table = new Tabulator("#table", {
+        height:"auto",
+        layout:"fitDataStretch",
+        data: ${JSON.stringify(data)},
+        columns: ${JSON.stringify(fields)}
+    });
+    `;
+    await page.evaluate(code);
+    await page.waitForSelector('#table');
+
+    // Handles image generation.
+
+    let url;
+    let localName;
+    if (renderImage) {
+      localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
+      await page.screenshot({ path: localName, fullPage: true });
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+      GBLogEx.info(min, `BASIC: Table image generated at ${url} .`);
+    }
+
+    // Handles PDF generation.
+
+    if (renderPDF) {
+      localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.pdf`);
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+      let pdf = await page.pdf({ format: 'A4' });
+      GBLogEx.info(min, `BASIC: Table PDF generated at ${url} .`);
+    }
+
+    await browser.close();
+    return { url, localName };
+  }
+
+  public async closeHandles({ pid }) {
+    delete this.cachedMerge[pid];
+  }
+
+  public async asPDF({ pid, data }) {
+    let file = await this.renderTable(pid, data, true, false);
+    return file;
+  }
+
+  public async asImage({ pid, data }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
+    // Checks if it is a GBFILE.
+
+    if (data.data) {
+      const gbfile = data.data;
+
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+      const botId = min.instance.botId;
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const tmpDocx = urlJoin(gbaiName, `${botId}.gbdrive`, `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+
+      // Performs the conversion operation.
+
+      await client.api(`${baseUrl}/drive/root:/${tmpDocx}:/content`).put(data.data);
+      const res = await client.api(`${baseUrl}/drive/root:/${tmpDocx}:/content?format=pdf`).get();
+      await client.api(`${baseUrl}/drive/root:/${tmpDocx}:/content`).delete();
+
+      const streamToBuffer = stream => {
+        const chunks = [];
+        return new Promise((resolve, reject) => {
+          stream.on('data', chunk => chunks.push(chunk));
+          stream.on('error', reject);
+          stream.on('end', () => resolve(Buffer.concat(chunks)));
+        });
+      };
+
+      gbfile.data = await streamToBuffer(res);
+
+      // Converts the PDF to PNG.
+
+      const pngPages: PngPageOutput[] = await pdfToPng(gbfile.data, {
+        disableFontFace: false,
+        useSystemFonts: false,
+        viewportScale: 2.0,
+        pagesToProcess: [1],
+        strictPagesToProcess: false,
+        verbosityLevel: 0
+      });
+
+      // Prepare an image on cache and return the GBFILE information.
+
+      const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
+      if (pngPages.length > 0) {
+        const buffer = pngPages[0].content;
+        const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+
+        Fs.writeFileSync(localName, buffer, { encoding: null });
+
+        return { localName: localName, url: url, data: buffer };
+      }
+    } else {
+      let file = await this.renderTable(pid, data, false, true);
+      return file;
+    }
+  }
+
+  public async executeSQL({ pid, data, sql }) {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    if (!data || !data[0]) {
+      return data;
+    }
+    let objectMode = false;
+    if (data[0].gbarray) {
+      objectMode = true;
+    }
+
+    let first;
+    if (objectMode) {
+      first = data.shift();
+    }
+    GBLogEx.info(min, `Executing SQL: ${sql}`);
+    data = alasql(sql, [data]);
+    if (objectMode) {
+      data.unshift(first);
+    }
+    return data;
+  }
+
+  /**
+   * Retrives the content of a given URL.
+   */
+  public async getFileContents({ pid, url, headers }) {
+    const options = {
+      method: 'GET',
+      encoding: 'binary',
+      headers: headers
+    };
+    return await fetch(url, options);
+  }
+
+  /**
+   * Retrives a random id with a length of five, every time it is called.
+   */
+  public getRandomId() {
+    const idGeneration = '1v'; // TODO:  this.dk['idGeneration'];
+    if (idGeneration && idGeneration.trim().toLowerCase() === 'number') {
+      return GBAdminService.getNumberIdentifier();
+    } else {
+      return GBAdminService.getRndReadableIdentifier().substr(5);
+    }
+  }
+
+  /**
+   * Retrives stock inforation for a given symbol.
+   */
+  public async getStock({ pid, symbol }) {
+    const url = `http://live-nse.herokuapp.com/?symbol=${symbol}`;
+    let data = await fetch(url);
+    return data;
+  }
+
+  /**
+   * Holds script execution for the number of seconds specified.
+   *
+   * @example WAIT 5 ' This will wait five seconds.
+   *
+   */
+  public async wait({ pid, seconds }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    // tslint:disable-next-line no-string-based-set-timeout
+    GBLogEx.info(min, `BASIC: WAIT for ${seconds} second(s).`);
+    const timeout = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    await timeout(seconds * 1000);
+  }
+
+  /**
+   * Sends a text message to the mobile number specified.
+   *
+   * @example TALK TO "+199988887777", "Message text here"
+   *
+   */
+  public async talkTo({ pid, mobile, message }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: Talking '${message}' to a specific user (${mobile}) (TALK TO). `);
+    await min.conversationalService.sendMarkdownToMobile(min, null, mobile, message);
+  }
+
+  /**
+   * Get a user object from a alias.
+   *
+   * @example user = USER "someone"
+   *
+   */
+  public async getUser({ pid, username }) {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    let sec = new SecService();
+    const user = await sec.getUserFromUsername(min.instance.instanceId, username);
+
+    return { displayName: user.displayName, mobile: user.userSystemId, email: user.email };
+  }
+
+  /**
+   * Sends a SMS message to the mobile number specified.
+   *
+   * @example SEND SMS TO "+199988887777", "Message text here"
+   *
+   */
+  public async sendSmsTo({ pid, mobile, message }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: SEND SMS TO '${mobile}', message '${message}'.`);
+    await min.conversationalService.sendSms(min, mobile, message);
+  }
+
+  /**
+   * 1. Defines a cell value in the tabular file.
+   * 2. Defines an element text on HTML page.
+   *
+   * @example SET "file.xlsx", "A2", 4500
+   *
+   * @example SET page, "elementHTMLSelector", "text"
+
+   */
+  public async set({ pid, handle, file, address, value, name = null }): Promise<any> {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
+    // Handles calls for HTML stuff
+
+    if (handle && WebAutomationServices.isSelector(file)) {
+      GBLogEx.info(min, `BASIC: Web automation SET ${file}' to '${address}'    . `);
+      await new WebAutomationServices().setElementText({ pid, handle, selector: file, text: address });
+
+      return;
+    }
+
+    // TODO: Add a semaphore between FILTER and SET.
+
+    // Processes FILTER option to ensure parallel SET calls.
+
+    const filter = await DialogKeywords.getOption({ pid, name: 'filter' });
+    if (filter) {
+      const row = this.find({ pid, handle: null, args: [filter] });
+      address += row['line'];
+    }
+
+    // Handles calls for BASIC persistence on sheet files.
+
+    GBLogEx.info(min, `BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
+
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+
+    const botId = min.instance.botId;
+    const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
+    let document = await this.internalGetDocument(client, baseUrl, path, file);
+    let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
+    let body = { values: [[]] };
+
+    // Processes FILTER option to ensure parallel SET calls.
+
+    let titleAddress;
+
+    if (filter) {
+      // Transforms address number (col index) to letter based.
+      // Eg.: REM This is A column and index automatically specified by filter.
+      //      SET file.xlsx, 1, 4000
+
+      if (KeywordsExpressions.isNumber(address)) {
+        address = `${this.numberToLetters(address)}`;
+        titleAddress = `${address}1:${address}1`;
+      }
+
+      // Processes SET FILTER directive to calculate address.
+
+      body.values[0][0] = 'id';
+      const addressId = 'A1:A1';
+      await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${addressId}')`
+        )
+        .patch(body);
+
+      const row = await this.find({ pid, handle: null, args: [file, filter] });
+      if (row) {
+        address += row['line']; // Eg.: "A" + 1 = "A1".
+      }
+    }
+    address = address.indexOf(':') !== -1 ? address : address + ':' + address;
+
+    if (titleAddress) {
+      body.values[0][0] = name.trim().replace(/[^a-zA-Z]/gi, '');
+
+      await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${titleAddress}')`
+        )
+        .patch(body);
+    }
+
+    body.values[0][0] = value;
+    await client
+      .api(
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
+      )
+      .patch(body);
+  }
+
+  /**
+   * Retrives a document from the drive, given a path and filename.
+   */
+  public async internalGetDocument(client: any, baseUrl: any, path: string, file: string) {
+    let res = await client.api(`${baseUrl}/drive/root:/${path}:/children`).get();
+
+    let documents = res.value.filter(m => {
+      return m.name.toLowerCase() === file.toLowerCase();
+    });
+
+    if (!documents || documents.length === 0) {
+      throw new Error(
+        `File '${file}' specified on GBasic command not found. Check the .gbdata or the .gbdialog associated.`,
+        { cause: 404 }
+      );
+    }
+
+    return documents[0];
+  }
+
+  /**
+   * Saves the content of variable into the file in .gbdata default folder.
+   *
+   * @exaple SAVE variable as "my.txt"
+   *
+   */
+  public async saveFile({ pid, file, data }): Promise<any> {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: Saving '${file}' (SAVE file).`);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const botId = min.instance.botId;
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+
+    // Checks if it is a GB FILE object.
+
+    if (data.data && data.filename) {
+      data = data.data;
+    }
+
+    try {
+      data = GBServer.globals.files[data].data; // TODO
+      await client.api(`${baseUrl}/drive/root:/${path}/${file}:/content`).put(data);
+    } catch (error) {
+      if (error.code === 'itemNotFound') {
+        GBLogEx.info(min, `BASIC: BASIC source file not found: ${file}.`);
+      } else if (error.code === 'nameAlreadyExists') {
+        GBLogEx.info(min, `BASIC: BASIC destination file already exists: ${file}.`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Saves the content of variable into BLOB storage.
+   *
+   * MSFT uses MD5, see https://katelynsills.com/law/the-curious-case-of-md5.
+   *
+   * @exaple UPLOAD file.
+   *
+   */
+  public async uploadFile({ pid, file }): Promise<any> {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: UPLOAD '${file.name}' ${file.size} bytes.`);
+
+    // Checks if it is a GB FILE object.
+
+    const accountName = min.core.getParam(min.instance, 'Blob Account');
+    const accountKey = min.core.getParam(min.instance, 'Blob Key');
+
+    const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
+    const baseUrl = `https://${accountName}.blob.core.windows.net`;
+
+    const blobServiceClient = new BlobServiceClient(`${baseUrl}`, sharedKeyCredential);
+
+    // It is an SharePoint object that needs to be downloaded.
+
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const localName = Path.join('work', gbaiName, 'cache', `${GBAdminService.getRndReadableIdentifier()}.tmp`);
+    const url = file['url'];
+    const response = await fetch(url);
+
+    // Writes it to disk and calculate hash.
+
+    const data = await response.arrayBuffer();
+    Fs.writeFileSync(localName, Buffer.from(data), { encoding: null });
+    const hash = new Uint8Array(md5.array(data));
+
+    // Performs uploading passing local hash.
+
+    const container = blobServiceClient.getContainerClient(accountName);
+    const blockBlobClient: BlockBlobClient = container.getBlockBlobClient(file.path);
+    const res = await blockBlobClient.uploadFile(localName, {
+      blobHTTPHeaders: {
+        blobContentMD5: hash
+      }
+    });
+
+    // If upload is OK including hash check, removes the temporary file.
+
+    if (res._response.status === 201 && new Uint8Array(res.contentMD5).toString() === hash.toString()) {
+      Fs.rmSync(localName);
+
+      file['md5'] = hash.toString();
+
+      return file;
+    } else {
+      GBLog.error(`BASIC: BLOB HTTP ${res.errorCode} ${res._response.status} .`);
+    }
+  }
+
+  /**
+   * Takes note inside a notes.xlsx of .gbdata.
+   *
+   * @example NOTE "text"
+   *
+   */
+  public async note({ pid, text }): Promise<any> {
+    await this.save({ pid, file: 'Notes.xlsx', args: [text] });
+  }
+
+  /**
+   * Saves variables to storage, not a worksheet.
+   *
+   */
+  public async saveToStorageBatch({ pid, table, rows }): Promise<void> {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: Saving batch to storage '${table}' (SAVE).`);
+
+    if (rows.length === 0) {
+      return;
+    }
+
+    const definition = this.getTableFromName(table, min);
+    const rowsDest = [];
+
+    rows.forEach(row => {
+      const dst = {};
+      let i = 0;
+      Object.keys(row).forEach(column => {
+        const field = column.charAt(0).toUpperCase() + column.slice(1);
+        dst[field] = row[column];
+        i++;
+      });
+      rowsDest.push(dst);
+    });
+
+    await retry(
+      async bail => {
+        await definition.bulkCreate(GBUtil.caseInsensitive(rowsDest));
+      },
+      {
+        retries: 5,
+        onRetry: err => {
+          GBLog.error(`Retrying SaveToStorageBatch due to: ${JSON.stringify(err)}.`);
+        }
+      }
+    );
+  }
+
+  /**
+   * Saves variables to storage, not a worksheet.
+   *
+   * @example SAVE "Billing",  columnName1, columnName2
+   *
+   */
+  public async saveToStorage({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
+    if (!fieldsValues || fieldsValues.length === 0 || !fieldsValues[0]) {
+      return;
+    }
+
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: Saving to storage '${table}' (SAVE).`);
+
+    const definition = this.getTableFromName(table, min);
+
+    let dst = {};
+    // Uppercases fields.
+    let i = 0;
+    Object.keys(fieldsValues).forEach(fieldSrc => {
+      const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
+
+      dst[field] = fieldsValues[fieldSrc];
+
+      i++;
+    });
+
+    let item;
+    await retry(
+      async bail => {
+        item = await definition.create(dst);
+      },
+      {
+        retries: 5,
+        onRetry: err => {
+          GBLog.error(`Retrying SaveToStorage due to: ${err.message}.`);
+        }
+      }
+    );
+    return item;
+  }
+
+  public async saveToStorageWithJSON({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: Saving to storage '${table}' (SAVE).`);
+    const minBoot = GBServer.globals.minBoot as any;
+    const definition = minBoot.core.sequelize.models[table];
+
+    let out = [];
+    let data = {},
+      data2 = {};
+
+    // Flattern JSON to a table.
+
+    data = this.flattenJSON(fieldsValues);
+
+    // Uppercases fields.
+
+    Object.keys(data).forEach(field => {
+      const field2 = field.charAt(0).toUpperCase() + field.slice(1);
+      data2[field2] = data[field];
+    });
+
+    return await definition.create(data2);
+  }
+
+  /**
+   * Saves the content of several variables to a new row in a tabular file.
+   *
+   * @example SAVE "customers.xlsx", name, email, phone, address, city, state, country
+   *
+   */
+  public async save({ pid, file, args }): Promise<any> {
+    if (!args) {
+      return;
+    }
+
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
+    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+    const botId = min.instance.botId;
+    const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
+
+    let sheets;
+    let document;
+    try {
+      document = await this.internalGetDocument(client, baseUrl, path, file);
+      sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
+    } catch (e) {
+      if (e.cause === 404) {
+        // Creates the file.
+
+        const blank = Path.join(process.env.PWD, 'blank.xlsx');
+        const data = Fs.readFileSync(blank);
+        await client.api(`${baseUrl}/drive/root:/${path}/${file}:/content`).put(data);
+
+        // Tries to open again.
+
+        document = await this.internalGetDocument(client, baseUrl, path, file);
+        sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
+      } else {
+        throw e;
+      }
+    }
+
+    let address;
+    let body = { values: [[]] };
+
+    // Processes FILTER option to ensure parallel SET calls.
+
+    const filter = await DialogKeywords.getOption({ pid, name: 'filter' });
+    if (filter) {
+      // Creates id row.
+
+      body.values[0][0] = 'id';
+      const addressId = 'A1:A1';
+      await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${addressId}')`
+        )
+        .patch(body);
+      body.values[0][0] = undefined;
+
+      // FINDs the filtered row to be updated.
+
+      const row = await this.find({ pid, handle: null, args: [file, filter] });
+      if (row) {
+        address = `A${row['line']}:${this.numberToLetters(args.length)}${row['line']}`;
+      }
+    }
+
+    // Editing or saving detection.
+
+    if (!address) {
+      await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A2:DX2')/insert`
+        )
+        .post({});
+      address = `A2:${this.numberToLetters(args.length - 1)}2`;
+    }
+
+    // Fills rows object to call sheet API.
+
+    for (let index = 0; index < args.length; index++) {
+      let value = args[index];
+      if (value && (await this.isValidDate({ pid, dt: value }))) {
+        value = `'${value}`;
+      }
+
+      // If  filter is defined, skips id column.
+
+      body.values[0][filter ? index + 1 : index] = value;
+    }
+
+    await retry(
+      async bail => {
+        const result = await client
+          .api(
+            `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
+          )
+          .patch(body);
+
+        if (result.status != 200) {
+          GBLogEx.info(min, `Waiting 5 secs. before retrying HTTP ${result.status} GET: ${result.url}`);
+          await GBUtil.sleep(5 * 1000);
+          throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
+        }
+      },
+      {
+        retries: 5,
+        onRetry: err => {
+          GBLog.error(`Retrying HTTP GET due to: ${err.message}.`);
+        }
+      }
+    );
+  }
+
+  /**
+   * Retrives the content of a cell in a tabular file.
+   *
+   * @example value = GET "file.xlsx", "A2"
+   *
+   */
+  public async getHttp({ pid, file, addressOrHeaders, httpUsername, httpPs, qs, streaming }): Promise<any> {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    if (file.startsWith('http')) {
+      return await this.getByHttp({
+        pid,
+        url: file,
+        headers: addressOrHeaders,
+        username: httpUsername,
+        ps: httpPs,
+        qs
+      });
+    } else {
+      GBLogEx.info(min, `BASIC: GET '${addressOrHeaders}' in '${file}'.`);
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+      const botId = min.instance.botId;
+      ('');
+      const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
+
+      let document = await this.internalGetDocument(client, baseUrl, path, file);
+
+      // Creates workbook session that will be discarded.
+
+      let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
+
+      let results = await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${addressOrHeaders}')`
+        )
+        .get();
+
+      let val = results.text[0][0];
+      GBLogEx.info(min, `BASIC: Getting '${file}' (GET). Value= ${val}.`);
+      return val;
+    }
+  }
+
+  public async isValidDate({ pid, dt }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const contentLocale = min.core.getParam(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+    let date = SystemKeywords.getDateFromLocaleString(pid, dt, contentLocale);
+    if (!date) {
+      return false;
+    }
+
+    if (!(date instanceof Date)) {
+      date = new Date(date);
+    }
+
+    return !isNaN(date.valueOf());
+  }
+
+  public async isValidNumber({ pid, number }) {
+    return KeywordsExpressions.isNumber(number);
+  }
+
+  public isValidHour({ pid, value }) {
+    return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value);
+  }
+
+  public static async getFilter(text) {
+    let filter;
+    const operators = [/\<\=/, /\<\>/, /\>\=/, /\</, /\>/, /\bnot in\b/, /\bin\b/, /\=/];
+    let done = false;
+    await CollectionUtil.asyncForEach(operators, async op => {
+      var re = new RegExp(op, 'gi');
+      const parts = text.split(re);
+
+      if (parts.length === 2 && !done) {
+        filter = {
+          columnName: parts[0].trim(),
+          operator: op.toString().replace(/\\b/g, '').replace(/\//g, '').replace(/\\/g, '').replace(/\b/g, ''),
+          value: parts[1].trim()
+        };
+
+        // Swaps values and names in case of IN operators.
+
+        if (filter.operator === 'not in' || filter.operator === 'in') {
+          const columnName = filter.columnName;
+          filter.columnName = filter.value;
+          filter.value = columnName;
+        }
+
+        done = true;
+      }
+    });
+
+    return filter;
+  }
+
+  /**
+   * Finds a value or multi-value results in a tabular file.
+   *
+   * @example
+   *
+   *  rows = FIND "file.xlsx", "A2=active", "A2 < 12/06/2010 15:00"
+   *  i = 1
+   *  do while i <= ubound(row)
+   *    row = rows[i]
+   *    send sms to "+" + row.mobile, "Hello " + row.name + "! "
+   *  loop
+   * @see NPM package data-forge
+   *
+   */
+  public async find({ pid, handle, args }): Promise<any> {
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+    const file = args[0];
+    args.shift();
+
+    const botId = min.instance.botId;
+    const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
+
+    // MAX LINES property.
+
+    let maxLines = 5000;
+    if (params && params.maxLines) {
+      if (params.maxLines.toString().toLowerCase() !== 'default') {
+        maxLines = Number.parseInt(params.maxLines).valueOf();
+      }
+    } else {
+      maxLines = maxLines;
+    }
+    GBLogEx.info(min, `BASIC: FIND running on ${file} (maxLines: ${maxLines}) and args: ${JSON.stringify(args)}...`);
+
+    // Choose data sources based on file type (HTML Table, data variable or sheet file)
+
+    let results;
+    let header, rows;
+    let page;
+    if (handle) {
+      page = WebAutomationServices.getPageByHandle(handle);
+    }
+
+    if (handle && page['$eval'] && WebAutomationServices.isSelector(file)) {
+      const container = page['frame'] ? page['frame'] : page;
+      const originalSelector = file;
+
+      // Transforms table
+
+      const resultH = await container.evaluate(originalSelector => {
+        const rows = document.querySelectorAll(`${originalSelector} tr`);
+        return Array.from(rows, row => {
+          const columns = row.querySelectorAll('th');
+          return Array.from(columns, column => column.innerText);
+        });
+      }, originalSelector);
+
+      const result = await container.evaluate(originalSelector => {
+        const rows = document.querySelectorAll(`${originalSelector} tr`);
+        return Array.from(rows, row => {
+          const columns = row.querySelectorAll('td');
+          return Array.from(columns, column => column.innerText);
+        });
+      }, originalSelector);
+
+      header = [];
+      for (let i = 0; i < resultH[0].length; i++) {
+        header[i] = resultH[0][i];
+      }
+
+      rows = [];
+      rows[0] = header;
+      for (let i = 1; i < result.length; i++) {
+        rows[i] = result[i];
+      }
+    } else if (file['cTag']) {
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const localName = Path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
+      const url = file['@microsoft.graph.downloadUrl'];
+      const response = await fetch(url);
+      Fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
+
+      var workbook = new Excel.Workbook();
+      const worksheet = await workbook.csv.readFile(localName);
+      header = [];
+      rows = [];
+
+      for (let i = 0; i < worksheet.rowCount; i++) {
+        const r = worksheet.getRow(i + 1);
+        let outRow = [];
+        let hasValue = false;
+        for (let j = 0; j < r.cellCount; j++) {
+          const value = r.getCell(j + 1).text;
+          if (value) {
+            hasValue = true;
+          }
+          outRow.push(value);
+        }
+
+        if (i == 0) {
+          header = outRow;
+        } else if (hasValue) {
+          rows.push(outRow);
+        }
+      }
+    } else if (file.indexOf('.xlsx') !== -1) {
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+
+      let document;
+      document = await this.internalGetDocument(client, baseUrl, path, file);
+
+      // Creates workbook session that will be discarded.
+
+      let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
+
+      results = await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:CZ${maxLines}')`
+        )
+        .get();
+
+      header = results.text[0];
+      rows = results.text;
+    } else {
+      const t = this.getTableFromName(file, min);
+
+      if (!t) {
+        throw new Error(`TABLE ${file} not found. Check TABLE keywords.`);
+      }
+
+      const systemFilter = await SystemKeywords.getFilter(args[0]);
+      let filter = {};
+      filter[systemFilter.columnName] = systemFilter.value;
+      const res = await t.findAll({ where: filter });
+
+      return res.length > 1 ? res : res[0];
+    }
+
+    const contentLocale = min.core.getParam(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+    // Increments columnIndex by looping until find a column match.
+
+    const filters = [];
+    let predefinedFilterTypes;
+    if (params.filterTypes) {
+      predefinedFilterTypes = params.filterTypes.split(',');
+    }
+
+    let filterIndex = 0;
+    await CollectionUtil.asyncForEach(args, async arg => {
+      const filter = await SystemKeywords.getFilter(arg);
+      if (!filter) {
+        throw new Error(`BASIC: FIND filter has an error: ${arg} check this and publish .gbdialog again.`);
+      }
+
+      let columnIndex = 0;
+      for (; columnIndex < header.length; columnIndex++) {
+        if (header[columnIndex].toLowerCase() === filter.columnName.toLowerCase()) {
+          break;
+        }
+      }
+      filter.columnIndex = columnIndex;
+      const fixed = predefinedFilterTypes ? predefinedFilterTypes[filterIndex] : null;
+
+      if (this.isValidHour(filter.value)) {
+        filter.dataType = fixed ? fixed : 'hourInterval';
+      } else if (await this.isValidDate({ pid, dt: filter.value })) {
+        filter.value = SystemKeywords.getDateFromLocaleString(pid, filter.value, contentLocale);
+        filter.dataType = fixed ? fixed : 'date';
+      } else if (await this.isValidNumber({ pid, number: filter.value })) {
+        filter.value = Number.parseInt(filter.value);
+        filter.dataType = fixed ? fixed : 'number';
+      } else {
+        filter.value = filter.value;
+        filter.dataType = fixed ? fixed : 'string';
+      }
+      filters.push(filter);
+      filterIndex++;
+    });
+
+    // As BASIC uses arrays starting with 1 (one) as index,
+    // a ghost element is added at 0 (zero) position.
+
+    let table = [];
+    table.push({ gbarray: '0' });
+    let foundIndex = 1;
+
+    // Fills the row variable.
+
+    let rowCount = 0;
+    for (; foundIndex < rows.length; foundIndex++) {
+      let filterAcceptCount = 0;
+      await CollectionUtil.asyncForEach(filters, async filter => {
+        let result = rows[foundIndex][filter.columnIndex];
+        let wholeWord = true;
+        if (user && params && params.wholeWord) {
+          wholeWord = params.wholeWord;
+        }
+        if (!result) {
+          return;
+        }
+
+        switch (filter.dataType) {
+          case 'string':
+            const v1 = GBConversationalService.removeDiacritics(result.toLowerCase().trim());
+            const v2 = GBConversationalService.removeDiacritics(filter.value.toLowerCase().trim());
+            GBLogEx.info(min, `FIND filter: ${v1} ${filter.operator} ${v2}.`);
+
+            switch (filter.operator) {
+              case '=':
+                if (v1 === v2) {
+                  filterAcceptCount++;
+                }
+                break;
+              case '<>':
+                if (v1 !== v2) {
+                  filterAcceptCount++;
+                }
+                break;
+              case 'not in':
+                if (v1.indexOf(v2) === -1) {
+                  filterAcceptCount++;
+                }
+                break;
+              case 'in':
+                if (wholeWord) {
+                  if (v1 === v2) {
+                    filterAcceptCount++;
+                  }
+                } else {
+                  if (v1.indexOf(v2) > -1) {
+                    filterAcceptCount++;
+                  }
+                }
+                break;
+            }
+            break;
+          case 'number':
+            switch (filter.operator) {
+              case '=':
+                if (Number.parseInt(result) === filter.value) {
+                  filterAcceptCount++;
+                }
+                break;
+            }
+            break;
+
+          case 'hourInterval':
+            switch (filter.operator) {
+              case '=':
+                if (v1 === v2) {
+                  filterAcceptCount++;
+                }
+                break;
+              case 'in':
+                const e = result.split(';');
+                const hr = Number.parseInt(filter.value.split(':')[0]);
+                let lastHour = Number.parseInt(e[0]);
+                let found = false;
+                await CollectionUtil.asyncForEach(e, async hour => {
+                  if (!found && lastHour <= hr && hr <= hour) {
+                    filterAcceptCount++;
+                    found = true;
+                  }
+                  lastHour = hour;
+                });
+                break;
+            }
+            break;
+
+          case 'date':
+            if (result.charAt(0) === "'") {
+              result = result.substr(1);
+            }
+            const resultDate = SystemKeywords.getDateFromLocaleString(pid, result, contentLocale);
+            if (resultDate) {
+              if (filter.value['dateOnly']) {
+                resultDate.setHours(0, 0, 0, 0);
+              }
+              switch (filter.operator) {
+                case '=':
+                  if (resultDate.getTime() == filter.value.getTime()) filterAcceptCount++;
+                  break;
+                case '<':
+                  if (resultDate.getTime() < filter.value.getTime()) filterAcceptCount++;
+                  break;
+                case '>':
+                  if (resultDate.getTime() > filter.value.getTime()) filterAcceptCount++;
+                  break;
+                case '<=':
+                  if (resultDate.getTime() <= filter.value.getTime()) filterAcceptCount++;
+                  break;
+                case '>=':
+                  if (resultDate.getTime() >= filter.value.getTime()) filterAcceptCount++;
+                  break;
+              }
+              break;
+            }
+        }
+      });
+
+      if (filterAcceptCount === filters.length) {
+        rowCount++;
+        let row = {};
+        const xlRow = rows[foundIndex];
+        let hasValue = false;
+        for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
+          const propertyName = header[colIndex].trim();
+
+          let value = xlRow[colIndex];
+          if (value) {
+            hasValue = true;
+            value = value.trim();
+            if (value.charAt(0) === "'") {
+              if (await this.isValidDate({ pid, dt: value.substr(1) })) {
+                value = value.substr(1);
+              }
+            }
+          }
+
+          row[propertyName] = value;
+        }
+        row['ordinal'] = rowCount;
+        row['line'] = foundIndex + 1;
+        if (hasValue) {
+          table.push(row);
+        }
+      }
+    }
+
+    const outputArray = await DialogKeywords.getOption({ pid, name: 'output' });
+
+    if (table.length === 1) {
+      GBLogEx.info(min, `BASIC: FIND returned no results (zero rows).`);
+      return null;
+    } else if (table.length === 2 && !outputArray) {
+      GBLogEx.info(min, `BASIC: FIND returned single result: ${table[0]}.`);
+      return table[1];
+    } else {
+      GBLogEx.info(min, `BASIC: FIND returned multiple results (Count): ${table.length - 1}.`);
+      return table;
+    }
+  }
+
+  public static getDateFromLocaleString(pid, date: any, contentLocale: any) {
+    let ret = null;
+    let parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})\s*(10|11|12|0?[1-9]):([0-5][0-9])/gi.exec(date);
+    if (parts && parts[5]) {
+      switch (contentLocale) {
+        case 'pt':
+          ret = new Date(
+            Number.parseInt(parts[3]),
+            Number.parseInt(parts[2]) - 1,
+            Number.parseInt(parts[1]),
+            Number.parseInt(parts[4]),
+            Number.parseInt(parts[5]),
+            0,
+            0
+          );
+          break;
+        case 'en':
+          ret = new Date(
+            Number.parseInt(parts[3]),
+            Number.parseInt(parts[1]) - 1,
+            Number.parseInt(parts[2]),
+            Number.parseInt(parts[4]),
+            Number.parseInt(parts[5]),
+            0,
+            0
+          );
+          break;
+      }
+
+      ret['dateOnly'] = false;
+    }
+
+    parts = /^([0-3]?[0-9]).([0-3]?[0-9]).((?:[0-9]{2})?[0-9]{2})$/gi.exec(date);
+    if (parts && parts[3]) {
+      switch (contentLocale) {
+        case 'pt':
+          ret = new Date(
+            Number.parseInt(parts[3]),
+            Number.parseInt(parts[2]) - 1,
+            Number.parseInt(parts[1]),
+            0,
+            0,
+            0,
+            0
+          );
+          break;
+        case 'en':
+          ret = new Date(
+            Number.parseInt(parts[3]),
+            Number.parseInt(parts[1]) - 1,
+            Number.parseInt(parts[2]),
+            0,
+            0,
+            0,
+            0
+          );
+          break;
+      }
+
+      ret['dateOnly'] = true;
+    }
+    return ret;
+  }
 
   public async setSystemPrompt({ pid, text }) {
     let { min, user } = await DialogKeywords.getProcessInfo(pid);
