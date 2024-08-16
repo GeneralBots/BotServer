@@ -1170,11 +1170,15 @@ export class SystemKeywords {
       if (!t) {
         throw new Error(`TABLE ${file} not found. Check TABLE keywords.`);
       }
-
-      const systemFilter = await SystemKeywords.getFilter(args[0]);
-      let filter = {};
-      filter[systemFilter.columnName] = systemFilter.value;
-      const res = await t.findAll({ where: filter });
+      let res;
+      if (args[0]) {
+        const systemFilter = await SystemKeywords.getFilter(args[0]);
+        let filter = {};
+        filter[systemFilter.columnName] = systemFilter.value;
+        res = await t.findAll({ where: filter });
+      } else {
+        res = await t.findAll();
+      }
 
       return res.length > 1 ? res : res[0];
     }
