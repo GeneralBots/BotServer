@@ -542,12 +542,12 @@ export class GBVMService extends GBService {
           let col = 1;
           let index = 1;
 
-          const mid = (str, start, length) => {
-              start = start - 1;
+          const mid = (arr, start, length) => {
+              
               if (length === undefined) {
-                  return str.substring(start);
+                  return arr.slice(start);
               }
-              return str.substring(start, start + length);
+              return arr.slice(start, start + length);
           }
 
           // Makes objects in BASIC insensitive.
