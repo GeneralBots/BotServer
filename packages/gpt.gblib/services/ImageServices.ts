@@ -31,7 +31,8 @@
 'use strict';
 
 import { GBMinInstance } from 'botlib';
-import { OpenAIClient } from '@azure/openai';
+import OpenAI from 'openai';
+
 import { AzureKeyCredential } from '@azure/core-auth';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords';
 import Path from 'path';
@@ -45,7 +46,6 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx';
  * Image processing services of conversation to be called by BASIC.
  */
 export class ImageServices {
-
   public async getImageFromPrompt({ pid, prompt }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
@@ -55,11 +55,12 @@ export class ImageServices {
 
     if (azureOpenAIKey) {
       // Initialize the Azure OpenAI client
-      const client = new OpenAIClient(azureOpenAIEndpoint, new AzureKeyCredential(azureOpenAIKey));
+
+      const client = new OpenAI({ apiKey: azureOpenAIKey, baseURL: azureOpenAIEndpoint });
 
       // Make a request to the image generation endpoint
 
-      const response = await client.getImageGeneration(azureOpenAIImageModel, {
+      const response = await client.images.generate({
         prompt: prompt,
         n: 1,
         size: '1024x1024'
@@ -75,7 +76,7 @@ export class ImageServices {
 
       GBLogEx.info(min, `BASIC: DALL-E image generated at ${url}.`);
 
-      return {localName, url};
+      return { localName, url };
     }
   }
 }

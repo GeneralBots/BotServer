@@ -100,6 +100,7 @@ export class GBServer {
     GBServer.globals.wwwroot = null;
     GBServer.globals.entryPointDialog = null;
     GBServer.globals.debuggers = [];
+    GBServer.globals.users = [];
     GBServer.globals.indexSemaphore = new Mutex();
 
     server.use(bodyParser.json());
@@ -121,17 +122,16 @@ export class GBServer {
     });
 
     process.on('unhandledRejection', (err, p) => {
-
       let bypass = false;
       let res = err['response'];
       if (res) {
-        if (res?.body?.error?.message?.startsWith('Failed to send activity: bot timed out')){
-            bypass  = true;
+        if (res?.body?.error?.message?.startsWith('Failed to send activity: bot timed out')) {
+          bypass = true;
         }
       }
 
-      if(!bypass){
-        GBLogEx.error(0,`GBREJECTION: ${GBUtil.toYAML(err)} ${GBUtil.toYAML(p)}`);
+      if (!bypass) {
+        GBLogEx.error(0, `GBREJECTION: ${GBUtil.toYAML(err)} ${GBUtil.toYAML(p)}`);
       }
     });
 
@@ -178,6 +178,8 @@ export class GBServer {
           let runOnce = false;
           if (GBConfigService.get('STORAGE_SERVER')) {
             azureDeployer = await AzureDeployerService.createInstance(deployer);
+            await core.initStorage();
+          } else if (GBConfigService.get('STORAGE_FILE')) {
             await core.initStorage();
           } else {
             runOnce = true;

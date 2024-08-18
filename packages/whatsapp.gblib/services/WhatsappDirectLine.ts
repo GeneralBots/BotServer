@@ -85,12 +85,10 @@ export class WhatsappDirectLine extends GBService {
   public botId: string;
   public botNumber: string;
   public min: GBMinInstance;
-  private directLineSecret: string;
   private locale: string = 'pt-BR';
   provider: any;
   INSTANCE_URL = 'https://api.maytapi.com/api';
   private customClient: any;
-  private groupId;
 
   constructor(
     min: GBMinInstance,
@@ -104,13 +102,12 @@ export class WhatsappDirectLine extends GBService {
     super();
 
     this.min = min;
-    this.botId = botId;
-    this.directLineSecret = directLineSecret;
+    this.botId = botId;    
     this.whatsappServiceKey = whatsappServiceKey;
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
     this.provider = whatsappServiceKey === 'internal' ? 'GeneralBots' : 'meta';
-    this.groupId = groupId;
+    
   }
 
   public static async asyncForEach(array, callback) {
@@ -121,6 +118,7 @@ export class WhatsappDirectLine extends GBService {
 
   public async setup(setUrl: boolean) {
     const client = await new SwaggerClient({
+      url: 'http://127.0.0.1:3978/api/messages', // TODO:
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
       requestInterceptor: req => {
         req.headers['Authorization'] = `Bearer ${this.min.instance.webchatKey}`;

@@ -341,6 +341,7 @@ export class GBConversationalService {
   }
 
   public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
+
     if (step.context.activity.channelId !== 'msteams' && step.context.activity.channelId !== 'omnichannel') {
       GBLogEx.info(
         min,

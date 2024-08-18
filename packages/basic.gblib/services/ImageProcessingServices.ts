@@ -39,6 +39,7 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import urlJoin from 'url-join';
 import { GBServer } from '../../../src/app.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import sharp from 'sharp';
 
 /**
  * Image processing services of conversation to be called by BASIC.
