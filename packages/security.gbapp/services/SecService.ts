@@ -8,6 +8,7 @@ import * as Fs from 'fs';
 import mkdirp from 'mkdirp';
 import urlJoin from 'url-join';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBServer } from '../../../src/app.js';
 
 
 /**
@@ -52,7 +53,8 @@ export class SecService extends GBService {
     user.displayName = displayName;
     user.email = email;
     user.defaultChannel = channelName;
-
+    GBServer.globals.users [user.userId] = user;
+    
     return await user.save();
   }
 
@@ -74,6 +76,7 @@ export class SecService extends GBService {
     const user = await GuaribasUser.findOne(options);
 
     user.conversationReference = conversationReference;
+    GBServer.globals.users [user.userId] = user;
     await user.save();
   }
 
@@ -82,6 +85,7 @@ export class SecService extends GBService {
     const user = await GuaribasUser.findOne(options);
 
     user.conversationReference = conversationReference;
+    GBServer.globals.users [user.userId] = user;
     await user.save();
   }
 
@@ -92,7 +96,7 @@ export class SecService extends GBService {
       }
     });
     user.locale = locale;
-
+    GBServer.globals.users [user.userId] = user;
     return await user.save();
   }
 
@@ -103,7 +107,7 @@ export class SecService extends GBService {
       }
     });
     user.hearOnDialog = dialogName;
-
+    GBServer.globals.users [user.userId] = user;
     return await user.save();
   }
 
@@ -114,7 +118,7 @@ export class SecService extends GBService {
       }
     });
     user.instanceId = instanceId;
-
+    GBServer.globals.users [user.userId] = user;
     return await user.save();
   }
 
@@ -160,9 +164,11 @@ export class SecService extends GBService {
       agent.instanceId = user.instanceId;
       agent.agentMode = 'self';
       agent.agentSystemId = null;
+      GBServer.globals.users [agent.userId] = user;
       await agent.save();
     }
 
+    GBServer.globals.users [user.userId] = user;
     await user.save();
 
     return user;
@@ -306,6 +312,7 @@ export class SecService extends GBService {
     }
     obj[name] = value;
     user.params = JSON.stringify(obj);
+    GBServer.globals.users [userId] = user;
     return await user.save();
   }
 }

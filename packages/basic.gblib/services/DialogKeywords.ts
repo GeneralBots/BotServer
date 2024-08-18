@@ -427,7 +427,7 @@ export class DialogKeywords {
    * @example TALK TOLIST (array,member)
    *
    */
-  public async getToLst(pid, array, member) {
+  public async getToLst({pid, array, member}) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     if (!array) {
@@ -1366,7 +1366,7 @@ export class DialogKeywords {
     const step = proc.step;
     const min = GBServer.globals.minInstances.filter(p => p.instance.instanceId == proc.instanceId)[0];
     const sec = new SecService();
-    const user = await sec.getUserFromId(min.instance.instanceId, proc.userId);
+    const user = GBServer.globals.users [proc.userId];
     const params = user ? JSON.parse(user.params) : {};
     return {
       min,

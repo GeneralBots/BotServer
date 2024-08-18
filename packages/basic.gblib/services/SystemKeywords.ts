@@ -92,6 +92,7 @@ export class SystemKeywords {
   }
 
   public async append({ pid, args }) {
+    if (!args) return [];
     let array = [].concat(...args);
     return array.filter(function (item, pos) {
       return item;

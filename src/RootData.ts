@@ -58,6 +58,7 @@ export class RootData {
   public debugConversationId: any; // Used to self-message during debug.
   public debuggers: any[]; // Client of attached Debugger instances by botId.
   public chatGPT: any; // ChatGPT API handle (shared Browser).
+  public users: any[]; // Loaded users.
   public dk;
   public wa;
   public sys;

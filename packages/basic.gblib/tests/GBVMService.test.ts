@@ -1,4 +1,4 @@
-import { GBVMService } from './GBVMService';
+import { GBVMService } from '../services/GBVMService';
 import { expect, test } from 'vitest'
 
 test('Default', () => {
