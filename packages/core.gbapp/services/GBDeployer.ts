@@ -45,6 +45,8 @@ import { AzureSearch } from 'pragmatismo-io-framework';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
+import Excel from 'exceljs';
+import asyncPromise from 'async-promises';
 import { GuaribasPackage } from '../models/GBModel.js';
 import { GBAdminService } from './../../admin.gbapp/services/GBAdminService.js';
 import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService.js';
@@ -286,7 +288,6 @@ export class GBDeployer implements IGBDeployer {
         `${publicAddress}/api/messages/${instance.botId}`
       );
     } else {
-      
       // Internally create resources on cloud provider.
 
       instance = await service.internalDeployBot(
@@ -326,7 +327,6 @@ export class GBDeployer implements IGBDeployer {
 
     let embedding;
     if (!azureOpenAIEmbeddingModel) {
-    
       return;
     }
 
@@ -337,14 +337,13 @@ export class GBDeployer implements IGBDeployer {
       azureOpenAIApiVersion: azureOpenAIVersion,
       azureOpenAIApiInstanceName: azureOpenAIApiInstanceName
     });
-    
+
     try {
       vectorStore = await HNSWLib.load(min['vectorStorePath'], embedding);
     } catch {
       vectorStore = new HNSWLib(embedding, {
         space: 'cosine'
       });
-      
     }
     return vectorStore;
   }
@@ -418,64 +417,37 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Loads all para from tabular file Config.xlsx.
    */
-  public async loadParamsFromTabular(min: GBMinInstance): Promise<any> {
-    const siteId = process.env.STORAGE_SITE_ID;
-    const libraryId = process.env.STORAGE_LIBRARY;
+  public async loadParamsFromTabular(min: GBMinInstance, path): Promise<any> {
+    const workbook = new Excel.Workbook();
+    const data = await workbook.xlsx.readFile(Path.join(path, 'Config.xlsx'));
 
-    GBLogEx.info(min, `Connecting to Config.xslx (siteId: ${siteId}, libraryId: ${libraryId})...`);
+    let worksheet: any;
+    for (let t = 0; t < data.worksheets.length; t++) {
+      worksheet = data.worksheets[t];
+      if (worksheet) {
+        break;
+      }
+    }
+    const rows = worksheet._rows;
+    GBLogEx.info(min, `Processing ${rows.length} rows from Config file ${path}...`);
+    let list = [];
 
-    // Connects to MSFT storage.
+    await asyncPromise.eachSeries(rows, async line => {
+      // Skips the first line.
 
-    const token = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, true);
+      if (line != undefined && line._cells[0] !== undefined && line._cells[1] !== undefined) {
+        // Extracts values from columns in the current line.
 
-    const client = MicrosoftGraph.Client.init({
-      authProvider: done => {
-        done(null, token);
+        let obj = {};
+        obj[line._cells[0].text] = line._cells[1].text;
+        list.push(obj);
       }
     });
 
-    // Retrieves all files in .bot folder.
-
-    const botId = min.instance.botId;
-    const path = DialogKeywords.getGBAIPath(botId, 'gbot');
-    let url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${path}:/children`;
-
-    GBLogEx.info(min, `Loading .gbot from Excel: ${url}`);
-    const res = await client.api(url).get();
-
-    // Finds Config.xlsx.
-
-    const document = res.value.filter(m => {
-      return m.name === 'Config.xlsx';
-    });
-    if (document === undefined || document.length === 0) {
-      GBLogEx.info(min, `Config.xlsx not found on .bot folder, check the package.`);
-
-      return null;
-    }
-
-    // Reads all rows in Config.xlsx that contains a pair of name/value
-    // and fills an object that is returned to be saved in params instance field.
-
-    const results = await client
-      .api(
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('General')/range(address='A7:B100')`
-      )
-      .get();
-    let index = 0,
-      obj = {};
-    for (; index < results.text.length; index++) {
-      if (results.text[index][0] === '') {
-        return obj;
-      }
-      obj[results.text[index][0]] = results.text[index][1];
-    }
-
-    return obj;
+    return list;
   }
 
   /**
-   * Loads all para from tabular file Config.xlsx.
    */
   public async downloadFolder(
     min: GBMinInstance,
@@ -632,14 +604,7 @@ export class GBDeployer implements IGBDeployer {
       case '.gbot':
         // Extracts configuration information from .gbot files.
 
-        if (process.env.ENABLE_PARAMS_ONLINE === 'false') {
-          if (Fs.existsSync(localPath)) {
-            GBLogEx.info(min, `Loading .gbot from ${localPath}.`);
-            await this.deployBotFromLocalPath(localPath, GBServer.globals.publicAddress);
-          }
-        } else {
-          min.instance.params = await this.loadParamsFromTabular(min);
-        }
+        min.instance.params = await this.loadParamsFromTabular(min, localPath);
 
         let connections = [];
 

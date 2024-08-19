@@ -316,15 +316,15 @@ export class GBMinService {
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
-    
-    dir = Path.join(process.env.PWD, 'work', gbai);
 
-    const server = new webdav.WebDAVServer();
-    server.setFileSystem(`/${botId}`,
-      new webdav.PhysicalFileSystem(dir), (success) => {
+    if (process.env.STORAGE_FILE) {
+      dir = Path.join(process.env.STORAGE_LIBRARY, 'work', gbai);
+
+      const server = new webdav.WebDAVServer();
+      server.setFileSystem(`/${botId}`, new webdav.PhysicalFileSystem(dir), success => {
         server.start(() => console.log('WEBDAV READY'));
-    })
-
+      });
+    }
     // Loads Named Entity data for this bot.
 
     // TODO: await KBService.RefreshNER(min);
@@ -665,7 +665,6 @@ export class GBMinService {
     if (instance !== null) {
       // Gets the webchat token, speech token and theme.
 
-      const webchatTokenContainer = await this.getWebchatToken(instance);
       const speechToken = instance.speechKey != undefined ? await this.getSTSToken(instance) : null;
       let theme = instance.theme;
 
@@ -674,13 +673,12 @@ export class GBMinService {
       if (!theme) {
         theme = `default.gbtheme`;
       }
-
+      
       let config = {
         instanceId: instance.instanceId,
         botId: botId,
         theme: theme,
-        speechToken: speechToken,
-        conversationId: webchatTokenContainer.conversationId,
+        speechToken: speechToken,        
         authenticatorTenant: instance.authenticatorTenant,
         authenticatorClientId: instance.marketplaceId,
         paramLogoImageUrl: this.core.getParam(instance, 'Logo Image Url', null),
@@ -696,6 +694,8 @@ export class GBMinService {
       if (process.env.STORAGE_FILE) {
         config['domain'] = `http://localhost:${process.env.PORT}/directline`;
       } else {
+        const webchatTokenContainer = await this.getWebchatToken(instance);
+        config['conversationId']= webchatTokenContainer.conversationId,
         config['webchatToken'] = webchatTokenContainer.token;
       }
 
@@ -711,7 +711,7 @@ export class GBMinService {
    * Gets Webchat token from Bot Service.
    */
   private async getWebchatToken(instance: any) {
-    const url = 'https://directline.botframework.com/v3/directline/tokens/generate';
+    const url = `http://localhost:${process.env.PORT}/v3/directline/tokens/generate`;
     const options = {
       method: 'POST',
       headers: {
@@ -1397,7 +1397,8 @@ export class GBMinService {
     context.activity.text = context.activity.text.trim();
 
     const member = context.activity.from;
-    let memberId = null, email = null;
+    let memberId = null,
+      email = null;
 
     // Processes e-mail from id in case of Teams messages.
 
@@ -1669,7 +1670,7 @@ export class GBMinService {
           if (script === 'start') {
             pid = GBVMService.createProcessInfo(user, min, 'api', null);
 
-            const client =  await GBUtil.getDirectLineClient(min);
+            const client = await GBUtil.getDirectLineClient(min);
             const response = await client.apis.Conversations.Conversations_StartConversation();
 
             min['apiConversations'][pid] = { conversation: response.obj, client: client };

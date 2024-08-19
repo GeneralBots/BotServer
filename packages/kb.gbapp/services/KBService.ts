@@ -746,11 +746,11 @@ export class KBService implements IGBKBService {
         let doc = await loader.load();
         let content = doc[0].pageContent;
 
-        if (file.name.endsWith('zap.docx')){
+        if (file.name.endsWith('zap.docx')) {
           await min.whatsAppDirectLine.createOrUpdateTemplate(min, file.name, content);
         }
-        
-        const answer =  {
+
+        const answer = {
           instanceId: instance.instanceId,
           content: content,
           format: '.md',
@@ -1369,10 +1369,12 @@ export class KBService implements IGBKBService {
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(min, localPath, p, instance);
     GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
-    const service = await AzureDeployerService.createInstance(deployer);
-    const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
-    await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));
 
+    if (!process.env.STORAGE_FILE) {
+      const service = await AzureDeployerService.createInstance(deployer);
+      const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
+      await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));
+    }
     min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
     await KBService.RefreshNER(min);
 
