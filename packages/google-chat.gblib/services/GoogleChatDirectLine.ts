@@ -36,6 +36,7 @@ import { GBLog, GBMinInstance, GBService } from 'botlib';
 import { GBServer } from '../../../src/app.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Support for Google Chat.
@@ -90,10 +91,7 @@ export class GoogleChatDirectLine extends GBService {
   }
 
   public async setup (setUrl) {
-    this.directLineClient = new Swagger({
-      spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-      usePromise: true
-    });
+    this.directLineClient =  await GBUtil.getDirectLineClient(this.min);
     const client = await this.directLineClient;
 
     client.clientAuthorizations.add(

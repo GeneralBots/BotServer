@@ -42,6 +42,7 @@ import { FacebookAdapter } from 'botbuilder-adapter-facebook';
 import mkdirp from 'mkdirp';
 import Fs from 'fs';
 import arrayBufferToBuffer from 'arraybuffer-to-buffer';
+import { v2 as webdav } from 'webdav-server';
 import { NlpManager } from 'node-nlp';
 import Koa from 'koa';
 import { createRpcServer } from '@push-rpc/core';
@@ -253,6 +254,8 @@ export class GBMinService {
     GBServer.globals.minInstances.push(min);
     const user = null; // No user context.
 
+    // Serves individual URL for each bot conversational interface.
+
     await this.deployer['deployPackage2'](min, user, 'packages/default.gbtheme');
 
     // Install per bot deployed packages.
@@ -313,6 +316,14 @@ export class GBMinService {
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
+    
+    dir = Path.join(process.env.PWD, 'work', gbai);
+
+    const server = new webdav.WebDAVServer();
+    server.setFileSystem(`/${botId}`,
+      new webdav.PhysicalFileSystem(dir), (success) => {
+        server.start(() => console.log('WEBDAV READY'));
+    })
 
     // Loads Named Entity data for this bot.
 
@@ -321,16 +332,11 @@ export class GBMinService {
     // Calls the loadBot context.activity for all packages.
 
     await this.invokeLoadBot(min.appPackages, GBServer.globals.sysPackages, min);
-
-    // Serves individual URL for each bot conversational interface.
-
     const receiver = async (req, res) => {
       await this.receiver(req, res, conversationState, min, instance, GBServer.globals.appPackages);
     };
     let url = `/api/messages/${instance.botId}`;
-    GBServer.globals.server.post(url, receiver);
-    url = `/api/messages`;
-    GBServer.globals.server.post(url, receiver);
+
     GBServer.globals.server.get(url, (req, res) => {
       if (req.query['hub.mode'] === 'subscribe') {
         if (req.query['hub.verify_token'] === process.env.FACEBOOK_VERIFY_TOKEN) {
@@ -349,12 +355,7 @@ export class GBMinService {
     if (process.env.TEST_MESSAGE) {
       GBLogEx.info(min, `Starting auto test with '${process.env.TEST_MESSAGE}'.`);
 
-      const client = await new SwaggerClient({
-        spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-        requestInterceptor: req => {
-          req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
-        }
-      });
+      const client = await GBUtil.getDirectLineClient(min);
 
       const response = await client.apis.Conversations.Conversations_StartConversation();
       const conversationId = response.obj.conversationId;
@@ -450,7 +451,9 @@ export class GBMinService {
           whatsAppDirectLine = WhatsappDirectLine.botsByNumber[to];
         }
 
-        await whatsAppDirectLine.WhatsAppCallback(req, res, whatsAppDirectLine.botId);
+        if (whatsAppDirectLine) {
+          await whatsAppDirectLine.WhatsAppCallback(req, res, whatsAppDirectLine.botId);
+        }
       })
       .bind(min);
 
@@ -672,27 +675,31 @@ export class GBMinService {
         theme = `default.gbtheme`;
       }
 
-      res.send(
-        JSON.stringify({
-          instanceId: instance.instanceId,
-          botId: botId,
-          theme: theme,
-          //webchatToken: webchatTokenContainer.token,
-          domain: 'http://localhost:3978/directline',
-          speechToken: speechToken,
-          conversationId: webchatTokenContainer.conversationId,
-          authenticatorTenant: instance.authenticatorTenant,
-          authenticatorClientId: instance.marketplaceId,
-          paramLogoImageUrl: this.core.getParam(instance, 'Logo Image Url', null),
-          paramLogoImageAlt: this.core.getParam(instance, 'Logo Image Alt', null),
-          paramLogoImageWidth: this.core.getParam(instance, 'Logo Image Width', null),
-          paramLogoImageHeight: this.core.getParam(instance, 'Logo Image Height', null),
-          paramLogoImageType: this.core.getParam(instance, 'Logo Image Type', null),
-          logo: this.core.getParam(instance, 'Logo', null),
-          color1: this.core.getParam(instance, 'Color1', null),
-          color2: this.core.getParam(instance, 'Color2', null)
-        })
-      );
+      let config = {
+        instanceId: instance.instanceId,
+        botId: botId,
+        theme: theme,
+        speechToken: speechToken,
+        conversationId: webchatTokenContainer.conversationId,
+        authenticatorTenant: instance.authenticatorTenant,
+        authenticatorClientId: instance.marketplaceId,
+        paramLogoImageUrl: this.core.getParam(instance, 'Logo Image Url', null),
+        paramLogoImageAlt: this.core.getParam(instance, 'Logo Image Alt', null),
+        paramLogoImageWidth: this.core.getParam(instance, 'Logo Image Width', null),
+        paramLogoImageHeight: this.core.getParam(instance, 'Logo Image Height', null),
+        paramLogoImageType: this.core.getParam(instance, 'Logo Image Type', null),
+        logo: this.core.getParam(instance, 'Logo', null),
+        color1: this.core.getParam(instance, 'Color1', null),
+        color2: this.core.getParam(instance, 'Color2', null)
+      };
+
+      if (process.env.STORAGE_FILE) {
+        config['domain'] = `http://localhost:${process.env.PORT}/directline`;
+      } else {
+        config['webchatToken'] = webchatTokenContainer.token;
+      }
+
+      res.send(JSON.stringify(config));
     } else {
       const error = `Instance not found while retrieving from .gbui web client: ${botId}.`;
       res.sendStatus(error);
@@ -749,15 +756,18 @@ export class GBMinService {
    */
   private async buildBotAdapter(instance: any, sysPackages: IGBPackage[], appPackages: IGBPackage[]) {
     // MSFT stuff.
-    const uri = 'http://localhost:3978';
 
-    const adapter = new BotFrameworkAdapter({
-      clientOptions: { baseUri: uri },
+    let config = {
       appId: instance.marketplaceId ? instance.marketplaceId : GBConfigService.get('MARKETPLACE_ID'),
       appPassword: instance.marketplacePassword
         ? instance.marketplacePassword
         : GBConfigService.get('MARKETPLACE_SECRET')
-    });
+    };
+    if (process.env.STORAGE_FILE) {
+      config['clientOptions'] = { baseUri: `http://localhost:${process.env.PORT}` };
+    }
+
+    const adapter = new BotFrameworkAdapter(config);
     const storage = new MemoryStorage();
     const conversationState = new ConversationState(storage);
     const userState = new UserState(storage);
@@ -770,6 +780,28 @@ export class GBMinService {
     // The minimal bot is built here.
 
     const min = new GBMinInstance();
+
+    // Setups default BOT Framework dialogs.
+
+    min.userProfile = conversationState.createProperty('userProfile');
+    const dialogState = conversationState.createProperty('dialogState');
+
+    min.dialogs = new DialogSet(dialogState);
+    min.dialogs.add(new TextPrompt('textPrompt'));
+    min.dialogs.add(new AttachmentPrompt('attachmentPrompt'));
+
+    min.dialogs.add(new ConfirmPrompt('confirmPrompt'));
+    if (process.env.ENABLE_AUTH) {
+      min.dialogs.add(
+        new OAuthPrompt('oAuthPrompt', {
+          connectionName: 'OAuth2',
+          text: 'Please sign in to General Bots.',
+          title: 'Sign in',
+          timeout: 300000
+        })
+      );
+    }
+
     min.botId = instance.botId;
     min.bot = adapter;
     min.userState = userState;
@@ -791,6 +823,15 @@ export class GBMinService {
     }
     min['apiConversations'] = {};
     min.packages = sysPackages;
+
+    const receiver = async (req, res) => {
+      await this.receiver(req, res, conversationState, min, instance, GBServer.globals.appPackages);
+    };
+
+    let url = `/api/messages/${instance.botId}`;
+    GBServer.globals.server.post(url, receiver);
+    url = `/api/messages`;
+    GBServer.globals.server.post(url, receiver);
 
     // NLP Manager.
 
@@ -879,26 +920,6 @@ export class GBMinService {
       WhatsappDirectLine.botsByNumber[botNumber] = min.whatsAppDirectLine;
     }
 
-    // Setups default BOT Framework dialogs.
-
-    min.userProfile = conversationState.createProperty('userProfile');
-    const dialogState = conversationState.createProperty('dialogState');
-
-    min.dialogs = new DialogSet(dialogState);
-    min.dialogs.add(new TextPrompt('textPrompt'));
-    min.dialogs.add(new AttachmentPrompt('attachmentPrompt'));
-
-    min.dialogs.add(new ConfirmPrompt('confirmPrompt'));
-    if (process.env.ENABLE_AUTH) {
-      min.dialogs.add(
-        new OAuthPrompt('oAuthPrompt', {
-          connectionName: 'OAuth2',
-          text: 'Please sign in to General Bots.',
-          title: 'Sign in',
-          timeout: 300000
-        })
-      );
-    }
     return { min, adapter, conversationState };
   }
 
@@ -1177,7 +1198,7 @@ export class GBMinService {
         await handler(context);
         // Return status
         res.status(200);
-                
+
         res.end();
       } else {
         await adapter['processActivity'](req, res, handler);
@@ -1376,7 +1397,7 @@ export class GBMinService {
     context.activity.text = context.activity.text.trim();
 
     const member = context.activity.from;
-    let memberId, email;
+    let memberId = null, email = null;
 
     // Processes e-mail from id in case of Teams messages.
 
@@ -1648,12 +1669,7 @@ export class GBMinService {
           if (script === 'start') {
             pid = GBVMService.createProcessInfo(user, min, 'api', null);
 
-            const client = await new SwaggerClient({
-              spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-              requestInterceptor: req => {
-                req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
-              }
-            });
+            const client =  await GBUtil.getDirectLineClient(min);
             const response = await client.apis.Conversations.Conversations_StartConversation();
 
             min['apiConversations'][pid] = { conversation: response.obj, client: client };

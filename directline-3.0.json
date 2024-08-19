@@ -1,5 +1,5 @@
 {
-  "swagger": "2.0",
+  "openapi": "3.0.0",
   "info": {
     "version": "v3",
     "title": "Bot Connector - Direct Line API - v3.0",
@@ -15,7 +15,7 @@
       "url": "https://opensource.org/licenses/MIT"
     }
   },
-  "host": "directline.botframework.com",
+  "servers": [{"url": "http://127.0.0.1:4242"}],
   "schemes": [
     "https"
   ],

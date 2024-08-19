@@ -37,6 +37,7 @@ import SwaggerClient from 'swagger-client';
 import { spawn } from 'child_process';
 import { CodeServices } from '../../gpt.gblib/services/CodeServices.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Web Automation services of conversation to be called by BASIC.
@@ -154,12 +155,8 @@ export class DebuggerService {
 
       let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
 
-      const client = await new SwaggerClient({
-        spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-        requestInterceptor: req => {
-          req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
-        }
-      });
+      const client = await GBUtil.getDirectLineClient(min);
+
       GBServer.globals.debuggers[botId].client = client;
       const response = await client.apis.Conversations.Conversations_StartConversation();
       const conversationId = response.obj.conversationId;

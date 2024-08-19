@@ -54,8 +54,10 @@ export class SecService extends GBService {
     user.email = email;
     user.defaultChannel = channelName;
     GBServer.globals.users [user.userId] = user;
-    
-    return await user.save();
+    if(user.changed()){
+      await user.save();
+    }
+    return user;
   }
 
   /**

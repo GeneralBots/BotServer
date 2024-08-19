@@ -30,7 +30,6 @@
 
 import mime from 'mime-types';
 import urlJoin from 'url-join';
-import SwaggerClient from 'swagger-client';
 import Path from 'path';
 import Fs from 'fs';
 import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
@@ -46,7 +45,7 @@ import qrcode from 'qrcode-terminal';
 import express from 'express';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import pkg from 'whatsapp-web.js';
-import fetch, { Response } from 'node-fetch';
+import fetch from 'node-fetch';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
@@ -117,20 +116,9 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async setup(setUrl: boolean) {
-    const client = await new SwaggerClient({
-      url: 'http://127.0.0.1:3978/api/messages', // TODO:
-      spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-      requestInterceptor: req => {
-        req.headers['Authorization'] = `Bearer ${this.min.instance.webchatKey}`;
-      }
-    });
     
-    this.directLineClient = client;
+    this.directLineClient = GBUtil.getDirectLineClient(this.min);
     
-    // Warms up MSBF.
-    
-    await client.apis.Conversations.Conversations_StartConversation();
-
     let url: string;
     let options: any;
 

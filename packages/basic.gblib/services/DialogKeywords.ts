@@ -1348,12 +1348,7 @@ export class DialogKeywords {
 
     const conversation = min['apiConversations'][pid];
 
-    const client = await new SwaggerClient({
-      spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-      requestInterceptor: req => {
-        req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
-      }
-    });
+    const client = await GBUtil.getDirectLineClient(min);
     conversation.client = client;
     const response = await client.apis.Conversations.Conversations_StartConversation();
     conversation.conversationId = response.obj.conversationId;

@@ -40,6 +40,8 @@ import bodyParser from 'body-parser';
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
 import child_process from 'child_process';
 import express from 'express';
+import {start as startRouter} from '../packages/core.gbapp/services/router/bridge.js'
+
 import fs from 'fs';
 import http from 'http';
 import httpProxy from 'http-proxy';
@@ -87,8 +89,9 @@ export class GBServer {
 
     const server = express();
     this.initEndpointsDocs(server);
-
+    startRouter(server);
     GBServer.globals.server = server;
+
     GBServer.globals.httpsServer = null;
     GBServer.globals.webSessions = {};
     GBServer.globals.processes = {};
@@ -118,7 +121,7 @@ export class GBServer {
     });
 
     process.on('uncaughtException', (err, p) => {
-      GBLogEx.error(0, `GBEXCEPTION: ${GBUtil.toYAML(err)} ${GBUtil.toYAML(p)}`);
+      GBLogEx.error(0, `GBEXCEPTION: ${GBUtil.toYAML(JSON.parse(JSON.stringify(err, Object.getOwnPropertyNames(err))))}`);
     });
 
     process.on('unhandledRejection', (err, p) => {
@@ -131,7 +134,7 @@ export class GBServer {
       }
 
       if (!bypass) {
-        GBLogEx.error(0, `GBREJECTION: ${GBUtil.toYAML(err)} ${GBUtil.toYAML(p)}`);
+        GBLogEx.error(0,`GBREJECTION: ${GBUtil.toYAML(JSON.parse(JSON.stringify(err, Object.getOwnPropertyNames(err))))}`);
       }
     });
 
@@ -147,6 +150,7 @@ export class GBServer {
       (async () => {
         try {
           GBLogEx.info(0, `Now accepting connections on ${port}...`);
+          
           process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
           // Reads basic configuration, initialize minimal services.
@@ -247,7 +251,7 @@ export class GBServer {
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
           GBServer.globals.minService = minService;
           await minService.buildMin(instances);
-
+          
           server.all('*', async (req, res, next) => {
             const host = req.headers.host;
 

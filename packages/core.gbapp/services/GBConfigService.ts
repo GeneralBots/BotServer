@@ -106,7 +106,7 @@ export class GBConfigService {
           value = undefined;
           break;
         case 'STORAGE_FILE':
-          value = './guaribas.sqlite';
+          value = './data.db';
           break;
         case 'GBKB_AUTO_DEPLOY':
           value = false;

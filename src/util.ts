@@ -34,6 +34,8 @@
 
 'use strict';
 import * as YAML from 'yaml';
+import SwaggerClient from 'swagger-client';
+import Fs from 'fs';
 
 export class GBUtil {
   public static repeat(chr, count) {
@@ -53,7 +55,7 @@ export class GBUtil {
 
     return (GBUtil.repeat(pad, length) + value).substr(0, width);
   }
-  
+
   public static padR(value, width, pad) {
     if (!width || width < 1) return value;
 
@@ -62,6 +64,22 @@ export class GBUtil {
     if (length < 1) value.substr(0, width);
 
     return (value + GBUtil.repeat(pad, length)).substr(0, width);
+  }
+
+  public static async getDirectLineClient(min) {
+
+    let config = {
+      url: `http://127.0.0.1:${process.env.port}/api/messages`, 
+      spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
+      requestInterceptor: req => {
+        req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
+      }
+    };    
+    if (process.env.STORAGE_FILE) {
+      config['spec'].servers = [{ url: `http://127.0.0.1:${process.env.PORT}/api/messages` }];
+      config['openapi'] = '3.0.0';
+    }
+    return await new SwaggerClient(config);
   }
 
   public static toYAML(json) {
