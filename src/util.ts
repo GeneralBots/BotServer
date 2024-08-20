@@ -75,10 +75,12 @@ export class GBUtil {
       }
     };
     if (!GBConfigService.get('STORAGE_NAME')) {
-      (config['url'] = `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages`),
-        (config['spec'].servers = [{ url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages` }]);
+      config['spec'].url = `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages`,
+      config['spec'].servers = [{ url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages` }];
       config['openapi'] = '3.0.0';
+      delete config['spec'].host;
     }
+
     return await new SwaggerClient(config);
   }
 

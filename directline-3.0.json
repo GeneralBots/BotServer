@@ -15,6 +15,7 @@
       "url": "https://opensource.org/licenses/MIT"
     }
   },
+  "host": "directline.botframework.com",
   "schemes": [
     "https"
   ],
