@@ -88,7 +88,7 @@ export class GBServer {
 
     const server = express();
     this.initEndpointsDocs(server);
-    
+
     GBServer.globals.server = server;
 
     GBServer.globals.httpsServer = null;
@@ -225,7 +225,7 @@ export class GBServer {
             GBServer.globals.publicAddress
           );
 
-          if (instances.  length === 0) {
+          if (instances.length === 0) {
             if (GBConfigService.get('STORAGE_NAME')) {
               const instance = await importer.importIfNotExistsBotPackage(
                 GBConfigService.get('BOT_ID'),
@@ -244,9 +244,10 @@ export class GBServer {
               await azureDeployer['runSearch'](instance);
             }
           }
-          
-          await core['ensureFolders'](instances, deployer);
 
+          if (!GBConfigService.get('STORAGE_NAME')) {
+            await core['ensureFolders'](instances, deployer);
+          }
           GBServer.globals.bootInstance = instances[0];
 
           // Builds minimal service infrastructure.
