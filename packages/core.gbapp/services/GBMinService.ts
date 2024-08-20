@@ -173,8 +173,9 @@ export class GBMinService {
     await CollectionUtil.asyncForEach(
       instances,
       (async instance => {
-
-        startRouter(GBServer.globals.server, instance.botId);
+        if (!GBConfigService.get('STORAGE_NAME')) {
+          startRouter(GBServer.globals.server, instance.botId);
+        }
 
         try {
           GBLog.info(`Mounting ${instance.botId}...`);
@@ -284,7 +285,7 @@ export class GBMinService {
     const gbai = DialogKeywords.getGBAIPath(min.botId);
     let dir = `work/${gbai}/cache`;
     const botId = gbai.replace(/\.[^/.]+$/, '');
-    
+
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
@@ -677,12 +678,12 @@ export class GBMinService {
       if (!theme) {
         theme = `default.gbtheme`;
       }
-      
+
       let config = {
         instanceId: instance.instanceId,
         botId: botId,
         theme: theme,
-        speechToken: speechToken,        
+        speechToken: speechToken,
         authenticatorTenant: instance.authenticatorTenant,
         authenticatorClientId: instance.marketplaceId,
         paramLogoImageUrl: this.core.getParam(instance, 'Logo Image Url', null),
@@ -699,8 +700,8 @@ export class GBMinService {
         config['domain'] = `http://localhost:${process.env.PORT}/directline/${botId}`;
       } else {
         const webchatTokenContainer = await this.getWebchatToken(instance);
-        config['conversationId']= webchatTokenContainer.conversationId,
-        config['webchatToken'] = webchatTokenContainer.token;
+        (config['conversationId'] = webchatTokenContainer.conversationId),
+          (config['webchatToken'] = webchatTokenContainer.token);
       }
 
       res.send(JSON.stringify(config));
@@ -844,8 +845,7 @@ export class GBMinService {
       GBServer.globals.minBoot = min;
       GBServer.globals.minBoot.instance.marketplaceId = GBConfigService.get('MARKETPLACE_ID');
       GBServer.globals.minBoot.instance.marketplacePassword = GBConfigService.get('MARKETPLACE_SECRET');
-    }
-    else{
+    } else {
       url = `/api/messages`;
       GBServer.globals.server.post(url, receiver);
     }

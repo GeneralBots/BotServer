@@ -124,7 +124,7 @@ export class GBServer {
     process.on('uncaughtException', (err, p) => {
       GBLogEx.error(
         0,
-        `GBEXCEPTION: ${GBUtil.toYAML(JSON.parse(JSON.stringify(err, Object.getOwnPropertyNames(err))))}`
+        `GBEXCEPTION: ${GBUtil.toYAML(err)}`
       );
     });
 
@@ -140,7 +140,7 @@ export class GBServer {
       if (!bypass) {
         GBLogEx.error(
           0,
-          `GBREJECTION: ${GBUtil.toYAML(JSON.parse(JSON.stringify(err, Object.getOwnPropertyNames(err))))}`
+          `GBREJECTION: ${GBUtil.toYAML(err)}`
         );
       }
     });

@@ -68,14 +68,13 @@ export class GBUtil {
   }
 
   public static async getDirectLineClient(min) {
-
     let config = {
-      url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages`, 
+      url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages`,
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
       requestInterceptor: req => {
         req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
       }
-    };    
+    };
     if (!GBConfigService.get('STORAGE_NAME')) {
       config['spec'].servers = [{ url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages` }];
       config['openapi'] = '3.0.0';
@@ -83,11 +82,18 @@ export class GBUtil {
     return await new SwaggerClient(config);
   }
 
-  public static toYAML(json) {
-    const doc = new YAML.Document();
-    doc.contents = json;
-    return doc.toString();
-  }
+  public static toYAML(data) {
+    const extractProps = (obj) => {
+        return Object.getOwnPropertyNames(obj).reduce((acc, key) => {
+            const value = obj[key];
+            acc[key] = value && typeof value === 'object' && !Array.isArray(value) ? extractProps(value) : value;
+            return acc;
+        }, {});
+    };
+
+    const extractedError = extractProps(data);
+    return YAML.stringify(extractedError);
+}
 
   public static sleep(ms) {
     return new Promise(resolve => {
