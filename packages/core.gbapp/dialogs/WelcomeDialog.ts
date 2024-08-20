@@ -36,11 +36,11 @@
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib';
 import { GBServer } from '../../../src/app.js';
-import { GBConversationalService } from '../services/GBConversationalService.js';
 import { Messages } from '../strings.js';
 import { GBLogEx } from '../services/GBLogEx.js';
+import { GBConfigService } from '../services/GBConfigService.js';
 
 /**
  *  Dialog for Welcoming people.
@@ -65,7 +65,7 @@ export class WelcomeDialog extends IGBDialog {
         async step => {
           if (
             GBServer.globals.entryPointDialog !== null &&
-            min.instance.botId === process.env.BOT_ID &&
+            min.instance.botId === GBConfigService.get('BOT_ID') &&
             step.context.activity.channelId === 'webchat'
           ) {
             return step.replaceDialog(GBServer.globals.entryPointDialog);

@@ -65,4 +65,5 @@ export class RootData {
   public dbg;
   public img;
   indexSemaphore: any;
+  public webDavServer;
 }

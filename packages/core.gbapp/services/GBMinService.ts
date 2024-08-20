@@ -42,10 +42,11 @@ import { FacebookAdapter } from 'botbuilder-adapter-facebook';
 import mkdirp from 'mkdirp';
 import Fs from 'fs';
 import arrayBufferToBuffer from 'arraybuffer-to-buffer';
-import { v2 as webdav } from 'webdav-server';
 import { NlpManager } from 'node-nlp';
 import Koa from 'koa';
+import { v2 as webdav } from 'webdav-server';
 import { createRpcServer } from '@push-rpc/core';
+import { start as startRouter } from '../../../packages/core.gbapp/services/router/bridge.js';
 import wash from 'washyourmouthoutwithsoap';
 import {
   AutoSaveStateMiddleware,
@@ -172,6 +173,9 @@ export class GBMinService {
     await CollectionUtil.asyncForEach(
       instances,
       (async instance => {
+
+        startRouter(GBServer.globals.server, instance.botId);
+
         try {
           GBLog.info(`Mounting ${instance.botId}...`);
           await this['mountBot'](instance);
@@ -256,7 +260,7 @@ export class GBMinService {
 
     // Serves individual URL for each bot conversational interface.
 
-    await this.deployer['deployPackage2'](min, user, 'packages/default.gbtheme');
+    await this.deployer['deployPackage2'](min, user, 'templates/default.gbai/default.gbtheme');
 
     // Install per bot deployed packages.
 
@@ -280,7 +284,7 @@ export class GBMinService {
     const gbai = DialogKeywords.getGBAIPath(min.botId);
     let dir = `work/${gbai}/cache`;
     const botId = gbai.replace(/\.[^/.]+$/, '');
-
+    
     if (!Fs.existsSync(dir)) {
       mkdirp.sync(dir);
     }
@@ -317,12 +321,12 @@ export class GBMinService {
       mkdirp.sync(dir);
     }
 
-    if (process.env.STORAGE_FILE) {
-      dir = Path.join(process.env.STORAGE_LIBRARY, 'work', gbai);
+    if (GBConfigService.get('STORAGE_FILE')) {
+      dir = Path.join(GBConfigService.get('STORAGE_LIBRARY'), 'work', gbai);
 
-      const server = new webdav.WebDAVServer();
+      const server = GBServer.globals.webDavServer;
       server.setFileSystem(`/${botId}`, new webdav.PhysicalFileSystem(dir), success => {
-        server.start(() => console.log('WEBDAV READY'));
+        GBLogEx.info(1, `WebDav for ${botId} loaded.`);
       });
     }
     // Loads Named Entity data for this bot.
@@ -691,8 +695,8 @@ export class GBMinService {
         color2: this.core.getParam(instance, 'Color2', null)
       };
 
-      if (process.env.STORAGE_FILE) {
-        config['domain'] = `http://localhost:${process.env.PORT}/directline`;
+      if (GBConfigService.get('STORAGE_FILE')) {
+        config['domain'] = `http://localhost:${process.env.PORT}/directline/${botId}`;
       } else {
         const webchatTokenContainer = await this.getWebchatToken(instance);
         config['conversationId']= webchatTokenContainer.conversationId,
@@ -763,7 +767,7 @@ export class GBMinService {
         ? instance.marketplacePassword
         : GBConfigService.get('MARKETPLACE_SECRET')
     };
-    if (process.env.STORAGE_FILE) {
+    if (GBConfigService.get('STORAGE_FILE')) {
       config['clientOptions'] = { baseUri: `http://localhost:${process.env.PORT}` };
     }
 
@@ -830,8 +834,6 @@ export class GBMinService {
 
     let url = `/api/messages/${instance.botId}`;
     GBServer.globals.server.post(url, receiver);
-    url = `/api/messages`;
-    GBServer.globals.server.post(url, receiver);
 
     // NLP Manager.
 
@@ -842,6 +844,10 @@ export class GBMinService {
       GBServer.globals.minBoot = min;
       GBServer.globals.minBoot.instance.marketplaceId = GBConfigService.get('MARKETPLACE_ID');
       GBServer.globals.minBoot.instance.marketplacePassword = GBConfigService.get('MARKETPLACE_SECRET');
+    }
+    else{
+      url = `/api/messages`;
+      GBServer.globals.server.post(url, receiver);
     }
 
     if (min.instance.facebookWorkplaceVerifyToken) {
@@ -1192,7 +1198,7 @@ export class GBMinService {
     };
 
     try {
-      if (process.env.STORAGE_FILE) {
+      if (GBConfigService.get('STORAGE_FILE')) {
         const context = adapter['createContext'](req);
         context['_activity'] = context.activity.body;
         await handler(context);

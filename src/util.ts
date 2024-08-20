@@ -36,6 +36,7 @@
 import * as YAML from 'yaml';
 import SwaggerClient from 'swagger-client';
 import Fs from 'fs';
+import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
 
 export class GBUtil {
   public static repeat(chr, count) {
@@ -69,14 +70,14 @@ export class GBUtil {
   public static async getDirectLineClient(min) {
 
     let config = {
-      url: `http://127.0.0.1:${process.env.port}/api/messages`, 
+      url: `http://127.0.0.1:${GBConfigService.get('PORT')}/api/messages`, 
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
       requestInterceptor: req => {
         req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
       }
     };    
-    if (process.env.STORAGE_FILE) {
-      config['spec'].servers = [{ url: `http://127.0.0.1:${process.env.PORT}/api/messages` }];
+    if (GBConfigService.get('STORAGE_FILE')) {
+      config['spec'].servers = [{ url: `http://127.0.0.1:${GBConfigService.get('PORT')}/api/messages` }];
       config['openapi'] = '3.0.0';
     }
     return await new SwaggerClient(config);

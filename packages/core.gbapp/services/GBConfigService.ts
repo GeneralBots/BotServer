@@ -42,7 +42,7 @@ import * as en from 'dotenv-extended';
  */
 export class GBConfigService {
   public static getBoolean(value: string): boolean {
-    return (this.get(value) as unknown) as boolean;
+    return this.get(value) as unknown as boolean;
   }
   public static getServerPort(): string {
     if (process.env.PORT) {
@@ -84,8 +84,11 @@ export class GBConfigService {
         case 'CLOUD_USERNAME':
           value = undefined;
           break;
+        case 'STORAGE_LIBRARY':
+          value = `${process.env.HOME}/gbpackages`;
+          break;
         case 'BOT_ID':
-          value = undefined;
+          value = 'default';
           break;
         case 'CLOUD_PASSWORD':
           value = undefined;
@@ -103,7 +106,7 @@ export class GBConfigService {
           value = undefined;
           break;
         case 'STORAGE_DIALECT':
-          value = undefined;
+          value = 'sqlite';
           break;
         case 'STORAGE_FILE':
           value = './data.db';
@@ -160,7 +163,7 @@ export class GBConfigService {
           value = true;
           break;
         case 'BOT_URL':
-          value = undefined;
+          value = 'http://localhost:4242';
           break;
         case 'STORAGE_SERVER':
           value = undefined;

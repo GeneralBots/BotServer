@@ -187,8 +187,8 @@ export class GBAdminService implements IGBAdminService {
         await deployer['cleanupPackage'](min.instance, packageName);
       }
 
-      if (process.env.STORAGE_FILE) {
-        const path = Path.join(process.env.STORAGE_LIBRARY, gbaiPath);
+      if (GBConfigService.get('STORAGE_FILE')) {
+        const path = Path.join(GBConfigService.get('STORAGE_LIBRARY'), gbaiPath);
         Fs.cpSync(path, localFolder, { errorOnExist: false, force: true, recursive: true});
       } else {
         await deployer['downloadFolder'](min, Path.join('work', `${gbai}`), Path.basename(localFolder));

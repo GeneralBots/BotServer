@@ -120,7 +120,7 @@ export class GBDeployer implements IGBDeployer {
     );
 
     const siteId = process.env.STORAGE_SITE_ID;
-    const libraryId = process.env.STORAGE_LIBRARY;
+    const libraryId = GBConfigService.get('STORAGE_LIBRARY');
 
     const client = MicrosoftGraph.Client.init({
       authProvider: done => {
@@ -222,22 +222,24 @@ export class GBDeployer implements IGBDeployer {
     const instance = await this.importer.createBotInstance(botId);
     const bootInstance = GBServer.globals.bootInstance;
 
-    // Gets the access token to perform service operations.
+    if (!GBConfigService.get('STORAGE_FILE')) {
+      // Gets the access token to perform service operations.
 
-    const accessToken = await (GBServer.globals.minBoot.adminService as any)['acquireElevatedToken'](
-      bootInstance.instanceId,
-      true
-    );
+      const accessToken = await (GBServer.globals.minBoot.adminService as any)['acquireElevatedToken'](
+        bootInstance.instanceId,
+        true
+      );
 
-    // Creates the MSFT application that will be associated to the bot.
+      // Creates the MSFT application that will be associated to the bot.
 
-    const service = await AzureDeployerService.createInstance(this);
-    const application = await service.createApplication(accessToken, botId);
+      const service = await AzureDeployerService.createInstance(this);
+      const application = await service.createApplication(accessToken, botId);
+      // Fills new instance base information and get App secret.
 
-    // Fills new instance base information and get App secret.
+      instance.marketplaceId = (application as any).appId;
+      instance.marketplacePassword = await service.createApplicationSecret(accessToken, (application as any).id);
+    }
 
-    instance.marketplaceId = (application as any).appId;
-    instance.marketplacePassword = await service.createApplicationSecret(accessToken, (application as any).id);
     instance.adminPass = GBAdminService.getRndPassword();
     instance.title = botId;
     instance.activationCode = instance.botId.substring(0, 15);
@@ -249,10 +251,12 @@ export class GBDeployer implements IGBDeployer {
     // Saves bot information to the store.
 
     await this.core.saveInstance(instance);
-
+    if (!GBConfigService.get('STORAGE_FILE')) {
+      await this.deployBotOnAzure(instance, GBServer.globals.publicAddress);
+    }
     // Creates remaining objects on the cloud and updates instance information.
 
-    return await this.deployBotFull(instance, GBServer.globals.publicAddress);
+    return instance;
   }
 
   /**
@@ -267,7 +271,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Performs all tasks of deploying a new bot on the cloud.
    */
-  public async deployBotFull(instance: IGBInstance, publicAddress: string): Promise<IGBInstance> {
+  public async deployBotOnAzure(instance: IGBInstance, publicAddress: string): Promise<IGBInstance> {
     // Reads base configuration from environent file.
 
     const service = await AzureDeployerService.createInstance(this);
@@ -411,7 +415,7 @@ export class GBDeployer implements IGBDeployer {
   public async deployBotFromLocalPath(localPath: string, publicAddress: string): Promise<void> {
     const packageName = Path.basename(localPath);
     const instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
-    await this.deployBotFull(instance, publicAddress);
+    await this.deployBotOnAzure(instance, publicAddress);
   }
 
   /**

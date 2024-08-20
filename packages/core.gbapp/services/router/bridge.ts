@@ -11,7 +11,7 @@ const conversationsCleanupInterval = 10000;
 const conversations: { [key: string]: IConversation } = {};
 const botDataStore: { [key: string]: IBotData } = {};
 
-export const getRouter = (serviceUrl: string, botUrl: string, conversationInitRequired = true): express.Router => {
+export const getRouter = (serviceUrl: string, botUrl: string, conversationInitRequired = true, botId): express.Router => {
     const router = express.Router();
 
     router.use(bodyParser.json()); // for parsing application/json
@@ -22,8 +22,9 @@ export const getRouter = (serviceUrl: string, botUrl: string, conversationInitRe
         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-ms-bot-agent');
         next();
     });
+
     // CLIENT ENDPOINT
-    router.options('/directline', (req, res) => {
+    router.options(`/directline/${botId}/`, (req, res) => {
         res.status(200).end();
     });
 
@@ -53,7 +54,7 @@ export const getRouter = (serviceUrl: string, botUrl: string, conversationInitRe
     };
 
     router.post('/v3/directline/conversations',reqs );
-    router.post('/directline/conversations',reqs );
+    router.post(`/directline/${botId}/conversations`,reqs );
 
     // Reconnect API
     router.get('/v3/directline/conversations/:conversationId', (req, res) => { 
@@ -69,7 +70,7 @@ export const getRouter = (serviceUrl: string, botUrl: string, conversationInitRe
     });
 
     // Gets activities from store (local history array for now)
-    router.get('/directline/conversations/:conversationId/activities', (req, res) => {
+    router.get(`/directline/${botId}/conversations/:conversationId/activities`, (req, res) => {
         const watermark = req.query.watermark && req.query.watermark !== 'null' ? Number(req.query.watermark) : 0;
 
         const conversation = getConversation(req.params.conversationId, conversationInitRequired);
@@ -95,7 +96,7 @@ export const getRouter = (serviceUrl: string, botUrl: string, conversationInitRe
     });
 
     // Sends message to bot. Assumes message activities
-    router.post('/directline/conversations/:conversationId/activities', (req, res) => {
+    router.post(`/directline/${botId}/conversations/:conversationId/activities`, (req, res) => {
         const incomingActivity = req.body;
         // Make copy of activity. Add required fields
         const activity = createMessageActivity(incomingActivity, serviceUrl, req.params.conversationId);
@@ -209,11 +210,11 @@ export const getRouter = (serviceUrl: string, botUrl: string, conversationInitRe
  * @param conversationInitRequired Requires that a conversation is initialized before it is accessed, returning a 400
  * when not the case. If set to false, a new conversation reference is created on the fly. This is true by default.
  */
-export const initializeRoutes = (app: express.Express, port: number, botUrl: string, conversationInitRequired = true) => {
+export const initializeRoutes = (app: express.Express, port: number, botUrl: string, conversationInitRequired = true, botId) => {
     conversationsCleanup();
 
     const directLineEndpoint = `http://127.0.0.1:${port}`;
-    const router = getRouter(directLineEndpoint, botUrl, conversationInitRequired);
+    const router = getRouter(directLineEndpoint, botUrl, conversationInitRequired, botId);
 
     app.use(router);
     console.log(`Routing messages to bot on ${botUrl}`);
@@ -272,9 +273,9 @@ const setPrivateConversationData = (req: express.Request, res: express.Response)
     res.status(200).send(setBotData(req.params.channelId, req.params.conversationId, req.params.userId, req.body));
 };
 
-export const start = (server)=>{
+export const start = (server, botId)=>{
 
-    initializeRoutes(server, Number(process.env.PORT), `http://127.0.0.1:${process.env.PORT}/api/messages`);
+    initializeRoutes(server, Number(process.env.PORT), `http://127.0.0.1:${process.env.PORT}/api/messages/${botId}`, null, botId);
 }
 
 const deleteStateForUser = (req: express.Request, res: express.Response) => {

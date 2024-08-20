@@ -40,8 +40,7 @@ import bodyParser from 'body-parser';
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
 import child_process from 'child_process';
 import express from 'express';
-import {start as startRouter} from '../packages/core.gbapp/services/router/bridge.js'
-
+import { v2 as webdav } from 'webdav-server';
 import fs from 'fs';
 import http from 'http';
 import httpProxy from 'http-proxy';
@@ -89,7 +88,7 @@ export class GBServer {
 
     const server = express();
     this.initEndpointsDocs(server);
-    startRouter(server);
+    
     GBServer.globals.server = server;
 
     GBServer.globals.httpsServer = null;
@@ -105,6 +104,8 @@ export class GBServer {
     GBServer.globals.debuggers = [];
     GBServer.globals.users = [];
     GBServer.globals.indexSemaphore = new Mutex();
+    GBServer.globals.webDavServer = new webdav.WebDAVServer();
+    GBServer.globals.webDavServer.start();
 
     server.use(bodyParser.json());
     server.use(bodyParser.json({ limit: '1mb' }));
@@ -121,7 +122,10 @@ export class GBServer {
     });
 
     process.on('uncaughtException', (err, p) => {
-      GBLogEx.error(0, `GBEXCEPTION: ${GBUtil.toYAML(JSON.parse(JSON.stringify(err, Object.getOwnPropertyNames(err))))}`);
+      GBLogEx.error(
+        0,
+        `GBEXCEPTION: ${GBUtil.toYAML(JSON.parse(JSON.stringify(err, Object.getOwnPropertyNames(err))))}`
+      );
     });
 
     process.on('unhandledRejection', (err, p) => {
@@ -134,7 +138,10 @@ export class GBServer {
       }
 
       if (!bypass) {
-        GBLogEx.error(0,`GBREJECTION: ${GBUtil.toYAML(JSON.parse(JSON.stringify(err, Object.getOwnPropertyNames(err))))}`);
+        GBLogEx.error(
+          0,
+          `GBREJECTION: ${GBUtil.toYAML(JSON.parse(JSON.stringify(err, Object.getOwnPropertyNames(err))))}`
+        );
       }
     });
 
@@ -150,7 +157,7 @@ export class GBServer {
       (async () => {
         try {
           GBLogEx.info(0, `Now accepting connections on ${port}...`);
-          
+
           process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
           // Reads basic configuration, initialize minimal services.
@@ -186,7 +193,6 @@ export class GBServer {
           } else if (GBConfigService.get('STORAGE_FILE')) {
             await core.initStorage();
           } else {
-            runOnce = true;
             [GBServer.globals.bootInstance, azureDeployer] = await core['createBootInstanceEx'](
               core,
               null,
@@ -194,6 +200,7 @@ export class GBServer {
               deployer,
               GBConfigService.get('FREE_TIER')
             );
+            await core.saveInstance(GBServer.globals.bootInstance);
           }
 
           core.ensureAdminIsSecured();
@@ -206,10 +213,6 @@ export class GBServer {
           await core.checkStorage(azureDeployer);
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
           await core.syncDatabaseStructure();
-
-          if (runOnce) {
-            await core.saveInstance(GBServer.globals.bootInstance);
-          }
 
           // Deployment of local applications for the first time.
 
@@ -224,23 +227,27 @@ export class GBServer {
             GBServer.globals.publicAddress
           );
 
-          if (instances.length === 0) {
-            const instance = await importer.importIfNotExistsBotPackage(
-              GBConfigService.get('BOT_ID'),
-              'boot.gbot',
-              'packages/boot.gbot',
-              GBServer.globals.bootInstance
-            );
+          if (instances.  length === 0) {
+            if (!GBConfigService.get('STORAGE_FILE')) {
+              const instance = await importer.importIfNotExistsBotPackage(
+                GBConfigService.get('BOT_ID'),
+                'boot.gbot',
+                'packages/boot.gbot',
+                GBServer.globals.bootInstance
+              );
 
-            instances.push(instance);
-            GBServer.globals.minBoot.instance = instances[0];
-            GBServer.globals.bootInstance = instances[0];
-            await deployer.deployBotFull(instance, GBServer.globals.publicAddress);
+              instances.push(instance);
+              GBServer.globals.minBoot.instance = instances[0];
+              GBServer.globals.bootInstance = instances[0];
+              await deployer.deployBotOnAzure(instance, GBServer.globals.publicAddress);
 
-            // Runs the search even with empty content to create structure.
+              // Runs the search even with empty content to create structure.
 
-            await azureDeployer['runSearch'](instance);
+              await azureDeployer['runSearch'](instance);
+            }
           }
+          
+          await core['ensureFolders'](instances, deployer);
 
           GBServer.globals.bootInstance = instances[0];
 
@@ -251,7 +258,7 @@ export class GBServer {
           const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
           GBServer.globals.minService = minService;
           await minService.buildMin(instances);
-          
+
           server.all('*', async (req, res, next) => {
             const host = req.headers.host;
 
