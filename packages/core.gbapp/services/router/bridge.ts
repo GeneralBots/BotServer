@@ -56,7 +56,8 @@ export const getRouter = (serviceUrl: string, botUrl: string, conversationInitRe
 
     router.post('/v3/directline/conversations',reqs );
     router.post(`/directline/${botId}/conversations`,reqs );
-
+    router.post(`/directline/conversations`,reqs );
+    
     // Reconnect API
     router.get('/v3/directline/conversations/:conversationId', (req, res) => { 
         const conversation = getConversation(req.params.conversationId, conversationInitRequired);
