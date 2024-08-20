@@ -132,6 +132,12 @@ export class GBCoreService implements IGBCoreService {
       password = GBConfigService.get('STORAGE_PASSWORD');
     } else if (this.dialect === 'sqlite') {
       storage = GBConfigService.get('STORAGE_FILE');
+
+      if (!Fs.existsSync(storage)){
+        process.env.STORAGE_SYNC = 'true';
+      }
+
+
     } else {
       throw new Error(`Unknown dialect: ${this.dialect}.`);
     }
@@ -845,38 +851,36 @@ ENDPOINT_UPDATE=true
 
         const base = Path.join(process.env.PWD, 'templates', 'default.gbai');
 
-        Fs.cpSync(Path.join(base, `default.gbkb`), gbaiPath, {
+        Fs.cpSync(Path.join(base, `default.gbkb`), Path.join(gbaiPath,`default.gbkb`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        Fs.cpSync(Path.join(base, `default.gbot`), gbaiPath, {
+        Fs.cpSync(Path.join(base, `default.gbot`), Path.join(gbaiPath, `default.gbot`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        Fs.cpSync(Path.join(base, `default.gbtheme`), gbaiPath, {
+        Fs.cpSync(Path.join(base, `default.gbtheme`), Path.join(gbaiPath, `default.gbtheme`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        Fs.cpSync(Path.join(base, `default.gbdata`), gbaiPath, {
+        Fs.cpSync(Path.join(base, `default.gbdata`), Path.join(gbaiPath, `default.gbdata`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        Fs.cpSync(Path.join(base, `default.gbdialog`), gbaiPath, {
+        Fs.cpSync(Path.join(base, `default.gbdialog`), Path.join(gbaiPath, `default.gbdialog`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        Fs.cpSync(Path.join(base, `default.gbdrive`), gbaiPath, {
+        Fs.cpSync(Path.join(base, `default.gbdrive`), Path.join(gbaiPath, `default.gbdrive`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-
-
       }
     }
   }

@@ -106,13 +106,13 @@ export class GBVMService extends GBService {
   }
 
   public async loadDialog(filename: string, folder: string, min: GBMinInstance) {
+
     const wordFile = filename;
     const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
     const fullVbsFile = urlJoin(folder, vbsFile);
     const docxStat = Fs.statSync(urlJoin(folder, wordFile));
     const interval = 3000; // If compiled is older 30 seconds, then recompile.
     let writeVBS = true;
-
 
     // TODO: #412.
     // const subscription = {
@@ -140,25 +140,8 @@ export class GBVMService extends GBService {
     let mainName = GBVMService.getMethodNameFromVBSFilename(filename);
     min.scriptMap[filename] = mainName;
 
-    if (writeVBS) {
+    if (writeVBS && GBConfigService.get('STORAGE_NAME')) {
       let text = await this.getTextFromWord(folder, wordFile);
-
-      // Pre process SET SCHEDULE calls.
-
-      const schedules = GBVMService.getSetScheduleKeywordArgs(text);
-
-      const s = new ScheduleServices();
-      await s.deleteScheduleIfAny(min, mainName);
-
-      let i = 1;
-      await CollectionUtil.asyncForEach(schedules, async (syntax) => {
-
-        if (s) {
-            await s.createOrUpdateSchedule(min, syntax, `${mainName};${i++}`);
-        }
-      });
-
-      text = text.replace(/^\s*SET SCHEDULE (.*)/gim, '');
 
       // Write VBS file without pragma keywords.
 
@@ -167,32 +150,7 @@ export class GBVMService extends GBService {
 
     // Process node_modules install.
 
-    const node_modules = urlJoin(process.env.PWD, folder, 'node_modules');
-    if (!Fs.existsSync(node_modules)) {
-      const packageJson = `
-            {
-              "name": "${min.botId}.gbdialog",
-              "version": "1.0.0",
-              "description": "${min.botId} transpiled .gbdialog",
-              "author": "${min.botId} owner.",
-              "license": "ISC",
-              "dependencies": {
-                "yaml": "2.4.2",
-                "encoding": "0.1.13",
-                "isomorphic-fetch": "3.0.0",
-                "punycode": "2.1.1",
-                "@push-rpc/core": "1.8.2",
-                "@push-rpc/http": "1.8.2",
-                "vm2": "3.9.11",
-                "async-retry": "1.3.3"
-              }
-            }`;
-      Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
-
-      GBLogEx.info(min, `BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
-      const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
-      child_process.execSync(`${npmPath} install`, { cwd: folder });
-    }
+    this.processNodeModules(folder, min);
 
     // Hot swap for .vbs files.
 
@@ -219,6 +177,44 @@ export class GBVMService extends GBService {
     }
 
     // Syncronizes Database Objects with the ones returned from "Word".
+
+    this.syncStorageFromTABLE(folder, filename, min, mainName);
+
+    const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
+    min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
+    return filename;
+  }
+
+  private processNodeModules(folder: string, min: GBMinInstance) {
+    const node_modules = urlJoin(process.env.PWD, folder, 'node_modules');
+    if (!Fs.existsSync(node_modules)) {
+      const packageJson = `
+            {
+              "name": "${min.botId}.gbdialog",
+              "version": "1.0.0",
+              "description": "${min.botId} transpiled .gbdialog",
+              "author": "${min.botId} owner.",
+              "license": "ISC",
+              "dependencies": {
+                "yaml": "2.4.2",
+                "encoding": "0.1.13",
+                "isomorphic-fetch": "3.0.0",
+                "punycode": "2.1.1",
+                "@push-rpc/core": "1.8.2",
+                "@push-rpc/http": "1.8.2",
+                "vm2": "3.9.11",
+                "async-retry": "1.3.3"
+              }
+            }`;
+      Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
+
+      GBLogEx.info(min, `BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
+      const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
+      child_process.execSync(`${npmPath} install`, { cwd: folder });
+    }
+  }
+
+  private syncStorageFromTABLE(folder: string, filename: string, min: GBMinInstance, mainName: string) {
 
     const tablesFile = urlJoin(folder, `${filename}.tables.json`);
     let sync = false;
@@ -284,7 +280,6 @@ export class GBVMService extends GBService {
       const associations = [];
 
       // Loads storage custom connections.
-
       const path = DialogKeywords.getGBAIPath(min.botId, null);
       const filePath = Path.join('work', path, 'connections.json');
       let connections = null;
@@ -297,23 +292,21 @@ export class GBVMService extends GBService {
         false
       );
 
-      tableDef.forEach(async t => {
+      tableDef.forEach(async (t) => {
 
         const tableName = t.name.trim();
 
         // Determines autorelationship.
-
         Object.keys(t.fields).forEach(key => {
           let obj = t.fields[key];
           obj.type = getTypeBasedOnCondition(obj.type, obj.size);
           if (obj.type.key === "TABLE") {
-            obj.type.key = "BIGINT"
+            obj.type.key = "BIGINT";
             associations.push({ from: tableName, to: obj.type.name });
           }
         });
 
         // Cutom connection for TABLE.
-
         const connectionName = t.connection;
         let con;
 
@@ -327,12 +320,11 @@ export class GBVMService extends GBService {
           const username = con['storageUsername'];
           const password = con['storagePassword'];
 
-          const logging: boolean | Function =
-            GBConfigService.get('STORAGE_LOGGING') === 'true'
-              ? (str: string): void => {
-                GBLogEx.info(min, str);
-              }
-              : false;
+          const logging: boolean | Function = GBConfigService.get('STORAGE_LOGGING') === 'true'
+            ? (str: string): void => {
+              GBLogEx.info(min, str);
+            }
+            : false;
 
           const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
           const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
@@ -367,11 +359,12 @@ export class GBVMService extends GBService {
           if (!min[connectionName]) {
             GBLogEx.info(min, `Loading custom connection ${connectionName}...`);
             min[connectionName] = new Sequelize(storageName, username, password, sequelizeOptions);
-            min[`llmconnection`] ={
+            min[`llmconnection`] = {
               type: dialect,
               username,
-              database: storageName, password};
-      
+              database: storageName, password
+            };
+
           }
         }
 
@@ -380,7 +373,6 @@ export class GBVMService extends GBService {
         }
 
         // Field checking, syncs if there is any difference.
-
         const seq = min[connectionName] ? min[connectionName]
           : minBoot.core.sequelize;
 
@@ -389,7 +381,6 @@ export class GBVMService extends GBService {
           const model = seq.models[tableName];
           if (model) {
             // Except Id, checks if has same number of fields.
-
             let equals = 0;
             Object.keys(t.fields).forEach(key => {
               let obj1 = t.fields[key];
@@ -419,7 +410,7 @@ export class GBVMService extends GBService {
           WHERE table_type = 'BASE TABLE'
           ORDER BY table_name ASC`, {
               type: QueryTypes.RAW
-            })[0]
+            })[0];
           }
           else if (con.storageDriver === 'mariadb') {
             tables = await seq.getQueryInterface().showAllTables();
@@ -460,10 +451,6 @@ export class GBVMService extends GBService {
         }
       });
     }
-
-    const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
-    min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
-    return filename;
   }
 
   public async translateBASIC(mainName, filename: any, min: GBMinInstance) {
@@ -471,6 +458,25 @@ export class GBVMService extends GBService {
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = Fs.readFileSync(filename, 'utf8');
+
+    // Pre process SET SCHEDULE calls.
+
+    const schedules = GBVMService.getSetScheduleKeywordArgs(basicCode);
+
+    const s = new ScheduleServices();
+    await s.deleteScheduleIfAny(min, mainName);
+
+    let i = 1;
+    await CollectionUtil.asyncForEach(schedules, async (syntax) => {
+
+      if (s) {
+          await s.createOrUpdateSchedule(min, syntax, `${mainName};${i++}`);
+      }
+    });
+
+    basicCode = basicCode.replace(/^\s*SET SCHEDULE (.*)/gim, '');
+
+
 
     // Process INCLUDE keyword to include another
     // dialog inside the dialog.

@@ -186,7 +186,7 @@ export class GBServer {
 
           // Creates a boot instance or load it from storage.
 
-          let runOnce = false;
+
           if (GBConfigService.get('STORAGE_SERVER')) {
             azureDeployer = await AzureDeployerService.createInstance(deployer);
             await core.initStorage();

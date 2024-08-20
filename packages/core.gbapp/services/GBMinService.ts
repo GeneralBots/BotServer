@@ -679,6 +679,10 @@ export class GBMinService {
         theme = `default.gbtheme`;
       }
 
+      let logo = this.core.getParam(instance, 'Logo', null);
+
+      logo = logo ? urlJoin(instance.botId, 'cache', logo) : 'images/logo-gb.png';
+
       let config = {
         instanceId: instance.instanceId,
         botId: botId,
@@ -691,7 +695,7 @@ export class GBMinService {
         paramLogoImageWidth: this.core.getParam(instance, 'Logo Image Width', null),
         paramLogoImageHeight: this.core.getParam(instance, 'Logo Image Height', null),
         paramLogoImageType: this.core.getParam(instance, 'Logo Image Type', null),
-        logo: this.core.getParam(instance, 'Logo', null),
+        logo: logo,
         color1: this.core.getParam(instance, 'Color1', null),
         color2: this.core.getParam(instance, 'Color2', null)
       };
