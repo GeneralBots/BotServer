@@ -321,7 +321,7 @@ export class GBMinService {
       mkdirp.sync(dir);
     }
 
-    if (GBConfigService.get('STORAGE_FILE')) {
+    if (!GBConfigService.get('STORAGE_NAME')) {
       dir = Path.join(GBConfigService.get('STORAGE_LIBRARY'), 'work', gbai);
 
       const server = GBServer.globals.webDavServer;
@@ -695,7 +695,7 @@ export class GBMinService {
         color2: this.core.getParam(instance, 'Color2', null)
       };
 
-      if (GBConfigService.get('STORAGE_FILE')) {
+      if (!GBConfigService.get('STORAGE_NAME')) {
         config['domain'] = `http://localhost:${process.env.PORT}/directline/${botId}`;
       } else {
         const webchatTokenContainer = await this.getWebchatToken(instance);
@@ -767,7 +767,7 @@ export class GBMinService {
         ? instance.marketplacePassword
         : GBConfigService.get('MARKETPLACE_SECRET')
     };
-    if (GBConfigService.get('STORAGE_FILE')) {
+    if (!GBConfigService.get('STORAGE_NAME')) {
       config['clientOptions'] = { baseUri: `http://localhost:${process.env.PORT}` };
     }
 
@@ -1198,7 +1198,7 @@ export class GBMinService {
     };
 
     try {
-      if (GBConfigService.get('STORAGE_FILE')) {
+      if (!GBConfigService.get('STORAGE_NAME')) {
         const context = adapter['createContext'](req);
         context['_activity'] = context.activity.body;
         await handler(context);

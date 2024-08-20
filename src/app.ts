@@ -190,7 +190,7 @@ export class GBServer {
           if (GBConfigService.get('STORAGE_SERVER')) {
             azureDeployer = await AzureDeployerService.createInstance(deployer);
             await core.initStorage();
-          } else if (GBConfigService.get('STORAGE_FILE')) {
+          } else if (!GBConfigService.get('STORAGE_NAME')) {
             await core.initStorage();
           } else {
             [GBServer.globals.bootInstance, azureDeployer] = await core['createBootInstanceEx'](
@@ -202,8 +202,6 @@ export class GBServer {
             );
             await core.saveInstance(GBServer.globals.bootInstance);
           }
-
-          core.ensureAdminIsSecured();
 
           // Deploys system and user packages.
 
@@ -228,7 +226,7 @@ export class GBServer {
           );
 
           if (instances.  length === 0) {
-            if (!GBConfigService.get('STORAGE_FILE')) {
+            if (GBConfigService.get('STORAGE_NAME')) {
               const instance = await importer.importIfNotExistsBotPackage(
                 GBConfigService.get('BOT_ID'),
                 'boot.gbot',

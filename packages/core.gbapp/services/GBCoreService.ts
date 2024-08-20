@@ -426,8 +426,8 @@ ENDPOINT_UPDATE=true
     let instances: IGBInstance[];
     try {
       instances = await core.loadInstances();
-      const group = GBConfigService.get('CLOUD_GROUP') ?? GBConfigService.get('BOT_ID');
       if (process.env.ENDPOINT_UPDATE === 'true') {
+        const group = GBConfigService.get('CLOUD_GROUP') ?? GBConfigService.get('BOT_ID');
         await CollectionUtil.asyncForEach(instances, async instance => {
           GBLogEx.info(instance.instanceId, `Updating bot endpoint for ${instance.botId}...`);
           try {
@@ -514,12 +514,6 @@ ENDPOINT_UPDATE=true
    * before starting the server.
    */
   public ensureAdminIsSecured() {
-    const password = GBConfigService.get('ADMIN_PASS');
-    if (!GBAdminService.StrongRegex.test(password)) {
-      throw new Error(
-        'Please, define a really strong password in ADMIN_PASS environment variable before running the server.'
-      );
-    }
   }
 
   public async createBootInstance(

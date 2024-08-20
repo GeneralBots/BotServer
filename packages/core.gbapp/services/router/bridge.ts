@@ -5,6 +5,7 @@ import moment from 'moment';
 import * as uuidv4 from 'uuid';
 
 import { IActivity, IBotData, IConversation, IConversationUpdateActivity, IMessageActivity } from './types';
+import { GBConfigService } from '../GBConfigService.js';
 
 const expiresIn = 1800;
 const conversationsCleanupInterval = 10000;
@@ -274,8 +275,8 @@ const setPrivateConversationData = (req: express.Request, res: express.Response)
 };
 
 export const start = (server, botId)=>{
-
-    initializeRoutes(server, Number(process.env.PORT), `http://127.0.0.1:${process.env.PORT}/api/messages/${botId}`, null, botId);
+    const port = GBConfigService.getServerPort();
+    initializeRoutes(server, Number(port), `http://127.0.0.1:${port}/api/messages/${botId}`, null, botId);
 }
 
 const deleteStateForUser = (req: express.Request, res: express.Response) => {

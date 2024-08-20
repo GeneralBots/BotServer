@@ -222,7 +222,7 @@ export class GBDeployer implements IGBDeployer {
     const instance = await this.importer.createBotInstance(botId);
     const bootInstance = GBServer.globals.bootInstance;
 
-    if (!GBConfigService.get('STORAGE_FILE')) {
+    if (GBConfigService.get('STORAGE_NAME')) {
       // Gets the access token to perform service operations.
 
       const accessToken = await (GBServer.globals.minBoot.adminService as any)['acquireElevatedToken'](
@@ -251,7 +251,7 @@ export class GBDeployer implements IGBDeployer {
     // Saves bot information to the store.
 
     await this.core.saveInstance(instance);
-    if (!GBConfigService.get('STORAGE_FILE')) {
+    if (GBConfigService.get('STORAGE_NAME')) {
       await this.deployBotOnAzure(instance, GBServer.globals.publicAddress);
     }
     // Creates remaining objects on the cloud and updates instance information.

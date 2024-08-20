@@ -70,14 +70,14 @@ export class GBUtil {
   public static async getDirectLineClient(min) {
 
     let config = {
-      url: `http://127.0.0.1:${GBConfigService.get('PORT')}/api/messages`, 
+      url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages`, 
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
       requestInterceptor: req => {
         req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
       }
     };    
-    if (GBConfigService.get('STORAGE_FILE')) {
-      config['spec'].servers = [{ url: `http://127.0.0.1:${GBConfigService.get('PORT')}/api/messages` }];
+    if (!GBConfigService.get('STORAGE_NAME')) {
+      config['spec'].servers = [{ url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages` }];
       config['openapi'] = '3.0.0';
     }
     return await new SwaggerClient(config);
