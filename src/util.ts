@@ -68,6 +68,7 @@ export class GBUtil {
   }
 
   public static async getDirectLineClient(min) {
+
     let config = {
       spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
       requestInterceptor: req => {
@@ -79,6 +80,7 @@ export class GBUtil {
       config['spec'].servers = [{ url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages` }];
       config['spec'].openapi = '3.0.0';
       delete config['spec'].host;
+      delete config['spec'].swagger;
     }
 
     return await new SwaggerClient(config);
