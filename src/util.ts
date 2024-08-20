@@ -74,7 +74,7 @@ export class GBUtil {
         req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
       }
     };
-    if (GBConfigService.get('STORAGE_FILE')) {
+    if (!GBConfigService.get('STORAGE_NAME')) {
       (config['url'] = `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages`),
         (config['spec'].servers = [{ url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages` }]);
       config['openapi'] = '3.0.0';
