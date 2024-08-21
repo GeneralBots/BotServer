@@ -808,29 +808,25 @@ export class WhatsappDirectLine extends GBService {
     const templateExists = templates.data.find(template => template.name === name);
 
     if (templateExists) {
-      // Step 2: Update the template
-      const updateTemplateEndpoint = `${baseUrl}/${templateExists.id}`;
+      // // Step 2: Update the template
+      // const updateTemplateEndpoint = `${baseUrl}/${templateExists.id}`;
 
-      // Removes the first HEADER element.
+      // const updateResponse = await fetch(updateTemplateEndpoint, {
+      //   method: 'POST',
+      //   headers: {
+      //     Authorization: `Bearer ${accessToken}`,
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({
+      //     components: data.components
+      //   })
+      // });
 
-      data.components.shift();
+      // if (!updateResponse.ok) {
+      //   throw new Error(`Failed to update template: ${name} ${await updateResponse.text()}`);
+      // }
 
-      const updateResponse = await fetch(updateTemplateEndpoint, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          components: data.components
-        })
-      });
-
-      if (!updateResponse.ok) {
-        throw new Error(`Failed to update template: ${name} ${await updateResponse.text()}`);
-      }
-
-      GBLogEx.info(min, `Template updated: ${name}`);
+      GBLogEx.info(min, `Template update skiped: ${name}`);
     } else {
       // Step 3: Create the template
       const createTemplateEndpoint = `${baseUrl}/${businessAccountId}/message_templates`;
