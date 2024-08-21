@@ -443,20 +443,19 @@ export class GBDeployer implements IGBDeployer {
     }
     
 
+    let obj = {};
     await asyncPromise.eachSeries(rows, async line => {
 
       if (line && line._cells[0] && line._cells[1] && line._cells[0].text) {
 
         // Extracts values from columns in the current line.
 
-        let obj = {};
         obj[line._cells[0].text] = line._cells[1].text;
-        list.push(obj);
       }
     });
 
     GBLogEx.info(min, GBUtil.toYAML(list));
-    return list;
+    return obj;
   }
 
   /**
