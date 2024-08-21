@@ -436,10 +436,17 @@ export class GBDeployer implements IGBDeployer {
     GBLogEx.info(min, `Processing ${rows.length} rows from Config file ${path}...`);
     let list = [];
 
-    await asyncPromise.eachSeries(rows, async line => {
-      // Skips the first line.
+    // Skips the header lines.
 
-      if (line != undefined && line._cells[0] !== undefined && line._cells[1] !== undefined) {
+    for (let index = 0; index < 6; index++) {
+      rows.shift();
+    }
+    
+
+    await asyncPromise.eachSeries(rows, async line => {
+
+      if (line && line._cells[0] && line._cells[1] && line._cells[0].text) {
+
         // Extracts values from columns in the current line.
 
         let obj = {};
@@ -448,6 +455,7 @@ export class GBDeployer implements IGBDeployer {
       }
     });
 
+    GBLogEx.info(min, GBUtil.toYAML(list));
     return list;
   }
 
