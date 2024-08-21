@@ -720,7 +720,7 @@ export class GBMinService {
    * Gets Webchat token from Bot Service.
    */
   private async getWebchatToken(instance: any) {
-    const url = `http://localhost:${process.env.PORT}/v3/directline/tokens/generate`;
+    const url = 'https://directline.botframework.com/v3/directline/tokens/generate';
     const options = {
       method: 'POST',
       headers: {

@@ -1218,7 +1218,7 @@ export class KBService implements IGBKBService {
     instance: IGBInstance
   ): Promise<any> {
     let subjectsLoaded;
-    if (menuFile) {
+    if (Fs.existsSync(menuFile)) {
       // Loads menu.xlsx and finds worksheet.
 
       const workbook = new Excel.Workbook();
