@@ -37,6 +37,7 @@ import * as YAML from 'yaml';
 import SwaggerClient from 'swagger-client';
 import Fs from 'fs';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
+import path from 'path';
 
 export class GBUtil {
   public static repeat(chr, count) {
@@ -123,4 +124,46 @@ export class GBUtil {
       return createCaseInsensitiveProxy(listOrRow);
     }
   }
+
+
+  public static copyIfNewerRecursive(src, dest) {
+    if (!Fs.existsSync(src)) {
+        console.error(`Source path "${src}" does not exist.`);
+        return;
+    }
+
+    // Check if the source is a directory
+    if (Fs.statSync(src).isDirectory()) {
+        // Create the destination directory if it doesn't exist
+        if (!Fs.existsSync(dest)) {
+            Fs.mkdirSync(dest, { recursive: true });
+        }
+
+        // Read all files and directories in the source directory
+        const entries = Fs.readdirSync(src);
+
+        for (let entry of entries) {
+            const srcEntry = path.join(src, entry);
+            const destEntry = path.join(dest, entry);
+
+            // Recursively copy each entry
+            this.copyIfNewerRecursive(srcEntry, destEntry);
+        }
+    } else {
+        // Source is a file, check if we need to copy it
+        if (Fs.existsSync(dest)) {
+            const srcStat = Fs.statSync(src);
+            const destStat = Fs.statSync(dest);
+
+            // Copy only if the source file is newer than the destination file
+            if (srcStat.mtime > destStat.mtime) {
+                Fs.cpSync(src, dest, { force: true });
+            }
+        } else {
+            // Destination file doesn't exist, so copy it
+            Fs.cpSync(src, dest, { force: true });
+        }
+    }
+}
+
 }

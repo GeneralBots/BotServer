@@ -54,6 +54,7 @@ import { GBServer } from '../../../src/app.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Services for server administration.
@@ -189,7 +190,7 @@ export class GBAdminService implements IGBAdminService {
 
       if (!GBConfigService.get('STORAGE_NAME')) {
         const path = Path.join(GBConfigService.get('STORAGE_LIBRARY'), gbaiPath);
-        Fs.cpSync(path, localFolder, { errorOnExist: false, force: true, recursive: true});
+        GBUtil.copyIfNewerRecursive(path, localFolder);
       } else {
         await deployer['downloadFolder'](min, Path.join('work', `${gbai}`), Path.basename(localFolder));
       }

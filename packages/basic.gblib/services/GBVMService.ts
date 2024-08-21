@@ -176,7 +176,7 @@ export class GBVMService extends GBService {
 
     if (Fs.existsSync(jsfile)) {
       const jsStat = Fs.statSync(jsfile);
-      const interval = 30000; // If compiled is older 30 seconds, then recompile.
+      const interval = 1000; // If compiled is older 1 seconds, then recompile.
       if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
         await this.translateBASIC(mainName, fullFilename, min);
       }
