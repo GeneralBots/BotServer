@@ -170,9 +170,6 @@ export class GBMinService {
     await CollectionUtil.asyncForEach(
       instances,
       (async instance => {
-        if (!GBConfigService.get('STORAGE_NAME')) {
-          startRouter(GBServer.globals.server, instance.botId);
-        }
 
         try {
           GBLog.info(`Mounting ${instance.botId}...`);
@@ -270,6 +267,8 @@ export class GBMinService {
    * installing all BASIC artifacts from .gbdialog and OAuth2.
    */
   public async mountBot(instance: IGBInstance) {
+
+
     // Build bot adapter.
 
     const { min, adapter, conversationState } = await this.buildBotAdapter(
@@ -773,6 +772,7 @@ export class GBMinService {
         : GBConfigService.get('MARKETPLACE_SECRET')
     };
     if (!GBConfigService.get('STORAGE_NAME')) {
+      startRouter(GBServer.globals.server, instance.botId);
       config['clientOptions'] = { baseUri: `http://localhost:${process.env.PORT}` };
     }
 
