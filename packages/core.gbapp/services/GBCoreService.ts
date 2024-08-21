@@ -242,7 +242,7 @@ export class GBCoreService implements IGBCoreService {
    * Loads all items to start several listeners.
    */
   public async loadInstances(): Promise<IGBInstance[]> {
-    if (process.env.LOAD_ONLY !== undefined) {
+    if (process.env.LOAD_ONLY) {
       const bots = process.env.LOAD_ONLY.split(`;`);
       const and = [];
       await CollectionUtil.asyncForEach(bots, async e => {
@@ -813,8 +813,6 @@ ENDPOINT_UPDATE=true
     if (!Fs.existsSync(libraryPath)) {
      mkdirp.sync(libraryPath);
     }
-
-
 
     await this.syncBotStorage(instances, 'default', deployer, libraryPath);
     

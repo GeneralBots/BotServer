@@ -167,9 +167,6 @@ export class GBMinService {
 
     let i = 1;
 
-    if (instances.length > 1) {
-    }
-
     await CollectionUtil.asyncForEach(
       instances,
       (async instance => {
@@ -184,11 +181,8 @@ export class GBMinService {
           GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
         }
       }).bind(this)
+    
     );
-
-    // Loads API.
-
-    await this.ensureAPI();
 
     // Loads schedules.
 
@@ -197,6 +191,37 @@ export class GBMinService {
     await service.scheduleAll();
 
     GBLogEx.info(0, `All Bot instances loaded.`);
+  }
+
+  public  async startSimpleTest(min) {
+    if (process.env.TEST_MESSAGE && min['isDefault']) {
+      GBLogEx.info(min, `Starting auto test with '${process.env.TEST_MESSAGE}'.`);
+
+      const client = await GBUtil.getDirectLineClient(min);
+
+      const response = await client.apis.Conversations.Conversations_StartConversation();
+      const conversationId = response.obj.conversationId;
+      GBServer.globals.debugConversationId = conversationId;
+
+      const steps = process.env.TEST_MESSAGE.split(';');
+
+      await CollectionUtil.asyncForEach(steps, async (step) => {
+        client.apis.Conversations.Conversations_PostActivity({
+          conversationId: conversationId,
+          activity: {
+            textFormat: 'plain',
+            text: step,
+            type: 'message',
+            from: {
+              id: 'test',
+              name: 'test'
+            }
+          }
+        });
+
+        await GBUtil.sleep(3000);
+      });
+    }
   }
 
   /**
@@ -255,6 +280,8 @@ export class GBMinService {
 
     // https://github.com/GeneralBots/BotServer/issues/286
     // min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
+
+    min['isDefault'] =  GBServer.globals.minInstances.length === 0;
 
     GBServer.globals.minInstances.push(min);
     const user = null; // No user context.
@@ -330,9 +357,6 @@ export class GBMinService {
         GBLogEx.info(1, `WebDav for ${botId} loaded.`);
       });
     }
-    // Loads Named Entity data for this bot.
-
-    // TODO: await KBService.RefreshNER(min);
 
     // Calls the loadBot context.activity for all packages.
 
@@ -356,34 +380,6 @@ export class GBMinService {
     });
     GBLog.verbose(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
 
-    // Test code.
-    if (process.env.TEST_MESSAGE) {
-      GBLogEx.info(min, `Starting auto test with '${process.env.TEST_MESSAGE}'.`);
-
-      const client = await GBUtil.getDirectLineClient(min);
-
-      const response = await client.apis.Conversations.Conversations_StartConversation();
-      const conversationId = response.obj.conversationId;
-      GBServer.globals.debugConversationId = conversationId;
-
-      const steps = process.env.TEST_MESSAGE.split(';');
-
-      await CollectionUtil.asyncForEach(steps, async step => {
-        client.apis.Conversations.Conversations_PostActivity({
-          conversationId: conversationId,
-          activity: {
-            textFormat: 'plain',
-            text: step,
-            type: 'message',
-            from: {
-              id: 'test',
-              name: 'test'
-            }
-          }
-        });
-
-        await GBUtil.sleep(3000);
-      });
 
       // Generates MS Teams manifest.
 
@@ -394,7 +390,6 @@ export class GBMinService {
         const data = await this.deployer.getBotManifest(instance);
         Fs.writeFileSync(packageTeams, data);
       }
-    }
 
     // Serves individual URL for each bot user interface.
 
@@ -463,6 +458,11 @@ export class GBMinService {
       .bind(min);
 
     GBDeployer.mountGBKBAssets(`${botId}.gbkb`, botId, `${botId}.gbkb`);
+
+    // Loads API.
+
+    await this.ensureAPI();
+
   }
 
   public static getProviderName(req: any, res: any) {
@@ -839,6 +839,8 @@ export class GBMinService {
 
     let url = `/api/messages/${instance.botId}`;
     GBServer.globals.server.post(url, receiver);
+    url = `/api/messages`;
+    GBServer.globals.server.post(url, receiver);
 
     // NLP Manager.
 
@@ -849,9 +851,6 @@ export class GBMinService {
       GBServer.globals.minBoot = min;
       GBServer.globals.minBoot.instance.marketplaceId = GBConfigService.get('MARKETPLACE_ID');
       GBServer.globals.minBoot.instance.marketplacePassword = GBConfigService.get('MARKETPLACE_SECRET');
-    } else {
-      url = `/api/messages`;
-      GBServer.globals.server.post(url, receiver);
     }
 
     if (min.instance.facebookWorkplaceVerifyToken) {

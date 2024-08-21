@@ -32,7 +32,7 @@
 
 import { GBMinInstance, GBService, IGBCoreService, GBLog } from 'botlib';
 import * as Fs from 'fs';
-import * as ji from 'just-indent'
+import * as ji from 'just-indent';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -52,8 +52,8 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { SystemKeywords } from './SystemKeywords.js';
 import { Sequelize, QueryTypes } from '@sequelize/core';
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { z } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -68,7 +68,8 @@ export class GBVMService extends GBService {
   public static API_PORT = 1111;
 
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
-    const files = await walkPromise(folder);
+    const ignore = Path.join('work', DialogKeywords.getGBAIPath(min.botId, 'gbdialog'), 'node_modules');
+    const files = await walkPromise(folder, { ignore: [ignore] });
 
     await CollectionUtil.asyncForEach(files, async file => {
       if (!file) {
@@ -77,9 +78,7 @@ export class GBVMService extends GBService {
 
       let filename: string = file.name;
 
-      if (filename.endsWith('.docx')) {
-        filename = await this.loadDialog(filename, folder, min);
-      }
+      filename = await this.loadDialog(filename, folder, min);
     });
   }
 
@@ -91,14 +90,11 @@ export class GBVMService extends GBService {
 
     //check every key for being same
     return Object.keys(obj1).every(function (key) {
-
       //if object
-      if ((typeof obj1[key] == "object") && (typeof obj2[key] == "object")) {
-
+      if (typeof obj1[key] == 'object' && typeof obj2[key] == 'object') {
         //recursively check
         return GBVMService.compare(obj1[key], obj2[key]);
       } else {
-
         //do the normal compare
         return obj1[key] === obj2[key];
       }
@@ -106,9 +102,22 @@ export class GBVMService extends GBService {
   }
 
   public async loadDialog(filename: string, folder: string, min: GBMinInstance) {
+    const isWord = filename.endsWith('.docx');
+    if (
+      !(
+        isWord ||
+        filename.endsWith('.vbs') ||
+        filename.endsWith('.vb') ||
+        filename.endsWith('.vba') ||
+        filename.endsWith('.bas') ||
+        filename.endsWith('.basic')
+      )
+    ) {
+      return;
+    }
 
     const wordFile = filename;
-    const vbsFile = filename.substr(0, filename.indexOf('docx')) + 'vbs';
+    const vbsFile = isWord ? filename.substr(0, filename.indexOf('docx')) + 'vbs' : filename;
     const fullVbsFile = urlJoin(folder, vbsFile);
     const docxStat = Fs.statSync(urlJoin(folder, wordFile));
     const interval = 3000; // If compiled is older 30 seconds, then recompile.
@@ -125,10 +134,9 @@ export class GBVMService extends GBService {
     // };
 
     // let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-    
+
     // await client.api('/subscriptions')
     //   .post(subscription);
-
 
     if (Fs.existsSync(fullVbsFile)) {
       const vbsStat = Fs.statSync(fullVbsFile);
@@ -184,7 +192,6 @@ export class GBVMService extends GBService {
     min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
     return filename;
   }
-
   private processNodeModules(folder: string, min: GBMinInstance) {
     const node_modules = urlJoin(process.env.PWD, folder, 'node_modules');
     if (!Fs.existsSync(node_modules)) {
@@ -215,7 +222,6 @@ export class GBVMService extends GBService {
   }
 
   private syncStorageFromTABLE(folder: string, filename: string, min: GBMinInstance, mainName: string) {
-
     const tablesFile = urlJoin(folder, `${filename}.tables.json`);
     let sync = false;
 
@@ -225,7 +231,6 @@ export class GBVMService extends GBService {
       const tableDef = JSON.parse(Fs.readFileSync(tablesFile, 'utf8')) as any;
 
       const getTypeBasedOnCondition = (t, size) => {
-
         if (1) {
           switch (t) {
             case 'string':
@@ -249,7 +254,6 @@ export class GBVMService extends GBService {
             default:
               return { type: 'TABLE', name: t };
           }
-
         } else {
           switch (t) {
             case 'string':
@@ -273,7 +277,6 @@ export class GBVMService extends GBService {
             default:
               return { key: 'TABLE', name: t };
           }
-
         }
       };
 
@@ -286,22 +289,17 @@ export class GBVMService extends GBService {
       if (Fs.existsSync(filePath)) {
         connections = JSON.parse(Fs.readFileSync(filePath, 'utf8'));
       }
-      const shouldSync = min.core.getParam<boolean>(
-        min.instance,
-        'Synchronize Database',
-        false
-      );
+      const shouldSync = min.core.getParam<boolean>(min.instance, 'Synchronize Database', false);
 
-      tableDef.forEach(async (t) => {
-
+      tableDef.forEach(async t => {
         const tableName = t.name.trim();
 
         // Determines autorelationship.
         Object.keys(t.fields).forEach(key => {
           let obj = t.fields[key];
           obj.type = getTypeBasedOnCondition(obj.type, obj.size);
-          if (obj.type.key === "TABLE") {
-            obj.type.key = "BIGINT";
+          if (obj.type.key === 'TABLE') {
+            obj.type.key = 'BIGINT';
             associations.push({ from: tableName, to: obj.type.name });
           }
         });
@@ -320,11 +318,12 @@ export class GBVMService extends GBService {
           const username = con['storageUsername'];
           const password = con['storagePassword'];
 
-          const logging: boolean | Function = GBConfigService.get('STORAGE_LOGGING') === 'true'
-            ? (str: string): void => {
-              GBLogEx.info(min, str);
-            }
-            : false;
+          const logging: boolean | Function =
+            GBConfigService.get('STORAGE_LOGGING') === 'true'
+              ? (str: string): void => {
+                  GBLogEx.info(min, str);
+                }
+              : false;
 
           const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
           const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
@@ -362,9 +361,9 @@ export class GBVMService extends GBService {
             min[`llmconnection`] = {
               type: dialect,
               username,
-              database: storageName, password
+              database: storageName,
+              password
             };
-
           }
         }
 
@@ -373,11 +372,9 @@ export class GBVMService extends GBService {
         }
 
         // Field checking, syncs if there is any difference.
-        const seq = min[connectionName] ? min[connectionName]
-          : minBoot.core.sequelize;
+        const seq = min[connectionName] ? min[connectionName] : minBoot.core.sequelize;
 
         if (seq) {
-
           const model = seq.models[tableName];
           if (model) {
             // Except Id, checks if has same number of fields.
@@ -386,12 +383,11 @@ export class GBVMService extends GBService {
               let obj1 = t.fields[key];
               let obj2 = model['fieldRawAttributesMap'][key];
 
-              if (key !== "id") {
+              if (key !== 'id') {
                 if (obj1 && obj2) {
                   equals++;
                 }
               }
-
             });
 
             if (equals != Object.keys(t.fields).length) {
@@ -401,23 +397,25 @@ export class GBVMService extends GBService {
 
           seq.define(tableName, t.fields);
 
-          // New table checking, if needs sync. 
+          // New table checking, if needs sync.
           let tables;
 
           if (con.storageDriver === 'mssql') {
-            tables = await seq.query(`SELECT table_name, table_schema
+            tables = await seq.query(
+              `SELECT table_name, table_schema
           FROM information_schema.tables
           WHERE table_type = 'BASE TABLE'
-          ORDER BY table_name ASC`, {
-              type: QueryTypes.RAW
-            })[0];
-          }
-          else if (con.storageDriver === 'mariadb') {
+          ORDER BY table_name ASC`,
+              {
+                type: QueryTypes.RAW
+              }
+            )[0];
+          } else if (con.storageDriver === 'mariadb') {
             tables = await seq.getQueryInterface().showAllTables();
           }
 
           let found = false;
-          tables.forEach((storageTable) => {
+          tables.forEach(storageTable => {
             if (storageTable['table_name'] === tableName) {
               found = true;
             }
@@ -432,15 +430,17 @@ export class GBVMService extends GBService {
             try {
               to.hasMany(from);
             } catch (error) {
-              throw new Error(`BASIC: Invalid relationship in ${mainName}: from ${e.from} to ${e.to} (${min.botId})... ${error.message}`);
+              throw new Error(
+                `BASIC: Invalid relationship in ${mainName}: from ${e.from} to ${e.to} (${min.botId})... ${error.message}`
+              );
             }
-
           });
 
-
           if (sync && shouldSync) {
-
-            GBLogEx.info(min, `BASIC: Syncing changes for TABLE ${connectionName} ${tableName} keyword (${min.botId})...`);
+            GBLogEx.info(
+              min,
+              `BASIC: Syncing changes for TABLE ${connectionName} ${tableName} keyword (${min.botId})...`
+            );
 
             await seq.sync({
               alter: true,
@@ -454,7 +454,6 @@ export class GBVMService extends GBService {
   }
 
   public async translateBASIC(mainName, filename: any, min: GBMinInstance) {
-
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = Fs.readFileSync(filename, 'utf8');
@@ -467,16 +466,13 @@ export class GBVMService extends GBService {
     await s.deleteScheduleIfAny(min, mainName);
 
     let i = 1;
-    await CollectionUtil.asyncForEach(schedules, async (syntax) => {
-
+    await CollectionUtil.asyncForEach(schedules, async syntax => {
       if (s) {
-          await s.createOrUpdateSchedule(min, syntax, `${mainName};${i++}`);
+        await s.createOrUpdateSchedule(min, syntax, `${mainName};${i++}`);
       }
     });
 
     basicCode = basicCode.replace(/^\s*SET SCHEDULE (.*)/gim, '');
-
-
 
     // Process INCLUDE keyword to include another
     // dialog inside the dialog.
@@ -718,7 +714,6 @@ export class GBVMService extends GBService {
 
     Fs.writeFileSync(jsfile, code);
     GBLogEx.info(min, `[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
-
   }
 
   private async executeTasks(min, tasks) {
@@ -726,12 +721,10 @@ export class GBVMService extends GBService {
       const task = tasks[i];
 
       if (task.kind === 'writeTableDefinition') {
-
         // Creates an empty object that will receive Sequelize fields.
 
         const tablesFile = `${task.file}.tables.json`;
         Fs.writeFileSync(tablesFile, JSON.stringify(task.tables));
-
       }
     }
   }
@@ -750,10 +743,10 @@ export class GBVMService extends GBService {
     lines.forEach(line => {
       if (line.trim()) {
         console.log(line);
-        const keyword = /\s*SET SCHEDULE (.*)/gi;
+        const keyword = /^\s*SET SCHEDULE (.*)/gi;
         let result: any = keyword.exec(line);
         if (result) {
-          result = result[1].replace(/\`|\"|\'/, '')
+          result = result[1].replace(/\`|\"|\'/, '');
           result = result.trim();
           results.push(result);
         }
@@ -762,7 +755,7 @@ export class GBVMService extends GBService {
 
     return results;
   }
-  
+
   private async getTextFromWord(folder: string, filename: string) {
     return new Promise<string>(async (resolve, reject) => {
       const path = urlJoin(folder, filename);
@@ -784,7 +777,6 @@ export class GBVMService extends GBService {
   }
 
   public static normalizeQuotes(text: any) {
-
     text = text.replace(/\"/gm, '`');
     text = text.replace(/\¨/gm, '`');
     text = text.replace(/\“/gm, '`');
@@ -798,26 +790,21 @@ export class GBVMService extends GBService {
   public static getMetadata(mainName: string, propertiesText, description) {
     let properties = {};
     if (!propertiesText || !description) {
-
-      return {}
+      return {};
     }
     const getType = asClause => {
-
       asClause = asClause.trim().toUpperCase();
 
       if (asClause.indexOf('STRING') !== -1) {
         return 'string';
-      }
-      else if (asClause.indexOf('OBJECT') !== -1) {
+      } else if (asClause.indexOf('OBJECT') !== -1) {
         return 'object';
-      }
-      else if (asClause.indexOf('INTEGER') !== -1 || asClause.indexOf('NUMBER') !== -1) {
+      } else if (asClause.indexOf('INTEGER') !== -1 || asClause.indexOf('NUMBER') !== -1) {
         return 'number';
       } else {
         return 'enum';
       }
     };
-
 
     for (let i = 0; i < propertiesText.length; i++) {
       const propertiesExp = propertiesText[i];
@@ -841,21 +828,19 @@ export class GBVMService extends GBService {
       properties[propertiesExp[1].trim()] = element;
     }
 
-
     let json = {
-      type: "function",
+      type: 'function',
       function: {
         name: `${mainName}`,
         description: description ? description : '',
         parameters: zodToJsonSchema(z.object(properties))
       }
-    }
+    };
 
     return json;
   }
 
   public async parseField(line) {
-
     let required = line.indexOf('*') !== -1;
     let unique = /\bunique\b/gi.test(line);
     let primaryKey = /\bkey\b/gi.test(line);
@@ -877,7 +862,8 @@ export class GBVMService extends GBService {
 
     let definition = {
       allowNull: !required,
-      unique: unique, primaryKey: primaryKey,
+      unique: unique,
+      primaryKey: primaryKey,
       autoIncrement: autoIncrement
     };
     definition['type'] = t;
@@ -896,7 +882,6 @@ export class GBVMService extends GBService {
    * @param code General Bots BASIC
    */
   public async convert(filename: string, mainName: string, code: string) {
-
     // Start and End of VB2TS tags of processing.
 
     code = process.env.ENABLE_AUTH ? `hear GBLogExin as login\n${code}` : code;
@@ -917,7 +902,6 @@ export class GBVMService extends GBService {
     const outputLines = [];
     let emmitIndex = 1;
     for (let i = 1; i <= lines.length; i++) {
-
       let line = lines[i - 1];
 
       // Remove lines before statements.
@@ -968,11 +952,11 @@ export class GBVMService extends GBService {
       const endTableKeyword = /^\s*END TABLE\s*/gim;
       let endTableReg = endTableKeyword.exec(line);
       if (endTableReg && table) {
-
         tables.push({
-          name: table, fields: fields, connection: connection
+          name: table,
+          fields: fields,
+          connection: connection
         });
-
 
         fields = {};
         table = null;
@@ -1013,14 +997,14 @@ export class GBVMService extends GBService {
       const talkKeyword = /^\s*BEGIN TALK\s*/gim;
       let talkReg = talkKeyword.exec(line);
       if (talkReg && !talk) {
-        talk = "await dk.talk ({pid: pid, text: `";
+        talk = 'await dk.talk ({pid: pid, text: `';
         emmit = false;
       }
 
       const systemPromptKeyword = /^\s*BEGIN SYSTEM PROMPT\s*/gim;
       let systemPromptReg = systemPromptKeyword.exec(line);
       if (systemPromptReg && !systemPrompt) {
-        systemPrompt = "await sys.setSystemPrompt ({pid: pid, text: `";
+        systemPrompt = 'await sys.setSystemPrompt ({pid: pid, text: `';
         emmit = false;
       }
 
@@ -1038,9 +1022,10 @@ export class GBVMService extends GBService {
 
     if (tables) {
       tasks.push({
-        kind: 'writeTableDefinition', file: filename, tables
+        kind: 'writeTableDefinition',
+        file: filename,
+        tables
       });
-
     }
 
     code = `${outputLines.join('\n')}\n`;
@@ -1053,14 +1038,7 @@ export class GBVMService extends GBService {
   /**
    * Executes the converted JavaScript from BASIC code inside execution context.
    */
-  public static async callVM(
-    text: string,
-    min: GBMinInstance,
-    step,
-    pid,
-    debug: boolean = false,
-    params = []
-  ) {
+  public static async callVM(text: string, min: GBMinInstance, step, pid, debug: boolean = false, params = []) {
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 
@@ -1076,8 +1054,7 @@ export class GBVMService extends GBService {
     // These variables will be automatically be available as normal BASIC variables.
 
     try {
-      variables['aadToken'] = await (min.adminService as any)['acquireElevatedToken']
-        (min.instance.instanceId, false);
+      variables['aadToken'] = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, false);
     } catch (error) {
       variables['aadToken'] = 'ERROR: Configure /setupSecurity before using aadToken variable.';
     }
@@ -1118,11 +1095,9 @@ export class GBVMService extends GBService {
     let code = min.sandBoxMap[text];
     const channel = step ? step.context.activity.channelId : 'web';
 
-
     const dk = new DialogKeywords();
     const sys = new SystemKeywords();
     await dk.setFilter({ pid: pid, value: null });
-
 
     // Find all tokens in .gbot Config.
 
@@ -1159,7 +1134,7 @@ export class GBVMService extends GBService {
           return await new Promise((resolve, reject) => {
             sandbox['resolve'] = resolve;
             // TODO: #411 sandbox['reject'] = reject;
-            sandbox['reject'] = ()=>{};
+            sandbox['reject'] = () => {};
 
             const vm1 = new NodeVM({
               allowAsync: true,
@@ -1176,7 +1151,6 @@ export class GBVMService extends GBService {
             const s = new VMScript(code, { filename: scriptPath });
             result = vm1.run(s);
           });
-
         })();
       } else {
         const runnerPath = urlJoin(
@@ -1207,10 +1181,15 @@ export class GBVMService extends GBService {
     } catch (error) {
       throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);
     }
-
   }
 
-  public static createProcessInfo(user: GuaribasUser, min: GBMinInstance, channel: any, executable: string, step = null) {
+  public static createProcessInfo(
+    user: GuaribasUser,
+    min: GBMinInstance,
+    channel: any,
+    executable: string,
+    step = null
+  ) {
     const pid = GBAdminService.getNumberIdentifier();
     GBServer.globals.processes[pid] = {
       pid: pid,

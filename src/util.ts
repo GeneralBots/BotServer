@@ -76,8 +76,8 @@ export class GBUtil {
       }
     };
     if (!GBConfigService.get('STORAGE_NAME')) {
-      config['spec'].url = `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages`,
-      config['spec'].servers = [{ url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages` }];
+      config['spec'].url = `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages/${min.botId}`,
+      config['spec'].servers = [{ url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages/${min.botId}` }];
       config['spec'].openapi = '3.0.0';
       delete config['spec'].host;
       delete config['spec'].swagger;

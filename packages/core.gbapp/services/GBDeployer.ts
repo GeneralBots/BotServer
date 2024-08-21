@@ -254,6 +254,11 @@ export class GBDeployer implements IGBDeployer {
     if (GBConfigService.get('STORAGE_NAME')) {
       await this.deployBotOnAzure(instance, GBServer.globals.publicAddress);
     }
+
+    // Makes available bot to the channels and .gbui interfaces.
+
+    await GBServer.globals.minService.mountBot(instance);
+
     // Creates remaining objects on the cloud and updates instance information.
 
     return instance;
@@ -310,11 +315,7 @@ export class GBDeployer implements IGBDeployer {
         subscriptionId
       );
 
-      // Makes available bot to the channels and .gbui interfaces.
-
-      await GBServer.globals.minService.mountBot(instance);
-      await GBServer.globals.minService.ensureAPI();
-    }
+    }   
 
     // Saves final instance object and returns it.
 

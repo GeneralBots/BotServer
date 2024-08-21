@@ -122,10 +122,7 @@ export class GBServer {
     });
 
     process.on('uncaughtException', (err, p) => {
-      GBLogEx.error(
-        0,
-        `GBEXCEPTION: ${GBUtil.toYAML(err)}`
-      );
+      GBLogEx.error(0, `GBEXCEPTION: ${GBUtil.toYAML(err)}`);
     });
 
     process.on('unhandledRejection', (err, p) => {
@@ -138,10 +135,7 @@ export class GBServer {
       }
 
       if (!bypass) {
-        GBLogEx.error(
-          0,
-          `GBREJECTION: ${GBUtil.toYAML(err)}`
-        );
+        GBLogEx.error(0, `GBREJECTION: ${GBUtil.toYAML(err)}`);
       }
     });
 
@@ -185,7 +179,6 @@ export class GBServer {
           }
 
           // Creates a boot instance or load it from storage.
-
 
           if (GBConfigService.get('STORAGE_SERVER')) {
             azureDeployer = await AzureDeployerService.createInstance(deployer);
@@ -245,17 +238,20 @@ export class GBServer {
             }
           }
 
-          if (!GBConfigService.get('STORAGE_NAME')) {
+          const conversationalService: GBConversationalService = new GBConversationalService(core);
+          const adminService: GBAdminService = new GBAdminService(core);
+          const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
+          GBServer.globals.minService = minService;
+
+          // Just sync if not using LOAD_ONLY.
+
+          if (!GBConfigService.get('STORAGE_NAME') && !process.env.LOAD_ONLY) {
             await core['ensureFolders'](instances, deployer);
           }
           GBServer.globals.bootInstance = instances[0];
 
           // Builds minimal service infrastructure.
 
-          const conversationalService: GBConversationalService = new GBConversationalService(core);
-          const adminService: GBAdminService = new GBAdminService(core);
-          const minService: GBMinService = new GBMinService(core, conversationalService, adminService, deployer);
-          GBServer.globals.minService = minService;
           await minService.buildMin(instances);
 
           server.all('*', async (req, res, next) => {
@@ -290,6 +286,8 @@ export class GBServer {
           });
 
           GBLogEx.info(0, `The Bot Server is in RUNNING mode...`);
+
+          await minService.startSimpleTest(GBServer.globals.minBoot);
 
           // Opens Navigator.
 

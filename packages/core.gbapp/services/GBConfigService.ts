@@ -79,8 +79,11 @@ export class GBConfigService {
   public static get(key: string): string | undefined {
     let value = GBConfigService.tryGet(key);
 
-    if (value === undefined) {
+    if (!value) {
       switch (key) {
+        case 'STORAGE_NAME':
+          value = null;
+          break;
         case 'CLOUD_USERNAME':
           value = undefined;
           break;
