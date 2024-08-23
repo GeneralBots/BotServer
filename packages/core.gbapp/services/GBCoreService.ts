@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -50,6 +50,7 @@ import { GBSecurityPackage } from '../../security.gbapp/index.js';
 import { GBWhatsappPackage } from '../../whatsapp.gblib/index.js';
 import { GuaribasApplications, GuaribasInstance, GuaribasLog } from '../models/GBModel.js';
 import { GBConfigService } from './GBConfigService.js';
+import mkdirp from 'mkdirp';
 import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp/index.js';
 import { GBSharePointPackage } from '../../sharepoint.gblib/index.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -109,7 +110,7 @@ export class GBCoreService implements IGBCoreService {
   constructor() {
     this.adminService = new GBAdminService(this);
   }
-  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) { }
+  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {}
 
   /**
    * Gets database config and connect to storage. Currently two databases
@@ -131,6 +132,12 @@ export class GBCoreService implements IGBCoreService {
       password = GBConfigService.get('STORAGE_PASSWORD');
     } else if (this.dialect === 'sqlite') {
       storage = GBConfigService.get('STORAGE_FILE');
+
+      if (!Fs.existsSync(storage)){
+        process.env.STORAGE_SYNC = 'true';
+      }
+
+
     } else {
       throw new Error(`Unknown dialect: ${this.dialect}.`);
     }
@@ -138,8 +145,8 @@ export class GBCoreService implements IGBCoreService {
     const logging: boolean | Function =
       GBConfigService.get('STORAGE_LOGGING') === 'true'
         ? (str: string): void => {
-          GBLogEx.info(0, str);
-        }
+            GBLogEx.info(0, str);
+          }
         : false;
 
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
@@ -231,12 +238,11 @@ export class GBCoreService implements IGBCoreService {
     return out;
   }
 
-
   /**
    * Loads all items to start several listeners.
    */
   public async loadInstances(): Promise<IGBInstance[]> {
-    if (process.env.LOAD_ONLY !== undefined) {
+    if (process.env.LOAD_ONLY) {
       const bots = process.env.LOAD_ONLY.split(`;`);
       const and = [];
       await CollectionUtil.asyncForEach(bots, async e => {
@@ -426,12 +432,11 @@ ENDPOINT_UPDATE=true
     let instances: IGBInstance[];
     try {
       instances = await core.loadInstances();
-      const group = GBConfigService.get('CLOUD_GROUP')??GBConfigService.get('BOT_ID');
       if (process.env.ENDPOINT_UPDATE === 'true') {
+        const group = GBConfigService.get('CLOUD_GROUP') ?? GBConfigService.get('BOT_ID');
         await CollectionUtil.asyncForEach(instances, async instance => {
           GBLogEx.info(instance.instanceId, `Updating bot endpoint for ${instance.botId}...`);
           try {
-
             await installationDeployer.updateBotProxy(
               instance.botId,
               group,
@@ -459,7 +464,10 @@ ENDPOINT_UPDATE=true
             Try setting STORAGE_SYNC to true in .env file. Error: ${error.message}.`
             );
           } else {
-            GBLogEx.info(0, `Storage is empty. After collecting storage structure from all .gbapps it will get synced.`);
+            GBLogEx.info(
+              0,
+              `Storage is empty. After collecting storage structure from all .gbapps it will get synced.`
+            );
           }
         } else {
           throw new Error(`Cannot connect to operating storage: ${error.message}.`);
@@ -512,14 +520,7 @@ ENDPOINT_UPDATE=true
    * before starting the server.
    */
   public ensureAdminIsSecured() {
-    const password = GBConfigService.get('ADMIN_PASS');
-    if (!GBAdminService.StrongRegex.test(password)) {
-      throw new Error(
-        'Please, define a really strong password in ADMIN_PASS environment variable before running the server.'
-      );
-    }
   }
-
 
   public async createBootInstance(
     core: GBCoreService,
@@ -529,9 +530,10 @@ ENDPOINT_UPDATE=true
     return await this.createBootInstanceEx(
       core,
       installationDeployer,
-      proxyAddress, null,
-      GBConfigService.get('FREE_TIER'));
-
+      proxyAddress,
+      null,
+      GBConfigService.get('FREE_TIER')
+    );
   }
   /**
    * Creates the first bot instance (boot instance) used to "boot" the server.
@@ -548,8 +550,10 @@ ENDPOINT_UPDATE=true
   ) {
     GBLogEx.info(0, `Deploying cognitive infrastructure (on the cloud / on premises)...`);
     try {
-      const { instance, credentials, subscriptionId, installationDeployer }
-        = await StartDialog.createBaseInstance(deployer, freeTier);
+      const { instance, credentials, subscriptionId, installationDeployer } = await StartDialog.createBaseInstance(
+        deployer,
+        freeTier
+      );
       installationDeployer['core'] = this;
       const changedInstance = await installationDeployer['deployFarm2'](
         proxyAddress,
@@ -668,27 +672,26 @@ ENDPOINT_UPDATE=true
   }
 
   public async setConfig(min, name: string, value: any): Promise<any> {
-
     // Handles calls for BASIC persistence on sheet files.
 
-    GBLog.info( `Defining Config.xlsx variable ${name}= '${value}'...`);
+    GBLog.info(`Defining Config.xlsx variable ${name}= '${value}'...`);
 
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
     const maxLines = 512;
-    const file = "Config.xlsx";
-      const path = DialogKeywords.getGBAIPath(min.botId, `gbot`);;
+    const file = 'Config.xlsx';
+    const path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
 
-    let document = await (new SystemKeywords()).internalGetDocument(client, baseUrl, path, file);
+    let document = await new SystemKeywords().internalGetDocument(client, baseUrl, path, file);
 
-    // Creates workbook session that will be discarded.
+    // Creates book session that will be discarded.
 
-    let sheets = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`)
-      .get();
+    let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
 
     let results = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A${maxLines}')`)
+      .api(
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A${maxLines}')`
+      )
       .get();
 
     const rows = results.text;
@@ -708,11 +711,11 @@ ENDPOINT_UPDATE=true
     body.values[0][0] = value;
 
     await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
+      .api(
+        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
+      )
       .patch(body);
   }
-
-
 
   /**
    * Get a dynamic param from instance. Dynamic params are defined in Config.xlsx
@@ -729,8 +732,7 @@ ENDPOINT_UPDATE=true
     // Gets .gbot Params from specified bot.
 
     if (instance.params) {
-
-      params = typeof (instance.params) === 'object' ? instance.params : JSON.parse(instance.params);
+      params = typeof instance.params === 'object' ? instance.params : JSON.parse(instance.params);
       params = GBUtil.caseInsensitive(params);
       value = params ? params[name] : defaultValue;
     }
@@ -740,7 +742,6 @@ ENDPOINT_UPDATE=true
     params = GBUtil.caseInsensitive(instance['dataValues']);
 
     if (params && !value) {
-
       // Retrieves the value from specified bot instance (no params collection).
 
       value = instance['dataValues'][name];
@@ -749,30 +750,26 @@ ENDPOINT_UPDATE=true
 
       const minBoot = GBServer.globals.minBoot as any;
 
-      if (
-        minBoot.instance &&
-        !value  && instance.botId != minBoot.instance.botId) {
-      
+      if (minBoot.instance && !value && instance.botId != minBoot.instance.botId) {
         instance = minBoot.instance;
-        
-        if(instance.params){
-          params = typeof (instance.params) === 'object' ? instance.params : JSON.parse(instance.params);
+
+        if (instance.params) {
+          params = typeof instance.params === 'object' ? instance.params : JSON.parse(instance.params);
           params = GBUtil.caseInsensitive(params);
           value = params ? params[name] : defaultValue;
         }
 
         // If still did not found in boot bot params, try instance fields.
 
-        if (!value){
+        if (!value) {
           value = instance['dataValues'][name];
         }
-        if (!value){
+        if (!value) {
           value = instance[name];
         }
-
       }
     }
-    
+
     if (value === undefined) {
       value = null;
     }
@@ -786,9 +783,9 @@ ENDPOINT_UPDATE=true
     if (value && typeof defaultValue === 'number') {
       return new Number(value ? value : defaultValue ? defaultValue : 0).valueOf();
     }
-  
-    const ret =  value ?? defaultValue;
-    return ret; 
+
+    const ret = value ?? defaultValue;
+    return ret;
   }
 
   /**
@@ -798,7 +795,7 @@ ENDPOINT_UPDATE=true
     let params = null;
     const list = [];
     if (instance.params) {
-      params = typeof (instance.params) === 'object' ? instance.params : JSON.parse(instance.params);
+      params = typeof instance.params === 'object' ? instance.params : JSON.parse(instance.params);
     }
 
     Object.keys(params).forEach(e => {
@@ -810,5 +807,79 @@ ENDPOINT_UPDATE=true
     return list;
   }
 
+  public async ensureFolders(instances, deployer: GBDeployer) {
+    let libraryPath = GBConfigService.get('STORAGE_LIBRARY');
 
+    if (!Fs.existsSync(libraryPath)) {
+     mkdirp.sync(libraryPath);
+    }
+
+    await this.syncBotStorage(instances, 'default', deployer, libraryPath);
+    
+    const files = Fs.readdirSync(libraryPath);
+    await CollectionUtil.asyncForEach(files, async file => {
+      
+      if (file.trim().toLowerCase() !== 'default.gbai'){
+
+      let botId = file.replace(/\.gbai/, '');
+
+      await this.syncBotStorage(instances, botId, deployer, libraryPath);
+      }
+    });
+  }
+
+  private async syncBotStorage(instances: any, botId: any, deployer: GBDeployer, libraryPath: string) {
+    let instance = instances.find(p => p.botId.toLowerCase().trim() === botId.toLowerCase().trim());
+
+    if (!instance) {
+
+      GBLog.info(`Importing package ${botId}...`);
+      
+      // Creates a bot.
+
+      let mobile = null,
+        email = null;
+
+      instance = await deployer.deployBlankBot(botId, mobile, email);
+      const gbaiPath = Path.join(libraryPath, `${botId}.gbai`);
+
+      if (!Fs.existsSync(gbaiPath)) {
+
+        Fs.mkdirSync(gbaiPath, { recursive: true });
+
+        const base = Path.join(process.env.PWD, 'templates', 'default.gbai');
+
+        Fs.cpSync(Path.join(base, `default.gbkb`), Path.join(gbaiPath,`default.gbkb`), {
+          errorOnExist: false,
+          force: true,
+          recursive: true
+        });
+        Fs.cpSync(Path.join(base, `default.gbot`), Path.join(gbaiPath, `default.gbot`), {
+          errorOnExist: false,
+          force: true,
+          recursive: true
+        });
+        Fs.cpSync(Path.join(base, `default.gbtheme`), Path.join(gbaiPath, `default.gbtheme`), {
+          errorOnExist: false,
+          force: true,
+          recursive: true
+        });
+        Fs.cpSync(Path.join(base, `default.gbdata`), Path.join(gbaiPath, `default.gbdata`), {
+          errorOnExist: false,
+          force: true,
+          recursive: true
+        });
+        Fs.cpSync(Path.join(base, `default.gbdialog`), Path.join(gbaiPath, `default.gbdialog`), {
+          errorOnExist: false,
+          force: true,
+          recursive: true
+        });
+        Fs.cpSync(Path.join(base, `default.gbdrive`), Path.join(gbaiPath, `default.gbdrive`), {
+          errorOnExist: false,
+          force: true,
+          recursive: true
+        });
+      }
+    }
+  }
 }

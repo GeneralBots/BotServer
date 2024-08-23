@@ -168,9 +168,18 @@ class GBUIApp extends React.Component {
     let _this_ = this;
     window['botchatDebug'] = true;
 
-    const line = new DirectLine({
+    const line = instanceClient.webchatToken ?
+    new DirectLine({
       token: instanceClient.webchatToken
-    });
+    }):
+    new DirectLine({
+      domain: instanceClient.domain,
+      secret: null,
+      token: null,
+      webSocket: false // defaults to true
+    });   
+    
+    ;
     _this_.setState({ line: line });
 
     line.connectionStatus$.subscribe(connectionStatus => {

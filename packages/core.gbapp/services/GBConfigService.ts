@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -42,7 +42,7 @@ import * as en from 'dotenv-extended';
  */
 export class GBConfigService {
   public static getBoolean(value: string): boolean {
-    return (this.get(value) as unknown) as boolean;
+    return this.get(value) as unknown as boolean;
   }
   public static getServerPort(): string {
     if (process.env.PORT) {
@@ -79,13 +79,19 @@ export class GBConfigService {
   public static get(key: string): string | undefined {
     let value = GBConfigService.tryGet(key);
 
-    if (value === undefined) {
+    if (!value) {
       switch (key) {
+        case 'STORAGE_NAME':
+          value = null;
+          break;
         case 'CLOUD_USERNAME':
           value = undefined;
           break;
+        case 'STORAGE_LIBRARY':
+          value = `${process.env.HOME}/gbpackages`;
+          break;
         case 'BOT_ID':
-          value = undefined;
+          value = 'default';
           break;
         case 'CLOUD_PASSWORD':
           value = undefined;
@@ -103,10 +109,10 @@ export class GBConfigService {
           value = undefined;
           break;
         case 'STORAGE_DIALECT':
-          value = undefined;
+          value = 'sqlite';
           break;
         case 'STORAGE_FILE':
-          value = './guaribas.sqlite';
+          value = './data.db';
           break;
         case 'GBKB_AUTO_DEPLOY':
           value = false;
@@ -160,7 +166,7 @@ export class GBConfigService {
           value = true;
           break;
         case 'BOT_URL':
-          value = undefined;
+          value = 'http://localhost:4242';
           break;
         case 'STORAGE_SERVER':
           value = undefined;

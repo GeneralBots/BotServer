@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -30,7 +30,6 @@
 
 import mime from 'mime-types';
 import urlJoin from 'url-join';
-import SwaggerClient from 'swagger-client';
 import Path from 'path';
 import Fs from 'fs';
 import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
@@ -46,7 +45,7 @@ import qrcode from 'qrcode-terminal';
 import express from 'express';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import pkg from 'whatsapp-web.js';
-import fetch, { Response } from 'node-fetch';
+import fetch from 'node-fetch';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
@@ -85,12 +84,10 @@ export class WhatsappDirectLine extends GBService {
   public botId: string;
   public botNumber: string;
   public min: GBMinInstance;
-  private directLineSecret: string;
   private locale: string = 'pt-BR';
   provider: any;
   INSTANCE_URL = 'https://api.maytapi.com/api';
   private customClient: any;
-  private groupId;
 
   constructor(
     min: GBMinInstance,
@@ -104,13 +101,12 @@ export class WhatsappDirectLine extends GBService {
     super();
 
     this.min = min;
-    this.botId = botId;
-    this.directLineSecret = directLineSecret;
+    this.botId = botId;    
     this.whatsappServiceKey = whatsappServiceKey;
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
     this.provider = whatsappServiceKey === 'internal' ? 'GeneralBots' : 'meta';
-    this.groupId = groupId;
+    
   }
 
   public static async asyncForEach(array, callback) {
@@ -120,19 +116,9 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async setup(setUrl: boolean) {
-    const client = await new SwaggerClient({
-      spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-      requestInterceptor: req => {
-        req.headers['Authorization'] = `Bearer ${this.min.instance.webchatKey}`;
-      }
-    });
     
-    this.directLineClient = client;
+    this.directLineClient = GBUtil.getDirectLineClient(this.min);
     
-    // Warms up MSBF.
-    
-    await client.apis.Conversations.Conversations_StartConversation();
-
     let url: string;
     let options: any;
 
@@ -822,29 +808,25 @@ export class WhatsappDirectLine extends GBService {
     const templateExists = templates.data.find(template => template.name === name);
 
     if (templateExists) {
-      // Step 2: Update the template
-      const updateTemplateEndpoint = `${baseUrl}/${templateExists.id}`;
+      // // Step 2: Update the template
+      // const updateTemplateEndpoint = `${baseUrl}/${templateExists.id}`;
 
-      // Removes the first HEADER element.
+      // const updateResponse = await fetch(updateTemplateEndpoint, {
+      //   method: 'POST',
+      //   headers: {
+      //     Authorization: `Bearer ${accessToken}`,
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({
+      //     components: data.components
+      //   })
+      // });
 
-      data.components.shift();
+      // if (!updateResponse.ok) {
+      //   throw new Error(`Failed to update template: ${name} ${await updateResponse.text()}`);
+      // }
 
-      const updateResponse = await fetch(updateTemplateEndpoint, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          components: data.components
-        })
-      });
-
-      if (!updateResponse.ok) {
-        throw new Error(`Failed to update template: ${name} ${await updateResponse.text()}`);
-      }
-
-      GBLogEx.info(min, `Template updated: ${name}`);
+      GBLogEx.info(min, `Template update skiped: ${name}`);
     } else {
       // Step 3: Create the template
       const createTemplateEndpoint = `${baseUrl}/${businessAccountId}/message_templates`;

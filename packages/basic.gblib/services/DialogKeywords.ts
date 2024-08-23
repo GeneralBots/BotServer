@@ -1,31 +1,29 @@
 /*****************************************************************************\
-|                                               ( )_  _                       |
-|    _ _    _ __   _ _    __    ___ ___     _ _ | ,_)(_)  ___   ___     _     |
-|   ( '_`\ ( '__)/'_` ) /'_ `\/' _ ` _ `\ /'_` )| |  | |/',__)/' v `\ /'_`\   |
-|   | (_) )| |  ( (_| |( (_) || ( ) ( ) |( (_| || |_ | |\__,\| (˅) |( (_) )  |
-|   | ,__/'(_)  `\__,_)`\__  |(_) (_) (_)`\__,_)`\__)(_)(____/(_) (_)`\___/'  |
-|   | |                ( )_) |                                                |
-|   (_)                 \___/'                                                |
+|  █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ® |
+| ██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █      |
+| ██  ███ ████  █ ██  █ ████  █████  ██████ ██      ████   █   █   █    ██    |
+| ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
+|  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
-| According to our dual licensing model,this program can be used either      |
-| under the terms of the GNU Affero General Public License,version 3,       |
+| According to our dual licensing model, this program can be used either      |
+| under the terms of the GNU Affero General Public License, version 3,        |
 | or under a proprietary license.                                             |
 |                                                                             |
 | The texts of the GNU Affero General Public License with an additional       |
 | permission and of our proprietary license can be found at and               |
 | in the LICENSE file you have received along with this program.              |
 |                                                                             |
-| This program is distributed in the hope that it will be useful,            |
-| but WITHOUT ANY WARRANTY,without even the implied warranty of              |
+| This program is distributed in the hope that it will be useful,             |
+| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
-| trademark license. Therefore any rights,title and interest in              |
+| trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
 |                                                                             |
 \*****************************************************************************/
@@ -429,7 +427,7 @@ export class DialogKeywords {
    * @example TALK TOLIST (array,member)
    *
    */
-  public async getToLst(pid, array, member) {
+  public async getToLst({pid, array, member}) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     if (!array) {
@@ -1350,12 +1348,7 @@ export class DialogKeywords {
 
     const conversation = min['apiConversations'][pid];
 
-    const client = await new SwaggerClient({
-      spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-      requestInterceptor: req => {
-        req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
-      }
-    });
+    const client = await GBUtil.getDirectLineClient(min);
     conversation.client = client;
     const response = await client.apis.Conversations.Conversations_StartConversation();
     conversation.conversationId = response.obj.conversationId;
@@ -1368,7 +1361,7 @@ export class DialogKeywords {
     const step = proc.step;
     const min = GBServer.globals.minInstances.filter(p => p.instance.instanceId == proc.instanceId)[0];
     const sec = new SecService();
-    const user = await sec.getUserFromId(min.instance.instanceId, proc.userId);
+    const user = GBServer.globals.users [proc.userId];
     const params = user ? JSON.parse(user.params) : {};
     return {
       min,

@@ -29,3 +29,4 @@ package-lock.json
 yarn-lock.json
 logo.svg
 screenshot.png
+data.db

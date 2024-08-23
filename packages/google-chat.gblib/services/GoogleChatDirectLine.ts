@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -36,6 +36,7 @@ import { GBLog, GBMinInstance, GBService } from 'botlib';
 import { GBServer } from '../../../src/app.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Support for Google Chat.
@@ -90,10 +91,7 @@ export class GoogleChatDirectLine extends GBService {
   }
 
   public async setup (setUrl) {
-    this.directLineClient = new Swagger({
-      spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-      usePromise: true
-    });
+    this.directLineClient =  await GBUtil.getDirectLineClient(this.min);
     const client = await this.directLineClient;
 
     client.clientAuthorizations.add(

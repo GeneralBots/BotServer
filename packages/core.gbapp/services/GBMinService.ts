@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -44,7 +44,9 @@ import Fs from 'fs';
 import arrayBufferToBuffer from 'arraybuffer-to-buffer';
 import { NlpManager } from 'node-nlp';
 import Koa from 'koa';
+import { v2 as webdav } from 'webdav-server';
 import { createRpcServer } from '@push-rpc/core';
+import { start as startRouter } from '../../../packages/core.gbapp/services/router/bridge.js';
 import wash from 'washyourmouthoutwithsoap';
 import {
   AutoSaveStateMiddleware,
@@ -140,10 +142,7 @@ export class GBMinService {
     this.deployer = deployer;
   }
 
-
-  public async enableAPI(min: GBMinInstance) {
-
-  }
+  public async enableAPI(min: GBMinInstance) {}
 
   /**
    * Constructs a new minimal instance for each bot.
@@ -168,24 +167,19 @@ export class GBMinService {
 
     let i = 1;
 
-    if (instances.length > 1) {
-    }
-
     await CollectionUtil.asyncForEach(
       instances,
       (async instance => {
+
         try {
-          GBLog.info(`Mounting ${instance.botId}...`)
+          GBLog.info(`Mounting ${instance.botId}...`);
           await this['mountBot'](instance);
         } catch (error) {
           GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
         }
       }).bind(this)
+    
     );
-
-    // Loads API.
-
-    await this.ensureAPI();
 
     // Loads schedules.
 
@@ -194,6 +188,37 @@ export class GBMinService {
     await service.scheduleAll();
 
     GBLogEx.info(0, `All Bot instances loaded.`);
+  }
+
+  public  async startSimpleTest(min) {
+    if (process.env.TEST_MESSAGE && min['isDefault']) {
+      GBLogEx.info(min, `Starting auto test with '${process.env.TEST_MESSAGE}'.`);
+
+      const client = await GBUtil.getDirectLineClient(min);
+
+      const response = await client.apis.Conversations.Conversations_StartConversation();
+      const conversationId = response.obj.conversationId;
+      GBServer.globals.debugConversationId = conversationId;
+
+      const steps = process.env.TEST_MESSAGE.split(';');
+
+      await CollectionUtil.asyncForEach(steps, async (step) => {
+        client.apis.Conversations.Conversations_PostActivity({
+          conversationId: conversationId,
+          activity: {
+            textFormat: 'plain',
+            text: step,
+            type: 'message',
+            from: {
+              id: 'test',
+              name: 'test'
+            }
+          }
+        });
+
+        await GBUtil.sleep(3000);
+      });
+    }
   }
 
   /**
@@ -234,7 +259,7 @@ export class GBMinService {
   /**
    * Unmounts the bot web site (default.gbui) secure domain, if any.
    */
-  public async unloadDomain(instance: IGBInstance) { }
+  public async unloadDomain(instance: IGBInstance) {}
 
   /**
    * Mount the instance by creating an BOT Framework bot object,
@@ -242,6 +267,7 @@ export class GBMinService {
    * installing all BASIC artifacts from .gbdialog and OAuth2.
    */
   public async mountBot(instance: IGBInstance) {
+
 
     // Build bot adapter.
 
@@ -254,10 +280,14 @@ export class GBMinService {
     // https://github.com/GeneralBots/BotServer/issues/286
     // min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
 
+    min['isDefault'] =  GBServer.globals.minInstances.length === 0;
+
     GBServer.globals.minInstances.push(min);
     const user = null; // No user context.
 
-    await this.deployer['deployPackage2'](min, user, 'packages/default.gbtheme');
+    // Serves individual URL for each bot conversational interface.
+
+    await this.deployer['deployPackage2'](min, user, 'templates/default.gbai/default.gbtheme');
 
     // Install per bot deployed packages.
 
@@ -318,21 +348,23 @@ export class GBMinService {
       mkdirp.sync(dir);
     }
 
-    // Loads Named Entity data for this bot.
+    if (!GBConfigService.get('STORAGE_NAME')) {
+      dir = Path.join(GBConfigService.get('STORAGE_LIBRARY'), 'work', gbai);
 
-    // TODO: await KBService.RefreshNER(min);
+      const server = GBServer.globals.webDavServer;
+      server.setFileSystem(`/${botId}`, new webdav.PhysicalFileSystem(dir), success => {
+        GBLogEx.info(1, `WebDav for ${botId} loaded.`);
+      });
+    }
 
     // Calls the loadBot context.activity for all packages.
 
     await this.invokeLoadBot(min.appPackages, GBServer.globals.sysPackages, min);
-
-    // Serves individual URL for each bot conversational interface.
-
     const receiver = async (req, res) => {
       await this.receiver(req, res, conversationState, min, instance, GBServer.globals.appPackages);
     };
-    const url = `/api/messages/${instance.botId}`;
-    GBServer.globals.server.post(url, receiver);
+    let url = `/api/messages/${instance.botId}`;
+
     GBServer.globals.server.get(url, (req, res) => {
       if (req.query['hub.mode'] === 'subscribe') {
         if (req.query['hub.verify_token'] === process.env.FACEBOOK_VERIFY_TOKEN) {
@@ -347,39 +379,6 @@ export class GBMinService {
     });
     GBLog.verbose(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
 
-    // Test code.
-    if (process.env.TEST_MESSAGE) {
-      GBLogEx.info(min, `Starting auto test with '${process.env.TEST_MESSAGE}'.`);
-
-      const client = await new SwaggerClient({
-        spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-        requestInterceptor: req => {
-          req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
-        }
-      });
-
-      const response = await client.apis.Conversations.Conversations_StartConversation();
-      const conversationId = response.obj.conversationId;
-      GBServer.globals.debugConversationId = conversationId;
-
-      const steps = process.env.TEST_MESSAGE.split(';');
-
-      await CollectionUtil.asyncForEach(steps, async step => {
-        client.apis.Conversations.Conversations_PostActivity({
-          conversationId: conversationId,
-          activity: {
-            textFormat: 'plain',
-            text: step,
-            type: 'message',
-            from: {
-              id: 'test',
-              name: 'test'
-            }
-          }
-        });
-
-        await GBUtil.sleep(3000);
-      });
 
       // Generates MS Teams manifest.
 
@@ -390,7 +389,6 @@ export class GBMinService {
         const data = await this.deployer.getBotManifest(instance);
         Fs.writeFileSync(packageTeams, data);
       }
-    }
 
     // Serves individual URL for each bot user interface.
 
@@ -426,37 +424,44 @@ export class GBMinService {
 
     // Setups official handler for WhatsApp.
 
-    GBServer.globals.server.all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
+    GBServer.globals.server
+      .all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
+        if (req.query['hub.mode'] === 'subscribe') {
+          const val = req.query['hub.verify_token'];
 
+          if (val === process.env.META_CHALLENGE) {
+            res.send(req.query['hub.challenge']);
+            res.status(200);
+            GBLogEx.info(min, `Meta callback OK. ${JSON.stringify(req.query)}`);
+          } else {
+            res.status(401);
+          }
+          res.end();
 
-      if (req.query['hub.mode'] === 'subscribe') {
-        const val = req.query['hub.verify_token'];
-
-        if (val === process.env.META_CHALLENGE) {
-          res.send(req.query['hub.challenge']);
-          res.status(200);
-          GBLogEx.info(min, `Meta callback OK. ${JSON.stringify(req.query)}`);
-        } else {
-          res.status(401);
+          return;
         }
-        res.end();
 
-        return;
-      }
+        let whatsAppDirectLine = min.whatsAppDirectLine;
 
-      let whatsAppDirectLine = min.whatsAppDirectLine;
+        // Not meta, multiples bots on root bot.
 
-      // Not meta, multiples bots on root bot.
+        if (!req.body.object) {
+          const to = req.body.To.replace(/whatsapp\:\+/gi, '');
+          whatsAppDirectLine = WhatsappDirectLine.botsByNumber[to];
+        }
 
-      if (!req.body.object) {
-        const to = req.body.To.replace(/whatsapp\:\+/gi, '');
-        whatsAppDirectLine = WhatsappDirectLine.botsByNumber[to];
-      }
-
-      await whatsAppDirectLine.WhatsAppCallback(req, res, whatsAppDirectLine.botId);
-    }).bind(min);
+        if (whatsAppDirectLine) {
+          await whatsAppDirectLine.WhatsAppCallback(req, res, whatsAppDirectLine.botId);
+        }
+      })
+      .bind(min);
 
     GBDeployer.mountGBKBAssets(`${botId}.gbkb`, botId, `${botId}.gbkb`);
+
+    // Loads API.
+
+    await this.ensureAPI();
+
   }
 
   public static getProviderName(req: any, res: any) {
@@ -510,9 +515,7 @@ export class GBMinService {
    * on https://<gbhost>/<BotId>/token URL.
    */
   private handleOAuthTokenRequests(server: any, min: GBMinInstance, instance: IGBInstance) {
-
     server.get(`/${min.instance.botId}/token`, async (req, res) => {
-
       let tokenName = req.query['value'];
       if (!tokenName) {
         tokenName = '';
@@ -535,9 +538,7 @@ export class GBMinService {
       if (tokenName) {
         const code = req?.query?.code;
 
-        let url = urlJoin(
-          host,
-          tenant, 'oauth/token');
+        let url = urlJoin(host, tenant, 'oauth/token');
         let buff = new Buffer(`${clientId}:${clientSecret}`);
         const base64 = buff.toString('base64');
 
@@ -549,14 +550,14 @@ export class GBMinService {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
           body: new URLSearchParams({
-            'grant_type': 'authorization_code',
-            'code': code
+            grant_type: 'authorization_code',
+            code: code
           })
         };
         const result = await fetch(url, options);
 
         if (result.status != 200) {
-          throw new Error(`handleOAuthTokenRequests error: ${result.status}: ${result.statusText}.`)
+          throw new Error(`handleOAuthTokenRequests error: ${result.status}: ${result.statusText}.`);
         }
 
         const text = await result.text();
@@ -564,24 +565,31 @@ export class GBMinService {
 
         // Saves token to the database.
 
-        await this.adminService.setValue(instance.instanceId,
-          `${tokenName}accessToken`, token['accessToken'] ? token['accessToken'] : token['access_token']);
-        await this.adminService.setValue(instance.instanceId,
-          `${tokenName}refreshToken`, token['refreshToken'] ? token['refreshToken'] : token['refresh_token']);
+        await this.adminService.setValue(
+          instance.instanceId,
+          `${tokenName}accessToken`,
+          token['accessToken'] ? token['accessToken'] : token['access_token']
+        );
+        await this.adminService.setValue(
+          instance.instanceId,
+          `${tokenName}refreshToken`,
+          token['refreshToken'] ? token['refreshToken'] : token['refresh_token']
+        );
 
-        await this.adminService.setValue(instance.instanceId,
-          `${tokenName}expiresOn`, token['expiresOn'] ?
-          token['expiresOn'].toString() :
-          new Date(Date.now() + (token['expires_in'] * 1000)).toString());
+        await this.adminService.setValue(
+          instance.instanceId,
+          `${tokenName}expiresOn`,
+          token['expiresOn']
+            ? token['expiresOn'].toString()
+            : new Date(Date.now() + token['expires_in'] * 1000).toString()
+        );
         await this.adminService.setValue(instance.instanceId, `${tokenName}AntiCSRFAttackState`, null);
-
-
-      }
-      else {
+      } else {
         const authenticationContext = new AuthenticationContext.AuthenticationContext(
           urlJoin(
             tokenName ? host : min.instance.authenticatorAuthorityHostUrl,
-            tokenName ? tenant : min.instance.authenticatorTenant)
+            tokenName ? tenant : min.instance.authenticatorTenant
+          )
         );
         const resource = 'https://graph.microsoft.com';
 
@@ -595,26 +603,24 @@ export class GBMinService {
           tokenName ? clientSecret : instance.marketplacePassword,
           async (err, token) => {
             if (err) {
-
               const msg = `handleOAuthTokenRequests: Error acquiring token: ${err}`;
 
               GBLog.error(msg);
               res.send(msg);
-
             } else {
-
               // Saves token to the database.
 
               await this.adminService.setValue(instance.instanceId, `${tokenName}accessToken`, token['accessToken']);
               await this.adminService.setValue(instance.instanceId, `${tokenName}refreshToken`, token['refreshToken']);
-              await this.adminService.setValue(instance.instanceId, `${tokenName}expiresOn`, token['expiresOn'].toString());
+              await this.adminService.setValue(
+                instance.instanceId,
+                `${tokenName}expiresOn`,
+                token['expiresOn'].toString()
+              );
               await this.adminService.setValue(instance.instanceId, `${tokenName}AntiCSRFAttackState`, null);
-
             }
           }
         );
-
-
       }
       // Inform the home for default .gbui after finishing token retrival.
 
@@ -633,8 +639,9 @@ export class GBMinService {
         min.instance.authenticatorTenant,
         '/oauth2/authorize'
       );
-      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.marketplaceId
-        }&redirect_uri=${urlJoin(process.env.BOT_URL, min.instance.botId, 'token')}`;
+      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
+        min.instance.marketplaceId
+      }&redirect_uri=${urlJoin(process.env.BOT_URL, min.instance.botId, 'token')}`;
       GBLogEx.info(min, `HandleOAuthRequests: ${authorizationUrl}.`);
       res.redirect(authorizationUrl);
     });
@@ -651,7 +658,6 @@ export class GBMinService {
       botId = GBConfigService.get('BOT_ID');
     }
 
-
     // Loads by the botId itself or by the activationCode field.
 
     let instance = await this.core.loadInstanceByBotId(botId);
@@ -663,7 +669,6 @@ export class GBMinService {
     if (instance !== null) {
       // Gets the webchat token, speech token and theme.
 
-      const webchatTokenContainer = await this.getWebchatToken(instance);
       const speechToken = instance.speechKey != undefined ? await this.getSTSToken(instance) : null;
       let theme = instance.theme;
 
@@ -673,29 +678,36 @@ export class GBMinService {
         theme = `default.gbtheme`;
       }
 
-      res.send(
-        JSON.stringify({
-          instanceId: instance.instanceId,
-          botId: botId,
-          theme: theme,
-          webchatToken: webchatTokenContainer.token,
-          speechToken: speechToken,
-          conversationId: webchatTokenContainer.conversationId,
-          authenticatorTenant: instance.authenticatorTenant,
-          authenticatorClientId: instance.marketplaceId,
-          paramLogoImageUrl: this.core.getParam(instance, 'Logo Image Url', null),
-          paramLogoImageAlt: this.core.getParam(instance, 'Logo Image Alt', null),
-          paramLogoImageWidth: this.core.getParam(instance, 'Logo Image Width', null),
-          paramLogoImageHeight: this.core.getParam(instance, 'Logo Image Height', null),
-          paramLogoImageType: this.core.getParam(instance, 'Logo Image Type', null),
-          logo: this.core.getParam(instance, 'Logo', null),
-          color1: this.core.getParam(instance, 'Color1', null),
-          color2: this.core.getParam(instance, 'Color2', null),
-          
-          
+      let logo = this.core.getParam(instance, 'Logo', null);
 
-        })
-      );
+      logo = logo ? urlJoin(instance.botId, 'cache', logo) : 'images/logo-gb.png';
+
+      let config = {
+        instanceId: instance.instanceId,
+        botId: botId,
+        theme: theme,
+        speechToken: speechToken,
+        authenticatorTenant: instance.authenticatorTenant,
+        authenticatorClientId: instance.marketplaceId,
+        paramLogoImageUrl: this.core.getParam(instance, 'Logo Image Url', null),
+        paramLogoImageAlt: this.core.getParam(instance, 'Logo Image Alt', null),
+        paramLogoImageWidth: this.core.getParam(instance, 'Logo Image Width', null),
+        paramLogoImageHeight: this.core.getParam(instance, 'Logo Image Height', null),
+        paramLogoImageType: this.core.getParam(instance, 'Logo Image Type', null),
+        logo: logo,
+        color1: this.core.getParam(instance, 'Color1', null),
+        color2: this.core.getParam(instance, 'Color2', null)
+      };
+
+      if (!GBConfigService.get('STORAGE_NAME')) {
+        config['domain'] = `http://localhost:${process.env.PORT}/directline/${botId}`;
+      } else {
+        const webchatTokenContainer = await this.getWebchatToken(instance);
+        (config['conversationId'] = webchatTokenContainer.conversationId),
+          (config['webchatToken'] = webchatTokenContainer.token);
+      }
+
+      res.send(JSON.stringify(config));
     } else {
       const error = `Instance not found while retrieving from .gbui web client: ${botId}.`;
       res.sendStatus(error);
@@ -753,12 +765,18 @@ export class GBMinService {
   private async buildBotAdapter(instance: any, sysPackages: IGBPackage[], appPackages: IGBPackage[]) {
     // MSFT stuff.
 
-    const adapter = new BotFrameworkAdapter({
+    let config = {
       appId: instance.marketplaceId ? instance.marketplaceId : GBConfigService.get('MARKETPLACE_ID'),
       appPassword: instance.marketplacePassword
         ? instance.marketplacePassword
         : GBConfigService.get('MARKETPLACE_SECRET')
-    });
+    };
+    if (!GBConfigService.get('STORAGE_NAME')) {
+      startRouter(GBServer.globals.server, instance.botId);
+      config['clientOptions'] = { baseUri: `http://localhost:${process.env.PORT}` };
+    }
+
+    const adapter = new BotFrameworkAdapter(config);
     const storage = new MemoryStorage();
     const conversationState = new ConversationState(storage);
     const userState = new UserState(storage);
@@ -771,6 +789,28 @@ export class GBMinService {
     // The minimal bot is built here.
 
     const min = new GBMinInstance();
+
+    // Setups default BOT Framework dialogs.
+
+    min.userProfile = conversationState.createProperty('userProfile');
+    const dialogState = conversationState.createProperty('dialogState');
+
+    min.dialogs = new DialogSet(dialogState);
+    min.dialogs.add(new TextPrompt('textPrompt'));
+    min.dialogs.add(new AttachmentPrompt('attachmentPrompt'));
+
+    min.dialogs.add(new ConfirmPrompt('confirmPrompt'));
+    if (process.env.ENABLE_AUTH) {
+      min.dialogs.add(
+        new OAuthPrompt('oAuthPrompt', {
+          connectionName: 'OAuth2',
+          text: 'Please sign in to General Bots.',
+          title: 'Sign in',
+          timeout: 300000
+        })
+      );
+    }
+
     min.botId = instance.botId;
     min.bot = adapter;
     min.userState = userState;
@@ -793,6 +833,15 @@ export class GBMinService {
     min['apiConversations'] = {};
     min.packages = sysPackages;
 
+    const receiver = async (req, res) => {
+      await this.receiver(req, res, conversationState, min, instance, GBServer.globals.appPackages);
+    };
+
+    let url = `/api/messages/${instance.botId}`;
+    GBServer.globals.server.post(url, receiver);
+    url = `/api/messages`;
+    GBServer.globals.server.post(url, receiver);
+
     // NLP Manager.
 
     const manager = new NlpManager({ languages: ['pt'], forceNER: true });
@@ -802,7 +851,6 @@ export class GBMinService {
       GBServer.globals.minBoot = min;
       GBServer.globals.minBoot.instance.marketplaceId = GBConfigService.get('MARKETPLACE_ID');
       GBServer.globals.minBoot.instance.marketplacePassword = GBConfigService.get('MARKETPLACE_SECRET');
-
     }
 
     if (min.instance.facebookWorkplaceVerifyToken) {
@@ -860,8 +908,7 @@ export class GBMinService {
 
       await min.whatsAppDirectLine.setup(true);
     } else {
-      if (min !== minBoot && minBoot.instance.whatsappServiceKey
-        && min.instance.webchatKey) {
+      if (min !== minBoot && minBoot.instance.whatsappServiceKey && min.instance.webchatKey) {
         min.whatsAppDirectLine = new WhatsappDirectLine(
           min,
           min.botId,
@@ -882,26 +929,6 @@ export class GBMinService {
       WhatsappDirectLine.botsByNumber[botNumber] = min.whatsAppDirectLine;
     }
 
-    // Setups default BOT Framework dialogs.
-
-    min.userProfile = conversationState.createProperty('userProfile');
-    const dialogState = conversationState.createProperty('dialogState');
-
-    min.dialogs = new DialogSet(dialogState);
-    min.dialogs.add(new TextPrompt('textPrompt'));
-    min.dialogs.add(new AttachmentPrompt('attachmentPrompt'));
-
-    min.dialogs.add(new ConfirmPrompt('confirmPrompt'));
-    if (process.env.ENABLE_AUTH) {
-      min.dialogs.add(
-        new OAuthPrompt('oAuthPrompt', {
-          connectionName: 'OAuth2',
-          text: 'Please sign in to General Bots.',
-          title: 'Sign in',
-          timeout: 300000
-        })
-      );
-    }
     return { min, adapter, conversationState };
   }
 
@@ -1087,7 +1114,10 @@ export class GBMinService {
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
             if (startDialog) {
               await sec.setParam(userId, 'welcomed', 'true');
-              GBLogEx.info(min, `Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`);
+              GBLogEx.info(
+                min,
+                `Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`
+              );
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
             }
           }
@@ -1095,7 +1125,8 @@ export class GBMinService {
 
         // Required for F0 handling of persisted conversations.
 
-        GBLogEx.info(min,
+        GBLogEx.info(
+          min,
           `Input> ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
         );
 
@@ -1103,7 +1134,6 @@ export class GBMinService {
         // Skips if the bot is talking.
 
         const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
-
 
         if (context.activity.type === 'installationUpdate') {
           GBLogEx.info(min, `Bot installed on Teams.`);
@@ -1133,7 +1163,8 @@ export class GBMinService {
               ) {
                 min['conversationWelcomed'][step.context.activity.conversation.id] = true;
 
-                GBLogEx.info(min,
+                GBLogEx.info(
+                  min,
                   `Auto start (web 1) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
                 );
                 await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
@@ -1147,7 +1178,6 @@ export class GBMinService {
         } else if (context.activity.type === 'message') {
           // Processes messages activities.
 
-
           await this.processMessageActivity(context, min, step, pid);
         } else if (context.activity.type === 'event') {
           // Processes events activities.
@@ -1155,8 +1185,9 @@ export class GBMinService {
           await this.processEventActivity(min, user, context, step);
         }
       } catch (error) {
-        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''
-          }`;
+        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${
+          error.error ? (error.error.stack ? error.error.stack : '') : ''
+        }`;
         GBLog.error(msg);
 
         await min.conversationalService.sendText(
@@ -1170,7 +1201,17 @@ export class GBMinService {
     };
 
     try {
-      await adapter['processActivity'](req, res, handler);
+      if (!GBConfigService.get('STORAGE_NAME')) {
+        const context = adapter['createContext'](req);
+        context['_activity'] = context.activity.body;
+        await handler(context);
+        // Return status
+        res.status(200);
+
+        res.end();
+      } else {
+        await adapter['processActivity'](req, res, handler);
+      }
     } catch (error) {
       if (error.code === 401) {
         GBLog.error('Calling processActivity due to Signing Key could not be retrieved error.');
@@ -1209,7 +1250,10 @@ export class GBMinService {
       const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
       if (startDialog && !min['conversationWelcomed'][step.context.activity.conversation.id]) {
         user.welcomed = true;
-        GBLogEx.info(min, `Auto start (web 2) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`);
+        GBLogEx.info(
+          min,
+          `Auto start (web 2) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
+        );
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
       }
     } else if (context.activity.name === 'updateToken') {
@@ -1263,7 +1307,6 @@ export class GBMinService {
   }
 
   private async handleUploads(min, step, user, params, autoSave) {
-
     // Prepare Promises to download each attachment and then execute each Promise.
 
     if (
@@ -1294,7 +1337,6 @@ export class GBMinService {
           GBServer.globals.files[handle] = gbfile;
 
           if (!min.cbMap[user.userId] && autoSave) {
-
             const result = await t['internalAutoSave']({ min: min, handle: handle });
             await min.conversationalService.sendText(
               min,
@@ -1303,12 +1345,9 @@ export class GBMinService {
             );
 
             return;
-          }
-          else {
+          } else {
             return gbfile;
           }
-
-
         } else {
           await this.sendActivity('Error uploading file. Please,start again.');
         }
@@ -1367,7 +1406,8 @@ export class GBMinService {
     context.activity.text = context.activity.text.trim();
 
     const member = context.activity.from;
-    let memberId, email;
+    let memberId = null,
+      email = null;
 
     // Processes e-mail from id in case of Teams messages.
 
@@ -1399,10 +1439,8 @@ export class GBMinService {
     const userId = user.userId;
     const params = user.params ? JSON.parse(user.params) : {};
 
-    
     let message: GuaribasConversationMessage;
     if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
-      
       // Adds message to the analytics layer.
 
       const analytics = new AnalyticsService();
@@ -1420,7 +1458,6 @@ export class GBMinService {
           userId,
           context.activity.text
         );
-
       }
     }
 
@@ -1439,7 +1476,8 @@ export class GBMinService {
       ) {
         await sec.setParam(userId, 'welcomed', 'true');
         min['conversationWelcomed'][step.context.activity.conversation.id] = true;
-        GBLogEx.info(min,
+        GBLogEx.info(
+          min,
           `Auto start (4) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
         );
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
@@ -1500,20 +1538,17 @@ export class GBMinService {
     } else {
       // Removes unwanted chars in input text.
 
-
       step.context.activity['originalText'] = context.activity.text;
       const text = await GBConversationalService.handleText(min, user, step, context.activity.text);
-      step.context.activity['originalText']
+      step.context.activity['originalText'];
       step.context.activity['text'] = text;
 
-
-      if (notes && text && text !== "") {
+      if (notes && text && text !== '') {
         const sys = new SystemKeywords();
         await sys.note({ pid, text });
         await step.context.sendActivity('OK.');
         return;
       }
-
 
       // Checks for bad words on input text.
 
@@ -1549,7 +1584,7 @@ export class GBMinService {
         }
       } else {
         if (min.cbMap[userId] && min.cbMap[userId].promise === '!GBHEAR') {
-          min.cbMap[userId].promise = step.context.activity['originalText'];;
+          min.cbMap[userId].promise = step.context.activity['originalText'];
         }
 
         // If there is a dialog in course, continue to the next step.
@@ -1557,8 +1592,9 @@ export class GBMinService {
           try {
             await step.continueDialog();
           } catch (error) {
-            const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''
-              }`;
+            const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${
+              error.error ? (error.error.stack ? error.error.stack : '') : ''
+            }`;
             GBLog.error(msg);
             await min.conversationalService.sendText(
               min,
@@ -1601,7 +1637,6 @@ export class GBMinService {
   }
 
   public async ensureAPI() {
-
     const mins = GBServer.globals.minInstances;
 
     function getRemoteId(ctx: Koa.Context) {
@@ -1611,14 +1646,11 @@ export class GBMinService {
     const close = async () => {
       return new Promise(resolve => {
         if (GBServer.globals.server.apiServer) {
-          GBServer.globals.server.apiServer.close(
-            cb => {
-              resolve(true);
-              GBLogEx.info(0, 'Reloading General Bots API...');
-            }
-          );
-        }
-        else {
+          GBServer.globals.server.apiServer.close(cb => {
+            resolve(true);
+            GBLogEx.info(0, 'Reloading General Bots API...');
+          });
+        } else {
           resolve(true);
           GBLogEx.info(0, 'Loading General Bots API...');
         }
@@ -1629,11 +1661,9 @@ export class GBMinService {
 
     let proxies = {};
     await CollectionUtil.asyncForEach(mins, async min => {
-
       let dialogs = {};
       await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
-
-        dialogs[script] = async (data) => {
+        dialogs[script] = async data => {
           let sec = new SecService();
           const user = await sec.ensureUser(
             min,
@@ -1649,13 +1679,7 @@ export class GBMinService {
           if (script === 'start') {
             pid = GBVMService.createProcessInfo(user, min, 'api', null);
 
-
-            const client = await new SwaggerClient({
-              spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
-              requestInterceptor: req => {
-                req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
-              }
-            });
+            const client = await GBUtil.getDirectLineClient(min);
             const response = await client.apis.Conversations.Conversations_StartConversation();
 
             min['apiConversations'][pid] = { conversation: response.obj, client: client };
@@ -1668,7 +1692,7 @@ export class GBMinService {
             ret = pid;
           }
           return ret;
-        }
+        };
       });
 
       const proxy = {
@@ -1686,10 +1710,10 @@ export class GBMinService {
       pingSendTimeout: null,
       keepAliveTimeout: null,
       listeners: {
-        unsubscribed(subscriptions: number): void { },
-        subscribed(subscriptions: number): void { },
-        disconnected(remoteId: string, connections: number): void { },
-        connected(remoteId: string, connections: number): void { },
+        unsubscribed(subscriptions: number): void {},
+        subscribed(subscriptions: number): void {},
+        disconnected(remoteId: string, connections: number): void {},
+        connected(remoteId: string, connections: number): void {},
         messageIn(...params): void {
           params.shift();
         },
@@ -1699,16 +1723,8 @@ export class GBMinService {
       }
     };
 
-    GBServer.globals.server.apiServer = createKoaHttpServer(
-      GBVMService.API_PORT,
-      getRemoteId, { prefix: `api/v3` });
+    GBServer.globals.server.apiServer = createKoaHttpServer(GBVMService.API_PORT, getRemoteId, { prefix: `api/v3` });
 
-    createRpcServer(
-      proxies,
-      GBServer.globals.server.apiServer,
-      opts
-    );
-
+    createRpcServer(proxies, GBServer.globals.server.apiServer, opts);
   }
-
 }

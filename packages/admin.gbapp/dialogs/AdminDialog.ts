@@ -313,7 +313,7 @@ export class AdminDialog extends IGBDialog {
             }
 
             if (packageName.indexOf('.') !== -1) {
-              cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${process.env.STORAGE_LIBRARY}/${botId}.gbai/${packageName}`;
+              cmd1 = `deployPackage ${process.env.STORAGE_SITE} /${GBConfigService.get('STORAGE_LIBRARY')}/${botId}.gbai/${packageName}`;
             } else {
               cmd1 = `deployPackage ${packageName}`;
             }

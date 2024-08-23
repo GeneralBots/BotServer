@@ -49,7 +49,7 @@ class SideBarMenu extends React.Component {
         <div className="tittleSideBarMenu">
           <img
             className="pragmatismoLogo"
-            src={this.props.instance.botId + "/cache/" + this.props.instance.logo}
+            src={this.props.instance.logo}
             alt="General Bots Logo" />
 
         </div>

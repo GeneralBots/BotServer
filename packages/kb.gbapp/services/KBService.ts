@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -746,11 +746,11 @@ export class KBService implements IGBKBService {
         let doc = await loader.load();
         let content = doc[0].pageContent;
 
-        if (file.name.endsWith('zap.docx')){
+        if (file.name.endsWith('zap.docx')) {
           await min.whatsAppDirectLine.createOrUpdateTemplate(min, file.name, content);
         }
-        
-        const answer =  {
+
+        const answer = {
           instanceId: instance.instanceId,
           content: content,
           format: '.md',
@@ -1218,7 +1218,7 @@ export class KBService implements IGBKBService {
     instance: IGBInstance
   ): Promise<any> {
     let subjectsLoaded;
-    if (menuFile) {
+    if (Fs.existsSync(menuFile)) {
       // Loads menu.xlsx and finds worksheet.
 
       const workbook = new Excel.Workbook();
@@ -1369,10 +1369,12 @@ export class KBService implements IGBKBService {
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(min, localPath, p, instance);
     GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
-    const service = await AzureDeployerService.createInstance(deployer);
-    const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
-    await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));
 
+    if (GBConfigService.get('STORAGE_NAME')) {
+      const service = await AzureDeployerService.createInstance(deployer);
+      const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
+      await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));
+    }
     min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
     await KBService.RefreshNER(min);
 

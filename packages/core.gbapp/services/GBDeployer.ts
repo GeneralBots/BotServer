@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -45,6 +45,8 @@ import { AzureSearch } from 'pragmatismo-io-framework';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
+import Excel from 'exceljs';
+import asyncPromise from 'async-promises';
 import { GuaribasPackage } from '../models/GBModel.js';
 import { GBAdminService } from './../../admin.gbapp/services/GBAdminService.js';
 import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService.js';
@@ -118,7 +120,7 @@ export class GBDeployer implements IGBDeployer {
     );
 
     const siteId = process.env.STORAGE_SITE_ID;
-    const libraryId = process.env.STORAGE_LIBRARY;
+    const libraryId = GBConfigService.get('STORAGE_LIBRARY');
 
     const client = MicrosoftGraph.Client.init({
       authProvider: done => {
@@ -220,22 +222,24 @@ export class GBDeployer implements IGBDeployer {
     const instance = await this.importer.createBotInstance(botId);
     const bootInstance = GBServer.globals.bootInstance;
 
-    // Gets the access token to perform service operations.
+    if (GBConfigService.get('STORAGE_NAME')) {
+      // Gets the access token to perform service operations.
 
-    const accessToken = await (GBServer.globals.minBoot.adminService as any)['acquireElevatedToken'](
-      bootInstance.instanceId,
-      true
-    );
+      const accessToken = await (GBServer.globals.minBoot.adminService as any)['acquireElevatedToken'](
+        bootInstance.instanceId,
+        true
+      );
 
-    // Creates the MSFT application that will be associated to the bot.
+      // Creates the MSFT application that will be associated to the bot.
 
-    const service = await AzureDeployerService.createInstance(this);
-    const application = await service.createApplication(accessToken, botId);
+      const service = await AzureDeployerService.createInstance(this);
+      const application = await service.createApplication(accessToken, botId);
+      // Fills new instance base information and get App secret.
 
-    // Fills new instance base information and get App secret.
+      instance.marketplaceId = (application as any).appId;
+      instance.marketplacePassword = await service.createApplicationSecret(accessToken, (application as any).id);
+    }
 
-    instance.marketplaceId = (application as any).appId;
-    instance.marketplacePassword = await service.createApplicationSecret(accessToken, (application as any).id);
     instance.adminPass = GBAdminService.getRndPassword();
     instance.title = botId;
     instance.activationCode = instance.botId.substring(0, 15);
@@ -247,10 +251,17 @@ export class GBDeployer implements IGBDeployer {
     // Saves bot information to the store.
 
     await this.core.saveInstance(instance);
+    if (GBConfigService.get('STORAGE_NAME')) {
+      await this.deployBotOnAzure(instance, GBServer.globals.publicAddress);
+    }
+
+    // Makes available bot to the channels and .gbui interfaces.
+
+    await GBServer.globals.minService.mountBot(instance);
 
     // Creates remaining objects on the cloud and updates instance information.
 
-    return await this.deployBotFull(instance, GBServer.globals.publicAddress);
+    return instance;
   }
 
   /**
@@ -265,7 +276,7 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Performs all tasks of deploying a new bot on the cloud.
    */
-  public async deployBotFull(instance: IGBInstance, publicAddress: string): Promise<IGBInstance> {
+  public async deployBotOnAzure(instance: IGBInstance, publicAddress: string): Promise<IGBInstance> {
     // Reads base configuration from environent file.
 
     const service = await AzureDeployerService.createInstance(this);
@@ -286,7 +297,6 @@ export class GBDeployer implements IGBDeployer {
         `${publicAddress}/api/messages/${instance.botId}`
       );
     } else {
-      
       // Internally create resources on cloud provider.
 
       instance = await service.internalDeployBot(
@@ -305,11 +315,7 @@ export class GBDeployer implements IGBDeployer {
         subscriptionId
       );
 
-      // Makes available bot to the channels and .gbui interfaces.
-
-      await GBServer.globals.minService.mountBot(instance);
-      await GBServer.globals.minService.ensureAPI();
-    }
+    }   
 
     // Saves final instance object and returns it.
 
@@ -326,7 +332,6 @@ export class GBDeployer implements IGBDeployer {
 
     let embedding;
     if (!azureOpenAIEmbeddingModel) {
-    
       return;
     }
 
@@ -337,14 +342,13 @@ export class GBDeployer implements IGBDeployer {
       azureOpenAIApiVersion: azureOpenAIVersion,
       azureOpenAIApiInstanceName: azureOpenAIApiInstanceName
     });
-    
+
     try {
       vectorStore = await HNSWLib.load(min['vectorStorePath'], embedding);
     } catch {
       vectorStore = new HNSWLib(embedding, {
         space: 'cosine'
       });
-      
     }
     return vectorStore;
   }
@@ -412,70 +416,50 @@ export class GBDeployer implements IGBDeployer {
   public async deployBotFromLocalPath(localPath: string, publicAddress: string): Promise<void> {
     const packageName = Path.basename(localPath);
     const instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
-    await this.deployBotFull(instance, publicAddress);
+    await this.deployBotOnAzure(instance, publicAddress);
   }
 
   /**
    * Loads all para from tabular file Config.xlsx.
    */
-  public async loadParamsFromTabular(min: GBMinInstance): Promise<any> {
-    const siteId = process.env.STORAGE_SITE_ID;
-    const libraryId = process.env.STORAGE_LIBRARY;
+  public async loadParamsFromTabular(min: GBMinInstance, path): Promise<any> {
+    const workbook = new Excel.Workbook();
+    const data = await workbook.xlsx.readFile(Path.join(path, 'Config.xlsx'));
 
-    GBLogEx.info(min, `Connecting to Config.xslx (siteId: ${siteId}, libraryId: ${libraryId})...`);
+    let worksheet: any;
+    for (let t = 0; t < data.worksheets.length; t++) {
+      worksheet = data.worksheets[t];
+      if (worksheet) {
+        break;
+      }
+    }
+    const rows = worksheet._rows;
+    GBLogEx.info(min, `Processing ${rows.length} rows from Config file ${path}...`);
+    let list = [];
 
-    // Connects to MSFT storage.
+    // Skips the header lines.
 
-    const token = await (min.adminService as any)['acquireElevatedToken'](min.instance.instanceId, true);
+    for (let index = 0; index < 6; index++) {
+      rows.shift();
+    }
+    
 
-    const client = MicrosoftGraph.Client.init({
-      authProvider: done => {
-        done(null, token);
+    let obj = {};
+    await asyncPromise.eachSeries(rows, async line => {
+
+      if (line && line._cells[0] && line._cells[1] && line._cells[0].text) {
+
+        // Extracts values from columns in the current line.
+
+        obj[line._cells[0].text] = line._cells[1].text;
       }
     });
 
-    // Retrieves all files in .bot folder.
-
-    const botId = min.instance.botId;
-    const path = DialogKeywords.getGBAIPath(botId, 'gbot');
-    let url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${path}:/children`;
-
-    GBLogEx.info(min, `Loading .gbot from Excel: ${url}`);
-    const res = await client.api(url).get();
-
-    // Finds Config.xlsx.
-
-    const document = res.value.filter(m => {
-      return m.name === 'Config.xlsx';
-    });
-    if (document === undefined || document.length === 0) {
-      GBLogEx.info(min, `Config.xlsx not found on .bot folder, check the package.`);
-
-      return null;
-    }
-
-    // Reads all rows in Config.xlsx that contains a pair of name/value
-    // and fills an object that is returned to be saved in params instance field.
-
-    const results = await client
-      .api(
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('General')/range(address='A7:B100')`
-      )
-      .get();
-    let index = 0,
-      obj = {};
-    for (; index < results.text.length; index++) {
-      if (results.text[index][0] === '') {
-        return obj;
-      }
-      obj[results.text[index][0]] = results.text[index][1];
-    }
-
+    GBLogEx.info(min, GBUtil.toYAML(list));
     return obj;
   }
 
   /**
-   * Loads all para from tabular file Config.xlsx.
    */
   public async downloadFolder(
     min: GBMinInstance,
@@ -632,14 +616,7 @@ export class GBDeployer implements IGBDeployer {
       case '.gbot':
         // Extracts configuration information from .gbot files.
 
-        if (process.env.ENABLE_PARAMS_ONLINE === 'false') {
-          if (Fs.existsSync(localPath)) {
-            GBLogEx.info(min, `Loading .gbot from ${localPath}.`);
-            await this.deployBotFromLocalPath(localPath, GBServer.globals.publicAddress);
-          }
-        } else {
-          min.instance.params = await this.loadParamsFromTabular(min);
-        }
+        min.instance.params = await this.loadParamsFromTabular(min, localPath);
 
         let connections = [];
 

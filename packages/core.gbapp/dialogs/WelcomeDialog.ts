@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -36,11 +36,11 @@
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib';
 import { GBServer } from '../../../src/app.js';
-import { GBConversationalService } from '../services/GBConversationalService.js';
 import { Messages } from '../strings.js';
 import { GBLogEx } from '../services/GBLogEx.js';
+import { GBConfigService } from '../services/GBConfigService.js';
 
 /**
  *  Dialog for Welcoming people.
@@ -65,7 +65,7 @@ export class WelcomeDialog extends IGBDialog {
         async step => {
           if (
             GBServer.globals.entryPointDialog !== null &&
-            min.instance.botId === process.env.BOT_ID &&
+            min.instance.botId === GBConfigService.get('BOT_ID') &&
             step.context.activity.channelId === 'webchat'
           ) {
             return step.replaceDialog(GBServer.globals.entryPointDialog);

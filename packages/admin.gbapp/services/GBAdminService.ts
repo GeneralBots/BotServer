@@ -1,5 +1,3 @@
-
-
 /*****************************************************************************\
 |  █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ® |
 | ██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █      |
@@ -7,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -23,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -49,13 +47,14 @@ import { GBSharePointService } from '../../sharepoint.gblib/services/SharePointS
 import { GuaribasAdmin } from '../models/AdminModel.js';
 import msRestAzure from 'ms-rest-azure';
 import Path from 'path';
-import { caseSensitive_Numbs_SpecialCharacters_PW, lowercase_PW } from 'super-strong-password-generator'
+import { caseSensitive_Numbs_SpecialCharacters_PW, lowercase_PW } from 'super-strong-password-generator';
 import crypto from 'crypto';
 import Fs from 'fs';
 import { GBServer } from '../../../src/app.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Services for server administration.
@@ -89,45 +88,40 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static async getADALCredentialsFromUsername(username: string, password: string) {
-
     return await msRestAzure.loginWithUsernamePassword(username, password);
   }
 
   public static getMobileCode() {
-
     return this.getNumberIdentifier(6);
   }
 
   public static getRndPassword(): string {
-    
     let password = caseSensitive_Numbs_SpecialCharacters_PW(15);
     password = password.replace(/[\@\[\=\:\;\?\"\'\#]/gi, '*');
 
     const removeRepeatedChars = (s, r) => {
-      let res = '', last = null, counter = 0;
+      let res = '',
+        last = null,
+        counter = 0;
       s.split('').forEach(char => {
-          if (char == last)
-              counter++;
-          else {
-              counter = 0;
-              last = char;
-          }
-          if (counter < r)
-              res += char;
-      });    
+        if (char == last) counter++;
+        else {
+          counter = 0;
+          last = char;
+        }
+        if (counter < r) res += char;
+      });
       return res;
-    }
+    };
 
     return removeRepeatedChars(password, 1);
   }
 
   public static getRndReadableIdentifier(): string {
-
     return lowercase_PW(14);
   }
 
   public static getNumberIdentifier(digits: number = 14): string {
-
     if (digits <= 0) {
       throw new Error('Number of digits should be greater than 0.');
     }
@@ -155,7 +149,6 @@ export class GBAdminService implements IGBAdminService {
   }
 
   public static async undeployPackageCommand(text: string, min: GBMinInstance) {
-
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
@@ -167,7 +160,12 @@ export class GBAdminService implements IGBAdminService {
   public static isSharePointPath(path: string) {
     return path.indexOf('sharepoint.com') !== -1;
   }
-  public static async deployPackageCommand(min: GBMinInstance, user: GuaribasUser, text: string, deployer: IGBDeployer) {
+  public static async deployPackageCommand(
+    min: GBMinInstance,
+    user: GuaribasUser,
+    text: string,
+    deployer: IGBDeployer
+  ) {
     const packageName = text.split(' ')[1];
 
     if (!this.isSharePointPath(packageName)) {
@@ -190,19 +188,21 @@ export class GBAdminService implements IGBAdminService {
         await deployer['cleanupPackage'](min.instance, packageName);
       }
 
-      await deployer['downloadFolder'](min,
-        Path.join('work', `${gbai}`),
-        Path.basename(localFolder));
+      if (!GBConfigService.get('STORAGE_NAME')) {
+        const path = Path.join(GBConfigService.get('STORAGE_LIBRARY'), gbaiPath);
+        GBUtil.copyIfNewerRecursive(path, localFolder);
+      } else {
+        await deployer['downloadFolder'](min, Path.join('work', `${gbai}`), Path.basename(localFolder));
+      }
       await deployer['deployPackage2'](min, user, localFolder);
     }
   }
   public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: GBDeployer) {
     const service = await AzureDeployerService.createInstance(deployer);
-    const searchIndex = min.instance.searchIndex ? min.instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
-    await deployer.rebuildIndex(
-      min.instance,
-      service.getKBSearchSchema(searchIndex)
-    );
+    const searchIndex = min.instance.searchIndex
+      ? min.instance.searchIndex
+      : GBServer.globals.minBoot.instance.searchIndex;
+    await deployer.rebuildIndex(min.instance, service.getKBSearchSchema(searchIndex));
   }
 
   public static async syncBotServerCommand(min: GBMinInstance, deployer: GBDeployer) {
@@ -245,15 +245,15 @@ export class GBAdminService implements IGBAdminService {
     return obj.value;
   }
 
-  public async acquireElevatedToken(instanceId: number, root: boolean = false,
+  public async acquireElevatedToken(
+    instanceId: number,
+    root: boolean = false,
     tokenName: string = '',
     clientId: string = null,
     clientSecret: string = null,
     host: string = null,
     tenant: string = null
   ): Promise<string> {
-
-
     if (root) {
       const minBoot = GBServer.globals.minBoot;
       instanceId = minBoot.instance.instanceId;
@@ -267,7 +267,6 @@ export class GBAdminService implements IGBAdminService {
       throw new Error(`/setupSecurity is required before running /publish.`);
     }
 
-
     return new Promise<string>(async (resolve, reject) => {
       const instance = await this.core.loadInstanceById(instanceId);
 
@@ -276,14 +275,10 @@ export class GBAdminService implements IGBAdminService {
         const accessToken = await this.getValue(instanceId, `${tokenName}accessToken`);
         resolve(accessToken);
       } else {
-
         if (tokenName && !root) {
-
           const refreshToken = await this.getValue(instanceId, `${tokenName}refreshToken`);
 
-          let url = urlJoin(
-            host,
-            tenant, 'oauth/token');
+          let url = urlJoin(host, tenant, 'oauth/token');
           let buff = new Buffer(`${clientId}:${clientSecret}`);
           const base64 = buff.toString('base64');
 
@@ -295,8 +290,8 @@ export class GBAdminService implements IGBAdminService {
               'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams({
-              'grant_type': 'refresh_token',
-              'refresh_token': refreshToken
+              grant_type: 'refresh_token',
+              refresh_token: refreshToken
             })
           };
           const result = await fetch(url, options);
@@ -313,15 +308,15 @@ export class GBAdminService implements IGBAdminService {
 
           await this.setValue(instanceId, `${tokenName}accessToken`, token['access_token']);
           await this.setValue(instanceId, `${tokenName}refreshToken`, token['refresh_token']);
-          await this.setValue(instanceId, `${tokenName}expiresOn`,
-            new Date(Date.now() + (token['expires_in'] * 1000)).toString());
+          await this.setValue(
+            instanceId,
+            `${tokenName}expiresOn`,
+            new Date(Date.now() + token['expires_in'] * 1000).toString()
+          );
           await this.setValue(instanceId, `${tokenName}AntiCSRFAttackState`, null);
 
           resolve(token['access_token']);
-
-        }
-        else {
-
+        } else {
           const oauth2 = tokenName ? 'oauth' : 'oauth2';
           const authorizationUrl = urlJoin(
             tokenName ? host : instance.authenticatorAuthorityHostUrl,
@@ -359,5 +354,5 @@ export class GBAdminService implements IGBAdminService {
     });
   }
 
-  public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void> { }
+  public async publish(min: GBMinInstance, packageName: string, republish: boolean): Promise<void> {}
 }

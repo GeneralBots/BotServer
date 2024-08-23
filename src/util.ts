@@ -34,6 +34,10 @@
 
 'use strict';
 import * as YAML from 'yaml';
+import SwaggerClient from 'swagger-client';
+import Fs from 'fs';
+import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
+import path from 'path';
 
 export class GBUtil {
   public static repeat(chr, count) {
@@ -53,7 +57,7 @@ export class GBUtil {
 
     return (GBUtil.repeat(pad, length) + value).substr(0, width);
   }
-  
+
   public static padR(value, width, pad) {
     if (!width || width < 1) return value;
 
@@ -64,10 +68,36 @@ export class GBUtil {
     return (value + GBUtil.repeat(pad, length)).substr(0, width);
   }
 
-  public static toYAML(json) {
-    const doc = new YAML.Document();
-    doc.contents = json;
-    return doc.toString();
+  public static async getDirectLineClient(min) {
+
+    let config = {
+      spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
+      requestInterceptor: req => {
+        req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
+      }
+    };
+    if (!GBConfigService.get('STORAGE_NAME')) {
+      config['spec'].url = `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages/${min.botId}`,
+      config['spec'].servers = [{ url: `http://127.0.0.1:${GBConfigService.getServerPort()}/api/messages/${min.botId}` }];
+      config['spec'].openapi = '3.0.0';
+      delete config['spec'].host;
+      delete config['spec'].swagger;
+    }
+
+    return await new SwaggerClient(config);
+  }
+
+  public static toYAML(data) {
+    const extractProps = obj => {
+      return Object.getOwnPropertyNames(obj).reduce((acc, key) => {
+        const value = obj[key];
+        acc[key] = value && typeof value === 'object' && !Array.isArray(value) ? extractProps(value) : value;
+        return acc;
+      }, {});
+    };
+
+    const extractedError = extractProps(data);
+    return YAML.stringify(extractedError);
   }
 
   public static sleep(ms) {
@@ -94,4 +124,46 @@ export class GBUtil {
       return createCaseInsensitiveProxy(listOrRow);
     }
   }
+
+
+  public static copyIfNewerRecursive(src, dest) {
+    if (!Fs.existsSync(src)) {
+        console.error(`Source path "${src}" does not exist.`);
+        return;
+    }
+
+    // Check if the source is a directory
+    if (Fs.statSync(src).isDirectory()) {
+        // Create the destination directory if it doesn't exist
+        if (!Fs.existsSync(dest)) {
+            Fs.mkdirSync(dest, { recursive: true });
+        }
+
+        // Read all files and directories in the source directory
+        const entries = Fs.readdirSync(src);
+
+        for (let entry of entries) {
+            const srcEntry = path.join(src, entry);
+            const destEntry = path.join(dest, entry);
+
+            // Recursively copy each entry
+            this.copyIfNewerRecursive(srcEntry, destEntry);
+        }
+    } else {
+        // Source is a file, check if we need to copy it
+        if (Fs.existsSync(dest)) {
+            const srcStat = Fs.statSync(src);
+            const destStat = Fs.statSync(dest);
+
+            // Copy only if the source file is newer than the destination file
+            if (srcStat.mtime > destStat.mtime) {
+                Fs.cpSync(src, dest, { force: true });
+            }
+        } else {
+            // Destination file doesn't exist, so copy it
+            Fs.cpSync(src, dest, { force: true });
+        }
+    }
+}
+
 }

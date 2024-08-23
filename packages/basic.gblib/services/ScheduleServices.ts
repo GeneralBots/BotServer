@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.         |
+| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.             |
+| "General Bots" is a registered trademark of pragmatismo.cloud.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -47,33 +47,30 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
  * Basic services for BASIC manipulation.
  */
 export class ScheduleServices extends GBService {
-  
   public async deleteScheduleIfAny(min: GBMinInstance, name: string) {
-
     let i = 1;
     while (i <= 10) {
       const task = min['scheduleMap'] ? min['scheduleMap'][name + i] : null;
 
       if (task) {
         task.destroy();
-        const id = `${name};${i}`;
-
-        delete min['scheduleMap'][id];
-        const count = await GuaribasSchedule.destroy({
-          where: {
-            instanceId: min.instance.instanceId,
-            name: id 
-          }
-        });
-
-        if (count > 0) {
-          GBLogEx.info(min, `BASIC: Removed ${name} SET SCHEDULE and ${count} rows from storage on: ${min.botId}...`);
-        }
       }
+      const id = `${name};${i}`;
+
+      delete min['scheduleMap'][id];
+      const count = await GuaribasSchedule.destroy({
+        where: {
+          instanceId: min.instance.instanceId,
+          name: id
+        }
+      });
+
+      if (count > 0) {
+        GBLogEx.info(min, `BASIC: Removed ${name} SET SCHEDULE and ${count} rows from storage on: ${min.botId}...`);
+      }
+
       i++;
-
     }
-
   }
 
   /**
@@ -113,12 +110,10 @@ export class ScheduleServices extends GBService {
       let i = 0;
       let lastName = '';
 
-      await CollectionUtil.asyncForEach(schedules, async (item) => {
-
+      await CollectionUtil.asyncForEach(schedules, async item => {
         if (item.name === lastName) {
           item.name = item.name + ++i;
-        }
-        else {
+        } else {
           i = 0;
         }
 
@@ -169,7 +164,6 @@ export class ScheduleServices extends GBService {
         },
         options
       );
-
     } catch (error) {
       GBLogEx.error(min, `Running .gbdialog word ${item.name} : ${error}...`);
     }
