@@ -1,12 +1,12 @@
 import { GBConfigService } from "../packages/core.gbapp/services/GBConfigService";
+import { app, BrowserWindow } from 'electron';
+import path from 'path';
+import url from 'url';
 
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
-const url = require('url');
+ export function runUI() {
 
-function createWindow() {
   // Create the browser window.
-  const win = new BrowserWindow({ width: 800, height: 600 });
+  const win = new BrowserWindow({ width: 800, height: 600, title: 'General Bots Studio' });
 
   // and load the index.html of the app.
   win.loadURL(
@@ -18,4 +18,4 @@ function createWindow() {
   );
 }
 
-app.on('ready', createWindow);
+app.on('ready', runUI);

@@ -1,5 +1,0 @@
-talk “Olá! Seja bem vinda(o)!” 
-
-X = find “campanhas.xlsx”, “nome=1239” OR TALK “Desculpe-me, não localizei seu nome.” 
-
-talk “opa, vamos lá!” + x.nome 

@@ -1,3 +1,0 @@
-	Últimas notícias 
-	Contato
-	Ofertas
