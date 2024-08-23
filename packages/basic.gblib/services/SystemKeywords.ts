@@ -56,12 +56,11 @@ import Docxtemplater from 'docxtemplater';
 import pptxTemplaterModule from 'pptxtemplater';
 import _ from 'lodash';
 import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
-import sharp from 'sharp';
 import ImageModule from 'open-docxtemplater-image-module';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 import { WebAutomationServices } from './WebAutomationServices.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
-import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
+import { ChatServices } from '../../llm.gblib/services/ChatServices.js';
 import mime from 'mime-types';
 import exts from '../../../extensions.json' assert { type: 'json' };
 import { SecService } from '../../security.gbapp/services/SecService.js';
@@ -1998,11 +1997,11 @@ export class SystemKeywords {
               return (orientation || 0) >= 5 ? [height, width] : [width, height];
             };
 
-            const metadata = await sharp(buf).metadata();
+            // TODO: sharp. const metadata = await sharp(buf).metadata();
             const size = getNormalSize({
-              width: metadata['width'],
-              height: metadata['height'],
-              orientation: metadata['orientation']
+              width: 400,
+              height: 400,
+              orientation: '0'
             });
             url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(imageName));
             images[index++] = { url: url, size: size, buf: buf };

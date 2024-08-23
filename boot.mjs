@@ -6,6 +6,7 @@ import Path from 'path';
 import { exec } from 'child_process';
 import pjson from './package.json' assert { type: 'json' };
 
+
 // Displays version of Node JS being used at runtime and others attributes.
 
 process.stdout.write(`General Bots. BotServer@${pjson.version}, botlib@${pjson.dependencies.botlib}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
@@ -15,8 +16,8 @@ var __dirname = process.env.PWD || process.cwd();
 try {
   var run = () => {
 
-    import('./dist/src/app.js').then((gb)=> {
-      gb.GBServer.run()
+    import('./dist/src/webapp.js').then((gb)=> {
+      gb.GBUI.run()
     });
   };
   var processDist = () => {
