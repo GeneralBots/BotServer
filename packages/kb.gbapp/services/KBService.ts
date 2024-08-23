@@ -83,7 +83,7 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
-import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
+import { ChatServices } from '../../llm.gblib/services/ChatServices.js';
 import { GBUtil } from '../../../src/util.js';
 
 /**

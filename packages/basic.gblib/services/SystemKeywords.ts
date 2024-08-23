@@ -61,7 +61,7 @@ import ImageModule from 'open-docxtemplater-image-module';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 import { WebAutomationServices } from './WebAutomationServices.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
-import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
+import { ChatServices } from '../../llm.gblib/services/ChatServices.js';
 import mime from 'mime-types';
 import exts from '../../../extensions.json' assert { type: 'json' };
 import { SecService } from '../../security.gbapp/services/SecService.js';

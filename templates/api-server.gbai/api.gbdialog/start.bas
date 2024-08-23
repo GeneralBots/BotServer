@@ -23,7 +23,7 @@ FOR EACH item IN data[0].itens
         produto.detalhe = item.detalhe
         produto.acompanhamentos = item.gruposAcompanhamento
 
-                produtos.push(produto)
+        produtos.push(produto)
     END IF
 NEXT
 
@@ -43,7 +43,7 @@ Segue o exemplo do JSON do Pedido, apague os itens e mande um com o pedido feito
            item: {
                 id: 23872,
                 valor: 20,
-                nome: Caipirinha Limão
+                nome: Guaraná
             },
             itensAcompanhamento: [
                  {
@@ -59,7 +59,7 @@ Segue o exemplo do JSON do Pedido, apague os itens e mande um com o pedido feito
             item: {
                 id: 25510,
                 valor: 12,
-                nome: Heineken Lata 350ml
+                nome: Laranja Lata 350ml
             },
             itensAcompanhamento: [],
             quantidade: 1,
@@ -68,7 +68,7 @@ Segue o exemplo do JSON do Pedido, apague os itens e mande um com o pedido feito
     ],
     barracaId: ${barraca},
     usuarioId: ${operador},
-    identificadorConta: Rafael,
+    identificadorConta: Areia,
     tipoEntregaId: 2,
     camposTipoEntrega: {
         Mesa: 5

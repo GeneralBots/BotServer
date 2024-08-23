@@ -47,7 +47,7 @@ import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import pkg from 'whatsapp-web.js';
 import fetch from 'node-fetch';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
-import { ChatServices } from '../../gpt.gblib/services/ChatServices.js';
+import { ChatServices } from '../../llm.gblib/services/ChatServices.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBUtil } from '../../../src/util.js';
 const { WAState, Client, MessageMedia } = pkg;
