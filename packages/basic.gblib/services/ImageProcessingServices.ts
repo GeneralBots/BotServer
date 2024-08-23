@@ -39,7 +39,6 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import urlJoin from 'url-join';
 import { GBServer } from '../../../src/app.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
-import sharp from 'sharp';
 
 /**
  * Image processing services of conversation to be called by BASIC.
@@ -55,22 +54,8 @@ export class ImageProcessingServices {
     GBLogEx.info(min, `BASIC: Image Processing SHARPEN ${file}.`);
 
     const gbfile = DialogKeywords.getFileByHandle(file);
-    const data = await sharp(gbfile.data)
-      .sharpen({
-        sigma: 2,
-        m1: 0,
-        m2: 3,
-        x1: 3,
-        y2: 15,
-        y3: 15
-      })
-      .toBuffer();
 
-    const newFile = {
-      filename: gbfile.filename,
-      data: data
-
-    };
+    // TODO: sharp.
     return;
   }
 

@@ -200,7 +200,6 @@
     "sequelize": "6.28.2",
     "sequelize-cli": "6.6.0",
     "sequelize-typescript": "2.1.5",
-    "sharp": "0.33.4",
     "simple-git": "3.24.0",
     "speakingurl": "14.0.1",
     "sqlite3": "5.1.7",

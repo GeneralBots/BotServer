@@ -53,7 +53,6 @@ import puppeteer, { Page } from 'puppeteer';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from 'langchain/document';
 import getColors from 'get-image-colors';
-import sharp from 'sharp';
 
 import {
   GBDialogStep,
@@ -1070,14 +1069,14 @@ export class KBService implements IGBKBService {
           const logoBinary = await page.goto(logo);
           const buffer = await logoBinary.buffer();
           const logoFilename = Path.basename(logo);
-          sharp(buffer)
-            .resize({
-              width: 48,
-              height: 48,
-              fit: 'inside', // Resize the image to fit within the specified dimensions
-              withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
-            })
-            .toFile(Path.join(logoPath, logoFilename));
+          // TODO: sharp(buffer)
+          //   .resize({
+          //     width: 48,
+          //     height: 48,
+          //     fit: 'inside', // Resize the image to fit within the specified dimensions
+          //     withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
+          //   })
+          //   .toFile(Path.join(logoPath, logoFilename));
           await min.core['setConfig'](min, 'Logo', logoFilename);
         } catch (error) {
           GBLogEx.debug(min, error);
