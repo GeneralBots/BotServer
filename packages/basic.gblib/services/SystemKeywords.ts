@@ -29,6 +29,8 @@
 \*****************************************************************************/
 'use strict';
 
+import { setFlagsFromString } from 'v8';
+import { runInNewContext } from 'vm';
 import { IgApiClient } from 'instagram-private-api';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
@@ -339,9 +341,22 @@ export class SystemKeywords {
   }
 
   public async closeHandles({ pid }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
     delete this.cachedMerge[pid];
+    
+    // Capture memory usage before GC
+    const memoryBeforeGC = process.memoryUsage().heapUsed / 1024 / 1024; // in MB
+    GBLogEx.info(min, ``);
+    
+    setFlagsFromString('--expose_gc');
+    const gc = runInNewContext('gc'); // nocommit
+    gc();
+  
+    // Capture memory usage after GC
+    const memoryAfterGC = process.memoryUsage().heapUsed / 1024 / 1024; // in MB
+    GBLogEx.info(min, `BASIC: Closing Handles... From ${memoryBeforeGC.toFixed(2)} MB to ${memoryAfterGC.toFixed(2)} MB`);
   }
-
+  
   public async asPDF({ pid, data }) {
     let file = await this.renderTable(pid, data, true, false);
     return file;
@@ -740,6 +755,10 @@ export class SystemKeywords {
     let rowsDest = [];
 
     rows.forEach(row => {
+      if (GBUtil.hasSubObject(row)) {
+        row = this.flattenJSON(row);
+      }
+
       let dst = {};
       let i = 0;
       Object.keys(row).forEach(column => {
@@ -777,7 +796,7 @@ export class SystemKeywords {
     }
 
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `Saving to storage '${table}' (SAVE).`);
+    GBLogEx.info(min, `SAVE '${table}': 1 row.`);
 
     const definition = this.getTableFromName(table, min);
 
@@ -1113,7 +1132,6 @@ export class SystemKeywords {
         header[i] = resultH[0][i];
       }
       resultH = null;
-       
 
       rows = [];
       rows[0] = header;
@@ -2131,16 +2149,6 @@ export class SystemKeywords {
       this.cachedMerge[pid] = { file: {} };
     }
 
-    // Check if is a tree or flat object.
-
-    const hasSubObject = t => {
-      for (var key in t) {
-        if (!t.hasOwnProperty(key)) continue;
-        if (typeof t[key] === 'object') return true;
-      }
-      return false;
-    };
-
     // MAX LINES property.
 
     let maxLines = 1000;
@@ -2228,6 +2236,7 @@ export class SystemKeywords {
 
       header = results.text[0];
       rows = results.text;
+      results = null;
     }
 
     let table = [];
@@ -2238,7 +2247,7 @@ export class SystemKeywords {
     if (!storage || !this.cachedMerge[pid][file]) {
       for (; foundIndex < rows.length; foundIndex++) {
         let row = {};
-        const tmpRow = rows[foundIndex];
+        let tmpRow = rows[foundIndex];
         row = tmpRow.dataValues ? tmpRow.dataValues : tmpRow;
 
         for (let colIndex = 0; colIndex < tmpRow.length; colIndex++) {
@@ -2255,6 +2264,8 @@ export class SystemKeywords {
         }
         row['line'] = foundIndex + 1;
         table.push(row);
+        row = null;
+        tmpRow = null;
       }
 
       if (storage) {
@@ -2285,7 +2296,7 @@ export class SystemKeywords {
 
       let row = data[i];
 
-      if (hasSubObject(row)) {
+      if (GBUtil.hasSubObject(row)) {
         row = this.flattenJSON(row);
       }
 
@@ -2301,10 +2312,11 @@ export class SystemKeywords {
           }
         });
 
-        const foundRow = key1Index[key1Value];
+        let foundRow = key1Index[key1Value];
         if (foundRow) {
           found = table[foundRow[0]];
         }
+        foundRow = null;
       }
 
       if (found) {
@@ -2335,6 +2347,7 @@ export class SystemKeywords {
               valueFound = found[e];
             }
           });
+          found = null;
 
           const equals =
             typeof value === 'string' && typeof valueFound === 'string'
@@ -2354,6 +2367,7 @@ export class SystemKeywords {
                 },
                 { retries: 5 }
               );
+              obj = null;
             } else {
               const cell = `${this.numberToLetters(j)}${i + 1}`;
               const address = `${cell}:${cell}`;
@@ -2389,7 +2403,7 @@ export class SystemKeywords {
         if (storage) {
           // Uppercases fields.
 
-          const dst = {};
+          let dst = {};
           let i = 0;
           Object.keys(fieldsValues).forEach(fieldSrc => {
             const name = fieldsNames[i];
@@ -2400,11 +2414,14 @@ export class SystemKeywords {
 
           fieldsValuesList.push(dst);
           this.cachedMerge[pid][file].push(dst);
+          dst = null;
         } else {
           await this.save({ pid, file, args: fieldsValues });
         }
+        fieldsValues = null;
         adds++;
       }
+      row = null;
     }
 
     // In case of storage, persist to DB in batch.
@@ -2412,6 +2429,8 @@ export class SystemKeywords {
     if (fieldsValuesList.length) {
       await this.saveToStorageBatch({ pid, table: file, rows: fieldsValuesList });
     }
+    key1Index = null;
+    key2Index = null;
 
     table = null;
     fieldsValuesList = null;
@@ -2588,7 +2607,7 @@ export class SystemKeywords {
       {
         retries: 5,
         onRetry: err => {
-          GBLog.error(`Retrying SaveToStorageBatch due to: ${err.message}.`);
+          GBLog.error(`Retrying deleteFromStorage due to: ${err.message}.`);
         }
       }
     );
