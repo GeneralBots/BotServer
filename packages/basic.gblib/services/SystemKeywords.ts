@@ -756,9 +756,6 @@ export class SystemKeywords {
     let rowsDest = [];
 
     rows.forEach(row => {
-      if (GBUtil.hasSubObject(row)) {
-        row = this.flattenJSON(row);
-      }
 
       let dst = {};
       let i = 0;
@@ -767,6 +764,11 @@ export class SystemKeywords {
         dst[field] = row[column];
         i++;
       });
+
+      if (GBUtil.hasSubObject(dst)) {
+        dst = this.flattenJSON(dst);
+      }
+
       rowsDest.push(dst);
       dst = null;
     });
@@ -801,8 +803,9 @@ export class SystemKeywords {
 
     const definition = this.getTableFromName(table, min);
 
-    let dst = {};
     // Uppercases fields.
+
+    let dst = {};
     let i = 0;
     Object.keys(fieldsValues).forEach(fieldSrc => {
       const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
