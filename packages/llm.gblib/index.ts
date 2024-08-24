@@ -39,10 +39,10 @@ import { GuaribasSchedule } from '../core.gbapp/models/GBModel.js';
 import { Sequelize } from 'sequelize-typescript';
 
 /**
- * Package for gpt.gblib.
+ * Package for llm.gblib.
  */
 
-export class GBGPTPackage implements IGBPackage {
+export class GBLLMPackage implements IGBPackage {
   public sysPackages: IGBPackage[];
   public CurrentEngineName = 'guaribas-1.0.0';
 
