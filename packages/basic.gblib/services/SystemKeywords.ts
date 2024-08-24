@@ -769,6 +769,7 @@ export class SystemKeywords {
       });
       rowsDest.push(dst);
       dst = null;
+      row = null;
     });
     GBLogEx.info(min, `SAVE '${table}': ${rows.length} row(s).`);
     
@@ -813,6 +814,7 @@ export class SystemKeywords {
 
       i++;
     });
+    dst = null;
 
     let item;
     await retry(
@@ -1380,7 +1382,7 @@ export class SystemKeywords {
       if (filterAcceptCount === filters.length) {
         rowCount++;
         let row = {};
-        const xlRow = rows[foundIndex];
+        let xlRow = rows[foundIndex];
         let hasValue = false;
         for (let colIndex = 0; colIndex < xlRow.length; colIndex++) {
           const propertyName = header[colIndex].trim();
@@ -1397,12 +1399,15 @@ export class SystemKeywords {
           }
 
           row[propertyName] = value;
+          value = null;
         }
+        xlRow = null;
         row['ordinal'] = rowCount;
         row['line'] = foundIndex + 1;
         if (hasValue) {
           table.push(row);
         }
+        row = null;
       }
     }
 
