@@ -343,7 +343,7 @@ export class SystemKeywords {
   public async closeHandles({ pid }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const memoryBeforeGC = process.memoryUsage().heapUsed / 1024 / 1024; // in MB
-    
+
     delete this.cachedMerge[pid];
     
     // Capture memory usage before GC
@@ -2348,8 +2348,7 @@ export class SystemKeywords {
               valueFound = found[e];
             }
           });
-          found = null;
-
+          
           const equals =
             typeof value === 'string' && typeof valueFound === 'string'
               ? value?.toLowerCase() != valueFound?.toLowerCase()
@@ -2423,6 +2422,7 @@ export class SystemKeywords {
         adds++;
       }
       row = null;
+      found = null;
     }
 
     // In case of storage, persist to DB in batch.
