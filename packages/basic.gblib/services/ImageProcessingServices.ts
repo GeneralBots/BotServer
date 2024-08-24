@@ -95,14 +95,6 @@ export class ImageProcessingServices {
     GBLogEx.info(min, `Image Processing SHARPEN ${file}.`);
 
     const gbfile = DialogKeywords.getFileByHandle(file);
-    const data = await sharp(gbfile.data)
-      .blur()
-      .toBuffer();
-
-    const newFile = {
-      filename: gbfile.filename,
-      data: data
-    };
     return;
   }
 
