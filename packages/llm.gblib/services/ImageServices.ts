@@ -67,7 +67,7 @@ export class ImageServices {
       });
 
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-      const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
+      const localName = Path.join('work', gbaiName, 'cache', `DALL-E${GBAdminService.getRndReadableIdentifier()}.png`);
 
       const url = response.data[0].url;
       const res = await fetch(url);
