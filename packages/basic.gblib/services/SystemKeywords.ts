@@ -342,10 +342,11 @@ export class SystemKeywords {
 
   public async closeHandles({ pid }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const memoryBeforeGC = process.memoryUsage().heapUsed / 1024 / 1024; // in MB
+    
     delete this.cachedMerge[pid];
     
     // Capture memory usage before GC
-    const memoryBeforeGC = process.memoryUsage().heapUsed / 1024 / 1024; // in MB
     GBLogEx.info(min, ``);
     
     setFlagsFromString('--expose_gc');
