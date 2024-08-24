@@ -372,7 +372,8 @@ export class KeywordsExpressions {
             if (__calls < __totalCalls && __pageMode === "auto") {
 
               // Performs GET request using the constructed URL
-              
+
+              let ___data = null
               await retry(
                 async (bail) => {
                     await ensureTokens();
@@ -380,6 +381,7 @@ export class KeywordsExpressions {
                 },{ retries: 5});         
 
               __data = ___data
+              ___data = null
                       
               // Updates current variable handlers.
               
@@ -396,6 +398,7 @@ export class KeywordsExpressions {
 
             }
           }
+          __data = null
 
         }`;
       }
@@ -412,7 +415,7 @@ export class KeywordsExpressions {
             if (!limit) limit = 100;
             __page = 1
             while (__page > 0 && __page < pages) {
-
+              let __res = null
               await retry(
                 async (bail) => {
                   await ensureTokens();
@@ -422,14 +425,16 @@ export class KeywordsExpressions {
               await sleep(330);
 
               res  = __res
+              __res = null
               list1 = res.data
+              res = null
 
 
               let j1 = 0
               items1  = []
               while (j1 < ubound(list1)) {
                 detail_id = caseInsensitive(list1[j1])['${key1}']
-
+                let __res = null
                 await retry(
                   async (bail) => {
                     await ensureTokens();
@@ -439,13 +444,16 @@ export class KeywordsExpressions {
                 await sleep(330);
                  
                 res  = __res
+                __res = null
 
                 items1[j1] = res.data
+                res = null
 
                 j1 = j1 + 1
               }
               __reportMerge1 = await sys.merge({pid: pid, file: '${tableName}' , data: items1 , key1: '${key1}'})
               items1 = null;
+
               __reportMerge.adds += __reportMerge1.adds;
               __reportMerge.updates += __reportMerge1.updates;
               __reportMerge.skipped += __reportMerge1.skipped;
@@ -457,6 +465,7 @@ export class KeywordsExpressions {
               if (list1?.length < limit) {
                 __page = 0
               }
+              list1 = null
             }
 
 
@@ -763,13 +772,16 @@ export class KeywordsExpressions {
             return `${$1} = await sys.getPdf({pid: pid, file: ${$2}});`;
           } else {
             return `
+            let __${$1} = null
           await retry(
+            
             async (bail) => {
               await ensureTokens();
               __${$1} = await sys.getHttp ({pid: pid, file: ${$2}, addressOrHeaders: headers, httpUsername, httpPs})
             },{ retries: 5});         
 
             ${$1} = __${$1} 
+            __${$1} = null
     
           `;
           }
