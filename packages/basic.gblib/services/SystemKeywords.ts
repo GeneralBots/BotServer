@@ -746,8 +746,7 @@ export class SystemKeywords {
    */
   public async saveToStorageBatch({ pid, table, rows }): Promise<void> {
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `SAVE '${table}': ${rows.length} row(s). ${GBUtil.toYAML(rows)}`);
-
+    
     if (rows.length === 0) {
       return;
     }
@@ -756,7 +755,7 @@ export class SystemKeywords {
     let rowsDest = [];
 
     rows.forEach(row => {
-
+      
       if (GBUtil.hasSubObject(row)) {
         row = this.flattenJSON(row);
       }
@@ -771,10 +770,11 @@ export class SystemKeywords {
       rowsDest.push(dst);
       dst = null;
     });
-
+    GBLogEx.info(min, `SAVE '${table}': ${rows.length} row(s). ${GBUtil.toYAML(rowsDest)}`);
+    
     await retry(
       async bail => {
-        await definition.bulkCreate(GBUtil.caseInsensitive(rowsDest));
+        await definition.bulkCreate(rowsDest);
         rowsDest = [];
       },
       {
