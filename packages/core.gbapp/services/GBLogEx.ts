@@ -37,6 +37,7 @@
 import { GBLog, IGBInstance } from 'botlib';
 import { GuaribasLog } from '../models/GBModel.js';
 import { GBServer } from '../../../src/app.js';
+import { GBConfigService } from './GBConfigService.js';
 
 export class GBLogEx {
   public static async error(minOrInstanceId: any, message: string) {
@@ -76,7 +77,7 @@ export class GBLogEx {
    * Finds and update user agent information to a next available person.
    */
   public static async log(instance: IGBInstance, kind: string, message: string): Promise<GuaribasLog> {
-    if (process.env.LOG_ON_STORAGE) {
+    if (GBConfigService.get('LOG_ON_STORAGE')) {
       message = message ? message.substring(0, 1023) : null;
 
       return await GuaribasLog.create(<GuaribasLog>{

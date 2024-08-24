@@ -491,7 +491,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(DEBUG)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
-        const params = this.getParams($3, ['text']);
+        const params = this.getParams($3, ['obj']);
         return `await sys.log ({pid: pid, ${params}})`;
       }
     ];

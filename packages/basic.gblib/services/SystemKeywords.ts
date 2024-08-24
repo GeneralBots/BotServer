@@ -770,7 +770,7 @@ export class SystemKeywords {
       rowsDest.push(dst);
       dst = null;
     });
-    GBLogEx.info(min, `SAVE '${table}': ${rows.length} row(s). ${GBUtil.toYAML(rowsDest)}`);
+    GBLogEx.info(min, `SAVE '${table}': ${rows.length} row(s).`);
     
     await retry(
       async bail => {
@@ -2698,34 +2698,9 @@ export class SystemKeywords {
     return array;
   }
 
-  public async log({ pid, text: obj }) {
+  public async log({ pid, obj }) {
     const { min } = await DialogKeywords.getProcessInfo(pid);
-
-    let level = 0;
-    const mydump = (text, level) => {
-      var dumped_text = '';
-
-      var level_padding = '';
-      for (var j = 0; j < level + 1; j++) level_padding += '    ';
-
-      if (typeof text == 'object') {
-        for (var item in text) {
-          var value = text[item];
-
-          if (typeof value == 'object') {
-            dumped_text += level_padding + "'" + item + "' ...\n";
-            dumped_text += mydump(value, level + 1);
-          } else {
-            dumped_text += level_padding + "'" + item + '\' => "' + value + '"\n';
-          }
-        }
-      } else {
-        dumped_text = text + '(' + typeof text + ')';
-      }
-      return dumped_text;
-    };
-
-    GBLogEx.info(min, mydump(obj, level));
+    GBLogEx.info(min, GBUtil.toYAML(obj));
   }
 
   public async getPdf({ pid, file }) {
