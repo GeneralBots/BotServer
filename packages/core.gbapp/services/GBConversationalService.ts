@@ -412,7 +412,7 @@ export class GBConversationalService {
           nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, {}, (err, data) => {
             const message = data.messages ? data.messages[0] : {};
             if (err || message['error-text']) {
-              GBLog.error(`BASIC: error sending SMS to ${mobile}: ${message['error-text']}`);
+              GBLog.error(`error sending SMS to ${mobile}: ${message['error-text']}`);
               reject(message['error-text']);
             } else {
               resolve(data);

@@ -215,7 +215,7 @@ export class GBVMService extends GBService {
             }`;
       Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
 
-      GBLogEx.info(min, `BASIC: Installing .gbdialog node_modules for ${min.botId}...`);
+      GBLogEx.info(min, `Installing .gbdialog node_modules for ${min.botId}...`);
       const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
       child_process.execSync(`${npmPath} install`, { cwd: folder });
     }
@@ -431,7 +431,7 @@ export class GBVMService extends GBService {
               to.hasMany(from);
             } catch (error) {
               throw new Error(
-                `BASIC: Invalid relationship in ${mainName}: from ${e.from} to ${e.to} (${min.botId})... ${error.message}`
+                `Invalid relationship in ${mainName}: from ${e.from} to ${e.to} (${min.botId})... ${error.message}`
               );
             }
           });
@@ -439,14 +439,14 @@ export class GBVMService extends GBService {
           if (sync && shouldSync) {
             GBLogEx.info(
               min,
-              `BASIC: Syncing changes for TABLE ${connectionName} ${tableName} keyword (${min.botId})...`
+              `Syncing changes for TABLE ${connectionName} ${tableName} keyword (${min.botId})...`
             );
 
             await seq.sync({
               alter: true,
               force: false // Keep it false due to data loss danger.
             });
-            GBLogEx.info(min, `BASIC: Done sync for ${min.botId} ${connectionName} ${tableName} storage table...`);
+            GBLogEx.info(min, `Done sync for ${min.botId} ${connectionName} ${tableName} storage table...`);
           }
         }
       });

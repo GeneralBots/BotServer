@@ -66,7 +66,7 @@ export class ScheduleServices extends GBService {
       });
 
       if (count > 0) {
-        GBLogEx.info(min, `BASIC: Removed ${name} SET SCHEDULE and ${count} rows from storage on: ${min.botId}...`);
+        GBLogEx.info(min, `Removed ${name} SET SCHEDULE and ${count} rows from storage on: ${min.botId}...`);
       }
 
       i++;

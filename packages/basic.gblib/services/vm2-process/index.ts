@@ -175,7 +175,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
         GBServer.globals.debuggers[limits.botId].state = 0;
         GBServer.globals.debuggers[limits.botId].stateInfo = 'Fail';
       } else if (stderrCache.includes('Debugger attached.')) {
-        GBLogEx.info(min, `BASIC: General Bots Debugger attached to Node .gbdialog process for ${limits.botId}.`);
+        GBLogEx.info(min, `General Bots Debugger attached to Node .gbdialog process for ${limits.botId}.`);
       }
     });
 
@@ -212,16 +212,16 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
                   });
                 }
                 GBServer.globals.debuggers[limits.botId].scope = variablesText;
-                GBLogEx.info(min,`BASIC: Breakpoint variables: ${variablesText}`); // (zero-based)
+                GBLogEx.info(min,`Breakpoint variables: ${variablesText}`); // (zero-based)
                 // Processes breakpoint hits.
 
                 if (hitBreakpoints.length >= 1) {
-                  GBLogEx.info(min, `BASIC: Break at line ${frame.location.lineNumber + 1}`); // (zero-based)
+                  GBLogEx.info(min, `Break at line ${frame.location.lineNumber + 1}`); // (zero-based)
 
                   GBServer.globals.debuggers[limits.botId].state = 2;
                   GBServer.globals.debuggers[limits.botId].stateInfo = 'Break';
                 } else {
-                  GBLog.verbose(`BASIC: Configuring breakpoints if any for ${limits.botId}...`);
+                  GBLog.verbose(`Configuring breakpoints if any for ${limits.botId}...`);
                   // Waits for debugger and setup breakpoints.
 
                   await CollectionUtil.asyncForEach(GBServer.globals.debuggers[limits.botId].breaks, async brk => {

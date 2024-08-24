@@ -51,7 +51,7 @@ export class ImageProcessingServices {
    */
   public async sharpen({ pid, file: file }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: Image Processing SHARPEN ${file}.`);
+    GBLogEx.info(min, `Image Processing SHARPEN ${file}.`);
 
     const gbfile = DialogKeywords.getFileByHandle(file);
 
@@ -92,7 +92,7 @@ export class ImageProcessingServices {
    */
    public async blur({ pid, file: file }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: Image Processing SHARPEN ${file}.`);
+    GBLogEx.info(min, `Image Processing SHARPEN ${file}.`);
 
     const gbfile = DialogKeywords.getFileByHandle(file);
     const data = await sharp(gbfile.data)

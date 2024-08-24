@@ -74,7 +74,7 @@ export class ImageServices {
       let buf: any = Buffer.from(await res.arrayBuffer());
       Fs.writeFileSync(localName, buf, { encoding: null });
 
-      GBLogEx.info(min, `BASIC: DALL-E image generated at ${url}.`);
+      GBLogEx.info(min, `DALL-E image generated at ${url}.`);
 
       return { localName, url };
     }

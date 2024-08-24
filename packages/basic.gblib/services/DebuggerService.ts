@@ -45,7 +45,7 @@ import { GBUtil } from '../../../src/util.js';
 export class DebuggerService {
 
   public async setBreakpoint({ botId, line }) {
-    GBLogEx.info(botId, `BASIC: Enabled breakpoint for ${botId} on ${line}.`);
+    GBLogEx.info(botId, `Enabled breakpoint for ${botId} on ${line}.`);
     GBServer.globals.debuggers[botId].breaks.push(Number.parseInt(line));
   }
 
@@ -145,11 +145,11 @@ export class DebuggerService {
       error = `Cannot DEBUG an already running process. ${botId}`;
       return { error: error };
     } else if (GBServer.globals.debuggers[botId].state === 2) {
-      GBLogEx.info(botId, `BASIC: Releasing execution ${botId} in DEBUG mode.`);
+      GBLogEx.info(botId, `Releasing execution ${botId} in DEBUG mode.`);
       await this.resume({ botId });
       return { status: 'OK' };
     } else {
-      GBLogEx.info(botId, `BASIC: Running ${botId} in DEBUG mode.`);
+      GBLogEx.info(botId, `Running ${botId} in DEBUG mode.`);
       GBServer.globals.debuggers[botId].state = 1;
       GBServer.globals.debuggers[botId].stateInfo = 'Running (Debug)';
 

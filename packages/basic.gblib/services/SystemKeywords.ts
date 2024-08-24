@@ -322,7 +322,7 @@ export class SystemKeywords {
       localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       await page.screenshot({ path: localName, fullPage: true });
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
-      GBLogEx.info(min, `BASIC: Table image generated at ${url} .`);
+      GBLogEx.info(min, `Table image generated at ${url} .`);
     }
 
     // Handles PDF generation.
@@ -331,7 +331,7 @@ export class SystemKeywords {
       localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.pdf`);
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
       let pdf = await page.pdf({ format: 'A4' });
-      GBLogEx.info(min, `BASIC: Table PDF generated at ${url} .`);
+      GBLogEx.info(min, `Table PDF generated at ${url} .`);
     }
 
     await browser.close();
@@ -469,7 +469,7 @@ export class SystemKeywords {
   public async wait({ pid, seconds }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     // tslint:disable-next-line no-string-based-set-timeout
-    GBLogEx.info(min, `BASIC: WAIT for ${seconds} second(s).`);
+    GBLogEx.info(min, `WAIT for ${seconds} second(s).`);
     const timeout = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     await timeout(seconds * 1000);
   }
@@ -482,7 +482,7 @@ export class SystemKeywords {
    */
   public async talkTo({ pid, mobile, message }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: Talking '${message}' to a specific user (${mobile}) (TALK TO). `);
+    GBLogEx.info(min, `Talking '${message}' to a specific user (${mobile}) (TALK TO). `);
     await min.conversationalService.sendMarkdownToMobile(min, null, mobile, message);
   }
 
@@ -508,7 +508,7 @@ export class SystemKeywords {
    */
   public async sendSmsTo({ pid, mobile, message }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: SEND SMS TO '${mobile}', message '${message}'.`);
+    GBLogEx.info(min, `SEND SMS TO '${mobile}', message '${message}'.`);
     await min.conversationalService.sendSms(min, mobile, message);
   }
 
@@ -527,7 +527,7 @@ export class SystemKeywords {
     // Handles calls for HTML stuff
 
     if (handle && WebAutomationServices.isSelector(file)) {
-      GBLogEx.info(min, `BASIC: Web automation SET ${file}' to '${address}'    . `);
+      GBLogEx.info(min, `Web automation SET ${file}' to '${address}'    . `);
       await new WebAutomationServices().setElementText({ pid, handle, selector: file, text: address });
 
       return;
@@ -545,7 +545,7 @@ export class SystemKeywords {
 
     // Handles calls for BASIC persistence on sheet files.
 
-    GBLogEx.info(min, `BASIC: Defining '${address}' in '${file}' to '${value}' (SET). `);
+    GBLogEx.info(min, `Defining '${address}' in '${file}' to '${value}' (SET). `);
 
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
@@ -632,7 +632,7 @@ export class SystemKeywords {
    */
   public async saveFile({ pid, file, data }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: Saving '${file}' (SAVE file).`);
+    GBLogEx.info(min, `Saving '${file}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
     const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
@@ -648,9 +648,9 @@ export class SystemKeywords {
       await client.api(`${baseUrl}/drive/root:/${path}/${file}:/content`).put(data);
     } catch (error) {
       if (error.code === 'itemNotFound') {
-        GBLogEx.info(min, `BASIC: BASIC source file not found: ${file}.`);
+        GBLogEx.info(min, `BASIC source file not found: ${file}.`);
       } else if (error.code === 'nameAlreadyExists') {
-        GBLogEx.info(min, `BASIC: BASIC destination file already exists: ${file}.`);
+        GBLogEx.info(min, `BASIC destination file already exists: ${file}.`);
       }
       throw error;
     }
@@ -666,7 +666,7 @@ export class SystemKeywords {
    */
   public async uploadFile({ pid, file }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: UPLOAD '${file.name}' ${file.size} bytes.`);
+    GBLogEx.info(min, `UPLOAD '${file.name}' ${file.size} bytes.`);
 
     // Checks if it is a GB FILE object.
 
@@ -710,7 +710,7 @@ export class SystemKeywords {
 
       return file;
     } else {
-      GBLog.error(`BASIC: BLOB HTTP ${res.errorCode} ${res._response.status} .`);
+      GBLog.error(`BLOB HTTP ${res.errorCode} ${res._response.status} .`);
     }
   }
 
@@ -730,17 +730,17 @@ export class SystemKeywords {
    */
   public async saveToStorageBatch({ pid, table, rows }): Promise<void> {
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: Saving batch to storage '${table}' (SAVE).`);
+    GBLogEx.info(min, `SAVE '${table}' ${rows.length} row(s).`);
 
     if (rows.length === 0) {
       return;
     }
 
     const definition = this.getTableFromName(table, min);
-    const rowsDest = [];
+    let rowsDest = [];
 
     rows.forEach(row => {
-      const dst = {};
+      let dst = {};
       let i = 0;
       Object.keys(row).forEach(column => {
         const field = column.charAt(0).toUpperCase() + column.slice(1);
@@ -748,16 +748,18 @@ export class SystemKeywords {
         i++;
       });
       rowsDest.push(dst);
+      dst = null;
     });
 
     await retry(
       async bail => {
         await definition.bulkCreate(GBUtil.caseInsensitive(rowsDest));
+        rowsDest = [];
       },
       {
         retries: 5,
         onRetry: err => {
-          GBLog.error(`Retrying SaveToStorageBatch due to: ${JSON.stringify(err)}.`);
+          GBLog.error(`SAVE (retry): ${GBUtil.toYAML(err)}.`);
         }
       }
     );
@@ -775,7 +777,7 @@ export class SystemKeywords {
     }
 
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: Saving to storage '${table}' (SAVE).`);
+    GBLogEx.info(min, `Saving to storage '${table}' (SAVE).`);
 
     const definition = this.getTableFromName(table, min);
 
@@ -807,7 +809,7 @@ export class SystemKeywords {
 
   public async saveToStorageWithJSON({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: Saving to storage '${table}' (SAVE).`);
+    GBLogEx.info(min, `Saving to storage '${table}' (SAVE).`);
     const minBoot = GBServer.globals.minBoot as any;
     const definition = minBoot.core.sequelize.models[table];
 
@@ -841,7 +843,7 @@ export class SystemKeywords {
     }
 
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
+    GBLogEx.info(min, `Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
     const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
@@ -929,7 +931,7 @@ export class SystemKeywords {
         if (result.status != 200) {
           GBLogEx.info(min, `Waiting 5 secs. before retrying HTTP ${result.status} GET: ${result.url}`);
           await GBUtil.sleep(5 * 1000);
-          throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
+          throw new Error(`HTTP:${result.status} retry: ${result.statusText}.`);
         }
       },
       {
@@ -959,7 +961,7 @@ export class SystemKeywords {
         qs
       });
     } else {
-      GBLogEx.info(min, `BASIC: GET '${addressOrHeaders}' in '${file}'.`);
+      GBLogEx.info(min, `GET '${addressOrHeaders}' in '${file}'.`);
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const botId = min.instance.botId;
       ('');
@@ -978,7 +980,7 @@ export class SystemKeywords {
         .get();
 
       let val = results.text[0][0];
-      GBLogEx.info(min, `BASIC: Getting '${file}' (GET). Value= ${val}.`);
+      GBLogEx.info(min, `Getting '${file}' (GET). Value= ${val}.`);
       return val;
     }
   }
@@ -1073,7 +1075,7 @@ export class SystemKeywords {
     } else {
       maxLines = maxLines;
     }
-    GBLogEx.info(min, `BASIC: FIND running on ${file} (maxLines: ${maxLines}) and args: ${JSON.stringify(args)}...`);
+    GBLogEx.info(min, `FIND running on ${file} (maxLines: ${maxLines}) and args: ${JSON.stringify(args)}...`);
 
     // Choose data sources based on file type (HTML Table, data variable or sheet file)
 
@@ -1090,7 +1092,7 @@ export class SystemKeywords {
 
       // Transforms table
 
-      const resultH = await container.evaluate(originalSelector => {
+      let resultH = await container.evaluate(originalSelector => {
         const rows = document.querySelectorAll(`${originalSelector} tr`);
         return Array.from(rows, row => {
           const columns = row.querySelectorAll('th');
@@ -1098,7 +1100,7 @@ export class SystemKeywords {
         });
       }, originalSelector);
 
-      const result = await container.evaluate(originalSelector => {
+      let result = await container.evaluate(originalSelector => {
         const rows = document.querySelectorAll(`${originalSelector} tr`);
         return Array.from(rows, row => {
           const columns = row.querySelectorAll('td');
@@ -1110,12 +1112,15 @@ export class SystemKeywords {
       for (let i = 0; i < resultH[0].length; i++) {
         header[i] = resultH[0][i];
       }
+      resultH = null;
+       
 
       rows = [];
       rows[0] = header;
       for (let i = 1; i < result.length; i++) {
         rows[i] = result[i];
       }
+      result = null;
     } else if (file['cTag']) {
       const gbaiName = DialogKeywords.getGBAIPath(min.botId);
       const localName = Path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
@@ -1124,7 +1129,7 @@ export class SystemKeywords {
       Fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
 
       var workbook = new Excel.Workbook();
-      const worksheet = await workbook.csv.readFile(localName);
+      let worksheet = await workbook.csv.readFile(localName);
       header = [];
       rows = [];
 
@@ -1146,6 +1151,7 @@ export class SystemKeywords {
           rows.push(outRow);
         }
       }
+      worksheet = null;
     } else if (file.indexOf('.xlsx') !== -1) {
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
@@ -1191,7 +1197,7 @@ export class SystemKeywords {
 
     // Increments columnIndex by looping until find a column match.
 
-    const filters = [];
+    let filters = [];
     let predefinedFilterTypes;
     if (params.filterTypes) {
       predefinedFilterTypes = params.filterTypes.split(',');
@@ -1201,7 +1207,7 @@ export class SystemKeywords {
     await CollectionUtil.asyncForEach(args, async arg => {
       const filter = await SystemKeywords.getFilter(arg);
       if (!filter) {
-        throw new Error(`BASIC: FIND filter has an error: ${arg} check this and publish .gbdialog again.`);
+        throw new Error(`FIND filter has an error: ${arg} check this and publish .gbdialog again.`);
       }
 
       let columnIndex = 0;
@@ -1380,15 +1386,18 @@ export class SystemKeywords {
     }
 
     const outputArray = await DialogKeywords.getOption({ pid, name: 'output' });
+    filters = null;
+    header = null;
+    rows = null;
 
     if (table.length === 1) {
-      GBLogEx.info(min, `BASIC: FIND returned no results (zero rows).`);
+      GBLogEx.info(min, `FIND returned no results (zero rows).`);
       return null;
     } else if (table.length === 2 && !outputArray) {
-      GBLogEx.info(min, `BASIC: FIND returned single result: ${table[0]}.`);
+      GBLogEx.info(min, `FIND returned single result: ${table[0]}.`);
       return table[1];
     } else {
-      GBLogEx.info(min, `BASIC: FIND returned multiple results (Count): ${table.length - 1}.`);
+      GBLogEx.info(min, `FIND returned multiple results (Count): ${table.length - 1}.`);
       return table;
     }
   }
@@ -1547,7 +1556,7 @@ export class SystemKeywords {
   }
 
   public async internalCreateDocument(min, path, content) {
-    GBLogEx.info(min, `BASIC: CREATE DOCUMENT '${path}...'`);
+    GBLogEx.info(min, `CREATE DOCUMENT '${path}...'`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const gbaiName = DialogKeywords.getGBAIPath(min.botId);
     const tmpDocx = urlJoin(gbaiName, path);
@@ -1583,7 +1592,7 @@ export class SystemKeywords {
    */
   public async copyFile({ pid, src, dest }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: BEGINING COPY '${src}' to '${dest}'`);
+    GBLogEx.info(min, `BEGINING COPY '${src}' to '${dest}'`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
 
@@ -1619,13 +1628,13 @@ export class SystemKeywords {
         name: `${Path.basename(dest)}`
       };
       const file = await client.api(`${baseUrl}/drive/items/${srcFile.id}/copy`).post(destFile);
-      GBLogEx.info(min, `BASIC: FINISHED COPY '${src}' to '${dest}'`);
+      GBLogEx.info(min, `FINISHED COPY '${src}' to '${dest}'`);
       return file;
     } catch (error) {
       if (error.code === 'itemNotFound') {
-        GBLogEx.info(min, `BASIC: COPY source file not found: ${srcPath}.`);
+        GBLogEx.info(min, `COPY source file not found: ${srcPath}.`);
       } else if (error.code === 'nameAlreadyExists') {
-        GBLogEx.info(min, `BASIC: COPY destination file already exists: ${dstPath}.`);
+        GBLogEx.info(min, `COPY destination file already exists: ${dstPath}.`);
       }
       throw error;
     }
@@ -1644,7 +1653,7 @@ export class SystemKeywords {
    */
   public async convert({ pid, src, dest }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: CONVERT '${src}' to '${dest}'`);
+    GBLogEx.info(min, `CONVERT '${src}' to '${dest}'`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
 
@@ -1690,9 +1699,9 @@ export class SystemKeywords {
       await client.api(`${baseUrl}/drive/root:/${dstPath}:/content`).put(result);
     } catch (error) {
       if (error.code === 'itemNotFound') {
-        GBLogEx.info(min, `BASIC: CONVERT source file not found: ${srcPath}.`);
+        GBLogEx.info(min, `CONVERT source file not found: ${srcPath}.`);
       } else if (error.code === 'nameAlreadyExists') {
-        GBLogEx.info(min, `BASIC: CONVERT destination file already exists: ${dstPath}.`);
+        GBLogEx.info(min, `CONVERT destination file already exists: ${dstPath}.`);
       }
       throw error;
     }
@@ -1789,17 +1798,17 @@ export class SystemKeywords {
         if (result.status === 401) {
           GBLogEx.info(min, `Waiting 5 secs. before retrying HTTP 401 GET: ${url}`);
           await GBUtil.sleep(5 * 1000);
-          throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
+          throw new Error(`HTTP:${result.status} retry: ${result.statusText}.`);
         }
         if (result.status === 429) {
           GBLogEx.info(min, `Waiting 1min. before retrying HTTP 429 GET: ${url}`);
           await GBUtil.sleep(60 * 1000);
-          throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
+          throw new Error(`HTTP:${result.status} retry: ${result.statusText}.`);
         }
         if (result.status === 503) {
           GBLogEx.info(min, `Waiting 1h before retrying GET 503: ${url}`);
           await GBUtil.sleep(60 * 60 * 1000);
-          throw new Error(`BASIC: HTTP:${result.status} retry: ${result.statusText}.`);
+          throw new Error(`HTTP:${result.status} retry: ${result.statusText}.`);
         }
 
         if (result.status === 2000) {
@@ -1809,7 +1818,7 @@ export class SystemKeywords {
           bail(new Error(`Expired Token for ${url}.`));
         }
         if (result.status != 200) {
-          throw new Error(`BASIC: GET ${result.status}: ${result.statusText}.`);
+          throw new Error(`GET ${result.status}: ${result.statusText}.`);
         }
       },
       {
@@ -1852,7 +1861,7 @@ export class SystemKeywords {
     if (res) {
       res['pageMode'] = pageMode;
     }
-
+    result = null;
     return res;
   }
 
@@ -1882,10 +1891,10 @@ export class SystemKeywords {
 
     let result = await fetch(url, options);
     const text = await result.text();
-    GBLogEx.info(min, `BASIC: PUT ${url} (${data}): ${text}`);
+    GBLogEx.info(min, `PUT ${url} (${data}): ${text}`);
 
     if (result.status != 200 && result.status != 201) {
-      throw new Error(`BASIC: PUT ${result.status}: ${result.statusText}.`);
+      throw new Error(`PUT ${result.status}: ${result.statusText}.`);
     }
 
     let res = JSON.parse(text);
@@ -1917,10 +1926,10 @@ export class SystemKeywords {
 
     let result = await fetch(url, options);
     const text = await result.text();
-    GBLogEx.info(min, `BASIC: POST ${url} (${data}): ${text}`);
+    GBLogEx.info(min, `POST ${url} (${data}): ${text}`);
 
     if (result.status != 200 && result.status != 201) {
-      throw new Error(`BASIC: POST ${result.status}: ${result.statusText}.`);
+      throw new Error(`POST ${result.status}: ${result.statusText}.`);
     }
 
     let res = JSON.parse(text);
@@ -2113,11 +2122,11 @@ export class SystemKeywords {
   public async merge({ pid, file, data, key1, key2 }): Promise<any> {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     if (!data || data.length === 0) {
-      GBLog.verbose(`BASIC: MERGE running on ${file}: NO DATA.`);
+      GBLog.verbose(`MERGE running on ${file}: NO DATA.`);
       return data;
     }
 
-    GBLogEx.info(min, `BASIC: MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
+    GBLogEx.info(min, `MERGE running on ${file} and key1: ${key1}, key2: ${key2}...`);
     if (!this.cachedMerge[pid]) {
       this.cachedMerge[pid] = { file: {} };
     }
@@ -2185,7 +2194,7 @@ export class SystemKeywords {
               page++;
               count = paged.length;
 
-              GBLogEx.info(min, `BASIC: MERGE cached: ${rows.length} from page: ${page}.`);
+              GBLogEx.info(min, `MERGE cached: ${rows.length} from page: ${page}.`);
             }
           },
           {
@@ -2404,7 +2413,14 @@ export class SystemKeywords {
       await this.saveToStorageBatch({ pid, table: file, rows: fieldsValuesList });
     }
 
-    GBLogEx.info(min, `BASIC: MERGE results: adds:${adds}, updates:${updates} , skipped: ${skipped}.`);
+    table = null;
+    fieldsValuesList = null;
+    rows = null;
+    header = null;
+    results = null;
+    t = null;
+
+    GBLogEx.info(min, `MERGE results: adds:${adds}, updates:${updates} , skipped: ${skipped}.`);
     return { title: file, adds, updates, skipped };
   }
 
@@ -2445,7 +2461,7 @@ export class SystemKeywords {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const prompt = `rewrite this sentence in a better way: ${text}`;
     const answer = await ChatServices.continue(min, prompt, 0);
-    GBLogEx.info(min, `BASIC: REWRITE ${text} TO ${answer}`);
+    GBLogEx.info(min, `REWRITE ${text} TO ${answer}`);
     return answer;
   }
 
@@ -2532,7 +2548,7 @@ export class SystemKeywords {
 
   private async internalAutoSave({ min, handle }) {
     const file = GBServer.globals.files[handle];
-    GBLogEx.info(min, `BASIC: Auto saving '${file.filename}' (SAVE file).`);
+    GBLogEx.info(min, `Auto saving '${file.filename}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
     const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
@@ -2556,7 +2572,7 @@ export class SystemKeywords {
 
   public async deleteFromStorage({ pid, table, criteria }) {
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: DELETE (storage) '${table}' where ${criteria}.`);
+    GBLogEx.info(min, `DELETE '${table}' where ${criteria}.`);
 
     const definition = this.getTableFromName(table, min);
     const filter = await SystemKeywords.getFilter(criteria);
@@ -2580,7 +2596,7 @@ export class SystemKeywords {
 
   public async deleteFile({ pid, file }) {
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `BASIC: DELETE '${file.name}'.`);
+    GBLogEx.info(min, `DELETE '${file.name}'.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
     const gbaiPath = DialogKeywords.getGBAIPath(min.botId);
