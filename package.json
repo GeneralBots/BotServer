@@ -15,7 +15,7 @@
     "Alan Perdomo <alanperdomo@hotmail.com>"
   ],
   "engines": {
-    "node": "=21.7.3"
+    "node": "=20.15.0"
   },
   "license": "AGPL-3.0",
   "preferGlobal": true,
