@@ -1313,9 +1313,9 @@ export class KeywordsExpressions {
         return `
         
         if (Array.isArray(${fields[0]})){
-          await sys.saveToStorageBatch({pid: pid, table: '${table}', rows:${fields[0]} })
+          await sys.saveToStorageBatch({pid: pid, table: ${table}, rows:${fields[0]} })
         }else{
-          await sys.saveToStorage({pid: pid, table: '${table}', fieldsValues: [${fieldsAsText}], fieldsNames: [${fieldsNames}] })
+          await sys.saveToStorage({pid: pid, table: ${table}, fieldsValues: [${fieldsAsText}], fieldsNames: [${fieldsNames}] })
         }
         ${fields[0].replace(/\`/g, '')} = null;
       `;

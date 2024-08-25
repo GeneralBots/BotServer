@@ -751,7 +751,7 @@ export class SystemKeywords {
       return;
     }
 
-    const definition = this.getTableFromName(table, min);
+    const t = this.getTableFromName(table, min);
     let rowsDest = [];
 
     rows.forEach(row => {
@@ -775,7 +775,7 @@ export class SystemKeywords {
     
     await retry(
       async bail => {
-        await definition.bulkCreate(rowsDest);
+        await t.bulkCreate(rowsDest);
         rowsDest = null;
       },
       {
