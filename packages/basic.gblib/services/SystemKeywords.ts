@@ -2259,6 +2259,7 @@ export class SystemKeywords {
           }
 
           row[propertyName] = value;
+          value = null;
         }
         row['line'] = foundIndex + 1;
         table.push(row);
