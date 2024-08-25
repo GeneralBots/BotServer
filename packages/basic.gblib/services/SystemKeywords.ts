@@ -776,7 +776,7 @@ export class SystemKeywords {
     await retry(
       async bail => {
         await definition.bulkCreate(rowsDest);
-        rowsDest = [];
+        rowsDest = null;
       },
       {
         retries: 5,
@@ -2200,18 +2200,8 @@ export class SystemKeywords {
       if (!this.cachedMerge[pid][file]) {
         await retry(
           async bail => {
-            let page = 0,
-              pageSize = 1000;
-            let count = 0;
-
-            while (page === 0 || count === pageSize) {
-              const paged = await t.findAll({ offset: page * pageSize, limit: pageSize, subquery: false, where: {} });
-              rows = [...paged, ...rows];
-              page++;
-              count = paged.length;
-
-              GBLogEx.info(min, `MERGE cached: ${rows.length} from page: ${page}.`);
-            }
+            rows = await t.findAll();
+            GBLogEx.info(min, `MERGE cached: ${rows.length} row(s)...`);
           },
           {
             retries: 5,
