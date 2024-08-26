@@ -358,12 +358,14 @@ export class GBVMService extends GBService {
           if (!min[connectionName]) {
             GBLogEx.info(min, `Loading custom connection ${connectionName}...`);
             min[connectionName] = new Sequelize(storageName, username, password, sequelizeOptions);
-            min[`llmconnection`] = {
-              type: dialect,
-              username,
-              database: storageName,
-              password
-            };
+            if (connectionName === 'llm') {
+              min[`llm`] = {
+                type: dialect,
+                username,
+                database: storageName,
+                password
+              };
+            }
           }
         }
 
@@ -437,10 +439,7 @@ export class GBVMService extends GBService {
           });
 
           if (sync && shouldSync) {
-            GBLogEx.info(
-              min,
-              `Syncing changes for TABLE ${connectionName} ${tableName} keyword (${min.botId})...`
-            );
+            GBLogEx.info(min, `Syncing changes for TABLE ${connectionName} ${tableName} keyword (${min.botId})...`);
 
             await seq.sync({
               alter: true,
