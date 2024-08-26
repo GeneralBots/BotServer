@@ -292,7 +292,7 @@ export class GBVMService extends GBService {
 
       connections.forEach(async con => {
 
-        const connectionName = con['storageDriver']
+        const connectionName = /^\S+/.exec(con['storageDriver'])[0];
 
         const dialect = con['storageDriver'];
         const host = con['storageServer'];
@@ -362,7 +362,6 @@ export class GBVMService extends GBService {
         // Cutom connection for TABLE.
         const connectionName = t.connection;
         let con;
-
 
         if (!con) {
           throw new Error(`Invalid connection specified: ${connectionName}.`);
