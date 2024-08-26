@@ -341,14 +341,6 @@ export class GBVMService extends GBService {
         if (!min[connectionName]) {
           GBLogEx.info(min, `Loading custom connection ${connectionName}...`);
           min[connectionName] = new Sequelize(storageName, username, password, sequelizeOptions);
-          if (connectionName === 'llm') {
-            min[`llm`] = {
-              type: dialect,
-              username,
-              database: storageName,
-              password
-            };
-          }
         }
       });
 
