@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+process.stdout.write(`General Bots. BotServer@${pjson.version}, botlib@${pjson.dependencies.botlib}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
+
 import Fs from 'fs';
 import os from 'node:os';
 import Path from 'path';
@@ -9,7 +11,6 @@ import pjson from './package.json' assert { type: 'json' };
 
 // Displays version of Node JS being used at runtime and others attributes.
 
-process.stdout.write(`General Bots. BotServer@${pjson.version}, botlib@${pjson.dependencies.botlib}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
 console.log(`\nLoading virtual machine source code files...`);
 
 var __dirname = process.env.PWD || process.cwd();

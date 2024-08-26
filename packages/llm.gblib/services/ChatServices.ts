@@ -476,7 +476,7 @@ export class ChatServices {
       });
     } else if (LLMMode === 'sql') {
       const con = min[`llm`];
-
+      
       const dialect = con['storageDriver'];
       const host = con['storageServer'];
       const port = con['storagePort'];
