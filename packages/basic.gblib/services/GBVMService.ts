@@ -361,14 +361,14 @@ export class GBVMService extends GBService {
 
         // Cutom connection for TABLE.
         const connectionName = t.connection;
-        let con;
+        let con = min[connectionName];
 
         if (!con) {
           throw new Error(`Invalid connection specified: ${connectionName}.`);
         }
 
         // Field checking, syncs if there is any difference.
-        const seq = min[connectionName] ? min[connectionName] : minBoot.core.sequelize;
+        const seq = con ? con : minBoot.core.sequelize;
 
         if (seq) {
           const model = seq.models[tableName];
