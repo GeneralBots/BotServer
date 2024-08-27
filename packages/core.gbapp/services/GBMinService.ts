@@ -700,7 +700,7 @@ export class GBMinService {
       };
 
       if (!GBConfigService.get('STORAGE_NAME')) {
-        config['domain'] = `http://localhost:${process.env.PORT}/directline/${botId}`;
+        config['domain'] = `http://localhost:${GBConfigService.get('PORT')}/directline/${botId}`;
       } else {
         const webchatTokenContainer = await this.getWebchatToken(instance);
         (config['conversationId'] = webchatTokenContainer.conversationId),
@@ -773,7 +773,7 @@ export class GBMinService {
     };
     if (!GBConfigService.get('STORAGE_NAME')) {
       startRouter(GBServer.globals.server, instance.botId);
-      config['clientOptions'] = { baseUri: `http://localhost:${process.env.PORT}` };
+      config['clientOptions'] = { baseUri: `http://localhost:${GBConfigService.get('PORT')}` };
     }
 
     const adapter = new BotFrameworkAdapter(config);

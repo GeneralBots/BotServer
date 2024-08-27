@@ -422,43 +422,53 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Loads all para from tabular file Config.xlsx.
    */
-  public async loadParamsFromTabular(min: GBMinInstance, path): Promise<any> {
-    const workbook = new Excel.Workbook();
-    const data = await workbook.xlsx.readFile(Path.join(path, 'Config.xlsx'));
-
-    let worksheet: any;
-    for (let t = 0; t < data.worksheets.length; t++) {
-      worksheet = data.worksheets[t];
-      if (worksheet) {
-        break;
+  
+  public async loadParamsFromTabular(min: GBMinInstance, filePath: string): Promise<any> {
+      if (!Fs.existsSync(filePath)) {
+          return [];
       }
-    }
-    const rows = worksheet._rows;
-    GBLogEx.info(min, `Processing ${rows.length} rows from Config file ${path}...`);
-    let list = [];
-
-    // Skips the header lines.
-
-    for (let index = 0; index < 6; index++) {
-      rows.shift();
-    }
-    
-
-    let obj = {};
-    await asyncPromise.eachSeries(rows, async line => {
-
-      if (line && line._cells[0] && line._cells[1] && line._cells[0].text) {
-
-        // Extracts values from columns in the current line.
-
-        obj[line._cells[0].text] = line._cells[1].text;
+  
+      const ext = Path.extname(filePath).toLowerCase();
+      let rows: any[] = [];
+      
+      const workbook = new Excel.Workbook();
+      
+      if (ext === '.xlsx') {
+          await workbook.xlsx.readFile(filePath);
+          let worksheet: any;
+          for (let t = 0; t < workbook.worksheets.length; t++) {
+              worksheet = workbook.worksheets[t];
+              if (worksheet) {
+                  break;
+              }
+          }
+          rows = worksheet.getSheetValues();
+      } else if (ext === '.csv') {
+          await workbook.csv.readFile(filePath);
+          let worksheet = workbook.worksheets[0]; // Assuming the CSV file has only one sheet
+          rows = worksheet.getSheetValues();
+      } else {
+          return [];
       }
-    });
-
-    GBLogEx.info(min, GBUtil.toYAML(list));
-    return obj;
+  
+      GBLogEx.info(min, `Processing ${rows.length} rows from Config file ${filePath}...`);
+  
+      // Skips the header lines.
+      for (let index = 0; index < 6; index++) {
+          rows.shift();
+      }
+  
+      let obj: any = {};
+      await asyncPromise.eachSeries(rows, async (line: any) => {
+          if (line && line._cells[0] && line._cells[1] && line._cells[0].text) {
+              obj[line._cells[0].text] = line._cells[1].text;
+          }
+      });
+  
+      GBLogEx.info(min, GBUtil.toYAML(obj));
+      return obj;
   }
-
+  
   /**
    */
   public async downloadFolder(
@@ -614,9 +624,12 @@ export class GBDeployer implements IGBDeployer {
 
     switch (packageType) {
       case '.gbot':
+
+      
         // Extracts configuration information from .gbot files.
 
         min.instance.params = await this.loadParamsFromTabular(min, localPath);
+        if (min.instance.params.length){
 
         let connections = [];
 
@@ -643,7 +656,7 @@ export class GBDeployer implements IGBDeployer {
         // Updates instance object.
 
         await this.core.saveInstance(min.instance);
-
+      }
         break;
 
       case '.gbkb':

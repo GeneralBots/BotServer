@@ -872,7 +872,7 @@ ENDPOINT_UPDATE=true
         Fs.cpSync(Path.join(base, `default.gbdialog`), Path.join(gbaiPath, `default.gbdialog`), {
           errorOnExist: false,
           force: true,
-          recursive: true
+          recursive: true, 
         });
         Fs.cpSync(Path.join(base, `default.gbdrive`), Path.join(gbaiPath, `default.gbdrive`), {
           errorOnExist: false,

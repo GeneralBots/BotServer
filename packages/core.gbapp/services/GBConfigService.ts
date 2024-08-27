@@ -81,6 +81,9 @@ export class GBConfigService {
 
     if (!value) {
       switch (key) {
+        case 'PORT':
+          value = this.getServerPort();
+          break;
         case 'STORAGE_NAME':
           value = null;
           break;
@@ -105,13 +108,13 @@ export class GBConfigService {
         case 'MARKETPLACE_ID':
           value = undefined;
           break;
-          case 'LOG_ON_STORAGE':
-            value = false;
-            break;
-          case 'MARKETPLACE_SECRET':
+        case 'LOG_ON_STORAGE':
+          value = false;
+          break;
+        case 'MARKETPLACE_SECRET':
           value = undefined;
           break;
-          
+
         case 'STORAGE_DIALECT':
           value = 'sqlite';
           break;

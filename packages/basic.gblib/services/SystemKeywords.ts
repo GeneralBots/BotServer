@@ -1745,24 +1745,27 @@ export class SystemKeywords {
 
   private flattenJSON(obj, res = {}, separator = '_', parent = null) {
     for (let key in obj) {
-      if (typeof obj[key] === 'function') {
-        continue;
-      }
-      if (typeof obj[key] !== 'object' || obj[key] instanceof Date) {
-        // If not defined already add the flattened field.
-
-        const newKey = `${parent ? parent + separator : ''}${key}`;
-        if (!res[newKey]) {
-          res[newKey] = obj[key];
-        } else {
-          GBLog.verbose(`Ignoring duplicated field in flatten operation to storage: ${key}.`);
+        if (!obj.hasOwnProperty(key) || typeof obj[key] === 'function') {
+            continue;
         }
-      } else {
-        obj[key] = this.flattenJSON(obj[key], res, separator, `${parent ? parent + separator : ''}${key}`);
-      }
+        if (typeof obj[key] !== 'object' || obj[key] instanceof Date) {
+            // If not defined already, add the flattened field.
+            const newKey = `${parent ? parent + separator : ''}${key}`;
+            if (!res.hasOwnProperty(newKey)) {
+                res[newKey] = obj[key];
+            } else {
+                GBLog.verbose(`Ignoring duplicated field in flatten operation to storage: ${key}.`);
+            }
+        } else {
+            // Create a temporary reference to the nested object to prevent memory leaks.
+            const tempObj = obj[key];
+            this.flattenJSON(tempObj, res, separator, `${parent ? parent + separator : ''}${key}`);
+            // Clear the reference to avoid holding unnecessary objects in memory.
+            obj[key] = null;
+        }
     }
     return res;
-  }
+}
 
   public async getCustomToken({ pid, tokenName }) {
     const { min } = await DialogKeywords.getProcessInfo(pid);

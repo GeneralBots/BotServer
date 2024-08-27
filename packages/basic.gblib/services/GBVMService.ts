@@ -285,7 +285,7 @@ export class GBVMService extends GBService {
       // Loads storage custom connections.
       const path = DialogKeywords.getGBAIPath(min.botId, null);
       const filePath = Path.join('work', path, 'connections.json');
-      let connections = null;
+      let connections = [];
       if (Fs.existsSync(filePath)) {
         connections = JSON.parse(Fs.readFileSync(filePath, 'utf8'));
       }

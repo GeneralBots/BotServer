@@ -492,7 +492,7 @@ export class ChatServices {
         });
       } else {
         dataSource = new DataSource({
-          type: dialect ===  dialect as any,
+          type: dialect as any,
           host: host,
           port: port,
           database: storageName,
