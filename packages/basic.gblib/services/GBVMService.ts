@@ -292,7 +292,7 @@ export class GBVMService extends GBService {
 
       connections.forEach(async con => {
 
-        const connectionName = /^\S+/.exec(con['storageDriver'])[0];
+        const connectionName = con['name'];
 
         const dialect = con['storageDriver'];
         const host = con['storageServer'];
