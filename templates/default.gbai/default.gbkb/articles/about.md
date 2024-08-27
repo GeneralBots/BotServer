@@ -1,16 +1,15 @@
-# Desenvolvimento Personalizado
+# Custom Development
 
-General Bots usa linguagem natural para entender o que as pessoas querem, facilitando o desenvolvimento de código. Quando alguém diz: "Preciso do relatório mensal" ou "Imprima o relatório do mês", General Bots entende o mesmo. Utilize o nosso desenvolvimento para estender a conversa com suas próprias regras e intenções.
+General Bots uses natural language to understand what people want, making code development easier. When someone says, "I need the monthly report" or "Print the report for the month," General Bots understands the same thing. Use our development tools to extend the conversation with your own rules and intents.
 
-# Descoberta
+# Discovery
 
-General Bots pode pró-ativamente sugerir suas habilidades para os usuários baseada no contexto, como solicitação de um pedido, envio de uma mensagem, agendamento de uma conferência telefônica ou qualquer ação definida na sua aplicação.
+General Bots can proactively suggest its abilities to users based on context, such as requesting an order, sending a message, scheduling a conference call, or any action defined in your application.
 
-# Torne pessoal
+# Make it Personal
 
-Entregue experiências únicas através do conhecimento que a General Bots possui sobre seus usuários e preferências, para ajudar a tomar decisões e apresentar sempre o melhor cenário.
+Deliver unique experiences through the knowledge that General Bots has about your users and their preferences, helping to make decisions and always presenting the best scenario.
 
-# Sem downloads adicionais
+# No Additional Downloads
 
-A interface da sua aplicação é automaticamente integrada à General Bots, de modo que não seja necessário realizar download ou instalações.
-
+Your application's interface is automatically integrated with General Bots, so there’s no need for additional downloads or installations.

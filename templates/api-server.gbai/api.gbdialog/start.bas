@@ -1,4 +1,4 @@
-REM 302 / 1234
+
 PARAM barraca AS number LIKE Código da barraca
 PARAM operador AS number LIKE Código do operador
 DESCRIPTION Esta função (tool) nunca é chamada pelo GPT. É um WebService do GB.
@@ -7,11 +7,11 @@ REM Login como Garçom
 data = NEW OBJECT
 data.IdentificadorOperador = operador
 data.BarracaId = barraca
-login = POST "https://api.server.com.br/api/Operadores/Login", data
+login = POST host + "/login", data
 SET HEADER "Authorization" AS  login.accessToken
 
 REM Obter o cardápio da Barraca -  Utilizar o token recuperado acima. 
-data = GET "https://api.server.com.br/api/Item/Barraca/${barraca}/Cliente"
+data = GET host + "/Barraca/${barraca}"
 produtos = NEW ARRAY 
  
 FOR EACH item IN data[0].itens
