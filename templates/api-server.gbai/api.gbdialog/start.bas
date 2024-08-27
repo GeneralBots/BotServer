@@ -1,79 +1,79 @@
 
-PARAM barraca AS number LIKE Código da barraca
-PARAM operador AS number LIKE Código do operador
-DESCRIPTION Esta função (tool) nunca é chamada pelo GPT. É um WebService do GB.
+PARAM stall AS number LIKE Stall Code
+PARAM operator AS number LIKE Operator Code
+DESCRIPTION This function (tool) is never called by GPT. It is a WebService of GB.
 
-REM Login como Garçom
+REM Login as Waiter
 data = NEW OBJECT
-data.IdentificadorOperador = operador
-data.BarracaId = barraca
+data.OperatorIdentifier = operator
+data.StallId = stall
 login = POST host + "/login", data
-SET HEADER "Authorization" AS  login.accessToken
+SET HEADER "Authorization" AS login.accessToken
 
-REM Obter o cardápio da Barraca -  Utilizar o token recuperado acima. 
-data = GET host + "/Barraca/${barraca}"
-produtos = NEW ARRAY 
- 
-FOR EACH item IN data[0].itens
-     IF item.statusItem = "Ativo" THEN
-        produto = NEW OBJECT
-        produto.id = item.id
-        produto.valor = item.valor
-        produto.nome = item.produto.nome
-        produto.detalhe = item.detalhe
-        produto.acompanhamentos = item.gruposAcompanhamento
+REM Get the menu - Use the token retrieved above.
+data = GET host + "/Stall/${stall}"
+products = NEW ARRAY 
 
-        produtos.push(produto)
+FOR EACH item IN data[0].items
+    IF item.itemStatus = "Active" THEN
+        product = NEW OBJECT
+        product.id = item.id
+        product.price = item.price
+        product.name = item.product.name
+        product.detail = item.detail
+        product.sides = item.sideGroups
+
+        products.push(product)
     END IF
 NEXT
 
 BEGIN SYSTEM PROMPT
-Você deve atuar como um chatbot que irá auxiliar o atendente de uma loja respeitando as seguintes regras:
-Sempre que o atendente fizer um pedido e deve incluir a mesa e o nome do cliente. Exemplo: Uma caipirinha de 400ml de Abacaxi para Rafael na mesa 10.
-Os pedidos são feitos com base nos produtos e acompanhamentos deste cardápio de produtos:
- ${JSON.stringify (produtos)}.
-A cada pedido realizado, retorne JSON contendo o nome do produto, a mesa e uma lista de acompanhamentos com seus respectivos ids.
-Mantenha itensPedido com apenas um item e mantenha itemsAcompanhamento apenas com os acompanhamentos que foram especificados.
-ItensAcompanhamento deve conter a coleção de itens de acompanhamento do pedido, que é solicitado quando o pedido é feito, por exemplo: Caipirinha de Morango com Gelo, Açúcar e Limão, gerariam três elementos neste nó.
 
-Segue o exemplo do JSON do Pedido, apague os itens e mande um com o pedido feito pela pessoa, é apenas um exemplo: 
+You must act as a chatbot that will assist a store attendant by following these rules:
+Whenever the attendant places an order, it must include the table and the customer's name. Example: A 400ml Pineapple Caipirinha for Rafael at table 10.
+Orders are based on the products and sides from this product menu:
+${JSON.stringify(products)}.
+
+For each order placed, return a JSON containing the product name, the table, and a list of sides with their respective ids.
+Keep orderedItems with only one item and keep sideItems only with the sides that were specified.
+sideItems should contain the collection of sides for the order, which is requested when the order is placed, for example: Strawberry Caipirinha with Ice, Sugar, and Lime would generate three elements in this node.
+
+Here is an example of the Order JSON, clear the items and send one with the order made by the person, this is just an example:
 {
-    itensPedido: [
+    orderedItems: [
         {
-           item: {
+            item: {
                 id: 23872,
-                valor: 20,
-                nome: Guaraná
+                price: 20,
+                name: Guaraná
             },
-            itensAcompanhamento: [
-                 {
+            sideItems: [
+                {
                     id: 0,
-                    valor: 0,
-                    quantidade: 1
+                    price: 0,
+                    quantity: 1
                 }
             ],
-            quantidade: 1,
-            observacao: a
+            quantity: 1,
+            notes: a
         },
         {
             item: {
                 id: 25510,
-                valor: 12,
-                nome: Laranja Lata 350ml
+                price: 12,
+                name: Orange Can 350ml
             },
-            itensAcompanhamento: [],
-            quantidade: 1,
-            observacao: nenhuma
+            sideItems: [],
+            quantity: 1,
+            notes: none
         }
     ],
-    barracaId: ${barraca},
-    usuarioId: ${operador},
-    identificadorConta: Areia,
-    tipoEntregaId: 2,
-    camposTipoEntrega: {
-        Mesa: 5
+    stallId: ${stall},
+    userId: ${operator},
+    accountIdentifier: Areia,
+    deliveryTypeId: 2,
+    deliveryTypeFields: {
+        Table: 5
     }
 }
-
-
 END SYSTEM PROMPT
