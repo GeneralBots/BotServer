@@ -492,7 +492,7 @@ export class ChatServices {
         });
       } else {
         dataSource = new DataSource({
-          type: dialect === 'mariadb'? 'mssql': dialect as any,
+          type: dialect === 'mariadb'? 'mysql': dialect as any,
           host: host,
           port: port,
           database: storageName,
