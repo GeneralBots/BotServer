@@ -395,8 +395,9 @@ export class GBVMService extends GBService {
 
           // New table checking, if needs sync.
           let tables;
+          const dialect = con.dialect.name;
 
-          if (con.storageDriver === 'mssql') {
+          if (dialect === 'mssql') {
             tables = await seq.query(
               `SELECT table_name, table_schema
           FROM information_schema.tables
@@ -406,7 +407,7 @@ export class GBVMService extends GBService {
                 type: QueryTypes.RAW
               }
             )[0];
-          } else if (con.storageDriver === 'mariadb') {
+          } else if (dialect === 'mariadb') {
             tables = await seq.getQueryInterface().showAllTables();
           }
 
