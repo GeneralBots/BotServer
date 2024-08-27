@@ -475,7 +475,7 @@ export class ChatServices {
         question
       });
     } else if (LLMMode === 'sql') {
-      const con = min[`llm`];
+      const con = min[`llm`]['gbconnection'];
       
       const dialect = con['storageDriver'];
       const host = con['storageServer'];
