@@ -314,8 +314,7 @@ export class GBDeployer implements IGBDeployer {
         instance.marketplacePassword,
         subscriptionId
       );
-
-    }   
+    }
 
     // Saves final instance object and returns it.
 
@@ -422,53 +421,53 @@ export class GBDeployer implements IGBDeployer {
   /**
    * Loads all para from tabular file Config.xlsx.
    */
-  
+
   public async loadParamsFromTabular(min: GBMinInstance, filePath: string): Promise<any> {
-      if (!Fs.existsSync(filePath)) {
-          return [];
+    const xls = Path.join(filePath, 'Config.xlsx');
+    const csv = Path.join(filePath, 'config.csv');
+
+    let rows: any[] = [];
+    let obj: any = {};
+
+    const workbook = new Excel.Workbook();
+
+    if (Fs.existsSync(xls)) {
+      await workbook.xlsx.readFile(xls);
+      let worksheet: any;
+      for (let t = 0; t < workbook.worksheets.length; t++) {
+        worksheet = workbook.worksheets[t];
+        if (worksheet) {
+          break;
+        }
       }
-  
-      const ext = Path.extname(filePath).toLowerCase();
-      let rows: any[] = [];
-      
-      const workbook = new Excel.Workbook();
-      
-      if (ext === '.xlsx') {
-          await workbook.xlsx.readFile(filePath);
-          let worksheet: any;
-          for (let t = 0; t < workbook.worksheets.length; t++) {
-              worksheet = workbook.worksheets[t];
-              if (worksheet) {
-                  break;
-              }
-          }
-          rows = worksheet.getSheetValues();
-      } else if (ext === '.csv') {
-          await workbook.csv.readFile(filePath);
-          let worksheet = workbook.worksheets[0]; // Assuming the CSV file has only one sheet
-          rows = worksheet.getSheetValues();
-      } else {
-          return [];
-      }
-  
-      GBLogEx.info(min, `Processing ${rows.length} rows from Config file ${filePath}...`);
-  
+      rows = worksheet.getSheetValues();
+
       // Skips the header lines.
       for (let index = 0; index < 6; index++) {
-          rows.shift();
+        rows.shift();
       }
-  
-      let obj: any = {};
-      await asyncPromise.eachSeries(rows, async (line: any) => {
-          if (line && line._cells[0] && line._cells[1] && line._cells[0].text) {
-              obj[line._cells[0].text] = line._cells[1].text;
-          }
-      });
-  
-      GBLogEx.info(min, GBUtil.toYAML(obj));
-      return obj;
+    } else if (Fs.existsSync(csv)) {
+      await workbook.csv.readFile(filePath);
+      let worksheet = workbook.worksheets[0]; // Assuming the CSV file has only one sheet
+      rows = worksheet.getSheetValues();
+
+      // Skips the header lines.
+
+      rows.shift();
+    } else {
+      return [];
+    }
+    await asyncPromise.eachSeries(rows, async (line: any) => {
+      if (line && line.length > 0) {
+        obj[line[1]] = line[2];
+      }
+    });
+
+    GBLogEx.info(min, `Processing ${rows.length} rows from ${filePath}...`);
+    rows = null;
+    return obj;
   }
-  
+
   /**
    */
   public async downloadFolder(
@@ -624,39 +623,36 @@ export class GBDeployer implements IGBDeployer {
 
     switch (packageType) {
       case '.gbot':
-
-      
         // Extracts configuration information from .gbot files.
 
         min.instance.params = await this.loadParamsFromTabular(min, localPath);
-        if (min.instance.params.length){
+        if (min.instance.params) {
+          let connections = [];
 
-        let connections = [];
+          // Find all tokens in .gbot Config.
+          const strFind = ' Driver';
+          const conns = await min.core['findParam'](min.instance, strFind);
+          await CollectionUtil.asyncForEach(conns, async t => {
+            const connectionName = t.replace(strFind, '');
+            let con = {};
+            con['name'] = connectionName;
+            con['storageServer'] = min.core.getParam<string>(min.instance, `${connectionName} Server`, null);
+            con['storageUsername'] = min.core.getParam<string>(min.instance, `${connectionName} Username`, null);
+            con['storageName'] = min.core.getParam<string>(min.instance, `${connectionName} Name`, null);
+            con['storagePort'] = min.core.getParam<string>(min.instance, `${connectionName} Port`, null);
+            con['storagePassword'] = min.core.getParam<string>(min.instance, `${connectionName} Password`, null);
+            con['storageDriver'] = min.core.getParam<string>(min.instance, `${connectionName} Driver`, null);
+            connections.push(con);
+          });
 
-        // Find all tokens in .gbot Config.
-        const strFind = ' Driver';
-        const conns = await min.core['findParam'](min.instance, strFind);
-        await CollectionUtil.asyncForEach(conns, async t => {
-          const connectionName = t.replace(strFind, '');
-          let con = {};
-          con['name'] = connectionName;
-          (con['storageServer'] = min.core.getParam<string>(min.instance, `${connectionName} Server`, null)),
-            (con['storageName'] = min.core.getParam<string>(min.instance, `${connectionName} Name`, null)),
-            (con['storageUsername'] = min.core.getParam<string>(min.instance, `${connectionName} Username`, null)),
-            (con['storagePort'] = min.core.getParam<string>(min.instance, `${connectionName} Port`, null)),
-            (con['storagePassword'] = min.core.getParam<string>(min.instance, `${connectionName} Password`, null)),
-            (con['storageDriver'] = min.core.getParam<string>(min.instance, `${connectionName} Driver`, null));
-          connections.push(con);
-        });
+          const path = DialogKeywords.getGBAIPath(min.botId, null);
+          const localFolder = Path.join('work', path, 'connections.json');
+          Fs.writeFileSync(localFolder, JSON.stringify(connections), { encoding: null });
 
-        const path = DialogKeywords.getGBAIPath(min.botId, null);
-        const localFolder = Path.join('work', path, 'connections.json');
-        Fs.writeFileSync(localFolder, JSON.stringify(connections), { encoding: null });
+          // Updates instance object.
 
-        // Updates instance object.
-
-        await this.core.saveInstance(min.instance);
-      }
+          await this.core.saveInstance(min.instance);
+        }
         break;
 
       case '.gbkb':

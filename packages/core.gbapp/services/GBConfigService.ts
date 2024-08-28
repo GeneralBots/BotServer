@@ -76,13 +76,16 @@ export class GBConfigService {
     }
   }
 
-  public static get(key: string): string | undefined {
+  public static get(key: string) {
     let value = GBConfigService.tryGet(key);
 
     if (!value) {
       switch (key) {
         case 'PORT':
           value = this.getServerPort();
+          break;
+        case 'GBVM':
+          value = false;
           break;
         case 'STORAGE_NAME':
           value = null;

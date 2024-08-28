@@ -291,7 +291,6 @@ export class GBVMService extends GBService {
       }
 
       connections.forEach(async con => {
-
         const connectionName = con['name'];
 
         const dialect = con['storageDriver'];
@@ -1124,7 +1123,7 @@ export class GBVMService extends GBService {
     let result;
 
     try {
-      if (GBConfigService.get('GBVM') === 'false') {
+      if (!GBConfigService.get('GBVM')) {
         return await (async () => {
           return await new Promise((resolve, reject) => {
             sandbox['resolve'] = resolve;
@@ -1145,6 +1144,7 @@ export class GBVMService extends GBService {
             });
             const s = new VMScript(code, { filename: scriptPath });
             result = vm1.run(s);
+            
           });
         })();
       } else {
@@ -1167,7 +1167,7 @@ export class GBVMService extends GBService {
           cpu: 100,
           memory: 50000,
           time: 60 * 60 * 24 * 14,
-          cwd: gbdialogPath,
+          cwd: scriptPath,
           script: runnerPath
         });
 
