@@ -724,7 +724,7 @@ ENDPOINT_UPDATE=true
    * @param name Name of param to get from instance.
    * @param defaultValue Value returned when no param is defined in Config.xlsx.
    */
-  public getParam<T>(instance: IGBInstance, name: string, defaultValue?: T): any {
+  public getParam<T>(instance: IGBInstance, name: string, defaultValue?: T, platform=false): any {
     let value = null;
     let params;
     name = name.trim();
@@ -772,6 +772,10 @@ ENDPOINT_UPDATE=true
 
     if (value === undefined) {
       value = null;
+    }
+
+    if (!value && platform){
+      value = process.env[name.replace(/ /g, "_").toUpperCase()];
     }
 
     if (value && typeof defaultValue === 'boolean') {

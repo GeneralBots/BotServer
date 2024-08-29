@@ -221,6 +221,72 @@ export class GBVMService extends GBService {
     }
   }
 
+  public static async  loadConnections(min) {
+
+    
+    // Loads storage custom connections.
+    const path = DialogKeywords.getGBAIPath(min.botId, null);
+    const filePath = Path.join('work', path, 'connections.json');
+    let connections = [];
+    if (Fs.existsSync(filePath)) {
+      connections = JSON.parse(Fs.readFileSync(filePath, 'utf8'));
+    }
+
+    connections.forEach(async con => {
+      const connectionName = con['name'];
+
+      const dialect = con['storageDriver'];
+      const host = con['storageServer'];
+      const port = con['storagePort'];
+      const storageName = con['storageName'];
+      const username = con['storageUsername'];
+      const password = con['storagePassword'];
+
+      const logging: boolean | Function =
+        GBConfigService.get('STORAGE_LOGGING') === 'true'
+          ? (str: string): void => {
+              GBLogEx.info(min, str);
+            }
+          : false;
+
+      const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
+      const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
+      const sequelizeOptions = {
+        define: {
+          charset: 'utf8',
+          collate: 'utf8_general_ci',
+          freezeTableName: true,
+          timestamps: false
+        },
+        host: host,
+        port: port,
+        logging: logging as boolean,
+        dialect: dialect,
+        quoteIdentifiers: false, // set case-insensitive
+        dialectOptions: {
+          options: {
+            trustServerCertificate: true,
+            encrypt: encrypt,
+            requestTimeout: 120 * 1000
+          }
+        },
+        pool: {
+          max: 5,
+          min: 0,
+          idle: 10000,
+          evict: 10000,
+          acquire: acquire
+        }
+      };
+
+      if (!min[connectionName]) {
+        GBLogEx.info(min, `Loading custom connection ${connectionName}...`);
+        min[connectionName] = new Sequelize(storageName, username, password, sequelizeOptions);
+        min[connectionName]['gbconnection'] = con;
+      }
+    });
+  }
+
   private syncStorageFromTABLE(folder: string, filename: string, min: GBMinInstance, mainName: string) {
     const tablesFile = urlJoin(folder, `${filename}.tables.json`);
     let sync = false;
@@ -281,68 +347,6 @@ export class GBVMService extends GBService {
       };
 
       const associations = [];
-
-      // Loads storage custom connections.
-      const path = DialogKeywords.getGBAIPath(min.botId, null);
-      const filePath = Path.join('work', path, 'connections.json');
-      let connections = [];
-      if (Fs.existsSync(filePath)) {
-        connections = JSON.parse(Fs.readFileSync(filePath, 'utf8'));
-      }
-
-      connections.forEach(async con => {
-        const connectionName = con['name'];
-
-        const dialect = con['storageDriver'];
-        const host = con['storageServer'];
-        const port = con['storagePort'];
-        const storageName = con['storageName'];
-        const username = con['storageUsername'];
-        const password = con['storagePassword'];
-
-        const logging: boolean | Function =
-          GBConfigService.get('STORAGE_LOGGING') === 'true'
-            ? (str: string): void => {
-                GBLogEx.info(min, str);
-              }
-            : false;
-
-        const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
-        const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
-        const sequelizeOptions = {
-          define: {
-            charset: 'utf8',
-            collate: 'utf8_general_ci',
-            freezeTableName: true,
-            timestamps: false
-          },
-          host: host,
-          port: port,
-          logging: logging as boolean,
-          dialect: dialect,
-          quoteIdentifiers: false, // set case-insensitive
-          dialectOptions: {
-            options: {
-              trustServerCertificate: true,
-              encrypt: encrypt,
-              requestTimeout: 120 * 1000
-            }
-          },
-          pool: {
-            max: 5,
-            min: 0,
-            idle: 10000,
-            evict: 10000,
-            acquire: acquire
-          }
-        };
-
-        if (!min[connectionName]) {
-          GBLogEx.info(min, `Loading custom connection ${connectionName}...`);
-          min[connectionName] = new Sequelize(storageName, username, password, sequelizeOptions);
-          min[connectionName]['gbconnection'] = con;
-        }
-      });
 
       const shouldSync = min.core.getParam<boolean>(min.instance, 'Synchronize Database', false);
 
@@ -1144,7 +1148,6 @@ export class GBVMService extends GBService {
             });
             const s = new VMScript(code, { filename: scriptPath });
             result = vm1.run(s);
-            
           });
         })();
       } else {

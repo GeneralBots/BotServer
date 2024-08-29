@@ -1,0 +1,4 @@
+name,value
+Answer Mode,sql
+llm File,northwind.db
+llm Driver,sqlite

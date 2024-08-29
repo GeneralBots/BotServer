@@ -294,28 +294,29 @@ export class ChatServices {
 
     let model;
 
-    const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
-    const azureOpenAIGPTModel = await min.core.getParam(min.instance, 'Azure Open AI GPT Model', null);
-    const azureOpenAIVersion = await min.core.getParam(min.instance, 'Azure Open AI Version', null);
-    const azureOpenAIApiInstanceName = await min.core.getParam(min.instance, 'Azure Open AI Instance', null);
+    const azureOpenAIKey = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Key', null, true);
+    const azureOpenAIGPTModel = await (min.core as any)['getParam'](
+      min.instance,
+      'Azure Open AI GPT Model',
+      null,
+      true
+    );
+    const azureOpenAIVersion = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Version', null, true);
+    const azureOpenAIApiInstanceName = await (min.core as any)['getParam'](
+      min.instance,
+      'Azure Open AI Instance',
+      null,
+      true
+    );
 
-    if (azureOpenAIKey) {
-      model = new ChatOpenAI({
-        azureOpenAIApiKey: azureOpenAIKey,
-        azureOpenAIApiInstanceName: azureOpenAIApiInstanceName,
-        azureOpenAIApiDeploymentName: azureOpenAIGPTModel,
-        azureOpenAIApiVersion: azureOpenAIVersion,
-        temperature: 0,
-        callbacks: [logHandler]
-      });
-    } else {
-      model = new ChatOpenAI({
-        openAIApiKey: process.env.OPENAI_API_KEY,
-        modelName: 'gpt-3.5-turbo-0125',
-        temperature: 0,
-        callbacks: [logHandler]
-      });
-    }
+    model = new ChatOpenAI({
+      azureOpenAIApiKey: azureOpenAIKey,
+      azureOpenAIApiInstanceName: azureOpenAIApiInstanceName,
+      azureOpenAIApiDeploymentName: azureOpenAIGPTModel,
+      azureOpenAIApiVersion: azureOpenAIVersion,
+      temperature: 0,
+      callbacks: [logHandler]
+    });
 
     let tools = await ChatServices.getTools(min);
     let toolsAsText = ChatServices.getToolsAsText(tools);
@@ -476,21 +477,24 @@ export class ChatServices {
       });
     } else if (LLMMode === 'sql') {
       const con = min[`llm`]['gbconnection'];
-      
+
       const dialect = con['storageDriver'];
-      const host = con['storageServer'];
-      const port = con['storagePort'];
-      const storageName = con['storageName'];
-      const username = con['storageUsername'];
-      const password = con['storagePassword'];
 
       let dataSource;
       if (dialect === 'sqlite') {
         dataSource = new DataSource({
           type: 'sqlite',
-          database: storageName
+          database: con['storageFile'],
+          synchronize: false,
+          logging: true
         });
       } else {
+        const host = con['storageServer'];
+        const port = con['storagePort'];
+        const storageName = con['storageName'];
+        const username = con['storageUsername'];
+        const password = con['storagePassword'];
+
         dataSource = new DataSource({
           type: dialect as any,
           host: host,

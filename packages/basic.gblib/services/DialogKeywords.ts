@@ -782,7 +782,7 @@ export class DialogKeywords {
    */
   public async getConfig({ pid, name }) {
     let { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    return min.core.getParam(min.instance, name, null);
+    return min.core.getParam(min.instance, name, null, false);
   }
 
   /**

@@ -1061,7 +1061,7 @@ export class KBService implements IGBKBService {
       let logo = await this.getLogoByPage(min, page);
       if (logo) {
         path = DialogKeywords.getGBAIPath(min.botId);
-        const logoPath = Path.join(process.env.PWD, 'work', path, 'cache');
+        
         const baseUrl = page.url().split('/').slice(0, 3).join('/');
         logo = logo.startsWith('https') ? logo : urlJoin(baseUrl, logo);
 

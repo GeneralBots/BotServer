@@ -377,8 +377,8 @@ export class GBMinService {
       }
       res.end();
     });
+    
     GBLog.verbose(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
-
 
       // Generates MS Teams manifest.
 
@@ -390,7 +390,9 @@ export class GBMinService {
         Fs.writeFileSync(packageTeams, data);
       }
 
-    // Serves individual URL for each bot user interface.
+      await GBVMService.loadConnections(min);
+
+      // Serves individual URL for each bot user interface.
 
     if (process.env.DISABLE_WEB !== 'true') {
       const uiUrl = `/${instance.botId}`;

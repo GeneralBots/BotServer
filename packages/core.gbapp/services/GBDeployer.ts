@@ -447,7 +447,7 @@ export class GBDeployer implements IGBDeployer {
         rows.shift();
       }
     } else if (Fs.existsSync(csv)) {
-      await workbook.csv.readFile(filePath);
+      await workbook.csv.readFile(csv);
       let worksheet = workbook.worksheets[0]; // Assuming the CSV file has only one sheet
       rows = worksheet.getSheetValues();
 
@@ -636,12 +636,23 @@ export class GBDeployer implements IGBDeployer {
             const connectionName = t.replace(strFind, '');
             let con = {};
             con['name'] = connectionName;
-            con['storageServer'] = min.core.getParam<string>(min.instance, `${connectionName} Server`, null);
-            con['storageUsername'] = min.core.getParam<string>(min.instance, `${connectionName} Username`, null);
-            con['storageName'] = min.core.getParam<string>(min.instance, `${connectionName} Name`, null);
-            con['storagePort'] = min.core.getParam<string>(min.instance, `${connectionName} Port`, null);
-            con['storagePassword'] = min.core.getParam<string>(min.instance, `${connectionName} Password`, null);
             con['storageDriver'] = min.core.getParam<string>(min.instance, `${connectionName} Driver`, null);
+            const storageName = min.core.getParam<string>(min.instance, `${connectionName} Name`, null);
+
+            let file = min.core.getParam<string>(min.instance, `${connectionName} File`, null);
+
+            if (storageName) {
+              con['storageName'] = storageName;
+              con['storageServer'] = min.core.getParam<string>(min.instance, `${connectionName} Server`, null);
+              con['storageUsername'] = min.core.getParam<string>(min.instance, `${connectionName} Username`, null);
+              con['storagePort'] = min.core.getParam<string>(min.instance, `${connectionName} Port`, null);
+              con['storagePassword'] = min.core.getParam<string>(min.instance, `${connectionName} Password`, null);
+            } else if (file) {
+              const path = DialogKeywords.getGBAIPath(min.botId, 'gbdata');
+              con['storageFile'] = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
+            } else {
+              GBLogEx.debug(min, `No storage information found for ${connectionName}, missing storage name or file.`);
+            }
             connections.push(con);
           });
 
