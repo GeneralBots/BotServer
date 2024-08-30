@@ -33,7 +33,6 @@
 import Path from 'path';
 import { GBLog, GBMinInstance } from 'botlib';
 import { DialogKeywords } from './DialogKeywords.js';
-import joinImages from 'join-images-updated';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import urlJoin from 'url-join';
@@ -76,7 +75,7 @@ export class ImageProcessingServices {
 
     const botId = min.instance.botId;
     const path = DialogKeywords.getGBAIPath(min.botId);
-    const img = await joinImages(paths);
+    // TODO: const img = await joinImages(paths);
     const localName = Path.join('work', path, 'cache', `img-mrg${GBAdminService.getRndReadableIdentifier()}.png`);
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
     img.toFile(localName);
