@@ -34,7 +34,7 @@
 
 'use strict';
 
-import { GBLog, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
+import { GBLog, GBMinInstance, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
 import * as Fs from 'fs';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Op, Dialect } from 'sequelize';
@@ -47,6 +47,7 @@ import { GBCorePackage } from '../../core.gbapp/index.js';
 import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp/index.js';
 import { GBKBPackage } from '../../kb.gbapp/index.js';
 import { GBSecurityPackage } from '../../security.gbapp/index.js';
+import { v2 as webdav } from 'webdav-server';
 import { GBWhatsappPackage } from '../../whatsapp.gblib/index.js';
 import { GuaribasApplications, GuaribasInstance, GuaribasLog } from '../models/GBModel.js';
 import { GBConfigService } from './GBConfigService.js';
@@ -891,5 +892,37 @@ ENDPOINT_UPDATE=true
         });
       }
     }
+  }
+
+  public static async createWebDavServer(minInstances: GBMinInstance[]) {
+    const userManager = new webdav.SimpleUserManager();
+    const privilegeManager = new webdav.SimplePathPrivilegeManager();
+
+    // Create the WebDAV server
+    const server = new webdav.WebDAVServer({
+      port: 1900,
+      httpAuthentication: new webdav.HTTPDigestAuthentication(userManager, 'Default realm'),
+      privilegeManager: privilegeManager
+    });
+    GBServer.globals.webDavServer = server;
+
+    minInstances.forEach(min => {
+      const user = min.core.getParam(min.instance, 'WebDav Username', GBConfigService.get('WEBDAV_USERNAME'));
+      const pass = min.core.getParam(min.instance, 'WebDav Password', GBConfigService.get('WEBDAV_PASSWORD'));
+
+      if (user && pass) {
+        const objUser = userManager.addUser(user, pass);
+
+        const virtualPath = '/' + min.botId;
+        let path = DialogKeywords.getGBAIPath(min.botId, null);
+        const gbaiRoot = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path);
+
+        server.setFileSystem(virtualPath, new webdav.PhysicalFileSystem(gbaiRoot), successed => {
+          GBLogEx.info(min.instance.instanceId, `WebDav online for ${min.botId}...`);
+        });
+        privilegeManager.setRights(objUser, virtualPath, ['all']);
+      }
+    });
+    server.start(1900);
   }
 }

@@ -40,7 +40,6 @@ import bodyParser from 'body-parser';
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
 import child_process from 'child_process';
 import express from 'express';
-import { v2 as webdav } from 'webdav-server';
 import fs from 'fs';
 import http from 'http';
 import httpProxy from 'http-proxy';
@@ -104,9 +103,7 @@ export class GBServer {
     GBServer.globals.debuggers = [];
     GBServer.globals.users = [];
     GBServer.globals.indexSemaphore = new Mutex();
-    GBServer.globals.webDavServer = new webdav.WebDAVServer();
-    GBServer.globals.webDavServer.start();
-
+    
     server.use(bodyParser.json());
     server.use(bodyParser.json({ limit: '1mb' }));
     server.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
@@ -252,7 +249,9 @@ export class GBServer {
 
           // Builds minimal service infrastructure.
 
-          await minService.buildMin(instances);
+          const minInstances = await minService.buildMin(instances);
+
+          GBServer.globals.webDavServer = await GBCoreService.createWebDavServer(minInstances);
 
           server.all('*', async (req, res, next) => {
             const host = req.headers.host;

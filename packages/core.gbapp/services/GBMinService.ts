@@ -147,7 +147,7 @@ export class GBMinService {
   /**
    * Constructs a new minimal instance for each bot.
    */
-  public async buildMin(instances: IGBInstance[]) {
+  public async buildMin(instances: IGBInstance[]) : Promise<GBMinInstance[]> {
     // Servers default UI on root address '/' if web enabled.
 
     if (process.env.DISABLE_WEB !== 'true') {
@@ -166,6 +166,7 @@ export class GBMinService {
     // Calls mountBot event to all bots.
 
     let i = 1;
+    const minInstances = [];
 
     await CollectionUtil.asyncForEach(
       instances,
@@ -173,7 +174,8 @@ export class GBMinService {
 
         try {
           GBLog.info(`Mounting ${instance.botId}...`);
-          await this['mountBot'](instance);
+          const min = await this['mountBot'](instance);
+          minInstances.push(min);
         } catch (error) {
           GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
         }
@@ -187,7 +189,9 @@ export class GBMinService {
     const service = new ScheduleServices();
     await service.scheduleAll();
 
-    GBLogEx.info(0, `All Bot instances loaded.`);
+    GBLogEx.info(0, `All Bot service instances loaded.`);
+
+    return minInstances;
   }
 
   public  async startSimpleTest(min) {
@@ -348,15 +352,6 @@ export class GBMinService {
       mkdirp.sync(dir);
     }
 
-    if (!GBConfigService.get('STORAGE_NAME')) {
-      dir = Path.join(GBConfigService.get('STORAGE_LIBRARY'), 'work', gbai);
-
-      const server = GBServer.globals.webDavServer;
-      server.setFileSystem(`/${botId}`, new webdav.PhysicalFileSystem(dir), success => {
-        GBLogEx.info(1, `WebDav for ${botId} loaded.`);
-      });
-    }
-
     // Calls the loadBot context.activity for all packages.
 
     await this.invokeLoadBot(min.appPackages, GBServer.globals.sysPackages, min);
@@ -463,6 +458,8 @@ export class GBMinService {
     // Loads API.
 
     await this.ensureAPI();
+
+    return min;
 
   }
 
