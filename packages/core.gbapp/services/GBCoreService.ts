@@ -65,6 +65,7 @@ import { GBLogEx } from './GBLogEx.js';
 import { GBDeployer } from './GBDeployer.js';
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
+import csvdb from 'csv-database';
 
 /**
  * GBCoreService contains main logic for handling storage services related
@@ -133,11 +134,9 @@ export class GBCoreService implements IGBCoreService {
     } else if (this.dialect === 'sqlite') {
       storage = GBConfigService.get('STORAGE_FILE');
 
-      if (!Fs.existsSync(storage)){
+      if (!Fs.existsSync(storage)) {
         process.env.STORAGE_SYNC = 'true';
       }
-
-
     } else {
       throw new Error(`Unknown dialect: ${this.dialect}.`);
     }
@@ -519,8 +518,7 @@ ENDPOINT_UPDATE=true
    * Verifies that an complex global password has been specified
    * before starting the server.
    */
-  public ensureAdminIsSecured() {
-  }
+  public ensureAdminIsSecured() {}
 
   public async createBootInstance(
     core: GBCoreService,
@@ -672,49 +670,61 @@ ENDPOINT_UPDATE=true
   }
 
   public async setConfig(min, name: string, value: any): Promise<any> {
-    // Handles calls for BASIC persistence on sheet files.
+    if (GBConfigService.get('STORAGE_NAME')) {
+      // Handles calls for BASIC persistence on sheet files.
 
-    GBLog.info(`Defining Config.xlsx variable ${name}= '${value}'...`);
+      GBLog.info(`Defining Config.xlsx variable ${name}= '${value}'...`);
 
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
-    const maxLines = 512;
-    const file = 'Config.xlsx';
-    const path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
+      const maxLines = 512;
+      const file = 'Config.xlsx';
+      const path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
 
-    let document = await new SystemKeywords().internalGetDocument(client, baseUrl, path, file);
+      let document = await new SystemKeywords().internalGetDocument(client, baseUrl, path, file);
 
-    // Creates book session that will be discarded.
+      // Creates book session that will be discarded.
 
-    let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
+      let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
 
-    let results = await client
-      .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A${maxLines}')`
-      )
-      .get();
+      let results = await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A${maxLines}')`
+        )
+        .get();
 
-    const rows = results.text;
-    let address = '';
+      const rows = results.text;
+      let address = '';
 
-    // Fills the row variable.
+      // Fills the row variable.
 
-    for (let i = 1; i <= rows.length; i++) {
-      let result = rows[i - 1][0];
-      if (result && result.toLowerCase() === name.toLowerCase()) {
-        address = `B${i}:B${i}`;
-        break;
+      for (let i = 1; i <= rows.length; i++) {
+        let result = rows[i - 1][0];
+        if (result && result.toLowerCase() === name.toLowerCase()) {
+          address = `B${i}:B${i}`;
+          break;
+        }
+      }
+
+      let body = { values: [[]] };
+      body.values[0][0] = value;
+
+      await client
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
+        )
+        .patch(body);
+    } else {
+      let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
+      const config = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, 'config.csv');
+
+      const db = await csvdb(config, ['name', 'value'], ',');
+      if (await db.get({ name: name })) {
+        await db.edit({ name: name }, { name, value });
+      } else {
+        await db.add({ name, value });
       }
     }
-
-    let body = { values: [[]] };
-    body.values[0][0] = value;
-
-    await client
-      .api(
-        `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
-      )
-      .patch(body);
   }
 
   /**
@@ -724,7 +734,7 @@ ENDPOINT_UPDATE=true
    * @param name Name of param to get from instance.
    * @param defaultValue Value returned when no param is defined in Config.xlsx.
    */
-  public getParam<T>(instance: IGBInstance, name: string, defaultValue?: T, platform=false): any {
+  public getParam<T>(instance: IGBInstance, name: string, defaultValue?: T, platform = false): any {
     let value = null;
     let params;
     name = name.trim();
@@ -774,8 +784,8 @@ ENDPOINT_UPDATE=true
       value = null;
     }
 
-    if (!value && platform){
-      value = process.env[name.replace(/ /g, "_").toUpperCase()];
+    if (!value && platform) {
+      value = process.env[name.replace(/ /g, '_').toUpperCase()];
     }
 
     if (value && typeof defaultValue === 'boolean') {
@@ -815,19 +825,17 @@ ENDPOINT_UPDATE=true
     let libraryPath = GBConfigService.get('STORAGE_LIBRARY');
 
     if (!Fs.existsSync(libraryPath)) {
-     mkdirp.sync(libraryPath);
+      mkdirp.sync(libraryPath);
     }
 
     await this.syncBotStorage(instances, 'default', deployer, libraryPath);
-    
+
     const files = Fs.readdirSync(libraryPath);
     await CollectionUtil.asyncForEach(files, async file => {
-      
-      if (file.trim().toLowerCase() !== 'default.gbai'){
+      if (file.trim().toLowerCase() !== 'default.gbai') {
+        let botId = file.replace(/\.gbai/, '');
 
-      let botId = file.replace(/\.gbai/, '');
-
-      await this.syncBotStorage(instances, botId, deployer, libraryPath);
+        await this.syncBotStorage(instances, botId, deployer, libraryPath);
       }
     });
   }
@@ -836,9 +844,8 @@ ENDPOINT_UPDATE=true
     let instance = instances.find(p => p.botId.toLowerCase().trim() === botId.toLowerCase().trim());
 
     if (!instance) {
-
       GBLog.info(`Importing package ${botId}...`);
-      
+
       // Creates a bot.
 
       let mobile = null,
@@ -848,12 +855,11 @@ ENDPOINT_UPDATE=true
       const gbaiPath = Path.join(libraryPath, `${botId}.gbai`);
 
       if (!Fs.existsSync(gbaiPath)) {
-
         Fs.mkdirSync(gbaiPath, { recursive: true });
 
         const base = Path.join(process.env.PWD, 'templates', 'default.gbai');
 
-        Fs.cpSync(Path.join(base, `default.gbkb`), Path.join(gbaiPath,`default.gbkb`), {
+        Fs.cpSync(Path.join(base, `default.gbkb`), Path.join(gbaiPath, `default.gbkb`), {
           errorOnExist: false,
           force: true,
           recursive: true
@@ -876,7 +882,7 @@ ENDPOINT_UPDATE=true
         Fs.cpSync(Path.join(base, `default.gbdialog`), Path.join(gbaiPath, `default.gbdialog`), {
           errorOnExist: false,
           force: true,
-          recursive: true, 
+          recursive: true
         });
         Fs.cpSync(Path.join(base, `default.gbdrive`), Path.join(gbaiPath, `default.gbdrive`), {
           errorOnExist: false,

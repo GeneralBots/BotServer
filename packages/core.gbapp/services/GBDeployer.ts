@@ -324,10 +324,20 @@ export class GBDeployer implements IGBDeployer {
   public async loadOrCreateEmptyVectorStore(min: GBMinInstance): Promise<HNSWLib> {
     let vectorStore: HNSWLib;
 
-    const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
-    const azureOpenAIVersion = await min.core.getParam(min.instance, 'Azure Open AI Version', null);
-    const azureOpenAIApiInstanceName = await min.core.getParam(min.instance, 'Azure Open AI Instance', null);
-    const azureOpenAIEmbeddingModel = await min.core.getParam(min.instance, 'Azure Open AI Embedding Model', null);
+    const azureOpenAIKey = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Key', null, true);
+    const azureOpenAIVersion = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Version', null, true);
+    const azureOpenAIApiInstanceName = await (min.core as any)['getParam'](
+      min.instance,
+      'Azure Open AI Instance',
+      null,
+      true
+    );
+    const azureOpenAIEmbeddingModel = await (min.core as any)['getParam'](
+      min.instance,
+      'Azure Open AI Embedding Model',
+      null,
+      true
+    );
 
     let embedding;
     if (!azureOpenAIEmbeddingModel) {
@@ -663,6 +673,10 @@ export class GBDeployer implements IGBDeployer {
           // Updates instance object.
 
           await this.core.saveInstance(min.instance);
+          GBLogEx.info(min, `Reloading bot ${min.botId}...`);
+          GBServer.globals.minService.unmountBot(min.botId);
+          GBServer.globals.minService.mountBot(min.instance);
+          GBLogEx.info(min, `Bot ${min.botId} reloaded.`);
         }
         break;
 

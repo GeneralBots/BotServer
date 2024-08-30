@@ -54,6 +54,7 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from 'langchain/document';
 import getColors from 'get-image-colors';
 
+
 import {
   GBDialogStep,
   GBLog,

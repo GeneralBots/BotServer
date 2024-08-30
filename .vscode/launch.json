@@ -14,6 +14,7 @@
         "NODE_NO_WARNINGS":"1"
       },
       "args": [
+        "--max-old-space-size 5120", 
         "--no-deprecation", 
         "--loader ts-node/esm", 
         "--require ${workspaceRoot}/suppress-node-warnings.cjs", 
