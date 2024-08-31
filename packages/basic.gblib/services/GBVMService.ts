@@ -221,9 +221,7 @@ export class GBVMService extends GBService {
     }
   }
 
-  public static async  loadConnections(min) {
-
-    
+  public static async loadConnections(min) {
     // Loads storage custom connections.
     const path = DialogKeywords.getGBAIPath(min.botId, null);
     const filePath = Path.join('work', path, 'connections.json');
@@ -368,83 +366,83 @@ export class GBVMService extends GBService {
         let con = min[connectionName];
 
         if (!con) {
-          throw new Error(`Invalid connection specified: ${connectionName}.`);
-        }
+          GBLogEx.debug(min, `Invalid connection specified: ${min.bot} ${tableName} ${connectionName}.`);
+        } else {
+          // Field checking, syncs if there is any difference.
+          const seq = con ? con : minBoot.core.sequelize;
 
-        // Field checking, syncs if there is any difference.
-        const seq = con ? con : minBoot.core.sequelize;
+          if (seq) {
+            const model = seq.models[tableName];
+            if (model) {
+              // Except Id, checks if has same number of fields.
+              let equals = 0;
+              Object.keys(t.fields).forEach(key => {
+                let obj1 = t.fields[key];
+                let obj2 = model['fieldRawAttributesMap'][key];
 
-        if (seq) {
-          const model = seq.models[tableName];
-          if (model) {
-            // Except Id, checks if has same number of fields.
-            let equals = 0;
-            Object.keys(t.fields).forEach(key => {
-              let obj1 = t.fields[key];
-              let obj2 = model['fieldRawAttributesMap'][key];
-
-              if (key !== 'id') {
-                if (obj1 && obj2) {
-                  equals++;
+                if (key !== 'id') {
+                  if (obj1 && obj2) {
+                    equals++;
+                  }
                 }
+              });
+
+              if (equals != Object.keys(t.fields).length) {
+                sync = true;
               }
-            });
-
-            if (equals != Object.keys(t.fields).length) {
-              sync = true;
             }
-          }
 
-          seq.define(tableName, t.fields);
+            seq.define(tableName, t.fields);
 
-          // New table checking, if needs sync.
-          let tables;
-          const dialect = con.dialect.name;
+            // New table checking, if needs sync.
+            let tables;
+            const dialect = con.dialect.name;
 
-          if (dialect === 'mssql') {
-            tables = await seq.query(
-              `SELECT table_name, table_schema
+            if (dialect === 'mssql') {
+              tables = await seq.query(
+                `SELECT table_name, table_schema
           FROM information_schema.tables
           WHERE table_type = 'BASE TABLE'
           ORDER BY table_name ASC`,
-              {
-                type: QueryTypes.RAW
+                {
+                  type: QueryTypes.RAW
+                }
+              )[0];
+            } else if (dialect === 'mariadb') {
+              tables = await seq.getQueryInterface().showAllTables();
+            }
+
+            let found = false;
+            tables.forEach(storageTable => {
+              if (storageTable['table_name'] === tableName) {
+                found = true;
               }
-            )[0];
-          } else if (dialect === 'mariadb') {
-            tables = await seq.getQueryInterface().showAllTables();
-          }
-
-          let found = false;
-          tables.forEach(storageTable => {
-            if (storageTable['table_name'] === tableName) {
-              found = true;
-            }
-          });
-
-          sync = sync ? sync : !found;
-
-          associations.forEach(e => {
-            const from = seq.models[e.from];
-            const to = seq.models[e.to];
-
-            try {
-              to.hasMany(from);
-            } catch (error) {
-              throw new Error(
-                `Invalid relationship in ${mainName}: from ${e.from} to ${e.to} (${min.botId})... ${error.message}`
-              );
-            }
-          });
-
-          if (sync && shouldSync) {
-            GBLogEx.info(min, `Syncing changes for TABLE ${connectionName} ${tableName} keyword (${min.botId})...`);
-
-            await seq.sync({
-              alter: true,
-              force: false // Keep it false due to data loss danger.
             });
-            GBLogEx.info(min, `Done sync for ${min.botId} ${connectionName} ${tableName} storage table...`);
+
+            sync = sync ? sync : !found;
+
+            associations.forEach(e => {
+              const from = seq.models[e.from];
+              const to = seq.models[e.to];
+
+              try {
+                to.hasMany(from);
+              } catch (error) {
+                throw new Error(
+                  `Invalid relationship in ${mainName}: from ${e.from} to ${e.to} (${min.botId})... ${error.message}`
+                );
+              }
+            });
+
+            if (sync && shouldSync) {
+              GBLogEx.info(min, `Syncing changes for TABLE ${connectionName} ${tableName} keyword (${min.botId})...`);
+
+              await seq.sync({
+                alter: true,
+                force: false // Keep it false due to data loss danger.
+              });
+              GBLogEx.info(min, `Done sync for ${min.botId} ${connectionName} ${tableName} storage table...`);
+            }
           }
         }
       });
