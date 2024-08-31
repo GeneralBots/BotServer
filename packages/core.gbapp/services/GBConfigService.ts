@@ -90,7 +90,16 @@ export class GBConfigService {
         case 'STORAGE_NAME':
           value = null;
           break;
+        case 'WEBDAV_USERNAME':
+          value = null;
+          break;
+        case 'WEBDAV_PASSWORD':
+          value = null;
+          break;
         case 'CLOUD_USERNAME':
+          value = undefined;
+          break;
+        case 'CLOUD_PASSWORD':
           value = undefined;
           break;
         case 'STORAGE_LIBRARY':
@@ -98,9 +107,6 @@ export class GBConfigService {
           break;
         case 'BOT_ID':
           value = 'default';
-          break;
-        case 'CLOUD_PASSWORD':
-          value = undefined;
           break;
         case 'CLOUD_SUBSCRIPTIONID':
           value = undefined;

@@ -1648,7 +1648,6 @@ export class GBMinService {
         if (GBServer.globals.server.apiServer) {
           GBServer.globals.server.apiServer.close(cb => {
             resolve(true);
-            GBLogEx.info(0, 'Reloading General Bots API...');
           });
         } else {
           resolve(true);

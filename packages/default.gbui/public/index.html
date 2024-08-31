@@ -57,6 +57,17 @@
       /* filter: opacity(0); Problem in recent Chrome 68+ */
     }
   </style>
+
+  <script>
+          // Focus the input field after rendering
+          setTimeout(() => {
+        const input = document.querySelector('.webchat-input');
+        if (input) {
+          input.focus();
+        }
+      }, 3000); // Adjust timing as needed
+
+  </script>
 </head>
 
 <body style="background-color: lightgrey;">
