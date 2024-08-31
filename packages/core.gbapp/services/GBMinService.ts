@@ -289,6 +289,9 @@ export class GBMinService {
     GBServer.globals.minInstances.push(min);
     const user = null; // No user context.
 
+
+    await GBVMService.loadConnections(min);
+
     // Serves individual URL for each bot conversational interface.
 
     await this.deployer['deployPackage2'](min, user, 'templates/default.gbai/default.gbtheme');
@@ -384,8 +387,6 @@ export class GBMinService {
         const data = await this.deployer.getBotManifest(instance);
         Fs.writeFileSync(packageTeams, data);
       }
-
-      await GBVMService.loadConnections(min);
 
       // Serves individual URL for each bot user interface.
 
