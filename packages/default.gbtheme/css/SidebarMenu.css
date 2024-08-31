@@ -1,0 +1,206 @@
+.ms-Nav {
+    background: #222;
+    color: white;
+    margin-top: 20px;
+}
+
+.ms-Nav-link {
+    color: white !important;
+    background-color: #222222 !important;
+}
+
+.ms-Nav-link a:active {
+    border-right: 2px solid white;
+}
+
+.ms-Nav-compositeLink .ms-Nav-chevronButton.ms-Nav-chevronButton--link {
+    background: #222222 !important;
+}
+
+.ms-Nav-compositeLink.is-selected .ms-Nav-chevronButton,
+.ms-Nav-compositeLink.is-selected a {
+    padding-left: 70px !important;
+}
+
+html[dir="ltr"] .ms-Nav-compositeLink.is-selected .ms-Nav-chevronButton:after,
+html[dir="ltr"] .ms-Nav-compositeLink.is-selected a:after {
+    border-left: none !important;
+}
+
+@media screen and (max-width: 419px) {
+    .sidebar {
+        display: inline-block !important;
+        background-color: green !important;
+        height: 8%;
+        width: 100% !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .tittleSideBarMenu {
+        display: none;
+    }
+
+    .iconMenu {
+        color: #d1d1d1;
+        font-size: 13px;
+        display: inline;
+        margin-right: 20px;
+    }
+    .iconMenu:hover {
+        color: white;
+    }
+
+    .IconsMenu {
+        position: absolute;
+        top: 50%;
+        margin-top: -23px;
+        height: 22px;
+        width: 300px;
+        left: 50%;
+        margin-left: -150px;
+        text-align: center;
+        font-family: "Open Sans", sans-serif;
+    }
+
+    .iconText {
+        cursor: pointer;
+    }
+}
+
+@media screen and (min-width: 520px) and (max-width:1000px) {
+    .tittleSideBarMenu {
+        display: none;
+    }
+    .sidebar {
+        display: inline-block !important;
+        background-color: green !important;
+        height: 8%;
+        width: 100% !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-image: url("../../../../Archive/ProjectKBot.gbai/ProjectKBot.gbtheme/images/bot-logo.png");
+        background-position: 2px 2px;
+        background-repeat: no-repeat;
+        background-size: contain;
+    }
+    .IconsMenu {
+        position: absolute;
+        top: 50%;
+        margin-top: -11px;
+        height: 22px;
+        width: 416px;
+        left: 100px !important;
+        margin-left: 0px !important;
+        text-align: center;
+        font-family: "Open Sans", sans-serif;
+    }
+    .iconMenu {
+        color: #d1d1d1;
+    }
+    .iconMenu:hover {
+        color: white;
+    }
+}
+
+@media screen and (min-width: 420px) and (max-width: 1000px) {
+    .sidebar {
+        display: inline-block !important;
+        background-color: green !important;
+        height: 8%;
+        width: 100% !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    .tittleSideBarMenu {
+        display: none;
+    }
+
+    .iconMenu {
+        color: #d1d1d1;
+        font-size: 14px;
+        display: inline;
+        margin-right: 20px;
+    }
+    .iconMenu:hover {
+        color: white;
+    }
+
+    .IconsMenu {
+        position: absolute;
+        top: 50%;
+        margin-top: -11px;
+        height: 22px;
+        width: 416px;
+        left: 50%;
+        margin-left: -208px;
+        text-align: center;
+        font-family: "Open Sans", sans-serif;
+    }
+
+    .iconText {
+        cursor: pointer;
+    }
+}
+
+
+@media screen and (min-width: 1000px) {
+    .sidebar {
+        display: inline-block !important;
+        background-color: green !important;
+        height: 13%;
+        position: absolute;
+        top: 1%;
+        left: 1%;
+        width: 46% !important;
+        border-right: 14px solid #19baee !important;
+    }
+
+    .tittleSideBarMenu {
+        color: white;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .iconMenu {
+        color: #d1d1d1;
+        font-size: 14px;
+        text-align: center;
+        margin-right: 20px;
+        margin-left: 20px;
+    }
+    .iconMenu:hover {
+        color: white;
+    }
+
+    .IconsMenu {
+        width: 520px;
+        display: inline-flex;
+        position: absolute;
+        left: 50%;
+        margin-left: -249px;
+        bottom: 10px;
+        height: 22px;
+        font-family: "Open Sans", sans-serif;
+    }
+
+    .iconText {
+        cursor: pointer;
+    }
+}
+
+@media screen and (max-height: 684px) {
+    .tittleSideBarMenu {
+        display: none;
+    }
+}
+
+
+
+.iconText:hover {
+    cursor: pointer;
+
+}

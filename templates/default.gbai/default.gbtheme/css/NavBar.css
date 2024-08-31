@@ -1,0 +1,22 @@
+.NavBar {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.2em 0.5em;
+    border-bottom-width: 1px;
+    color:black;
+    height: 100%;
+}
+
+/*
+.logo {
+    padding-top: 4em;
+}
+*/
+
+.NavBar .searchbox { width: 20em; }
+
+.NavBar .searchbox .ms-SearchBox {
+    background-color: white;
+    margin-bottom: 0;
+}

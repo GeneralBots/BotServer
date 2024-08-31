@@ -1,0 +1,171 @@
+body {
+    background-color: #dadada !important;
+}
+
+.loader {
+    opacity: 1 !important;
+    filter: opacity(100%);
+}
+
+
+.gb-quality-button-yes {
+    width: 54px;
+    text-decoration: none;
+    text-transform: uppercase;
+    background-color: green;
+    color: white;
+    padding: 2px;
+    cursor: pointer;
+    transition: 0.9s;
+    transition-delay: 0.3s;
+    border: none;
+}
+
+.gb-quality-button-no {
+    width: 54px;
+    text-decoration: none;
+    text-transform: uppercase;
+    background-color: red;
+    color: white;
+    padding: 2px;
+    cursor: pointer;
+    transition: 0.9s;
+    transition-delay: 0.3s;
+    border: none;
+}
+
+.gb-markdown-player-quality {
+    background-color: #f5e4a8;
+    padding: 4px;
+    position: absolute;
+    bottom: 14px;
+    left: -9px;
+    width: 100%;
+    border-radius: 5px;
+    color: #52514e;
+    border: 1px solid #b2a46e;
+    text-align: center;
+}
+
+.media-player {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+.media-player-container {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.media-player-link {
+    cursor: pointer !important;
+}
+
+.gb-bullet-player {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
+    background: white;
+    height: 95%;
+    overflow-y: scroll;
+}
+
+.gb-bullet-player-item {
+    cursor: pointer;
+}
+
+.gb-image-player-outter-div {}
+
+.gb-image-player-img {}
+
+.gb-bullet-player-outter-div {}
+
+.gb-video-player-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
+.gb-video-react-player {
+
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+body {
+    display: flex;
+}
+
+.App {
+    min-height: 100vh;
+}
+
+.App .body {
+    display: flex;
+    flex-direction: row;
+}
+
+.body {
+    flex-basis: 12em;
+    /* Default value of the element before distribuing the remaing space */
+    flex-grow: 0;
+    /* Defined the ability to groe */
+    flex-shrink: 0;
+    /* Defines the ability to shrink */
+    max-width: 12em;
+    order: -1;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+.media-player-container {
+    overflow: auto;
+    max-height: 90%;
+    font-family: "Open Sans", sans-serif;
+    background: white;
+}
+
+.media-player-scroll {
+    height: 1500px;
+}
+
+@media screen and (max-width: 1000px) {
+    .media-player-scroll h1 {
+        font-size: 15px;
+    }
+    .media-player-scroll p {
+        font-size: 12px;
+    }
+    .media-player-scroll li {
+        font-size: 12px;
+    }
+}
+
+@media screen and (max-width: 451px) {
+    .media-player {
+        position: relative;
+        zoom: 90%;
+        height: 94% !important;
+        width: 95% !important;
+        background-repeat: no-repeat;
+        margin-top: 10px;
+        margin-left: 10px;
+        margin-right: -40px;
+    }
+    .gb-markdown-player-quality {
+        bottom: -1px;
+        left: -3px;
+    }
+}
+
+@media screen and (min-width: 451px) {
+    .media-player {
+        position: relative;
+        zoom: 90%;
+        height: 100% !important;
+        width: 95% !important;
+        background-repeat: no-repeat;
+        margin-top: 10px;
+        margin-left: 20px;
+        margin-right: -40px;
+    }
+}

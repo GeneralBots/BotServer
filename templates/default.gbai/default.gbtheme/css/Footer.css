@@ -1,0 +1,8 @@
+.footer {
+    align-items: center;
+    background-color: #450a64;
+    display: flex;
+    justify-content: center;
+}
+
+.footer-container { color: white; }
