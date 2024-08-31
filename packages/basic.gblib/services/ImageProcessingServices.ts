@@ -78,7 +78,7 @@ export class ImageProcessingServices {
     // TODO: const img = await joinImages(paths);
     const localName = Path.join('work', path, 'cache', `img-mrg${GBAdminService.getRndReadableIdentifier()}.png`);
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
-    img.toFile(localName);
+//    img.toFile(localName);
 
     return { localName: localName, url: url, data: null };
 
