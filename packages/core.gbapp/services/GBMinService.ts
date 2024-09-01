@@ -1493,7 +1493,7 @@ export class GBMinService {
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
 
-    // TODO: Externalize intents for GPT.
+    // TODO: Externalize intents for LLM.
 
     if (/create dialog|creative dialog|create a dialog|criar diálogo|criar diálogo/gi.test(context.activity.text)) {
       await step.beginDialog('/dialog');

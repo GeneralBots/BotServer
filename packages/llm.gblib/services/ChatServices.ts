@@ -70,6 +70,7 @@ import {
   SQL_MSSQL_PROMPT,
   SQL_MYSQL_PROMPT
 } from 'langchain/chains/sql_db';
+import { GBUtil } from '../../../src/util.js';
 
 export interface CustomOutputParserFields {}
 export type ExpectedOutput = any;
@@ -82,19 +83,19 @@ class CustomHandler extends BaseCallbackHandler {
   name = 'custom_handler';
 
   handleLLMNewToken(token: string) {
-    GBLogEx.info(0, `LLM: token: ${JSON.stringify(token)}`);
+    GBLogEx.info(0, `LLM: token: ${GBUtil.toYAML(token)}`);
   }
 
   handleLLMStart(llm: Serialized, _prompts: string[]) {
-    GBLogEx.info(0, `LLM: handleLLMStart ${JSON.stringify(llm)}, Prompts: ${_prompts.join('\n')}`);
+    GBLogEx.info(0, `LLM: handleLLMStart ${GBUtil.toYAML(llm)}, Prompts: ${_prompts.join('\n')}`);
   }
 
   handleChainStart(chain: Serialized) {
-    GBLogEx.info(0, `LLM: handleChainStart: ${JSON.stringify(chain)}`);
+    GBLogEx.info(0, `LLM: handleChainStart: ${GBUtil.toYAML(chain)}`);
   }
 
   handleToolStart(tool: Serialized) {
-    GBLogEx.info(0, `LLM: handleToolStart: ${JSON.stringify(tool)}`);
+    GBLogEx.info(0, `LLM: handleToolStart: ${GBUtil.toYAML(tool)}`);
   }
 }
 
@@ -132,6 +133,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     try {
       GBLogEx.info(this.min, result);
       result = result.replace(/\\n/g, '');
+      result = result.replace(/\`\`\`/g, '');
       res = JSON.parse(result);
     } catch {
       return result;
@@ -295,9 +297,9 @@ export class ChatServices {
     let model;
 
     const azureOpenAIKey = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Key', null, true);
-    const azureOpenAIGPTModel = await (min.core as any)['getParam'](
+    const azureOpenAILLMModel = await (min.core as any)['getParam'](
       min.instance,
-      'Azure Open AI GPT Model',
+      'Azure Open AI LLM Model',
       null,
       true
     );
@@ -312,7 +314,7 @@ export class ChatServices {
     model = new ChatOpenAI({
       azureOpenAIApiKey: azureOpenAIKey,
       azureOpenAIApiInstanceName: azureOpenAIApiInstanceName,
-      azureOpenAIApiDeploymentName: azureOpenAIGPTModel,
+      azureOpenAIApiDeploymentName: azureOpenAILLMModel,
       azureOpenAIApiVersion: azureOpenAIVersion,
       temperature: 0,
       callbacks: [logHandler]
@@ -412,8 +414,8 @@ export class ChatServices {
         tool_output: async (output: object) => {
           const name = output['func'][0].function.name;
           const args = JSON.parse(output['func'][0].function.arguments);
-          GBLogEx.info(min, `Running .gbdialog '${name}' as GPT tool...`);
-          const pid = GBVMService.createProcessInfo(null, min, 'gpt', null);
+          GBLogEx.info(min, `Running .gbdialog '${name}' as LLM tool...`);
+          const pid = GBVMService.createProcessInfo(null, min, 'LLM', null);
 
           return await GBVMService.callVM(name, min, false, pid, false, args);
         },
@@ -458,8 +460,9 @@ export class ChatServices {
       new StringOutputParser()
     ]);
 
+    GBLogEx.info(min, `Calling LLM...`);
     let result, sources;
-    let text, file, page;
+    let page;
 
     // Choose the operation mode of answer generation, based on
     // .gbot switch LLMMode and choose the corresponding chain.
@@ -477,7 +480,6 @@ export class ChatServices {
       });
     } else if (LLMMode === 'sql') {
       const con = min[`llm`]['gbconnection'];
-
       const dialect = con['storageDriver'];
 
       let dataSource;
@@ -506,6 +508,7 @@ export class ChatServices {
           logging: true
         });
       }
+
       const db = await SqlDatabase.fromDataSourceParams({
         appDataSource: dataSource
       });
@@ -519,11 +522,11 @@ export class ChatServices {
 
           VERY IMPORTANT: Return just the  generated SQL command as plain text with no Markdown or formmating.
           ------------
-    SCHEMA: {schema}
-    ------------
-    QUESTION: {question}
-    ------------
-    SQL QUERY:`);
+          SCHEMA: {schema}
+          ------------
+          QUESTION: {question}
+          ------------
+          SQL QUERY:`);
 
       /**
        * Create a new RunnableSequence where we pipe the output from `db.getTableInfo()`
@@ -600,7 +603,7 @@ export class ChatServices {
 
       result = result.content;
     } else {
-      GBLogEx.info(min, `Invalid Answer Mode in Config.xlsx: ${LLMMode}.`);
+      GBLogEx.info(min, `Invalid Answer Mode in .gbot: ${LLMMode}.`);
     }
 
     await memory.saveContext(
@@ -612,7 +615,6 @@ export class ChatServices {
       }
     );
 
-    GBLogEx.info(min, `GPT Result: ${result.toString()}`);
     return { answer: result.toString(), sources, questionId: 0, page };
   }
 
@@ -625,7 +627,7 @@ export class ChatServices {
   private static async getTools(min: GBMinInstance) {
     let functions = [];
 
-    // Adds .gbdialog as functions if any to GPT Functions.
+    // Adds .gbdialog as functions if any to LLM Functions.
     await CollectionUtil.asyncForEach(Object.keys(min.scriptMap), async script => {
       const path = DialogKeywords.getGBAIPath(min.botId, 'gbdialog', null);
       const jsonFile = Path.join('work', path, `${script}.json`);

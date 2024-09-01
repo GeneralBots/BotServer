@@ -1,7 +1,7 @@
 
 PARAM stall AS number LIKE Stall Code
 PARAM operator AS number LIKE Operator Code
-DESCRIPTION This function (tool) is never called by GPT. It is a WebService of GB.
+DESCRIPTION This function (tool) is never called by LLM. It is a WebService of GB.
 
 REM Login as Waiter
 data = NEW OBJECT
