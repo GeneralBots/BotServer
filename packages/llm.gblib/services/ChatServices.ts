@@ -132,7 +132,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     let res;
     try {
       GBLogEx.info(this.min, result);
-      result = result.replace(/\\n/g, '');
+      result = result.      replace(/\\n/g, '');
       result = result.replace(/\`\`\`/g, '');
       res = JSON.parse(result);
     } catch {
@@ -314,6 +314,7 @@ export class ChatServices {
     model = new ChatOpenAI({
       azureOpenAIApiKey: azureOpenAIKey,
       azureOpenAIApiInstanceName: azureOpenAIApiInstanceName,
+      
       azureOpenAIApiDeploymentName: azureOpenAILLMModel,
       azureOpenAIApiVersion: azureOpenAIVersion,
       temperature: 0,
