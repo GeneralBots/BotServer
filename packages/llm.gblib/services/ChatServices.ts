@@ -71,7 +71,7 @@ import {
   SQL_MYSQL_PROMPT
 } from 'langchain/chains/sql_db';
 import { GBUtil } from '../../../src/util.js';
-
+import { z } from 'zod';
 export interface CustomOutputParserFields {}
 export type ExpectedOutput = any;
 
@@ -475,7 +475,7 @@ export class ChatServices {
 
       result = res.text ? res.text : res;
       sources = res.sources;
-    } else if (LLMMode === 'function') {
+    } else if (LLMMode === 'tool') {
       result = await conversationalToolChain.invoke({
         question
       });
@@ -639,7 +639,8 @@ export class ChatServices {
 
         if (funcObj) {
           // TODO: Use ajv.
-          funcObj.schema = eval(jsonSchemaToZod(funcObj.parameters));
+          
+          funcObj.schema = jsonSchemaToZod(funcObj.parameters);
           functions.push(new DynamicStructuredTool(funcObj));
         }
       }
