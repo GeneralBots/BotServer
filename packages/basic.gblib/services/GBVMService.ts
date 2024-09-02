@@ -453,7 +453,8 @@ export class GBVMService extends GBService {
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = Fs.readFileSync(filename, 'utf8');
-
+    basicCode = GBVMService.normalizeQuotes(basicCode);
+    
     // Pre process SET SCHEDULE calls.
 
     const schedules = GBVMService.getSetScheduleKeywordArgs(basicCode);
@@ -764,9 +765,6 @@ export class GBVMService extends GBService {
           }
         }
 
-        if (text) {
-          text = GBVMService.normalizeQuotes(text);
-        }
         resolve(text);
       });
     });
@@ -783,14 +781,15 @@ export class GBVMService extends GBService {
     return text;
   }
 
-  public static getMetadata(mainName: string, propertiesText, description) {
+  public static getMetadata(mainName: string, propertiesText: string[][], description: string) {
     let properties = {};
     if (!propertiesText || !description) {
       return {};
     }
-    const getType = asClause => {
+  
+    const getType = (asClause: string) => {
       asClause = asClause.trim().toUpperCase();
-
+  
       if (asClause.indexOf('STRING') !== -1) {
         return 'string';
       } else if (asClause.indexOf('OBJECT') !== -1) {
@@ -801,41 +800,46 @@ export class GBVMService extends GBService {
         return 'enum';
       }
     };
-
+  
     for (let i = 0; i < propertiesText.length; i++) {
       const propertiesExp = propertiesText[i];
       const t = getType(propertiesExp[2]);
       let element;
-
+  
       if (t === 'enum') {
-        element = z.enum(propertiesExp[2].split(','));
+        const list = propertiesExp[2] as any;
+        element = z.enum(list.split(','));
       } else if (t === 'string') {
         element = z.string();
       } else if (t === 'object') {
-        element = z.string();
+        element = z.string();  // Assuming 'object' is represented as a string here
       } else if (t === 'number') {
         element = z.number();
       } else {
         GBLog.warn(`Element type invalid specified on .docx: ${propertiesExp[0]}`);
       }
-
-      element.describe(propertiesExp[3]);
+  
+      element['description'] = propertiesExp[4]?.trim();  // Assuming description is in the 4th index
       element['type'] = t;
       properties[propertiesExp[1].trim()] = element;
     }
-
-    let json = {
+  
+    const json = {
       type: 'function',
       function: {
-        name: `${mainName}`,
+        name: mainName,
         description: description ? description : '',
         parameters: zodToJsonSchema(z.object(properties))
-      }
+      },
+      arguments: propertiesText.reduce((acc, prop) => {
+        acc[prop[1].trim()] = prop[3]?.trim();  // Assuming value is in the 3rd index
+        return acc;
+      }, {})
     };
-
+  
     return json;
   }
-
+  
   public async parseField(line) {
     let required = line.indexOf('*') !== -1;
     let unique = /\bunique\b/gi.test(line);
@@ -913,7 +917,7 @@ export class GBVMService extends GBService {
       // Pre-process "off-line" static KEYWORDS.
 
       let emmit = true;
-      const params = /^\s*PARAM\s*(.*)\s*AS\s*(.*)\s*LIKE\s*(.*)/gim;
+      const params = /^\s*PARAM\s*(.*)\s*AS\s*(.*)\s*LIKE\s*(.*)\s*DESCRIPTION\s*(.*)/gim;
       const param = params.exec(line);
       if (param) {
         properties.push(param);

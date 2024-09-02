@@ -168,34 +168,27 @@ export class GBAdminService implements IGBAdminService {
   ) {
     const packageName = text.split(' ')[1];
 
-    if (!this.isSharePointPath(packageName)) {
-      const additionalPath = GBConfigService.get('ADDITIONAL_DEPLOY_PATH');
-      if (additionalPath === undefined) {
-        throw new Error('ADDITIONAL_DEPLOY_PATH is not set and deployPackage was called.');
-      }
-      await deployer['deployPackage2'](min, user, urlJoin(additionalPath, packageName));
-    } else {
-      const folderName = text.split(' ')[2];
-      const packageType = Path.extname(folderName).substr(1);
-      const gbaiPath = DialogKeywords.getGBAIPath(min.instance.botId, packageType, null);
-      const localFolder = Path.join('work', gbaiPath);
+    const folderName = text.split(' ')[2];
+    const packageType = Path.extname(folderName).substr(1);
+    const gbaiPath = DialogKeywords.getGBAIPath(min.instance.botId, packageType, null);
+    const localFolder = Path.join('work', gbaiPath);
 
-      // .gbot packages are handled using storage API, so no download
-      // of local resources is required.
-      const gbai = DialogKeywords.getGBAIPath(min.instance.botId);
+    // .gbot packages are handled using storage API, so no download
+    // of local resources is required.
+    const gbai = DialogKeywords.getGBAIPath(min.instance.botId);
 
-      if (packageType === 'gbkb') {
-        await deployer['cleanupPackage'](min.instance, packageName);
-      }
-
-      if (!GBConfigService.get('STORAGE_NAME')) {
-        const path = Path.join(GBConfigService.get('STORAGE_LIBRARY'), gbaiPath);
-        GBUtil.copyIfNewerRecursive(path, localFolder);
-      } else {
-        await deployer['downloadFolder'](min, Path.join('work', `${gbai}`), Path.basename(localFolder));
-      }
-      await deployer['deployPackage2'](min, user, localFolder);
+    if (packageType === 'gbkb') {
+      await deployer['cleanupPackage'](min.instance, packageName);
     }
+
+    if (!GBConfigService.get('STORAGE_NAME')) {
+      const path = Path.join(GBConfigService.get('STORAGE_LIBRARY'), gbaiPath);
+      GBUtil.copyIfNewerRecursive(path, localFolder);
+    } else {
+      await deployer['downloadFolder'](min, Path.join('work', `${gbai}`), Path.basename(localFolder));
+    }
+    await deployer['deployPackage2'](min, user, localFolder);
+
   }
   public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: GBDeployer) {
     const service = await AzureDeployerService.createInstance(deployer);

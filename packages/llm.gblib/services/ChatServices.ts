@@ -621,8 +621,17 @@ export class ChatServices {
 
   private static getToolsAsText(tools) {
     return Object.keys(tools)
-      .map(toolname => `- ${tools[toolname].name}: ${tools[toolname].description}`)
-      .join('\n');
+    .map(toolname => {
+      const tool = tools[toolname];
+      const properties = tool.lc_kwargs.parameters.properties;
+      const params = Object.keys(properties).map(param => {
+        const { description, type } = properties[param];
+        return `${param} (${type}): ${description}`;
+      }).join(', ');
+  
+      return `- ${tool.name}: ${tool.description}\n  Parameters: ${params?? 'No parameters'}`;
+    })
+    .join('\n');
   }
 
   private static async getTools(min: GBMinInstance) {
