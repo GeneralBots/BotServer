@@ -39,6 +39,7 @@ import { ChatGeneration, Generation } from '@langchain/core/outputs';
 import {
   AIMessagePromptTemplate,
   ChatPromptTemplate,
+  SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder
 } from '@langchain/core/prompts';
@@ -72,6 +73,7 @@ import {
 } from 'langchain/chains/sql_db';
 import { GBUtil } from '../../../src/util.js';
 import { z } from 'zod';
+import zodToJsonSchema from 'zod-to-json-schema';
 export interface CustomOutputParserFields {}
 export type ExpectedOutput = any;
 
@@ -323,25 +325,38 @@ export class ChatServices {
 
     let tools = await ChatServices.getTools(min);
     let toolsAsText = ChatServices.getToolsAsText(tools);
+    let openaiTools = tools.map(tool => convertToOpenAITool(tool, { strict: true }));
 
+    function updateFields(schemas) {
+      schemas.forEach(schema => {
+
+        if (schema.function && schema.function.parameters) {
+          delete schema.function.strict;
+          schema.function.parameters.additionalProperties = false;
+        }
+      });
+    }
+    updateFields(openaiTools);
+    
     const modelWithTools = model.bind({
-      tools: tools.map(convertToOpenAITool)
+      tools: openaiTools
     });
 
     const questionGeneratorTemplate = ChatPromptTemplate.fromMessages([
-      AIMessagePromptTemplate.fromTemplate(
+      SystemMessagePromptTemplate.fromTemplate(
         `
-        Answer the question without calling any tool, but if there is a need to call:
-        You have access to the following set of tools. 
-        Here are the names and descriptions for each tool:
+      ${systemPrompt}
+       
+      When a tool is required, use the tools provided below. 
+      The tools available to you are listed below, along with their names, parameters, and descriptions:
+      IMPORTANT: Never call a tool with a missing required param, without asking them first to the user!
+      List of tools:
+      ${toolsAsText}
 
-          ${toolsAsText}
-
-          Do not use any previous tools output in the {chat_history}. 
         `
       ),
-      new MessagesPlaceholder('chat_history'),
-      AIMessagePromptTemplate.fromTemplate(`Follow Up Input: {question}
+       new MessagesPlaceholder('chat_history'),
+      HumanMessagePromptTemplate.fromTemplate(`Follow Up Input: {question}
     Standalone question:`)
     ]);
 
@@ -353,14 +368,23 @@ export class ChatServices {
     ]);
 
     const toolsResultPrompt = ChatPromptTemplate.fromMessages([
-      AIMessagePromptTemplate.fromTemplate(
-        `The tool just returned value in last call. Using {chat_history}
-        rephrase the answer to the user using this tool output.
+      SystemMessagePromptTemplate.fromTemplate(
+        `
+      ${systemPrompt}
+       
+      List of tools:
+      ${toolsAsText}
+
         `
       ),
-      new MessagesPlaceholder('chat_history'),
-      AIMessagePromptTemplate.fromTemplate(`Tool output: {tool_output} 
-    Standalone question:`)
+      AIMessagePromptTemplate.fromTemplate(
+        `
+        The tool just returned value in last call answer the question based on tool description.
+        `
+      ),
+      
+      HumanMessagePromptTemplate.fromTemplate(`Tool output: {tool_output} 
+    Folowing answer:`)
     ]);
 
     const jsonInformation = `VERY IMPORTANT: ALWAYS return VALID standard JSON with the folowing structure: 'text' as answer, 
@@ -415,13 +439,14 @@ export class ChatServices {
         tool_output: async (output: object) => {
           const name = output['func'][0].function.name;
           const args = JSON.parse(output['func'][0].function.arguments);
-          GBLogEx.info(min, `Running .gbdialog '${name}' as LLM tool...`);
+          GBLogEx.info(min, `LLM Tool called .gbdialog '${name}'...`);
           const pid = GBVMService.createProcessInfo(null, min, 'LLM', null);
 
           return await GBVMService.callVM(name, min, false, pid, false, args);
         },
         chat_history: async () => {
           const { chat_history } = await memory.loadMemoryVariables({});
+          
           return chat_history;
         }
       },
@@ -623,10 +648,10 @@ export class ChatServices {
     return Object.keys(tools)
     .map(toolname => {
       const tool = tools[toolname];
-      const properties = tool.lc_kwargs.parameters.properties;
+      const properties = tool.lc_kwargs.schema.properties;
       const params = Object.keys(properties).map(param => {
         const { description, type } = properties[param];
-        return `${param} (${type}): ${description}`;
+        return `${param} *REQUIRED* (${type}): ${description}`;
       }).join(', ');
   
       return `- ${tool.name}: ${tool.description}\n  Parameters: ${params?? 'No parameters'}`;
@@ -649,7 +674,7 @@ export class ChatServices {
         if (funcObj) {
           // TODO: Use ajv.
           
-          funcObj.schema = jsonSchemaToZod(funcObj.parameters);
+          funcObj.schema = eval(funcObj.schema);
           functions.push(new DynamicStructuredTool(funcObj));
         }
       }
