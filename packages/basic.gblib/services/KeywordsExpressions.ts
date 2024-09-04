@@ -820,6 +820,14 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(SET ANSWER MODE)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['mode']);
+        return `await sys.setAnswerMode({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*(set language)(\s*)(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await dk.setLanguage ({pid: pid, language: ${$3}})`;

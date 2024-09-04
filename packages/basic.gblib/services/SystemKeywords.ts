@@ -2834,4 +2834,13 @@ export class SystemKeywords {
 
     GBLogEx.info(min, `Image posted on IG: ${publishResult}`);
   }
+
+  public async setAnswerMode({ pid, mode }) {
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+
+    ChatServices.usersMode[user.userSystemId] =  mode;
+
+    GBLogEx.info(min, `LLM Mode (user.userSystemId) : ${mode}`);
+  }
+
 }
