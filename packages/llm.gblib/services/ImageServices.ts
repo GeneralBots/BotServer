@@ -79,4 +79,32 @@ export class ImageServices {
       return { localName, url };
     }
   }
+
+  public async getCaptionForImage({ pid, imageUrl }) {
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+
+    const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null);
+    const azureOpenAITextModel = 'gpt-4'; // Specify GPT-4 model here
+    const azureOpenAIEndpoint = await min.core.getParam(min.instance, 'Azure Open AI Endpoint', null);
+
+    if (azureOpenAIKey && azureOpenAITextModel && imageUrl) {
+      // Initialize the Azure OpenAI client
+      const client = new OpenAI({ apiKey: azureOpenAIKey, baseURL: azureOpenAIEndpoint });
+
+      // Construct a prompt to describe the image and generate a caption
+      const prompt = `Provide a descriptive caption for the image at the following URL: ${imageUrl}`;
+
+      // Generate a caption using GPT-4
+      const response = await client.completions.create({
+        model: azureOpenAITextModel,
+        prompt: prompt,
+        max_tokens: 50
+      });
+
+      const caption = response['data'].choices[0].text.trim();
+      GBLogEx.info(min, `Generated caption: ${caption}`);
+
+      return { caption };
+    }
+  }
 }

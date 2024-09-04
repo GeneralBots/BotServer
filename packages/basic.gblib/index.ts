@@ -1,4 +1,3 @@
-
 /*****************************************************************************\
 |  █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ® |
 | ██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █      |
@@ -44,21 +43,34 @@ import { createKoaHttpMiddleware } from '@push-rpc/http';
 import { GBServer } from '../../src/app.js';
 import { SocketServer } from '@push-rpc/core';
 import * as koaBody from 'koa-body';
+import ratelimit from 'koa-ratelimit';
 
-export function createKoaHttpServer(
-  port: number,
-  getRemoteId: (ctx: Koa.Context) => string,
-  opts:{}
-): SocketServer {
-  const { onError, onConnection, middleware } =
-  createKoaHttpMiddleware(getRemoteId);
+export function createKoaHttpServer(port: number, getRemoteId: (ctx: Koa.Context) => string, opts: {}): SocketServer {
+  const { onError, onConnection, middleware } = createKoaHttpMiddleware(getRemoteId);
 
   const app = new Koa();
+
+  // Apply the rate-limiting middleware
+  app.use(
+    ratelimit({
+      driver: 'memory', // Use 'memory' for in-memory store
+      duration: 60000, // 1 minute window
+      errorMessage: 'Slow down your requests',
+      id: ctx => ctx.ip, // Identify client by IP address
+      headers: {
+        remaining: 'X-RateLimit-Remaining',
+        reset: 'X-RateLimit-Reset',
+        total: 'X-RateLimit-Limit'
+      },
+      max: 100, // Limit each IP to 100 requests per window
+      disableHeader: false
+    })
+  );
+
   app.use(cors({ origin: '*' }));
-  app.use(koaBody.koaBody({jsonLimit:'1024mb',textLimit:'1024mb', formLimit:'1024mb',
-     multipart: true }));
+  app.use(koaBody.koaBody({ jsonLimit: '1024mb', textLimit: '1024mb', formLimit: '1024mb', multipart: true }));
   app.use(middleware);
-  const server =   app.listen(port);
+  const server = app.listen(port);
   const SERVER_TIMEOUT = 60 * 60 * 24 * 1000; // Equals to client RPC set.
   server.timeout = SERVER_TIMEOUT;
 
@@ -100,7 +112,7 @@ export class GBBasicPackage implements IGBPackage {
   }
   public async loadBot(min: GBMinInstance): Promise<void> {
     const botId = min.botId;
-   GBServer.globals.debuggers[botId] = {};
+    GBServer.globals.debuggers[botId] = {};
     GBServer.globals.debuggers[botId].state = 0;
     GBServer.globals.debuggers[botId].breaks = [];
     GBServer.globals.debuggers[botId].stateInfo = 'Stopped';

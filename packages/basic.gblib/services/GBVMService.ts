@@ -453,7 +453,8 @@ export class GBVMService extends GBService {
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = Fs.readFileSync(filename, 'utf8');
-
+    basicCode = GBVMService.normalizeQuotes(basicCode);
+    
     // Pre process SET SCHEDULE calls.
 
     const schedules = GBVMService.getSetScheduleKeywordArgs(basicCode);
@@ -576,10 +577,10 @@ export class GBVMService extends GBService {
 
           // Transfers auto variables into global object.
 
-          for(__indexer in this.variables) { 
-              global[__indexer] = this.variables[__indexer];
-          }   
-
+          for (const key of Object.keys(this.variables)) {
+              global[key] = this.variables[key];
+              console.log('Defining global variable: ' + key);
+          }
 
           // Defines local utility BASIC functions.
 
@@ -764,9 +765,6 @@ export class GBVMService extends GBService {
           }
         }
 
-        if (text) {
-          text = GBVMService.normalizeQuotes(text);
-        }
         resolve(text);
       });
     });
@@ -783,14 +781,15 @@ export class GBVMService extends GBService {
     return text;
   }
 
-  public static getMetadata(mainName: string, propertiesText, description) {
+  public static getMetadata(mainName: string, propertiesText: string[][], description: string) {
     let properties = {};
     if (!propertiesText || !description) {
       return {};
     }
-    const getType = asClause => {
+  
+    const getType = (asClause: string) => {
       asClause = asClause.trim().toUpperCase();
-
+  
       if (asClause.indexOf('STRING') !== -1) {
         return 'string';
       } else if (asClause.indexOf('OBJECT') !== -1) {
@@ -801,41 +800,47 @@ export class GBVMService extends GBService {
         return 'enum';
       }
     };
-
+  
     for (let i = 0; i < propertiesText.length; i++) {
       const propertiesExp = propertiesText[i];
       const t = getType(propertiesExp[2]);
       let element;
-
+      const description =   propertiesExp[4]?.trim();
+  
       if (t === 'enum') {
-        element = z.enum(propertiesExp[2].split(','));
+        const list = propertiesExp[2] as any;
+        element = z.enum(list.split(','));
       } else if (t === 'string') {
-        element = z.string();
+        element = z.string({description:description});
       } else if (t === 'object') {
-        element = z.string();
+        element = z.string({description:description});  // Assuming 'object' is represented as a string here
       } else if (t === 'number') {
-        element = z.number();
+        element = z.number({description:description});
       } else {
         GBLog.warn(`Element type invalid specified on .docx: ${propertiesExp[0]}`);
       }
+  
 
-      element.describe(propertiesExp[3]);
       element['type'] = t;
       properties[propertiesExp[1].trim()] = element;
     }
-
-    let json = {
+  
+    const json = {
       type: 'function',
       function: {
-        name: `${mainName}`,
+        name: mainName,
         description: description ? description : '',
-        parameters: zodToJsonSchema(z.object(properties))
-      }
+        schema: zodToJsonSchema(z.object(properties))
+      },
+      arguments: propertiesText.reduce((acc, prop) => {
+        acc[prop[1].trim()] = prop[3]?.trim();  // Assuming value is in the 3rd index
+        return acc;
+      }, {})
     };
-
+  
     return json;
   }
-
+  
   public async parseField(line) {
     let required = line.indexOf('*') !== -1;
     let unique = /\bunique\b/gi.test(line);
@@ -913,7 +918,7 @@ export class GBVMService extends GBService {
       // Pre-process "off-line" static KEYWORDS.
 
       let emmit = true;
-      const params = /^\s*PARAM\s*(.*)\s*AS\s*(.*)\s*LIKE\s*(.*)/gim;
+      const params = /^\s*PARAM\s*(.*)\s*AS\s*(.*)\s*LIKE\s*(.*)\s*DESCRIPTION\s*(.*)/gim;
       const param = params.exec(line);
       if (param) {
         properties.push(param);
@@ -1045,7 +1050,7 @@ export class GBVMService extends GBService {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    let variables = [];
+    let variables = {};
 
     // These variables will be automatically be available as normal BASIC variables.
 
@@ -1086,7 +1091,7 @@ export class GBVMService extends GBService {
     const botId = min.botId;
     const path = DialogKeywords.getGBAIPath(min.botId, `gbdialog`);
     const gbdialogPath = urlJoin(process.cwd(), 'work', path);
-    const scriptPath = urlJoin(gbdialogPath, `${text}.js`);
+    const scriptFilePath = urlJoin(gbdialogPath, `${text}.js`);
 
     let code = min.sandBoxMap[text];
     const channel = step ? step.context.activity.channelId : 'web';
@@ -1144,7 +1149,7 @@ export class GBVMService extends GBService {
                 context: 'sandbox'
               }
             });
-            const s = new VMScript(code, { filename: scriptPath });
+            const s = new VMScript(code, { filename: scriptFilePath });
             result = vm1.run(s);
           });
         })();
@@ -1163,16 +1168,17 @@ export class GBVMService extends GBService {
           min: 0,
           max: 0,
           debug: debug,
-          debuggerport: GBVMService.DEBUGGER_PORT,
+          // debuggerport: GBVMService.DEBUGGER_PORT,
           botId: botId,
           cpu: 100,
           memory: 50000,
           time: 60 * 60 * 24 * 14,
-          cwd: scriptPath,
+          cwd: gbdialogPath,
           script: runnerPath
+          
         });
 
-        result = await run(code, { filename: scriptPath, sandbox: sandbox });
+        result = await run(code, Object.assign( sandbox, { filename: scriptFilePath}));
       }
     } catch (error) {
       throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);

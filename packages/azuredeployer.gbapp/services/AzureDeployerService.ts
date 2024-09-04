@@ -986,7 +986,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         appSettings: [
           { name: 'WEBSITES_CONTAINER_START_TIME_LIMIT', value: `${WebSiteResponseTimeout}` },
           { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: GBAdminService.getNodeVersion() },
-          { name: 'ADDITIONAL_DEPLOY_PATH', value: `` },
           { name: 'ADMIN_PASS', value: `${instance.adminPass}` },
           { name: 'BOT_ID', value: `${instance.botId}` },
           { name: 'CLOUD_SUBSCRIPTIONID', value: `${instance.cloudSubscriptionId}` },

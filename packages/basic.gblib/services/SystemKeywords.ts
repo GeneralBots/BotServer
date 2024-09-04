@@ -48,7 +48,7 @@ import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import urlJoin from 'url-join';
 import Excel from 'exceljs';
 import { BufferWindowMemory } from 'langchain/memory';
-import { TwitterApi } from 'twitter-api-v2';
+import csvdb from 'csv-database';
 import Path from 'path';
 import ComputerVisionClient from '@azure/cognitiveservices-computervision';
 import ApiKeyCredentials from '@azure/ms-rest-js';
@@ -347,6 +347,7 @@ export class SystemKeywords {
 
     delete this.cachedMerge[pid];
 
+
     // Capture memory usage before GC
     GBLogEx.info(min, ``);
 
@@ -356,7 +357,10 @@ export class SystemKeywords {
 
     // Capture memory usage after GC
     const memoryAfterGC = process.memoryUsage().heapUsed / 1024 / 1024; // in MB
-    GBLogEx.info(min, `BASIC: Closing Handles... From ${memoryBeforeGC.toFixed(2)} MB to ${memoryAfterGC.toFixed(2)} MB`);
+    GBLogEx.info(
+      min,
+      `BASIC: Closing Handles... From ${memoryBeforeGC.toFixed(2)} MB to ${memoryAfterGC.toFixed(2)} MB`
+    );
   }
 
   public async asPDF({ pid, data }) {
@@ -756,7 +760,7 @@ export class SystemKeywords {
     let rowsDest = [];
 
     rows.forEach(row => {
-
+      
       if (GBUtil.hasSubObject(row)) {
         row = this.flattenJSON(row);
       }
@@ -1040,7 +1044,7 @@ export class SystemKeywords {
 
   public static async getFilter(text) {
     let filter;
-    const operators = [/\<\=/, /\<\>/, /\>\=/, /\</, /\>/, /\bnot in\b/, /\bin\b/, /\=/];
+    const operators = [/\<\=/, /\<\>/, /\>\=/, /\</, /\>/,/\blike\b/, /\bnot in\b/, /\bin\b/, /\=/];
     let done = false;
     await CollectionUtil.asyncForEach(operators, async op => {
       var re = new RegExp(op, 'gi');
@@ -1194,6 +1198,23 @@ export class SystemKeywords {
 
       header = results.text[0];
       rows = results.text;
+    } else if (file.indexOf('.csv') !== -1) {
+      let res;
+      let path = DialogKeywords.getGBAIPath(min.botId, `gbdata`);
+      const csvFile = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
+      const firstLine = Fs.readFileSync(csvFile, 'utf8').split('\n')[0];
+      const headers = firstLine.split(',');
+      const db = await csvdb(csvFile, headers, ',');
+      if (args[0]) {
+        const systemFilter = await SystemKeywords.getFilter(args[0]);
+        let filter = {};
+        filter[systemFilter.columnName] = systemFilter.value;
+        res = await db.get(filter);
+      } else {
+        res = await db.get();
+      }
+
+      return res.length > 1 ? res : res[0];
     } else {
       const t = this.getTableFromName(file, min);
 
@@ -2447,31 +2468,24 @@ export class SystemKeywords {
   }
 
   /**
-   * Publishs a tweet to X.
+   * Publishs a post to BlueSky .
    *
-   * TWEET "My tweet text"
+   * BlueSky "My BlueSky text"
    */
-  public async tweet({ pid, text }) {
+  public async postToBlueSky({ pid, text }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
-    const consumer_key = min.core.getParam(min.instance, 'Twitter Consumer Key', null);
-    const consumer_secret = min.core.getParam(min.instance, 'Twitter Consumer Key Secret', null);
-    const access_token_key = min.core.getParam(min.instance, 'Twitter Access Token', null);
-    const access_token_secret = min.core.getParam(min.instance, 'Twitter Access Token Secret', null);
+    const consumer_key = min.core.getParam(min.instance, 'BlueSky Consumer Key', null);
+    const consumer_secret = min.core.getParam(min.instance, 'BlueSky Consumer Key Secret', null);
+    const access_token_key = min.core.getParam(min.instance, 'BlueSky Access Token', null);
+    const access_token_secret = min.core.getParam(min.instance, 'BlueSky Access Token Secret', null);
 
     if (!consumer_key || !consumer_secret || !access_token_key || !access_token_secret) {
-      GBLogEx.info(min, 'Twitter not configured in .gbot.');
+      GBLogEx.info(min, 'BlueSky not configured in .gbot.');
     }
+    throw new Error('Not implemented yet.');
 
-    const client = new TwitterApi({
-      appKey: consumer_key,
-      appSecret: consumer_secret,
-      accessToken: access_token_key,
-      accessSecret: access_token_secret
-    });
-
-    await client.v2.tweet(text);
-    GBLogEx.info(min, `Twitter Automation: ${text}.`);
+    GBLogEx.info(min, `BlueSky Automation: ${text}.`);
   }
 
   /**

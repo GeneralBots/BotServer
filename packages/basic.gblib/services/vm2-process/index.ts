@@ -118,7 +118,6 @@ const systemVariables = [
   'valueOf'
 ];
 
-
 export const createVm2Pool = ({ min, max, ...limits }) => {
   limits = Object.assign(
     {
@@ -140,8 +139,14 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
   let stderrCache = '';
 
   const run = async (code: any, scope: any) => {
+    // Configure environment variables
+    const env = Object.assign({}, process.env, {
+      NODE_ENV: 'production',
+      NODE_OPTIONS: '' // Clear NODE_OPTIONS if needed
+    });
+
     const childProcess = spawn(
-      'cpulimit',
+      '/usr/bin/cpulimit',
       [
         '-ql',
         limits.cpu,
@@ -153,7 +158,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
         limits.script,
         ref
       ],
-      { cwd: limits.cwd, shell: false }
+      { cwd: limits.cwd, shell: true, env: env }
     );
 
     childProcess.stdout.on('data', data => {
@@ -186,7 +191,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
 
     // Only attach if called by debugger/run.
 
-    if (GBServer.globals.debuggers[limits.botId]) {
+    if (limits.debug) {
       const debug = async () => {
         return new Promise((resolve, reject) => {
           CDP(async client => {
@@ -212,7 +217,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
                   });
                 }
                 GBServer.globals.debuggers[limits.botId].scope = variablesText;
-                GBLogEx.info(min,`Breakpoint variables: ${variablesText}`); // (zero-based)
+                GBLogEx.info(min, `Breakpoint variables: ${variablesText}`); // (zero-based)
                 // Processes breakpoint hits.
 
                 if (hitBreakpoints.length >= 1) {

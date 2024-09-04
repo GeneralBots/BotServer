@@ -26,10 +26,13 @@ const server = net1.createServer(socket => {
   const buffer = [];
 
   const sync = async () => {
+    
     const request = buffer.join('').toString();
+    console.log(request);
     if (request.includes('\n')) {
       try {
         const { code, scope } = JSON.parse(request);
+        
         const result = await evaluate(code, {
           ...scope,
           module: null
@@ -45,6 +48,11 @@ const server = net1.createServer(socket => {
       }
     }
   };
+  socket.on('error', err => {
+    
+    console.log(err);
+  });
+
 
   socket.on('data', data => {
     buffer.push(data);
