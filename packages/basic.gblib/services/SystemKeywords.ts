@@ -69,6 +69,7 @@ import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import retry from 'async-retry';
 import { BlobServiceClient, BlockBlobClient, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { FacebookAdsApi, Page } from 'facebook-nodejs-business-sdk';
 
 import { md5 } from 'js-md5';
 import { GBUtil } from '../../../src/util.js';
@@ -172,22 +173,22 @@ export class SystemKeywords {
     if (date) {
       return array
         ? array.sort((a, b) => {
-            const c = new Date(a[memberName]);
-            const d = new Date(b[memberName]);
-            return c.getTime() - d.getTime();
-          })
+          const c = new Date(a[memberName]);
+          const d = new Date(b[memberName]);
+          return c.getTime() - d.getTime();
+        })
         : null;
     } else {
       return array
         ? array.sort((a, b) => {
-            if (a[memberName] < b[memberName]) {
-              return -1;
-            }
-            if (a[memberName] > b[memberName]) {
-              return 1;
-            }
-            return 0;
-          })
+          if (a[memberName] < b[memberName]) {
+            return -1;
+          }
+          if (a[memberName] > b[memberName]) {
+            return 1;
+          }
+          return 0;
+        })
         : array;
     }
   }
@@ -345,6 +346,7 @@ export class SystemKeywords {
     const memoryBeforeGC = process.memoryUsage().heapUsed / 1024 / 1024; // in MB
 
     delete this.cachedMerge[pid];
+
 
     // Capture memory usage before GC
     GBLogEx.info(min, ``);
@@ -758,6 +760,7 @@ export class SystemKeywords {
     let rowsDest = [];
 
     rows.forEach(row => {
+      
       if (GBUtil.hasSubObject(row)) {
         row = this.flattenJSON(row);
       }
@@ -2786,6 +2789,36 @@ export class SystemKeywords {
         }
       );
   }
+
+  public async postToFacebook({ pid, imagePath, caption, pageId }) {
+    // Obtendo informações do processo para logs (ajuste conforme necessário)
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+
+    // Leitura do arquivo de imagem
+    const imageBuffer = Fs.readFileSync(Path.resolve(imagePath));
+
+    // Criação de um arquivo temporário para enviar
+    const tempFilePath = Path.resolve('temp_image.jpg');
+    Fs.writeFileSync(tempFilePath, imageBuffer);
+
+    // Publicação da imagem
+    const page = new Page(pageId);
+    const response = await page.createFeed({
+      message: caption,
+      attached_media: [
+        {
+          media_fbid: tempFilePath,
+        },
+      ],
+    });
+
+    // Log do resultado
+    GBLogEx.info(min, `Imagem publicada no Facebook: ${JSON.stringify(response)}`);
+
+    // Limpeza do arquivo temporário
+    Fs.unlinkSync(tempFilePath);
+  }
+
 
   public async postToInstagram({ pid, username, password, imagePath, caption }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
