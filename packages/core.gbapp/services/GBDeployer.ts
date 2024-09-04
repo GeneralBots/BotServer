@@ -931,6 +931,10 @@ export class GBDeployer implements IGBDeployer {
       express.static(urlJoin('work', gbaiName, filename, 'videos'))
     );
     GBServer.globals.server.use(`/${botId}/cache`, express.static(urlJoin('work', gbaiName, 'cache')));
+    
+    
+    // FEAT-A7B1F6
+    
     GBServer.globals.server.use(
       `/${gbaiName}/${botId}.gbdrive/public`,
       express.static(urlJoin('work', gbaiName, `${botId}.gbdata`, 'public'))

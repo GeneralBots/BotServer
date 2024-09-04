@@ -147,7 +147,7 @@ export class GBMinService {
   /**
    * Constructs a new minimal instance for each bot.
    */
-  public async buildMin(instances: IGBInstance[]) : Promise<GBMinInstance[]> {
+  public async buildMin(instances: IGBInstance[]): Promise<GBMinInstance[]> {
     // Servers default UI on root address '/' if web enabled.
 
     if (process.env.DISABLE_WEB !== 'true') {
@@ -171,7 +171,6 @@ export class GBMinService {
     await CollectionUtil.asyncForEach(
       instances,
       (async instance => {
-
         try {
           GBLog.info(`Mounting ${instance.botId}...`);
           const min = await this['mountBot'](instance);
@@ -180,7 +179,6 @@ export class GBMinService {
           GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
         }
       }).bind(this)
-    
     );
 
     // Loads schedules.
@@ -194,7 +192,7 @@ export class GBMinService {
     return minInstances;
   }
 
-  public  async startSimpleTest(min) {
+  public async startSimpleTest(min) {
     if (process.env.TEST_MESSAGE && min['isDefault']) {
       GBLogEx.info(min, `Starting auto test with '${process.env.TEST_MESSAGE}'.`);
 
@@ -206,7 +204,7 @@ export class GBMinService {
 
       const steps = process.env.TEST_MESSAGE.split(';');
 
-      await CollectionUtil.asyncForEach(steps, async (step) => {
+      await CollectionUtil.asyncForEach(steps, async step => {
         client.apis.Conversations.Conversations_PostActivity({
           conversationId: conversationId,
           activity: {
@@ -271,8 +269,6 @@ export class GBMinService {
    * installing all BASIC artifacts from .gbdialog and OAuth2.
    */
   public async mountBot(instance: IGBInstance) {
-
-
     // Build bot adapter.
 
     const { min, adapter, conversationState } = await this.buildBotAdapter(
@@ -284,11 +280,10 @@ export class GBMinService {
     // https://github.com/GeneralBots/BotServer/issues/286
     // min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
 
-    min['isDefault'] =  GBServer.globals.minInstances.length === 0;
+    min['isDefault'] = GBServer.globals.minInstances.length === 0;
 
     GBServer.globals.minInstances.push(min);
     const user = null; // No user context.
-
 
     await GBVMService.loadConnections(min);
 
@@ -359,9 +354,20 @@ export class GBMinService {
 
     await this.invokeLoadBot(min.appPackages, GBServer.globals.sysPackages, min);
     const receiver = async (req, res) => {
-      await this.receiver(req, res, conversationState, min, instance, GBServer.globals.appPackages);
+      let path = /(http[s]?:\/\/)?([^\/\s]+\/)(.*)/gi;
+      const botId = req.url.substr(req.url.lastIndexOf('/') +1);
+
+      const min = GBServer.globals.minInstances.filter(p => p.instance.botId == botId)[0];
+
+      await this.receiver(req, res, conversationState, min, GBServer.globals.appPackages);
     };
     let url = `/api/messages/${instance.botId}`;
+    GBServer.globals.server.post(url, receiver);
+
+    if (min['default']) {
+      url = `/api/messages`;
+      GBServer.globals.server.post(url, receiver);
+    }
 
     GBServer.globals.server.get(url, (req, res) => {
       if (req.query['hub.mode'] === 'subscribe') {
@@ -375,20 +381,20 @@ export class GBMinService {
       }
       res.end();
     });
-    
+
     GBLog.verbose(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
 
-      // Generates MS Teams manifest.
+    // Generates MS Teams manifest.
 
-      const manifest = `${instance.botId}-Teams.zip`;
-      const packageTeams = urlJoin(`work`, DialogKeywords.getGBAIPath(instance.botId), manifest);
-      if (!Fs.existsSync(packageTeams)) {
-        GBLogEx.info(min, 'Generating MS Teams manifest....');
-        const data = await this.deployer.getBotManifest(instance);
-        Fs.writeFileSync(packageTeams, data);
-      }
+    const manifest = `${instance.botId}-Teams.zip`;
+    const packageTeams = urlJoin(`work`, DialogKeywords.getGBAIPath(instance.botId), manifest);
+    if (!Fs.existsSync(packageTeams)) {
+      GBLogEx.info(min, 'Generating MS Teams manifest....');
+      const data = await this.deployer.getBotManifest(instance);
+      Fs.writeFileSync(packageTeams, data);
+    }
 
-      // Serves individual URL for each bot user interface.
+    // Serves individual URL for each bot user interface.
 
     if (process.env.DISABLE_WEB !== 'true') {
       const uiUrl = `/${instance.botId}`;
@@ -424,7 +430,6 @@ export class GBMinService {
 
     GBServer.globals.server
       .all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
-
         if (req.query['hub.mode'] === 'subscribe') {
           const val = req.query['hub.verify_token'];
           const challenge = min.core.getParam<string>(min.instance, `Meta Challenge`, null);
@@ -463,7 +468,6 @@ export class GBMinService {
     await this.ensureAPI();
 
     return min;
-
   }
 
   public static getProviderName(req: any, res: any) {
@@ -835,15 +839,6 @@ export class GBMinService {
     min['apiConversations'] = {};
     min.packages = sysPackages;
 
-    const receiver = async (req, res) => {
-      await this.receiver(req, res, conversationState, min, instance, GBServer.globals.appPackages);
-    };
-
-    let url = `/api/messages/${instance.botId}`;
-    GBServer.globals.server.post(url, receiver);
-    url = `/api/messages`;
-    GBServer.globals.server.post(url, receiver);
-
     // NLP Manager.
 
     const manager = new NlpManager({ languages: ['pt'], forceNER: true });
@@ -931,6 +926,8 @@ export class GBMinService {
       WhatsappDirectLine.botsByNumber[botNumber] = min.whatsAppDirectLine;
     }
 
+    min['default'] = min === minBoot;
+
     return { min, adapter, conversationState };
   }
 
@@ -989,7 +986,6 @@ export class GBMinService {
     res: any,
     conversationState: ConversationState,
     min: GBMinInstance,
-    instance: any,
     appPackages: any[]
   ) {
     // Uses standard or Facebook Adapter.
@@ -1065,7 +1061,7 @@ export class GBMinService {
 
           if (step.context.activity.channelId !== 'msteams') {
             const service = new KBService(min.core.sequelize);
-            const data = await service.getFaqBySubjectArray(instance.instanceId, 'faq', undefined);
+            const data = await service.getFaqBySubjectArray(min.instance.instanceId, 'faq', undefined);
             await min.conversationalService.sendEvent(min, step, 'play', {
               playerType: 'bullet',
               data: data.slice(0, 10)

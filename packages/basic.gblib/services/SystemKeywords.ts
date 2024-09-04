@@ -2718,14 +2718,25 @@ export class SystemKeywords {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `BASIC GET (pdf): ${file}`);
 
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-    let path = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
-    let template = await this.internalGetDocument(client, baseUrl, path, file);
-    let url = template['@microsoft.graph.downloadUrl'];
-    const res = await fetch(url);
-    let buf: any = Buffer.from(await res.arrayBuffer());
-    const data = new Uint8Array(buf);
+    let data ;
+
+    if (GBConfigService.get('STORAGE_NAME')) {
+      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      let path = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
+      let template = await this.internalGetDocument(client, baseUrl, path, file);
+      let url = template['@microsoft.graph.downloadUrl'];
+      const res = await fetch(url);
+      let buf: any = Buffer.from(await res.arrayBuffer());
+      data = new Uint8Array(buf);
+    }
+    else {
+      let path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+      let filePath = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
+      data = Fs.readFileSync(filePath, 'utf8');
+      data = new Uint8Array(Buffer.from(data, 'utf8'));
+    }
+
     const pdf = await getDocument({ data }).promise;
     let pages = [];
 
