@@ -69,6 +69,7 @@ import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import retry from 'async-retry';
 import { BlobServiceClient, BlockBlobClient, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { FacebookAdsApi, Page } from 'facebook-nodejs-business-sdk';
 
 import { md5 } from 'js-md5';
 import { GBUtil } from '../../../src/util.js';
@@ -172,22 +173,22 @@ export class SystemKeywords {
     if (date) {
       return array
         ? array.sort((a, b) => {
-            const c = new Date(a[memberName]);
-            const d = new Date(b[memberName]);
-            return c.getTime() - d.getTime();
-          })
+          const c = new Date(a[memberName]);
+          const d = new Date(b[memberName]);
+          return c.getTime() - d.getTime();
+        })
         : null;
     } else {
       return array
         ? array.sort((a, b) => {
-            if (a[memberName] < b[memberName]) {
-              return -1;
-            }
-            if (a[memberName] > b[memberName]) {
-              return 1;
-            }
-            return 0;
-          })
+          if (a[memberName] < b[memberName]) {
+            return -1;
+          }
+          if (a[memberName] > b[memberName]) {
+            return 1;
+          }
+          return 0;
+        })
         : array;
     }
   }
@@ -345,19 +346,19 @@ export class SystemKeywords {
     const memoryBeforeGC = process.memoryUsage().heapUsed / 1024 / 1024; // in MB
 
     delete this.cachedMerge[pid];
-    
+
     // Capture memory usage before GC
     GBLogEx.info(min, ``);
-    
+
     setFlagsFromString('--expose_gc');
     const gc = runInNewContext('gc'); // nocommit
     gc();
-  
+
     // Capture memory usage after GC
     const memoryAfterGC = process.memoryUsage().heapUsed / 1024 / 1024; // in MB
     GBLogEx.info(min, `BASIC: Closing Handles... From ${memoryBeforeGC.toFixed(2)} MB to ${memoryAfterGC.toFixed(2)} MB`);
   }
-  
+
   public async asPDF({ pid, data }) {
     let file = await this.renderTable(pid, data, true, false);
     return file;
@@ -746,7 +747,7 @@ export class SystemKeywords {
    */
   public async saveToStorageBatch({ pid, table, rows }): Promise<void> {
     const { min } = await DialogKeywords.getProcessInfo(pid);
-    
+
     if (rows.length === 0) {
       return;
     }
@@ -755,7 +756,7 @@ export class SystemKeywords {
     let rowsDest = [];
 
     rows.forEach(row => {
-      
+
       if (GBUtil.hasSubObject(row)) {
         row = this.flattenJSON(row);
       }
@@ -772,7 +773,7 @@ export class SystemKeywords {
       row = null;
     });
     GBLogEx.info(min, `SAVE '${table}': ${rows.length} row(s).`);
-    
+
     await retry(
       async bail => {
         await t.bulkCreate(rowsDest);
@@ -1745,27 +1746,27 @@ export class SystemKeywords {
 
   private flattenJSON(obj, res = {}, separator = '_', parent = null) {
     for (let key in obj) {
-        if (!obj.hasOwnProperty(key) || typeof obj[key] === 'function') {
-            continue;
-        }
-        if (typeof obj[key] !== 'object' || obj[key] instanceof Date) {
-            // If not defined already, add the flattened field.
-            const newKey = `${parent ? parent + separator : ''}${key}`;
-            if (!res.hasOwnProperty(newKey)) {
-                res[newKey] = obj[key];
-            } else {
-                GBLog.verbose(`Ignoring duplicated field in flatten operation to storage: ${key}.`);
-            }
+      if (!obj.hasOwnProperty(key) || typeof obj[key] === 'function') {
+        continue;
+      }
+      if (typeof obj[key] !== 'object' || obj[key] instanceof Date) {
+        // If not defined already, add the flattened field.
+        const newKey = `${parent ? parent + separator : ''}${key}`;
+        if (!res.hasOwnProperty(newKey)) {
+          res[newKey] = obj[key];
         } else {
-            // Create a temporary reference to the nested object to prevent memory leaks.
-            const tempObj = obj[key];
-            this.flattenJSON(tempObj, res, separator, `${parent ? parent + separator : ''}${key}`);
-            // Clear the reference to avoid holding unnecessary objects in memory.
-            obj[key] = null;
+          GBLog.verbose(`Ignoring duplicated field in flatten operation to storage: ${key}.`);
         }
+      } else {
+        // Create a temporary reference to the nested object to prevent memory leaks.
+        const tempObj = obj[key];
+        this.flattenJSON(tempObj, res, separator, `${parent ? parent + separator : ''}${key}`);
+        // Clear the reference to avoid holding unnecessary objects in memory.
+        obj[key] = null;
+      }
     }
     return res;
-}
+  }
 
   public async getCustomToken({ pid, tokenName }) {
     const { min } = await DialogKeywords.getProcessInfo(pid);
@@ -2349,7 +2350,7 @@ export class SystemKeywords {
               valueFound = found[e];
             }
           });
-          
+
           const equals =
             typeof value === 'string' && typeof valueFound === 'string'
               ? value?.toLowerCase() != valueFound?.toLowerCase()
@@ -2763,6 +2764,36 @@ export class SystemKeywords {
         }
       );
   }
+
+  public async postToFacebook({ pid, imagePath, caption, pageId }) {
+    // Obtendo informações do processo para logs (ajuste conforme necessário)
+    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
+
+    // Leitura do arquivo de imagem
+    const imageBuffer = Fs.readFileSync(Path.resolve(imagePath));
+
+    // Criação de um arquivo temporário para enviar
+    const tempFilePath = Path.resolve('temp_image.jpg');
+    Fs.writeFileSync(tempFilePath, imageBuffer);
+
+    // Publicação da imagem
+    const page = new Page(pageId);
+    const response = await page.createFeed({
+      message: caption,
+      attached_media: [
+        {
+          media_fbid: tempFilePath,
+        },
+      ],
+    });
+
+    // Log do resultado
+    GBLogEx.info(min, `Imagem publicada no Facebook: ${JSON.stringify(response)}`);
+
+    // Limpeza do arquivo temporário
+    Fs.unlinkSync(tempFilePath);
+  }
+
 
   public async postToInstagram({ pid, username, password, imagePath, caption }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
