@@ -2495,8 +2495,8 @@ export class SystemKeywords {
    */
   public async rewrite({ pid, text }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    const prompt = `rewrite this sentence in a better way: ${text}`;
-    const answer = await ChatServices.continue(min, prompt, 0);
+    const prompt = `Rewrite this sentence in a better way: ${text}`;
+    const answer = await ChatServices.invokeLLM(min, prompt);
     GBLogEx.info(min, `REWRITE ${text} TO ${answer}`);
     return answer;
   }

@@ -61,6 +61,8 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GBUtil } from '../../../src/util.js';
 import SwaggerClient from 'swagger-client';
 import { GBVMService } from './GBVMService.js';
+import { ChatServices } from '../../../packages/llm.gblib/services/ChatServices.js';
+import puppeteer from 'puppeteer';
 
 /**
  * Default check interval for user replay
@@ -72,6 +74,49 @@ const API_RETRIES = 120;
  * Base services of conversation to be called by BASIC.
  */
 export class DialogKeywords {
+  public async llmChart({ pid, data, prompt }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+
+    // The prompt for the LLM, including the data.
+
+    const llmPrompt = `
+    You are given the following data: ${JSON.stringify(data)}.
+    
+    Based on this data, generate a configuration for a Billboard.js chart. The output should be valid JSON, following Billboard.js conventions. Ensure the JSON is returned without markdown formatting, explanations, or comments.
+    
+    The chart should be ${prompt}. Return only the JSON configuration, nothing else.`;
+
+    // Send the prompt to the LLM and get the response
+
+    const response = await ChatServices.invokeLLM(min, llmPrompt);
+    const args = JSON.parse(response.content); // Ensure the LLM generates valid JSON
+
+    // Launch Puppeteer to render the chart
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    // Load Billboard.js styles and scripts
+
+    await page.addStyleTag({ url: 'https://cdn.jsdelivr.net/npm/billboard.js/dist/theme/datalab.min.css' });
+    await page.addScriptTag({ url: 'https://cdn.jsdelivr.net/npm/billboard.js/dist/billboard.pkgd.min.js' });
+
+    // Pass the args to render the chart
+
+    await page.evaluate(`bb.generate(${JSON.stringify(args)});`);
+
+    // Get the chart container and take a screenshot
+
+    const content = await page.$('.bb');
+    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const localName = Path.join('work', gbaiName, 'cache', `chart${GBAdminService.getRndReadableIdentifier()}.jpg`);
+    await content.screenshot({ path: localName, omitBackground: true });
+    await browser.close();
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+    GBLogEx.info(min, `Visualization: Chart generated at ${url}.`);
+
+    return { localName, url };
+  }
   /**
    *
    * Data = [10,20,30]
@@ -427,7 +472,7 @@ export class DialogKeywords {
    * @example TALK TOLIST (array,member)
    *
    */
-  public async getToLst({pid, array, member}) {
+  public async getToLst({ pid, array, member }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     if (!array) {
@@ -1361,7 +1406,7 @@ export class DialogKeywords {
     const step = proc.step;
     const min = GBServer.globals.minInstances.filter(p => p.instance.instanceId == proc.instanceId)[0];
     const sec = new SecService();
-    const user = GBServer.globals.users [proc.userId];
+    const user = GBServer.globals.users[proc.userId];
     const params = user ? JSON.parse(user.params) : {};
     return {
       min,

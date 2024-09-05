@@ -1200,6 +1200,14 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*chart prompt(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['type', 'data', 'prompt']);
+        return `${$1} = await dk.llmChart ({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*MERGE\s*(.*)\s*WITH\s*(.*)BY\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `__reportMerge1 = await sys.merge({pid: pid, file: ${$1}, data: ${$2}, key1: ${$3}})

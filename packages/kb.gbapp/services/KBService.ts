@@ -379,7 +379,7 @@ export class KBService implements IGBKBService {
         returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
     );
 
-    return await ChatServices.answerByLLM(min, user, query);
+    return await ChatServices.answerByLLM( step.context.activity['pid'], min, user, query);
   }
 
   public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {
