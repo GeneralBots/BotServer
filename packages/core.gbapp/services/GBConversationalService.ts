@@ -675,10 +675,7 @@ export class GBConversationalService {
           type: 'header',
           parameters: [
             {
-              type: mediaType,
-              media: {
-                link: urlMedia
-              }
+              type: mediaType
             }
           ]
         }

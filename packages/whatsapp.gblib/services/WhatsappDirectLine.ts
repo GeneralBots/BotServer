@@ -837,10 +837,11 @@ export class WhatsappDirectLine extends GBService {
         throw new Error(`Failed to create template: ${name} ${body}`);
       }
 
-      GBLogEx.info(min, `Template created: ${name}`);
+      GBLogEx.info(min, `Template created: ${name}. Waiting 20 seconds to get approved.`);
+      await GBUtil.sleep(20 * 1000);
     }
 
-    await GBUtil.sleep(20 * 1000);
+    
   }
 
   public async sendToDevice(to: any, msg: string, conversationId) {
