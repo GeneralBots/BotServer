@@ -758,8 +758,8 @@ export class WhatsappDirectLine extends GBService {
       text.toLowerCase().endsWith('.png') ||
       text.toLowerCase().endsWith('.mp4') ||
       text.toLowerCase().endsWith('.mov');
-    let mediaType = text.toLowerCase().endsWith('.mp4') || text.toLowerCase().endsWith('.mov') ? 'video' : 'image';
-    let mediaFile = /(.*)\n/gim.exec(text)[0].trim();
+      let mediaFile = /(.*)\n/gim.exec(text)[0].trim();
+      let mediaType = mediaFile.toLowerCase().endsWith('.mp4') || text.toLowerCase().endsWith('.mov') ? 'video' : 'image';
 
     // Set folder based on media type
     let folder = mediaType === 'video' ? 'videos' : 'images';
