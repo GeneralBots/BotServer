@@ -644,7 +644,7 @@ export class GBConversationalService {
   public async fillAndBroadcastTemplate(min: GBMinInstance, template, mobile: string, text) {
     template = template.replace(/\-/gi, '_');
     template = template.replace(/\./gi, '_');
-  
+
     let isMedia =
       text.toLowerCase().endsWith('.jpg') ||
       text.toLowerCase().endsWith('.jpeg') ||
@@ -653,21 +653,21 @@ export class GBConversationalService {
       text.toLowerCase().endsWith('.mov');
     let mediaType = text.toLowerCase().endsWith('.mp4') || text.toLowerCase().endsWith('.mov') ? 'video' : 'image';
     let mediaFile = !isMedia ? /(.*)\n/gim.exec(text)[0].trim() : text;
-  
+
     // Set folder based on media type
     const folder = mediaType === 'videos' ? 'videos' : 'images';
     const gbaiName = DialogKeywords.getGBAIPath(min.botId);
     const fileUrl = urlJoin(process.env.BOT_URL, 'kb', gbaiName, `${min.botId}.gbkb`, folder, mediaFile);
-  
+
     let urlMedia = mediaFile.startsWith('http') ? mediaFile : fileUrl;
-  
+
     if (!isMedia) {
       text = text.substring(mediaFile.length + 1).trim();
       text = text.replace(/\n/g, '\\n');
     }
-  
+
     template = isMedia ? mediaFile.replace(/\.[^/.]+$/, '') : template;
-  
+
     let data: any = {
       name: template,
       components: [
@@ -684,11 +684,13 @@ export class GBConversationalService {
         }
       ]
     };
-  
+    data['components'][0]['parameters'][0][mediaType] = {link: urlMedia};
+
+
     await this.sendToMobile(min, mobile, data, null);
     GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlMedia}`);
   }
-  
+
   // tslint:enable:no-unsafe-any
 
   public async sendMarkdownToMobile(min: GBMinInstance, step: GBDialogStep, mobile: string, text: string) {
