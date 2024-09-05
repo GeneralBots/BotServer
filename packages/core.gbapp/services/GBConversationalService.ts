@@ -341,7 +341,6 @@ export class GBConversationalService {
   }
 
   public async sendEvent(min: GBMinInstance, step: GBDialogStep, name: string, value: Object): Promise<any> {
-
     if (step.context.activity.channelId !== 'msteams' && step.context.activity.channelId !== 'omnichannel') {
       GBLogEx.info(
         min,
@@ -642,30 +641,32 @@ export class GBConversationalService {
     });
   }
 
-
   public async fillAndBroadcastTemplate(min: GBMinInstance, template, mobile: string, text) {
-
-    template = template.replace(/\-/gi, '_')
-    template = template.replace(/\./gi, '_')
+    template = template.replace(/\-/gi, '_');
+    template = template.replace(/\./gi, '_');
 
     let isMedia =
       text.toLowerCase().endsWith('.jpg') ||
       text.toLowerCase().endsWith('.jpeg') ||
-      text.toLowerCase().endsWith('.png');
+      text.toLowerCase().endsWith('.png') ||
+      text.toLowerCase().endsWith('.mp4') ||
+      text.toLowerCase().endsWith('.mov');
 
-    let image = !isMedia ? /(.*)\n/gim.exec(text)[0].trim() : text;
+    let mediaFile = !isMedia ? /(.*)\n/gim.exec(text)[0].trim() : text;
 
     const gbaiName = DialogKeywords.getGBAIPath(min.botId);
-    const fileUrl = urlJoin(process.env.BOT_URL, 'kb', gbaiName, `${min.botId}.gbkb`, 'images', image);
+    const fileUrl = urlJoin(process.env.BOT_URL, 'kb', gbaiName, `${min.botId}.gbkb`, 'media', mediaFile);
 
-    let urlImage = image.startsWith('http') ? image : fileUrl;
+    let urlMedia = mediaFile.startsWith('http') ? mediaFile : fileUrl;
 
     if (!isMedia) {
-      text = text.substring(image.length + 1).trim();
+      text = text.substring(mediaFile.length + 1).trim();
       text = text.replace(/\n/g, '\\n');
     }
 
-    template = isMedia ? image.replace(/\.[^/.]+$/, '') : template;
+    template = isMedia ? mediaFile.replace(/\.[^/.]+$/, '') : template;
+
+    let mediaType = text.toLowerCase().endsWith('.mp4') || text.toLowerCase().endsWith('.mov') ? 'video' : 'image';
 
     let data: any = {
       name: template,
@@ -674,9 +675,9 @@ export class GBConversationalService {
           type: 'header',
           parameters: [
             {
-              type: 'image',
-              image: {
-                link: urlImage
+              type: mediaType,
+              media: {
+                link: urlMedia
               }
             }
           ]
@@ -685,8 +686,9 @@ export class GBConversationalService {
     };
 
     await this.sendToMobile(min, mobile, data, null);
-    GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlImage}`);
+    GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlMedia}`);
   }
+
   // tslint:enable:no-unsafe-any
 
   public async sendMarkdownToMobile(min: GBMinInstance, step: GBDialogStep, mobile: string, text: string) {

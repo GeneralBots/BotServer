@@ -16,5 +16,5 @@ POST TO INSTAGRAM username, password, image, caption
 # Postar no Facebook
 POST TO FACEBOOK username, password, image, caption
 
-# Postar no Twitter
-TWEET username, password, image, caption
+# Postar no BlueSky
+BLUESKY username, password, image, caption
