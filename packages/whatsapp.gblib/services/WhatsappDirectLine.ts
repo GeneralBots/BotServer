@@ -101,12 +101,11 @@ export class WhatsappDirectLine extends GBService {
     super();
 
     this.min = min;
-    this.botId = botId;    
+    this.botId = botId;
     this.whatsappServiceKey = whatsappServiceKey;
     this.whatsappServiceNumber = whatsappServiceNumber;
     this.whatsappServiceUrl = whatsappServiceUrl;
     this.provider = whatsappServiceKey === 'internal' ? 'GeneralBots' : 'meta';
-    
   }
 
   public static async asyncForEach(array, callback) {
@@ -116,9 +115,8 @@ export class WhatsappDirectLine extends GBService {
   }
 
   public async setup(setUrl: boolean) {
-    
     this.directLineClient = GBUtil.getDirectLineClient(this.min);
-    
+
     let url: string;
     let options: any;
 
@@ -750,27 +748,37 @@ export class WhatsappDirectLine extends GBService {
   // Function to create or update a template using WhatsApp Business API
 
   public async createOrUpdateTemplate(min: GBMinInstance, template, text) {
+    template = template.replace(/\-/gi, '_');
+    template = template.replace(/\./gi, '_');
 
-    template = template.replace(/\-/gi, '_')
-    template = template.replace(/\./gi, '_')
+    // Determine if media is image or video
+    let isMedia =
+      text.toLowerCase().endsWith('.jpg') ||
+      text.toLowerCase().endsWith('.jpeg') ||
+      text.toLowerCase().endsWith('.png') ||
+      text.toLowerCase().endsWith('.mp4') ||
+      text.toLowerCase().endsWith('.mov');
+    let mediaType = text.toLowerCase().endsWith('.mp4') || text.toLowerCase().endsWith('.mov') ? 'video' : 'image';
+    let mediaFile = /(.*)\n/gim.exec(text)[0].trim();
 
-    let image = /(.*)\n/gim.exec(text)[0].trim();
-
+    // Set folder based on media type
+    let folder = mediaType === 'video' ? 'videos' : 'images';
     let path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
-    path = Path.join(process.env.PWD, 'work', path, 'images', image);
+    path = Path.join(process.env.PWD, 'work', path, folder, mediaFile);
 
-    text = text.substring(image.length + 1).trim();
+    text = text.substring(mediaFile.length + 1).trim();
     text = text.replace(/\n/g, '\\n');
 
-    const handleImage = await min.whatsAppDirectLine.uploadLargeFile(min, path);
+    // Upload the media file based on media type
+    const handleMedia = await min.whatsAppDirectLine.uploadLargeFile(min, path);
 
     let data: any = {
       name: template,
       components: [
         {
           type: 'HEADER',
-          format: 'IMAGE',
-          example: { header_handle: [handleImage] }
+          format: mediaType.toUpperCase(), // Use IMAGE or VIDEO format
+          example: { header_handle: [handleMedia] }
         },
         {
           type: 'BODY',
@@ -782,17 +790,14 @@ export class WhatsappDirectLine extends GBService {
     const name = data.name;
 
     // Define the API base URL and endpoints
-
     const baseUrl = 'https://graph.facebook.com/v20.0'; // API version 20.0
     const businessAccountId = this.whatsappBusinessManagerId;
     const accessToken = this.whatsappServiceKey;
 
     // Endpoint for listing templates
-
     const listTemplatesEndpoint = `${baseUrl}/${businessAccountId}/message_templates?access_token=${accessToken}`;
 
     // Step 1: Check if the template exists
-
     const listResponse = await fetch(listTemplatesEndpoint, {
       method: 'GET',
       headers: {
@@ -808,25 +813,7 @@ export class WhatsappDirectLine extends GBService {
     const templateExists = templates.data.find(template => template.name === name);
 
     if (templateExists) {
-      // // Step 2: Update the template
-      // const updateTemplateEndpoint = `${baseUrl}/${templateExists.id}`;
-
-      // const updateResponse = await fetch(updateTemplateEndpoint, {
-      //   method: 'POST',
-      //   headers: {
-      //     Authorization: `Bearer ${accessToken}`,
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({
-      //     components: data.components
-      //   })
-      // });
-
-      // if (!updateResponse.ok) {
-      //   throw new Error(`Failed to update template: ${name} ${await updateResponse.text()}`);
-      // }
-
-      GBLogEx.info(min, `Template update skiped: ${name}`);
+      GBLogEx.info(min, `Template update skipped: ${name}`);
     } else {
       // Step 3: Create the template
       const createTemplateEndpoint = `${baseUrl}/${businessAccountId}/message_templates`;
@@ -1186,7 +1173,7 @@ export class WhatsappDirectLine extends GBService {
         } else {
           let t;
           activeMin = GBServer.globals.minInstances.filter(p => p.instance.instanceId === user.instanceId)[0];
-          if (activeMin === undefined) {      
+          if (activeMin === undefined) {
             activeMin = GBServer.globals.minBoot;
             t = (activeMin as any).whatsAppDirectLine;
             await t.sendToDevice(
