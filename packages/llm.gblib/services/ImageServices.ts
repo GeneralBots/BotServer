@@ -41,6 +41,7 @@ import Fs from 'fs';
 import urlJoin from 'url-join';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx';
+import { GBUtil } from '../../../src/util';
 
 /**
  * Image processing services of conversation to be called by BASIC.
@@ -66,7 +67,7 @@ export class ImageServices {
         size: '1024x1024'
       });
 
-      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const gbaiName = GBUtil.getGBAIPath(min.botId);
       const localName = Path.join('work', gbaiName, 'cache', `DALL-E${GBAdminService.getRndReadableIdentifier()}.png`);
 
       const url = response.data[0].url;

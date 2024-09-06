@@ -656,7 +656,7 @@ export class GBConversationalService {
 
     // Set folder based on media type
     const folder = mediaType === 'video' ? 'videos' : 'images';
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiName = GBUtil.getGBAIPath(min.botId);
     const fileUrl = urlJoin(process.env.BOT_URL, 'kb', gbaiName, `${min.botId}.gbkb`, folder, mediaFile);
 
     let urlMedia = mediaFile.startsWith('http') ? mediaFile : fileUrl;

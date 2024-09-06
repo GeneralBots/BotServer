@@ -152,7 +152,7 @@ export class GBAdminService implements IGBAdminService {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
-    const path = DialogKeywords.getGBAIPath(min.botId, null, packageName);
+    const path = GBUtil.getGBAIPath(min.botId, null, packageName);
     const localFolder = Path.join('work', path);
     await deployer.undeployPackageFromLocalPath(min.instance, localFolder);
   }
@@ -170,12 +170,12 @@ export class GBAdminService implements IGBAdminService {
 
     const folderName = text.split(' ')[2];
     const packageType = Path.extname(folderName).substr(1);
-    const gbaiPath = DialogKeywords.getGBAIPath(min.instance.botId, packageType, null);
+    const gbaiPath = GBUtil.getGBAIPath(min.instance.botId, packageType, null);
     const localFolder = Path.join('work', gbaiPath);
 
     // .gbot packages are handled using storage API, so no download
     // of local resources is required.
-    const gbai = DialogKeywords.getGBAIPath(min.instance.botId);
+    const gbai = GBUtil.getGBAIPath(min.instance.botId);
 
     if (packageType === 'gbkb') {
       await deployer['cleanupPackage'](min.instance, packageName);

@@ -51,6 +51,7 @@ import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import Path from 'path';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Dialog arguments.
@@ -245,7 +246,7 @@ export class AskDialog extends IGBDialog {
 
             for (const key in results.sources) {
               const source = results.sources[key];
-              const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
+              const path = GBUtil.getGBAIPath(min.botId, `gbkb`);
               let url = urlJoin('kb', path, 'docs', Path.basename(source.file));
               url = `${url}#page=${source.page}&toolbar=0&messages=0&statusbar=0&navpanes=0`;
               urls.push({ url: url });

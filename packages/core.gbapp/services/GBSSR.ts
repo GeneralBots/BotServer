@@ -303,12 +303,12 @@ export class GBSSR {
     }
 
 
-    let path = DialogKeywords.getGBAIPath(botId, `gbui`);
+    let path = GBUtil.getGBAIPath(botId, `gbui`);
 
     // Checks if the bot has an .gbui published or use default.gbui.
 
     if (!Fs.existsSync(path)) {
-      path = DialogKeywords.getGBAIPath(minBoot.botId, `gbui`);
+      path = GBUtil.getGBAIPath(minBoot.botId, `gbui`);
     }
     let parts = req.url.replace(`/${botId}`, '').split('?');
     let url = parts[0];

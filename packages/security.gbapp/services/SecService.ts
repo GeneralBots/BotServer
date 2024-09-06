@@ -9,6 +9,7 @@ import mkdirp from 'mkdirp';
 import urlJoin from 'url-join';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GBServer } from '../../../src/app.js';
+import { GBUtil } from '../../../src/util.js';
 
 
 /**
@@ -25,7 +26,7 @@ export class SecService extends GBService {
     email: string
   ): Promise<GuaribasUser> {
 
-    const gbaiPath = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiPath = GBUtil.getGBAIPath(min.botId);
     const dir = urlJoin ('work',gbaiPath, 'users', userSystemId);
 
     if (!Fs.existsSync(dir)) {

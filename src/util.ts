@@ -38,6 +38,10 @@ import SwaggerClient from 'swagger-client';
 import Fs from 'fs';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
 import path from 'path';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { Page } from 'puppeteer';
+import urljoin from 'url-join';
+import html2md from 'html-to-md';
 
 export class GBUtil {
   public static repeat(chr, count) {
@@ -173,5 +177,92 @@ export class GBUtil {
       if (typeof t[key] === 'object') return true;
     }
     return false;
+  }
+
+  public static async getPdfText(data: Buffer): Promise<string> {
+    const pdf = await getDocument({ data }).promise;
+    let pages = [];
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const text = textContent.items
+        .map(item => item['str'])
+        .join('')
+        .replace(/\s/g, ''); // Optionally remove extra spaces
+      pages.push(text);
+    }
+
+    return pages.join('');
+  }
+
+  static getGBAIPath(botId, packageType = null, packageName = null) {
+    let gbai = `${botId}.gbai`;
+    if (!packageType && !packageName) {
+      return GBConfigService.get('DEV_GBAI') ? GBConfigService.get('DEV_GBAI') : gbai;
+    }
+
+    if (GBConfigService.get('DEV_GBAI')) {
+      gbai = GBConfigService.get('DEV_GBAI');
+      botId = gbai.replace(/\.[^/.]+$/, '');
+      return urljoin(GBConfigService.get('DEV_GBAI'), packageName ? packageName : `${botId}.${packageType}`);
+    } else {
+      return urljoin(gbai, packageName ? packageName : `${botId}.${packageType}`);
+    }
+  }
+
+  public static async savePage(url: string, page: Page, directoryPath: string): Promise<string | null> {
+    
+    let response = await page.goto(url);
+
+    if (!response) {
+      response = await page.waitForResponse(() => true);
+    }
+    
+    if (response && response.headers && response.status() === 200) {
+      const contentType = response.headers()['content-type'];
+
+      if (contentType) {
+        const urlObj = new URL(url);
+        const urlPath = urlObj.pathname.endsWith('/') ? urlObj.pathname.slice(0, -1) : urlObj.pathname;
+        let filename = urlPath.split('/').pop() || 'index';
+
+        Fs.mkdirSync(directoryPath, { recursive: true });
+
+        const extensionMap = {
+          'text/html': 'html',
+          'application/pdf': 'pdf',
+          'text/plain': 'txt',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+          'application/json': 'json',
+          'application/xml': 'xml',
+          'text/csv': 'csv',
+          'application/x-httpd-php': 'php',
+          'application/javascript': 'js',
+          'text/javascript': 'js',
+          'text/css': 'css',
+          'text/xml': 'xml'
+        };
+
+        const extension = Object.keys(extensionMap).find(key => contentType.includes(key)) || 'bin';
+        filename = `${filename}.${extension}`;
+        const filePath = path.join(directoryPath, filename);
+
+        let fileContent;
+        if (extension === 'html') {
+          fileContent = html2md(await response.text());
+        } else if (extension === 'pdf') {
+          const pdfBuffer = await response.buffer();
+          fileContent = await GBUtil.getPdfText(pdfBuffer); // Extract text from the PDF
+        } else {
+          fileContent = await response.buffer();
+        }
+
+        Fs.writeFileSync(filePath, fileContent);
+
+        return filePath;
+      }
+    }
+    return null;
   }
 }

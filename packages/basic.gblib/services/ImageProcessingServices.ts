@@ -38,6 +38,7 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import urlJoin from 'url-join';
 import { GBServer } from '../../../src/app.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Image processing services of conversation to be called by BASIC.
@@ -74,7 +75,7 @@ export class ImageProcessingServices {
     });
 
     const botId = min.instance.botId;
-    const path = DialogKeywords.getGBAIPath(min.botId);
+    const path = GBUtil.getGBAIPath(min.botId);
     // TODO: const img = await joinImages(paths);
     const localName = Path.join('work', path, 'cache', `img-mrg${GBAdminService.getRndReadableIdentifier()}.png`);
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));

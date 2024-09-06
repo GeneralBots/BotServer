@@ -511,7 +511,7 @@ export class GBDeployer implements IGBDeployer {
 
       // Retrieves all files in remote folder.
 
-      let path = DialogKeywords.getGBAIPath(min.botId);
+      let path = GBUtil.getGBAIPath(min.botId);
       path = urlJoin(path, remotePath);
       let url = `${baseUrl}/drive/root:/${path}:/children`;
 
@@ -643,7 +643,7 @@ export class GBDeployer implements IGBDeployer {
           const strFind = ' Driver';
           const conns = await min.core['findParam'](min.instance, strFind);
           await CollectionUtil.asyncForEach(conns, async t => {
-            const connectionName = t.replace(strFind, '');
+            const connectionName = t.replace(strFind, '').trim();
             let con = {};
             con['name'] = connectionName;
             con['storageDriver'] = min.core.getParam<string>(min.instance, `${connectionName} Driver`, null);
@@ -652,13 +652,13 @@ export class GBDeployer implements IGBDeployer {
             let file = min.core.getParam<string>(min.instance, `${connectionName} File`, null);
 
             if (storageName) {
-              con['storageName'] = storageName;
+              con['storageName'] = storageName.trim();
               con['storageServer'] = min.core.getParam<string>(min.instance, `${connectionName} Server`, null);
               con['storageUsername'] = min.core.getParam<string>(min.instance, `${connectionName} Username`, null);
               con['storagePort'] = min.core.getParam<string>(min.instance, `${connectionName} Port`, null);
               con['storagePassword'] = min.core.getParam<string>(min.instance, `${connectionName} Password`, null);
             } else if (file) {
-              const path = DialogKeywords.getGBAIPath(min.botId, 'gbdata');
+              const path = GBUtil.getGBAIPath(min.botId, 'gbdata');
               con['storageFile'] = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
             } else {
               GBLogEx.debug(min, `No storage information found for ${connectionName}, missing storage name or file.`);
@@ -666,7 +666,7 @@ export class GBDeployer implements IGBDeployer {
             connections.push(con);
           });
 
-          const path = DialogKeywords.getGBAIPath(min.botId, null);
+          const path = GBUtil.getGBAIPath(min.botId, null);
           const localFolder = Path.join('work', path, 'connections.json');
           Fs.writeFileSync(localFolder, JSON.stringify(connections), { encoding: null });
 
@@ -726,7 +726,7 @@ export class GBDeployer implements IGBDeployer {
    * Removes the package local files from cache.
    */
   public async cleanupPackage(instance: IGBInstance, packageName: string) {
-    const path = DialogKeywords.getGBAIPath(instance.botId, null, packageName);
+    const path = GBUtil.getGBAIPath(instance.botId, null, packageName);
     const localFolder = Path.join('work', path);
     rimraf.sync(localFolder);
   }
@@ -740,7 +740,7 @@ export class GBDeployer implements IGBDeployer {
     const packageType = Path.extname(packageName);
     const p = await this.getStoragePackageByName(instance.instanceId, packageName);
 
-    const path = DialogKeywords.getGBAIPath(instance.botId, null, packageName);
+    const path = GBUtil.getGBAIPath(instance.botId, null, packageName);
     const localFolder = Path.join('work', path);
 
     return await this.undeployPackageFromLocalPath(instance, localFolder);
@@ -899,7 +899,7 @@ export class GBDeployer implements IGBDeployer {
    * Servers bot storage assets to be used by web, WhatsApp and other channels.
    */
   public static mountGBKBAssets(packageName: any, botId: string, filename: string) {
-    const gbaiName = DialogKeywords.getGBAIPath(botId);
+    const gbaiName = GBUtil.getGBAIPath(botId);
 
     // Servers menu assets.
 

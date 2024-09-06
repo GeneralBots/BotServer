@@ -150,7 +150,7 @@ export class WhatsappDirectLine extends GBService {
       case 'GeneralBots':
         const minBoot = GBServer.globals.minBoot;
         // Initialize the browser using a local profile for each bot.
-        const gbaiPath = DialogKeywords.getGBAIPath(this.min.botId);
+        const gbaiPath = GBUtil.getGBAIPath(this.min.botId);
         const webVersion = '2.2412.51';
         const localName = Path.join('work', gbaiPath, 'profile');
         const createClient = () => {
@@ -323,7 +323,7 @@ export class WhatsappDirectLine extends GBService {
           const base64Image = await message.downloadMedia();
 
           let buf: any = Buffer.from(base64Image.data, 'base64');
-          const gbaiName = DialogKeywords.getGBAIPath(this.min.botId);
+          const gbaiName = GBUtil.getGBAIPath(this.min.botId);
           const localName = Path.join(
             'work',
             gbaiName,
@@ -763,7 +763,7 @@ export class WhatsappDirectLine extends GBService {
 
     // Set folder based on media type
     let folder = mediaType === 'video' ? 'videos' : 'images';
-    let path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
+    let path = GBUtil.getGBAIPath(min.botId, `gbkb`);
     path = Path.join(process.env.PWD, 'work', path, folder, mediaFile);
 
     text = text.substring(mediaFile.length + 1).trim();

@@ -84,7 +84,7 @@ export class DialogKeywords {
     
     Based on this data, generate a configuration for a Billboard.js chart. The output should be valid JSON, following Billboard.js conventions. Ensure the JSON is returned without markdown formatting, explanations, or comments.
     
-    The chart should be ${prompt}. Return only the JSON configuration, nothing else.`;
+    The chart should be ${prompt}. Return only the one-line only JSON configuration, nothing else.`;
 
     // Send the prompt to the LLM and get the response
 
@@ -108,7 +108,7 @@ export class DialogKeywords {
     // Get the chart container and take a screenshot
 
     const content = await page.$('.bb');
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiName = GBUtil.getGBAIPath(min.botId);
     const localName = Path.join('work', gbaiName, 'cache', `chart${GBAdminService.getRndReadableIdentifier()}.jpg`);
     await content.screenshot({ path: localName, omitBackground: true });
     await browser.close();
@@ -182,7 +182,7 @@ export class DialogKeywords {
       };
     }
 
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiName = GBUtil.getGBAIPath(min.botId);
     const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
 
     await ChartServices.screenshot(definition, localName);
@@ -1037,7 +1037,7 @@ export class DialogKeywords {
 
         let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
         const botId = min.instance.botId;
-        const path = DialogKeywords.getGBAIPath(botId);
+        const path = GBUtil.getGBAIPath(botId);
         let url = `${baseUrl}/drive/root:/${path}:/children`;
 
         GBLogEx.info(min, `Loading HEAR AS .xlsx options from Sheet: ${url}`);
@@ -1287,20 +1287,6 @@ export class DialogKeywords {
       GBLog.error(`BASIC RUNTIME ERR HEAR ${error.message ? error.message : error}\n Stack:${error.stack}`);
     }
   }
-  static getGBAIPath(botId, packageType = null, packageName = null) {
-    let gbai = `${botId}.gbai`;
-    if (!packageType && !packageName) {
-      return GBConfigService.get('DEV_GBAI') ? GBConfigService.get('DEV_GBAI') : gbai;
-    }
-
-    if (GBConfigService.get('DEV_GBAI')) {
-      gbai = GBConfigService.get('DEV_GBAI');
-      botId = gbai.replace(/\.[^/.]+$/, '');
-      return urljoin(GBConfigService.get('DEV_GBAI'), packageName ? packageName : `${botId}.${packageType}`);
-    } else {
-      return urljoin(gbai, packageName ? packageName : `${botId}.${packageType}`);
-    }
-  }
 
   /**
    * Prepares the next dialog to be shown to the specified user.
@@ -1457,7 +1443,7 @@ export class DialogKeywords {
     const element = filename._page ? filename._page : filename.screenshot ? filename : null;
     let url;
     let nameOnly;
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiName = GBUtil.getGBAIPath(min.botId);
 
     // Web automation.
 
@@ -1494,7 +1480,7 @@ export class DialogKeywords {
     // .gbdrive direct sending.
     else {
       const ext = Path.extname(filename);
-      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const gbaiName = GBUtil.getGBAIPath(min.botId);
 
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const fileUrl = urlJoin('/', gbaiName, `${min.botId}.gbdrive`, filename);
@@ -1527,7 +1513,7 @@ export class DialogKeywords {
       // Prepare a cache to be referenced by Bot Framework.
 
       const buf = Fs.readFileSync(filename);
-      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const gbaiName = GBUtil.getGBAIPath(min.botId);
       const localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
       Fs.writeFileSync(localName, buf, { encoding: null });
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
@@ -1560,7 +1546,7 @@ export class DialogKeywords {
     const data = img.replace(/^data:image\/\w+;base64,/, '');
     const buf = Buffer.from(data, 'base64');
 
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiName = GBUtil.getGBAIPath(min.botId);
     const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
     Fs.writeFileSync(localName, buf, { encoding: null });
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));

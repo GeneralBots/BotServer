@@ -680,7 +680,7 @@ ENDPOINT_UPDATE=true
 
       const maxLines = 512;
       const file = 'Config.xlsx';
-      const path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
+      const path = GBUtil.getGBAIPath(min.botId, `gbot`);
 
       let document = await new SystemKeywords().internalGetDocument(client, baseUrl, path, file);
 
@@ -716,7 +716,7 @@ ENDPOINT_UPDATE=true
         )
         .patch(body);
     } else {
-      let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
+      let path = GBUtil.getGBAIPath(min.botId, `gbot`);
       const config = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, 'config.csv');
 
       const db = await csvdb(config, ['name', 'value'], ',');
@@ -914,7 +914,7 @@ ENDPOINT_UPDATE=true
         const objUser = userManager.addUser(user, pass);
 
         const virtualPath = '/' + min.botId;
-        let path = DialogKeywords.getGBAIPath(min.botId, null);
+        let path = GBUtil.getGBAIPath(min.botId, null);
         const gbaiRoot = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path);
 
         server.setFileSystem(virtualPath, new webdav.PhysicalFileSystem(gbaiRoot), successed => {

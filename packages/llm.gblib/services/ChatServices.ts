@@ -146,7 +146,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     await CollectionUtil.asyncForEach(sources, async source => {
       let found = false;
       if (source && source.file.endsWith('.pdf')) {
-        const gbaiName = DialogKeywords.getGBAIPath(this.min.botId, 'gbkb');
+        const gbaiName = GBUtil.getGBAIPath(this.min.botId, 'gbkb');
         const localName = Path.join(process.env.PWD, 'work', gbaiName, 'docs', source.file);
 
         if (localName) {
@@ -185,7 +185,7 @@ export class ChatServices {
 
     if (pngPages.length > 0) {
       const buffer = pngPages[0].content;
-      const gbaiName = DialogKeywords.getGBAIPath(min.botId, null);
+      const gbaiName = GBUtil.getGBAIPath(min.botId, null);
       const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
       Fs.writeFileSync(localName, buffer, { encoding: null });
@@ -708,7 +708,7 @@ export class ChatServices {
 
     // Adds .gbdialog as functions if any to LLM Functions.
     await CollectionUtil.asyncForEach(Object.keys(min.scriptMap), async script => {
-      const path = DialogKeywords.getGBAIPath(min.botId, 'gbdialog', null);
+      const path = GBUtil.getGBAIPath(min.botId, 'gbdialog', null);
       const jsonFile = Path.join('work', path, `${script}.json`);
 
       if (Fs.existsSync(jsonFile) && script.toLowerCase() !== 'start.vbs') {

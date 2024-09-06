@@ -44,6 +44,7 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { Mutex } from 'async-mutex';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { SystemKeywords } from './SystemKeywords.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Web Automation services of conversation to be called by BASIC.
@@ -348,7 +349,7 @@ export class WebAutomationServices {
     const page = WebAutomationServices.getPageByHandle(handle);
     GBLogEx.info(min, `Web Automation SCREENSHOT ${selector}.`);
 
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiName = GBUtil.getGBAIPath(min.botId);
     const localName = Path.join('work', gbaiName, 'cache', `screen-${GBAdminService.getRndReadableIdentifier()}.jpg`);
 
     await page.screenshot({ path: localName });
@@ -439,7 +440,7 @@ export class WebAutomationServices {
     folder = folder.replace(/\\/gi, '/');
 
     // Determines full path at source and destination.
-    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+    const path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
     const root = path;
     const dstPath = urlJoin(root, folder, filename);
 

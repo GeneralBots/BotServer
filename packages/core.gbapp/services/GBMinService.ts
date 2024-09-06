@@ -293,24 +293,24 @@ export class GBMinService {
 
     // Install per bot deployed packages.
 
-    let packagePath = urlJoin(`work`, DialogKeywords.getGBAIPath(min.botId, 'gbdialog'));
+    let packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, 'gbdialog'));
     if (Fs.existsSync(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
-    packagePath = urlJoin(`work`, DialogKeywords.getGBAIPath(min.botId, 'gbapp'));
+    packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, 'gbapp'));
     if (Fs.existsSync(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
-    packagePath = urlJoin(`work`, DialogKeywords.getGBAIPath(min.botId, 'gbtheme'));
+    packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, 'gbtheme'));
     if (Fs.existsSync(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
-    packagePath = urlJoin(`work`, DialogKeywords.getGBAIPath(min.botId, `gblib`));
+    packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, `gblib`));
     if (Fs.existsSync(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
 
-    const gbai = DialogKeywords.getGBAIPath(min.botId);
+    const gbai = GBUtil.getGBAIPath(min.botId);
     let dir = `work/${gbai}/cache`;
     const botId = gbai.replace(/\.[^/.]+$/, '');
 
@@ -387,7 +387,7 @@ export class GBMinService {
     // Generates MS Teams manifest.
 
     const manifest = `${instance.botId}-Teams.zip`;
-    const packageTeams = urlJoin(`work`, DialogKeywords.getGBAIPath(instance.botId), manifest);
+    const packageTeams = urlJoin(`work`, GBUtil.getGBAIPath(instance.botId), manifest);
     if (!Fs.existsSync(packageTeams)) {
       GBLogEx.info(min, 'Generating MS Teams manifest....');
       const data = await this.deployer.getBotManifest(instance);
@@ -832,7 +832,7 @@ export class GBMinService {
     min['scheduleMap'] = {};
     min['conversationWelcomed'] = {};
     if (await min.core.getParam(min.instance, 'Answer Mode', null)) {
-      const gbkbPath = DialogKeywords.getGBAIPath(min.botId, 'gbkb');
+      const gbkbPath = GBUtil.getGBAIPath(min.botId, 'gbkb');
       min['vectorStorePath'] = Path.join('work', gbkbPath, 'docs-vectorized');
       min['vectorStore'] = await this.deployer.loadOrCreateEmptyVectorStore(min);
     }
@@ -1095,7 +1095,7 @@ export class GBMinService {
               ps: null,
               qs: null
             });
-            const path = DialogKeywords.getGBAIPath(min.botId);
+            const path = GBUtil.getGBAIPath(min.botId);
             const folder = `work/${path}/cache`;
             const filename = `${GBAdminService.generateUuid()}.png`;
 
@@ -1271,7 +1271,7 @@ export class GBMinService {
   private static async downloadAttachmentAndWrite(attachment) {
     const url = attachment.contentUrl;
     const localFolder = 'work';
-    const path = DialogKeywords.getGBAIPath(this['min'].botId);
+    const path = GBUtil.getGBAIPath(this['min'].botId);
     const localFileName = Path.join(localFolder, path, 'uploads', attachment.name);
 
     let buffer;

@@ -54,6 +54,7 @@ import { SystemKeywords } from './SystemKeywords.js';
 import { Sequelize, QueryTypes } from '@sequelize/core';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -68,7 +69,7 @@ export class GBVMService extends GBService {
   public static API_PORT = 1111;
 
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
-    const ignore = Path.join('work', DialogKeywords.getGBAIPath(min.botId, 'gbdialog'), 'node_modules');
+    const ignore = Path.join('work', GBUtil.getGBAIPath(min.botId, 'gbdialog'), 'node_modules');
     const files = await walkPromise(folder, { ignore: [ignore] });
 
     await CollectionUtil.asyncForEach(files, async file => {
@@ -223,7 +224,7 @@ export class GBVMService extends GBService {
 
   public static async loadConnections(min) {
     // Loads storage custom connections.
-    const path = DialogKeywords.getGBAIPath(min.botId, null);
+    const path = GBUtil.getGBAIPath(min.botId, null);
     const filePath = Path.join('work', path, 'connections.json');
     let connections = [];
     if (Fs.existsSync(filePath)) {
@@ -1089,7 +1090,7 @@ export class GBVMService extends GBService {
     }
 
     const botId = min.botId;
-    const path = DialogKeywords.getGBAIPath(min.botId, `gbdialog`);
+    const path = GBUtil.getGBAIPath(min.botId, `gbdialog`);
     const gbdialogPath = urlJoin(process.cwd(), 'work', path);
     const scriptFilePath = urlJoin(gbdialogPath, `${text}.js`);
 

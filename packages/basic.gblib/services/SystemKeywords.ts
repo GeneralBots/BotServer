@@ -262,7 +262,7 @@ export class SystemKeywords {
     // headers.
 
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiName = GBUtil.getGBAIPath(min.botId);
     const browser = await GBSSR.createBrowser(null);
     const page = await browser.newPage();
     await page.minimize();
@@ -378,7 +378,7 @@ export class SystemKeywords {
 
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const botId = min.instance.botId;
-      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const gbaiName = GBUtil.getGBAIPath(min.botId);
       const tmpDocx = urlJoin(gbaiName, `${botId}.gbdrive`, `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
 
       // Performs the conversion operation.
@@ -571,7 +571,7 @@ export class SystemKeywords {
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
     const botId = min.instance.botId;
-    const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
+    const path = GBUtil.getGBAIPath(botId, 'gbdata');
     let document = await this.internalGetDocument(client, baseUrl, path, file);
     let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
     let body = { values: [[]] };
@@ -656,7 +656,7 @@ export class SystemKeywords {
     GBLogEx.info(min, `Saving '${file}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+    const path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
 
     // Checks if it is a GB FILE object.
 
@@ -701,7 +701,7 @@ export class SystemKeywords {
 
     // It is an SharePoint object that needs to be downloaded.
 
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiName = GBUtil.getGBAIPath(min.botId);
     const localName = Path.join('work', gbaiName, 'cache', `${GBAdminService.getRndReadableIdentifier()}.tmp`);
     const url = file['url'];
     const response = await fetch(url);
@@ -875,7 +875,7 @@ export class SystemKeywords {
     GBLogEx.info(min, `Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
+    const path = GBUtil.getGBAIPath(botId, 'gbdata');
 
     let sheets;
     let document;
@@ -994,7 +994,7 @@ export class SystemKeywords {
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const botId = min.instance.botId;
       ('');
-      const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
+      const path = GBUtil.getGBAIPath(botId, 'gbdata');
 
       let document = await this.internalGetDocument(client, baseUrl, path, file);
 
@@ -1092,7 +1092,7 @@ export class SystemKeywords {
     args.shift();
 
     const botId = min.instance.botId;
-    const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
+    const path = GBUtil.getGBAIPath(botId, 'gbdata');
 
     // MAX LINES property.
 
@@ -1150,7 +1150,7 @@ export class SystemKeywords {
       }
       result = null;
     } else if (file['cTag']) {
-      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const gbaiName = GBUtil.getGBAIPath(min.botId);
       const localName = Path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
       const url = file['@microsoft.graph.downloadUrl'];
       const response = await fetch(url);
@@ -1200,7 +1200,7 @@ export class SystemKeywords {
       rows = results.text;
     } else if (file.indexOf('.csv') !== -1) {
       let res;
-      let path = DialogKeywords.getGBAIPath(min.botId, `gbdata`);
+      let path = GBUtil.getGBAIPath(min.botId, `gbdata`);
       const csvFile = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
       const firstLine = Fs.readFileSync(csvFile, 'utf8').split('\n')[0];
       const headers = firstLine.split(',');
@@ -1520,7 +1520,7 @@ export class SystemKeywords {
     if (user) {
       ChatServices.userSystemPrompt[user.userSystemId] = text;
 
-      const path = DialogKeywords.getGBAIPath(min.botId);
+      const path = GBUtil.getGBAIPath(min.botId);
       const systemPromptFile = urlJoin(process.cwd(), 'work', path, 'users', user.userSystemId, 'systemPrompt.txt');
       Fs.writeFileSync(systemPromptFile, text);
     }
@@ -1536,7 +1536,7 @@ export class SystemKeywords {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    let path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+    let path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
 
     // Extracts each part of path to call create folder to each
     // one of them.
@@ -1585,7 +1585,7 @@ export class SystemKeywords {
   public async shareFolder({ pid, folder, email, message }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+    const path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
     const root = urlJoin(path, folder);
 
     const src = await client.api(`${baseUrl}/drive/root:/${root}`).get();
@@ -1606,7 +1606,7 @@ export class SystemKeywords {
   public async internalCreateDocument(min, path, content) {
     GBLogEx.info(min, `CREATE DOCUMENT '${path}...'`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiName = GBUtil.getGBAIPath(min.botId);
     const tmpDocx = urlJoin(gbaiName, path);
 
     // Templates a blank {content} tag inside the blank.docx.
@@ -1651,7 +1651,7 @@ export class SystemKeywords {
 
     // Determines full path at source and destination.
 
-    const root = DialogKeywords.getGBAIPath(botId, 'gbdrive');
+    const root = GBUtil.getGBAIPath(botId, 'gbdrive');
     const srcPath = urlJoin(root, src);
     const dstPath = urlJoin(root, dest);
 
@@ -1711,7 +1711,7 @@ export class SystemKeywords {
     dest = dest.replace(/\\/gi, '/');
 
     // Determines full path at source and destination.
-    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+    const path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
     const root = path;
     const srcPath = urlJoin(root, src);
     const dstPath = urlJoin(path, dest);
@@ -2001,7 +2001,7 @@ export class SystemKeywords {
   public async fill({ pid, templateName, data }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
     const botId = min.instance.botId;
-    const gbaiName = DialogKeywords.getGBAIPath(botId, 'gbdata');
+    const gbaiName = GBUtil.getGBAIPath(botId, 'gbdata');
     let localName;
 
     // Downloads template from .gbdrive.
@@ -2240,7 +2240,7 @@ export class SystemKeywords {
       }
     } else {
       const botId = min.instance.botId;
-      const path = DialogKeywords.getGBAIPath(botId, 'gbdata');
+      const path = GBUtil.getGBAIPath(botId, 'gbdata');
 
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
@@ -2510,7 +2510,7 @@ export class SystemKeywords {
   public async pay({ pid, orderId, customerName, ammount }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
-    const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiName = GBUtil.getGBAIPath(min.botId);
 
     const merchantId = min.core.getParam(min.instance, 'Merchant ID', null);
     const merchantKey = min.core.getParam(min.instance, 'Merchant Key', null);
@@ -2587,7 +2587,7 @@ export class SystemKeywords {
     GBLogEx.info(min, `Auto saving '${file.filename}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
-    const path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+    const path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
     const fileName = file.url ? file.url : file.name;
     const contentType = mime.lookup(fileName);
     const ext = Path.extname(fileName).substring(1);
@@ -2635,7 +2635,7 @@ export class SystemKeywords {
     GBLogEx.info(min, `DELETE '${file.name}'.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
-    const gbaiPath = DialogKeywords.getGBAIPath(min.botId);
+    const gbaiPath = GBUtil.getGBAIPath(min.botId);
     const fileName = file.name;
     const contentType = mime.lookup(fileName);
     const ext = Path.extname(fileName).substring(1);
@@ -2677,7 +2677,7 @@ export class SystemKeywords {
 
     // Retrieves all files in remote folder.
 
-    let path = DialogKeywords.getGBAIPath(min.botId);
+    let path = GBUtil.getGBAIPath(min.botId);
     path = urlJoin(path, remotePath);
     let url = `${baseUrl}/drive/root:/${path}:/children`;
 
@@ -2721,11 +2721,11 @@ export class SystemKeywords {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `BASIC GET (pdf): ${file}`);
 
-    let data ;
+    let data;
 
     if (GBConfigService.get('STORAGE_NAME')) {
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-      const gbaiName = DialogKeywords.getGBAIPath(min.botId);
+      const gbaiName = GBUtil.getGBAIPath(min.botId);
       let path = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
       let template = await this.internalGetDocument(client, baseUrl, path, file);
       let url = template['@microsoft.graph.downloadUrl'];
@@ -2734,26 +2734,12 @@ export class SystemKeywords {
       data = new Uint8Array(buf);
     }
     else {
-      let path = DialogKeywords.getGBAIPath(min.botId, `gbdrive`);
+      let path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
       let filePath = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
       data = Fs.readFileSync(filePath, 'utf8');
       data = new Uint8Array(Buffer.from(data, 'utf8'));
     }
-
-    const pdf = await getDocument({ data }).promise;
-    let pages = [];
-
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const text = textContent.items
-        .map(item => item['str'])
-        .join('')
-        .replace(/\s/g, '');
-      pages.push(text);
-    }
-
-    return pages.join('');
+    return await GBUtil.getPdfText(data);
   }
 
   public async setContext({ pid, text }) {

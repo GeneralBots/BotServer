@@ -54,7 +54,6 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from 'langchain/document';
 import getColors from 'get-image-colors';
 
-
 import {
   GBDialogStep,
   GBLog,
@@ -379,7 +378,7 @@ export class KBService implements IGBKBService {
         returnedScore: ${returnedScore} < required (searchScore): ${searchScore}`
     );
 
-    return await ChatServices.answerByLLM( step.context.activity['pid'], min, user, query);
+    return await ChatServices.answerByLLM(step.context.activity['pid'], min, user, query);
   }
 
   public async getSubjectItems(instanceId: number, parentId: number): Promise<GuaribasSubject[]> {
@@ -558,7 +557,7 @@ export class KBService implements IGBKBService {
           const isBasic = answer.toLowerCase().startsWith('/basic');
           if (/TALK\s*\".*\"/gi.test(answer) || isBasic) {
             const code = isBasic ? answer.substr(6) : answer;
-            const path = DialogKeywords.getGBAIPath(min.botId, `gbdialog`);
+            const path = GBUtil.getGBAIPath(min.botId, `gbdialog`);
             const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
             const localName = Path.join('work', path, `${scriptName}`);
             Fs.writeFileSync(localName, code, { encoding: null });
@@ -633,12 +632,12 @@ export class KBService implements IGBKBService {
       answer.endsWith('.xls') ||
       answer.endsWith('.xlsx')
     ) {
-      const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
+      const path = GBUtil.getGBAIPath(min.botId, `gbkb`);
       const doc = urlJoin(GBServer.globals.publicAddress, 'kb', path, 'assets', answer);
       const url = `http://view.officeapps.live.com/op/view.aspx?src=${doc}`;
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.endsWith('.pdf')) {
-      const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
+      const path = GBUtil.getGBAIPath(min.botId, `gbkb`);
       const url = urlJoin('kb', path, 'assets', answer);
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
@@ -740,7 +739,7 @@ export class KBService implements IGBKBService {
           });
         }
       } else if (file !== null && file.name.endsWith('.docx')) {
-        let path = DialogKeywords.getGBAIPath(instance.botId, `gbkb`);
+        let path = GBUtil.getGBAIPath(instance.botId, `gbkb`);
         const localName = Path.join('work', path, 'articles', file.name);
         let loader = new DocxLoader(localName);
         let doc = await loader.load();
@@ -761,7 +760,7 @@ export class KBService implements IGBKBService {
 
         data.answers.push(answer);
       } else if (file !== null && file.name.endsWith('.toc.docx')) {
-        const path = DialogKeywords.getGBAIPath(instance.botId, `gbkb`);
+        const path = GBUtil.getGBAIPath(instance.botId, `gbkb`);
         const localName = Path.join('work', path, 'articles', file.name);
         const buffer = Fs.readFileSync(localName, { encoding: null });
         var options = {
@@ -769,13 +768,13 @@ export class KBService implements IGBKBService {
           convertImage: async image => {
             const localName = Path.join(
               'work',
-              DialogKeywords.getGBAIPath(instance.botId),
+              GBUtil.getGBAIPath(instance.botId),
               'cache',
               `img-docx${GBAdminService.getRndReadableIdentifier()}.png`
             );
             const url = urlJoin(
               GBServer.globals.publicAddress,
-              DialogKeywords.getGBAIPath(instance.botId).replace(/\.[^/.]+$/, ''),
+              GBUtil.getGBAIPath(instance.botId).replace(/\.[^/.]+$/, ''),
               'cache',
               Path.basename(localName)
             );
@@ -864,34 +863,6 @@ export class KBService implements IGBKBService {
     });
   }
 
-  async saveHtmlPage(min, url: string, page: Page): Promise<string | null> {
-    let response = await page.goto(url);
-    if (!response) {
-      response = await page.waitForResponse(() => true);
-    }
-    if (response && response.headers && response.status() === 200) {
-      const contentType = response.headers()['content-type'];
-      if (contentType && contentType.includes('text/html')) {
-        const buffer = html2md(await response.text());
-        const urlObj = new URL(url);
-        const urlPath = urlObj.pathname.endsWith('/') ? urlObj.pathname.slice(0, -1) : urlObj.pathname; // Remove trailing slash if present
-        let filename = urlPath.split('/').pop() || 'index'; // Get the filename from the URL path or set it to 'index.html' as default
-        filename = `${filename}.html`;
-        let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
-        const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
-        const filePath = Path.join(directoryPath, filename);
-
-        GBLogEx.info(min, `[GBDeployer] Saving Website file in ${filePath}.`);
-
-        Fs.mkdirSync(directoryPath, { recursive: true }); // Create directory recursively if it doesn't exist
-        Fs.writeFileSync(filePath, buffer);
-
-        return filePath;
-      }
-    }
-    return null;
-  }
-
   async crawl(
     min,
     url: string,
@@ -906,7 +877,6 @@ export class KBService implements IGBKBService {
         depth > maxDepth ||
         visited.has(url) ||
         url.endsWith('.jpg') ||
-        url.endsWith('.pdf') ||
         url.endsWith('.jpg') ||
         url.endsWith('.png') ||
         url.endsWith('.mp4')
@@ -915,14 +885,17 @@ export class KBService implements IGBKBService {
       }
 
       await GBLogEx.info(min, `Processing URL: ${url}.`);
-
       visited.add(url);
-
-      const filename = await this.saveHtmlPage(min, url, page);
+      
+      const path = GBUtil.getGBAIPath(min.botId, `gbot`);
+      const directoryPath = path.join(process.env.PWD, 'work', path, 'Website');
+      const filename = await GBUtil.savePage(url, page, directoryPath);
 
       if (!filename) {
-        // If the URL doesn't represent an HTML page, skip crawling its links
+
+        // If the URL doesn't represent an HTML/PDF page, skip crawling its links
         return [];
+
       }
       const currentDomain = new URL(page.url()).hostname;
 
@@ -1052,7 +1025,7 @@ export class KBService implements IGBKBService {
 
       website.endsWith('/') ? website.substring(0, website.length - 1) : website;
 
-      let path = DialogKeywords.getGBAIPath(min.botId, `gbot`);
+      let path = GBUtil.getGBAIPath(min.botId, `gbot`);
       const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
       Fs.rmSync(directoryPath, { recursive: true, force: true });
 
@@ -1061,8 +1034,8 @@ export class KBService implements IGBKBService {
 
       let logo = await this.getLogoByPage(min, page);
       if (logo) {
-        path = DialogKeywords.getGBAIPath(min.botId);
-        
+        path = GBUtil.getGBAIPath(min.botId);
+
         const baseUrl = page.url().split('/').slice(0, 3).join('/');
         logo = logo.startsWith('https') ? logo : urlJoin(baseUrl, logo);
 
@@ -1380,7 +1353,7 @@ export class KBService implements IGBKBService {
 
     GBLogEx.info(min, `[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
     const html = await GBSSR.getHTML(min);
-    let path = DialogKeywords.getGBAIPath(min.botId, `gbui`);
+    let path = GBUtil.getGBAIPath(min.botId, `gbui`);
     path = Path.join(process.env.PWD, 'work', path, 'index.html');
     GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${path}.`);
     Fs.writeFileSync(path, html, 'utf8');
@@ -1425,7 +1398,7 @@ export class KBService implements IGBKBService {
     if (channel === 'whatsapp') {
       await min.conversationalService.sendFile(min, step, null, answer.content, '');
     } else {
-      const path = DialogKeywords.getGBAIPath(min.botId, `gbkb`);
+      const path = GBUtil.getGBAIPath(min.botId, `gbkb`);
       await conversationalService.sendEvent(min, step, 'play', {
         playerType: 'video',
         data: urlJoin(path, 'videos', answer.content)
