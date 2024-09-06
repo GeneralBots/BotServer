@@ -33,7 +33,7 @@
 
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBVMService } from './GBVMService.js';
-import Path from 'path';
+import path from 'path';
 
 /**
  * Image processing services of conversation to be called by BASIC.
@@ -297,7 +297,7 @@ export class KeywordsExpressions {
 
         if (kind === 'AS' && KeywordsExpressions.isNumber(sessionName)) {
           const jParams = JSON.parse(`{${params}}`);
-          const filename = `${Path.basename(jParams.url, 'txt')}xlsx`;
+          const filename = `${path.basename(jParams.url, 'txt')}xlsx`;
           return `files[${sessionName}] = "${filename}"`;
         } else {
           sessionName = `"${sessionName}"`;

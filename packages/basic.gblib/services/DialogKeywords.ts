@@ -40,18 +40,17 @@ import { SecService } from '../../security.gbapp/services/SecService.js';
 import { SystemKeywords } from './SystemKeywords.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { Messages } from '../strings.js';
-import * as Fs from 'fs';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
+import fs from 'fs';
 import libphonenumber from 'google-libphonenumber';
 import * as df from 'date-diff';
 import tesseract from 'node-tesseract-ocr';
-import Path from 'path';
+import path from 'path';
 import sgMail from '@sendgrid/mail';
 import mammoth from 'mammoth';
 import qrcode from 'qrcode';
 import { WebAutomationServices } from './WebAutomationServices.js';
-import urljoin from 'url-join';
 import QrScanner from 'qr-scanner';
 import pkg from 'whatsapp-web.js';
 import { ActivityTypes } from 'botbuilder';
@@ -59,7 +58,6 @@ const { List, Buttons } = pkg;
 import mime from 'mime-types';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GBUtil } from '../../../src/util.js';
-import SwaggerClient from 'swagger-client';
 import { GBVMService } from './GBVMService.js';
 import { ChatServices } from '../../../packages/llm.gblib/services/ChatServices.js';
 import puppeteer from 'puppeteer';
@@ -109,10 +107,10 @@ export class DialogKeywords {
 
     const content = await page.$('.bb');
     const gbaiName = GBUtil.getGBAIPath(min.botId);
-    const localName = Path.join('work', gbaiName, 'cache', `chart${GBAdminService.getRndReadableIdentifier()}.jpg`);
+    const localName = path.join('work', gbaiName, 'cache', `chart${GBAdminService.getRndReadableIdentifier()}.jpg`);
     await content.screenshot({ path: localName, omitBackground: true });
     await browser.close();
-    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
     GBLogEx.info(min, `Visualization: Chart generated at ${url}.`);
 
     return { localName, url };
@@ -183,11 +181,11 @@ export class DialogKeywords {
     }
 
     const gbaiName = GBUtil.getGBAIPath(min.botId);
-    const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
+    const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
 
     await ChartServices.screenshot(definition, localName);
 
-    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
     GBLogEx.info(min, `Visualization: Chart generated at ${url}.`);
 
@@ -1448,11 +1446,11 @@ export class DialogKeywords {
     // Web automation.
 
     if (element) {
-      const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
-      nameOnly = Path.basename(localName);
+      const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
+      nameOnly = path.basename(localName);
       await element.screenshot({ path: localName, fullPage: true });
 
-      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
       GBLogEx.info(min, `WebAutomation: Sending ${url} to ${mobile} (${channel}).`);
     }
@@ -1460,7 +1458,7 @@ export class DialogKeywords {
     // GBFILE object.
     else if (filename.url) {
       url = filename.url;
-      nameOnly = Path.basename(filename.localName);
+      nameOnly = path.basename(filename.localName);
 
       GBLogEx.info(min, `Sending the GBFILE ${url} to ${mobile} (${channel}).`);
     }
@@ -1479,7 +1477,7 @@ export class DialogKeywords {
 
     // .gbdrive direct sending.
     else {
-      const ext = Path.extname(filename);
+      const ext = path.extname(filename);
       const gbaiName = GBUtil.getGBAIPath(min.botId);
 
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
@@ -1496,27 +1494,27 @@ export class DialogKeywords {
       const driveUrl = template['@microsoft.graph.downloadUrl'];
       const res = await fetch(driveUrl);
       let buf: any = Buffer.from(await res.arrayBuffer());
-      let localName1 = Path.join(
+      let localName1 = path.join(
         'work',
         gbaiName,
         'cache',
         `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
       );
-      Fs.writeFileSync(localName1, buf, { encoding: null });
+      fs.writeFileSync(localName1, buf, { encoding: null });
 
-      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName1));
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName1));
     }
 
     if (!url) {
-      const ext = Path.extname(filename.localName);
+      const ext = path.extname(filename.localName);
 
       // Prepare a cache to be referenced by Bot Framework.
 
-      const buf = Fs.readFileSync(filename);
+      const buf = fs.readFileSync(filename);
       const gbaiName = GBUtil.getGBAIPath(min.botId);
-      const localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
-      Fs.writeFileSync(localName, buf, { encoding: null });
-      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+      const localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
+      fs.writeFileSync(localName, buf, { encoding: null });
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
     }
 
     const contentType = mime.lookup(url);
@@ -1547,9 +1545,9 @@ export class DialogKeywords {
     const buf = Buffer.from(data, 'base64');
 
     const gbaiName = GBUtil.getGBAIPath(min.botId);
-    const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-    Fs.writeFileSync(localName, buf, { encoding: null });
-    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+    const localName = path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
+    fs.writeFileSync(localName, buf, { encoding: null });
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
     return { data: data, localName: localName, url: url };
   }

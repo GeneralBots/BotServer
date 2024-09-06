@@ -30,7 +30,7 @@
 
 'use strict';
 
-import Path from 'path';
+import path from 'path';
 import { GBLog, GBMinInstance } from 'botlib';
 import { DialogKeywords } from './DialogKeywords.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -77,8 +77,8 @@ export class ImageProcessingServices {
     const botId = min.instance.botId;
     const path = GBUtil.getGBAIPath(min.botId);
     // TODO: const img = await joinImages(paths);
-    const localName = Path.join('work', path, 'cache', `img-mrg${GBAdminService.getRndReadableIdentifier()}.png`);
-    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+    const localName = path.join('work', path, 'cache', `img-mrg${GBAdminService.getRndReadableIdentifier()}.png`);
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 //    img.toFile(localName);
 
     return { localName: localName, url: url, data: null };

@@ -37,8 +37,8 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
-import Path from 'path';
-import Fs from 'fs';
+import path from 'path';
+import fs from 'fs';
 import { NextFunction, Request, Response } from 'express';
 import urljoin from 'url-join';
 import { GBMinInstance } from 'botlib';
@@ -106,11 +106,11 @@ export class GBSSR {
       args.push(`--user-data-dir=${profilePath}`);
 
       const preferences = urljoin(profilePath, 'Default', 'Preferences');
-      if (Fs.existsSync(preferences)) {
-        const file = Fs.readFileSync(preferences, 'utf8');
+      if (fs.existsSync(preferences)) {
+        const file = fs.readFileSync(preferences, 'utf8');
         const data = JSON.parse(file);
         data['profile']['exit_type'] = 'none';
-        Fs.writeFileSync(preferences, JSON.stringify(data));
+        fs.writeFileSync(preferences, JSON.stringify(data));
       }
     }
 
@@ -307,25 +307,25 @@ export class GBSSR {
 
     // Checks if the bot has an .gbui published or use default.gbui.
 
-    if (!Fs.existsSync(path)) {
+    if (!fs.existsSync(path)) {
       path = GBUtil.getGBAIPath(minBoot.botId, `gbui`);
     }
     let parts = req.url.replace(`/${botId}`, '').split('?');
     let url = parts[0];
 
-    if (min && req.originalUrl && prerender && exclude && Fs.existsSync(path)) {
+    if (min && req.originalUrl && prerender && exclude && fs.existsSync(path)) {
 
       // Reads from static HTML when a bot is crawling.
 
-      path = Path.join(process.env.PWD, 'work', path, 'index.html');
-      const html = Fs.readFileSync(path, 'utf8');
+      path = path.join(process.env.PWD, 'work', path, 'index.html');
+      const html = fs.readFileSync(path, 'utf8');
       res.status(200).send(html);
       return true;
     } else {
 
       // Servers default.gbui web application.
 
-      path = Path.join(
+      path = path.join(
         process.env.PWD,
         GBDeployer.deployFolder,
         GBMinService.uiPackage,
@@ -336,11 +336,11 @@ export class GBSSR {
         path = GBServer.globals.wwwroot + "/index.html"; // TODO.
       }
       if (!min && !url.startsWith("/static") && GBServer.globals.wwwroot) {
-        path = Path.join(GBServer.globals.wwwroot, url);
+        path = path.join(GBServer.globals.wwwroot, url);
       }
-      if (Fs.existsSync(path)) {
+      if (fs.existsSync(path)) {
         if (min) {
-          let html = Fs.readFileSync(path, 'utf8');
+          let html = fs.readFileSync(path, 'utf8');
           html = html.replace(/\{p\}/gi, min.botId);
           html = html.replace(/\{botId\}/gi, min.botId);
           html = html.replace(/\{theme\}/gi, min.instance.theme ? min.instance.theme :

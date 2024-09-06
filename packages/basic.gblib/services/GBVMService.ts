@@ -31,7 +31,7 @@
 'use strict';
 
 import { GBMinInstance, GBService, IGBCoreService, GBLog } from 'botlib';
-import * as Fs from 'fs';
+import fs from 'fs';
 import * as ji from 'just-indent';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
@@ -44,7 +44,7 @@ import { createVm2Pool } from './vm2-process/index.js';
 import textract from 'textract';
 import walkPromise from 'walk-promise';
 import child_process from 'child_process';
-import Path from 'path';
+import path from 'path';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { DialogKeywords } from './DialogKeywords.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
@@ -69,7 +69,7 @@ export class GBVMService extends GBService {
   public static API_PORT = 1111;
 
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
-    const ignore = Path.join('work', GBUtil.getGBAIPath(min.botId, 'gbdialog'), 'node_modules');
+    const ignore = path.join('work', GBUtil.getGBAIPath(min.botId, 'gbdialog'), 'node_modules');
     const files = await walkPromise(folder, { ignore: [ignore] });
 
     await CollectionUtil.asyncForEach(files, async file => {
@@ -120,7 +120,7 @@ export class GBVMService extends GBService {
     const wordFile = filename;
     const vbsFile = isWord ? filename.substr(0, filename.indexOf('docx')) + 'vbs' : filename;
     const fullVbsFile = urlJoin(folder, vbsFile);
-    const docxStat = Fs.statSync(urlJoin(folder, wordFile));
+    const docxStat = fs.statSync(urlJoin(folder, wordFile));
     const interval = 3000; // If compiled is older 30 seconds, then recompile.
     let writeVBS = true;
 
@@ -139,8 +139,8 @@ export class GBVMService extends GBService {
     // await client.api('/subscriptions')
     //   .post(subscription);
 
-    if (Fs.existsSync(fullVbsFile)) {
-      const vbsStat = Fs.statSync(fullVbsFile);
+    if (fs.existsSync(fullVbsFile)) {
+      const vbsStat = fs.statSync(fullVbsFile);
       if (docxStat['mtimeMs'] < vbsStat['mtimeMs'] + interval) {
         writeVBS = false;
       }
@@ -154,7 +154,7 @@ export class GBVMService extends GBService {
 
       // Write VBS file without pragma keywords.
 
-      Fs.writeFileSync(urlJoin(folder, vbsFile), text);
+      fs.writeFileSync(urlJoin(folder, vbsFile), text);
     }
 
     // Process node_modules install.
@@ -165,18 +165,18 @@ export class GBVMService extends GBService {
 
     const fullFilename = urlJoin(folder, filename);
     if (process.env.DEV_HOTSWAP) {
-      Fs.watchFile(fullFilename, async () => {
+      fs.watchFile(fullFilename, async () => {
         await this.translateBASIC(mainName, fullFilename, min);
-        const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
+        const parsedCode: string = fs.readFileSync(jsfile, 'utf8');
         min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
       });
     }
 
-    const compiledAt = Fs.statSync(fullFilename);
+    const compiledAt = fs.statSync(fullFilename);
     const jsfile = urlJoin(folder, `${filename}.js`);
 
-    if (Fs.existsSync(jsfile)) {
-      const jsStat = Fs.statSync(jsfile);
+    if (fs.existsSync(jsfile)) {
+      const jsStat = fs.statSync(jsfile);
       const interval = 1000; // If compiled is older 1 seconds, then recompile.
       if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
         await this.translateBASIC(mainName, fullFilename, min);
@@ -189,13 +189,13 @@ export class GBVMService extends GBService {
 
     this.syncStorageFromTABLE(folder, filename, min, mainName);
 
-    const parsedCode: string = Fs.readFileSync(jsfile, 'utf8');
+    const parsedCode: string = fs.readFileSync(jsfile, 'utf8');
     min.sandBoxMap[mainName.toLowerCase().trim()] = parsedCode;
     return filename;
   }
   private processNodeModules(folder: string, min: GBMinInstance) {
     const node_modules = urlJoin(process.env.PWD, folder, 'node_modules');
-    if (!Fs.existsSync(node_modules)) {
+    if (!fs.existsSync(node_modules)) {
       const packageJson = `
             {
               "name": "${min.botId}.gbdialog",
@@ -214,7 +214,7 @@ export class GBVMService extends GBService {
                 "async-retry": "1.3.3"
               }
             }`;
-      Fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
+      fs.writeFileSync(urlJoin(folder, 'package.json'), packageJson);
 
       GBLogEx.info(min, `Installing .gbdialog node_modules for ${min.botId}...`);
       const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
@@ -225,10 +225,10 @@ export class GBVMService extends GBService {
   public static async loadConnections(min) {
     // Loads storage custom connections.
     const path = GBUtil.getGBAIPath(min.botId, null);
-    const filePath = Path.join('work', path, 'connections.json');
+    const filePath = path.join('work', path, 'connections.json');
     let connections = [];
-    if (Fs.existsSync(filePath)) {
-      connections = JSON.parse(Fs.readFileSync(filePath, 'utf8'));
+    if (fs.existsSync(filePath)) {
+      connections = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     }
 
     connections.forEach(async con => {
@@ -290,10 +290,10 @@ export class GBVMService extends GBService {
     const tablesFile = urlJoin(folder, `${filename}.tables.json`);
     let sync = false;
 
-    if (Fs.existsSync(tablesFile)) {
+    if (fs.existsSync(tablesFile)) {
       const minBoot = GBServer.globals.minBoot;
 
-      const tableDef = JSON.parse(Fs.readFileSync(tablesFile, 'utf8')) as any;
+      const tableDef = JSON.parse(fs.readFileSync(tablesFile, 'utf8')) as any;
 
       const getTypeBasedOnCondition = (t, size) => {
         if (1) {
@@ -453,7 +453,7 @@ export class GBVMService extends GBService {
   public async translateBASIC(mainName, filename: any, min: GBMinInstance) {
     // Converts General Bots BASIC into regular VBS
 
-    let basicCode: string = Fs.readFileSync(filename, 'utf8');
+    let basicCode: string = fs.readFileSync(filename, 'utf8');
     basicCode = GBVMService.normalizeQuotes(basicCode);
     
     // Pre process SET SCHEDULE calls.
@@ -481,13 +481,13 @@ export class GBVMService extends GBService {
 
       if (include) {
         let includeName = include[1].trim();
-        includeName = Path.join(Path.dirname(filename), includeName);
+        includeName = path.join(path.dirname(filename), includeName);
         includeName = includeName.substr(0, includeName.lastIndexOf('.')) + '.vbs';
 
         // To use include, two /publish will be necessary (for now)
         // because of alphabet order may raise not found errors.
 
-        let includeCode: string = Fs.readFileSync(includeName, 'utf8');
+        let includeCode: string = fs.readFileSync(includeName, 'utf8');
         basicCode = basicCode.replace(/^include\b.*$/gim, includeCode);
       }
     } while (include);
@@ -497,10 +497,10 @@ export class GBVMService extends GBService {
     // Generates function JSON metadata to be used later.
 
     const jsonFile = `${filename}.json`;
-    Fs.writeFileSync(jsonFile, JSON.stringify(metadata));
+    fs.writeFileSync(jsonFile, JSON.stringify(metadata));
 
     const mapFile = `${filename}.map`;
-    Fs.writeFileSync(mapFile, JSON.stringify(map));
+    fs.writeFileSync(mapFile, JSON.stringify(map));
 
     // Execute off-line code tasks
 
@@ -710,7 +710,7 @@ export class GBVMService extends GBService {
 
     code = ji.default(code, '  ');
 
-    Fs.writeFileSync(jsfile, code);
+    fs.writeFileSync(jsfile, code);
     GBLogEx.info(min, `[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
   }
 
@@ -722,7 +722,7 @@ export class GBVMService extends GBService {
         // Creates an empty object that will receive Sequelize fields.
 
         const tablesFile = `${task.file}.tables.json`;
-        Fs.writeFileSync(tablesFile, JSON.stringify(task.tables));
+        fs.writeFileSync(tablesFile, JSON.stringify(task.tables));
       }
     }
   }
@@ -760,7 +760,7 @@ export class GBVMService extends GBService {
       textract.fromFileWithPath(path, { preserveLineBreaks: true }, (error, text) => {
         if (error) {
           if (error.message.startsWith('File not correctly recognized as zip file')) {
-            text = Fs.readFileSync(path, 'utf8');
+            text = fs.readFileSync(path, 'utf8');
           } else {
             reject(error);
           }

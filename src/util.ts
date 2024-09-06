@@ -35,7 +35,7 @@
 'use strict';
 import * as YAML from 'yaml';
 import SwaggerClient from 'swagger-client';
-import Fs from 'fs';
+import fs from 'fs';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
 import path from 'path';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
@@ -74,7 +74,7 @@ export class GBUtil {
 
   public static async getDirectLineClient(min) {
     let config = {
-      spec: JSON.parse(Fs.readFileSync('directline-3.0.json', 'utf8')),
+      spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
       requestInterceptor: req => {
         req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
       }
@@ -131,20 +131,20 @@ export class GBUtil {
   }
 
   public static copyIfNewerRecursive(src, dest) {
-    if (!Fs.existsSync(src)) {
+    if (!fs.existsSync(src)) {
       console.error(`Source path "${src}" does not exist.`);
       return;
     }
 
     // Check if the source is a directory
-    if (Fs.statSync(src).isDirectory()) {
+    if (fs.statSync(src).isDirectory()) {
       // Create the destination directory if it doesn't exist
-      if (!Fs.existsSync(dest)) {
-        Fs.mkdirSync(dest, { recursive: true });
+      if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
       }
 
       // Read all files and directories in the source directory
-      const entries = Fs.readdirSync(src);
+      const entries = fs.readdirSync(src);
 
       for (let entry of entries) {
         const srcEntry = path.join(src, entry);
@@ -155,17 +155,17 @@ export class GBUtil {
       }
     } else {
       // Source is a file, check if we need to copy it
-      if (Fs.existsSync(dest)) {
-        const srcStat = Fs.statSync(src);
-        const destStat = Fs.statSync(dest);
+      if (fs.existsSync(dest)) {
+        const srcStat = fs.statSync(src);
+        const destStat = fs.statSync(dest);
 
         // Copy only if the source file is newer than the destination file
         if (srcStat.mtime > destStat.mtime) {
-          Fs.cpSync(src, dest, { force: true });
+          fs.cpSync(src, dest, { force: true });
         }
       } else {
         // Destination file doesn't exist, so copy it
-        Fs.cpSync(src, dest, { force: true });
+        fs.cpSync(src, dest, { force: true });
       }
     }
   }
@@ -227,7 +227,7 @@ export class GBUtil {
         const urlPath = urlObj.pathname.endsWith('/') ? urlObj.pathname.slice(0, -1) : urlObj.pathname;
         let filename = urlPath.split('/').pop() || 'index';
 
-        Fs.mkdirSync(directoryPath, { recursive: true });
+        fs.mkdirSync(directoryPath, { recursive: true });
 
         const extensionMap = {
           'text/html': 'html',
@@ -258,7 +258,7 @@ export class GBUtil {
           fileContent = await response.buffer();
         }
 
-        Fs.writeFileSync(filePath, fileContent);
+        fs.writeFileSync(filePath, fileContent);
 
         return filePath;
       }

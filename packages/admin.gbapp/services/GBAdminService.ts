@@ -46,10 +46,10 @@ import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
 import { GBSharePointService } from '../../sharepoint.gblib/services/SharePointService.js';
 import { GuaribasAdmin } from '../models/AdminModel.js';
 import msRestAzure from 'ms-rest-azure';
-import Path from 'path';
+import path from 'path';
 import { caseSensitive_Numbs_SpecialCharacters_PW, lowercase_PW } from 'super-strong-password-generator';
 import crypto from 'crypto';
-import Fs from 'fs';
+import fs from 'fs';
 import { GBServer } from '../../../src/app.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
@@ -77,7 +77,7 @@ export class GBAdminService implements IGBAdminService {
 
   public static getNodeVersion() {
     const packageJson = urlJoin(process.cwd(), 'package.json');
-    const pkg = JSON.parse(Fs.readFileSync(packageJson, 'utf8'));
+    const pkg = JSON.parse(fs.readFileSync(packageJson, 'utf8'));
     return pkg.engines.node.replace('=', '');
   }
 
@@ -153,7 +153,7 @@ export class GBAdminService implements IGBAdminService {
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
     const path = GBUtil.getGBAIPath(min.botId, null, packageName);
-    const localFolder = Path.join('work', path);
+    const localFolder = path.join('work', path);
     await deployer.undeployPackageFromLocalPath(min.instance, localFolder);
   }
 
@@ -169,9 +169,9 @@ export class GBAdminService implements IGBAdminService {
     const packageName = text.split(' ')[1];
 
     const folderName = text.split(' ')[2];
-    const packageType = Path.extname(folderName).substr(1);
+    const packageType = path.extname(folderName).substr(1);
     const gbaiPath = GBUtil.getGBAIPath(min.instance.botId, packageType, null);
-    const localFolder = Path.join('work', gbaiPath);
+    const localFolder = path.join('work', gbaiPath);
 
     // .gbot packages are handled using storage API, so no download
     // of local resources is required.
@@ -182,10 +182,10 @@ export class GBAdminService implements IGBAdminService {
     }
 
     if (!GBConfigService.get('STORAGE_NAME')) {
-      const path = Path.join(GBConfigService.get('STORAGE_LIBRARY'), gbaiPath);
-      GBUtil.copyIfNewerRecursive(path, localFolder);
+      const filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbaiPath);
+      GBUtil.copyIfNewerRecursive(filePath, localFolder);
     } else {
-      await deployer['downloadFolder'](min, Path.join('work', `${gbai}`), Path.basename(localFolder));
+      await deployer['downloadFolder'](min, path.join('work', `${gbai}`), path.basename(localFolder));
     }
     await deployer['deployPackage2'](min, user, localFolder);
 

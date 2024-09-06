@@ -31,7 +31,7 @@
 import Swagger from 'swagger-client';
 import { google } from 'googleapis';
 import { PubSub } from '@google-cloud/pubsub';
-import Fs from 'fs';
+import fs from 'fs';
 import { GBLog, GBMinInstance, GBService } from 'botlib';
 import { GBServer } from '../../../src/app.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';

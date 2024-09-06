@@ -31,10 +31,9 @@
 'use strict';
 
 import urlJoin from 'url-join';
-import Fs from 'fs';
-import Path from 'path';
+import fs from 'fs';
+import path from 'path';
 import url from 'url';
-
 import { GBLog } from 'botlib';
 import { GBServer } from '../../../src/app.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
@@ -350,11 +349,11 @@ export class WebAutomationServices {
     GBLogEx.info(min, `Web Automation SCREENSHOT ${selector}.`);
 
     const gbaiName = GBUtil.getGBAIPath(min.botId);
-    const localName = Path.join('work', gbaiName, 'cache', `screen-${GBAdminService.getRndReadableIdentifier()}.jpg`);
+    const localName = path.join('work', gbaiName, 'cache', `screen-${GBAdminService.getRndReadableIdentifier()}.jpg`);
 
     await page.screenshot({ path: localName });
 
-    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
     GBLogEx.info(min, `WebAutomation: Screenshot captured at ${url}.`);
 
     return { data: null, localName: localName, url: url };
@@ -416,18 +415,18 @@ export class WebAutomationServices {
     let filename;
     if (options.uri.indexOf('file://') != -1) {
       local = url.fileURLToPath(options.uri);
-      filename = Path.basename(local);
+      filename = path.basename(local);
     } else {
       const getBasenameFormUrl = urlStr => {
         const url = new URL(urlStr);
-        return Path.basename(url.pathname);
+        return path.basename(url.pathname);
       };
       filename = getBasenameFormUrl(options.uri);
     }
 
     let result: Buffer;
     if (local) {
-      result = Fs.readFileSync(local);
+      result = fs.readFileSync(local);
     } else {
       const res = await fetch(options.uri, options);
       result = Buffer.from(await res.arrayBuffer());
@@ -440,8 +439,8 @@ export class WebAutomationServices {
     folder = folder.replace(/\\/gi, '/');
 
     // Determines full path at source and destination.
-    const path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
-    const root = path;
+    const packagePath = GBUtil.getGBAIPath(min.botId, `gbdrive`);
+    const root = packagePath;
     const dstPath = urlJoin(root, folder, filename);
 
     // Checks if the destination contains subfolders that

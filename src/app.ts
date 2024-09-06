@@ -139,7 +139,7 @@ export class GBServer {
     // Creates working directory.
 
     process.env.PWD = process.cwd();
-    const workDir = Path.join(process.env.PWD, 'work');
+    const workDir = path.join(process.env.PWD, 'work');
     if (!fs.existsSync(workDir)) {
       mkdirp.sync(workDir);
     }

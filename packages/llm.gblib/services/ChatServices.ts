@@ -51,10 +51,10 @@ import { SqlDatabaseChain } from 'langchain/chains/sql_db';
 import { SqlDatabase } from 'langchain/sql_db';
 import { DataSource } from 'typeorm';
 import { GBMinInstance } from 'botlib';
-import * as Fs from 'fs';
+import fs from 'fs';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
 import { BufferWindowMemory } from 'langchain/memory';
-import Path from 'path';
+import path from 'path';
 import { PngPageOutput, pdfToPng } from 'pdf-to-png-converter';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -147,7 +147,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
       let found = false;
       if (source && source.file.endsWith('.pdf')) {
         const gbaiName = GBUtil.getGBAIPath(this.min.botId, 'gbkb');
-        const localName = Path.join(process.env.PWD, 'work', gbaiName, 'docs', source.file);
+        const localName = path.join(process.env.PWD, 'work', gbaiName, 'docs', source.file);
 
         if (localName) {
           const { url } = await ChatServices.pdfPageAsImage(this.min, localName, source.page);
@@ -186,9 +186,9 @@ export class ChatServices {
     if (pngPages.length > 0) {
       const buffer = pngPages[0].content;
       const gbaiName = GBUtil.getGBAIPath(min.botId, null);
-      const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
-      const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
-      Fs.writeFileSync(localName, buffer, { encoding: null });
+      const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
+      const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
+      fs.writeFileSync(localName, buffer, { encoding: null });
       return { localName: localName, url: url, data: buffer };
     }
   }
@@ -216,7 +216,7 @@ export class ChatServices {
     for (const filePaths of Object.keys(uniqueDocuments)) {
       const doc = uniqueDocuments[filePaths];
       const metadata = doc.metadata;
-      const filename = Path.basename(metadata.source);
+      const filename = path.basename(metadata.source);
       let page = 0;
       if (metadata.source.endsWith('.pdf')) {
         page = await ChatServices.findPageForText(metadata.source, doc.pageContent);
@@ -234,7 +234,7 @@ export class ChatServices {
   }
 
   private static async findPageForText(pdfPath, searchText) {
-    const data = new Uint8Array(Fs.readFileSync(pdfPath));
+    const data = new Uint8Array(fs.readFileSync(pdfPath));
     const pdf = await getDocument({ data }).promise;
 
     searchText = searchText.replace(/\s/g, '');
@@ -709,10 +709,10 @@ export class ChatServices {
     // Adds .gbdialog as functions if any to LLM Functions.
     await CollectionUtil.asyncForEach(Object.keys(min.scriptMap), async script => {
       const path = GBUtil.getGBAIPath(min.botId, 'gbdialog', null);
-      const jsonFile = Path.join('work', path, `${script}.json`);
+      const jsonFile = path.join('work', path, `${script}.json`);
 
-      if (Fs.existsSync(jsonFile) && script.toLowerCase() !== 'start.vbs') {
-        const funcJSON = JSON.parse(Fs.readFileSync(jsonFile, 'utf8'));
+      if (fs.existsSync(jsonFile) && script.toLowerCase() !== 'start.vbs') {
+        const funcJSON = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
         const funcObj = funcJSON?.function;
 
         if (funcObj) {

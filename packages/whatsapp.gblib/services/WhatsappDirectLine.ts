@@ -30,8 +30,8 @@
 
 import mime from 'mime-types';
 import urlJoin from 'url-join';
-import Path from 'path';
-import Fs from 'fs';
+import path from 'path';
+import fs from 'fs';
 import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app.js';
@@ -56,7 +56,7 @@ import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { createBot } from 'whatsapp-cloud-api';
 import { promisify } from 'util';
-const stat = promisify(Fs.stat);
+const stat = promisify(fs.stat);
 
 /**
  * Support for Whatsapp.
@@ -152,7 +152,7 @@ export class WhatsappDirectLine extends GBService {
         // Initialize the browser using a local profile for each bot.
         const gbaiPath = GBUtil.getGBAIPath(this.min.botId);
         const webVersion = '2.2412.51';
-        const localName = Path.join('work', gbaiPath, 'profile');
+        const localName = path.join('work', gbaiPath, 'profile');
         const createClient = () => {
           const client = (this.customClient = new Client({
             puppeteer: GBSSR.preparePuppeteer(localName),
@@ -181,20 +181,20 @@ export class WhatsappDirectLine extends GBService {
 
               const s = new DialogKeywords();
               const qrBuf = await s.getQRCode({ pid, text: qr });
-              const localName = Path.join(
+              const localName = path.join(
                 'work',
                 gbaiPath,
                 'cache',
                 `qr${GBAdminService.getRndReadableIdentifier()}.png`
               );
-              Fs.writeFileSync(localName, qrBuf.data);
-              const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
+              fs.writeFileSync(localName, qrBuf.data);
+              const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', path.basename(localName));
 
               if (adminNumber) {
                 await GBServer.globals.minBoot.whatsAppDirectLine.sendFileToDevice(
                   adminNumber,
                   url,
-                  Path.basename(localName),
+                  path.basename(localName),
                   msg
                 );
               }
@@ -324,14 +324,14 @@ export class WhatsappDirectLine extends GBService {
 
           let buf: any = Buffer.from(base64Image.data, 'base64');
           const gbaiName = GBUtil.getGBAIPath(this.min.botId);
-          const localName = Path.join(
+          const localName = path.join(
             'work',
             gbaiName,
             'cache',
             `tmp${GBAdminService.getRndReadableIdentifier()}.docx`
           );
-          Fs.writeFileSync(localName, buf, { encoding: null });
-          const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', Path.basename(localName));
+          fs.writeFileSync(localName, buf, { encoding: null });
+          const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', path.basename(localName));
 
           attachments = [];
           attachments.push({
@@ -764,7 +764,7 @@ export class WhatsappDirectLine extends GBService {
     // Set folder based on media type
     let folder = mediaType === 'video' ? 'videos' : 'images';
     let path = GBUtil.getGBAIPath(min.botId, `gbkb`);
-    path = Path.join(process.env.PWD, 'work', path, folder, mediaFile);
+    path = path.join(process.env.PWD, 'work', path, folder, mediaFile);
 
     text = text.substring(mediaFile.length + 1).trim();
     text = text.replace(/\n/g, '\\n');
@@ -1231,7 +1231,7 @@ export class WhatsappDirectLine extends GBService {
 
       while (startOffset < fileSize) {
         const endOffset = Math.min(startOffset + CHUNK_SIZE, fileSize);
-        const fileStream = Fs.createReadStream(filePath, { start: startOffset, end: endOffset - 1 });
+        const fileStream = fs.createReadStream(filePath, { start: startOffset, end: endOffset - 1 });
         const chunkSize = endOffset - startOffset;
 
         const uploadResponse = await fetch(`https://graph.facebook.com/v20.0/upload:${uploadSessionId}`, {

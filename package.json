@@ -21,7 +21,7 @@
   "preferGlobal": true,
   "private": false,
   "bin": {
-    "gbot": "./boot.cjs"
+    "gbot": "./boot.mjs"
   },
   "readme": "README.md",
   "repository": {

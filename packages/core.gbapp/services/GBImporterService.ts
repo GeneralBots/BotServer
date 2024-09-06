@@ -36,7 +36,7 @@
 
 import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
 import { CreateOptions } from 'sequelize/types';
-import Fs from 'fs';
+import fs from 'fs';
 import urlJoin from 'url-join';
 import { GBServer } from '../../../src/app.js';
 import { GuaribasInstance } from '../models/GBModel.js';
@@ -61,9 +61,9 @@ export class GBImporter {
     const file = urlJoin(localPath, 'settings.json');
 
     let settingsJson = {botId: botId}; 
-    if (Fs.existsSync(file)){
+    if (fs.existsSync(file)){
 
-      settingsJson = JSON.parse(Fs.readFileSync(file, 'utf8'));
+      settingsJson = JSON.parse(fs.readFileSync(file, 'utf8'));
       if (botId === undefined) {
         botId = settingsJson.botId;
       }

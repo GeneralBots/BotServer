@@ -49,7 +49,7 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import urlJoin from 'url-join';
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
-import Path from 'path';
+import path from 'path';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GBUtil } from '../../../src/util.js';
 
@@ -247,7 +247,7 @@ export class AskDialog extends IGBDialog {
             for (const key in results.sources) {
               const source = results.sources[key];
               const path = GBUtil.getGBAIPath(min.botId, `gbkb`);
-              let url = urlJoin('kb', path, 'docs', Path.basename(source.file));
+              let url = urlJoin('kb', path, 'docs', path.basename(source.file));
               url = `${url}#page=${source.page}&toolbar=0&messages=0&statusbar=0&navpanes=0`;
               urls.push({ url: url });
             }

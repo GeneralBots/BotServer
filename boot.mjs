@@ -2,9 +2,9 @@
 
 process.stdout.write(`General Bots. BotServer@${pjson.version}, botlib@${pjson.dependencies.botlib}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
 
-import Fs from 'fs';
+import fs from 'fs';
 import os from 'node:os';
-import Path from 'path';
+import path from 'path';
 import { exec } from 'child_process';
 import pjson from './package.json' assert { type: 'json' };
 
@@ -22,10 +22,10 @@ try {
     });
   };
   var processDist = () => {
-    if (!Fs.existsSync('dist')) {
+    if (!fs.existsSync('dist')) {
       console.log(`\n`);
       console.log(`Generall Bots: Compiling...`);
-      exec(Path.join(__dirname, 'node_modules/.bin/tsc'), (err, stdout, stderr) => {
+      exec(path.join(__dirname, 'node_modules/.bin/tsc'), (err, stdout, stderr) => {
         if (err) {
           console.error(err);
           return;
@@ -39,7 +39,7 @@ try {
 
   // Installing modules if it has not been done yet.
 
-  if (!Fs.existsSync('node_modules')) {
+  if (!fs.existsSync('node_modules')) {
     console.log(`\n`);
     console.log(`Generall Bots: Installing modules for the first time, please wait...`);
     exec('npm install', (err, stdout, stderr) => {

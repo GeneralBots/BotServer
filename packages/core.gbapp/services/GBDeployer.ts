@@ -34,12 +34,12 @@
 
 'use strict';
 
-import Path from 'path';
+import path from 'path';
 import express from 'express';
 import child_process from 'child_process';
 import { rimraf } from 'rimraf';
 import urlJoin from 'url-join';
-import Fs from 'fs';
+import fs from 'fs';
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -151,10 +151,10 @@ export class GBDeployer implements IGBDeployer {
     async function scanPackageDirectory(path) {
       // Gets all directories.
 
-      const isDirectory = source => Fs.lstatSync(source).isDirectory();
+      const isDirectory = source => fs.lstatSync(source).isDirectory();
       const getDirectories = source =>
-        Fs.readdirSync(source)
-          .map(name => Path.join(source, name))
+        fs.readdirSync(source)
+          .map(name => path.join(source, name))
           .filter(isDirectory);
       const dirs = getDirectories(path);
       await CollectionUtil.asyncForEach(dirs, async element => {
@@ -163,7 +163,7 @@ export class GBDeployer implements IGBDeployer {
         if (element === '.') {
           GBLogEx.info(0, `Ignoring ${element}...`);
         } else {
-          const name = Path.basename(element);
+          const name = path.basename(element);
 
           // Skips what does not need to be loaded.
 
@@ -423,7 +423,7 @@ export class GBDeployer implements IGBDeployer {
    * Deploys a bot to the storage from a .gbot folder.
    */
   public async deployBotFromLocalPath(localPath: string, publicAddress: string): Promise<void> {
-    const packageName = Path.basename(localPath);
+    const packageName = path.basename(localPath);
     const instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
     await this.deployBotOnAzure(instance, publicAddress);
   }
@@ -433,15 +433,15 @@ export class GBDeployer implements IGBDeployer {
    */
 
   public async loadParamsFromTabular(min: GBMinInstance, filePath: string): Promise<any> {
-    const xls = Path.join(filePath, 'Config.xlsx');
-    const csv = Path.join(filePath, 'config.csv');
+    const xls = path.join(filePath, 'Config.xlsx');
+    const csv = path.join(filePath, 'config.csv');
 
     let rows: any[] = [];
     let obj: any = {};
 
     const workbook = new Excel.Workbook();
 
-    if (Fs.existsSync(xls)) {
+    if (fs.existsSync(xls)) {
       await workbook.xlsx.readFile(xls);
       let worksheet: any;
       for (let t = 0; t < workbook.worksheets.length; t++) {
@@ -456,7 +456,7 @@ export class GBDeployer implements IGBDeployer {
       for (let index = 0; index < 6; index++) {
         rows.shift();
       }
-    } else if (Fs.existsSync(csv)) {
+    } else if (fs.existsSync(csv)) {
       await workbook.csv.readFile(csv);
       let worksheet = workbook.worksheets[0]; // Assuming the CSV file has only one sheet
       rows = worksheet.getSheetValues();
@@ -498,14 +498,14 @@ export class GBDeployer implements IGBDeployer {
       // Creates each subfolder.
 
       let pathBase = localPath;
-      if (!Fs.existsSync(pathBase)) {
-        Fs.mkdirSync(pathBase);
+      if (!fs.existsSync(pathBase)) {
+        fs.mkdirSync(pathBase);
       }
 
       await CollectionUtil.asyncForEach(parts, async item => {
-        pathBase = Path.join(pathBase, item);
-        if (!Fs.existsSync(pathBase)) {
-          Fs.mkdirSync(pathBase);
+        pathBase = path.join(pathBase, item);
+        if (!fs.existsSync(pathBase)) {
+          fs.mkdirSync(pathBase);
         }
       });
 
@@ -527,19 +527,19 @@ export class GBDeployer implements IGBDeployer {
       // Download files or navigate to directory to recurse.
 
       await CollectionUtil.asyncForEach(documents, async item => {
-        const itemPath = Path.join(localPath, remotePath, item.name);
+        const itemPath = path.join(localPath, remotePath, item.name);
 
         if (item.folder) {
-          if (!Fs.existsSync(itemPath)) {
-            Fs.mkdirSync(itemPath);
+          if (!fs.existsSync(itemPath)) {
+            fs.mkdirSync(itemPath);
           }
           const nextFolder = urlJoin(remotePath, item.name);
           await this.downloadFolder(min, localPath, nextFolder);
         } else {
           let download = true;
 
-          if (Fs.existsSync(itemPath)) {
-            const dt = Fs.statSync(itemPath);
+          if (fs.existsSync(itemPath)) {
+            const dt = fs.statSync(itemPath);
             if (new Date(dt.mtime) >= new Date(item.lastModifiedDateTime)) {
               download = false;
             }
@@ -550,8 +550,8 @@ export class GBDeployer implements IGBDeployer {
             const url = item['@microsoft.graph.downloadUrl'];
 
             const response = await fetch(url);
-            Fs.writeFileSync(itemPath, Buffer.from(await response.arrayBuffer()), { encoding: null });
-            Fs.utimesSync(itemPath, new Date(), new Date(item.lastModifiedDateTime));
+            fs.writeFileSync(itemPath, Buffer.from(await response.arrayBuffer()), { encoding: null });
+            fs.utimesSync(itemPath, new Date(), new Date(item.lastModifiedDateTime));
           } else {
             GBLogEx.info(min, `Local is up to date: ${itemPath}...`);
           }
@@ -596,7 +596,7 @@ export class GBDeployer implements IGBDeployer {
    * Deploys a folder into the bot storage.
    */
   public async deployPackage2(min: GBMinInstance, user, localPath: string) {
-    const packageType = Path.extname(localPath);
+    const packageType = path.extname(localPath);
     let handled = false;
     let pck = null;
 
@@ -659,7 +659,7 @@ export class GBDeployer implements IGBDeployer {
               con['storagePassword'] = min.core.getParam<string>(min.instance, `${connectionName} Password`, null);
             } else if (file) {
               const path = GBUtil.getGBAIPath(min.botId, 'gbdata');
-              con['storageFile'] = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
+              con['storageFile'] = path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
             } else {
               GBLogEx.debug(min, `No storage information found for ${connectionName}, missing storage name or file.`);
             }
@@ -667,8 +667,8 @@ export class GBDeployer implements IGBDeployer {
           });
 
           const path = GBUtil.getGBAIPath(min.botId, null);
-          const localFolder = Path.join('work', path, 'connections.json');
-          Fs.writeFileSync(localFolder, JSON.stringify(connections), { encoding: null });
+          const localFolder = path.join('work', path, 'connections.json');
+          fs.writeFileSync(localFolder, JSON.stringify(connections), { encoding: null });
 
           // Updates instance object.
 
@@ -699,7 +699,7 @@ export class GBDeployer implements IGBDeployer {
       case '.gbtheme':
         // Updates server listeners to serve theme files in .gbtheme.
 
-        const packageName = Path.basename(localPath);
+        const packageName = path.basename(localPath);
         GBServer.globals.server.use(`/themes/${packageName}`, express.static(localPath));
         GBLogEx.verbose(min, `Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
 
@@ -727,7 +727,7 @@ export class GBDeployer implements IGBDeployer {
    */
   public async cleanupPackage(instance: IGBInstance, packageName: string) {
     const path = GBUtil.getGBAIPath(instance.botId, null, packageName);
-    const localFolder = Path.join('work', path);
+    const localFolder = path.join('work', path);
     rimraf.sync(localFolder);
   }
 
@@ -737,11 +737,11 @@ export class GBDeployer implements IGBDeployer {
   public async undeployPackageFromPackageName(instance: IGBInstance, packageName: string) {
     // Gets information about the package.
 
-    const packageType = Path.extname(packageName);
+    
     const p = await this.getStoragePackageByName(instance.instanceId, packageName);
 
-    const path = GBUtil.getGBAIPath(instance.botId, null, packageName);
-    const localFolder = Path.join('work', path);
+    const packagePath = GBUtil.getGBAIPath(instance.botId, null, packageName);
+    const localFolder = path.join('work', packagePath);
 
     return await this.undeployPackageFromLocalPath(instance, localFolder);
   }
@@ -752,15 +752,15 @@ export class GBDeployer implements IGBDeployer {
   public async undeployPackageFromLocalPath(instance: IGBInstance, localPath: string) {
     // Gets information about the package.
 
-    const packageType = Path.extname(localPath);
-    const packageName = Path.basename(localPath);
+    const packageType = path.extname(localPath);
+    const packageName = path.basename(localPath);
     const p = await this.getStoragePackageByName(instance.instanceId, packageName);
 
     // Removes objects from storage, cloud resources and local files if any.
 
     switch (packageType) {
       case '.gbot':
-        const packageObject = JSON.parse(Fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
+        const packageObject = JSON.parse(fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
         await this.undeployBot(packageObject.botId, packageName);
         break;
 
@@ -879,10 +879,10 @@ export class GBDeployer implements IGBDeployer {
 
     // Checks if .gbapp compiliation is enabled.
 
-    if (!Fs.existsSync(`${root}/build`) && process.env.DISABLE_WEB !== 'true') {
+    if (!fs.existsSync(`${root}/build`) && process.env.DISABLE_WEB !== 'true') {
       // Write a .env required to fix some bungs in create-react-app tool.
 
-      Fs.writeFileSync(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
+      fs.writeFileSync(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
 
       // Install modules and compiles the web app.
 
@@ -954,22 +954,22 @@ export class GBDeployer implements IGBDeployer {
   ) {
     // Runs `npm install` for the package.
 
-    GBLogEx.info(0, `Deploying General Bots Application (.gbapp) or Library (.gblib): ${Path.basename(gbappPath)}...`);
-    let folder = Path.join(gbappPath, 'node_modules');
+    GBLogEx.info(0, `Deploying General Bots Application (.gbapp) or Library (.gblib): ${path.basename(gbappPath)}...`);
+    let folder = path.join(gbappPath, 'node_modules');
     if (process.env.GBAPP_DISABLE_COMPILE !== 'true') {
-      if (!Fs.existsSync(folder)) {
+      if (!fs.existsSync(folder)) {
         GBLogEx.info(0, `Installing modules for ${gbappPath}...`);
         child_process.execSync('npm install', { cwd: gbappPath });
       }
     }
 
-    folder = Path.join(gbappPath, 'dist');
+    folder = path.join(gbappPath, 'dist');
     try {
       // Runs TSC in .gbapp folder.
 
       if (process.env.GBAPP_DISABLE_COMPILE !== 'true') {
         GBLogEx.info(0, `Compiling: ${gbappPath}.`);
-        child_process.execSync(Path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: gbappPath });
+        child_process.execSync(path.join(process.env.PWD, 'node_modules/.bin/tsc'), { cwd: gbappPath });
       }
 
       // After compiled, adds the .gbapp to the current server VM context.
@@ -1035,7 +1035,7 @@ export class GBDeployer implements IGBDeployer {
 
     let appPackagesProcessed = 0;
     await CollectionUtil.asyncForEach(gbappPackages, async e => {
-      const filenameOnly = Path.basename(e);
+      const filenameOnly = path.basename(e);
 
       // Skips .gbapp inside deploy folder.
 

@@ -32,7 +32,7 @@
 
 import { GBLog, GBMinInstance } from 'botlib';
 import { GBServer } from '../../../src/app.js';
-import Fs from 'fs';
+import fs from 'fs';
 import SwaggerClient from 'swagger-client';
 import { spawn } from 'child_process';
 import { CodeServices } from '../../llm.gblib/services/CodeServices.js';

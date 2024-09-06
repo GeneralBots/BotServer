@@ -35,7 +35,7 @@
 'use strict';
 
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
-import * as Fs from 'fs';
+import fs from 'fs';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Op, Dialect } from 'sequelize';
 import { GBServer } from '../../../src/app.js';
@@ -60,7 +60,7 @@ import { GBGoogleChatPackage } from '../../google-chat.gblib/index.js';
 import { GBHubSpotPackage } from '../../hubspot.gblib/index.js';
 import open from 'open';
 import ngrok from 'ngrok';
-import Path from 'path';
+import path from 'path';
 import { GBUtil } from '../../../src/util.js';
 import { GBLogEx } from './GBLogEx.js';
 import { GBDeployer } from './GBDeployer.js';
@@ -135,7 +135,7 @@ export class GBCoreService implements IGBCoreService {
     } else if (this.dialect === 'sqlite') {
       storage = GBConfigService.get('STORAGE_FILE');
 
-      if (!Fs.existsSync(storage)) {
+      if (!fs.existsSync(storage)) {
         process.env.STORAGE_SYNC = 'true';
       }
     } else {
@@ -313,7 +313,7 @@ STORAGE_SYNC_ALTER=true
 ENDPOINT_UPDATE=true
 `;
 
-    Fs.writeFileSync('.env', env);
+    fs.writeFileSync('.env', env);
   }
 
   /**
@@ -323,7 +323,7 @@ ENDPOINT_UPDATE=true
    */
   public async ensureProxy(port): Promise<string> {
     try {
-      if (Fs.existsSync('node_modules/ngrok/bin/ngrok.exe') || Fs.existsSync('node_modules/.bin/ngrok')) {
+      if (fs.existsSync('node_modules/ngrok/bin/ngrok.exe') || fs.existsSync('node_modules/.bin/ngrok')) {
         return await ngrok.connect({ port: port });
       } else {
         GBLog.warn('ngrok executable not found. Check installation or node_modules folder.');
@@ -410,7 +410,7 @@ ENDPOINT_UPDATE=true
 
     let matchingAppPackages = [];
     await CollectionUtil.asyncForEach(appPackages, async appPackage => {
-      const filenameOnly = Path.basename(appPackage.name);
+      const filenameOnly = path.basename(appPackage.name);
       const matchedApp = apps.find(app => app.name === filenameOnly);
       if (matchedApp || filenameOnly.endsWith('.gblib')) {
         matchingAppPackages.push(appPackage);
@@ -717,7 +717,7 @@ ENDPOINT_UPDATE=true
         .patch(body);
     } else {
       let path = GBUtil.getGBAIPath(min.botId, `gbot`);
-      const config = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, 'config.csv');
+      const config = path.join(GBConfigService.get('STORAGE_LIBRARY'), path, 'config.csv');
 
       const db = await csvdb(config, ['name', 'value'], ',');
       if (await db.get({ name: name })) {
@@ -825,13 +825,13 @@ ENDPOINT_UPDATE=true
   public async ensureFolders(instances, deployer: GBDeployer) {
     let libraryPath = GBConfigService.get('STORAGE_LIBRARY');
 
-    if (!Fs.existsSync(libraryPath)) {
+    if (!fs.existsSync(libraryPath)) {
       mkdirp.sync(libraryPath);
     }
 
     await this.syncBotStorage(instances, 'default', deployer, libraryPath);
 
-    const files = Fs.readdirSync(libraryPath);
+    const files = fs.readdirSync(libraryPath);
     await CollectionUtil.asyncForEach(files, async file => {
       if (file.trim().toLowerCase() !== 'default.gbai') {
         let botId = file.replace(/\.gbai/, '');
@@ -853,39 +853,39 @@ ENDPOINT_UPDATE=true
         email = null;
 
       instance = await deployer.deployBlankBot(botId, mobile, email);
-      const gbaiPath = Path.join(libraryPath, `${botId}.gbai`);
+      const gbaiPath = path.join(libraryPath, `${botId}.gbai`);
 
-      if (!Fs.existsSync(gbaiPath)) {
-        Fs.mkdirSync(gbaiPath, { recursive: true });
+      if (!fs.existsSync(gbaiPath)) {
+        fs.mkdirSync(gbaiPath, { recursive: true });
 
-        const base = Path.join(process.env.PWD, 'templates', 'default.gbai');
+        const base = path.join(process.env.PWD, 'templates', 'default.gbai');
 
-        Fs.cpSync(Path.join(base, `default.gbkb`), Path.join(gbaiPath, `default.gbkb`), {
+        fs.cpSync(path.join(base, `default.gbkb`), path.join(gbaiPath, `default.gbkb`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        Fs.cpSync(Path.join(base, `default.gbot`), Path.join(gbaiPath, `default.gbot`), {
+        fs.cpSync(path.join(base, `default.gbot`), path.join(gbaiPath, `default.gbot`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        Fs.cpSync(Path.join(base, `default.gbtheme`), Path.join(gbaiPath, `default.gbtheme`), {
+        fs.cpSync(path.join(base, `default.gbtheme`), path.join(gbaiPath, `default.gbtheme`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        Fs.cpSync(Path.join(base, `default.gbdata`), Path.join(gbaiPath, `default.gbdata`), {
+        fs.cpSync(path.join(base, `default.gbdata`), path.join(gbaiPath, `default.gbdata`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        Fs.cpSync(Path.join(base, `default.gbdialog`), Path.join(gbaiPath, `default.gbdialog`), {
+        fs.cpSync(path.join(base, `default.gbdialog`), path.join(gbaiPath, `default.gbdialog`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        Fs.cpSync(Path.join(base, `default.gbdrive`), Path.join(gbaiPath, `default.gbdrive`), {
+        fs.cpSync(path.join(base, `default.gbdrive`), path.join(gbaiPath, `default.gbdrive`), {
           errorOnExist: false,
           force: true,
           recursive: true
@@ -915,7 +915,7 @@ ENDPOINT_UPDATE=true
 
         const virtualPath = '/' + min.botId;
         let path = GBUtil.getGBAIPath(min.botId, null);
-        const gbaiRoot = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path);
+        const gbaiRoot = path.join(GBConfigService.get('STORAGE_LIBRARY'), path);
 
         server.setFileSystem(virtualPath, new webdav.PhysicalFileSystem(gbaiRoot), successed => {
           GBLogEx.info(min.instance.instanceId, `WebDav online for ${min.botId}...`);

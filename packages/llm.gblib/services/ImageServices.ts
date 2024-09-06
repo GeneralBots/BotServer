@@ -35,9 +35,9 @@ import OpenAI from 'openai';
 
 import { AzureKeyCredential } from '@azure/core-auth';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords';
-import Path from 'path';
+import path from 'path';
 import { GBServer } from '../../../src/app.js';
-import Fs from 'fs';
+import fs from 'fs';
 import urlJoin from 'url-join';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx';
@@ -68,12 +68,12 @@ export class ImageServices {
       });
 
       const gbaiName = GBUtil.getGBAIPath(min.botId);
-      const localName = Path.join('work', gbaiName, 'cache', `DALL-E${GBAdminService.getRndReadableIdentifier()}.png`);
+      const localName = path.join('work', gbaiName, 'cache', `DALL-E${GBAdminService.getRndReadableIdentifier()}.png`);
 
       const url = response.data[0].url;
       const res = await fetch(url);
       let buf: any = Buffer.from(await res.arrayBuffer());
-      Fs.writeFileSync(localName, buf, { encoding: null });
+      fs.writeFileSync(localName, buf, { encoding: null });
 
       GBLogEx.info(min, `DALL-E image generated at ${url}.`);
 

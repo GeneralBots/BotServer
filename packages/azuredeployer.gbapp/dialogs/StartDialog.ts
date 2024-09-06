@@ -35,7 +35,7 @@
 'use strict';
 
 import { GBLog, IGBInstallationDeployer, IGBInstance } from 'botlib';
-import * as Fs from 'fs';
+import fs from 'fs';
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService.js';
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService.js';
 import scanf from 'scanf';
@@ -49,7 +49,7 @@ export class StartDialog {
   public static async createBaseInstance (deployer, freeTier) {
     // No .env so asks for cloud credentials to start a new farm.
 
-    if (!Fs.existsSync(`.env`)) {
+    if (!fs.existsSync(`.env`)) {
       process.stdout.write(
         'A empty enviroment is detected. To start automatic deploy, please enter some information:\n'
       );

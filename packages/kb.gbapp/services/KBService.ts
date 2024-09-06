@@ -31,10 +31,8 @@
 /**
  * @fileoverview Knowledge base services and logic.
  */
-
-import html2md from 'html-to-md';
-import Path from 'path';
-import Fs from 'fs';
+import path from 'path';
+import fs from 'fs';
 import urlJoin from 'url-join';
 import asyncPromise from 'async-promises';
 import walkPromise from 'walk-promise';
@@ -48,7 +46,7 @@ import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { EPubLoader } from '@langchain/community/document_loaders/fs/epub';
 import { CSVLoader } from '@langchain/community/document_loaders/fs/csv';
-import path from 'path';
+
 import puppeteer, { Page } from 'puppeteer';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from 'langchain/document';
@@ -503,7 +501,7 @@ export class KBService implements IGBKBService {
               'Existe um problema na base de conhecimento. Fui treinado para entender sua pergunta, avise a quem me criou que a resposta não foi informada para esta pergunta.';
           } else if (answer.indexOf('.md') > -1 || answer.indexOf('.docx') > -1) {
             const mediaFilename = urlJoin(path.dirname(filePath), '..', 'articles', answer);
-            if (Fs.existsSync(mediaFilename)) {
+            if (fs.existsSync(mediaFilename)) {
               // Tries to load .docx file from Articles folder.
 
               if (answer.indexOf('.docx') > -1) {
@@ -511,7 +509,7 @@ export class KBService implements IGBKBService {
               } else {
                 // Loads normally markdown file.
 
-                answer = Fs.readFileSync(mediaFilename, 'utf8');
+                answer = fs.readFileSync(mediaFilename, 'utf8');
               }
               format = '.md';
               media = path.basename(mediaFilename);
@@ -559,12 +557,12 @@ export class KBService implements IGBKBService {
             const code = isBasic ? answer.substr(6) : answer;
             const path = GBUtil.getGBAIPath(min.botId, `gbdialog`);
             const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
-            const localName = Path.join('work', path, `${scriptName}`);
-            Fs.writeFileSync(localName, code, { encoding: null });
+            const localName = path.join('work', path, `${scriptName}`);
+            fs.writeFileSync(localName, code, { encoding: null });
             answer = scriptName;
 
             const vm = new GBVMService();
-            await vm.loadDialog(Path.basename(localName), Path.dirname(localName), min);
+            await vm.loadDialog(path.basename(localName), path.dirname(localName), min);
           }
 
           // Now with all the data ready, creates entities in the store.
@@ -692,7 +690,7 @@ export class KBService implements IGBKBService {
 
     // Imports menu.xlsx if any.
 
-    if (Fs.existsSync(subjectFile) || Fs.existsSync(menuFile)) {
+    if (fs.existsSync(subjectFile) || fs.existsSync(menuFile)) {
       await this.importSubjectFile(packageStorage.packageId, subjectFile, menuFile, instance);
     }
 
@@ -727,7 +725,7 @@ export class KBService implements IGBKBService {
 
         if (content === null) {
           const fullFilename = urlJoin(file.root, file.name);
-          content = Fs.readFileSync(fullFilename, 'utf-8');
+          content = fs.readFileSync(fullFilename, 'utf-8');
 
           await GuaribasAnswer.create(<GuaribasAnswer>{
             instanceId: instance.instanceId,
@@ -740,7 +738,7 @@ export class KBService implements IGBKBService {
         }
       } else if (file !== null && file.name.endsWith('.docx')) {
         let path = GBUtil.getGBAIPath(instance.botId, `gbkb`);
-        const localName = Path.join('work', path, 'articles', file.name);
+        const localName = path.join('work', path, 'articles', file.name);
         let loader = new DocxLoader(localName);
         let doc = await loader.load();
         let content = doc[0].pageContent;
@@ -761,12 +759,12 @@ export class KBService implements IGBKBService {
         data.answers.push(answer);
       } else if (file !== null && file.name.endsWith('.toc.docx')) {
         const path = GBUtil.getGBAIPath(instance.botId, `gbkb`);
-        const localName = Path.join('work', path, 'articles', file.name);
-        const buffer = Fs.readFileSync(localName, { encoding: null });
+        const localName = path.join('work', path, 'articles', file.name);
+        const buffer = fs.readFileSync(localName, { encoding: null });
         var options = {
           buffer: buffer,
           convertImage: async image => {
-            const localName = Path.join(
+            const localName = path.join(
               'work',
               GBUtil.getGBAIPath(instance.botId),
               'cache',
@@ -776,10 +774,10 @@ export class KBService implements IGBKBService {
               GBServer.globals.publicAddress,
               GBUtil.getGBAIPath(instance.botId).replace(/\.[^/.]+$/, ''),
               'cache',
-              Path.basename(localName)
+              path.basename(localName)
             );
             const buffer = await image.read();
-            Fs.writeFileSync(localName, buffer, { encoding: null });
+            fs.writeFileSync(localName, buffer, { encoding: null });
             return { src: url };
           }
         };
@@ -1026,8 +1024,8 @@ export class KBService implements IGBKBService {
       website.endsWith('/') ? website.substring(0, website.length - 1) : website;
 
       let path = GBUtil.getGBAIPath(min.botId, `gbot`);
-      const directoryPath = Path.join(process.env.PWD, 'work', path, 'Website');
-      Fs.rmSync(directoryPath, { recursive: true, force: true });
+      const directoryPath = path.join(process.env.PWD, 'work', path, 'Website');
+      fs.rmSync(directoryPath, { recursive: true, force: true });
 
       let browser = await puppeteer.launch({ headless: false });
       const page = await this.getFreshPage(browser, website);
@@ -1042,7 +1040,7 @@ export class KBService implements IGBKBService {
         try {
           const logoBinary = await page.goto(logo);
           const buffer = await logoBinary.buffer();
-          const logoFilename = Path.basename(logo);
+          const logoFilename = path.basename(logo);
           // TODO: sharp(buffer)
           //   .resize({
           //     width: 48,
@@ -1050,7 +1048,7 @@ export class KBService implements IGBKBService {
           //     fit: 'inside', // Resize the image to fit within the specified dimensions
           //     withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
           //   })
-          //   .toFile(Path.join(logoPath, logoFilename));
+          //   .toFile(path.join(logoPath, logoFilename));
           await min.core['setConfig'](min, 'Logo', logoFilename);
         } catch (error) {
           GBLogEx.debug(min, error);
@@ -1106,7 +1104,7 @@ export class KBService implements IGBKBService {
     } else {
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
-        let filePath = Path.join(file.root, file.name);
+        let filePath = path.join(file.root, file.name);
 
         const document = await this.loadAndSplitFile(filePath);
         const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
@@ -1191,7 +1189,7 @@ export class KBService implements IGBKBService {
     instance: IGBInstance
   ): Promise<any> {
     let subjectsLoaded;
-    if (Fs.existsSync(menuFile)) {
+    if (fs.existsSync(menuFile)) {
       // Loads menu.xlsx and finds worksheet.
 
       const workbook = new Excel.Workbook();
@@ -1260,7 +1258,7 @@ export class KBService implements IGBKBService {
 
       subjectsLoaded = subjects;
     } else {
-      subjectsLoaded = JSON.parse(Fs.readFileSync(filename, 'utf8'));
+      subjectsLoaded = JSON.parse(fs.readFileSync(filename, 'utf8'));
     }
 
     const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
@@ -1335,7 +1333,7 @@ export class KBService implements IGBKBService {
    * @param localPath Path to the .gbkb folder.
    */
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
-    const packageName = Path.basename(localPath);
+    const packageName = path.basename(localPath);
     const instance = await core.loadInstanceByBotId(min.botId);
     GBLogEx.info(min, `[GBDeployer] Importing: ${localPath}`);
 
@@ -1353,10 +1351,10 @@ export class KBService implements IGBKBService {
 
     GBLogEx.info(min, `[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
     const html = await GBSSR.getHTML(min);
-    let path = GBUtil.getGBAIPath(min.botId, `gbui`);
-    path = Path.join(process.env.PWD, 'work', path, 'index.html');
-    GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${path}.`);
-    Fs.writeFileSync(path, html, 'utf8');
+    let packagePath = GBUtil.getGBAIPath(min.botId, `gbui`);
+    packagePath = path.join(process.env.PWD, 'work', packagePath, 'index.html');
+    GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${packagePath}.`);
+    fs.writeFileSync(packagePath, html, 'utf8');
 
     GBLogEx.info(min, `[GBDeployer] Finished import of ${localPath}`);
   }

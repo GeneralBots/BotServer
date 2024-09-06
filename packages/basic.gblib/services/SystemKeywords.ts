@@ -34,7 +34,6 @@ import { runInNewContext } from 'vm';
 import { IgApiClient } from 'instagram-private-api';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -43,13 +42,13 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { DialogKeywords } from './DialogKeywords.js';
 import { GBServer } from '../../../src/app.js';
 import { GBVMService } from './GBVMService.js';
-import Fs from 'fs';
+import fs from 'fs';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import urlJoin from 'url-join';
 import Excel from 'exceljs';
 import { BufferWindowMemory } from 'langchain/memory';
 import csvdb from 'csv-database';
-import Path from 'path';
+import path from 'path';
 import ComputerVisionClient from '@azure/cognitiveservices-computervision';
 import ApiKeyCredentials from '@azure/ms-rest-js';
 import alasql from 'alasql';
@@ -69,7 +68,7 @@ import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import retry from 'async-retry';
 import { BlobServiceClient, BlockBlobClient, StorageSharedKeyCredential } from '@azure/storage-blob';
-import { FacebookAdsApi, Page } from 'facebook-nodejs-business-sdk';
+import { Page } from 'facebook-nodejs-business-sdk';
 
 import { md5 } from 'js-md5';
 import { GBUtil } from '../../../src/util.js';
@@ -322,17 +321,17 @@ export class SystemKeywords {
     let url;
     let localName;
     if (renderImage) {
-      localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
+      localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       await page.screenshot({ path: localName, fullPage: true });
-      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
       GBLogEx.info(min, `Table image generated at ${url} .`);
     }
 
     // Handles PDF generation.
 
     if (renderPDF) {
-      localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.pdf`);
-      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+      localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.pdf`);
+      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
       let pdf = await page.pdf({ format: 'A4' });
       GBLogEx.info(min, `Table PDF generated at ${url} .`);
     }
@@ -411,12 +410,12 @@ export class SystemKeywords {
 
       // Prepare an image on cache and return the GBFILE information.
 
-      const localName = Path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
+      const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       if (pngPages.length > 0) {
         const buffer = pngPages[0].content;
-        const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+        const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
-        Fs.writeFileSync(localName, buffer, { encoding: null });
+        fs.writeFileSync(localName, buffer, { encoding: null });
 
         return { localName: localName, url: url, data: buffer };
       }
@@ -702,14 +701,14 @@ export class SystemKeywords {
     // It is an SharePoint object that needs to be downloaded.
 
     const gbaiName = GBUtil.getGBAIPath(min.botId);
-    const localName = Path.join('work', gbaiName, 'cache', `${GBAdminService.getRndReadableIdentifier()}.tmp`);
+    const localName = path.join('work', gbaiName, 'cache', `${GBAdminService.getRndReadableIdentifier()}.tmp`);
     const url = file['url'];
     const response = await fetch(url);
 
     // Writes it to disk and calculate hash.
 
     const data = await response.arrayBuffer();
-    Fs.writeFileSync(localName, Buffer.from(data), { encoding: null });
+    fs.writeFileSync(localName, Buffer.from(data), { encoding: null });
     const hash = new Uint8Array(md5.array(data));
 
     // Performs uploading passing local hash.
@@ -725,7 +724,7 @@ export class SystemKeywords {
     // If upload is OK including hash check, removes the temporary file.
 
     if (res._response.status === 201 && new Uint8Array(res.contentMD5).toString() === hash.toString()) {
-      Fs.rmSync(localName);
+      fs.rmSync(localName);
 
       file['md5'] = hash.toString();
 
@@ -886,8 +885,8 @@ export class SystemKeywords {
       if (e.cause === 404) {
         // Creates the file.
 
-        const blank = Path.join(process.env.PWD, 'blank.xlsx');
-        const data = Fs.readFileSync(blank);
+        const blank = path.join(process.env.PWD, 'blank.xlsx');
+        const data = fs.readFileSync(blank);
         await client.api(`${baseUrl}/drive/root:/${path}/${file}:/content`).put(data);
 
         // Tries to open again.
@@ -1151,10 +1150,10 @@ export class SystemKeywords {
       result = null;
     } else if (file['cTag']) {
       const gbaiName = GBUtil.getGBAIPath(min.botId);
-      const localName = Path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
+      const localName = path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
       const url = file['@microsoft.graph.downloadUrl'];
       const response = await fetch(url);
-      Fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
+      fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
 
       var workbook = new Excel.Workbook();
       let worksheet = await workbook.csv.readFile(localName);
@@ -1200,9 +1199,9 @@ export class SystemKeywords {
       rows = results.text;
     } else if (file.indexOf('.csv') !== -1) {
       let res;
-      let path = GBUtil.getGBAIPath(min.botId, `gbdata`);
-      const csvFile = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
-      const firstLine = Fs.readFileSync(csvFile, 'utf8').split('\n')[0];
+      let packagePath = GBUtil.getGBAIPath(min.botId, `gbdata`);
+      const csvFile = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
+      const firstLine = fs.readFileSync(csvFile, 'utf8').split('\n')[0];
       const headers = firstLine.split(',');
       const db = await csvdb(csvFile, headers, ',');
       if (args[0]) {
@@ -1522,7 +1521,7 @@ export class SystemKeywords {
 
       const path = GBUtil.getGBAIPath(min.botId);
       const systemPromptFile = urlJoin(process.cwd(), 'work', path, 'users', user.userSystemId, 'systemPrompt.txt');
-      Fs.writeFileSync(systemPromptFile, text);
+      fs.writeFileSync(systemPromptFile, text);
     }
   }
 
@@ -1611,8 +1610,8 @@ export class SystemKeywords {
 
     // Templates a blank {content} tag inside the blank.docx.
 
-    const blank = Path.join(process.env.PWD, 'blank.docx');
-    let buf = Fs.readFileSync(blank);
+    const blank = path.join(process.env.PWD, 'blank.docx');
+    let buf = fs.readFileSync(blank);
     let zip = new PizZip(buf);
     let doc = new Docxtemplater();
     doc.setOptions({ linebreaks: true });
@@ -1660,7 +1659,7 @@ export class SystemKeywords {
 
     let folder;
     if (dest.indexOf('/') !== -1) {
-      const pathOnly = Path.dirname(dest);
+      const pathOnly = path.dirname(dest);
       folder = await this.createFolder({ pid, name: pathOnly });
     } else {
       folder = await client.api(`${baseUrl}/drive/root:/${root}`).get();
@@ -1673,7 +1672,7 @@ export class SystemKeywords {
       const srcFile = await client.api(`${baseUrl}/drive/root:/${srcPath}`).get();
       const destFile = {
         parentReference: { driveId: folder.parentReference.driveId, id: folder.id },
-        name: `${Path.basename(dest)}`
+        name: `${path.basename(dest)}`
       };
       const file = await client.api(`${baseUrl}/drive/items/${srcFile.id}/copy`).post(destFile);
       GBLogEx.info(min, `FINISHED COPY '${src}' to '${dest}'`);
@@ -1721,7 +1720,7 @@ export class SystemKeywords {
 
     let folder;
     if (dest.indexOf('/') !== -1) {
-      const pathOnly = Path.dirname(dest);
+      const pathOnly = path.dirname(dest);
       folder = await this.createFolder({ pid, name: pathOnly });
     } else {
       folder = await client.api(`${baseUrl}/drive/root:/${root}`).get();
@@ -2007,20 +2006,20 @@ export class SystemKeywords {
     // Downloads template from .gbdrive.
 
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-    let path = '/' + urlJoin(gbaiName, `${botId}.gbdrive`);
-    let template = await this.internalGetDocument(client, baseUrl, path, templateName);
+    let packagePath = '/' + urlJoin(gbaiName, `${botId}.gbdrive`);
+    let template = await this.internalGetDocument(client, baseUrl, packagePath, templateName);
     let url = template['@microsoft.graph.downloadUrl'];
     const res = await fetch(url);
     let buf: any = Buffer.from(await res.arrayBuffer());
-    localName = Path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
-    Fs.writeFileSync(localName, buf, { encoding: null });
+    localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+    fs.writeFileSync(localName, buf, { encoding: null });
 
     // Replace image path on all elements of data.
 
     const images = [];
     let index = 0;
-    path = Path.join(gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
-    url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+    packagePath = path.join(gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+    url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
     const traverseDataToInjectImageUrl = async o => {
       for (var i in o) {
@@ -2035,15 +2034,15 @@ export class SystemKeywords {
           if (value.endsWith && value.endsWith(`.${kind}`)) {
             const { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
-            path = urlJoin(gbaiName, `${botId}.gbdrive`);
+            packagePath = urlJoin(gbaiName, `${botId}.gbdrive`);
             if (value.indexOf('/') !== -1) {
-              path = '/' + urlJoin(path, Path.dirname(value));
-              value = Path.basename(value);
+              packagePath = '/' + urlJoin(packagePath, path.dirname(value));
+              value = path.basename(value);
             }
 
-            const ref = await this.internalGetDocument(client, baseUrl, path, value);
+            const ref = await this.internalGetDocument(client, baseUrl, packagePath, value);
             let url = ref['@microsoft.graph.downloadUrl'];
-            const imageName = Path.join(
+            const imageName = path.join(
               'work',
               gbaiName,
               'cache',
@@ -2051,7 +2050,7 @@ export class SystemKeywords {
             );
             const response = await fetch(url);
             const buf = Buffer.from(await response.arrayBuffer());
-            Fs.writeFileSync(imageName, buf, { encoding: null });
+            fs.writeFileSync(imageName, buf, { encoding: null });
 
             const getNormalSize = ({ width, height, orientation }) => {
               return (orientation || 0) >= 5 ? [height, width] : [width, height];
@@ -2063,7 +2062,7 @@ export class SystemKeywords {
               height: 400,
               orientation: '0'
             });
-            url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(imageName));
+            url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(imageName));
             images[index++] = { url: url, size: size, buf: buf };
           }
         }
@@ -2100,7 +2099,7 @@ export class SystemKeywords {
     doc.setData(data).render();
 
     buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
-    Fs.writeFileSync(localName, buf, { encoding: null });
+    fs.writeFileSync(localName, buf, { encoding: null });
 
     return { localName: localName, url: url, data: buf };
   }
@@ -2557,14 +2556,14 @@ export class SystemKeywords {
     // Prepare an image on cache and return the GBFILE information.
 
     const buf = Buffer.from(data.Payment.QrCodeBase64Image, 'base64');
-    const localName = Path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-    Fs.writeFileSync(localName, buf, { encoding: null });
-    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', Path.basename(localName));
+    const localName = path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
+    fs.writeFileSync(localName, buf, { encoding: null });
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
     GBLogEx.info(min, `GBPay: ${data.MerchantOrderId} OK: ${url}.`);
 
     return {
-      name: Path.basename(localName),
+      name: path.basename(localName),
       localName: localName,
       url: url,
       data: buf,
@@ -2590,7 +2589,7 @@ export class SystemKeywords {
     const path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
     const fileName = file.url ? file.url : file.name;
     const contentType = mime.lookup(fileName);
-    const ext = Path.extname(fileName).substring(1);
+    const ext = path.extname(fileName).substring(1);
     const kind = await this.getExtensionInfo(ext);
 
     let d = new Date(),
@@ -2638,7 +2637,7 @@ export class SystemKeywords {
     const gbaiPath = GBUtil.getGBAIPath(min.botId);
     const fileName = file.name;
     const contentType = mime.lookup(fileName);
-    const ext = Path.extname(fileName).substring(1);
+    const ext = path.extname(fileName).substring(1);
     const kind = await this.getExtensionInfo(ext);
 
     await client.api(`${baseUrl}/drive/root:/${gbaiPath}/${file.path}`).delete();
@@ -2702,7 +2701,7 @@ export class SystemKeywords {
         obj['name'] = item.name;
         obj['size'] = item.size;
         obj['hash'] = item.file?.hashes?.quickXorHash;
-        obj['path'] = Path.join(remotePath, item.name);
+        obj['path'] = path.join(remotePath, item.name);
         obj['url'] = item['@microsoft.graph.downloadUrl'];
 
         array.push(obj);
@@ -2735,8 +2734,8 @@ export class SystemKeywords {
     }
     else {
       let path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
-      let filePath = Path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
-      data = Fs.readFileSync(filePath, 'utf8');
+      let filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
+      data = fs.readFileSync(filePath, 'utf8');
       data = new Uint8Array(Buffer.from(data, 'utf8'));
     }
     return await GBUtil.getPdfText(data);
@@ -2781,11 +2780,11 @@ export class SystemKeywords {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
     // Leitura do arquivo de imagem
-    const imageBuffer = Fs.readFileSync(Path.resolve(imagePath));
+    const imageBuffer = fs.readFileSync(path.resolve(imagePath));
 
     // Criação de um arquivo temporário para enviar
-    const tempFilePath = Path.resolve('temp_image.jpg');
-    Fs.writeFileSync(tempFilePath, imageBuffer);
+    const tempFilePath = path.resolve('temp_image.jpg');
+    fs.writeFileSync(tempFilePath, imageBuffer);
 
     // Publicação da imagem
     const page = new Page(pageId);
@@ -2802,7 +2801,7 @@ export class SystemKeywords {
     GBLogEx.info(min, `Imagem publicada no Facebook: ${JSON.stringify(response)}`);
 
     // Limpeza do arquivo temporário
-    Fs.unlinkSync(tempFilePath);
+    fs.unlinkSync(tempFilePath);
   }
 
 
