@@ -568,6 +568,7 @@ export class ChatServices {
             Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} results using the LIMIT clause as per SQL. You can order the results to return the most informative data in the database.
             Never query for all columns from a table. You must query only the columns that are needed to answer the question. Wrap each column name in double quotes (") to denote them as delimited identifiers.
             Pay attention to use only the column names you can see in the tables below. Be careful to not query for columns that do not exist. Also, pay attention to which column is in which table.
+            Attention not to generate ambiguous column name, qualifing tables on joins.
 
           VERY IMPORTANT: Return just the  generated SQL command as plain text with no Markdown or formmating.
           ------------
@@ -708,8 +709,8 @@ export class ChatServices {
 
     // Adds .gbdialog as functions if any to LLM Functions.
     await CollectionUtil.asyncForEach(Object.keys(min.scriptMap), async script => {
-      const path = GBUtil.getGBAIPath(min.botId, 'gbdialog', null);
-      const jsonFile = path.join('work', path, `${script}.json`);
+      const packagePath = GBUtil.getGBAIPath(min.botId, 'gbdialog', null);
+      const jsonFile = path.join('work', packagePath, `${script}.json`);
 
       if (fs.existsSync(jsonFile) && script.toLowerCase() !== 'start.vbs') {
         const funcJSON = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));

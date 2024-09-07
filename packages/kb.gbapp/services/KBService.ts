@@ -164,8 +164,8 @@ export class KBService implements IGBKBService {
 
     // Extracts botId from URL.
 
-    let path = /(http[s]?:\/\/)?([^\/\s]+\/)(.*)/gi;
-    const botId = url.replace(path, ($0, $1, $2, $3) => {
+    let packagePath = /(http[s]?:\/\/)?([^\/\s]+\/)(.*)/gi;
+    const botId = url.replace(packagePath, ($0, $1, $2, $3) => {
       return $3.substr($3.indexOf('/'));
     });
 
@@ -555,9 +555,9 @@ export class KBService implements IGBKBService {
           const isBasic = answer.toLowerCase().startsWith('/basic');
           if (/TALK\s*\".*\"/gi.test(answer) || isBasic) {
             const code = isBasic ? answer.substr(6) : answer;
-            const path = GBUtil.getGBAIPath(min.botId, `gbdialog`);
+            const packagePath = GBUtil.getGBAIPath(min.botId, `gbdialog`);
             const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
-            const localName = path.join('work', path, `${scriptName}`);
+            const localName = path.join('work', packagePath, `${scriptName}`);
             fs.writeFileSync(localName, code, { encoding: null });
             answer = scriptName;
 
@@ -630,13 +630,13 @@ export class KBService implements IGBKBService {
       answer.endsWith('.xls') ||
       answer.endsWith('.xlsx')
     ) {
-      const path = GBUtil.getGBAIPath(min.botId, `gbkb`);
-      const doc = urlJoin(GBServer.globals.publicAddress, 'kb', path, 'assets', answer);
+      const packagePath = GBUtil.getGBAIPath(min.botId, `gbkb`);
+      const doc = urlJoin(GBServer.globals.publicAddress, 'kb', packagePath, 'assets', answer);
       const url = `http://view.officeapps.live.com/op/view.aspx?src=${doc}`;
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.endsWith('.pdf')) {
-      const path = GBUtil.getGBAIPath(min.botId, `gbkb`);
-      const url = urlJoin('kb', path, 'assets', answer);
+      const packagePath = GBUtil.getGBAIPath(min.botId, `gbkb`);
+      const url = urlJoin('kb', packagePath, 'assets', answer);
       await this.playUrl(min, min.conversationalService, step, url, channel);
     } else if (answer.format === '.md') {
       await min.conversationalService['playMarkdown'](min, answer, channel, step, GBMinService.userMobile(step));
@@ -737,8 +737,8 @@ export class KBService implements IGBKBService {
           });
         }
       } else if (file !== null && file.name.endsWith('.docx')) {
-        let path = GBUtil.getGBAIPath(instance.botId, `gbkb`);
-        const localName = path.join('work', path, 'articles', file.name);
+        let packagePath = GBUtil.getGBAIPath(instance.botId, `gbkb`);
+        const localName = path.join('work', packagePath, 'articles', file.name);
         let loader = new DocxLoader(localName);
         let doc = await loader.load();
         let content = doc[0].pageContent;
@@ -758,8 +758,8 @@ export class KBService implements IGBKBService {
 
         data.answers.push(answer);
       } else if (file !== null && file.name.endsWith('.toc.docx')) {
-        const path = GBUtil.getGBAIPath(instance.botId, `gbkb`);
-        const localName = path.join('work', path, 'articles', file.name);
+        const packagePath = GBUtil.getGBAIPath(instance.botId, `gbkb`);
+        const localName = path.join('work', packagePath, 'articles', file.name);
         const buffer = fs.readFileSync(localName, { encoding: null });
         var options = {
           buffer: buffer,
@@ -885,8 +885,8 @@ export class KBService implements IGBKBService {
       await GBLogEx.info(min, `Processing URL: ${url}.`);
       visited.add(url);
       
-      const path = GBUtil.getGBAIPath(min.botId, `gbot`);
-      const directoryPath = path.join(process.env.PWD, 'work', path, 'Website');
+      const packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
+      const directoryPath = path.join(process.env.PWD, 'work', packagePath, 'Website');
       const filename = await GBUtil.savePage(url, page, directoryPath);
 
       if (!filename) {
@@ -1023,8 +1023,8 @@ export class KBService implements IGBKBService {
 
       website.endsWith('/') ? website.substring(0, website.length - 1) : website;
 
-      let path = GBUtil.getGBAIPath(min.botId, `gbot`);
-      const directoryPath = path.join(process.env.PWD, 'work', path, 'Website');
+      let packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
+      const directoryPath = path.join(process.env.PWD, 'work', packagePath, 'Website');
       fs.rmSync(directoryPath, { recursive: true, force: true });
 
       let browser = await puppeteer.launch({ headless: false });
@@ -1032,7 +1032,7 @@ export class KBService implements IGBKBService {
 
       let logo = await this.getLogoByPage(min, page);
       if (logo) {
-        path = GBUtil.getGBAIPath(min.botId);
+        packagePath = GBUtil.getGBAIPath(min.botId);
 
         const baseUrl = page.url().split('/').slice(0, 3).join('/');
         logo = logo.startsWith('https') ? logo : urlJoin(baseUrl, logo);
@@ -1040,7 +1040,7 @@ export class KBService implements IGBKBService {
         try {
           const logoBinary = await page.goto(logo);
           const buffer = await logoBinary.buffer();
-          const logoFilename = path.basename(logo);
+          const logoFilename = packagePath.basename(logo);
           // TODO: sharp(buffer)
           //   .resize({
           //     width: 48,
@@ -1396,10 +1396,10 @@ export class KBService implements IGBKBService {
     if (channel === 'whatsapp') {
       await min.conversationalService.sendFile(min, step, null, answer.content, '');
     } else {
-      const path = GBUtil.getGBAIPath(min.botId, `gbkb`);
+      const packagePath = GBUtil.getGBAIPath(min.botId, `gbkb`);
       await conversationalService.sendEvent(min, step, 'play', {
         playerType: 'video',
-        data: urlJoin(path, 'videos', answer.content)
+        data: urlJoin(packagePath, 'videos', answer.content)
       });
     }
   }

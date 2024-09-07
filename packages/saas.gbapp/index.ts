@@ -112,7 +112,7 @@ export class Package implements IGBPackage {
 
 
 
-  public async getTasksMarkdown(path, file) {
+  public async getTasksMarkdown(packagePath, file) {
 
     let token =
       await this.adminService.acquireElevatedToken(this.instanceId);
@@ -126,7 +126,7 @@ export class Package implements IGBPackage {
     let libraryId = process.env.STORAGE_LIBRARY;
 
     let res = await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${path}:/children`)
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${packagePath}:/children`)
       .get();
 
     let document = res.value.filter(m => {

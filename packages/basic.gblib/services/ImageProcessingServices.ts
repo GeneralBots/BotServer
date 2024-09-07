@@ -75,9 +75,9 @@ export class ImageProcessingServices {
     });
 
     const botId = min.instance.botId;
-    const path = GBUtil.getGBAIPath(min.botId);
+    const packagePath = GBUtil.getGBAIPath(min.botId);
     // TODO: const img = await joinImages(paths);
-    const localName = path.join('work', path, 'cache', `img-mrg${GBAdminService.getRndReadableIdentifier()}.png`);
+    const localName = path.join('work', packagePath, 'cache', `img-mrg${GBAdminService.getRndReadableIdentifier()}.png`);
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 //    img.toFile(localName);
 

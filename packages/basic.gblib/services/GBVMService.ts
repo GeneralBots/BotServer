@@ -224,8 +224,8 @@ export class GBVMService extends GBService {
 
   public static async loadConnections(min) {
     // Loads storage custom connections.
-    const path = GBUtil.getGBAIPath(min.botId, null);
-    const filePath = path.join('work', path, 'connections.json');
+    const packagePath = GBUtil.getGBAIPath(min.botId, null);
+    const filePath = path.join('work', packagePath, 'connections.json');
     let connections = [];
     if (fs.existsSync(filePath)) {
       connections = JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -756,11 +756,11 @@ export class GBVMService extends GBService {
 
   private async getTextFromWord(folder: string, filename: string) {
     return new Promise<string>(async (resolve, reject) => {
-      const path = urlJoin(folder, filename);
-      textract.fromFileWithPath(path, { preserveLineBreaks: true }, (error, text) => {
+      const filePath = urlJoin(folder, filename);
+      textract.fromFileWithPath(filePath, { preserveLineBreaks: true }, (error, text) => {
         if (error) {
           if (error.message.startsWith('File not correctly recognized as zip file')) {
-            text = fs.readFileSync(path, 'utf8');
+            text = fs.readFileSync(filePath, 'utf8');
           } else {
             reject(error);
           }
@@ -1090,8 +1090,8 @@ export class GBVMService extends GBService {
     }
 
     const botId = min.botId;
-    const path = GBUtil.getGBAIPath(min.botId, `gbdialog`);
-    const gbdialogPath = urlJoin(process.cwd(), 'work', path);
+    const packagePath = GBUtil.getGBAIPath(min.botId, `gbdialog`);
+    const gbdialogPath = urlJoin(process.cwd(), 'work', packagePath);
     const scriptFilePath = urlJoin(gbdialogPath, `${text}.js`);
 
     let code = min.sandBoxMap[text];

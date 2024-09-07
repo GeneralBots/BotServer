@@ -1095,7 +1095,7 @@ export class GBMinService {
               ps: null,
               qs: null
             });
-            const path = GBUtil.getGBAIPath(min.botId);
+            const packagePath = GBUtil.getGBAIPath(min.botId);
             const folder = `work/${path}/cache`;
             const filename = `${GBAdminService.generateUuid()}.png`;
 
@@ -1271,8 +1271,8 @@ export class GBMinService {
   private static async downloadAttachmentAndWrite(attachment) {
     const url = attachment.contentUrl;
     const localFolder = 'work';
-    const path = GBUtil.getGBAIPath(this['min'].botId);
-    const localFileName = path.join(localFolder, path, 'uploads', attachment.name);
+    const packagePath = GBUtil.getGBAIPath(this['min'].botId);
+    const localFileName = path.join(localFolder, packagePath, 'uploads', attachment.name);
 
     let buffer;
     if (url.startsWith('data:')) {

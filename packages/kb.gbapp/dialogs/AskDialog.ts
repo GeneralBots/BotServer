@@ -246,8 +246,8 @@ export class AskDialog extends IGBDialog {
 
             for (const key in results.sources) {
               const source = results.sources[key];
-              const path = GBUtil.getGBAIPath(min.botId, `gbkb`);
-              let url = urlJoin('kb', path, 'docs', path.basename(source.file));
+              const packagePath = GBUtil.getGBAIPath(min.botId, `gbkb`);
+              let url = urlJoin('kb', packagePath, 'docs', path.basename(source.file));
               url = `${url}#page=${source.page}&toolbar=0&messages=0&statusbar=0&navpanes=0`;
               urls.push({ url: url });
             }

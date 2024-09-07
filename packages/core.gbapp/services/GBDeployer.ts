@@ -56,7 +56,6 @@ import { GBImporter } from './GBImporterService.js';
 import { TeamsService } from '../../teams.gblib/services/TeamsService.js';
 import MicrosoftGraph from '@microsoft/microsoft-graph-client';
 import { GBLogEx } from './GBLogEx.js';
-import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBUtil } from '../../../src/util.js';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
 import { OpenAIEmbeddings } from '@langchain/openai';
@@ -148,7 +147,7 @@ export class GBDeployer implements IGBDeployer {
     const gbappPackages: string[] = [];
     const generalPackages: string[] = [];
 
-    async function scanPackageDirectory(path) {
+    async function scanPackageDirectory(directory) {
       // Gets all directories.
 
       const isDirectory = source => fs.lstatSync(source).isDirectory();
@@ -156,7 +155,7 @@ export class GBDeployer implements IGBDeployer {
         fs.readdirSync(source)
           .map(name => path.join(source, name))
           .filter(isDirectory);
-      const dirs = getDirectories(path);
+      const dirs = getDirectories(directory);
       await CollectionUtil.asyncForEach(dirs, async element => {
         // For each folder, checks its extensions looking for valid packages.
 
@@ -503,7 +502,7 @@ export class GBDeployer implements IGBDeployer {
       }
 
       await CollectionUtil.asyncForEach(parts, async item => {
-        pathBase = path.join(pathBase, item);
+        pathBase = packagePath.join(pathBase, item);
         if (!fs.existsSync(pathBase)) {
           fs.mkdirSync(pathBase);
         }
@@ -511,9 +510,9 @@ export class GBDeployer implements IGBDeployer {
 
       // Retrieves all files in remote folder.
 
-      let path = GBUtil.getGBAIPath(min.botId);
-      path = urlJoin(path, remotePath);
-      let url = `${baseUrl}/drive/root:/${path}:/children`;
+      let packagePath = GBUtil.getGBAIPath(min.botId);
+      packagePath = urlJoin(packagePath, remotePath);
+      let url = `${baseUrl}/drive/root:/${packagePath}:/children`;
 
       GBLogEx.info(min, `Download URL: ${url}`);
 
@@ -527,7 +526,7 @@ export class GBDeployer implements IGBDeployer {
       // Download files or navigate to directory to recurse.
 
       await CollectionUtil.asyncForEach(documents, async item => {
-        const itemPath = path.join(localPath, remotePath, item.name);
+        const itemPath = packagePath.join(localPath, remotePath, item.name);
 
         if (item.folder) {
           if (!fs.existsSync(itemPath)) {
@@ -658,16 +657,16 @@ export class GBDeployer implements IGBDeployer {
               con['storagePort'] = min.core.getParam<string>(min.instance, `${connectionName} Port`, null);
               con['storagePassword'] = min.core.getParam<string>(min.instance, `${connectionName} Password`, null);
             } else if (file) {
-              const path = GBUtil.getGBAIPath(min.botId, 'gbdata');
-              con['storageFile'] = path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
+              const packagePath = GBUtil.getGBAIPath(min.botId, 'gbdata');
+              con['storageFile'] = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
             } else {
               GBLogEx.debug(min, `No storage information found for ${connectionName}, missing storage name or file.`);
             }
             connections.push(con);
           });
 
-          const path = GBUtil.getGBAIPath(min.botId, null);
-          const localFolder = path.join('work', path, 'connections.json');
+          const packagePath = GBUtil.getGBAIPath(min.botId, null);
+          const localFolder = path.join('work', packagePath, 'connections.json');
           fs.writeFileSync(localFolder, JSON.stringify(connections), { encoding: null });
 
           // Updates instance object.
@@ -726,8 +725,8 @@ export class GBDeployer implements IGBDeployer {
    * Removes the package local files from cache.
    */
   public async cleanupPackage(instance: IGBInstance, packageName: string) {
-    const path = GBUtil.getGBAIPath(instance.botId, null, packageName);
-    const localFolder = path.join('work', path);
+    const packagePath = GBUtil.getGBAIPath(instance.botId, null, packageName);
+    const localFolder = path.join('work', packagePath);
     rimraf.sync(localFolder);
   }
 

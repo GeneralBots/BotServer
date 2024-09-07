@@ -303,29 +303,29 @@ export class GBSSR {
     }
 
 
-    let path = GBUtil.getGBAIPath(botId, `gbui`);
+    let packagePath = GBUtil.getGBAIPath(botId, `gbui`);
 
     // Checks if the bot has an .gbui published or use default.gbui.
 
-    if (!fs.existsSync(path)) {
-      path = GBUtil.getGBAIPath(minBoot.botId, `gbui`);
+    if (!fs.existsSync(packagePath)) {
+      packagePath = GBUtil.getGBAIPath(minBoot.botId, `gbui`);
     }
     let parts = req.url.replace(`/${botId}`, '').split('?');
     let url = parts[0];
 
-    if (min && req.originalUrl && prerender && exclude && fs.existsSync(path)) {
+    if (min && req.originalUrl && prerender && exclude && fs.existsSync(packagePath)) {
 
       // Reads from static HTML when a bot is crawling.
 
-      path = path.join(process.env.PWD, 'work', path, 'index.html');
-      const html = fs.readFileSync(path, 'utf8');
+      packagePath = path.join(process.env.PWD, 'work', packagePath, 'index.html');
+      const html = fs.readFileSync(packagePath, 'utf8');
       res.status(200).send(html);
       return true;
     } else {
 
       // Servers default.gbui web application.
 
-      path = path.join(
+      packagePath = path.join(
         process.env.PWD,
         GBDeployer.deployFolder,
         GBMinService.uiPackage,
@@ -333,14 +333,14 @@ export class GBSSR {
         url === '/' || url === '' ? `index.html` : url
       );
       if (GBServer.globals.wwwroot && url === '/') {
-        path = GBServer.globals.wwwroot + "/index.html"; // TODO.
+        packagePath = GBServer.globals.wwwroot + "/index.html"; // TODO.
       }
       if (!min && !url.startsWith("/static") && GBServer.globals.wwwroot) {
-        path = path.join(GBServer.globals.wwwroot, url);
+        packagePath = packagePath.join(GBServer.globals.wwwroot, url);
       }
-      if (fs.existsSync(path)) {
+      if (fs.existsSync(packagePath)) {
         if (min) {
-          let html = fs.readFileSync(path, 'utf8');
+          let html = fs.readFileSync(packagePath, 'utf8');
           html = html.replace(/\{p\}/gi, min.botId);
           html = html.replace(/\{botId\}/gi, min.botId);
           html = html.replace(/\{theme\}/gi, min.instance.theme ? min.instance.theme :
@@ -348,7 +348,7 @@ export class GBSSR {
           html = html.replace(/\{title\}/gi, min.instance.title);
           res.send(html).end();
         } else {
-          res.sendFile(path);
+          res.sendFile(packagePath);
         }
         return true;
       } else {

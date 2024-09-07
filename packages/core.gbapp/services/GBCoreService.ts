@@ -680,9 +680,9 @@ ENDPOINT_UPDATE=true
 
       const maxLines = 512;
       const file = 'Config.xlsx';
-      const path = GBUtil.getGBAIPath(min.botId, `gbot`);
+      const packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
 
-      let document = await new SystemKeywords().internalGetDocument(client, baseUrl, path, file);
+      let document = await new SystemKeywords().internalGetDocument(client, baseUrl, packagePath, file);
 
       // Creates book session that will be discarded.
 
@@ -716,8 +716,8 @@ ENDPOINT_UPDATE=true
         )
         .patch(body);
     } else {
-      let path = GBUtil.getGBAIPath(min.botId, `gbot`);
-      const config = path.join(GBConfigService.get('STORAGE_LIBRARY'), path, 'config.csv');
+      let packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
+      const config = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, 'config.csv');
 
       const db = await csvdb(config, ['name', 'value'], ',');
       if (await db.get({ name: name })) {

@@ -763,14 +763,14 @@ export class WhatsappDirectLine extends GBService {
 
     // Set folder based on media type
     let folder = mediaType === 'video' ? 'videos' : 'images';
-    let path = GBUtil.getGBAIPath(min.botId, `gbkb`);
-    path = path.join(process.env.PWD, 'work', path, folder, mediaFile);
+    let packagePath = GBUtil.getGBAIPath(min.botId, `gbkb`);
+    packagePath = path.join(process.env.PWD, 'work', packagePath, folder, mediaFile);
 
     text = text.substring(mediaFile.length + 1).trim();
     text = text.replace(/\n/g, '\\n');
 
     // Upload the media file based on media type
-    const handleMedia = await min.whatsAppDirectLine.uploadLargeFile(min, path);
+    const handleMedia = await min.whatsAppDirectLine.uploadLargeFile(min, packagePath);
 
     let data: any = {
       name: template,

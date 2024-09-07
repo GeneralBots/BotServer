@@ -139,7 +139,7 @@ export class GBOService {
         done(null, token);
       }
     });
-    const path = `/`;
+    const packagePath = `/`;
     let res = await client.api(
       `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateLibraryId}/drive/root/children`)
       .get();

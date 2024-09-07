@@ -1035,7 +1035,7 @@ export class DialogKeywords {
 
         let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
         const botId = min.instance.botId;
-        const path = GBUtil.getGBAIPath(botId);
+        const packagePath = GBUtil.getGBAIPath(botId);
         let url = `${baseUrl}/drive/root:/${path}:/children`;
 
         GBLogEx.info(min, `Loading HEAR AS .xlsx options from Sheet: ${url}`);

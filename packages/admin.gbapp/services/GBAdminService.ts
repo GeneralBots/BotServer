@@ -152,8 +152,8 @@ export class GBAdminService implements IGBAdminService {
     const packageName = text.split(' ')[1];
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
-    const path = GBUtil.getGBAIPath(min.botId, null, packageName);
-    const localFolder = path.join('work', path);
+    const packagePath = GBUtil.getGBAIPath(min.botId, null, packageName);
+    const localFolder = path.join('work', packagePath);
     await deployer.undeployPackageFromLocalPath(min.instance, localFolder);
   }
 

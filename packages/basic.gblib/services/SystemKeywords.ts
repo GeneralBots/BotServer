@@ -33,7 +33,7 @@ import { setFlagsFromString } from 'v8';
 import { runInNewContext } from 'vm';
 import { IgApiClient } from 'instagram-private-api';
 import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import path, { resolve } from 'path';
 import { GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -48,7 +48,7 @@ import urlJoin from 'url-join';
 import Excel from 'exceljs';
 import { BufferWindowMemory } from 'langchain/memory';
 import csvdb from 'csv-database';
-import path from 'path';
+import packagePath from 'path';
 import ComputerVisionClient from '@azure/cognitiveservices-computervision';
 import ApiKeyCredentials from '@azure/ms-rest-js';
 import alasql from 'alasql';
@@ -570,8 +570,8 @@ export class SystemKeywords {
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
     const botId = min.instance.botId;
-    const path = GBUtil.getGBAIPath(botId, 'gbdata');
-    let document = await this.internalGetDocument(client, baseUrl, path, file);
+    const packagePath = GBUtil.getGBAIPath(botId, 'gbdata');
+    let document = await this.internalGetDocument(client, baseUrl, packagePath, file);
     let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
     let body = { values: [[]] };
 
@@ -655,7 +655,7 @@ export class SystemKeywords {
     GBLogEx.info(min, `Saving '${file}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    const path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
+    const packagePath = GBUtil.getGBAIPath(min.botId, `gbdrive`);
 
     // Checks if it is a GB FILE object.
 
@@ -665,7 +665,7 @@ export class SystemKeywords {
 
     try {
       data = GBServer.globals.files[data].data; // TODO
-      await client.api(`${baseUrl}/drive/root:/${path}/${file}:/content`).put(data);
+      await client.api(`${baseUrl}/drive/root:/${packagePath}/${file}:/content`).put(data);
     } catch (error) {
       if (error.code === 'itemNotFound') {
         GBLogEx.info(min, `BASIC source file not found: ${file}.`);
@@ -874,12 +874,12 @@ export class SystemKeywords {
     GBLogEx.info(min, `Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    const path = GBUtil.getGBAIPath(botId, 'gbdata');
+    const packagePath = GBUtil.getGBAIPath(botId, 'gbdata');
 
     let sheets;
     let document;
     try {
-      document = await this.internalGetDocument(client, baseUrl, path, file);
+      document = await this.internalGetDocument(client, baseUrl, packagePath, file);
       sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
     } catch (e) {
       if (e.cause === 404) {
@@ -887,11 +887,11 @@ export class SystemKeywords {
 
         const blank = path.join(process.env.PWD, 'blank.xlsx');
         const data = fs.readFileSync(blank);
-        await client.api(`${baseUrl}/drive/root:/${path}/${file}:/content`).put(data);
+        await client.api(`${baseUrl}/drive/root:/${packagePath}/${file}:/content`).put(data);
 
         // Tries to open again.
 
-        document = await this.internalGetDocument(client, baseUrl, path, file);
+        document = await this.internalGetDocument(client, baseUrl, packagePath, file);
         sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
       } else {
         throw e;
@@ -993,9 +993,9 @@ export class SystemKeywords {
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const botId = min.instance.botId;
       ('');
-      const path = GBUtil.getGBAIPath(botId, 'gbdata');
+      const packagePath = GBUtil.getGBAIPath(botId, 'gbdata');
 
-      let document = await this.internalGetDocument(client, baseUrl, path, file);
+      let document = await this.internalGetDocument(client, baseUrl, packagePath, file);
 
       // Creates workbook session that will be discarded.
 
@@ -1091,7 +1091,7 @@ export class SystemKeywords {
     args.shift();
 
     const botId = min.instance.botId;
-    const path = GBUtil.getGBAIPath(botId, 'gbdata');
+    const packagePath = GBUtil.getGBAIPath(botId, 'gbdata');
 
     // MAX LINES property.
 
@@ -1183,7 +1183,7 @@ export class SystemKeywords {
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
       let document;
-      document = await this.internalGetDocument(client, baseUrl, path, file);
+      document = await this.internalGetDocument(client, baseUrl, packagePath, file);
 
       // Creates workbook session that will be discarded.
 
@@ -1519,8 +1519,8 @@ export class SystemKeywords {
     if (user) {
       ChatServices.userSystemPrompt[user.userSystemId] = text;
 
-      const path = GBUtil.getGBAIPath(min.botId);
-      const systemPromptFile = urlJoin(process.cwd(), 'work', path, 'users', user.userSystemId, 'systemPrompt.txt');
+      const packagePath = GBUtil.getGBAIPath(min.botId);
+      const systemPromptFile = urlJoin(process.cwd(), 'work', packagePath, 'users', user.userSystemId, 'systemPrompt.txt');
       fs.writeFileSync(systemPromptFile, text);
     }
   }
@@ -1535,7 +1535,7 @@ export class SystemKeywords {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
-    let path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
+    let packagePath = GBUtil.getGBAIPath(min.botId, `gbdrive`);
 
     // Extracts each part of path to call create folder to each
     // one of them.
@@ -1556,18 +1556,18 @@ export class SystemKeywords {
       };
 
       try {
-        lastFolder = await client.api(`${baseUrl}/drive/root:/${path}:/children`).post(body);
+        lastFolder = await client.api(`${baseUrl}/drive/root:/${packagePath}:/children`).post(body);
       } catch (error) {
         if (error.code !== 'nameAlreadyExists') {
           throw error;
         } else {
-          lastFolder = await client.api(`${baseUrl}/drive/root:/${urlJoin(path, item)}`).get();
+          lastFolder = await client.api(`${baseUrl}/drive/root:/${urlJoin(packagePath, item)}`).get();
         }
       }
 
       // Increments path to the next child be created.
 
-      path = urlJoin(path, item);
+      packagePath = urlJoin(packagePath, item);
     });
     return lastFolder;
   }
@@ -1584,8 +1584,8 @@ export class SystemKeywords {
   public async shareFolder({ pid, folder, email, message }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-    const path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
-    const root = urlJoin(path, folder);
+    const packagePath = GBUtil.getGBAIPath(min.botId, `gbdrive`);
+    const root = urlJoin(packagePath, folder);
 
     const src = await client.api(`${baseUrl}/drive/root:/${root}`).get();
 
@@ -1602,11 +1602,11 @@ export class SystemKeywords {
     await client.api(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/invite`).post(body);
   }
 
-  public async internalCreateDocument(min, path, content) {
-    GBLogEx.info(min, `CREATE DOCUMENT '${path}...'`);
+  public async internalCreateDocument(min, filePath, content) {
+    GBLogEx.info(min, `CREATE DOCUMENT '${filePath}...'`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const gbaiName = GBUtil.getGBAIPath(min.botId);
-    const tmpDocx = urlJoin(gbaiName, path);
+    const tmpDocx = urlJoin(gbaiName, filePath);
 
     // Templates a blank {content} tag inside the blank.docx.
 
@@ -1624,9 +1624,9 @@ export class SystemKeywords {
     await client.api(`${baseUrl}/drive/root:/${tmpDocx}:/content`).put(buf);
   }
 
-  public async createDocument({ pid, path, content }) {
+  public async createDocument({ pid, packagePath, content }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-    this.internalCreateDocument(min, path, content);
+    this.internalCreateDocument(min, packagePath, content);
   }
 
   /**
@@ -1710,10 +1710,10 @@ export class SystemKeywords {
     dest = dest.replace(/\\/gi, '/');
 
     // Determines full path at source and destination.
-    const path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
-    const root = path;
+    const packagePath = GBUtil.getGBAIPath(min.botId, `gbdrive`);
+    const root = packagePath;
     const srcPath = urlJoin(root, src);
-    const dstPath = urlJoin(path, dest);
+    const dstPath = urlJoin(packagePath, dest);
 
     // Checks if the destination contains subfolders that
     // need to be created.
@@ -2239,12 +2239,12 @@ export class SystemKeywords {
       }
     } else {
       const botId = min.instance.botId;
-      const path = GBUtil.getGBAIPath(botId, 'gbdata');
+      const packagePath = GBUtil.getGBAIPath(botId, 'gbdata');
 
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
       let document;
-      document = await this.internalGetDocument(client, baseUrl, path, file);
+      document = await this.internalGetDocument(client, baseUrl, packagePath, file);
 
       // Creates workbook session that will be discarded.
 
@@ -2586,7 +2586,7 @@ export class SystemKeywords {
     GBLogEx.info(min, `Auto saving '${file.filename}' (SAVE file).`);
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
 
-    const path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
+    const packagePath = GBUtil.getGBAIPath(min.botId, `gbdrive`);
     const fileName = file.url ? file.url : file.name;
     const contentType = mime.lookup(fileName);
     const ext = path.extname(fileName).substring(1);
@@ -2599,7 +2599,7 @@ export class SystemKeywords {
 
     const today = [day, month, year].join('-');
     const result = await client
-      .api(`${baseUrl}/drive/root:/${path}/${today}/${kind.category}/${fileName}:/content`)
+      .api(`${baseUrl}/drive/root:/${packagePath}/${today}/${kind.category}/${fileName}:/content`)
       .put(file.data);
 
     return { contentType, ext, kind, category: kind['category'] };
@@ -2676,9 +2676,9 @@ export class SystemKeywords {
 
     // Retrieves all files in remote folder.
 
-    let path = GBUtil.getGBAIPath(min.botId);
-    path = urlJoin(path, remotePath);
-    let url = `${baseUrl}/drive/root:/${path}:/children`;
+    let packagePath = GBUtil.getGBAIPath(min.botId);
+    packagePath = urlJoin(packagePath, remotePath);
+    let url = `${baseUrl}/drive/root:/${packagePath}:/children`;
 
     const res = await client.api(url).get();
     const documents = res.value;
@@ -2725,16 +2725,16 @@ export class SystemKeywords {
     if (GBConfigService.get('STORAGE_NAME')) {
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const gbaiName = GBUtil.getGBAIPath(min.botId);
-      let path = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
-      let template = await this.internalGetDocument(client, baseUrl, path, file);
+      let packagePath = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
+      let template = await this.internalGetDocument(client, baseUrl, packagePath, file);
       let url = template['@microsoft.graph.downloadUrl'];
       const res = await fetch(url);
       let buf: any = Buffer.from(await res.arrayBuffer());
       data = new Uint8Array(buf);
     }
     else {
-      let path = GBUtil.getGBAIPath(min.botId, `gbdrive`);
-      let filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), path, file);
+      let packagePath = GBUtil.getGBAIPath(min.botId, `gbdrive`);
+      let filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
       data = fs.readFileSync(filePath, 'utf8');
       data = new Uint8Array(Buffer.from(data, 'utf8'));
     }
