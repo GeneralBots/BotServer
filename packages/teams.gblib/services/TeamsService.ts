@@ -29,7 +29,7 @@
 \*****************************************************************************/
 
 import { GBService } from 'botlib';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import AdmZip from 'adm-zip';
 
 /**
@@ -45,7 +45,7 @@ export class TeamsService extends GBService {
   }
 
   public async getManifest(marketplaceId, botName, botDescription, id, packageName, yourName) {
-    let content = fs.readFileSync('teams-manifest.json', 'utf8');
+    let content = await fs.readFile('teams-manifest.json', 'utf8');
 
     content = content.replace(/\@\@marketplaceId/gi, marketplaceId);
     content = content.replace(/\@\@botName/gi, botName);

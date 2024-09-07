@@ -2,12 +2,12 @@
 
 process.stdout.write(`General Bots. BotServer@${pjson.version}, botlib@${pjson.dependencies.botlib}, node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
 
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import os from 'node:os';
 import path from 'path';
 import { exec } from 'child_process';
 import pjson from './package.json' assert { type: 'json' };
-
+import {GBUtil} from './dist/src/util.js'
 
 // Displays version of Node JS being used at runtime and others attributes.
 
@@ -15,42 +15,42 @@ console.log(`\nLoading virtual machine source code files...`);
 
 var __dirname = process.env.PWD || process.cwd();
 try {
-  var run = () => {
+  var run = async () => {
 
-    import('./dist/src/app.js').then((gb)=> {
-      gb.GBServer.run()
+    import('./dist/src/app.js').then(async (gb)=> {
+      await gb.GBServer.run()
     });
   };
-  var processDist = () => {
-    if (!fs.existsSync('dist')) {
+  var processDist = async () => {
+    if (!await GBUtil.exists('dist')) {
       console.log(`\n`);
       console.log(`Generall Bots: Compiling...`);
-      exec(path.join(__dirname, 'node_modules/.bin/tsc'), (err, stdout, stderr) => {
+      exec(path.join(__dirname, 'node_modules/.bin/tsc'), async (err, stdout, stderr) => {
         if (err) {
           console.error(err);
           return;
         }
-        run();
+        await run();
       });
     } else {
-      run();
+      await run();
     }
   };
 
   // Installing modules if it has not been done yet.
 
-  if (!fs.existsSync('node_modules')) {
+  if (!await GBUtil.exists('node_modules')) {
     console.log(`\n`);
     console.log(`Generall Bots: Installing modules for the first time, please wait...`);
-    exec('npm install', (err, stdout, stderr) => {
+    exec('npm install', async (err, stdout, stderr) => {
       if (err) {
         console.error(err);
         return;
       }
-      processDist();
+      await processDist();
     });
   } else {
-    processDist();
+    await processDist();
   }
 } catch (e) {
   console.log(e);

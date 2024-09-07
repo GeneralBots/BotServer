@@ -49,7 +49,7 @@ import msRestAzure from 'ms-rest-azure';
 import path from 'path';
 import { caseSensitive_Numbs_SpecialCharacters_PW, lowercase_PW } from 'super-strong-password-generator';
 import crypto from 'crypto';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import { GBServer } from '../../../src/app.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
@@ -75,9 +75,9 @@ export class GBAdminService implements IGBAdminService {
     return crypto.randomUUID();
   }
 
-  public static getNodeVersion() {
+  public static async getNodeVersion() {
     const packageJson = urlJoin(process.cwd(), 'package.json');
-    const pkg = JSON.parse(fs.readFileSync(packageJson, 'utf8'));
+    const pkg = JSON.parse(await fs.readFile(packageJson, 'utf8'));
     return pkg.engines.node.replace('=', '');
   }
 

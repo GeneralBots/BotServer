@@ -29,7 +29,7 @@
 \*****************************************************************************/
 
 'use strict';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import { HttpMethods, HttpOperationResponse, ServiceClient, WebResource } from '@azure/ms-rest-js';
 import { GBLog } from 'botlib';
 import urlJoin from 'url-join';
@@ -420,7 +420,7 @@ export class JunoSubscription {
     const httpClient = new ServiceClient();
     const url = urlJoin(JunoSubscription.getResourceUrl(), `/documents/${id}/files`);
     var form = new FormData();
-    form.append('file', fs.readFileSync(file));
+    form.append('file', await fs.readFile(file));
 
     const req = JunoSubscription.createRequestObject(
       token,

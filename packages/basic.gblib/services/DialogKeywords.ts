@@ -42,7 +42,7 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { Messages } from '../strings.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import libphonenumber from 'google-libphonenumber';
 import * as df from 'date-diff';
 import tesseract from 'node-tesseract-ocr';
@@ -1500,7 +1500,7 @@ export class DialogKeywords {
         'cache',
         `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
       );
-      fs.writeFileSync(localName1, buf, { encoding: null });
+      fs.writeFile(localName1, buf, { encoding: null });
 
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName1));
     }
@@ -1510,10 +1510,10 @@ export class DialogKeywords {
 
       // Prepare a cache to be referenced by Bot Framework.
 
-      const buf = fs.readFileSync(filename);
+      const buf = await fs.readFile(filename);
       const gbaiName = GBUtil.getGBAIPath(min.botId);
       const localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
-      fs.writeFileSync(localName, buf, { encoding: null });
+      fs.writeFile(localName, buf, { encoding: null });
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
     }
 
@@ -1546,7 +1546,7 @@ export class DialogKeywords {
 
     const gbaiName = GBUtil.getGBAIPath(min.botId);
     const localName = path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-    fs.writeFileSync(localName, buf, { encoding: null });
+    fs.writeFile(localName, buf, { encoding: null });
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
     return { data: data, localName: localName, url: url };

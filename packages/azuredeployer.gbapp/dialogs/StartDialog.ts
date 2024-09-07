@@ -35,12 +35,13 @@
 'use strict';
 
 import { GBLog, IGBInstallationDeployer, IGBInstance } from 'botlib';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import { GBAdminService } from '../../../packages/admin.gbapp/services/GBAdminService.js';
 import { GBConfigService } from '../../../packages/core.gbapp/services/GBConfigService.js';
 import scanf from 'scanf';
 import { AzureDeployerService } from '../services/AzureDeployerService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * Handles command-line dialog for getting info for Boot Bot.
@@ -49,7 +50,7 @@ export class StartDialog {
   public static async createBaseInstance (deployer, freeTier) {
     // No .env so asks for cloud credentials to start a new farm.
 
-    if (!fs.existsSync(`.env`)) {
+    if (!await GBUtil.exists(`.env`)) {
       process.stdout.write(
         'A empty enviroment is detected. To start automatic deploy, please enter some information:\n'
       );

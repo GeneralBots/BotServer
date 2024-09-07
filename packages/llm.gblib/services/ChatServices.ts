@@ -51,7 +51,7 @@ import { SqlDatabaseChain } from 'langchain/chains/sql_db';
 import { SqlDatabase } from 'langchain/sql_db';
 import { DataSource } from 'typeorm';
 import { GBMinInstance } from 'botlib';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import { jsonSchemaToZod } from 'json-schema-to-zod';
 import { BufferWindowMemory } from 'langchain/memory';
 import path from 'path';
@@ -188,7 +188,7 @@ export class ChatServices {
       const gbaiName = GBUtil.getGBAIPath(min.botId, null);
       const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
-      fs.writeFileSync(localName, buffer, { encoding: null });
+      fs.writeFile(localName, buffer, { encoding: null });
       return { localName: localName, url: url, data: buffer };
     }
   }
@@ -234,7 +234,7 @@ export class ChatServices {
   }
 
   private static async findPageForText(pdfPath, searchText) {
-    const data = new Uint8Array(fs.readFileSync(pdfPath));
+    const data = new Uint8Array(await fs.readFile(pdfPath));
     const pdf = await getDocument({ data }).promise;
 
     searchText = searchText.replace(/\s/g, '');
@@ -712,8 +712,8 @@ export class ChatServices {
       const packagePath = GBUtil.getGBAIPath(min.botId, 'gbdialog', null);
       const jsonFile = path.join('work', packagePath, `${script}.json`);
 
-      if (fs.existsSync(jsonFile) && script.toLowerCase() !== 'start.vbs') {
-        const funcJSON = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
+      if (await GBUtil.exists(jsonFile) && script.toLowerCase() !== 'start.vbs') {
+        const funcJSON = JSON.parse(await fs.readFile(jsonFile, 'utf8'));
         const funcObj = funcJSON?.function;
 
         if (funcObj) {

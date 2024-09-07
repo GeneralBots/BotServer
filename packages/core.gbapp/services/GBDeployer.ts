@@ -39,7 +39,7 @@ import express from 'express';
 import child_process from 'child_process';
 import { rimraf } from 'rimraf';
 import urlJoin from 'url-join';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
 import { CollectionUtil } from 'pragmatismo-io-framework';
@@ -150,9 +150,9 @@ export class GBDeployer implements IGBDeployer {
     async function scanPackageDirectory(directory) {
       // Gets all directories.
 
-      const isDirectory = source => fs.lstatSync(source).isDirectory();
-      const getDirectories = source =>
-        fs.readdirSync(source)
+      const isDirectory = async source => (await fs.lstat(source)).isDirectory();
+      const getDirectories = async source =>
+        (await fs.readdir(source))
           .map(name => path.join(source, name))
           .filter(isDirectory);
       const dirs = getDirectories(directory);
@@ -440,7 +440,7 @@ export class GBDeployer implements IGBDeployer {
 
     const workbook = new Excel.Workbook();
 
-    if (fs.existsSync(xls)) {
+    if (await GBUtil.exists(xls)) {
       await workbook.xlsx.readFile(xls);
       let worksheet: any;
       for (let t = 0; t < workbook.worksheets.length; t++) {
@@ -455,7 +455,7 @@ export class GBDeployer implements IGBDeployer {
       for (let index = 0; index < 6; index++) {
         rows.shift();
       }
-    } else if (fs.existsSync(csv)) {
+    } else if (await GBUtil.exists(csv)) {
       await workbook.csv.readFile(csv);
       let worksheet = workbook.worksheets[0]; // Assuming the CSV file has only one sheet
       rows = worksheet.getSheetValues();
@@ -497,14 +497,14 @@ export class GBDeployer implements IGBDeployer {
       // Creates each subfolder.
 
       let pathBase = localPath;
-      if (!fs.existsSync(pathBase)) {
-        fs.mkdirSync(pathBase);
+      if (!await GBUtil.exists(pathBase)) {
+        fs.mkdir(pathBase);
       }
 
       await CollectionUtil.asyncForEach(parts, async item => {
         pathBase = packagePath.join(pathBase, item);
-        if (!fs.existsSync(pathBase)) {
-          fs.mkdirSync(pathBase);
+        if (!await GBUtil.exists(pathBase)) {
+          fs.mkdir(pathBase);
         }
       });
 
@@ -529,16 +529,16 @@ export class GBDeployer implements IGBDeployer {
         const itemPath = packagePath.join(localPath, remotePath, item.name);
 
         if (item.folder) {
-          if (!fs.existsSync(itemPath)) {
-            fs.mkdirSync(itemPath);
+          if (!await GBUtil.exists(itemPath)) {
+            fs.mkdir(itemPath);
           }
           const nextFolder = urlJoin(remotePath, item.name);
           await this.downloadFolder(min, localPath, nextFolder);
         } else {
           let download = true;
 
-          if (fs.existsSync(itemPath)) {
-            const dt = fs.statSync(itemPath);
+          if (await GBUtil.exists(itemPath)) {
+            const dt =await  fs.stat(itemPath);
             if (new Date(dt.mtime) >= new Date(item.lastModifiedDateTime)) {
               download = false;
             }
@@ -549,8 +549,8 @@ export class GBDeployer implements IGBDeployer {
             const url = item['@microsoft.graph.downloadUrl'];
 
             const response = await fetch(url);
-            fs.writeFileSync(itemPath, Buffer.from(await response.arrayBuffer()), { encoding: null });
-            fs.utimesSync(itemPath, new Date(), new Date(item.lastModifiedDateTime));
+            fs.writeFile(itemPath, Buffer.from(await response.arrayBuffer()), { encoding: null });
+            fs.utimes(itemPath, new Date(), new Date(item.lastModifiedDateTime));
           } else {
             GBLogEx.info(min, `Local is up to date: ${itemPath}...`);
           }
@@ -667,7 +667,7 @@ export class GBDeployer implements IGBDeployer {
 
           const packagePath = GBUtil.getGBAIPath(min.botId, null);
           const localFolder = path.join('work', packagePath, 'connections.json');
-          fs.writeFileSync(localFolder, JSON.stringify(connections), { encoding: null });
+          fs.writeFile(localFolder, JSON.stringify(connections), { encoding: null });
 
           // Updates instance object.
 
@@ -759,7 +759,7 @@ export class GBDeployer implements IGBDeployer {
 
     switch (packageType) {
       case '.gbot':
-        const packageObject = JSON.parse(fs.readFileSync(urlJoin(localPath, 'package.json'), 'utf8'));
+        const packageObject = JSON.parse(await fs.readFile(urlJoin(localPath, 'package.json'), 'utf8'));
         await this.undeployBot(packageObject.botId, packageName);
         break;
 
@@ -870,7 +870,7 @@ export class GBDeployer implements IGBDeployer {
    * Prepares the React application inside default.gbui folder and
    * makes this web application available as default web front-end.
    */
-  public setupDefaultGBUI() {
+  public async setupDefaultGBUI() {
     // Setups paths.
 
     const root = 'packages/default.gbui';
@@ -878,10 +878,10 @@ export class GBDeployer implements IGBDeployer {
 
     // Checks if .gbapp compiliation is enabled.
 
-    if (!fs.existsSync(`${root}/build`) && process.env.DISABLE_WEB !== 'true') {
+    if (!(await GBUtil.exists(`${root}/build`)) && process.env.DISABLE_WEB !== 'true') {
       // Write a .env required to fix some bungs in create-react-app tool.
 
-      fs.writeFileSync(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
+      fs.writeFile(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
 
       // Install modules and compiles the web app.
 
@@ -956,7 +956,7 @@ export class GBDeployer implements IGBDeployer {
     GBLogEx.info(0, `Deploying General Bots Application (.gbapp) or Library (.gblib): ${path.basename(gbappPath)}...`);
     let folder = path.join(gbappPath, 'node_modules');
     if (process.env.GBAPP_DISABLE_COMPILE !== 'true') {
-      if (!fs.existsSync(folder)) {
+      if (!await GBUtil.exists(folder)) {
         GBLogEx.info(0, `Installing modules for ${gbappPath}...`);
         child_process.execSync('npm install', { cwd: gbappPath });
       }

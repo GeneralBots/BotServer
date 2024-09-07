@@ -35,10 +35,13 @@
 'use strict';
 import * as YAML from 'yaml';
 import SwaggerClient from 'swagger-client';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
 import path from 'path';
-import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { VerbosityLevel, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+VerbosityLevel.ERRORS=0;
+VerbosityLevel.WARNINGS=0;
+VerbosityLevel.INFOS=0;
 import { Page } from 'puppeteer';
 import urljoin from 'url-join';
 import html2md from 'html-to-md';
@@ -74,7 +77,7 @@ export class GBUtil {
 
   public static async getDirectLineClient(min) {
     let config = {
-      spec: JSON.parse(fs.readFileSync('directline-3.0.json', 'utf8')),
+      spec: JSON.parse(await fs.readFile('directline-3.0.json', 'utf8')),
       requestInterceptor: req => {
         req.headers['Authorization'] = `Bearer ${min.instance.webchatKey}`;
       }
@@ -130,21 +133,93 @@ export class GBUtil {
     }
   }
 
-  public static copyIfNewerRecursive(src, dest) {
-    if (!fs.existsSync(src)) {
+  public static async exists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath);
+      return true; // File exists
+    } catch (error) {
+      return false; // File does not exist
+    }
+  }
+
+ public static async savePage(url: string, page: Page, directoryPath: string): Promise<string | null> {
+    try {
+      // Check if the directory exists, create it if not
+      const directoryExists = await this.fileExists(directoryPath);
+      if (!directoryExists) {
+        await fs.mkdir(directoryPath, { recursive: true }); // Create directory if it doesn't exist
+      }
+  
+      // Check if the URL is for a downloadable file (e.g., .pdf)
+      if (url.endsWith('.pdf')) {
+        const response = await fetch(url);
+  
+        if (!response.ok) {
+          throw new Error('Failed to download the file');
+        }
+  
+        const buffer = await response.arrayBuffer(); // Convert response to array buffer
+        const fileName = path.basename(url); // Extract file name from URL
+        const filePath = path.join(directoryPath, fileName); // Create file path
+  
+        const data = new Uint8Array(buffer);
+        const text = await GBUtil.getPdfText(data);
+
+        // Write the buffer to the file asynchronously
+        await fs.writeFile(filePath, text);
+  
+        return filePath; // Return the saved file path
+      } else {
+        // Use Puppeteer for non-downloadable pages
+
+        const parsedUrl = new URL(url);
+
+        // Get the last part of the URL path or default to 'index' if empty
+        const pathParts = parsedUrl.pathname.split('/').filter(Boolean); // Remove empty parts
+        const lastPath = pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'index';
+        const flatLastPath = lastPath.replace(/\W+/g, '-'); // Flatten the last part of the path
+        
+        const fileName = `${flatLastPath}.html`;
+        const filePath = path.join(directoryPath, fileName);
+
+        const htmlContent = await page.content();
+  
+        // Write HTML content asynchronously
+        await fs.writeFile(filePath, htmlContent);
+  
+        return filePath;
+      }
+    } catch (error) {
+      console.error('Error saving page:', error);
+      return null;
+    }
+  }
+  
+  public static async  fileExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+  
+
+  public static async copyIfNewerRecursive(src, dest) {
+    if (!await GBUtil.exists(src)) {
       console.error(`Source path "${src}" does not exist.`);
       return;
     }
 
     // Check if the source is a directory
-    if (fs.statSync(src).isDirectory()) {
+    if ((await  fs.stat(src)).isDirectory()) {
       // Create the destination directory if it doesn't exist
-      if (!fs.existsSync(dest)) {
-        fs.mkdirSync(dest, { recursive: true });
+      if (!await GBUtil.exists(dest)) {
+        fs.mkdir(dest, { recursive: true });
       }
 
       // Read all files and directories in the source directory
-      const entries = fs.readdirSync(src);
+      const entries =await  fs.readdir(src);
 
       for (let entry of entries) {
         const srcEntry = path.join(src, entry);
@@ -155,17 +230,17 @@ export class GBUtil {
       }
     } else {
       // Source is a file, check if we need to copy it
-      if (fs.existsSync(dest)) {
-        const srcStat = fs.statSync(src);
-        const destStat = fs.statSync(dest);
+      if (await GBUtil.exists(dest)) {
+        const srcStat =await  fs.stat(src);
+        const destStat =await  fs.stat(dest);
 
         // Copy only if the source file is newer than the destination file
         if (srcStat.mtime > destStat.mtime) {
-          fs.cpSync(src, dest, { force: true });
+          fs.cp(src, dest, { force: true });
         }
       } else {
         // Destination file doesn't exist, so copy it
-        fs.cpSync(src, dest, { force: true });
+        fs.cp(src, dest, { force: true });
       }
     }
   }
@@ -179,8 +254,9 @@ export class GBUtil {
     return false;
   }
 
-  public static async getPdfText(data: Buffer): Promise<string> {
-    const pdf = await getDocument({ data }).promise;
+  public static async getPdfText(data): Promise<string> {
+    
+    const pdf = await getDocument({data}).promise;
     let pages = [];
 
     for (let i = 1; i <= pdf.numPages; i++) {
@@ -188,12 +264,12 @@ export class GBUtil {
       const textContent = await page.getTextContent();
       const text = textContent.items
         .map(item => item['str'])
-        .join('')
-        .replace(/\s/g, ''); // Optionally remove extra spaces
+        .join(' ')
+        .replace(/\s+/g, ' '); // Optionally remove extra spaces
       pages.push(text);
     }
 
-    return pages.join('');
+    return pages.join(' ');
   }
 
   static getGBAIPath(botId, packageType = null, packageName = null) {
@@ -211,58 +287,5 @@ export class GBUtil {
     }
   }
 
-  public static async savePage(url: string, page: Page, directoryPath: string): Promise<string | null> {
-    
-    let response = await page.goto(url);
 
-    if (!response) {
-      response = await page.waitForResponse(() => true);
-    }
-    
-    if (response && response.headers && response.status() === 200) {
-      const contentType = response.headers()['content-type'];
-
-      if (contentType) {
-        const urlObj = new URL(url);
-        const urlPath = urlObj.pathname.endsWith('/') ? urlObj.pathname.slice(0, -1) : urlObj.pathname;
-        let filename = urlPath.split('/').pop() || 'index';
-
-        fs.mkdirSync(directoryPath, { recursive: true });
-
-        const extensionMap = {
-          'text/html': 'html',
-          'application/pdf': 'pdf',
-          'text/plain': 'txt',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
-          'application/json': 'json',
-          'application/xml': 'xml',
-          'text/csv': 'csv',
-          'application/x-httpd-php': 'php',
-          'application/javascript': 'js',
-          'text/javascript': 'js',
-          'text/css': 'css',
-          'text/xml': 'xml'
-        };
-
-        const extension = Object.keys(extensionMap).find(key => contentType.includes(key)) || 'bin';
-        filename = `${filename}.${extension}`;
-        const filePath = path.join(directoryPath, filename);
-
-        let fileContent;
-        if (extension === 'html') {
-          fileContent = html2md(await response.text());
-        } else if (extension === 'pdf') {
-          const pdfBuffer = await response.buffer();
-          fileContent = await GBUtil.getPdfText(pdfBuffer); // Extract text from the PDF
-        } else {
-          fileContent = await response.buffer();
-        }
-
-        fs.writeFileSync(filePath, fileContent);
-
-        return filePath;
-      }
-    }
-    return null;
-  }
 }

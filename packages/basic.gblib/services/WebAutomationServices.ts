@@ -31,7 +31,7 @@
 'use strict';
 
 import urlJoin from 'url-join';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import path from 'path';
 import url from 'url';
 import { GBLog } from 'botlib';
@@ -426,7 +426,7 @@ export class WebAutomationServices {
 
     let result: Buffer;
     if (local) {
-      result = fs.readFileSync(local);
+      result = await fs.readFile(local);
     } else {
       const res = await fetch(options.uri, options);
       result = Buffer.from(await res.arrayBuffer());

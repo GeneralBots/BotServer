@@ -936,7 +936,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         serverFarmId: farmId,
 
         siteConfig: {
-          nodeVersion: GBAdminService.getNodeVersion(),
+          nodeVersion: await GBAdminService.getNodeVersion(),
           detailedErrorLoggingEnabled: true,
           requestTracingEnabled: true
         }
@@ -985,7 +985,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       siteConfig: {
         appSettings: [
           { name: 'WEBSITES_CONTAINER_START_TIME_LIMIT', value: `${WebSiteResponseTimeout}` },
-          { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: GBAdminService.getNodeVersion() },
+          { name: 'WEBSITE_NODE_DEFAULT_VERSION', value:  await GBAdminService.getNodeVersion() },
           { name: 'ADMIN_PASS', value: `${instance.adminPass}` },
           { name: 'BOT_ID', value: `${instance.botId}` },
           { name: 'CLOUD_SUBSCRIPTIONID', value: `${instance.cloudSubscriptionId}` },

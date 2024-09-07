@@ -37,7 +37,7 @@ import { AzureKeyCredential } from '@azure/core-auth';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords';
 import path from 'path';
 import { GBServer } from '../../../src/app.js';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import urlJoin from 'url-join';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx';
@@ -73,7 +73,7 @@ export class ImageServices {
       const url = response.data[0].url;
       const res = await fetch(url);
       let buf: any = Buffer.from(await res.arrayBuffer());
-      fs.writeFileSync(localName, buf, { encoding: null });
+      fs.writeFile(localName, buf, { encoding: null });
 
       GBLogEx.info(min, `DALL-E image generated at ${url}.`);
 

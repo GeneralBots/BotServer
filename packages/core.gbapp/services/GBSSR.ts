@@ -38,7 +38,7 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import { NextFunction, Request, Response } from 'express';
 import urljoin from 'url-join';
 import { GBMinInstance } from 'botlib';
@@ -91,7 +91,7 @@ export class GBSSR {
     'tiqcdn'
   ];
 
-  public static preparePuppeteer(profilePath) {
+  public static async preparePuppeteer(profilePath) {
     let args = [
       '--check-for-update-interval=2592000',
       '--disable-accelerated-2d-canvas',
@@ -106,11 +106,11 @@ export class GBSSR {
       args.push(`--user-data-dir=${profilePath}`);
 
       const preferences = urljoin(profilePath, 'Default', 'Preferences');
-      if (fs.existsSync(preferences)) {
-        const file = fs.readFileSync(preferences, 'utf8');
+      if (await GBUtil.exists(preferences)) {
+        const file = await fs.readFile(preferences, 'utf8');
         const data = JSON.parse(file);
         data['profile']['exit_type'] = 'none';
-        fs.writeFileSync(preferences, JSON.stringify(data));
+        fs.writeFile(preferences, JSON.stringify(data));
       }
     }
 
@@ -126,7 +126,7 @@ export class GBSSR {
 
 
   public static async createBrowser(profilePath): Promise<any> {
-    const opts = this.preparePuppeteer(profilePath);
+    const opts = await this.preparePuppeteer(profilePath);
     puppeteer.use(hidden());
     puppeteer.use(require("puppeteer-extra-plugin-minmax")());
     const browser = await puppeteer.launch(opts);
@@ -307,18 +307,18 @@ export class GBSSR {
 
     // Checks if the bot has an .gbui published or use default.gbui.
 
-    if (!fs.existsSync(packagePath)) {
+    if (!await GBUtil.exists(packagePath)) {
       packagePath = GBUtil.getGBAIPath(minBoot.botId, `gbui`);
     }
     let parts = req.url.replace(`/${botId}`, '').split('?');
     let url = parts[0];
 
-    if (min && req.originalUrl && prerender && exclude && fs.existsSync(packagePath)) {
+    if (min && req.originalUrl && prerender && exclude && await GBUtil.exists(packagePath)) {
 
       // Reads from static HTML when a bot is crawling.
 
       packagePath = path.join(process.env.PWD, 'work', packagePath, 'index.html');
-      const html = fs.readFileSync(packagePath, 'utf8');
+      const html = await fs.readFile(packagePath, 'utf8');
       res.status(200).send(html);
       return true;
     } else {
@@ -338,9 +338,9 @@ export class GBSSR {
       if (!min && !url.startsWith("/static") && GBServer.globals.wwwroot) {
         packagePath = packagePath.join(GBServer.globals.wwwroot, url);
       }
-      if (fs.existsSync(packagePath)) {
+      if (await GBUtil.exists(packagePath)) {
         if (min) {
-          let html = fs.readFileSync(packagePath, 'utf8');
+          let html = await fs.readFile(packagePath, 'utf8');
           html = html.replace(/\{p\}/gi, min.botId);
           html = html.replace(/\{botId\}/gi, min.botId);
           html = html.replace(/\{theme\}/gi, min.instance.theme ? min.instance.theme :

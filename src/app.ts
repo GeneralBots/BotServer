@@ -40,7 +40,7 @@ import bodyParser from 'body-parser';
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
 import child_process from 'child_process';
 import express from 'express';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import http from 'http';
 import httpProxy from 'http-proxy';
 import https from 'https';
@@ -70,7 +70,7 @@ export class GBServer {
    *  Program entry-point.
    */
 
-  public static run() {
+  public static async run() {
     GBLogEx.info(0, `The Bot Server is in STARTING mode...`);
     GBServer.globals = new RootData();
     GBConfigService.init();
@@ -140,7 +140,7 @@ export class GBServer {
 
     process.env.PWD = process.cwd();
     const workDir = path.join(process.env.PWD, 'work');
-    if (!fs.existsSync(workDir)) {
+    if (!await GBUtil.exists(workDir)) {
       mkdirp.sync(workDir);
     }
 
@@ -205,7 +205,7 @@ export class GBServer {
           // Deployment of local applications for the first time.
 
           if (GBConfigService.get('DISABLE_WEB') !== 'true') {
-            deployer.setupDefaultGBUI();
+            await deployer.setupDefaultGBUI();
           }
 
           GBLogEx.info(0, `Publishing instances...`);
@@ -301,7 +301,7 @@ export class GBServer {
     };
 
     if (process.env.CERTIFICATE_PFX) {
-      const server1 = http.createServer((req, res) => {
+      const server1 = http.createServer(async (req, res) => {
         const host = req.headers.host.startsWith('www.') ? req.headers.host.substring(4) : req.headers.host;
 
         res
@@ -314,8 +314,8 @@ export class GBServer {
 
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
-        pfx: fs.readFileSync(process.env.CERTIFICATE_PFX),
-        ca: fs.existsSync(process.env.CERTIFICATE_CA) ? fs.readFileSync(process.env.CERTIFICATE_CA) : null
+        pfx: await fs.readFile(process.env.CERTIFICATE_PFX),
+        ca: await GBUtil.exists(process.env.CERTIFICATE_CA) ? await fs.readFile(process.env.CERTIFICATE_CA) : null
       };
 
       const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
@@ -329,7 +329,7 @@ export class GBServer {
         if (process.env[certPfxEnv] && process.env[certPassphraseEnv] && process.env[certDomainEnv]) {
           const options = {
             passphrase: process.env[certPassphraseEnv],
-            pfx: fs.readFileSync(process.env[certPfxEnv])
+            pfx: await fs.readFile(process.env[certPfxEnv])
           };
           httpsServer.addContext(process.env[certDomainEnv], options);
         } else {
@@ -348,7 +348,7 @@ export class GBServer {
 
     // A workaround for swagger-ui-dist not being able to set custom swagger URL
     const indexContent = fs
-      .readFileSync(path.join(swaggerUiAssetPath, 'swagger-initializer.js'))
+      .readFile(path.join(swaggerUiAssetPath, 'swagger-initializer.js'))
       .toString()
       .replace('https://petstore.swagger.io/v2/swagger.json', `/${SWAGGER_FILE_NAME}`);
     app.get(`${ENDPOINT}/swagger-initializer.js`, (req, res) => res.send(indexContent));

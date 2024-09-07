@@ -32,7 +32,7 @@
  * @fileoverview Knowledge base services and logic.
  */
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import urlJoin from 'url-join';
 import asyncPromise from 'async-promises';
 import walkPromise from 'walk-promise';
@@ -501,7 +501,7 @@ export class KBService implements IGBKBService {
               'Existe um problema na base de conhecimento. Fui treinado para entender sua pergunta, avise a quem me criou que a resposta não foi informada para esta pergunta.';
           } else if (answer.indexOf('.md') > -1 || answer.indexOf('.docx') > -1) {
             const mediaFilename = urlJoin(path.dirname(filePath), '..', 'articles', answer);
-            if (fs.existsSync(mediaFilename)) {
+            if (await GBUtil.exists(mediaFilename)) {
               // Tries to load .docx file from Articles folder.
 
               if (answer.indexOf('.docx') > -1) {
@@ -509,7 +509,7 @@ export class KBService implements IGBKBService {
               } else {
                 // Loads normally markdown file.
 
-                answer = fs.readFileSync(mediaFilename, 'utf8');
+                answer = await fs.readFile(mediaFilename, 'utf8');
               }
               format = '.md';
               media = path.basename(mediaFilename);
@@ -558,7 +558,7 @@ export class KBService implements IGBKBService {
             const packagePath = GBUtil.getGBAIPath(min.botId, `gbdialog`);
             const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
             const localName = path.join('work', packagePath, `${scriptName}`);
-            fs.writeFileSync(localName, code, { encoding: null });
+            fs.writeFile(localName, code, { encoding: null });
             answer = scriptName;
 
             const vm = new GBVMService();
@@ -690,7 +690,7 @@ export class KBService implements IGBKBService {
 
     // Imports menu.xlsx if any.
 
-    if (fs.existsSync(subjectFile) || fs.existsSync(menuFile)) {
+    if (await GBUtil.exists(subjectFile) || await GBUtil.exists(menuFile)) {
       await this.importSubjectFile(packageStorage.packageId, subjectFile, menuFile, instance);
     }
 
@@ -725,7 +725,7 @@ export class KBService implements IGBKBService {
 
         if (content === null) {
           const fullFilename = urlJoin(file.root, file.name);
-          content = fs.readFileSync(fullFilename, 'utf-8');
+          content = await fs.readFile(fullFilename, 'utf-8');
 
           await GuaribasAnswer.create(<GuaribasAnswer>{
             instanceId: instance.instanceId,
@@ -760,7 +760,7 @@ export class KBService implements IGBKBService {
       } else if (file !== null && file.name.endsWith('.toc.docx')) {
         const packagePath = GBUtil.getGBAIPath(instance.botId, `gbkb`);
         const localName = path.join('work', packagePath, 'articles', file.name);
-        const buffer = fs.readFileSync(localName, { encoding: null });
+        const buffer = await fs.readFile(localName, { encoding: null });
         var options = {
           buffer: buffer,
           convertImage: async image => {
@@ -777,7 +777,7 @@ export class KBService implements IGBKBService {
               path.basename(localName)
             );
             const buffer = await image.read();
-            fs.writeFileSync(localName, buffer, { encoding: null });
+            fs.writeFile(localName, buffer, { encoding: null });
             return { src: url };
           }
         };
@@ -874,7 +874,6 @@ export class KBService implements IGBKBService {
       if (
         depth > maxDepth ||
         visited.has(url) ||
-        url.endsWith('.jpg') ||
         url.endsWith('.jpg') ||
         url.endsWith('.png') ||
         url.endsWith('.mp4')
@@ -1025,7 +1024,7 @@ export class KBService implements IGBKBService {
 
       let packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
       const directoryPath = path.join(process.env.PWD, 'work', packagePath, 'Website');
-      fs.rmSync(directoryPath, { recursive: true, force: true });
+      fs.rm(directoryPath, { recursive: true, force: true });
 
       let browser = await puppeteer.launch({ headless: false });
       const page = await this.getFreshPage(browser, website);
@@ -1040,7 +1039,7 @@ export class KBService implements IGBKBService {
         try {
           const logoBinary = await page.goto(logo);
           const buffer = await logoBinary.buffer();
-          const logoFilename = packagePath.basename(logo);
+          const logoFilename = path.basename(logo);
           // TODO: sharp(buffer)
           //   .resize({
           //     width: 48,
@@ -1189,7 +1188,7 @@ export class KBService implements IGBKBService {
     instance: IGBInstance
   ): Promise<any> {
     let subjectsLoaded;
-    if (fs.existsSync(menuFile)) {
+    if (await GBUtil.exists(menuFile)) {
       // Loads menu.xlsx and finds worksheet.
 
       const workbook = new Excel.Workbook();
@@ -1258,7 +1257,7 @@ export class KBService implements IGBKBService {
 
       subjectsLoaded = subjects;
     } else {
-      subjectsLoaded = JSON.parse(fs.readFileSync(filename, 'utf8'));
+      subjectsLoaded = JSON.parse(await fs.readFile(filename, 'utf8'));
     }
 
     const doIt = async (subjects: GuaribasSubject[], parentSubjectId: number) => {
@@ -1354,7 +1353,7 @@ export class KBService implements IGBKBService {
     let packagePath = GBUtil.getGBAIPath(min.botId, `gbui`);
     packagePath = path.join(process.env.PWD, 'work', packagePath, 'index.html');
     GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${packagePath}.`);
-    fs.writeFileSync(packagePath, html, 'utf8');
+    fs.writeFile(packagePath, html, 'utf8');
 
     GBLogEx.info(min, `[GBDeployer] Finished import of ${localPath}`);
   }

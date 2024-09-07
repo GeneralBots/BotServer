@@ -4,7 +4,7 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GuaribasUser } from '../models/index.js';
 import { FindOptions } from 'sequelize';
 import { DialogKeywords } from '../../../packages/basic.gblib/services/DialogKeywords.js';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import mkdirp from 'mkdirp';
 import urlJoin from 'url-join';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
@@ -29,7 +29,7 @@ export class SecService extends GBService {
     const gbaiPath = GBUtil.getGBAIPath(min.botId);
     const dir = urlJoin ('work',gbaiPath, 'users', userSystemId);
 
-    if (!fs.existsSync(dir)) {
+    if (!await GBUtil.exists(dir)) {
       mkdirp.sync(dir);
     }
 
@@ -44,8 +44,8 @@ export class SecService extends GBService {
     }
 
     const systemPromptFile = urlJoin(dir, 'systemPrompt.txt');
-    if (fs.existsSync(systemPromptFile)) {
-      user[ 'systemPrompt'] = fs.readFileSync(systemPromptFile);
+    if (await GBUtil.exists(systemPromptFile)) {
+      user[ 'systemPrompt'] = await fs.readFile(systemPromptFile);
     }
 
     user.instanceId = min.instance.instanceId;

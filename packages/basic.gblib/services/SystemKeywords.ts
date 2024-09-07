@@ -32,7 +32,7 @@
 import { setFlagsFromString } from 'v8';
 import { runInNewContext } from 'vm';
 import { IgApiClient } from 'instagram-private-api';
-import { readFileSync } from 'fs';
+import { readFile } from 'fs';
 import path, { resolve } from 'path';
 import { GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
@@ -42,7 +42,7 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { DialogKeywords } from './DialogKeywords.js';
 import { GBServer } from '../../../src/app.js';
 import { GBVMService } from './GBVMService.js';
-import fs from 'fs';
+import fs from 'fs/promises';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import urlJoin from 'url-join';
 import Excel from 'exceljs';
@@ -172,22 +172,22 @@ export class SystemKeywords {
     if (date) {
       return array
         ? array.sort((a, b) => {
-          const c = new Date(a[memberName]);
-          const d = new Date(b[memberName]);
-          return c.getTime() - d.getTime();
-        })
+            const c = new Date(a[memberName]);
+            const d = new Date(b[memberName]);
+            return c.getTime() - d.getTime();
+          })
         : null;
     } else {
       return array
         ? array.sort((a, b) => {
-          if (a[memberName] < b[memberName]) {
-            return -1;
-          }
-          if (a[memberName] > b[memberName]) {
-            return 1;
-          }
-          return 0;
-        })
+            if (a[memberName] < b[memberName]) {
+              return -1;
+            }
+            if (a[memberName] > b[memberName]) {
+              return 1;
+            }
+            return 0;
+          })
         : array;
     }
   }
@@ -346,7 +346,6 @@ export class SystemKeywords {
 
     delete this.cachedMerge[pid];
 
-
     // Capture memory usage before GC
     GBLogEx.info(min, ``);
 
@@ -415,7 +414,7 @@ export class SystemKeywords {
         const buffer = pngPages[0].content;
         const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
-        fs.writeFileSync(localName, buffer, { encoding: null });
+        fs.writeFile(localName, buffer, { encoding: null });
 
         return { localName: localName, url: url, data: buffer };
       }
@@ -708,7 +707,7 @@ export class SystemKeywords {
     // Writes it to disk and calculate hash.
 
     const data = await response.arrayBuffer();
-    fs.writeFileSync(localName, Buffer.from(data), { encoding: null });
+    fs.writeFile(localName, Buffer.from(data), { encoding: null });
     const hash = new Uint8Array(md5.array(data));
 
     // Performs uploading passing local hash.
@@ -724,7 +723,7 @@ export class SystemKeywords {
     // If upload is OK including hash check, removes the temporary file.
 
     if (res._response.status === 201 && new Uint8Array(res.contentMD5).toString() === hash.toString()) {
-      fs.rmSync(localName);
+      fs.rm(localName);
 
       file['md5'] = hash.toString();
 
@@ -759,7 +758,6 @@ export class SystemKeywords {
     let rowsDest = [];
 
     rows.forEach(row => {
-      
       if (GBUtil.hasSubObject(row)) {
         row = this.flattenJSON(row);
       }
@@ -886,7 +884,7 @@ export class SystemKeywords {
         // Creates the file.
 
         const blank = path.join(process.env.PWD, 'blank.xlsx');
-        const data = fs.readFileSync(blank);
+        const data = await fs.readFile(blank);
         await client.api(`${baseUrl}/drive/root:/${packagePath}/${file}:/content`).put(data);
 
         // Tries to open again.
@@ -1043,7 +1041,7 @@ export class SystemKeywords {
 
   public static async getFilter(text) {
     let filter;
-    const operators = [/\<\=/, /\<\>/, /\>\=/, /\</, /\>/,/\blike\b/, /\bnot in\b/, /\bin\b/, /\=/];
+    const operators = [/\<\=/, /\<\>/, /\>\=/, /\</, /\>/, /\blike\b/, /\bnot in\b/, /\bin\b/, /\=/];
     let done = false;
     await CollectionUtil.asyncForEach(operators, async op => {
       var re = new RegExp(op, 'gi');
@@ -1153,7 +1151,7 @@ export class SystemKeywords {
       const localName = path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
       const url = file['@microsoft.graph.downloadUrl'];
       const response = await fetch(url);
-      fs.writeFileSync(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
+      fs.writeFile(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
 
       var workbook = new Excel.Workbook();
       let worksheet = await workbook.csv.readFile(localName);
@@ -1201,7 +1199,8 @@ export class SystemKeywords {
       let res;
       let packagePath = GBUtil.getGBAIPath(min.botId, `gbdata`);
       const csvFile = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
-      const firstLine = fs.readFileSync(csvFile, 'utf8').split('\n')[0];
+      const data = await fs.readFile(csvFile, 'utf8');
+      const firstLine = data.split('\n')[0];
       const headers = firstLine.split(',');
       const db = await csvdb(csvFile, headers, ',');
       if (args[0]) {
@@ -1520,8 +1519,15 @@ export class SystemKeywords {
       ChatServices.userSystemPrompt[user.userSystemId] = text;
 
       const packagePath = GBUtil.getGBAIPath(min.botId);
-      const systemPromptFile = urlJoin(process.cwd(), 'work', packagePath, 'users', user.userSystemId, 'systemPrompt.txt');
-      fs.writeFileSync(systemPromptFile, text);
+      const systemPromptFile = urlJoin(
+        process.cwd(),
+        'work',
+        packagePath,
+        'users',
+        user.userSystemId,
+        'systemPrompt.txt'
+      );
+      fs.writeFile(systemPromptFile, text);
     }
   }
 
@@ -1611,7 +1617,7 @@ export class SystemKeywords {
     // Templates a blank {content} tag inside the blank.docx.
 
     const blank = path.join(process.env.PWD, 'blank.docx');
-    let buf = fs.readFileSync(blank);
+    let buf = await fs.readFile(blank);
     let zip = new PizZip(buf);
     let doc = new Docxtemplater();
     doc.setOptions({ linebreaks: true });
@@ -2012,7 +2018,7 @@ export class SystemKeywords {
     const res = await fetch(url);
     let buf: any = Buffer.from(await res.arrayBuffer());
     localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
-    fs.writeFileSync(localName, buf, { encoding: null });
+    fs.writeFile(localName, buf, { encoding: null });
 
     // Replace image path on all elements of data.
 
@@ -2050,7 +2056,7 @@ export class SystemKeywords {
             );
             const response = await fetch(url);
             const buf = Buffer.from(await response.arrayBuffer());
-            fs.writeFileSync(imageName, buf, { encoding: null });
+            fs.writeFile(imageName, buf, { encoding: null });
 
             const getNormalSize = ({ width, height, orientation }) => {
               return (orientation || 0) >= 5 ? [height, width] : [width, height];
@@ -2099,7 +2105,7 @@ export class SystemKeywords {
     doc.setData(data).render();
 
     buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
-    fs.writeFileSync(localName, buf, { encoding: null });
+    fs.writeFile(localName, buf, { encoding: null });
 
     return { localName: localName, url: url, data: buf };
   }
@@ -2557,7 +2563,7 @@ export class SystemKeywords {
 
     const buf = Buffer.from(data.Payment.QrCodeBase64Image, 'base64');
     const localName = path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-    fs.writeFileSync(localName, buf, { encoding: null });
+    fs.writeFile(localName, buf, { encoding: null });
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
     GBLogEx.info(min, `GBPay: ${data.MerchantOrderId} OK: ${url}.`);
@@ -2731,11 +2737,10 @@ export class SystemKeywords {
       const res = await fetch(url);
       let buf: any = Buffer.from(await res.arrayBuffer());
       data = new Uint8Array(buf);
-    }
-    else {
+    } else {
       let packagePath = GBUtil.getGBAIPath(min.botId, `gbdrive`);
       let filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
-      data = fs.readFileSync(filePath, 'utf8');
+      data = await fs.readFile(filePath, 'utf8');
       data = new Uint8Array(Buffer.from(data, 'utf8'));
     }
     return await GBUtil.getPdfText(data);
@@ -2780,11 +2785,11 @@ export class SystemKeywords {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
     // Leitura do arquivo de imagem
-    const imageBuffer = fs.readFileSync(path.resolve(imagePath));
+    const imageBuffer = await fs.readFile(path.resolve(imagePath));
 
     // Criação de um arquivo temporário para enviar
     const tempFilePath = path.resolve('temp_image.jpg');
-    fs.writeFileSync(tempFilePath, imageBuffer);
+    fs.writeFile(tempFilePath, imageBuffer);
 
     // Publicação da imagem
     const page = new Page(pageId);
@@ -2792,18 +2797,17 @@ export class SystemKeywords {
       message: caption,
       attached_media: [
         {
-          media_fbid: tempFilePath,
-        },
-      ],
+          media_fbid: tempFilePath
+        }
+      ]
     });
 
     // Log do resultado
     GBLogEx.info(min, `Imagem publicada no Facebook: ${JSON.stringify(response)}`);
 
     // Limpeza do arquivo temporário
-    fs.unlinkSync(tempFilePath);
+    fs.unlink(tempFilePath);
   }
-
 
   public async postToInstagram({ pid, username, password, imagePath, caption }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
@@ -2811,11 +2815,9 @@ export class SystemKeywords {
     const ig = new IgApiClient();
     ig.state.generateDevice(username);
     await ig.account.login(username, password);
-    const imageBuffer = readFileSync(resolve(imagePath));
-    const publishResult = await ig.publish.photo({
-      file: imageBuffer,
-      caption
-    });
+    const imageBuffer = await fs.readFile(imagePath);
+    const publishResult = await ig.publish.photo(
+      { file: imageBuffer, caption });
 
     GBLogEx.info(min, `Image posted on IG: ${publishResult}`);
   }
@@ -2823,9 +2825,8 @@ export class SystemKeywords {
   public async setAnswerMode({ pid, mode }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
-    ChatServices.usersMode[user.userSystemId] =  mode;
+    ChatServices.usersMode[user.userSystemId] = mode;
 
     GBLogEx.info(min, `LLM Mode (user.userSystemId) : ${mode}`);
   }
-
 }

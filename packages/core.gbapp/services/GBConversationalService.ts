@@ -48,7 +48,8 @@ import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { GBMinService } from './GBMinService.js';
 import urlJoin from 'url-join';
-import fs from 'fs';
+import {createWriteStream, createReadStream} from 'fs';
+import fs from 'fs/promises'; 
 import twilio from 'twilio';
 import Nexmo from 'nexmo';
 import { join } from 'path';
@@ -451,15 +452,15 @@ export class GBConversationalService {
         const waveFilename = `work/tmp${name}.pcm`;
 
         let audio = await textToSpeech.repairWavHeaderStream(res.result as any);
-        fs.writeFileSync(waveFilename, audio);
+        fs.writeFile(waveFilename, audio);
 
         const oggFilenameOnly = `tmp${name}.ogg`;
         const oggFilename = `work/${oggFilenameOnly}`;
-        const output = fs.createWriteStream(oggFilename);
+        const output = createWriteStream(oggFilename);
         const transcoder = new prism.FFmpeg({
           args: ['-analyzeduration', '0', '-loglevel', '0', '-f', 'opus', '-ar', '16000', '-ac', '1']
         });
-        fs.createReadStream(waveFilename).pipe(transcoder).pipe(output);
+        createReadStream(waveFilename).pipe(transcoder).pipe(output);
 
         let url = urlJoin(GBServer.globals.publicAddress, 'audios', oggFilenameOnly);
         resolve(url);
@@ -481,7 +482,7 @@ export class GBConversationalService {
 
         const dest = `work/tmp${name}.wav`;
         const src = `work/tmp${name}.ogg`;
-        fs.writeFileSync(src, oggFile.read());
+        fs.writeFile(src, oggFile.read());
 
         const makeMp3 = shell([
           'node_modules/ffmpeg-static/ffmpeg', // TODO: .exe on MSWin.
@@ -499,12 +500,12 @@ export class GBConversationalService {
           join(process.cwd(), dest)
         ]);
 
-        exec(makeMp3, error => {
+        exec(makeMp3, async error => {
           if (error) {
             GBLog.error(error);
             return Promise.reject(error);
           } else {
-            let data = fs.readFileSync(dest);
+            let data = await fs.readFile(dest);
 
             const speechToText = new SpeechToTextV1({
               authenticator: new IamAuthenticator({ apikey: process.env.WATSON_STT_KEY }),

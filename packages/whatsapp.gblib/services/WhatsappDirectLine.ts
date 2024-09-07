@@ -31,7 +31,7 @@
 import mime from 'mime-types';
 import urlJoin from 'url-join';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app.js';
@@ -57,6 +57,7 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { createBot } from 'whatsapp-cloud-api';
 import { promisify } from 'util';
 const stat = promisify(fs.stat);
+import {createReadStream} from 'fs';
 
 /**
  * Support for Whatsapp.
@@ -153,9 +154,9 @@ export class WhatsappDirectLine extends GBService {
         const gbaiPath = GBUtil.getGBAIPath(this.min.botId);
         const webVersion = '2.2412.51';
         const localName = path.join('work', gbaiPath, 'profile');
-        const createClient = () => {
+        const createClient = async () => {
           const client = (this.customClient = new Client({
-            puppeteer: GBSSR.preparePuppeteer(localName),
+            puppeteer: await GBSSR.preparePuppeteer(localName),
             webVersionCache: {
               type: 'remote',
               remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${webVersion}.html`
@@ -187,7 +188,7 @@ export class WhatsappDirectLine extends GBService {
                 'cache',
                 `qr${GBAdminService.getRndReadableIdentifier()}.png`
               );
-              fs.writeFileSync(localName, qrBuf.data);
+              fs.writeFile(localName, qrBuf.data);
               const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', path.basename(localName));
 
               if (adminNumber) {
@@ -330,7 +331,7 @@ export class WhatsappDirectLine extends GBService {
             'cache',
             `tmp${GBAdminService.getRndReadableIdentifier()}.docx`
           );
-          fs.writeFileSync(localName, buf, { encoding: null });
+          fs.writeFile(localName, buf, { encoding: null });
           const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', path.basename(localName));
 
           attachments = [];
@@ -1200,7 +1201,7 @@ export class WhatsappDirectLine extends GBService {
   public async uploadLargeFile(min, filePath) {
     const CHUNK_SIZE = 4 * 1024 * 1024; // 4MB chunks
     let uploadSessionId;
-    const fileSize = (await stat(filePath)).size;
+    const fileSize = (await fs.stat(filePath)).size;
     const fileName = filePath.split('/').pop();
     const fileType = mime.lookup(filePath);
     const appId = this.whatsappFBAppId;
@@ -1231,7 +1232,7 @@ export class WhatsappDirectLine extends GBService {
 
       while (startOffset < fileSize) {
         const endOffset = Math.min(startOffset + CHUNK_SIZE, fileSize);
-        const fileStream = fs.createReadStream(filePath, { start: startOffset, end: endOffset - 1 });
+        const fileStream = createReadStream(filePath, { start: startOffset, end: endOffset - 1 });
         const chunkSize = endOffset - startOffset;
 
         const uploadResponse = await fetch(`https://graph.facebook.com/v20.0/upload:${uploadSessionId}`, {

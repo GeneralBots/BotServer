@@ -35,7 +35,7 @@
 'use strict';
 
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Op, Dialect } from 'sequelize';
 import { GBServer } from '../../../src/app.js';
@@ -135,7 +135,7 @@ export class GBCoreService implements IGBCoreService {
     } else if (this.dialect === 'sqlite') {
       storage = GBConfigService.get('STORAGE_FILE');
 
-      if (!fs.existsSync(storage)) {
+      if (!await GBUtil.exists(storage)) {
         process.env.STORAGE_SYNC = 'true';
       }
     } else {
@@ -313,7 +313,7 @@ STORAGE_SYNC_ALTER=true
 ENDPOINT_UPDATE=true
 `;
 
-    fs.writeFileSync('.env', env);
+    fs.writeFile('.env', env);
   }
 
   /**
@@ -323,7 +323,7 @@ ENDPOINT_UPDATE=true
    */
   public async ensureProxy(port): Promise<string> {
     try {
-      if (fs.existsSync('node_modules/ngrok/bin/ngrok.exe') || fs.existsSync('node_modules/.bin/ngrok')) {
+      if (await GBUtil.exists('node_modules/ngrok/bin/ngrok.exe') || await GBUtil.exists('node_modules/.bin/ngrok')) {
         return await ngrok.connect({ port: port });
       } else {
         GBLog.warn('ngrok executable not found. Check installation or node_modules folder.');
@@ -825,13 +825,13 @@ ENDPOINT_UPDATE=true
   public async ensureFolders(instances, deployer: GBDeployer) {
     let libraryPath = GBConfigService.get('STORAGE_LIBRARY');
 
-    if (!fs.existsSync(libraryPath)) {
+    if (!await GBUtil.exists(libraryPath)) {
       mkdirp.sync(libraryPath);
     }
 
     await this.syncBotStorage(instances, 'default', deployer, libraryPath);
 
-    const files = fs.readdirSync(libraryPath);
+    const files = fs.readdir(libraryPath);
     await CollectionUtil.asyncForEach(files, async file => {
       if (file.trim().toLowerCase() !== 'default.gbai') {
         let botId = file.replace(/\.gbai/, '');
@@ -855,37 +855,37 @@ ENDPOINT_UPDATE=true
       instance = await deployer.deployBlankBot(botId, mobile, email);
       const gbaiPath = path.join(libraryPath, `${botId}.gbai`);
 
-      if (!fs.existsSync(gbaiPath)) {
-        fs.mkdirSync(gbaiPath, { recursive: true });
+      if (!await GBUtil.exists(gbaiPath)) {
+        fs.mkdir(gbaiPath, { recursive: true });
 
         const base = path.join(process.env.PWD, 'templates', 'default.gbai');
 
-        fs.cpSync(path.join(base, `default.gbkb`), path.join(gbaiPath, `default.gbkb`), {
+        fs.cp(path.join(base, `default.gbkb`), path.join(gbaiPath, `default.gbkb`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        fs.cpSync(path.join(base, `default.gbot`), path.join(gbaiPath, `default.gbot`), {
+        fs.cp(path.join(base, `default.gbot`), path.join(gbaiPath, `default.gbot`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        fs.cpSync(path.join(base, `default.gbtheme`), path.join(gbaiPath, `default.gbtheme`), {
+        fs.cp(path.join(base, `default.gbtheme`), path.join(gbaiPath, `default.gbtheme`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        fs.cpSync(path.join(base, `default.gbdata`), path.join(gbaiPath, `default.gbdata`), {
+        fs.cp(path.join(base, `default.gbdata`), path.join(gbaiPath, `default.gbdata`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        fs.cpSync(path.join(base, `default.gbdialog`), path.join(gbaiPath, `default.gbdialog`), {
+        fs.cp(path.join(base, `default.gbdialog`), path.join(gbaiPath, `default.gbdialog`), {
           errorOnExist: false,
           force: true,
           recursive: true
         });
-        fs.cpSync(path.join(base, `default.gbdrive`), path.join(gbaiPath, `default.gbdrive`), {
+        fs.cp(path.join(base, `default.gbdrive`), path.join(gbaiPath, `default.gbdrive`), {
           errorOnExist: false,
           force: true,
           recursive: true

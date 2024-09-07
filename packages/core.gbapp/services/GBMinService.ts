@@ -40,7 +40,7 @@ import removeRoute from 'express-remove-route';
 import AuthenticationContext from 'adal-node';
 import { FacebookAdapter } from 'botbuilder-adapter-facebook';
 import mkdirp from 'mkdirp';
-import fs from 'fs';
+import fs from 'fs/promises'; 
 import arrayBufferToBuffer from 'arraybuffer-to-buffer';
 import { NlpManager } from 'node-nlp';
 import Koa from 'koa';
@@ -244,7 +244,7 @@ export class GBMinService {
     // TODO: https://github.com/GeneralBots/BotServer/issues/321
     const options = {
       passphrase: process.env.CERTIFICATE2_PASSPHRASE,
-      pfx: fs.readFileSync(process.env.CERTIFICATE2_PFX)
+      pfx: await fs.readFile(process.env.CERTIFICATE2_PFX)
     };
 
     const domain = min.core.getParam(min.instance, 'Domain', null);
@@ -294,19 +294,19 @@ export class GBMinService {
     // Install per bot deployed packages.
 
     let packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, 'gbdialog'));
-    if (fs.existsSync(packagePath)) {
+    if (await GBUtil.exists(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
     packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, 'gbapp'));
-    if (fs.existsSync(packagePath)) {
+    if (await GBUtil.exists(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
     packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, 'gbtheme'));
-    if (fs.existsSync(packagePath)) {
+    if (await GBUtil.exists(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
     packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, `gblib`));
-    if (fs.existsSync(packagePath)) {
+    if (await GBUtil.exists(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
 
@@ -314,39 +314,39 @@ export class GBMinService {
     let dir = `work/${gbai}/cache`;
     const botId = gbai.replace(/\.[^/.]+$/, '');
 
-    if (!fs.existsSync(dir)) {
+    if (!await GBUtil.exists(dir)) {
       mkdirp.sync(dir);
     }
     dir = `work/${gbai}/profile`;
-    if (!fs.existsSync(dir)) {
+    if (!await GBUtil.exists(dir)) {
       mkdirp.sync(dir);
     }
     dir = `work/${gbai}/uploads`;
-    if (!fs.existsSync(dir)) {
+    if (!await GBUtil.exists(dir)) {
       mkdirp.sync(dir);
     }
     dir = `work/${gbai}/${botId}.gbkb`;
-    if (!fs.existsSync(dir)) {
+    if (!await GBUtil.exists(dir)) {
       mkdirp.sync(dir);
     }
     dir = `work/${gbai}/${botId}.gbkb/docs-vectorized`;
-    if (!fs.existsSync(dir)) {
+    if (!await GBUtil.exists(dir)) {
       mkdirp.sync(dir);
     }
     dir = `work/${gbai}/${botId}.gbdialog`;
-    if (!fs.existsSync(dir)) {
+    if (!await GBUtil.exists(dir)) {
       mkdirp.sync(dir);
     }
     dir = `work/${gbai}/${botId}.gbot`;
-    if (!fs.existsSync(dir)) {
+    if (!await GBUtil.exists(dir)) {
       mkdirp.sync(dir);
     }
     dir = `work/${gbai}/${botId}.gbui`;
-    if (!fs.existsSync(dir)) {
+    if (!await GBUtil.exists(dir)) {
       mkdirp.sync(dir);
     }
     dir = `work/${gbai}/users`;
-    if (!fs.existsSync(dir)) {
+    if (!await GBUtil.exists(dir)) {
       mkdirp.sync(dir);
     }
 
@@ -388,10 +388,10 @@ export class GBMinService {
 
     const manifest = `${instance.botId}-Teams.zip`;
     const packageTeams = urlJoin(`work`, GBUtil.getGBAIPath(instance.botId), manifest);
-    if (!fs.existsSync(packageTeams)) {
+    if (!await GBUtil.exists(packageTeams)) {
       GBLogEx.info(min, 'Generating MS Teams manifest....');
       const data = await this.deployer.getBotManifest(instance);
-      fs.writeFileSync(packageTeams, data);
+      fs.writeFile(packageTeams, data);
     }
 
     // Serves individual URL for each bot user interface.
@@ -1099,7 +1099,7 @@ export class GBMinService {
             const folder = `work/${path}/cache`;
             const filename = `${GBAdminService.generateUuid()}.png`;
 
-            fs.writeFileSync(urlJoin(folder, filename), data);
+            fs.writeFile(urlJoin(folder, filename), data);
             step.context.activity.text = urlJoin(
               GBServer.globals.publicAddress,
               `${min.instance.botId}`,
@@ -1287,7 +1287,7 @@ export class GBMinService {
       buffer = arrayBufferToBuffer(await res.arrayBuffer());
     }
 
-    fs.writeFileSync(localFileName, buffer);
+    fs.writeFile(localFileName, buffer);
 
     return {
       fileName: attachment.name,
@@ -1324,7 +1324,7 @@ export class GBMinService {
           const t = new SystemKeywords();
           GBLogEx.info(min, `BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
           const handle = WebAutomationServices.cyrb53({ pid: 0, str: min.botId + attachmentData.fileName });
-          let data = fs.readFileSync(attachmentData.localPath);
+          let data = await fs.readFile(attachmentData.localPath);
 
           const gbfile = {
             filename: attachmentData.localPath,
@@ -1358,9 +1358,9 @@ export class GBMinService {
           filename: string;
         }
 
-        const results = successfulSaves.reduce((accum: GBFile[], item) => {
+        const results = successfulSaves.reduce(async (accum: GBFile[], item) => {
           const result: GBFile = {
-            data: fs.readFileSync(successfulSaves[0]['localPath']),
+            data: await fs.readFile(successfulSaves[0]['localPath']),
             filename: successfulSaves[0]['fileName']
           };
           accum.push(result);
