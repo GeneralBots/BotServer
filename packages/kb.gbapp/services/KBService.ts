@@ -31,26 +31,27 @@
 /**
  * @fileoverview Knowledge base services and logic.
  */
-import path from 'path';
-import fs from 'fs/promises'; 
-import urlJoin from 'url-join';
-import asyncPromise from 'async-promises';
-import walkPromise from 'walk-promise';
 import { SearchClient } from '@azure/search-documents';
+import asyncPromise from 'async-promises';
 import Excel from 'exceljs';
-import getSlug from 'speakingurl';
-import { GBServer } from '../../../src/app.js';
+import fs from 'fs/promises';
+import html2md from 'html-to-md';
 import { JSONLoader } from 'langchain/document_loaders/fs/json';
 import { TextLoader } from 'langchain/document_loaders/fs/text';
-import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
+import path from 'path';
+import getSlug from 'speakingurl';
+import urlJoin from 'url-join';
+import walkPromise from 'walk-promise';
+import { GBServer } from '../../../src/app.js';
+import { CSVLoader } from '@langchain/community/document_loaders/fs/csv';
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { EPubLoader } from '@langchain/community/document_loaders/fs/epub';
-import { CSVLoader } from '@langchain/community/document_loaders/fs/csv';
+import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 
-import puppeteer, { Page } from 'puppeteer';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { Document } from 'langchain/document';
 import getColors from 'get-image-colors';
+import { Document } from 'langchain/document';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import puppeteer, { Page } from 'puppeteer';
 
 import {
   GBDialogStep,
@@ -61,27 +62,27 @@ import {
   IGBInstance,
   IGBKBService
 } from 'botlib';
+import mammoth from 'mammoth';
+import { parse } from 'node-html-parser';
+import pdf from 'pdf-extraction';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
+import textract from 'textract';
+import { GBUtil } from '../../../src/util.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService.js';
+import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
+import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GuaribasPackage } from '../../core.gbapp/models/GBModel.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
+import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
 import { CSService } from '../../customer-satisfaction.gbapp/services/CSService.js';
+import { ChatServices } from '../../llm.gblib/services/ChatServices.js';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models/index.js';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService.js';
-import { parse } from 'node-html-parser';
-import textract from 'textract';
-import pdf from 'pdf-extraction';
-import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
-import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
-import mammoth from 'mammoth';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
-import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
-import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
-import { ChatServices } from '../../llm.gblib/services/ChatServices.js';
-import { GBUtil } from '../../../src/util.js';
 
 /**
  * Result for quey on KB data.
@@ -690,7 +691,7 @@ export class KBService implements IGBKBService {
 
     // Imports menu.xlsx if any.
 
-    if (await GBUtil.exists(subjectFile) || await GBUtil.exists(menuFile)) {
+    if ((await GBUtil.exists(subjectFile)) || (await GBUtil.exists(menuFile))) {
       await this.importSubjectFile(packageStorage.packageId, subjectFile, menuFile, instance);
     }
 
@@ -881,18 +882,16 @@ export class KBService implements IGBKBService {
         return [];
       }
 
-      await GBLogEx.info(min, `Processing URL: ${url}.`);
+      await GBLogEx.info(min, `Crawling: ${url}.`);
       visited.add(url);
-      
+
       const packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
       const directoryPath = path.join(process.env.PWD, 'work', packagePath, 'Website');
-      const filename = await GBUtil.savePage(url, page, directoryPath);
+      const filename = await KBService.savePage(min, url, page, directoryPath);
 
       if (!filename) {
-
         // If the URL doesn't represent an HTML/PDF page, skip crawling its links
         return [];
-
       }
       const currentDomain = new URL(page.url()).hostname;
 
@@ -1085,14 +1084,21 @@ export class KBService implements IGBKBService {
 
       files.shift();
 
+      GBLogEx.info(min, `Vectorizing ${files.length} file(s)...`);
+
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
 
-        const document = await this.loadAndSplitFile(file);
-        const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
-        const vectorStore = min['vectorStore'];
-        await vectorStore.addDocuments(flattenedDocuments);
-        await vectorStore.save(min['vectorStorePath']);
+        try {
+          const document = await this.loadAndSplitFile(file);
+          const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
+          const vectorStore = min['vectorStore'];
+          await vectorStore.addDocuments(flattenedDocuments);
+          await vectorStore.save(min['vectorStorePath']);
+        } catch (error) {
+          GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
+        }
+
       });
     }
 
@@ -1419,5 +1425,74 @@ export class KBService implements IGBKBService {
         }
       });
     });
+  }
+
+  public static async savePage(
+    min: GBMinInstance,
+    url: string,
+    page: Page,
+    directoryPath: string
+  ): Promise<string | null> {
+    try {
+      
+      // Check if the directory exists, create it if not.
+
+      const directoryExists = await GBUtil.exists(directoryPath);
+      if (!directoryExists) {
+        await fs.mkdir(directoryPath, { recursive: true }); // Create directory if it doesn't exist
+      }
+
+      // Check if the URL is for a downloadable file (e.g., .pdf).
+      
+      if (
+        url.endsWith('.pdf') ||
+        url.endsWith('.docx') ||
+        url.endsWith('.csv') ||
+        url.endsWith('.epub') ||
+        url.endsWith('.xml') ||
+        url.endsWith('.json') ||
+        url.endsWith('.txt')
+      ) {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error('Failed to download the file');
+        }
+
+        const buffer = await response.arrayBuffer(); // Convert response to array buffer
+        const fileName = path.basename(url); // Extract file name from URL
+        const filePath = path.join(directoryPath, fileName); // Create file path
+
+        const data = new Uint8Array(buffer);
+        await fs.writeFile(filePath, data);
+
+        return filePath; // Return the saved file path
+      } else {
+        await page.goto(url, { waitUntil: 'networkidle2' });
+
+        const parsedUrl = new URL(url);
+
+        // Get the last part of the URL path or default to 'index' if empty
+        const pathParts = parsedUrl.pathname.split('/').filter(Boolean); // Remove empty parts
+        const lastPath = pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'index';
+        const flatLastPath = lastPath.replace(/\W+/g, '-'); // Flatten the last part of the path
+
+        const fileName = `${flatLastPath}.html`;
+        const filePath = path.join(directoryPath, fileName);
+
+        const htmlContent = await page.content();
+
+        // Convert HTML to Markdown using html2md
+        const markdownContent = html2md(htmlContent);
+
+        // Write Markdown content to file
+        await fs.writeFile(filePath, markdownContent);
+
+        return filePath;
+      }
+    } catch (error) {
+      GBLogEx.info(min, `Cannot save: ${url}. ${GBUtil.toYAML(error)}`);
+      return null;
+    }
   }
 }

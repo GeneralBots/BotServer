@@ -44,7 +44,6 @@ VerbosityLevel.WARNINGS=0;
 VerbosityLevel.INFOS=0;
 import { Page } from 'puppeteer';
 import urljoin from 'url-join';
-import html2md from 'html-to-md';
 
 export class GBUtil {
   public static repeat(chr, count) {
@@ -103,11 +102,17 @@ export class GBUtil {
         return acc;
       }, {});
     };
-
+  
     const extractedError = extractProps(data);
-    return YAML.stringify(extractedError);
+    
+    // Inline formatting for logs
+    return YAML.stringify(extractedError, {
+      indent: 2,          // Defines the indentation
+      flowLevel: -1,       // Forces inline formatting
+      styles: { '!!null': 'canonical' }  // Optional: Customize null display
+    } as any);
   }
-
+  
   public static sleep(ms) {
     return new Promise(resolve => {
       setTimeout(resolve, ms);
@@ -139,68 +144,6 @@ export class GBUtil {
       return true; // File exists
     } catch (error) {
       return false; // File does not exist
-    }
-  }
-
- public static async savePage(url: string, page: Page, directoryPath: string): Promise<string | null> {
-    try {
-      // Check if the directory exists, create it if not
-      const directoryExists = await this.fileExists(directoryPath);
-      if (!directoryExists) {
-        await fs.mkdir(directoryPath, { recursive: true }); // Create directory if it doesn't exist
-      }
-  
-      // Check if the URL is for a downloadable file (e.g., .pdf)
-      if (url.endsWith('.pdf')) {
-        const response = await fetch(url);
-  
-        if (!response.ok) {
-          throw new Error('Failed to download the file');
-        }
-  
-        const buffer = await response.arrayBuffer(); // Convert response to array buffer
-        const fileName = path.basename(url); // Extract file name from URL
-        const filePath = path.join(directoryPath, fileName); // Create file path
-  
-        const data = new Uint8Array(buffer);
-        const text = await GBUtil.getPdfText(data);
-
-        // Write the buffer to the file asynchronously
-        await fs.writeFile(filePath, text);
-  
-        return filePath; // Return the saved file path
-      } else {
-        // Use Puppeteer for non-downloadable pages
-
-        const parsedUrl = new URL(url);
-
-        // Get the last part of the URL path or default to 'index' if empty
-        const pathParts = parsedUrl.pathname.split('/').filter(Boolean); // Remove empty parts
-        const lastPath = pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'index';
-        const flatLastPath = lastPath.replace(/\W+/g, '-'); // Flatten the last part of the path
-        
-        const fileName = `${flatLastPath}.html`;
-        const filePath = path.join(directoryPath, fileName);
-
-        const htmlContent = await page.content();
-  
-        // Write HTML content asynchronously
-        await fs.writeFile(filePath, htmlContent);
-  
-        return filePath;
-      }
-    } catch (error) {
-      console.error('Error saving page:', error);
-      return null;
-    }
-  }
-  
-  public static async  fileExists(filePath: string): Promise<boolean> {
-    try {
-      await fs.access(filePath);
-      return true;
-    } catch (error) {
-      return false;
     }
   }
   
