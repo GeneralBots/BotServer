@@ -32,6 +32,7 @@
 
 import { GBLog } from 'botlib';
 import * as en from 'dotenv-extended';
+import path from 'path';
 
 /**
  * @fileoverview General Bots server core.
@@ -103,7 +104,7 @@ export class GBConfigService {
           value = undefined;
           break;
         case 'STORAGE_LIBRARY':
-          value = `${process.env.PWD}/templates`;
+          value = path.join(process.env.PWD, 'templates');
           break;
         case 'BOT_ID':
           value = 'default';
