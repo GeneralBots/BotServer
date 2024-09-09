@@ -155,7 +155,7 @@ export class GBDeployer implements IGBDeployer {
         (await fs.readdir(source))
           .map(name => path.join(source, name))
           .filter(isDirectory);
-      const dirs = getDirectories(directory);
+      const dirs = await getDirectories(directory);
       await CollectionUtil.asyncForEach(dirs, async element => {
         // For each folder, checks its extensions looking for valid packages.
 

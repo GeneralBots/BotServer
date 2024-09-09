@@ -795,43 +795,6 @@ export class SystemKeywords {
    * @example SAVE "Billing",  columnName1, columnName2
    *
    */
-  public async saveToStorage({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
-    if (!fieldsValues || fieldsValues.length === 0 || !fieldsValues[0]) {
-      return;
-    }
-
-    const { min } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `SAVE '${table}': 1 row.`);
-
-    const definition = this.getTableFromName(table, min);
-
-    // Uppercases fields.
-
-    let dst = {};
-    let i = 0;
-    Object.keys(fieldsValues).forEach(fieldSrc => {
-      const field = fieldsNames[i].charAt(0).toUpperCase() + fieldsNames[i].slice(1);
-
-      dst[field] = fieldsValues[fieldSrc];
-
-      i++;
-    });
-    dst = null;
-
-    let item;
-    await retry(
-      async bail => {
-        item = await definition.create(dst);
-      },
-      {
-        retries: 5,
-        onRetry: err => {
-          GBLog.error(`Retrying SaveToStorage due to: ${err.message}.`);
-        }
-      }
-    );
-    return item;
-  }
 
   public async saveToStorageWithJSON({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
