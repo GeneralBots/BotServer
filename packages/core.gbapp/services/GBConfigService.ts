@@ -103,7 +103,7 @@ export class GBConfigService {
           value = undefined;
           break;
         case 'STORAGE_LIBRARY':
-          value = `${process.env.HOME}/gbpackages`;
+          value = `${process.env.PWD}/templates`;
           break;
         case 'BOT_ID':
           value = 'default';
