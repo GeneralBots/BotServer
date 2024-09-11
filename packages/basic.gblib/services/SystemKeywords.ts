@@ -414,7 +414,7 @@ export class SystemKeywords {
         const buffer = pngPages[0].content;
         const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
-    await fs.writeFile(localName, buffer, { encoding: null });
+        await fs.writeFile(localName, buffer, { encoding: null });
 
         return { localName: localName, url: url, data: buffer };
       }
@@ -707,7 +707,7 @@ export class SystemKeywords {
     // Writes it to disk and calculate hash.
 
     const data = await response.arrayBuffer();
-await fs.writeFile(localName, Buffer.from(data), { encoding: null });
+    await fs.writeFile(localName, Buffer.from(data), { encoding: null });
     const hash = new Uint8Array(md5.array(data));
 
     // Performs uploading passing local hash.
@@ -1114,7 +1114,7 @@ await fs.writeFile(localName, Buffer.from(data), { encoding: null });
       const localName = path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
       const url = file['@microsoft.graph.downloadUrl'];
       const response = await fetch(url);
-  await fs.writeFile(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
+      await fs.writeFile(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
 
       var workbook = new Excel.Workbook();
       let worksheet = await workbook.csv.readFile(localName);
@@ -1490,7 +1490,7 @@ await fs.writeFile(localName, Buffer.from(data), { encoding: null });
         user.userSystemId,
         'systemPrompt.txt'
       );
-  await fs.writeFile(systemPromptFile, text);
+      await fs.writeFile(systemPromptFile, text);
     }
   }
 
@@ -1981,7 +1981,7 @@ await fs.writeFile(localName, Buffer.from(data), { encoding: null });
     const res = await fetch(url);
     let buf: any = Buffer.from(await res.arrayBuffer());
     localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
-await fs.writeFile(localName, buf, { encoding: null });
+    await fs.writeFile(localName, buf, { encoding: null });
 
     // Replace image path on all elements of data.
 
@@ -2019,7 +2019,7 @@ await fs.writeFile(localName, buf, { encoding: null });
             );
             const response = await fetch(url);
             const buf = Buffer.from(await response.arrayBuffer());
-        await fs.writeFile(imageName, buf, { encoding: null });
+            await fs.writeFile(imageName, buf, { encoding: null });
 
             const getNormalSize = ({ width, height, orientation }) => {
               return (orientation || 0) >= 5 ? [height, width] : [width, height];
@@ -2068,7 +2068,7 @@ await fs.writeFile(localName, buf, { encoding: null });
     doc.setData(data).render();
 
     buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
-await fs.writeFile(localName, buf, { encoding: null });
+    await fs.writeFile(localName, buf, { encoding: null });
 
     return { localName: localName, url: url, data: buf };
   }
@@ -2526,7 +2526,7 @@ await fs.writeFile(localName, buf, { encoding: null });
 
     const buf = Buffer.from(data.Payment.QrCodeBase64Image, 'base64');
     const localName = path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-await fs.writeFile(localName, buf, { encoding: null });
+    await fs.writeFile(localName, buf, { encoding: null });
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
     GBLogEx.info(min, `GBPay: ${data.MerchantOrderId} OK: ${url}.`);
@@ -2688,25 +2688,29 @@ await fs.writeFile(localName, buf, { encoding: null });
   public async getPdf({ pid, file }) {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `BASIC GET (pdf): ${file}`);
+    try {
+      let data;
 
-    let data;
-
-    if (GBConfigService.get('STORAGE_NAME')) {
-      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-      const gbaiName = GBUtil.getGBAIPath(min.botId);
-      let packagePath = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
-      let template = await this.internalGetDocument(client, baseUrl, packagePath, file);
-      let url = template['@microsoft.graph.downloadUrl'];
-      const res = await fetch(url);
-      let buf: any = Buffer.from(await res.arrayBuffer());
-      data = new Uint8Array(buf);
-    } else {
-      let packagePath = GBUtil.getGBAIPath(min.botId, `gbdrive`);
-      let filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
-      data = await fs.readFile(filePath, 'utf8');
-      data = new Uint8Array(Buffer.from(data, 'utf8'));
+      if (GBConfigService.get('STORAGE_NAME')) {
+        let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+        const gbaiName = GBUtil.getGBAIPath(min.botId);
+        let packagePath = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);
+        let template = await this.internalGetDocument(client, baseUrl, packagePath, file);
+        let url = template['@microsoft.graph.downloadUrl'];
+        const res = await fetch(url);
+        let buf: any = Buffer.from(await res.arrayBuffer());
+        data = new Uint8Array(buf);
+      } else {
+        let packagePath = GBUtil.getGBAIPath(min.botId, `gbdrive`);
+        let filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
+        data = await fs.readFile(filePath);
+        data = new Uint8Array(data);
+      }
+      return await GBUtil.getPdfText(data);
+    } catch (error) {
+      GBLogEx.error(min, error);
+      return null;
     }
-    return await GBUtil.getPdfText(data);
   }
 
   public async setContext({ pid, text }) {
@@ -2752,7 +2756,7 @@ await fs.writeFile(localName, buf, { encoding: null });
 
     // Criação de um arquivo temporário para enviar
     const tempFilePath = path.resolve('temp_image.jpg');
-await fs.writeFile(tempFilePath, imageBuffer);
+    await fs.writeFile(tempFilePath, imageBuffer);
 
     // Publicação da imagem
     const page = new Page(pageId);
@@ -2779,8 +2783,7 @@ await fs.writeFile(tempFilePath, imageBuffer);
     ig.state.generateDevice(username);
     await ig.account.login(username, password);
     const imageBuffer = await fs.readFile(imagePath);
-    const publishResult = await ig.publish.photo(
-      { file: imageBuffer, caption });
+    const publishResult = await ig.publish.photo({ file: imageBuffer, caption });
 
     GBLogEx.info(min, `Image posted on IG: ${publishResult}`);
   }
@@ -2790,6 +2793,6 @@ await fs.writeFile(tempFilePath, imageBuffer);
 
     ChatServices.usersMode[user.userSystemId] = mode;
 
-    GBLogEx.info(min, `LLM Mode (user.userSystemId) : ${mode}`);
+    GBLogEx.info(min, `LLM Mode (${user.userSystemId}): ${mode}`);
   }
 }

@@ -35,13 +35,13 @@
 'use strict';
 import * as YAML from 'yaml';
 import SwaggerClient from 'swagger-client';
-import fs from 'fs/promises'; 
+import fs from 'fs/promises';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
 import path from 'path';
 import { VerbosityLevel, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-VerbosityLevel.ERRORS=0;
-VerbosityLevel.WARNINGS=0;
-VerbosityLevel.INFOS=0;
+VerbosityLevel.ERRORS = 0;
+VerbosityLevel.WARNINGS = 0;
+VerbosityLevel.INFOS = 0;
 import { Page } from 'puppeteer';
 import urljoin from 'url-join';
 
@@ -102,17 +102,17 @@ export class GBUtil {
         return acc;
       }, {});
     };
-  
+
     const extractedError = extractProps(data);
-    
+
     // Inline formatting for logs
     return YAML.stringify(extractedError, {
-      indent: 2,          // Defines the indentation
-      flowLevel: -1,       // Forces inline formatting
-      styles: { '!!null': 'canonical' }  // Optional: Customize null display
+      indent: 2, // Defines the indentation
+      flowLevel: -1, // Forces inline formatting
+      styles: { '!!null': 'canonical' } // Optional: Customize null display
     } as any);
   }
-  
+
   public static sleep(ms) {
     return new Promise(resolve => {
       setTimeout(resolve, ms);
@@ -146,44 +146,45 @@ export class GBUtil {
       return false; // File does not exist
     }
   }
-  
 
   public static async copyIfNewerRecursive(src, dest) {
-    if (!await GBUtil.exists(src)) {
+    if (!(await GBUtil.exists(src))) {
       console.error(`Source path "${src}" does not exist.`);
       return;
     }
 
     // Check if the source is a directory
-    if ((await  fs.stat(src)).isDirectory()) {
+    if ((await fs.stat(src)).isDirectory()) {
       // Create the destination directory if it doesn't exist
-      if (!await GBUtil.exists(dest)) {
-        fs.mkdir(dest, { recursive: true });
+      if (!(await GBUtil.exists(dest))) {
+        await  fs.mkdir(dest, { recursive: true });
       }
 
       // Read all files and directories in the source directory
-      const entries =await  fs.readdir(src);
+      const entries = await fs.readdir(src);
 
       for (let entry of entries) {
         const srcEntry = path.join(src, entry);
         const destEntry = path.join(dest, entry);
 
         // Recursively copy each entry
-        this.copyIfNewerRecursive(srcEntry, destEntry);
+
+        await this.copyIfNewerRecursive(srcEntry, destEntry);
       }
     } else {
       // Source is a file, check if we need to copy it
+
       if (await GBUtil.exists(dest)) {
-        const srcStat =await  fs.stat(src);
-        const destStat =await  fs.stat(dest);
+        const srcStat = await fs.stat(src);
+        const destStat = await fs.stat(dest);
 
         // Copy only if the source file is newer than the destination file
         if (srcStat.mtime > destStat.mtime) {
-          fs.cp(src, dest, { force: true });
+          await fs.cp(src, dest, { force: true });
         }
       } else {
         // Destination file doesn't exist, so copy it
-        fs.cp(src, dest, { force: true });
+        await fs.cp(src, dest, { force: true });
       }
     }
   }
@@ -198,8 +199,7 @@ export class GBUtil {
   }
 
   public static async getPdfText(data): Promise<string> {
-    
-    const pdf = await getDocument({data}).promise;
+    const pdf = await getDocument({ data }).promise;
     let pages = [];
 
     for (let i = 1; i <= pdf.numPages; i++) {
@@ -229,6 +229,4 @@ export class GBUtil {
       return urljoin(gbai, packageName ? packageName : `${botId}.${packageType}`);
     }
   }
-
-
 }
