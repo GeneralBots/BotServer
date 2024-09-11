@@ -2795,4 +2795,69 @@ export class SystemKeywords {
 
     GBLogEx.info(min, `LLM Mode (${user.userSystemId}): ${mode}`);
   }
+
+  /**
+   * Saves variables to storage, not a worksheet.
+   *
+   * @example SAVE "Billing",  columnName1, columnName2
+   *
+   */
+  public async saveToStorage({ pid, table, fieldsValues, fieldsNames }): Promise<any> {
+    if (!fieldsValues || fieldsValues.length === 0 || !fieldsValues[0]) {
+      return;
+    }
+
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    GBLogEx.info(min, `SAVE '${table}': 1 row.`);
+
+    // Uppercase fields
+    const dst = {};
+    fieldsNames.forEach((fieldName, index) => {
+      const field = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+      dst[field] = fieldsValues[Object.keys(fieldsValues)[index]];
+    });
+
+    let item;
+    await retry(
+      async bail => {
+        if (table.endsWith('.csv')) {
+          // CSV handling
+          const packagePath = GBUtil.getGBAIPath(min.botId, "gbdata");
+          const csvFile = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, `${table}`);
+          
+          try {
+            // Try to read the file to get headers
+            const data = await fs.readFile(csvFile, 'utf8');
+            const headers = data.split('\n')[0].split(',');
+            const db = await csvdb(csvFile, headers, ',');
+            
+            // Append new row
+            await db.add(dst);
+            item = dst;
+          } catch (error) {
+            if (error.code === 'ENOENT') {
+              // File doesn't exist, create it with headers and data
+              const headers = Object.keys(dst);
+              await fs.writeFile(csvFile, headers.join(',') + '\n');
+              const db = await csvdb(csvFile, headers, ',');
+              await db.add(dst);
+              item = dst;
+            } else {
+              throw error;
+            }
+          }
+        } else {
+          const definition = this.getTableFromName(table, min);
+          item = await definition.create(dst);
+        }
+      },
+      {
+        retries: 5,
+        onRetry: err => {
+          GBLog.error(`Retrying SaveToStorage due to: ${err.message}.`);
+        }
+      }
+    );
+    return item;
+  }
 }
