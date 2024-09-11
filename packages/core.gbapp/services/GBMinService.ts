@@ -1749,9 +1749,9 @@ await fs.writeFile(localFileName, buffer);
   private async watchPackages(min: GBMinInstance, packageType) {
     if (!GBConfigService.get('STORAGE_NAME')) {
       const packagePath = GBUtil.getGBAIPath(min.botId, packageType);
-      const dirPath = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath);
+      const libraryPath = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath);
   
-      const watcher = chokidar.watch(dirPath, {
+      const watcher =   chokidar.watch(libraryPath, {
         persistent: true,
         ignoreInitial: true, // Ignore initial add events
         depth: 99, // Watch subdirectories
@@ -1780,8 +1780,8 @@ await fs.writeFile(localFileName, buffer);
         if (this.recentChanges.size > 0) {
           
           try {
-                        
-            await this.deployer.deployPackage2(min, null, dirPath);
+            const workFolder = path.join('work', packagePath);       
+            await this.deployer.deployPackage2(min, null, workFolder, true);
 
           } catch (error) {
             GBLogEx.error(min, `Error deploying package: ${GBUtil.toYAML(error)}`);

@@ -471,7 +471,7 @@ export class KBService implements IGBKBService {
     const answers = [];
     const questions = [];
 
-    GBLogEx.info(min, `Processing ${rows.length} rows from tabular file ${filePath}...`);
+    GBLogEx.info(min, `Processing ${rows.length} rows from ${path.basename(filePath)}...`);
     await asyncPromise.eachSeries(rows, async line => {
       // Skips the first line.
 
@@ -1370,7 +1370,7 @@ export class KBService implements IGBKBService {
       await fs.writeFile(packagePath, html, 'utf8');
     }
 
-    GBLogEx.info(min, `Done publishing of: ${localPath}.`);
+    GBLogEx.info(min, `Done publishing of: ${path.basename(localPath)}.`);
   }
 
   private async playAudio(
