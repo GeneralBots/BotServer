@@ -155,7 +155,7 @@ export class GBVMService extends GBService {
 
       // Write VBS file without pragma keywords.
 
-      fs.writeFile(urlJoin(folder, vbsFile), text);
+  await fs.writeFile(urlJoin(folder, vbsFile), text);
     }
 
     // Process node_modules install.
@@ -215,7 +215,7 @@ export class GBVMService extends GBService {
                 "async-retry": "1.3.3"
               }
             }`;
-      fs.writeFile(urlJoin(folder, 'package.json'), packageJson);
+  await fs.writeFile(urlJoin(folder, 'package.json'), packageJson);
 
       GBLogEx.info(min, `Installing .gbdialog node_modules for ${min.botId}...`);
       const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
@@ -498,10 +498,10 @@ export class GBVMService extends GBService {
     // Generates function JSON metadata to be used later.
 
     const jsonFile = `${filename}.json`;
-    fs.writeFile(jsonFile, JSON.stringify(metadata));
+await fs.writeFile(jsonFile, JSON.stringify(metadata));
 
     const mapFile = `${filename}.map`;
-    fs.writeFile(mapFile, JSON.stringify(map));
+await fs.writeFile(mapFile, JSON.stringify(map));
 
     // Execute off-line code tasks
 
@@ -711,7 +711,7 @@ export class GBVMService extends GBService {
 
     code = ji.default(code, '  ');
 
-    fs.writeFile(jsfile, code);
+await fs.writeFile(jsfile, code);
     GBLogEx.info(min, `[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
   }
 
@@ -723,7 +723,7 @@ export class GBVMService extends GBService {
         // Creates an empty object that will receive Sequelize fields.
 
         const tablesFile = `${task.file}.tables.json`;
-        fs.writeFile(tablesFile, JSON.stringify(task.tables));
+    await fs.writeFile(tablesFile, JSON.stringify(task.tables));
       }
     }
   }

@@ -188,7 +188,7 @@ export class WhatsappDirectLine extends GBService {
                 'cache',
                 `qr${GBAdminService.getRndReadableIdentifier()}.png`
               );
-              fs.writeFile(localName, qrBuf.data);
+          await fs.writeFile(localName, qrBuf.data);
               const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', path.basename(localName));
 
               if (adminNumber) {
@@ -331,7 +331,7 @@ export class WhatsappDirectLine extends GBService {
             'cache',
             `tmp${GBAdminService.getRndReadableIdentifier()}.docx`
           );
-          fs.writeFile(localName, buf, { encoding: null });
+      await fs.writeFile(localName, buf, { encoding: null });
           const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', path.basename(localName));
 
           attachments = [];

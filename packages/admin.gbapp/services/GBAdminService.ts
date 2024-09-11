@@ -173,21 +173,7 @@ export class GBAdminService implements IGBAdminService {
     const gbaiPath = GBUtil.getGBAIPath(min.instance.botId, packageType, null);
     const localFolder = path.join('work', gbaiPath);
 
-    // .gbot packages are handled using storage API, so no download
-    // of local resources is required.
-    const gbai = GBUtil.getGBAIPath(min.instance.botId);
-
-    if (packageType === 'gbkb') {
-      await deployer['cleanupPackage'](min.instance, packageName);
-    }
-
-    if (!GBConfigService.get('STORAGE_NAME')) {
-      const filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbaiPath);
-      GBUtil.copyIfNewerRecursive(filePath, localFolder);
-    } else {
-      await deployer['downloadFolder'](min, path.join('work', `${gbai}`), path.basename(localFolder));
-    }
-    await deployer['deployPackage2'](min, user, localFolder);
+    await deployer['deployPackage2'](min, user, localFolder, true);
 
   }
   public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: GBDeployer) {

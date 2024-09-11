@@ -110,7 +110,7 @@ export class GBSSR {
         const file = await fs.readFile(preferences, 'utf8');
         const data = JSON.parse(file);
         data['profile']['exit_type'] = 'none';
-        fs.writeFile(preferences, JSON.stringify(data));
+    await fs.writeFile(preferences, JSON.stringify(data));
       }
     }
 

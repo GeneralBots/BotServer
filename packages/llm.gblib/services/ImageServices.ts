@@ -73,7 +73,7 @@ export class ImageServices {
       const url = response.data[0].url;
       const res = await fetch(url);
       let buf: any = Buffer.from(await res.arrayBuffer());
-      fs.writeFile(localName, buf, { encoding: null });
+  await fs.writeFile(localName, buf, { encoding: null });
 
       GBLogEx.info(min, `DALL-E image generated at ${url}.`);
 

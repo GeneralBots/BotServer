@@ -441,9 +441,15 @@ export class KBService implements IGBKBService {
     min: GBMinInstance,
     packageId: number
   ): Promise<GuaribasQuestion[]> {
-    GBLogEx.info(min, `Now reading file ${filePath}...`);
+    GBLogEx.info(min, `Now reading file ${path.basename(filePath)}...`);
     const workbook = new Excel.Workbook();
-    const data = await workbook.xlsx.readFile(filePath);
+
+    let data;
+    if (filePath.endsWith('.xlsx')) {
+      data = await workbook.xlsx.readFile(filePath);
+    } else if (filePath.endsWith('.csv')) {
+      data = await workbook.csv.readFile(filePath);
+    }
 
     let lastQuestionId: number;
     let lastAnswer: GuaribasAnswer;
@@ -451,11 +457,13 @@ export class KBService implements IGBKBService {
     // Finds a valid worksheet because Excel returns empty slots
     // when loading worksheets collection.
 
-    let worksheet: any;
-    for (let t = 0; t < data.worksheets.length; t++) {
-      worksheet = data.worksheets[t];
-      if (worksheet) {
-        break;
+    let worksheet = data;
+    if (!worksheet) {
+      for (let t = 0; t < data.worksheets.length; t++) {
+        worksheet = data.worksheets[t];
+        if (worksheet) {
+          break;
+        }
       }
     }
 
@@ -778,7 +786,7 @@ export class KBService implements IGBKBService {
               path.basename(localName)
             );
             const buffer = await image.read();
-            fs.writeFile(localName, buffer, { encoding: null });
+            await fs.writeFile(localName, buffer, { encoding: null });
             return { src: url };
           }
         };
@@ -1098,15 +1106,12 @@ export class KBService implements IGBKBService {
         } catch (error) {
           GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
         }
-
       });
     }
 
     files = await walkPromise(urlJoin(localPath, 'docs'));
 
-    if (!files[0]) {
-      GBLogEx.info(min, `[GBDeployer] docs folder not created yet in .gbkb neither a website in .gbot.`);
-    } else {
+    if (files[0]) {
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
         let filePath = path.join(file.root, file.name);
@@ -1181,7 +1186,7 @@ export class KBService implements IGBKBService {
     const files = await walkPromise(localPath);
 
     await CollectionUtil.asyncForEach(files, async file => {
-      if (file !== null && file.name.endsWith('.xlsx')) {
+      if (file !== null && (file.name.endsWith('.xlsx') || file.name.endsWith('.csv'))) {
         return await this.importKbTabularFile(urlJoin(file.root, file.name), min, packageId);
       }
     });
@@ -1340,7 +1345,7 @@ export class KBService implements IGBKBService {
   public async deployKb(core: IGBCoreService, deployer: GBDeployer, localPath: string, min: GBMinInstance) {
     const packageName = path.basename(localPath);
     const instance = await core.loadInstanceByBotId(min.botId);
-    GBLogEx.info(min, `[GBDeployer] Importing: ${localPath}`);
+    GBLogEx.info(min, `Publishing: ${path.basename(localPath)}`);
 
     const p = await deployer.deployPackageToStorage(instance.instanceId, packageName);
     await this.importKbPackage(min, localPath, p, instance);
@@ -1354,14 +1359,18 @@ export class KBService implements IGBKBService {
     min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
     await KBService.RefreshNER(min);
 
-    GBLogEx.info(min, `[GBDeployer] Start Bot Server Side Rendering... ${localPath}`);
-    const html = await GBSSR.getHTML(min);
-    let packagePath = GBUtil.getGBAIPath(min.botId, `gbui`);
-    packagePath = path.join(process.env.PWD, 'work', packagePath, 'index.html');
-    GBLogEx.info(min, `[GBDeployer] Saving SSR HTML in ${packagePath}.`);
-    fs.writeFile(packagePath, html, 'utf8');
+    const ssr = min.core.getParam<boolean>(min.instance, 'SSR', false);
 
-    GBLogEx.info(min, `[GBDeployer] Finished import of ${localPath}`);
+    if (ssr) {
+      GBLogEx.info(min, `Start Bot Server Side Rendering... ${localPath}`);
+      const html = await GBSSR.getHTML(min);
+      let packagePath = GBUtil.getGBAIPath(min.botId, `gbui`);
+      packagePath = path.join(process.env.PWD, 'work', packagePath, 'index.html');
+      GBLogEx.info(min, `Saving SSR HTML in ${packagePath}.`);
+      await fs.writeFile(packagePath, html, 'utf8');
+    }
+
+    GBLogEx.info(min, `Done publishing of: ${localPath}.`);
   }
 
   private async playAudio(
@@ -1434,7 +1443,6 @@ export class KBService implements IGBKBService {
     directoryPath: string
   ): Promise<string | null> {
     try {
-      
       // Check if the directory exists, create it if not.
 
       const directoryExists = await GBUtil.exists(directoryPath);
@@ -1443,7 +1451,7 @@ export class KBService implements IGBKBService {
       }
 
       // Check if the URL is for a downloadable file (e.g., .pdf).
-      
+
       if (
         url.endsWith('.pdf') ||
         url.endsWith('.docx') ||

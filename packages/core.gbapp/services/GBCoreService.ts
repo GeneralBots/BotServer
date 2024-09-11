@@ -35,7 +35,7 @@
 'use strict';
 
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
-import fs from 'fs/promises'; 
+import fs from 'fs/promises';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Op, Dialect } from 'sequelize';
 import { GBServer } from '../../../src/app.js';
@@ -135,7 +135,7 @@ export class GBCoreService implements IGBCoreService {
     } else if (this.dialect === 'sqlite') {
       storage = GBConfigService.get('STORAGE_FILE');
 
-      if (!await GBUtil.exists(storage)) {
+      if (!(await GBUtil.exists(storage))) {
         process.env.STORAGE_SYNC = 'true';
       }
     } else {
@@ -313,7 +313,7 @@ STORAGE_SYNC_ALTER=true
 ENDPOINT_UPDATE=true
 `;
 
-    fs.writeFile('.env', env);
+await fs.writeFile('.env', env);
   }
 
   /**
@@ -323,7 +323,10 @@ ENDPOINT_UPDATE=true
    */
   public async ensureProxy(port): Promise<string> {
     try {
-      if (await GBUtil.exists('node_modules/ngrok/bin/ngrok.exe') || await GBUtil.exists('node_modules/.bin/ngrok')) {
+      if (
+        (await GBUtil.exists('node_modules/ngrok/bin/ngrok.exe')) ||
+        (await GBUtil.exists('node_modules/.bin/ngrok'))
+      ) {
         return await ngrok.connect({ port: port });
       } else {
         GBLog.warn('ngrok executable not found. Check installation or node_modules folder.');
@@ -825,15 +828,15 @@ ENDPOINT_UPDATE=true
   public async ensureFolders(instances, deployer: GBDeployer) {
     let libraryPath = GBConfigService.get('STORAGE_LIBRARY');
 
-    if (!await GBUtil.exists(libraryPath)) {
+    if (!(await GBUtil.exists(libraryPath))) {
       mkdirp.sync(libraryPath);
     }
 
     await this.syncBotStorage(instances, 'default', deployer, libraryPath);
 
-    const files = fs.readdir(libraryPath);
+    const files = await fs.readdir(libraryPath);
     await CollectionUtil.asyncForEach(files, async file => {
-      if (file.trim().toLowerCase() !== 'default.gbai') {
+      if (file.trim().toLowerCase() !== 'default.gbai' && file.charAt(0) !== '_') {
         let botId = file.replace(/\.gbai/, '');
 
         await this.syncBotStorage(instances, botId, deployer, libraryPath);
@@ -855,7 +858,7 @@ ENDPOINT_UPDATE=true
       instance = await deployer.deployBlankBot(botId, mobile, email);
       const gbaiPath = path.join(libraryPath, `${botId}.gbai`);
 
-      if (!await GBUtil.exists(gbaiPath)) {
+      if (!(await GBUtil.exists(gbaiPath))) {
         fs.mkdir(gbaiPath, { recursive: true });
 
         const base = path.join(process.env.PWD, 'templates', 'default.gbai');

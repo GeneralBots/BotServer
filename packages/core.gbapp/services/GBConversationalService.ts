@@ -452,7 +452,7 @@ export class GBConversationalService {
         const waveFilename = `work/tmp${name}.pcm`;
 
         let audio = await textToSpeech.repairWavHeaderStream(res.result as any);
-        fs.writeFile(waveFilename, audio);
+    await fs.writeFile(waveFilename, audio);
 
         const oggFilenameOnly = `tmp${name}.ogg`;
         const oggFilename = `work/${oggFilenameOnly}`;
@@ -482,7 +482,7 @@ export class GBConversationalService {
 
         const dest = `work/tmp${name}.wav`;
         const src = `work/tmp${name}.ogg`;
-        fs.writeFile(src, oggFile.read());
+    await fs.writeFile(src, oggFile.read());
 
         const makeMp3 = shell([
           'node_modules/ffmpeg-static/ffmpeg', // TODO: .exe on MSWin.

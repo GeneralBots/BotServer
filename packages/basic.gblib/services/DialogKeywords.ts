@@ -1500,7 +1500,7 @@ export class DialogKeywords {
         'cache',
         `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
       );
-      fs.writeFile(localName1, buf, { encoding: null });
+  await fs.writeFile(localName1, buf, { encoding: null });
 
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName1));
     }
@@ -1513,7 +1513,7 @@ export class DialogKeywords {
       const buf = await fs.readFile(filename);
       const gbaiName = GBUtil.getGBAIPath(min.botId);
       const localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
-      fs.writeFile(localName, buf, { encoding: null });
+  await fs.writeFile(localName, buf, { encoding: null });
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
     }
 
@@ -1546,7 +1546,7 @@ export class DialogKeywords {
 
     const gbaiName = GBUtil.getGBAIPath(min.botId);
     const localName = path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-    fs.writeFile(localName, buf, { encoding: null });
+await fs.writeFile(localName, buf, { encoding: null });
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
     return { data: data, localName: localName, url: url };

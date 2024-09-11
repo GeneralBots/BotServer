@@ -36,6 +36,10 @@
 import { createRpcServer } from '@push-rpc/core';
 import AuthenticationContext from 'adal-node';
 import arrayBufferToBuffer from 'arraybuffer-to-buffer';
+import { watch } from 'fs';
+import debounce from 'lodash.debounce';
+
+import chokidar from 'chokidar';
 import {
   AutoSaveStateMiddleware,
   BotFrameworkAdapter,
@@ -45,7 +49,14 @@ import {
   UserState
 } from 'botbuilder';
 import { FacebookAdapter } from 'botbuilder-adapter-facebook';
-import { AttachmentPrompt, ConfirmPrompt, DialogSet, OAuthPrompt, TextPrompt, WaterfallDialog } from 'botbuilder-dialogs';
+import {
+  AttachmentPrompt,
+  ConfirmPrompt,
+  DialogSet,
+  OAuthPrompt,
+  TextPrompt,
+  WaterfallDialog
+} from 'botbuilder-dialogs';
 import { MicrosoftAppCredentials } from 'botframework-connector';
 import {
   GBDialogStep,
@@ -313,39 +324,48 @@ export class GBMinService {
     let dir = `work/${gbai}/cache`;
     const botId = gbai.replace(/\.[^/.]+$/, '');
 
-    if (!await GBUtil.exists(dir)) {
+    if (!(await GBUtil.exists(dir))) {
       mkdirp.sync(dir);
     }
     dir = `work/${gbai}/profile`;
-    if (!await GBUtil.exists(dir)) {
+    if (!(await GBUtil.exists(dir))) {
       mkdirp.sync(dir);
     }
     dir = `work/${gbai}/uploads`;
-    if (!await GBUtil.exists(dir)) {
+    if (!(await GBUtil.exists(dir))) {
       mkdirp.sync(dir);
     }
+
     dir = `work/${gbai}/${botId}.gbkb`;
-    if (!await GBUtil.exists(dir)) {
+    if (!(await GBUtil.exists(dir))) {
       mkdirp.sync(dir);
     }
+    await this.watchPackages(min, 'gbkb');
+
     dir = `work/${gbai}/${botId}.gbkb/docs-vectorized`;
-    if (!await GBUtil.exists(dir)) {
+    if (!(await GBUtil.exists(dir))) {
       mkdirp.sync(dir);
     }
+
     dir = `work/${gbai}/${botId}.gbdialog`;
-    if (!await GBUtil.exists(dir)) {
+    if (!(await GBUtil.exists(dir))) {
       mkdirp.sync(dir);
     }
+    await this.watchPackages(min, 'gbdialog');
+
     dir = `work/${gbai}/${botId}.gbot`;
-    if (!await GBUtil.exists(dir)) {
+    if (!(await GBUtil.exists(dir))) {
       mkdirp.sync(dir);
     }
+    await this.watchPackages(min, 'gbot');
+
     dir = `work/${gbai}/${botId}.gbui`;
-    if (!await GBUtil.exists(dir)) {
+    if (!(await GBUtil.exists(dir))) {
       mkdirp.sync(dir);
     }
+
     dir = `work/${gbai}/users`;
-    if (!await GBUtil.exists(dir)) {
+    if (!(await GBUtil.exists(dir))) {
       mkdirp.sync(dir);
     }
 
@@ -354,7 +374,7 @@ export class GBMinService {
     await this.invokeLoadBot(min.appPackages, GBServer.globals.sysPackages, min);
     const receiver = async (req, res) => {
       let path = /(http[s]?:\/\/)?([^\/\s]+\/)(.*)/gi;
-      const botId = req.url.substr(req.url.lastIndexOf('/') +1);
+      const botId = req.url.substr(req.url.lastIndexOf('/') + 1);
 
       const min = GBServer.globals.minInstances.filter(p => p.instance.botId == botId)[0];
 
@@ -387,10 +407,9 @@ export class GBMinService {
 
     const manifest = `${instance.botId}-Teams.zip`;
     const packageTeams = urlJoin(`work`, GBUtil.getGBAIPath(instance.botId), manifest);
-    if (!await GBUtil.exists(packageTeams)) {
-      GBLogEx.info(min, 'Generating MS Teams manifest....');
+    if (!(await GBUtil.exists(packageTeams))) {
       const data = await this.deployer.getBotManifest(instance);
-      fs.writeFile(packageTeams, data);
+  await fs.writeFile(packageTeams, data);
     }
 
     // Serves individual URL for each bot user interface.
@@ -468,7 +487,7 @@ export class GBMinService {
 
     return min;
   }
-
+   
   public static getProviderName(req: any, res: any) {
     if (!res) {
       return 'GeneralBots';
@@ -1098,7 +1117,7 @@ export class GBMinService {
             const folder = `work/${path}/cache`;
             const filename = `${GBAdminService.generateUuid()}.png`;
 
-            fs.writeFile(urlJoin(folder, filename), data);
+        await fs.writeFile(urlJoin(folder, filename), data);
             step.context.activity.text = urlJoin(
               GBServer.globals.publicAddress,
               `${min.instance.botId}`,
@@ -1286,7 +1305,7 @@ export class GBMinService {
       buffer = arrayBufferToBuffer(await res.arrayBuffer());
     }
 
-    fs.writeFile(localFileName, buffer);
+await fs.writeFile(localFileName, buffer);
 
     return {
       fileName: attachment.name,
@@ -1723,4 +1742,65 @@ export class GBMinService {
 
     createRpcServer(proxies, GBServer.globals.server.apiServer, opts);
   }
+
+    // Map to track recent changes with timestamps
+    private  recentChanges: Map<string, number> = new Map();
+
+  private async watchPackages(min: GBMinInstance, packageType) {
+    if (!GBConfigService.get('STORAGE_NAME')) {
+      const packagePath = GBUtil.getGBAIPath(min.botId, packageType);
+      const dirPath = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath);
+  
+      const watcher = chokidar.watch(dirPath, {
+        persistent: true,
+        ignoreInitial: true, // Ignore initial add events
+        depth: 99, // Watch subdirectories
+        awaitWriteFinish: {
+          stabilityThreshold: 500, // Wait for 500ms to ensure file is written completely
+        }
+      });
+  
+      const WRITE_INTERVAL = 5000; // 5 seconds interval
+  
+      // Function to handle file changes and prevent multiple calls within the 5-second window
+      const handleFileChange = async (filePath) => {
+        const now = Date.now();
+  
+        // Add or update the file in the recent changes list
+        this.recentChanges.set(filePath, now);
+  
+        // Clean up entries older than 5 seconds
+        for (const [key, timestamp] of this.recentChanges.entries()) {
+          if (now - timestamp > WRITE_INTERVAL) {
+            this.recentChanges.delete(key);
+          }
+        }
+  
+        // If we have recent changes, deploy the package only once
+        if (this.recentChanges.size > 0) {
+          
+          try {
+                        
+            await this.deployer.deployPackage2(min, null, dirPath);
+
+          } catch (error) {
+            GBLogEx.error(min, `Error deploying package: ${GBUtil.toYAML(error)}`);
+          }
+  
+          // Delay further processing to prevent multiple deployments within 5 seconds
+          await new Promise(resolve => setTimeout(resolve, WRITE_INTERVAL));
+          
+          // After the delay, clear only entries that were processed
+          this.recentChanges.clear();
+        }
+      };
+  
+      // Watch for file changes
+      watcher.on('change', (filePath) => {
+        handleFileChange(filePath).catch(error => console.error('Error processing file change:', error));
+      });
+  
+    }
+  }
+  
 }

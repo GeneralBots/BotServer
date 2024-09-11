@@ -414,7 +414,7 @@ export class SystemKeywords {
         const buffer = pngPages[0].content;
         const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
-        fs.writeFile(localName, buffer, { encoding: null });
+    await fs.writeFile(localName, buffer, { encoding: null });
 
         return { localName: localName, url: url, data: buffer };
       }
@@ -707,7 +707,7 @@ export class SystemKeywords {
     // Writes it to disk and calculate hash.
 
     const data = await response.arrayBuffer();
-    fs.writeFile(localName, Buffer.from(data), { encoding: null });
+await fs.writeFile(localName, Buffer.from(data), { encoding: null });
     const hash = new Uint8Array(md5.array(data));
 
     // Performs uploading passing local hash.
@@ -1114,7 +1114,7 @@ export class SystemKeywords {
       const localName = path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
       const url = file['@microsoft.graph.downloadUrl'];
       const response = await fetch(url);
-      fs.writeFile(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
+  await fs.writeFile(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
 
       var workbook = new Excel.Workbook();
       let worksheet = await workbook.csv.readFile(localName);
@@ -1490,7 +1490,7 @@ export class SystemKeywords {
         user.userSystemId,
         'systemPrompt.txt'
       );
-      fs.writeFile(systemPromptFile, text);
+  await fs.writeFile(systemPromptFile, text);
     }
   }
 
@@ -1981,7 +1981,7 @@ export class SystemKeywords {
     const res = await fetch(url);
     let buf: any = Buffer.from(await res.arrayBuffer());
     localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
-    fs.writeFile(localName, buf, { encoding: null });
+await fs.writeFile(localName, buf, { encoding: null });
 
     // Replace image path on all elements of data.
 
@@ -2019,7 +2019,7 @@ export class SystemKeywords {
             );
             const response = await fetch(url);
             const buf = Buffer.from(await response.arrayBuffer());
-            fs.writeFile(imageName, buf, { encoding: null });
+        await fs.writeFile(imageName, buf, { encoding: null });
 
             const getNormalSize = ({ width, height, orientation }) => {
               return (orientation || 0) >= 5 ? [height, width] : [width, height];
@@ -2068,7 +2068,7 @@ export class SystemKeywords {
     doc.setData(data).render();
 
     buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
-    fs.writeFile(localName, buf, { encoding: null });
+await fs.writeFile(localName, buf, { encoding: null });
 
     return { localName: localName, url: url, data: buf };
   }
@@ -2526,7 +2526,7 @@ export class SystemKeywords {
 
     const buf = Buffer.from(data.Payment.QrCodeBase64Image, 'base64');
     const localName = path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-    fs.writeFile(localName, buf, { encoding: null });
+await fs.writeFile(localName, buf, { encoding: null });
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
     GBLogEx.info(min, `GBPay: ${data.MerchantOrderId} OK: ${url}.`);
@@ -2752,7 +2752,7 @@ export class SystemKeywords {
 
     // Criação de um arquivo temporário para enviar
     const tempFilePath = path.resolve('temp_image.jpg');
-    fs.writeFile(tempFilePath, imageBuffer);
+await fs.writeFile(tempFilePath, imageBuffer);
 
     // Publicação da imagem
     const page = new Page(pageId);

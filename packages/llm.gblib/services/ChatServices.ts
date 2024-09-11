@@ -188,7 +188,7 @@ export class ChatServices {
       const gbaiName = GBUtil.getGBAIPath(min.botId, null);
       const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
-      fs.writeFile(localName, buffer, { encoding: null });
+  await fs.writeFile(localName, buffer, { encoding: null });
       return { localName: localName, url: url, data: buffer };
     }
   }
