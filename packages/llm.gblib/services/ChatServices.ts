@@ -414,12 +414,12 @@ export class ChatServices {
     sources as an array of ('file' indicating the PDF filename and 'page' indicating the page number) listing all segmented context. 
     Example JSON format: "text": "this is the answer, anything LLM output as text answer shoud be here.", 
     "sources": [{{"file": "filename.pdf", "page": 3}}, {{"file": "filename2.pdf", "page": 1}}],
-    return valid JSON with brackets. Avoid explaining the context directly
+    return *valid READY TO BE PARSED JSON* with brackets. Avoid explaining the context directly
     to the Human; instead, refer to the document source, always return more than one source document
     and check if the answer can be extended by using additional contexts in 
     other files, as specified before.
     
-    Double check if the output is a valid JSON with brackets. all fields are required: text, file, page.
+    Double check if the output is a valid RFC 8259 JSON. all fields are required: text, file, page.
   `;
 
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([

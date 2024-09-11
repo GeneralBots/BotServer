@@ -120,24 +120,37 @@ export class GBUtil {
   }
 
   public static caseInsensitive(listOrRow) {
+    // If the input is not an object or array, return it as is
     if (!listOrRow || typeof listOrRow !== 'object') {
       return listOrRow;
     }
-    const lowercase = oldKey => (typeof oldKey === 'string' ? oldKey.toLowerCase() : oldKey);
+  
+    // Helper function to convert property names to lowercase
+    const lowercase = key => typeof key === 'string' ? key.toLowerCase() : key;
+  
+    // Create a proxy that maps property accesses to lowercase property names
     const createCaseInsensitiveProxy = obj => {
-      const propertiesMap = new Map(Object.keys(obj).map(propKey => [lowercase(propKey), obj[propKey]]));
+      const propertiesMap = new Map(
+        Object.keys(obj).map(propKey => [lowercase(propKey), obj[propKey]])
+      );
+      
       const caseInsensitiveGetHandler = {
         get: (target, property) => propertiesMap.get(lowercase(property))
       };
+  
       return new Proxy(obj, caseInsensitiveGetHandler);
     };
+  
+    // Handle arrays by mapping each element to a case-insensitive proxy
     if (Array.isArray(listOrRow)) {
-      return listOrRow.map(row => createCaseInsensitiveProxy(row));
+      return listOrRow.map(row => 
+        typeof row === 'object' && row !== null ? createCaseInsensitiveProxy(row) : row
+      );
     } else {
       return createCaseInsensitiveProxy(listOrRow);
     }
   }
-
+  
   public static async exists(filePath: string): Promise<boolean> {
     try {
       await fs.access(filePath);
