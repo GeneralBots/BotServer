@@ -217,7 +217,7 @@ export class GBVMService extends GBService {
             }`;
   await fs.writeFile(urlJoin(folder, 'package.json'), packageJson);
 
-      GBLogEx.info(min, `Installing .gbdialog node_modules for ${min.botId}...`);
+      GBLogEx.info(min, `Installing node_modules...`);
       const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
       child_process.exec(`${npmPath} install`, { cwd: folder });
     }
@@ -280,7 +280,7 @@ export class GBVMService extends GBService {
       };
 
       if (!min[connectionName]) {
-        GBLogEx.info(min, `Loading custom connection ${connectionName}...`);
+        GBLogEx.info(min, `Loading data connection ${connectionName}...`);
         min[connectionName] = new Sequelize(storageName, username, password, sequelizeOptions);
         min[connectionName]['gbconnection'] = con;
       }
@@ -712,7 +712,7 @@ await fs.writeFile(mapFile, JSON.stringify(map));
     code = ji.default(code, '  ');
 
 await fs.writeFile(jsfile, code);
-    GBLogEx.info(min, `[GBVMService] Finished loading of ${filename}, JavaScript from Word: \n ${code}`);
+    GBLogEx.info(min, `Code reloaded: ${path.basename(filename)}.`);
   }
 
   private async executeTasks(min, tasks) {

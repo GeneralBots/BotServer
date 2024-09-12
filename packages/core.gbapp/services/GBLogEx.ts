@@ -40,48 +40,48 @@ import { GBServer } from '../../../src/app.js';
 import { GBConfigService } from './GBConfigService.js';
 
 export class GBLogEx {
-  public static async error(minOrInstanceId: any, message: string) {
+  private static async logWithLevel(
+    level: 'error' | 'debug' | 'info' | 'verbose',
+    minOrInstanceId: any,
+    message: string
+  ) {
+    const instanceId = this.normalizeInstanceId(minOrInstanceId);
+    GBLog[level](`${instanceId}: ${message}`);
+    await this.log(instanceId, level.charAt(0), message);
+  }
+
+  private static normalizeInstanceId(minOrInstanceId: any): string | number {
     if (typeof minOrInstanceId === 'object') {
-      minOrInstanceId = minOrInstanceId.instance.instanceId;
+      return minOrInstanceId.instance ? minOrInstanceId.instance.botId : minOrInstanceId.botId;
     }
-    GBLog.error(`${minOrInstanceId}: ${message}`);
-    await this.log(minOrInstanceId, 'e', message);
+    return minOrInstanceId === 0 ? 'default' : minOrInstanceId;
+  }
+
+  public static async error(minOrInstanceId: any, message: string) {
+    await this.logWithLevel('error', minOrInstanceId, message);
   }
 
   public static async debug(minOrInstanceId: any, message: string) {
-    if (typeof minOrInstanceId === 'object') {
-      minOrInstanceId = minOrInstanceId.instance.instanceId;
-    }
-    GBLog.debug(`${minOrInstanceId}: ${message}`);
-    await this.log(minOrInstanceId, 'd', message);
+    await this.logWithLevel('debug', minOrInstanceId, message);
   }
 
   public static async info(minOrInstanceId: any, message: string) {
-
-    if (typeof minOrInstanceId === 'object') {
-      minOrInstanceId = minOrInstanceId.instance.instanceId;
-    }
-    GBLog.info(`${minOrInstanceId}: ${message}`);
-    await this.log(minOrInstanceId, 'i', message);
+    await this.logWithLevel('info', minOrInstanceId, message);
   }
 
   public static async verbose(minOrInstanceId: any, message: string) {
-    if (typeof minOrInstanceId === 'object') {
-      minOrInstanceId = minOrInstanceId.instance.instanceId;
-    }
-    GBLog.verbose(`${minOrInstanceId}: ${message}`);
-    await this.log(minOrInstanceId, 'v', message);
+    await this.logWithLevel('verbose', minOrInstanceId, message);
   }
 
   /**
    * Finds and update user agent information to a next available person.
    */
-  public static async log(instance: IGBInstance, kind: string, message: string): Promise<GuaribasLog> {
+  public static async log(instance, kind: string, message: string): Promise<GuaribasLog> {
     if (GBConfigService.get('LOG_ON_STORAGE')) {
       message = message ? message.substring(0, 1023) : null;
 
       return await GuaribasLog.create(<GuaribasLog>{
-        instanceId: instance ? instance.instanceId : GBServer.globals,
+        instanceId: instance ? instance : 0,
         message: message,
         kind: kind
       });

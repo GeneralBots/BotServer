@@ -59,6 +59,7 @@ import { GBLogEx } from './GBLogEx.js';
 import { GBUtil } from '../../../src/util.js';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
 import { OpenAIEmbeddings } from '@langchain/openai';
+import { GBMinService } from './GBMinService.js';
 
 /**
  * Deployer service for bots, themes, ai and more.
@@ -688,6 +689,7 @@ export class GBDeployer implements IGBDeployer {
           await this.core.saveInstance(min.instance);
           GBServer.globals.minService.unmountBot(min.botId);
           GBServer.globals.minService.mountBot(min.instance);
+
           GBLogEx.info(min, `Bot ${min.botId} reloaded.`);
         }
         break;

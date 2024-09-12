@@ -1366,17 +1366,17 @@ export class DialogKeywords {
   }
 
   public async start({ botId, botApiKey, userSystemId, text }) {
+
     let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
     let sec = new SecService();
     let user = await sec.getUserFromSystemId(userSystemId);
+
     if (!user) {
       user = await sec.ensureUser(min, userSystemId, userSystemId, null, 'api', 'API User', null);
     }
 
     const pid = GBVMService.createProcessInfo(user, min, 'api', null);
-
     const conversation = min['apiConversations'][pid];
-
     const client = await GBUtil.getDirectLineClient(min);
     conversation.client = client;
     const response = await client.apis.Conversations.Conversations_StartConversation();

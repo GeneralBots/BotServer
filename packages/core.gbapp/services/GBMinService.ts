@@ -181,11 +181,11 @@ export class GBMinService {
       instances,
       (async instance => {
         try {
-          GBLog.info(`Mounting ${instance.botId}...`);
+          GBLogEx.info(instance, `Mounting...`);
           const min = await this['mountBot'](instance);
           minInstances.push(min);
         } catch (error) {
-          GBLog.error(`Error mounting bot ${instance.botId}: ${error.message}\n${error.stack}`);
+          GBLogEx.error(instance, `Error mounting bot: ${error.message}\n${error.stack}`);
         }
       }).bind(this)
     );
@@ -400,6 +400,7 @@ export class GBMinService {
       res.end();
     });
 
+    await GBMinService.ensureAPI(min);
     GBLog.verbose(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
 
     // Generates MS Teams manifest.
@@ -479,10 +480,6 @@ export class GBMinService {
       .bind(min);
 
     GBDeployer.mountGBKBAssets(`${botId}.gbkb`, botId, `${botId}.gbkb`);
-
-    // Loads API.
-
-    await this.ensureAPI();
 
     return min;
   }
@@ -1651,9 +1648,15 @@ export class GBMinService {
     }
   }
 
-  public async ensureAPI() {
-    const mins = GBServer.globals.minInstances;
-
+  public static async ensureAPI(min: GBMinInstance) {
+    const api = min.core.getParam(min.instance, 'Server API', null);
+    if (!api) {
+      
+      return;
+    }
+    
+    GBLogEx.info(min, `Enabling API...`);
+    
     function getRemoteId(ctx: Koa.Context) {
       return '1'; // Each bot has its own API.
     }
@@ -1666,7 +1669,7 @@ export class GBMinService {
           });
         } else {
           resolve(true);
-          GBLogEx.info(0, 'Loading General Bots API...');
+
         }
       });
     };
@@ -1674,10 +1677,15 @@ export class GBMinService {
     await close();
 
     let proxies = {};
-    await CollectionUtil.asyncForEach(mins, async min => {
-      let dialogs = {};
-      await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
-        dialogs[script] = async data => {
+    let dialogs = {};
+    await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
+      dialogs[script] = async data => {
+
+          if (!data.userSystemId){
+            throw  new Error('UserSystemId is required.');
+          }
+
+
           let sec = new SecService();
           const user = await sec.ensureUser(
             min,
@@ -1706,8 +1714,8 @@ export class GBMinService {
             ret = pid;
           }
           return ret;
-        };
-      });
+
+      };
 
       const proxy = {
         dk: new DialogKeywords(),

@@ -62,6 +62,7 @@ export const getRouter = (
   };
 
   router.post('/v3/directline/conversations', reqs);
+  router.post(`/api/messages/${botId}/v3/directline/conversations`, reqs);
   router.post(`/directline/${botId}/conversations`, reqs);
   router.post(`/directline/conversations`, reqs);
 
