@@ -161,47 +161,45 @@ export class GBUtil {
   }
 
   public static async copyIfNewerRecursive(src, dest) {
+    // Check if the source exists
     if (!(await GBUtil.exists(src))) {
-      console.error(`Source path "${src}" does not exist.`);
-      return;
+     return;
     }
-
-    // Check if the source is a directory
-    if ((await fs.stat(src)).isDirectory()) {
-      // Create the destination directory if it doesn't exist
-      if (!(await GBUtil.exists(dest))) {
-        await  fs.mkdir(dest, { recursive: true });
-      }
-
-      // Read all files and directories in the source directory
-      const entries = await fs.readdir(src);
-
-      for (let entry of entries) {
-        const srcEntry = path.join(src, entry);
-        const destEntry = path.join(dest, entry);
-
-        // Recursively copy each entry
-
-        await this.copyIfNewerRecursive(srcEntry, destEntry);
-      }
-    } else {
-      // Source is a file, check if we need to copy it
-
-      if (await GBUtil.exists(dest)) {
-        const srcStat = await fs.stat(src);
-        const destStat = await fs.stat(dest);
-
-        // Copy only if the source file is newer than the destination file
-        if (srcStat.mtime > destStat.mtime) {
-          await fs.cp(src, dest, { force: true });
+  
+      // Check if the source is a directory
+      if ((await fs.stat(src)).isDirectory()) {
+        // Create the destination directory if it doesn't exist
+        if (!(await GBUtil.exists(dest))) {
+          await fs.mkdir(dest, { recursive: true });
+        }
+  
+        // Read all files and directories in the source directory
+        const entries = await fs.readdir(src);
+  
+        for (let entry of entries) {
+          const srcEntry = path.join(src, entry);
+          const destEntry = path.join(dest, entry);
+  
+          // Recursively copy each entry
+          await this.copyIfNewerRecursive(srcEntry, destEntry);
         }
       } else {
-        // Destination file doesn't exist, so copy it
-        await fs.cp(src, dest, { force: true });
+        // Source is a file, check if we need to copy it
+        if (await GBUtil.exists(dest)) {
+          const srcStat = await fs.stat(src);
+          const destStat = await fs.stat(dest);
+  
+          // Copy only if the source file is newer than the destination file
+          if (srcStat.mtime > destStat.mtime) {
+            await fs.cp(src, dest, { force: true });
+          }
+        } else {
+          // Destination file doesn't exist, so copy it
+          await fs.cp(src, dest, { force: true });
+        }
       }
-    }
   }
-  // Check if is a tree or flat object.
+    // Check if is a tree or flat object.
 
   public static hasSubObject(t) {
     for (var key in t) {

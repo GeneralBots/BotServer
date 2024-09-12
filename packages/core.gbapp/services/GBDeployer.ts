@@ -607,7 +607,7 @@ export class GBDeployer implements IGBDeployer {
 
       if (!GBConfigService.get('STORAGE_NAME')) {
         const filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbai, packageName);
-        GBUtil.copyIfNewerRecursive(filePath, packageWorkFolder);
+        await GBUtil.copyIfNewerRecursive(filePath, packageWorkFolder);
       } else {
         await this.downloadFolder(min, path.join('work', `${gbai}`), packageName);
       }

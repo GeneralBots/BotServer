@@ -36,9 +36,8 @@
 import { createRpcServer } from '@push-rpc/core';
 import AuthenticationContext from 'adal-node';
 import arrayBufferToBuffer from 'arraybuffer-to-buffer';
-import { watch } from 'fs';
-import debounce from 'lodash.debounce';
-
+import { Semaphore } from 'async-mutex';
+import { Mutex } from 'async-mutex';
 import chokidar from 'chokidar';
 import {
   AutoSaveStateMiddleware,
@@ -409,7 +408,7 @@ export class GBMinService {
     const packageTeams = urlJoin(`work`, GBUtil.getGBAIPath(instance.botId), manifest);
     if (!(await GBUtil.exists(packageTeams))) {
       const data = await this.deployer.getBotManifest(instance);
-  await fs.writeFile(packageTeams, data);
+      await fs.writeFile(packageTeams, data);
     }
 
     // Serves individual URL for each bot user interface.
@@ -487,7 +486,7 @@ export class GBMinService {
 
     return min;
   }
-   
+
   public static getProviderName(req: any, res: any) {
     if (!res) {
       return 'GeneralBots';
@@ -1117,7 +1116,7 @@ export class GBMinService {
             const folder = `work/${path}/cache`;
             const filename = `${GBAdminService.generateUuid()}.png`;
 
-        await fs.writeFile(urlJoin(folder, filename), data);
+            await fs.writeFile(urlJoin(folder, filename), data);
             step.context.activity.text = urlJoin(
               GBServer.globals.publicAddress,
               `${min.instance.botId}`,
@@ -1305,7 +1304,7 @@ export class GBMinService {
       buffer = arrayBufferToBuffer(await res.arrayBuffer());
     }
 
-await fs.writeFile(localFileName, buffer);
+    await fs.writeFile(localFileName, buffer);
 
     return {
       fileName: attachment.name,
@@ -1743,64 +1742,42 @@ await fs.writeFile(localFileName, buffer);
     createRpcServer(proxies, GBServer.globals.server.apiServer, opts);
   }
 
-    // Map to track recent changes with timestamps
-    private  recentChanges: Map<string, number> = new Map();
+  // Map to track recent changes with timestamps
 
-  private async watchPackages(min: GBMinInstance, packageType) {
+  private recentChanges: Set<string> = new Set();
+  private mutex: Mutex = new Mutex();
+
+  public async watchPackages(min: GBMinInstance, packageType: string): Promise<void> {
     if (!GBConfigService.get('STORAGE_NAME')) {
       const packagePath = GBUtil.getGBAIPath(min.botId, packageType);
       const libraryPath = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath);
-  
-      const watcher =   chokidar.watch(libraryPath, {
-        persistent: true,
-        ignoreInitial: true, // Ignore initial add events
-        depth: 99, // Watch subdirectories
-        awaitWriteFinish: {
-          stabilityThreshold: 500, // Wait for 500ms to ensure file is written completely
-        }
-      });
-  
-      const WRITE_INTERVAL = 5000; // 5 seconds interval
-  
-      // Function to handle file changes and prevent multiple calls within the 5-second window
-      const handleFileChange = async (filePath) => {
-        const now = Date.now();
-  
-        // Add or update the file in the recent changes list
-        this.recentChanges.set(filePath, now);
-  
-        // Clean up entries older than 5 seconds
-        for (const [key, timestamp] of this.recentChanges.entries()) {
-          if (now - timestamp > WRITE_INTERVAL) {
-            this.recentChanges.delete(key);
-          }
-        }
-  
-        // If we have recent changes, deploy the package only once
-        if (this.recentChanges.size > 0) {
-          
-          try {
-            const workFolder = path.join('work', packagePath);       
-            await this.deployer.deployPackage2(min, null, workFolder, true);
 
-          } catch (error) {
-            GBLogEx.error(min, `Error deploying package: ${GBUtil.toYAML(error)}`);
+      const watcher = chokidar.watch(libraryPath, {
+        depth: 99 // Watch subdirectories
+      });
+
+      const handleFileChange = async (filePath: string) => {
+        this.recentChanges.add(filePath);
+
+        // Use mutex to ensure only one deployment runs at a time
+        await this.mutex.runExclusive(async () => {
+          if (this.recentChanges.size > 0) {
+            try {
+              const workFolder = path.join('work', packagePath);
+              await this.deployer.deployPackage2(min, null, workFolder, true);
+            } catch (error) {
+              GBLogEx.error(min, `Error deploying package: ${GBUtil.toYAML(error)}`);
+            } finally {
+              this.recentChanges.clear();
+            }
           }
-  
-          // Delay further processing to prevent multiple deployments within 5 seconds
-          await new Promise(resolve => setTimeout(resolve, WRITE_INTERVAL));
-          
-          // After the delay, clear only entries that were processed
-          this.recentChanges.clear();
-        }
+        });
       };
-  
+
       // Watch for file changes
-      watcher.on('change', (filePath) => {
+      watcher.on('change', filePath => {
         handleFileChange(filePath).catch(error => console.error('Error processing file change:', error));
       });
-  
     }
   }
-  
 }
