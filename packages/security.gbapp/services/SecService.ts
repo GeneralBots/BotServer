@@ -80,7 +80,7 @@ export class SecService extends GBService {
 
     user.conversationReference = conversationReference;
     GBServer.globals.users [user.userId] = user;
-    await user.save();
+    return await user.save();
   }
 
   public async updateConversationReferenceById(userId: number, conversationReference: string) {
@@ -89,7 +89,7 @@ export class SecService extends GBService {
 
     user.conversationReference = conversationReference;
     GBServer.globals.users [user.userId] = user;
-    await user.save();
+    return await user.save();
   }
 
   public async updateUserLocale(userId: number, locale: any): Promise<GuaribasUser> {

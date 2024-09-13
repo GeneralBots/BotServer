@@ -48,8 +48,8 @@ import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { GBMinService } from './GBMinService.js';
 import urlJoin from 'url-join';
-import {createWriteStream, createReadStream} from 'fs';
-import fs from 'fs/promises'; 
+import { createWriteStream, createReadStream } from 'fs';
+import fs from 'fs/promises';
 import twilio from 'twilio';
 import Nexmo from 'nexmo';
 import { join } from 'path';
@@ -452,7 +452,7 @@ export class GBConversationalService {
         const waveFilename = `work/tmp${name}.pcm`;
 
         let audio = await textToSpeech.repairWavHeaderStream(res.result as any);
-    await fs.writeFile(waveFilename, audio);
+        await fs.writeFile(waveFilename, audio);
 
         const oggFilenameOnly = `tmp${name}.ogg`;
         const oggFilename = `work/${oggFilenameOnly}`;
@@ -482,7 +482,7 @@ export class GBConversationalService {
 
         const dest = `work/tmp${name}.wav`;
         const src = `work/tmp${name}.ogg`;
-    await fs.writeFile(src, oggFile.read());
+        await fs.writeFile(src, oggFile.read());
 
         const makeMp3 = shell([
           'node_modules/ffmpeg-static/ffmpeg', // TODO: .exe on MSWin.
@@ -1282,22 +1282,31 @@ export class GBConversationalService {
    * Sends a message in a user with an already started conversation (got ConversationReference set)
    */
   public async sendOnConversation(min: GBMinInstance, user: GuaribasUser, message: any) {
-    if (message['buttons'] || message['sections']) {
-      await min['whatsAppDirectLine'].sendToDevice(user.userSystemId, message, user.conversationReference);
-    } else if (user.conversationReference.startsWith('spaces')) {
-      await min['googleDirectLine'].sendToDevice(user.userSystemId, null, user.conversationReference, message);
-    } else {
-      const ref = JSON.parse(user.conversationReference);
-      MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
-      try {
+    if (GBConfigService.get('STORAGE_NAME')) {
+        const ref = JSON.parse(user.conversationReference);
+        MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
         await min.bot['continueConversation'](ref, async t1 => {
           const ref2 = TurnContext.getConversationReference(t1.activity);
           await min.bot.continueConversation(ref2, async t2 => {
             await t2.sendActivity(message);
           });
         });
-      } catch (error) {
-        console.log(error);
+      
+    } else {
+
+      const ref = JSON.parse(user.conversationReference);
+      await min.bot['continueConversation'](ref, async (t1) => {
+          const ref2 = TurnContext.getConversationReference(t1.activity);
+          await min.bot.continueConversation(ref2, async (t2) => {
+              await t2.sendActivity(message);
+          });
+      });
+
+      if (message['buttons'] || message['sections']) {
+        await min['whatsAppDirectLine'].sendToDevice(user.userSystemId, message, user.conversationReference);
+      }
+      else if (user.conversationReference && user.conversationReference.startsWith('spaces')) {
+        await min['googleDirectLine'].sendToDevice(user.userSystemId, null, user.conversationReference, message);
       }
     }
   }

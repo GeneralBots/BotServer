@@ -19,9 +19,9 @@ Here is an example of the Order JSON, clear the items and send one with the orde
     orderedItems: [
         {
             item: {
-                id: 23872,
-                price: 20,
-                name: Guaraná
+                id: 102,
+                price: 0.30,
+                name: Banana
             },
             sideItems: [
                 {
@@ -35,9 +35,9 @@ Here is an example of the Order JSON, clear the items and send one with the orde
         },
         {
             item: {
-                id: 25510,
-                price: 12,
-                name: Orange Can 350ml
+                id: 103,
+                price: 0.30,
+                name: Carrot
             },
             sideItems: [],
             quantity: 1,
@@ -46,9 +46,6 @@ Here is an example of the Order JSON, clear the items and send one with the orde
     ],
     userId: ${operator},
     accountIdentifier: Areia,
-    deliveryTypeId: 2,
-    deliveryTypeFields: {
-        Table: 5
-    }
+    deliveryTypeId: 2
 }
 END SYSTEM PROMPT

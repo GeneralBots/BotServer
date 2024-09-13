@@ -35,6 +35,21 @@
           "application/xml",
           "text/xml"
         ],
+        "parameters": [
+          {
+            "name": "userSystemId",
+            "in": "query",
+            "description": "User System ID",
+            "required": false,
+            "type": "string"
+          },{
+            "name": "userName",
+            "in": "query",
+            "description": "User Name",
+            "required": false,
+            "type": "string"
+          }],
+
         "responses": {
           "200": {
             "description": "The conversation was successfully created, updated, or retrieved.",

@@ -151,8 +151,6 @@ export class GBMinService {
     this.deployer = deployer;
   }
 
-  public async enableAPI(min: GBMinInstance) {}
-
   /**
    * Constructs a new minimal instance for each bot.
    */
@@ -400,7 +398,8 @@ export class GBMinService {
       res.end();
     });
 
-    await GBMinService.ensureAPI(min);
+    await this.ensureAPI();
+
     GBLog.verbose(`GeneralBots(${instance.engineName}) listening on: ${url}.`);
 
     // Generates MS Teams manifest.
@@ -1032,12 +1031,13 @@ export class GBMinService {
 
       const member = context.activity.from;
       const sec = new SecService();
-      const user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
+      let user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
       const userId = user.userId;
       const params = user.params ? JSON.parse(user.params) : {};
 
       try {
         const conversationReference = JSON.stringify(TurnContext.getConversationReference(context.activity));
+        user = await sec.updateConversationReferenceById(user.userId, conversationReference);
 
         // First time processing.
 
@@ -1648,15 +1648,9 @@ export class GBMinService {
     }
   }
 
-  public static async ensureAPI(min: GBMinInstance) {
-    const api = min.core.getParam(min.instance, 'Server API', null);
-    if (!api) {
-      
-      return;
-    }
-    
-    GBLogEx.info(min, `Enabling API...`);
-    
+  public async ensureAPI() {
+    const mins = GBServer.globals.minInstances;
+
     function getRemoteId(ctx: Koa.Context) {
       return '1'; // Each bot has its own API.
     }
@@ -1669,7 +1663,7 @@ export class GBMinService {
           });
         } else {
           resolve(true);
-
+          GBLogEx.info(0, 'Loading General Bots API...');
         }
       });
     };
@@ -1677,45 +1671,47 @@ export class GBMinService {
     await close();
 
     let proxies = {};
-    let dialogs = {};
-    await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
-      dialogs[script] = async data => {
+    await CollectionUtil.asyncForEach(mins, async min => {
+      let dialogs = {};
 
-          if (!data.userSystemId){
-            throw  new Error('UserSystemId is required.');
-          }
+      await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
+        const api = min.core.getParam(min.instance, 'Server API', null);
+        if (api) {
+          dialogs[script] = async data => {
+            let sec = new SecService();
+            const user = await sec.ensureUser(
+              min,
+              data.userSystemId,
+              data.userName ?  data.userName : 'apiuser',
+              '',
+              'api',
+              data.userSystemId,
+              null
+            );
 
+            let pid = data?.pid;
+            if (script === 'start') {
+              pid = GBVMService.createProcessInfo(user, min, 'api', null);
 
-          let sec = new SecService();
-          const user = await sec.ensureUser(
-            min,
-            data.userSystemId,
-            data.userSystemId,
-            '',
-            'api',
-            data.userSystemId,
-            null
-          );
+              const client = await GBUtil.getDirectLineClient(min);
+              const response = await client.apis.Conversations.Conversations_StartConversation({
+                userSystemId: user.userSystemId,
+                userName: user.userName
+              });
+              
+              min['apiConversations'][pid] = { conversation: response.obj, client: client };
+              min['conversationWelcomed'][response.obj.id] = true;
+            }
 
-          let pid = data?.pid;
-          if (script === 'start') {
-            pid = GBVMService.createProcessInfo(user, min, 'api', null);
+            let ret = await GBVMService.callVM(script, min, null, pid, false, data);
 
-            const client = await GBUtil.getDirectLineClient(min);
-            const response = await client.apis.Conversations.Conversations_StartConversation();
-
-            min['apiConversations'][pid] = { conversation: response.obj, client: client };
-            min['conversationWelcomed'][response.obj.id] = true;
-          }
-
-          let ret = await GBVMService.callVM(script, min, null, pid, false, data);
-
-          if (script === 'start') {
-            ret = pid;
-          }
-          return ret;
-
-      };
+            if (script === 'start') {
+              ret = pid;
+            }
+            return ret;
+          };
+        }
+      });
 
       const proxy = {
         dk: new DialogKeywords(),

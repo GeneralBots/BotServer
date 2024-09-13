@@ -12,6 +12,7 @@ const conversationsCleanupInterval = 10000;
 const conversations: { [key: string]: IConversation } = {};
 const botDataStore: { [key: string]: IBotData } = {};
 
+
 export const getRouter = (
   serviceUrl: string,
   botUrl: string,
@@ -46,7 +47,10 @@ export const getRouter = (
     };
     console.log('Created conversation with conversationId: ' + conversationId);
 
-    const activity = createConversationUpdateActivity(serviceUrl, conversationId);
+    const activity = createConversationUpdateActivity
+      (serviceUrl, conversationId, req.query?.userSystemId,
+        req.query?.userName
+      );
     fetch(botUrl, {
       method: 'POST',
       body: JSON.stringify(activity),
@@ -61,10 +65,10 @@ export const getRouter = (
     });
   };
 
-  router.post('/v3/directline/conversations', reqs);
-  router.post(`/api/messages/${botId}/v3/directline/conversations`, reqs);
-  router.post(`/directline/${botId}/conversations`, reqs);
-  router.post(`/directline/conversations`, reqs);
+  router.post('/v3/directline/conversations/', reqs);
+  router.post(`/api/messages/${botId}/v3/directline/conversations/`, reqs);
+  router.post(`/directline/${botId}/conversations/`, reqs);
+  router.post(`/directline/conversations/`, reqs);
 
   // Reconnect API
   router.get('/v3/directline/conversations/:conversationId', (req, res) => {
@@ -329,7 +333,7 @@ const createMessageActivity = (
   };
 };
 
-const createConversationUpdateActivity = (serviceUrl: string, conversationId: string): IConversationUpdateActivity => {
+const createConversationUpdateActivity = (serviceUrl: string, conversationId: string, userSystemId, userName): IConversationUpdateActivity => {
   const activity: IConversationUpdateActivity = {
     type: 'conversationUpdate',
     channelId: 'emulator',
@@ -338,7 +342,7 @@ const createConversationUpdateActivity = (serviceUrl: string, conversationId: st
     id: uuidv4.v4(),
     membersAdded: [],
     membersRemoved: [],
-    from: { id: 'offline-directline', name: 'Offline Directline Server' }
+    from: { id: userSystemId, name: userName }
   };
   return activity;
 };
