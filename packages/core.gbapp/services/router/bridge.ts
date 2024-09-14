@@ -84,7 +84,7 @@ export const getRouter = (
   });
 
   // Gets activities from store (local history array for now)
-  router.get(`/directline/${botId}/conversations/:conversationId/activities`, (req, res) => {
+  router.get(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, (req, res) => {
     const watermark = req.query.watermark && req.query.watermark !== 'null' ? Number(req.query.watermark) : 0;
 
     const conversation = getConversation(req.params.conversationId, conversationInitRequired);
@@ -146,14 +146,12 @@ export const getRouter = (
   router.post('/v3/conversations', (req, res) => {
     console.warn('/v3/conversations not implemented');
   });
-
-  router.post('/v3/conversations/:conversationId/activities', (req, res) => {
+  
+  router.post(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, (req, res) => {
     let activity: IActivity;
 
     activity = req.body;
-    activity.id = uuidv4.v4();
-    activity.from = { id: 'id', name: 'Bot' };
-
+    
     const conversation = getConversation(req.params.conversationId, conversationInitRequired);
     if (conversation) {
       conversation.history.push(activity);
@@ -164,7 +162,7 @@ export const getRouter = (
     }
   });
 
-  router.post('/v3/conversations/:conversationId/activities/:activityId', (req, res) => {
+  router.post(`/api/messages/${botId}/v3/conversations/:conversationId/activities/:activityId`, (req, res) => {
     let activity: IActivity;
 
     activity = req.body;

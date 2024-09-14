@@ -42,7 +42,7 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { Messages } from '../strings.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
-import fs from 'fs/promises'; 
+import fs from 'fs/promises';
 import libphonenumber from 'google-libphonenumber';
 import * as df from 'date-diff';
 import tesseract from 'node-tesseract-ocr';
@@ -66,7 +66,7 @@ import puppeteer from 'puppeteer';
  * Default check interval for user replay
  */
 const DEFAULT_HEAR_POLL_INTERVAL = 500;
-const API_RETRIES = 120;
+const POOLING_COUNT = 120;
 
 /**
  * Base services of conversation to be called by BASIC.
@@ -1314,11 +1314,9 @@ export class DialogKeywords {
     GBLogEx.info(min, `MESSAGE BOT: ${text}.`);
 
     const { conversation, client } = min['apiConversations'][pid];
-
     await client.apis.Conversations.Conversations_PostActivity({
       conversationId: conversation.conversationId,
       activity: {
-        pid: pid,
         textFormat: 'plain',
         text: text,
         type: 'message',
@@ -1332,7 +1330,7 @@ export class DialogKeywords {
     let messages = [];
     GBLogEx.info(min, `MessageBot: Starting message polling ${conversation.conversationId}).`);
 
-    let count = API_RETRIES;
+    let count = POOLING_COUNT;
     while (count--) {
       await GBUtil.sleep(DEFAULT_HEAR_POLL_INTERVAL);
 
@@ -1345,28 +1343,23 @@ export class DialogKeywords {
         let activities = response.obj.activities;
 
         if (activities && activities.length) {
-          activities = activities.filter(m => m.from.id === min.botId && m.type === 'message');
+          activities = activities.filter(m => m.from.id !== user.userSystemId && m.type === 'message');
           if (activities.length) {
             activities.forEach(activity => {
               messages.push(activity.text);
               GBLogEx.info(min, `MESSAGE BOT answer from bot: ${activity.text}`);
             });
+            return messages.join('\n');
           }
-          return messages.join('\n');
         }
       } catch (err) {
-        GBLog.error(
-          `Error calling printMessages in messageBot API ${err.data === undefined ? err : err.data} ${
-            err.errObj ? err.errObj.message : ''
-          }`
-        );
-        return err;
+        GBLog.error(`API Message Pooling error: ${GBUtil.toYAML(err)}`);
       }
     }
+    return null;
   }
 
   public async start({ botId, botApiKey, userSystemId, text }) {
-
     let min: GBMinInstance = GBServer.globals.minInstances.filter(p => p.instance.botId === botId)[0];
     let sec = new SecService();
     let user = await sec.getUserFromSystemId(userSystemId);
@@ -1500,7 +1493,7 @@ export class DialogKeywords {
         'cache',
         `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
       );
-  await fs.writeFile(localName1, buf, { encoding: null });
+      await fs.writeFile(localName1, buf, { encoding: null });
 
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName1));
     }
@@ -1513,7 +1506,7 @@ export class DialogKeywords {
       const buf = await fs.readFile(filename);
       const gbaiName = GBUtil.getGBAIPath(min.botId);
       const localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
-  await fs.writeFile(localName, buf, { encoding: null });
+      await fs.writeFile(localName, buf, { encoding: null });
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
     }
 
@@ -1546,7 +1539,7 @@ export class DialogKeywords {
 
     const gbaiName = GBUtil.getGBAIPath(min.botId);
     const localName = path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-await fs.writeFile(localName, buf, { encoding: null });
+    await fs.writeFile(localName, buf, { encoding: null });
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
     return { data: data, localName: localName, url: url };
