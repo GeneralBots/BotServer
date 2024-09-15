@@ -513,7 +513,7 @@ export class GBVMService extends GBService {
 
     const template = (await fs.readFile('./vm-inject.js')).toString();
     code = template.replace('//##INJECTED_CODE_HERE', code );
-    code = template.replace('//##INJECTED_HEADER', `port=${GBVMService.API_PORT}; botId='${min.botId}';` );
+    code = code.replace('//##INJECTED_HEADER', `port=${GBVMService.API_PORT}; botId='${min.botId}';` );
 
     code = ji.default(code, '  ');
 
