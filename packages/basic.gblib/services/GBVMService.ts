@@ -31,7 +31,7 @@
 'use strict';
 
 import { GBMinInstance, GBService, IGBCoreService, GBLog } from 'botlib';
-import fs from 'fs/promises'; 
+import fs from 'fs/promises';
 import * as ji from 'just-indent';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
@@ -121,7 +121,7 @@ export class GBVMService extends GBService {
     const wordFile = filename;
     const vbsFile = isWord ? filename.substr(0, filename.indexOf('docx')) + 'vbs' : filename;
     const fullVbsFile = urlJoin(folder, vbsFile);
-    const docxStat =await  fs.stat(urlJoin(folder, wordFile));
+    const docxStat = await fs.stat(urlJoin(folder, wordFile));
     const interval = 3000; // If compiled is older 30 seconds, then recompile.
     let writeVBS = true;
 
@@ -141,7 +141,7 @@ export class GBVMService extends GBService {
     //   .post(subscription);
 
     if (await GBUtil.exists(fullVbsFile)) {
-      const vbsStat =await  fs.stat(fullVbsFile);
+      const vbsStat = await fs.stat(fullVbsFile);
       if (docxStat['mtimeMs'] < vbsStat['mtimeMs'] + interval) {
         writeVBS = false;
       }
@@ -155,7 +155,7 @@ export class GBVMService extends GBService {
 
       // Write VBS file without pragma keywords.
 
-  await fs.writeFile(urlJoin(folder, vbsFile), text);
+      await fs.writeFile(urlJoin(folder, vbsFile), text);
     }
 
     // Process node_modules install.
@@ -173,11 +173,11 @@ export class GBVMService extends GBService {
       });
     }
 
-    const compiledAt =await  fs.stat(fullFilename);
+    const compiledAt = await fs.stat(fullFilename);
     const jsfile = urlJoin(folder, `${filename}.js`);
 
     if (await GBUtil.exists(jsfile)) {
-      const jsStat =await  fs.stat(jsfile);
+      const jsStat = await fs.stat(jsfile);
       const interval = 1000; // If compiled is older 1 seconds, then recompile.
       if (compiledAt.isFile() && compiledAt['mtimeMs'] > jsStat['mtimeMs'] + interval) {
         await this.translateBASIC(mainName, fullFilename, min);
@@ -196,7 +196,7 @@ export class GBVMService extends GBService {
   }
   private async processNodeModules(folder: string, min: GBMinInstance) {
     const node_modules = urlJoin(process.env.PWD, folder, 'node_modules');
-    if (!await GBUtil.exists(node_modules)) {
+    if (!(await GBUtil.exists(node_modules))) {
       const packageJson = `
             {
               "name": "${min.botId}.gbdialog",
@@ -215,7 +215,7 @@ export class GBVMService extends GBService {
                 "async-retry": "1.3.3"
               }
             }`;
-  await fs.writeFile(urlJoin(folder, 'package.json'), packageJson);
+      await fs.writeFile(urlJoin(folder, 'package.json'), packageJson);
 
       GBLogEx.info(min, `Installing node_modules...`);
       const npmPath = urlJoin(process.env.PWD, 'node_modules', '.bin', 'npm');
@@ -456,7 +456,7 @@ export class GBVMService extends GBService {
 
     let basicCode: string = await fs.readFile(filename, 'utf8');
     basicCode = GBVMService.normalizeQuotes(basicCode);
-    
+
     // Pre process SET SCHEDULE calls.
 
     const schedules = GBVMService.getSetScheduleKeywordArgs(basicCode);
@@ -498,10 +498,10 @@ export class GBVMService extends GBService {
     // Generates function JSON metadata to be used later.
 
     const jsonFile = `${filename}.json`;
-await fs.writeFile(jsonFile, JSON.stringify(metadata));
+    await fs.writeFile(jsonFile, JSON.stringify(metadata));
 
     const mapFile = `${filename}.map`;
-await fs.writeFile(mapFile, JSON.stringify(map));
+    await fs.writeFile(mapFile, JSON.stringify(map));
 
     // Execute off-line code tasks
 
@@ -511,207 +511,11 @@ await fs.writeFile(mapFile, JSON.stringify(map));
 
     const jsfile: string = `${filename}.js`;
 
-    code = `
-        module.exports = (async () => { 
-
-          // Imports npm packages for this .gbdialog conversational application.
-
-          require('isomorphic-fetch');
-          const YAML = require('yaml');
-          const http = require('node:http');
-          const retry = require('async-retry');
-          const createRpcClient = require("@push-rpc/core").createRpcClient;
-          const createHttpClient = require("@push-rpc/http").createHttpClient;
-          
-          // Unmarshalls Local variables from server VM.
-
-          const pid = this.pid;
-          let id = this.id;
-          let username = this.username;
-          let mobile = this.mobile;
-          let from = this.from;
-          const channel = this.channel;
-          const ENTER = this.ENTER;
-          const headers = this.headers;
-          let httpUsername = this.httpUsername;
-          let httpPs = this.httpPs;
-          let today = this.today;
-          let now = this.now;
-          let date = new Date();
-          let page = null;
-          const files = [];
-          let col = 1;
-          let index = 1;
-
-          const mid = (arr, start, length) => {
-              
-              if (length === undefined) {
-                  return arr.slice(start);
-              }
-              return arr.slice(start, start + length);
-          }
-
-          // Makes objects in BASIC insensitive.
-
-          const caseInsensitive = (listOrRow) => {
-            
-            if (!listOrRow) {
-              
-              return listOrRow;
-            };
-
-            const lowercase = (oldKey) => typeof oldKey === 'string' ? oldKey.toLowerCase() : oldKey;
-
-            const createCaseInsensitiveProxy = (obj) => {
-                const propertiesMap = new Map(Object.keys(obj).map(propKey => [lowercase(propKey), obj[propKey]]));
-                const caseInsensitiveGetHandler = {
-                    get: (target, property) => propertiesMap.get(lowercase(property))
-                };
-                return new Proxy(obj, caseInsensitiveGetHandler);
-            };
-
-            if (listOrRow.length) {
-                return listOrRow.map(row => createCaseInsensitiveProxy(row));
-            } else {
-                return createCaseInsensitiveProxy(listOrRow);
-            }
-          };
-
-          // Transfers auto variables into global object.
-
-          for (const key of Object.keys(this.variables)) {
-              global[key] = this.variables[key];
-              console.log('Defining global variable: ' + key);
-          }
-
-          // Defines local utility BASIC functions.
-
-          const ubound = (gbarray) => {
-            let length = 0;
-            if (gbarray){
-              length = gbarray.length;
-              if (length > 0){
-                if(gbarray[0].gbarray){
-                  return length - 1;
-                }
-              }
-            }
-            return length;
-          }
-            
-          const isarray = (gbarray) => {return Array.isArray(gbarray) };
-
-          // Proxies remote functions as BASIC functions.
-          
-          const weekday = (v) => { return (async () => { return await dk.getWeekFromDate({v}) })(); };
-          const hour = (v) => { return (async () => { return await dk.getHourFromDate({v}) })(); };
-          const base64 =  (v) => { return (async () => { return await dk.getCoded({v}) })(); };
-          const tolist =  (v) => { return (async () => { return await dk.getToLst({v}) })(); };
-          const uuid =  () => { 
-              var dt = new Date().getTime();
-              var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-                  var r = (dt + Math.random()*16)%16 | 0;
-                  dt = Math.floor(dt/16);
-                  return (c=='x' ? r :(r&0x3|0x8)).toString(16);
-              });
-              return uuid;
-          };
-          const random =  () => { return Number.parseInt((Math.random() * 8) % 8 * 100000000)};
-
-
-          // Setups interprocess communication from .gbdialog run-time to the BotServer API.
-
-          const optsRPC = {callTimeout: this.callTimeout, messageParser: data => {return JSON.parse(data)}};
-          let url;
-          const agent = http.Agent({ keepAlive: true });
-
-          url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/dk';
-          const dk = (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-          url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/sys';
-          const sys =  (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-          url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/wa';
-          const wa = (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-          url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/img';
-          const img =  (await createRpcClient(() => createHttpClient(url, {agent: agent}), optsRPC)).remote;
-
-          const timeout = (ms)=>  {
-            return new Promise(resolve => setTimeout(resolve, ms));
-          }
-
-          const ensureTokens = async (firstTime) => {
-            const REFRESH_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
-            const tokens = this.tokens ? this.tokens.split(',') : [];
-            
-            for (let i = 0; i < tokens.length; i++) { 
-              const tokenName = tokens[i];
-              
-              // Auto update Bearer authentication for the first token.
-              const expiresOn = new Date(global[tokenName + '_expiresOn']);
-              const expiration = expiresOn.getTime() - REFRESH_THRESHOLD_MS;
-
-              // Expires token 10min. before or if it the first time, load it.
-              if (expiration < Date.now() || firstTime) {
-                console.log('Expired. Refreshing token...' + expiration);
-                try {
-                  const result = await sys.getCustomToken({pid: this.pid, tokenName: tokenName});
-                  global[tokenName] = result.token;
-                  global[tokenName + '_expiresOn'] = result.expiresOn; 
-                  console.log('DONE:' + new Date(global[tokenName + '_expiresOn']));
-                } catch (error) {
-                  console.error('Failed to refresh token for ' + tokenName + ':', error);
-                  continue;
-                }
-              }
-
-              if (i == 0) {
-                headers['Authorization'] = 'Bearer ' + global[tokenName];
-              }
-            }
-          };
-          const sleep =  async (ms) => {
-            return new Promise(resolve => {
-              setTimeout(resolve, ms);
-            });
-          }
-
-          const TOYAML = (json) => {
-             const doc = new YAML.Document();
-             doc.contents = json;
-             return doc.toString();
-          }       
-
-          // Line of Business logic.
-          
-          let __reportMerge = {adds:  0, updates: 0, skipped: 0};
-          let __report = () => {
-            return __reportMerge.title + ' adds: ' + __reportMerge.adds + ', updates: ' + __reportMerge.updates + ' and skipped: ' + __reportMerge.skipped + '.';
-          };
-          let REPORT = 'No report yet';
-
-          try{
-            await ensureTokens(true);
-            ${code} 
-          }
-          catch(e){
-            console.log(e);
-
-            reject ({message: e.message, name: e.name});
-          }
-          finally{
-
-              // Closes handles if any.
-
-              await wa.closeHandles({pid: pid});
-              await sys.closeHandles({pid: pid});
-
-              resolve(true);
-          }
-        })(); 
-`;
+    code = (await fs.readFile('./vm-inject.js')).toString();
 
     code = ji.default(code, '  ');
 
-await fs.writeFile(jsfile, code);
+    await fs.writeFile(jsfile, code);
     GBLogEx.info(min, `Code reloaded: ${path.basename(filename)}.`);
   }
 
@@ -723,7 +527,7 @@ await fs.writeFile(jsfile, code);
         // Creates an empty object that will receive Sequelize fields.
 
         const tablesFile = `${task.file}.tables.json`;
-    await fs.writeFile(tablesFile, JSON.stringify(task.tables));
+        await fs.writeFile(tablesFile, JSON.stringify(task.tables));
       }
     }
   }
@@ -741,7 +545,6 @@ await fs.writeFile(jsfile, code);
 
     lines.forEach(line => {
       if (line.trim()) {
-        console.log(line);
         const keyword = /^\s*SET SCHEDULE (.*)/gi;
         let result: any = keyword.exec(line);
         if (result) {
@@ -788,10 +591,10 @@ await fs.writeFile(jsfile, code);
     if (!propertiesText || !description) {
       return {};
     }
-  
+
     const getType = (asClause: string) => {
       asClause = asClause.trim().toUpperCase();
-  
+
       if (asClause.indexOf('STRING') !== -1) {
         return 'string';
       } else if (asClause.indexOf('OBJECT') !== -1) {
@@ -802,31 +605,30 @@ await fs.writeFile(jsfile, code);
         return 'enum';
       }
     };
-  
+
     for (let i = 0; i < propertiesText.length; i++) {
       const propertiesExp = propertiesText[i];
       const t = getType(propertiesExp[2]);
       let element;
-      const description =   propertiesExp[4]?.trim();
-  
+      const description = propertiesExp[4]?.trim();
+
       if (t === 'enum') {
         const list = propertiesExp[2] as any;
         element = z.enum(list.split(','));
       } else if (t === 'string') {
-        element = z.string({description:description});
+        element = z.string({ description: description });
       } else if (t === 'object') {
-        element = z.string({description:description});  // Assuming 'object' is represented as a string here
+        element = z.string({ description: description }); // Assuming 'object' is represented as a string here
       } else if (t === 'number') {
-        element = z.number({description:description});
+        element = z.number({ description: description });
       } else {
         GBLog.warn(`Element type invalid specified on .docx: ${propertiesExp[0]}`);
       }
-  
 
       element['type'] = t;
       properties[propertiesExp[1].trim()] = element;
     }
-  
+
     const json = {
       type: 'function',
       function: {
@@ -835,14 +637,14 @@ await fs.writeFile(jsfile, code);
         schema: zodToJsonSchema(z.object(properties))
       },
       arguments: propertiesText.reduce((acc, prop) => {
-        acc[prop[1].trim()] = prop[3]?.trim();  // Assuming value is in the 3rd index
+        acc[prop[1].trim()] = prop[3]?.trim(); // Assuming value is in the 3rd index
         return acc;
       }, {})
     };
-  
+
     return json;
   }
-  
+
   public async parseField(line) {
     let required = line.indexOf('*') !== -1;
     let unique = /\bunique\b/gi.test(line);
@@ -1177,10 +979,9 @@ await fs.writeFile(jsfile, code);
           time: 60 * 60 * 24 * 14,
           cwd: gbdialogPath,
           script: runnerPath
-          
         });
 
-        result = await run(code, Object.assign( sandbox, { filename: scriptFilePath}));
+        result = await run(code, Object.assign(sandbox, { filename: scriptFilePath }));
       }
     } catch (error) {
       throw new Error(`BASIC RUNTIME ERR: ${error.message ? error.message : error}\n Stack:${error.stack}`);

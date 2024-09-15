@@ -1230,6 +1230,7 @@ export class GBMinService {
         GBLog.error('Calling processActivity due to Signing Key could not be retrieved error.');
         await adapter['processActivity'](req, res, handler);
       } else {
+        
         throw error;
       }
     }

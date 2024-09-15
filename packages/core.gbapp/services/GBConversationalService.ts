@@ -574,8 +574,8 @@ export class GBConversationalService {
       GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
     }
 
-    var renderer = new marked.marked.Renderer();
-    renderer.oldImage = renderer.image;
+    var renderer = new marked.Renderer();
+    renderer['oldImage'] = renderer.image;
     renderer.image = function (href, title, text) {
       var videos = ['webm', 'mp4', 'mov'];
       var filetype = href.split('.').pop();
@@ -592,7 +592,7 @@ export class GBConversationalService {
           '</video>';
         return out;
       } else {
-        return renderer.oldImage(href, title, text);
+        return renderer['oldImage'](href, title, text);
       }
     };
 
@@ -601,13 +601,8 @@ export class GBConversationalService {
     marked.setOptions({
       renderer: renderer,
       gfm: true,
-      tables: true,
       breaks: false,
       pedantic: false,
-      sanitize: false,
-      smartLists: true,
-      smartypants: false,
-      xhtml: false
     });
 
     // MSFT Translator breaks markdown, so we need to manually fix it:
@@ -619,10 +614,10 @@ export class GBConversationalService {
     if (mobile) {
       await this.sendMarkdownToMobile(min, step, mobile, text);
     } else if (GBConfigService.get('DISABLE_WEB') !== 'true') {
-      const html = marked(text);
+      const html = await marked.marked(text);
       await this.sendHTMLToWeb(min, step, html, answer);
     } else {
-      const html = marked(text);
+      const html = await marked.marked(text);
       await min.conversationalService.sendText(min, step, html);
     }
   }

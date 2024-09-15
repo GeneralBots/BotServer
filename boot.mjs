@@ -11,7 +11,7 @@ import {GBUtil} from './dist/src/util.js'
 
 // Displays version of Node JS being used at runtime and others attributes.
 
-console.log(`\nLoading virtual machine source code files...`);
+console.log(`\nLoading General Bots VM...`);
 
 var __dirname = process.env.PWD || process.cwd();
 try {
@@ -24,7 +24,7 @@ try {
   var processDist = async () => {
     if (!await GBUtil.exists('dist')) {
       console.log(`\n`);
-      console.log(`Generall Bots: Compiling...`);
+      console.log(`General Bots: Compiling...`);
       exec(path.join(__dirname, 'node_modules/.bin/tsc'), async (err, stdout, stderr) => {
         if (err) {
           console.error(err);
@@ -41,7 +41,7 @@ try {
 
   if (!await GBUtil.exists('node_modules')) {
     console.log(`\n`);
-    console.log(`Generall Bots: Installing modules for the first time, please wait...`);
+    console.log(`General Bots: Installing modules for the first time, please wait...`);
     exec('npm install', async (err, stdout, stderr) => {
       if (err) {
         console.error(err);
