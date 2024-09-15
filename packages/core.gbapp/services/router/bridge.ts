@@ -49,7 +49,7 @@ export const getRouter = (
 
     const activity = createConversationUpdateActivity
       (serviceUrl, conversationId, req.query?.userSystemId,
-        req.query?.userName
+        req.query?.userName, req.query.pid
       );
     fetch(botUrl, {
       method: 'POST',
@@ -110,10 +110,12 @@ export const getRouter = (
   });
 
   // Sends message to bot. Assumes message activities
-  router.post(`/directline/${botId}/conversations/:conversationId/activities`, (req, res) => {
+  
+  router.post(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, (req, res) => {
     const incomingActivity = req.body;
     // Make copy of activity. Add required fields
-    const activity = createMessageActivity(incomingActivity, serviceUrl, req.params.conversationId);
+    const activity = createMessageActivity(incomingActivity, serviceUrl, req.params.conversationId, 
+      req.params['pid']);
 
     const conversation = getConversation(req.params.conversationId, conversationInitRequired);
 
@@ -147,20 +149,20 @@ export const getRouter = (
     console.warn('/v3/conversations not implemented');
   });
   
-  router.post(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, (req, res) => {
-    let activity: IActivity;
+  // TODO: Check duplicate. router.post(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, (req, res) => {
+  //   let activity: IActivity;
 
-    activity = req.body;
+  //   activity = req.body;
     
-    const conversation = getConversation(req.params.conversationId, conversationInitRequired);
-    if (conversation) {
-      conversation.history.push(activity);
-      res.status(200).send();
-    } else {
-      // Conversation was never initialized
-      res.status(400).send();
-    }
-  });
+  //   const conversation = getConversation(req.params.conversationId, conversationInitRequired);
+  //   if (conversation) {
+  //     conversation.history.push(activity);
+  //     res.status(200).send();
+  //   } else {
+  //     // Conversation was never initialized
+  //     res.status(400).send();
+  //   }
+  // });
 
   router.post(`/api/messages/${botId}/v3/conversations/:conversationId/activities/:activityId`, (req, res) => {
     let activity: IActivity;
@@ -320,21 +322,22 @@ const deleteStateForUser = (req: express.Request, res: express.Response) => {
 const createMessageActivity = (
   incomingActivity: IMessageActivity,
   serviceUrl: string,
-  conversationId: string
+  conversationId: string, pid
 ): IMessageActivity => {
-  return {
+  const obj =  {
     ...incomingActivity,
-    channelId: 'emulator',
+    channelId: 'api',
     serviceUrl,
     conversation: { id: conversationId },
     id: uuidv4.v4()
   };
+  return obj;
 };
 
-const createConversationUpdateActivity = (serviceUrl: string, conversationId: string, userSystemId, userName): IConversationUpdateActivity => {
+const createConversationUpdateActivity = (serviceUrl: string, conversationId: string, userSystemId, userName, pid): IConversationUpdateActivity => {
   const activity: IConversationUpdateActivity = {
     type: 'conversationUpdate',
-    channelId: 'emulator',
+    channelId: 'api',
     serviceUrl,
     conversation: { id: conversationId },
     id: uuidv4.v4(),
@@ -342,6 +345,7 @@ const createConversationUpdateActivity = (serviceUrl: string, conversationId: st
     membersRemoved: [],
     from: { id: userSystemId, name: userName }
   };
+  activity['pid']  = pid;
   return activity;
 };
 

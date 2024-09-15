@@ -210,13 +210,17 @@ export class GBMinService {
       GBServer.globals.debugConversationId = conversationId;
 
       const steps = process.env.TEST_MESSAGE.split(';');
+      const sec = new SecService();
+      const user = await sec.ensureUser(min, 'testuser', 'testuser', '', 'test', 'testuser', null);
 
+      const pid = GBVMService.createProcessInfo(user, min, 'api', null);
       await CollectionUtil.asyncForEach(steps, async step => {
         client.apis.Conversations.Conversations_PostActivity({
           conversationId: conversationId,
           activity: {
             textFormat: 'plain',
             text: step,
+            pid: pid,
             type: 'message',
             from: {
               id: 'test',
@@ -1197,10 +1201,7 @@ export class GBMinService {
           await this.processEventActivity(min, user, context, step);
         }
       } catch (error) {
-        const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${
-          error.error ? (error.error.stack ? error.error.stack : '') : ''
-        }`;
-        GBLog.error(msg);
+        GBLog.error(`Receiver: ${GBUtil.toYAML(error)}`);
 
         await min.conversationalService.sendText(
           min,
@@ -1682,7 +1683,7 @@ export class GBMinService {
             const user = await sec.ensureUser(
               min,
               data.userSystemId,
-              data.userName ?  data.userName : 'apiuser',
+              data.userName ? data.userName : 'apiuser',
               '',
               'api',
               data.userSystemId,
@@ -1696,9 +1697,10 @@ export class GBMinService {
               const client = await GBUtil.getDirectLineClient(min);
               const response = await client.apis.Conversations.Conversations_StartConversation({
                 userSystemId: user.userSystemId,
-                userName: user.userName
+                userName: user.userName,
+                pid: pid
               });
-              
+
               min['apiConversations'][pid] = { conversation: response.obj, client: client };
               min['conversationWelcomed'][response.obj.id] = true;
             }

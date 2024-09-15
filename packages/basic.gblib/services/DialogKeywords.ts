@@ -1311,15 +1311,16 @@ export class DialogKeywords {
 
   public async messageBot({ pid, text }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `MESSAGE BOT: ${text}.`);
-
     const { conversation, client } = min['apiConversations'][pid];
+    GBLogEx.info(min, `API messaged bot (Conversation Id: ${conversation.conversationId}): ${text} .`);
+
     await client.apis.Conversations.Conversations_PostActivity({
       conversationId: conversation.conversationId,
       activity: {
         textFormat: 'plain',
         text: text,
         type: 'message',
+        pid: pid,
         from: {
           id: user.userSystemId,
           name: user.userName
@@ -1327,8 +1328,9 @@ export class DialogKeywords {
       }
     });
 
+    min['conversationWelcomed'][conversation.conversationId] = true;
     let messages = [];
-    GBLogEx.info(min, `MessageBot: Starting message polling ${conversation.conversationId}).`);
+    GBLogEx.info(min, `Start API message pooling: ${conversation.conversationId})...`);
 
     let count = POOLING_COUNT;
     while (count--) {
@@ -1353,6 +1355,7 @@ export class DialogKeywords {
           }
         }
       } catch (err) {
+        count = 0;
         GBLog.error(`API Message Pooling error: ${GBUtil.toYAML(err)}`);
       }
     }

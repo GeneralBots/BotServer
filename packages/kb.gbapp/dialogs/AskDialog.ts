@@ -109,9 +109,7 @@ export class AskDialog extends IGBDialog {
           const askForMore = min.core.getParam(min.instance, 'Ask For More', null);
           if (askForMore) {
             text = askForMore;
-          }
-          else {
-
+          } else {
             return await step.endDialog(null);
           }
         } else if (step.context.activity.group || (step.options && step.options.emptyPrompt)) {
@@ -131,15 +129,7 @@ export class AskDialog extends IGBDialog {
 
           let sec = new SecService();
           const member = step.context.activity.from;
-          const user = await sec.ensureUser(
-            min,
-            member.id,
-            member.name,
-            '',
-            'web',
-            member.name,
-            null
-          );
+          const user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
 
           let handled = false;
           let nextDialog = null;
@@ -210,7 +200,7 @@ export class AskDialog extends IGBDialog {
         const locale = step.context.activity.locale;
 
         // Stops any content on projector.
-        if (step.context.activity.channelId !== 'msteams') {
+        if (step.context.activity.channelId === 'web') {
           await min.conversationalService.sendEvent(min, step, 'stop', undefined);
         }
         // Handle extra text from FAQ.
@@ -236,14 +226,21 @@ export class AskDialog extends IGBDialog {
           return;
         }
 
-        const results: any = await service.ask(min, user, step, step.context.activity['pid'], text, searchScore, null /* user.subjects */);
+        const results: any = await service.ask(
+          min,
+          user,
+          step,
+          step.context.activity['pid'],
+          text,
+          searchScore,
+          null /* user.subjects */
+        );
 
         // If there is some result, answer immediately.
 
         if (results !== undefined && results.answer !== undefined) {
           let urls = [];
           if (results.sources) {
-
             for (const key in results.sources) {
               const source = results.sources[key];
               const packagePath = GBUtil.getGBAIPath(min.botId, `gbkb`);
@@ -253,8 +250,7 @@ export class AskDialog extends IGBDialog {
             }
 
             if (urls.length > 0) {
-              await min.conversationalService.sendEvent(
-                min, step, 'play', {
+              await min.conversationalService.sendEvent(min, step, 'play', {
                 playerType: 'multiurl',
                 data: urls
               });
@@ -267,8 +263,6 @@ export class AskDialog extends IGBDialog {
 
           return await AskDialog.handleAnswer(service, min, step, user, answer);
         }
-
-
 
         GBLogEx.info(min, `SEARCH called but NO answer could be found (zero results).`);
 
@@ -284,7 +278,7 @@ export class AskDialog extends IGBDialog {
   }
 
   private static async handleAnswer(service: KBService, min: GBMinInstance, step: any, user, answer: GuaribasAnswer) {
-    let text = typeof (answer) === 'string' ? answer : answer.content;
+    let text = typeof answer === 'string' ? answer : answer.content;
     text = text.trim();
     if (text.endsWith('.docx')) {
       const mainName = GBVMService.getMethodNameFromVBSFilename(text);
@@ -381,15 +375,7 @@ export class AskDialog extends IGBDialog {
 
           let sec = new SecService();
           const member = step.context.activity.from;
-          const user = await sec.ensureUser(
-            min,
-            member.id,
-            member.name,
-            '',
-            'web',
-            member.name,
-            null
-          );
+          const user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
 
           await step.endDialog();
           const pid = step.context.activity['pid'];
