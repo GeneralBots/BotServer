@@ -381,14 +381,14 @@ export class ChatServices {
       new MessagesPlaceholder('chat_history'),
       HumanMessagePromptTemplate.fromTemplate(`Follow Up Input: {question}
     Standalone question:`)
-    ]);
+    ] as any);
 
     const directPrompt = ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate(systemPrompt),
       new MessagesPlaceholder('chat_history'),
       HumanMessagePromptTemplate.fromTemplate(`Follow Up Input: {question}
       Standalone question:`)
-    ]);
+    ] as any);
 
     const toolsResultPrompt = ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate(
@@ -408,7 +408,7 @@ export class ChatServices {
 
       HumanMessagePromptTemplate.fromTemplate(`Tool output: {tool_output} 
     Folowing answer:`)
-    ]);
+    ] as any);
 
     const jsonInformation = `VERY IMPORTANT: ALWAYS return VALID standard JSON with the folowing structure: 'text' as answer, 
     sources as an array of ('file' indicating the PDF filename and 'page' indicating the page number) listing all segmented context. 
@@ -442,7 +442,7 @@ export class ChatServices {
       ),
       new MessagesPlaceholder('chat_history'),
       HumanMessagePromptTemplate.fromTemplate('Question: {question}')
-    ]);
+    ] as any);
 
     const directChain = RunnableSequence.from([
       {
@@ -455,7 +455,7 @@ export class ChatServices {
       directPrompt,
       model,
       new StringOutputParser()
-    ]);
+    ] as any);
 
     const callToolChain = RunnableSequence.from([
       {
@@ -476,7 +476,7 @@ export class ChatServices {
       toolsResultPrompt,
       model,
       new StringOutputParser()
-    ]);
+    ] as any);
 
     const combineDocumentsChain = RunnableSequence.from([
       {
@@ -493,7 +493,7 @@ export class ChatServices {
       combineDocumentsPrompt,
       model,
       new GBLLMOutputParser(min, null, null)
-    ]);
+    ] as any);
 
     const conversationalToolChain = RunnableSequence.from([
       {
@@ -507,7 +507,7 @@ export class ChatServices {
       modelWithTools,
       new GBLLMOutputParser(min, callToolChain, docsContext?.docstore?._docs.length > 0 ? combineDocumentsChain : null),
       new StringOutputParser()
-    ]);
+    ] as any);
 
     GBLogEx.info(min, `Calling LLM...`);
     let result, sources;
@@ -591,7 +591,7 @@ export class ChatServices {
         prompt,
         model,
         new StringOutputParser()
-      ]);
+      ] as any);
 
       /**
        * Create the final prompt template which is tasked with getting the natural
@@ -633,12 +633,13 @@ export class ChatServices {
           table_info: () => 'any'
         },
         {
-          result: finalResponsePrompt.pipe(model).pipe(new StringOutputParser()),
+          result: finalResponsePrompt.pipe(model).pipe(
+            new StringOutputParser() as any),
 
           // Pipe the query through here unchanged so it gets logged alongside the result.
           sql: previousStepResult => previousStepResult.query
         }
-      ]);
+      ] as any);
       result = await finalChain.invoke({
         question: question
       });

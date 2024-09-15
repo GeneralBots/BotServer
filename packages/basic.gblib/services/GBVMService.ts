@@ -877,7 +877,7 @@ export class GBVMService extends GBService {
 
     // Auto-NLP generates BASIC variables related to entities.
 
-    if (step ? step.context.activity.originalText : null && min['nerEngine']) {
+    if (step?.context.activity.originalText  && min['nerEngine']) {
       const result = await min['nerEngine'].process(step.context.activity.originalText);
 
       for (let i = 0; i < result.entities.length; i++) {
