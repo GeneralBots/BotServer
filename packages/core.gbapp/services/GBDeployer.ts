@@ -835,11 +835,11 @@ export class GBDeployer implements IGBDeployer {
 
     try {
       await search.deleteDataSource(dsName);
-    } catch (err) {
+    } catch (error) {
       // If it is a 404 there is nothing to delete as it is the first creation.
 
-      if (err.code !== 404) {
-        throw err;
+      if (error.code !== 404) {
+        throw error;
       }
     }
 
@@ -847,11 +847,11 @@ export class GBDeployer implements IGBDeployer {
 
     try {
       await search.deleteIndex();
-    } catch (err) {
+    } catch (error) {
       // If it is a 404 there is nothing to delete as it is the first creation.
 
-      if (err.code !== 404 && err.code !== 'OperationNotAllowed') {
-        throw err;
+      if (error.code !== 404 && error.code !== 'OperationNotAllowed') {
+        throw error;
       }
     }
 
@@ -859,9 +859,9 @@ export class GBDeployer implements IGBDeployer {
 
     try {
       await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
-    } catch (err) {
-      GBLog.error(err);
-      throw err;
+    } catch (error) {
+      GBLog.error(error);
+      throw error;
     }
     await search.createIndex(searchSchema, dsName);
 

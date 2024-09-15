@@ -1354,9 +1354,9 @@ export class DialogKeywords {
             return messages.join('\n');
           }
         }
-      } catch (err) {
+      } catch (error) {
         count = 0;
-        GBLog.error(`API Message Pooling error: ${GBUtil.toYAML(err)}`);
+        GBLog.error(`API Message Pooling error: ${GBUtil.toYAML(error)}`);
       }
     }
     return null;

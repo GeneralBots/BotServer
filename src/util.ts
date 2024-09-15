@@ -106,17 +106,21 @@ export class GBUtil {
         return acc;
       }, {});
     };
-
+  
     const extractedError = extractProps(data);
-
-    // Inline formatting for logs
-    return YAML.stringify(extractedError, {
+    let yamlString = YAML.stringify(extractedError, {
       indent: 2, // Defines the indentation
       flowLevel: -1, // Forces inline formatting
       styles: { '!!null': 'canonical' } // Optional: Customize null display
     } as any);
+  
+    
+      //yamlString = yamlString.slice(0, 256); // Truncate to 1024 bytes
+    
+  
+    return yamlString;
   }
-
+  
   public static sleep(ms) {
     return new Promise(resolve => {
       setTimeout(resolve, ms);

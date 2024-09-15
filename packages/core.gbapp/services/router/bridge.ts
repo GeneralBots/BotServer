@@ -164,7 +164,7 @@ export const getRouter = (
   //   }
   // });
 
-  router.post(`/api/messages/${botId}/v3/conversations/:conversationId/activities/:activityId`, (req, res) => {
+  router.post(`/v3/conversations/:conversationId/activities/:activityId`, (req, res) => {
     let activity: IActivity;
 
     activity = req.body;

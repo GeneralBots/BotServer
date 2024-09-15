@@ -226,15 +226,21 @@ export class AskDialog extends IGBDialog {
           return;
         }
 
-        const results: any = await service.ask(
-          min,
-          user,
-          step,
-          step.context.activity['pid'],
-          text,
-          searchScore,
-          null /* user.subjects */
-        );
+        let results;
+        try {
+          results = await service.ask(
+            min,
+            user,
+            step,
+            step.context.activity['pid'],
+            text,
+            searchScore,
+            null /* user.subjects */
+          );
+        } catch (error) {
+          GBLog.error(`/answer ERROR: ${GBUtil.toYAML(error)}`);
+          throw error;
+        }
 
         // If there is some result, answer immediately.
 

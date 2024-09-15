@@ -1218,6 +1218,7 @@ export class GBMinService {
         const context = adapter['createContext'](req);
         context['_activity'] = context.activity.body;
         await handler(context);
+        
         // Return status
         res.status(200);
 
@@ -1230,7 +1231,7 @@ export class GBMinService {
         GBLog.error('Calling processActivity due to Signing Key could not be retrieved error.');
         await adapter['processActivity'](req, res, handler);
       } else {
-        
+        GBLog.error(`Error processing activity: ${GBUtil.toYAML(error)}`);
         throw error;
       }
     }
@@ -1637,7 +1638,7 @@ export class GBMinService {
               }
             });
             data.step = null;
-            GBLogEx.info(min, `/answer being called from processMessageActivity (nextDialog=${nextDialog}).`);
+            GBLogEx.info(min, `/answer from processMessageActivity (nextDialog=${nextDialog}).`);
             await step.beginDialog(nextDialog ? nextDialog : '/answer', {
               data: data,
               query: text,

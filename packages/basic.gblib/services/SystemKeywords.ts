@@ -925,8 +925,8 @@ export class SystemKeywords {
       },
       {
         retries: 5,
-        onRetry: err => {
-          GBLog.error(`Retrying HTTP GET due to: ${err.message}.`);
+        onRetry: error => {
+          GBLog.error(`Retrying HTTP GET due to: ${error.message}.`);
         }
       }
     );
@@ -1842,8 +1842,8 @@ export class SystemKeywords {
       },
       {
         retries: 5,
-        onRetry: err => {
-          GBLog.error(`Retrying HTTP GET due to: ${err.message}.`);
+        onRetry: error => {
+          GBLog.error(`Retrying HTTP GET due to: ${error.message}.`);
         }
       }
     );
@@ -2198,8 +2198,8 @@ export class SystemKeywords {
           },
           {
             retries: 5,
-            onRetry: err => {
-              GBLog.error(`MERGE: Retrying SELECT ALL on table: ${err.message}.`);
+            onRetry: error => {
+              GBLog.error(`MERGE: Retrying SELECT ALL on table: ${error.message}.`);
             }
           }
         );
@@ -2591,8 +2591,8 @@ export class SystemKeywords {
       },
       {
         retries: 5,
-        onRetry: err => {
-          GBLog.error(`Retrying deleteFromStorage due to: ${err.message}.`);
+        onRetry: error => {
+          GBLog.error(`Retrying deleteFromStorage due to: ${error.message}.`);
         }
       }
     );
@@ -2853,8 +2853,8 @@ export class SystemKeywords {
       },
       {
         retries: 5,
-        onRetry: err => {
-          GBLog.error(`Retrying SaveToStorage due to: ${err.message}.`);
+        onRetry: error => {
+          GBLog.error(`Retrying SaveToStorage due to: ${error.message}.`);
         }
       }
     );

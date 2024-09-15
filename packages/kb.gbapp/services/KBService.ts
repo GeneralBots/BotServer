@@ -915,7 +915,7 @@ export class KBService implements IGBKBService {
               }
 
               return !isIgnored && currentDomain == new URL(p.href).hostname;
-            } catch (err) {
+            } catch (error) {
               return false;
             }
           });

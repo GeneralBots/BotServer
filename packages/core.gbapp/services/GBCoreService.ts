@@ -398,7 +398,7 @@ await fs.writeFile('.env', env);
     }
     try {
       instance.params = JSON.stringify(JSON.parse(instance.params));
-    } catch (err) {
+    } catch (error) {
       instance.params = JSON.stringify(instance.params);
     }
     return await instance.save();

@@ -293,8 +293,8 @@ export class GBServer {
           if (process.env.DEV_OPEN_BROWSER) {
             core.openBrowserInDevelopment();
           }
-        } catch (err) {
-          GBLog.error(`STOP: ${err.message ? err.message : err} ${err.stack ? err.stack : ''}`);
+        } catch (error) {
+          GBLog.error(`STOP: ${GBUtil.toYAML(error.message)}`);
           process.exit(1);
         }
       })();

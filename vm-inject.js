@@ -1,4 +1,7 @@
 module.exports = (async () => {
+  //##INJECTED_HEADER
+  
+
   // Imports npm packages for this .gbdialog conversational application.
 
   require('isomorphic-fetch');
@@ -130,14 +133,15 @@ module.exports = (async () => {
   };
   let url;
   const agent = http.Agent({ keepAlive: true });
-
-  url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/dk';
+  
+  
+  url = `http://localhost:${port}/${botId}/dk`;
   const dk = (await createRpcClient(() => createHttpClient(url, { agent: agent }), optsRPC)).remote;
-  url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/sys';
+  url = `http://localhost:${port}/${botId}/sys`;
   const sys = (await createRpcClient(() => createHttpClient(url, { agent: agent }), optsRPC)).remote;
-  url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/wa';
+  url = `http://localhost:${port}/${botId}/wa`;
   const wa = (await createRpcClient(() => createHttpClient(url, { agent: agent }), optsRPC)).remote;
-  url = 'http://localhost:${GBVMService.API_PORT}/${min.botId}/img';
+  url = `http://localhost:${port}/${botId}/img`;
   const img = (await createRpcClient(() => createHttpClient(url, { agent: agent }), optsRPC)).remote;
 
   const timeout = ms => {
@@ -206,7 +210,7 @@ module.exports = (async () => {
   try {
     await ensureTokens(true);
     
-    ${code}
+    //##INJECTED_CODE_HERE
 
   } catch (e) {
     console.log(e);

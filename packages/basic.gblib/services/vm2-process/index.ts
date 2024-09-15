@@ -251,8 +251,8 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
               await client.Runtime.enable();
 
               resolve(1);
-            } catch (err) {
-              GBLog.error(err);
+            } catch (error) {
+              GBLog.error(error);
               kill(childProcess);
               GBServer.globals.debuggers[limits.botId].state = 0;
               GBServer.globals.debuggers[limits.botId].stateInfo = 'Stopped';

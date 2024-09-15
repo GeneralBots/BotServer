@@ -188,8 +188,8 @@ export class GoogleChatDirectLine extends GBService {
         });
         watermark = response.obj.watermark;
         await this.printMessages(response.obj.activities, conversationId, threadName, from, fromName);
-      } catch (err) {
-        GBLog.error(`Error calling printMessages on GoogleChat channel ${err.data === undefined ? err : err.data}`);
+      } catch (error) {
+        GBLog.error(`Error calling printMessages on GoogleChat channel ${GBUtil.toYAML(error)}`);
       }
     };
     setInterval(worker, this.pollInterval);
