@@ -336,7 +336,7 @@ export class GBSSR {
         packagePath = GBServer.globals.wwwroot + "/index.html"; // TODO.
       }
       if (!min && !url.startsWith("/static") && GBServer.globals.wwwroot) {
-        packagePath = packagePath.join(GBServer.globals.wwwroot, url);
+        packagePath = path.join(GBServer.globals.wwwroot, url);
       }
       if (await GBUtil.exists(packagePath)) {
         if (min) {

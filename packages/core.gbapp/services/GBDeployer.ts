@@ -525,7 +525,7 @@ export class GBDeployer implements IGBDeployer {
       // Download files or navigate to directory to recurse.
 
       await CollectionUtil.asyncForEach(documents, async item => {
-        const itemPath = packagePath.join(localPath, remotePath, item.name);
+        const itemPath = path.join(localPath, remotePath, item.name);
 
         if (item.folder) {
           if (!(await GBUtil.exists(itemPath))) {
