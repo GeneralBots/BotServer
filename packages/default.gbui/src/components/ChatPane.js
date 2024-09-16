@@ -35,8 +35,7 @@ class ChatPane extends React.Component {
 
   render() {
     return (
-      <Chat
-        
+      <Chat        
         ref={(chat) => { this.chat = chat; }}
         botConnection={this.props.botConnection}
         user={{ id: "webUser@gb", name: "You" }}

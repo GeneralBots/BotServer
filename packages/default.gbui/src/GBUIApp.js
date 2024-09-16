@@ -168,18 +168,17 @@ class GBUIApp extends React.Component {
     let _this_ = this;
     window['botchatDebug'] = true;
 
-    const line = instanceClient.webchatToken ?
-    new DirectLine({
-      token: instanceClient.webchatToken
-    }):
-    new DirectLine({
-      domain: instanceClient.domain,
-      secret: null,
-      token: null,
-      webSocket: false // defaults to true
-    });   
-    
-    ;
+    const line = instanceClient.webchatToken
+      ? new DirectLine({
+          token: instanceClient.webchatToken
+        })
+      : new DirectLine({
+          domain: instanceClient.domain,
+          secret: null,
+          token: null,
+          webSocket: false // defaults to true
+        });
+
     _this_.setState({ line: line });
 
     line.connectionStatus$.subscribe(connectionStatus => {
@@ -322,9 +321,9 @@ class GBUIApp extends React.Component {
         gbCss = <GBCss instance={this.state.instanceClient} />;
         seo = <SEO instance={this.state.instanceClient} />;
         const token = this.state.instanceClient.speechToken;
-        
+
         document.body.style.setProperty('background-color', this.state.instanceClient.color2, 'important');
-        
+
         chat = (
           <ReactWebChat
             ref={chat => {
@@ -350,12 +349,10 @@ class GBUIApp extends React.Component {
             <SidebarMenu chat={this.chat} instance={this.state.instanceClient} />
           </div>
         );
-    
       }
     }
     return (
       <StaticContent>
-
         {seo}
         <div>
           {gbCss}

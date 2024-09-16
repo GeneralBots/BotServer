@@ -48,8 +48,7 @@ export const getRouter = (
     console.log('Created conversation with conversationId: ' + conversationId);
 
     const activity = createConversationUpdateActivity
-      (serviceUrl, conversationId, req.query?.userSystemId,
-        req.query?.userName, req.query.pid
+      (serviceUrl, conversationId
       );
     fetch(botUrl, {
       method: 'POST',
@@ -334,7 +333,7 @@ const createMessageActivity = (
   return obj;
 };
 
-const createConversationUpdateActivity = (serviceUrl: string, conversationId: string, userSystemId, userName, pid): IConversationUpdateActivity => {
+const createConversationUpdateActivity = (serviceUrl: string, conversationId: string): IConversationUpdateActivity => {
   const activity: IConversationUpdateActivity = {
     type: 'conversationUpdate',
     channelId: 'api',
@@ -343,9 +342,9 @@ const createConversationUpdateActivity = (serviceUrl: string, conversationId: st
     id: uuidv4.v4(),
     membersAdded: [],
     membersRemoved: [],
-    from: { id: userSystemId, name: userName }
+    from: {id: "bot", name: "bot"}
   };
-  activity['pid']  = pid;
+  
   return activity;
 };
 

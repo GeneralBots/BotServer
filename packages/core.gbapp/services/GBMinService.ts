@@ -1015,8 +1015,8 @@ export class GBMinService {
 
     // Unifies channel detection.  Unmarshalls group information.
 
-    req.body.channelId = req.body.from.channelIdEx === 'whatsapp' ? 'omnichannel' : req.body.channelId;
-    req.body.group = req.body.from.group;
+    req.body.channelId = req.body?.from.channelIdEx === 'whatsapp' ? 'omnichannel' : req.body.channelId;
+    req.body.group = req.body?.from.group;
 
     // Default activity processing and handler.
 
