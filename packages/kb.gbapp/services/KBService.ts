@@ -471,7 +471,7 @@ export class KBService implements IGBKBService {
     const answers = [];
     const questions = [];
 
-    GBLogEx.info(min, `Processing ${rows.length} rows from ${path.basename(filePath)}...`);
+    GBLogEx.info(min, `Processing ${rows?.length} rows from ${path.basename(filePath)}...`);
     await asyncPromise.eachSeries(rows, async line => {
       // Skips the first line.
 
