@@ -458,7 +458,7 @@ export class KBService implements IGBKBService {
     // when loading worksheets collection.
 
     let worksheet = data;
-    if (!worksheet) {
+    if (!worksheet._rows) {
       for (let t = 0; t < data.worksheets.length; t++) {
         worksheet = data.worksheets[t];
         if (worksheet) {
