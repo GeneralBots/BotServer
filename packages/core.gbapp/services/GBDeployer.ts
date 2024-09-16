@@ -500,11 +500,8 @@ export class GBDeployer implements IGBDeployer {
         fs.mkdir(pathBase);
       }
 
-      let packagePath = GBUtil.getGBAIPath(min.botId);
-      packagePath = urlJoin(packagePath, remotePath);
-
       await CollectionUtil.asyncForEach(parts, async item => {
-        pathBase = packagePath.join(pathBase, item);
+        pathBase = path.join(pathBase, item);
         if (!(await GBUtil.exists(pathBase))) {
           fs.mkdir(pathBase);
         }
@@ -512,6 +509,8 @@ export class GBDeployer implements IGBDeployer {
 
       // Retrieves all files in remote folder.
       
+      let packagePath = GBUtil.getGBAIPath(min.botId);
+      packagePath = urlJoin(packagePath, remotePath);
       let url = `${baseUrl}/drive/root:/${packagePath}:/children`;
 
       GBLogEx.info(min, `Downloading: ${url}`);
