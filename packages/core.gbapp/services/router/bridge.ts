@@ -84,7 +84,7 @@ export const getRouter = (
   router.get(`/directline/${botId}/conversations/:conversationId`,req3);
 
   // Gets activities from store (local history array for now)
-  router.get(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, (req, res) => {
+  const req45= (req, res) => {
     const watermark = req.query.watermark && req.query.watermark !== 'null' ? Number(req.query.watermark) : 0;
 
     const conversation = getConversation(req.params.conversationId, conversationInitRequired);
@@ -107,7 +107,36 @@ export const getRouter = (
       // Conversation was never initialized
       res.status(400).send();
     }
-  });
+  }
+
+  
+const req34 = (req, res) => {
+  const watermark = req.query.watermark && req.query.watermark !== 'null' ? Number(req.query.watermark) : 0;
+
+  const conversation = getConversation(req.params.conversationId, conversationInitRequired);
+
+  if (conversation) {
+    // If the bot has pushed anything into the history array
+    if (conversation.history.length > watermark) {
+      const activities = conversation.history.slice(watermark);
+      res.status(200).json({
+        activities,
+        watermark: watermark + activities.length
+      });
+    } else {
+      res.status(200).send({
+        activities: [],
+        watermark
+      });
+    }
+  } else {
+    // Conversation was never initialized
+    res.status(400).send();
+  }
+};
+
+  router.get(`/directline/${botId}/conversations/:conversationId/activities`, req34);
+  router.get(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, req34);
 
   // Sends message to bot. Assumes message activities
   
