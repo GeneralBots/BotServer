@@ -50,10 +50,11 @@ class RenderItem extends Component {
       <div className="gb-video-player-wrapper">
         {this.props.list.map(item => (
           <iframe
+            key={item.url} 
             title="Video"
             ref="video"
             className="gb-video-react-player"
-            src={item.url}
+            src={`${item.url}?t=${Date.now()}`} 
             width="100%"
             height="100%"
           />

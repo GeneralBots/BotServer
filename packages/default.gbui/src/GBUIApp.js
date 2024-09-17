@@ -336,7 +336,7 @@ class GBUIApp extends React.Component {
             })}
           />
         );
-
+        
         sideBar = (
           <div
             className="sidebar"

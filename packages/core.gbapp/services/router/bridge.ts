@@ -11,7 +11,6 @@ const conversationsCleanupInterval = 10000;
 const conversations: { [key: string]: IConversation } = {};
 const botDataStore: { [key: string]: IBotData } = {};
 
-
 export const getRouter = (
   serviceUrl: string,
   botUrl: string,
@@ -46,9 +45,7 @@ export const getRouter = (
     };
     console.log('Created conversation with conversationId: ' + conversationId);
 
-    const activity = createConversationUpdateActivity
-      (serviceUrl, conversationId
-      );
+    const activity = createConversationUpdateActivity(serviceUrl, conversationId);
     fetch(botUrl, {
       method: 'POST',
       body: JSON.stringify(activity),
@@ -80,11 +77,11 @@ export const getRouter = (
 
     console.warn('/v3/directline/conversations/:conversationId not implemented');
   };
-  router.get('/v3/directline/conversations/:conversationId',req3);
-  router.get(`/directline/${botId}/conversations/:conversationId`,req3);
+  router.get('/v3/directline/conversations/:conversationId', req3);
+  router.get(`/directline/${botId}/conversations/:conversationId`, req3);
 
   // Gets activities from store (local history array for now)
-  const req45= (req, res) => {
+  const req45 = (req, res) => {
     const watermark = req.query.watermark && req.query.watermark !== 'null' ? Number(req.query.watermark) : 0;
 
     const conversation = getConversation(req.params.conversationId, conversationInitRequired);
@@ -107,44 +104,42 @@ export const getRouter = (
       // Conversation was never initialized
       res.status(400).send();
     }
-  }
+  };
 
-  
-const req34 = (req, res) => {
-  const watermark = req.query.watermark && req.query.watermark !== 'null' ? Number(req.query.watermark) : 0;
+  const req34 = (req, res) => {
+    const watermark = req.query.watermark && req.query.watermark !== 'null' ? Number(req.query.watermark) : 0;
 
-  const conversation = getConversation(req.params.conversationId, conversationInitRequired);
+    const conversation = getConversation(req.params.conversationId, conversationInitRequired);
 
-  if (conversation) {
-    // If the bot has pushed anything into the history array
-    if (conversation.history.length > watermark) {
-      const activities = conversation.history.slice(watermark);
-      res.status(200).json({
-        activities,
-        watermark: watermark + activities.length
-      });
+    if (conversation) {
+      // If the bot has pushed anything into the history array
+      if (conversation.history.length > watermark) {
+        const activities = conversation.history.slice(watermark);
+        res.status(200).json({
+          activities,
+          watermark: watermark + activities.length
+        });
+      } else {
+        res.status(200).send({
+          activities: [],
+          watermark
+        });
+      }
     } else {
-      res.status(200).send({
-        activities: [],
-        watermark
-      });
+      // Conversation was never initialized
+      res.status(400).send();
     }
-  } else {
-    // Conversation was never initialized
-    res.status(400).send();
-  }
-};
+  };
 
   router.get(`/directline/${botId}/conversations/:conversationId/activities`, req34);
   router.get(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, req34);
 
   // Sends message to bot. Assumes message activities
-  
-  const res2= (req, res) => {
+
+  const res2 = (req, res) => {
     const incomingActivity = req.body;
     // Make copy of activity. Add required fields
-    const activity = createMessageActivity(incomingActivity, serviceUrl, req.params.conversationId, 
-      req.params['pid']);
+    const activity = createMessageActivity(incomingActivity, serviceUrl, req.params.conversationId, req.params['pid']);
 
     const conversation = getConversation(req.params.conversationId, conversationInitRequired);
 
@@ -180,12 +175,12 @@ const req34 = (req, res) => {
   router.post('/v3/conversations', (req, res) => {
     console.warn('/v3/conversations not implemented');
   });
-  
+
   // TODO: Check duplicate. router.post(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, (req, res) => {
   //   let activity: IActivity;
 
   //   activity = req.body;
-    
+
   //   const conversation = getConversation(req.params.conversationId, conversationInitRequired);
   //   if (conversation) {
   //     conversation.history.push(activity);
@@ -354,9 +349,10 @@ const deleteStateForUser = (req: express.Request, res: express.Response) => {
 const createMessageActivity = (
   incomingActivity: IMessageActivity,
   serviceUrl: string,
-  conversationId: string, pid
+  conversationId: string,
+  pid
 ): IMessageActivity => {
-  const obj =  {
+  const obj = {
     ...incomingActivity,
     channelId: 'api',
     serviceUrl,
@@ -375,9 +371,9 @@ const createConversationUpdateActivity = (serviceUrl: string, conversationId: st
     id: uuidv4.v4(),
     membersAdded: [],
     membersRemoved: [],
-    from: {id: "bot", name: "bot"}
+    from: { id: 'bot', name: 'bot' }
   };
-  
+
   return activity;
 };
 
@@ -397,6 +393,3 @@ const conversationsCleanup = () => {
     });
   }, conversationsCleanupInterval);
 };
-
-
-

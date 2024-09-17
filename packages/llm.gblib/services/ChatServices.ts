@@ -134,6 +134,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     let res;
     try {
       GBLogEx.info(this.min, result);
+      result = result.replace(/\u000A/g, '\\n');
       result = result.replace(/\\n/g, '');
       result = result.replace(/\`\`\`/g, '');
       res = JSON.parse(result);
@@ -158,7 +159,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
         }
       }
 
-      if (found) {
+      if (!found) {
         GBLogEx.info(this.min, `File not found referenced in other .pdf: ${source.file}`);
       }
     });
@@ -226,7 +227,9 @@ export class ChatServices {
         page ? page : 'entire document'
       } 
       (you will fill the JSON sources collection field later), 
-      memorize this block among document information and return when you are refering this part of content:\n\n\n\n ${
+      never use Index or Summary pages to answer, just content. And
+      memorize this block among document information and return when you 
+      are refering this part of content:\n\n\n\n ${
         doc.pageContent
       } \n\n\n\n.`;
     }
@@ -410,17 +413,38 @@ export class ChatServices {
     Folowing answer:`)
     ] as any);
 
-    const jsonInformation = `VERY IMPORTANT: ALWAYS return VALID standard JSON with the folowing structure: 'text' as answer, 
-    sources as an array of ('file' indicating the PDF filename and 'page' indicating the page number) listing all segmented context. 
-    Example JSON format: "text": "this is the answer, anything LLM output as text answer shoud be here.", 
-    "sources": [{{"file": "filename.pdf", "page": 3}}, {{"file": "filename2.pdf", "page": 1}}],
-    return *valid READY TO BE PARSED JSON* with brackets. Avoid explaining the context directly
-    to the Human; instead, refer to the document source, always return more than one source document
-    and check if the answer can be extended by using additional contexts in 
-    other files, as specified before.
-    
-    Double check if the output is a valid RFC 8259 JSON. all fields are required: text, file, page.
-  `;
+        
+    const jsonInformation = `
+    CRITICAL INSTRUCTION: You MUST ALWAYS return ONLY a valid JSON object matching this exact structure, with no additional text before or after:
+
+      {{
+        "text": "Your answer goes here, providing a thorough response using information from multiple source documents.",
+        "sources": [
+          {{
+            "file": "document1.pdf",
+            "page": 5
+          }},
+          {{
+            "file": "document2.pdf", 
+            "page": 12
+          }}
+          // Add more source objects as needed
+        ]
+      }}
+  
+      Note: The example shows two source documents for illustration. You may include any number of source documents in the "sources" array as needed. Ensure each source has both "file" and "page" fields. The "page" values should refer to actual content pages, not index or summary pages.
+  
+      Requirements:
+      - The JSON must be valid according to RFC 8259 and parseable without errors
+      - The "text" field must contain your full response
+      - Never say that a person needs to go a part of the document, instead look for the page content and answer the question.
+      - The "sources" array must list the source documents used, with each source having "file" and "page" fields
+      - Ensure the "page" numbers refer to real pages of content, not index or summary pages
+      - Do not include any text, markdown, or other content outside the JSON object
+      - Double check that your response contains ONLY the JSON object before returning
+  
+      Failure to follow these requirements exactly will result in an error.`; 
+  
 
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
       AIMessagePromptTemplate.fromTemplate(
