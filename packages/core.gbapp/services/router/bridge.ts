@@ -3,7 +3,6 @@ import express from 'express';
 import fetch from 'isomorphic-fetch';
 import moment from 'moment';
 import * as uuidv4 from 'uuid';
-
 import { IActivity, IBotData, IConversation, IConversationUpdateActivity, IMessageActivity } from './types';
 import { GBConfigService } from '../GBConfigService.js';
 
@@ -70,7 +69,7 @@ export const getRouter = (
   router.post(`/directline/conversations/`, reqs);
 
   // Reconnect API
-  router.get('/v3/directline/conversations/:conversationId', (req, res) => {
+  const req3 = (req, res) => {
     const conversation = getConversation(req.params.conversationId, conversationInitRequired);
     if (conversation) {
       res.status(200).send(conversation);
@@ -80,7 +79,9 @@ export const getRouter = (
     }
 
     console.warn('/v3/directline/conversations/:conversationId not implemented');
-  });
+  };
+  router.get('/v3/directline/conversations/:conversationId',req3);
+  router.get(`/directline/${botId}/conversations/:conversationId`,req3);
 
   // Gets activities from store (local history array for now)
   router.get(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, (req, res) => {
@@ -110,7 +111,7 @@ export const getRouter = (
 
   // Sends message to bot. Assumes message activities
   
-  router.post(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, (req, res) => {
+  const res2= (req, res) => {
     const incomingActivity = req.body;
     // Make copy of activity. Add required fields
     const activity = createMessageActivity(incomingActivity, serviceUrl, req.params.conversationId, 
@@ -133,7 +134,10 @@ export const getRouter = (
       // Conversation was never initialized
       res.status(400).send();
     }
-  });
+  };
+
+  router.post(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, res2);
+  router.post(`/directline/${botId}/conversations/:conversationId/activities`, res2);
 
   router.post('/v3/directline/conversations/:conversationId/upload', (req, res) => {
     console.warn('/v3/directline/conversations/:conversationId/upload not implemented');
@@ -364,3 +368,6 @@ const conversationsCleanup = () => {
     });
   }, conversationsCleanupInterval);
 };
+
+
+
