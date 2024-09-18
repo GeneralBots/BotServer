@@ -508,7 +508,7 @@ export class GBDeployer implements IGBDeployer {
       });
 
       // Retrieves all files in remote folder.
-      
+
       let packagePath = GBUtil.getGBAIPath(min.botId);
       packagePath = urlJoin(packagePath, remotePath);
       let url = `${baseUrl}/drive/root:/${packagePath}:/children`;
@@ -548,7 +548,7 @@ export class GBDeployer implements IGBDeployer {
             const url = item['@microsoft.graph.downloadUrl'];
 
             const response = await fetch(url);
-        await fs.writeFile(itemPath, Buffer.from(await response.arrayBuffer()), { encoding: null });
+            await fs.writeFile(itemPath, Buffer.from(await response.arrayBuffer()), { encoding: null });
             fs.utimes(itemPath, new Date(), new Date(item.lastModifiedDateTime));
           } else {
             GBLogEx.info(min, `Local is up to date: ${path.basename(itemPath)}...`);
@@ -682,7 +682,7 @@ export class GBDeployer implements IGBDeployer {
 
           const packagePath = GBUtil.getGBAIPath(min.botId, null);
           const localFolder = path.join('work', packagePath, 'connections.json');
-      await fs.writeFile(localFolder, JSON.stringify(connections), { encoding: null });
+          await fs.writeFile(localFolder, JSON.stringify(connections), { encoding: null });
 
           // Updates instance object.
 
@@ -713,7 +713,7 @@ export class GBDeployer implements IGBDeployer {
       case '.gbtheme':
         // Updates server listeners to serve theme files in .gbtheme.
 
-        GBServer.globals.server.use( '/' + urlJoin('themes', packageName), express.static(packageWorkFolder));
+        GBServer.globals.server.use('/' + urlJoin('themes', packageName), express.static(packageWorkFolder));
         GBLogEx.verbose(min, `Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
 
         break;
@@ -894,7 +894,7 @@ export class GBDeployer implements IGBDeployer {
     if (!(await GBUtil.exists(`${root}/build`)) && process.env.DISABLE_WEB !== 'true') {
       // Write a .env required to fix some bungs in create-react-app tool.
 
-  await fs.writeFile(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
+      await fs.writeFile(`${root}/.env`, 'SKIP_PREFLIGHT_CHECK=true');
 
       // Install modules and compiles the web app.
 

@@ -343,6 +343,13 @@ export class GBSSR {
           let html = await fs.readFile(packagePath, 'utf8');
           html = html.replace(/\{p\}/gi, min.botId);
           html = html.replace(/\{botId\}/gi, min.botId);
+
+          const theme = 
+            `theme-${
+             await (min.core as any)['getParam'](min.instance, 'Theme Color','grey' )}`;
+          
+          html = html.replace(/\{themeColor\}/gi, theme);
+          
           html = html.replace(/\{theme\}/gi, min.instance.theme ? min.instance.theme :
             'default.gbtheme');
           html = html.replace(/\{title\}/gi, min.instance.title);

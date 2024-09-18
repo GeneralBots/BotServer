@@ -1,28 +1,45 @@
+/* Base Styles */
+body {
+    font-family: 'Open Sans', sans-serif;
+    color: var(--color-text);
+    background: linear-gradient(135deg, var(--color-background-light), var(--color-background-dark));
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
 /* Main Sections */
 
 /* Sidebar */
 .ms-Nav {
-    background: #1a1a1a;
-    color: #ffffff;
+    background: var(--color-sidebar-background);
+    color: var(--color-text);
     margin-top: 2rem;
     border-radius: 1rem;
     padding: 1rem;
+    box-shadow: 0 4px 8px rgba(var(--color-shadow), 0.2);
 }
 
 .ms-Nav-link {
-    color: #ffffff !important;
-    background-color: #2a2a2a !important;
+    color: var(--color-text) !important;
+    background-color: var(--color-link-background) !important;
     border-radius: 0.75rem;
     margin: 0.5rem 0;
     padding: 0.75rem;
+    transition: background-color 0.3s, border-right 0.3s;
 }
 
 .ms-Nav-link a:active {
-    border-right: 2px solid #ffffff;
+    border-right: 2px solid var(--color-text);
 }
 
 .ms-Nav-compositeLink .ms-Nav-chevronButton.ms-Nav-chevronButton--link {
-    background: #2a2a2a !important;
+    background: var(--color-link-background) !important;
 }
 
 .ms-Nav-compositeLink.is-selected {
@@ -35,8 +52,7 @@
 }
 
 .sidebar {
-    
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 30px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 15px rgba(var(--color-shadow), 0.3);
     border-radius: 1rem;
     background-repeat: no-repeat;
 }
@@ -50,9 +66,6 @@ screen and (min-width: 420px) and (max-width: 1000px) {
         position: absolute;
         top: 8px;
         left: 14px;
-    }
-
-    .sidebar {
         border-radius: 1rem 1rem 0 0;
     }
 
@@ -63,15 +76,14 @@ screen and (min-width: 420px) and (max-width: 1000px) {
     .titleSideBarMenu img {
         width: 32px;
         margin-left: 10px;
-        margin-top:4px;        
+        margin-top: 4px;
     }
-
 
     .iconMenu {
         font-size: 9pt;
         display: inline;
         margin-right: 16px;
-        margin-top: 20px;;
+        margin-top: 20px;
     }
 
     .iconMenu:hover {
@@ -116,24 +128,23 @@ screen and (min-width: 420px) and (max-width: 1000px) {
         display: inline-block !important;
         height: 18%;
         width: 45% !important;
-        background-color: #1a1a1a !important;
+        background-color: var(--color-sidebar-background) !important;
         position: absolute;
         top: 3%;
         left: 3%;
-        border-right: 14px solid #4a4a4a !important;
+        border-right: 14px solid var(--color-border) !important;
     }
 
     .titleSideBarMenu {
         text-align: center;
         margin-top: 3px;
-
     }
 
     .iconMenu {
         font-size: 09pt;
         text-align: center;
         margin: 10px 6px;
-        padding-left: 48px;;
+        padding-left: 48px;
     }
 
     .IconsMenu {
@@ -143,7 +154,7 @@ screen and (min-width: 420px) and (max-width: 1000px) {
         left: 50%;
         margin-left: -260px;
         bottom: 1rem;
-        top:60px;
+        top: 60px;
         height: 28px;
         font-family: "Open Sans", sans-serif;
         font-size: 12pt;
@@ -152,16 +163,17 @@ screen and (min-width: 420px) and (max-width: 1000px) {
 
 /* Player */
 .player {
-    background-color: white;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 30px rgba(255, 255, 255, 0.5);
+    background-color: var(--color-player-background);
+    box-shadow: 0 4px 15px rgba(var(--color-shadow), 0.3);
     border-radius: 0.75rem;
+    border: 7px solid var(--color-border);
 }
 
 @media screen and (max-width: 1000px) {
     .player {
         width: 94% !important;
         height: 44% !important;
-        border: 5px solid #4a4a41;
+        border: 5px solid var(--color-border);
         position: absolute;
         top: 11%;
         left: 50%;
@@ -176,7 +188,7 @@ screen and (min-width: 420px) and (max-width: 1000px) {
     .player {
         width: 45% !important;
         height: 71% !important;
-        border: 7px solid #6c6c6c;
+        border: 7px solid var(--color-light-border);
         position: absolute;
         left: 3%;
         top: 24%;
@@ -185,8 +197,8 @@ screen and (min-width: 420px) and (max-width: 1000px) {
 
 /* Webchat */
 .webchat {
-    background-color: #ffffff !important;
-    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
+    background-color: var(--color-webchat-background) !important;
+    box-shadow: 0 8px 20px rgba(var(--color-shadow), 0.1);
     border-radius: 1rem;
     overflow: auto !important;
 }
@@ -218,135 +230,60 @@ screen and (min-width: 420px) and (max-width: 1000px) {
         right: 15px;
         top: 19px;
         bottom: 0;
-        border-bottom: 4px solid #4a4a4a;
+        border-bottom: 4px solid var(--color-border);
     }
 }
 
 /* General Styles */
-body {
-    background: linear-gradient(135deg, #000000, #ffffff);
-    font-family: 'Open Sans', sans-serif;
-    color: #ffffff;
-    margin: 0;
-    padding: 0;
-}
-
-
-
 .gb-quality-button-yes {
     width: 54px;
     text-decoration: none;
     text-transform: uppercase;
-    background-color: green;
-    color: white;
+    background-color: var(--color-yes-button-background);
+    color: var(--color-white);
     padding: 2px;
     cursor: pointer;
-    transition: 0.9s;
-    transition-delay: 0.3s;
+    transition: background-color 0.9s, transform 0.3s;
     border: none;
+}
+
+.gb-quality-button-yes:hover {
+    transform: scale(1.1);
 }
 
 .gb-quality-button-no {
     width: 54px;
     text-decoration: none;
     text-transform: uppercase;
-    background-color: red;
-    color: white;
+    background-color: var(--color-no-button-background);
+    color: var(--color-white);
     padding: 2px;
     cursor: pointer;
-    transition: 0.9s;
-    transition-delay: 0.3s;
+    transition: background-color 0.9s, transform 0.3s;
     border: none;
 }
 
+.gb-quality-button-no:hover {
+    transform: scale(1.1);
+}
+
 .gb-markdown-player-quality {
-    background-color: #f5e4a8;
+    background-color: var(--color-markdown-background);
     padding: 4px;
     position: absolute;
     bottom: 14px;
     left: -9px;
     width: 100%;
     border-radius: 5px;
-    color: #52514e;
-    border: 1px solid #b2a46e;
+    color: var(--color-markdown-text);
+    border: 1px solid var(--color-markdown-border);
     text-align: center;
-}
-
-.media-player {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
-}
-
-.media-player-container {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.media-player-link {
-    cursor: pointer !important;
-}
-
-.gb-bullet-player {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
-    background: white;
-    height: 95%;
-    overflow-y: scroll;
-}
-
-.gb-bullet-player-item {
-    cursor: pointer;
-}
-
-.gb-image-player-outter-div {}
-
-.gb-image-player-img {}
-
-.gb-bullet-player-outter-div {}
-
-.gb-video-player-wrapper {
-    width: 100%;
-    height: 100%;
-}
-
-.gb-video-react-player {
-
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-body {
-    display: flex;
-}
-
-.App {
-    min-height: 100vh;
-}
-
-.App .body {
-    display: flex;
-    flex-direction: row;
-}
-
-.body {
-    flex-basis: 12em;
-    /* Default value of the element before distribuing the remaing space */
-    flex-grow: 0;
-    /* Defined the ability to groe */
-    flex-shrink: 0;
-    /* Defines the ability to shrink */
-    max-width: 12em;
-    order: -1;
-}
-
-body {
-    margin: 0;
-    overflow: hidden;
 }
 
 .media-player-container {
     overflow: auto;
     max-height: 90%;
-    font-family: "Open Sans", sans-serif;
-    background: white;
+    background: var(--color-media-background);
 }
 
 .media-player-scroll {
@@ -390,7 +327,424 @@ body {
         width: 95% !important;
         background-repeat: no-repeat;
         margin-top: 10px;
-        margin-left: 20px;
+        margin-left: 10px;
         margin-right: -40px;
     }
+}
+
+/* Grey Theme */
+
+.theme-grey {
+    --color-dark: #212121;
+    --color-dark-gray: #424242;
+    --color-gray: #616161;
+    --color-light-gray: #E0E0E0;
+    --color-white: #F5F5F5;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #757575;
+    --color-background-light:#212121;
+    --color-background-dark:  #F5F5F5;
+    --color-sidebar-background: #424242;
+    --color-link-background: #212121;
+    --color-player-background: #E0E0E0;
+    --color-webchat-background: #F5F5F5;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #212121;
+    --color-markdown-border: #757575;
+    --color-media-background: #F5F5F5;
+}
+
+.theme-light{
+    --color-text: #333;
+    --color-background-light: #f4f4f9;
+    --color-background-dark: #e0e0e0;
+    --color-sidebar-background: lightgrey;
+    --color-link-background: #f0f0f0;
+    --color-player-background: #fafafa;
+    --color-webchat-background: #ffffff;
+    --color-shadow: 0, 0, 0;
+    --color-border: #cccccc;
+    --color-light-border: #ddd;
+    --color-yes-button-background: #28a745;
+    --color-no-button-background: #dc3545;
+    --color-white: #fff;
+    --color-markdown-background: #f9f9f9;
+    --color-markdown-text: #333;
+    --color-markdown-border: #ccc;
+    --color-media-background: #f0f0f0;
+}
+
+
+/* Red Theme */
+
+.theme-red{
+    --color-dark: #D32F2F;
+    --color-dark-gray: #C62828;
+    --color-gray: #B71C1C;
+    --color-light-gray: #FFCDD2;
+    --color-white: #FAFAFA;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #D32F2F;
+    --color-background-light: #FFEBEE;
+    --color-background-dark: #D32F2F;
+    --color-sidebar-background: #C62828;
+    --color-link-background: #B71C1C;
+    --color-player-background: #F8BBD0;
+    --color-webchat-background: #FCE4EC;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #B71C1C;
+    --color-markdown-border: #D32F2F;
+    --color-media-background: #FFEBEE;
+}
+
+/* Blue Theme */ 
+.theme-blue {
+
+    --color-dark: #0D47A1;
+    --color-dark-gray: #1565C0;
+    --color-gray: #1976D2;
+    --color-light-gray: #BBDEFB;
+    --color-white: #E3F2FD;
+    --color-green: #2E7D32;
+    --color-red: #C62828;
+    --color-yellow: #F9A825;
+    --color-text: white;
+    --color-border: #1E88E5;
+    --color-background-light: #E3F2FD;
+    --color-background-dark: #1976D2;
+    --color-sidebar-background: #1565C0;
+    --color-link-background: #0D47A1;
+    --color-player-background: #BBDEFB;
+    --color-webchat-background: #E3F2FD;
+    --color-yes-button-background: #2E7D32;
+    --color-no-button-background: #C62828;
+    --color-markdown-background: #F9A825;
+    --color-markdown-text: #0D47A1;
+    --color-markdown-border: #1E88E5;
+    --color-media-background: #E3F2FD;
+}
+
+/* Green Theme */
+ .theme-green { 
+    
+    --color-dark: #1B5E20;
+    --color-dark-gray: #2E7D32;
+    --color-gray: #388E3C;
+    --color-light-gray: #C8E6C9;
+    --color-white: #F1F8E9;
+    --color-green: #1B5E20;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #4CAF50;
+    --color-background-light: #F1F8E9;
+    --color-background-dark: #388E3C;
+    --color-sidebar-background: #2E7D32;
+    --color-link-background: #1B5E20;
+    --color-player-background: #C8E6C9;
+    --color-webchat-background: #F1F8E9;
+    --color-yes-button-background: #4CAF50;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #1B5E20;
+    --color-markdown-border: #4CAF50;
+    --color-media-background: #F1F8E9;
+}
+
+/* Yellow Theme */
+ .theme-yellow { 
+
+    --color-dark: #FBC02D;
+    --color-dark-gray: #F9A825;
+    --color-gray: #F57F17;
+    --color-light-gray: #FFF9C4;
+    --color-white: #FFFDE7;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #FBC02D;
+    --color-background-light: #FFF9C4;
+    --color-background-dark: #F57F17;
+    --color-sidebar-background: #F9A825;
+    --color-link-background: #FBC02D;
+    --color-player-background: #FFFDE7;
+    --color-webchat-background: #FFF9C4;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #F9A825;
+    --color-markdown-text: #F57F17;
+    --color-markdown-border: #FBC02D;
+    --color-media-background: #FFF9C4;
+}
+
+/* Purple Theme */
+.theme-purple {
+    --color-dark: #4A148C;
+    --color-dark-gray: #6A1B9A;
+    --color-gray: #7B1FA2;
+    --color-light-gray: #E1BEE7;
+    --color-white: #F3E5F5;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #6A1B9A;
+    --color-background-light: #F3E5F5;
+    --color-background-dark: #7B1FA2;
+    --color-sidebar-background: #6A1B9A;
+    --color-link-background: #4A148C;
+    --color-player-background: #E1BEE7;
+    --color-webchat-background: #F3E5F5;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #7B1FA2;
+    --color-markdown-border: #6A1B9A;
+    --color-media-background: #E1BEE7;
+}
+
+/* Orange Theme */
+.theme-orange {
+    --color-dark: #E65100;
+    --color-dark-gray: #EF6C00;
+    --color-gray: #F57C00;
+    --color-light-gray: #FFCC80;
+    --color-white: #FFF3E0;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #FF9800;
+    --color-background-light: #FFF3E0;
+    --color-background-dark: #F57C00;
+    --color-sidebar-background: #EF6C00;
+    --color-link-background: #E65100;
+    --color-player-background: #FFCC80;
+    --color-webchat-background: #FFF3E0;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #E65100;
+    --color-markdown-border: #FF9800;
+    --color-media-background: #FFF3E0;
+}
+
+/* Brown Theme */
+.theme-brown {
+    --color-dark: #3E2723;
+    --color-dark-gray: #4E342E;
+    --color-gray: #5D4037;
+    --color-light-gray: #D7CCC8;
+    --color-white: #EFEBE9;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #6D4C41;
+    --color-background-light: #EFEBE9;
+    --color-background-dark: #5D4037;
+    --color-sidebar-background: #4E342E;
+    --color-link-background: #3E2723;
+    --color-player-background: #D7CCC8;
+    --color-webchat-background: #EFEBE9;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #5D4037;
+    --color-markdown-border: #6D4C41;
+    --color-media-background: #EFEBE9;
+}
+
+/* Pink Theme */
+.theme-pink {
+    --color-dark: #880E4F;
+    --color-dark-gray: #AD1457;
+    --color-gray: #C2185B;
+    --color-light-gray: #F8BBD0;
+    --color-white: #FCE4EC;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #C2185B;
+    --color-background-light: #FCE4EC;
+    --color-background-dark: #C2185B;
+    --color-sidebar-background: #AD1457;
+    --color-link-background: #880E4F;
+    --color-player-background: #F8BBD0;
+    --color-webchat-background: #FCE4EC;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #880E4F;
+    --color-markdown-border: #C2185B;
+    --color-media-background: #FCE4EC;
+}
+
+/* Cyan Theme */
+.theme-cyan {
+    --color-dark: #006064;
+    --color-dark-gray: #00838F;
+    --color-gray: #0097A7;
+    --color-light-gray: #B2EBF2;
+    --color-white: #E0F7FA;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #00ACC1;
+    --color-background-light: #E0F7FA;
+    --color-background-dark: #0097A7;
+    --color-sidebar-background: #00838F;
+    --color-link-background: #006064;
+    --color-player-background: #B2EBF2;
+    --color-webchat-background: #E0F7FA;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #006064;
+    --color-markdown-border: #00ACC1;
+    --color-media-background: #E0F7FA;
+}
+
+/* Lime Theme */
+.theme-lime {
+    --color-dark: #827717;
+    --color-dark-gray: #9E9D24;
+    --color-gray: #AFB42B;
+    --color-light-gray: #F0F4C3;
+    --color-white: #F9FBE7;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #CDDC39;
+    --color-background-light: #F9FBE7;
+    --color-background-dark: #AFB42B;
+    --color-sidebar-background: #9E9D24;
+    --color-link-background: #827717;
+    --color-player-background: #F0F4C3;
+    --color-webchat-background: #F9FBE7;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #827717;
+    --color-markdown-border: #CDDC39;
+    --color-media-background: #F9FBE7;
+}
+
+/* Indigo Theme */
+.theme-indigo {
+    --color-dark: #1A237E;
+    --color-dark-gray: #283593;
+    --color-gray: #303F9F;
+    --color-light-gray: #C5CAE9;
+    --color-white: #E8EAF6;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #3F51B5;
+    --color-background-light: #E8EAF6;
+    --color-background-dark: #303F9F;
+    --color-sidebar-background: #283593;
+    --color-link-background: #1A237E;
+    --color-player-background: #C5CAE9;
+    --color-webchat-background: #E8EAF6;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #1A237E;
+    --color-markdown-border: #3F51B5;
+    --color-media-background: #E8EAF6;
+}
+
+/* Teal Theme */
+.theme-teal {
+    --color-dark: #004D40;
+    --color-dark-gray: #00695C;
+    --color-gray: #00796B;
+    --color-light-gray: #B2DFDB;
+    --color-white: #E0F2F1;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #009688;
+    --color-background-light: #E0F2F1;
+    --color-background-dark: #00796B;
+    --color-sidebar-background: #00695C;
+    --color-link-background: #004D40;
+    --color-player-background: #B2DFDB;
+    --color-webchat-background: #E0F2F1;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #004D40;
+    --color-markdown-border: #009688;
+    --color-media-background: #E0F2F1;
+}
+
+/* Violet Theme */
+.theme-violet {
+    --color-dark: #4A148C;
+    --color-dark-gray: #6A1B9A;
+    --color-gray: #7B1FA2;
+    --color-light-gray: #E1BEE7;
+    --color-white: #F3E5F5;
+    --color-green: #388E3C;
+    --color-red: #D32F2F;
+    --color-yellow: #FBC02D;
+    --color-text: white;
+    --color-border: #6A1B9A;
+    --color-background-light: #F3E5F5;
+    --color-background-dark: #7B1FA2;
+    --color-sidebar-background: #6A1B9A;
+    --color-link-background: #4A148C;
+    --color-player-background: #E1BEE7;
+    --color-webchat-background: #F3E5F5;
+    --color-yes-button-background: #388E3C;
+    --color-no-button-background: #D32F2F;
+    --color-markdown-background: #FBC02D;
+    --color-markdown-text: #7B1FA2;
+    --color-markdown-border: #6A1B9A;
+    --color-media-background: #F3E5F5;
+}
+
+/* Black & White Theme */
+ .theme-black-white { 
+
+    --color-dark: #000000;
+    --color-dark-gray: #333333;
+    --color-gray: #555555;
+    --color-light-gray: #DDDDDD;
+    --color-white: #FFFFFF;
+    --color-green: #00FF00;
+    --color-red: #FF0000;
+    --color-yellow: #FFFF00;
+    --color-text: white;
+    --color-border: #555555;
+    --color-background-light: #FFFFFF;
+    --color-background-dark: #000000;
+    --color-sidebar-background: #333333;
+    --color-link-background: #000000;
+    --color-player-background: #DDDDDD;
+    --color-webchat-background: #FFFFFF;
+    --color-yes-button-background: #00FF00;
+    --color-no-button-background: #FF0000;
+    --color-markdown-background: #FFFF00;
+    --color-markdown-text: #000000;
+    --color-markdown-border: #555555;
+    --color-media-background: #FFFFFF;
 }
