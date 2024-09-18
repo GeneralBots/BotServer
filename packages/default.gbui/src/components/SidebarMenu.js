@@ -46,7 +46,7 @@ class SideBarMenu extends React.Component {
   render() {
     return (
       <div>
-        <div className="tittleSideBarMenu">
+        <div className="titleSideBarMenu">
           <img
             className="pragmatismoLogo"
             src={this.props.instance.logo}

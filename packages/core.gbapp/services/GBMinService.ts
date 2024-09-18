@@ -298,9 +298,6 @@ export class GBMinService {
 
     await GBVMService.loadConnections(min);
 
-    // Serves individual URL for each bot conversational interface.
-
-    await this.deployer['deployPackage2'](min, user, 'templates/default.gbai/default.gbtheme');
 
     // Install per bot deployed packages.
 
@@ -316,6 +313,10 @@ export class GBMinService {
     if (await GBUtil.exists(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
     }
+    else {
+      await this.deployer['deployPackage2'](min, user, path.join('work', 'default.gbai', 'default.gbtheme'));
+    }
+
     packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, `gblib`));
     if (await GBUtil.exists(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);

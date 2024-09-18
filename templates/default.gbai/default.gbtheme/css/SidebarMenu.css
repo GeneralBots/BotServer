@@ -38,7 +38,7 @@ html[dir="ltr"] .ms-Nav-compositeLink.is-selected a:after {
         left: 0;
     }
 
-    .tittleSideBarMenu {
+    .titleSideBarMenu {
         display: none;
     }
 
@@ -70,7 +70,7 @@ html[dir="ltr"] .ms-Nav-compositeLink.is-selected a:after {
 }
 
 @media screen and (min-width: 520px) and (max-width:1000px) {
-    .tittleSideBarMenu {
+    .titleSideBarMenu {
         display: none;
     }
     .sidebar {
@@ -115,7 +115,7 @@ html[dir="ltr"] .ms-Nav-compositeLink.is-selected a:after {
         top: 0;
         left: 0;
     }
-    .tittleSideBarMenu {
+    .titleSideBarMenu {
         display: none;
     }
 
@@ -159,7 +159,7 @@ html[dir="ltr"] .ms-Nav-compositeLink.is-selected a:after {
         border-right: 14px solid #19baee !important;
     }
 
-    .tittleSideBarMenu {
+    .titleSideBarMenu {
         color: white;
         text-align: center;
         margin-top: 10px;
@@ -193,7 +193,7 @@ html[dir="ltr"] .ms-Nav-compositeLink.is-selected a:after {
 }
 
 @media screen and (max-height: 684px) {
-    .tittleSideBarMenu {
+    .titleSideBarMenu {
         display: none;
     }
 }

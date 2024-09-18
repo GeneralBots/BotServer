@@ -713,7 +713,7 @@ export class GBDeployer implements IGBDeployer {
       case '.gbtheme':
         // Updates server listeners to serve theme files in .gbtheme.
 
-        GBServer.globals.server.use(`/themes/${packageName}`, express.static(packageWorkFolder));
+        GBServer.globals.server.use( '/' + urlJoin('themes', packageName), express.static(packageWorkFolder));
         GBLogEx.verbose(min, `Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
 
         break;

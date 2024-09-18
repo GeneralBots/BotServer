@@ -44,7 +44,7 @@ class GBCss extends React.Component {
           <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/MediaPlayer.css"} />
           <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/NavBar.css"} />
           <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/App.css"} />
-          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/SideBarMenu.css" } />
+          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/SidebarMenu.css" } />
         </Helmet>
       );
     } else {
