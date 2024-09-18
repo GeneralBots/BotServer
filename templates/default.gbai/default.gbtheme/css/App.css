@@ -36,7 +36,7 @@
 
 .sidebar {
     
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.7), 0 0 30px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 30px rgba(255, 255, 255, 0.5);
     border-radius: 1rem;
     background-repeat: no-repeat;
 }
@@ -68,7 +68,7 @@ screen and (min-width: 420px) and (max-width: 1000px) {
 
 
     .iconMenu {
-        font-size: 14px;
+        font-size: 9pt;
         display: inline;
         margin-right: 16px;
         margin-top: 20px;;
@@ -114,7 +114,7 @@ screen and (min-width: 420px) and (max-width: 1000px) {
 @media screen and (min-width: 1000px) {
     .sidebar {
         display: inline-block !important;
-        height: 14%;
+        height: 18%;
         width: 45% !important;
         background-color: #1a1a1a !important;
         position: absolute;
@@ -130,9 +130,10 @@ screen and (min-width: 420px) and (max-width: 1000px) {
     }
 
     .iconMenu {
-        font-size: 16px;
+        font-size: 09pt;
         text-align: center;
-        margin: 0 1.5rem;
+        margin: 10px 6px;
+        padding-left: 48px;;
     }
 
     .IconsMenu {
@@ -140,17 +141,19 @@ screen and (min-width: 420px) and (max-width: 1000px) {
         display: inline-flex;
         position: absolute;
         left: 50%;
-        margin-left: -280px;
+        margin-left: -260px;
         bottom: 1rem;
-        height: 30px;
+        top:60px;
+        height: 28px;
         font-family: "Open Sans", sans-serif;
+        font-size: 12pt;
     }
 }
 
 /* Player */
 .player {
     background-color: white;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.7), 0 0 30px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 30px rgba(255, 255, 255, 0.5);
     border-radius: 0.75rem;
 }
 
@@ -172,18 +175,18 @@ screen and (min-width: 420px) and (max-width: 1000px) {
 @media screen and (min-width: 1000px) {
     .player {
         width: 45% !important;
-        height: 77% !important;
+        height: 71% !important;
         border: 7px solid #6c6c6c;
         position: absolute;
         left: 3%;
-        top: 19%;
+        top: 24%;
     }
 }
 
 /* Webchat */
 .webchat {
     background-color: #ffffff !important;
-    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
     border-radius: 1rem;
     overflow: auto !important;
 }
@@ -210,10 +213,9 @@ screen and (min-width: 420px) and (max-width: 1000px) {
 @media screen and (min-width: 1000px) {
     .webchat {
         width: 48% !important;
-        height: 95%;
+        height: 94%;
         position: absolute;
         right: 15px;
-        
         top: 19px;
         bottom: 0;
         border-bottom: 4px solid #4a4a4a;
