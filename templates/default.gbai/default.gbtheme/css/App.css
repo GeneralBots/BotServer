@@ -1,3 +1,5 @@
+/* Main Sections */
+
 /* Sidebar */
 .ms-Nav {
     background: #1a1a1a;
@@ -33,7 +35,7 @@
 }
 
 .sidebar {
-    background-color: white !important;
+    
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.7), 0 0 30px rgba(255, 255, 255, 0.5);
     border-radius: 1rem;
     background-repeat: no-repeat;
@@ -43,11 +45,11 @@
 screen and (min-width: 420px) and (max-width: 1000px) {
     .sidebar {
         display: inline-block !important;
-        height: 10%;
-        width: 100% !important;
+        height: 7%;
+        width: 95% !important;
         position: absolute;
-        top: 0;
-        left: 0;
+        top: 8px;
+        left: 14px;
     }
 
     .sidebar {
@@ -55,18 +57,25 @@ screen and (min-width: 420px) and (max-width: 1000px) {
     }
 
     .titleSideBarMenu {
-        display: none;
+        color: gray;
     }
 
+    .titleSideBarMenu img {
+        width: 32px;
+        margin-left: 10px;
+        margin-top:4px;        
+    }
+
+
     .iconMenu {
-        color: #ffffff;
-        font-size: 15px;
+        font-size: 14px;
         display: inline;
-        margin-right: 1.5rem;
+        margin-right: 16px;
+        margin-top: 20px;;
     }
 
     .iconMenu:hover {
-        color: #cccccc;
+        color: gray;
     }
 
     .iconText {
@@ -91,10 +100,10 @@ screen and (min-width: 420px) and (max-width: 1000px) {
         .IconsMenu {
             position: absolute;
             top: 50%;
-            margin-top: -15px;
+            margin-top: -10px;
             height: 30px;
             width: 450px;
-            left: 100px !important;
+            left: 80px !important;
             margin-left: 0px !important;
             text-align: center;
             font-family: "Open Sans", sans-serif;
@@ -115,14 +124,12 @@ screen and (min-width: 420px) and (max-width: 1000px) {
     }
 
     .titleSideBarMenu {
-        color: #ffffff;
         text-align: center;
         margin-top: 3px;
 
     }
 
     .iconMenu {
-        color: #ffffff;
         font-size: 16px;
         text-align: center;
         margin: 0 1.5rem;
@@ -149,14 +156,13 @@ screen and (min-width: 420px) and (max-width: 1000px) {
 
 @media screen and (max-width: 1000px) {
     .player {
-        width: 93% !important;
-        height: 26% !important;
-        border: 7px solid #4a4a4a;
+        width: 94% !important;
+        height: 44% !important;
+        border: 5px solid #4a4a41;
         position: absolute;
-        top: 9%;
+        top: 11%;
         left: 50%;
         margin-left: -48%;
-        padding: 50px;
         background-repeat: no-repeat;
         background-size: contain;
         background-position: center;
@@ -166,7 +172,7 @@ screen and (min-width: 420px) and (max-width: 1000px) {
 @media screen and (min-width: 1000px) {
     .player {
         width: 45% !important;
-        height: 75% !important;
+        height: 77% !important;
         border: 7px solid #6c6c6c;
         position: absolute;
         left: 3%;
@@ -190,11 +196,11 @@ screen and (min-width: 420px) and (max-width: 1000px) {
 @media screen and (max-width: 1000px) {
     .webchat {
         width: 96% !important;
-        height: 57% !important;
+        height: 37% !important;
         font-family: 'Open Sans', sans-serif;
         font-size: 16px;
         position: absolute;
-        top: 41%;
+        top: 60%;
         left: 50%;
         margin-left: -48%;
         border-radius: 1rem;
@@ -204,10 +210,10 @@ screen and (min-width: 420px) and (max-width: 1000px) {
 @media screen and (min-width: 1000px) {
     .webchat {
         width: 48% !important;
-        height: 92.6%;
+        height: 95%;
         position: absolute;
-        right: 20px;
-        margin-left: -8%;
+        right: 15px;
+        
         top: 19px;
         bottom: 0;
         border-bottom: 4px solid #4a4a4a;
