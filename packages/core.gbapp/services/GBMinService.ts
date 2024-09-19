@@ -687,7 +687,6 @@ export class GBMinService {
     if (instance === null) {
       instance = await this.core.loadInstanceByActivationCode(botId);
     }
-    GBLogEx.info(instance.instanceId, `New user: ${req.body?.user?.id}.`);
 
     if (instance !== null) {
       // Gets the webchat token, speech token and theme.
