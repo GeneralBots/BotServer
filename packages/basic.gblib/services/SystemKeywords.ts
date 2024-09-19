@@ -2822,15 +2822,15 @@ export class SystemKeywords {
       async bail => {
         if (table.endsWith('.csv')) {
           // CSV handling
-          const packagePath = GBUtil.getGBAIPath(min.botId, "gbdata");
+          const packagePath = GBUtil.getGBAIPath(min.botId, 'gbdata');
           const csvFile = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, `${table}`);
-          
+
           try {
             // Try to read the file to get headers
             const data = await fs.readFile(csvFile, 'utf8');
             const headers = data.split('\n')[0].split(',');
             const db = await csvdb(csvFile, headers, ',');
-            
+
             // Append new row
             await db.add(dst);
             item = dst;
@@ -2859,5 +2859,13 @@ export class SystemKeywords {
       }
     );
     return item;
+  }
+
+  public async play({ pid, file }) {
+    const { min, user, params, step } = await DialogKeywords.getProcessInfo(pid);
+
+    await min.kbService.playUrl(min, min.conversationalService, step, file?.url ? file.url : file);
+
+    await this.setMemoryContext({ pid, erase: true });
   }
 }

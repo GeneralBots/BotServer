@@ -1383,7 +1383,7 @@ export class KBService implements IGBKBService {
     conversationalService.sendAudio(min, step, answer.content);
   }
 
-  private async playUrl(
+  public async playUrl(
     min,
     conversationalService: IGBConversationalService,
     step: GBDialogStep,

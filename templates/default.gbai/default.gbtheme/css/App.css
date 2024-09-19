@@ -186,9 +186,9 @@ screen and (min-width: 420px) and (max-width: 1000px) {
 
 @media screen and (min-width: 1000px) {
     .player {
-        width: 45% !important;
-        height: 71% !important;
-        border: 7px solid var(--color-light-border);
+        width: 46% !important;
+        height: 73% !important;
+        border: 8px solid var(--color-light-border);
         position: absolute;
         left: 3%;
         top: 24%;

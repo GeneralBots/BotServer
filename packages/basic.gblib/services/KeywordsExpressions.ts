@@ -484,10 +484,19 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*(.*)\=\s*(GET IMAGE)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
-        const params = this.getParams($4, ['text']);
+        const params = this.getParams($4, ['prompt']);
         return `${$1} = await img.getImageFromPrompt({pid: pid, ${params}})`;
       }
     ];
+
+    keywords[i++] = [
+      /\s*(PLAY)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($3, ['file']);
+        return `await sys.play({pid: pid, ${params}})`;
+      }
+    ];
+
 
     keywords[i++] = [
       /^\s*(.*)\=\s*(AUTO SAVE)(\s*)(.*)/gim,

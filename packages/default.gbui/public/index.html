@@ -58,13 +58,14 @@
     </style>
 
     <script>
-      // Focus the input field after rendering
-      setTimeout(() => {
-        const input = document.querySelector('.webchat__send-box-text-box__input');
-        if (input) {
-          input.focus();
-        }
-      }, 3000); // Adjust timing as needed
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          const input = document.querySelector('.webchat__send-box-text-box__input');
+          if (input) {
+            input.focus();
+          }
+        }, 3000); // Adjust timing as needed
+      });
     </script>
   </head>
 
