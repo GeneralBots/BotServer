@@ -2861,10 +2861,13 @@ export class SystemKeywords {
     return item;
   }
 
-  public async play({ pid, file }) {
+  public async showImage({ pid, file }) {
     const { min, user, params, step } = await DialogKeywords.getProcessInfo(pid);
 
-    await min.kbService.playUrl(min, min.conversationalService, step, file?.url ? file.url : file);
+    const url = file?.url ? file.url : file;
+    GBLog.info(`PLAY IMAGE: ${url}.`);
+
+    await min.kbService.showImage(min, min.conversationalService, step, url);
 
     await this.setMemoryContext({ pid, erase: true });
   }

@@ -518,7 +518,7 @@ export class GBVMService extends GBService {
     code = ji.default(code, '  ');
 
     await fs.writeFile(jsfile, code);
-    GBLogEx.info(min, `Code reloaded: ${path.basename(filename)}.`);
+    
   }
 
   private async executeTasks(min, tasks) {

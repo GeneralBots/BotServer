@@ -45,7 +45,9 @@ export const getRouter = (
     };
     console.log('Created conversation with conversationId: ' + conversationId);
 
-    const activity = createConversationUpdateActivity(serviceUrl, conversationId);
+    const userId = req.body.user.id;
+
+    const activity = createConversationUpdateActivity(serviceUrl, conversationId, userId);
     fetch(botUrl, {
       method: 'POST',
       body: JSON.stringify(activity),
@@ -362,7 +364,7 @@ const createMessageActivity = (
   return obj;
 };
 
-const createConversationUpdateActivity = (serviceUrl: string, conversationId: string): IConversationUpdateActivity => {
+const createConversationUpdateActivity = (serviceUrl: string, conversationId: string, userId: any): IConversationUpdateActivity => {
   const activity: IConversationUpdateActivity = {
     type: 'conversationUpdate',
     channelId: 'api',
@@ -371,7 +373,7 @@ const createConversationUpdateActivity = (serviceUrl: string, conversationId: st
     id: uuidv4.v4(),
     membersAdded: [],
     membersRemoved: [],
-    from: { id: 'bot', name: 'bot' }
+    from: { id: userId, name: 'webbot' }
   };
 
   return activity;

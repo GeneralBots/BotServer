@@ -3,7 +3,6 @@
     "default": {
       "packages": [
         "package.json",
-        "packages/default.gbtheme/package.json",
         "packages/default.gbui/package.json"
       ]
     }

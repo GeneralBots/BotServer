@@ -490,10 +490,10 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /\s*(PLAY)(\s*)(.*)/gim,
+      /\s*(SHOW IMAGE)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($3, ['file']);
-        return `await sys.play({pid: pid, ${params}})`;
+        return `await sys.showImage({pid: pid, ${params}})`;
       }
     ];
 

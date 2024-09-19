@@ -1382,7 +1382,22 @@ export class KBService implements IGBKBService {
   ) {
     conversationalService.sendAudio(min, step, answer.content);
   }
-
+  public async showImage(
+    min,
+    conversationalService: IGBConversationalService,
+    step: GBDialogStep,
+    url: string,
+    channel: string
+  ) {
+    if (channel === 'whatsapp') {
+      await min.conversationalService.sendFile(min, step, null, url, '');
+    } else {
+      await conversationalService.sendEvent(min, step, 'play', {
+        playerType: 'image',
+        data: url
+      });
+    }
+  }
   public async playUrl(
     min,
     conversationalService: IGBConversationalService,

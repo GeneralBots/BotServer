@@ -57,6 +57,15 @@ class GBUIApp extends React.Component {
     window.user = this.getUser();
   }
 
+  generateRandomId(length) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+  }
+
   sendToken(token) {
     setTimeout(() => {
       window.line
@@ -87,7 +96,7 @@ class GBUIApp extends React.Component {
   }
 
   getUser() {
-    return { id: 'web@gb', name: 'You' };
+    return { id: window.userId, name: 'You' };
   }
 
   postMessage(value) {
@@ -167,6 +176,9 @@ class GBUIApp extends React.Component {
   setupBotConnection(instanceClient) {
     let _this_ = this;
     window['botchatDebug'] = true;
+    window.userId = this.generateRandomId(16);
+
+    _this_.setState({ token: instanceClient.webchatToken });
 
     const line = instanceClient.webchatToken
       ? new DirectLine({
@@ -174,16 +186,18 @@ class GBUIApp extends React.Component {
         })
       : new DirectLine({
           domain: instanceClient.domain,
+          userId:window.userId, 
+          userIdOnStartConversation: window.userId, 
           secret: null,
           token: null,
           webSocket: false // defaults to true
         });
+      line.setUserId(window.userId);    
 
     _this_.setState({ line: line });
 
     line.connectionStatus$.subscribe(connectionStatus => {
       if (connectionStatus === ConnectionStatus.Online) {
-        line.setUserId = null;
         _this_.setState({ instanceClient: instanceClient });
         window['botConnection'] = line;
       }
@@ -314,29 +328,29 @@ class GBUIApp extends React.Component {
     let gbCss = <div />;
     let seo = <div />;
     let sideBar = <div />;
-
+    
     if (this.state.line) {
+      
+      chat = (
+        <ReactWebChat
+          ref={chat => {
+            this.chat = chat;
+          }}
+          userID= {window.userId}
+          locale={'en-us'}
+          directLine={this.state.line}
+        />
+      );
+
       if (this.state.instanceClient) {
         let color1 = this.state.instanceClient.color1;
         gbCss = <GBCss instance={this.state.instanceClient} />;
         seo = <SEO instance={this.state.instanceClient} />;
-        const token = this.state.instanceClient.speechToken;
+
 
         document.body.style.setProperty('background-color', this.state.instanceClient.color2, 'important');
 
-        chat = (
-          <ReactWebChat
-            ref={chat => {
-              this.chat = chat;
-            }}
-            locale={'en-us'}
-            directLine={this.state.line}
-            webSpeechPonyfillFactory={window.WebChat.createCognitiveServicesSpeechServicesPonyfillFactory({
-              credentials: { authorizationToken: token, region: 'westus' }
-            })}
-          />
-        );
-        
+
         sideBar = (
           <div
             className="sidebar"

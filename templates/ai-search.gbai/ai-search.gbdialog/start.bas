@@ -1,6 +1,6 @@
 image = GET IMAGE "AI Search BOT and write General Bots."
 
-PLAY image 
+SHOW IMAGE image 
 
 BEGIN SYSTEM PROMPT
 

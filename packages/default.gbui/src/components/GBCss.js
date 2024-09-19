@@ -37,14 +37,8 @@ class GBCss extends React.Component {
     if (this.props.instance) {
       css = (
         <Helmet>
-          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/ChatPane.css"} />
-          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/Content.css"} />
-          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/Footer.css"} />
-          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/GifPlayer.css"} />
-          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/MediaPlayer.css"} />
-          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/NavBar.css"} />
-          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/App.css"} />
-          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/SidebarMenu.css" } />
+          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/colors.css"} />
+          <link rel="stylesheet" type="text/css" href={"/themes/" + this.props.instance.theme + "/css/default.css" } />
         </Helmet>
       );
     } else {

@@ -602,7 +602,7 @@ export class GBDeployer implements IGBDeployer {
     const gbai = GBUtil.getGBAIPath(min.instance.botId);
 
     if (download) {
-      if (packageType === 'gbkb') {
+      if (packageType === '.gbkb' || packageType === '.gbtheme') {
         await this.cleanupPackage(min.instance, packageName);
       }
 

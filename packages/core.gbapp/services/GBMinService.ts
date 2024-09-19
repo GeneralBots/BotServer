@@ -298,7 +298,6 @@ export class GBMinService {
 
     await GBVMService.loadConnections(min);
 
-
     // Install per bot deployed packages.
 
     let packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, 'gbdialog'));
@@ -312,8 +311,8 @@ export class GBMinService {
     packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, 'gbtheme'));
     if (await GBUtil.exists(packagePath)) {
       await this.deployer['deployPackage2'](min, user, packagePath);
-    }
-    else {
+      await this.watchPackages(min, 'gbtheme');
+    } else {
       await this.deployer['deployPackage2'](min, user, path.join('work', 'default.gbai', 'default.gbtheme'));
     }
 
@@ -688,7 +687,7 @@ export class GBMinService {
     if (instance === null) {
       instance = await this.core.loadInstanceByActivationCode(botId);
     }
-    GBLogEx.info(instance.instanceId, `Client requested instance for: ${botId}.`);
+    GBLogEx.info(instance.instanceId, `New user: ${req.body?.user?.id}.`);
 
     if (instance !== null) {
       // Gets the webchat token, speech token and theme.
@@ -727,8 +726,8 @@ export class GBMinService {
         config['domain'] = `http://localhost:${GBConfigService.get('PORT')}/directline/${botId}`;
       } else {
         const webchatTokenContainer = await this.getWebchatToken(instance);
-        (config['conversationId'] = webchatTokenContainer.conversationId),
-          (config['webchatToken'] = webchatTokenContainer.token);
+        config['conversationId'] = webchatTokenContainer.conversationId;
+        config['webchatToken'] = webchatTokenContainer.token;
       }
 
       res.send(JSON.stringify(config));
@@ -1219,7 +1218,7 @@ export class GBMinService {
         const context = adapter['createContext'](req);
         context['_activity'] = context.activity.body;
         await handler(context);
-        
+
         // Return status
         res.status(200);
 
@@ -1774,6 +1773,7 @@ export class GBMinService {
             try {
               const workFolder = path.join('work', packagePath);
               await this.deployer.deployPackage2(min, null, workFolder, true);
+              GBLogEx.info(min, `Deployed: ${path.basename(workFolder)}.`);
             } catch (error) {
               GBLogEx.error(min, `Error deploying package: ${GBUtil.toYAML(error)}`);
             } finally {

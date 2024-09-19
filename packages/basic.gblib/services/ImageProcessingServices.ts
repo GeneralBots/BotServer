@@ -107,6 +107,8 @@ export class ImageProcessingServices {
   public async getImageFromPrompt({ pid, prompt }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
+    GBLogEx.info(min, `DALL-E: ${prompt}.`);
+
     const azureOpenAIKey = await min.core.getParam(min.instance, 'Azure Open AI Key', null, true);
     const azureOpenAIEndpoint = await min.core.getParam(min.instance, 'Azure Open AI Endpoint', null, true);
     const azureOpenAIVersion = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Version', null, true);

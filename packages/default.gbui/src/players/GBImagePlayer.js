@@ -28,23 +28,21 @@
 |                                                                             |
 \*****************************************************************************/
 
-import React, { Component } from "react";
+import React, { Component } from 'react';
 
 class GBImagePlayer extends Component {
   constructor() {
     super();
-    this.state = {
-    };
+    this.state = {};
   }
 
   play(url) {
     this.playerImage.src = url;
   }
 
-  stop(){
-    this.playerImage.src = "";
+  stop() {
+    this.playerImage.src = '';
   }
-  
 
   render() {
     return (

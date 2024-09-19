@@ -40,7 +40,7 @@ import bodyParser from 'body-parser';
 import { GBLog, GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
 import child_process from 'child_process';
 import express from 'express';
-import fs from 'fs/promises'; 
+import fs from 'fs/promises';
 import http from 'http';
 import httpProxy from 'http-proxy';
 import https from 'https';
@@ -103,7 +103,7 @@ export class GBServer {
     GBServer.globals.debuggers = [];
     GBServer.globals.users = [];
     GBServer.globals.indexSemaphore = new Mutex();
-    
+
     server.use(bodyParser.json());
     server.use(bodyParser.json({ limit: '1mb' }));
     server.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
@@ -112,6 +112,15 @@ export class GBServer {
         req.query[key.toLowerCase()] = req.query[key];
       }
       next();
+    });
+
+    process.on('SIGINT', () => {
+      GBLogEx.info(0, 'SIGINT signal received.');
+    });
+
+    process.on('SIGTSTP', () => {
+      GBLogEx.info(0, 'SIGTSTP signal received.');
+      shutdown();
     });
 
     process.on('SIGTERM', () => {
@@ -140,7 +149,7 @@ export class GBServer {
 
     process.env.PWD = process.cwd();
     const workDir = path.join(process.env.PWD, 'work');
-    if (!await GBUtil.exists(workDir)) {
+    if (!(await GBUtil.exists(workDir))) {
       mkdirp.sync(workDir);
     }
 
@@ -295,7 +304,7 @@ export class GBServer {
           }
         } catch (error) {
           GBLog.error(`STOP: ${GBUtil.toYAML(error.message)}`);
-          process.exit(1);
+          shutdown();
         }
       })();
     };
@@ -315,7 +324,7 @@ export class GBServer {
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
         pfx: await fs.readFile(process.env.CERTIFICATE_PFX),
-        ca: await GBUtil.exists(process.env.CERTIFICATE_CA) ? await fs.readFile(process.env.CERTIFICATE_CA) : null
+        ca: (await GBUtil.exists(process.env.CERTIFICATE_CA)) ? await fs.readFile(process.env.CERTIFICATE_CA) : null
       };
 
       const httpsServer = https.createServer(options1, server).listen(port, mainCallback);
@@ -362,3 +371,17 @@ export class GBServer {
     });
   }
 }
+
+function shutdown() {
+  GBServer.globals.server.close(() => {
+    GBLogEx.info(0, 'General Bots server closed.');
+
+    GBServer.globals.apiServer.close(() => {
+      GBLogEx.info(0, 'General Bots API server closed.');
+      process.exit(0);
+    });    
+    
+  });
+
+}
+
