@@ -313,7 +313,7 @@ export class GBMinService {
       await this.deployer['deployPackage2'](min, user, packagePath);
       await this.watchPackages(min, 'gbtheme');
     } else {
-      await this.deployer['deployPackage2'](min, user, path.join('work', 'default.gbai', 'default.gbtheme'));
+      await this.deployer['deployPackage2'](min, user, path.join(GBConfigService.get('STORAGE_LIBRARY'), 'default.gbai', 'default.gbtheme'));
     }
 
     packagePath = urlJoin(`work`, GBUtil.getGBAIPath(min.botId, `gblib`));
