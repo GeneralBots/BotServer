@@ -17,7 +17,7 @@ var __dirname = process.env.PWD || process.cwd();
 try {
   var run = async () => {
 
-    import('./dist/src/app.js').then(async (gb)=> {
+    import('./src/app.js').then(async (gb)=> {
       await gb.GBServer.run()
     });
   };
