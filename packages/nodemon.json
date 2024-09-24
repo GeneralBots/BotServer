@@ -1,0 +1,5 @@
+{
+    "watch": ["src", "packages"], 
+    "ext": "ts",
+    "exec": "tsx" 
+}

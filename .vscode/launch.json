@@ -5,25 +5,25 @@
       "type": "node",
       "request": "launch",
       "sourceMaps": true,
-      "name": "Debug Program",
-      "runtimeExecutable": "node",
+      "name": "Debug Program with Nodemon",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nodemon", "--exec", "tsx"], // Use nodemon with tsx
       "program": "${workspaceRoot}/boot.mjs",
       "cwd": "${workspaceRoot}",
       "env": {
         "NODE_ENV": "development",
-        "NODE_NO_WARNINGS":"1"
+        "NODE_NO_WARNINGS": "1"
       },
       "args": [
-        "--no-deprecation", 
-        "--loader ts-node/esm", 
-        "--require ${workspaceRoot}/suppress-node-warnings.cjs", 
+        "--require", "${workspaceRoot}/suppress-node-warnings.cjs"
       ],
       "skipFiles": [
         "node_modules/**/*.js",
         "<node_internals>/**"
-      ],        
+      ],
       "outFiles": [
-        "${workspaceRoot}/dist/**/*.js"],
+        "${workspaceRoot}/dist/**/*.js"
+      ],
       "stopOnEntry": false,
       "console": "integratedTerminal"
     }

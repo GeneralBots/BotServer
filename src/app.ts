@@ -380,7 +380,7 @@ function shutdown() {
       GBLogEx.info(0, 'General Bots API server closed.');
       process.exit(0);
     });    
-    
+     
   });
 
 }

@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "strict": false,
+    "rootDir": "./",
+    "strict": true,
     "allowJs": true,
     "downlevelIteration": true,
     "baseUrl": "./",
