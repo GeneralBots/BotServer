@@ -3,6 +3,7 @@
   "version": "5.0.0",
   "description": "General Bot Community Edition open-core server.",
   "main": "./boot.mjs",
+  "type":"module",
   "bugs": "https://github.com/pragmatismo-io/BotServer/issues",
   "homepage": "https://github.com/pragmatismo-io/BotServer/#readme",
   "contributors": [

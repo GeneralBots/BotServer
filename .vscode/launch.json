@@ -5,9 +5,8 @@
       "type": "node",
       "request": "launch",
       "sourceMaps": true,
-      "name": "Debug Program with Nodemon",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["nodemon", "--ext","ts","--exec", "tsx"],
+      "name": "Debug Program",
+      "runtimeExecutable": "node",
       "program": "${workspaceRoot}/boot.mjs",
       "cwd": "${workspaceRoot}",
       "env": {

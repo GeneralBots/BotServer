@@ -63,7 +63,6 @@ import { WebAutomationServices } from './WebAutomationServices.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
 import { ChatServices } from '../../llm.gblib/services/ChatServices.js';
 import mime from 'mime-types';
-import exts from '../../../extensions.json' assert { type: 'json' };
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import retry from 'async-retry';
@@ -2615,7 +2614,10 @@ export class SystemKeywords {
   }
 
   public async getExtensionInfo(ext: any): Promise<any> {
-    let array = exts.filter((v, i, a) => a[i]['extension'] === ext);
+
+    // TODO: Load exts.
+    
+    let array = []; // exts.filter((v, i, a) => a[i]['extension'] === ext);
     if (array[0]) {
       return array[0];
     }
