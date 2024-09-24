@@ -134,8 +134,8 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     let res;
     try {
       GBLogEx.info(this.min, result);
-      result = result.replace(/\u000A/g, '\\n');
-      result = result.replace(/\\n/g, '');
+      result = result.replace(/\u000A/g, '\n');
+      result = result.replace(/\\n/g, '\n');
       result = result.replace(/\`\`\`/g, '');
       res = JSON.parse(result);
     } catch {
@@ -197,7 +197,7 @@ export class ChatServices {
   private static async getRelevantContext(
     vectorStore: HNSWLib,
     sanitizedQuestion: string,
-    numDocuments: number = 3
+    numDocuments: number = 10
   ): Promise<string> {
     if (sanitizedQuestion === '' || !vectorStore) {
       return '';
@@ -227,11 +227,12 @@ export class ChatServices {
         page ? page : 'entire document'
       } 
       (you will fill the JSON sources collection field later), 
-      never use Index or Summary pages to answer, just content. And
-      memorize this block among document information and return when you 
-      are refering this part of content:\n\n\n\n ${
+      Ignore this block if it is an index or part of table of contents. 
+      And memorize this block among document
+       information and return when you 
+       are refering this part of content:\n\n\n\n ${
         doc.pageContent
-      } \n\n\n\n.`;
+      } \n\n\n\n.`; 
     }
     return output;
   }
@@ -435,13 +436,17 @@ export class ChatServices {
       Note: The example shows two source documents for illustration. You may include any number of source documents in the "sources" array as needed. Ensure each source has both "file" and "page" fields. The "page" values should refer to actual content pages, not index or summary pages.
   
       Requirements:
+      - Do not include table of content pages in answers.
       - The JSON must be valid according to RFC 8259 and parseable without errors
       - The "text" field must contain your full response
       - Never say that a person needs to go a part of the document, instead look for the page content and answer the question.
       - The "sources" array must list the source documents used, with each source having "file" and "page" fields
       - Ensure the "page" numbers refer to real pages of content, not index or summary pages
       - Do not include any text, markdown, or other content outside the JSON object
+      - Absolutely avoid any Table of Contents, Indexes, or Summary pages. 
+      - Ensure that no TOC with page numbering, indexing or summary information is included in your response.
       - Double check that your response contains ONLY the JSON object before returning
+      - You sometimes return a formatted JSON surrounded by quotes like MD, DONT RETURN LIKE THIS, just valid JSON!
   
       Failure to follow these requirements exactly will result in an error.`; 
   

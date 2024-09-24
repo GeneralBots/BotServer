@@ -1496,7 +1496,8 @@ export class GBMinService {
         );
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
 
-        return;
+
+      
       }
     }
 

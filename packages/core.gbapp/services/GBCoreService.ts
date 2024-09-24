@@ -802,6 +802,10 @@ await fs.writeFile('.env', env);
       return new Number(value ? value : defaultValue ? defaultValue : 0).valueOf();
     }
 
+    if (typeof value === 'string') {
+      return value.trim();
+    }
+
     const ret = value ?? defaultValue;
     return ret;
   }

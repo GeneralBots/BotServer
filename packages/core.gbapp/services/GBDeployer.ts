@@ -714,7 +714,7 @@ export class GBDeployer implements IGBDeployer {
         // Updates server listeners to serve theme files in .gbtheme.
         const filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), 'default.gbai', 'default.gbtheme');
         GBServer.globals.server.use('/' + urlJoin('themes', packageName), express.static( filePath));
-        GBLogEx.info(min, `Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
+        GBLogEx.verbose(min, `Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
 
         break;
 
