@@ -119,7 +119,8 @@ export class ImageProcessingServices {
       // Initialize the Azure OpenAI client
 
       const client = new AzureOpenAI({
-        baseURL: azureOpenAIEndpoint,
+        endpoint: azureOpenAIEndpoint,
+        deployment: azureOpenAIImageModel,
         apiVersion: azureOpenAIVersion,
         apiKey: azureOpenAIKey
       });
@@ -127,7 +128,7 @@ export class ImageProcessingServices {
       // Make a request to the image generation endpoint
       
       const response = await client.images.generate({
-        model: azureOpenAIImageModel,
+        model: '',
         prompt: prompt,
         n: 1,
         size: '1024x1024'
