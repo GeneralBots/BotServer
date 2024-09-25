@@ -2,4 +2,4 @@ name,value
 Answer Mode,chart
 llm File,northwind.db
 llm Driver,sqlite
-Theme Color,yellow
+Theme Color,red
