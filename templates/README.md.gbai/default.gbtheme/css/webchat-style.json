@@ -1,0 +1,50 @@
+{
+  "accent": "Red",
+  "avatarSize": 40,
+
+  "backgroundColor": "White",
+
+  "bubbleBackground": "White",
+  "bubbleBorder": "solid 1px #E6E6E6",
+  "bubbleBorderRadius": 2,
+  "bubbleFromUserBackground": "White",
+  "bubbleFromUserBorder": "solid 1px #E6E6E6",
+  "bubbleFromUserBorderRadius": 2,
+  "bubbleFromUserTextColor": "Black",
+  "bubbleImageHeight": 240,
+  "bubbleMaxWidth": 480,
+  "bubbleMinHeight": 40,
+  "bubbleMinWidth": 250,
+  "bubbleTextColor": "Black",
+
+  "hideSendBox": false,
+
+  "microphoneButtonColorOnDictate": "#F33",
+
+  "paddingRegular": 10,
+  "paddingWide": 20,
+
+  "sendBoxButtonColor": "#999",
+  "sendBoxButtonColorOnDisabled": "#CCC",
+  "sendBoxButtonColorOnFocus": "#333",
+  "sendBoxButtonColorOnHover": "#333",
+
+  "sendBoxHeight": 40,
+
+  "showSpokenText": false,
+
+  "suggestedActionBackground": "White",
+  "suggestedActionBorder": "solid 2px",
+  "suggestedActionBorderRadius": 0,
+  "suggestedActionDisabledBackground": "White",
+  "suggestedActionDisabledBorder": "solid 2px #E6E6E6",
+  "suggestedActionHeight": 40,
+  "transcriptOverlayButtonBackground": "rgba(0, 0, 0, .6)",
+  "transcriptOverlayButtonBackgroundOnFocus": "rgba(0, 0, 0, .8)",
+  "transcriptOverlayButtonBackgroundOnHover": "rgba(0, 0, 0, .8)",
+  "transcriptOverlayButtonColor": "White",
+  "transcriptOverlayButtonColorOnFocus": "White",
+  "transcriptOverlayButtonColorOnHover": "White",
+
+  "videoHeight": 270
+}

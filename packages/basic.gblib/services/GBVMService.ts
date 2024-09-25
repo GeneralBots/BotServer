@@ -877,7 +877,7 @@ export class GBVMService extends GBService {
 
     // Auto-NLP generates BASIC variables related to entities.
 
-    if (step?.context.activity.originalText  && min['nerEngine']) {
+    if (step?.context?.activity.originalText  && min['nerEngine']) {
       const result = await min['nerEngine'].process(step.context.activity.originalText);
 
       for (let i = 0; i < result.entities.length; i++) {
@@ -900,7 +900,7 @@ export class GBVMService extends GBService {
     const scriptFilePath = urlJoin(gbdialogPath, `${text}.js`);
 
     let code = min.sandBoxMap[text];
-    const channel = step ? step.context.activity.channelId : 'web';
+    const channel = step?.context ? step.context.activity.channelId : 'web';
 
     const dk = new DialogKeywords();
     const sys = new SystemKeywords();

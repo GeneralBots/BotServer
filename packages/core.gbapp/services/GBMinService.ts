@@ -272,7 +272,7 @@ export class GBMinService {
   /**
    * Unmounts the bot web site (default.gbui) secure domain, if any.
    */
-  public async unloadDomain(instance: IGBInstance) {}
+  public async unloadDomain(instance: IGBInstance) { }
 
   /**
    * Mount the instance by creating an BOT Framework bot object,
@@ -662,9 +662,8 @@ export class GBMinService {
         min.instance.authenticatorTenant,
         '/oauth2/authorize'
       );
-      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
-        min.instance.marketplaceId
-      }&redirect_uri=${urlJoin(process.env.BOT_URL, min.instance.botId, 'token')}`;
+      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.marketplaceId
+        }&redirect_uri=${urlJoin(process.env.BOT_URL, min.instance.botId, 'token')}`;
       GBLogEx.info(min, `HandleOAuthRequests: ${authorizationUrl}.`);
       res.redirect(authorizationUrl);
     });
@@ -1014,8 +1013,8 @@ export class GBMinService {
 
     // Unifies channel detection.  Unmarshalls group information.
 
-    req.body.channelId = req.body?.from.channelIdEx === 'whatsapp' ? 'omnichannel' : req.body.channelId;
-    req.body.group = req.body?.from.group;
+    req.body.channelId = req.body?.from?.channelIdEx === 'whatsapp' ? 'omnichannel' : req.body.channelId;
+    req.body.group = req.body?.from?.group;
 
     // Default activity processing and handler.
 
@@ -1032,7 +1031,7 @@ export class GBMinService {
       const step = await min.dialogs.createContext(context);
       step.context.activity.locale = 'pt-BR';
 
-      const member = context.activity.from;
+      const member = context.activity.recipient ? context.activity.recipient : context.activity.from;
       const sec = new SecService();
       let user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
       const userId = user.userId;
@@ -1497,7 +1496,7 @@ export class GBMinService {
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
 
 
-      
+
       }
     }
 
@@ -1607,9 +1606,8 @@ export class GBMinService {
           try {
             await step.continueDialog();
           } catch (error) {
-            const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${
-              error.error ? (error.error.stack ? error.error.stack : '') : ''
-            }`;
+            const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''
+              }`;
             GBLog.error(msg);
             await min.conversationalService.sendText(
               min,
@@ -1732,10 +1730,10 @@ export class GBMinService {
       pingSendTimeout: null,
       keepAliveTimeout: null,
       listeners: {
-        unsubscribed(subscriptions: number): void {},
-        subscribed(subscriptions: number): void {},
-        disconnected(remoteId: string, connections: number): void {},
-        connected(remoteId: string, connections: number): void {},
+        unsubscribed(subscriptions: number): void { },
+        subscribed(subscriptions: number): void { },
+        disconnected(remoteId: string, connections: number): void { },
+        connected(remoteId: string, connections: number): void { },
         messageIn(...params): void {
           params.shift();
         },

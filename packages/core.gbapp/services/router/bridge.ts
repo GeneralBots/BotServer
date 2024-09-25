@@ -45,7 +45,7 @@ export const getRouter = (
     };
     console.log('Created conversation with conversationId: ' + conversationId);
 
-    const userId = req.body.user.id;
+    const userId = req.query?.userSystemId ? req.query?.userSystemId : req.body.user.id;
 
     const activity = createConversationUpdateActivity(serviceUrl, conversationId, userId);
     fetch(botUrl, {
