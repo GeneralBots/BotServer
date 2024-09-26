@@ -437,7 +437,7 @@ export class GBDeployer implements IGBDeployer {
     let rows: any[] = [];
     let obj: any = {};
 
-    const workbook =  new Excel.Workbook();
+    const workbook = new Excel.Workbook();
 
     if (await GBUtil.exists(xls)) {
       await workbook.xlsx.readFile(xls);
@@ -471,14 +471,14 @@ export class GBDeployer implements IGBDeployer {
         const key = line[1];
         let value = line[2];
 
-        if (value.text){value = value.text};
-
+        
         if (key && value) {
+          if (value.text) { value = value.text };
           obj[key] = value;
         }
       }
     });
-    
+
     GBLogEx.info(min, `Processing ${rows.length} rows from ${path.basename(filePath)}...`);
     rows = null;
     return obj;
@@ -720,8 +720,8 @@ export class GBDeployer implements IGBDeployer {
 
       case '.gbtheme':
         // Updates server listeners to serve theme files in .gbtheme.
-        const filePath = path.join(process.env.PWD, 'templates','default.gbai', 'default.gbtheme');
-        GBServer.globals.server.use('/' + urlJoin('themes', packageName), express.static( filePath));
+        const filePath = path.join(process.env.PWD, 'templates', 'default.gbai', 'default.gbtheme');
+        GBServer.globals.server.use('/' + urlJoin('themes', packageName), express.static(filePath));
         GBLogEx.verbose(min, `Theme (.gbtheme) assets accessible at: /themes/${packageName}.`);
 
         break;
