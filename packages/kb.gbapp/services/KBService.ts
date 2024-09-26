@@ -1023,6 +1023,7 @@ export class KBService implements IGBKBService {
     let website = min.core.getParam<string>(min.instance, 'Website', null);
     const maxDepth = min.core.getParam<number>(min.instance, 'Website Depth', 1);
     const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
+    GBLogEx.info(min, `Website: ${website}, Max Depth: ${maxDepth}, Ignore URLs: ${websiteIgnoreUrls}`);
 
     if (website) {
       // Removes last slash if any.
