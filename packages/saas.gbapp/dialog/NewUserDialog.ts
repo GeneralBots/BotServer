@@ -33,7 +33,7 @@
 import { IGBDialog, GBMinInstance } from 'botlib';
 import { Messages } from '../strings.js';
 import { MainService } from '../service/MainService.js';
-import { Package } from '../index.js';
+import { SaaSPackage } from '../index.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 
 export class NewUserDialog extends IGBDialog {
@@ -243,7 +243,7 @@ export class NewUserDialog extends IGBDialog {
               min,
               botName,
               '999999999',
-              'operations@pragmatismo.cloud',
+              'email@doman.cloud',
               '5521999998888',
               botName,
               null,
@@ -289,7 +289,7 @@ export class NewUserDialog extends IGBDialog {
 
             return await step.replaceDialog('/profile_name', step.activeDialog.state.options);
           } else {
-            const name = Package.welcomes ? Package.welcomes[mobile] : null;
+            const name = SaaSPackage.welcomes ? SaaSPackage.welcomes[mobile] : null;
             step.activeDialog.state.options.name = name;
             step.activeDialog.state.options.mobile = mobile;
 

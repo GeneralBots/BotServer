@@ -30,8 +30,7 @@
 
 "use strict"
 
-import { MainService } from "./MainService";
-const request = require('request-promise-native');
+import { MainService } from "./MainService.js";
 
 export class MSSubscriptionService {
 
@@ -49,7 +48,7 @@ export class MSSubscriptionService {
                 'x-ms-marketplace-token': token
             }
         };
-        let result = await request.get(options);
+        let result = null; // TODO: await fetch({});
         let data = JSON.parse(result);
 
         const additionalData = {
@@ -107,7 +106,7 @@ export class MSSubscriptionService {
             }
         };
 
-         result = await request.get(options);
+         result = null; //  TODO: fetch.
          data = JSON.parse(result);
     }
 

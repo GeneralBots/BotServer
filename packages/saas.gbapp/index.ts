@@ -32,16 +32,13 @@
 
 import { IGBPackage, GBMinInstance, IGBCoreService, GBLog, IGBAdminService, GBDialogStep } from 'botlib'
 import { Sequelize } from 'sequelize-typescript'
-import { GBOnlineSubscription } from './model/MainModel'
+import { GBOnlineSubscription } from './model/MainModel.js'
 
-import { MSSubscriptionService } from './service/MSSubscription'
+import { MSSubscriptionService } from './service/MSSubscription.js'
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import { NewUserDialog } from './dialog/NewUserDialog'
-const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
+import { NewUserDialog } from './dialog/NewUserDialog.js'
 
-const cron = require('node-cron');
-
-export class Package implements IGBPackage {
+export class SaaSPackage implements IGBPackage {
   sysPackages: IGBPackage[]
   adminService: IGBAdminService;
   public static welcomes = {};
@@ -95,11 +92,6 @@ export class Package implements IGBPackage {
     this.adminService = min.adminService;
     this.instanceId = min.instanceId;
 
-    cron.schedule(schedule, async () => {
-      GBLog.info( 'Sending Tasks notifications if applies...');
-      await this.notifyJob(sendToDevice);
-    }, options);
-    GBLog.info( 'Running Reviews notifications 09:30 from Monday to Friday...');
   }
 
   /**
@@ -111,45 +103,6 @@ export class Package implements IGBPackage {
   }
 
 
-
-  public async getTasksMarkdown(packagePath, file) {
-
-    let token =
-      await this.adminService.acquireElevatedToken(this.instanceId);
-
-    let client = MicrosoftGraph.Client.init({
-      authProvider: done => {
-        done(null, token);
-      }
-    });
-    let siteId = process.env.STORAGE_SITE_ID;
-    let libraryId = process.env.STORAGE_LIBRARY;
-
-    let res = await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:${packagePath}:/children`)
-      .get();
-
-    let document = res.value.filter(m => {
-      return m.name === file
-    });
-
-    let results = await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/items/${document[0].id}/workbook/worksheets('Tasks')/range(address='A1:A10')`)
-      .get();
-
-    let index = 1;
-    let md = `*Tasks*\n`;
-
-    for (; index <= 10; index++) {
-      const row = results.text[index];
-      if (row !== undefined) {
-        md = `${md}\n *${index}*. ${row[0]}`;
-      }
-    }
-
-    return md;
-  }
-
   async unloadPackage(core: IGBCoreService): Promise<void> {
 
   }
@@ -158,10 +111,9 @@ export class Package implements IGBPackage {
 
     let gboService = min.gbappServices['gboService'];
 
-
     // Gets the sendToDevice method of whatsapp.gblib and setups scheduler.
 
-    if (min.whatsAppDirectLine !== undefined && min.botId === "Pragmatismo") {
+    if (min.whatsAppDirectLine !== undefined) {
       const sendToDevice = min.whatsAppDirectLine.sendToDevice.bind(min.whatsAppDirectLine);
       this.setupScheduler(min, sendToDevice);
       this.notifyJob(sendToDevice);
@@ -183,7 +135,7 @@ export class Package implements IGBPackage {
 
         const from = data.from;
         const fromName = data.fromName;
-        Package.welcomes[from] = fromName;
+        SaaSPackage.welcomes[from] = fromName;
         break;
 
       default:

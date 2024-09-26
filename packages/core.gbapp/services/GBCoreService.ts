@@ -65,8 +65,8 @@ import { GBUtil } from '../../../src/util.js';
 import { GBLogEx } from './GBLogEx.js';
 import { GBDeployer } from './GBDeployer.js';
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
-import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import csvdb from 'csv-database';
+import { SaaSPackage } from '../../saas.gbapp/index.js';
 
 /**
  * GBCoreService contains main logic for handling storage services related
@@ -503,7 +503,8 @@ await fs.writeFile('.env', env);
         GBSharePointPackage,
         GBGoogleChatPackage,
         GBBasicPackage,
-        GBHubSpotPackage
+        GBHubSpotPackage,
+        SaaSPackage
       ],
       async e => {
         GBLogEx.info(0, `Loading sys package: ${e.name}...`);
