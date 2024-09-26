@@ -465,11 +465,11 @@ export class GBDeployer implements IGBDeployer {
     } else {
       return [];
     }
+    console.log(GBUtil.toYAML(rows));
     await asyncPromise.eachSeries(rows, async (line: any) => {
-      console.log(GBUtil.toYAML(line));
       if (line && line.length > 0) {
-        const key = line[1]?.trim();
-        const value = line[2]?.trim();
+        const key = line[1];
+        const value = line[2];
         if (key && value) {
           obj[key] = value;
         }
