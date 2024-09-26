@@ -437,7 +437,7 @@ export class GBDeployer implements IGBDeployer {
     let rows: any[] = [];
     let obj: any = {};
 
-    const workbook = new Excel.Workbook();
+    const workbook =  new Excel.Workbook();
 
     if (await GBUtil.exists(xls)) {
       await workbook.xlsx.readFile(xls);
@@ -467,10 +467,14 @@ export class GBDeployer implements IGBDeployer {
     }
     await asyncPromise.eachSeries(rows, async (line: any) => {
       if (line && line.length > 0) {
-        obj[line[1]] = line[2];
+        const key = line[1]?.trim();
+        const value = line[2]?.trim();
+        if (key && value) {
+          obj[key] = value;
+        }
       }
     });
-
+    
     GBLogEx.info(min, `Processing ${rows.length} rows from ${path.basename(filePath)}...`);
     rows = null;
     return obj;
