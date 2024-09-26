@@ -51,7 +51,7 @@ import { SqlDatabaseChain } from 'langchain/chains/sql_db';
 import { SqlDatabase } from 'langchain/sql_db';
 import { DataSource } from 'typeorm';
 import { GBMinInstance } from 'botlib';
-import fs from 'fs/promises'; 
+import fs from 'fs/promises';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
 import { BufferWindowMemory } from 'langchain/memory';
 import path from 'path';
@@ -74,7 +74,7 @@ import {
 import { GBUtil } from '../../../src/util.js';
 import { z } from 'zod';
 import zodToJsonSchema from 'zod-to-json-schema';
-export interface CustomOutputParserFields {}
+export interface CustomOutputParserFields { }
 export type ExpectedOutput = any;
 
 function isChatGeneration(llmOutput: ChatGeneration | Generation): llmOutput is ChatGeneration {
@@ -133,12 +133,10 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
 
     let res;
     try {
-      GBLogEx.info(this.min, result);
-      result = result.replace(/\u000A/g, '\n');
-      result = result.replace(/\\n/g, '\n');
-      result = result.replace(/\`\`\`/g, '');
+        GBLogEx.info(this.min, result);
       res = JSON.parse(result);
-    } catch {
+    } catch (e) {
+      GBLogEx.verbose(this.min, `LLM JSON error: ${GBUtil.toYAML(e)}.`);
       return result;
     }
 
@@ -189,7 +187,7 @@ export class ChatServices {
       const gbaiName = GBUtil.getGBAIPath(min.botId, null);
       const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
-  await fs.writeFile(localName, buffer, { encoding: null });
+      await fs.writeFile(localName, buffer, { encoding: null });
       return { localName: localName, url: url, data: buffer };
     }
   }
@@ -223,16 +221,14 @@ export class ChatServices {
         page = await ChatServices.findPageForText(metadata.source, doc.pageContent);
       }
 
-      output = `${output}\n\n\n\nUse also the following context which is coming from Source Document: ${filename} at page: ${
-        page ? page : 'entire document'
-      } 
+      output = `${output}\n\n\n\nUse also the following context which is coming from Source Document: ${filename} at page: ${page ? page : 'entire document'
+        } 
       (you will fill the JSON sources collection field later), 
       Ignore this block if it is an index or part of table of contents. 
       And memorize this block among document
        information and return when you 
-       are refering this part of content:\n\n\n\n ${
-        doc.pageContent
-      } \n\n\n\n.`; 
+       are refering this part of content:\n\n\n\n ${doc.pageContent
+        } \n\n\n\n.`;
     }
     return output;
   }
@@ -414,7 +410,7 @@ export class ChatServices {
     Folowing answer:`)
     ] as any);
 
-        
+
     const jsonInformation = `
     CRITICAL INSTRUCTION: You MUST ALWAYS return ONLY a valid JSON object matching this exact structure, with no additional text before or after:
 
@@ -447,9 +443,10 @@ export class ChatServices {
       - Ensure that no TOC with page numbering, indexing or summary information is included in your response.
       - Double check that your response contains ONLY the JSON object before returning
       - You sometimes return a formatted JSON surrounded by quotes like MD, DONT RETURN LIKE THIS, just valid JSON!
+      - Do not use ENTER to format JSON, but keep ENTER char inside text tag.
   
-      Failure to follow these requirements exactly will result in an error.`; 
-  
+      Failure to follow these requirements exactly will result in an error.`;
+
 
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
       AIMessagePromptTemplate.fromTemplate(
