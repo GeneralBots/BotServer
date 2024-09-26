@@ -469,7 +469,10 @@ export class GBDeployer implements IGBDeployer {
     await asyncPromise.eachSeries(rows, async (line: any) => {
       if (line && line.length > 0) {
         const key = line[1];
-        const value = line[2];
+        let value = line[2];
+
+        if (value.text){value = value.text};
+
         if (key && value) {
           obj[key] = value;
         }
