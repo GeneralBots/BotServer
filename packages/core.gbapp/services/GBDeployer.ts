@@ -465,7 +465,7 @@ export class GBDeployer implements IGBDeployer {
     } else {
       return [];
     }
-    console.log(GBUtil.toYAML(rows));
+    GBLogEx.error(0, GBUtil.toYAML(rows));
     await asyncPromise.eachSeries(rows, async (line: any) => {
       if (line && line.length > 0) {
         const key = line[1];
