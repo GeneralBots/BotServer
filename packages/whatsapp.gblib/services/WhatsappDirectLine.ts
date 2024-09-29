@@ -31,7 +31,7 @@
 import mime from 'mime-types';
 import urlJoin from 'url-join';
 import path from 'path';
-import fs from 'fs/promises'; 
+import fs from 'fs/promises';
 import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app.js';
@@ -57,7 +57,7 @@ import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { createBot } from 'whatsapp-cloud-api';
 import { promisify } from 'util';
 const stat = promisify(fs.stat);
-import {createReadStream} from 'fs';
+import { createReadStream } from 'fs';
 
 /**
  * Support for Whatsapp.
@@ -123,7 +123,7 @@ export class WhatsappDirectLine extends GBService {
 
     switch (this.provider) {
       case 'meta':
-        this.botNumber = this.min.core.getParam<string>(this.min.instance, 'Bot Number', null);
+        this.botNumber = (this.min.core['getParam'] as any)(this.min.instance, 'Bot Number', null, true);
         let whatsappServiceNumber, whatsappServiceKey, url;
         if (this.botNumber && this.min.instance.whatsappServiceNumber) {
           whatsappServiceNumber = this.min.instance.whatsappServiceNumber;
@@ -188,7 +188,7 @@ export class WhatsappDirectLine extends GBService {
                 'cache',
                 `qr${GBAdminService.getRndReadableIdentifier()}.png`
               );
-          await fs.writeFile(localName, qrBuf.data);
+              await fs.writeFile(localName, qrBuf.data);
               const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', path.basename(localName));
 
               if (adminNumber) {
@@ -331,7 +331,7 @@ export class WhatsappDirectLine extends GBService {
             'cache',
             `tmp${GBAdminService.getRndReadableIdentifier()}.docx`
           );
-      await fs.writeFile(localName, buf, { encoding: null });
+          await fs.writeFile(localName, buf, { encoding: null });
           const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', path.basename(localName));
 
           attachments = [];
@@ -529,8 +529,22 @@ export class WhatsappDirectLine extends GBService {
       }
     } else if (user.agentMode === 'bot' || user.agentMode === null || user.agentMode === undefined) {
       if (WhatsappDirectLine.conversationIds[botId + from + group] === undefined) {
-        GBLogEx.info(this.min, `GBWhatsapp: Starting new conversation on Bot.`);
-        const response = await client.apis.Conversations.Conversations_StartConversation();
+        const pid = GBVMService.createProcessInfo(user, this.min, 'whatsapp', null);
+        GBLogEx.info(this.min, `GBWhatsapp: Starting new conversation on Bot (pid: ${pid}).`);
+        let response;
+        if (GBConfigService.get('STORAGE_NAME')) {
+          response = await client.apis.Conversations.Conversations_StartConversation(
+
+          );
+        } else {
+          response = await client.apis.Conversations.Conversations_StartConversation(
+            {
+              userSystemId: user.userSystemId,
+              userName: user.userName,
+              pid: pid
+            }
+          );
+        }
         const generatedConversationId = response.obj.conversationId;
 
         WhatsappDirectLine.conversationIds[botId + from + group] = generatedConversationId;
@@ -759,8 +773,8 @@ export class WhatsappDirectLine extends GBService {
       text.toLowerCase().endsWith('.png') ||
       text.toLowerCase().endsWith('.mp4') ||
       text.toLowerCase().endsWith('.mov');
-      let mediaFile = /(.*)\n/gim.exec(text)[0].trim();
-      let mediaType = mediaFile.toLowerCase().endsWith('.mp4') || text.toLowerCase().endsWith('.mov') ? 'video' : 'image';
+    let mediaFile = /(.*)\n/gim.exec(text)[0].trim();
+    let mediaType = mediaFile.toLowerCase().endsWith('.mp4') || text.toLowerCase().endsWith('.mov') ? 'video' : 'image';
 
     // Set folder based on media type
     let folder = mediaType === 'video' ? 'videos' : 'images';
@@ -842,7 +856,7 @@ export class WhatsappDirectLine extends GBService {
       await GBUtil.sleep(20 * 1000);
     }
 
-    
+
   }
 
   public async sendToDevice(to: any, msg: string, conversationId) {

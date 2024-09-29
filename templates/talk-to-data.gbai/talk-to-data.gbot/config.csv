@@ -1,5 +1,5 @@
 name,value
-Answer Mode,chart
+Answer Mode,sql
 llm File,northwind.db
 llm Driver,sqlite
 Theme Color,red

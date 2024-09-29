@@ -453,7 +453,7 @@ export class GBMinService {
       .all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
         if (req.query['hub.mode'] === 'subscribe') {
           const val = req.query['hub.verify_token'];
-          const challenge = min.core.getParam<string>(min.instance, `Meta Challenge`, null);
+          const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
 
           if (challenge && val === challenge) {
             res.send(req.query['hub.challenge']);
@@ -1086,7 +1086,9 @@ export class GBMinService {
         }
 
         let pid = step.context.activity['pid'];
-        if (!pid) {
+        let recipient = context.activity?.recipient?.id;
+
+        if (!pid && recipient !== min.botId) {
           pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null, step);
         }
         step.context.activity['pid'] = pid;
@@ -1151,7 +1153,8 @@ export class GBMinService {
 
         if (context.activity.type === 'installationUpdate') {
           GBLogEx.info(min, `Bot installed on Teams.`);
-        } else if (context.activity.type === 'conversationUpdate' && context.activity.membersAdded.length > 0) {
+        } else if (context.activity.type === 'conversationUpdate' &&
+          context.activity.membersAdded.length > 0) {
           // Check if a bot or a human participant is being added to the conversation.
 
           const member = context.activity.membersAdded[0];
