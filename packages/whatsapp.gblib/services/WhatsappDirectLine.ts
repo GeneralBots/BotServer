@@ -556,9 +556,9 @@ export class WhatsappDirectLine extends GBService {
         WhatsappDirectLine.chatIds[generatedConversationId] = message?.chatId;
 
         this.pollMessages(client, generatedConversationId, from, fromName);
-        this.inputMessage(client, generatedConversationId, text, from, fromName, group, attachments);
+        this.inputMessage(client, generatedConversationId, text, from, fromName, group, attachments, pid);
       } else {
-        this.inputMessage(client, conversationId, text, from, fromName, group, attachments);
+        this.inputMessage(client, conversationId, text, from, fromName, group, attachments, null);
       }
     } else {
       GBLog.warn(`Inconsistencty found: Invalid agentMode on User Table: ${user.agentMode}`);
@@ -592,7 +592,7 @@ export class WhatsappDirectLine extends GBService {
     await sec.updateHumanAgent(id, this.min.instance.instanceId, null);
   }
 
-  public inputMessage(client, conversationId: string, text: string, from, fromName: string, group, attachments: File) {
+  public inputMessage(client, conversationId: string, text: string, from, fromName: string, group, attachments: File, pid = null) {
     try {
       return client.apis.Conversations.Conversations_PostActivity({
         conversationId: conversationId,
@@ -610,6 +610,7 @@ export class WhatsappDirectLine extends GBService {
             id: from,
             name: fromName,
             channelIdEx: 'whatsapp',
+            pid: pid,
             group: group
           },
           replyToId: from

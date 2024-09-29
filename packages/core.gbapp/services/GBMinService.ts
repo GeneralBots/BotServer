@@ -1085,7 +1085,10 @@ export class GBMinService {
           }
         }
 
-        let pid = step.context.activity['pid'];
+        let pid = step.context.activity['pid'] ?
+          step.context.activity['pid'] :
+          step.context.activity.from['pid'];
+
         let recipient = context.activity?.recipient?.id;
 
         if (!pid && recipient !== min.botId) {
@@ -1143,7 +1146,7 @@ export class GBMinService {
 
         GBLogEx.info(
           min,
-          `Input> ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
+          `Human: pid:${pid} ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
         );
 
         // Answer to specific BOT Framework event conversationUpdate to auto start dialogs.
