@@ -1195,13 +1195,13 @@ export class GBMinService {
           }
         } else if (context.activity.type === 'message') {
 
-          let pid = WhatsappDirectLine.pidByNumber[user.userSystemId];
+          let pid = WhatsappDirectLine.pidByNumber[context.activity.from.id];
   
           // Required for F0 handling of persisted conversations.
   
           GBLogEx.info(
             min,
-            `Human: pid:${pid} ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
+            `Human: pid:${pid} ${context.activity.from.id} ${GBUtil.toYAML(WhatsappDirectLine.pidByNumber)} ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
           );
           
   

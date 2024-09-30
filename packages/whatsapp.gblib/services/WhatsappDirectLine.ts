@@ -536,9 +536,7 @@ export class WhatsappDirectLine extends GBService {
         let response;
         if (GBConfigService.get('STORAGE_NAME')) {
           response = await client.apis.Conversations.Conversations_StartConversation(
-            { userSystemId: user.userSystemId,
-            userName: user.userName,
-            pid: pid}
+            
           );
         } else {
           response = await client.apis.Conversations.Conversations_StartConversation(
