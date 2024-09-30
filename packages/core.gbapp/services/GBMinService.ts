@@ -1095,15 +1095,13 @@ export class GBMinService {
             });
           }
         }
-
+       
         let pid = WhatsappDirectLine.pidByNumber[member.id];
-        let recipient = context.activity?.recipient?.id;
-
-        if (!pid && recipient !== min.botId) {
+        GBLogEx.info(min, `Receiver: ${member.id} - pid: ${pid}.`);
+        if (!pid) {
           pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null, step);
         }
-        step.context.activity['pid'] = pid;
-
+        
         // Required for MSTEAMS handling of persisted conversations.
 
         if (step.context.activity.channelId === 'msteams') {
@@ -1145,10 +1143,13 @@ export class GBMinService {
                 min,
                 `Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`
               );
+              
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
             }
           }
         }
+
+        step.context.activity['pid'] = pid;
 
         // Required for F0 handling of persisted conversations.
 
