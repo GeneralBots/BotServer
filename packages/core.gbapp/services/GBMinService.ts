@@ -1203,7 +1203,7 @@ export class GBMinService {
             min,
             `Human: pid:${pid} ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
           );
-  
+          
   
           // Processes messages activities.
 
