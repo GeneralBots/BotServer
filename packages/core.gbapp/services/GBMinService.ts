@@ -1028,8 +1028,6 @@ export class GBMinService {
 
     const handler = async context => {
 
-      const member = context.activity.recipient ? context.activity.recipient : context.activity.from;
-
       // Handle activity text issues.
 
       if (!context.activity.text) {
@@ -1044,6 +1042,7 @@ export class GBMinService {
 
       
       const sec = new SecService();
+      const member = context.activity.recipient ? context.activity.recipient : context.activity.from;
       let user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
       const userId = user.userId;
       const params = user.params ? JSON.parse(user.params) : {};
@@ -1096,11 +1095,6 @@ export class GBMinService {
           }
         }
        
-        let pid = WhatsappDirectLine.pidByNumber[member.id];
-        GBLogEx.info(min, `Receiver: ${member.id} - pid: ${pid}.`);
-        if (!pid) {
-          pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null, step);
-        }
         
         // Required for MSTEAMS handling of persisted conversations.
 
@@ -1144,19 +1138,10 @@ export class GBMinService {
                 `Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`
               );
               
-              await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
+              await GBVMService.callVM(startDialog.toLowerCase(), min, step, 0);
             }
           }
         }
-
-        step.context.activity['pid'] = pid;
-
-        // Required for F0 handling of persisted conversations.
-
-        GBLogEx.info(
-          min,
-          `Human: pid:${pid} ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
-        );
 
         // Answer to specific BOT Framework event conversationUpdate to auto start dialogs.
         // Skips if the bot is talking.
@@ -1190,6 +1175,10 @@ export class GBMinService {
                 !GBMinService.userMobile(step) &&
                 !min['conversationWelcomed'][step.context.activity.conversation.id]
               ) {
+
+                const pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null, step);
+                step.context.activity['pid'] = pid;
+      
                 min['conversationWelcomed'][step.context.activity.conversation.id] = true;
 
                 GBLogEx.info(
@@ -1205,6 +1194,17 @@ export class GBMinService {
             return;
           }
         } else if (context.activity.type === 'message') {
+
+          let pid = WhatsappDirectLine.pidByNumber[user.userSystemId];
+  
+          // Required for F0 handling of persisted conversations.
+  
+          GBLogEx.info(
+            min,
+            `Human: pid:${pid} ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
+          );
+  
+  
           // Processes messages activities.
 
           await this.processMessageActivity(context, min, step, pid);
