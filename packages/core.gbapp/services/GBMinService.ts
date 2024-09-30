@@ -451,6 +451,14 @@ export class GBMinService {
 
     GBServer.globals.server
       .all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
+
+        const status = req.body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
+
+        if (status) {
+          GBLogEx.info(min, `WhatsApp: ${status.recipient_id} ${status.status}`);
+          return;
+        }
+
         if (req.query['hub.mode'] === 'subscribe') {
           const val = req.query['hub.verify_token'];
           const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
@@ -1019,6 +1027,9 @@ export class GBMinService {
     // Default activity processing and handler.
 
     const handler = async context => {
+
+      const member = context.activity.recipient ? context.activity.recipient : context.activity.from;
+
       // Handle activity text issues.
 
       if (!context.activity.text) {
@@ -1031,7 +1042,7 @@ export class GBMinService {
       const step = await min.dialogs.createContext(context);
       step.context.activity.locale = 'pt-BR';
 
-      const member = context.activity.recipient ? context.activity.recipient : context.activity.from;
+      
       const sec = new SecService();
       let user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
       const userId = user.userId;
@@ -1085,10 +1096,7 @@ export class GBMinService {
           }
         }
 
-        let pid = step.context.activity['pid'] ?
-          step.context.activity['pid'] :
-          step.context.activity.from['pid'];
-
+        let pid = WhatsappDirectLine.pidByNumber[member.id];
         let recipient = context.activity?.recipient?.id;
 
         if (!pid && recipient !== min.botId) {

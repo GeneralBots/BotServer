@@ -65,6 +65,7 @@ import { createReadStream } from 'fs';
 export class WhatsappDirectLine extends GBService {
   public static conversationIds = {};
   public static botsByNumber = {};
+  public static pidByNumber = {};
   public static mobiles = {};
   public static phones = {};
   public static chatIds = {};
@@ -530,11 +531,14 @@ export class WhatsappDirectLine extends GBService {
     } else if (user.agentMode === 'bot' || user.agentMode === null || user.agentMode === undefined) {
       if (WhatsappDirectLine.conversationIds[botId + from + group] === undefined) {
         const pid = GBVMService.createProcessInfo(user, this.min, 'whatsapp', null);
+        WhatsappDirectLine.pidByNumber[from] = pid;
         GBLogEx.info(this.min, `GBWhatsapp: Starting new conversation on Bot (pid: ${pid}).`);
         let response;
         if (GBConfigService.get('STORAGE_NAME')) {
           response = await client.apis.Conversations.Conversations_StartConversation(
-
+            { userSystemId: user.userSystemId,
+            userName: user.userName,
+            pid: pid}
           );
         } else {
           response = await client.apis.Conversations.Conversations_StartConversation(
@@ -554,6 +558,7 @@ export class WhatsappDirectLine extends GBService {
         WhatsappDirectLine.mobiles[generatedConversationId] = from;
         WhatsappDirectLine.usernames[from] = fromName;
         WhatsappDirectLine.chatIds[generatedConversationId] = message?.chatId;
+        
 
         this.pollMessages(client, generatedConversationId, from, fromName);
         this.inputMessage(client, generatedConversationId, text, from, fromName, group, attachments, pid);
