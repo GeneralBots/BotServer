@@ -1463,7 +1463,6 @@ export class DialogKeywords {
 
       await CollectionUtil.asyncForEach(pngs, async png => {
 
-
         // Prepare a cache to be referenced by Bot Framework.
 
         url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(png.localName));
@@ -1478,7 +1477,7 @@ export class DialogKeywords {
         });
 
         if (channel === 'omnichannel' || !user) {
-          await min.conversationalService.sendFile(min, null, mobile, url, caption);
+          await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
         } else {
           await min.conversationalService['sendOnConversation'](min, user, reply);
         }

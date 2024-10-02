@@ -536,7 +536,7 @@ export class WhatsappDirectLine extends GBService {
         let response;
         if (GBConfigService.get('STORAGE_NAME')) {
           response = await client.apis.Conversations.Conversations_StartConversation(
-            
+
           );
         } else {
           response = await client.apis.Conversations.Conversations_StartConversation(
@@ -556,7 +556,7 @@ export class WhatsappDirectLine extends GBService {
         WhatsappDirectLine.mobiles[generatedConversationId] = from;
         WhatsappDirectLine.usernames[from] = fromName;
         WhatsappDirectLine.chatIds[generatedConversationId] = message?.chatId;
-        
+
 
         this.pollMessages(client, generatedConversationId, from, fromName);
         this.inputMessage(client, generatedConversationId, text, from, fromName, group, attachments, pid);
@@ -693,7 +693,7 @@ export class WhatsappDirectLine extends GBService {
     return `${attachment.content.title} - ${attachment.content.text}`;
   }
 
-  public async sendFileToDevice(to, url, filename, caption, chatId) {
+  public async sendFileToDevice(to, url, filename, caption, chatId, viewOnce) {
     let options;
     switch (this.provider) {
       case 'meta':
@@ -707,9 +707,13 @@ export class WhatsappDirectLine extends GBService {
           whatsappServiceNumber = GBServer.globals.minBoot.instance.whatsappServiceNumber;
           whatsappServiceKey = GBServer.globals.minBoot.instance.whatsappServiceKey;
         }
-        const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
-        await driver.sendImage(to, url, { caption: caption });
-
+        if (viewOnce){
+          this.sendImageViewOnce(to, url, caption);
+        }
+        else{
+          const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
+          await driver.sendImage(to, url, { caption: caption });
+        }
         break;
 
       case 'GeneralBots':
@@ -761,7 +765,47 @@ export class WhatsappDirectLine extends GBService {
   public async sendTextAsAudioToDevice(to, msg: string, chatId) {
     const url = await GBConversationalService.getAudioBufferFromText(msg);
 
-    await this.sendFileToDevice(to, url, 'Audio', msg, chatId);
+    await this.sendFileToDevice(to, url, 'Audio', msg, chatId, false);
+  }
+
+  public async sendImageViewOnce(mobile, imageUrl, caption = '') {
+
+    // Define the API base URL and endpoints
+    const baseUrl = 'https://graph.facebook.com/v20.0'; // API version 20.0
+
+
+    const accessToken = this.whatsappServiceKey;
+    const sendMessageEndpoint = `${baseUrl}/${this.whatsappBusinessManagerId}/messages`;
+
+    const messageData = {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to: mobile,
+      type: 'image',
+      image: {
+        link: imageUrl,
+        caption: caption
+      },
+      view_once: true
+    };
+
+    const response = await fetch(sendMessageEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(messageData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Failed to send image: ${JSON.stringify(errorData)}`);
+    }
+
+    const result = await response.json();
+    GBLogEx.info(0, 'Image sent successfully:' + result);
+    return result;
   }
 
   // Function to create or update a template using WhatsApp Business API
