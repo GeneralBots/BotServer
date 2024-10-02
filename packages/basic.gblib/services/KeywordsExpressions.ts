@@ -775,14 +775,14 @@ export class KeywordsExpressions {
         // Handles the GET http version.
         else {
 
-          const value = $2.replace(/\`/gi, '');
+          return `
 
-          if (value.endsWith('.pdf') && !value.startsWith('https')) {
-            return `${$1} = await sys.getPdf({pid: pid, file: ${$2}});`;
+          if (${$2}.endsWith('.pdf') && !${$2}.startsWith('https')) {
+            ${$1} = await sys.getPdf({pid: pid, file: ${$2}});
           } else {
-            return `
+            
             let __${$1} = null
-          await retry(
+            await retry(
             
             async (bail) => {
               await ensureTokens();
@@ -790,11 +790,10 @@ export class KeywordsExpressions {
             },{ retries: 5});         
 
             ${$1} = __${$1} 
-            __${$1} = null
-    
+                __${$1} = null
+          }
           `;
           }
-        }
       }
     ];
 

@@ -149,8 +149,8 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
         const localName = path.join(process.env.PWD, 'work', gbaiName, 'docs', source.file);
 
         if (localName) {
-          const { url } = await ChatServices.pdfPageAsImage(this.min, localName, source.page);
-          text = `![alt text](${url})
+          const pngs = await GBUtil.pdfPageAsImage(this.min, localName, source.page);
+          text = `![alt text](${pngs[0].url})
           ${text}`;
           found = true;
           source.file = localName;
@@ -167,30 +167,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
 }
 
 export class ChatServices {
-  public static async pdfPageAsImage(min, filename, pageNumber) {
-    // Converts the PDF to PNG.
 
-    GBLogEx.info(min, `Converting ${filename}, page: ${pageNumber}...`);
-    const pngPages: PngPageOutput[] = await pdfToPng(filename, {
-      disableFontFace: true,
-      useSystemFonts: true,
-      viewportScale: 2.0,
-      pagesToProcess: [pageNumber],
-      strictPagesToProcess: false,
-      verbosityLevel: 0
-    });
-
-    // Prepare an image on cache and return the GBFILE information.
-
-    if (pngPages.length > 0) {
-      const buffer = pngPages[0].content;
-      const gbaiName = GBUtil.getGBAIPath(min.botId, null);
-      const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
-      const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
-      await fs.writeFile(localName, buffer, { encoding: null });
-      return { localName: localName, url: url, data: buffer };
-    }
-  }
 
   private static async getRelevantContext(
     vectorStore: HNSWLib,

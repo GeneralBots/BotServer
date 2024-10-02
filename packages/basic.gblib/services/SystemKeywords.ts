@@ -952,7 +952,7 @@ export class SystemKeywords {
       GBLogEx.info(min, `GET '${addressOrHeaders}' in '${file}'.`);
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const botId = min.instance.botId;
-      ('');
+      
       const packagePath = GBUtil.getGBAIPath(botId, 'gbdata');
 
       let document = await this.internalGetDocument(client, baseUrl, packagePath, file);

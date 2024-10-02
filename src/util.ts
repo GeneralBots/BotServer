@@ -42,8 +42,12 @@ import { VerbosityLevel, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 VerbosityLevel.ERRORS = 0;
 VerbosityLevel.WARNINGS = 0;
 VerbosityLevel.INFOS = 0;
-import { Page } from 'puppeteer';
 import urljoin from 'url-join';
+import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService.js';
+import { GBLogEx } from '../packages/core.gbapp/services/GBLogEx.js';
+import { PngPageOutput, pdfToPng } from 'pdf-to-png-converter';
+import urlJoin from 'url-join';
+import { GBServer } from './app.js';
 
 export class GBUtil {
   public static repeat(chr, count) {
@@ -244,4 +248,37 @@ export class GBUtil {
       return urljoin(gbai, packageName ? packageName : `${botId}.${packageType}`);
     }
   }
+
+  public static async pdfPageAsImage(min, filename, pageNumber) {
+    // Converts the PDF to PNG.
+  
+    GBLogEx.info(min, `Converting ${filename}, page: ${pageNumber ?? 'all'}...`);
+    
+    const options = {
+      disableFontFace: true,
+      useSystemFonts: true,
+      viewportScale: 2.0,
+      pagesToProcess: pageNumber !== undefined ? [pageNumber] : undefined,
+      strictPagesToProcess: false,
+      verbosityLevel: 0
+    };
+  
+    const pngPages: PngPageOutput[] = await pdfToPng(filename, options);
+  
+    const generatedFiles = [];
+  
+    for (const pngPage of pngPages) {
+      const buffer = pngPage.content;
+      const gbaiName = GBUtil.getGBAIPath(min.botId, null);
+      const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
+      const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
+      
+      await fs.writeFile(localName, buffer, { encoding: null });
+      
+      generatedFiles.push({ localName: localName, url: url, data: buffer });
+    }
+  
+    return generatedFiles.length > 0 ? generatedFiles : null;
+  }
+  
 }

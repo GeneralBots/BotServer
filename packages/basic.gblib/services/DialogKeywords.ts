@@ -37,7 +37,7 @@ import urlJoin from 'url-join';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
-import {Jimp} from 'jimp';
+import { Jimp } from 'jimp';
 import jsQR from 'jsqr';
 import { SystemKeywords } from './SystemKeywords.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
@@ -254,28 +254,28 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit({}) {}
+  public async exit({ }) { }
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ pid }) {}
+  public async getActiveTasks({ pid }) { }
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ pid, dealName, contact, company, amount }) {}
+  public async createDeal({ pid, dealName, contact, company, amount }) { }
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ pid, name }) {}
+  public async fndContact({ pid, name }) { }
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -936,7 +936,7 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu({}) {
+  public async showMenu({ }) {
     // https://github.com/GeneralBots/BotServer/issues/237
     // return await beginDialog('/menu');
   }
@@ -1215,20 +1215,20 @@ export class DialogKeywords {
         const handle = WebAutomationServices.cyrb53({ pid, str: min.botId + answer.filename });
         GBServer.globals.files[handle] = answer;
 
-          // Load the image with Jimp
-          const image = await Jimp.read(answer.data);
+        // Load the image with Jimp
+        const image = await Jimp.read(answer.data);
 
-          // Get the image data
-          const imageData = {
-              data: new Uint8ClampedArray(image.bitmap.data),
-              width: image.bitmap.width,
-              height: image.bitmap.height,
-          };
+        // Get the image data
+        const imageData = {
+          data: new Uint8ClampedArray(image.bitmap.data),
+          width: image.bitmap.width,
+          height: image.bitmap.height,
+        };
 
-          // Use jsQR to decode the QR code
-          const decodedQR = jsQR(imageData.data, imageData.width, imageData.height);
+        // Use jsQR to decode the QR code
+        const decodedQR = jsQR(imageData.data, imageData.width, imageData.height);
 
-          result = decodedQR.data;
+        result = decodedQR.data;
 
       } else if (kind === 'zipcode') {
         const extractEntity = (text: string) => {
@@ -1455,6 +1455,36 @@ export class DialogKeywords {
     let nameOnly;
     const gbaiName = GBUtil.getGBAIPath(min.botId);
 
+    if (filename.endsWith('.pdf')) {
+      const gbdriveName = GBUtil.getGBAIPath(min.botId, 'gbdrive');
+      const pdf = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbdriveName, filename);
+
+      const pngs = await GBUtil.pdfPageAsImage(min, pdf, undefined);
+
+      await CollectionUtil.asyncForEach(pngs, async png => {
+
+
+        // Prepare a cache to be referenced by Bot Framework.
+
+        url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(png.localName));
+
+        const contentType = mime.lookup(url);
+        const reply = { type: ActivityTypes.Message, text: caption };
+        reply['attachments'] = [];
+        reply['attachments'].push({
+          name: nameOnly,
+          contentType: contentType,
+          contentUrl: url
+        });
+
+        if (channel === 'omnichannel' || !user) {
+          await min.conversationalService.sendFile(min, null, mobile, url, caption);
+        } else {
+          await min.conversationalService['sendOnConversation'](min, user, reply);
+        }
+      });          
+    }
+
     // Web automation.
 
     if (element) {
@@ -1489,32 +1519,37 @@ export class DialogKeywords {
 
     // .gbdrive direct sending.
     else {
-      const ext = path.extname(filename);
-      const gbaiName = GBUtil.getGBAIPath(min.botId);
 
-      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-      const fileUrl = urlJoin('/', gbaiName, `${min.botId}.gbdrive`, filename);
-      GBLogEx.info(min, `Direct send from .gbdrive: ${fileUrl} to ${mobile}.`);
 
-      const sys = new SystemKeywords();
+      if (GBConfigService.get('STORAGE_NAME')) {
 
-      const pathOnly = fileUrl.substring(0, fileUrl.lastIndexOf('/'));
-      const fileOnly = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+        const ext = path.extname(filename);
+        const gbaiName = GBUtil.getGBAIPath(min.botId);
 
-      let template = await sys.internalGetDocument(client, baseUrl, pathOnly, fileOnly);
+        let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+        const fileUrl = urlJoin('/', gbaiName, `${min.botId}.gbdrive`, filename);
+        GBLogEx.info(min, `Direct send from .gbdrive: ${fileUrl} to ${mobile}.`);
 
-      const driveUrl = template['@microsoft.graph.downloadUrl'];
-      const res = await fetch(driveUrl);
-      let buf: any = Buffer.from(await res.arrayBuffer());
-      let localName1 = path.join(
-        'work',
-        gbaiName,
-        'cache',
-        `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
-      );
-      await fs.writeFile(localName1, buf, { encoding: null });
+        const sys = new SystemKeywords();
 
-      url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName1));
+        const pathOnly = fileUrl.substring(0, fileUrl.lastIndexOf('/'));
+        const fileOnly = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+
+        let template = await sys.internalGetDocument(client, baseUrl, pathOnly, fileOnly);
+
+        const driveUrl = template['@microsoft.graph.downloadUrl'];
+        const res = await fetch(driveUrl);
+        let buf: any = Buffer.from(await res.arrayBuffer());
+        let localName1 = path.join(
+          'work',
+          gbaiName,
+          'cache',
+          `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
+        );
+        await fs.writeFile(localName1, buf, { encoding: null });
+
+        url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName1));
+      }
     }
 
     if (!url) {

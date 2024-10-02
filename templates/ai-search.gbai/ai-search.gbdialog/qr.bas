@@ -1,6 +1,7 @@
 TALK "Please, take a photo of the QR Code and send to me."
 HEAR doc as QRCODE
-text = GET "doc-"  + doc + ".pdf"
+TALK "Reading document " + doc + "..."
+text = GET doc
 
 IF text THEN
 
@@ -8,7 +9,10 @@ IF text THEN
     SET CONTEXT text 
     SET ANSWER MODE "document"
     TALK "Document ${doc} loaded. You can ask me anything about it."
+    TALK "I will also send it to you..."
+    SEND FILE doc  
 
 ELSE
     TALK "Document was not found, please try again."
 END IF
+
