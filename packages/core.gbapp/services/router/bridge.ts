@@ -1,3 +1,6 @@
+import fs from 'fs/promises';
+import formidable from 'formidable';
+import path from 'path';
 import bodyParser from 'body-parser';
 import express from 'express';
 import fetch from 'isomorphic-fetch';
@@ -5,6 +8,9 @@ import moment from 'moment';
 import * as uuidv4 from 'uuid';
 import { IActivity, IBotData, IConversation, IConversationUpdateActivity, IMessageActivity } from './types';
 import { GBConfigService } from '../GBConfigService.js';
+import { GBUtil } from '../../../../src/util.js';
+import urlJoin from 'url-join';
+import { GBServer } from '../../../../src/app.js';
 
 const expiresIn = 1800;
 const conversationsCleanupInterval = 10000;
@@ -38,6 +44,7 @@ export const getRouter = (
 
   // Creates a conversation
   const reqs = (req, res) => {
+
     const conversationId: string = uuidv4.v4().toString();
     conversations[conversationId] = {
       conversationId,
@@ -45,9 +52,11 @@ export const getRouter = (
     };
     console.log('Created conversation with conversationId: ' + conversationId);
 
-    const userId = req.query?.userSystemId ? req.query?.userSystemId : req.body.user.id;
+    let userId = req.query?.userSystemId ? req.query?.userSystemId : req.body?.user?.id;
+    userId = userId ? userId : req.query.userId;
 
     const activity = createConversationUpdateActivity(serviceUrl, conversationId, userId);
+
     fetch(botUrl, {
       method: 'POST',
       body: JSON.stringify(activity),
@@ -162,8 +171,81 @@ export const getRouter = (
     }
   };
 
+  // import { createMessageActivity, getConversation } from './yourModule'; // Update this import as needed
+
+  const resupload = async (req, res) => {
+    // Extract botId from the URL using the pathname
+    const urlParts = req.url.split('/');
+    const botId = urlParts[2]; // Assuming the URL is structured like /directline/{botId}/conversations/:conversationId/upload
+    const conversationId = req.params.conversationId; // Extract conversationId from parameters
+
+    const uploadDir = path.join(process.cwd(), 'work', `${botId}.gbai`, 'cache'); // Create upload directory path
+
+    // Create the uploads directory if it doesn't exist
+
+    await fs.mkdir(uploadDir, { recursive: true });
+
+    const form = formidable({
+      uploadDir, // Use the constructed upload directory
+      keepExtensions: true,  // Keep file extensions
+    });
+
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        console.log(`Error parsing the file: ${GBUtil.toYAML(err)}.`);
+        return res.status(400).send('Error parsing the file.');
+      }
+
+      const incomingActivity = fields; // Get incoming activity data
+      const file = files.file[0]; // Access the uploaded file
+
+      const fileName = file['newFilename'];
+      const fileUrl = urlJoin(GBServer.globals.publicAddress, `${botId}.gbai`,'cache', fileName);
+
+      // Create the activity message
+      let userId = req.query?.userSystemId ? req.query?.userSystemId : req.body?.user?.id;
+      userId = userId ? userId : req.query?.userId;
+
+      const activity = createMessageActivity(incomingActivity, serviceUrl, conversationId, req.params['pid']);
+      activity.from = { id: userId, name: 'webbot' };
+      activity.attachments = [{
+        contentType: 'application/octet-stream', // Adjust as necessary
+        contentUrl: fileUrl,
+        name: fileName, // Original filename
+      }];
+      const conversation = getConversation(conversationId, conversationInitRequired);
+
+      if (conversation) {
+        // Add the uploaded file info to the activity
+        activity['fileUrl'] = fileUrl; // Set the file URL
+
+        conversation.history.push(activity);
+
+        try {
+          const response = await fetch(botUrl, {
+            method: 'POST',
+            body: JSON.stringify(activity),
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          res.status(response.status).json({ id: activity.id });
+        } catch (fetchError) {
+          console.error('Error fetching bot:', fetchError);
+          res.status(500).send('Error processing request.');
+        }
+      } else {
+        // Conversation was never initialized
+        res.status(400).send('Conversation not initialized.');
+      }
+    });
+  };
+
   router.post(`/api/messages/${botId}/v3/directline/conversations/:conversationId/activities`, res2);
   router.post(`/directline/${botId}/conversations/:conversationId/activities`, res2);
+
+  router.post(`/directline/${botId}/conversations/:conversationId/upload`, resupload);
 
   router.post('/v3/directline/conversations/:conversationId/upload', (req, res) => {
     console.warn('/v3/directline/conversations/:conversationId/upload not implemented');

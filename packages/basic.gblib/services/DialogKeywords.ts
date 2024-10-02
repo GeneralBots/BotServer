@@ -37,6 +37,8 @@ import urlJoin from 'url-join';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
+import {Jimp} from 'jimp';
+import jsQR from 'jsqr';
 import { SystemKeywords } from './SystemKeywords.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { Messages } from '../strings.js';
@@ -61,6 +63,7 @@ import { GBUtil } from '../../../src/util.js';
 import { GBVMService } from './GBVMService.js';
 import { ChatServices } from '../../../packages/llm.gblib/services/ChatServices.js';
 import puppeteer from 'puppeteer';
+import QRCodeProcessor from './QRCodeServices.js';
 
 /**
  * Default check interval for user replay
@@ -1206,14 +1209,27 @@ export class DialogKeywords {
         }
 
         result = phoneNumber;
-      } else if (kind === 'qr-scanner') {
+      } else if (kind === 'qrcode') {
         //https://github.com/GeneralBots/BotServer/issues/171
-        GBLogEx.info(min, `BASIC (${min.botId}): Upload done for ${answer.filename}.`);
+        GBLogEx.info(min, `BASIC (${min.botId}): QRCode for ${answer.filename}.`);
         const handle = WebAutomationServices.cyrb53({ pid, str: min.botId + answer.filename });
         GBServer.globals.files[handle] = answer;
-        QrScanner.scanImage(GBServer.globals.files[handle])
-          .then(result => console.log(result))
-          .catch(error => console.log(error || 'no QR code found.'));
+
+          // Load the image with Jimp
+          const image = await Jimp.read(answer.data);
+
+          // Get the image data
+          const imageData = {
+              data: new Uint8ClampedArray(image.bitmap.data),
+              width: image.bitmap.width,
+              height: image.bitmap.height,
+          };
+
+          // Use jsQR to decode the QR code
+          const decodedQR = jsQR(imageData.data, imageData.width, imageData.height);
+
+          result = decodedQR.data;
+
       } else if (kind === 'zipcode') {
         const extractEntity = (text: string) => {
           text = text.replace(/\-/gi, '');

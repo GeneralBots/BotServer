@@ -135,6 +135,7 @@ export class GBMinService {
   public deployer: GBDeployer;
 
   bar1;
+  static pidsConversation = {};
 
   /**
    * Static initialization of minimal instance.
@@ -455,7 +456,7 @@ export class GBMinService {
         const status = req.body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
 
         if (status) {
-          GBLogEx.info(min, `WhatsApp: ${status.recipient_id} ${status.status}`);
+          GBLogEx.verbose(min, `WhatsApp: ${status.recipient_id} ${status.status}`);
           return;
         }
 
@@ -1040,7 +1041,7 @@ export class GBMinService {
       const step = await min.dialogs.createContext(context);
       step.context.activity.locale = 'pt-BR';
 
-      
+
       const sec = new SecService();
       const member = context.activity.recipient ? context.activity.recipient : context.activity.from;
       let user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
@@ -1094,8 +1095,27 @@ export class GBMinService {
             });
           }
         }
-       
-        
+
+        let conversationId = step.context.activity.conversation.id;
+
+        let pid = GBMinService.pidsConversation[conversationId];
+
+        if (!pid) {
+
+          pid = step.context.activity['pid'];
+          if (!pid) {
+            pid = WhatsappDirectLine.pidByNumber[context.activity.from.id];
+            if (!pid) {
+              pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null, step);
+            }
+          }
+        }
+        GBMinService.pidsConversation[conversationId] = pid; 
+        step.context.activity['pid'] = pid;
+
+        const notes = min.core.getParam(min.instance, 'Notes', null);
+        await this.handleUploads(min, step, user, params, notes != null);
+    
         // Required for MSTEAMS handling of persisted conversations.
 
         if (step.context.activity.channelId === 'msteams') {
@@ -1137,7 +1157,7 @@ export class GBMinService {
                 min,
                 `Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`
               );
-              
+
               await GBVMService.callVM(startDialog.toLowerCase(), min, step, 0);
             }
           }
@@ -1178,7 +1198,7 @@ export class GBMinService {
 
                 const pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null, step);
                 step.context.activity['pid'] = pid;
-      
+
                 min['conversationWelcomed'][step.context.activity.conversation.id] = true;
 
                 GBLogEx.info(
@@ -1195,16 +1215,16 @@ export class GBMinService {
           }
         } else if (context.activity.type === 'message') {
 
-          let pid = WhatsappDirectLine.pidByNumber[context.activity.from.id];
-  
+
+
           // Required for F0 handling of persisted conversations.
-  
+
           GBLogEx.info(
             min,
             `Human: pid:${pid} ${context.activity.from.id} ${GBUtil.toYAML(WhatsappDirectLine.pidByNumber)} ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
           );
-          
-  
+
+
           // Processes messages activities.
 
           await this.processMessageActivity(context, min, step, pid);
@@ -1302,26 +1322,28 @@ export class GBMinService {
     const url = attachment.contentUrl;
     const localFolder = 'work';
     const packagePath = GBUtil.getGBAIPath(this['min'].botId);
-    const localFileName = path.join(localFolder, packagePath, 'uploads', attachment.name);
+    const localFileName = path.join(localFolder, packagePath, 'cache', attachment.name);
 
     let buffer;
-    if (url.startsWith('data:')) {
-      const base64Data = url.split(';base64,')[1];
-      buffer = Buffer.from(base64Data, 'base64');
-    } else {
-      const options = {
-        method: 'GET',
-        encoding: 'binary'
-      };
-      const res = await fetch(url, options);
-      buffer = arrayBufferToBuffer(await res.arrayBuffer());
-    }
-
-    await fs.writeFile(localFileName, buffer);
+    // if (url.startsWith('data:')) {
+    //   const base64Data = url.split(';base64,')[1];
+    //   buffer = Buffer.from(base64Data, 'base64');
+    // } else {
+    //   const options = {
+    //     method: 'GET',
+    //     encoding: 'binary'
+    //   };
+    //   const res = await fetch(url, options);
+    //   buffer = arrayBufferToBuffer(await res.arrayBuffer());
+    // }
+    //write
+    buffer = await fs.readFile(localFileName);
 
     return {
-      fileName: attachment.name,
-      localPath: localFileName
+      name: attachment.name,
+      filename: localFileName,
+      url: url,
+      data: buffer
     };
   }
 
@@ -1343,7 +1365,7 @@ export class GBMinService {
       step.context.activity.attachments[0].contentType != 'text/html'
     ) {
       const promises = step.context.activity.attachments.map(
-        GBMinService.downloadAttachmentAndWrite.bind({ min, user, params })
+         GBMinService.downloadAttachmentAndWrite.bind({ min, user, params })
       );
       const successfulSaves = await Promise.all(promises);
       async function replyForReceivedAttachments(attachmentData) {
@@ -1352,14 +1374,15 @@ export class GBMinService {
           // a upload with no Dialog, so run Auto Save to .gbdrive.
 
           const t = new SystemKeywords();
-          GBLogEx.info(min, `BASIC (${min.botId}): Upload done for ${attachmentData.fileName}.`);
-          const handle = WebAutomationServices.cyrb53({ pid: 0, str: min.botId + attachmentData.fileName });
-          let data = await fs.readFile(attachmentData.localPath);
+          GBLogEx.info(min, `BASIC (${min.botId}): Upload done for ${attachmentData.filename}.`);
+          const handle = WebAutomationServices.cyrb53({ pid: 0, str: min.botId + attachmentData.filename });
+          let data = await fs.readFile(attachmentData.filename);
 
           const gbfile = {
-            filename: attachmentData.localPath,
+            filename: path.join(process.env.PWD, attachmentData.filename),
             data: data,
-            name: path.basename(attachmentData.fileName)
+            url: attachmentData.url,
+            name: path.basename(attachmentData.filename)
           };
 
           GBServer.globals.files[handle] = gbfile;
@@ -1386,12 +1409,16 @@ export class GBMinService {
         class GBFile {
           data: Buffer;
           filename: string;
+          url: string;
+          name: string;
         }
 
-        const results = successfulSaves.reduce(async (accum: GBFile[], item) => {
+        const results = await successfulSaves.reduce(async (accum: GBFile[], item) => {
           const result: GBFile = {
-            data: await fs.readFile(successfulSaves[0]['localPath']),
-            filename: successfulSaves[0]['fileName']
+            data: await fs.readFile(successfulSaves[0]['filename']),
+            filename: successfulSaves[0]['filename'],
+            name: successfulSaves[0]['name'],
+            url: successfulSaves[0]['url'],
           };
           accum.push(result);
           return accum;
@@ -1515,9 +1542,6 @@ export class GBMinService {
       }
     }
 
-    const notes = min.core.getParam(min.instance, 'Notes', null);
-    await this.handleUploads(min, step, user, params, notes != null);
-
     // Files in .gbdialog can be called directly by typing its name normalized into JS .
 
     const isVMCall = Object.keys(min.scriptMap).find(key => min.scriptMap[key] === context.activity.text) !== undefined;
@@ -1571,13 +1595,6 @@ export class GBMinService {
       const text = await GBConversationalService.handleText(min, user, step, context.activity.text);
       step.context.activity['originalText'];
       step.context.activity['text'] = text;
-
-      if (notes && text && text !== '') {
-        const sys = new SystemKeywords();
-        await sys.note({ pid, text });
-        await step.context.sendActivity('OK.');
-        return;
-      }
 
       // Checks for bad words on input text.
 
