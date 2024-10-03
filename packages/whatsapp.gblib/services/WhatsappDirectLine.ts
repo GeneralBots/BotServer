@@ -802,8 +802,7 @@ export class WhatsappDirectLine extends GBService {
       image: {
         link: imageUrl,
         caption: caption,
-      },
-      view_once: true
+      }
     };
 
     const response = await fetch(sendMessageEndpoint, {
@@ -946,8 +945,9 @@ export class WhatsappDirectLine extends GBService {
               messages = msg.match(/(.|[\r\n]){1,4096}/g);
 
               await CollectionUtil.asyncForEach(messages, async msg => {
-                await this.customClient.sendText(to, msg);
 
+                await this.sendTextMessage(to, msg);
+                
                 if (messages.length > 1) {
                   await GBUtil.sleep(3000);
                 }
@@ -1393,5 +1393,41 @@ export class WhatsappDirectLine extends GBService {
       console.error('Error during image download:', error.message);
     }
   }
+  public async sendTextMessage(mobile, message) {
 
+    // Define the API base URL and endpoints
+    const baseUrl = 'https://graph.facebook.com/v20.0'; // API version 20.0
+  
+    const accessToken = this.whatsappServiceKey;
+    const sendMessageEndpoint = `${baseUrl}/${this.whatsappServiceNumber}/messages`;
+  
+    const messageData = {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to: mobile,
+      type: 'text',
+      text: {
+        body: message,
+      }
+    };
+  
+    const response = await fetch(sendMessageEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(messageData)
+    });
+  
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Failed to send message: ${JSON.stringify(errorData)}`);
+    }
+  
+    const result = await response.json();
+    GBLogEx.info(0, 'Message sent successfully:' + result);
+    return result;
+  }
+  
 }
