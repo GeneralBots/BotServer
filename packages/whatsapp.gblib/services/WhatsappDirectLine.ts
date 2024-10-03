@@ -281,20 +281,38 @@ export class WhatsappDirectLine extends GBService {
     switch (provider) {
       case 'meta':
         if (req.body.entry[0].changes[0].value.messages[0].text) {
-          text = req.body.entry[0].changes[0].value.messages[0].text.body;
+            text = req.body.entry[0].changes[0].value.messages[0].text.body;
         } else if (req.body.entry[0].changes[0].value.messages[0].button) {
-          text = req.body.entry[0].changes[0].value.messages[0].button.text;
-        } else {
-          res.status(200);
-          res.end();
-
-          return;
+            text = req.body.entry[0].changes[0].value.messages[0].button.text;
         }
-
+    
         from = req.body.entry[0].changes[0].value.messages[0].from;
         to = this.min.core.getParam<string>(this.min.instance, 'Bot Number', null);
         fromName = req.body.entry[0].changes[0].value.contacts[0].profile.name;
-
+    
+        // Check for media in the 'meta' case
+        if (req.body.entry[0].changes[0].value.messages[0].hasMedia) {
+            const base64Image = await req.body.entry[0].changes[0].value.messages[0].downloadMedia(); // Ensure this method exists
+    
+            let buf = Buffer.from(base64Image.data, 'base64');
+            const gbaiName = GBUtil.getGBAIPath(this.min.botId);
+            const localName = path.join(
+                'work',
+                gbaiName,
+                'cache',
+                `tmp${GBAdminService.getRndReadableIdentifier()}` // No extension
+            );
+            await fs.writeFile(localName, buf, { encoding: null });
+            const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', path.basename(localName));
+    
+            attachments = [{
+                name: `${new Date().toISOString().replace(/:/g, '')}`, // No extension
+                noName: true,
+                contentType: base64Image.mimetype,
+                contentUrl: url
+            }];
+        }
+    
         break;
       case 'official':
         message = req.body;
