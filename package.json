@@ -102,7 +102,6 @@
     "@sequelize/core": "7.0.0-alpha.37",
     "@types/node": "22.5.2",
     "@types/validator": "13.12.1",
-    "@u4/opencv4nodejs": "7.1.2",
     "adm-zip": "0.5.16",
     "alasql": "4.5.1",
     "any-shell-escape": "0.1.1",

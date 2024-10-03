@@ -63,7 +63,7 @@ import { GBUtil } from '../../../src/util.js';
 import { GBVMService } from './GBVMService.js';
 import { ChatServices } from '../../../packages/llm.gblib/services/ChatServices.js';
 import puppeteer from 'puppeteer';
-import QRCodeProcessor from './QRCodeServices.js';
+
 
 /**
  * Default check interval for user replay
