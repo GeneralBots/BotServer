@@ -1196,13 +1196,16 @@ export class GBConversationalService {
     }
   }
 
-  public async sendText(min: GBMinInstance, step, text) {
-    await this['sendTextWithOptions'](min, step, text, true, null);
+  public async sendText(min: GBMinInstance, step, text, user = null) {
+    await this['sendTextWithOptions'](min, step, text, true, null, user);
   }
 
-  public async sendTextWithOptions(min: GBMinInstance, step, text, translate, keepTextList) {
+  public async sendTextWithOptions(min: GBMinInstance, step, text, translate, keepTextList, user) {
     let sec = new SecService();
-    let user = await sec.getUserFromSystemId(step.context.activity.from.id);
+    
+    if (!user){
+      user = await sec.getUserFromSystemId(step.context.activity.from.id);
+    }
     await this['sendTextWithOptionsAndUser'](min, user, step, text, true, null);
   }
 

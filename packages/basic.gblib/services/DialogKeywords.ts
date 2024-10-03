@@ -1430,7 +1430,7 @@ export class DialogKeywords {
       GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
 
       if (step) {
-        await min.conversationalService.sendText(min, step, text);
+        await min.conversationalService.sendText(min, step, text, user);
       } else {
         await min.conversationalService['sendOnConversation'](min, user, text);
       }
