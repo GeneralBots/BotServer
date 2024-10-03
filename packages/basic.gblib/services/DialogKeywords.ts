@@ -1460,9 +1460,9 @@ export class DialogKeywords {
       const pdf = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbdriveName, filename);
 
       const pngs = await GBUtil.pdfPageAsImage(min, pdf, undefined);
-
+      
       await CollectionUtil.asyncForEach(pngs, async png => {
-
+        await GBUtil.sleep(500);
         // Prepare a cache to be referenced by Bot Framework.
 
         url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(png.localName));
@@ -1476,8 +1476,8 @@ export class DialogKeywords {
           contentUrl: url
         });
 
-        if (channel === 'omnichannel' || !user) {
-          await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption);
+        if (channel === 'omnichannel'  || channel === 'whatsapp' || !user) {
+          await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption, undefined, true);
         } else {
           await min.conversationalService['sendOnConversation'](min, user, reply);
         }

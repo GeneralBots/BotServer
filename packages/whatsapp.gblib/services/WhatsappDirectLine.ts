@@ -32,6 +32,7 @@ import mime from 'mime-types';
 import urlJoin from 'url-join';
 import path from 'path';
 import fs from 'fs/promises';
+import Fs from 'fs';
 import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBServer } from '../../../src/app.js';
@@ -281,38 +282,36 @@ export class WhatsappDirectLine extends GBService {
     switch (provider) {
       case 'meta':
         if (req.body.entry[0].changes[0].value.messages[0].text) {
-            text = req.body.entry[0].changes[0].value.messages[0].text.body;
+          text = req.body.entry[0].changes[0].value.messages[0].text.body;
         } else if (req.body.entry[0].changes[0].value.messages[0].button) {
-            text = req.body.entry[0].changes[0].value.messages[0].button.text;
+          text = req.body.entry[0].changes[0].value.messages[0].button.text;
         }
-    
+
         from = req.body.entry[0].changes[0].value.messages[0].from;
         to = this.min.core.getParam<string>(this.min.instance, 'Bot Number', null);
         fromName = req.body.entry[0].changes[0].value.contacts[0].profile.name;
-    
+
         // Check for media in the 'meta' case
-        if (req.body.entry[0].changes[0].value.messages[0].hasMedia) {
-            const base64Image = await req.body.entry[0].changes[0].value.messages[0].downloadMedia(); // Ensure this method exists
-    
-            let buf = Buffer.from(base64Image.data, 'base64');
-            const gbaiName = GBUtil.getGBAIPath(this.min.botId);
-            const localName = path.join(
-                'work',
-                gbaiName,
-                'cache',
-                `tmp${GBAdminService.getRndReadableIdentifier()}` // No extension
-            );
-            await fs.writeFile(localName, buf, { encoding: null });
-            const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', path.basename(localName));
-    
-            attachments = [{
-                name: `${new Date().toISOString().replace(/:/g, '')}`, // No extension
-                noName: true,
-                contentType: base64Image.mimetype,
-                contentUrl: url
-            }];
+        if (req.body.entry[0].changes[0].value.messages[0].type === 'image') {
+          const gbaiName = GBUtil.getGBAIPath(this.min.botId);
+          const localName = path.join(
+            'work',
+            gbaiName,
+            'cache',
+            `tmp${GBAdminService.getRndReadableIdentifier()}`
+          );
+          const image = req.body.entry[0].changes[0].value.messages[0].image;
+          await this.downloadImage(image.id, localName);
+          const url = urlJoin(GBServer.globals.publicAddress, this.min.botId, 'cache', path.basename(localName));
+
+          attachments = [{
+            name: path.basename(localName),
+            noName: true,
+            contentType: image.mime_type,
+            contentUrl: url
+          }];
         }
-    
+
         break;
       case 'official':
         message = req.body;
@@ -365,8 +364,8 @@ export class WhatsappDirectLine extends GBService {
         break;
     }
 
-    text = text.replace(/\@\d+ /gi, '');
-    GBLogEx.info(0, `GBWhatsapp: RCV ${from}(${fromName}): ${text})`);
+    text = text ? text.replace(/\@\d+ /gi, '') : null;
+    GBLogEx.info(0, `GBWhatsapp: RCV ${from}(${fromName}): ${text ? text : 'binary'})`);
 
     let botGroupID = WhatsappDirectLine.botGroups[this.min.botId];
     let botShortcuts = this.min.core.getParam<string>(this.min.instance, 'WhatsApp Group Shortcuts', null);
@@ -725,10 +724,10 @@ export class WhatsappDirectLine extends GBService {
           whatsappServiceNumber = GBServer.globals.minBoot.instance.whatsappServiceNumber;
           whatsappServiceKey = GBServer.globals.minBoot.instance.whatsappServiceKey;
         }
-        if (viewOnce){
-          this.sendImageViewOnce(to, url, caption);
+        if (viewOnce) {
+          await this.sendImageViewOnce(to, url, caption);
         }
-        else{
+        else {
           const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
           await driver.sendImage(to, url, { caption: caption });
         }
@@ -793,7 +792,7 @@ export class WhatsappDirectLine extends GBService {
 
 
     const accessToken = this.whatsappServiceKey;
-    const sendMessageEndpoint = `${baseUrl}/${this.whatsappBusinessManagerId}/messages`;
+    const sendMessageEndpoint = `${baseUrl}/${this.whatsappServiceNumber}/messages`;
 
     const messageData = {
       messaging_product: 'whatsapp',
@@ -802,9 +801,9 @@ export class WhatsappDirectLine extends GBService {
       type: 'image',
       image: {
         link: imageUrl,
-        caption: caption
+        caption: caption,
+        view_once: true
       },
-      view_once: true
     };
 
     const response = await fetch(sendMessageEndpoint, {
@@ -1039,11 +1038,6 @@ export class WhatsappDirectLine extends GBService {
             text = req.body.entry[0].changes[0].value.messages[0].text.body;
           } else if (req.body.entry[0].changes[0].value.messages[0].button) {
             text = req.body.entry[0].changes[0].value.messages[0].button.text;
-          } else {
-            res.status(200);
-            res.end();
-
-            return;
           }
           id = req.body.entry[0].changes[0].value.messages[0].from;
           senderName = req.body.entry[0].changes[0].value.contacts[0].profile.name;
@@ -1076,12 +1070,15 @@ export class WhatsappDirectLine extends GBService {
       }
 
       const sec = new SecService();
+      let toSwitchMin;
 
       // Tries to find if user wants to switch bots.
 
-      let toSwitchMin = GBServer.globals.minInstances.filter(
-        p => p.instance.botId.toLowerCase() === text.toLowerCase()
-      )[0];
+      if (text) {
+        toSwitchMin = GBServer.globals.minInstances.filter(
+          p => p.instance.botId.toLowerCase() === text.toLowerCase()
+        )[0];
+      }
 
       botId = botId ?? GBServer.globals.minBoot.botId;
       GBLogEx.info(this.min, `A WhatsApp mobile requested instance for: ${botId}.`);
@@ -1139,7 +1136,7 @@ export class WhatsappDirectLine extends GBService {
 
       // Processes group behaviour.
 
-      text = text.replace(/\@\d+ /gi, '');
+      text = text ? text.replace(/\@\d+ /gi, '') : null;
 
       let group;
       if (provider === 'GeneralBots') {
@@ -1184,7 +1181,7 @@ export class WhatsappDirectLine extends GBService {
         return;
       }
 
-      if (!toSwitchMin) {
+      if (!toSwitchMin && text) {
         toSwitchMin = GBServer.globals.minInstances.filter(p =>
           p.instance.activationCode ? p.instance.activationCode.toLowerCase() === text.toLowerCase() : false
         )[0];
@@ -1355,4 +1352,46 @@ export class WhatsappDirectLine extends GBService {
       console.error('Error during file upload:', error);
     }
   }
+
+  public async downloadImage(mediaId, outputPath) {
+    const userAccessToken = this.whatsappServiceKey;
+    let imageUrl;
+
+    try {
+      // Step 1: Fetch the media metadata
+      const metadataResponse = await fetch(
+        `https://graph.facebook.com/v20.0/${mediaId}`, {
+        headers: {
+          Authorization: `Bearer ${userAccessToken}`,
+        }
+      }
+      );
+
+      const metadataData = await metadataResponse.json();
+      if (!metadataResponse.ok) {
+        throw new Error(metadataData.error.message);
+      }
+      imageUrl = metadataData.url; // Assuming the API returns the image URL in this field
+      console.log('Image URL retrieved:', imageUrl);
+
+      // Step 2: Download the image
+      const imageResponse = await fetch(imageUrl, {
+        headers: {
+          Authorization: `Bearer ${userAccessToken}`,
+          'User-Agent': 'gb/5.0.0'
+        }
+      });
+      if (!imageResponse.ok) {
+        throw new Error('Failed to download image: ' + imageResponse.statusText);
+      }
+
+      // Step 3: Save the image to the specified output path
+      const fileStream = Fs.createWriteStream(outputPath);
+      imageResponse.body.pipe(fileStream);
+
+    } catch (error) {
+      console.error('Error during image download:', error.message);
+    }
+  }
+
 }
