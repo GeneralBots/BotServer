@@ -1210,7 +1210,6 @@ export class GBConversationalService {
   }
 
   public async sendTextWithOptionsAndUser(min: GBMinInstance, user, step, text, translate, keepTextList) {
-    const member = step ? step.context.activity.from : null;
 
     let replacements = [];
 
@@ -1253,10 +1252,12 @@ export class GBConversationalService {
       }
       analytics.createMessage(min.instance.instanceId, conversation, null, text);
     }
-    if (!step && member && !isNaN(member.id) && !member.id.startsWith('1000')) {
-      const to = step.context.activity.group ? step.context.activity.group : member.id;
+    console.log(GBUtil.toYAML(step));
+    if (step && step.IsRevoked) {
 
-      await min.whatsAppDirectLine.sendToDevice(to, text, step.context.activity.conversation.id);
+      await min.whatsAppDirectLine.sendToDevice(user.userSystemId, 
+          text);
+
     } else {
       await step.context.sendActivity(text);
     }

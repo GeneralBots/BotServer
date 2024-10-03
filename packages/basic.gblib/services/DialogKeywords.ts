@@ -1421,7 +1421,7 @@ export class DialogKeywords {
     GBLogEx.info(min, `TALK '${text} step:${step}'.`);
 
     if (user) {
-      // TODO: const translate = user ? user.basicOptions.translatorOn : false;
+      
       text = await min.conversationalService.translate(
         min,
         text,
