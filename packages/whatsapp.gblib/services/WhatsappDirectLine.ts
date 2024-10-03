@@ -1402,7 +1402,6 @@ export class WhatsappDirectLine extends GBService {
     const sendMessageEndpoint = `${baseUrl}/${this.whatsappServiceNumber}/messages`;
   
     const messageData = {
-      messaging_product: 'whatsapp',
       recipient_type: 'individual',
       to: mobile,
       type: 'text',
