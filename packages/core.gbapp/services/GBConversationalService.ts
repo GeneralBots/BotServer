@@ -1252,14 +1252,17 @@ export class GBConversationalService {
       }
       analytics.createMessage(min.instance.instanceId, conversation, null, text);
     }
-    console.log(GBUtil.toYAML(step));
-    if (step && step.IsRevoked) {
 
-      await min.whatsAppDirectLine.sendToDevice(user.userSystemId, 
-          text);
-
-    } else {
+    
+    try{
+      // TODO: Remove MS BOT Framework and put GBNative.
+      
       await step.context.sendActivity(text);
+
+    } catch {
+      await min.whatsAppDirectLine.sendToDevice(user.userSystemId, 
+        text);
+
     }
   }
   public async broadcast(min: GBMinInstance, message: string) {
