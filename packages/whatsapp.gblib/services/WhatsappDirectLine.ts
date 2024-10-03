@@ -802,8 +802,8 @@ export class WhatsappDirectLine extends GBService {
       image: {
         link: imageUrl,
         caption: caption,
-        view_once: true
       },
+      view_once: true
     };
 
     const response = await fetch(sendMessageEndpoint, {

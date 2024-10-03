@@ -1462,7 +1462,7 @@ export class DialogKeywords {
       const pngs = await GBUtil.pdfPageAsImage(min, pdf, undefined);
       
       await CollectionUtil.asyncForEach(pngs, async png => {
-        await GBUtil.sleep(500);
+        await GBUtil.sleep(2000);
         // Prepare a cache to be referenced by Bot Framework.
 
         url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(png.localName));
