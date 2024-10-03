@@ -676,7 +676,7 @@ export class WhatsappDirectLine extends GBService {
             break;
 
           case 'image/png':
-            await this.sendFileToDevice(to, attachment.contentUrl, attachment.name, attachment.name, 0);
+            await this.sendFileToDevice(to, attachment.contentUrl, attachment.name, attachment.name, 0, 0);
 
             return;
 
