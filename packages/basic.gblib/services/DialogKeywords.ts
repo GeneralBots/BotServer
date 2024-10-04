@@ -1546,7 +1546,7 @@ export class DialogKeywords {
             contentUrl: url
           });
 
-          if (channel === 'omnichannel' || channel === 'whatsapp' || !user) {
+          if (!isNaN(mobile)) {
             await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption, undefined, true);
           } else {
             await min.conversationalService['sendOnConversation'](min, user, reply);
