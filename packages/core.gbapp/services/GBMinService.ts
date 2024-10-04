@@ -1110,16 +1110,15 @@ export class GBMinService {
             }
           }
         }
-        GBMinService.pidsConversation[conversationId] = pid; 
+        GBMinService.pidsConversation[conversationId] = pid;
         step.context.activity['pid'] = pid;
 
         const notes = min.core.getParam(min.instance, 'Notes', null);
-        if (await this.handleUploads(min, step, user, params, notes != null))
-        {
+        if (await this.handleUploads(min, step, user, params, notes != null)) {
           return;
 
         }
-    
+
         // Required for MSTEAMS handling of persisted conversations.
 
         if (step.context.activity.channelId === 'msteams') {
@@ -1334,16 +1333,16 @@ export class GBMinService {
       const base64Data = url.split(';base64,')[1];
       buffer = Buffer.from(base64Data, 'base64');
     } else {
-        const options = {
-          method: 'GET',
-          encoding: 'binary'
-        };
-        const res = await fetch(url, options);
+      const options = {
+        method: 'GET',
+        encoding: 'binary'
+      };
+      const res = await fetch(url, options);
       buffer = arrayBufferToBuffer(await res.arrayBuffer());
     }
 
     await fs.writeFile(localFileName, buffer);
-    
+
     return {
       name: attachment.name,
       filename: localFileName,
@@ -1363,19 +1362,18 @@ export class GBMinService {
 
   private async handleUploads(min, step, user, params, autoSave) {
     // Prepare Promises to download each attachment and then execute each Promise.
-    let ret = false;
     if (
       step.context.activity.attachments &&
       step.context.activity.attachments[0] &&
       step.context.activity.attachments[0].contentType != 'text/html'
     ) {
       const promises = step.context.activity.attachments.map(
-         GBMinService.downloadAttachmentAndWrite.bind({ min, user, params })
+        GBMinService.downloadAttachmentAndWrite.bind({ min, user, params })
       );
       const successfulSaves = await Promise.all(promises);
       async function replyForReceivedAttachments(attachmentData) {
         if (attachmentData) {
-          
+
           // In case of not having HEAR activated before, it is
           // a upload with no Dialog, so run Auto Save to .gbdrive.
 
@@ -1412,7 +1410,6 @@ export class GBMinService {
       const replyPromises = successfulSaves.map(replyForReceivedAttachments.bind(step.context));
       await Promise.all(replyPromises);
       if (successfulSaves.length > 0) {
-        ret = true;
         class GBFile {
           data: Buffer;
           filename: string;
@@ -1436,13 +1433,11 @@ export class GBMinService {
             throw new Error('It is only possible to upload one file per message, right now.');
           }
           min.cbMap[user.userId].promise = results[0];
-          return;
-        } else {
-          return;
         }
       }
+      return successfulSaves.length > 0;
     }
-    return ret;
+    return false;
   }
 
   /**

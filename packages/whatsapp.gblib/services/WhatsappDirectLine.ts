@@ -693,7 +693,7 @@ export class WhatsappDirectLine extends GBService {
             break;
 
           case 'image/png':
-            await this.sendFileToDevice(to, attachment.contentUrl, attachment.name, attachment.name, 0, 0);
+            await this.sendFileToDevice(to, attachment.contentUrl, attachment.name, attachment.name, 0, false);
 
             return;
 
@@ -710,7 +710,7 @@ export class WhatsappDirectLine extends GBService {
     return `${attachment.content.title} - ${attachment.content.text}`;
   }
 
-  public async sendFileToDevice(to, url, filename, caption, chatId, viewOnce) {
+  public async sendFileToDevice(to, url, filename, caption, chatId, isViewOnce = false) {
     let options;
     switch (this.provider) {
       case 'meta':
@@ -724,7 +724,7 @@ export class WhatsappDirectLine extends GBService {
           whatsappServiceNumber = GBServer.globals.minBoot.instance.whatsappServiceNumber;
           whatsappServiceKey = GBServer.globals.minBoot.instance.whatsappServiceKey;
         }
-        if (viewOnce) {
+        if (isViewOnce) {
           await this.sendImageViewOnce(to, url, caption);
         }
         else {
@@ -744,7 +744,7 @@ export class WhatsappDirectLine extends GBService {
           }
         }
 
-        await this.customClient.sendMessage(to, attachment, { caption: caption , viewOnce});
+        await this.customClient.sendMessage(to, attachment, { caption: caption, isViewOnce });
         break;
     }
 
@@ -923,7 +923,7 @@ export class WhatsappDirectLine extends GBService {
 
   }
 
-  public async sendToDevice(to: any, msg: string, conversationId, viewOnce= false) {
+  public async sendToDevice(to: any, msg: string, conversationId, isViewOnce = false) {
     try {
       const cmd = '/audio ';
       let url;
@@ -947,7 +947,7 @@ export class WhatsappDirectLine extends GBService {
               await CollectionUtil.asyncForEach(messages, async msg => {
 
                 await this.sendTextMessage(to, msg);
-                
+
                 if (messages.length > 1) {
                   await GBUtil.sleep(3000);
                 }
@@ -984,7 +984,7 @@ export class WhatsappDirectLine extends GBService {
               }
             }
             if ((await this.customClient.getState()) === WAState.CONNECTED) {
-              await this.customClient.sendMessage(to, msg, { isViewOnce: isViewOnce });
+              await this.customClient.sendMessage(to, msg, { isViewOnce });
             } else {
               GBLogEx.info(this.min, `WhatsApp OFFLINE ${to}: ${msg}`);
             }
@@ -1397,10 +1397,10 @@ export class WhatsappDirectLine extends GBService {
 
     // Define the API base URL and endpoints
     const baseUrl = 'https://graph.facebook.com/v20.0'; // API version 20.0
-  
+
     const accessToken = this.whatsappServiceKey;
     const sendMessageEndpoint = `${baseUrl}/${this.whatsappServiceNumber}/messages`;
-  
+
     const messageData = {
       messaging_product: 'whatsapp',
       to: mobile,
@@ -1409,7 +1409,7 @@ export class WhatsappDirectLine extends GBService {
         body: message,
       }
     };
-  
+
     const response = await fetch(sendMessageEndpoint, {
       method: 'POST',
       headers: {
@@ -1418,15 +1418,15 @@ export class WhatsappDirectLine extends GBService {
       },
       body: JSON.stringify(messageData)
     });
-  
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(`Failed to send message: ${JSON.stringify(errorData)}`);
     }
-  
+
     const result = await response.json();
     GBLogEx.info(0, 'Message sent successfully:' + result);
     return result;
   }
-  
+
 }
