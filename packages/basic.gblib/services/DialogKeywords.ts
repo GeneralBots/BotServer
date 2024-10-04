@@ -1429,7 +1429,7 @@ export class DialogKeywords {
       );
       GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
 
-      if (step) {
+      if (!isNaN(user.userSystemId)){
         await min.conversationalService.sendText(min, step, text, user);
       } else {
         await min.conversationalService['sendOnConversation'](min, user, text);

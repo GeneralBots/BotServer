@@ -159,10 +159,10 @@ export class WhatsappDirectLine extends GBService {
         const createClient = async () => {
           const client = (this.customClient = new Client({
             puppeteer: await GBSSR.preparePuppeteer(localName),
-            webVersionCache: {
-              type: 'remote',
-              remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${webVersion}.html`
-            }
+            // webVersionCache: {
+            //   type: 'remote',
+            //   remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${webVersion}.html`
+            // }
           }));
           client.on(
             'message',
@@ -226,7 +226,7 @@ export class WhatsappDirectLine extends GBService {
               if (chat.isGroup) {
                 // await chat.clearMessages();
               } else if (!chat.pinned) {
-                await chat.delete();
+                //await chat.delete();
               }
             });
           });
@@ -744,7 +744,7 @@ export class WhatsappDirectLine extends GBService {
           }
         }
 
-        await this.customClient.sendMessage(to, attachment, { caption: caption });
+        await this.customClient.sendMessage(to, attachment, { caption: caption , viewOnce});
         break;
     }
 
@@ -923,7 +923,7 @@ export class WhatsappDirectLine extends GBService {
 
   }
 
-  public async sendToDevice(to: any, msg: string, conversationId) {
+  public async sendToDevice(to: any, msg: string, conversationId, viewOnce= false) {
     try {
       const cmd = '/audio ';
       let url;
@@ -984,7 +984,7 @@ export class WhatsappDirectLine extends GBService {
               }
             }
             if ((await this.customClient.getState()) === WAState.CONNECTED) {
-              await this.customClient.sendMessage(to, msg);
+              await this.customClient.sendMessage(to, msg, { isViewOnce: isViewOnce });
             } else {
               GBLogEx.info(this.min, `WhatsApp OFFLINE ${to}: ${msg}`);
             }
@@ -1013,7 +1013,7 @@ export class WhatsappDirectLine extends GBService {
 
   private async WhatsAppCallback(req, res, botId = null) {
     try {
-      if (!req.body && req.type !== 'ptt') {
+      if (!req.body && req.type !== 'ptt' && !req.hasMedia) {
         return;
       }
 

@@ -1253,15 +1253,12 @@ export class GBConversationalService {
       analytics.createMessage(min.instance.instanceId, conversation, null, text);
     }
 
-    
-    try{
-      // TODO: Remove MS BOT Framework and put GBNative.
-      
-      await step.context.sendActivity(text);
+    if (!isNaN(user.userSystemId)){
 
-    } catch {
-      await min.whatsAppDirectLine.sendToDevice(user.userSystemId, 
-        text);
+      await min.whatsAppDirectLine.sendToDevice(user.userSystemId,         text);
+    }
+    else{
+      await step.context.sendActivity(text);
 
     }
   }

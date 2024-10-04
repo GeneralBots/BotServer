@@ -1329,20 +1329,21 @@ export class GBMinService {
     const localFileName = path.join(localFolder, packagePath, 'cache', attachment.name);
 
     let buffer;
-    // if (url.startsWith('data:')) {
-    //   const base64Data = url.split(';base64,')[1];
-    //   buffer = Buffer.from(base64Data, 'base64');
-    // } else {
-    //   const options = {
-    //     method: 'GET',
-    //     encoding: 'binary'
-    //   };
-    //   const res = await fetch(url, options);
-    //   buffer = arrayBufferToBuffer(await res.arrayBuffer());
-    // }
-    //write
-    buffer = await fs.readFile(localFileName);
 
+    if (url.startsWith('data:')) {
+      const base64Data = url.split(';base64,')[1];
+      buffer = Buffer.from(base64Data, 'base64');
+    } else {
+        const options = {
+          method: 'GET',
+          encoding: 'binary'
+        };
+        const res = await fetch(url, options);
+      buffer = arrayBufferToBuffer(await res.arrayBuffer());
+    }
+
+    await fs.writeFile(localFileName, buffer);
+    
     return {
       name: attachment.name,
       filename: localFileName,
