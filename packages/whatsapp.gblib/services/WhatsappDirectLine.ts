@@ -743,7 +743,7 @@ export class WhatsappDirectLine extends GBService {
             to = to + '@c.us';
           }
         }
-
+        GBLogEx.info(this.min, `WhatsApp isViewOnce 2${isViewOnce}`);
         await this.customClient.sendMessage(to, attachment, { caption: caption, isViewOnce });
         break;
     }
@@ -984,6 +984,7 @@ export class WhatsappDirectLine extends GBService {
               }
             }
             if ((await this.customClient.getState()) === WAState.CONNECTED) {
+              GBLogEx.info(this.min, `WhatsApp isViewOnce ${isViewOnce}`);
               await this.customClient.sendMessage(to, msg, { isViewOnce });
             } else {
               GBLogEx.info(this.min, `WhatsApp OFFLINE ${to}: ${msg}`);
