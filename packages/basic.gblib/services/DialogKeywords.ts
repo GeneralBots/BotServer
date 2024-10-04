@@ -1421,7 +1421,7 @@ export class DialogKeywords {
     GBLogEx.info(min, `TALK '${text} step:${step}'.`);
 
     if (user) {
-      
+
       text = await min.conversationalService.translate(
         min,
         text,
@@ -1429,7 +1429,7 @@ export class DialogKeywords {
       );
       GBLog.verbose(`Translated text(playMarkdown): ${text}.`);
 
-      if (!isNaN(user.userSystemId)){
+      if (!isNaN(user.userSystemId)) {
         await min.conversationalService.sendText(min, step, text, user);
       } else {
         await min.conversationalService['sendOnConversation'](min, user, text);
@@ -1453,41 +1453,14 @@ export class DialogKeywords {
     const element = filename._page ? filename._page : filename.screenshot ? filename : null;
     let url;
     let nameOnly;
+    let localName;
     const gbaiName = GBUtil.getGBAIPath(min.botId);
 
-    if (filename.endsWith('.pdf')) {
-      const gbdriveName = GBUtil.getGBAIPath(min.botId, 'gbdrive');
-      const pdf = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbdriveName, filename);
-
-      const pngs = await GBUtil.pdfPageAsImage(min, pdf, undefined);
-      
-      await CollectionUtil.asyncForEach(pngs, async png => {
-        await GBUtil.sleep(2000);
-        // Prepare a cache to be referenced by Bot Framework.
-
-        url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(png.localName));
-
-        const contentType = mime.lookup(url);
-        const reply = { type: ActivityTypes.Message, text: caption };
-        reply['attachments'] = [];
-        reply['attachments'].push({
-          name: nameOnly,
-          contentType: contentType,
-          contentUrl: url
-        });
-
-        if (channel === 'omnichannel'  || channel === 'whatsapp' || !user) {
-          await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption, undefined, true);
-        } else {
-          await min.conversationalService['sendOnConversation'](min, user, reply);
-        }
-      });          
-    }
 
     // Web automation.
 
     if (element) {
-      const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
+      localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.jpg`);
       nameOnly = path.basename(localName);
       await element.screenshot({ path: localName, fullPage: true });
 
@@ -1539,16 +1512,50 @@ export class DialogKeywords {
         const driveUrl = template['@microsoft.graph.downloadUrl'];
         const res = await fetch(driveUrl);
         let buf: any = Buffer.from(await res.arrayBuffer());
-        let localName1 = path.join(
+        localName = path.join(
           'work',
           gbaiName,
           'cache',
           `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
         );
-        await fs.writeFile(localName1, buf, { encoding: null });
+        await fs.writeFile(localName, buf, { encoding: null });
 
-        url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName1));
+        url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
       }
+      else {
+        const gbdriveName = GBUtil.getGBAIPath(min.botId, 'gbdrive');
+        localName = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbdriveName, filename);
+      }
+
+      if (localName.endsWith('.pdf')) {
+
+        const pngs = await GBUtil.pdfPageAsImage(min, localName, undefined);
+
+        await CollectionUtil.asyncForEach(pngs, async png => {
+          await GBUtil.sleepRandom();
+          // Prepare a cache to be referenced by Bot Framework.
+
+          url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(png.localName));
+
+          const contentType = mime.lookup(url);
+          const reply = { type: ActivityTypes.Message, text: caption };
+          reply['attachments'] = [];
+          reply['attachments'].push({
+            name: nameOnly,
+            contentType: contentType,
+            contentUrl: url
+          });
+
+          if (channel === 'omnichannel' || channel === 'whatsapp' || !user) {
+            await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption, undefined, true);
+          } else {
+            await min.conversationalService['sendOnConversation'](min, user, reply);
+          }
+        });
+
+        return;
+      }
+
     }
 
     if (!url) {

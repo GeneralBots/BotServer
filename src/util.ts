@@ -280,5 +280,9 @@ export class GBUtil {
   
     return generatedFiles.length > 0 ? generatedFiles : null;
   }
-  
+
+  public static async sleepRandom(min = 1, max = 5) {
+    const randomDelay = Math.floor(Math.random() * (max - min + 1) + min) * 1000; 
+    await new Promise(resolve => setTimeout(resolve, randomDelay));
+  }  
 }
