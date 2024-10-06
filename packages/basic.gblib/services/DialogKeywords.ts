@@ -650,7 +650,7 @@ export class DialogKeywords {
    *
    */
   public async sendTemplateTo({ pid, mobile, filename }) {
-    const { min, user, proc } = await DialogKeywords.getProcessInfo(pid);
+    const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `SEND TEMPLATE TO '${mobile}',filename '${filename}'.`);
     const service = new GBConversationalService(min.core);
 

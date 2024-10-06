@@ -743,7 +743,7 @@ export class WhatsappDirectLine extends GBService {
             to = to + '@c.us';
           }
         }
-        GBLogEx.info(this.min, `WhatsApp isViewOnce 2${isViewOnce}`);
+        GBLogEx.info(this.min, `WhatsApp isViewOnce ${isViewOnce}`);
         await this.customClient.sendMessage(to, attachment, { caption: caption, isViewOnce });
         break;
     }

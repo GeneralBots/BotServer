@@ -1378,7 +1378,7 @@ export class GBMinService {
           // a upload with no Dialog, so run Auto Save to .gbdrive.
 
           const t = new SystemKeywords();
-          GBLogEx.info(min, `BASIC (${min.botId}): Upload done for ${attachmentData.filename}.`);
+          GBLogEx.info(min, `BASIC (${min.botId}): Upload2 done for ${attachmentData.filename}.`);
           const handle = WebAutomationServices.cyrb53({ pid: 0, str: min.botId + attachmentData.filename });
           let data = await fs.readFile(attachmentData.filename);
 

@@ -108,9 +108,11 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
 
   private toolChain: RunnableSequence;
   private min;
+  private user;
 
-  constructor(min, toolChain: RunnableSequence, documentChain: RunnableSequence) {
+  constructor(min, user, toolChain: RunnableSequence, documentChain: RunnableSequence) {
     super();
+    this.user = user;
     this.min = min;
     this.toolChain = toolChain;
   }
@@ -150,8 +152,18 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
 
         if (localName) {
           const pngs = await GBUtil.pdfPageAsImage(this.min, localName, source.page);
-          text = `![alt text](${pngs[0].url})
-          ${text}`;
+          
+          if (!isNaN(this.user.userSystemId)){
+              await this.min.whatsAppDirectLine.sendFileToDevice(
+                this.user.userSystemId, pngs[0].url, 
+                localName, null, undefined, true);
+  
+          }
+          else
+          {
+            text = `![alt text](${pngs[0].url})
+             ${text}`;
+          }
           found = true;
           source.file = localName;
         }
@@ -495,7 +507,7 @@ export class ChatServices {
       },
       combineDocumentsPrompt,
       model,
-      new GBLLMOutputParser(min, null, null)
+      new GBLLMOutputParser(min, user, null, null)
     ] as any);
 
     const conversationalToolChain = RunnableSequence.from([
@@ -508,7 +520,7 @@ export class ChatServices {
       },
       questionGeneratorTemplate,
       modelWithTools,
-      new GBLLMOutputParser(min, callToolChain, docsContext?.docstore?._docs.length > 0 ? combineDocumentsChain : null),
+      new GBLLMOutputParser(min, user, callToolChain, docsContext?.docstore?._docs.length > 0 ? combineDocumentsChain : null),
       new StringOutputParser()
     ] as any);
 
