@@ -60,12 +60,14 @@ class GBUIApp extends React.Component {
   generateRandomId(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
+    const array = new Uint32Array(length);
+    window.crypto.getRandomValues(array);
     for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * characters.length));
+      result += characters.charAt(array[i] % characters.length);
     }
     return result;
   }
-
+  
   sendToken(token) {
     setTimeout(() => {
       window.line
