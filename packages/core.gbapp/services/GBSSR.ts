@@ -38,7 +38,7 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
 import path from 'path';
-import fs from 'fs/promises'; 
+import fs from 'fs/promises';
 import { NextFunction, Request, Response } from 'express';
 import urljoin from 'url-join';
 import { GBMinInstance } from 'botlib';
@@ -110,7 +110,7 @@ export class GBSSR {
         const file = await fs.readFile(preferences, 'utf8');
         const data = JSON.parse(file);
         data['profile']['exit_type'] = 'none';
-    await fs.writeFile(preferences, JSON.stringify(data));
+        await fs.writeFile(preferences, JSON.stringify(data));
       }
     }
 
@@ -308,7 +308,7 @@ export class GBSSR {
     // Checks if the bot has an .gbui published or use default.gbui.
 
     if (!await GBUtil.exists(packagePath)) {
-      packagePath = GBUtil.getGBAIPath(minBoot.botId, `gbui`);
+      packagePath = path.join(process.env.PWD, 'packages', `default.gbui`);
     }
     let parts = req.url.replace(`/${botId}`, '').split('?');
     let url = parts[0];
@@ -344,12 +344,11 @@ export class GBSSR {
           html = html.replace(/\{p\}/gi, min.botId);
           html = html.replace(/\{botId\}/gi, min.botId);
 
-          const theme = 
-            `theme-${
-             await (min.core as any)['getParam'](min.instance, 'Theme Color','grey' )}`;
-          
+          const theme =
+            `theme-${await (min.core as any)['getParam'](min.instance, 'Theme Color', 'grey')}`;
+
           html = html.replace(/\{themeColor\}/gi, theme);
-          
+
           html = html.replace(/\{theme\}/gi, min.instance.theme ? min.instance.theme :
             'default.gbtheme');
           html = html.replace(/\{title\}/gi, min.instance.title);

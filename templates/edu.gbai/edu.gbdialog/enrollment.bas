@@ -7,4 +7,3 @@ PARAM address AS string LIKE "Rua das Flores, 123, São Paulo, SP" DESCRIPTION "
 DESCRIPTION  "This is a the enrollment process, called when the user wants to enrol. Once all information is collected, confirm the details and inform them that their enrollment request has been successfully submitted. Provide a polite and professional tone throughout the interaction."
 
 SAVE "enrollments.csv", id, name, birthday, email, personalid, address
-    
