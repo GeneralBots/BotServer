@@ -184,7 +184,9 @@ class GBUIApp extends React.Component {
 
     const line = instanceClient.webchatToken
       ? new DirectLine({
-          token: instanceClient.webchatToken
+        userId:window.userId, 
+        userIdOnStartConversation: window.userId, 
+        token: instanceClient.webchatToken
         })
       : new DirectLine({
           domain: instanceClient.domain,
