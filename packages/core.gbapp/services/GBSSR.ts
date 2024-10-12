@@ -308,7 +308,7 @@ export class GBSSR {
     // Checks if the bot has an .gbui published or use default.gbui.
 
     if (!await GBUtil.exists(packagePath)) {
-      packagePath = path.join(process.env.PWD, 'packages', `default.gbui`);
+      packagePath = path.join(process.env.PWD, 'packages', `default.gbui`, 'build');
     }
     let parts = req.url.replace(`/${botId}`, '').split('?');
     let url = parts[0];
