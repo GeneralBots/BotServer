@@ -58,7 +58,7 @@ export class SaaSPackage implements IGBPackage {
 
   async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     sequelize.addModels([GBOnlineSubscription]);
-    core.setWWWRoot(process.env.SAAS_WWWROOT);
+    
     core.setEntryPointDialog('/welcome_saas');
 
     // Installs webhook for Microsoft intercommunication.
