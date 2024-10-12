@@ -1043,7 +1043,12 @@ export class GBMinService {
 
 
       const sec = new SecService();
-      const member = context.activity.recipient ? context.activity.recipient : context.activity.from;
+      let member = context.activity.recipient;
+      
+      
+      if (process.env.STORAGE_NAME){
+        member  = context.activity.from;
+      }
       let user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
       const userId = user.userId;
       const params = user.params ? JSON.parse(user.params) : {};
