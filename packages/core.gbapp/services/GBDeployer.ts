@@ -522,9 +522,15 @@ export class GBDeployer implements IGBDeployer {
       let url = `${baseUrl}/drive/root:/${packagePath}:/children`;
 
       GBLogEx.info(min, `Downloading: ${url}`);
+      let documents;
 
-      const res = await client.api(url).get();
-      const documents = res.value;
+
+      try {
+        const res = await client.api(url).get();
+        documents = res.value;
+      } catch (error) {
+        GBLogEx.info(min, `Error downloading: ${error.toString()}`);
+      }
       if (documents === undefined || documents.length === 0) {
         GBLogEx.info(min, `${remotePath} is an empty folder.`);
         return null;
