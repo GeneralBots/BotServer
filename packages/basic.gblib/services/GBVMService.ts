@@ -399,10 +399,7 @@ export class GBVMService extends GBService {
               }
             }
 
-            seq.define(tableName, t.fields, {
-              
-              timestamps: false, 
-          });
+            seq.define(tableName, t.fields);
 
             // New table checking, if needs sync.
             let tables;
