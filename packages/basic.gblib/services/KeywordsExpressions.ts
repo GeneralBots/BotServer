@@ -1309,7 +1309,7 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*refresh\s*(.*)/gim,
+      /^\s*(refresh)\s*(.*)/gim,
       ($0, $1, $2, $3) => {
         return `await sys.refreshDataSourceCache({pid: pid, connectionName: ${$2}})`;
       }

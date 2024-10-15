@@ -1044,10 +1044,9 @@ export class GBMinService {
 
       const sec = new SecService();
       let member = context.activity.recipient;
-      
-      
-      if (process.env.STORAGE_NAME){
-        member  = context.activity.from;
+
+      if (process.env.STORAGE_NAME || !member) {
+        member = context.activity.from;
       }
       let user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
       const userId = user.userId;
