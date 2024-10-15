@@ -171,22 +171,22 @@ export class SystemKeywords {
     if (date) {
       return array
         ? array.sort((a, b) => {
-            const c = new Date(a[memberName]);
-            const d = new Date(b[memberName]);
-            return c.getTime() - d.getTime();
-          })
+          const c = new Date(a[memberName]);
+          const d = new Date(b[memberName]);
+          return c.getTime() - d.getTime();
+        })
         : null;
     } else {
       return array
         ? array.sort((a, b) => {
-            if (a[memberName] < b[memberName]) {
-              return -1;
-            }
-            if (a[memberName] > b[memberName]) {
-              return 1;
-            }
-            return 0;
-          })
+          if (a[memberName] < b[memberName]) {
+            return -1;
+          }
+          if (a[memberName] > b[memberName]) {
+            return 1;
+          }
+          return 0;
+        })
         : array;
     }
   }
@@ -749,6 +749,10 @@ export class SystemKeywords {
   public async saveToStorageBatch({ pid, table, rows }): Promise<void> {
     const { min } = await DialogKeywords.getProcessInfo(pid);
 
+    if (typeof rows === 'object' && rows !== null) {
+      rows = [rows];
+    }
+    
     if (rows.length === 0) {
       return;
     }
@@ -952,7 +956,7 @@ export class SystemKeywords {
       GBLogEx.info(min, `GET '${addressOrHeaders}' in '${file}'.`);
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const botId = min.instance.botId;
-      
+
       const packagePath = GBUtil.getGBAIPath(botId, 'gbdata');
 
       let document = await this.internalGetDocument(client, baseUrl, packagePath, file);
@@ -2616,7 +2620,7 @@ export class SystemKeywords {
   public async getExtensionInfo(ext: any): Promise<any> {
 
     // TODO: Load exts.
-    
+
     let array = []; // exts.filter((v, i, a) => a[i]['extension'] === ext);
     if (array[0]) {
       return array[0];
