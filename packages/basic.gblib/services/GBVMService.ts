@@ -405,19 +405,7 @@ export class GBVMService extends GBService {
             let tables;
             const dialect = con.dialect.name;
 
-            if (dialect === 'mssql') {
-              tables = await seq.query(
-                `SELECT table_name, table_schema
-          FROM information_schema.tables
-          WHERE table_type = 'BASE TABLE'
-          ORDER BY table_name ASC`,
-                {
-                  type: QueryTypes.RAW
-                }
-              )[0];
-            } else if (dialect === 'mariadb') {
-              tables = await seq.getQueryInterface().showAllTables();
-            }
+            tables = await GBUtil.listTables(dialect, seq);
 
             let found = false;
             tables.forEach(storageTable => {
@@ -457,6 +445,7 @@ export class GBVMService extends GBService {
   }
 
   public async translateBASIC(mainName, filename: any, min: GBMinInstance) {
+
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = await fs.readFile(filename, 'utf8');

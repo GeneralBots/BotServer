@@ -48,6 +48,7 @@ import urlJoin from 'url-join';
 import Excel from 'exceljs';
 import { BufferWindowMemory } from 'langchain/memory';
 import csvdb from 'csv-database';
+import { Sequelize, QueryTypes, DataTypes } from '@sequelize/core';
 import packagePath from 'path';
 import ComputerVisionClient from '@azure/cognitiveservices-computervision';
 import ApiKeyCredentials from '@azure/ms-rest-js';
@@ -752,7 +753,7 @@ export class SystemKeywords {
     if (typeof rows === 'object' && rows !== null) {
       rows = [rows];
     }
-    
+
     if (rows.length === 0) {
       return;
     }
@@ -2876,5 +2877,91 @@ export class SystemKeywords {
     await min.kbService.showImage(min, min.conversationalService, step, url);
 
     await this.setMemoryContext({ pid, erase: true });
+  }
+
+  
+  public async refreshDataSourceCache({ pid, connectionName }) {
+      const { min, user, params, step } = await DialogKeywords.getProcessInfo(pid);
+  
+      let sqliteFilePath =path.join('work', GBUtil.getGBAIPath(min.botId), `${connectionName}.sqlite`);
+    
+      // Step 1: Clean the SQLite file if it already exists
+      if (await GBUtil.exists(sqliteFilePath)) {
+          await fs.unlink(sqliteFilePath); // Remove the file
+          GBLogEx.info(min, `${sqliteFilePath} has been cleaned.`);
+      }
+  
+      // Step 2: Connect to SQLite (Local)
+      const sqlite = new Sequelize({
+          dialect: 'sqlite',
+          storage: sqliteFilePath
+      });
+  
+      // Get the connection details from the min object
+      let con = min[connectionName];
+      const dialect = con.dialect.name;
+  
+      // Step 3: Get the list of all tables from the source database
+      const tables = await GBUtil.listTables(dialect, min.core.sequelize);
+      const tableNames = tables.map(table => Object.values(table)[0]);
+  
+      // Function to map source database datatypes to SQLite-compatible datatypes
+      const mapToSQLiteType = (columnType) => {
+          const typeMapping = {
+              'VARCHAR': DataTypes.STRING,
+              'CHAR': DataTypes.STRING,
+              'TEXT': DataTypes.TEXT,
+              'TINYINT': DataTypes.INTEGER,
+              'SMALLINT': DataTypes.INTEGER,
+              'MEDIUMINT': DataTypes.INTEGER,
+              'INT': DataTypes.INTEGER,
+              'INTEGER': DataTypes.INTEGER,
+              'BIGINT': DataTypes.BIGINT,
+              'FLOAT': DataTypes.FLOAT,
+              'DOUBLE': DataTypes.DOUBLE,
+              'DECIMAL': DataTypes.DECIMAL,
+              'DATE': DataTypes.DATE,
+              'DATETIME': DataTypes.DATE,
+              'TIMESTAMP': DataTypes.DATE,
+              'BLOB': DataTypes.BLOB,
+              'BOOLEAN': DataTypes.BOOLEAN,
+              // Add more mappings as needed
+          };
+  
+          // Return mapped type or fallback to STRING if not mapped
+          return typeMapping[columnType.toUpperCase()] || DataTypes.STRING;
+      };
+  
+      // Step 4: Retrieve and export data for each table
+      for (const table of tableNames) {
+          // Retrieve rows from the source table
+          const [rows] = await min.core.sequelize.query(`SELECT * FROM ${table}`);
+  
+          if (rows.length === 0) continue; // Skip if the table has no data
+  
+          // Get the schema for the current table from the source database
+          const columns = await min.core.sequelize.queryInterface.describeTable(table);
+  
+          // Create a schema object for SQLite
+          const schema = {};
+          Object.keys(columns).forEach(col => {
+              const columnType = columns[col].type;
+              schema[col] = mapToSQLiteType(columnType); // Map source type to SQLite type
+          });
+  
+          // Define the model dynamically for each table in SQLite
+          const Model = sqlite.define(table, schema, { timestamps: false });
+  
+          // Sync the model (create table)
+          await Model.sync({ force: true });
+  
+          // Bulk insert rows into the SQLite table
+          await Model.bulkCreate(rows);
+      }
+  
+      GBLogEx.info(min, `All tables have been successfully exported to ${sqliteFilePath}`);
+  
+      // Close SQLite connection
+      await sqlite.close();
   }
 }

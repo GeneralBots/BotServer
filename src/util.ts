@@ -31,7 +31,7 @@
 /**
  * @fileoverview General Bots local utility.
  */
- 
+
 'use strict';
 import * as YAML from 'yaml';
 import SwaggerClient from 'swagger-client';
@@ -48,6 +48,7 @@ import { GBLogEx } from '../packages/core.gbapp/services/GBLogEx.js';
 import { PngPageOutput, pdfToPng } from 'pdf-to-png-converter';
 import urlJoin from 'url-join';
 import { GBServer } from './app.js';
+import { QueryTypes } from '@sequelize/core';
 
 export class GBUtil {
   public static repeat(chr, count) {
@@ -110,21 +111,21 @@ export class GBUtil {
         return acc;
       }, {});
     };
-  
+
     const extractedError = extractProps(data);
     let yamlString = YAML.stringify(extractedError, {
       indent: 2, // Defines the indentation
       flowLevel: -1, // Forces inline formatting
       styles: { '!!null': 'canonical' } // Optional: Customize null display
     } as any);
-  
-    
-      //yamlString = yamlString.slice(0, 256); // Truncate to 1024 bytes
-    
-  
+
+
+    //yamlString = yamlString.slice(0, 256); // Truncate to 1024 bytes
+
+
     return yamlString;
   }
-  
+
   public static sleep(ms) {
     return new Promise(resolve => {
       setTimeout(resolve, ms);
@@ -207,6 +208,26 @@ export class GBUtil {
       }
     }
   }
+
+  public static async listTables(dialect: any, seq: any) {
+    let tables;
+    if (dialect === 'mssql') {
+      tables = await seq.query(
+        `SELECT table_name, table_schema
+          FROM information_schema.tables
+          WHERE table_type = 'BASE TABLE'
+          ORDER BY table_name ASC`,
+        {
+          type: QueryTypes.RAW
+        }
+      )[0];
+    } else if (dialect === 'mariadb') {
+      tables = await seq.getQueryInterface().showAllTables();
+    }
+    return tables;
+  }
+
+
   // Check if is a tree or flat object.
 
   public static hasSubObject(t) {
@@ -251,9 +272,9 @@ export class GBUtil {
 
   public static async pdfPageAsImage(min, filename, pageNumber) {
     // Converts the PDF to PNG.
-  
+
     GBLogEx.info(min, `Converting ${filename}, page: ${pageNumber ?? 'all'}...`);
-    
+
     const options = {
       disableFontFace: true,
       useSystemFonts: true,
@@ -262,27 +283,27 @@ export class GBUtil {
       strictPagesToProcess: false,
       verbosityLevel: 0
     };
-  
+
     const pngPages: PngPageOutput[] = await pdfToPng(filename, options);
-  
+
     const generatedFiles = [];
-  
+
     for (const pngPage of pngPages) {
       const buffer = pngPage.content;
       const gbaiName = GBUtil.getGBAIPath(min.botId, null);
       const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
-      
+
       await fs.writeFile(localName, buffer, { encoding: null });
-      
+
       generatedFiles.push({ localName: localName, url: url, data: buffer });
     }
-  
+
     return generatedFiles.length > 0 ? generatedFiles : null;
   }
 
   public static async sleepRandom(min = 1, max = 5) {
-    const randomDelay = Math.floor(Math.random() * (max - min + 1) + min) * 1000; 
+    const randomDelay = Math.floor(Math.random() * (max - min + 1) + min) * 1000;
     await new Promise(resolve => setTimeout(resolve, randomDelay));
-  }  
+  }
 }

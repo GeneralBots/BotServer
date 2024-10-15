@@ -1,4 +1,5 @@
 name,value
+Admin, 5521999998888
 Answer Mode,sql
 llm File,northwind.db
 llm Driver,sqlite

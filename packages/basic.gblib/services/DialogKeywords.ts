@@ -30,39 +30,38 @@
 
 'use strict';
 
+import sgMail from '@sendgrid/mail';
+import { ActivityTypes } from 'botbuilder';
 import { GBLog, GBMinInstance } from 'botlib';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
-import { ChartServices } from './ChartServices.js';
-import urlJoin from 'url-join';
-import { GBServer } from '../../../src/app.js';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
-import { SecService } from '../../security.gbapp/services/SecService.js';
-import { Jimp } from 'jimp';
-import jsQR from 'jsqr';
-import { SystemKeywords } from './SystemKeywords.js';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import { Messages } from '../strings.js';
-import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
+import * as df from 'date-diff';
 import fs from 'fs/promises';
 import libphonenumber from 'google-libphonenumber';
-import * as df from 'date-diff';
+import { Jimp } from 'jimp';
+import jsQR from 'jsqr';
+import mammoth from 'mammoth';
+import mime from 'mime-types';
 import tesseract from 'node-tesseract-ocr';
 import path from 'path';
-import sgMail from '@sendgrid/mail';
-import mammoth from 'mammoth';
-import qrcode from 'qrcode';
-import { WebAutomationServices } from './WebAutomationServices.js';
-import QrScanner from 'qr-scanner';
-import pkg from 'whatsapp-web.js';
-import { ActivityTypes } from 'botbuilder';
-const { List, Buttons } = pkg;
-import mime from 'mime-types';
-import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
-import { GBUtil } from '../../../src/util.js';
-import { GBVMService } from './GBVMService.js';
-import { ChatServices } from '../../../packages/llm.gblib/services/ChatServices.js';
+import { CollectionUtil } from 'pragmatismo-io-framework';
 import puppeteer from 'puppeteer';
+import qrcode from 'qrcode';
+import urlJoin from 'url-join';
+import pkg from 'whatsapp-web.js';
+import { ChatServices } from '../../../packages/llm.gblib/services/ChatServices.js';
+import { GBServer } from '../../../src/app.js';
+import { GBUtil } from '../../../src/util.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
+import { Messages } from '../strings.js';
+import { ChartServices } from './ChartServices.js';
+import { GBVMService } from './GBVMService.js';
+import { SystemKeywords } from './SystemKeywords.js';
+import { WebAutomationServices } from './WebAutomationServices.js';
+const { List, Buttons } = pkg;
 
 
 /**
@@ -384,6 +383,7 @@ export class DialogKeywords {
     var year = date.getFullYear();
 
     format = format.replace('MM', GBUtil.padL(month.toString(), 2, '0'));
+    format = format.toLowerCase();
 
     if (format.indexOf('yyyy') > -1) format = format.replace('yyyy', year.toString());
     else if (format.indexOf('yy') > -1) format = format.replace('yy', year.toString().substr(2, 2));
