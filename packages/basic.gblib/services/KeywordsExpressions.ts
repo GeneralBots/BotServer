@@ -793,7 +793,7 @@ export class KeywordsExpressions {
                 __${$1} = null
           }
           `;
-          }
+        }
       }
     ];
 
@@ -1336,13 +1336,14 @@ export class KeywordsExpressions {
         // Checks if it is a collection or series of params.
         return `
         
-        if (Array.isArray(${fields[0]})){
-          await sys.saveToStorageBatch({pid: pid, table: ${table}, rows:${fields[0]} })
-        }else{
+        if (Array.isArray(${fields[0]}) || typeof ${fields[0]} === 'object') {
+          await sys.saveToStorageBatch({pid: pid, table: ${table}, rows: ${fields[0]} })
+        } else {
           await sys.saveToStorage({pid: pid, table: ${table}, fieldsValues: [${fieldsAsText}], fieldsNames: [${fieldsNames}] })
         }
         ${fields[0].replace(/\`/g, '')} = null;
       `;
+
       }
     ];
 
