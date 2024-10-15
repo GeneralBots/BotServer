@@ -66,7 +66,6 @@ import { GBUtil } from '../../../src/util.js';
  * Basic services for BASIC manipulation.
  */
 export class GBVMService extends GBService {
-  private static DEBUGGER_PORT = 9222;
   public static API_PORT = 1111;
 
   public async loadDialogPackage(folder: string, min: GBMinInstance, core: IGBCoreService, deployer: GBDeployer) {
@@ -354,6 +353,7 @@ export class GBVMService extends GBService {
         const tableName = t.name.trim();
 
         // Determines autorelationship.
+
         Object.keys(t.fields).forEach(key => {
           let obj = t.fields[key];
           obj.type = getTypeBasedOnCondition(obj.type, obj.size);
@@ -363,20 +363,25 @@ export class GBVMService extends GBService {
           }
         });
 
-        // Cutom connection for TABLE.
+        // Custom connection for TABLE.
+
         const connectionName = t.connection;
         let con = min[connectionName];
 
         if (!con) {
           GBLogEx.debug(min, `Invalid connection specified: ${min.bot} ${tableName} ${connectionName}.`);
         } else {
+
           // Field checking, syncs if there is any difference.
+
           const seq = con ? con : minBoot.core.sequelize;
 
           if (seq) {
             const model = seq.models[tableName];
             if (model) {
+
               // Except Id, checks if has same number of fields.
+
               let equals = 0;
               Object.keys(t.fields).forEach(key => {
                 let obj1 = t.fields[key];
@@ -396,7 +401,7 @@ export class GBVMService extends GBService {
 
             seq.define(tableName, t.fields, {
               
-              timestamps: true, 
+              timestamps: false, 
           });
 
             // New table checking, if needs sync.
@@ -496,7 +501,7 @@ export class GBVMService extends GBService {
       }
     } while (include);
 
-    let { code, map, metadata, tasks, systemPrompt } = await this.convert(filename, mainName, basicCode);
+    let { code, map, metadata, tasks } = await this.convert(filename, mainName, basicCode);
 
     // Generates function JSON metadata to be used later.
 
@@ -941,7 +946,7 @@ export class GBVMService extends GBService {
     try {
       if (!GBConfigService.get('GBVM')) {
         return await (async () => {
-          return await new Promise((resolve, reject) => {
+          return await new Promise((resolve) => {
             sandbox['resolve'] = resolve;
             // TODO: #411 sandbox['reject'] = reject;
             sandbox['reject'] = () => {};
