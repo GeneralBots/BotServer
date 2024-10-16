@@ -221,7 +221,7 @@ export class GBUtil {
           type: QueryTypes.RAW
         }
       )[0];
-    } else if (dialect === 'mariadb') {
+    } else  {
       tables = await seq.getQueryInterface().showAllTables();
     }
     return tables;

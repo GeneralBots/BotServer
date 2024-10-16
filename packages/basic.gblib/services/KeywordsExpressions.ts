@@ -482,6 +482,14 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(.*)\=\s*(ANSWER)(\s*)(.*)/gim,
+      ($0, $1, $2, $3, $4) => {
+        const params = this.getParams($4, ['text']);
+        return `${$1} = await sys.answer ({pid: pid, ${params}})`;
+      }
+    ];
+
+    keywords[i++] = [
       /^\s*(.*)\=\s*(GET IMAGE)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['prompt']);

@@ -2,6 +2,6 @@ REM SET SCHEDULE
 
 REFRESH "llm"
 
-list = REWRITE "A list of latest 10 orders made."
+list = ANSWER "A list of latest 10 orders made."
 
-TALK TO admin
+TALK "The Report is: \n" + list
