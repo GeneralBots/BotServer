@@ -545,12 +545,20 @@ export class ChatServices {
     } else if (LLMMode === 'sql' || LLMMode === 'chart') {
       const con = min[`llm`]['gbconnection'];
       const dialect = con['storageDriver'];
+      
+      const answerSource = await (min.core as any)['getParam'](min.instance, 
+        'Answer Source', false);
 
       let dataSource;
-      if (dialect === 'sqlite') {
+      if (dialect === 'sqlite' || answerSource ===  'cache') {
+
+        let sqliteFilePath = answerSource ===  'cache' ?
+          path.join('work', GBUtil.getGBAIPath(min.botId), `${con['name']}.sqlite`):
+          con['storageFile'];
+
         dataSource = new DataSource({
           type: 'sqlite',
-          database: con['storageFile'],
+          database: sqliteFilePath,
           synchronize: false,
           logging: true
         });

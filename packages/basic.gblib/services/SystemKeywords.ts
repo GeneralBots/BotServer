@@ -750,7 +750,7 @@ export class SystemKeywords {
   public async saveToStorageBatch({ pid, table, rows }): Promise<void> {
     const { min } = await DialogKeywords.getProcessInfo(pid);
 
-    if (typeof rows === 'object' && rows !== null) {
+    if (!Array.isArray(data) && typeof rows === 'object' && rows !== null) {
       rows = [rows];
     }
 

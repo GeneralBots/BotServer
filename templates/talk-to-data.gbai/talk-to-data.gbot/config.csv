@@ -1,6 +1,7 @@
 name,value
 Admin, 5521999998888
 Answer Mode,sql
+Answer Source,cache
 llm File,northwind.db
 llm Driver,sqlite
 Theme Color,red
