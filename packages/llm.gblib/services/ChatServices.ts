@@ -550,11 +550,10 @@ export class ChatServices {
         'Answer Source', false);
 
       let dataSource;
-      if (dialect === 'sqlite' || answerSource ===  'cache') {
+      if (answerSource ===  'cache') {
 
-        let sqliteFilePath = answerSource ===  'cache' ?
-          path.join('work', GBUtil.getGBAIPath(min.botId), `${con['name']}.sqlite`):
-          con['storageFile'];
+        let sqliteFilePath = 
+          path.join('work', GBUtil.getGBAIPath(min.botId), `${con['name']}.sqlite`);
 
         dataSource = new DataSource({
           type: 'sqlite',
