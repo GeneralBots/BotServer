@@ -2961,7 +2961,7 @@ export class SystemKeywords {
         };
 
         // If the column is named 'id' or 'Id', set it as the primary key
-        if (col.toLowerCase() === 'id') {
+        if (col.toLowerCase() === 'id' || col.toLowerCase() === 'internal_id') {
           schema[col].primaryKey = true;
         }
       });
