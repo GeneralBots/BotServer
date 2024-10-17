@@ -212,13 +212,15 @@ export class GBUtil {
   public static async listTables(dialect: any, seq: any) {
     let tables;
     if (dialect === 'mssql') {
-      tables = await seq.getQueryInterface().showAllTables({ schema: 'dbo' }); 
+      // Extracting table name from the object returned by MSSQL
+      tables = await seq.getQueryInterface().showAllTables({ schema: 'dbo' });
+      tables = tables.map((table: any) => table.tableName); // Extracting the table name
     } else {
       tables = await seq.getQueryInterface().showAllTables();
     }
     return tables;
   }
-  
+    
 
   // Check if is a tree or flat object.
 
