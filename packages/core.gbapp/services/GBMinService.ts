@@ -205,16 +205,23 @@ export class GBMinService {
       GBLogEx.info(min, `Starting auto test with '${process.env.TEST_MESSAGE}'.`);
 
       const client = await GBUtil.getDirectLineClient(min);
+      const sec = new SecService();
+      const user = await sec.ensureUser(min, 'testuser', 'testuser', '', 'test', 'testuser', null);
+      const pid = GBVMService.createProcessInfo(user, min, 'api', null);
 
-      const response = await client.apis.Conversations.Conversations_StartConversation();
+      const response = await client.apis.Conversations.Conversations_StartConversation(
+        {
+          userSystemId: user.userSystemId,
+          userName: user.userName,
+          pid: pid
+        }
+
+      );
       const conversationId = response.obj.conversationId;
       GBServer.globals.debugConversationId = conversationId;
 
       const steps = process.env.TEST_MESSAGE.split(';');
-      const sec = new SecService();
-      const user = await sec.ensureUser(min, 'testuser', 'testuser', '', 'test', 'testuser', null);
 
-      const pid = GBVMService.createProcessInfo(user, min, 'api', null);
       await CollectionUtil.asyncForEach(steps, async step => {
         client.apis.Conversations.Conversations_PostActivity({
           conversationId: conversationId,
@@ -225,8 +232,10 @@ export class GBMinService {
             type: 'message',
             from: {
               id: 'test',
-              name: 'test'
-            }
+              name: 'test',
+              channelIdEx: 'web',
+              pid: pid
+            },
           }
         });
 
