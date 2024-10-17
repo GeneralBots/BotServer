@@ -415,6 +415,12 @@ export class GBVMService extends GBService {
             });
 
             sync = sync ? sync : !found;
+            
+            // Do not erase tables in case of an error in collection retrieval.
+
+            if (tables.length === 0){
+              sync = false;
+            }
 
             associations.forEach(e => {
               const from = seq.models[e.from];

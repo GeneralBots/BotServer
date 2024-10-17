@@ -2912,7 +2912,7 @@ export class SystemKeywords {
     const dialect = con.dialect.name;
 
     // Step 3: Get the list of all tables from the source database
-    const tables = await GBUtil.listTables(dialect, min.core.sequelize);
+    const tables = await GBUtil.listTables(dialect, con);
 
     // Function to map source database datatypes to SQLite-compatible datatypes
     const mapToSQLiteType = (columnType) => {
