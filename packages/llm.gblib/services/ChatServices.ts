@@ -549,6 +549,9 @@ export class ChatServices {
       const answerSource = await (min.core as any)['getParam'](min.instance, 
         'Answer Source', false);
 
+        GBLogEx.info(min, `Answer Source = ${answerSource}.`);
+
+
       let dataSource;
       if (answerSource ===  'cache') {
         let sqliteFilePath = 
