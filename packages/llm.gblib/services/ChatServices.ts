@@ -551,9 +551,9 @@ export class ChatServices {
 
       let dataSource;
       if (answerSource ===  'cache') {
-
         let sqliteFilePath = 
-          path.join('work', GBUtil.getGBAIPath(min.botId), `${con['name']}.sqlite`);
+        path.join('work', GBUtil.getGBAIPath(min.botId), `${con['name']}.sqlite`);
+        GBLogEx.info(min, `Using data from cache: Path.basename(${sqliteFilePath}).`);
 
         dataSource = new DataSource({
           type: 'sqlite',
@@ -619,7 +619,7 @@ export class ChatServices {
        * Create the final prompt template which is tasked with getting the natural
        * language response to the SQL query.
        */
-      const finalResponsePrompt =
+      const finalResponsePrompt = 
         PromptTemplate.fromTemplate(`Based on the table schema below, question, SQL query, and SQL response, write a natural language response:
           Optimize answers for KPI people. ${systemPrompt}
               ------------
