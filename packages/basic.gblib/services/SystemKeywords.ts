@@ -2944,12 +2944,12 @@ export class SystemKeywords {
     // Step 4: Retrieve and export data for each table
     for (const table of tables) {
       // Retrieve rows from the source table
-      const [rows] = await min.core.sequelize.query(`SELECT * FROM ${table}`);
+      const [rows] = await con.query(`SELECT * FROM ${table}`);
 
       if (rows.length === 0) continue; // Skip if the table has no data
 
       // Get the schema for the current table from the source database
-      const columns = await min.core.sequelize.queryInterface.describeTable(table);
+      const columns = await con.queryInterface.describeTable(table);
 
       // Create a schema object for SQLite
       const schema = {};
