@@ -547,7 +547,7 @@ export class ChatServices {
       const dialect = con['storageDriver'];
       
       const answerSource = await (min.core as any)['getParam'](min.instance, 
-        'Answer Source', false);
+        'Answer Source', 'server');
 
         GBLogEx.info(min, `Answer Source = ${answerSource}.`);
 
