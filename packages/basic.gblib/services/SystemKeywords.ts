@@ -2955,7 +2955,17 @@ export class SystemKeywords {
       const schema = {};
       Object.keys(columns).forEach(col => {
         const columnType = columns[col].type;
-        schema[col] = mapToSQLiteType(columnType); // Map source type to SQLite type
+
+        // Map source type to SQLite type
+        schema[col] = {
+          type: mapToSQLiteType(columnType)
+        };
+
+        // If the column is named 'id' or 'Id', set it as the primary key
+        if (col.toLowerCase() === 'id') {
+          schema[col].primaryKey = true;
+          schema[col].autoIncrement = true; // Optional: auto-increment for primary key
+        }
       });
 
       // Define the model dynamically for each table in SQLite
