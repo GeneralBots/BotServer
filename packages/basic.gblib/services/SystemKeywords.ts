@@ -2963,7 +2963,6 @@ export class SystemKeywords {
         // If the column is named 'id' or 'Id', set it as the primary key
         if (col.toLowerCase() === 'id') {
           schema[col].primaryKey = true;
-          schema[col].autoIncrement = true; // Optional: auto-increment for primary key
         }
       });
 
