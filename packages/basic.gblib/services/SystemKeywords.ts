@@ -2952,6 +2952,7 @@ export class SystemKeywords {
 
       // Create a schema object for SQLite
       const schema = {};
+      let pkAdded = false;
       Object.keys(columns).forEach(col => {
         const columnType = columns[col].type;
 
@@ -2961,8 +2962,9 @@ export class SystemKeywords {
         };
 
         // If the column is named 'id' or 'Id', set it as the primary key
-        if (col.toLowerCase() === 'id' || col.toLowerCase() === 'internal_id') {
+        if (! pkAdded && (col.toLowerCase() === 'id' || col.toLowerCase() === 'internal_id')) {
           schema[col].primaryKey = true;
+          pkAdded = true;
         }
       });
 
