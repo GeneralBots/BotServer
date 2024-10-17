@@ -2937,7 +2937,6 @@ export class SystemKeywords {
         // Add more mappings as needed
       };
 
-      // Return mapped type or fallback to STRING if not mapped
       return typeMapping[columnType.toUpperCase()] || DataTypes.STRING;
     };
 
@@ -2964,6 +2963,7 @@ export class SystemKeywords {
         // If the column is named 'id' or 'Id', set it as the primary key
         if (col.toLowerCase() === 'id') {
           schema[col].primaryKey = true;
+          schema[col].autoIncrement = true; // Optional: auto-increment for primary key
         }
       });
 
@@ -2973,13 +2973,38 @@ export class SystemKeywords {
       // Sync the model (create table)
       await Model.sync({ force: true });
 
+      // Transform data to match schema types before bulk insert
+      const transformedRows = rows.map(row => {
+        const transformedRow = {};
+        for (const key in row) {
+          const columnType = schema[key].type;
+
+          // Handle different data types
+          if (columnType === DataTypes.STRING) {
+            transformedRow[key] = row[key] !== null ? String(row[key]) : null; // Convert to string
+          } else if (columnType === DataTypes.INTEGER || columnType === DataTypes.BIGINT) {
+            transformedRow[key] = row[key] !== null ? Number(row[key]) : null; // Convert to number
+          } else if (columnType === DataTypes.FLOAT || columnType === DataTypes.DOUBLE) {
+            transformedRow[key] = row[key] !== null ? parseFloat(row[key]) : null; // Convert to float
+          } else if (columnType === DataTypes.BOOLEAN) {
+            transformedRow[key] = row[key] !== null ? Boolean(row[key]) : null; // Convert to boolean
+          } else if (columnType === DataTypes.DATE) {
+            transformedRow[key] = row[key] !== null ? new Date(row[key]) : null; // Convert to date
+          } else {
+            transformedRow[key] = row[key]; // Keep original value for unsupported types
+          }
+        }
+        return transformedRow;
+      });
+
       // Bulk insert rows into the SQLite table
-      await Model.bulkCreate(rows);
+      await Model.bulkCreate(transformedRows);
     }
 
     GBLogEx.info(min, `All tables have been successfully exported to ${sqliteFilePath}`);
 
     // Close SQLite connection
     await sqlite.close();
-  }
+}
+
 }
