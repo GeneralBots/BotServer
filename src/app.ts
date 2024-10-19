@@ -262,37 +262,63 @@ export class GBServer {
 
           GBServer.globals.webDavServer = await GBCoreService.createWebDavServer(minInstances);
 
+          require('dotenv').config(); // Load environment variables
+          const httpProxy = require('http-proxy');
+          const auth = require('basic-auth'); // Assuming you're using basic-auth for admin access
+          const GBSSR = require('./GBSSR'); // Assuming GBSSR is already required elsewhere
+          
+          // Parse the ROUTE from the .env file
+          const routeConfig = process.env.ROUTE.split(';').reduce((acc, entry) => {
+            const [domain, port] = entry.split(':');
+            acc[domain] = port;
+            return acc;
+          }, {});
+          
+          // Proxy setup
+          const proxy = httpProxy.createProxyServer({});
+          
           server.all('*', async (req, res, next) => {
-            const host = req.headers.host;
-
+            const host = req.headers.host.startsWith('www.') ? req.headers.host.substring(4) : req.headers.host;
+          
+            // Check if the request is for logs
             if (req.originalUrl.startsWith('/logs')) {
               if (process.env.ENABLE_WEBLOG === 'true') {
                 const admins = {
                   admin: { password: process.env.ADMIN_PASS }
                 };
-
-                // ... some not authenticated middlewares.
+          
+                // Authenticate the user
                 const user = auth(req);
                 if (!user || !admins[user.name] || admins[user.name].password !== user.pass) {
                   res.set('WWW-Authenticate', 'Basic realm="example"');
                   return res.status(401).send();
                 }
               } else {
+                // If logging is not enabled, pass the request to GBSSR filter
                 await GBSSR.ssrFilter(req, res, next);
               }
             } else {
-              // Setups unsecure http redirect.
-              const proxy = httpProxy.createProxyServer({});
-
-              if (host === process.env.API_HOST) {
-                GBLogEx.info(0, `Redirecting to API...`);
-                return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
-              } else {
-                await GBSSR.ssrFilter(req, res, next);
+              // If the domain is in routeConfig, proxy to the corresponding local service
+              if (routeConfig[host]) {
+                const target = `http://localhost:${routeConfig[host]}`;
+                console.log(`Routing to internal server: ${target}`);
+                return proxy.web(req, res, { target }, (err) => {
+                  console.error('Proxy error:', err);
+                  res.status(500).send('Internal proxy error.');
+                });
               }
+          
+              // If the host is the API host, redirect traffic to the API
+              if (host === process.env.API_HOST) {
+                console.log('Redirecting to API...');
+                return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express API server
+              }
+          
+              // For other cases, pass through the GBSSR filter
+              await GBSSR.ssrFilter(req, res, next);
             }
           });
-
+          
           GBLogEx.info(0, `The Bot Server is in RUNNING mode...`);
 
           await minService.startSimpleTest(GBServer.globals.minBoot);
@@ -310,16 +336,40 @@ export class GBServer {
     };
 
     if (process.env.CERTIFICATE_PFX) {
-      const server1 = http.createServer(async (req, res) => {
-        const host = req.headers.host.startsWith('www.') ? req.headers.host.substring(4) : req.headers.host;
 
-        res
-          .writeHead(301, {
-            Location: 'https://' + host + req.url
-          })
-          .end();
+      
+      // Parse the ROUTE from the .env file
+      const routeConfig = process.env.ROUTE.split(';').reduce((acc, entry) => {
+        const [domain, port] = entry.split(':');
+        acc[domain] = port;
+        return acc;
+      }, {});
+      
+      // Create a proxy server for internal routing
+      const proxy = httpProxy.createProxyServer();
+      
+      const server1 = http.createServer(async (req, res) => {
+        let host = req.headers.host.startsWith('www.') ? req.headers.host.substring(4) : req.headers.host;
+      
+        // If the domain is in the routeConfig, handle internally
+        if (routeConfig[host]) {
+          const target = `http://localhost:${routeConfig[host]}`;
+          proxy.web(req, res, { target }, (err) => {
+            console.error('Internal routing error:', err);
+            res.writeHead(500, { 'Content-Type': 'text/plain' });
+            res.end('Internal routing error.');
+          });
+        } else {
+          // Otherwise, redirect to the HTTPS version
+          res.writeHead(301, {
+            Location: `https://${host}${req.url}`
+          }).end();
+        }
       });
-      server1.listen(80);
+      
+      server1.listen(80, () => {
+        console.log('HTTP Server is listening on port 80');
+      });
 
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
