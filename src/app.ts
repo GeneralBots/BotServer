@@ -293,12 +293,14 @@ export class GBServer {
                 await GBSSR.ssrFilter(req, res, next);
               }
             } else {
+              GBLogEx.info(0, `Host request: ${host}`);
+
               // If the domain is in routeConfig, proxy to the corresponding local service
               if (routeConfig[host]) {
                 const target = `http://localhost:${routeConfig[host]}`;
-                console.log(`Routing to internal server: ${target}`);
+                GBLogEx.info(0, `Routing to internal server: ${target}`);
                 return proxy.web(req, res, { target }, (err) => {
-                  console.error('Proxy error:', err);
+                  GBLogEx.error(0, `GBRouter error: ${GBUtil.toYAML(err)}`);
                   res.status(500).send('Internal proxy error.');
                 });
               }
