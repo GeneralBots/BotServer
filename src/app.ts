@@ -262,13 +262,8 @@ export class GBServer {
 
           GBServer.globals.webDavServer = await GBCoreService.createWebDavServer(minInstances);
 
-          require('dotenv').config(); // Load environment variables
-          const httpProxy = require('http-proxy');
-          const auth = require('basic-auth'); // Assuming you're using basic-auth for admin access
-          const GBSSR = require('./GBSSR'); // Assuming GBSSR is already required elsewhere
-          
           // Parse the ROUTE from the .env file
-          const routeConfig = process.env.ROUTE.split(';').reduce((acc, entry) => {
+          const routeConfig = process.env.ROUTER.split(';').reduce((acc, entry) => {
             const [domain, port] = entry.split(':');
             acc[domain] = port;
             return acc;
@@ -336,14 +331,15 @@ export class GBServer {
     };
 
     if (process.env.CERTIFICATE_PFX) {
-
-      
+      let routeConfig ={};
+      if (process.env.ROUTER){
       // Parse the ROUTE from the .env file
-      const routeConfig = process.env.ROUTE.split(';').reduce((acc, entry) => {
+      routeConfig = process.env.ROUTER.split(';').reduce((acc, entry) => {
         const [domain, port] = entry.split(':');
         acc[domain] = port;
         return acc;
       }, {});
+    }
       
       // Create a proxy server for internal routing
       const proxy = httpProxy.createProxyServer();
