@@ -263,14 +263,13 @@ export class GBServer {
           GBServer.globals.webDavServer = await GBCoreService.createWebDavServer(minInstances);
 
           // Parse the ROUTE from the .env file
+
           const routeConfig = process.env.ROUTER.split(';').reduce((acc, entry) => {
             const [domain, port] = entry.split(':');
             acc[domain] = port;
             return acc;
           }, {});
           
-          // Proxy setup
-          const proxy = httpProxy.createProxyServer({});
           
           server.all('*', async (req, res, next) => {
             const host = req.headers.host.startsWith('www.') ? req.headers.host.substring(4) : req.headers.host;
@@ -294,6 +293,21 @@ export class GBServer {
               }
             } else {
               GBLogEx.info(0, `Host request: ${host}`);
+
+              let key = Path.join(process.env.CERT_PATH, `${host}.key.pem`);
+              let cert = Path.join(process.env.CERT_PATH, `${host}.certificate.pem`);
+
+              // Proxy setup
+              const proxy = httpProxy.createProxyServer({
+                target: {
+                  host: 'localhost',
+                  port: routeConfig[host]
+                },
+                ssl: {
+                  key: await fs.readFile( key, 'utf8'),
+                  cert: await fs.readFile(cert, 'utf8')
+                }
+              });
 
               // If the domain is in routeConfig, proxy to the corresponding local service
               if (routeConfig[host]) {
@@ -388,6 +402,7 @@ export class GBServer {
             passphrase: process.env[certPassphraseEnv],
             pfx: await fs.readFile(process.env[certPfxEnv])
           };
+
           httpsServer.addContext(process.env[certDomainEnv], options);
         } else {
           break;
