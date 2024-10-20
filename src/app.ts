@@ -289,11 +289,11 @@ export class GBServer {
                 return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
               } else if (host === process.env.ROUTER_1) {
                 GBLogEx.info(0, `Redirecting...`);
-                return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_1_PORT}` }); // Express server
+                return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_1_PORT}` });
                 
               } else if (host === process.env.ROUTER_2) {
                 GBLogEx.info(0, `Redirecting...`);
-                return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_2_PORT}` }); // Express server
+                return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_2_PORT}` });
               } else {
                 await GBSSR.ssrFilter(req, res, next);
               }

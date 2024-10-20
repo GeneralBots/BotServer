@@ -159,11 +159,6 @@ export class GBMinService {
     // Servers default UI on root address '/' if web enabled.
 
     if (process.env.DISABLE_WEB !== 'true') {
-      // SSR processing and default.gbui access definition.
-
-      GBServer.globals.server.get('/', async (req, res, next) => {
-        await GBSSR.ssrFilter(req, res, next);
-      });
 
       // Servers the bot information object via HTTP so clients can get
       // instance information stored on server.
