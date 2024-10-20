@@ -262,74 +262,44 @@ export class GBServer {
 
           GBServer.globals.webDavServer = await GBCoreService.createWebDavServer(minInstances);
 
-          // Parse the ROUTE from the .env file
-
-          const routeConfig = process.env.ROUTER.split(';').reduce((acc, entry) => {
-            const [domain, port] = entry.split(':');
-            acc[domain] = port;
-            return acc;
-          }, {});
-          
-          
           server.all('*', async (req, res, next) => {
-            const host = req.headers.host.startsWith('www.') ? req.headers.host.substring(4) : req.headers.host;
-          
-            // Check if the request is for logs
+            const host = req.headers.host;
+
             if (req.originalUrl.startsWith('/logs')) {
               if (process.env.ENABLE_WEBLOG === 'true') {
                 const admins = {
                   admin: { password: process.env.ADMIN_PASS }
                 };
-          
-                // Authenticate the user
+
+                // ... some not authenticated middlewares.
                 const user = auth(req);
                 if (!user || !admins[user.name] || admins[user.name].password !== user.pass) {
                   res.set('WWW-Authenticate', 'Basic realm="example"');
                   return res.status(401).send();
                 }
               } else {
-                // If logging is not enabled, pass the request to GBSSR filter
                 await GBSSR.ssrFilter(req, res, next);
               }
             } else {
-              GBLogEx.info(0, `Host request: ${host}`);
+              // Setups unsecure http redirect.
+              const proxy = httpProxy.createProxyServer({});
 
-              let key = Path.join(process.env.CERT_PATH, `${host}.key.pem`);
-              let cert = Path.join(process.env.CERT_PATH, `${host}.certificate.pem`);
-
-              // Proxy setup
-              const proxy = httpProxy.createProxyServer({
-                target: {
-                  host: 'localhost',
-                  port: routeConfig[host]
-                },
-                ssl: {
-                  key: await fs.readFile( key, 'utf8'),
-                  cert: await fs.readFile(cert, 'utf8')
-                }
-              });
-
-              // If the domain is in routeConfig, proxy to the corresponding local service
-              if (routeConfig[host]) {
-                const target = `http://localhost:${routeConfig[host]}`;
-                GBLogEx.info(0, `Routing to internal server: ${target}`);
-                return proxy.web(req, res, { target }, (err) => {
-                  GBLogEx.error(0, `GBRouter error: ${GBUtil.toYAML(err)}`);
-                  res.status(500).send('Internal proxy error.');
-                });
-              }
-          
-              // If the host is the API host, redirect traffic to the API
               if (host === process.env.API_HOST) {
-                console.log('Redirecting to API...');
-                return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express API server
+                GBLogEx.info(0, `Redirecting to API...`);
+                return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
+              } else if (host === process.env.ROUTER_1) {
+                GBLogEx.info(0, `Redirecting...`);
+                return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_1_PORT}` }); // Express server
+                
+              } else if (host === process.env.ROUTER_2) {
+                GBLogEx.info(0, `Redirecting...`);
+                return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_2_PORT}` }); // Express server
+              } else {
+                await GBSSR.ssrFilter(req, res, next);
               }
-          
-              // For other cases, pass through the GBSSR filter
-              await GBSSR.ssrFilter(req, res, next);
             }
           });
-          
+
           GBLogEx.info(0, `The Bot Server is in RUNNING mode...`);
 
           await minService.startSimpleTest(GBServer.globals.minBoot);
@@ -347,41 +317,16 @@ export class GBServer {
     };
 
     if (process.env.CERTIFICATE_PFX) {
-      let routeConfig ={};
-      if (process.env.ROUTER){
-      // Parse the ROUTE from the .env file
-      routeConfig = process.env.ROUTER.split(';').reduce((acc, entry) => {
-        const [domain, port] = entry.split(':');
-        acc[domain] = port;
-        return acc;
-      }, {});
-    }
-      
-      // Create a proxy server for internal routing
-      const proxy = httpProxy.createProxyServer();
-      
       const server1 = http.createServer(async (req, res) => {
-        let host = req.headers.host.startsWith('www.') ? req.headers.host.substring(4) : req.headers.host;
-      
-        // If the domain is in the routeConfig, handle internally
-        if (routeConfig[host]) {
-          const target = `http://localhost:${routeConfig[host]}`;
-          proxy.web(req, res, { target }, (err) => {
-            console.error('Internal routing error:', err);
-            res.writeHead(500, { 'Content-Type': 'text/plain' });
-            res.end('Internal routing error.');
-          });
-        } else {
-          // Otherwise, redirect to the HTTPS version
-          res.writeHead(301, {
-            Location: `https://${host}${req.url}`
-          }).end();
-        }
+        const host = req.headers.host.startsWith('www.') ? req.headers.host.substring(4) : req.headers.host;
+
+        res
+          .writeHead(301, {
+            Location: 'https://' + host + req.url
+          })
+          .end();
       });
-      
-      server1.listen(80, () => {
-        console.log('HTTP Server is listening on port 80');
-      });
+      server1.listen(80);
 
       const options1 = {
         passphrase: process.env.CERTIFICATE_PASSPHRASE,
@@ -402,7 +347,6 @@ export class GBServer {
             passphrase: process.env[certPassphraseEnv],
             pfx: await fs.readFile(process.env[certPfxEnv])
           };
-
           httpsServer.addContext(process.env[certDomainEnv], options);
         } else {
           break;
@@ -442,8 +386,8 @@ function shutdown() {
     GBServer.globals.apiServer.close(() => {
       GBLogEx.info(0, 'General Bots API server closed.');
       process.exit(0);
-    });    
-     
+    });
+
   });
 
 }
