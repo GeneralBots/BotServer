@@ -213,8 +213,8 @@ export class ChatServices {
       output = `${output}\n\n\n\nUse also the following context which is coming from Source Document: ${filename} at page: ${page ? page : 'entire document'
         } 
       (you will fill the JSON sources collection field later), 
-      Ignore this block if it is an index or part of table of contents. 
-      And memorize this block among document
+      Use other page if  this block is an index or table of contents (TOC). 
+      And memorize this block (if it is not an Index or TOC) among document
        information and return when you 
        are refering this part of content:\n\n\n\n ${doc.pageContent
         } \n\n\n\n.`;
