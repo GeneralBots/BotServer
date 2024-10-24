@@ -401,7 +401,7 @@ export class ChatServices {
 
 
     const jsonInformation = `
-    CRITICAL INSTRUCTION: You MUST ALWAYS return ONLY a valid parsable JSON object (using \n in strings with enter char) matching this exact structure, with no additional text before or after:
+    CRITICAL INSTRUCTION: You MUST ALWAYS return ONLY a valid parsable JSON object matching this exact structure, with no additional text before or after:
 
       {{
         "text": "Your answer goes here, \n\n providing a thorough response using information from multiple source documents.",
@@ -432,7 +432,7 @@ export class ChatServices {
       - Ensure that no TOC with page numbering, indexing or summary information is included in your response.
       - Double check that your response contains ONLY the JSON object before returning
       - You sometimes return a formatted JSON surrounded by quotes like MD, DONT RETURN LIKE THIS, just valid JSON!
-      - Do not use ENTER to format JSON, but keep ENTER char inside text tag.
+      - Do not use ENTER to format text inside JSON strings, but keep ENTER char (\n) inside json text nodes.
   
       Failure to follow these requirements exactly will result in an error.`;
 
