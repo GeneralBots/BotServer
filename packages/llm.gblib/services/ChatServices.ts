@@ -401,10 +401,10 @@ export class ChatServices {
 
 
     const jsonInformation = `
-    CRITICAL INSTRUCTION: You MUST ALWAYS return ONLY a valid JSON object matching this exact structure, with no additional text before or after:
+    CRITICAL INSTRUCTION: You MUST ALWAYS return ONLY a valid parsable JSON object (using \n in strings with enter char) matching this exact structure, with no additional text before or after:
 
       {{
-        "text": "Your answer goes here, providing a thorough response using information from multiple source documents.",
+        "text": "Your answer goes here, \n\n providing a thorough response using information from multiple source documents.",
         "sources": [
           {{
             "file": "document1.pdf",
