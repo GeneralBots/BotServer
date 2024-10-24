@@ -677,52 +677,57 @@ await fs.writeFile('.env', env);
   public async setConfig(min, name: string, value: any): Promise<any> {
     if (GBConfigService.get('STORAGE_NAME')) {
       // Handles calls for BASIC persistence on sheet files.
-
       GBLog.info(`Defining Config.xlsx variable ${name}= '${value}'...`);
-
+      
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-
       const maxLines = 512;
       const file = 'Config.xlsx';
       const packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
-
+      
       let document = await new SystemKeywords().internalGetDocument(client, baseUrl, packagePath, file);
-
+      
       // Creates book session that will be discarded.
-
       let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
-
+      
+      // Get the current rows in column A
       let results = await client
-        .api(
-          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A${maxLines}')`
-        )
+        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A${maxLines}')`)
         .get();
-
-      const rows = results.text;
+        
+      const rows = results.values;
       let address = '';
-
-      // Fills the row variable.
-
+      let lastEmptyRow = -1;
+      let isEdit = false;
+  
+      // Loop through column A to find the row where name matches, or find the next empty row
       for (let i = 1; i <= rows.length; i++) {
         let result = rows[i - 1][0];
         if (result && result.toLowerCase() === name.toLowerCase()) {
-          address = `B${i}:B${i}`;
+          address = `B${i}:B${i}`; // Match found, update value in column B
+          isEdit = true; // We are in editing mode
           break;
+        } else if (!result && lastEmptyRow === -1) {
+          lastEmptyRow = i; // Store the first empty row if no match is found
         }
       }
-
-      let body = { values: [[]] };
-      body.values[0][0] = value;
-
+  
+      // If no match was found and there's an empty row, add a new entry
+      if (!isEdit && lastEmptyRow !== -1) {
+        address = `A${lastEmptyRow}:B${lastEmptyRow}`; // Add new entry in columns A and B
+      }
+  
+      // Prepare the request body based on whether it's an edit or add operation
+      let body = { values: isEdit ? [[value]] : [[name, value]] };
+  
+      // Update or add the new value in the found address
       await client
-        .api(
-          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
-        )
+        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
         .patch(body);
+        
     } else {
       let packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
       const config = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, 'config.csv');
-
+  
       const db = await csvdb(config, ['name', 'value'], ',');
       if (await db.get({ name: name })) {
         await db.edit({ name: name }, { name, value });
@@ -731,7 +736,7 @@ await fs.writeFile('.env', env);
       }
     }
   }
-
+  
   /**
    * Get a dynamic param from instance. Dynamic params are defined in Config.xlsx
    * and loaded into the work folder from   comida command.
