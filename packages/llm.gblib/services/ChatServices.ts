@@ -420,20 +420,8 @@ export class ChatServices {
   
       Note: The example shows two source documents for illustration. You may include any number of source documents in the "sources" array as needed. Ensure each source has both "file" and "page" fields. The "page" values should refer to actual content pages, not index or summary pages.
   
-      Requirements:
-      - Do not include table of content pages in answers.
-      - The JSON must be valid according to RFC 8259 and parseable without errors
-      - The "text" field must contain your full response
-      - Never say that a person needs to go a part of the document, instead look for the page content and answer the question.
-      - The "sources" array must list the source documents used, with each source having "file" and "page" fields
-      - Ensure the "page" numbers refer to real pages of content, not index or summary pages
-      - Do not include any text, markdown, or other content outside the JSON object
-      - Absolutely avoid any Table of Contents, Indexes, or Summary pages. 
-      - Ensure that no TOC with page numbering, indexing or summary information is included in your response.
-      - Double check that your response contains ONLY the JSON object before returning
-      - You sometimes return a formatted JSON surrounded by quotes like MD, DONT RETURN LIKE THIS, just valid JSON!
-      - Do not use ENTER to format text inside JSON strings, but keep ENTER char (\n) inside json text nodes.
-  
+      Return valid JSON according to RFC 8259 without any formatting line breaks or whitespace. Text fields must encode line breaks as \n characters, not actual line breaks. Structure your response as a single JSON object with "text" containing your complete response and "sources" array listing documents with "file" and "page" numbers. Do not include any content outside the JSON. Never reference page numbers in text - include the actual content. Avoid table of contents, index or summary pages when citing sources. Sources must reference actual content pages only. Do not surround the JSON with quotes, markdown, or other formatting. Validate that your response parses as valid JSON before returning. Double check that line breaks are properly encoded as \n and not actual line breaks in the output.
+      
       Failure to follow these requirements exactly will result in an error.`;
 
 
