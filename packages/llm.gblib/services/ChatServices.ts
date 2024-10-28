@@ -403,7 +403,7 @@ export class ChatServices {
       Let me help improve that prompt to be more concise and clearer:
 
       RESPONSE FORMAT: Return only a single valid JSON object with no surrounding text. Structure:
-      {"text": "Complete response as a single string, using \\n for all line breaks, bullets and lists", "sources": [{"file": "filename", "page": number}]}
+      {{"text": "Complete response as a single string, using \\n for all line breaks, \n1. bullets and; \n2.lists.", "sources": [{{"file": "filename", "page": number}}]}}
 
       CRITICAL REQUIREMENTS:
       1. Only valid JSON, no text/formatting before/after
