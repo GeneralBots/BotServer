@@ -135,7 +135,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
 
     let res;
     try {
-        GBLogEx.info(this.min, result);
+      GBLogEx.info(this.min, result);
       res = JSON.parse(result);
     } catch (e) {
       GBLogEx.verbose(this.min, `LLM JSON error: ${GBUtil.toYAML(e)}.`);
@@ -152,15 +152,14 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
 
         if (localName) {
           const pngs = await GBUtil.pdfPageAsImage(this.min, localName, source.page);
-          
-          if (!isNaN(this.user.userSystemId)){
-              await this.min.whatsAppDirectLine.sendFileToDevice(
-                this.user.userSystemId, pngs[0].url, 
-                localName, null, undefined, true);
-  
+
+          if (!isNaN(this.user.userSystemId)) {
+            await this.min.whatsAppDirectLine.sendFileToDevice(
+              this.user.userSystemId, pngs[0].url,
+              localName, null, undefined, true);
+
           }
-          else
-          {
+          else {
             text = `![alt text](${pngs[0].url})
              ${text}`;
           }
@@ -401,28 +400,30 @@ export class ChatServices {
 
 
     const jsonInformation = `
-    CRITICAL INSTRUCTION: You MUST ALWAYS return ONLY a valid parsable JSON object matching this exact structure, with no additional text before or after:
+      Let me help improve that prompt to be more concise and clearer:
 
-      {{
-        "text": "Your answer goes here, \n\n providing a thorough response using information from multiple source documents.",
-        "sources": [
-          {{
-            "file": "document1.pdf",
-            "page": 5
-          }},
-          {{
-            "file": "document2.pdf", 
-            "page": 12
-          }}
-          // Add more source objects as needed
-        ]
-      }}
-  
-      Note: The example shows two source documents for illustration. You may include any number of source documents in the "sources" array as needed. Ensure each source has both "file" and "page" fields. The "page" values should refer to actual content pages, not index or summary pages.
-  
-      Return valid JSON according to RFC 8259 without any formatting line breaks or whitespace. Text fields must encode line breaks as \n characters, not actual line breaks. Structure your response as a single JSON object with "text" containing your complete response and "sources" array listing documents with "file" and "page" numbers. Do not include any content outside the JSON. Never reference page numbers in text - include the actual content. Avoid table of contents, index or summary pages when citing sources. Sources must reference actual content pages only. Do not surround the JSON with quotes, markdown, or other formatting. Validate that your response parses as valid JSON before returning. Double check that line breaks are properly encoded as \n and not actual line breaks in the output.
-      
-      Failure to follow these requirements exactly will result in an error.`;
+      RESPONSE FORMAT: Return only a single valid JSON object with no surrounding text. Structure:
+      {"text": "Complete response as a single string, using \\n for all line breaks, bullets and lists", "sources": [{"file": "filename", "page": number}]}
+
+      CRITICAL REQUIREMENTS:
+      1. Only valid JSON, no text/formatting before/after
+      2. No actual line breaks - encode ALL as \n
+      3. Bullets/lists formatted as "1. " or "• " with \n
+      4. Sources cite only content pages
+      5. Text field contains complete response 
+      6. Valid according to RFC 8259
+      7. No quotes/markdown around JSON
+
+      Example bullet formatting:
+      "1. First point\\n2. Second point\\n" or "• First\\n• Second\\n"
+
+      VALIDATION: Confirm output contains:
+      - Single JSON object
+      - No line breaks except \n in strings  
+      - No surrounding text
+      - Valid source pages
+
+      ERROR IF: Line breaks in JSON, text outside JSON, invalid format`;
 
 
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
@@ -533,17 +534,17 @@ export class ChatServices {
     } else if (LLMMode === 'sql' || LLMMode === 'chart') {
       const con = min[`llm`]['gbconnection'];
       const dialect = con['storageDriver'];
-      
-      const answerSource = await (min.core as any)['getParam'](min.instance, 
+
+      const answerSource = await (min.core as any)['getParam'](min.instance,
         'Answer Source', 'server');
 
-        GBLogEx.info(min, `Answer Source = ${answerSource}.`);
+      GBLogEx.info(min, `Answer Source = ${answerSource}.`);
 
 
       let dataSource;
-      if (answerSource ===  'cache') {
-        let sqliteFilePath = 
-        path.join('work', GBUtil.getGBAIPath(min.botId), `${con['name']}.sqlite`);
+      if (answerSource === 'cache') {
+        let sqliteFilePath =
+          path.join('work', GBUtil.getGBAIPath(min.botId), `${con['name']}.sqlite`);
         GBLogEx.info(min, `Using data from cache: Path.basename(${sqliteFilePath}).`);
 
         dataSource = new DataSource({
@@ -610,7 +611,7 @@ export class ChatServices {
        * Create the final prompt template which is tasked with getting the natural
        * language response to the SQL query.
        */
-      const finalResponsePrompt = 
+      const finalResponsePrompt =
         PromptTemplate.fromTemplate(`Based on the table schema below, question, SQL query, and SQL response, write a natural language response:
           Optimize answers for KPI people. ${systemPrompt}
               ------------
