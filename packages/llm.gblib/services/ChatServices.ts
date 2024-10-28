@@ -400,16 +400,14 @@ export class ChatServices {
 
 
     const jsonInformation = `
-      Let me help improve that prompt to be more concise and clearer:
-
       RESPONSE FORMAT: Return only a single valid JSON object with no surrounding text. Structure:
       {{"text": "Complete response as a single string, using \\n for all line breaks, \n1. bullets and; \n2.lists.", "sources": [{{"file": "filename", "page": number}}]}}
 
       CRITICAL REQUIREMENTS:
-      1. Only valid JSON, no text/formatting before/after
+      1. Only valid JSON, no text/formatting before/after (VERY VERY IMPORTANT)
       2. No actual line breaks - encode ALL as \n
       3. Bullets/lists formatted as "1. " or "• " with \n
-      4. Sources cite only content pages
+      4. Sources cite only content pages inside sources JSON tag.
       5. Text field contains complete response 
       6. Valid according to RFC 8259
       7. No quotes/markdown around JSON
@@ -418,7 +416,7 @@ export class ChatServices {
       "1. First point\\n2. Second point\\n" or "• First\\n• Second\\n"
 
       VALIDATION: Confirm output contains:
-      - Single JSON object
+      - Single JSON object (no free text)
       - No line breaks except \n in strings  
       - No surrounding text
       - Valid source pages
