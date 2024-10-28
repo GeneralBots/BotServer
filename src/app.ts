@@ -283,15 +283,17 @@ export class GBServer {
             } else {
               // Setups unsecure http redirect.
               const proxy = httpProxy.createProxyServer({});
-              GBLogEx.verbose(0, `Redirecting... ${req.originalUrl}`);
 
               if (host === process.env.API_HOST) {
+                GBLogEx.info(0, `Redirecting to API...`);
                 return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
               } else if (host === process.env.ROUTER_1) {
-                return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_1_PORT}` });
+                GBLogEx.info(0, `Redirecting...`);
+                return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_1_PORT}` }); // Express server
                 
               } else if (host === process.env.ROUTER_2) {
-                return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_2_PORT}` });
+                GBLogEx.info(0, `Redirecting...`);
+                return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_2_PORT}` }); // Express server
               } else {
                 await GBSSR.ssrFilter(req, res, next);
               }

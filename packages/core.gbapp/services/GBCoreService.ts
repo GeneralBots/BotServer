@@ -700,14 +700,14 @@ await fs.writeFile('.env', env);
       let isEdit = false;
   
       // Loop through column A to find the row where name matches, or find the next empty row
-      for (let i = 1; i <= rows.length; i++) {
+      for (let i = 7; i <= rows.length; i++) {
         let result = rows[i - 1][0];
         if (result && result.toLowerCase() === name.toLowerCase()) {
           address = `B${i}:B${i}`; // Match found, update value in column B
           isEdit = true; // We are in editing mode
           break;
         } else if (!result && lastEmptyRow === -1) {
-          lastEmptyRow = i; // Store the first empty row if no match is found
+          lastEmptyRow = i ; // Store the first empty row if no match is found
         }
       }
   
