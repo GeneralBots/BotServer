@@ -285,7 +285,7 @@ export class ChatServices {
       return { answer: undefined, questionId: 0 };
     }
 
-    const LLMMode = mode ?? answerMode;
+    const LLMMode = (mode ?? answerMode).toLowerCase();
     const docsContext = min['vectorStore'];
 
     let memory;
@@ -537,7 +537,6 @@ export class ChatServices {
         'Answer Source', 'server');
 
       GBLogEx.info(min, `Answer Source = ${answerSource}.`);
-
 
       let dataSource;
       if (answerSource === 'cache') {

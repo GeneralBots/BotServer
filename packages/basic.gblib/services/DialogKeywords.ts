@@ -1391,7 +1391,9 @@ export class DialogKeywords {
     const conversation = min['apiConversations'][pid];
     const client = await GBUtil.getDirectLineClient(min);
     conversation.client = client;
-    const response = await client.apis.Conversations.Conversations_StartConversation();
+    const response = await client.apis.Conversations.Conversations_StartConversation(
+      
+    );
     conversation.conversationId = response.obj.conversationId;
 
     return await GBVMService.callVM('start', min, null, pid);
