@@ -651,6 +651,10 @@ export class KBService implements IGBKBService {
       await min.conversationalService['playMarkdown'](min, answer, channel, step, GBMinService.userMobile(step));
     } else if (answer.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
+    } else if(answer.startsWith('![')){
+      
+      const url = answer.match(/\((.*?)\)/)[1];
+      await this.showImage(min, min.conversationalService, step, url, channel)
     } else {
       await min.conversationalService.sendText(min, step, answer);
     }
