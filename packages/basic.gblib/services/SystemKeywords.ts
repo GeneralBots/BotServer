@@ -33,6 +33,7 @@ import { setFlagsFromString } from 'v8';
 import { runInNewContext } from 'vm';
 import { IgApiClient } from 'instagram-private-api';
 import { readFile } from 'fs';
+import ai2html from 'ai2html';
 import path, { resolve } from 'path';
 import { GBLog, GBMinInstance } from 'botlib';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
@@ -1663,7 +1664,7 @@ export class SystemKeywords {
   /**
    * Converts a drive file from a place to another .
    *
-   * Supported sources csv, doc, docx, odp, ods, odt, pot, potm, potx, pps,
+   * Supported sources ai, csv, doc, docx, odp, ods, odt, pot, potm, potx, pps,
    * ppsx, ppsxm, ppt, pptm, pptx, rtf, xls, xlsx
    *
    * @example
@@ -1688,43 +1689,51 @@ export class SystemKeywords {
     const srcPath = urlJoin(root, src);
     const dstPath = urlJoin(packagePath, dest);
 
-    // Checks if the destination contains subfolders that
-    // need to be created.
 
-    let folder;
-    if (dest.indexOf('/') !== -1) {
-      const pathOnly = path.dirname(dest);
-      folder = await this.createFolder({ pid, name: pathOnly });
+    if (path.extname(srcPath) === 'ai'){
+
+      // TODO: To be done.
+
     } else {
-      folder = await client.api(`${baseUrl}/drive/root:/${root}`).get();
-    }
 
-    // Performs the conversion operation getting a reference
-    // to the source and calling /content on drive API.
+      // Checks if the destination contains subfolders that
+      // need to be created.
 
-    try {
-      const res = await client.api(`${baseUrl}/drive/root:/${srcPath}:/content?format=pdf`).get();
-
-      const streamToBuffer = stream => {
-        const chunks = [];
-        return new Promise((resolve, reject) => {
-          stream.on('data', chunk => chunks.push(chunk));
-          stream.on('error', reject);
-          stream.on('end', () => resolve(Buffer.concat(chunks)));
-        });
-      };
-
-      const result = await streamToBuffer(res);
-
-      await client.api(`${baseUrl}/drive/root:/${dstPath}:/content`).put(result);
-    } catch (error) {
-      if (error.code === 'itemNotFound') {
-        GBLogEx.info(min, `CONVERT source file not found: ${srcPath}.`);
-      } else if (error.code === 'nameAlreadyExists') {
-        GBLogEx.info(min, `CONVERT destination file already exists: ${dstPath}.`);
+      let folder;
+      if (dest.indexOf('/') !== -1) {
+        const pathOnly = path.dirname(dest);
+        folder = await this.createFolder({ pid, name: pathOnly });
+      } else {
+        folder = await client.api(`${baseUrl}/drive/root:/${root}`).get();
       }
-      throw error;
-    }
+
+      // Performs the conversion operation getting a reference
+      // to the source and calling /content on drive API.
+
+      try {
+        const res = await client.api(`${baseUrl}/drive/root:/${srcPath}:/content?format=pdf`).get();
+
+        const streamToBuffer = stream => {
+          const chunks = [];
+          return new Promise((resolve, reject) => {
+            stream.on('data', chunk => chunks.push(chunk));
+            stream.on('error', reject);
+            stream.on('end', () => resolve(Buffer.concat(chunks)));
+          });
+        };
+
+        const result = await streamToBuffer(res);
+
+        await client.api(`${baseUrl}/drive/root:/${dstPath}:/content`).put(result);
+      } catch (error) {
+        if (error.code === 'itemNotFound') {
+          GBLogEx.info(min, `CONVERT source file not found: ${srcPath}.`);
+        } else if (error.code === 'nameAlreadyExists') {
+          GBLogEx.info(min, `CONVERT destination file already exists: ${dstPath}.`);
+        }
+        throw error;
+      }
+  }
   }
 
   /**
@@ -2888,7 +2897,31 @@ export class SystemKeywords {
 
     await this.setMemoryContext({ pid, erase: true });
   }
-
-
+  
+  public async convertAI2HTML(aiFilePath) {
+   
+      // Convert the AI file to HTML and assets
+      const result = await ai2html.convertFile(aiFilePath, {
+        outputFormat: 'html',
+        outputWriteMethod: 'write-file',
+        outputPath: path.dirname(aiFilePath),
+        useDocumentSettings: true,
+      });
+  
+      // Get the generated HTML file path
+      const htmlFilePath = result.outputFiles.find((file) => file.endsWith('.html')).filePath;
+  
+      // Read the HTML content
+      const htmlContent = await fs.readFile(htmlFilePath, 'utf8');
+  
+      // Save the HTML and assets to a cache directory
+      const cacheDir = path.join('work', 'cache');
+      await fs.mkdir(cacheDir, { recursive: true });
+      const cacheFilePath = path.join(cacheDir, path.basename(htmlFilePath));
+      await fs.writeFile(cacheFilePath, htmlContent);
+  
+      return cacheFilePath;
+  
+  }
 
 }

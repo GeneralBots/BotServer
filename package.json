@@ -103,6 +103,7 @@
     "@types/node": "22.5.2",
     "@types/validator": "13.12.1",
     "adm-zip": "0.5.16",
+    "ai2html": "^0.121.1",
     "alasql": "4.5.1",
     "any-shell-escape": "0.1.1",
     "arraybuffer-to-buffer": "0.0.7",
