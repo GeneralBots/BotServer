@@ -353,6 +353,7 @@ export class GBDeployer implements IGBDeployer {
     try {
       vectorStore = await HNSWLib.load(min['vectorStorePath'], embedding);
     } catch {
+      GBLogEx.info(min, 'Creating new store...');
       vectorStore = new HNSWLib(embedding, {
         space: 'cosine'
       });

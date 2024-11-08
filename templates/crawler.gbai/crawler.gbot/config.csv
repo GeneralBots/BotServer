@@ -1,4 +1,5 @@
 name,value
-Website,https://www.dgti.uerj.br/
+Website,https://www.oabgo.org.br/
 Answer Mode,document
-Theme Color,purple    
+Theme Color,purple
+LLM Provider,claude

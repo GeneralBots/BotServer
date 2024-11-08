@@ -47,6 +47,7 @@ import { CSVLoader } from '@langchain/community/document_loaders/fs/csv';
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { EPubLoader } from '@langchain/community/document_loaders/fs/epub';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
+import { rimraf } from 'rimraf';
 
 import getColors from 'get-image-colors';
 import { Document } from 'langchain/document';
@@ -651,8 +652,8 @@ export class KBService implements IGBKBService {
       await min.conversationalService['playMarkdown'](min, answer, channel, step, GBMinService.userMobile(step));
     } else if (answer.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
-    } else if(answer.startsWith('![')){
-      
+    } else if (answer.startsWith('![')) {
+
       const url = answer.match(/\((.*?)\)/)[1];
       await this.showImage(min, min.conversationalService, step, url, channel)
     } else {
@@ -885,7 +886,7 @@ export class KBService implements IGBKBService {
   ): Promise<string[]> {
     try {
       if (
-        depth > maxDepth ||
+        (depth > maxDepth && !url.endsWith('pdf')) ||
         visited.has(url) ||
         url.endsWith('.jpg') ||
         url.endsWith('.png') ||
@@ -1029,6 +1030,14 @@ export class KBService implements IGBKBService {
     const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
     GBLogEx.info(min, `Website: ${website}, Max Depth: ${maxDepth}, Ignore URLs: ${websiteIgnoreUrls}`);
 
+    let vectorStore = min['vectorStore'];
+    if (vectorStore) {
+      rimraf.sync(min['vectorStorePath'])
+      
+      vectorStore = await min.deployService['loadOrCreateEmptyVectorStore'](min);
+      min['vectorStore'] = vectorStore;
+    }
+
     if (website) {
       // Removes last slash if any.
 
@@ -1099,19 +1108,20 @@ export class KBService implements IGBKBService {
 
       GBLogEx.info(min, `Vectorizing ${files.length} file(s)...`);
 
+
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
 
         try {
           const document = await this.loadAndSplitFile(file);
           const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
-          const vectorStore = min['vectorStore'];
           await vectorStore.addDocuments(flattenedDocuments);
-          await vectorStore.save(min['vectorStorePath']);
         } catch (error) {
           GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
         }
       });
+
+
     }
 
     files = await walkPromise(urlJoin(localPath, 'docs'));
@@ -1123,12 +1133,15 @@ export class KBService implements IGBKBService {
 
         const document = await this.loadAndSplitFile(filePath);
         const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
-        const vectorStore = min['vectorStore'];
         await vectorStore.addDocuments(flattenedDocuments);
-        await vectorStore.save(min['vectorStorePath']);
       });
     }
+    await vectorStore.save(min['vectorStorePath']);
+    min['vectorStore'] = vectorStore;
+
   }
+
+
 
   defaultRecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter({
     chunkSize: 700,
@@ -1496,7 +1509,11 @@ export class KBService implements IGBKBService {
 
         return filePath; // Return the saved file path
       } else {
-        await page.goto(url, { waitUntil: 'networkidle2' });
+        await page.goto(url, {
+          waitUntil: 'networkidle2',
+          timeout: 60000 // Timeout after 1 minute (60,000 ms)
+        });
+
 
         const parsedUrl = new URL(url);
 

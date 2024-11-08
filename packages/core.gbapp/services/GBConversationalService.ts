@@ -53,7 +53,6 @@ import fs from 'fs/promises';
 import twilio from 'twilio';
 import Nexmo from 'nexmo';
 import { join } from 'path';
-import path from 'path';
 import shell from 'any-shell-escape';
 import { exec } from 'child_process';
 import prism from 'prism-media';
@@ -66,7 +65,6 @@ import * as marked from 'marked';
 import Translate from '@google-cloud/translate';
 import { GBUtil } from '../../../src/util.js';
 import { GBLogEx } from './GBLogEx.js';
-import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 
 /**
  * Provides basic services for handling messages and dispatching to back-end

@@ -29,6 +29,7 @@
 \*****************************************************************************/
 
 'use strict';
+import { ChatAnthropic } from "@langchain/anthropic";
 import { PromptTemplate } from '@langchain/core/prompts';
 import { WikipediaQueryRun } from '@langchain/community/tools/wikipedia_query_run';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
@@ -244,6 +245,16 @@ export class ChatServices {
   public static async invokeLLM(min: GBMinInstance, text: string) {
     let model;
 
+    model = await ChatServices.getModel(min);
+
+    return await model.invoke(text);
+  }
+
+  public static memoryMap = {};
+  public static userSystemPrompt = {};
+  public static usersMode = {};
+
+  private static async getModel(min: GBMinInstance) {
     const azureOpenAIKey = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Key', null, true);
     const azureOpenAILLMModel = await (min.core as any)['getParam'](
       min.instance,
@@ -259,22 +270,32 @@ export class ChatServices {
       true
     );
 
-    model = new ChatOpenAI({
-      azureOpenAIApiKey: azureOpenAIKey,
-      azureOpenAIApiInstanceName: azureOpenAIApiInstanceName,
-
-      azureOpenAIApiDeploymentName: azureOpenAILLMModel,
-      azureOpenAIApiVersion: azureOpenAIVersion,
-      temperature: 0,
-      callbacks: [logHandler]
-    });
-
-    return await model.invoke(text);
+    const provider = await (min.core as any)['getParam'](
+      min.instance,
+      'LLM Provider',
+      null,
+      'openai'
+    );
+    let model;
+    if (provider === 'claude') {
+      model = new ChatAnthropic({
+        model: "claude-3-haiku-20240307",
+        temperature: 0,
+        maxTokens: undefined,
+        maxRetries: 2,
+      });
+    } else {
+      model = new ChatOpenAI({
+        azureOpenAIApiKey: azureOpenAIKey,
+        azureOpenAIApiInstanceName: azureOpenAIApiInstanceName,
+        azureOpenAIApiDeploymentName: azureOpenAILLMModel,
+        azureOpenAIApiVersion: azureOpenAIVersion,
+        temperature: 0,
+        callbacks: [logHandler]
+      });
+    }
+    return model;
   }
-
-  public static memoryMap = {};
-  public static userSystemPrompt = {};
-  public static usersMode = {};
 
   public static async answerByLLM(pid: number, min: GBMinInstance, user, question: string, mode = null) {
     const answerMode = this.usersMode[user.userSystemId]
@@ -308,32 +329,7 @@ export class ChatServices {
 
     const systemPrompt = securityPrompt + (user ? this.userSystemPrompt[user.userSystemId] : '');
 
-    let model;
-
-    const azureOpenAIKey = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Key', null, true);
-    const azureOpenAILLMModel = await (min.core as any)['getParam'](
-      min.instance,
-      'Azure Open AI LLM Model',
-      null,
-      true
-    );
-    const azureOpenAIVersion = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Version', null, true);
-    const azureOpenAIApiInstanceName = await (min.core as any)['getParam'](
-      min.instance,
-      'Azure Open AI Instance',
-      null,
-      true
-    );
-
-    model = new ChatOpenAI({
-      azureOpenAIApiKey: azureOpenAIKey,
-      azureOpenAIApiInstanceName: azureOpenAIApiInstanceName,
-
-      azureOpenAIApiDeploymentName: azureOpenAILLMModel,
-      azureOpenAIApiVersion: azureOpenAIVersion,
-      temperature: 0,
-      callbacks: [logHandler]
-    });
+    let model = await ChatServices.getModel(min);
 
     let tools = await ChatServices.getTools(min);
     let toolsAsText = ChatServices.getToolsAsText(tools);
