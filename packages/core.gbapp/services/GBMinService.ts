@@ -822,8 +822,8 @@ export class GBMinService {
 
     // The minimal bot is built here.
 
-    const min = new GBMinInstance();
-
+    const min =  new GBMinInstance();
+    
     // Setups default BOT Framework dialogs.
 
     min.userProfile = conversationState.createProperty('userProfile');
@@ -859,7 +859,8 @@ export class GBMinService {
     min.sandBoxMap = {};
     min['scheduleMap'] = {};
     min['conversationWelcomed'] = {};
-    if (await min.core.getParam(min.instance, 'Answer Mode', null)) {
+    if (await min.core.getParam(min.instance, 'Answer Mode', null) &&
+      !min['vectorStore']) {
       const gbkbPath = GBUtil.getGBAIPath(min.botId, 'gbkb');
       min['vectorStorePath'] = path.join('work', gbkbPath, 'docs-vectorized');
       min['vectorStore'] = await this.deployer.loadOrCreateEmptyVectorStore(min);

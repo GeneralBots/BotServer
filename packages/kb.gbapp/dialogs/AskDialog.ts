@@ -174,6 +174,11 @@ export class AskDialog extends IGBDialog {
         }
       },
       async step => {
+
+
+        min = GBServer.globals.minInstances.find(p=> p.botId === min.botId);
+
+
         let answer;
         const member = step.context.activity.from;
         const sec = new SecService();

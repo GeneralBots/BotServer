@@ -1030,13 +1030,6 @@ export class KBService implements IGBKBService {
     const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
     GBLogEx.info(min, `Website: ${website}, Max Depth: ${maxDepth}, Ignore URLs: ${websiteIgnoreUrls}`);
 
-    let vectorStore = min['vectorStore'];
-    if (vectorStore) {
-      rimraf.sync(min['vectorStorePath'])
-      
-      vectorStore = await min.deployService['loadOrCreateEmptyVectorStore'](min);
-      min['vectorStore'] = vectorStore;
-    }
 
     if (website) {
       // Removes last slash if any.
@@ -1108,14 +1101,17 @@ export class KBService implements IGBKBService {
 
       GBLogEx.info(min, `Vectorizing ${files.length} file(s)...`);
 
-
+      // if (await GBUtil.exists(path.join(min['vectorStorePath'], 'args.json'))){
+      //   await min['vectorStore'].delete(min['vectorStorePath']);
+      // }
+      
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
 
         try {
           const document = await this.loadAndSplitFile(file);
           const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
-          await vectorStore.addDocuments(flattenedDocuments);
+          await min['vectorStore'].addDocuments(flattenedDocuments);
         } catch (error) {
           GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
         }
@@ -1133,11 +1129,10 @@ export class KBService implements IGBKBService {
 
         const document = await this.loadAndSplitFile(filePath);
         const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
-        await vectorStore.addDocuments(flattenedDocuments);
+        await min['vectorStore'].addDocuments(flattenedDocuments);
       });
     }
-    await vectorStore.save(min['vectorStorePath']);
-    min['vectorStore'] = vectorStore;
+    await min['vectorStore'].save(min['vectorStorePath']);
 
   }
 
