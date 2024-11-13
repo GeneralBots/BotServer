@@ -1101,10 +1101,15 @@ export class KBService implements IGBKBService {
 
       GBLogEx.info(min, `Vectorizing ${files.length} file(s)...`);
 
-      // if (await GBUtil.exists(path.join(min['vectorStorePath'], 'args.json'))){
-      //   await min['vectorStore'].delete(min['vectorStorePath']);
-      // }
-      
+      if (await GBUtil.exists(min['vectorStorePath'])) {
+
+        GBLogEx.info(min, `Cleaning vector store: ${min['vectorStorePath']}...`)
+        const gbkbPath = GBUtil.getGBAIPath(min.botId, 'gbkb');
+        min['vectorStorePath'] = path.join('work', gbkbPath, 'docs-vectorized');
+        min['vectorStore'] = await min.deployService.loadOrCreateEmptyVectorStore(min);
+
+      }
+
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
 
