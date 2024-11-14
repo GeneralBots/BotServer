@@ -1106,7 +1106,7 @@ export class KBService implements IGBKBService {
         GBLogEx.info(min, `Cleaning vector store: ${min['vectorStorePath']}...`)
         const gbkbPath = GBUtil.getGBAIPath(min.botId, 'gbkb');
         min['vectorStorePath'] = path.join('work', gbkbPath, 'docs-vectorized');
-        min['vectorStore'] = await min.deployService.loadOrCreateEmptyVectorStore(min);
+        min['vectorStore'] = await min.deployService['loadOrCreateEmptyVectorStore'](min);
 
       }
 
