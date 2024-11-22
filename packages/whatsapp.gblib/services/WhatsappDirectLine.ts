@@ -923,6 +923,54 @@ export class WhatsappDirectLine extends GBService {
 
   }
 
+  // New method to send button list
+private async sendButtonList(to: string, buttons: string[]) {
+  const baseUrl = 'https://graph.facebook.com/v20.0';
+  const accessToken = this.whatsappServiceKey;
+  const sendMessageEndpoint = `${baseUrl}/${this.whatsappServiceNumber}/messages`;
+
+  const messageData = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to: to,
+    type: 'interactive',
+    interactive: {
+      type: 'button',
+      body: {
+        text: 'Please select an option:'
+      },
+      action: {
+        buttons: buttons.map((button, index) => ({
+          type: 'reply',
+          reply: {
+            id: `button_${index + 1}`,
+            title: button
+          }
+        }))
+      }
+    }
+  };
+
+  const response = await fetch(sendMessageEndpoint, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(messageData)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Failed to send button list: ${JSON.stringify(errorData)}`);
+  }
+
+  const result = await response.json();
+  GBLogEx.info(this.min, 'Button list sent successfully:' + JSON.stringify(result));
+  return result;
+}
+
+
   public async sendToDevice(to: any, msg: string, conversationId, isViewOnce = false) {
     try {
       const cmd = '/audio ';
@@ -941,6 +989,10 @@ export class WhatsappDirectLine extends GBService {
           case 'meta':
             if (msg['name']) {
               await this.customClient.sendTemplate(to, msg['name'], 'pt_BR', msg['components']);
+            } else if (msg.startsWith('[[') && msg.endsWith(']]')) {
+              // Parse the button list
+              const buttons = JSON.parse(msg);
+              await this.sendButtonList(to, buttons);
             } else {
               messages = msg.match(/(.|[\r\n]){1,4096}/g);
 

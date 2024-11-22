@@ -47,34 +47,19 @@ import {
 import { RunnableSequence } from '@langchain/core/runnables';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { convertToOpenAITool } from '@langchain/core/utils/function_calling';
-import { ChatOpenAI, OpenAI } from '@langchain/openai';
-import { SqlDatabaseChain } from 'langchain/chains/sql_db';
+import { ChatOpenAI } from '@langchain/openai';
 import { SqlDatabase } from 'langchain/sql_db';
 import { DataSource } from 'typeorm';
 import { GBMinInstance } from 'botlib';
 import fs from 'fs/promises';
-import { jsonSchemaToZod } from 'json-schema-to-zod';
 import { BufferWindowMemory } from 'langchain/memory';
 import path from 'path';
-import { PngPageOutput, pdfToPng } from 'pdf-to-png-converter';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import urlJoin from 'url-join';
-import { GBServer } from '../../../src/app.js';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
-import {
-  DEFAULT_SQL_DATABASE_PROMPT,
-  SQL_POSTGRES_PROMPT,
-  SQL_SQLITE_PROMPT,
-  SQL_MSSQL_PROMPT,
-  SQL_MYSQL_PROMPT
-} from 'langchain/chains/sql_db';
 import { GBUtil } from '../../../src/util.js';
-import { z } from 'zod';
-import zodToJsonSchema from 'zod-to-json-schema';
 export interface CustomOutputParserFields { }
 export type ExpectedOutput = any;
 
@@ -140,40 +125,46 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
       res = JSON.parse(result);
     } catch (e) {
       GBLogEx.verbose(this.min, `LLM JSON error: ${GBUtil.toYAML(e)}.`);
+
       return result;
     }
 
     let { sources, text } = res;
 
-    await CollectionUtil.asyncForEach(sources, async source => {
-      let found = false;
-      if (source && source.file.endsWith('.pdf')) {
-        const gbaiName = GBUtil.getGBAIPath(this.min.botId, 'gbkb');
-        const localName = path.join(process.env.PWD, 'work', gbaiName, 'docs', source.file);
+    if (!sources) {
 
-        if (localName) {
-          const pngs = await GBUtil.pdfPageAsImage(this.min, localName, source.page);
+      GBLogEx.verbose(this.min, `LLM JSON output sources is NULL.`);
+    }
+    else {
+      await CollectionUtil.asyncForEach(sources, async source => {
+        let found = false;
+        if (source && source.file.endsWith('.pdf')) {
+          const gbaiName = GBUtil.getGBAIPath(this.min.botId, 'gbkb');
+          const localName = path.join(process.env.PWD, 'work', gbaiName, 'docs', source.file);
 
-          if (!isNaN(this.user.userSystemId)) {
-            await this.min.whatsAppDirectLine.sendFileToDevice(
-              this.user.userSystemId, pngs[0].url,
-              localName, null, undefined, true);
+          if (localName) {
+            const pngs = await GBUtil.pdfPageAsImage(this.min, localName, source.page);
 
-          }
-          else {
-            text = `![alt text](${pngs[0].url})
+            if (!isNaN(this.user.userSystemId)) {
+              await this.min.whatsAppDirectLine.sendFileToDevice(
+                this.user.userSystemId, pngs[0].url,
+                localName, null, undefined, true);
+
+            }
+            else {
+              text = `![alt text](${pngs[0].url})
              ${text}`;
+            }
+            found = true;
+            source.file = localName;
           }
-          found = true;
-          source.file = localName;
         }
-      }
 
-      if (!found) {
-        GBLogEx.info(this.min, `File not found referenced in other .pdf: ${source.file}`);
-      }
-    });
-
+        if (!found) {
+          GBLogEx.info(this.min, `File not found referenced in other .pdf: ${source.file}`);
+        }
+      });
+    }
     return { text, sources };
   }
 }
@@ -307,7 +298,7 @@ export class ChatServices {
     }
 
     const LLMMode = (mode ?? answerMode).toLowerCase();
-    
+
 
     let memory;
     if (user && !this.memoryMap[user.userSystemId]) {

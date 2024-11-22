@@ -1,47 +1,19 @@
-/*****************************************************************************\
-|  █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ® |
-| ██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █      |
-| ██  ███ ████  █ ██  █ ████  █████  ██████ ██      ████   █   █   █    ██    |
-| ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
-|  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
-|                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
-| Licensed under the AGPL-3.0.                                                |
-|                                                                             |
-| According to our dual licensing model, this program can be used either      |
-| under the terms of the GNU Affero General Public License, version 3,        |
-| or under a proprietary license.                                             |
-|                                                                             |
-| The texts of the GNU Affero General Public License with an additional       |
-| permission and of our proprietary license can be found at and               |
-| in the LICENSE file you have received along with this program.              |
-|                                                                             |
-| This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
-| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
-| GNU Affero General Public License for more details.                         |
-|                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.              |
-| The licensing of the program under the AGPLv3 does not imply a              |
-| trademark license. Therefore any rights, title and interest in              |
-| our trademarks remain entirely with us.                                     |
-|                                                                             |
-\*****************************************************************************/
+/home/rodriguez/Sources/BotServer/src/util.ts
 
 /**
  * @fileoverview General Bots local utility.
+ * This file contains utility functions used across the General Bots project.
+ * @license AGPL-3.0
  */
 
 'use strict';
+
 import * as YAML from 'yaml';
 import SwaggerClient from 'swagger-client';
 import fs from 'fs/promises';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
 import path from 'path';
 import { VerbosityLevel, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-VerbosityLevel.ERRORS = 0;
-VerbosityLevel.WARNINGS = 0;
-VerbosityLevel.INFOS = 0;
 import urljoin from 'url-join';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService.js';
 import { GBLogEx } from '../packages/core.gbapp/services/GBLogEx.js';
@@ -50,8 +22,19 @@ import urlJoin from 'url-join';
 import { GBServer } from './app.js';
 import { QueryTypes } from '@sequelize/core';
 
+// ... existing code ...
+
+/**
+ * Utility class containing various helper functions for the General Bots project.
+ */
 export class GBUtil {
-  public static repeat(chr, count) {
+  /**
+   * Repeats a character a specified number of times.
+   * @param {string} chr - The character to repeat.
+   * @param {number} count - The number of times to repeat the character.
+   * @returns {string} The repeated string.
+   */
+  public static repeat(chr: string, count: number): string {
     let str = '';
     for (let x = 0; x < count; x++) {
       str += chr;
@@ -59,7 +42,14 @@ export class GBUtil {
     return str;
   }
 
-  public static padL(value, width, pad) {
+  /**
+   * Pads a string on the left with a specified character.
+   * @param {string} value - The string to pad.
+   * @param {number} width - The desired width of the padded string.
+   * @param {string} [pad=' '] - The character to use for padding.
+   * @returns {string} The padded string.
+   */
+  public static padL(value: string, width: number, pad: string = ' '): string {
     if (!width || width < 1) return value;
 
     if (!pad) pad = ' ';
@@ -69,7 +59,14 @@ export class GBUtil {
     return (GBUtil.repeat(pad, length) + value).substr(0, width);
   }
 
-  public static padR(value, width, pad) {
+  /**
+   * Pads a string on the right with a specified character.
+   * @param {string} value - The string to pad.
+   * @param {number} width - The desired width of the padded string.
+   * @param {string} [pad=' '] - The character to use for padding.
+   * @returns {string} The padded string.
+   */
+  public static padR(value: string, width: number, pad: string = ' '): string {
     if (!width || width < 1) return value;
 
     if (!pad) pad = ' ';
@@ -79,7 +76,12 @@ export class GBUtil {
     return (value + GBUtil.repeat(pad, length)).substr(0, width);
   }
 
-  public static async getDirectLineClient(min) {
+  /**
+   * Gets a DirectLine client for bot communication.
+   * @param {any} min - The minimum configuration object.
+   * @returns {Promise<SwaggerClient>} A promise that resolves to a SwaggerClient instance.
+   */
+  public static async getDirectLineClient(min: any): Promise<SwaggerClient> {
     let config;
     if (!GBConfigService.get('STORAGE_NAME')) {
       config = {
@@ -103,7 +105,12 @@ export class GBUtil {
     return await new SwaggerClient(config);
   }
 
-  public static toYAML(data) {
+  /**
+   * Converts data to YAML format.
+   * @param {any} data - The data to convert to YAML.
+   * @returns {string} The YAML representation of the data.
+   */
+  public static toYAML(data: any): string {
     const extractProps = obj => {
       return Object.getOwnPropertyNames(obj).reduce((acc, key) => {
         const value = obj[key];
@@ -126,13 +133,23 @@ export class GBUtil {
     return yamlString;
   }
 
-  public static sleep(ms) {
+  /**
+   * Implements a delay function.
+   * @param {number} ms - The number of milliseconds to sleep.
+   * @returns {Promise<void>} A promise that resolves after the specified delay.
+   */
+  public static sleep(ms: number): Promise<void> {
     return new Promise(resolve => {
       setTimeout(resolve, ms);
     });
   }
 
-  public static caseInsensitive(listOrRow) {
+  /**
+   * Creates case-insensitive proxies for objects or arrays.
+   * @param {any} listOrRow - The object or array to make case-insensitive.
+   * @returns {any} A case-insensitive version of the input.
+   */
+  public static caseInsensitive(listOrRow: any): any {
     // If the input is not an object or array, return it as is
     if (!listOrRow || typeof listOrRow !== 'object') {
       return listOrRow;
@@ -160,6 +177,11 @@ export class GBUtil {
     }
   }
 
+  /**
+   * Checks if a file exists.
+   * @param {string} filePath - The path of the file to check.
+   * @returns {Promise<boolean>} A promise that resolves to true if the file exists, false otherwise.
+   */
   public static async exists(filePath: string): Promise<boolean> {
     try {
       await fs.access(filePath);
@@ -169,7 +191,13 @@ export class GBUtil {
     }
   }
 
-  public static async copyIfNewerRecursive(src, dest) {
+  /**
+   * Recursively copies files if they are newer.
+   * @param {string} src - The source path.
+   * @param {string} dest - The destination path.
+   * @returns {Promise<void>} A promise that resolves when the copy operation is complete.
+   */
+  public static async copyIfNewerRecursive(src: string, dest: string): Promise<void> {
     // Check if the source exists
     if (!(await GBUtil.exists(src))) {
       return;
@@ -209,7 +237,13 @@ export class GBUtil {
     }
   }
 
-  public static async listTables(dialect: any, seq: any) {
+  /**
+   * Lists database tables.
+   * @param {any} dialect - The database dialect.
+   * @param {any} seq - The Sequelize instance.
+   * @returns {Promise<string[]>} A promise that resolves to an array of table names.
+   */
+  public static async listTables(dialect: any, seq: any): Promise<string[]> {
     let tables;
     if (dialect === 'sqlite') {
       tables = await seq.getQueryInterface().showAllTables();
@@ -220,11 +254,13 @@ export class GBUtil {
     }
     return tables;
   }
-    
 
-  // Check if is a tree or flat object.
-
-  public static hasSubObject(t) {
+  /**
+   * Checks if an object has sub-objects.
+   * @param {any} t - The object to check.
+   * @returns {boolean} True if the object has sub-objects, false otherwise.
+   */
+  public static hasSubObject(t: any): boolean {
     for (var key in t) {
       if (!t.hasOwnProperty(key)) continue;
       if (typeof t[key] === 'object') return true;
@@ -232,7 +268,12 @@ export class GBUtil {
     return false;
   }
 
-  public static async getPdfText(data): Promise<string> {
+  /**
+   * Extracts text from a PDF.
+   * @param {any} data - The PDF data.
+   * @returns {Promise<string>} A promise that resolves to the extracted text.
+   */
+  public static async getPdfText(data: any): Promise<string> {
     const pdf = await getDocument({ data }).promise;
     let pages = [];
 
@@ -249,7 +290,14 @@ export class GBUtil {
     return pages.join(' ');
   }
 
-  static getGBAIPath(botId, packageType = null, packageName = null) {
+  /**
+   * Gets the path for GBAI (General Bots AI) files.
+   * @param {string} botId - The bot ID.
+   * @param {string} [packageType] - The package type.
+   * @param {string} [packageName] - The package name.
+   * @returns {string} The GBAI path.
+   */
+  static getGBAIPath(botId: string, packageType?: string, packageName?: string): string {
     let gbai = `${botId}.gbai`;
     if (!packageType && !packageName) {
       return GBConfigService.get('DEV_GBAI') ? GBConfigService.get('DEV_GBAI') : gbai;
@@ -264,7 +312,14 @@ export class GBUtil {
     }
   }
 
-  public static async pdfPageAsImage(min, filename, pageNumber) {
+  /**
+   * Converts a PDF page to an image.
+   * @param {any} min - The minimum configuration object.
+   * @param {string} filename - The filename of the PDF.
+   * @param {number} [pageNumber] - The page number to convert (optional).
+   * @returns {Promise<any[]>} A promise that resolves to an array of generated image files.
+   */
+  public static async pdfPageAsImage(min: any, filename: string, pageNumber?: number): Promise<any[]> {
     // Converts the PDF to PNG.
 
     GBLogEx.info(min, `Converting ${filename}, page: ${pageNumber ?? 'all'}...`);
@@ -296,7 +351,13 @@ export class GBUtil {
     return generatedFiles.length > 0 ? generatedFiles : null;
   }
 
-  public static async sleepRandom(min = 1, max = 5) {
+  /**
+   * Implements a random delay.
+   * @param {number} [min=1] - The minimum delay in seconds.
+   * @param {number} [max=5] - The maximum delay in seconds.
+   * @returns {Promise<void>} A promise that resolves after the random delay.
+   */
+  public static async sleepRandom(min: number = 1, max: number = 5): Promise<void> {
     const randomDelay = Math.floor(Math.random() * (max - min + 1) + min) * 1000;
     await new Promise(resolve => setTimeout(resolve, randomDelay));
   }

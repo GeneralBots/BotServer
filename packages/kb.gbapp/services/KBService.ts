@@ -1126,8 +1126,9 @@ export class KBService implements IGBKBService {
     }
 
     files = await walkPromise(urlJoin(localPath, 'docs'));
-
+    
     if (files[0]) {
+      GBLogEx.info(min, `Add embeddings from .gbkb: ${files.length}}...`);
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
         let filePath = path.join(file.root, file.name);
