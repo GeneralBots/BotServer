@@ -1,4 +1,3 @@
-/home/rodriguez/Sources/BotServer/src/util.ts
 
 /**
  * @fileoverview General Bots local utility.
