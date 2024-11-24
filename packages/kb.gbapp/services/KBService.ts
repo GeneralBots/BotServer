@@ -1145,7 +1145,7 @@ export class KBService implements IGBKBService {
 
     if (files[0]) {
       shouldSave = true;
-      GBLogEx.info(min, `Add embeddings from .gbkb: ${files.length}}...`);
+      GBLogEx.info(min, `Add embeddings from .gbkb: ${files.length} files being processed...`);
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
         let filePath = path.join(file.root, file.name);
