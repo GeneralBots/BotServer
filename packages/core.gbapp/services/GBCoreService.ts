@@ -927,8 +927,8 @@ await fs.writeFile('.env', env);
         const objUser = userManager.addUser(user, pass);
 
         const virtualPath = '/' + min.botId;
-        let path = GBUtil.getGBAIPath(min.botId, null);
-        const gbaiRoot = path.join(GBConfigService.get('STORAGE_LIBRARY'), path);
+        let path1 = GBUtil.getGBAIPath(min.botId, null);
+        const gbaiRoot = path.join(GBConfigService.get('STORAGE_LIBRARY'), path1);
 
         server.setFileSystem(virtualPath, new webdav.PhysicalFileSystem(gbaiRoot), successed => {
           GBLogEx.info(min.instance.instanceId, `WebDav online for ${min.botId}...`);

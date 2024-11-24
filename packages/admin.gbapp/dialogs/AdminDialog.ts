@@ -45,11 +45,11 @@ import { GBAdminService } from '../services/GBAdminService.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
+import { GBServer } from '../../../src/app.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 
-/**
- * Dialogs for administration tasks.
- */
-export class AdminDialog extends IGBDialog {
+
+class AdminDialog extends IGBDialog {
   public static isIntentYes(locale, utterance) {
     return utterance.toLowerCase().match(Messages[locale].affirmative_sentences);
   }
@@ -58,15 +58,7 @@ export class AdminDialog extends IGBDialog {
     return utterance.toLowerCase().match(Messages[locale].negative_sentences);
   }
 
-  /**
-   * Setup dialogs flows and define services call.
-   *
-   * @param bot The bot adapter.
-   * @param min The minimal bot instance data.
-   */
   public static setup(min: GBMinInstance) {
-    // Setup services.
-
     const importer = new GBImporter(min.core);
     const deployer = new GBDeployer(min.core, importer);
 
@@ -75,6 +67,7 @@ export class AdminDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/admin-auth', [
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
           } else {
@@ -82,12 +75,14 @@ export class AdminDialog extends IGBDialog {
           }
         },
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].authenticate;
 
           return await min.conversationalService.prompt(min, step, prompt);
         },
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           const locale = step.context.activity.locale;
           const sensitive = step.context.activity['originalText'];
 
@@ -106,6 +101,7 @@ export class AdminDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/admin', [
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
           } else {
@@ -113,12 +109,14 @@ export class AdminDialog extends IGBDialog {
           }
         },
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].authenticate;
 
           return await min.conversationalService.prompt(min, step, prompt);
         },
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           const locale = step.context.activity.locale;
           const sensitive = step.context.activity['originalText'];
 
@@ -133,8 +131,8 @@ export class AdminDialog extends IGBDialog {
           }
         },
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           const locale: string = step.context.activity.locale;
-          // tslint:disable-next-line:no-unsafe-any
           const text: string = step.context.activity['originalText'];
           const cmdName = text.split(' ')[0];
 
@@ -166,6 +164,7 @@ export class AdminDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/install', [
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
           } else {
@@ -173,6 +172,7 @@ export class AdminDialog extends IGBDialog {
           }
         },
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           step.activeDialog.state.options.args = (step.options as any).args;
           if (step.activeDialog.state.options.confirm) {
             return await step.next('sim');
@@ -182,9 +182,8 @@ export class AdminDialog extends IGBDialog {
           }
         },
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           const locale = step.context.activity.locale;
-
-          // If the user says yes, starts publishing.
 
           if (AdminDialog.isIntentYes(locale, step.result)) {
             const list = min.core.getParam(min.instance, '.gbapp List', null);
@@ -208,10 +207,10 @@ export class AdminDialog extends IGBDialog {
       ])
     );
 
-
     min.dialogs.add(
       new WaterfallDialog('/logs', [
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
           } else {
@@ -219,25 +218,26 @@ export class AdminDialog extends IGBDialog {
           }
         },
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           const logs = await min.core['getLatestLogs']();
           await min.conversationalService.sendText(min, step, logs);
           return await step.replaceDialog('/ask', { isReturning: true });
         }
       ]));
 
-
     min.dialogs.add(
       new WaterfallDialog('/publish', [
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
           } else {
             return await step.next(step.options);
           }
         },
-
         async step => {
-          step.activeDialog.state.options.confirm = true; // Feature removed.
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
+          step.activeDialog.state.options.confirm = true;
           if (step.activeDialog.state.options.confirm || process.env.ADMIN_OPEN_PUBLISH === 'true') {
             return await step.next('sim');
           } else {
@@ -246,9 +246,8 @@ export class AdminDialog extends IGBDialog {
           }
         },
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           const locale = step.context.activity.locale;
-
-          // If the user says yes, starts publishing.
 
           if (AdminDialog.isIntentYes(locale, step.result)) {
             let from = step.context.activity.from.id;
@@ -270,6 +269,7 @@ export class AdminDialog extends IGBDialog {
           }
         },
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           const locale = step.context.activity.locale;
           if (!step.result) {
             await min.conversationalService.sendText(min, step, Messages[locale].publish_must_be_admin);
@@ -298,7 +298,6 @@ export class AdminDialog extends IGBDialog {
           } else {
             packages.push(filename);
           }
-
 
           await CollectionUtil.asyncForEach(packages, async packageName => {
             let cmd1;
@@ -338,6 +337,14 @@ export class AdminDialog extends IGBDialog {
 
             await GBAdminService.deployPackageCommand(min, user, cmd1, deployer);
 
+            // .gbot updates severals keys in instantece, so min must be updated.
+
+            const activeMin = GBServer.globals.minInstances.find(p=> p.botId === min.botId);
+
+            if (activeMin){
+                min = activeMin;
+            }
+
           });
           await min.conversationalService.sendText(min, step, `Training is finished.`);
 
@@ -351,11 +358,6 @@ export class AdminDialog extends IGBDialog {
     );
   }
 
-  /**
-   * Check if the specified phone can receive a message by running
-   * the /broadcast command with specific phone numbers.
-   * @param phone Phone number to check (eg.: +5521900002233)
-   */
   public static canPublish(min: GBMinInstance, phone: string): Boolean {
     if (process.env.SECURITY_CAN_PUBLISH !== undefined) {
       let list = process.env.SECURITY_CAN_PUBLISH.split(';');
@@ -381,6 +383,7 @@ export class AdminDialog extends IGBDialog {
     min.dialogs.add(
       new WaterfallDialog('/setupSecurity', [
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           const tokenName = step.activeDialog.state.tokenName = step.options['args'];
           if (tokenName) {
             step.activeDialog.state.clientId = min.core.getParam<string>(min.instance, `${tokenName} Client ID`, null),
@@ -393,8 +396,8 @@ export class AdminDialog extends IGBDialog {
             return await step.next(step.options);
           }
         },
-
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           if (step.activeDialog.state.tokenName) {
             return await step.next(step.options);
           }
@@ -405,9 +408,10 @@ export class AdminDialog extends IGBDialog {
           return await min.conversationalService.prompt(min, step, prompt);
         },
         async step => {
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           if (step.activeDialog.state.tokenName) {
             return await step.next(step.options);
-          }
+                      }
           step.activeDialog.state.authenticatorTenant = step.context.activity['originalText'];
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].enter_authenticator_authority_host_url;
@@ -415,7 +419,7 @@ export class AdminDialog extends IGBDialog {
           return await min.conversationalService.prompt(min, step, prompt);
         },
         async step => {
-
+          min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           step.activeDialog.state.authenticatorAuthorityHostUrl = step.context.activity['originalText'];
 
           const tokenName = step.activeDialog.state.tokenName;
@@ -423,13 +427,12 @@ export class AdminDialog extends IGBDialog {
           if (!tokenName) {
             min.instance.authenticatorAuthorityHostUrl = step.activeDialog.state.authenticatorAuthorityHostUrl;
             min.instance.authenticatorTenant = step.activeDialog.state.authenticatorTenant;
-          
 
-          await min.adminService.updateSecurityInfo(
-            min.instance.instanceId,
-            tokenName ? step.activeDialog.state.tenant : step.activeDialog.state.authenticatorTenant,
-            tokenName ? step.activeDialog.state.host : step.activeDialog.state.authenticatorAuthorityHostUrl
-          );
+            await min.adminService.updateSecurityInfo(
+              min.instance.instanceId,
+              tokenName ? step.activeDialog.state.tenant : step.activeDialog.state.authenticatorTenant,
+              tokenName ? step.activeDialog.state.host : step.activeDialog.state.authenticatorAuthorityHostUrl
+            );
           }
           const locale = step.context.activity.locale;
           const buf = Buffer.alloc(16);
@@ -455,3 +458,5 @@ export class AdminDialog extends IGBDialog {
     );
   }
 }
+
+export { AdminDialog };

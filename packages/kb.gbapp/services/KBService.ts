@@ -654,8 +654,19 @@ export class KBService implements IGBKBService {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else if (answer.startsWith('![')) {
 
-      const url = answer.match(/\((.*?)\)/)[1];
-      await this.showImage(min, min.conversationalService, step, url, channel)
+      // Checks for text after the image markdown.
+
+      const hasText = answer.split(/!\[.*?\]\(.*?\)(.*)/)[3];
+
+      if (hasText) {
+        await min.conversationalService.sendText(min, step, answer);
+      }
+      else{
+        const urlMatch = answer.match(/!?\[.*?\]\((.*?)\)/);
+        const url = urlMatch ? urlMatch[1] : null;  
+        await this.showImage(min, min.conversationalService, step, url, channel)
+      }
+
     } else {
       await min.conversationalService.sendText(min, step, answer);
     }
@@ -697,6 +708,7 @@ export class KBService implements IGBKBService {
     packageStorage: GuaribasPackage,
     instance: IGBInstance
   ): Promise<any> {
+
     // Imports subjects tree into database and return it.
 
     const subjectFile = urlJoin(localPath, 'subjects.json');
@@ -1126,7 +1138,7 @@ export class KBService implements IGBKBService {
     }
 
     files = await walkPromise(urlJoin(localPath, 'docs'));
-    
+
     if (files[0]) {
       GBLogEx.info(min, `Add embeddings from .gbkb: ${files.length}}...`);
       await CollectionUtil.asyncForEach(files, async file => {
@@ -1138,8 +1150,9 @@ export class KBService implements IGBKBService {
         await min['vectorStore'].addDocuments(flattenedDocuments);
       });
     }
-    await min['vectorStore'].save(min['vectorStorePath']);
-
+    if (min['vectorStore']) {
+      await min['vectorStore'].save(min['vectorStorePath']);
+    }
   }
 
 

@@ -475,9 +475,9 @@ export class ChatServices {
           return chat_history;
         },
         context: (async (output: string) => {
-          const c = await ChatServices.getRelevantContext(this['vectorStore'], output);
+          const c = await ChatServices.getRelevantContext(min['vectorStore'], output);
           return `${systemPrompt} \n ${c ? 'Use this context to answer:\n' + c : 'answer just with user question.'}`;
-        }).bind(min)
+        })
       },
       combineDocumentsPrompt,
       model,

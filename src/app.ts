@@ -365,7 +365,7 @@ export class GBServer {
       .readFile(path.join(swaggerUiAssetPath, 'swagger-initializer.js'))
       .toString()
       .replace('https://petstore.swagger.io/v2/swagger.json', `/${SWAGGER_FILE_NAME}`);
-    app.get(`${ENDPOINT}/swagger-initializer.js`, (req, res) => res.send(indexContent));
+    app.get(`${ENDPOINT}/swagger-initializer.js`, (req, res) => res.send(indexContent) as any);
 
     // Serve the swagger-ui assets
     app.use(ENDPOINT, express.static(swaggerUiAssetPath));
