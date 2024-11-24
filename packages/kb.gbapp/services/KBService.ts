@@ -656,9 +656,7 @@ export class KBService implements IGBKBService {
 
       // Checks for text after the image markdown, after the element 4, there are text blocks.
 
-      
       const removeMarkdownImages = (text: string) => {
-        // Remove both inline images ![alt](url) and reference images ![alt][ref]
         return text.replace(/!\[[^\]]*\](?:\([^)]*\)|\[[^\]]*\])/g, '').trim();
       }
 
@@ -1046,7 +1044,8 @@ export class KBService implements IGBKBService {
     const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
     GBLogEx.info(min, `Website: ${website}, Max Depth: ${maxDepth}, Ignore URLs: ${websiteIgnoreUrls}`);
 
-
+    let shouldSave = false;
+    
     if (website) {
       // Removes last slash if any.
 
@@ -1128,6 +1127,7 @@ export class KBService implements IGBKBService {
 
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
+        shouldSave = true;
 
         try {
           const document = await this.loadAndSplitFile(file);
@@ -1144,6 +1144,7 @@ export class KBService implements IGBKBService {
     files = await walkPromise(urlJoin(localPath, 'docs'));
 
     if (files[0]) {
+      shouldSave = true;
       GBLogEx.info(min, `Add embeddings from .gbkb: ${files.length}}...`);
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
@@ -1154,7 +1155,7 @@ export class KBService implements IGBKBService {
         await min['vectorStore'].addDocuments(flattenedDocuments);
       });
     }
-    if (min['vectorStore']) {
+    if (shouldSave && min['vectorStore']) {
       await min['vectorStore'].save(min['vectorStorePath']);
     }
   }

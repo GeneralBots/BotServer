@@ -538,22 +538,36 @@ export class ChatServices {
           logging: true
         });
       } else {
-        const host = con['storageServer'];
-        const port = con['storagePort'];
-        const storageName = con['storageName'];
-        const username = con['storageUsername'];
-        const password = con['storagePassword'];
 
-        dataSource = new DataSource({
-          type: dialect as any,
-          host: host,
-          port: port,
-          database: storageName,
-          username: username,
-          password: password,
-          synchronize: false,
-          logging: true
-        });
+
+        if (dialect === 'sqlite') {
+          const storageFile = con['storageFile'];
+          dataSource = new DataSource({
+            type: 'sqlite',
+            database: storageFile,
+            synchronize: false,
+            logging: true
+          });
+
+        }
+        else {
+          const host = con['storageServer'];
+          const port = con['storagePort'];
+          const storageName = con['storageName'];
+          const username = con['storageUsername'];
+          const password = con['storagePassword'];
+
+          dataSource = new DataSource({
+            type: dialect as any,
+            host: host,
+            port: port,
+            database: storageName,
+            username: username,
+            password: password,
+            synchronize: false,
+            logging: true
+          });
+        }
       }
 
       const db = await SqlDatabase.fromDataSourceParams({
