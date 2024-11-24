@@ -196,10 +196,17 @@ export class ChatServices {
       const doc = uniqueDocuments[filePaths];
       const metadata = doc.metadata;
       const filename = path.basename(metadata.source);
+
+      if (!GBUtil.isContentPage(doc.pageContent)){
+        continue;
+      }
+
       let page = 0;
       if (metadata.source.endsWith('.pdf')) {
         page = await ChatServices.findPageForText(metadata.source, doc.pageContent);
       }
+
+
 
       output = `${output}\n\n\n\nUse also the following context which is coming from Source Document: ${filename} at page: ${page ? page : 'entire document'
         } 

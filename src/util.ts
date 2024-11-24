@@ -360,4 +360,47 @@ export class GBUtil {
     const randomDelay = Math.floor(Math.random() * (max - min + 1) + min) * 1000;
     await new Promise(resolve => setTimeout(resolve, randomDelay));
   }
+
+  public static isContentPage(text: string): boolean {
+    // Common patterns that indicate non-content pages
+    const nonContentPatterns = [
+      /^index$/i,
+      /^contents$/i, 
+      /^table of contents$/i,
+      /^appendix/i,
+      /^glossary$/i,
+      /^bibliography$/i,
+      /^references$/i,
+      /^acknowledgments?$/i,
+      /^copyright/i,
+      /^about the author/i
+    ];
+  
+    // Check if page is mostly dots, numbers or blank
+    const isDotLeaderPage = text.replace(/\s+/g, '').match(/\.{10,}/);
+    const isNumbersPage = text.replace(/\s+/g, '').match(/^\d+$/);
+    const isBlankPage = text.trim().length === 0;
+  
+    // Check if page has actual content
+    const wordCount = text.trim().split(/\s+/).length;
+    const hasMinimalContent = wordCount > 10;
+  
+    // Check if page matches any non-content patterns
+    const isNonContent = nonContentPatterns.some(pattern => 
+      pattern.test(text.trim())
+    );
+  
+    // Page is valid content if:
+    // - Not mostly dots/numbers/blank
+    // - Has minimal word count
+    // - Doesn't match non-content patterns
+    return !isDotLeaderPage && 
+           !isNumbersPage && 
+           !isBlankPage &&
+           hasMinimalContent &&
+           !isNonContent;
+  }
+  
+
+
 }
