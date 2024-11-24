@@ -654,11 +654,15 @@ export class KBService implements IGBKBService {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else if (answer.startsWith('![')) {
 
-      // Checks for text after the image markdown.
+      // Checks for text after the image markdown, after the element 4, there are text blocks.
 
-      const hasText = answer.split(/!\[.*?\]\(.*?\)(.*)/)[3];
+      
+      const removeMarkdownImages = (text: string) => {
+        // Remove both inline images ![alt](url) and reference images ![alt][ref]
+        return text.replace(/!\[[^\]]*\](?:\([^)]*\)|\[[^\]]*\])/g, '').trim();
+      }
 
-      if (hasText) {
+      if (removeMarkdownImages(answer)) {
         await min.conversationalService.sendText(min, step, answer);
       }
       else{
