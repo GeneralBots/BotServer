@@ -180,26 +180,30 @@ export class ChatServices {
     if (sanitizedQuestion === '' || !vectorStore) {
       return '';
     }
-
-    let documents = await vectorStore.similaritySearch(sanitizedQuestion, numDocuments);
+    let documents = await vectorStore.similaritySearch(sanitizedQuestion, numDocuments * 10);
     const uniqueDocuments = {};
+    const MAX_DOCUMENTS = numDocuments;
 
     for (const document of documents) {
+      if (!GBUtil.isContentPage(document.pageContent)) {
+        continue;
+      }
+
       if (!uniqueDocuments[document.metadata.source]) {
         uniqueDocuments[document.metadata.source] = document;
       }
-    }
 
+      // Stop once we have max unique documents
+      if (Object.keys(uniqueDocuments).length >= MAX_DOCUMENTS) {
+        break;
+      }
+    }
     let output = '';
 
     for (const filePaths of Object.keys(uniqueDocuments)) {
       const doc = uniqueDocuments[filePaths];
       const metadata = doc.metadata;
       const filename = path.basename(metadata.source);
-
-      if (!GBUtil.isContentPage(doc.pageContent)){
-        continue;
-      }
 
       let page = 0;
       if (metadata.source.endsWith('.pdf')) {

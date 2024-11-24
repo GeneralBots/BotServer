@@ -365,15 +365,7 @@ export class GBUtil {
     // Common patterns that indicate non-content pages
     const nonContentPatterns = [
       /^index$/i,
-      /^contents$/i, 
       /^table of contents$/i,
-      /^appendix/i,
-      /^glossary$/i,
-      /^bibliography$/i,
-      /^references$/i,
-      /^acknowledgments?$/i,
-      /^copyright/i,
-      /^about the author/i
     ];
   
     // Check if page is mostly dots, numbers or blank
