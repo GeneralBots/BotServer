@@ -53,7 +53,7 @@ import getColors from 'get-image-colors';
 import { Document } from 'langchain/document';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import puppeteer, { Page } from 'puppeteer';
-
+import {Jimp} from 'jimp';
 import {
   GBDialogStep,
   GBLog,
@@ -1065,22 +1065,18 @@ export class KBService implements IGBKBService {
         const baseUrl = page.url().split('/').slice(0, 3).join('/');
         logo = logo.startsWith('https') ? logo : urlJoin(baseUrl, logo);
 
-        try {
-          const logoBinary = await page.goto(logo);
-          const buffer = await logoBinary.buffer();
-          const logoFilename = path.basename(logo);
-          // TODO: sharp(buffer)
-          //   .resize({
-          //     width: 48,
-          //     height: 48,
-          //     fit: 'inside', // Resize the image to fit within the specified dimensions
-          //     withoutEnlargement: true // Don't enlarge the image if its dimensions are already smaller
-          //   })
-          //   .toFile(path.join(logoPath, logoFilename));
-          await min.core['setConfig'](min, 'Logo', logoFilename);
-        } catch (error) {
-          GBLogEx.debug(min, error);
-        }
+        const logoBinary = await page.goto(logo);
+        const buffer = await logoBinary.buffer();
+        const logoFilename = path.basename(logo);
+
+        // Replace sharp with jimp
+        const image = await Jimp.read(buffer);
+        await image.scaleToFit({w:48, h:48});
+        packagePath = path.join(process.env.PWD, 'work', packagePath);
+  
+        const logoPath    = path.join(packagePath, 'cache', logoFilename);
+        await (image as any).write(logoPath);
+        await min.core['setConfig'](min, 'Logo', logoFilename);
       }
 
       // Extract dominant colors from the screenshot
