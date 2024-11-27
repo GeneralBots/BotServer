@@ -593,7 +593,9 @@ export class ChatServices {
             Pay attention to use only the column names you can see in the tables below. Be careful to not query for columns that do not exist. Also, pay attention to which column is in which table.
             Attention not to generate ambiguous column name, qualifing tables on joins.
 
-          VERY IMPORTANT: Return just the  generated SQL command as plain text with no Markdown or formmating.
+          VERY IMPORTANT: 
+            - Return just the  generated SQL command as plain text with no Markdown or formmating.
+            - Always use LOWER to ignore case on string comparison in WHERE clauses.
           ------------
           SCHEMA: {schema}
           ------------
