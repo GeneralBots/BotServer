@@ -2924,4 +2924,122 @@ export class SystemKeywords {
   
   }
 
+
+  public async refreshDataSourceCache({ pid, connectionName }) {
+    const { min, user, params, step } = await DialogKeywords.getProcessInfo(pid);
+
+    let sqliteFilePath = path.join('work', GBUtil.getGBAIPath(min.botId), `${connectionName}.sqlite`);
+
+    // Step 1: Clean the SQLite file if it already exists
+    if (await GBUtil.exists(sqliteFilePath)) {
+      await fs.unlink(sqliteFilePath); // Remove the file
+      GBLogEx.info(min, `${sqliteFilePath} has been cleaned.`);
+    }
+
+    // Step 2: Connect to SQLite (Local)
+    const sqlite = new Sequelize({
+      dialect: 'sqlite',
+      storage: sqliteFilePath
+    });
+
+    // Get the connection details from the min object
+    let con = min[connectionName];
+    const dialect = con.dialect.name;
+
+    // Step 3: Get the list of all tables from the source database
+    const tables = await GBUtil.listTables(dialect, con);
+
+    // Function to map source database datatypes to SQLite-compatible datatypes
+    const mapToSQLiteType = (columnType) => {
+      const typeMapping = {
+        'VARCHAR': DataTypes.STRING,
+        'CHAR': DataTypes.STRING,
+        'TEXT': DataTypes.TEXT,
+        'TINYINT': DataTypes.INTEGER,
+        'SMALLINT': DataTypes.INTEGER,
+        'MEDIUMINT': DataTypes.INTEGER,
+        'INT': DataTypes.INTEGER,
+        'INTEGER': DataTypes.INTEGER,
+        'BIGINT': DataTypes.BIGINT,
+        'FLOAT': DataTypes.FLOAT,
+        'DOUBLE': DataTypes.DOUBLE,
+        'DECIMAL': DataTypes.DECIMAL,
+        'DATE': DataTypes.DATE,
+        'DATETIME': DataTypes.DATE,
+        'TIMESTAMP': DataTypes.DATE,
+        'BLOB': DataTypes.BLOB,
+        'BOOLEAN': DataTypes.BOOLEAN,
+        // Add more mappings as needed
+      };
+
+      return typeMapping[columnType.toUpperCase()] || DataTypes.STRING;
+    };
+
+    // Step 4: Retrieve and export data for each table
+    for (const table of tables) {
+      // Retrieve rows from the source table
+      const [rows] = await con.query(`SELECT * FROM ${table}`);
+
+      if (rows.length === 0) continue; // Skip if the table has no data
+
+      // Get the schema for the current table from the source database
+      const columns = await con.queryInterface.describeTable(table);
+
+      // Create a schema object for SQLite
+      const schema = {};
+      let pkAdded = false;
+      Object.keys(columns).forEach(col => {
+        const columnType = columns[col].type;
+
+        // Map source type to SQLite type
+        schema[col] = {
+          type: mapToSQLiteType(columnType)
+        };
+
+        // If the column is named 'id' or 'Id', set it as the primary key
+        if (! pkAdded && (col.toLowerCase() === 'id' || col.toLowerCase() === 'internal_id')) {
+          schema[col].primaryKey = true;
+          pkAdded = true;
+        }
+      });
+
+      // Define the model dynamically for each table in SQLite
+      const Model = sqlite.define(table, schema, { timestamps: false });
+
+      // Sync the model (create table)
+      await Model.sync({ force: true });
+
+      // Transform data to match schema types before bulk insert
+      const transformedRows = rows.map(row => {
+        const transformedRow = {};
+        for (const key in row) {
+          const columnType = schema[key].type;
+
+          // Handle different data types
+          if (columnType === DataTypes.STRING) {
+            transformedRow[key] = row[key] !== null ? String(row[key]) : null; // Convert to string
+          } else if (columnType === DataTypes.INTEGER || columnType === DataTypes.BIGINT) {
+            transformedRow[key] = row[key] !== null ? Number(row[key]) : null; // Convert to number
+          } else if (columnType === DataTypes.FLOAT || columnType === DataTypes.DOUBLE) {
+            transformedRow[key] = row[key] !== null ? parseFloat(row[key]) : null; // Convert to float
+          } else if (columnType === DataTypes.BOOLEAN) {
+            transformedRow[key] = row[key] !== null ? Boolean(row[key]) : null; // Convert to boolean
+          } else if (columnType === DataTypes.DATE) {
+            transformedRow[key] = row[key] !== null ? new Date(row[key]) : null; // Convert to date
+          } else {
+            transformedRow[key] = row[key]; // Keep original value for unsupported types
+          }
+        }
+        return transformedRow;
+      });
+
+      // Bulk insert rows into the SQLite table
+      await Model.bulkCreate(transformedRows);
+    }
+
+    GBLogEx.info(min, `All tables have been successfully exported to ${sqliteFilePath}`);
+
+    // Close SQLite connection
+    await sqlite.close();
+}
 }
