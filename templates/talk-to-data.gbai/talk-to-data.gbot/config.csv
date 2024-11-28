@@ -3,4 +3,5 @@ Admin, 5521999998888
 Answer Mode,chart
 llm File,northwind.db
 llm Driver,sqlite
+llm Tables,Products;Orders;Customers;Categories;Order Details
 Theme Color,red

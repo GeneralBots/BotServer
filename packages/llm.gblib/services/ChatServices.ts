@@ -539,6 +539,8 @@ export class ChatServices {
     } else if (LLMMode === 'sql' || LLMMode === 'chart') {
       const con = min[`llm`]['gbconnection'];
       const dialect = con['storageDriver'];
+      let tables = con['storageTables'];
+      tables = tables ? tables.split(';') : null;
 
       const answerSource = await (min.core as any)['getParam'](min.instance,
         'Answer Source', 'server');
@@ -613,14 +615,14 @@ export class ChatServices {
           SQL QUERY:`);
 
       /**
-       * Create a new RunnableSequence where we pipe the output from `db.getTableInfo()`
+       * Create a new RunnableSequence.
        */
       const sqlQueryChain = RunnableSequence.from([
         {
-          schema: async () => db.getTableInfo(),
+          schema: async () => db.getTableInfo(tables),
           question: (input: { question: string }) => input.question,
           top_k: () => 10,
-          table_info: () => 'any'
+          table_info: () => 'any',
         },
         prompt,
         model,
@@ -633,7 +635,7 @@ export class ChatServices {
        */
       const finalResponsePrompt =
         PromptTemplate.fromTemplate(`Based on the table schema below, question, SQL query, and SQL response, write a natural language response:
-          Optimize answers for KPI people. ${systemPrompt}
+          Optimize answers for KPI people. ${systemPrompt} 
               ------------
               SCHEMA: {schema}
               ------------
@@ -659,12 +661,13 @@ export class ChatServices {
           query: sqlQueryChain
         },
         {
-          schema: async () => db.getTableInfo(),
+          schema: async () => db.getTableInfo(tables),
           question: input => input.question,
           query: input => input.query,
           response: input => db.run(input.query),
           top_k: () => 10,
-          table_info: () => 'any'
+          table_info: () => 'any',
+          table_names_to_use: () => tables
         },
         {
           result: finalResponsePrompt.pipe(model).pipe(

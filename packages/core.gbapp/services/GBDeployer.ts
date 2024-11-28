@@ -676,8 +676,9 @@ export class GBDeployer implements IGBDeployer {
             let con = {};
             con['name'] = connectionName;
             con['storageDriver'] = min.core.getParam<string>(min.instance, `${connectionName} Driver`, null);
+            con['storageTables'] = min.core.getParam<string>(min.instance, `${connectionName} Tables`, null);
             const storageName = min.core.getParam<string>(min.instance, `${connectionName} Name`, null);
-
+            
             let file = min.core.getParam<string>(min.instance, `${connectionName} File`, null);
 
             if (storageName) {
