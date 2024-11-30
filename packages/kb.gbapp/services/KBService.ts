@@ -895,10 +895,11 @@ export class KBService implements IGBKBService {
     depth: number,
     maxDepth: number,
     page: Page,
-    websiteIgnoreUrls
+    websiteIgnoreUrls, maxDocuments: number
   ): Promise<string[]> {
     try {
       if (
+        (maxDocuments > visited.size) ||
         (depth > maxDepth && !url.endsWith('pdf')) ||
         visited.has(url) ||
         url.endsWith('.jpg') ||
@@ -1040,8 +1041,9 @@ export class KBService implements IGBKBService {
 
     let website = min.core.getParam<string>(min.instance, 'Website', null);
     const maxDepth = min.core.getParam<number>(min.instance, 'Website Depth', 1);
+    const maxDocuments = min.core.getParam<number>(min.instance, 'Website Max Documents', 1);
     const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
-    GBLogEx.info(min, `Website: ${website}, Max Depth: ${maxDepth}, Ignore URLs: ${websiteIgnoreUrls}`);
+    GBLogEx.info(min, `Website: ${website}, Max Depth: ${maxDepth}, Website Max Documents${maxDocuments}, Ignore URLs: ${websiteIgnoreUrls}`);
 
     let shouldSave = false;
 
@@ -1128,7 +1130,7 @@ export class KBService implements IGBKBService {
       page.setCacheEnabled(false);
 
       const visited = new Set<string>();
-      files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page, websiteIgnoreUrls));
+      files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page, websiteIgnoreUrls, maxDocuments));
 
       await browser.close();
 
