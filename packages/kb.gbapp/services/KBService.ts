@@ -1066,8 +1066,23 @@ export class KBService implements IGBKBService {
         logo = logo.startsWith('https') ? logo : urlJoin(baseUrl, logo);
 
         const logoBinary = await page.goto(logo);
-        const buffer = await logoBinary.buffer();
+        let buffer = await logoBinary.buffer();
         const logoFilename = path.basename(logo);
+
+        // Replace sharp with jimp
+        if (buffer.toString().includes('<svg')) {
+          // For SVG files, convert using svg2img
+          const svg2img = require('svg2img');
+          buffer = await new Promise((resolve, reject) => {
+            svg2img(buffer, {width: 48, height: 48}, (error: any, buffer: Buffer) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(buffer); 
+              }
+            });
+          });
+        }
 
         // Replace sharp with jimp
         const image = await Jimp.read(buffer);
