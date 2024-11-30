@@ -966,7 +966,7 @@ export class KBService implements IGBKBService {
 
       const childLinks = [];
       for (const link of filteredLinks) {
-        const links = await this.crawl(min, link, visited, depth + 1, maxDepth, page, websiteIgnoreUrls);
+        const links = await this.crawl(min, link, visited, depth + 1, maxDepth, page, websiteIgnoreUrls, maxDocuments);
         if (links) {
           childLinks.push(...links);
         }
