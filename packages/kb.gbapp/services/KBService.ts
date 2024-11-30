@@ -47,13 +47,12 @@ import { CSVLoader } from '@langchain/community/document_loaders/fs/csv';
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { EPubLoader } from '@langchain/community/document_loaders/fs/epub';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
-import { rimraf } from 'rimraf';
-
+import svg2img from 'svg2img';
 import getColors from 'get-image-colors';
 import { Document } from 'langchain/document';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import puppeteer, { Page } from 'puppeteer';
-import {Jimp} from 'jimp';
+import { Jimp } from 'jimp';
 import {
   GBDialogStep,
   GBLog,
@@ -663,9 +662,9 @@ export class KBService implements IGBKBService {
       if (removeMarkdownImages(answer)) {
         await min.conversationalService.sendText(min, step, answer);
       }
-      else{
+      else {
         const urlMatch = answer.match(/!?\[.*?\]\((.*?)\)/);
-        const url = urlMatch ? urlMatch[1] : null;  
+        const url = urlMatch ? urlMatch[1] : null;
         await this.showImage(min, min.conversationalService, step, url, channel)
       }
 
@@ -1045,7 +1044,7 @@ export class KBService implements IGBKBService {
     GBLogEx.info(min, `Website: ${website}, Max Depth: ${maxDepth}, Ignore URLs: ${websiteIgnoreUrls}`);
 
     let shouldSave = false;
-    
+
     if (website) {
       // Removes last slash if any.
 
@@ -1067,18 +1066,28 @@ export class KBService implements IGBKBService {
 
         const logoBinary = await page.goto(logo);
         let buffer = await logoBinary.buffer();
-        const logoFilename = path.basename(logo);
+        let logoFilename = path.basename(logo);
 
         // Replace sharp with jimp
         if (buffer.toString().includes('<svg')) {
+
+          logoFilename = logoFilename.replace('.svg', '.png');
+          
           // For SVG files, convert using svg2img
-          const svg2img = require('svg2img');
+
           buffer = await new Promise((resolve, reject) => {
-            svg2img(buffer, {width: 48, height: 48}, (error: any, buffer: Buffer) => {
+            svg2img(buffer, {
+              resvg: {
+                fitTo: {
+                  mode: 'width', // or height
+                  value: 48,
+                },
+              }
+            }, (error: any, buffer: Buffer) => {
               if (error) {
                 reject(error);
               } else {
-                resolve(buffer); 
+                resolve(buffer);
               }
             });
           });
@@ -1086,10 +1095,10 @@ export class KBService implements IGBKBService {
 
         // Replace sharp with jimp
         const image = await Jimp.read(buffer);
-        await image.scaleToFit({w:48, h:48});
+        await image.scaleToFit({ w: 48, h: 48 });
         packagePath = path.join(process.env.PWD, 'work', packagePath);
-  
-        const logoPath    = path.join(packagePath, 'cache', logoFilename);
+
+        const logoPath = path.join(packagePath, 'cache', logoFilename);
         await (image as any).write(logoPath);
         await min.core['setConfig'](min, 'Logo', logoFilename);
       }
