@@ -964,7 +964,7 @@ export class GBDeployer implements IGBDeployer {
 
     GBServer.globals.server.use(
       `/${gbaiName}/${botId}.gbdrive/public`,
-      express.static(urlJoin('work', gbaiName, `${botId}.gbdata`, 'public'))
+      express.static(urlJoin('work', gbaiName, `${botId}.gbdrive`, 'public'))
     );
 
     GBLog.verbose(`KB (.gbkb) assets accessible at: /kb/${gbaiName}/${packageName}.`);

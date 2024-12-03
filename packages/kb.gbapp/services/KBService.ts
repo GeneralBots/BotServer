@@ -48,6 +48,7 @@ import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { EPubLoader } from '@langchain/community/document_loaders/fs/epub';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import svg2img from 'svg2img';
+import isICO from 'icojs';
 import getColors from 'get-image-colors';
 import { Document } from 'langchain/document';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
@@ -1069,13 +1070,18 @@ export class KBService implements IGBKBService {
 
         const logoBinary = await page.goto(logo);
         let buffer = await logoBinary.buffer();
-        let logoFilename = path.basename(logo);
+        let logoFilename = 'extracted-logo.png';
 
         // Replace sharp with jimp
-        if (buffer.toString().includes('<svg')) {
+        if (buffer.slice(0, 4).toString('hex') === '00000100') {
+          // Convert ICO to PNG
+          const images = await isICO.parseICO(buffer, 'image/x-icon');
+          if (!images || images.length === 0) {
+            throw new Error('Failed to parse ICO file');
+          }
+          buffer = Buffer.from(images[0].buffer);
+        } else if (buffer.toString().includes('<svg')) {
 
-          logoFilename = logoFilename.replace('.svg', '.png');
-          
           // For SVG files, convert using svg2img
 
           buffer = await new Promise((resolve, reject) => {

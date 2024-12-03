@@ -151,6 +151,7 @@
     "html-to-md": "0.8.6",
     "http-proxy": "1.18.1",
     "ibm-watson": "9.1.0",
+    "icojs": "^0.19.4",
     "instagram-private-api": "1.46.1",
     "iso-639-1": "3.1.3",
     "isomorphic-fetch": "3.0.0",
