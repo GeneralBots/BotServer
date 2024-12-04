@@ -1287,16 +1287,20 @@ export class GBMinService {
    */
   private async processEventActivity(min, user, context, step: GBDialogStep) {
     const pid = step.context.activity['pid'];
-    if (context.activity.name === 'whoAmI') {
-      await step.beginDialog('/whoAmI');
-    } else if (context.activity.name === 'showSubjects') {
-      await step.beginDialog('/menu', undefined);
-    } else if (context.activity.name === 'giveFeedback') {
-      await step.beginDialog('/feedback', {
-        fromMenu: true
-      });
+
+    const contentLocale = min.core.getParam(
+      min.instance,
+      'Default Content Language',
+      GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
+    );
+
+    if (context.activity.name === 'showSubjects') {
+      await step.replaceDialog('/answer', { query: `Show a list of subjects you can help me in ${contentLocale} language.` });
+
+     
     } else if (context.activity.name === 'showFAQ') {
-      await step.beginDialog('/faq');
+      await step.replaceDialog('/answer', { query: `Show a FAQ for me about how can you help me in a bullet list, in ${contentLocale} language.` });
+      
     } else if (context.activity.name === 'answerEvent') {
       await step.beginDialog('/answerEvent', <AskDialogArgs>{
         questionId: context.activity.data,
