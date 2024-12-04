@@ -38,8 +38,7 @@ class SideBarMenu extends React.Component {
         name: command,
         locale: "en-us",
         textFormat: "plain",
-        timestamp: new Date().toISOString(),
-        from: window.user
+        timestamp: new Date().toISOString()
       });
   }
 
