@@ -73,6 +73,8 @@ import textract from 'textract';
 import { GBUtil } from '../../../src/util.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService.js';
+import webp from 'webp-converter';
+import os from 'os';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GuaribasPackage } from '../../core.gbapp/models/GBModel.js';
@@ -1080,6 +1082,18 @@ export class KBService implements IGBKBService {
             throw new Error('Failed to parse ICO file');
           }
           buffer = Buffer.from(images[0].buffer);
+        } else if (buffer.slice(0, 4).toString('hex') === '52494646' &&
+          buffer.slice(8, 12).toString('hex') === '57454250') {
+
+          // Convert WebP to PNG using temporary files
+          const tempWebP = path.join(os.tmpdir(), `temp-${Date.now()}.webp`);
+          const tempPNG = path.join(os.tmpdir(), `temp-${Date.now()}.png`);
+
+          await fs.writeFile(tempWebP, buffer);
+          await webp.dwebp(tempWebP, tempPNG, "-o");
+
+          buffer = await fs.readFile(tempPNG);
+
         } else if (buffer.toString().includes('<svg')) {
 
           // For SVG files, convert using svg2img
@@ -1558,9 +1572,13 @@ export class KBService implements IGBKBService {
         return filePath; // Return the saved file path
       } else {
         await page.goto(url, {
-          waitUntil: 'networkidle2',
-          timeout: 60000 // Timeout after 1 minute (60,000 ms)
+          waitUntil: 'domcontentloaded', // Changed to only wait for DOM
+          timeout: 10000 // Reduced timeout to 10 seconds
         });
+
+        // Stop all scripts and requests
+        await page.setRequestInterception(true);
+        page.on('request', request => request.abort());
 
 
         const parsedUrl = new URL(url);

@@ -780,10 +780,19 @@ export class SystemKeywords {
     });
     GBLogEx.info(min, `SAVE '${table}': ${rows.length} row(s).`);
 
+    // Capture the values we need for retries
+    const tableName = table;
+    const minRef = min;
+
     await retry(
-      async bail => {
-        await t.bulkCreate(rowsDest);
-        rowsDest = null;
+      async (bail) => {
+        const t = this.getTableFromName(tableName, minRef);
+        try {
+          await t.bulkCreate(rowsDest);
+          rowsDest = null;
+        } catch (error) {
+          throw error;
+        }
       },
       {
         retries: 5,
@@ -1690,7 +1699,7 @@ export class SystemKeywords {
     const dstPath = urlJoin(packagePath, dest);
 
 
-    if (path.extname(srcPath) === 'ai'){
+    if (path.extname(srcPath) === 'ai') {
 
       // TODO: To be done.
 
@@ -1733,7 +1742,7 @@ export class SystemKeywords {
         }
         throw error;
       }
-  }
+    }
   }
 
   /**
@@ -2897,31 +2906,31 @@ export class SystemKeywords {
 
     await this.setMemoryContext({ pid, erase: true });
   }
-  
+
   public async convertAI2HTML(aiFilePath) {
-   
-      // Convert the AI file to HTML and assets
-      const result = await ai2html.convertFile(aiFilePath, {
-        outputFormat: 'html',
-        outputWriteMethod: 'write-file',
-        outputPath: path.dirname(aiFilePath),
-        useDocumentSettings: true,
-      });
-  
-      // Get the generated HTML file path
-      const htmlFilePath = result.outputFiles.find((file) => file.endsWith('.html')).filePath;
-  
-      // Read the HTML content
-      const htmlContent = await fs.readFile(htmlFilePath, 'utf8');
-  
-      // Save the HTML and assets to a cache directory
-      const cacheDir = path.join('work', 'cache');
-      await fs.mkdir(cacheDir, { recursive: true });
-      const cacheFilePath = path.join(cacheDir, path.basename(htmlFilePath));
-      await fs.writeFile(cacheFilePath, htmlContent);
-  
-      return cacheFilePath;
-  
+
+    // Convert the AI file to HTML and assets
+    const result = await ai2html.convertFile(aiFilePath, {
+      outputFormat: 'html',
+      outputWriteMethod: 'write-file',
+      outputPath: path.dirname(aiFilePath),
+      useDocumentSettings: true,
+    });
+
+    // Get the generated HTML file path
+    const htmlFilePath = result.outputFiles.find((file) => file.endsWith('.html')).filePath;
+
+    // Read the HTML content
+    const htmlContent = await fs.readFile(htmlFilePath, 'utf8');
+
+    // Save the HTML and assets to a cache directory
+    const cacheDir = path.join('work', 'cache');
+    await fs.mkdir(cacheDir, { recursive: true });
+    const cacheFilePath = path.join(cacheDir, path.basename(htmlFilePath));
+    await fs.writeFile(cacheFilePath, htmlContent);
+
+    return cacheFilePath;
+
   }
 
 
@@ -2997,7 +3006,7 @@ export class SystemKeywords {
         };
 
         // If the column is named 'id' or 'Id', set it as the primary key
-        if (! pkAdded && (col.toLowerCase() === 'id' || col.toLowerCase() === 'internal_id')) {
+        if (!pkAdded && (col.toLowerCase() === 'id' || col.toLowerCase() === 'internal_id')) {
           schema[col].primaryKey = true;
           pkAdded = true;
         }
@@ -3041,5 +3050,5 @@ export class SystemKeywords {
 
     // Close SQLite connection
     await sqlite.close();
-}
+  }
 }
