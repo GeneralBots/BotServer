@@ -2548,11 +2548,3 @@ export class GBCompiler {
     return result;
   }
 }
-
-// Usage:
-// const compiler = new GBCompiler();
-// const result = compiler.compile(source, {
-//   filename: 'test.bas',
-//   mainName: 'TestProgram',
-//   pid: 'process-id'
-// });
