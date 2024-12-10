@@ -1571,19 +1571,21 @@ export class KBService implements IGBKBService {
 
         return filePath; // Return the saved file path
       } else {
-        await page.goto(url, {
-          waitUntil: 'domcontentloaded', // Changed to only wait for DOM
-          timeout: 10000 // Reduced timeout to 10 seconds
-        });
-
-        // Stop all scripts and requests
-        await page.setRequestInterception(true);
-        // Stop all scripts and requests
+        // Configure request interception before navigation
         await page.setRequestInterception(true);
         page.on('request', request => {
-          if (!request.isInterceptResolutionHandled()) {
+          // Only allow document requests, block everything else
+          if (request.resourceType() === 'document') {
+            request.continue();
+          } else {
             request.abort();
           }
+        });
+
+        // Navigate with strict timeout and wait for content
+        await page.goto(url, {
+          waitUntil: 'networkidle0', // Wait until network is idle
+          timeout: 30000 // 30 second timeout
         });
 
         const parsedUrl = new URL(url);
