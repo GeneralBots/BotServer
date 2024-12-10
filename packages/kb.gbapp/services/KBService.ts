@@ -1578,8 +1578,12 @@ export class KBService implements IGBKBService {
 
         // Stop all scripts and requests
         await page.setRequestInterception(true);
-        page.on('request', request => request.abort());
-
+        // Stop all scripts and requests
+        await page.setRequestInterception(true);
+        page.on('request', request => {
+          if (!request.isInterceptResolutionHandled()) {
+            request.abort();
+          }
 
         const parsedUrl = new URL(url);
 
