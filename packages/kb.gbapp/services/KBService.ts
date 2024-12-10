@@ -1584,6 +1584,7 @@ export class KBService implements IGBKBService {
           if (!request.isInterceptResolutionHandled()) {
             request.abort();
           }
+        });
 
         const parsedUrl = new URL(url);
 
