@@ -1572,6 +1572,8 @@ export class KBService implements IGBKBService {
         return filePath; // Return the saved file path
       } else {
 
+        const parsedUrl = new URL(url);
+
         // Get the last part of the URL path or default to 'index' if empty
         const pathParts = parsedUrl.pathname.split('/').filter(Boolean); // Remove empty parts
         const lastPath = pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'index';
