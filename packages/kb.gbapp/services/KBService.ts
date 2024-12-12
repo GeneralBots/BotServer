@@ -1571,24 +1571,6 @@ export class KBService implements IGBKBService {
 
         return filePath; // Return the saved file path
       } else {
-        // Configure request interception before navigation
-        await page.setRequestInterception(true);
-        page.on('request', request => {
-          // Only allow document requests, block everything else
-          if (request.resourceType() === 'document') {
-            request.continue();
-          } else {
-            request.abort();
-          }
-        });
-
-        // Navigate with strict timeout and wait for content
-        await page.goto(url, {
-          waitUntil: 'networkidle0', // Wait until network is idle
-          timeout: 30000 // 30 second timeout
-        });
-
-        const parsedUrl = new URL(url);
 
         // Get the last part of the URL path or default to 'index' if empty
         const pathParts = parsedUrl.pathname.split('/').filter(Boolean); // Remove empty parts
@@ -1598,6 +1580,30 @@ export class KBService implements IGBKBService {
         const fileName = `${flatLastPath}.html`;
         const filePath = path.join(directoryPath, fileName);
 
+        // Configure request interception before navigation
+        await page.setRequestInterception(true);
+        page.on('request', request => {
+          // Only allow document requests, block everything else 
+          if (request.resourceType() === 'document') {
+            request.continue();
+          } else {
+            request.abort();
+          }
+        });
+
+        // Navigate with strict timeout and wait for content
+        // Navigate and get content even if page fails to load fully
+        let content = '';
+        try {
+          await page.goto(url, {
+            waitUntil: 'networkidle0', // Wait until network is idle
+            timeout: 30000 // 30 second timeout
+          });
+        } catch (err) {
+          // Ignore timeout/navigation errors
+        }
+
+        // Get whatever HTML content was loaded
         const htmlContent = await page.content();
 
         // Convert HTML to Markdown using html2md
