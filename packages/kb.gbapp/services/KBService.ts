@@ -86,6 +86,7 @@ import { CSService } from '../../customer-satisfaction.gbapp/services/CSService.
 import { ChatServices } from '../../llm.gblib/services/ChatServices.js';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models/index.js';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService.js';
+import { exec } from 'child_process';
 
 /**
  * Result for quey on KB data.
@@ -1073,7 +1074,6 @@ export class KBService implements IGBKBService {
         const logoBinary = await page.goto(logo);
         let buffer = await logoBinary.buffer();
         let logoFilename = 'extracted-logo.png';
-
         // Replace sharp with jimp
         if (buffer.slice(0, 4).toString('hex') === '00000100') {
           // Convert ICO to PNG
@@ -1082,6 +1082,25 @@ export class KBService implements IGBKBService {
             throw new Error('Failed to parse ICO file');
           }
           buffer = Buffer.from(images[0].buffer);
+        } else if (buffer.slice(0, 12).toString('hex').includes('66747970617669')) {
+          // Convert AVIF to PNG using FFmpeg
+          const tempAvif = path.join(os.tmpdir(), `temp-${Date.now()}.avif`);
+          const tempPng = path.join(os.tmpdir(), `temp-${Date.now()}.png`);
+
+          await fs.writeFile(tempAvif, buffer);
+
+          await new Promise((resolve, reject) => {
+            exec(`ffmpeg -i "${tempAvif}" "${tempPng}"`, (error) => {
+              if (error) reject(error);
+              else resolve(null);
+            });
+          });
+          buffer = await fs.readFile(tempPng);
+
+          // Clean up temp files
+          await fs.unlink(tempAvif).catch(() => { });
+          await fs.unlink(tempPng).catch(() => { });
+
         } else if (buffer.slice(0, 4).toString('hex') === '52494646' &&
           buffer.slice(8, 12).toString('hex') === '57454250') {
 
@@ -1120,7 +1139,6 @@ export class KBService implements IGBKBService {
         const image = await Jimp.read(buffer);
         await image.scaleToFit({ w: 48, h: 48 });
         packagePath = path.join(process.env.PWD, 'work', packagePath);
-
         const logoPath = path.join(packagePath, 'cache', logoFilename);
         await (image as any).write(logoPath);
         await min.core['setConfig'](min, 'Logo', logoFilename);
@@ -1581,15 +1599,17 @@ export class KBService implements IGBKBService {
 
         const fileName = `${flatLastPath}.html`;
         const filePath = path.join(directoryPath, fileName);
-
         // Configure request interception before navigation
         await page.setRequestInterception(true);
         page.on('request', request => {
-          // Only allow document requests, block everything else 
           if (request.resourceType() === 'document') {
-            request.continue();
+            request.continue().catch(() => {
+              // Ignore errors from requests that were already handled
+            });
           } else {
-            request.abort();
+            request.abort().catch(() => {
+              // Ignore errors from requests that were already handled  
+            });
           }
         });
 
