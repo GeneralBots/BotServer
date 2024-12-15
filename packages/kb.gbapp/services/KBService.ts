@@ -1090,7 +1090,7 @@ export class KBService implements IGBKBService {
           await fs.writeFile(tempAvif, buffer);
 
           await new Promise((resolve, reject) => {
-            exec(`ffmpeg -i "${tempAvif}" "${tempPng}"`, (error) => {
+            exec(`node_modules/ffmpeg-static/ffmpeg -i "${tempAvif}" "${tempPng}"`, (error) => {
               if (error) reject(error);
               else resolve(null);
             });
