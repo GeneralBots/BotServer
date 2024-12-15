@@ -1019,17 +1019,20 @@ export class KBService implements IGBKBService {
   }
 
   async getFreshPage(browser, url) {
-    try {
-      if (!browser || browser.isConnected() === false) {
-        browser = await puppeteer.launch({ headless: false }); // Change headless to true if you don't want to see the browser window
-      }
-      const page = await browser.newPage();
-      await page.goto(url);
-      return page;
-    } catch (error) {
-      console.error('An error occurred while getting fresh page:', error);
-      throw error;
+    if (!browser || browser.isConnected() === false) {
+      browser = await puppeteer.launch({ headless: false });
     }
+    const page = await browser.newPage();
+    try {
+      await page.goto(url, {
+        waitUntil: 'networkidle0', // Wait until network is idle
+        timeout: 30000 // 30 second timeout
+      });
+    } catch (err) {
+      // Ignore timeout/navigation errors
+    }
+
+    return page;
   }
 
   /**
