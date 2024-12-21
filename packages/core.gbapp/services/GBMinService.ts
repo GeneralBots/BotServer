@@ -39,6 +39,7 @@ import arrayBufferToBuffer from 'arraybuffer-to-buffer';
 import { Semaphore } from 'async-mutex';
 import { Mutex } from 'async-mutex';
 import chokidar from 'chokidar';
+import cors from 'cors';
 import {
   AutoSaveStateMiddleware,
   BotFrameworkAdapter,
@@ -158,11 +159,17 @@ export class GBMinService {
   public async buildMin(instances: IGBInstance[]): Promise<GBMinInstance[]> {
     // Servers default UI on root address '/' if web enabled.
 
-    if (process.env.DISABLE_WEB !== 'true') {
+    if (process.env.DISABLE_WEB !== 'true' || process.env.ENABLE_INSTANCE_ON_URL) {
 
       // Servers the bot information object via HTTP so clients can get
       // instance information stored on server.
-
+      GBServer.globals.server.use(cors({
+        origin: 'http://localhost:8081', 
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'
+          , 'x-ms-bot-agent'
+        ]
+      }));      
       GBServer.globals.server.get('/instances/:botId', this.handleGetInstanceForClient.bind(this));
     }
 

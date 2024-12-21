@@ -559,7 +559,7 @@ export class GBDeployer implements IGBDeployer {
           }
 
           if (download) {
-            GBLogEx.verbose(min, `Downloading ${itemPath}...`);
+            GBLogEx.info(min, `Downloading: ${itemPath}...`);
             const url = item['@microsoft.graph.downloadUrl'];
 
             const response = await fetch(url);
