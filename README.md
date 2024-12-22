@@ -1,16 +1,19 @@
 ### Key Facts
-- AGPL License (to use as custom-label SaaS)
+- LLM Orchestrator AGPL licensed (to use as custom-label SaaS, contributing back)
 - True community governance
 - No single corporate control 
 - 5+ years of stability
 - Never changed license
 - Enterprise-grad
 - Hosted locally or Multicloud
-  
+
+## Contributors
+
 <a href="https://github.com/generalbots/botserver/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=generalbots/botserver" />
 </a>
 
+## Overview
 
 | Area                         | Status                                                                                             |
 |------------------------------|----------------------------------------------------------------------------------------------------|
@@ -23,12 +26,11 @@
 | Samples                      | [BASIC](https://github.com/GeneralBots/BotServer/tree/master/packages/default.gbdialog) or [![TypeScript](https://badges.frapsoft.com/typescript/code/typescript.svg?v=101)](https://github.com/GeneralBots/AzureADPasswordReset.gbapp)
 | [Docker Image](https://github.com/lpicanco/docker-botserver)  ![Docker Pulls](https://img.shields.io/docker/pulls/lpicanco/botserver.svg) <br/> *Provided by [@lpicanco](https://github.com/lpicanco/docker-botserver)* |
 
-General Bots
-------------------
+# General Bots
 
 ![General Bot Logo](https://github.com/GeneralBots/BotServer/blob/main/logo.png?raw=true))
 
-General Bot is a strongly typed package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
+General Bot is a strongly typed LLM conversational platform package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
 
 ## What is a Bot Server?
 
@@ -42,9 +44,7 @@ advanced fashion writing custom code in editors like Visual Studio Code, Atom or
 
 Everyone can create bots by just copying and pasting some files and using their
 favorite tools from Office (or any text editor) or Photoshop (or any image
-editor). BASIC can be used to build custom dialogs so Bot can be extended just like VBA for Excel  (currently in alpha).
-
-![General Bot Reference Architecture](https://raw.githubusercontent.com/GeneralBots/BotBook/master/images/general-bots-reference-architecture.png)
+editor). LLM and BASIC can be mixed used to build custom dialogs so Bot can be extended just like VBA for Excel.
 
 ## Samples
 
@@ -76,7 +76,7 @@ SEND FILE img
 
 ## Guide
 
-[Read the General Bots BotBook Guide](https://github.com/GeneralBots/BotBook/tree/master/book).
+[Read the General Bots BotBook Guide](https://docs.pragmatismo.cloud)
 
 # Videos
 
