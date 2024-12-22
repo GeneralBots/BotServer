@@ -26,7 +26,7 @@
 General Bots
 ------------------
 
-![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
+![General Bot Logo](https://github.com/GeneralBots/BotServer/blob/main/logo.png?raw=true))
 
 General Bot is a strongly typed package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
 
@@ -80,14 +80,8 @@ SEND FILE img
 
 # Videos
 
-Now with the General Bots server you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
-
-[![General Bot Video](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-01-thumb.jpg)](https://www.youtube.com/watch?v=AfKTwljoMOs)
-
-See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC * published on December 3rd, 2018.
-
-[![See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-02-thumb.jpg)](https://www.youtube.com/watch?v=yX1sF9n9628)
- 
+ 7 AI General Bots LLM Templates for Goodness
+ [https://www.youtube.com/watch?v=KJgvUPXi3Fw](https://www.youtube.com/watch?v=KJgvUPXi3Fw)
   
 # Contributing
 
