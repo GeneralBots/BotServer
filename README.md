@@ -46,6 +46,77 @@ Everyone can create bots by just copying and pasting some files and using their
 favorite tools from Office (or any text editor) or Photoshop (or any image
 editor). LLM and BASIC can be mixed used to build custom dialogs so Bot can be extended just like VBA for Excel.
 
+## Getting Started
+
+### Prerequisites
+
+Before you embark on your General Bots journey, ensure you have the following tools installed:
+
+- **Node.js (version 20 or later)**: General Bots leverages the latest features of Node.js to provide a robust and efficient runtime environment. Download it from [nodejs.org](https://nodejs.org/en/download/).
+- **Git (latest stable version)**: Essential for version control and collaborating on bot projects. Get it from [git-scm.com](https://git-scm.com/downloads).
+
+### Quick Start Guide
+
+Follow these steps to get your General Bots server up and running:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/GeneralBots/BotServer
+   ```
+   This command creates a local copy of the General Bots server repository on your machine.
+
+2. Navigate to the project directory:
+   ```bash
+   cd BotServer
+   ```
+   This changes your current directory to the newly cloned BotServer folder.
+
+3. Install dependencies and start the server:
+   ```bash
+   npm install
+   npm run start
+   ```
+   The `npm install` command installs all necessary dependencies for the project. `npm run start` builds your bot server locally and serves it through a development server.
+
+### Accessing Your Bot
+
+Once the server is running, you can access your bot at `http://localhost:4242/`. This local server allows you to interact with your bot and test its functionality in real-time. If you want to publish
+without password, define [ADMIN_OPEN_PUBLISH](https://github.com/GeneralBots/BotBook/master/docs/chapter-07-gbot-reference#enviroment-variables-reference) as true in BotServer .env file.
+
+To publish bot packages and initiate a conversation with the bot, use the command:
+
+```
+/publish
+```
+This command prepares your bot packages for use and allows you to start interacting with your bot immediately.
+
+## Development Workflow
+
+### 1. Project Structure
+
+The General Bots server follows a modular architecture designed for flexibility and scalability. Here's an overview of the main directories:
+
+```
+BotServer/
+├── packages/
+│   ├── core.gbapp/         # Core bot functionality
+│   ├── kb.gbapp/           # Knowledge base packages
+├── src /             # Main entry point
+└── package.json      # Project configuration
+```
+
+This structure allows for easy navigation and management of different aspects of your bot project.
+
+### 2. Creating Custom Packages
+
+One of the strengths of General Bots is its extensibility. You can create custom packages to enhance your bot's capabilities:
+
+- **.gbkb (Knowledge Base packages)**: Store and manage your bot's knowledge and responses.
+- **.gbtheme (Theme packages)**: Customize the visual appearance of your bot interface.
+- **.gbapp (Application packages)**: Add new features and functionalities to your bot.
+
+Each package type has its own structure and purpose, which we'll explore in depth in their respective chapters.
+
 ## Samples
 
 Several samples, including a Bot for AD Password Reset, are avaiable on the [repository list](https://github.com/GeneralBots).
