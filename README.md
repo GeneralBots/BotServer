@@ -1,3 +1,12 @@
+### Key Facts
+- AGPL License (to use as custom-label SaaS)
+- True community governance
+- No single corporate control 
+- 5+ years of stability
+- Never changed license
+- Enterprise-grad
+- Hosted locally or Multicloud
+  
 <a href="https://github.com/generalbots/botserver/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=generalbots/botserver" />
 </a>
