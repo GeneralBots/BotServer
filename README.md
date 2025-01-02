@@ -1,7 +1,19 @@
+### Key Facts
+- LLM Orchestrator AGPL licensed (to use as custom-label SaaS, contributing back)
+- True community governance
+- No single corporate control 
+- 5+ years of stability
+- Never changed license
+- Enterprise-grad
+- Hosted locally or Multicloud
+
+## Contributors
+
 <a href="https://github.com/generalbots/botserver/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=generalbots/botserver" />
 </a>
 
+## Overview
 
 | Area                         | Status                                                                                             |
 |------------------------------|----------------------------------------------------------------------------------------------------|
@@ -9,17 +21,16 @@
 | Community                    | [![StackExchange](https://img.shields.io/stackexchange/stackoverflow/t/generalbots.svg)](https://stackoverflow.com/questions/tagged/generalbots)  [![Open-source](https://badges.frapsoft.com/os/v2/open-source.svg)](https://badges.frapsoft.com) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) [![License](https://img.shields.io/badge/license-AGPL-blue.svg)](https://github.com/GeneralBots/BotServer/blob/master/LICENSE.txt)|
 | Management                   | [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://gitHub.com/GeneralBots/BotServer/graphs/commit-activity) |
 | Security                     | [![Known Vulnerabilities](https://snyk.io/test/github/GeneralBots/BotServer/badge.svg)](https://snyk.io/test/github/GeneralBots/BotServer) |
-| Building & Quality           | [![Build Status](https://travis-ci.com/GeneralBots/BotServer.svg?branch=master)](https://app.travis-ci.com/github/GeneralBots/BotServer)  [![Coverage Status](https://coveralls.io/repos/github/GeneralBots/BotServer/badge.svg)](https://coveralls.io/github/GeneralBots/BotServer) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) |
-| Packaging                    | [![forthebadge](https://badge.fury.io/js/botserver.svg)](https://badge.fury.io) [![ZipFile](https://camo.githubusercontent.com/0150c0f148d50fe9750ebc5d313581da699a8c50/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f7a69702d646f776e6c6f61642d626c75652e737667)](https://github.com/GeneralBots/BotServer/releases/latest) [![Dependencies](https://david-dm.org/GeneralBots/botserver.svg)](https://david-dm.org) [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/) |
-| Samples                      | [VBA](https://github.com/GeneralBots/BotServer/tree/master/packages/default.gbdialog) or [![TypeScript](https://badges.frapsoft.com/typescript/code/typescript.svg?v=101)](https://github.com/GeneralBots/AzureADPasswordReset.gbapp)
-| [Docker Image](https://github.com/lpicanco/docker-botserver) | ![Docker Automated build](https://img.shields.io/docker/automated/lpicanco/botserver.svg) ![Docker Build Status](https://img.shields.io/docker/build/lpicanco/botserver.svg) ![MicroBadger Size](https://img.shields.io/microbadger/image-size/lpicanco/botserver.svg) ![MicroBadger Layers](https://img.shields.io/microbadger/layers/lpicanco/botserver.svg) ![Docker Pulls](https://img.shields.io/docker/pulls/lpicanco/botserver.svg) <br/> *Provided by [@lpicanco](https://github.com/lpicanco/docker-botserver)* |
+| Building & Quality           |  [![Coverage Status](https://coveralls.io/repos/github/GeneralBots/BotServer/badge.svg)](https://coveralls.io/github/GeneralBots/BotServer) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) |
+| Packaging                    | [![forthebadge](https://badge.fury.io/js/botserver.svg)](https://badge.fury.io) [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/) |
+| Samples                      | [BASIC](https://github.com/GeneralBots/BotServer/tree/master/packages/default.gbdialog) or [![TypeScript](https://badges.frapsoft.com/typescript/code/typescript.svg?v=101)](https://github.com/GeneralBots/AzureADPasswordReset.gbapp)
+| [Docker Image](https://github.com/lpicanco/docker-botserver)  ![Docker Pulls](https://img.shields.io/docker/pulls/lpicanco/botserver.svg) <br/> *Provided by [@lpicanco](https://github.com/lpicanco/docker-botserver)* |
 
-General Bots
-------------------
+# General Bots
 
-![General Bot Logo](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/logo.png)
+![General Bot Logo](https://github.com/GeneralBots/BotServer/blob/main/logo.png?raw=true))
 
-General Bot is a strongly typed package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
+General Bot is a strongly typed LLM conversational platform package based chat bot server focused in convention over configuration and code-less approaches, which brings software packages and application server concepts to help parallel bot development.
 
 ## What is a Bot Server?
 
@@ -33,9 +44,78 @@ advanced fashion writing custom code in editors like Visual Studio Code, Atom or
 
 Everyone can create bots by just copying and pasting some files and using their
 favorite tools from Office (or any text editor) or Photoshop (or any image
-editor). BASIC can be used to build custom dialogs so Bot can be extended just like VBA for Excel  (currently in alpha).
+editor). LLM and BASIC can be mixed used to build custom dialogs so Bot can be extended just like VBA for Excel.
 
-![General Bot Reference Architecture](https://raw.githubusercontent.com/GeneralBots/BotBook/master/images/general-bots-reference-architecture.png)
+## Getting Started
+
+### Prerequisites
+
+Before you embark on your General Bots journey, ensure you have the following tools installed:
+
+- **Node.js (version 20 or later)**: General Bots leverages the latest features of Node.js to provide a robust and efficient runtime environment. Download it from [nodejs.org](https://nodejs.org/en/download/).
+- **Git (latest stable version)**: Essential for version control and collaborating on bot projects. Get it from [git-scm.com](https://git-scm.com/downloads).
+
+### Quick Start Guide
+
+Follow these steps to get your General Bots server up and running:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/GeneralBots/BotServer
+   ```
+   This command creates a local copy of the General Bots server repository on your machine.
+
+2. Navigate to the project directory:
+   ```bash
+   cd BotServer
+   ```
+   This changes your current directory to the newly cloned BotServer folder.
+
+3. Install dependencies and start the server:
+   ```bash
+   npm install
+   npm run start
+   ```
+   The `npm install` command installs all necessary dependencies for the project. `npm run start` builds your bot server locally and serves it through a development server.
+
+### Accessing Your Bot
+
+Once the server is running, you can access your bot at `http://localhost:4242/`. This local server allows you to interact with your bot and test its functionality in real-time. If you want to publish
+without password, define [ADMIN_OPEN_PUBLISH](https://github.com/GeneralBots/BotBook/master/docs/chapter-07-gbot-reference#enviroment-variables-reference) as true in BotServer .env file.
+
+To publish bot packages and initiate a conversation with the bot, use the command:
+
+```
+/publish
+```
+This command prepares your bot packages for use and allows you to start interacting with your bot immediately.
+
+## Development Workflow
+
+### 1. Project Structure
+
+The General Bots server follows a modular architecture designed for flexibility and scalability. Here's an overview of the main directories:
+
+```
+BotServer/
+├── packages/
+│   ├── core.gbapp/         # Core bot functionality
+│   ├── kb.gbapp/           # Knowledge base packages
+├── src /             # Main entry point
+└── package.json      # Project configuration
+```
+
+This structure allows for easy navigation and management of different aspects of your bot project.
+
+### 2. Creating Custom Packages
+
+One of the strengths of General Bots is its extensibility. You can create custom packages to enhance your bot's capabilities:
+
+- **.gbkb (Knowledge Base packages)**: Store and manage your bot's knowledge and responses.
+- **.gbtheme (Theme packages)**: Customize the visual appearance of your bot interface.
+- **.gbapp (Application packages)**: Add new features and functionalities to your bot.
+
+Each package type has its own structure and purpose, which we'll explore in depth in their respective chapters.
 
 ## Samples
 
@@ -67,18 +147,12 @@ SEND FILE img
 
 ## Guide
 
-[Read the General Bots BotBook Guide](https://github.com/GeneralBots/BotBook/tree/master/book).
+[Read the General Bots BotBook Guide](https://docs.pragmatismo.cloud)
 
 # Videos
 
-Now with the General Bots server you can press F5 on Visual Studio to get a bot factory on your environment* published on November 10th, 2018.
-
-[![General Bot Video](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-01-thumb.jpg)](https://www.youtube.com/watch?v=AfKTwljoMOs)
-
-See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC * published on December 3rd, 2018.
-
-[![See how easy is to use 'hear' and 'talk' to build Microsoft BOT Framework v4 logic with plain BASIC](https://raw.githubusercontent.com/pragmatismo-io/BotServer/master/docs/images/video-02-thumb.jpg)](https://www.youtube.com/watch?v=yX1sF9n9628)
- 
+ 7 AI General Bots LLM Templates for Goodness
+ [https://www.youtube.com/watch?v=KJgvUPXi3Fw](https://www.youtube.com/watch?v=KJgvUPXi3Fw)
   
 # Contributing
 
