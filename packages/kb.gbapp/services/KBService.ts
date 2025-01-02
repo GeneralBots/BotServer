@@ -1072,7 +1072,9 @@ export class KBService implements IGBKBService {
         packagePath = GBUtil.getGBAIPath(min.botId);
 
         const baseUrl = page.url().split('/').slice(0, 3).join('/');
-        logo = logo.startsWith('https') ? logo : urlJoin(baseUrl, logo);
+
+        logo = logo.startsWith('//') ? 'https:' + logo : (
+          logo.startsWith('https') ? logo : urlJoin(baseUrl, logo));
 
         const logoBinary = await page.goto(logo);
         let buffer = await logoBinary.buffer();
@@ -1138,13 +1140,15 @@ export class KBService implements IGBKBService {
           });
         }
 
-        // Replace sharp with jimp
+        // Replace sharp with jimp.
+
         const image = await Jimp.read(buffer);
         await image.scaleToFit({ w: 48, h: 48 });
         packagePath = path.join(process.env.PWD, 'work', packagePath);
         const logoPath = path.join(packagePath, 'cache', logoFilename);
         await (image as any).write(logoPath);
         await min.core['setConfig'](min, 'Logo', logoFilename);
+        
       }
 
       // Extract dominant colors from the screenshot
