@@ -283,6 +283,7 @@ export class GBVMService extends GBService {
         sequelizeOptions.dialectOptions['ssl'] = false;
         sequelizeOptions.dialectOptions['application_name'] = 'General Bots';
         sequelizeOptions.dialectOptions['connectTimeout'] =10000;
+        sequelizeOptions.dialectOptions['query_timeout'] =10000;
         sequelizeOptions.dialectOptions['statement_timeout'] = 10000;
         sequelizeOptions.dialectOptions['idle_in_transaction_session_timeout'] = 10000;
           
