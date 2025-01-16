@@ -280,9 +280,9 @@ export class GBVMService extends GBService {
       };
       
       if (dialect === 'postgres') {
-        sequelizeOptions['ssl'] = true;
-        sequelizeOptions['clientMinMessages'] = 'notice';
-        sequelizeOptions['dialect']= PostgresDialect;
+        sequelizeOptions.dialectOptions['ssl'] = true;
+        sequelizeOptions.dialectOptions['application_name'] = 'General Bots';
+        
       }
       
       if (!min[connectionName]) {
