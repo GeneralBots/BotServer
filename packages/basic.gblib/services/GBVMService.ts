@@ -300,6 +300,16 @@ export class GBVMService extends GBService {
             // Convert all table names to lowercase
             freezeTableName: true,
             hooks: {
+              beforeSave: (options) => {
+                if (options.where) {
+                  options.where = toLowerCase(options.where);
+                }
+              },
+              beforeDestroy: (options) => {
+                if (options.where) {
+                  options.where = toLowerCase(options.where);
+                }
+              },
               beforeFind: (options) => {
                 if (options.where) {
                   options.where = toLowerCase(options.where);
