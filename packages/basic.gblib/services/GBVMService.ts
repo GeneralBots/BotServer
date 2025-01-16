@@ -741,7 +741,7 @@ export class GBVMService extends GBService {
     const fieldRegExp = /^\s*(\w+)\s*(\w+)(?:\((.*)\))?/gim;
 
     let reg = fieldRegExp.exec(line);
-    const name = reg[1];
+    const name = reg[1].toLowerCase();
     const t = reg[2];
 
     let definition = {
