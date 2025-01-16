@@ -300,6 +300,11 @@ export class GBVMService extends GBService {
             // Convert all table names to lowercase
             freezeTableName: true,
             hooks: {
+              beforeFind: (options) => {
+                if (options.where) {
+                  options.where = toLowerCase(options.where);
+                }
+              },
               beforeDefine: (attributes, options) => {
                 // Convert model name and table name to lowercase
                 if (options.modelName) {
@@ -320,14 +325,6 @@ export class GBVMService extends GBService {
             }
           },
 
-          // Convert query attributes to lowercase
-          hooks: {
-            beforeFind: (options) => {
-              if (options.where) {
-                options.where = toLowerCase(options.where);
-              }
-            }
-          }
         };
 
 
