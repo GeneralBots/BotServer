@@ -241,18 +241,30 @@ export class GBVMService extends GBService {
       const storageName = con['storageName'];
       const username = con['storageUsername'];
       const password = con['storagePassword'];
-      
+
       const logging: boolean | Function =
         GBConfigService.get('STORAGE_LOGGING') === 'true'
           ? (str: string): void => {
-              GBLogEx.info(min, str);
-            }
+            GBLogEx.info(min, str);
+          }
           : false;
 
       const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
       const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
       let sequelizeOptions;
-      
+
+
+      // Simple function to convert all object keys to lowercase
+      const toLowerCase = (obj) => {
+        if (!obj) return obj;
+        if (typeof obj !== 'object') return obj;
+
+        return Object.keys(obj).reduce((acc, key) => {
+          acc[key.toLowerCase()] = obj[key];
+          return acc;
+        }, {});
+      }
+
       if (dialect === 'postgres') {
 
         sequelizeOptions = {
@@ -263,11 +275,69 @@ export class GBVMService extends GBService {
           dialectOptions: {
             ssl: false,
             application_name: 'General Bots',
-            connectTimeout:10000,
-            query_timeout:10000,
+            connectTimeout: 10000,
+            query_timeout: 10000,
             statement_timeout: 10000,
             idle_in_transaction_session_timeout: 10000,
-    
+
+          },
+          pool: {
+            max: 1,
+            min: 0,
+            idle: 10000,
+            evict: 10000,
+            acquire: acquire
+          },
+          define: {
+            // Convert all table names to lowercase
+            freezeTableName: true,
+            hooks: {
+              beforeDefine: (attributes, options) => {
+                // Convert model and column names to lowercase
+                options.tableName = options.tableName?.toLowerCase();
+                for (const attr in attributes) {
+                  const lowered = attr.toLowerCase();
+                  if (attr !== lowered) {
+                    attributes[lowered] = attributes[attr];
+                    delete attributes[attr];
+                  }
+                }
+              }
+            }
+          },
+
+          // Convert query attributes to lowercase
+          hooks: {
+            beforeFind: (options) => {
+              if (options.where) {
+                options.where = toLowerCase(options.where);
+              }
+            }
+          }
+        };
+
+
+      }
+      else {
+
+        sequelizeOptions = {
+          define: {
+            charset: 'utf8',
+            collate: 'utf8_general_ci',
+            freezeTableName: true,
+            timestamps: false
+          },
+          host: host,
+          port: port,
+          logging: logging as boolean,
+          dialect: dialect,
+          quoteIdentifiers: false, // set case-insensitive
+          dialectOptions: {
+            options: {
+              trustServerCertificate: true,
+              encrypt: encrypt,
+              requestTimeout: 120 * 1000
+            }
           },
           pool: {
             max: 1,
@@ -277,40 +347,8 @@ export class GBVMService extends GBService {
             acquire: acquire
           }
         };
-  
-          
       }
-        else{
 
-      sequelizeOptions = {
-        define: {
-          charset: 'utf8',
-          collate: 'utf8_general_ci',
-          freezeTableName: true,
-          timestamps: false
-        },
-        host: host,
-        port: port,
-        logging: logging as boolean,
-        dialect: dialect,
-        quoteIdentifiers: false, // set case-insensitive
-        dialectOptions: {
-          options: {
-            trustServerCertificate: true,
-            encrypt: encrypt,
-            requestTimeout: 120 * 1000
-          }
-        },
-        pool: {
-          max: 1,
-          min: 0,
-          idle: 10000,
-          evict: 10000,
-          acquire: acquire
-        }
-      };
-    }
-      
       if (!min[connectionName]) {
         GBLogEx.info(min, `Loading data connection ${connectionName} (${dialect})...`);
         min[connectionName] = new Sequelize(storageName, username, password, sequelizeOptions);
@@ -448,10 +486,10 @@ export class GBVMService extends GBService {
             });
 
             sync = sync ? sync : !found;
-            
+
             // Do not erase tables in case of an error in collection retrieval.
 
-            if (tables.length === 0){
+            if (tables.length === 0) {
               sync = false;
             }
 
@@ -545,13 +583,13 @@ export class GBVMService extends GBService {
     const jsfile: string = `${filename}.js`;
 
     const template = (await fs.readFile('./vm-inject.js')).toString();
-    code = template.replace('//##INJECTED_CODE_HERE', code );
-    code = code.replace('//##INJECTED_HEADER', `port=${GBVMService.API_PORT}; botId='${min.botId}';` );
+    code = template.replace('//##INJECTED_CODE_HERE', code);
+    code = code.replace('//##INJECTED_HEADER', `port=${GBVMService.API_PORT}; botId='${min.botId}';`);
 
     code = ji.default(code, '  ');
 
     await fs.writeFile(jsfile, code);
-    
+
   }
 
   private async executeTasks(min, tasks) {
@@ -910,7 +948,7 @@ export class GBVMService extends GBService {
 
     // Auto-NLP generates BASIC variables related to entities.
 
-    if (step?.context?.activity.originalText  && min['nerEngine']) {
+    if (step?.context?.activity.originalText && min['nerEngine']) {
       const result = await min['nerEngine'].process(step.context.activity.originalText);
 
       for (let i = 0; i < result.entities.length; i++) {
@@ -974,7 +1012,7 @@ export class GBVMService extends GBService {
           return await new Promise((resolve) => {
             sandbox['resolve'] = resolve;
             // TODO: #411 sandbox['reject'] = reject;
-            sandbox['reject'] = () => {};
+            sandbox['reject'] = () => { };
 
             const vm1 = new NodeVM({
               allowAsync: true,
