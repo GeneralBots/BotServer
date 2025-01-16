@@ -291,14 +291,17 @@ export class GBVMService extends GBService {
           define: {
             // Convert all table names to lowercase
             freezeTableName: true,
-            tableName: function() {
-              return this.name.toLowerCase();
-          },
             hooks: {
               beforeDefine: (attributes, options) => {
-                // Convert model and column names to lowercase
-                options.tableName = options.tableName?.toLowerCase();
-                for (const attr in attributes) {
+    // Convert model name and table name to lowercase
+    if (options.modelName) {
+      options.modelName = options.modelName.toLowerCase();
+  }
+  if (options.tableName) {
+      options.tableName = options.tableName.toLowerCase();
+  } else {
+      options.tableName = options.modelName.toLowerCase();
+  }                for (const attr in attributes) {
                   const lowered = attr.toLowerCase();
                   if (attr !== lowered) {
                     attributes[lowered] = attributes[attr];
