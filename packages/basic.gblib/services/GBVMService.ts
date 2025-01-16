@@ -39,6 +39,7 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
 import { ScheduleServices } from './ScheduleServices.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import urlJoin from 'url-join';
+import { PostgresDialect } from '@sequelize/postgres';
 import { NodeVM, VMScript } from 'vm2';
 import { createVm2Pool } from './vm2-process/index.js';
 import { watch } from 'fs';
@@ -240,7 +241,7 @@ export class GBVMService extends GBService {
       const storageName = con['storageName'];
       const username = con['storageUsername'];
       const password = con['storagePassword'];
-
+      
       const logging: boolean | Function =
         GBConfigService.get('STORAGE_LOGGING') === 'true'
           ? (str: string): void => {
@@ -250,7 +251,7 @@ export class GBVMService extends GBService {
 
       const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
       const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
-      const sequelizeOptions = {
+      let sequelizeOptions = {
         define: {
           charset: 'utf8',
           collate: 'utf8_general_ci',
@@ -277,9 +278,15 @@ export class GBVMService extends GBService {
           acquire: acquire
         }
       };
-
+      
+      if (dialect === 'postgres') {
+        sequelizeOptions['ssl'] = true;
+        sequelizeOptions['clientMinMessages'] = 'notice';
+        sequelizeOptions['dialect']= PostgresDialect;
+      }
+      
       if (!min[connectionName]) {
-        GBLogEx.info(min, `Loading data connection ${connectionName}...`);
+        GBLogEx.info(min, `Loading data connection ${connectionName} (${dialect})...`);
         min[connectionName] = new Sequelize(storageName, username, password, sequelizeOptions);
         min[connectionName]['gbconnection'] = con;
       }
