@@ -251,7 +251,38 @@ export class GBVMService extends GBService {
 
       const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
       const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
-      let sequelizeOptions = {
+      let sequelizeOptions;
+      
+      if (dialect === 'postgres') {
+
+        sequelizeOptions = {
+          host: host,
+          port: port,
+          logging: logging as boolean,
+          dialect: dialect,
+          dialectOptions: {
+            ssl: false,
+            application_name: 'General Bots',
+            connectTimeout:10000,
+            query_timeout:10000,
+            statement_timeout: 10000,
+            idle_in_transaction_session_timeout: 10000,
+    
+          },
+          pool: {
+            max: 1,
+            min: 0,
+            idle: 10000,
+            evict: 10000,
+            acquire: acquire
+          }
+        };
+  
+          
+      }
+        else{
+
+      sequelizeOptions = {
         define: {
           charset: 'utf8',
           collate: 'utf8_general_ci',
@@ -278,16 +309,7 @@ export class GBVMService extends GBService {
           acquire: acquire
         }
       };
-      
-      if (dialect === 'postgres') {
-        sequelizeOptions.dialectOptions['ssl'] = false;
-        sequelizeOptions.dialectOptions['application_name'] = 'General Bots';
-        sequelizeOptions.dialectOptions['connectTimeout'] =10000;
-        sequelizeOptions.dialectOptions['query_timeout'] =10000;
-        sequelizeOptions.dialectOptions['statement_timeout'] = 10000;
-        sequelizeOptions.dialectOptions['idle_in_transaction_session_timeout'] = 10000;
-          
-      }
+    }
       
       if (!min[connectionName]) {
         GBLogEx.info(min, `Loading data connection ${connectionName} (${dialect})...`);
