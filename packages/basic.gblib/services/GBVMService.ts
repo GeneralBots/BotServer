@@ -442,7 +442,7 @@ export class GBVMService extends GBService {
       const shouldSync = min.core.getParam<boolean>(min.instance, 'Synchronize Database', false);
 
       tableDef.forEach(async t => {
-        const tableName = t.name.trim().toLowerCase();
+        const tableName = t.name.trim();
 
         // Determines autorelationship.
 

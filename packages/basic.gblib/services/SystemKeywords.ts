@@ -2143,9 +2143,9 @@ export class SystemKeywords {
     const parts = file.split('.');
     const con = min[parts[0]];
     if (con) {
-      return con.models[parts[1].toLowerCase()];
+      return con.models[parts[1]];
     } else {
-      return minBoot.core.sequelize.models[file.toLowerCase()];
+      return minBoot.core.sequelize.models[file];
     }
   }
 
