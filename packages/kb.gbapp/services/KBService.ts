@@ -1180,7 +1180,7 @@ export class KBService implements IGBKBService {
 
       await browser.close();
 
-      files.shift();
+      
 
       GBLogEx.info(min, `Vectorizing ${files.length} file(s)...`);
 
