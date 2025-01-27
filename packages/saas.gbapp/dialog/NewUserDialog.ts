@@ -243,14 +243,14 @@ export class NewUserDialog extends IGBDialog {
               min,
               botName,
               '999999999',
-              'email@doman.cloud',
+              'email@domain.cloud',
               '5521999998888',
               botName,
               null,
               '12',
               '99',
               '1234',
-              'Starter.gbai',
+              'crawlergbot.gbai',
               true
             );
             
