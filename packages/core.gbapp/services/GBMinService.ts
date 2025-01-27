@@ -531,7 +531,7 @@ export class GBMinService {
       try {
         // Performs the checking of WhatsApp API if enabled for this instance.
 
-        if (min.whatsAppDirectLine != undefined && instance.whatsappServiceKey !== null) {
+        if (min.whatsAppDirectLine && instance.whatsappServiceKey) {
           if (!(await min.whatsAppDirectLine.check(min))) {
             const error = `WhatsApp API lost connection for: ${min.botId}.`;
             GBLog.error(error);
@@ -547,8 +547,8 @@ export class GBMinService {
       } catch (error) {
         // GB is not OK, 500 and detail the information on response content.
 
-        GBLog.error(error);
-        res.status(500).send(error.toString());
+        GBLogEx.error(min, error);
+        res.status(500).send('Service with erros. Please, check service log.');
       }
     });
   }
