@@ -294,7 +294,7 @@ export class ChatServices {
         azureOpenAIApiDeploymentName: azureOpenAILLMModel,
         azureOpenAIApiVersion: azureOpenAIVersion,
         temperature: 0,
-        callbacks: [logHandler]
+        // TODO: callbacks: [logHandler]
       });
     }
     return model;
