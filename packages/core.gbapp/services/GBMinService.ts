@@ -529,17 +529,7 @@ export class GBMinService {
   private createCheckHealthAddress(server: any, min: GBMinInstance, instance: IGBInstance) {
     server.get(`/${min.instance.botId}/check`, async (req, res) => {
       try {
-        // Performs the checking of WhatsApp API if enabled for this instance.
-
-        if (min.whatsAppDirectLine && instance.whatsappServiceKey) {
-          if (!(await min.whatsAppDirectLine.check(min))) {
-            const error = `WhatsApp API lost connection for: ${min.botId}.`;
-            GBLog.error(error);
-            res.status(500).send(error);
-
-            return;
-          }
-        }
+       
 
         // GB is OK, so 200.
 
