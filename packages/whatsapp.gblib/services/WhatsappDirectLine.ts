@@ -1504,7 +1504,7 @@ private async sendButtonList(to: string, buttons: string[]) {
       const audioId = req.body.entry[0].changes[0].value.messages[0].audio.id;
       
           // User access token from min.whatsappServiceKey
-          const userAccessToken = min.whatsappServiceKey;
+          const userAccessToken = GBServer.globals.minBoot.instance.whatsappServiceKey;
       
   
       // Meta WhatsApp Business API endpoint for downloading media
