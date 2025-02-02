@@ -1606,7 +1606,7 @@ export class GBMinService {
       // Removes unwanted chars in input text.
 
       step.context.activity['originalText'] = context.activity.text;
-      const text = await GBConversationalService.handleText(min, user, step, context.activity.text);
+      const text =  context.activity.text;
       step.context.activity['originalText'];
       step.context.activity['text'] = text;
 

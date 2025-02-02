@@ -1169,8 +1169,23 @@ private async sendButtonList(to: string, buttons: string[]) {
           user = await sec.updateUserLocale(user.userId, locale);
         }
       }
-      if (req.type === 'ptt') {
-        if (process.env.AUDIO_DISABLED !== 'true') {
+
+
+      if (process.env.AUDIO_DISABLED !== 'true') {
+      if (provider ==='meta'){
+              
+        const buf = await this.downloadAudio(req, min);
+
+        text = await GBConversationalService.getTextFromAudioBuffer(
+          this.min.instance.speechKey,
+          this.min.instance.cloudLocation,
+          buf,
+          user.locale
+        );
+
+
+      }else if (req.type === 'ptt') {
+          
           const media = await req.downloadMedia();
           const buf = Buffer.from(media.data, 'base64');
 
@@ -1182,15 +1197,11 @@ private async sendButtonList(to: string, buttons: string[]) {
           );
 
           req.body = text;
-        } else {
-          await this.sendToDevice(
-            user.userSystemId,
-            `No momento estou apenas conseguindo ler mensagens de texto.`,
-            null
-          );
-        }
-      }
 
+        }
+      
+      }
+      
       let activeMin;
 
       // Processes group behaviour.
@@ -1486,6 +1497,48 @@ private async sendButtonList(to: string, buttons: string[]) {
     const result = await response.json();
     GBLogEx.info(0, 'Message sent successfully:' + result);
     return result;
+  }
+
+  public async downloadAudio(req, min) {
+      // Extract the audio ID from the request body
+      const audioId = req.body.entry[0].changes[0].value.messages[0].audio.id;
+  
+      // Meta WhatsApp Business API endpoint for downloading media
+      const metaApiUrl = `https://graph.facebook.com/v16.0/${audioId}`;
+  
+      // User access token from min.whatsappServiceKey
+      const userAccessToken = min.whatsappServiceKey;
+  
+      // Fetch the media URL using the audio ID
+      const mediaUrlResponse = await fetch(metaApiUrl, {
+        headers: {
+          Authorization: `Bearer ${userAccessToken}`,
+        },
+      });
+  
+      if (!mediaUrlResponse.ok) {
+        throw new Error(`Failed to fetch media URL: ${mediaUrlResponse.statusText}`);
+      }
+  
+      const mediaUrlData = await mediaUrlResponse.json();
+      const mediaUrl = mediaUrlData.url;
+  
+      if (!mediaUrl) {
+        throw new Error('Media URL not found in the response');
+      }
+  
+      // Download the audio file
+      const audioResponse = await fetch(mediaUrl, {
+        headers: {
+          Authorization: `Bearer ${userAccessToken}`,
+        },
+      });
+  
+      if (!audioResponse.ok) {
+        throw new Error(`Failed to download audio: ${audioResponse.statusText}`);
+      }
+  
+      return audioResponse.body;
   }
 
 }
