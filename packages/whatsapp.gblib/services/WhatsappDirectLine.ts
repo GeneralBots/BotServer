@@ -1502,13 +1502,13 @@ private async sendButtonList(to: string, buttons: string[]) {
   public async downloadAudio(req, min) {
       // Extract the audio ID from the request body
       const audioId = req.body.entry[0].changes[0].value.messages[0].audio.id;
+      
+          // User access token from min.whatsappServiceKey
+          const userAccessToken = min.whatsappServiceKey;
+      
   
       // Meta WhatsApp Business API endpoint for downloading media
-      const metaApiUrl = `https://graph.facebook.com/v16.0/${audioId}`;
-  
-      // User access token from min.whatsappServiceKey
-      const userAccessToken = min.whatsappServiceKey;
-  
+      const metaApiUrl =         `https://graph.facebook.com/v20.0/${audioId}`;
       // Fetch the media URL using the audio ID
       const mediaUrlResponse = await fetch(metaApiUrl, {
         headers: {
