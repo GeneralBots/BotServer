@@ -1503,9 +1503,8 @@ private async sendButtonList(to: string, buttons: string[]) {
       // Extract the audio ID from the request body
       const audioId = req.body.entry[0].changes[0].value.messages[0].audio.id;
       
-          // User access token from min.whatsappServiceKey
-          const userAccessToken = GBServer.globals.minBoot.instance.whatsappServiceKey;
-      
+      // User access token from min.whatsappServiceKey
+      const userAccessToken = GBServer.globals.minBoot.instance.whatsappServiceKey;
   
       // Meta WhatsApp Business API endpoint for downloading media
       const metaApiUrl =         `https://graph.facebook.com/v20.0/${audioId}`;
@@ -1528,17 +1527,17 @@ private async sendButtonList(to: string, buttons: string[]) {
       }
   
       // Download the audio file
-      const audioResponse = await fetch(mediaUrl, {
+      const res = await fetch(mediaUrl, {
         headers: {
           Authorization: `Bearer ${userAccessToken}`,
         },
       });
   
-      if (!audioResponse.ok) {
-        throw new Error(`Failed to download audio: ${audioResponse.statusText}`);
+      if (!res.ok) {
+        throw new Error(`Failed to download audio: ${res.statusText}`);
       }
-  
-      return audioResponse.body;
+      let buf: any = Buffer.from(await res.arrayBuffer());
+      return buf;
   }
 
 }
