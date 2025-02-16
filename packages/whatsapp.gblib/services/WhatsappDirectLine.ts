@@ -1539,6 +1539,7 @@ private async sendButtonList(to: string, buttons: string[]) {
       let buf: any = Buffer.from(await res.arrayBuffer());
       return buf;
   }
+
   public async getLatestCampaignReport() {
     const businessAccountId = this.whatsappBusinessManagerId;
     const userAccessToken = this.whatsappServiceKey;
@@ -1550,13 +1551,10 @@ private async sendButtonList(to: string, buttons: string[]) {
     try {
         // Step 1: Fetch templates with edit time ordering
         const statsResponse = await fetch(
-            `https://graph.facebook.com/v20.0/${businessAccountId}/message_templates?` +
-            `fields=id,name,category,language,status,created_time,last_edited_time,` +
-            `delivered_24h,read_24h,rejection_reason&` +
+            `https://graph.facebook.com/v21.0/${businessAccountId}/message_templates?` +
+            `fields=id,name,category,language,status,created_time,last_edited_time&` +
             `ordering=[{last_edited_time: 'DESC'}]`, {
-            headers: {
-                Authorization: `Bearer ${userAccessToken}`
-            }
+            headers: { Authorization: `Bearer ${userAccessToken}` }
         });
 
         const data = await statsResponse.json();
@@ -1577,14 +1575,37 @@ private async sendButtonList(to: string, buttons: string[]) {
             return 'No marketing templates found.';
         }
 
-        // Get the most recently edited marketing template
         const latestTemplate = marketingTemplates[0];
+        const templateId = latestTemplate.id;
+        
+        // Step 2: Fetch template analytics
+        const startTime = Math.floor(Date.now() / 1000) - 86400; // Last 24h
+        const endTime = Math.floor(Date.now() / 1000);
+        
+        const analyticsResponse = await fetch(
+            `https://graph.facebook.com/v21.0/${businessAccountId}/template_analytics?` +
+            `start=${startTime}&end=${endTime}&granularity=daily&metric_types=sent,delivered,read,clicked&template_ids=[${templateId}]`, {
+            headers: { Authorization: `Bearer ${userAccessToken}` }
+        });
 
-        // Calculate metrics
-        const delivered = latestTemplate.delivered_24h || 0;
-        const read = latestTemplate.read_24h || 0;
-        const readRate = delivered > 0 ? ((read / delivered) * 100).toFixed(0) : 0;
+        const analyticsData = await analyticsResponse.json();
+        if (!analyticsResponse.ok) {
+            throw new Error(analyticsData.error.message);
+        }
 
+        const dataPoints = analyticsData.data[0]?.data_points || [];
+        if (dataPoints.length === 0) {
+            return 'No analytics data available for the specified template.';
+        }
+
+        const latestDataPoint = dataPoints[dataPoints.length - 1];
+        const sent = latestDataPoint.sent || 0;
+        const delivered = latestDataPoint.delivered || 0;
+        const read = latestDataPoint.read || 0;
+        const clicked = latestDataPoint.clicked?.reduce((acc, item) => acc + item.count, 0) || 0;
+        const readRate = delivered > 0 ? ((read / delivered) * 100).toFixed(2) : 0;
+        const clickRate = delivered > 0 ? ((clicked / delivered) * 100).toFixed(2) : 0;
+        
         // Format the date
         const lastEditedDate = latestTemplate.last_edited_time 
             ? new Date(latestTemplate.last_edited_time).toLocaleDateString('en-US', {
@@ -1594,20 +1615,25 @@ private async sendButtonList(to: string, buttons: string[]) {
               })
             : 'Not available';
 
-        // Format the response exactly as requested
         return `Template Name: *${latestTemplate.name}*
 Category: *${latestTemplate.category?.toUpperCase()}*
 Language: *${latestTemplate.language?.replace('-', '_').toUpperCase() || 'pt_BR'}*
 Status: *${latestTemplate.status?.toUpperCase()}*
+Messages Sent: *${sent.toLocaleString()}*
 Messages Delivered: *${delivered.toLocaleString()}*
 Message Read Rate: *${readRate}% (${read.toLocaleString()})*
+Message Click Rate: *${clickRate}% (${clicked.toLocaleString()})*
 Top Block Reason: *${latestTemplate.rejection_reason || '––'}*
-Last Edited: *${lastEditedDate}*`.trim();
-
+Last Edited: *${lastEditedDate}*`;
     } catch (error) {
         console.error('Error fetching WhatsApp template statistics:', error.message);
         throw error;
     }
 }
+
+
+
+
+
 
 }
