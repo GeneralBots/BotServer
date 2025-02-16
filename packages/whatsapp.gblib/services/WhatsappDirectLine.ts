@@ -1539,6 +1539,7 @@ private async sendButtonList(to: string, buttons: string[]) {
       let buf: any = Buffer.from(await res.arrayBuffer());
       return buf;
   }
+
   public async getLatestCampaignReport() {
     const businessAccountId = this.whatsappBusinessManagerId;
     const userAccessToken = this.whatsappServiceKey;
@@ -1554,13 +1555,20 @@ private async sendButtonList(to: string, buttons: string[]) {
             `fields=message_templates{id,name,category,language,status,created_time,last_edited_time}&` +
             `access_token=${userAccessToken}`
         );
-
+        
         const data = await statsResponse.json();
         if (!statsResponse.ok) {
-            throw new Error(data.error?.message || 'Failed to fetch templates');
+          throw new Error(data.error?.message || 'Failed to fetch templates');
+        }
+        console.log(GBUtil.toYAML(data));
+          
+        // Check if message_templates is an array
+        if (!Array.isArray(data.message_templates)) {
+            console.error('Expected message_templates to be an array, but got:', data.message_templates);
+            return 'Invalid response format for message templates.';
         }
 
-        if (!data.message_templates || data.message_templates.length === 0) {
+        if (data.message_templates.length === 0) {
             throw new Error('No template statistics found');
         }
 
@@ -1573,7 +1581,6 @@ private async sendButtonList(to: string, buttons: string[]) {
             return 'No marketing templates found.';
         }
 
-        console.log(GBUtil.toYAML(marketingTemplates));
         const latestTemplate = marketingTemplates[0];
         const templateId = latestTemplate.id;
 
@@ -1588,11 +1595,11 @@ private async sendButtonList(to: string, buttons: string[]) {
         );
 
         const analyticsData = await analyticsResponse.json();
+        console.log(GBUtil.toYAML(analyticsData));
         if (!analyticsResponse.ok) {
             throw new Error(analyticsData.error?.message || 'Failed to fetch analytics');
         }
 
-        console.log(GBUtil.toYAML(analyticsData));
         const dataPoints = analyticsData.template_analytics?.data[0]?.data_points || [];
         if (dataPoints.length === 0) {
             return 'No analytics data available for the specified template.';
