@@ -1540,8 +1540,6 @@ private async sendButtonList(to: string, buttons: string[]) {
       return buf;
   }
 
-
-
   public async getLatestCampaignReport() {
     const businessAccountId = this.whatsappBusinessManagerId;
     const userAccessToken = this.whatsappServiceKey;
@@ -1551,80 +1549,65 @@ private async sendButtonList(to: string, buttons: string[]) {
     }
 
     try {
-        // GraphQL query without any date filters
-        const query = `
-            query WhatsAppBusinessAccountManagerTemplateDetailsInsightsContainerQuery {
-                businessAccount(id: "${businessAccountId}") {
-                    messageTemplates {
-                        id
-                        name
-                        category
-                        language
-                        status
-                        lastEditedTime
-                        insights {  // No date filters here
-                            sent
-                            delivered
-                            read
-                            clicked
-                        }
-                    }
-                }
-            }
-        `;
+        // Step 1: Fetch templates with edit time ordering
+        const statsResponse = await fetch(
+            `https://graph.facebook.com/v21.0/${businessAccountId}?` +
+            `fields=message_templates{id,name,category,language,status,created_time,last_edited_time}&` +
+            `access_token=${userAccessToken}`, 
+        );
 
-        // Perform the fetch request with improved error handling
-        const response = await fetch('https://graph.facebook.com/v12.0/graphql', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${userAccessToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ query })
-        });
-
-        // Log response status and raw response data for debugging
-        console.log('Response Status:', response.status);
-        const result = await response.json();
-        console.log('Raw Response:', result);
-
-        if (!response.ok) {
-            // If response is not OK, throw an error
-            throw new Error(result.errors ? result.errors[0].message : 'Error fetching data');
+        const data = await statsResponse.json();
+        if (!statsResponse.ok) {
+            throw new Error(data.error.message);
         }
 
-        // Check if there are data or errors in the response
-        if (result.errors) {
-            throw new Error(result.errors.map(err => err.message).join(', '));
+        if (!data.message_templates || data.message_templates.length === 0) {
+            throw new Error('No template statistics found');
         }
 
-        const templates = result.data.businessAccount.messageTemplates;
-
-        if (!templates || templates.length === 0) {
-            return 'No marketing templates found.';
-        }
-
-        // Filter for marketing templates and sort by last edited time
-        const marketingTemplates = templates
+        // Filter for marketing templates and get the latest edited one
+        const marketingTemplates = data.message_templates
             .filter(template => template.category?.toUpperCase() === 'MARKETING')
-            .sort((a, b) => new Date(b.lastEditedTime).getTime() - new Date(a.lastEditedTime).getTime());
+            .sort((a, b) => new Date(b.last_edited_time).getTime() - new Date(a.last_edited_time).getTime());
 
         if (marketingTemplates.length === 0) {
             return 'No marketing templates found.';
         }
-
+        console.log(GBUtil.toYAML(marketingTemplates));
         const latestTemplate = marketingTemplates[0];
-        const insights = latestTemplate.insights || {};
-        const sent = insights.sent || 0;
-        const delivered = insights.delivered || 0;
-        const read = insights.read || 0;
-        const clicked = insights.clicked || 0;
+        const templateId = latestTemplate.id;
+
+        // Step 2: Fetch template analytics
+        const startTime = Math.floor(Date.now() / 1000) - 86400 * 7; // Last 7 days
+        const endTime = Math.floor(Date.now() / 1000);
+
+        const analyticsResponse = await fetch(
+            `https://graph.facebook.com/v21.0/${businessAccountId}?` +
+            `fields=template_analytics.start(${startTime}).end(${endTime}).granularity(DAY).metric_types(sent,delivered,read,clicked).template_ids([${templateId}])&` +
+            `access_token=${userAccessToken}`, 
+        );
+
+        const analyticsData = await analyticsResponse.json();
+        if (!analyticsResponse.ok) {
+            throw new Error(analyticsData.error.message);
+        }
+        console.log(GBUtil.toYAML(analyticsData));
+        const dataPoints = analyticsData.template_analytics?.data[0]?.data_points || [];
+        if (dataPoints.length === 0) {
+            return 'No analytics data available for the specified template.';
+        }
+
+        const latestDataPoint = dataPoints[dataPoints.length - 1];
+        const sent = latestDataPoint.sent || 0;
+        const delivered = latestDataPoint.delivered || 0;
+        const read = latestDataPoint.read || 0;
+        const clicked = latestDataPoint.clicked?.reduce((acc, item) => acc + item.count, 0) || 0;
         const readRate = delivered > 0 ? ((read / delivered) * 100).toFixed(2) : 0;
         const clickRate = delivered > 0 ? ((clicked / delivered) * 100).toFixed(2) : 0;
-
+        
         // Format the date
-        const lastEditedDate = latestTemplate.lastEditedTime 
-            ? new Date(latestTemplate.lastEditedTime).toLocaleDateString('en-US', {
+        const lastEditedDate = latestTemplate.last_edited_time 
+            ? new Date(latestTemplate.last_edited_time).toLocaleDateString('en-US', {
                 month: 'short',
                 day: '2-digit',
                 year: 'numeric'
@@ -1639,16 +1622,13 @@ Messages Sent: *${sent.toLocaleString()}*
 Messages Delivered: *${delivered.toLocaleString()}*
 Message Read Rate: *${readRate}% (${read.toLocaleString()})*
 Message Click Rate: *${clickRate}% (${clicked.toLocaleString()})*
+Top Block Reason: *${latestTemplate.rejection_reason || '––'}*
 Last Edited: *${lastEditedDate}*`;
     } catch (error) {
-        // Log and throw the error with the message for debugging
-        console.error('Error fetching WhatsApp template statistics using GraphQL:', error.message);
+        console.error('Error fetching WhatsApp template statistics:', error.message);
         throw error;
     }
 }
-
-
-  
 
 
 }
