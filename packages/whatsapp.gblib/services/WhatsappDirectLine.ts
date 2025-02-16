@@ -1576,6 +1576,7 @@ private async sendButtonList(to: string, buttons: string[]) {
             return 'No marketing templates found.';
         }
 
+        // Log YAML formatted data
         console.log(GBUtil.toYAML(marketingTemplates));
         const latestTemplate = marketingTemplates[0];
         const templateId = latestTemplate.id;
@@ -1595,7 +1596,9 @@ private async sendButtonList(to: string, buttons: string[]) {
             throw new Error(analyticsData.error?.message || 'Failed to fetch analytics');
         }
 
+        // Log YAML formatted analytics data
         console.log(GBUtil.toYAML(analyticsData));
+
         const dataPoints = analyticsData.template_analytics?.data[0]?.data_points || [];
         if (dataPoints.length === 0) {
             return 'No analytics data available for the specified template.';
