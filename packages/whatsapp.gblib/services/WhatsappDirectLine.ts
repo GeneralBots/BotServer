@@ -1540,112 +1540,109 @@ private async sendButtonList(to: string, buttons: string[]) {
       return buf;
   }
   public async getLatestTemplateReport() {
-    const businessAccountId = this.whatsappBusinessManagerId;
-    const userAccessToken = this.whatsappServiceKey;
-
-    if (!(businessAccountId && userAccessToken)) {
-        return 'No statistics available for WhatsApp templates.';
-    }
-
-    let templateData;
-
-    try {
-        // Step 1: Fetch latest template message statistics
-        const statsResponse = await fetch(
-            `https://graph.facebook.com/v20.0/${businessAccountId}/message_templates?` +
-            `fields=id,name,status,language,quality_score,category,created_time,` +
-            `message_sends_24h,message_sends_7d,message_sends_30d,` +
-            `delivered_24h,delivered_7d,delivered_30d,` +
-            `read_24h,read_7d,read_30d&` +
-            `limit=1&` +
-            `order=created_time_desc`, {
-            headers: {
-                Authorization: `Bearer ${userAccessToken}`
-            }
-        });
-
-        const data = await statsResponse.json();
-        if (!statsResponse.ok) {
-            throw new Error(data.error.message);
-        }
-
-        if (!data.data || data.data.length === 0) {
-            throw new Error('No template statistics found');
-        }
-
-        templateData = data.data[0];
-        console.log('Latest template statistics retrieved:', templateData.name);
-
-        // Step 2: Calculate key metrics
-        const metrics = {
-            name: templateData.name,
-            status: templateData.status,
-            language: templateData.language,
-            category: templateData.category,
-            qualityScore: templateData.quality_score,
-            createdTime: new Date(templateData.created_time).toLocaleString(),
-            
-            // 24-hour metrics
-            sends24h: templateData.message_sends_24h,
-            delivered24h: templateData.delivered_24h,
-            read24h: templateData.read_24h,
-            deliveryRate24h: ((templateData.delivered_24h / templateData.message_sends_24h) * 100).toFixed(2),
-            readRate24h: ((templateData.read_24h / templateData.delivered_24h) * 100).toFixed(2),
-            
-            // 7-day metrics
-            sends7d: templateData.message_sends_7d,
-            delivered7d: templateData.delivered_7d,
-            read7d: templateData.read_7d,
-            deliveryRate7d: ((templateData.delivered_7d / templateData.message_sends_7d) * 100).toFixed(2),
-            readRate7d: ((templateData.read_7d / templateData.delivered_7d) * 100).toFixed(2),
-            
-            // 30-day metrics
-            sends30d: templateData.message_sends_30d,
-            delivered30d: templateData.delivered_30d,
-            read30d: templateData.read_30d,
-            deliveryRate30d: ((templateData.delivered_30d / templateData.message_sends_30d) * 100).toFixed(2),
-            readRate30d: ((templateData.read_30d / templateData.delivered_30d) * 100).toFixed(2)
-        };
-
-        // Step 3: Format and return the report
-        return `
-Latest WhatsApp Template Statistics
----------------------------------
-Template Name: ${metrics.name}
-Created: ${metrics.createdTime}
-Status: ${metrics.status}
-Language: ${metrics.language}
-Category: ${metrics.category}
-Quality Score: ${metrics.qualityScore}
-
-Last 24 Hours
-------------
-Messages Sent: ${metrics.sends24h?.toLocaleString() ?? '0'}
-Delivered: ${metrics.delivered24h?.toLocaleString() ?? '0'}
-Read: ${metrics.read24h?.toLocaleString() ?? '0'}
-Delivery Rate: ${metrics.deliveryRate24h}%
-Read Rate: ${metrics.readRate24h}%
-
-Last 7 Days
-----------
-Messages Sent: ${metrics.sends7d?.toLocaleString() ?? '0'}
-Delivered: ${metrics.delivered7d?.toLocaleString() ?? '0'}
-Read: ${metrics.read7d?.toLocaleString() ?? '0'}
-Delivery Rate: ${metrics.deliveryRate7d}%
-Read Rate: ${metrics.readRate7d}%
-
-Last 30 Days
------------
-Messages Sent: ${metrics.sends30d?.toLocaleString() ?? '0'}
-Delivered: ${metrics.delivered30d?.toLocaleString() ?? '0'}
-Read: ${metrics.read30d?.toLocaleString() ?? '0'}
-Delivery Rate: ${metrics.deliveryRate30d}%
-Read Rate: ${metrics.readRate30d}%
-        `.trim();
-
-    } catch (error) {
-        console.error('Error fetching latest WhatsApp template statistics:', error.message);
-        throw error;
-    }
-}
-}
+      const businessAccountId = this.whatsappBusinessManagerId;
+      const userAccessToken = this.whatsappServiceKey;
+  
+      if (!(businessAccountId && userAccessToken)) {
+          return 'No statistics available for WhatsApp templates.';
+      }
+  
+      try {
+          // Step 1: Fetch all templates ordered by creation time
+          const statsResponse = await fetch(
+              `https://graph.facebook.com/v20.0/${businessAccountId}/message_templates?` +
+              `fields=id,name,status,language,quality_score,category,created_time,` +
+              `message_sends_24h,message_sends_7d,message_sends_30d,` +
+              `delivered_24h,delivered_7d,delivered_30d,` +
+              `read_24h,read_7d,read_30d&` +
+              `ordering=[{created_time: 'DESC'}]`, {
+              headers: {
+                  Authorization: `Bearer ${userAccessToken}`
+              }
+          });
+  
+          const data = await statsResponse.json();
+          if (!statsResponse.ok) {
+              throw new Error(data.error.message);
+          }
+  
+          if (!data.data || data.data.length === 0) {
+              throw new Error('No template statistics found');
+          }
+  
+          // Get the last template from the sorted data
+          const templateData = data.data[data.data.length - 1];
+          console.log('Latest template statistics retrieved:', templateData.name);
+  
+          // Step 2: Calculate key metrics
+          const metrics = {
+              name: templateData.name,
+              status: templateData.status,
+              language: templateData.language,
+              category: templateData.category,
+              qualityScore: templateData.quality_score,
+              createdTime: new Date(templateData.created_time).toLocaleString(),
+              
+              // 24-hour metrics
+              sends24h: templateData.message_sends_24h,
+              delivered24h: templateData.delivered_24h,
+              read24h: templateData.read_24h,
+              deliveryRate24h: ((templateData.delivered_24h / templateData.message_sends_24h) * 100).toFixed(2),
+              readRate24h: ((templateData.read_24h / templateData.delivered_24h) * 100).toFixed(2),
+              
+              // 7-day metrics
+              sends7d: templateData.message_sends_7d,
+              delivered7d: templateData.delivered_7d,
+              read7d: templateData.read_7d,
+              deliveryRate7d: ((templateData.delivered_7d / templateData.message_sends_7d) * 100).toFixed(2),
+              readRate7d: ((templateData.read_7d / templateData.delivered_7d) * 100).toFixed(2),
+              
+              // 30-day metrics
+              sends30d: templateData.message_sends_30d,
+              delivered30d: templateData.delivered_30d,
+              read30d: templateData.read_30d,
+              deliveryRate30d: ((templateData.delivered_30d / templateData.message_sends_30d) * 100).toFixed(2),
+              readRate30d: ((templateData.read_30d / templateData.delivered_30d) * 100).toFixed(2)
+          };
+  
+          // Step 3: Format and return the report
+          return `
+  Latest WhatsApp Template Statistics
+  ---------------------------------
+  Template Name: ${metrics.name}
+  Created: ${metrics.createdTime}
+  Status: ${metrics.status}
+  Language: ${metrics.language}
+  Category: ${metrics.category}
+  Quality Score: ${metrics.qualityScore}
+  
+  Last 24 Hours
+  ------------
+  Messages Sent: ${metrics.sends24h?.toLocaleString() ?? '0'}
+  Delivered: ${metrics.delivered24h?.toLocaleString() ?? '0'}
+  Read: ${metrics.read24h?.toLocaleString() ?? '0'}
+  Delivery Rate: ${metrics.deliveryRate24h}%
+  Read Rate: ${metrics.readRate24h}%
+  
+  Last 7 Days
+  ----------
+  Messages Sent: ${metrics.sends7d?.toLocaleString() ?? '0'}
+  Delivered: ${metrics.delivered7d?.toLocaleString() ?? '0'}
+  Read: ${metrics.read7d?.toLocaleString() ?? '0'}
+  Delivery Rate: ${metrics.deliveryRate7d}%
+  Read Rate: ${metrics.readRate7d}%
+  
+  Last 30 Days
+  -----------
+  Messages Sent: ${metrics.sends30d?.toLocaleString() ?? '0'}
+  Delivered: ${metrics.delivered30d?.toLocaleString() ?? '0'}
+  Read: ${metrics.read30d?.toLocaleString() ?? '0'}
+  Delivery Rate: ${metrics.deliveryRate30d}%
+  Read Rate: ${metrics.readRate30d}%
+          `.trim();
+  
+      } catch (error) {
+          console.error('Error fetching latest WhatsApp template statistics:', error.message);
+          throw error;
+      }
+  }}
