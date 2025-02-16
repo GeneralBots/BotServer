@@ -1544,7 +1544,7 @@ private async sendButtonList(to: string, buttons: string[]) {
     const userAccessToken = this.whatsappServiceKey;
 
     if (!(businessAccountId && userAccessToken)) {
-        return 'No statistics available for General Bots WhatsApp templates.';
+        return 'No statistics available for marketing templates.';
     }
 
     try {
@@ -1552,10 +1552,7 @@ private async sendButtonList(to: string, buttons: string[]) {
         const statsResponse = await fetch(
             `https://graph.facebook.com/v20.0/${businessAccountId}/message_templates?` +
             `fields=id,name,category,language,status,created_time,last_edited_time,` +
-            `message_sends_24h,message_sends_7d,message_sends_30d,` +
-            `delivered_24h,delivered_7d,delivered_30d,` +
-            `read_24h,read_7d,read_30d,content,components,` +
-            `quality_score,rejection_reason&` +
+            `delivered_24h,read_24h,rejection_reason&` +
             `ordering=[{last_edited_time: 'DESC'}]`, {
             headers: {
                 Authorization: `Bearer ${userAccessToken}`
@@ -1571,42 +1568,46 @@ private async sendButtonList(to: string, buttons: string[]) {
             throw new Error('No template statistics found');
         }
 
-        // Process all templates and format them
-        const templateReports = data.data.map(template => {
-            // Calculate delivery and read rates
-            const delivered = template.delivered_24h || 0;
-            const read = template.read_24h || 0;
-            const readRate = delivered > 0 ? ((read / delivered) * 100).toFixed(0) : 0;
+        // Filter for marketing templates and get the latest edited one
+        const marketingTemplates = data.data
+            .filter(template => template.category?.toUpperCase() === 'MARKETING')
+            .sort((a, b) => new Date(b.last_edited_time).getTime() - new Date(a.last_edited_time).getTime());
 
-            const lastEditedDate = new Date(template.last_edited_time || template.created_time);
+        if (marketingTemplates.length === 0) {
+            return 'No marketing templates found.';
+        }
 
-            return `
-Template Name: **${template.name}**
-Category: **${template.category}**
-Language: **${template.language}**
-Status: **${template.status}**
-Messages Delivered: **${delivered.toLocaleString()}**
-Message Read Rate: **${readRate}% (${read.toLocaleString()})**
-Top Block Reason: **${template.rejection_reason || '––'}**
-Last Edited: **${lastEditedDate.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: '2-digit', 
-    year: 'numeric'
-})}**
-${template.content ? `Content: ${template.content}` : ''}
--------------------`;
-        });
+        // Get the most recently edited marketing template
+        const latestTemplate = marketingTemplates[0];
 
-        // Join all template reports with double line breaks
-        return `General Bots WhatsApp Analytics Report
-============================================
-${templateReports.join('\n\n')}`.trim();
+        // Calculate metrics
+        const delivered = latestTemplate.delivered_24h || 0;
+        const read = latestTemplate.read_24h || 0;
+        const readRate = delivered > 0 ? ((read / delivered) * 100).toFixed(0) : 0;
+
+        // Format the date
+        const lastEditedDate = latestTemplate.last_edited_time 
+            ? new Date(latestTemplate.last_edited_time).toLocaleDateString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric'
+              })
+            : 'Not available';
+
+        // Format the response exactly as requested
+        return `Template Name: *${latestTemplate.name}*
+Category: *${latestTemplate.category?.toUpperCase()}*
+Language: *${latestTemplate.language?.replace('-', '_').toUpperCase() || 'pt_BR'}*
+Status: *${latestTemplate.status?.toUpperCase()}*
+Messages Delivered: *${delivered.toLocaleString()}*
+Message Read Rate: *${readRate}% (${read.toLocaleString()})*
+Top Block Reason: *${latestTemplate.rejection_reason || '––'}*
+Last Edited: *${lastEditedDate}*`.trim();
 
     } catch (error) {
         console.error('Error fetching WhatsApp template statistics:', error.message);
         throw error;
     }
 }
-
 
 }
