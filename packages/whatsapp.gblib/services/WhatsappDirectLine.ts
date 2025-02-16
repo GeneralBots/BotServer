@@ -1539,8 +1539,7 @@ private async sendButtonList(to: string, buttons: string[]) {
       let buf: any = Buffer.from(await res.arrayBuffer());
       return buf;
   }
-
-  public async getLatestCampaignReport() {
+  public async getLatestTemplateReport() {
     const businessAccountId = this.whatsappBusinessManagerId;
     const userAccessToken = this.whatsappServiceKey;
 
@@ -1551,13 +1550,15 @@ private async sendButtonList(to: string, buttons: string[]) {
     let templateData;
 
     try {
-        // Step 1: Fetch template message statistics
+        // Step 1: Fetch latest template message statistics
         const statsResponse = await fetch(
             `https://graph.facebook.com/v20.0/${businessAccountId}/message_templates?` +
-            `fields=id,name,status,language,quality_score,category,` +
+            `fields=id,name,status,language,quality_score,category,created_time,` +
             `message_sends_24h,message_sends_7d,message_sends_30d,` +
             `delivered_24h,delivered_7d,delivered_30d,` +
-            `read_24h,read_7d,read_30d&limit=1`, {
+            `read_24h,read_7d,read_30d&` +
+            `limit=1&` +
+            `order=created_time_desc`, {
             headers: {
                 Authorization: `Bearer ${userAccessToken}`
             }
@@ -1573,7 +1574,7 @@ private async sendButtonList(to: string, buttons: string[]) {
         }
 
         templateData = data.data[0];
-        console.log('Template statistics retrieved:', templateData.name);
+        console.log('Latest template statistics retrieved:', templateData.name);
 
         // Step 2: Calculate key metrics
         const metrics = {
@@ -1582,6 +1583,7 @@ private async sendButtonList(to: string, buttons: string[]) {
             language: templateData.language,
             category: templateData.category,
             qualityScore: templateData.quality_score,
+            createdTime: new Date(templateData.created_time).toLocaleString(),
             
             // 24-hour metrics
             sends24h: templateData.message_sends_24h,
@@ -1607,9 +1609,10 @@ private async sendButtonList(to: string, buttons: string[]) {
 
         // Step 3: Format and return the report
         return `
-WhatsApp Template Statistics
----------------------------
+Latest WhatsApp Template Statistics
+---------------------------------
 Template Name: ${metrics.name}
+Created: ${metrics.createdTime}
 Status: ${metrics.status}
 Language: ${metrics.language}
 Category: ${metrics.category}
@@ -1641,7 +1644,7 @@ Read Rate: ${metrics.readRate30d}%
         `.trim();
 
     } catch (error) {
-        console.error('Error fetching WhatsApp template statistics:', error.message);
+        console.error('Error fetching latest WhatsApp template statistics:', error.message);
         throw error;
     }
 }
