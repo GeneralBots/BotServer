@@ -1574,7 +1574,7 @@ private async sendButtonList(to: string, buttons: string[]) {
         if (marketingTemplates.length === 0) {
             return 'No marketing templates found.';
         }
-
+        console.log(GBUtil.toYAML(marketingTemplates));
         const latestTemplate = marketingTemplates[0];
         const templateId = latestTemplate.id;
         
@@ -1592,7 +1592,7 @@ private async sendButtonList(to: string, buttons: string[]) {
         if (!analyticsResponse.ok) {
             throw new Error(analyticsData.error.message);
         }
-
+        console.log(GBUtil.toYAML(analyticsData));
         const dataPoints = analyticsData.data[0]?.data_points || [];
         if (dataPoints.length === 0) {
             return 'No analytics data available for the specified template.';
