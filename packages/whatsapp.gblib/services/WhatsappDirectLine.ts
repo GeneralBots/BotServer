@@ -1540,7 +1540,9 @@ private async sendButtonList(to: string, buttons: string[]) {
       return buf;
   }
 
-  public async getLatestCampaignReport() {
+
+
+  public async getLatestCampaignReportUsingGraphQL() {
     const businessAccountId = this.whatsappBusinessManagerId;
     const userAccessToken = this.whatsappServiceKey;
 
@@ -1549,66 +1551,68 @@ private async sendButtonList(to: string, buttons: string[]) {
     }
 
     try {
-        // Step 1: Fetch templates with edit time ordering
-        const statsResponse = await fetch(
-            `https://graph.facebook.com/v21.0/${businessAccountId}/message_templates?` +
-            `fields=id,name,category,language,status,created_time,last_edited_time&` +
-            `ordering=[{last_edited_time: 'DESC'}]`, {
-            headers: { Authorization: `Bearer ${userAccessToken}` }
+        // GraphQL query for templates and insights
+        const query = `
+            query WhatsAppBusinessAccountManagerTemplateDetailsInsightsContainerQuery {
+                businessAccount(id: "${businessAccountId}") {
+                    messageTemplates {
+                        id
+                        name
+                        category
+                        language
+                        status
+                        lastEditedTime
+                        insights(startDate: "2025-02-01", endDate: "2025-02-16") {
+                            sent
+                            delivered
+                            read
+                            clicked
+                        }
+                    }
+                }
+            }
+        `;
+
+        const response = await fetch('https://graph.facebook.com/graphql', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${userAccessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                query
+            })
         });
 
-        const data = await statsResponse.json();
-        if (!statsResponse.ok) {
-            throw new Error(data.error.message);
+        const result = await response.json();
+        
+        if (!response.ok || result.errors) {
+            throw new Error(result.errors ? result.errors[0].message : 'Error fetching data');
         }
 
-        if (!data.data || data.data.length === 0) {
-            throw new Error('No template statistics found');
-        }
+        const templates = result.data.businessAccount.messageTemplates;
 
-        // Filter for marketing templates and get the latest edited one
-        const marketingTemplates = data.data
+        // Filter for marketing templates
+        const marketingTemplates = templates
             .filter(template => template.category?.toUpperCase() === 'MARKETING')
-            .sort((a, b) => new Date(b.last_edited_time).getTime() - new Date(a.last_edited_time).getTime());
+            .sort((a, b) => new Date(b.lastEditedTime).getTime() - new Date(a.lastEditedTime).getTime());
 
         if (marketingTemplates.length === 0) {
             return 'No marketing templates found.';
         }
 
         const latestTemplate = marketingTemplates[0];
-        const templateId = latestTemplate.id;
-        
-        // Step 2: Fetch template analytics
-        const startTime = Math.floor(Date.now() / 1000) - 604800; // Last 7 days
-        const endTime = Math.floor(Date.now() / 1000);
-                
-        const analyticsResponse = await fetch(
-            `https://graph.facebook.com/v21.0/${businessAccountId}/template_analytics?` +
-            `start=${startTime}&end=${endTime}&granularity=daily&metric_types=sent,delivered,read,clicked&template_ids=[${templateId}]`, {
-            headers: { Authorization: `Bearer ${userAccessToken}` }
-        });
-
-        const analyticsData = await analyticsResponse.json();
-        if (!analyticsResponse.ok) {
-            throw new Error(analyticsData.error.message);
-        }
-
-        const dataPoints = analyticsData.data[0]?.data_points || [];
-        if (dataPoints.length === 0) {
-            return 'No analytics data available for the specified template.';
-        }
-
-        const latestDataPoint = dataPoints[dataPoints.length - 1];
-        const sent = latestDataPoint.sent || 0;
-        const delivered = latestDataPoint.delivered || 0;
-        const read = latestDataPoint.read || 0;
-        const clicked = latestDataPoint.clicked?.reduce((acc, item) => acc + item.count, 0) || 0;
+        const insights = latestTemplate.insights || {};
+        const sent = insights.sent || 0;
+        const delivered = insights.delivered || 0;
+        const read = insights.read || 0;
+        const clicked = insights.clicked || 0;
         const readRate = delivered > 0 ? ((read / delivered) * 100).toFixed(2) : 0;
         const clickRate = delivered > 0 ? ((clicked / delivered) * 100).toFixed(2) : 0;
         
         // Format the date
-        const lastEditedDate = latestTemplate.last_edited_time 
-            ? new Date(latestTemplate.last_edited_time).toLocaleDateString('en-US', {
+        const lastEditedDate = latestTemplate.lastEditedTime 
+            ? new Date(latestTemplate.lastEditedTime).toLocaleDateString('en-US', {
                 month: 'short',
                 day: '2-digit',
                 year: 'numeric'
@@ -1623,13 +1627,13 @@ Messages Sent: *${sent.toLocaleString()}*
 Messages Delivered: *${delivered.toLocaleString()}*
 Message Read Rate: *${readRate}% (${read.toLocaleString()})*
 Message Click Rate: *${clickRate}% (${clicked.toLocaleString()})*
-Top Block Reason: *${latestTemplate.rejection_reason || '––'}*
 Last Edited: *${lastEditedDate}*`;
     } catch (error) {
-        console.error('Error fetching WhatsApp template statistics:', error.message);
+        console.error('Error fetching WhatsApp template statistics using GraphQL:', error.message);
         throw error;
     }
 }
+
 
 
 
