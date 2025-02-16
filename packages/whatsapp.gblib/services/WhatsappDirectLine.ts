@@ -1542,7 +1542,7 @@ private async sendButtonList(to: string, buttons: string[]) {
 
 
 
-  public async getLatestCampaignReportUsingGraphQL() {
+  public async getLatestCampaignReport() {
     const businessAccountId = this.whatsappBusinessManagerId;
     const userAccessToken = this.whatsappServiceKey;
 
