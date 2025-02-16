@@ -1579,9 +1579,9 @@ private async sendButtonList(to: string, buttons: string[]) {
         const templateId = latestTemplate.id;
         
         // Step 2: Fetch template analytics
-        const startTime = Math.floor(Date.now() / 1000) - 86400; // Last 24h
+        const startTime = Math.floor(Date.now() / 1000) - 604800; // Last 7 days
         const endTime = Math.floor(Date.now() / 1000);
-        
+                
         const analyticsResponse = await fetch(
             `https://graph.facebook.com/v21.0/${businessAccountId}/template_analytics?` +
             `start=${startTime}&end=${endTime}&granularity=daily&metric_types=sent,delivered,read,clicked&template_ids=[${templateId}]`, {
