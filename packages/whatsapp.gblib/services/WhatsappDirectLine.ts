@@ -1544,73 +1544,105 @@ private async sendButtonList(to: string, buttons: string[]) {
     const businessAccountId = this.whatsappBusinessManagerId;
     const userAccessToken = this.whatsappServiceKey;
 
-    if (!(businessAccountId && userAccessToken)){
-      return 'No report for campaigns.';
+    if (!(businessAccountId && userAccessToken)) {
+        return 'No statistics available for WhatsApp templates.';
     }
 
-    let campaignData;
+    let templateData;
 
     try {
-        // Step 1: Fetch the latest campaign data
-        const campaignResponse = await fetch(
-            `https://graph.facebook.com/v20.0/${businessAccountId}/message_campaigns?` +
-            `fields=id,name,status,message_template_name,language,` +
-            `scheduled_time,completed_time,audience_size,delivered_count,read_count&` +
-            `limit=1&order=created_time_desc`, {
+        // Step 1: Fetch template message statistics
+        const statsResponse = await fetch(
+            `https://graph.facebook.com/v20.0/${businessAccountId}/message_templates?` +
+            `fields=id,name,status,language,quality_score,category,` +
+            `message_sends_24h,message_sends_7d,message_sends_30d,` +
+            `delivered_24h,delivered_7d,delivered_30d,` +
+            `read_24h,read_7d,read_30d&limit=1`, {
             headers: {
                 Authorization: `Bearer ${userAccessToken}`
             }
         });
 
-        const data = await campaignResponse.json();
-        if (!campaignResponse.ok) {
+        const data = await statsResponse.json();
+        if (!statsResponse.ok) {
             throw new Error(data.error.message);
         }
 
         if (!data.data || data.data.length === 0) {
-            throw new Error('No campaigns found');
+            throw new Error('No template statistics found');
         }
 
-        campaignData = data.data[0];
-        console.log('Latest campaign retrieved:', campaignData.name);
+        templateData = data.data[0];
+        console.log('Template statistics retrieved:', templateData.name);
 
         // Step 2: Calculate key metrics
         const metrics = {
-            name: campaignData.name,
-            status: campaignData.status,
-            template: campaignData.message_template_name,
-            language: campaignData.language,
-            timing: campaignData.completed_time || campaignData.scheduled_time,
-            audience: campaignData.audience_size,
-            delivered: campaignData.delivered_count,
-            read: campaignData.read_count,
-            deliveryRate: ((campaignData.delivered_count / campaignData.audience_size) * 100).toFixed(2),
-            readRate: ((campaignData.read_count / campaignData.delivered_count) * 100).toFixed(2)
+            name: templateData.name,
+            status: templateData.status,
+            language: templateData.language,
+            category: templateData.category,
+            qualityScore: templateData.quality_score,
+            
+            // 24-hour metrics
+            sends24h: templateData.message_sends_24h,
+            delivered24h: templateData.delivered_24h,
+            read24h: templateData.read_24h,
+            deliveryRate24h: ((templateData.delivered_24h / templateData.message_sends_24h) * 100).toFixed(2),
+            readRate24h: ((templateData.read_24h / templateData.delivered_24h) * 100).toFixed(2),
+            
+            // 7-day metrics
+            sends7d: templateData.message_sends_7d,
+            delivered7d: templateData.delivered_7d,
+            read7d: templateData.read_7d,
+            deliveryRate7d: ((templateData.delivered_7d / templateData.message_sends_7d) * 100).toFixed(2),
+            readRate7d: ((templateData.read_7d / templateData.delivered_7d) * 100).toFixed(2),
+            
+            // 30-day metrics
+            sends30d: templateData.message_sends_30d,
+            delivered30d: templateData.delivered_30d,
+            read30d: templateData.read_30d,
+            deliveryRate30d: ((templateData.delivered_30d / templateData.message_sends_30d) * 100).toFixed(2),
+            readRate30d: ((templateData.read_30d / templateData.delivered_30d) * 100).toFixed(2)
         };
 
         // Step 3: Format and return the report
         return `
-Latest Campaign Summary
-----------------------
-Name: ${metrics.name}
+WhatsApp Template Statistics
+---------------------------
+Template Name: ${metrics.name}
 Status: ${metrics.status}
-Template: ${metrics.template}
 Language: ${metrics.language}
-Time: ${new Date(metrics.timing).toLocaleString()}
+Category: ${metrics.category}
+Quality Score: ${metrics.qualityScore}
 
-Metrics
--------
-Audience Size: ${metrics.audience.toLocaleString()}
-Delivered: ${metrics.delivered.toLocaleString()}
-Read: ${metrics.read.toLocaleString()}
-Delivery Rate: ${metrics.deliveryRate}%
-Read Rate: ${metrics.readRate}%
+Last 24 Hours
+------------
+Messages Sent: ${metrics.sends24h?.toLocaleString() ?? '0'}
+Delivered: ${metrics.delivered24h?.toLocaleString() ?? '0'}
+Read: ${metrics.read24h?.toLocaleString() ?? '0'}
+Delivery Rate: ${metrics.deliveryRate24h}%
+Read Rate: ${metrics.readRate24h}%
+
+Last 7 Days
+----------
+Messages Sent: ${metrics.sends7d?.toLocaleString() ?? '0'}
+Delivered: ${metrics.delivered7d?.toLocaleString() ?? '0'}
+Read: ${metrics.read7d?.toLocaleString() ?? '0'}
+Delivery Rate: ${metrics.deliveryRate7d}%
+Read Rate: ${metrics.readRate7d}%
+
+Last 30 Days
+-----------
+Messages Sent: ${metrics.sends30d?.toLocaleString() ?? '0'}
+Delivered: ${metrics.delivered30d?.toLocaleString() ?? '0'}
+Read: ${metrics.read30d?.toLocaleString() ?? '0'}
+Delivery Rate: ${metrics.deliveryRate30d}%
+Read Rate: ${metrics.readRate30d}%
         `.trim();
 
     } catch (error) {
-        console.error('Error fetching campaign data:', error.message);
+        console.error('Error fetching WhatsApp template statistics:', error.message);
         throw error;
     }
 }
-
 }
