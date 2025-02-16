@@ -1539,7 +1539,6 @@ private async sendButtonList(to: string, buttons: string[]) {
       let buf: any = Buffer.from(await res.arrayBuffer());
       return buf;
   }
-
   public async getLatestCampaignReport() {
     const businessAccountId = this.whatsappBusinessManagerId;
     const userAccessToken = this.whatsappServiceKey;
@@ -1553,12 +1552,12 @@ private async sendButtonList(to: string, buttons: string[]) {
         const statsResponse = await fetch(
             `https://graph.facebook.com/v21.0/${businessAccountId}?` +
             `fields=message_templates{id,name,category,language,status,created_time,last_edited_time}&` +
-            `access_token=${userAccessToken}`, 
+            `access_token=${userAccessToken}`
         );
 
         const data = await statsResponse.json();
         if (!statsResponse.ok) {
-            throw new Error(data.error.message);
+            throw new Error(data.error?.message || 'Failed to fetch templates');
         }
 
         if (!data.message_templates || data.message_templates.length === 0) {
@@ -1573,6 +1572,7 @@ private async sendButtonList(to: string, buttons: string[]) {
         if (marketingTemplates.length === 0) {
             return 'No marketing templates found.';
         }
+
         console.log(GBUtil.toYAML(marketingTemplates));
         const latestTemplate = marketingTemplates[0];
         const templateId = latestTemplate.id;
@@ -1584,13 +1584,14 @@ private async sendButtonList(to: string, buttons: string[]) {
         const analyticsResponse = await fetch(
             `https://graph.facebook.com/v21.0/${businessAccountId}?` +
             `fields=template_analytics.start(${startTime}).end(${endTime}).granularity(DAY).metric_types(sent,delivered,read,clicked).template_ids([${templateId}])&` +
-            `access_token=${userAccessToken}`, 
+            `access_token=${userAccessToken}`
         );
 
         const analyticsData = await analyticsResponse.json();
         if (!analyticsResponse.ok) {
-            throw new Error(analyticsData.error.message);
+            throw new Error(analyticsData.error?.message || 'Failed to fetch analytics');
         }
+
         console.log(GBUtil.toYAML(analyticsData));
         const dataPoints = analyticsData.template_analytics?.data[0]?.data_points || [];
         if (dataPoints.length === 0) {
@@ -1604,9 +1605,9 @@ private async sendButtonList(to: string, buttons: string[]) {
         const clicked = latestDataPoint.clicked?.reduce((acc, item) => acc + item.count, 0) || 0;
         const readRate = delivered > 0 ? ((read / delivered) * 100).toFixed(2) : 0;
         const clickRate = delivered > 0 ? ((clicked / delivered) * 100).toFixed(2) : 0;
-        
+
         // Format the date
-        const lastEditedDate = latestTemplate.last_edited_time 
+        const lastEditedDate = latestTemplate.last_edited_time
             ? new Date(latestTemplate.last_edited_time).toLocaleDateString('en-US', {
                 month: 'short',
                 day: '2-digit',
@@ -1624,9 +1625,10 @@ Message Read Rate: *${readRate}% (${read.toLocaleString()})*
 Message Click Rate: *${clickRate}% (${clicked.toLocaleString()})*
 Top Block Reason: *${latestTemplate.rejection_reason || '––'}*
 Last Edited: *${lastEditedDate}*`;
+
     } catch (error) {
         console.error('Error fetching WhatsApp template statistics:', error.message);
-        throw error;
+        return `Error fetching statistics: ${error.message}`;
     }
 }
 
