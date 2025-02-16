@@ -56,6 +56,18 @@ export class QualityDialog extends IGBDialog {
     const service = new CSService();
 
     min.dialogs.add(
+      new WaterfallDialog('/report', [
+        async step => {
+          const locale = step.context.activity.locale;
+          await min.conversationalService.sendText(min, step, await min.whatsAppDirectLine.getLatestCampaignReport());
+          return await step.replaceDialog('/ask', { isReturning: true });
+        }
+      ])
+    );
+
+
+
+    min.dialogs.add(
       new WaterfallDialog('/check', [
         async step => {
           const locale = step.context.activity.locale;

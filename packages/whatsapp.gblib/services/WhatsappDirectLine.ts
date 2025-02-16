@@ -1540,4 +1540,77 @@ private async sendButtonList(to: string, buttons: string[]) {
       return buf;
   }
 
+  public async getLatestCampaignReport() {
+    const businessAccountId = this.whatsappBusinessManagerId;
+    const userAccessToken = this.whatsappServiceKey;
+
+    if (!(businessAccountId && userAccessToken)){
+      return 'No report for campaigns.';
+    }
+
+    let campaignData;
+
+    try {
+        // Step 1: Fetch the latest campaign data
+        const campaignResponse = await fetch(
+            `https://graph.facebook.com/v20.0/${businessAccountId}/message_campaigns?` +
+            `fields=id,name,status,message_template_name,language,` +
+            `scheduled_time,completed_time,audience_size,delivered_count,read_count&` +
+            `limit=1&order=created_time_desc`, {
+            headers: {
+                Authorization: `Bearer ${userAccessToken}`
+            }
+        });
+
+        const data = await campaignResponse.json();
+        if (!campaignResponse.ok) {
+            throw new Error(data.error.message);
+        }
+
+        if (!data.data || data.data.length === 0) {
+            throw new Error('No campaigns found');
+        }
+
+        campaignData = data.data[0];
+        console.log('Latest campaign retrieved:', campaignData.name);
+
+        // Step 2: Calculate key metrics
+        const metrics = {
+            name: campaignData.name,
+            status: campaignData.status,
+            template: campaignData.message_template_name,
+            language: campaignData.language,
+            timing: campaignData.completed_time || campaignData.scheduled_time,
+            audience: campaignData.audience_size,
+            delivered: campaignData.delivered_count,
+            read: campaignData.read_count,
+            deliveryRate: ((campaignData.delivered_count / campaignData.audience_size) * 100).toFixed(2),
+            readRate: ((campaignData.read_count / campaignData.delivered_count) * 100).toFixed(2)
+        };
+
+        // Step 3: Format and return the report
+        return `
+Latest Campaign Summary
+----------------------
+Name: ${metrics.name}
+Status: ${metrics.status}
+Template: ${metrics.template}
+Language: ${metrics.language}
+Time: ${new Date(metrics.timing).toLocaleString()}
+
+Metrics
+-------
+Audience Size: ${metrics.audience.toLocaleString()}
+Delivered: ${metrics.delivered.toLocaleString()}
+Read: ${metrics.read.toLocaleString()}
+Delivery Rate: ${metrics.deliveryRate}%
+Read Rate: ${metrics.readRate}%
+        `.trim();
+
+    } catch (error) {
+        console.error('Error fetching campaign data:', error.message);
+        throw error;
+    }
+}
+
 }
