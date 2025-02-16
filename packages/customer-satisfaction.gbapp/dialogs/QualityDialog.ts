@@ -59,7 +59,7 @@ export class QualityDialog extends IGBDialog {
       new WaterfallDialog('/report', [
         async step => {
           const locale = step.context.activity.locale;
-          await min.conversationalService.sendText(min, step, await min.whatsAppDirectLine.getLatestTemplateReport());
+          await min.conversationalService.sendText(min, step, await min.whatsAppDirectLine.getLatestCampaignReport());
           return await step.replaceDialog('/ask', { isReturning: true });
         }
       ])
