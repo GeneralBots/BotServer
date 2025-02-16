@@ -1542,7 +1542,7 @@ private async sendButtonList(to: string, buttons: string[]) {
 
 
 
-  public async getLatestCampaignReport() {
+  public async getLatestCampaignReportUsingGraphQL() {
     const businessAccountId = this.whatsappBusinessManagerId;
     const userAccessToken = this.whatsappServiceKey;
 
@@ -1551,7 +1551,7 @@ private async sendButtonList(to: string, buttons: string[]) {
     }
 
     try {
-        // GraphQL query for templates and insights
+        // GraphQL query without any date filters
         const query = `
             query WhatsAppBusinessAccountManagerTemplateDetailsInsightsContainerQuery {
                 businessAccount(id: "${businessAccountId}") {
@@ -1562,7 +1562,7 @@ private async sendButtonList(to: string, buttons: string[]) {
                         language
                         status
                         lastEditedTime
-                        insights(startDate: "2025-02-01", endDate: "2025-02-16") {
+                        insights {  // No date filters here
                             sent
                             delivered
                             read
@@ -1573,26 +1573,38 @@ private async sendButtonList(to: string, buttons: string[]) {
             }
         `;
 
-        const response = await fetch('https://graph.facebook.com/graphql', {
+        // Perform the fetch request with improved error handling
+        const response = await fetch('https://graph.facebook.com/v12.0/graphql', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${userAccessToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                query
-            })
+            body: JSON.stringify({ query })
         });
 
+        // Log response status and raw response data for debugging
+        console.log('Response Status:', response.status);
         const result = await response.json();
-        
-        if (!response.ok || result.errors) {
+        console.log('Raw Response:', result);
+
+        if (!response.ok) {
+            // If response is not OK, throw an error
             throw new Error(result.errors ? result.errors[0].message : 'Error fetching data');
+        }
+
+        // Check if there are data or errors in the response
+        if (result.errors) {
+            throw new Error(result.errors.map(err => err.message).join(', '));
         }
 
         const templates = result.data.businessAccount.messageTemplates;
 
-        // Filter for marketing templates
+        if (!templates || templates.length === 0) {
+            return 'No marketing templates found.';
+        }
+
+        // Filter for marketing templates and sort by last edited time
         const marketingTemplates = templates
             .filter(template => template.category?.toUpperCase() === 'MARKETING')
             .sort((a, b) => new Date(b.lastEditedTime).getTime() - new Date(a.lastEditedTime).getTime());
@@ -1609,7 +1621,7 @@ private async sendButtonList(to: string, buttons: string[]) {
         const clicked = insights.clicked || 0;
         const readRate = delivered > 0 ? ((read / delivered) * 100).toFixed(2) : 0;
         const clickRate = delivered > 0 ? ((clicked / delivered) * 100).toFixed(2) : 0;
-        
+
         // Format the date
         const lastEditedDate = latestTemplate.lastEditedTime 
             ? new Date(latestTemplate.lastEditedTime).toLocaleDateString('en-US', {
@@ -1629,13 +1641,14 @@ Message Read Rate: *${readRate}% (${read.toLocaleString()})*
 Message Click Rate: *${clickRate}% (${clicked.toLocaleString()})*
 Last Edited: *${lastEditedDate}*`;
     } catch (error) {
+        // Log and throw the error with the message for debugging
         console.error('Error fetching WhatsApp template statistics using GraphQL:', error.message);
         throw error;
     }
 }
 
 
-
+  
 
 
 }
