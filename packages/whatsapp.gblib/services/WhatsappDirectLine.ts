@@ -1559,9 +1559,11 @@ private async sendButtonList(to: string, buttons: string[]) {
         let data = await statsResponse.json();
         if (!statsResponse.ok) {
             throw new Error(data.error?.message || 'Failed to fetch templates');
-          }
-          console.log(GBUtil.toYAML(data));
-          data = data.message_templates.data;
+        }
+        console.log(GBUtil.toYAML(data));
+
+        data = data.message_templates?.data || [];
+
         // Check if message_templates is an array
         if (!Array.isArray(data)) {
             console.error('Expected message_templates to be an array, but got:', data.message_templates);
@@ -1584,7 +1586,7 @@ private async sendButtonList(to: string, buttons: string[]) {
         const latestTemplate = marketingTemplates[0];
         const templateId = latestTemplate.id;
 
-        // Step 2: Fetch template analytics
+        // Step 2: Fetch template analytics for the last 7 days
         const startTime = Math.floor(Date.now() / 1000) - 86400 * 7; // Last 7 days
         const endTime = Math.floor(Date.now() / 1000);
 
@@ -1596,6 +1598,7 @@ private async sendButtonList(to: string, buttons: string[]) {
 
         const analyticsData = await analyticsResponse.json();
         console.log(GBUtil.toYAML(analyticsData));
+
         if (!analyticsResponse.ok) {
             throw new Error(analyticsData.error?.message || 'Failed to fetch analytics');
         }
@@ -1605,13 +1608,18 @@ private async sendButtonList(to: string, buttons: string[]) {
             return 'No analytics data available for the specified template.';
         }
 
-        const latestDataPoint = dataPoints[dataPoints.length - 1];
-        const sent = latestDataPoint.sent || 0;
-        const delivered = latestDataPoint.delivered || 0;
-        const read = latestDataPoint.read || 0;
-        const clicked = latestDataPoint.clicked?.reduce((acc, item) => acc + item.count, 0) || 0;
-        const readRate = delivered > 0 ? ((read / delivered) * 100).toFixed(2) : 0;
-        const clickRate = delivered > 0 ? ((clicked / delivered) * 100).toFixed(2) : 0;
+        // Aggregate the data points for the latest template and the last 7 days
+        const aggregatedData = dataPoints.reduce((acc, dataPoint) => {
+            acc.sent += dataPoint.sent || 0;
+            acc.delivered += dataPoint.delivered || 0;
+            acc.read += dataPoint.read || 0;
+            acc.clicked += (dataPoint.clicked?.reduce((sum, item) => sum + item.count, 0)) || 0;
+            return acc;
+        }, { sent: 0, delivered: 0, read: 0, clicked: 0 });
+
+        // Calculate read rate and click rate
+        const readRate = aggregatedData.delivered > 0 ? ((aggregatedData.read / aggregatedData.delivered) * 100).toFixed(2) : 0;
+        const clickRate = aggregatedData.delivered > 0 ? ((aggregatedData.clicked / aggregatedData.delivered) * 100).toFixed(2) : 0;
 
         // Format the date
         const lastEditedDate = latestTemplate.last_edited_time
@@ -1626,10 +1634,10 @@ private async sendButtonList(to: string, buttons: string[]) {
 Category: *${latestTemplate.category?.toUpperCase()}*
 Language: *${latestTemplate.language?.replace('-', '_').toUpperCase() || 'pt_BR'}*
 Status: *${latestTemplate.status?.toUpperCase()}*
-Messages Sent: *${sent.toLocaleString()}*
-Messages Delivered: *${delivered.toLocaleString()}*
-Message Read Rate: *${readRate}% (${read.toLocaleString()})*
-Message Click Rate: *${clickRate}% (${clicked.toLocaleString()})*
+Messages Sent: *${aggregatedData.sent.toLocaleString()}*
+Messages Delivered: *${aggregatedData.delivered.toLocaleString()}*
+Message Read Rate: *${readRate}% (${aggregatedData.read.toLocaleString()})*
+Message Click Rate: *${clickRate}% (${aggregatedData.clicked.toLocaleString()})*
 Top Block Reason: *${latestTemplate.rejection_reason || '––'}*
 Last Edited: *${lastEditedDate}*`;
 
