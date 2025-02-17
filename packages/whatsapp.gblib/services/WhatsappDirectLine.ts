@@ -1590,7 +1590,7 @@ private async sendButtonList(to: string, buttons: string[]) {
 
         const analyticsResponse = await fetch(
             `https://graph.facebook.com/v21.0/${businessAccountId}?` +
-            `fields=template_analytics.start(${startTime}).end(${endTime}).granularity(DAY).metric_types(sent,delivered,read,clicked).template_ids([${templateId}])&` +
+            `fields=template_analytics.start(${startTime}).end(${endTime}).granularity(DAILY).metric_types(sent,delivered,read,clicked).template_ids([${templateId}])&` +
             `access_token=${userAccessToken}`
         );
 
