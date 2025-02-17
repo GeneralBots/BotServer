@@ -1556,19 +1556,24 @@ private async sendButtonList(to: string, buttons: string[]) {
             `access_token=${userAccessToken}`
         );
 
-        const data = await statsResponse.json();
+        let data = await statsResponse.json();
         if (!statsResponse.ok) {
             throw new Error(data.error?.message || 'Failed to fetch templates');
-        }
-
-        // Check if data.data is an array (templates are under "data" not "message_templates")
-        if (!Array.isArray(data.data)) {
-            console.error('Expected data to be an array, but got:', data.data);
+          }
+          console.log(GBUtil.toYAML(data));
+          data = data.message_templates.data;
+        // Check if message_templates is an array
+        if (!Array.isArray(data)) {
+            console.error('Expected message_templates to be an array, but got:', data.message_templates);
             return 'Invalid response format for message templates.';
         }
 
-        // Filter templates in the "data" array
-        const marketingTemplates = data.data
+        if (data.length === 0) {
+            throw new Error('No template statistics found');
+        }
+
+        // Filter for marketing templates and get the latest edited one
+        const marketingTemplates = data
             .filter(template => template.category?.toUpperCase() === 'MARKETING')
             .sort((a, b) => new Date(b.last_edited_time).getTime() - new Date(a.last_edited_time).getTime());
 
@@ -1576,8 +1581,6 @@ private async sendButtonList(to: string, buttons: string[]) {
             return 'No marketing templates found.';
         }
 
-        // Log YAML formatted data
-        console.log(GBUtil.toYAML(marketingTemplates));
         const latestTemplate = marketingTemplates[0];
         const templateId = latestTemplate.id;
 
@@ -1592,12 +1595,10 @@ private async sendButtonList(to: string, buttons: string[]) {
         );
 
         const analyticsData = await analyticsResponse.json();
+        console.log(GBUtil.toYAML(analyticsData));
         if (!analyticsResponse.ok) {
             throw new Error(analyticsData.error?.message || 'Failed to fetch analytics');
         }
-
-        // Log YAML formatted analytics data
-        console.log(GBUtil.toYAML(analyticsData));
 
         const dataPoints = analyticsData.template_analytics?.data[0]?.data_points || [];
         if (dataPoints.length === 0) {
