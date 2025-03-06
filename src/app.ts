@@ -186,12 +186,8 @@ export class GBServer {
 
           // Creates a boot instance or load it from storage.
 
-          if (GBConfigService.get('STORAGE_SERVER')) {
-            azureDeployer = await AzureDeployerService.createInstance(deployer);
+          if (GBConfigService.get('GB_MODE') === 'legacy') {
             await core.initStorage();
-          } else if (!GBConfigService.get('STORAGE_NAME')) {
-            await core.initStorage();
-          } else {
             [GBServer.globals.bootInstance, azureDeployer] = await core['createBootInstanceEx'](
               core,
               null,
@@ -200,6 +196,9 @@ export class GBServer {
               GBConfigService.get('FREE_TIER')
             );
             await core.saveInstance(GBServer.globals.bootInstance);
+          }
+          else {
+            await core.initStorage();
           }
 
           // Deploys system and user packages.
@@ -225,7 +224,7 @@ export class GBServer {
           );
 
           if (instances.length === 0) {
-            if (GBConfigService.get('STORAGE_NAME')) {
+            if (GBConfigService.get('GB_MODE') === 'legacy') {
               const instance = await importer.importIfNotExistsBotPackage(
                 GBConfigService.get('BOT_ID'),
                 'boot.gbot',
@@ -251,7 +250,8 @@ export class GBServer {
 
           // Just sync if not using LOAD_ONLY.
 
-          if (!GBConfigService.get('STORAGE_NAME') && !process.env.LOAD_ONLY) {
+          if (GBConfigService.get('GB_MODE') !== 'legacy'
+            && !process.env.LOAD_ONLY) {
             await core['ensureFolders'](instances, deployer);
           }
           GBServer.globals.bootInstance = instances[0];
@@ -289,7 +289,7 @@ export class GBServer {
                 return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
               } else if (host === process.env.ROUTER_1) {
                 return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_1_PORT}` });
-                
+
               } else if (host === process.env.ROUTER_2) {
                 return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_2_PORT}` });
               } else {
@@ -308,7 +308,7 @@ export class GBServer {
             core.openBrowserInDevelopment();
           }
         } catch (error) {
-          GBLog.error(`STOP: ${GBUtil.toYAML(error.message)}`);
+          GBLog.error(`STOP: ${GBUtil.toYAML(error)}`);
           shutdown();
         }
       })();
@@ -378,15 +378,10 @@ export class GBServer {
 }
 
 function shutdown() {
-  GBServer.globals.server.close(() => {
-    GBLogEx.info(0, 'General Bots server closed.');
 
-    GBServer.globals.apiServer.close(() => {
-      GBLogEx.info(0, 'General Bots API server closed.');
-      process.exit(0);
-    });
+  GBLogEx.info(0, 'General Bots server is now shutdown.');
 
-  });
+  process.exit(0);
 
 }
 

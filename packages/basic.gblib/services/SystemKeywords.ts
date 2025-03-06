@@ -2726,7 +2726,7 @@ export class SystemKeywords {
     try {
       let data;
 
-      if (GBConfigService.get('STORAGE_NAME')) {
+      if (GBConfigService.get('GB_MODE') === 'legacy') {
         let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
         const gbaiName = GBUtil.getGBAIPath(min.botId);
         let packagePath = '/' + urlJoin(gbaiName, `${min.botId}.gbdrive`);

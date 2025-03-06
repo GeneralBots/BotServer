@@ -1280,7 +1280,7 @@ export class GBConversationalService {
    * Sends a message in a user with an already started conversation (got ConversationReference set)
    */
   public async sendOnConversation(min: GBMinInstance, user: GuaribasUser, message: any) {
-    if (GBConfigService.get('STORAGE_NAME')) {
+    if (GBConfigService.get('GB_MODE') === 'legacy') {
         const ref = JSON.parse(user.conversationReference);
         MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
         await min.bot['continueConversation'](ref, async t1 => {

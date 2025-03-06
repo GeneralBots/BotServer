@@ -150,7 +150,7 @@ export class GBVMService extends GBService {
     let mainName = GBVMService.getMethodNameFromVBSFilename(filename);
     min.scriptMap[filename] = mainName;
 
-    if (writeVBS && GBConfigService.get('STORAGE_NAME')) {
+    if (writeVBS && GBConfigService.get('GB_MODE') === 'legacy') {
       let text = await this.getTextFromWord(folder, wordFile);
 
       // Write VBS file without pragma keywords.

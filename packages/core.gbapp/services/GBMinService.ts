@@ -730,7 +730,7 @@ export class GBMinService {
         color2: this.core.getParam(instance, 'Color2', null)
       };
 
-      if (!GBConfigService.get('STORAGE_NAME')) {
+      if (GBConfigService.get('GB_MODE') !== 'legacy') {
         config['domain'] = `http://localhost:${GBConfigService.get('PORT')}/directline/${botId}`;
       } else {
         const webchatTokenContainer = await this.getWebchatToken(instance);
@@ -802,7 +802,7 @@ export class GBMinService {
         ? instance.marketplacePassword
         : GBConfigService.get('MARKETPLACE_SECRET')
     };
-    if (!GBConfigService.get('STORAGE_NAME')) {
+    if (GBConfigService.get('GB_MODE') !== 'legacy') {
       startRouter(GBServer.globals.server, instance.botId);
       config['clientOptions'] = { baseUri: `http://localhost:${GBConfigService.get('PORT')}` };
     }
@@ -1047,7 +1047,7 @@ export class GBMinService {
       const sec = new SecService();
       let member = context.activity.recipient;
 
-      if (process.env.STORAGE_NAME || !member) {
+      if (process.env.GB_MODE === 'legacy' || !member) {
         member = context.activity.from;
       }
       let user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
@@ -1256,7 +1256,7 @@ export class GBMinService {
     };
 
     try {
-      if (!GBConfigService.get('STORAGE_NAME')) {
+      if (GBConfigService.get('GB_MODE') !== 'legacy') {
         const context = adapter['createContext'](req);
         context['_activity'] = context.activity.body;
         await handler(context);
@@ -1800,7 +1800,7 @@ export class GBMinService {
   private mutex: Mutex = new Mutex();
 
   public async watchPackages(min: GBMinInstance, packageType: string): Promise<void> {
-    if (!GBConfigService.get('STORAGE_NAME')) {
+    if (GBConfigService.get('GB_MODE') !== 'legacy') {
       const packagePath = GBUtil.getGBAIPath(min.botId, packageType);
       const libraryPath = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath);
 

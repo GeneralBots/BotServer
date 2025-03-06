@@ -67,6 +67,7 @@ import { GBDeployer } from './GBDeployer.js';
 import { SystemKeywords } from '../../basic.gblib/services/SystemKeywords.js';
 import csvdb from 'csv-database';
 import { SaaSPackage } from '../../saas.gbapp/index.js';
+import { Client } from 'minio';
 
 /**
  * GBCoreService contains main logic for handling storage services related
@@ -120,66 +121,90 @@ export class GBCoreService implements IGBCoreService {
    */
   public async initStorage(): Promise<any> {
     this.dialect = GBConfigService.get('STORAGE_DIALECT');
-
+  
+    let port: number | undefined;
     let host: string | undefined;
     let database: string | undefined;
     let username: string | undefined;
     let password: string | undefined;
     let storage: string | undefined;
-
-    if (this.dialect === 'mssql') {
+  
+    // Validar o dialeto
+    if (!['mssql', 'postgres', 'sqlite'].includes(this.dialect)) {
+      throw new Error(`Unknown or unsupported dialect: ${this.dialect}.`);
+    }
+  
+    // Configurações específicas para cada dialeto
+    if (this.dialect === 'mssql' || this.dialect === 'postgres') {
       host = GBConfigService.get('STORAGE_SERVER');
       database = GBConfigService.get('STORAGE_NAME');
       username = GBConfigService.get('STORAGE_USERNAME');
       password = GBConfigService.get('STORAGE_PASSWORD');
+  
+      const portStr = GBConfigService.get('STORAGE_PORT');
+      port = portStr ? parseInt(portStr, 10) : undefined;
+  
+      if (!host || !database || !username || !password || !port) {
+        throw new Error(`Missing required configuration for ${this.dialect}.`);
+      }
     } else if (this.dialect === 'sqlite') {
       storage = GBConfigService.get('STORAGE_FILE');
-
+  
+      if (!storage) {
+        throw new Error('STORAGE_FILE is required for SQLite.');
+      }
+  
       if (!(await GBUtil.exists(storage))) {
         process.env.STORAGE_SYNC = 'true';
       }
-    } else {
-      throw new Error(`Unknown dialect: ${this.dialect}.`);
     }
-
+  
+    // Configuração de logging
     const logging: boolean | Function =
       GBConfigService.get('STORAGE_LOGGING') === 'true'
         ? (str: string): void => {
             GBLogEx.info(0, str);
           }
         : false;
-
+  
+    // Configuração de encrypt (específico para MSSQL)
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
-
-    const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
+  
+    // Configuração do pool
+    const acquireStr = GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT');
+    const acquire = acquireStr ? parseInt(acquireStr, 10) : 10000; // Valor padrão de 10 segundos
+  
+    // Configuração do Sequelize
     const sequelizeOptions: SequelizeOptions = {
       define: {
         freezeTableName: true,
-        timestamps: false
+        timestamps: false,
       },
       host: host,
+      port: port,
       logging: logging as boolean,
       dialect: this.dialect as Dialect,
       storage: storage,
-      quoteIdentifiers: false, // set case-insensitive
-      dialectOptions: {
+      quoteIdentifiers: this.dialect === 'postgres', 
+      dialectOptions: this.dialect === 'mssql' ? {
         options: {
           trustServerCertificate: true,
-          encrypt: encrypt
-        }
-      },
+          encrypt: encrypt,
+        },
+      } : {},
       pool: {
         max: 5,
         min: 0,
         idle: 10000,
         evict: 10000,
-        acquire: acquire
-      }
+        acquire: acquire,
+      },
     };
-
+  
+    // Inicializar o Sequelize
     this.sequelize = new Sequelize(database, username, password, sequelizeOptions);
   }
-
+  
   /**
    * Checks wheather storage is acessible or not and opens firewall
    * in case of any connection block.
@@ -675,7 +700,7 @@ await fs.writeFile('.env', env);
   }
 
   public async setConfig(min, name: string, value: any): Promise<any> {
-    if (GBConfigService.get('STORAGE_NAME')) {
+    if (GBConfigService.get('GB_MODE') === 'legacy') {
       // Handles calls for BASIC persistence on sheet files.
       GBLog.info(`Defining Config.xlsx variable ${name}= '${value}'...`);
       
@@ -836,29 +861,53 @@ await fs.writeFile('.env', env);
   }
 
   public async ensureFolders(instances, deployer: GBDeployer) {
+    const storageMode = process.env.GB_MODE;
     let libraryPath = GBConfigService.get('STORAGE_LIBRARY');
+  
+    if (storageMode === 'gbcluster') {
+      const minioClient = new Client({
+        endPoint: process.env.DRIVE_SERVER,
+        port: parseInt(process.env.DRIVE_PORT),
+        useSSL: process.env.DRIVE_USE_SSL === 'true',
+        accessKey: process.env.DRIVE_ACCESSKEY,
+        secretKey: process.env.DRIVE_SECRET,
+      });
+  
+      await this.syncBotStorage(instances, 'default', deployer, libraryPath);
+      
+      const bucketStream = await minioClient.listBuckets();
+      
+      for await (const bucket of bucketStream) {
+        if (bucket.name.endsWith('.gbai') && bucket.name.startsWith(process.env.DRIVE_ORG_PREFIX)) {
 
-    if (!(await GBUtil.exists(libraryPath))) {
-      mkdirp.sync(libraryPath);
-    }
-
-    await this.syncBotStorage(instances, 'default', deployer, libraryPath);
-
-    const files = await fs.readdir(libraryPath);
-    await CollectionUtil.asyncForEach(files, async file => {
-      if (file.trim().toLowerCase() !== 'default.gbai' && file.charAt(0) !== '_') {
-        let botId = file.replace(/\.gbai/, '');
-
-        await this.syncBotStorage(instances, botId, deployer, libraryPath);
+          const botId = bucket.name.replace('.gbai', '').replace(process.env.DRIVE_ORG_PREFIX, '');
+          await this.syncBotStorage(instances, botId, deployer, libraryPath);
+          
+        }
       }
-    });
+    } else {
+      if (!(await GBUtil.exists(libraryPath))) {
+        mkdirp.sync(libraryPath);
+      }
+  
+      await this.syncBotStorage(instances, 'default', deployer, libraryPath);
+      
+      const files = await fs.readdir(libraryPath);
+      await CollectionUtil.asyncForEach(files, async (file) => {
+        if (file.trim().toLowerCase() !== 'default.gbai' && file.charAt(0) !== '_') {
+          let botId = file.replace(/\.gbai/, '');
+          await this.syncBotStorage(instances, botId, deployer, libraryPath);
+          
+        }
+      });
+    }
   }
-
+  
   private async syncBotStorage(instances: any, botId: any, deployer: GBDeployer, libraryPath: string) {
     let instance = instances.find(p => p.botId.toLowerCase().trim() === botId.toLowerCase().trim());
 
     if (!instance) {
-      GBLog.info(`Importing package ${botId}...`);
+      GBLog.info(`Importing package ${botId}.gbai...`);
 
       // Creates a bot.
 
@@ -866,45 +915,14 @@ await fs.writeFile('.env', env);
         email = null;
 
       instance = await deployer.deployBlankBot(botId, mobile, email);
+      instances.push(instance);
       const gbaiPath = path.join(libraryPath, `${botId}.gbai`);
 
       if (!(await GBUtil.exists(gbaiPath))) {
         fs.mkdir(gbaiPath, { recursive: true });
-
-        const base = path.join(process.env.PWD, 'templates', 'default.gbai');
-
-        fs.cp(path.join(base, `default.gbkb`), path.join(gbaiPath, `default.gbkb`), {
-          errorOnExist: false,
-          force: true,
-          recursive: true
-        });
-        fs.cp(path.join(base, `default.gbot`), path.join(gbaiPath, `default.gbot`), {
-          errorOnExist: false,
-          force: true,
-          recursive: true
-        });
-        fs.cp(path.join(base, `default.gbtheme`), path.join(gbaiPath, `default.gbtheme`), {
-          errorOnExist: false,
-          force: true,
-          recursive: true
-        });
-        fs.cp(path.join(base, `default.gbdata`), path.join(gbaiPath, `default.gbdata`), {
-          errorOnExist: false,
-          force: true,
-          recursive: true
-        });
-        fs.cp(path.join(base, `default.gbdialog`), path.join(gbaiPath, `default.gbdialog`), {
-          errorOnExist: false,
-          force: true,
-          recursive: true
-        });
-        fs.cp(path.join(base, `default.gbdrive`), path.join(gbaiPath, `default.gbdrive`), {
-          errorOnExist: false,
-          force: true,
-          recursive: true
-        });
       }
     }
+    return instance;
   }
 
   public static async createWebDavServer(minInstances: GBMinInstance[]) {

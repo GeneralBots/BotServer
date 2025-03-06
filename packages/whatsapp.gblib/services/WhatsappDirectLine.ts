@@ -557,7 +557,7 @@ export class WhatsappDirectLine extends GBService {
         WhatsappDirectLine.pidByNumber[from] = pid;
         GBLogEx.info(this.min, `GBWhatsapp: Starting new conversation on Bot (pid: ${pid}).`);
         let response;
-        if (GBConfigService.get('STORAGE_NAME')) {
+        if (GBConfigService.get('GB_MODE') === 'legacy') {
           response = await client.apis.Conversations.Conversations_StartConversation(
 
           );

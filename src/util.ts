@@ -82,7 +82,7 @@ export class GBUtil {
    */
   public static async getDirectLineClient(min: any): Promise<SwaggerClient> {
     let config;
-    if (!GBConfigService.get('STORAGE_NAME')) {
+    if (GBConfigService.get('GB_MODE') !== 'legacy') {
       config = {
         spec: JSON.parse(await fs.readFile('directline-v2.json', 'utf8')),
         requestInterceptor: req => {

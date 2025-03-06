@@ -39,6 +39,8 @@ import express from 'express';
 import child_process from 'child_process';
 import { rimraf } from 'rimraf';
 import urlJoin from 'url-join';
+import { Client } from 'minio';
+
 import fs from 'fs/promises';
 import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
 import { AzureSearch } from 'pragmatismo-io-framework';
@@ -220,7 +222,7 @@ export class GBDeployer implements IGBDeployer {
     const instance = await this.importer.createBotInstance(botId);
     const bootInstance = GBServer.globals.bootInstance;
 
-    if (GBConfigService.get('STORAGE_NAME')) {
+    if (GBConfigService.get('GB_MODE') === 'legacy') {
       // Gets the access token to perform service operations.
 
       const accessToken = await (GBServer.globals.minBoot.adminService as any)['acquireElevatedToken'](
@@ -232,6 +234,7 @@ export class GBDeployer implements IGBDeployer {
 
       const service = await AzureDeployerService.createInstance(this);
       const application = await service.createApplication(accessToken, botId);
+      
       // Fills new instance base information and get App secret.
 
       instance.marketplaceId = (application as any).appId;
@@ -249,7 +252,7 @@ export class GBDeployer implements IGBDeployer {
     // Saves bot information to the store.
 
     await this.core.saveInstance(instance);
-    if (GBConfigService.get('STORAGE_NAME')) {
+    if (GBConfigService.get('GB_MODE') === 'legacy') {
       await this.deployBotOnAzure(instance, GBServer.globals.publicAddress);
     }
 
@@ -487,6 +490,7 @@ export class GBDeployer implements IGBDeployer {
 
   /**
    */
+  
   public async downloadFolder(
     min: GBMinInstance,
     localPath: string,
@@ -494,86 +498,118 @@ export class GBDeployer implements IGBDeployer {
     baseUrl: string = null,
     client = null
   ): Promise<any> {
-    GBLogEx.info(min, `downloadFolder: localPath=${localPath}, remotePath=${remotePath}, baseUrl=${baseUrl}`);
-
-    if (!baseUrl) {
-      let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-
-      remotePath = remotePath.replace(/\\/gi, '/');
-      const parts = remotePath.split('/');
-
-      // Creates each subfolder.
-
-      let pathBase = localPath;
-      if (!(await GBUtil.exists(pathBase))) {
-        fs.mkdir(pathBase);
-      }
-
-      await CollectionUtil.asyncForEach(parts, async item => {
-        pathBase = path.join(pathBase, item);
-        if (!(await GBUtil.exists(pathBase))) {
-          fs.mkdir(pathBase);
-        }
+    const storageMode = process.env.GB_MODE;
+  
+    if (storageMode === 'gbcluster') {
+      const minioClient = new Client({
+        endPoint: process.env.DRIVE_SERVER || 'localhost',
+        port: parseInt(process.env.DRIVE_PORT || '9000', 10),
+        useSSL: process.env.DRIVE_USE_SSL === 'true',
+        accessKey: process.env.DRIVE_ACCESSKEY,
+        secretKey: process.env.DRIVE_SECRET,
       });
-
-      // Retrieves all files in remote folder.
-
-      let packagePath = GBUtil.getGBAIPath(min.botId);
-      packagePath = urlJoin(packagePath, remotePath);
-      let url = `${baseUrl}/drive/root:/${packagePath}:/children`;
-
-      GBLogEx.info(min, `Downloading: ${url}`);
-      let documents;
-
-
-      try {
-        const res = await client.api(url).get();
-        documents = res.value;
-      } catch (error) {
-        GBLogEx.info(min, `Error downloading: ${error.toString()}`);
+  
+      const bucketName = process.env.DRIVE_BUCKETPREFIX + min.botId + '.gbai';
+  
+      if (!(await GBUtil.exists(localPath))) {
+        await fs.mkdir(localPath, { recursive: true });
       }
-      if (documents === undefined || documents.length === 0) {
-        GBLogEx.info(min, `${remotePath} is an empty folder.`);
-        return null;
-      }
-
-      // Download files or navigate to directory to recurse.
-
-      await CollectionUtil.asyncForEach(documents, async item => {
-        const itemPath = path.join(localPath, remotePath, item.name);
-
-        if (item.folder) {
+  
+      const objectsStream = minioClient.listObjects(bucketName, remotePath, true);
+      for await (const obj of objectsStream) {
+        const itemPath = path.join(localPath, obj.name);
+  
+        if (obj.name.endsWith('/')) {
           if (!(await GBUtil.exists(itemPath))) {
-            fs.mkdir(itemPath);
+            await fs.mkdir(itemPath, { recursive: true });
           }
-          const nextFolder = urlJoin(remotePath, item.name);
-          await this.downloadFolder(min, localPath, nextFolder);
         } else {
           let download = true;
-
+  
           if (await GBUtil.exists(itemPath)) {
-            const dt = await fs.stat(itemPath);
-            if (new Date(dt.mtime) >= new Date(item.lastModifiedDateTime)) {
+            const stats = await fs.stat(itemPath);
+            if (stats.mtime >= new Date(obj.lastModified)) {
               download = false;
             }
           }
-
+  
           if (download) {
-            GBLogEx.info(min, `Downloading: ${itemPath}...`);
-            const url = item['@microsoft.graph.downloadUrl'];
-
-            const response = await fetch(url);
-            await fs.writeFile(itemPath, Buffer.from(await response.arrayBuffer()), { encoding: null });
-            fs.utimes(itemPath, new Date(), new Date(item.lastModifiedDateTime));
-          } else {
-            GBLogEx.info(min, `Local is up to date: ${path.basename(itemPath)}...`);
+            await minioClient.fGetObject(bucketName, obj.name, itemPath);
+            await fs.utimes(itemPath, new Date(), new Date(obj.lastModified));
           }
         }
-      });
+      }
+    } else {
+      if (!baseUrl) {
+        const { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+  
+        remotePath = remotePath.replace(/\\/gi, '/');
+        const parts = remotePath.split('/');
+  
+        let pathBase = localPath;
+        if (!(await GBUtil.exists(pathBase))) {
+          await fs.mkdir(pathBase, { recursive: true });
+        }
+  
+        await CollectionUtil.asyncForEach(parts, async (item) => {
+          pathBase = path.join(pathBase, item);
+          if (!(await GBUtil.exists(pathBase))) {
+            await fs.mkdir(pathBase, { recursive: true });
+          }
+        });
+  
+        let packagePath = GBUtil.getGBAIPath(min.botId);
+        packagePath = urlJoin(packagePath, remotePath);
+        let url = `${baseUrl}/drive/root:/${packagePath}:/children`;
+  
+        let documents;
+  
+        try {
+          const res = await client.api(url).get();
+          documents = res.value;
+        } catch (error) {
+          GBLogEx.info(min, `Error downloading: ${error.toString()}`);
+        }
+  
+        if (documents === undefined || documents.length === 0) {
+          return null;
+        }
+  
+        await CollectionUtil.asyncForEach(documents, async (item) => {
+          const itemPath = path.join(localPath, remotePath, item.name);
+  
+          if (item.folder) {
+            if (!(await GBUtil.exists(itemPath))) {
+              await fs.mkdir(itemPath, { recursive: true });
+            }
+            const nextFolder = urlJoin(remotePath, item.name);
+            await this.downloadFolder(min, localPath, nextFolder);
+          } else {
+            let download = true;
+  
+            if (await GBUtil.exists(itemPath)) {
+              const stats = await fs.stat(itemPath);
+              if (new Date(stats.mtime) >= new Date(item.lastModifiedDateTime)) {
+                download = false;
+              }
+            }
+  
+            if (download) {
+              const url = item['@microsoft.graph.downloadUrl'];
+  
+              const response = await fetch(url);
+              await fs.writeFile(itemPath, new Uint8Array(await response.arrayBuffer()), { encoding: null });
+              await fs.utimes(itemPath, new Date(), new Date(item.lastModifiedDateTime));
+            }
+          }
+        });
+      }
     }
+  
   }
+
   /**
-   * UndDeploys a bot to the storage.
+   * Undeploys a bot to the storage.
    */
   public async undeployBot(botId: string, packageName: string): Promise<void> {
     // Deletes Bot registration on cloud.
@@ -621,7 +657,7 @@ export class GBDeployer implements IGBDeployer {
         await this.cleanupPackage(min.instance, packageName);
       }
 
-      if (!GBConfigService.get('STORAGE_NAME')) {
+      if (GBConfigService.get('GB_MODE') !== 'legacy') {
         const filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbai, packageName);
         await GBUtil.copyIfNewerRecursive(filePath, packageWorkFolder);
       } else {

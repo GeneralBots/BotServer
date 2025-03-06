@@ -1456,7 +1456,7 @@ export class KBService implements IGBKBService {
     await this.importKbPackage(min, localPath, p, instance);
     GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
 
-    if (GBConfigService.get('STORAGE_NAME')) {
+    if (GBConfigService.get('GB_MODE') === 'legacy') {
       const service = await AzureDeployerService.createInstance(deployer);
       const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
       await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));

@@ -1495,7 +1495,7 @@ export class DialogKeywords {
     else {
 
 
-      if (GBConfigService.get('STORAGE_NAME')) {
+      if (GBConfigService.get('GB_MODE') === 'legacy') {
 
         const ext = path.extname(filename);
         const gbaiName = GBUtil.getGBAIPath(min.botId);
