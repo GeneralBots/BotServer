@@ -1,5 +1,4 @@
 name: GBCI
-run: git config --global http.sslVerify false
 on:
   push:
     branches: [ "main" ]
