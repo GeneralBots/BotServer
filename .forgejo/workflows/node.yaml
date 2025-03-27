@@ -11,11 +11,12 @@ jobs:
     runs-on: gbo
     
     steps:
-    - uses: actions/checkout@v4
-    
+
     - name: Disable SSL verification (temporary)
       run: git config --global http.sslVerify false
-  
+
+    - uses: actions/checkout@v4
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
