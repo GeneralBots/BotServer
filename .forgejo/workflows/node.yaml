@@ -36,7 +36,6 @@ jobs:
 
         echo "[General Bots Deployer] Building default.gbui..."
         cd /opt/gbo/bin/BotServer/packages/default.gbui
-        npm config set scripts-prepend-node-path true
         npm install
         npm run build
         
