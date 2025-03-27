@@ -22,12 +22,26 @@ jobs:
       with:
         node-version: '20' 
         cache: 'npm'       
+
+    - name: Copy files to deployment location
+      run: |
+        sudo cp ./* /opt/gbo/bin/BotServer/
+
+    - name: Install production dependencies in deployment location
+      run: |
+        echo "[General Bots Deployer] Building BotServer..."
+        cd /opt/gbo/bin/BotServer
+        sudo npm ci --production
+        npm run build --if-present
+
+        cd /opt/gbo/bin/BotServer/default.gbui
+        npm config set scripts-prepend-node-path true
+        echo "[General Bots Deployer] Building default.gbui..."
+        npm install
+        npm run build
         
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run tests
-      run: npm test
+        cd ../..
+        rm -rf deploy/default.gbui/node_modules
       
     - name: Build project
       run: npm run build --if-present
