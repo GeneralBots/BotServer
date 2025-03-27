@@ -347,7 +347,7 @@ class GBUIApp extends React.Component {
       );
 
       if (this.state.instanceClient) {
-        let color1 = this.state.instanceClient.color1;
+        
         gbCss = <GBCss instance={this.state.instanceClient} />;
         seo = <SEO instance={this.state.instanceClient} />;
 
