@@ -1,4 +1,5 @@
 name: GBCI
+run: git config --global http.sslVerify false
 on:
   push:
     branches: [ "main" ]
@@ -10,43 +11,20 @@ jobs:
     runs-on: gbo
     
     steps:
-    - name: Disable SSL verification (temporary)
-      run: git config --global http.sslVerify false
-      
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20' 
         cache: 'npm'       
-
-    - name: Copy files to deployment location
-      run: |
-        sudo cp ./* /opt/gbo/bin/BotServer/
-
-    - name: Install production dependencies in deployment location
-      run: |
-        echo "[General Bots Deployer] Building BotServer..."
-        cd /opt/gbo/bin/BotServer
-        sudo npm ci --production
-        npm run build --if-present
-
-        cd /opt/gbo/bin/BotServer/default.gbui
-        npm config set scripts-prepend-node-path true
-        echo "[General Bots Deployer] Building default.gbui..."
-        npm install
-        npm run build
         
-        cd ../..
-        rm -rf deploy/default.gbui/node_modules
-
-    - name: Transpile TypeScript
-      run: |
-        
-        /opt/gbo/bin/BotServer/node_modules/.bin/tsc -p .
-        
-    - name: Reload and enable service
-      run: |
-        npm run start &
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm test
+      
+    - name: Build project
+      run: npm run build --if-present
+      
