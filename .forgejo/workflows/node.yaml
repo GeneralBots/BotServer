@@ -13,6 +13,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Disable SSL verification (temporary)
+      run: git config --global http.sslVerify false
+  
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
