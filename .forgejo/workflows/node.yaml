@@ -34,14 +34,17 @@ jobs:
         sudo npm ci --production
         npm run build --if-present
 
-        cd /opt/gbo/bin/BotServer/default.gbui
-        npm config set scripts-prepend-node-path true
         echo "[General Bots Deployer] Building default.gbui..."
+        cd /opt/gbo/bin/BotServer/packages/default.gbui
+        npm config set scripts-prepend-node-path true
         npm install
         npm run build
         
         cd ../..
-        rm -rf deploy/default.gbui/node_modules
-      
-    - name: Build project
-      run: npm run build --if-present
+        rm -rf packages/default.gbui/node_modules
+
+    - name: Kill previous Node.js process (if running)
+      run: pkill -f "node dist/src/app.js" || true  # Ignore if process doesn't exist
+
+    - name: Start Node.js in background (and persist after workflow)
+      run: nohup node dist/src/app.js > /dev/null 2>&1 &
