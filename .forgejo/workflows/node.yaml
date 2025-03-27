@@ -25,7 +25,7 @@ jobs:
 
     - name: Copy files to deployment location
       run: |
-        sudo cp ./* /opt/gbo/bin/BotServer/
+        sudo cp -r ./* /opt/gbo/bin/BotServer/
 
     - name: Install production dependencies in deployment location
       run: |
