@@ -47,4 +47,4 @@ jobs:
 
         pkill -f "node ./boot.mjs" || true
         
-        npm run start  &
+        npm run start 
