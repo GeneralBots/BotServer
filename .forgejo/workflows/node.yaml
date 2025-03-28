@@ -44,4 +44,4 @@ jobs:
         
         pkill -f "node ./boot.mjs" || true
         
-        nohup npm run start
+        npm run start
