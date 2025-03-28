@@ -42,9 +42,7 @@ jobs:
     - name: Restart Bots Deployer
       run: |
         echo "[General Bots Deployer] Restarting..."
-        
         cd /opt/gbo/bin/BotServer
-
         pkill -f "node ./boot.mjs" || true
-                
-        /opt/gbo/bin/start-botserver.sh &
+        
+        nohup NODE_NO_WARNINGS=1 node ./boot.mjs --loader ts-node/esm --require ./suppress-node-warnings.cjs > /dev/null 2>&1 &
