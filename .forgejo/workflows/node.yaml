@@ -12,40 +12,38 @@ jobs:
     
     steps:
 
-    - name: Disable SSL verification (temporary)
-      run: git config --global http.sslVerify false
+    # - name: Disable SSL verification (temporary)
+    #   run: git config --global http.sslVerify false
 
-    - uses: actions/checkout@v4
+    # - uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20' 
-        cache: 'npm'       
+    # - name: Setup Node.js
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: '20' 
+    #     cache: 'npm'       
 
-    - name: Copy files to deployment location
-      run: |
-        sudo cp -r ./* /opt/gbo/bin/BotServer/
+    # - name: Copy files to deployment location
+    #   run: |
+    #     sudo cp -r ./* /opt/gbo/bin/BotServer/
 
-    - name: Install production dependencies in deployment location
-      run: |
-        echo "[General Bots Deployer] Building BotServer..."
-        cd /opt/gbo/bin/BotServer
-        sudo npm ci --production
-        npm run build --if-present
+    # - name: Install production dependencies in deployment location
+    #   run: |
+    #     echo "[General Bots Deployer] Building BotServer..."
+    #     cd /opt/gbo/bin/BotServer
+    #     sudo npm ci --production
+    #     npm run build --if-present
 
-        echo "[General Bots Deployer] Building default.gbui..."
-        cd /opt/gbo/bin/BotServer/packages/default.gbui
-        npm install
-        npm run build
+    #     echo "[General Bots Deployer] Building default.gbui..."
+    #     cd /opt/gbo/bin/BotServer/packages/default.gbui
+    #     npm install
+    #     npm run build
         
-        cd ../..
-        rm -rf packages/default.gbui/node_modules
+    #     cd /opt/gbo/bin/BotServer
+    #     rm -rf packages/default.gbui/node_modules
 
-    - name: Kill previous Node.js process (if running)
+    - name: Restart Bots Deployer
       run: |
+        echo "[General Bots Deployer] Restarting..."
         pkill -f "node ./boot.mjs" || true
-
-    - name: Start Node.js in background (and persist after workflow)
-      run: |
         nohup npm run start > /dev/null 2>&1 &
