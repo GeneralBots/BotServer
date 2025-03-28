@@ -731,7 +731,12 @@ export class GBMinService {
       };
 
       if (GBConfigService.get('GB_MODE') !== 'legacy') {
-        config['domain'] = `http://localhost:${GBConfigService.get('PORT')}/directline/${botId}`;
+        const url = 
+        process.env.BOT_URL ||
+        `http://localhost:${GBConfigService.get('PORT')}`;
+
+        config['domain'] = urlJoin(url, 'directline', botId);
+ 
       } else {
         const webchatTokenContainer = await this.getWebchatToken(instance);
         config['conversationId'] = webchatTokenContainer.conversationId;

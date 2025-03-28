@@ -129,12 +129,12 @@ export class GBCoreService implements IGBCoreService {
     let password: string | undefined;
     let storage: string | undefined;
   
-    // Validar o dialeto
+    
     if (!['mssql', 'postgres', 'sqlite'].includes(this.dialect)) {
       throw new Error(`Unknown or unsupported dialect: ${this.dialect}.`);
     }
   
-    // Configurações específicas para cada dialeto
+    
     if (this.dialect === 'mssql' || this.dialect === 'postgres') {
       host = GBConfigService.get('STORAGE_SERVER');
       database = GBConfigService.get('STORAGE_NAME');
@@ -159,7 +159,7 @@ export class GBCoreService implements IGBCoreService {
       }
     }
   
-    // Configuração de logging
+    
     const logging: boolean | Function =
       GBConfigService.get('STORAGE_LOGGING') === 'true'
         ? (str: string): void => {
@@ -167,14 +167,14 @@ export class GBCoreService implements IGBCoreService {
           }
         : false;
   
-    // Configuração de encrypt (específico para MSSQL)
+    
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
   
-    // Configuração do pool
+    
     const acquireStr = GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT');
     const acquire = acquireStr ? parseInt(acquireStr, 10) : 10000; // Valor padrão de 10 segundos
   
-    // Configuração do Sequelize
+    
     const sequelizeOptions: SequelizeOptions = {
       define: {
         freezeTableName: true,
@@ -201,7 +201,7 @@ export class GBCoreService implements IGBCoreService {
       },
     };
   
-    // Inicializar o Sequelize
+    
     this.sequelize = new Sequelize(database, username, password, sequelizeOptions);
   }
   
