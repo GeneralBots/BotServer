@@ -803,8 +803,13 @@ export class GBMinService {
         : GBConfigService.get('MARKETPLACE_SECRET')
     };
     if (GBConfigService.get('GB_MODE') !== 'legacy') {
+
+      const url = 
+        process.env.BOT_URL ||
+        `http://localhost:${GBConfigService.get('PORT')}`;
+
       startRouter(GBServer.globals.server, instance.botId);
-      config['clientOptions'] = { baseUri: `http://localhost:${GBConfigService.get('PORT')}` };
+      config['clientOptions'] = { baseUri: url };
     }
 
     const adapter = new BotFrameworkAdapter(config);

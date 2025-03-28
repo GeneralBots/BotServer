@@ -43,7 +43,9 @@ jobs:
         rm -rf packages/default.gbui/node_modules
 
     - name: Kill previous Node.js process (if running)
-      run: pkill -f "node dist/src/app.js" || true  # Ignore if process doesn't exist
+      run: |
+        pkill -f "node dist/src/app.js" || true  # Ignore if process doesn't exist
 
     - name: Start Node.js in background (and persist after workflow)
-      run: nohup node dist/src/app.js > /dev/null 2>&1 &
+      run: |
+        nohup npm run start > /dev/null 2>&1 &
