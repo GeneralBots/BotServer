@@ -44,5 +44,6 @@ jobs:
         echo "[General Bots Deployer] Restarting..."
         
         cd /opt/gbo/bin/BotServer
+        
         pkill -f "node ./boot.mjs" || true
         screen -S botserver -dm bash -c "npm run start > /opt/gbo/logs/BotsServer.log 2>&1"
