@@ -44,7 +44,7 @@ jobs:
 
     - name: Kill previous Node.js process (if running)
       run: |
-        pkill -f "node dist/src/app.js" || true
+        pkill -f "node ./boot.mjs" || true
 
     - name: Start Node.js in background (and persist after workflow)
       run: |
