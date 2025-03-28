@@ -46,5 +46,5 @@ jobs:
         cd /opt/gbo/bin/BotServer
 
         pkill -f "node ./boot.mjs" || true
-        
-        ( sleep 2; npm run start > /opt/gbo/logs/botserver.log 2>&1 ) &
+                
+        nohup /opt/gbo/bin/start_botserver.sh & 
