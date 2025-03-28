@@ -47,4 +47,4 @@ jobs:
 
         pkill -f "node ./boot.mjs" || true
                 
-        nohup /opt/gbo/bin/start_botserver.sh & 
+        nohup /opt/gbo/bin/start-botserver.sh & 
