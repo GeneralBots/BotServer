@@ -45,4 +45,4 @@ jobs:
         cd /opt/gbo/bin/BotServer
         pkill -f "node ./boot.mjs" || true
         
-        nohup NODE_NO_WARNINGS=1 node ./boot.mjs --loader ts-node/esm --require ./suppress-node-warnings.cjs > /dev/null 2>&1 &
+        NODE_NO_WARNINGS=1 node ./boot.mjs --loader ts-node/esm --require ./suppress-node-warnings.cjs &
