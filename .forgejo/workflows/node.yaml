@@ -38,10 +38,13 @@ jobs:
     #     cd /opt/gbo/bin/BotServer/packages/default.gbui
     #     npm install
     #     npm run build
+         
     - name: Restart Bots Deployer
       run: |
         echo "[General Bots Deployer] Restarting..."
         
+        cd /opt/gbo/bin/BotServer
+
         pkill -f "node ./boot.mjs" || true
         
-        npm run start
+        npm run start  &
