@@ -45,4 +45,6 @@ jobs:
         cd /opt/gbo/bin/BotServer
         pkill -f "node ./boot.mjs" || true
         
-        NODE_NO_WARNINGS=1 node ./boot.mjs --loader ts-node/esm --require ./suppress-node-warnings.cjs
+        npm run start --if-present &
+        sleep 5
+        echo "[General Bots Deployer] Bots Deployer restarted."
