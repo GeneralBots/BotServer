@@ -32,26 +32,24 @@
 
 import { GBMinInstance, GBLog } from "botlib";
 import { CollectionUtil } from 'pragmatismo-io-framework';
-const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
-const Juno = require('juno-payment-node');
-const sgMail = require('@sendgrid/mail');
-const PasswordGenerator = require('strict-password-generator').default;
+import MicrosoftGraph from "@microsoft/microsoft-graph-client";
+
+import sgMail from '@sendgrid/mail';
+import { default as PasswordGenerator } from 'strict-password-generator';
+import { promises as fs } from 'fs';
+import { GBConfigService } from "../../core.gbapp/services/GBConfigService.js";
+import path from "path";
+
 
 export class GBOService {
 
   public isValidCardNumber(ccNumber) {
-    let card = new Juno.Card();
-    return card.validateNumber(ccNumber);
   }
 
   public isValidSecurityCode(ccNumber, cvcNumber) {
-    let card = new Juno.Card();
-    return card.validateCvc(ccNumber, cvcNumber);
   }
 
   public isValidExpireDate(month, year) {
-    let card = new Juno.Card();
-    return card.validateExpireDate(month, year);
   }
 
   public async sendEmail(token: string, to: string, from: string,
@@ -127,25 +125,41 @@ export class GBOService {
   }
 
   public async listTemplates(min: GBMinInstance) {
+    if (GBConfigService.get('GB_MODE') === 'legacy') {
+      let templateLibraryId = process.env.SAAS_TEMPLATE_LIBRARY;
+      let siteId = process.env.STORAGE_SITE_ID;
 
-    let templateLibraryId = process.env.SAAS_TEMPLATE_LIBRARY;
-    let siteId = process.env.STORAGE_SITE_ID;
+      let token =
+        await (min.adminService as any).acquireElevatedToken(min.instance.instanceId, true);
 
-    let token =
-      await (min.adminService as any).acquireElevatedToken(min.instance.instanceId, true);
+      let client = MicrosoftGraph.Client.init({
+        authProvider: done => {
+          done(null, token);
+        }
+      });
+      const packagePath = `/`;
+      let res = await client.api(
+        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateLibraryId}/drive/root/children`)
+        .get();
 
-    let client = MicrosoftGraph.Client.init({
-      authProvider: done => {
-        done(null, token);
+      return res.value;
+    }
+    else {
+
+      const templatesDir = path.join(process.env.PWD,'templates');
+      const gbaiDirectories = [];
+
+      // Read all entries in the templates directory
+      const entries = await fs.readdir(templatesDir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        // Check if it's a directory and ends with .gbai
+        if (entry.isDirectory() && entry.name.endsWith('.gbai')) {
+          gbaiDirectories.push({ name: entry.name });
+        }
       }
-    });
-    const packagePath = `/`;
-    let res = await client.api(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateLibraryId}/drive/root/children`)
-      .get();
-
-    return res.value;
-
+      return gbaiDirectories;
+    }
   }
 
   public async copyTemplates(min: GBMinInstance, gbaiDest, templateName: string, kind: string, botName: string) {

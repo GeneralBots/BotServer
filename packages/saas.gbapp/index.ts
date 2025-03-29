@@ -37,6 +37,7 @@ import { GBOnlineSubscription } from './model/MainModel.js'
 import { MSSubscriptionService } from './service/MSSubscription.js'
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { NewUserDialog } from './dialog/NewUserDialog.js'
+import { GBOService } from './service/GBOService.js'
 
 export class SaaSPackage implements IGBPackage {
   sysPackages: IGBPackage[]
@@ -109,7 +110,7 @@ export class SaaSPackage implements IGBPackage {
 
   async loadBot(min: GBMinInstance): Promise<void> {
 
-    let gboService = min.gbappServices['gboService'];
+    let gboService = new GBOService();
 
     // Gets the sendToDevice method of whatsapp.gblib and setups scheduler.
 

@@ -49,7 +49,7 @@ import { GBServer } from '../../../src/app.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import Excel from 'exceljs';
 import asyncPromise from 'async-promises';
-import { GuaribasPackage } from '../models/GBModel.js';
+import { GuaribasInstance, GuaribasPackage } from '../models/GBModel.js';
 import { GBAdminService } from './../../admin.gbapp/services/GBAdminService.js';
 import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService.js';
 import { KBService } from './../../kb.gbapp/services/KBService.js';
@@ -234,7 +234,7 @@ export class GBDeployer implements IGBDeployer {
 
       const service = await AzureDeployerService.createInstance(this);
       const application = await service.createApplication(accessToken, botId);
-      
+
       // Fills new instance base information and get App secret.
 
       instance.marketplaceId = (application as any).appId;
@@ -269,11 +269,24 @@ export class GBDeployer implements IGBDeployer {
    * Verifies if bot exists on bot catalog.
    */
   public async botExists(botId: string): Promise<boolean> {
-    const service = await AzureDeployerService.createInstance(this);
 
-    return await service.botExists(botId);
+    if (GBConfigService.get('GB_MODE') !== 'legacy') {
+      const where = { botId: botId };
+
+      return await GuaribasInstance.findOne({
+        where: where
+      }) !== null;
+  
+    }
+    else {
+
+      const service = await AzureDeployerService.createInstance(this);
+
+      return await service.botExists(botId);
+    
+    }
   }
-
+  
   /**
    * Performs all tasks of deploying a new bot on the cloud.
    */
@@ -469,13 +482,13 @@ export class GBDeployer implements IGBDeployer {
     } else {
       return [];
     }
-    
+
     await asyncPromise.eachSeries(rows, async (line: any) => {
       if (line && line.length > 0) {
         const key = line[1];
         let value = line[2];
 
-        
+
         if (key && value) {
           if (value.text) { value = value.text };
           obj[key] = value;
@@ -490,7 +503,7 @@ export class GBDeployer implements IGBDeployer {
 
   /**
    */
-  
+
   public async downloadFolder(
     min: GBMinInstance,
     localPath: string,
@@ -499,7 +512,7 @@ export class GBDeployer implements IGBDeployer {
     client = null
   ): Promise<any> {
     const storageMode = process.env.GB_MODE;
-  
+
     if (storageMode === 'gbcluster') {
       const minioClient = new Client({
         endPoint: process.env.DRIVE_SERVER || 'localhost',
@@ -508,31 +521,31 @@ export class GBDeployer implements IGBDeployer {
         accessKey: process.env.DRIVE_ACCESSKEY,
         secretKey: process.env.DRIVE_SECRET,
       });
-  
+
       const bucketName = process.env.DRIVE_BUCKETPREFIX + min.botId + '.gbai';
-  
+
       if (!(await GBUtil.exists(localPath))) {
         await fs.mkdir(localPath, { recursive: true });
       }
-  
+
       const objectsStream = minioClient.listObjects(bucketName, remotePath, true);
       for await (const obj of objectsStream) {
         const itemPath = path.join(localPath, obj.name);
-  
+
         if (obj.name.endsWith('/')) {
           if (!(await GBUtil.exists(itemPath))) {
             await fs.mkdir(itemPath, { recursive: true });
           }
         } else {
           let download = true;
-  
+
           if (await GBUtil.exists(itemPath)) {
             const stats = await fs.stat(itemPath);
             if (stats.mtime >= new Date(obj.lastModified)) {
               download = false;
             }
           }
-  
+
           if (download) {
             await minioClient.fGetObject(bucketName, obj.name, itemPath);
             await fs.utimes(itemPath, new Date(), new Date(obj.lastModified));
@@ -542,42 +555,42 @@ export class GBDeployer implements IGBDeployer {
     } else {
       if (!baseUrl) {
         const { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-  
+
         remotePath = remotePath.replace(/\\/gi, '/');
         const parts = remotePath.split('/');
-  
+
         let pathBase = localPath;
         if (!(await GBUtil.exists(pathBase))) {
           await fs.mkdir(pathBase, { recursive: true });
         }
-  
+
         await CollectionUtil.asyncForEach(parts, async (item) => {
           pathBase = path.join(pathBase, item);
           if (!(await GBUtil.exists(pathBase))) {
             await fs.mkdir(pathBase, { recursive: true });
           }
         });
-  
+
         let packagePath = GBUtil.getGBAIPath(min.botId);
         packagePath = urlJoin(packagePath, remotePath);
         let url = `${baseUrl}/drive/root:/${packagePath}:/children`;
-  
+
         let documents;
-  
+
         try {
           const res = await client.api(url).get();
           documents = res.value;
         } catch (error) {
           GBLogEx.info(min, `Error downloading: ${error.toString()}`);
         }
-  
+
         if (documents === undefined || documents.length === 0) {
           return null;
         }
-  
+
         await CollectionUtil.asyncForEach(documents, async (item) => {
           const itemPath = path.join(localPath, remotePath, item.name);
-  
+
           if (item.folder) {
             if (!(await GBUtil.exists(itemPath))) {
               await fs.mkdir(itemPath, { recursive: true });
@@ -586,17 +599,17 @@ export class GBDeployer implements IGBDeployer {
             await this.downloadFolder(min, localPath, nextFolder);
           } else {
             let download = true;
-  
+
             if (await GBUtil.exists(itemPath)) {
               const stats = await fs.stat(itemPath);
               if (new Date(stats.mtime) >= new Date(item.lastModifiedDateTime)) {
                 download = false;
               }
             }
-  
+
             if (download) {
               const url = item['@microsoft.graph.downloadUrl'];
-  
+
               const response = await fetch(url);
               await fs.writeFile(itemPath, new Uint8Array(await response.arrayBuffer()), { encoding: null });
               await fs.utimes(itemPath, new Date(), new Date(item.lastModifiedDateTime));
@@ -605,7 +618,7 @@ export class GBDeployer implements IGBDeployer {
         });
       }
     }
-  
+
   }
 
   /**
@@ -714,7 +727,7 @@ export class GBDeployer implements IGBDeployer {
             con['storageDriver'] = min.core.getParam<string>(min.instance, `${connectionName} Driver`, null);
             con['storageTables'] = min.core.getParam<string>(min.instance, `${connectionName} Tables`, null);
             const storageName = min.core.getParam<string>(min.instance, `${connectionName} Name`, null);
-            
+
             let file = min.core.getParam<string>(min.instance, `${connectionName} File`, null);
 
             if (storageName) {

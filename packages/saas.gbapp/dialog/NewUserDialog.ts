@@ -35,6 +35,7 @@ import { Messages } from '../strings.js';
 import { MainService } from '../service/MainService.js';
 import { SaaSPackage } from '../index.js';
 import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GBOService } from '../service/GBOService.js';
 
 export class NewUserDialog extends IGBDialog {
   static getBotNameDialog(min: GBMinInstance) {
@@ -83,7 +84,7 @@ export class NewUserDialog extends IGBDialog {
         async step => {
           const locale = 'en-US';
           await step.context.sendActivity('Aqui estão alguns modelos para você escolher:');
-          let gboService = min.gbappServices['gboService'];
+          let gboService = new GBOService();
           const list = await gboService.listTemplates(min);
 
           let templateMessage = undefined;
@@ -101,8 +102,9 @@ export class NewUserDialog extends IGBDialog {
         async step => {
           const list = step.activeDialog.state.options.templateList;
           let template = null;
+          let gboService = new GBOService();
           await CollectionUtil.asyncForEach(list, async item => {
-            let gboService = min.gbappServices['gboService'];
+            
             if (gboService.kmpSearch(step.context.activity.originalText, item.name) != -1) {
               template = item.name;
             }

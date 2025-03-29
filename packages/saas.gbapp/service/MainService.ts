@@ -34,6 +34,7 @@ import { GBOnlineSubscription } from '../model/MainModel.js';
 import { GBMinInstance, GBLog } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import urlJoin from 'url-join';
+import { GBOService } from './GBOService.js';
 
 export class MainService {
   async createSubscriptionMSFT(email: string, plan: string, offer: string, quantity: number, additionalData: any) { }
@@ -108,8 +109,8 @@ export class MainService {
 
     let siteId = process.env.STORAGE_SITE_ID;
     let libraryId = process.env.STORAGE_LIBRARY;
-    let gboService = min.gbappServices['gboService'];
-
+    let gboService = new GBOService();
+    
     let sleep = ms => {
       return new Promise(resolve => {
         setTimeout(resolve, ms);

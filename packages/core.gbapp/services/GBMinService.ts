@@ -1269,7 +1269,7 @@ export class GBMinService {
       if (GBConfigService.get('GB_MODE') !== 'legacy') {
         const context = adapter['createContext'](req);
         context['_activity'] = context.activity.body;
-        await handler(context);
+        await adapter['processActivity'](req, res, handler);
 
         // Return status
         res.status(200);
