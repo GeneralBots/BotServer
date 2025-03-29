@@ -113,7 +113,7 @@ export class GBCoreService implements IGBCoreService {
   constructor() {
     this.adminService = new GBAdminService(this);
   }
-  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {}
+  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) { }
 
   /**
    * Gets database config and connect to storage. Currently two databases
@@ -121,60 +121,60 @@ export class GBCoreService implements IGBCoreService {
    */
   public async initStorage(): Promise<any> {
     this.dialect = GBConfigService.get('STORAGE_DIALECT');
-  
+
     let port: number | undefined;
     let host: string | undefined;
     let database: string | undefined;
     let username: string | undefined;
     let password: string | undefined;
     let storage: string | undefined;
-  
-    
+
+
     if (!['mssql', 'postgres', 'sqlite'].includes(this.dialect)) {
       throw new Error(`Unknown or unsupported dialect: ${this.dialect}.`);
     }
-  
-    
+
+
     if (this.dialect === 'mssql' || this.dialect === 'postgres') {
       host = GBConfigService.get('STORAGE_SERVER');
       database = GBConfigService.get('STORAGE_NAME');
       username = GBConfigService.get('STORAGE_USERNAME');
       password = GBConfigService.get('STORAGE_PASSWORD');
-  
+
       const portStr = GBConfigService.get('STORAGE_PORT');
       port = portStr ? parseInt(portStr, 10) : undefined;
-  
+
       if (!host || !database || !username || !password || !port) {
         throw new Error(`Missing required configuration for ${this.dialect}.`);
       }
     } else if (this.dialect === 'sqlite') {
       storage = GBConfigService.get('STORAGE_FILE');
-  
+
       if (!storage) {
         throw new Error('STORAGE_FILE is required for SQLite.');
       }
-  
+
       if (!(await GBUtil.exists(storage))) {
         process.env.STORAGE_SYNC = 'true';
       }
     }
-  
-    
+
+
     const logging: boolean | Function =
       GBConfigService.get('STORAGE_LOGGING') === 'true'
         ? (str: string): void => {
-            GBLogEx.info(0, str);
-          }
+          GBLogEx.info(0, str);
+        }
         : false;
-  
-    
+
+
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
-  
-    
+
+
     const acquireStr = GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT');
     const acquire = acquireStr ? parseInt(acquireStr, 10) : 10000; // Valor padrão de 10 segundos
-  
-    
+
+
     const sequelizeOptions: SequelizeOptions = {
       define: {
         freezeTableName: true,
@@ -185,7 +185,7 @@ export class GBCoreService implements IGBCoreService {
       logging: logging as boolean,
       dialect: this.dialect as Dialect,
       storage: storage,
-      quoteIdentifiers: this.dialect === 'postgres', 
+      quoteIdentifiers: this.dialect === 'postgres',
       dialectOptions: this.dialect === 'mssql' ? {
         options: {
           trustServerCertificate: true,
@@ -200,11 +200,11 @@ export class GBCoreService implements IGBCoreService {
         acquire: acquire,
       },
     };
-  
-    
+
+
     this.sequelize = new Sequelize(database, username, password, sequelizeOptions);
   }
-  
+
   /**
    * Checks wheather storage is acessible or not and opens firewall
    * in case of any connection block.
@@ -338,7 +338,7 @@ STORAGE_SYNC_ALTER=true
 ENDPOINT_UPDATE=true
 `;
 
-await fs.writeFile('.env', env);
+    await fs.writeFile('.env', env);
   }
 
   /**
@@ -548,7 +548,7 @@ await fs.writeFile('.env', env);
    * Verifies that an complex global password has been specified
    * before starting the server.
    */
-  public ensureAdminIsSecured() {}
+  public ensureAdminIsSecured() { }
 
   public async createBootInstance(
     core: GBCoreService,
@@ -703,27 +703,27 @@ await fs.writeFile('.env', env);
     if (GBConfigService.get('GB_MODE') === 'legacy') {
       // Handles calls for BASIC persistence on sheet files.
       GBLog.info(`Defining Config.xlsx variable ${name}= '${value}'...`);
-      
+
       let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
       const maxLines = 512;
       const file = 'Config.xlsx';
       const packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
-      
+
       let document = await new SystemKeywords().internalGetDocument(client, baseUrl, packagePath, file);
-      
+
       // Creates book session that will be discarded.
       let sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
-      
+
       // Get the current rows in column A
       let results = await client
         .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A${maxLines}')`)
         .get();
-        
+
       const rows = results.values;
       let address = '';
       let lastEmptyRow = -1;
       let isEdit = false;
-  
+
       // Loop through column A to find the row where name matches, or find the next empty row
       for (let i = 7; i <= rows.length; i++) {
         let result = rows[i - 1][0];
@@ -732,27 +732,27 @@ await fs.writeFile('.env', env);
           isEdit = true; // We are in editing mode
           break;
         } else if (!result && lastEmptyRow === -1) {
-          lastEmptyRow = i ; // Store the first empty row if no match is found
+          lastEmptyRow = i; // Store the first empty row if no match is found
         }
       }
-  
+
       // If no match was found and there's an empty row, add a new entry
       if (!isEdit && lastEmptyRow !== -1) {
         address = `A${lastEmptyRow}:B${lastEmptyRow}`; // Add new entry in columns A and B
       }
-  
+
       // Prepare the request body based on whether it's an edit or add operation
       let body = { values: isEdit ? [[value]] : [[name, value]] };
-  
+
       // Update or add the new value in the found address
       await client
         .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
         .patch(body);
-        
+
     } else {
       let packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
       const config = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, 'config.csv');
-  
+
       const db = await csvdb(config, ['name', 'value'], ',');
       if (await db.get({ name: name })) {
         await db.edit({ name: name }, { name, value });
@@ -761,7 +761,7 @@ await fs.writeFile('.env', env);
       }
     }
   }
-  
+
   /**
    * Get a dynamic param from instance. Dynamic params are defined in Config.xlsx
    * and loaded into the work folder from   comida command.
@@ -863,7 +863,7 @@ await fs.writeFile('.env', env);
   public async ensureFolders(instances, deployer: GBDeployer) {
     const storageMode = process.env.GB_MODE;
     let libraryPath = GBConfigService.get('STORAGE_LIBRARY');
-  
+
     if (storageMode === 'gbcluster') {
       const minioClient = new Client({
         endPoint: process.env.DRIVE_SERVER,
@@ -872,54 +872,58 @@ await fs.writeFile('.env', env);
         accessKey: process.env.DRIVE_ACCESSKEY,
         secretKey: process.env.DRIVE_SECRET,
       });
-  
+
       await this.syncBotStorage(instances, 'default', deployer, libraryPath);
-      
+
       const bucketStream = await minioClient.listBuckets();
-      
+
       for await (const bucket of bucketStream) {
         if (bucket.name.endsWith('.gbai') && bucket.name.startsWith(process.env.DRIVE_ORG_PREFIX)) {
 
           const botId = bucket.name.replace('.gbai', '').replace(process.env.DRIVE_ORG_PREFIX, '');
           await this.syncBotStorage(instances, botId, deployer, libraryPath);
-          
+
         }
       }
     } else {
       if (!(await GBUtil.exists(libraryPath))) {
         mkdirp.sync(libraryPath);
       }
-  
+
       await this.syncBotStorage(instances, 'default', deployer, libraryPath);
-      
+
       const files = await fs.readdir(libraryPath);
       await CollectionUtil.asyncForEach(files, async (file) => {
         if (file.trim().toLowerCase() !== 'default.gbai' && file.charAt(0) !== '_') {
           let botId = file.replace(/\.gbai/, '');
           await this.syncBotStorage(instances, botId, deployer, libraryPath);
-          
+
         }
       });
     }
   }
-  
+
   private async syncBotStorage(instances: any, botId: any, deployer: GBDeployer, libraryPath: string) {
+
+
     let instance = instances.find(p => p.botId.toLowerCase().trim() === botId.toLowerCase().trim());
 
-    if (!instance) {
-      GBLog.info(`Importing package ${botId}.gbai...`);
+    if (process.env.GB_MODE === 'local') {
+      if (!instance) {
+        GBLog.info(`Importing package ${botId}.gbai...`);
 
-      // Creates a bot.
+        // Creates a bot.
 
-      let mobile = null,
-        email = null;
+        let mobile = null,
+          email = null;
 
-      instance = await deployer.deployBlankBot(botId, mobile, email);
-      instances.push(instance);
-      const gbaiPath = path.join(libraryPath, `${botId}.gbai`);
+        instance = await deployer.deployBlankBot(botId, mobile, email);
+        instances.push(instance);
+        const gbaiPath = path.join(libraryPath, `${botId}.gbai`);
 
-      if (!(await GBUtil.exists(gbaiPath))) {
-        fs.mkdir(gbaiPath, { recursive: true });
+        if (!(await GBUtil.exists(gbaiPath))) {
+          fs.mkdir(gbaiPath, { recursive: true });
+        }
       }
     }
     return instance;

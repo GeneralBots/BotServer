@@ -522,7 +522,7 @@ export class GBDeployer implements IGBDeployer {
         secretKey: process.env.DRIVE_SECRET,
       });
 
-      const bucketName = process.env.DRIVE_BUCKETPREFIX + min.botId + '.gbai';
+      const bucketName =  process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai';
 
       if (!(await GBUtil.exists(localPath))) {
         await fs.mkdir(localPath, { recursive: true });
@@ -670,7 +670,7 @@ export class GBDeployer implements IGBDeployer {
         await this.cleanupPackage(min.instance, packageName);
       }
 
-      if (GBConfigService.get('GB_MODE') !== 'legacy') {
+      if (GBConfigService.get('GB_MODE') === 'local') {
         const filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbai, packageName);
         await GBUtil.copyIfNewerRecursive(filePath, packageWorkFolder);
       } else {

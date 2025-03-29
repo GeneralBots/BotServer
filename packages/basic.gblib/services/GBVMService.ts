@@ -1028,7 +1028,7 @@ export class GBVMService extends GBService {
     let result;
 
     try {
-      if (!GBConfigService.get('GBVM')) {
+      if (GBConfigService.get('GBVM') !== false) {
         return await (async () => {
           return await new Promise((resolve) => {
             sandbox['resolve'] = resolve;

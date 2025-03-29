@@ -35,6 +35,7 @@ import { GBMinInstance, GBLog } from 'botlib';
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import urlJoin from 'url-join';
 import { GBOService } from './GBOService.js';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 
 export class MainService {
   async createSubscriptionMSFT(email: string, plan: string, offer: string, quantity: number, additionalData: any) { }
@@ -105,7 +106,10 @@ export class MainService {
     subscription.externalSubscriptionId = externalSubscriptionId;
     await subscription.save();
 
-    let token = await (min.adminService.acquireElevatedToken as any)(min.instance.instanceId, true);
+    let token = 
+      GBConfigService.get('GB_MODE') === 'legacy'?
+      await (min.adminService.acquireElevatedToken as any)(min.instance.instanceId, true) :
+      null;
 
     let siteId = process.env.STORAGE_SITE_ID;
     let libraryId = process.env.STORAGE_LIBRARY;
@@ -119,15 +123,15 @@ export class MainService {
 
 
     GBLog.info( 'Creating .gbai folder ...');
-    let item = await gboService.createSubFolderAtRoot(token, `${botName}.gbai`, siteId, libraryId);
-    await sleep(1000);
+    let item = await gboService.createRootFolder(token, `${botName}.gbai`, siteId, libraryId);
+
 
     GBLog.info( 'Copying Templates...');
-    await gboService.copyTemplates(min, item, 'Shared.gbai', 'gbkb', botName);
-    await gboService.copyTemplates(min, item, 'Shared.gbai', 'gbot', botName);
-    await gboService.copyTemplates(min, item, 'Shared.gbai', 'gbtheme', botName);
-    await gboService.copyTemplates(min, item, 'Shared.gbai', 'gbdialog', botName);
-    await gboService.copyTemplates(min, item, 'Shared.gbai', 'gbdata', botName);
+    // await gboService.copyTemplates(min, item, 'shared.gbai', 'gbkb', botName);
+    // await gboService.copyTemplates(min, item, 'shared.gbai', 'gbot', botName);
+    // await gboService.copyTemplates(min, item, 'shared.gbai', 'gbtheme', botName);
+    // await gboService.copyTemplates(min, item, 'shared.gbai', 'gbdialog', botName);
+    // await gboService.copyTemplates(min, item, 'shared.gbai', 'gbdata', botName);
     await gboService.copyTemplates(min, item, templateName, 'gbkb', botName);
     await gboService.copyTemplates(min, item, templateName, 'gbot', botName);
     await gboService.copyTemplates(min, item, templateName, 'gbtheme', botName);

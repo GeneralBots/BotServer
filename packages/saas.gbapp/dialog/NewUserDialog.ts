@@ -116,7 +116,7 @@ export class NewUserDialog extends IGBDialog {
             return await step.replaceDialog('/welcome_saas_bottemplate', step.activeDialog.state.options);
           } else {
             step.activeDialog.state.options.templateName = template;
-            debugger;
+            
             await NewUserDialog.createBot(step, min, true);
 
             return await step.replaceDialog('/ask', { isReturning: true });
@@ -252,7 +252,7 @@ export class NewUserDialog extends IGBDialog {
               '12',
               '99',
               '1234',
-              'crawlergbot.gbai',
+              'ai-search.gbai',
               true
             );
             

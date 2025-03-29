@@ -86,7 +86,7 @@ export class GBConfigService {
           value = this.getServerPort();
           break;
         case 'GBVM':
-          value = false;
+          value = true;
           break;
         case 'STORAGE_NAME':
           value = null;

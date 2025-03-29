@@ -37,8 +37,11 @@ import MicrosoftGraph from "@microsoft/microsoft-graph-client";
 import sgMail from '@sendgrid/mail';
 import { default as PasswordGenerator } from 'strict-password-generator';
 import { promises as fs } from 'fs';
+import { existsSync } from 'fs';
+
 import { GBConfigService } from "../../core.gbapp/services/GBConfigService.js";
 import path from "path";
+import { Client } from "minio";
 
 
 export class GBOService {
@@ -75,54 +78,6 @@ export class GBOService {
     });
   }
 
-  public async createSubFolderAtRoot(token: string, name: string,
-    siteId: string, libraryId: string) {
-    return new Promise<any>((resolve, reject) => {
-      let client = MicrosoftGraph.Client.init({
-        authProvider: done => {
-          done(null, token);
-        }
-      });
-      const body = {
-        "name": name,
-        "folder": {},
-        "@microsoft.graph.conflictBehavior": "rename"
-      }
-      client.api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root/children`)
-        .post(body, (err, res) => {
-          if (err) {
-            reject(err)
-          }
-          else {
-            resolve(res);
-          }
-        });
-    });
-  }
-  public async createSubFolderAt(token: string, parentPath: string, name: string,
-    siteId: string, libraryId: string) {
-    return new Promise<any>((resolve, reject) => {
-      let client = MicrosoftGraph.Client.init({
-        authProvider: done => {
-          done(null, token);
-        }
-      });
-      const body = {
-        "name": name,
-        "folder": {},
-        "@microsoft.graph.conflictBehavior": "rename"
-      }
-      client.api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${parentPath}:/children`)
-        .post(body, (err, res) => {
-          if (err) {
-            reject(err)
-          }
-          else {
-            resolve(res);
-          }
-        });
-    });
-  }
 
   public async listTemplates(min: GBMinInstance) {
     if (GBConfigService.get('GB_MODE') === 'legacy') {
@@ -146,7 +101,7 @@ export class GBOService {
     }
     else {
 
-      const templatesDir = path.join(process.env.PWD,'templates');
+      const templatesDir = path.join(process.env.PWD, 'templates');
       const gbaiDirectories = [];
 
       // Read all entries in the templates directory
@@ -161,67 +116,109 @@ export class GBOService {
       return gbaiDirectories;
     }
   }
+  public async copyTemplates(min: GBMinInstance, gbaiDest: any, templateName: string, kind: string, botName: string): Promise<void> {
+    const storageMode = process.env.GB_MODE;
 
-  public async copyTemplates(min: GBMinInstance, gbaiDest, templateName: string, kind: string, botName: string) {
+    if (storageMode === 'legacy') {
+      // Microsoft Graph (SharePoint) Implementation
+      const token = await (min.adminService as any).acquireElevatedToken(min.instance.instanceId, true);
+      const siteId = process.env.STORAGE_SITE_ID;
+      const templateLibraryId = process.env.SAAS_TEMPLATE_LIBRARY;
+      const libraryId = process.env.STORAGE_LIBRARY;
 
-    let token =
-      await (min.adminService as any).acquireElevatedToken(min.instance.instanceId, true);
+      const client = MicrosoftGraph.Client.init({
+        authProvider: (done) => done(null, token)
+      });
 
-    let siteId = process.env.STORAGE_SITE_ID;
-    let templateLibraryId = process.env.SAAS_TEMPLATE_LIBRARY;
-    let libraryId = process.env.STORAGE_LIBRARY;
+      const packageName = `${templateName.split('.')[0]}.${kind}`;
+      const destinationName = `${botName}.${kind}`;
 
-    let client = MicrosoftGraph.Client.init({
-      authProvider: done => {
-        done(null, token);
-      }
-    });
+      try {
+        // Try direct copy first
+        const src = await client.api(
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateLibraryId}/drive/root:/${templateName}/${packageName}`
+        ).get();
 
-    const body =
-    {
-      "parentReference": { driveId: gbaiDest.parentReference.driveId, id: gbaiDest.id },
-      "name": `${botName}.${kind}`
-    }
-
-    const packageName = `${templateName.split('.')[0]}.${kind}`;
-
-    try {
-      const src = await client.api(
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateLibraryId}/drive/root:/${templateName}/${packageName}`)
-        .get();
-
-      return await client.api(
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateLibraryId}/drive/items/${src.id}/copy`)
-        .post(body);
-
-    } catch (error) {
-
-      if (error.code === "itemNotFound") {
-
-      } else if (error.code === "nameAlreadyExists") {
-
-        let src = await client.api(
-          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateLibraryId}/drive/root:/${templateName}/${packageName}:/children`)
-          .get();
-        const dstName = `${botName}.gbai/${botName}.${kind}`;
-        let dst = await client.api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${dstName}`)
-          .get();
-
-        await CollectionUtil.asyncForEach(src.value, async item => {
-
-          const body =
-          {
-            "parentReference": { driveId: dst.parentReference.driveId, id: dst.id }
-          }
-          await client.api(
-            `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateLibraryId}/drive/items/${item.id}/copy`)
-            .post(body);
+        await client.api(
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateLibraryId}/drive/items/${src.id}/copy`
+        ).post({
+          parentReference: {
+            driveId: gbaiDest.parentReference.driveId,
+            id: gbaiDest.id
+          },
+          name: destinationName
         });
+      } catch (error) {
+        if (error.code === "nameAlreadyExists") {
+          // Handle existing destination by copying contents individually
+          const srcItems = await client.api(
+            `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateLibraryId}/drive/root:/${templateName}/${packageName}:/children`
+          ).get();
+
+          const dstPath = `${botName}.gbai/${destinationName}`;
+          const dst = await client.api(
+            `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root:/${dstPath}`
+          ).get();
+
+          await CollectionUtil.asyncForEach(srcItems.value, async (item) => {
+            await client.api(
+              `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${templateLibraryId}/drive/items/${item.id}/copy`
+            ).post({
+              parentReference: {
+                driveId: dst.parentReference.driveId,
+                id: dst.id
+              }
+            });
+          });
+        } else {
+          GBLog.error(`Failed to copy templates: ${error.message}`);
+          throw error;
+        }
       }
-      else {
-        GBLog.error(error);
-        throw error;
-      }
+    }
+    else if (storageMode === 'gbcluster') {
+
+      // MinIO Implementation
+      const minioClient = new Client({
+        endPoint: process.env.DRIVE_SERVER,
+        port: parseInt(process.env.DRIVE_PORT),
+        useSSL: process.env.DRIVE_USE_SSL === 'true',
+        accessKey: process.env.DRIVE_ACCESSKEY,
+        secretKey: process.env.DRIVE_SECRET,
+      });
+
+      
+      const bucketName  = `${process.env.DRIVE_ORG_PREFIX}${botName}.gbai`;
+      const packageName = `${templateName.split('.')[0]}.${kind}`;
+      const localTemplatePath = path.join(process.env.PWD, 'templates', templateName, packageName);
+      const minioDestinationPath = `${botName}.${kind}`;
+
+      const uploadDirectory = async (localPath: string, minioPath: string = '') => {
+
+        // Ensure the bucket exists in local file system
+        if (existsSync(localPath)) {
+
+          const entries = await fs.readdir(localPath, { withFileTypes: true });
+
+          for (const entry of entries) {
+            const fullLocalPath = path.join(localPath, entry.name);
+            const objectName = path.posix.join(minioPath, entry.name);
+
+            if (entry.isDirectory()) {
+              await uploadDirectory(fullLocalPath, objectName);
+            } else {
+              const fileContent = await fs.readFile(fullLocalPath);
+              await minioClient.putObject(bucketName, objectName, fileContent);
+              GBLog.info(`Uploaded ${objectName} to MinIO bucket ${bucketName}`);
+            }
+          }
+        }
+        else {
+          GBLog.verbose(`Package ${localPath} does not exist on templates.`);
+        }
+      };
+
+      await uploadDirectory(localTemplatePath, minioDestinationPath);
     }
   }
 
@@ -365,4 +362,56 @@ export class GBOService {
 
     return documents[0];
   }
+
+  public async createRootFolder(token: string, name: string,
+    siteId: string, libraryId: string) {
+    const storageMode = process.env.GB_MODE;
+
+    if (storageMode === 'gbcluster') {
+      // Minio implementation
+      const minioClient = new Client({
+        endPoint: process.env.DRIVE_SERVER,
+        port: parseInt(process.env.DRIVE_PORT),
+        useSSL: process.env.DRIVE_USE_SSL === 'true',
+        accessKey: process.env.DRIVE_ACCESSKEY,
+        secretKey: process.env.DRIVE_SECRET,
+      });
+
+
+      // Ensure bucket exists
+
+      name = `${process.env.DRIVE_ORG_PREFIX}${name}`;
+      const bucketExists = await minioClient.bucketExists(name);
+      if (!bucketExists) {
+        await minioClient.makeBucket(name);
+      }
+      return { name: name, folder: {} }; // Return similar structure to MS Graph
+
+    } else {
+      // Original MS Graph implementation
+      return new Promise<any>((resolve, reject) => {
+        let client = MicrosoftGraph.Client.init({
+          authProvider: done => {
+            done(null, token);
+          }
+        });
+        const body = {
+          "name": name,
+          "folder": {},
+          "@microsoft.graph.conflictBehavior": "rename"
+        }
+        client.api(`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${libraryId}/drive/root/children`)
+          .post(body, (err, res) => {
+            if (err) {
+              reject(err)
+            }
+            else {
+              resolve(res);
+            }
+          });
+      });
+    }
+  }
+
+
 }
