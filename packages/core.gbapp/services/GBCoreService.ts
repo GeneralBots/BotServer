@@ -282,8 +282,10 @@ export class GBCoreService implements IGBCoreService {
       };
       return await GuaribasInstance.findAll(options as any);
     } else {
-      const options = { where: { state: 'active' } };
-      return await GuaribasInstance.findAll(options);
+      const options = { where: { state: 'active' }  ,
+      
+      order: [['instanceId', 'ASC']]};
+      return await GuaribasInstance.findAll(options as any);
     }
   }
 
