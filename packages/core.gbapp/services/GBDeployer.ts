@@ -522,7 +522,7 @@ export class GBDeployer implements IGBDeployer {
         secretKey: process.env.DRIVE_SECRET,
       });
 
-      const bucketName =  process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai';
+      const bucketName =  (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
 
       if (!(await GBUtil.exists(localPath))) {
         await fs.mkdir(localPath, { recursive: true });

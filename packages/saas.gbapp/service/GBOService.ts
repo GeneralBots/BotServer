@@ -188,7 +188,7 @@ export class GBOService {
       });
 
       
-      const bucketName  = `${process.env.DRIVE_ORG_PREFIX}${botName}.gbai`;
+      const bucketName  = `${process.env.DRIVE_ORG_PREFIX}${botName}.gbai`.toLowerCase();
       const packageName = `${templateName.split('.')[0]}.${kind}`;
       const localTemplatePath = path.join(process.env.PWD, 'templates', templateName, packageName);
       const minioDestinationPath = `${botName}.${kind}`;
@@ -380,7 +380,7 @@ export class GBOService {
 
       // Ensure bucket exists
 
-      name = `${process.env.DRIVE_ORG_PREFIX}${name}`;
+      name = `${process.env.DRIVE_ORG_PREFIX}${name}`.toLowerCase();
       const bucketExists = await minioClient.bucketExists(name);
       if (!bucketExists) {
         await minioClient.makeBucket(name);
