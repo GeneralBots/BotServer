@@ -569,7 +569,7 @@ export class KBService implements IGBKBService {
           if (/TALK\s*\".*\"/gi.test(answer) || isBasic) {
             const code = isBasic ? answer.substr(6) : answer;
             const packagePath = GBUtil.getGBAIPath(min.botId, `gbdialog`);
-            const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.docx`;
+            const scriptName = `tmp${GBAdminService.getRndReadableIdentifier()}.vbs`;
             const localName = path.join('work', packagePath, `${scriptName}`);
             fs.writeFile(localName, code, { encoding: null });
             answer = scriptName;
