@@ -751,9 +751,9 @@ ENDPOINT_UPDATE=true
       await client
         .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
         .patch(body);
-
-    } else {
-      let packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
+    }
+    else if (GBConfigService.get('GB_MODE') === 'local') {
+          let packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
       const config = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, 'config.csv');
 
       const db = await csvdb(config, ['name', 'value'], ',');

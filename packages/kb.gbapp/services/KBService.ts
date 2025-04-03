@@ -1049,7 +1049,7 @@ export class KBService implements IGBKBService {
     let website = min.core.getParam<string>(min.instance, 'Website', null);
     const maxDepth = min.core.getParam<number>(min.instance, 'Website Depth', 1);
     const MAX_DOCUMENTS = 50;
-    const maxDocuments = min.core.getParam<number>(min.instance, 'Website Max Documents', MAX_DOCUMENTS);
+    const maxDocuments = min.core.getParam<number>(min.instance, '  ', MAX_DOCUMENTS);
     const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
     GBLogEx.info(min, `Website: ${website}, Max Depth: ${maxDepth}, Website Max Documents: ${maxDocuments}, Ignore URLs: ${websiteIgnoreUrls}`);
 
