@@ -188,14 +188,14 @@ export class GBServer {
 
           if (GBConfigService.get('GB_MODE') === 'legacy') {
             await core.initStorage();
-            [GBServer.globals.bootInstance, azureDeployer] = await core['createBootInstanceEx'](
-              core,
-              null,
-              GBServer.globals.publicAddress,
-              deployer,
-              GBConfigService.get('FREE_TIER')
-            );
-            await core.saveInstance(GBServer.globals.bootInstance);
+            // [GBServer.globals.bootInstance, azureDeployer] = await core['createBootInstanceEx'](
+            //   core,
+            //   null,
+            //   GBServer.globals.publicAddress,
+            //   deployer,
+            //   GBConfigService.get('FREE_TIER')
+            // );
+            // await core.saveInstance(GBServer.globals.bootInstance);
           }
           else {
             await core.initStorage();
