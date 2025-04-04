@@ -492,8 +492,17 @@ export class GBMinService {
         // Not meta, multiples bots on root bot.
 
         if (!req.body.object) {
-          const to = req.body.To.replace(/whatsapp\:\+/gi, '');
-          whatsAppDirectLine = WhatsappDirectLine.botsByNumber[to];
+
+          if (req.body.To){
+
+            const to = req.body.To.replace(/whatsapp\:\+/gi, '');
+            whatsAppDirectLine = WhatsappDirectLine.botsByNumber[to];
+          }
+          else
+          {
+              const minBoot = GBServer.globals.minBoot as GBMinInstance;
+              whatsAppDirectLine = minBoot.whatsAppDirectLine;
+          }
         }
 
         if (whatsAppDirectLine) {
