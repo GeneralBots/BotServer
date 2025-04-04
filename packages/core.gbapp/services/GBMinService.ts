@@ -458,7 +458,7 @@ export class GBMinService {
     // Provides checking of instance health.
 
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
-
+    
     // Setups official handler for WhatsApp.
 
     GBServer.globals.server
@@ -467,13 +467,15 @@ export class GBMinService {
         const status = req.body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
 
         if (status) {
-          GBLogEx.verbose(min, `WhatsApp: ${status.recipient_id} ${status.status}`);
+          GBLogEx.info(min, `WhatsApp: ${status.recipient_id} ${status.status}`);
           return;
         }
+        
+        const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
+        GBLogEx.info(min, `Meta callback entering...${challenge} ${JSON.stringify(req.query)}`);
 
         if (req.query['hub.mode'] === 'subscribe') {
           const val = req.query['hub.verify_token'];
-          const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
 
           if (challenge && val === challenge) {
             res.send(req.query['hub.challenge']);
