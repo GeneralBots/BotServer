@@ -1075,10 +1075,18 @@ export class GBMinService {
       let user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
       const userId = user.userId;
       const params = user.params ? JSON.parse(user.params) : {};
-
+      const t = new SystemKeywords();
+      
       try {
         const conversationReference = JSON.stringify(TurnContext.getConversationReference(context.activity));
         user = await sec.updateConversationReferenceById(user.userId, conversationReference);
+
+        const auth = min.core.getParam(min.instance, 'Enable Authentication', null);
+
+        if (auth && await t.find({pid: pid, "users.csv", `key={member.id}`})){
+
+        }
+
 
         // First time processing.
 
@@ -1158,7 +1166,6 @@ export class GBMinService {
             );
             const botToken = await credentials.getToken();
             const headers = { Authorization: `Bearer ${botToken}` };
-            const t = new SystemKeywords();
             const data = await t.getByHttp({
               pid: 0,
               url: file.contentUrl,

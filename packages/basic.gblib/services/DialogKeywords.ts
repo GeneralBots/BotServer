@@ -1528,9 +1528,9 @@ export class DialogKeywords {
 
 
         const ext = path.extname(filename);
-        const gbaiName = GBUtil.getGBAIPath(min.botId);
+        
 
-        const fileUrl = urlJoin('/', gbaiName, `${min.botId}.gbdrive`, filename);
+        const fileUrl = urlJoin('/', `${min.botId}.gbdrive`, filename);
         GBLogEx.info(min, `Direct send from .gbdrive: ${fileUrl} to ${mobile}.`);
 
         const fileOnly = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
