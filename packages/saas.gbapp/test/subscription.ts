@@ -5,7 +5,7 @@
           //   min,
           //   'Test',
           //   '999999999999',
-          //   '@domain.cloud',
+          //   '@domain.com.br',
           //   '9999999999999',
           //   'bot'+min.adminService['getRndReadableIdentifier'](),
           //   null,

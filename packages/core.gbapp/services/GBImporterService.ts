@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.              |
+| "General Bots" is a registered trademark of pragmatismo.com.br.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -80,10 +80,10 @@ export class GBImporter {
         instance.state = 'active';
         instance.adminPass = GBConfigService.get('ADMIN_PASS');
         instance.botId = GBConfigService.get('BOT_ID');
-        instance.cloudSubscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
-        instance.cloudLocation = GBConfigService.get('CLOUD_LOCATION');
-        instance.cloudUsername = GBConfigService.get('CLOUD_USERNAME');
-        instance.cloudPassword = GBConfigService.get('CLOUD_PASSWORD');
+        instance.com.brSubscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+        instance.com.brLocation = GBConfigService.get('CLOUD_LOCATION');
+        instance.com.brUsername = GBConfigService.get('CLOUD_USERNAME');
+        instance.com.brPassword = GBConfigService.get('CLOUD_PASSWORD');
         instance.marketplaceId = GBConfigService.get('MARKETPLACE_ID');
         instance.marketplacePassword = GBConfigService.get('MARKETPLACE_SECRET');
         instance.storageDialect = GBConfigService.get('STORAGE_DIALECT');

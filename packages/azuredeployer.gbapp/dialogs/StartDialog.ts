@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.              |
+| "General Bots" is a registered trademark of pragmatismo.com.br.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -105,10 +105,10 @@ export class StartDialog {
 
     instance.botId = botId;
     instance.state = 'active';
-    instance.cloudUsername = username;
-    instance.cloudPassword = password;
-    instance.cloudSubscriptionId = subscriptionId;
-    instance.cloudLocation = location;
+    instance.com.brUsername = username;
+    instance.com.brPassword = password;
+    instance.com.brSubscriptionId = subscriptionId;
+    instance.com.brLocation = location;
     instance.marketplaceId = appId;
     instance.marketplacePassword = appPassword;
     instance.adminPass = GBAdminService.getRndPassword();

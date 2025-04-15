@@ -14,4 +14,4 @@ In the legal field, the Law template facilitates quick access to case summaries 
 | **LLM Tools**         | Custom Integration with Data Sources    | Real-Time Data Access                   | Custom Logic for LLM Integration      | Integration with Legacy Systems      |
 | **Talk to Data**      | SQL Interaction and Chart Generation    | Natural Language Queries                | Chart Generation                      | Business Intelligence Dashboards      |
 
-[Full Documentation](https://docs.pragmatismo.cloud)
+[Full Documentation](https://docs.pragmatismo.com.br)

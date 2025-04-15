@@ -6,9 +6,9 @@
     "packageName": "@@packageName",
     "developer": {
         "name": "@@yourName",
-        "websiteUrl": "https://gb.pragmatismo.cloud",
-        "privacyUrl": "https://gb.pragmatismo.cloud/privacy.html",
-        "termsOfUseUrl": "https://gb.pragmatismo.cloud/terms.html"
+        "websiteUrl": "https://gb.pragmatismo.com.br",
+        "privacyUrl": "https://gb.pragmatismo.com.br/privacy.html",
+        "termsOfUseUrl": "https://gb.pragmatismo.com.br/terms.html"
     },
     "icons": {
         "color": "color.png",

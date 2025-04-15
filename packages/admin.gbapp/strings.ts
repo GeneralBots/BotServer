@@ -1,7 +1,7 @@
 export const Messages = {
   'en-US': {
     authenticate: 'Please, authenticate:',
-    welcome: 'Welcome to pragmatismo.cloud GeneralBots Administration.',
+    welcome: 'Welcome to pragmatismo.com.br GeneralBots Administration.',
     which_task: 'Which task do you wanna run now?',
     working: command => `I'm working on ${command}...`,
     finished_working: 'Done.',
@@ -26,7 +26,7 @@ export const Messages = {
   },
   'pt-BR': {
     authenticate: 'Please, authenticate:',
-    welcome: 'Welcome to pragmatismo.cloud GeneralBots Administration.',
+    welcome: 'Welcome to pragmatismo.com.br GeneralBots Administration.',
     which_task: 'Which task do you wanna run now?',
     working: command => `I'm working on ${command}...`,
     finished_working: 'Done.',

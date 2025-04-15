@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.              |
+| "General Bots" is a registered trademark of pragmatismo.com.br.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -192,7 +192,7 @@ export class NewUserDialog extends IGBDialog {
 
             return await step.replaceDialog('/ask', { isReturning: true });
           } else {
-            // return await step.replaceDialog('/welcome_saas_voucher', 'Os meios de pagamento estão neste momento desabilitados, por favor informe um voucher ou contate info@pragmatismo.cloud.');
+            // return await step.replaceDialog('/welcome_saas_voucher', 'Os meios de pagamento estão neste momento desabilitados, por favor informe um voucher ou contate info@pragmatismo.com.br.');
 
             step.activeDialog.state.options.nextDialog = 'welcome_saas_return_document';
             return await step.replaceDialog('/xrm_document', step.activeDialog.state.options);
@@ -205,7 +205,7 @@ export class NewUserDialog extends IGBDialog {
   private static async createBot(step: any, min: GBMinInstance, free: boolean) {
     const locale = 'en-US';
     await step.context.sendActivity(Messages[locale].ok_procceding_creation);
-    const url = `https://gb.pragmatismo.cloud/${step.activeDialog.state.options.botName}`;
+    const url = `https://gb.pragmatismo.com.br/${step.activeDialog.state.options.botName}`;
     await step.context.sendActivity(Messages[locale].bot_created(url));
     const service = new MainService();
     await service.createSubscription(
@@ -245,7 +245,7 @@ export class NewUserDialog extends IGBDialog {
               min,
               botName,
               '999999999',
-              'email@domain.cloud',
+              'email@domain.com.br',
               '5521999998888',
               botName,
               null,

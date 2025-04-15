@@ -5,7 +5,7 @@
 | ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
 |  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
 |                                                                             |
-| General Bots Copyright (c) pragmatismo.cloud. All rights reserved.          |
+| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.          |
 | Licensed under the AGPL-3.0.                                                |
 |                                                                             |
 | According to our dual licensing model, this program can be used either      |
@@ -21,7 +21,7 @@
 | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.cloud.              |
+| "General Bots" is a registered trademark of pragmatismo.com.br.              |
 | The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
@@ -325,10 +325,10 @@ export class GBCoreService implements IGBCoreService {
 ADDITIONAL_DEPLOY_PATH=
 ADMIN_PASS=${instance.adminPass}
 BOT_ID=${instance.botId}
-CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}
-CLOUD_LOCATION=${instance.cloudLocation}
-CLOUD_USERNAME=${instance.cloudUsername}
-CLOUD_PASSWORD=${instance.cloudPassword}
+CLOUD_SUBSCRIPTIONID=${instance.com.brSubscriptionId}
+CLOUD_LOCATION=${instance.com.brLocation}
+CLOUD_USERNAME=${instance.com.brUsername}
+CLOUD_PASSWORD=${instance.com.brPassword}
 MARKETPLACE_ID=${instance.marketplaceId}
 MARKETPLACE_SECRET=${instance.marketplacePassword}
 STORAGE_DIALECT=${instance.storageDialect}
