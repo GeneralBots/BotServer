@@ -80,10 +80,10 @@ export class GBImporter {
         instance.state = 'active';
         instance.adminPass = GBConfigService.get('ADMIN_PASS');
         instance.botId = GBConfigService.get('BOT_ID');
-        instance.com.brSubscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
-        instance.com.brLocation = GBConfigService.get('CLOUD_LOCATION');
-        instance.com.brUsername = GBConfigService.get('CLOUD_USERNAME');
-        instance.com.brPassword = GBConfigService.get('CLOUD_PASSWORD');
+        instance.cloudSubscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
+        instance.cloudLocation = GBConfigService.get('CLOUD_LOCATION');
+        instance.cloudUsername = GBConfigService.get('CLOUD_USERNAME');
+        instance.cloudPassword = GBConfigService.get('CLOUD_PASSWORD');
         instance.marketplaceId = GBConfigService.get('MARKETPLACE_ID');
         instance.marketplacePassword = GBConfigService.get('MARKETPLACE_SECRET');
         instance.storageDialect = GBConfigService.get('STORAGE_DIALECT');

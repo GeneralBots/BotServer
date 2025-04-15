@@ -1178,7 +1178,7 @@ private async sendButtonList(to: string, buttons: string[]) {
 
         text = await GBConversationalService.getTextFromAudioBuffer(
           this.min.instance.speechKey,
-          this.min.instance.com.brLocation,
+          this.min.instance.cloudLocation,
           buf,
           user.locale
         );
@@ -1191,7 +1191,7 @@ private async sendButtonList(to: string, buttons: string[]) {
 
           text = await GBConversationalService.getTextFromAudioBuffer(
             this.min.instance.speechKey,
-            this.min.instance.com.brLocation,
+            this.min.instance.cloudLocation,
             buf,
             user.locale
           );

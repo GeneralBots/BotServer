@@ -382,7 +382,7 @@ export class GBDeployer implements IGBDeployer {
    */
   public async publishNLP(instance: IGBInstance): Promise<void> {
     const service = await AzureDeployerService.createInstance(this);
-    const res = await service.publishNLP(instance.com.brLocation, instance.nlpAppId, instance.nlpAuthoringKey);
+    const res = await service.publishNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
     if (res.status !== 200 && res.status !== 201) {
       throw res.bodyAsText;
     }
@@ -393,7 +393,7 @@ export class GBDeployer implements IGBDeployer {
    */
   public async trainNLP(instance: IGBInstance): Promise<void> {
     const service = await AzureDeployerService.createInstance(this);
-    const res = await service.trainNLP(instance.com.brLocation, instance.nlpAppId, instance.nlpAuthoringKey);
+    const res = await service.trainNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
     if (res.status !== 200 && res.status !== 202) {
       throw res.bodyAsText;
     }
@@ -423,7 +423,7 @@ export class GBDeployer implements IGBDeployer {
   public async refreshNLPEntity(instance: IGBInstance, listName, listData): Promise<void> {
     const service = await AzureDeployerService.createInstance(this);
     const res = await service.refreshEntityList(
-      instance.com.brLocation,
+      instance.cloudLocation,
       instance.nlpAppId,
       listName,
       instance.nlpAuthoringKey,

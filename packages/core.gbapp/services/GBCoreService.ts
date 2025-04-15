@@ -325,10 +325,10 @@ export class GBCoreService implements IGBCoreService {
 ADDITIONAL_DEPLOY_PATH=
 ADMIN_PASS=${instance.adminPass}
 BOT_ID=${instance.botId}
-CLOUD_SUBSCRIPTIONID=${instance.com.brSubscriptionId}
-CLOUD_LOCATION=${instance.com.brLocation}
-CLOUD_USERNAME=${instance.com.brUsername}
-CLOUD_PASSWORD=${instance.com.brPassword}
+CLOUD_SUBSCRIPTIONID=${instance.cloudSubscriptionId}
+CLOUD_LOCATION=${instance.cloudLocation}
+CLOUD_USERNAME=${instance.cloudUsername}
+CLOUD_PASSWORD=${instance.cloudPassword}
 MARKETPLACE_ID=${instance.marketplaceId}
 MARKETPLACE_SECRET=${instance.marketplacePassword}
 STORAGE_DIALECT=${instance.storageDialect}

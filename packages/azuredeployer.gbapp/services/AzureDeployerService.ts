@@ -394,16 +394,16 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     await this.enableResourceProviders('Microsoft.Sql');
 
     GBLogEx.info(0, `Deploying Deploy Group (It may take a few minutes)...`);
-    await this.createDeployGroup(name, instance.com.brLocation);
+    await this.createDeployGroup(name, instance.cloudLocation);
 
     let serverFarm;
     let serverName;
 
     if (process.env.DEPLOY_WEB) {
       GBLogEx.info(0, `Deploying Bot Server...`);
-      serverFarm = await this.createHostingPlan(name, `${name}-server-plan`, instance.com.brLocation);
+      serverFarm = await this.createHostingPlan(name, `${name}-server-plan`, instance.cloudLocation);
       serverName = `${name}-server`;
-      await this.createServer(serverFarm.id, name, serverName, instance.com.brLocation);
+      await this.createServer(serverFarm.id, name, serverName, instance.cloudLocation);
     }
 
     GBLogEx.info(0, `Deploying Bot Storage...`);
@@ -417,9 +417,9 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       administratorLogin,
       administratorPassword,
       storageServer,
-      instance.com.brLocation
+      instance.cloudLocation
     );
-    await this.createStorage(name, storageServer, storageName, instance.com.brLocation);
+    await this.createStorage(name, storageServer, storageName, instance.cloudLocation);
     instance.storageUsername = administratorLogin;
     instance.storagePassword = administratorPassword;
     instance.storageName = storageName;
@@ -429,7 +429,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     // TODO: Enable in .env
     // GBLogEx.info(min, `Deploying Search...`);
     // const searchName = `${name}-search`.toLowerCase();
-    // await this.createSearch(name, searchName, instance.com.brLocation);
+    // await this.createSearch(name, searchName, instance.cloudLocation);
     // const searchKeys = await this.searchClient.adminKeys.get(name, searchName);
     // instance.searchHost = `${searchName}.search.windows.net`;
     // instance.searchIndex = 'azuresql-index';
@@ -437,13 +437,13 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     // instance.searchKey = searchKeys.primaryKey;
 
     // GBLogEx.info(min, `Deploying Speech...`);
-    // const speech = await this.createSpeech(name, `${name}speech`, instance.com.brLocation);
+    // const speech = await this.createSpeech(name, `${name}speech`, instance.cloudLocation);
     // keys = await this.cognitiveClient.accounts.listKeys(name, speech.name);
     // instance.speechEndpoint = speech.properties.endpoint;
     // instance.speechKey = keys.key1;
 
     // GBLogEx.info(min, `Deploying Text Analytics...`);
-    // const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.com.brLocation);
+    // const textAnalytics = await this.createTextAnalytics(name, `${name}-textanalytics`, instance.cloudLocation);
     // instance.textAnalyticsEndpoint = textAnalytics.properties.endpoint.replace(`/text/analytics/v2.0`, '');
 
     GBLogEx.info(0, `Deploying SpellChecker...`);
@@ -451,8 +451,8 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.spellcheckerEndpoint = spellChecker.properties.endpoint;
 
     // GBLogEx.info(min, `Deploying NLP...`);
-    // const nlp = await this.createNLP(name, `${name}-nlp`, instance.com.brLocation);
-    // const nlpa = await this.createNLPAuthoring(name, `${name}-nlpa`, instance.com.brLocation);
+    // const nlp = await this.createNLP(name, `${name}-nlp`, instance.cloudLocation);
+    // const nlpa = await this.createNLPAuthoring(name, `${name}-nlpa`, instance.cloudLocation);
     // instance.nlpEndpoint = nlp.properties.endpoint;
 
 
@@ -472,7 +472,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
       instance.nlpKey,
       instance.marketplaceId,
       instance.marketplacePassword,
-      instance.com.brSubscriptionId
+      instance.cloudSubscriptionId
     );
 
     GBLogEx.info(0, `Waiting one minute to finish NLP service and keys creation...`);
@@ -486,7 +486,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     // instance.nlpKey = keys.key1;
 
     // instance.nlpAuthoringKey = authoringKeys.key1;
-    // const nlpAppId = await this.createNLPService(name, name, instance.com.brLocation, culture, instance.nlpAuthoringKey);
+    // const nlpAppId = await this.createNLPService(name, name, instance.cloudLocation, culture, instance.nlpAuthoringKey);
     // instance.nlpAppId = nlpAppId;
 
     if (process.env.DEPLOY_WEB) {
@@ -511,10 +511,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     const instance = <IGBInstance>{};
     instance.state = 'active';
     instance.botId = title;
-    instance.com.brUsername = username;
-    instance.com.brPassword = password;
-    instance.com.brSubscriptionId = subscriptionId;
-    instance.com.brLocation = cloudLocation;
+    instance.cloudUsername = username;
+    instance.cloudPassword = password;
+    instance.cloudSubscriptionId = subscriptionId;
+    instance.cloudLocation = cloudLocation;
     instance.nlpAuthoringKey = authoringKey;
     instance.marketplaceId = appId;
     instance.marketplacePassword = appPassword;
@@ -629,7 +629,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
     const token = new StaticAccessToken();
 
-    this.com.br = new ResourceManagementClient(token, subscriptionId);
+    this.cloud = new ResourceManagementClient(token, subscriptionId);
     this.webSiteClient = new WebSiteManagementClient(token, subscriptionId);
     this.storageClient = new SqlManagementClient(token, subscriptionId);
     this.cognitiveClient = new CognitiveServicesManagementClient(token, subscriptionId);
@@ -904,13 +904,13 @@ export class AzureDeployerService implements IGBInstallationDeployer {
   private async createDeployGroup(name: string, location: string) {
     const params = { location: location };
 
-    return await this.com.br.resourceGroups.createOrUpdate(name, params);
+    return await this.cloud.resourceGroups.createOrUpdate(name, params);
   }
 
   private async enableResourceProviders(name: string) {
-    const ret = await this.com.br.providers.get(name);
+    const ret = await this.cloud.providers.get(name);
     if (ret.registrationState === 'NotRegistered') {
-      await this.com.br.providers.register(name);
+      await this.cloud.providers.register(name);
     }
   }
 
@@ -980,7 +980,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
 
   private async updateWebisteConfig(group: string, name: string, serverFarmId: string, instance: IGBInstance) {
     const parameters: Site = {
-      location: instance.com.brLocation,
+      location: instance.cloudLocation,
       serverFarmId: serverFarmId,
       siteConfig: {
         appSettings: [
@@ -988,10 +988,10 @@ export class AzureDeployerService implements IGBInstallationDeployer {
           { name: 'WEBSITE_NODE_DEFAULT_VERSION', value:  await GBAdminService.getNodeVersion() },
           { name: 'ADMIN_PASS', value: `${instance.adminPass}` },
           { name: 'BOT_ID', value: `${instance.botId}` },
-          { name: 'CLOUD_SUBSCRIPTIONID', value: `${instance.com.brSubscriptionId}` },
-          { name: 'CLOUD_LOCATION', value: `${instance.com.brLocation}` },
-          { name: 'CLOUD_USERNAME', value: `${instance.com.brUsername}` },
-          { name: 'CLOUD_PASSWORD', value: `${instance.com.brPassword}` },
+          { name: 'CLOUD_SUBSCRIPTIONID', value: `${instance.cloudSubscriptionId}` },
+          { name: 'CLOUD_LOCATION', value: `${instance.cloudLocation}` },
+          { name: 'CLOUD_USERNAME', value: `${instance.cloudUsername}` },
+          { name: 'CLOUD_PASSWORD', value: `${instance.cloudPassword}` },
           { name: 'MARKETPLACE_ID', value: `${instance.marketplaceId}` },
           { name: 'MARKETPLACE_SECRET', value: `${instance.marketplacePassword}` },
           { name: 'STORAGE_DIALECT', value: `${instance.storageDialect}` },

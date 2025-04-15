@@ -105,10 +105,10 @@ export class StartDialog {
 
     instance.botId = botId;
     instance.state = 'active';
-    instance.com.brUsername = username;
-    instance.com.brPassword = password;
-    instance.com.brSubscriptionId = subscriptionId;
-    instance.com.brLocation = location;
+    instance.cloudUsername = username;
+    instance.cloudPassword = password;
+    instance.cloudSubscriptionId = subscriptionId;
+    instance.cloudLocation = location;
     instance.marketplaceId = appId;
     instance.marketplacePassword = appPassword;
     instance.adminPass = GBAdminService.getRndPassword();
