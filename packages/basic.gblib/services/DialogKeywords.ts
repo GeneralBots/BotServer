@@ -61,6 +61,7 @@ import { ChartServices } from './ChartServices.js';
 import { GBVMService } from './GBVMService.js';
 import { SystemKeywords } from './SystemKeywords.js';
 import { WebAutomationServices } from './WebAutomationServices.js';
+import { Client } from 'minio';
 const { List, Buttons } = pkg;
 
 
@@ -1392,7 +1393,7 @@ export class DialogKeywords {
     const client = await GBUtil.getDirectLineClient(min);
     conversation.client = client;
     const response = await client.apis.Conversations.Conversations_StartConversation(
-      
+
     );
     conversation.conversationId = response.obj.conversationId;
 
@@ -1523,7 +1524,41 @@ export class DialogKeywords {
         await fs.writeFile(localName, buf, { encoding: null });
 
         url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
+      } else if (GBConfigService.get('GB_MODE') === 'gbcluster') {
+
+
+        const ext = path.extname(filename);
+        const gbaiName = GBUtil.getGBAIPath(min.botId);
+
+        const fileUrl = urlJoin('/', gbaiName, `${min.botId}.gbdrive`, filename);
+        GBLogEx.info(min, `Direct send from .gbdrive: ${fileUrl} to ${mobile}.`);
+
+        const fileOnly = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+
+        const minioClient = new Client({
+          endPoint: process.env.DRIVE_SERVER || 'localhost',
+          port: parseInt(process.env.DRIVE_PORT || '9000', 10),
+          useSSL: process.env.DRIVE_USE_SSL === 'true',
+          accessKey: process.env.DRIVE_ACCESSKEY,
+          secretKey: process.env.DRIVE_SECRET,
+        });
+
+        const bucketName = (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
+        localName = path.join(
+          'work',
+          gbaiName,
+          'cache',
+          `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
+        );
+
+        await minioClient.fGetObject(bucketName, fileUrl, localName);
+
+
+        url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
+
       }
+
+
       else {
         const gbdriveName = GBUtil.getGBAIPath(min.botId, 'gbdrive');
         localName = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbdriveName, filename);

@@ -472,7 +472,6 @@ export class ChatServices {
           const name = output['func'][0].function.name;
           const args = JSON.parse(output['func'][0].function.arguments);
           GBLogEx.info(min, `LLM Tool called .gbdialog '${name}'...`);
-          const pid = GBVMService.createProcessInfo(null, min, 'LLM', null);
 
           return await GBVMService.callVM(name, min, false, pid, false, args);
         },
