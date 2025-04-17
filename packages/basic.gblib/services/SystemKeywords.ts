@@ -73,6 +73,7 @@ import { Page } from 'facebook-nodejs-business-sdk';
 
 import { md5 } from 'js-md5';
 import { GBUtil } from '../../../src/util.js';
+import { Client } from 'minio';
 
 /**
  * @fileoverview General Bots server core.
@@ -1175,8 +1176,44 @@ export class SystemKeywords {
     } else if (file.indexOf('.csv') !== -1) {
       let res;
       let packagePath = GBUtil.getGBAIPath(min.botId, `gbdata`);
+      
+      if (GBConfigService.get('GB_MODE') === 'gbcluster') {
+        
+        const fileUrl = urlJoin('/', `${min.botId}.gbdata`, file);
+        GBLogEx.info(min, `Direct data from .csv: ${fileUrl}.`);
+
+        const fileOnly = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+
+        const minioClient = new Client({
+          endPoint: process.env.DRIVE_SERVER || 'localhost',
+          port: parseInt(process.env.DRIVE_PORT || '9000', 10),
+          useSSL: process.env.DRIVE_USE_SSL === 'true',
+          accessKey: process.env.DRIVE_ACCESSKEY,
+          secretKey: process.env.DRIVE_SECRET,
+        });
+
+        const bucketName = (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
+        const localName = path.join(
+          'work',
+          gbaiName,
+          'cache',
+          `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
+        );
+
+        await minioClient.fGetObject(bucketName, fileUrl, localName);
+      }
+      else {
+        
+      }
+      
+      
+      
       const csvFile = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
       const data = await fs.readFile(csvFile, 'utf8');
+
+
+
+
       const firstLine = data.split('\n')[0];
       const headers = firstLine.split(',');
       const db = await csvdb(csvFile, headers, ',');

@@ -465,8 +465,7 @@ export class GBMinService {
       .all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
 
         const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
-        GBLogEx.info(min, `Meta callback entering...${challenge} ${JSON.stringify(req.query)}`);
-
+        
         const status = req.body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
 
         if (status) {
@@ -481,7 +480,6 @@ export class GBMinService {
           if (challenge && val === challenge) {
             res.send(req.query['hub.challenge']);
             res.status(200);
-            GBLogEx.info(min, `Meta callback OK. ${JSON.stringify(req.query)}`);
           } else {
             res.status(401);
           }
@@ -1096,7 +1094,7 @@ export class GBMinService {
         GBMinService.pidsConversation[conversationId] = pid;
         step.context.activity['pid'] = pid;
 
-        const auth = min.core.getParam(min.instance, 'Enable Authentication', null);
+        const auth = true; // min.core.getParam(min.instance, 'Enable Authentication', null);
 
         if (auth) {
           const res = await t.find({ pid: pid, handle: "users.csv", args: [`key={member.id}`] });
