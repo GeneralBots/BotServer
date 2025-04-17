@@ -1094,7 +1094,7 @@ export class GBMinService {
         GBMinService.pidsConversation[conversationId] = pid;
         step.context.activity['pid'] = pid;
 
-        const auth = true; // min.core.getParam(min.instance, 'Enable Authentication', null);
+        const auth = false; // min.core.getParam(min.instance, 'Enable Authentication', null);
 
         if (auth) {
           const res = await t.find({ pid: pid, handle: "users.csv", args: [`key={member.id}`] });

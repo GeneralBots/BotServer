@@ -29,51 +29,49 @@
 \*****************************************************************************/
 'use strict';
 
-import { setFlagsFromString } from 'v8';
-import { runInNewContext } from 'vm';
-import { IgApiClient } from 'instagram-private-api';
-import { readFile } from 'fs';
-import ai2html from 'ai2html';
-import path, { resolve } from 'path';
-import { GBLog, GBMinInstance } from 'botlib';
-import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
-import { CollectionUtil } from 'pragmatismo-io-framework';
-import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
-import { DialogKeywords } from './DialogKeywords.js';
-import { GBServer } from '../../../src/app.js';
-import { GBVMService } from './GBVMService.js';
-import fs from 'fs/promises';
-import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
-import urlJoin from 'url-join';
-import Excel from 'exceljs';
-import { BufferWindowMemory } from 'langchain/memory';
-import csvdb from 'csv-database';
-import { Sequelize, QueryTypes, DataTypes } from '@sequelize/core';
-import packagePath from 'path';
 import ComputerVisionClient from '@azure/cognitiveservices-computervision';
 import ApiKeyCredentials from '@azure/ms-rest-js';
-import alasql from 'alasql';
-import PizZip from 'pizzip';
-import Docxtemplater from 'docxtemplater';
-import pptxTemplaterModule from 'pptxtemplater';
-import _ from 'lodash';
-import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
-import ImageModule from 'open-docxtemplater-image-module';
-import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
-import { WebAutomationServices } from './WebAutomationServices.js';
-import { KeywordsExpressions } from './KeywordsExpressions.js';
-import { ChatServices } from '../../llm.gblib/services/ChatServices.js';
-import mime from 'mime-types';
-import { SecService } from '../../security.gbapp/services/SecService.js';
-import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
-import retry from 'async-retry';
 import { BlobServiceClient, BlockBlobClient, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { DataTypes, Sequelize } from '@sequelize/core';
+import ai2html from 'ai2html';
+import alasql from 'alasql';
+import retry from 'async-retry';
+import { GBLog } from 'botlib';
+import csvdb from 'csv-database';
+import Docxtemplater from 'docxtemplater';
+import Excel from 'exceljs';
 import { Page } from 'facebook-nodejs-business-sdk';
+import fs from 'fs/promises';
+import { IgApiClient } from 'instagram-private-api';
+import { BufferWindowMemory } from 'langchain/memory';
+import _ from 'lodash';
+import mime from 'mime-types';
+import ImageModule from 'open-docxtemplater-image-module';
+import path from 'path';
+import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
+import PizZip from 'pizzip';
+import pptxTemplaterModule from 'pptxtemplater';
+import { CollectionUtil } from 'pragmatismo-io-framework';
+import urlJoin from 'url-join';
+import { setFlagsFromString } from 'v8';
+import { runInNewContext } from 'vm';
+import { GBServer } from '../../../src/app.js';
+import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
+import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
+import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
+import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
+import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBSSR } from '../../core.gbapp/services/GBSSR.js';
+import { ChatServices } from '../../llm.gblib/services/ChatServices.js';
+import { SecService } from '../../security.gbapp/services/SecService.js';
+import { DialogKeywords } from './DialogKeywords.js';
+import { GBVMService } from './GBVMService.js';
+import { KeywordsExpressions } from './KeywordsExpressions.js';
+import { WebAutomationServices } from './WebAutomationServices.js';
 
 import { md5 } from 'js-md5';
-import { GBUtil } from '../../../src/util.js';
 import { Client } from 'minio';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * @fileoverview General Bots server core.
@@ -416,7 +414,7 @@ export class SystemKeywords {
         const buffer = pngPages[0].content;
         const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
-        await fs.writeFile(localName, buffer, { encoding: null });
+        await fs.writeFile(localName, new Uint8Array(buffer), { encoding: null });
 
         return { localName: localName, url: url, data: buffer };
       }
@@ -709,7 +707,7 @@ export class SystemKeywords {
     // Writes it to disk and calculate hash.
 
     const data = await response.arrayBuffer();
-    await fs.writeFile(localName, Buffer.from(data), { encoding: null });
+    await fs.writeFile(localName, new Uint8Array(Buffer.from(data)), { encoding: null });
     const hash = new Uint8Array(md5.array(data));
 
     // Performs uploading passing local hash.
@@ -1129,7 +1127,7 @@ export class SystemKeywords {
       const localName = path.join('work', gbaiName, 'cache', `csv${GBAdminService.getRndReadableIdentifier()}.csv`);
       const url = file['@microsoft.graph.downloadUrl'];
       const response = await fetch(url);
-      await fs.writeFile(localName, Buffer.from(await response.arrayBuffer()), { encoding: null });
+      await fs.writeFile(localName, new Uint8Array(Buffer.from(await response.arrayBuffer())), { encoding: null });
 
       var workbook = new Excel.Workbook();
       let worksheet = await workbook.csv.readFile(localName);
@@ -1192,12 +1190,13 @@ export class SystemKeywords {
           secretKey: process.env.DRIVE_SECRET,
         });
 
+        const gbaiName = GBUtil.getGBAIPath(min.botId);
         const bucketName = (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
         const localName = path.join(
           'work',
           gbaiName,
           'cache',
-          `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
+          `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.csv`
         );
 
         await minioClient.fGetObject(bucketName, fileUrl, localName);
@@ -2040,7 +2039,7 @@ export class SystemKeywords {
     const res = await fetch(url);
     let buf: any = Buffer.from(await res.arrayBuffer());
     localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
-    await fs.writeFile(localName, buf, { encoding: null });
+    await fs.writeFile(localName, new Uint8Array(buf), { encoding: null });
 
     // Replace image path on all elements of data.
 
@@ -2078,7 +2077,7 @@ export class SystemKeywords {
             );
             const response = await fetch(url);
             const buf = Buffer.from(await response.arrayBuffer());
-            await fs.writeFile(imageName, buf, { encoding: null });
+            await fs.writeFile(imageName, new Uint8Array(buf), { encoding: null });
 
             const getNormalSize = ({ width, height, orientation }) => {
               return (orientation || 0) >= 5 ? [height, width] : [width, height];
@@ -2127,7 +2126,7 @@ export class SystemKeywords {
     doc.setData(data).render();
 
     buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
-    await fs.writeFile(localName, buf, { encoding: null });
+    await fs.writeFile(localName, new Uint8Array(buf), { encoding: null });
 
     return { localName: localName, url: url, data: buf };
   }
@@ -2595,7 +2594,7 @@ export class SystemKeywords {
 
     const buf = Buffer.from(data.Payment.QrCodeBase64Image, 'base64');
     const localName = path.join('work', gbaiName, 'cache', `qr${GBAdminService.getRndReadableIdentifier()}.png`);
-    await fs.writeFile(localName, buf, { encoding: null });
+    await fs.writeFile(localName, new Uint8Array(buf), { encoding: null });
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
     GBLogEx.info(min, `GBPay: ${data.MerchantOrderId} OK: ${url}.`);
@@ -2828,7 +2827,7 @@ export class SystemKeywords {
 
     // Criação de um arquivo temporário para enviar
     const tempFilePath = path.resolve('temp_image.jpg');
-    await fs.writeFile(tempFilePath, imageBuffer);
+    await fs.writeFile(tempFilePath, new Uint8Array(imageBuffer));
 
     // Publicação da imagem
     const page = new Page(pageId);
