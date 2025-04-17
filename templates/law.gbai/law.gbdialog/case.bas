@@ -2,7 +2,7 @@ TALK "What is the case number?"
 HEAR cod
 text = GET "case-" + cod + ".pdf"
 
-IF text THEN
+IF text THEN 
 
     text = "Based on this document, answer the person's questions:\n\n" + text
     SET CONTEXT text 

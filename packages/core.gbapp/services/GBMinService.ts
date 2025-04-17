@@ -424,7 +424,7 @@ export class GBMinService {
     const packageTeams = urlJoin(`work`, GBUtil.getGBAIPath(instance.botId), manifest);
     if (!(await GBUtil.exists(packageTeams))) {
       const data = await this.deployer.getBotManifest(instance);
-      await fs.writeFile(packageTeams, data);
+      //await fs.writeFile(packageTeams, data);
     }
 
     // Serves individual URL for each bot user interface.
