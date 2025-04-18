@@ -518,7 +518,7 @@ export class AzureDeployerService implements IGBInstallationDeployer {
     instance.nlpAuthoringKey = authoringKey;
     instance.marketplaceId = appId;
     instance.marketplacePassword = appPassword;
-    instance.adminPass = GBAdminService.getRndPassword();
+    instance.adminPass = await GBUtil.hashPassword(GBAdminService.getRndPassword());
 
     const credentials = await GBAdminService.getADALCredentialsFromUsername(username, password);
     // tslint:disable-next-line:no-http-string
@@ -986,7 +986,6 @@ export class AzureDeployerService implements IGBInstallationDeployer {
         appSettings: [
           { name: 'WEBSITES_CONTAINER_START_TIME_LIMIT', value: `${WebSiteResponseTimeout}` },
           { name: 'WEBSITE_NODE_DEFAULT_VERSION', value:  await GBAdminService.getNodeVersion() },
-          { name: 'ADMIN_PASS', value: `${instance.adminPass}` },
           { name: 'BOT_ID', value: `${instance.botId}` },
           { name: 'CLOUD_SUBSCRIPTIONID', value: `${instance.cloudSubscriptionId}` },
           { name: 'CLOUD_LOCATION', value: `${instance.cloudLocation}` },

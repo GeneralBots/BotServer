@@ -111,7 +111,7 @@ export class StartDialog {
     instance.cloudLocation = location;
     instance.marketplaceId = appId;
     instance.marketplacePassword = appPassword;
-    instance.adminPass = GBAdminService.getRndPassword();
+    instance.adminPass = await GBUtil.hashPassword(GBAdminService.getRndPassword());
 
     return { instance, credentials, subscriptionId , installationDeployer};
   }

@@ -241,7 +241,7 @@ export class GBDeployer implements IGBDeployer {
       instance.marketplacePassword = await service.createApplicationSecret(accessToken, (application as any).id);
     }
 
-    instance.adminPass = GBAdminService.getRndPassword();
+    instance.adminPass =await  GBUtil.hashPassword( GBAdminService.getRndPassword());
     instance.title = botId;
     instance.activationCode = instance.botId.substring(0, 15);
     instance.state = 'active';

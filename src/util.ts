@@ -12,6 +12,8 @@ import SwaggerClient from 'swagger-client';
 import fs from 'fs/promises';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
 import path from 'path';
+import  bcrypt from 'bcrypt';
+const saltRounds = 10; // The higher the number, the more secure but slower
 import { VerbosityLevel, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import urljoin from 'url-join';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService.js';
@@ -27,6 +29,29 @@ import { QueryTypes } from '@sequelize/core';
  * Utility class containing various helper functions for the General Bots project.
  */
 export class GBUtil {
+
+  
+  // When creating/updating a user (hashing before saving to DB)
+  public async static hashPassword(password) {
+    try {
+      const hash = await bcrypt.hash(password, saltRounds);
+      return hash;
+    } catch (err) {
+      console.error('Error hashing password:', err);
+      throw err;
+    }
+  }
+  
+  // When comparing passwords (like during login)
+  public async static comparePassword(inputPassword, hashedPassword) {
+    try {
+      return await bcrypt.compare(inputPassword, hashedPassword);
+    } catch (err) {
+      console.error('Error comparing passwords:', err);
+      throw err;
+    }
+  }
+
   /**
    * Repeats a character a specified number of times.
    * @param {string} chr - The character to repeat.

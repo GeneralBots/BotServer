@@ -47,6 +47,7 @@ import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { GBServer } from '../../../src/app.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from 'src/util.js';
 
 
 class AdminDialog extends IGBDialog {
@@ -86,7 +87,7 @@ class AdminDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const sensitive = step.context.activity['originalText'];
 
-          if (sensitive === min.instance.adminPass) {
+          if (await GBUtil.comparePassword( sensitive, min.instance.adminPass)) {
             await min.conversationalService.sendText(min, step, Messages[locale].welcome);
 
             return await step.endDialog(true);
@@ -120,7 +121,7 @@ class AdminDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const sensitive = step.context.activity['originalText'];
 
-          if (sensitive === min.instance.adminPass) {
+          if (await GBUtil.comparePassword( sensitive, min.instance.adminPass)) {
             await min.conversationalService.sendText(min, step, Messages[locale].welcome);
 
             return await min.conversationalService.prompt(min, step, Messages[locale].which_task);

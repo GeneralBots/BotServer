@@ -159,7 +159,6 @@ export class MainService {
 <br/>
 <br/> Digite /publish do seu WhatsApp para publicar os pacotes. Seu número está autorizado na pasta ${botName}.gbot/Config.xlsx
 <br/>
-<br/> Guarde a senha raiz: <b>${instance.adminPass}</b> em um local seguro, use-a para realizar o /publish via Web (WhatsApp dispensa senha).
 <br/>
 <br/>O arquivo .zip em anexo pode ser importado no Teams conforme instruções em:
 <br/><a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload">https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload</a>. 
