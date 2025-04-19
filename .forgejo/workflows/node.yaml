@@ -47,7 +47,8 @@ jobs:
         echo "[General Bots Deployer] Restarting..."
         
 
-        sudo systemctl restart botserver --no-block
+        timeout 10 sudo systemctl stop botserver
+        timeout 10 sudo systemctl start botserver
         sudo systemctl status botserver
 
         echo "[General Bots Deployer] Started."
