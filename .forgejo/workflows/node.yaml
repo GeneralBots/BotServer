@@ -17,11 +17,11 @@ jobs:
 
     - uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20' 
-        cache: 'npm'       
+    # - name: Setup Node.js
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: '20' 
+    #     cache: 'npm'       
     
     - name: Copy files to deployment location
       run: |
@@ -33,17 +33,12 @@ jobs:
     - name: Install production dependencies in deployment location
       run: |
         echo "[General Bots Deployer] Building BotServer..."
+
         cd /opt/gbo/bin/BotServer
-        
         # sudo npm ci --production
-
-        npm run build --if-present
-
-        echo "[General Bots Deployer] Building default.gbui..."
-        cd /opt/gbo/bin/BotServer/packages/default.gbui
+        npm run build-server
+        # npm run build-gbui
         
-        # npm install
-        # npm run build
 
     - name: Restart Bots Deployer
       run: |
