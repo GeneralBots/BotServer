@@ -25,6 +25,7 @@ jobs:
     
     - name: Copy files to deployment location
       run: |
+        echo "[General Bots Deployer] Copying files to deploy location..."
         sudo rm -rf /opt/gbo/bin/BotServer/dist
         
         sudo cp -r ./* /opt/gbo/bin/BotServer
