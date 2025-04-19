@@ -1542,7 +1542,7 @@ export class DialogKeywords {
           accessKey: process.env.DRIVE_ACCESSKEY,
           secretKey: process.env.DRIVE_SECRET,
         });
-
+        
         const bucketName = (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
         localName = path.join(
           'work',
@@ -1553,8 +1553,9 @@ export class DialogKeywords {
 
         await minioClient.fGetObject(bucketName, fileUrl, localName);
 
-
+        
         url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
+        GBLogEx.info(min, `Exposing ${localName} to ${url}...`);
 
       }
 
@@ -1608,7 +1609,6 @@ export class DialogKeywords {
       const localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
-      GBLogEx.info(min, `Exposing ${localName} to ${url}...`);
       
       await fs.writeFile(localName, new Uint8Array(buf), { encoding: null });
     }

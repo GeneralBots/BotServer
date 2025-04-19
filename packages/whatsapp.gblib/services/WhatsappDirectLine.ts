@@ -734,8 +734,17 @@ export class WhatsappDirectLine extends GBService {
           await this.sendImageViewOnce(to, url, caption);
         }
         else {
-          const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
-          await driver.sendImage(to, url, { caption: caption });
+          
+            const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
+            const fileExtension = path.extname(url).toLowerCase();
+
+            if (['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.ods', '.csv'].includes(fileExtension)) {
+            await driver.sendDocument(to, url, { caption: caption });
+            } else if (['.mp3', '.wav', '.ogg', '.aac', '.m4a'].includes(fileExtension)) {
+            await driver.sendAudio(to, url);
+            } else {
+            await driver.sendImage(to, url, { caption: caption });
+            }
         }
         break;
 
@@ -753,16 +762,8 @@ export class WhatsappDirectLine extends GBService {
         await this.customClient.sendMessage(to, attachment, { caption: caption, isViewOnce });
         break;
     }
-
-    if (options) {
-      try {
-        // tslint:disable-next-line: await-promise
-        const result = await fetch(url, options);
-        GBLogEx.info(this.min, `File ${url} sent to ${to}: ${result}`);
-      } catch (error) {
-        GBLog.error(`Error sending file to Whatsapp provider ${error.message}`);
-      }
-    }
+    GBLogEx.info(this.min, `File ${url} sent to ${to}.`);
+    
   }
 
   public async sendAudioToDevice(to, url) {
