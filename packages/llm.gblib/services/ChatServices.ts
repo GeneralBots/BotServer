@@ -396,8 +396,7 @@ export class ChatServices {
       ),
       AIMessagePromptTemplate.fromTemplate(
         `
-        The tool just returned value in last call answer the question based on tool description. 
-        Answer this to the user.
+        The tool just returned value in last call answer the question based on tool result.
         `
       ),
 
