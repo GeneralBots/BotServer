@@ -1588,7 +1588,7 @@ export class DialogKeywords {
 
 
           if (!isNaN(mobile)) {
-            await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption, undefined, true);
+            await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption, undefined, false);
           } else {
             await min.conversationalService['sendOnConversation'](min, user, reply);
           }
