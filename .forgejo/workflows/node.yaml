@@ -25,7 +25,7 @@ jobs:
     
     - name: Copy files to deployment location
       run: |
-        sudo rm -rf /opt/gbo/bin/BotServer/*
+        sudo rm -rf /opt/gbo/bin/BotServer/dist
         
         sudo cp -r ./* /opt/gbo/bin/BotServer
         sudo cp /opt/gbo/conf.d/bot/.env /opt/gbo/bin/BotServer
@@ -34,13 +34,16 @@ jobs:
       run: |
         echo "[General Bots Deployer] Building BotServer..."
         cd /opt/gbo/bin/BotServer
-        sudo npm ci --production
+        
+        # sudo npm ci --production
+
         npm run build --if-present
 
         echo "[General Bots Deployer] Building default.gbui..."
         cd /opt/gbo/bin/BotServer/packages/default.gbui
-        npm install
-        npm run build
+        
+        # npm install
+        # npm run build
 
     - name: Restart Bots Deployer
       run: |
