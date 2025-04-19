@@ -5,7 +5,6 @@ module.exports = (async () => {
   // Imports npm packages for this .gbdialog conversational application.
 
   require('isomorphic-fetch');
-  const YAML = require('yaml');
   const http = require('node:http');
   const retry = require('async-retry');
   const createRpcClient = require('@push-rpc/core').createRpcClient;
@@ -185,9 +184,7 @@ module.exports = (async () => {
   };
 
   const TOYAML = json => {
-    const doc = new YAML.Document();
-    doc.contents = json;
-    return doc.toString();
+    return json;
   };
 
   // Line of Business logic.

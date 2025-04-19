@@ -34,7 +34,6 @@ import { IGBPackage, GBMinInstance, IGBCoreService, GBLog, IGBAdminService, GBDi
 import { Sequelize } from 'sequelize-typescript'
 import { GBOnlineSubscription } from './model/MainModel.js'
 
-import { MSSubscriptionService } from './service/MSSubscription.js'
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import { NewUserDialog } from './dialog/NewUserDialog.js'
 import { GBOService } from './service/GBOService.js'
@@ -48,12 +47,10 @@ export class SaaSPackage implements IGBPackage {
   public getDialogs(min: GBMinInstance) {
     return [NewUserDialog.getDialog(min),
     NewUserDialog.getBotNameDialog(min),
-    NewUserDialog.getVoucherDialog(min),
     NewUserDialog.getBotTemplateDialog(min),
     NewUserDialog.getReturnFromPayment(min),
     NewUserDialog.getReturnFromCC(min),
     NewUserDialog.getReturnFromDocument(min),
-    NewUserDialog.getDialogBatch(min)
     ];
   }
 
@@ -61,21 +58,6 @@ export class SaaSPackage implements IGBPackage {
     sequelize.addModels([GBOnlineSubscription]);
     
     core.setEntryPointDialog('/welcome_saas');
-
-    // Installs webhook for Microsoft intercommunication.
-
-    core.installWebHook(true, '/mslanding', async (req, res) => {
-      const service = new MSSubscriptionService();
-      await service.handleMSLanding(req, res);
-    });
-    core.installWebHook(true, '/mshook', async (req, res) => {
-      const service = new MSSubscriptionService();
-      await service.handleMSHook(req, res);
-    });
-    core.installWebHook(true, '/signup', async (req, res) => {
-      const service = new MSSubscriptionService();
-      await service.handleMSSignUp(req, res);
-    });
 
 
   }

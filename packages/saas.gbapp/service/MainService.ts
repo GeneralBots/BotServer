@@ -36,9 +36,48 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
 import urlJoin from 'url-join';
 import { GBOService } from './GBOService.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
+import Stripe from 'stripe';
 
 export class MainService {
-  async createSubscriptionMSFT(email: string, plan: string, offer: string, quantity: number, additionalData: any) { }
+  private stripe: Stripe;
+
+  constructor() {
+    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  }
+
+  async createStripeCustomer(name: string, email: string, paymentMethodId: string) {
+    const customer = await this.stripe.customers.create({
+      name,
+      email,
+      payment_method: paymentMethodId,
+      invoice_settings: {
+        default_payment_method: paymentMethodId
+      }
+    });
+    return customer;
+  }
+
+  async createStripeSubscription(customerId: string, priceId: string) {
+    const subscription = await this.stripe.subscriptions.create({
+      customer: customerId,
+      items: [{ price: priceId }],
+      expand: ['latest_invoice.payment_intent']
+    });
+    return subscription;
+  }
+
+  async createPaymentMethod(cardNumber: string, expMonth: number, expYear: number, cvc: string) {
+    const paymentMethod = await this.stripe.paymentMethods.create({
+      type: 'card',
+      card: {
+        number: cardNumber,
+        exp_month: expMonth,
+        exp_year: expYear,
+        cvc: cvc
+      }
+    }, {});
+    return paymentMethod;
+  }
 
   async createSubscription(
     min: GBMinInstance,
@@ -48,90 +87,94 @@ export class MainService {
     mobile: string,
     botName: string,
     ccNumber: string,
-    ccExpiresOnMonth: string,
-    ccExpiresOnYear: string,
+    ccExpiresOnMonth: number,
+    ccExpiresOnYear: number,
     ccCode: string,
     templateName: string,
-    free: boolean
-  )
-   {
-    // Syncs internal subscription management.
+    free: boolean, planId: string,
+  ) {
+    let externalSubscriptionId = null;
 
-    const status = 'Started';
-    const planId = 'default';
+    if (!free) {
+      try {
+        // Create Stripe payment method
+        const paymentMethod = await this.createPaymentMethod(
+          ccNumber,
+          ccExpiresOnMonth,
+          ccExpiresOnYear,
+          ccCode
+        );
+
+        // Create Stripe customer
+        const customer = await this.createStripeCustomer(
+          name,
+          email,
+          paymentMethod.id
+        );
+
+        // Determine price ID based on plan
+        const priceId = planId === 'professional'
+          ? process.env.STRIPE_PROFESSIONAL_PRICE_ID
+          : process.env.STRIPE_PERSONAL_PRICE_ID;
+
+        // Create subscription
+        const subscription = await this.createStripeSubscription(
+          customer.id,
+          priceId
+        );
+
+        externalSubscriptionId = subscription.id;
+      } catch (error) {
+        GBLog.error(`Stripe payment failed: ${error.message}`);
+        throw error;
+      }
+    }
+
+    // Syncs internal subscription management
+    const status = free ? 'FreeTrial' : 'Active';
+    GBLog.info(`Creating subscription for ${name} (${email}, ${mobile}) with status: ${status}`);
+
     const quantity = 1;
-    const amount = 0.52;
-    const language = 'en';
+    const amount = 1;
 
-    const subscription = await GBOnlineSubscription.create(<GBOnlineSubscription>{
+    const subscription = await GBOnlineSubscription.create({
       instanceId: min.instance.instanceId,
       isFreeTrial: free,
       planId: planId,
       quantity: quantity,
       status: status,
-      // TODO: lastCCFourDigits: ccNumber...
+      amount: amount,
+      lastCCFourDigits: ccNumber ? ccNumber.slice(-4) : null
     });
 
-    let externalSubscriptionId = null;
-    let service = min.gbappServices['junoSubscription'];
-
-    if (!free) {
-      // if (ccNumber !== undefined) {
-      //   // Performs billing management.
-
-      //   externalSubscriptionId = await service.PayByCC(
-      //     name,
-      //     document,
-      //     email,
-      //     mobile,
-      //     ccNumber,
-      //     ccExpiresOnMonth,
-      //     ccExpiresOnYear,
-      //     ccCode,
-      //     amount
-      //   );
-      // } else {
-      //   externalSubscriptionId = await service.PayByBoleto(name, document, email, mobile);
-      // }
-    }
-
-    // Creates a bot.
-
-    GBLog.info( 'Deploying a blank bot to storage...');
-
+    // Creates a bot
+    GBLog.info('Deploying a blank bot to storage...');
     const instance = await min.deployService.deployBlankBot(botName, mobile, email);
 
-    GBLog.info( 'Creating subscription...');
+    GBLog.info('Creating subscription...');
     subscription.instanceId = instance.instanceId;
     subscription.externalSubscriptionId = externalSubscriptionId;
     await subscription.save();
 
-    let token = 
-      GBConfigService.get('GB_MODE') === 'legacy'?
-      await (min.adminService.acquireElevatedToken as any)(min.instance.instanceId, true) :
-      null;
+    let token =
+      GBConfigService.get('GB_MODE') === 'legacy' ?
+        await (min.adminService.acquireElevatedToken as any)(min.instance.instanceId, true) :
+        null;
 
     let siteId = process.env.STORAGE_SITE_ID;
     let libraryId = process.env.STORAGE_LIBRARY;
     let gboService = new GBOService();
-    
+
     let sleep = ms => {
       return new Promise(resolve => {
         setTimeout(resolve, ms);
       });
     };
 
-
-    GBLog.info( 'Creating .gbai folder ...');
+    GBLog.info('Creating .gbai folder ...');
     let item = await gboService.createRootFolder(token, `${botName}.gbai`, siteId, libraryId);
 
-
-    GBLog.info( 'Copying Templates...');
-    // await gboService.copyTemplates(min, item, 'shared.gbai', 'gbkb', botName);
-    // await gboService.copyTemplates(min, item, 'shared.gbai', 'gbot', botName);
-    // await gboService.copyTemplates(min, item, 'shared.gbai', 'gbtheme', botName);
-    // await gboService.copyTemplates(min, item, 'shared.gbai', 'gbdialog', botName);
-    // await gboService.copyTemplates(min, item, 'shared.gbai', 'gbdata', botName);
+    GBLog.info('Copying Templates...');
     await gboService.copyTemplates(min, item, templateName, 'gbkb', botName);
     await gboService.copyTemplates(min, item, templateName, 'gbot', botName);
     await gboService.copyTemplates(min, item, templateName, 'gbtheme', botName);
@@ -140,16 +183,16 @@ export class MainService {
     await gboService.copyTemplates(min, item, templateName, 'gbdrive', botName);
 
     await sleep(10000);
-    GBLog.info( 'Configuring .gbot...');
-    await min.core['setConfig'] (min, instance.botId, "Can Publish", mobile + ";");
+    GBLog.info('Configuring .gbot...');
+    await min.core['setConfig'](min, instance.botId, "Can Publish", mobile + ";");
     await min.core['setConfig'](min, instance.botId, "Admin Notify E-mail", email);
-    await min.core['setConfig'](min, instance.botId,  'WebDav Username', instance.botId);
-    await min.core['setConfig'](min, instance.botId,  'WebDav Secret', instance.adminPass);
+    await min.core['setConfig'](min, instance.botId, 'WebDav Username', instance.botId);
+    await min.core['setConfig'](min, instance.botId, 'WebDav Secret', instance.adminPass);
 
-    GBLog.info( 'Bot creation done.');
+    GBLog.info('Bot creation done.');
   }
 
-  public async otherTasks(min, botName, webUrl, instance, language){
+  public async otherTasks(min, botName, webUrl, instance, language) {
     let message = `Seu bot ${botName} está disponível no endereço: 
 <br/><a href="${urlJoin(process.env.BOT_URL, botName)}">${urlJoin(process.env.BOT_URL, botName)}</a>.
 <br/>
@@ -170,7 +213,7 @@ export class MainService {
 <br/>
 <br/>Atenciosamente, 
 <br/>General Bots Online.
-<br/><a href="https://gb.pragmatismo.com.br">https://gb.pragmatismo.com.br</a>
+<br/><a href=""></a>
 <br/>
 <br/>E-mail remetido por Pragmatismo. 
 <br/>`;
@@ -180,17 +223,16 @@ export class MainService {
       message,
       language
     );
-    
-    GBLog.info( 'Generating MS Teams manifest....');
-    
+
+    GBLog.info('Generating MS Teams manifest....');
+
     const appManifest = await min.deployService.getBotManifest(min.instance);
-    
+
     // GBLog.info( 'Sending e-mails....');
     // const emailToken = process.env.SAAS_SENDGRID_API_KEY;
     // gboService.sendEmail(
     //   emailToken,
     //   email,
-    //   'operations@pragmatismo.com.br',
     //   `${botName}`,
     //   message,
     //   message,

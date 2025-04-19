@@ -47,7 +47,7 @@ import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { GBServer } from '../../../src/app.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
-import { GBUtil } from 'src/util.js';
+import { GBUtil } from '../../../src/util.js';
 
 
 class AdminDialog extends IGBDialog {

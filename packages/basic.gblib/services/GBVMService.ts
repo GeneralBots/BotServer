@@ -205,7 +205,7 @@ export class GBVMService extends GBService {
               "author": "${min.botId} owner.",
               "license": "ISC",
               "dependencies": {
-                "yaml": "2.4.2",
+                
                 "encoding": "0.1.13",
                 "isomorphic-fetch": "3.0.0",
                 "punycode": "2.1.1",

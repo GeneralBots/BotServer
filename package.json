@@ -225,6 +225,7 @@
     "sqlite3": "5.1.7",
     "ssr-for-bots": "1.0.1-c",
     "strict-password-generator": "1.1.2",
+    "stripe": "^18.0.0",
     "svg2img": "^1.0.0-beta.2",
     "swagger-client": "3.29.2",
     "swagger-ui-dist": "5.17.14",

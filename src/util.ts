@@ -32,7 +32,7 @@ export class GBUtil {
 
   
   // When creating/updating a user (hashing before saving to DB)
-  public async static hashPassword(password) {
+  public static async hashPassword(password) {
     try {
       const hash = await bcrypt.hash(password, saltRounds);
       return hash;
@@ -43,7 +43,7 @@ export class GBUtil {
   }
   
   // When comparing passwords (like during login)
-  public async static comparePassword(inputPassword, hashedPassword) {
+  public static async comparePassword(inputPassword, hashedPassword) {
     try {
       return await bcrypt.compare(inputPassword, hashedPassword);
     } catch (err) {
@@ -367,7 +367,7 @@ export class GBUtil {
       const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.png`);
       const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
-      await fs.writeFile(localName, buffer, { encoding: null });
+      await fs.writeFile(localName, new Uint8Array(buffer), { encoding: null });
 
       generatedFiles.push({ localName: localName, url: url, data: buffer });
     }

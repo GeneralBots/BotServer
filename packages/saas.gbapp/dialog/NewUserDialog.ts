@@ -1,3 +1,4 @@
+// BotServer/packages/saas.gbapp/dialog/NewUserDialog.ts
 /*****************************************************************************\
 |  █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ® |
 | ██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █      |
@@ -38,18 +39,45 @@ import { CollectionUtil } from 'pragmatismo-io-framework';
 import { GBOService } from '../service/GBOService.js';
 
 export class NewUserDialog extends IGBDialog {
+  static getPlanSelectionDialog(min: GBMinInstance) {
+    return {
+      id: '/welcome_saas_plan',
+      waterfall: [
+        async step => {
+          const locale = 'en-US';
+          await step.context.sendActivity('Please choose your plan:');
+          await step.context.sendActivity('1. Personal - $9.99/month (basic features)');
+          await step.context.sendActivity('2. Professional - $29.99/month (advanced features)');
+          return await step.prompt('textPrompt', 'Enter 1 or 2 to select your plan:');
+        },
+        async step => {
+          const planChoice = step.context.activity.text.trim();
+          if (planChoice === '1') {
+            step.activeDialog.state.options.planId = 'personal';
+            step.activeDialog.state.options.amount = 9.99;
+          } else if (planChoice === '2') {
+            step.activeDialog.state.options.planId = 'professional';
+            step.activeDialog.state.options.amount = 29.99;
+          } else {
+            await step.context.sendActivity('Invalid choice. Please select 1 or 2.');
+            return await step.replaceDialog('/welcome_saas_plan');
+          }
+          return await step.replaceDialog('/welcome_saas_botname', step.activeDialog.state.options);
+        }
+      ]
+    };
+  }
+
   static getBotNameDialog(min: GBMinInstance) {
     return {
       id: '/welcome_saas_botname',
       waterfall: [
         async step => {
           const locale = 'en-US';
-
           await step.prompt('textPrompt', Messages[locale].whats_botname);
         },
         async step => {
           const locale = 'en-US';
-
           const extractEntity = text => {
             return text.match(/[_a-zA-Z][_a-zA-Z0-9]{0,16}/gi);
           };
@@ -58,17 +86,14 @@ export class NewUserDialog extends IGBDialog {
 
           if (value === null || value.length != 1) {
             await step.context.sendActivity(Messages[locale].validation_enter_valid_botname);
-
             return await step.replaceDialog('/welcome_saas_botname', step.activeDialog.state.options);
           } else {
             const botName = value[0];
             if (await min.deployService.botExists(botName)) {
-              await step.context.sendActivity(`O Bot ${botName} já existe. Escolha por favor, outro nome!`);
-
+              await step.context.sendActivity(`The Bot ${botName} already exists. Please choose another name!`);
               return await step.replaceDialog('/welcome_saas_botname', step.activeDialog.state.options);
             } else {
               step.activeDialog.state.options.botName = botName;
-
               return await step.replaceDialog('/welcome_saas_bottemplate', step.activeDialog.state.options);
             }
           }
@@ -77,6 +102,38 @@ export class NewUserDialog extends IGBDialog {
     };
   }
 
+  static getStripePaymentDialog(min: GBMinInstance) {
+    return {
+      id: '/welcome_saas_stripe_payment',
+      waterfall: [
+        async step => {
+          const locale = 'en-US';
+          await step.context.sendActivity(`Please enter your credit card details for the ${step.activeDialog.state.options.planId} plan ($${step.activeDialog.state.options.amount}/month):`);
+          return await step.prompt('textPrompt', 'Card number (e.g., 4242424242424242):');
+        },
+        async step => {
+          step.activeDialog.state.options.ccNumber = step.context.activity.text.trim();
+          return await step.prompt('textPrompt', 'Expiration month (MM):');
+        },
+        async step => {
+          step.activeDialog.state.options.ccExpiresOnMonth = step.context.activity.text.trim();
+          return await step.prompt('textPrompt', 'Expiration year (YYYY):');
+        },
+        async step => {
+          step.activeDialog.state.options.ccExpiresOnYear = step.context.activity.text.trim();
+          return await step.prompt('textPrompt', 'CVC:');
+        },
+        async step => {
+          step.activeDialog.state.options.ccSecuritycode = step.context.activity.text.trim();
+          await step.context.sendActivity('Processing payment...');
+          await NewUserDialog.createBot(step, min, false);
+          return await step.replaceDialog('/ask', { isReturning: true });
+        }
+      ]
+    };
+  }
+
+  
   static getBotTemplateDialog(min: GBMinInstance) {
     return {
       id: '/welcome_saas_bottemplate',
@@ -176,36 +233,10 @@ export class NewUserDialog extends IGBDialog {
     };
   }
 
-  static getVoucherDialog(min: GBMinInstance) {
-    return {
-      id: '/welcome_saas_voucher',
-      waterfall: [
-        async step => {
-          const locale = 'en-US';
-          await step.prompt('textPrompt', Messages[locale].own_voucher);
-        },
-        async step => {
-          const locale = 'en-US';
-
-          if (step.result.toLowerCase() === 'gb2020') {
-            await NewUserDialog.createBot(step, min, true);
-
-            return await step.replaceDialog('/ask', { isReturning: true });
-          } else {
-            // return await step.replaceDialog('/welcome_saas_voucher', 'Os meios de pagamento estão neste momento desabilitados, por favor informe um voucher ou contate info@pragmatismo.com.br.');
-
-            step.activeDialog.state.options.nextDialog = 'welcome_saas_return_document';
-            return await step.replaceDialog('/xrm_document', step.activeDialog.state.options);
-          }
-        }
-      ]
-    };
-  }
-
   private static async createBot(step: any, min: GBMinInstance, free: boolean) {
     const locale = 'en-US';
     await step.context.sendActivity(Messages[locale].ok_procceding_creation);
-    const url = `https://gb.pragmatismo.com.br/${step.activeDialog.state.options.botName}`;
+    const url = `${process.env.BOT_ID}/${step.activeDialog.state.options.botName}`;
     await step.context.sendActivity(Messages[locale].bot_created(url));
     const service = new MainService();
     await service.createSubscription(
@@ -220,49 +251,10 @@ export class NewUserDialog extends IGBDialog {
       step.activeDialog.state.options.ccExpiresOnYear,
       step.activeDialog.state.options.ccSecuritycode,
       step.activeDialog.state.options.templateName,
-      free
+      free, step.activeDialog.state.options.planId,
     );
   }
 
-  static getDialogBatch(min: GBMinInstance) {
-    return {
-      id: '/welcome_saas_batch',
-      waterfall: [
-        async step => {
-          const locale = 'en-US';
-          await step.context.sendActivity(Messages[locale].welcome);
-
-          await step.prompt('textPrompt', `Please, inform bot names separeted by comma (,).`);
-        },
-        async step => {
-          const locale = 'en-US';
-
-          const service = new MainService();
-
-          const bots = step.context.activity.originalText.split(',');
-          bots.forEach(async botName => {
-            await service.createSubscription(
-              min,
-              botName,
-              '999999999',
-              'email@domain.com.br',
-              '5521999998888',
-              botName,
-              null,
-              '12',
-              '99',
-              '1234',
-              'ai-search.gbai',
-              true
-            );
-            
-          });
-
-
-        }
-      ]
-    };
-  }
 
   static getDialog(min: GBMinInstance) {
     return {
@@ -279,24 +271,24 @@ export class NewUserDialog extends IGBDialog {
           step.activeDialog.state.options.ccExpiresOnYear = null;
           step.activeDialog.state.options.ccSecuritycode = null;
           step.activeDialog.state.options.templateName = null;
+          step.activeDialog.state.options.planId = null;
+          step.activeDialog.state.options.amount = null;
 
           await step.context.sendActivity(Messages[locale].welcome);
 
           const mobile = step.context.activity.from.id;
 
-          step.activeDialog.state.options.nextDialog = 'welcome_saas_botname';
+          step.activeDialog.state.options.nextDialog = 'welcome_saas_plan';
 
           if (isNaN(mobile as any)) {
             await step.context.sendActivity(Messages[locale].ok_get_information);
-
             return await step.replaceDialog('/profile_name', step.activeDialog.state.options);
           } else {
             const name = SaaSPackage.welcomes ? SaaSPackage.welcomes[mobile] : null;
             step.activeDialog.state.options.name = name;
             step.activeDialog.state.options.mobile = mobile;
 
-            await step.context.sendActivity(`Olá ${name}, vamos criar o seu Bot agora.`);
-
+            await step.context.sendActivity(`Hello ${name}, let's create your Bot now.`);
             return await step.replaceDialog('/profile_email', step.activeDialog.state.options);
           }
         }

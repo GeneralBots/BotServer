@@ -1,3 +1,4 @@
+// BotServer/packages/saas.gbapp/model/MainModel.ts
 /*****************************************************************************\
 |  █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ® |
 | ██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █      |
@@ -59,13 +60,13 @@ export class GBOnlineSubscription extends Model<GBOnlineSubscription> {
   instanceId: number;
 
   @Column
-  externalSubscriptionId: string // MSFT or
+  externalSubscriptionId: string;
 
   @Column
-  saasSubscriptionStatus: string
+  saasSubscriptionStatus: string;
 
   @Column
-  isFreeTrial: boolean
+  isFreeTrial: boolean;
 
   @Column
   planId: string;
@@ -74,8 +75,14 @@ export class GBOnlineSubscription extends Model<GBOnlineSubscription> {
   quantity: number;
 
   @Column
-  lastCCFourDigits: number;
+  lastCCFourDigits: string;
 
   @Column
   status: string;
+
+  @Column({
+    type: DataType.DECIMAL(10, 2)
+  })
+  amount: number;
+
 }
