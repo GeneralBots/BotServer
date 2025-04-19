@@ -1548,7 +1548,7 @@ export class DialogKeywords {
           'work',
           gbaiName,
           'cache',
-          `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
+          `${GBAdminService.getNumberIdentifier()}-${fileOnly}`
         );
 
         await minioClient.fGetObject(bucketName, fileUrl, localName);
