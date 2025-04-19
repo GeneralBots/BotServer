@@ -1565,7 +1565,7 @@ export class DialogKeywords {
       }
 
       if (localName.endsWith('.image.pdf')) {
-
+        GBLogEx.info(min, `Converting PDF to images...`);
         const pngs = await GBUtil.pdfPageAsImage(min, localName, undefined);
 
         await CollectionUtil.asyncForEach(pngs, async png => {
@@ -1582,6 +1582,9 @@ export class DialogKeywords {
             contentType: contentType,
             contentUrl: url
           });
+
+          
+
 
           if (!isNaN(mobile)) {
             await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption, undefined, true);
@@ -1603,8 +1606,11 @@ export class DialogKeywords {
       const buf = await fs.readFile(filename);
       const gbaiName = GBUtil.getGBAIPath(min.botId);
       const localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
-      await fs.writeFile(localName, buf, { encoding: null });
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
+
+      GBLogEx.info(min, `Exposing ${localName} to ${url}...`);
+      
+      await fs.writeFile(localName, new Uint8Array(buf), { encoding: null });
     }
 
     const contentType = mime.lookup(url);
