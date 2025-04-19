@@ -25,8 +25,8 @@ jobs:
     
     - name: Copy files to deployment location
       run: |
-        sudo rm -rf /opt/gbo/bin/BotServer
-        sudo mkdir -p /opt/gbo/bin/BotServer    
+        sudo rm -rf /opt/gbo/bin/BotServer/*
+        
         sudo cp -r ./* /opt/gbo/bin/BotServer
         sudo cp /opt/gbo/conf.d/bot/.env /opt/gbo/bin/BotServer
 
