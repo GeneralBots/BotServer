@@ -46,8 +46,8 @@ jobs:
       run: |
         echo "[General Bots Deployer] Restarting..."
         
-        cd /opt/gbo/bin/BotServer
+        sudo systemctl daemon-reload
+        sudo systemctl restart botserver
+        sudo systemctl status botserver
 
-        pkill -f "node ./boot.mjs" || true
-        
-        nohup npm run start > /dev/null 2>&1 &
+        echo "[General Bots Deployer] Started."
