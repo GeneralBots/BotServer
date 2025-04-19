@@ -716,7 +716,7 @@ export class WhatsappDirectLine extends GBService {
     return `${attachment.content.title} - ${attachment.content.text}`;
   }
 
-  public async sendFileToDevice(to, url, filename, caption, chatId, isViewOnce = true) {
+  public async sendFileToDevice(to, url, filename, caption, chatId, isViewOnce = false) {
     let options;
     switch (this.provider) {
       case 'meta':
