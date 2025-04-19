@@ -1521,7 +1521,7 @@ export class DialogKeywords {
           'cache',
           `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.${ext}`
         );
-        await fs.writeFile(localName, buf, { encoding: null });
+        await fs.writeFile(localName, new Uint8Array(buf), { encoding: null });
 
         url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
       } else if (GBConfigService.get('GB_MODE') === 'gbcluster') {
@@ -1616,8 +1616,8 @@ export class DialogKeywords {
       contentUrl: url
     });
 
-    if (channel === 'omnichannel' || !user) {
-      await min.conversationalService.sendFile(min, null, mobile, url, caption);
+    if (!isNaN(mobile)) {
+      await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption, undefined, true);
     } else {
       await min.conversationalService['sendOnConversation'](min, user, reply);
     }
