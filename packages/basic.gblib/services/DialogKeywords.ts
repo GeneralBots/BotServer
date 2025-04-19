@@ -1564,7 +1564,7 @@ export class DialogKeywords {
         localName = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbdriveName, filename);
       }
 
-      if (localName.endsWith('.pdf')) {
+      if (localName.endsWith('.image.pdf')) {
 
         const pngs = await GBUtil.pdfPageAsImage(min, localName, undefined);
 
