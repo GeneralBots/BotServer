@@ -809,7 +809,13 @@ export class GBVMService extends GBService {
 
       if (!table && !talk && !systemPrompt) {
         for (let j = 0; j < keywords.length; j++) {
-          line = line.replace(keywords[j][0], keywords[j][1]); // TODO: Investigate delay here.
+          const oldLine = line;
+          line = line.replace(keywords[j][0], keywords[j][1]);
+
+          if(line != oldLine){
+            break;
+          }
+
         }
       }
 

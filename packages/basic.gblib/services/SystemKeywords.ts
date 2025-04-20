@@ -836,7 +836,13 @@ export class SystemKeywords {
   /**
    * Saves the content of several variables to a new row in a tabular file.
    *
-   * @example SAVE "customers.xlsx", name, email, phone, address, city, state, country
+   * @example SAVE "customers.csv", name, email, phone, address, city, state, country
+   *
+   */
+  /**
+   * Saves the content of several variables to a new row in a tabular file.
+   *
+   * @example SAVE "customers.csv", id, name, email, phone
    *
    */
   public async save({ pid, file, args }): Promise<any> {
@@ -846,6 +852,89 @@ export class SystemKeywords {
 
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `Saving '${file}' (SAVE). Args: ${args.join(',')}.`);
+
+    // Handle gbcluster mode with Minio storage
+    if (GBConfigService.get('GB_MODE') === 'gbcluster') {
+      const fileUrl = urlJoin('/', `${min.botId}.gbdata`, file);
+      GBLogEx.info(min, `Direct data from .csv: ${fileUrl}.`);
+
+      const fileOnly = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+
+      const minioClient = new Client({
+        endPoint: process.env.DRIVE_SERVER || 'localhost',
+        port: parseInt(process.env.DRIVE_PORT || '9000', 10),
+        useSSL: process.env.DRIVE_USE_SSL === 'true',
+        accessKey: process.env.DRIVE_ACCESSKEY,
+        secretKey: process.env.DRIVE_SECRET,
+      });
+
+      const gbaiName = GBUtil.getGBAIPath(min.botId);
+      const bucketName = (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
+      const localName = path.join(
+        'work',
+        gbaiName,
+        'cache',
+        `${fileOnly.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.csv`
+      );
+
+      try {
+        // Lock the file for editing
+        await this.lockFile(minioClient, bucketName, fileUrl);
+
+        // Download the file
+        await minioClient.fGetObject(bucketName, fileUrl, localName);
+
+        // Read the CSV file
+        let csvData = await fs.readFile(localName, 'utf8');
+        let rows = csvData.split('\n').filter(row => row.trim() !== '');
+
+        // Check if first column is ID
+        const headers = rows.length > 0 ? rows[0].split(',') : [];
+        const hasIdColumn = headers.length > 0 && headers[0].toLowerCase() === 'id';
+
+        // If ID exists in args[0] and we have an ID column, try to find and update the row
+        let rowUpdated = false;
+        if (hasIdColumn && args[0]) {
+          for (let i = 1; i < rows.length; i++) {
+            const rowValues = rows[i].split(',');
+            if (rowValues[0] === args[0]) {
+              // Update existing row
+              rows[i] = args.join(',');
+              rowUpdated = true;
+              break;
+            }
+          }
+        }
+
+        // If no row was updated, add a new row
+        if (!rowUpdated) {
+          rows.push(args.join(','));
+        }
+
+        // Write back to the file
+        await fs.writeFile(localName, rows.join('\n'));
+
+        // Upload the updated file
+        await minioClient.fPutObject(bucketName, fileUrl, localName);
+
+        GBLogEx.info(min, `Successfully saved data to Minio storage: ${fileUrl}`);
+      } catch (error) {
+        GBLogEx.error(min, `Error saving to Minio storage: ${error.message}`);
+        throw error;
+      } finally {
+        // Ensure the file is unlocked
+        await this.unlockFile(minioClient, bucketName, fileUrl);
+        // Clean up the local file
+        try {
+          await fs.unlink(localName);
+        } catch (cleanupError) {
+          GBLogEx.info(min, `Could not clean up local file: ${cleanupError.message}`);
+        }
+      }
+      return;
+    }
+
+    // Original legacy mode handling
     let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
     const botId = min.instance.botId;
     const packagePath = GBUtil.getGBAIPath(botId, 'gbdata');
@@ -858,13 +947,11 @@ export class SystemKeywords {
     } catch (e) {
       if (e.cause === 404) {
         // Creates the file.
-
         const blank = path.join(process.env.PWD, 'blank.xlsx');
         const data = await fs.readFile(blank);
         await client.api(`${baseUrl}/drive/root:/${packagePath}/${file}:/content`).put(data);
 
         // Tries to open again.
-
         document = await this.internalGetDocument(client, baseUrl, packagePath, file);
         sheets = await client.api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets`).get();
       } else {
@@ -875,59 +962,48 @@ export class SystemKeywords {
     let address;
     let body = { values: [[]] };
 
-    // Processes FILTER option to ensure parallel SET calls.
+    // Check if first column is ID
+    const firstCell = await client
+      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A1')`)
+      .get();
 
-    const filter = await DialogKeywords.getOption({ pid, name: 'filter' });
-    if (filter) {
-      // Creates id row.
+    const hasIdColumn = firstCell.text.toLowerCase() === 'id';
 
-      body.values[0][0] = 'id';
-      const addressId = 'A1:A1';
-      await client
-        .api(
-          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${addressId}')`
-        )
-        .patch(body);
-      body.values[0][0] = undefined;
+    // If ID exists in args[0] and we have an ID column, try to find and update the row
+    let rowUpdated = false;
+    if (hasIdColumn && args[0]) {
+      const allRows = await client
+        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/usedRange`)
+        .get();
 
-      // FINDs the filtered row to be updated.
-
-      const row = await this.find({ pid, handle: null, args: [file, filter] });
-      if (row) {
-        address = `A${row['line']}:${this.numberToLetters(args.length)}${row['line']}`;
+      for (let i = 1; i < allRows.values.length; i++) {
+        if (allRows.values[i][0] === args[0]) {
+          // Update existing row
+          address = `A${i + 1}:${this.numberToLetters(args.length - 1)}${i + 1}`;
+          for (let j = 0; j < args.length; j++) {
+            body.values[0][j] = args[j];
+          }
+          rowUpdated = true;
+          break;
+        }
       }
     }
 
-    // Editing or saving detection.
-
-    if (!address) {
+    // If no row was updated, add a new row
+    if (!rowUpdated) {
       await client
-        .api(
-          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A2:DX2')/insert`
-        )
+        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A2:DX2')/insert`)
         .post({});
       address = `A2:${this.numberToLetters(args.length - 1)}2`;
-    }
-
-    // Fills rows object to call sheet API.
-
-    for (let index = 0; index < args.length; index++) {
-      let value = args[index];
-      if (value && (await this.isValidDate({ pid, dt: value }))) {
-        value = `'${value}`;
+      for (let j = 0; j < args.length; j++) {
+        body.values[0][j] = args[j];
       }
-
-      // If  filter is defined, skips id column.
-
-      body.values[0][filter ? index + 1 : index] = value;
     }
 
     await retry(
       async bail => {
         const result = await client
-          .api(
-            `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
-          )
+          .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
           .patch(body);
 
         if (result.status != 200) {
@@ -945,6 +1021,30 @@ export class SystemKeywords {
     );
   }
 
+  // Helper methods for Minio file locking (unchanged)
+  private async lockFile(minioClient: Client, bucketName: string, filePath: string): Promise<void> {
+    const lockFile = `${filePath}.lock`;
+    try {
+      await minioClient.statObject(bucketName, lockFile);
+      throw new Error(`File ${filePath} is currently locked for editing`);
+    } catch (error) {
+      if (error.code === 'NotFound') {
+        // Create lock file
+        await minioClient.putObject(bucketName, lockFile, 'locked');
+        return;
+      }
+      throw error;
+    }
+  }
+
+  private async unlockFile(minioClient: Client, bucketName: string, filePath: string): Promise<void> {
+    const lockFile = `${filePath}.lock`;
+    try {
+      await minioClient.removeObject(bucketName, lockFile);
+    } catch (error) {
+      GBLog.error(`Error removing lock file: ${error.message}`);
+    }
+  }
   /**
    * Retrives the content of a cell in a tabular file.
    *
@@ -1174,9 +1274,9 @@ export class SystemKeywords {
     } else if (file.indexOf('.csv') !== -1) {
       let res;
       let packagePath = GBUtil.getGBAIPath(min.botId, `gbdata`);
-      
+
       if (GBConfigService.get('GB_MODE') === 'gbcluster') {
-        
+
         const fileUrl = urlJoin('/', `${min.botId}.gbdata`, file);
         GBLogEx.info(min, `Direct data from .csv: ${fileUrl}.`);
 
@@ -1201,17 +1301,9 @@ export class SystemKeywords {
 
         await minioClient.fGetObject(bucketName, fileUrl, localName);
       }
-      else {
-        
-      }
-      
-      
-      
+
       const csvFile = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
       const data = await fs.readFile(csvFile, 'utf8');
-
-
-
 
       const firstLine = data.split('\n')[0];
       const headers = firstLine.split(',');

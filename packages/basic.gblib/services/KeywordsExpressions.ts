@@ -1299,13 +1299,13 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
-      /^\s*(save)(\s*)(.*\.xlsx)(.*)/gim,
-      ($0, $1, $2, $3, $4) => {
+      /^\s*(save)(\s*)(.*\.(xlsx|csv))(.*)/gim,
+      ($0, $1, $2, $3, $4, $5) => {
         $3 = $3.replace(/\'/g, '');
         $3 = $3.replace(/\"/g, '');
         $3 = $3.replace(/\`/g, '');
-        $4 = $4.substr(2);
-        return `await sys.save({pid: pid, file: "${$3}", args: [${$4}]})`;
+        $5 = $5.substr(2);
+        return `await sys.save({pid: pid, file: "${$3}", args: [${$5}]})`;
       }
     ];
 
