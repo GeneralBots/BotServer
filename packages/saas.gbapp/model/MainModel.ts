@@ -1,88 +1,59 @@
 // BotServer/packages/saas.gbapp/model/MainModel.ts
-/*****************************************************************************\
-|  █████  █████ ██    █ █████ █████   ████  ██      ████   █████ █████  ███ ® |
-| ██      █     ███   █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █   █      |
-| ██  ███ ████  █ ██  █ ████  █████  ██████ ██      ████   █   █   █    ██    |
-| ██   ██ █     █  ██ █ █     ██  ██ ██  ██ ██      ██  █ ██   ██  █      █   |
-|  █████  █████ █   ███ █████ ██  ██ ██  ██ █████   ████   █████   █   ███    |
-|                                                                             |
-| General Bots Copyright (c) pragmatismo.com.br. All rights reserved.          |
-| Licensed under the AGPL-3.0.                                                |
-|                                                                             |
-| According to our dual licensing model, this program can be used either      |
-| under the terms of the GNU Affero General Public License, version 3,        |
-| or under a proprietary license.                                             |
-|                                                                             |
-| The texts of the GNU Affero General Public License with an additional       |
-| permission and of our proprietary license can be found at and               |
-| in the LICENSE file you have received along with this program.              |
-|                                                                             |
-| This program is distributed in the hope that it will be useful,             |
-| but WITHOUT ANY WARRANTY, without even the implied warranty of              |
-| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                |
-| GNU Affero General Public License for more details.                         |
-|                                                                             |
-| "General Bots" is a registered trademark of pragmatismo.com.br.              |
-| The licensing of the program under the AGPLv3 does not imply a              |
-| trademark license. Therefore any rights, title and interest in              |
-| our trademarks remain entirely with us.                                     |
-|                                                                             |
-\*****************************************************************************/
-
 "use strict"
-
-import {
-  Table,
-  Column,
-  Model,
-  HasMany,
-  BelongsTo,
-  BelongsToMany,
-  Length,
-  ForeignKey,
-  CreatedAt,
-  UpdatedAt,
-  DataType,
-  IsUUID,
-  PrimaryKey,
-  AutoIncrement
-} from "sequelize-typescript"
+import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
 @Table({ tableName: 'GBOnlineSubscription' })
 export class GBOnlineSubscription extends Model<GBOnlineSubscription> {
-
-  @PrimaryKey
-  @AutoIncrement
-  @Column
-  Id: number
-
-  @Column
-  instanceId: number;
-
-  @Column
-  externalSubscriptionId: string;
-
-  @Column
-  saasSubscriptionStatus: string;
-
-  @Column
-  isFreeTrial: boolean;
-
-  @Column
-  planId: string;
-
-  @Column
-  quantity: number;
-
-  @Column
-  lastCCFourDigits: string;
-
-  @Column
-  status: string;
-
   @Column({
-    type: DataType.DECIMAL(10, 2)
+    primaryKey: true,
+    autoIncrement: true,
+    type: DataType.INTEGER
   })
-  amount: number;
+  declare subscriptionId: number;
 
+  @Column(DataType.INTEGER)
+  declare instanceId: number;
+
+  @Column(DataType.STRING(100))
+  declare customerName: string;
+
+  @Column(DataType.STRING(100))
+  declare customerEmail: string;
+
+  @Column(DataType.STRING(100))
+  declare stripeSessionId: string;
+
+  @Column(DataType.STRING(100))
+  declare stripePaymentIntentId: string;
+  
+
+  @Column(DataType.STRING(20))
+  declare customerMobile: string;
+
+  @Column(DataType.STRING(50))
+  declare botName: string;
+
+  @Column(DataType.STRING(20))
+  declare planId: string;
+
+  @Column(DataType.STRING(20))
+  declare status: string; // 'pending_payment', 'active', 'cancelled'
+
+  @Column(DataType.FLOAT)
+  declare paymentAmount: number;
+
+  @Column(DataType.STRING(500))
+  declare paymentUrl: string;
+
+  @Column(DataType.STRING(100))
+  declare paymentToken: string;
+
+  @Column(DataType.STRING(4))
+  declare lastCCFourDigits: string;
+
+  @Column(DataType.DATE)
+  declare createdAt: Date;
+
+  @Column(DataType.DATE)
+  declare activatedAt: Date;
 }

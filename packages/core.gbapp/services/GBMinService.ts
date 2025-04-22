@@ -459,6 +459,7 @@ export class GBMinService {
 
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
 
+
     // Setups official handler for WhatsApp.
 
     GBServer.globals.server

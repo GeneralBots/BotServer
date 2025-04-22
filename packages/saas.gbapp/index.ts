@@ -48,9 +48,9 @@ export class SaaSPackage implements IGBPackage {
     return [NewUserDialog.getDialog(min),
     NewUserDialog.getBotNameDialog(min),
     NewUserDialog.getBotTemplateDialog(min),
-    NewUserDialog.getReturnFromPayment(min),
-    NewUserDialog.getReturnFromCC(min),
-    NewUserDialog.getReturnFromDocument(min),
+    
+    NewUserDialog.getPlanSelectionDialog(min),
+    
     ];
   }
 
