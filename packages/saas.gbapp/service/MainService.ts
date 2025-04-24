@@ -51,7 +51,7 @@ export class MainService {
           price: priceId,
           quantity: 1,
         }],
-        
+        success_url: urlJoin(process.env.BOT_URL, min.botId, 'paymentSuccess?session_id={CHECKOUT_SESSION_ID}'),        
         mode: 'subscription',
         metadata: {
           subscriptionId: subscription.subscriptionId.toString(),
@@ -103,7 +103,7 @@ export class MainService {
           return await this.createBotResources(min, subscription, templateName);
         }
         
-        if (session.payment_status === 'unpaid' || session.status === 'expired') {
+        if (session.status === 'expired') {
           throw new Error('Payment failed or session expired. Please try again.');
         }
       }

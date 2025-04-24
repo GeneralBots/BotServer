@@ -136,7 +136,7 @@ export class NewUserDialog extends IGBDialog {
                 return await step.replaceDialog('/ask', { isReturning: true });
               } catch (error) {
                 await step.context.sendActivity(`Error: ${error.message}`);
-                return await step.replaceDialog('/welcome_saas_plan');
+                return await step.replaceDialog('/welcome_saas');
               }
             }
           }

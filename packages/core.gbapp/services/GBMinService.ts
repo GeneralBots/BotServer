@@ -105,6 +105,7 @@ import { GBConversationalService } from './GBConversationalService.js';
 import { GBDeployer } from './GBDeployer.js';
 import { GBLogEx } from './GBLogEx.js';
 import { GBSSR } from './GBSSR.js';
+import Stripe from 'stripe';
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -459,7 +460,61 @@ export class GBMinService {
 
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
 
-
+    GBServer.globals.server
+    .all(`/${min.instance.botId}/paymentSuccess`, async (req, res) => {
+      try {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        GBLogEx.info(min, `Payment success webhook received for bot ${min.instance.botId}`);
+        
+        const sessionId = req.query.session_id;
+        if (!sessionId) {
+          GBLogEx.info(min, 'No session_id parameter found in payment success callback');
+          return res.status(400).json({ success: false, error: 'Missing session_id parameter' });
+        }
+  
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        
+        if (session.payment_status === 'paid') {
+          GBLogEx.info(min, `Payment confirmed for session ${sessionId}`);
+          
+          // Only for successful payment - send HTML to close window
+          res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Payment Successful</title>
+              <script>
+                // Close the window after a short delay
+                setTimeout(() => {
+                    window.close();
+                }, 1000);
+              </script>
+            </head>
+            <body style="text-align: center; padding: 40px; font-family: Arial;">
+              <h1 style="color: #4CAF50;">Payment Successful!</h1>
+              <p>General Bots: Your transaction was completed successfully.</p>
+            </body>
+            </html>
+          `);
+          
+        } else {
+          GBLogEx.info(min, `Payment not completed for session ${sessionId}`);
+          res.status(402).json({ 
+            success: false, 
+            error: 'Payment not completed',
+            sessionId: sessionId
+          });
+        }
+      } catch (error) {
+        GBLogEx.error(min, `Error processing payment success: ${error.message}`);
+        res.status(500).json({ 
+          success: false, 
+          error: error.message
+          
+        });
+      }
+    })
+    .bind(min);
     // Setups official handler for WhatsApp.
 
     GBServer.globals.server
@@ -742,9 +797,9 @@ export class GBMinService {
 
       if (GBConfigService.get('GB_MODE') !== 'legacy') {
         const url =
-          process.env.BOT_URL ||
-          `http://localhost:${GBConfigService.get('PORT')}`;
-
+          process.env.BOT_URL && !process.env.BOT_URL.includes('ngrok')
+            ? process.env.BOT_URL
+            : `http://localhost:${GBConfigService.get('PORT')}`;
         config['domain'] = urlJoin(url, 'directline', botId);
 
       } else {
