@@ -1122,7 +1122,7 @@ export class GBMinService {
  
       if (context.activity.type === 'conversationUpdate') {
         if (context.activity.membersAdded && context.activity.membersAdded.length > 0 &&
-                    context.activity.membersAdded[0].id !== context.activity.recipient.id) {
+                    context.activity.membersAdded[0].id === context.activity.recipient.id) {
           GBLogEx.info(min, `Bot added to conversation: ${member.name}`);
 
           return;
