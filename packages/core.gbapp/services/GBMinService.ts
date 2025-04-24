@@ -461,24 +461,24 @@ export class GBMinService {
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
 
     GBServer.globals.server
-    .all(`/${min.instance.botId}/paymentSuccess`, async (req, res) => {
-      try {
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-        GBLogEx.info(min, `Payment success webhook received for bot ${min.instance.botId}`);
-        
-        const sessionId = req.query.session_id;
-        if (!sessionId) {
-          GBLogEx.info(min, 'No session_id parameter found in payment success callback');
-          return res.status(400).json({ success: false, error: 'Missing session_id parameter' });
-        }
-  
-        const session = await stripe.checkout.sessions.retrieve(sessionId);
-        
-        if (session.payment_status === 'paid') {
-          GBLogEx.info(min, `Payment confirmed for session ${sessionId}`);
-          
-          // Only for successful payment - send HTML to close window
-          res.send(`
+      .all(`/${min.instance.botId}/paymentSuccess`, async (req, res) => {
+        try {
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+          GBLogEx.info(min, `Payment success webhook received for bot ${min.instance.botId}`);
+
+          const sessionId = req.query.session_id;
+          if (!sessionId) {
+            GBLogEx.info(min, 'No session_id parameter found in payment success callback');
+            return res.status(400).json({ success: false, error: 'Missing session_id parameter' });
+          }
+
+          const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+          if (session.payment_status === 'paid') {
+            GBLogEx.info(min, `Payment confirmed for session ${sessionId}`);
+
+            // Only for successful payment - send HTML to close window
+            res.send(`
             <!DOCTYPE html>
             <html>
             <head>
@@ -496,32 +496,32 @@ export class GBMinService {
             </body>
             </html>
           `);
-          
-        } else {
-          GBLogEx.info(min, `Payment not completed for session ${sessionId}`);
-          res.status(402).json({ 
-            success: false, 
-            error: 'Payment not completed',
-            sessionId: sessionId
+
+          } else {
+            GBLogEx.info(min, `Payment not completed for session ${sessionId}`);
+            res.status(402).json({
+              success: false,
+              error: 'Payment not completed',
+              sessionId: sessionId
+            });
+          }
+        } catch (error) {
+          GBLogEx.error(min, `Error processing payment success: ${error.message}`);
+          res.status(500).json({
+            success: false,
+            error: error.message
+
           });
         }
-      } catch (error) {
-        GBLogEx.error(min, `Error processing payment success: ${error.message}`);
-        res.status(500).json({ 
-          success: false, 
-          error: error.message
-          
-        });
-      }
-    })
-    .bind(min);
+      })
+      .bind(min);
     // Setups official handler for WhatsApp.
 
     GBServer.globals.server
       .all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
 
         const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
-        
+
         const status = req.body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
 
         if (status) {
@@ -1117,10 +1117,17 @@ export class GBMinService {
 
       const step = await min.dialogs.createContext(context);
       step.context.activity.locale = 'pt-BR';
-
-
       const sec = new SecService();
       let member = context.activity.recipient;
+ 
+      if (context.activity.type === 'conversationUpdate') {
+        if (context.activity.membersAdded && context.activity.membersAdded.length > 0 &&
+                    context.activity.membersAdded[0].id !== context.activity.recipient.id) {
+          GBLogEx.info(min, `Bot added to conversation: ${member.name}`);
+
+          return;
+        }
+      }
 
       if (process.env.GB_MODE === 'legacy' || !member) {
         member = context.activity.from;
@@ -1150,7 +1157,7 @@ export class GBMinService {
         GBMinService.pidsConversation[conversationId] = pid;
         step.context.activity['pid'] = pid;
 
-        const auth = false; // min.core.getParam(min.instance, 'Enable Authentication', null);
+        const auth = min.core.getParam(min.instance, 'Enable Authentication', false);
 
         if (auth) {
           const res = await t.find({ pid: pid, handle: "users.csv", args: [`key={member.id}`] });
@@ -1167,209 +1174,202 @@ export class GBMinService {
         }
 
 
-          // First time processing.
+        // First time processing.
 
-          if (!params.loaded) {
-            if (step.context.activity.channelId !== 'msteams') {
-              await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
-            }
+        if (!params.loaded) {
+          if (step.context.activity.channelId !== 'msteams') {
+            await min.conversationalService.sendEvent(min, step, 'loadInstance', {});
+          }
 
-            // Default params.
+          // Default params.
 
-            await sec.setParam(userId, 'loaded', true);
-            await sec.setParam(userId, 'subjects', '[]');
-            await sec.setParam(userId, 'cb', null);
-            await sec.setParam(userId, 'welcomed', 'false');
-            await sec.setParam(userId, 'maxLines', 100);
-            await sec.setParam(userId, 'translatorOn', true);
-            await sec.setParam(userId, 'wholeWord', true);
-            await sec.setParam(userId, 'theme', 'white');
-            await sec.setParam(userId, 'maxColumns', 40);
+          await sec.setParam(userId, 'loaded', true);
+          await sec.setParam(userId, 'subjects', '[]');
+          await sec.setParam(userId, 'cb', null);
+          await sec.setParam(userId, 'welcomed', 'false');
+          await sec.setParam(userId, 'maxLines', 100);
+          await sec.setParam(userId, 'translatorOn', true);
+          await sec.setParam(userId, 'wholeWord', true);
+          await sec.setParam(userId, 'theme', 'white');
+          await sec.setParam(userId, 'maxColumns', 40);
 
-            // This same event is dispatched either to all participants
-            // including the bot, that is filtered bellow.
+          // This same event is dispatched either to all participants
+          // including the bot, that is filtered bellow.
 
-            if (context.activity.from.id !== min.botId) {
-              // Creates a new row in user table if it does not exists.
-              if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
-                // Stores conversation associated to the user to group each message.
+          if (context.activity.from.id !== min.botId) {
+            // Creates a new row in user table if it does not exists.
+            if (process.env.PRIVACY_STORE_MESSAGES === 'true') {
+              // Stores conversation associated to the user to group each message.
 
-                const analytics = new AnalyticsService();
-                await analytics.createConversation(user);
-              }
-            }
-
-            await sec.updateConversationReferenceById(userId, conversationReference);
-
-            if (step.context.activity.channelId !== 'msteams') {
-              const service = new KBService(min.core.sequelize);
-              const data = await service.getFaqBySubjectArray(min.instance.instanceId, 'faq', undefined);
-              await min.conversationalService.sendEvent(min, step, 'play', {
-                playerType: 'bullet',
-                data: data.slice(0, 10)
-              });
+              const analytics = new AnalyticsService();
+              await analytics.createConversation(user);
             }
           }
 
+          await sec.updateConversationReferenceById(userId, conversationReference);
 
-          const notes = min.core.getParam(min.instance, 'Notes', null);
-          if (await this.handleUploads(min, step, user, params, notes != null)) {
-            return;
-
+          if (step.context.activity.channelId !== 'msteams') {
+            const service = new KBService(min.core.sequelize);
+            const data = await service.getFaqBySubjectArray(min.instance.instanceId, 'faq', undefined);
+            await min.conversationalService.sendEvent(min, step, 'play', {
+              playerType: 'bullet',
+              data: data.slice(0, 10)
+            });
           }
-
-          // Required for MSTEAMS handling of persisted conversations.
-
-          if (step.context.activity.channelId === 'msteams') {
-            if (step.context.activity.attachments && step.context.activity.attachments.length > 1) {
-              const file = context.activity.attachments[0];
-              const credentials = new MicrosoftAppCredentials(
-                min.instance.marketplaceId,
-                min.instance.marketplacePassword
-              );
-              const botToken = await credentials.getToken();
-              const headers = { Authorization: `Bearer ${botToken}` };
-              const data = await t.getByHttp({
-                pid: 0,
-                url: file.contentUrl,
-                headers,
-                username: null,
-                ps: null,
-                qs: null
-              });
-              const packagePath = GBUtil.getGBAIPath(min.botId);
-              const folder = `work/${path}/cache`;
-              const filename = `${GBAdminService.generateUuid()}.png`;
-
-              await fs.writeFile(urlJoin(folder, filename), data);
-              step.context.activity.text = urlJoin(
-                GBServer.globals.publicAddress,
-                `${min.instance.botId}`,
-                'cache',
-                filename
-              );
-            }
-
-            if (!(await sec.getParam(user, 'welcomed'))) {
-              const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
-              if (startDialog) {
-                await sec.setParam(userId, 'welcomed', 'true');
-                GBLogEx.info(
-                  min,
-                  `Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`
-                );
-
-                await GBVMService.callVM(startDialog.toLowerCase(), min, step, 0);
-              }
-            }
-          }
-
-          // Answer to specific BOT Framework event conversationUpdate to auto start dialogs.
-          // Skips if the bot is talking.
-
-          const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
-
-          if (context.activity.type === 'installationUpdate') {
-            GBLogEx.info(min, `Bot installed on Teams.`);
-          } else if (context.activity.type === 'conversationUpdate' &&
-            context.activity.membersAdded.length > 0) {
-            // Check if a bot or a human participant is being added to the conversation.
-
-            const member = context.activity.membersAdded[0];
-            if (context.activity.membersAdded[0].id === context.activity.recipient.id) {
-              GBLogEx.info(min, `Bot added to conversation, starting chat...`);
-
-              // Calls onNewSession event on each .gbapp package.
-
-              await CollectionUtil.asyncForEach(appPackages, async e => {
-                await e.onNewSession(min, step);
-              });
-
-              // Auto starts dialogs if any is specified.
-
-              if (!startDialog && !(await sec.getParam(user, 'welcomed'))) {
-                // Otherwise, calls / (root) to default welcome users.
-
-                await step.beginDialog('/');
-              } else {
-                if (
-                  !GBMinService.userMobile(step) &&
-                  !min['conversationWelcomed'][step.context.activity.conversation.id]
-                ) {
-
-                  const pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null, step);
-                  step.context.activity['pid'] = pid;
-
-                  min['conversationWelcomed'][step.context.activity.conversation.id] = true;
-
-                  GBLogEx.info(
-                    min,
-                    `Auto start (web 1) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
-                  );
-                  await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
-                }
-              }
-            } else {
-              GBLogEx.info(min, `Person added to conversation: ${member.name}`);
-
-              return;
-            }
-          } else if (context.activity.type === 'message') {
+        }
 
 
+        const notes = min.core.getParam(min.instance, 'Notes', null);
+        if (await this.handleUploads(min, step, user, params, notes != null)) {
+          return;
 
-            // Required for F0 handling of persisted conversations.
+        }
 
-            GBLogEx.info(
-              min,
-              `Human: pid:${pid} ${context.activity.from.id} ${GBUtil.toYAML(WhatsappDirectLine.pidByNumber)} ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
+        // Required for MSTEAMS handling of persisted conversations.
+
+        if (step.context.activity.channelId === 'msteams') {
+          if (step.context.activity.attachments && step.context.activity.attachments.length > 1) {
+            const file = context.activity.attachments[0];
+            const credentials = new MicrosoftAppCredentials(
+              min.instance.marketplaceId,
+              min.instance.marketplacePassword
             );
+            const botToken = await credentials.getToken();
+            const headers = { Authorization: `Bearer ${botToken}` };
+            const data = await t.getByHttp({
+              pid: 0,
+              url: file.contentUrl,
+              headers,
+              username: null,
+              ps: null,
+              qs: null
+            });
+            const packagePath = GBUtil.getGBAIPath(min.botId);
+            const folder = `work/${path}/cache`;
+            const filename = `${GBAdminService.generateUuid()}.png`;
 
-
-            // Processes messages activities.
-
-            await this.processMessageActivity(context, min, step, pid);
-          } else if (context.activity.type === 'event') {
-            // Processes events activities.
-
-            await this.processEventActivity(min, user, context, step);
+            await fs.writeFile(urlJoin(folder, filename), data);
+            step.context.activity.text = urlJoin(
+              GBServer.globals.publicAddress,
+              `${min.instance.botId}`,
+              'cache',
+              filename
+            );
           }
-        } catch (error) {
-          GBLog.error(`Receiver: ${GBUtil.toYAML(error)}`);
 
-          await min.conversationalService.sendText(
+          if (!(await sec.getParam(user, 'welcomed'))) {
+            const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
+            if (startDialog) {
+              await sec.setParam(userId, 'welcomed', 'true');
+              GBLogEx.info(
+                min,
+                `Auto start (teams) dialog is now being called: ${startDialog} for ${min.instance.botId}...`
+              );
+
+              await GBVMService.callVM(startDialog.toLowerCase(), min, step, 0);
+            }
+          }
+        }
+
+        // Answer to specific BOT Framework event conversationUpdate to auto start dialogs.
+        // Skips if the bot is talking.
+
+        const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
+
+        if (context.activity.type === 'installationUpdate') {
+          GBLogEx.info(min, `Bot installed on Teams.`);
+        } else if (context.activity.type === 'conversationUpdate' &&
+          context.activity.membersAdded.length > 0) {
+          // Check if a bot or a human participant is being added to the conversation.
+
+          const member = context.activity.membersAdded[0];
+
+          // Calls onNewSession event on each .gbapp package.
+
+          await CollectionUtil.asyncForEach(appPackages, async e => {
+            await e.onNewSession(min, step);
+          });
+
+          // Auto starts dialogs if any is specified.
+
+          if (!startDialog && !(await sec.getParam(user, 'welcomed'))) {
+            // Otherwise, calls / (root) to default welcome users.
+
+            await step.beginDialog('/');
+          } else {
+            if (
+              !GBMinService.userMobile(step) &&
+              !min['conversationWelcomed'][step.context.activity.conversation.id]
+            ) {
+
+              const pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null, step);
+              step.context.activity['pid'] = pid;
+
+              min['conversationWelcomed'][step.context.activity.conversation.id] = true;
+
+              GBLogEx.info(
+                min,
+                `Auto start (web 1) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
+              );
+              await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
+            }
+          }
+        } else if (context.activity.type === 'message') {
+
+
+
+          // Required for F0 handling of persisted conversations.
+
+          GBLogEx.info(
             min,
-            step,
-            Messages[step.context.activity.locale].very_sorry_about_error
+            `Human: pid:${pid} ${context.activity.from.id} ${GBUtil.toYAML(WhatsappDirectLine.pidByNumber)} ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
           );
 
-          await step.beginDialog('/ask', { isReturning: true });
-        }
-      };
 
-      try {
-        if (GBConfigService.get('GB_MODE') !== 'legacy') {
-          const context = adapter['createContext'](req);
-          context['_activity'] = context.activity.body;
-          await adapter['processActivity'](req, res, handler);
+          // Processes messages activities.
 
-          // Return status
-          res.status(200);
+          await this.processMessageActivity(context, min, step, pid);
+        } else if (context.activity.type === 'event') {
+          // Processes events activities.
 
-          res.end();
-        } else {
-          await adapter['processActivity'](req, res, handler);
+          await this.processEventActivity(min, user, context, step);
         }
       } catch (error) {
-        if (error.code === 401) {
-          GBLog.error('Calling processActivity due to Signing Key could not be retrieved error.');
-          await adapter['processActivity'](req, res, handler);
-        } else {
-          GBLog.error(`Error processing activity: ${GBUtil.toYAML(error)}`);
-          throw error;
-        }
+        GBLog.error(`Receiver: ${GBUtil.toYAML(error)}`);
+
+        await min.conversationalService.sendText(
+          min,
+          step,
+          Messages[step.context.activity.locale].very_sorry_about_error
+        );
+
+        await step.beginDialog('/ask', { isReturning: true });
+      }
+    };
+
+    try {
+      if (GBConfigService.get('GB_MODE') !== 'legacy') {
+        const context = adapter['createContext'](req);
+        context['_activity'] = context.activity.body;
+        await adapter['processActivity'](req, res, handler);
+
+        // Return status
+        res.status(200);
+
+        res.end();
+      } else {
+        await adapter['processActivity'](req, res, handler);
+      }
+    } catch (error) {
+      if (error.code === 401) {
+        GBLog.error('Calling processActivity due to Signing Key could not be retrieved error.');
+        await adapter['processActivity'](req, res, handler);
+      } else {
+        GBLog.error(`Error processing activity: ${GBUtil.toYAML(error)}`);
+        throw error;
       }
     }
+  }
 
   /**
    * Called to handle all event sent by .gbui clients.
