@@ -1119,10 +1119,10 @@ export class GBMinService {
       step.context.activity.locale = 'pt-BR';
       const sec = new SecService();
       let member = context.activity.recipient;
- 
+
       if (context.activity.type === 'conversationUpdate') {
         if (context.activity.membersAdded && context.activity.membersAdded.length > 0 &&
-                    context.activity.membersAdded[0].id === context.activity.recipient.id) {
+          context.activity.membersAdded[0].id === context.activity.recipient.id) {
           GBLogEx.info(min, `Bot added to conversation: ${member.name}`);
 
           return;
@@ -1209,12 +1209,18 @@ export class GBMinService {
           await sec.updateConversationReferenceById(userId, conversationReference);
 
           if (step.context.activity.channelId !== 'msteams') {
+
+
             const service = new KBService(min.core.sequelize);
             const data = await service.getFaqBySubjectArray(min.instance.instanceId, 'faq', undefined);
-            await min.conversationalService.sendEvent(min, step, 'play', {
-              playerType: 'bullet',
-              data: data.slice(0, 10)
-            });
+            if (data.length > 0) {
+              await min.conversationalService.sendEvent(min, step, 'play', {
+                playerType: 'bullet',
+                data: data.slice(0, 10)
+              });
+
+              
+            }
           }
         }
 
@@ -1278,12 +1284,8 @@ export class GBMinService {
 
         if (context.activity.type === 'installationUpdate') {
           GBLogEx.info(min, `Bot installed on Teams.`);
-        } else if (context.activity.type === 'conversationUpdate' &&
-          context.activity.membersAdded.length > 0) {
-          // Check if a bot or a human participant is being added to the conversation.
-
-          const member = context.activity.membersAdded[0];
-
+        } else if (context.activity.type === 'conversationUpdate' ){
+ 
           // Calls onNewSession event on each .gbapp package.
 
           await CollectionUtil.asyncForEach(appPackages, async e => {

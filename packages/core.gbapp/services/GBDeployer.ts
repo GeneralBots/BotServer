@@ -258,7 +258,8 @@ export class GBDeployer implements IGBDeployer {
 
     // Makes available bot to the channels and .gbui interfaces.
 
-    await GBServer.globals.minService.mountBot(instance);
+    const min = await GBServer.globals.minService.mountBot(instance);
+    GBServer.globals.minInstances.push(min);
 
     // Creates remaining objects on the cloud and updates instance information.
 

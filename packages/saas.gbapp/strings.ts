@@ -10,7 +10,7 @@ export const Messages = {
     validation_enter_valid_botname: 'Please enter a valid Bot Name.',
     validation_enter_valid_voucher: 'Please enter a valid voucher code.',
     welcome:
-      "Welcome and let's create your Bot.  Also visit: https://gb.pragmatismo.com.br/privacy.html to learn more about our privacy policy.",
+      "Welcome and let's create your Bot.  Also visit: https://pragmatismo.com.br/privacy and https://pragmatismo.com.br/terms to learn more about our privacy policy and terms of use.",
     whats_botname: "What's the Bot name?",
     thanks_payment: 'Thanks for choosing paying for General Bots.',
     boleto_mail: 'Boleto will be e-mailed to you.'

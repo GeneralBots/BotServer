@@ -13,9 +13,9 @@ export class NewUserDialog extends IGBDialog {
       waterfall: [
         async step => {
           await step.context.sendActivity('Please choose your plan:');
-          await step.context.sendActivity('1. Free - $0/month (basic features)');
-          await step.context.sendActivity('2. Personal - $50/month (more features)');
-          await step.context.sendActivity('3. Professional - $150/month (advanced features)');
+          await step.context.sendActivity('1  Free - $0/month (basic features)');
+          await step.context.sendActivity('2  Personal - $50/month (more features)');
+          await step.context.sendActivity('3  Professional - $150/month (advanced features)');
           return await step.prompt('textPrompt', 'Enter 1, 2 or 3 to select your plan:');
         },
         async step => {

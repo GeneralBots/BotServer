@@ -65,8 +65,7 @@ export class WelcomeDialog extends IGBDialog {
         async step => {
           if (
             GBServer.globals.entryPointDialog !== null &&
-            min.instance.botId === GBConfigService.get('BOT_ID') &&
-            step.context.activity.channelId === 'webchat'
+            min.instance.botId === GBConfigService.get('BOT_ID')
           ) {
             return step.replaceDialog(GBServer.globals.entryPointDialog);
           }
