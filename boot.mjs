@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-process.stdout.write(`General Bots VM: node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
+process.stdout.write(`General Bots 5 VM: node@${process.version.replace('v', '')}, ${process.platform} ${process.arch} `);
 
 import fs from 'fs/promises'; 
 import os from 'node:os';
