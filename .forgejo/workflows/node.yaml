@@ -36,7 +36,7 @@ jobs:
         echo "[General Bots Deployer] Building BotServer..."
 
         cd /opt/gbo/bin/BotServer
-        # sudo npm ci --production
+        sudo npm ci --production
         npm run build-server
         # npm run build-gbui
         
