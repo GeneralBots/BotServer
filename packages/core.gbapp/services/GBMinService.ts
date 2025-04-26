@@ -567,6 +567,52 @@ export class GBMinService {
       })
       .bind(min);
 
+      GBServer.globals.server
+      .all('/${min.instance.botId}/meeting-token', async (req, res) => {
+        try {
+          // 1. Validate request
+          const { room, identity, name } = req.query;
+          if (!room || !identity) {
+            return res.status(400).json({ error: 'Missing required parameters: room, identity' });
+          }
+    
+          // 2. Get API keys from config (replace with your actual config access)
+          const apiKey = process.env.LIVEKIT_API_KEY;
+          const apiSecret = process.env.LIVEKIT_API_SECRET;
+          if (!apiKey || !apiSecret) {
+            return res.status(500).json({ error: 'Server misconfigured' });
+          }
+    
+          // 3. Generate token
+          const { AccessToken } = require('livekit-server-sdk');
+          const token = new AccessToken(apiKey, apiSecret, {
+            identity: identity.toString(),
+            name: name?.toString() || identity.toString()
+          });
+    
+          // 4. Set permissions
+          token.addGrant({
+            roomJoin: true,
+            room: room.toString(),
+            canPublish: true,
+            canSubscribe: true,
+            canPublishData: true
+          });
+    
+          // 5. Set expiration (24 hours default)
+          token.setTtl(24 * 60 * 60); // 6 hours in seconds
+    
+          // 6. Return JWT
+          const jwt = token.toJwt();
+          res.json({ token: jwt });
+    
+        } catch (err) {
+          GBLog.error(`Meeting token generation failed: ${err}`);
+          res.status(500).json({ error: 'Token generation failed' });
+        }
+      });
+
+
     GBDeployer.mountGBKBAssets(`${botId}.gbkb`, botId, `${botId}.gbkb`);
 
     return min;
