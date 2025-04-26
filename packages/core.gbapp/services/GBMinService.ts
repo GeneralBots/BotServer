@@ -604,9 +604,6 @@ export class GBMinService {
             canPublishData: true
           });
     
-          // 5. Set expiration (24 hours default)
-          token.setTtl(24 * 60 * 60); // 6 hours in seconds
-    
           // 6. Return JWT
           const jwt = token.toJwt();
           res.json({ token: jwt });
