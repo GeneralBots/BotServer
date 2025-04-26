@@ -605,7 +605,7 @@ export class GBMinService {
           });
     
           // 6. Return JWT
-          const jwt = token.toJwt();
+          const jwt = await token.toJwt();
           res.json({ token: jwt });
     
         } catch (err) {
