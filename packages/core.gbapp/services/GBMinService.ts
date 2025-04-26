@@ -568,8 +568,12 @@ export class GBMinService {
       .bind(min);
 
       GBServer.globals.server
-      .all('/${min.instance.botId}/meeting-token', async (req, res) => {
+      .all(`/${min.instance.botId}/meeting-token`, async (req, res) => {
+
         try {
+          // Add to your route handler
+          res.setHeader('Access-Control-Allow-Origin', '*');
+
           // 1. Validate request
           const { room, identity, name } = req.query;
           if (!room || !identity) {
