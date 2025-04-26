@@ -37,6 +37,7 @@ import { createRpcServer } from '@push-rpc/core';
 import AuthenticationContext from 'adal-node';
 import arrayBufferToBuffer from 'arraybuffer-to-buffer';
 import { Semaphore } from 'async-mutex';
+import { AccessToken } from 'livekit-server-sdk';
 import { Mutex } from 'async-mutex';
 import chokidar from 'chokidar';
 import cors from 'cors';
@@ -588,7 +589,7 @@ export class GBMinService {
           }
     
           // 3. Generate token
-          const { AccessToken } = require('livekit-server-sdk');
+          
           const token = new AccessToken(apiKey, apiSecret, {
             identity: identity.toString(),
             name: name?.toString() || identity.toString()

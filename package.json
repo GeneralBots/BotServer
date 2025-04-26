@@ -171,6 +171,7 @@
     "langchain": "0.2.17",
     "language-tags": "1.0.9",
     "line-replace": "2.0.1",
+    "livekit-server-sdk": "^2.12.0",
     "lodash": "4.17.21",
     "luxon": "3.5.0",
     "mammoth": "1.8.0",
