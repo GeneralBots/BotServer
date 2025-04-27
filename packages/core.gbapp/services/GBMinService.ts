@@ -166,7 +166,7 @@ export class GBMinService {
       // Servers the bot information object via HTTP so clients can get
       // instance information stored on server.
       GBServer.globals.server.use(cors({
-        origin: 'gb6.pragmatismo.com.br',
+        origin: 'https://gb6.pragmatismo.com.br',
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'
           , 'x-ms-bot-agent'
