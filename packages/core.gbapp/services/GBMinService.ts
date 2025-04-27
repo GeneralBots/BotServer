@@ -568,15 +568,18 @@ export class GBMinService {
       })
       .bind(min);
 
+      GBLog.info(`Defining meeting. `);
+
       GBServer.globals.server
       .all(`/${min.instance.botId}/meeting-token`, async (req, res) => {
 
         try {
           // Add to your route handler
           res.setHeader('Access-Control-Allow-Origin', '*');
-
+          
           // 1. Validate request
           const { room, identity, name } = req.query;
+          GBLog.info(`Meeting token asked. ${room} ${identity} ${name}`);
           if (!room || !identity) {
             return res.status(400).json({ error: 'Missing required parameters: room, identity' });
           }
