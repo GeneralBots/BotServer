@@ -603,7 +603,11 @@ export class DialogKeywords {
         subject: subject,
         text: body,
         html: body,
-      };
+        // headers: {
+        //   'List-Unsubscribe': `<mailto:${config.unsubscribeEmail}?subject=Unsubscribe>`,
+        //   'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+        // }
+        };
 
       await transporter.sendMail(mailOptions);
       GBLogEx.info(min, `E-mail ${to} (${subject}) sent via NodeMailer.`);

@@ -14,37 +14,9 @@ import { existsSync } from 'fs';
 import { GBConfigService } from "../../core.gbapp/services/GBConfigService.js";
 import path from "path";
 import { Client } from "minio";
-
-
+import { GBLogEx } from "packages/core.gbapp/services/GBLogEx.js";
 
 export class GBOService {
-  
-  
-  constructor() {
-  }
-  public async sendEmail(token: string, to: string, from: string,
-    subject: string, text: string, html: string) {
-    return new Promise<any>((resolve, reject) => {
-      sgMail.setApiKey(token);
-      const msg = {
-        to: to,
-        from: from,
-        subject: subject,
-        text: text,
-        html: html
-      };
-      sgMail.send(msg, false, (err, res) => {
-        if (err) {
-          reject(err)
-        }
-        else {
-          resolve(res);
-        }
-      });
-
-    });
-  }
-
 
   public async listTemplates(min: GBMinInstance) {
     if (GBConfigService.get('GB_MODE') === 'legacy') {
@@ -154,8 +126,8 @@ export class GBOService {
         secretKey: process.env.DRIVE_SECRET,
       });
 
-      
-      const bucketName  = `${process.env.DRIVE_ORG_PREFIX}${botName}.gbai`.toLowerCase();
+
+      const bucketName = `${process.env.DRIVE_ORG_PREFIX}${botName}.gbai`.toLowerCase();
       const packageName = `${templateName.split('.')[0]}.${kind}`;
       const localTemplatePath = path.join(process.env.PWD, 'templates', templateName, packageName);
       const minioDestinationPath = `${botName}.${kind}`;
@@ -225,38 +197,57 @@ export class GBOService {
     }
   }
 
+  public async shareWithEmail(bucketName, folder,  expiresInHours = 24 * 365) {
+    const minioClient = new Client({
+      endPoint: process.env.DRIVE_SERVER || 'localhost',
+      port: parseInt(process.env.DRIVE_PORT || '9000', 10),
+      useSSL: process.env.DRIVE_USE_SSL === 'true',
+      accessKey: process.env.DRIVE_ACCESSKEY,
+      secretKey: process.env.DRIVE_SECRET,
+    });
+  
+      // Generate a time-limited access link (default: 24 hours)
+      const presignedUrl = await minioClient.presignedGetObject(
+        bucketName,
+        folder,
+        expiresInHours * 60 * 60 // Convert hours to seconds
+      );
+      return presignedUrl;
+  }
+
   public async shareFolder(token: string, driveId: string, itemId: string, email: string) {
-    return new Promise<string>((resolve, reject) => {
-      let client = MicrosoftGraph.Client.init({
-        authProvider: done => {
-          done(null, token);
-        }
-      });
 
-      const body =
-      {
-        "recipients": [
-          {
-            "email": email
-          }
-        ],
-        "message": "General Bots Online - Packages folder",
-        "requireSignIn": true,
-        "sendInvitation": true,
-        "roles": ["write"]
-      };
-
-      client.api(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/invite`)
-        .post(body, (err, res) => {
-          if (err) {
-            GBLog.error('Sharing: ' + err);
-            reject(err)
-          }
-          else {
-            resolve(res);
+      return new Promise<string>((resolve, reject) => {
+        let client = MicrosoftGraph.Client.init({
+          authProvider: done => {
+            done(null, token);
           }
         });
-    });
+
+        const body =
+        {
+          "recipients": [
+            {
+              "email": email
+            }
+          ],
+          "message": "General Bots Online - Packages folder",
+          "requireSignIn": true,
+          "sendInvitation": true,
+          "roles": ["write"]
+        };
+
+        client.api(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/invite`)
+          .post(body, (err, res) => {
+            if (err) {
+              GBLog.error('Sharing: ' + err);
+              reject(err)
+            }
+            else {
+              resolve(res);
+            }
+          });
+      });
   }
 
   public kmpSearch(pattern, text) {
