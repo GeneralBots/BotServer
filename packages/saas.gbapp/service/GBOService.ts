@@ -6,15 +6,12 @@ import { GBMinInstance, GBLog } from "botlib";
 import { CollectionUtil } from 'pragmatismo-io-framework';
 import MicrosoftGraph from "@microsoft/microsoft-graph-client";
 
-import sgMail from '@sendgrid/mail';
-import { default as PasswordGenerator } from 'strict-password-generator';
 import { promises as fs } from 'fs';
 import { existsSync } from 'fs';
 
 import { GBConfigService } from "../../core.gbapp/services/GBConfigService.js";
 import path from "path";
 import { Client } from "minio";
-import { GBLogEx } from "packages/core.gbapp/services/GBLogEx.js";
 
 export class GBOService {
 
