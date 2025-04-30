@@ -187,6 +187,7 @@
     "node-html-parser": "6.1.13",
     "node-nlp": "4.27.0",
     "node-tesseract-ocr": "2.2.1",
+    "nodemailer": "6.10.1",
     "nodemon": "^3.1.7",
     "npm": "10.8.3",
     "open": "10.1.0",

@@ -30,7 +30,6 @@
 
 'use strict';
 
-import sgMail from '@sendgrid/mail';
 import { ActivityTypes } from 'botbuilder';
 import { GBLog, GBMinInstance } from 'botlib';
 import * as df from 'date-diff';
@@ -62,6 +61,7 @@ import { GBVMService } from './GBVMService.js';
 import { SystemKeywords } from './SystemKeywords.js';
 import { WebAutomationServices } from './WebAutomationServices.js';
 import { Client } from 'minio';
+import nodemailer from 'nodemailer';
 const { List, Buttons } = pkg;
 
 
@@ -574,7 +574,6 @@ export class DialogKeywords {
     // tslint:disable-next-line:no-console
 
     GBLogEx.info(min, `[E-mail]: to:${to},subject: ${subject},body: ${body}.`);
-    const emailToken = process.env.EMAIL_API_KEY;
 
     // Inline word document used as e-mail body.
 
@@ -583,24 +582,32 @@ export class DialogKeywords {
       body = result.value;
     }
 
-    if (emailToken) {
-      return new Promise<any>((resolve, reject) => {
-        sgMail.setApiKey(emailToken);
-        const msg = {
-          to: to,
-          from: process.env.EMAIL_FROM,
-          subject: subject,
-          text: body,
-          html: body
-        };
-        sgMail.send(msg, false, (err, res) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(res);
-          }
-        });
+    if (GBConfigService.get('GB_MODE') !== 'legacy') {
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_SERVER || 'localhost',
+        port: parseInt(process.env.EMAIL_PORT || '587', 10),
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER ,
+          pass: process.env.EMAIL_PASS ,
+        },
+        tls: {
+          rejectUnauthorized: (process.env.EMAIL_REJECT_UNAUTHORIZED === 'true'),
+        },
       });
+
+      const mailOptions = {
+        from: process.env.EMAIL_FROM,
+        to: to,
+        subject: subject,
+        text: body,
+        html: body,
+      };
+
+      await transporter.sendMail(mailOptions);
+      GBLogEx.info(min, `E-mail ${to} (${subject}) sent via NodeMailer.`);
+
     } else {
       let { client } = await GBDeployer.internalGetDriveClient(min);
 
