@@ -907,6 +907,15 @@ export class KeywordsExpressions {
     ];
 
     keywords[i++] = [
+      /^\s*(POST TO INSTAGRAM)(\s*)(.*)/gim,
+      ($0, $1, $2, $3) => {
+        const params = this.getParams($3, ['username', 'password', 'imagePath', 'caption']);
+        return `await sys.postToInstagram ({pid: pid, ${params}})`;
+      }
+    ];
+
+
+    keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(datediff)(\s*)(.*)/gim,
       ($0, $1, $2, $3, $4) => {
         const params = this.getParams($4, ['date1', 'date2', 'mode']);

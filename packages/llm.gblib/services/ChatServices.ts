@@ -250,7 +250,7 @@ export class ChatServices {
 
     model = await ChatServices.getModel(min);
 
-    return await model.invoke(text);
+    return await model .invoke(text);
   }
 
   public static memoryMap = {};

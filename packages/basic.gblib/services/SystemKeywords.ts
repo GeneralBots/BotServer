@@ -2616,6 +2616,8 @@ export class SystemKeywords {
     return answer.answer;
   }
 
+
+  
   /**
    * HEAR description
    * text = REWRITE description
@@ -2623,9 +2625,9 @@ export class SystemKeywords {
    */
   public async rewrite({ pid, text }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    const prompt = `Rewrite this sentence in a better way: ${text}`;
+    const prompt = `${text}`;
     const answer = await ChatServices.invokeLLM(min, prompt);
-    GBLogEx.info(min, `REWRITE ${text} TO ${answer}`);
+    GBLogEx.info(min, `REWRITE ${text} TO ${answer.text}`);
     return answer;
   }
 

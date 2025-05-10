@@ -113,7 +113,7 @@ export class ImageProcessingServices {
     const azureOpenAIEndpoint = await min.core.getParam(min.instance, 'Azure Open AI Endpoint', null, true);
     const azureOpenAIVersion = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Version', null, true);
     const azureOpenAIImageModel = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Image Model', null, true);
-    
+
 
     if (azureOpenAIKey) {
       // Initialize the Azure OpenAI client
@@ -124,16 +124,17 @@ export class ImageProcessingServices {
         apiVersion: azureOpenAIVersion,
         apiKey: azureOpenAIKey
       });
-      
-      // Make a request to the image generation endpoint
-      
-      const response = await client.images.generate({
-        model: '',
-        prompt: prompt,
-        n: 1,
-        size: '1024x1024'
-      });
 
+      // Make a request to the image generation endpoint
+
+      const response = await client.images.generate({
+
+        prompt: prompt,
+        n: 1, // Don't include for DALL-E 3 (always generates 1 image)
+        style: 'vivid', // optional ('natural' or 'vivid')
+        size: '1024x1024',
+        quality: 'standard', // optional
+      });
       const gbaiName = GBUtil.getGBAIPath(min.botId);
       const localName = path.join('work', gbaiName, 'cache', `DALL-E${GBAdminService.getRndReadableIdentifier()}.png`);
 

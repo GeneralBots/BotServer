@@ -168,7 +168,7 @@ export class GBAdminService implements IGBAdminService {
   ) {
     const packageName = text.split(' ')[1];
 
-    const folderName = text.split(' ')[2];
+    const folderName = text.substring(text.indexOf(packageName) + packageName.length + 1);
     const packageType = path.extname(folderName).substr(1);
     const gbaiPath = GBUtil.getGBAIPath(min.instance.botId, packageType, null);
     const localFolder = path.join('work', gbaiPath);
