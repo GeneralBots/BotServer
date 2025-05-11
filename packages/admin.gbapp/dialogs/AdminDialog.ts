@@ -293,6 +293,8 @@ class AdminDialog extends IGBDialog {
             await min.conversationalService.sendText(min, step, `Starting publishing for ${botId} packages...`);
             packages.push(`${botId}.gbot`);
             packages.push(`${botId}.gbtheme`);
+            packages.push(`${botId}.gbdrive`);
+            packages.push(`${botId}.gbdata`);
             packages.push(`${botId}.gbkb`);
             packages.push(`${botId}.gbdialog`);
             skipError = true;
@@ -305,6 +307,8 @@ class AdminDialog extends IGBDialog {
 
             if (
               packageName.toLowerCase() === 'gbdialog' ||
+              packageName.toLowerCase() === 'gbdrive' ||
+              packageName.toLowerCase() === 'gbdata' ||
               packageName.toLowerCase() === 'gbkb' ||
               packageName.toLowerCase() === 'gbot' ||
               packageName.toLowerCase() === 'gbtheme'

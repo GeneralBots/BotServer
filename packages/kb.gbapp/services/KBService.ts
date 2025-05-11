@@ -1148,7 +1148,7 @@ export class KBService implements IGBKBService {
         const logoPath = path.join(packagePath, 'cache', logoFilename);
         await (image as any).write(logoPath);
         await min.core['setConfig'](min, 'Logo', logoFilename);
-        
+
       }
 
       // Extract dominant colors from the screenshot
@@ -1179,7 +1179,6 @@ export class KBService implements IGBKBService {
       files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page, websiteIgnoreUrls, maxDocuments));
 
       await browser.close();
-
       
 
       GBLogEx.info(min, `Vectorizing ${files.length} file(s)...`);
@@ -1200,7 +1199,7 @@ export class KBService implements IGBKBService {
         try {
           const document = await this.loadAndSplitFile(file);
           const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
-          await min['vectorStore'].addDocuments(flattenedDocuments);
+          // await min['vectorStore'].addDocuments(flattenedDocuments);
         } catch (error) {
           GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
         }
@@ -1211,16 +1210,37 @@ export class KBService implements IGBKBService {
 
     files = await walkPromise(urlJoin(localPath, 'docs'));
 
+    // const gbdrive = path.join(process.env.PWD, 'work', GBUtil.getGBAIPath(min.botId, 'gbdrive'));
+    // files = files.concat(await walkPromise(gbdrive));
+
+    const gbdata = path.join(process.env.PWD, 'work', GBUtil.getGBAIPath(min.botId, 'gbdata'));
+    files = files.concat(await walkPromise(gbdata));
+
+
     if (files[0]) {
       shouldSave = true;
-      GBLogEx.info(min, `Add embeddings from .gbkb: ${files.length} files being processed...`);
+      GBLogEx.info(min, `Add embeddings from packages, ${files.length} files being processed...`);
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
         let filePath = path.join(file.root, file.name);
+        try {
 
-        const document = await this.loadAndSplitFile(filePath);
-        const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
-        await min['vectorStore'].addDocuments(flattenedDocuments);
+          if (file.name.endsWith('.csv')) {
+            // Read first 1000 lines of CSV file
+            const csvContent = await fs.readFile(filePath, 'utf8');
+            const lines = csvContent.split('\n').slice(0, 200).join('\n');
+            await fs.writeFile(filePath, lines, 'utf8');
+            content = lines;
+          }
+
+          const document = await this.loadAndSplitFile(filePath);
+          // TODO: Add full filename.
+          const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
+          await min['vectorStore'].addDocuments(flattenedDocuments);
+          GBLogEx.info(min, `Added ${filePath} to vector store.`);
+        } catch (error) {
+          GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
+        }
       });
     }
     if (shouldSave && min['vectorStore']) {

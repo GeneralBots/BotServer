@@ -510,7 +510,7 @@ export class GBDeployer implements IGBDeployer {
     localPath: string,
     remotePath: string,
     baseUrl: string = null,
-    client = null
+    client = null, onlyTextFiles = false
   ): Promise<any> {
     const storageMode = process.env.GB_MODE;
 
@@ -546,6 +546,19 @@ export class GBDeployer implements IGBDeployer {
               download = false;
             }
           }
+
+          if (onlyTextFiles && !obj.name.endsWith('.txt') || !obj.name.endsWith('.json')
+            && !obj.name.endsWith('.csv') && !obj.name.endsWith('.xlsx') && !obj.name.endsWith('.xls')
+            && !obj.name.endsWith('.xlsm') && !obj.name.endsWith('.xlsb') && !obj.name.endsWith('.xml')
+            && !obj.name.endsWith('.html') && !obj.name.endsWith('.htm') && !obj.name.endsWith('.md')
+            && !obj.name.endsWith('.docx') && !obj.name.endsWith('.pdf') && !obj.name.endsWith('.txt')
+            && !obj.name.endsWith('.doc') && !obj.name.endsWith('.pptx') && !obj.name.endsWith('.ppt')
+
+          ) {
+
+            download = false;
+          }
+
 
           if (download) {
             await minioClient.fGetObject(bucketName, obj.name, itemPath);
@@ -673,9 +686,20 @@ export class GBDeployer implements IGBDeployer {
 
       if (GBConfigService.get('GB_MODE') === 'local') {
         const filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbai, packageName);
-        await GBUtil.copyIfNewerRecursive(filePath, packageWorkFolder);
+        if (packageType === '.gbdrive' || packageType === '.gbdata') {
+          await GBUtil.copyIfNewerRecursive(filePath, packageWorkFolder, true);
+        }else {  
+          await GBUtil.copyIfNewerRecursive(filePath, packageWorkFolder, false);
+        }
       } else {
-        await this.downloadFolder(min, path.join('work', `${gbai}`), packageName);
+
+        if (packageType === '.gbdrive' || packageType === '.gbdata') {
+          await this.downloadFolder(min, path.join('work', `${gbai}`), packageName, undefined, undefined, true);
+        }
+        else
+        {
+          await this.downloadFolder(min, path.join('work', `${gbai}`), packageName);
+        }
       }
     }
 
@@ -711,6 +735,10 @@ export class GBDeployer implements IGBDeployer {
     // Deploy platform packages here accordingly to their extension.
 
     switch (packageType) {
+      case '.gbdrive':
+        break;
+        case '.gbdata':
+          break;
       case '.gbot':
         // Extracts configuration information from .gbot files.
 

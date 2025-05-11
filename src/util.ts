@@ -12,7 +12,7 @@ import SwaggerClient from 'swagger-client';
 import fs from 'fs/promises';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
 import path from 'path';
-import  bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 const saltRounds = 10; // The higher the number, the more secure but slower
 import { VerbosityLevel, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import urljoin from 'url-join';
@@ -30,7 +30,7 @@ import { QueryTypes } from '@sequelize/core';
  */
 export class GBUtil {
 
-  
+
   // When creating/updating a user (hashing before saving to DB)
   public static async hashPassword(password) {
     try {
@@ -41,7 +41,7 @@ export class GBUtil {
       throw err;
     }
   }
-  
+
   // When comparing passwords (like during login)
   public static async comparePassword(inputPassword, hashedPassword) {
     try {
@@ -221,7 +221,7 @@ export class GBUtil {
    * @param {string} dest - The destination path.
    * @returns {Promise<void>} A promise that resolves when the copy operation is complete.
    */
-  public static async copyIfNewerRecursive(src: string, dest: string): Promise<void> {
+  public static async copyIfNewerRecursive(src: string, dest: string, onlyTextFiles): Promise<void> {
     // Check if the source exists
     if (!(await GBUtil.exists(src))) {
       return;
@@ -242,22 +242,37 @@ export class GBUtil {
         const destEntry = path.join(dest, entry);
 
         // Recursively copy each entry
-        await this.copyIfNewerRecursive(srcEntry, destEntry);
+        await this.copyIfNewerRecursive(srcEntry, destEntry ,onlyTextFiles);
       }
     } else {
-      // Source is a file, check if we need to copy it
-      if (await GBUtil.exists(dest)) {
-        const srcStat = await fs.stat(src);
-        const destStat = await fs.stat(dest);
 
-        // Copy only if the source file is newer than the destination file
-        if (srcStat.mtime > destStat.mtime) {
+      let skip = false;
+
+      if (onlyTextFiles && !(
+        src.endsWith('.txt') || src.endsWith('.json')
+        || src.endsWith('.csv') || src.endsWith('.xlsx') || src.endsWith('.xls')
+        || src.endsWith('.xlsm') || src.endsWith('.xlsb') || src.endsWith('.xml')
+        || src.endsWith('.html') || src.endsWith('.htm') || src.endsWith('.md')
+        || src.endsWith('.docx') || src.endsWith('.pdf')
+        || src.endsWith('.doc') || src.endsWith('.pptx') || src.endsWith('.ppt'))) {
+          skip = true;
+      }
+
+      if (!skip) {
+        // Source is a file, check if we need to copy it
+        if (await GBUtil.exists(dest)) {
+          const srcStat = await fs.stat(src);
+          const destStat = await fs.stat(dest);
+          // Copy only if the source file is newer than the destination file
+          if (srcStat.mtime > destStat.mtime) {
+            await fs.cp(src, dest, { force: true });
+          }
+        } else {
+          // Destination file doesn't exist, so copy it
           await fs.cp(src, dest, { force: true });
         }
-      } else {
-        // Destination file doesn't exist, so copy it
-        await fs.cp(src, dest, { force: true });
       }
+
     }
   }
 
@@ -392,32 +407,32 @@ export class GBUtil {
       /^index$/i,
       /^table of contents$/i,
     ];
-  
+
     // Check if page is mostly dots, numbers or blank
     const isDotLeaderPage = text.replace(/\s+/g, '').match(/\.{10,}/);
     const isNumbersPage = text.replace(/\s+/g, '').match(/^\d+$/);
     const isBlankPage = text.trim().length === 0;
-  
+
     // Check if page has actual content
     const wordCount = text.trim().split(/\s+/).length;
     const hasMinimalContent = wordCount > 10;
-  
+
     // Check if page matches any non-content patterns
-    const isNonContent = nonContentPatterns.some(pattern => 
+    const isNonContent = nonContentPatterns.some(pattern =>
       pattern.test(text.trim())
     );
-  
+
     // Page is valid content if:
     // - Not mostly dots/numbers/blank
     // - Has minimal word count
     // - Doesn't match non-content patterns
-    return !isDotLeaderPage && 
-           !isNumbersPage && 
-           !isBlankPage &&
-           hasMinimalContent &&
-           !isNonContent;
+    return !isDotLeaderPage &&
+      !isNumbersPage &&
+      !isBlankPage &&
+      hasMinimalContent &&
+      !isNonContent;
   }
-  
+
 
 
 }

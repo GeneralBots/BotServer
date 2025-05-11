@@ -721,8 +721,9 @@ export class DialogKeywords {
     proc.roles = role;
 
     // Checks access.
-
-    const filters = ['People.xlsx', `${role}=x`, `id=${user.userSystemId}`];
+    
+    const file = process.env.GB_MODE === 'legacy' ? 'People.xlsx' : 'people.csv';
+    const filters = [file, `${role}=x`, `id=${user.userSystemId}`];
     const people = await sys.find({ pid, handle: null, args: filters });
 
     if (!people) {

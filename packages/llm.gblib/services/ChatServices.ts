@@ -132,6 +132,8 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
 
     let { sources, text } = res;
 
+    let securityEnabled = false;
+
     if (!sources) {
 
       GBLogEx.verbose(this.min, `LLM JSON output sources is NULL.`);
@@ -139,6 +141,12 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     else {
       await CollectionUtil.asyncForEach(sources, async source => {
         let found = false;
+
+        if (securityEnabled) {  
+          GBLogEx.info(this.min, `LLM JSON output security enabled.`);
+          
+        }
+
         if (source && source.file.endsWith('.pdf')) {
           const gbaiName = GBUtil.getGBAIPath(this.min.botId, 'gbkb');
           const localName = path.join(process.env.PWD, 'work', gbaiName, 'docs', source.file);
@@ -181,7 +189,7 @@ export class ChatServices {
     if (sanitizedQuestion === '' || !vectorStore) {
       return '';
     }
-    let documents = await vectorStore.similaritySearch(sanitizedQuestion, numDocuments * 10);
+    let documents = await vectorStore.similaritySearch(sanitizedQuestion, numDocuments );
     const uniqueDocuments = {};
     const MAX_DOCUMENTS = numDocuments;
 
