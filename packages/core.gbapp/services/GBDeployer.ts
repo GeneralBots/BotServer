@@ -547,17 +547,13 @@ export class GBDeployer implements IGBDeployer {
             }
           }
 
-          if (onlyTextFiles && !obj.name.endsWith('.txt') || !obj.name.endsWith('.json')
-            && !obj.name.endsWith('.csv') && !obj.name.endsWith('.xlsx') && !obj.name.endsWith('.xls')
-            && !obj.name.endsWith('.xlsm') && !obj.name.endsWith('.xlsb') && !obj.name.endsWith('.xml')
-            && !obj.name.endsWith('.html') && !obj.name.endsWith('.htm') && !obj.name.endsWith('.md')
-            && !obj.name.endsWith('.docx') && !obj.name.endsWith('.pdf') && !obj.name.endsWith('.txt')
-            && !obj.name.endsWith('.doc') && !obj.name.endsWith('.pptx') && !obj.name.endsWith('.ppt')
-
-          ) {
-
-            download = false;
-          }
+            // Only download text files if onlyTextFiles flag is set
+            if (onlyTextFiles) {
+            // Check if file is NOT one of the allowed text file types
+            if (!obj.name.match(/\.(txt|json|csv|xlsx?|xlsm|xlsb|xml|html?|md|docx?|pdf|pptx?)$/i)) {
+              download = false;
+            }
+            }
 
 
           if (download) {
