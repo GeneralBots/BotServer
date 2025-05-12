@@ -1214,7 +1214,7 @@ export class KBService implements IGBKBService {
     // files = files.concat(await walkPromise(gbdrive));
 
     const gbdata = path.join(process.env.PWD, 'work', GBUtil.getGBAIPath(min.botId, 'gbdata'));
-    files = files.concat(await walkPromise(gbdata));
+    //files = files.concat(await walkPromise(gbdata));
 
 
     if (files[0]) {
