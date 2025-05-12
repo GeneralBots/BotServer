@@ -302,8 +302,6 @@ export class ChatServices {
         azureOpenAIApiDeploymentName: azureOpenAILLMModel,
         azureOpenAIApiVersion: azureOpenAIVersion,
         temperature: 0,
-        model: 'gpt-4'
-        // TODO: callbacks: [logHandler]
       });
     }
     return model;
