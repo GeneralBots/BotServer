@@ -28,7 +28,7 @@ jobs:
         echo "[General Bots Deployer] Copying files to deploy location..."
         sudo rm -rf /opt/gbo/bin/BotServer/dist
         sudo cp -r ./* /opt/gbo/bin/BotServer
-        sudo cp /opt/gbo/conf.d/bot/.env /opt/gbo/bin/BotServer
+        
 
     - name: Install production dependencies in deployment location
       run: |
