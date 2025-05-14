@@ -1223,7 +1223,6 @@ export class KBService implements IGBKBService {
       await CollectionUtil.asyncForEach(files, async file => {
         let content = null;
         let filePath = path.join(file.root, file.name);
-        let skip = false;
         try {
 
           if (file.name.endsWith('.csv') || file.name.endsWith('.md')
@@ -1233,7 +1232,6 @@ export class KBService implements IGBKBService {
           ) {
 
             if (file.name.endsWith('.csv')) {
-              skip = false;
               // Read first 1000 lines of CSV file
               const csvContent = await fs.readFile(filePath, 'utf8');
               const lines = csvContent.split('\n').slice(0, 200).join('\n');
