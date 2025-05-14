@@ -1179,7 +1179,7 @@ export class KBService implements IGBKBService {
       files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page, websiteIgnoreUrls, maxDocuments));
 
       await browser.close();
-      
+
 
       GBLogEx.info(min, `Vectorizing ${files.length} file(s)...`);
 
@@ -1226,26 +1226,27 @@ export class KBService implements IGBKBService {
         let skip = false;
         try {
 
-          if (file.root.endsWith('.gbdata'))
-          {
-            skip = true;
-          if (file.name.endsWith('.csv')) {
-            skip = false;
-            // Read first 1000 lines of CSV file
-            const csvContent = await fs.readFile(filePath, 'utf8');
-            const lines = csvContent.split('\n').slice(0, 200).join('\n');
-            await fs.writeFile(filePath, lines, 'utf8');
-            content = lines;
-          }
-        }
-        if (!skip){
+          if (file.name.endsWith('.csv') || file.name.endsWith('.md')
+          || file.name.endsWith('.pdf') || file.name.endsWith('.docx') ||
+         file.name.endsWith('.epub') ||file.name.endsWith('.txt')
+          
+          ) {
 
-          const document = await this.loadAndSplitFile(filePath);
-          // TODO: Add full filename.
-          const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
-          await min['vectorStore'].addDocuments(flattenedDocuments);
-          GBLogEx.info(min, `Added ${filePath} to vector store.`);
-        }
+            if (file.name.endsWith('.csv')) {
+              skip = false;
+              // Read first 1000 lines of CSV file
+              const csvContent = await fs.readFile(filePath, 'utf8');
+              const lines = csvContent.split('\n').slice(0, 200).join('\n');
+              await fs.writeFile(filePath, lines, 'utf8');
+              content = lines;
+            }
+
+            const document = await this.loadAndSplitFile(filePath);
+            // TODO: Add full filename.
+            const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
+            await min['vectorStore'].addDocuments(flattenedDocuments);
+            GBLogEx.info(min, `Added ${filePath} to vector store.`);
+          }
         } catch (error) {
           GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
         }
