@@ -177,45 +177,45 @@ export class MainService {
     const botName = subscription.botName;
     const language = subscription['customerLanguage'] || 'en-us';
 
-    const webUrl = this.gboService.shareWithEmail(`process.env.DRIVE_ORG_PREFIX${botName}.gbai`, '/');
+    const webUrl = this.gboService.shareWithEmail(`${process.env.DRIVE_ORG_PREFIX}${botName}.gbai`, '/');
 
     urlJoin(process.env.DRIVE_WEB, 'browser',);
     const botUrl = urlJoin(process.env.BOT_URL, botName);
     const botId = instance.botId;
 
-    let message = `Seu bot ${botName} está disponível no endereço: 
-    <br/><a href="${urlJoin(process.env.BOT_URL, botName)}">${urlJoin(process.env.BOT_URL, botName)}</a>.
-    <br/>
-    <br/>Os pacotes do General Bots (ex: .gbkb, .gbtheme) para seu Bot devem ser editados no repositório de pacotes:
-    <br/>
-    <br/><a href="${webUrl}">${webUrl}</a>. 
-    <br/>
-    <br/> Digite /publish do seu WhatsApp para publicar os pacotes. Seu número está autorizado na pasta ${botName}.gbot/Config.xlsx
-    <br/>
-    <br/>O arquivo .zip em anexo pode ser importado no Teams conforme instruções em:
-    <br/><a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload">https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload</a>. 
-    <br/>
-    <br/>Log in to the Teams client with your Microsoft 365 account.
-    <br/>Select Apps and choose Upload a custom app.
-    <br/>Select this .zip file attached to this e-mail. An install dialog displays.
-    <br/>Add your Bot to Teams.
-    <br/>
-    <br/>Atenciosamente, 
-    <br/>General Bots Online.
-    <br/><a href="https://gb.pragmatismo.com.br">https://gb.pragmatismo.com.br</a>
-    <br/>
-    <br/>E-mail remetido por Pragmatismo. 
-    <br/>`;
+    // let message = `Seu bot ${botName} está disponível no endereço: 
+    // <br/><a href="${urlJoin(process.env.BOT_URL, botName)}">${urlJoin(process.env.BOT_URL, botName)}</a>.
+    // <br/>
+    // <br/>Os pacotes do General Bots (ex: .gbkb, .gbtheme) para seu Bot devem ser editados no repositório de pacotes:
+    // <br/>
+    // <br/><a href="${webUrl}">${webUrl}</a>. 
+    // <br/>
+    // <br/> Digite /publish do seu WhatsApp para publicar os pacotes. Seu número está autorizado na pasta ${botName}.gbot/Config.xlsx
+    // <br/>
+    // <br/>O arquivo .zip em anexo pode ser importado no Teams conforme instruções em:
+    // <br/><a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload">https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload</a>. 
+    // <br/>
+    // <br/>Log in to the Teams client with your Microsoft 365 account.
+    // <br/>Select Apps and choose Upload a custom app.
+    // <br/>Select this .zip file attached to this e-mail. An install dialog displays.
+    // <br/>Add your Bot to Teams.
+    // <br/>
+    // <br/>Atenciosamente, 
+    // <br/>General Bots Online.
+    // <br/><a href="https://gb.pragmatismo.com.br">https://gb.pragmatismo.com.br</a>
+    // <br/>
+    // <br/>E-mail remetido por Pragmatismo. 
+    // <br/>`;
 
-    message = await min.conversationalService.translate(
-      min,
-      message,
-      language
-    );
-    GBLog.info('Sending e-mails....');
+    // message = await min.conversationalService.translate(
+    //   min,
+    //   message,
+    //   language
+    // );
+    // GBLog.info('Sending e-mails....');
 
-    const dk = new DialogKeywords();
-    await dk.sendEmail({ pid: 0, to: subscription.customerEmail, subject: `Seu bot ${botName} está pronto!`, body: message });
+    // const dk = new DialogKeywords();
+    // await dk.sendEmail({ pid: 0, to: subscription.customerEmail, subject: `Seu bot ${botName} está pronto!`, body: message });
 
     return {
       success: true,

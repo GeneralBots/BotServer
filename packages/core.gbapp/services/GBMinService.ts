@@ -568,8 +568,6 @@ export class GBMinService {
       })
       .bind(min);
 
-      GBLog.info(`Defining meeting. `);
-
       GBServer.globals.server
       .all(`/${min.instance.botId}/meeting-token`, async (req, res) => {
 
