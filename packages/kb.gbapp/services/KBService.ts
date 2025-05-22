@@ -1243,6 +1243,9 @@ export class KBService implements IGBKBService {
       shouldSave = true;
       GBLogEx.info(min, `Add embeddings from packages, ${files.length} files being processed...`);
       await CollectionUtil.asyncForEach(files, async file => {
+
+        if (file.root) {
+
         let content = null;
         let filePath = path.join(file.root, file.name);
         try {
@@ -1270,6 +1273,7 @@ export class KBService implements IGBKBService {
         } catch (error) {
           GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
         }
+      }
       });
     }
     if (shouldSave && min['vectorStore']) {
