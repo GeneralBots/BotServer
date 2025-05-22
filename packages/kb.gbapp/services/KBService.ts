@@ -970,7 +970,8 @@ export class KBService implements IGBKBService {
 
       const childLinks = [];
       for (const link of filteredLinks) {
-        const links = await this.crawl(min, link, visited, depth + 1, maxDepth, page, websiteIgnoreUrls, maxDocuments);
+        const links = await this.crawl(min, link, 
+          visited, depth + 1, maxDepth, page, websiteIgnoreUrls, maxDocuments);
         if (links) {
           childLinks.push(...links);
         }
@@ -1038,7 +1039,7 @@ export class KBService implements IGBKBService {
     try {
       await page.goto(url, {
         waitUntil: 'networkidle0', // Wait until network is idle
-        timeout: 30000 // 30 second timeout
+        timeout: 8000
       });
     } catch (err) {
       // Ignore timeout/navigation errors
@@ -1060,7 +1061,7 @@ export class KBService implements IGBKBService {
 
     let website = min.core.getParam<string>(min.instance, 'Website', null);
     const maxDepth = min.core.getParam<number>(min.instance, 'Website Depth', 1);
-    const MAX_DOCUMENTS = 50;
+    const MAX_DOCUMENTS = 15;
     const maxDocuments = min.core.getParam<number>(min.instance, '  ', MAX_DOCUMENTS);
     const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
     GBLogEx.info(min, `Website: ${website}, Max Depth: ${maxDepth}, Website Max Documents: ${maxDocuments}, Ignore URLs: ${websiteIgnoreUrls}`);
@@ -1679,7 +1680,7 @@ export class KBService implements IGBKBService {
         try {
           await page.goto(url, {
             waitUntil: 'networkidle0', // Wait until network is idle
-            timeout: 30000 // 30 second timeout
+            timeout: 8000
           });
         } catch (err) {
           // Ignore timeout/navigation errors
