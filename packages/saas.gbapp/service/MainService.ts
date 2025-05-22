@@ -179,9 +179,9 @@ export class MainService {
 
     const webUrl = this.gboService.shareWithEmail(`${process.env.DRIVE_ORG_PREFIX}${botName}.gbai`, '/');
 
-    urlJoin(process.env.DRIVE_WEB, 'browser',);
-    const botUrl = urlJoin(process.env.BOT_URL, botName);
-    const botId = instance.botId;
+    // urlJoin(process.env.DRIVE_WEB, 'browser',);
+    // const botUrl = urlJoin(process.env.BOT_URL, botName);
+    // const botId = instance.botId;
 
     // let message = `Seu bot ${botName} está disponível no endereço: 
     // <br/><a href="${urlJoin(process.env.BOT_URL, botName)}">${urlJoin(process.env.BOT_URL, botName)}</a>.
