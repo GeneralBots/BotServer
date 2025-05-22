@@ -241,7 +241,7 @@ export class GBDeployer implements IGBDeployer {
       instance.marketplacePassword = await service.createApplicationSecret(accessToken, (application as any).id);
     }
 
-    instance.adminPass =await  GBUtil.hashPassword( GBAdminService.getRndPassword());
+    instance.adminPass = await GBUtil.hashPassword(GBAdminService.getRndPassword());
     instance.title = botId;
     instance.activationCode = instance.botId.substring(0, 15);
     instance.state = 'active';
@@ -277,17 +277,17 @@ export class GBDeployer implements IGBDeployer {
       return await GuaribasInstance.findOne({
         where: where
       }) !== null;
-  
+
     }
     else {
 
       const service = await AzureDeployerService.createInstance(this);
 
       return await service.botExists(botId);
-    
+
     }
   }
-  
+
   /**
    * Performs all tasks of deploying a new bot on the cloud.
    */
@@ -371,9 +371,20 @@ export class GBDeployer implements IGBDeployer {
       vectorStore = await HNSWLib.load(min['vectorStorePath'], embedding);
     } catch (e) {
       GBLogEx.info(min, `Creating new store...`);
-      vectorStore = new HNSWLib(embedding, {
-        space: 'cosine'
-      });
+      vectorStore = await HNSWLib.fromTexts(
+        ['This is General Bots.'], // Initial texts (empty)
+        {}, // Optional metadata
+        embedding,
+        {
+          'space': 'cosine',
+        } as any
+      );
+      const dir = path.dirname(min['vectorStorePath']);
+      if (!(await GBUtil.exists(dir))) {
+        fs.mkdir(dir, { recursive: true });
+      }
+
+      await vectorStore.save(min['vectorStorePath']);
     }
     return vectorStore;
   }
@@ -483,7 +494,7 @@ export class GBDeployer implements IGBDeployer {
     } else {
       return [];
     }
-
+    1
     await asyncPromise.eachSeries(rows, async (line: any) => {
       if (line && line.length > 0) {
         const key = line[1];
@@ -523,7 +534,7 @@ export class GBDeployer implements IGBDeployer {
         secretKey: process.env.DRIVE_SECRET,
       });
 
-      const bucketName =  (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
+      const bucketName = (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
 
       if (!(await GBUtil.exists(localPath))) {
         await fs.mkdir(localPath, { recursive: true });
@@ -547,13 +558,13 @@ export class GBDeployer implements IGBDeployer {
             }
           }
 
-            // Only download text files if onlyTextFiles flag is set
-            if (onlyTextFiles) {
+          // Only download text files if onlyTextFiles flag is set
+          if (onlyTextFiles) {
             // Check if file is NOT one of the allowed text file types
             if (!obj.name.match(/\.(txt|json|csv|xlsx?|xlsm|xlsb|xml|html?|md|docx?|pdf|pptx?)$/i)) {
               download = false;
             }
-            }
+          }
 
 
           if (download) {
@@ -684,7 +695,7 @@ export class GBDeployer implements IGBDeployer {
         const filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbai, packageName);
         if (packageType === '.gbdrive' || packageType === '.gbdata') {
           await GBUtil.copyIfNewerRecursive(filePath, packageWorkFolder, true);
-        }else {  
+        } else {
           await GBUtil.copyIfNewerRecursive(filePath, packageWorkFolder, false);
         }
       } else {
@@ -692,8 +703,7 @@ export class GBDeployer implements IGBDeployer {
         if (packageType === '.gbdrive' || packageType === '.gbdata') {
           await this.downloadFolder(min, path.join('work', `${gbai}`), packageName, undefined, undefined, true);
         }
-        else
-        {
+        else {
           await this.downloadFolder(min, path.join('work', `${gbai}`), packageName);
         }
       }
@@ -733,8 +743,8 @@ export class GBDeployer implements IGBDeployer {
     switch (packageType) {
       case '.gbdrive':
         break;
-        case '.gbdata':
-          break;
+      case '.gbdata':
+        break;
       case '.gbot':
         // Extracts configuration information from .gbot files.
 

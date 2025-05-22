@@ -1062,7 +1062,7 @@ export class KBService implements IGBKBService {
     let website = min.core.getParam<string>(min.instance, 'Website', null);
     const maxDepth = min.core.getParam<number>(min.instance, 'Website Depth', 1);
     const MAX_DOCUMENTS = 15;
-    const maxDocuments = min.core.getParam<number>(min.instance, '  ', MAX_DOCUMENTS);
+    const maxDocuments = min.core.getParam<number>(min.instance, 'Website Max Documents', MAX_DOCUMENTS);
     const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
     GBLogEx.info(min, `Website: ${website}, Max Depth: ${maxDepth}, Website Max Documents: ${maxDocuments}, Ignore URLs: ${websiteIgnoreUrls}`);
 
@@ -1222,7 +1222,7 @@ export class KBService implements IGBKBService {
         try {
           const document = await this.loadAndSplitFile(file);
           const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
-          // await min['vectorStore'].addDocuments(flattenedDocuments);
+          await min['vectorStore'].addDocuments(flattenedDocuments);
         } catch (error) {
           GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
         }
