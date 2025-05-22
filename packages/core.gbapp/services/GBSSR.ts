@@ -99,7 +99,7 @@ export class GBSSR {
       '--disable-features=site-per-process',
       '--disable-gpu',
       '--no-first-run',
-      '--no-sand-box',
+      '--no-sandbox',
       '--no-default-browser-check'
     ];
 
