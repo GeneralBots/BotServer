@@ -1020,7 +1020,19 @@ export class KBService implements IGBKBService {
 
   async getFreshPage(browser, url) {
     if (!browser || browser.isConnected() === false) {
-      browser = await puppeteer.launch({ headless: false });
+          let args = [
+      '--check-for-update-interval=2592000',
+      '--disable-accelerated-2d-canvas',
+      '--disable-dev-shm-usage',
+      '--disable-features=site-per-process',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-sandbox',
+      '--no-default-browser-check'
+    ];
+
+
+      browser = await puppeteer.launch({ headless: false, args: args });
     }
     const page = await browser.newPage();
     try {
@@ -1063,8 +1075,18 @@ export class KBService implements IGBKBService {
       let packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
       const directoryPath = path.join(process.env.PWD, 'work', packagePath, 'Website');
       fs.rm(directoryPath, { recursive: true, force: true });
+          let args = [
+      '--check-for-update-interval=2592000',
+      '--disable-accelerated-2d-canvas',
+      '--disable-dev-shm-usage',
+      '--disable-features=site-per-process',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-sandbox',
+      '--no-default-browser-check'
+    ];
 
-      let browser = await puppeteer.launch({ headless: false });
+      let browser = await puppeteer.launch({ headless: false , args});
       const page = await this.getFreshPage(browser, website);
 
       let logo = await this.getLogoByPage(min, page);
