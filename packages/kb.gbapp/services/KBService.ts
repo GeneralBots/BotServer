@@ -970,7 +970,7 @@ export class KBService implements IGBKBService {
 
       const childLinks = [];
       for (const link of filteredLinks) {
-        const links = await this.crawl(min, link, 
+        const links = await this.crawl(min, link,
           visited, depth + 1, maxDepth, page, websiteIgnoreUrls, maxDocuments);
         if (links) {
           childLinks.push(...links);
@@ -1021,16 +1021,16 @@ export class KBService implements IGBKBService {
 
   async getFreshPage(browser, url) {
     if (!browser || browser.isConnected() === false) {
-          let args = [
-      '--check-for-update-interval=2592000',
-      '--disable-accelerated-2d-canvas',
-      '--disable-dev-shm-usage',
-      '--disable-features=site-per-process',
-      '--disable-gpu',
-      '--no-first-run',
-      '--no-sandbox',
-      '--no-default-browser-check'
-    ];
+      let args = [
+        '--check-for-update-interval=2592000',
+        '--disable-accelerated-2d-canvas',
+        '--disable-dev-shm-usage',
+        '--disable-features=site-per-process',
+        '--disable-gpu',
+        '--no-first-run',
+        '--no-sandbox',
+        '--no-default-browser-check'
+      ];
 
 
       browser = await puppeteer.launch({ headless: false, args: args });
@@ -1076,18 +1076,18 @@ export class KBService implements IGBKBService {
       let packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
       const directoryPath = path.join(process.env.PWD, 'work', packagePath, 'Website');
       fs.rm(directoryPath, { recursive: true, force: true });
-          let args = [
-      '--check-for-update-interval=2592000',
-      '--disable-accelerated-2d-canvas',
-      '--disable-dev-shm-usage',
-      '--disable-features=site-per-process',
-      '--disable-gpu',
-      '--no-first-run',
-      '--no-sandbox',
-      '--no-default-browser-check'
-    ];
+      let args = [
+        '--check-for-update-interval=2592000',
+        '--disable-accelerated-2d-canvas',
+        '--disable-dev-shm-usage',
+        '--disable-features=site-per-process',
+        '--disable-gpu',
+        '--no-first-run',
+        '--no-sandbox',
+        '--no-default-browser-check'
+      ];
 
-      let browser = await puppeteer.launch({ headless: false , args});
+      let browser = await puppeteer.launch({ headless: false, args });
       const page = await this.getFreshPage(browser, website);
 
       let logo = await this.getLogoByPage(min, page);
@@ -1239,42 +1239,43 @@ export class KBService implements IGBKBService {
     const gbdata = path.join(process.env.PWD, 'work', GBUtil.getGBAIPath(min.botId, 'gbdata'));
     files = files.concat(await walkPromise(gbdata));
 
-
     if (files[0]) {
+
+      files = files.filter(p => { return p });
       shouldSave = true;
       GBLogEx.info(min, `Add embeddings from packages, ${files.length} files being processed...`);
       await CollectionUtil.asyncForEach(files, async file => {
 
         if (file.root) {
 
-        let content = null;
-        let filePath = path.join(file.root, file.name);
-        try {
+          let content = null;
+          let filePath = path.join(file.root, file.name);
+          try {
 
-          if (file.name.endsWith('.csv') || file.name.endsWith('.md')
-          || file.name.endsWith('.pdf') || file.name.endsWith('.docx') ||
-         file.name.endsWith('.epub') ||file.name.endsWith('.txt')
-          
-          ) {
+            if (file.name.endsWith('.csv') || file.name.endsWith('.md')
+              || file.name.endsWith('.pdf') || file.name.endsWith('.docx') ||
+              file.name.endsWith('.epub') || file.name.endsWith('.txt')
 
-            if (file.name.endsWith('.csv')) {
-              // Read first 1000 lines of CSV file
-              const csvContent = await fs.readFile(filePath, 'utf8');
-              const lines = csvContent.split('\n').slice(0, 200).join('\n');
-              await fs.writeFile(filePath, lines, 'utf8');
-              content = lines;
+            ) {
+
+              if (file.name.endsWith('.csv')) {
+                // Read first 1000 lines of CSV file
+                const csvContent = await fs.readFile(filePath, 'utf8');
+                const lines = csvContent.split('\n').slice(0, 200).join('\n');
+                await fs.writeFile(filePath, lines, 'utf8');
+                content = lines;
+              }
+
+              const document = await this.loadAndSplitFile(filePath);
+              // TODO: Add full filename.
+              const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
+              await min['vectorStore'].addDocuments(flattenedDocuments);
+              GBLogEx.info(min, `Added ${filePath} to vector store.`);
             }
-
-            const document = await this.loadAndSplitFile(filePath);
-            // TODO: Add full filename.
-            const flattenedDocuments = document.reduce((acc, val) => acc.concat(val), []);
-            await min['vectorStore'].addDocuments(flattenedDocuments);
-            GBLogEx.info(min, `Added ${filePath} to vector store.`);
+          } catch (error) {
+            GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
           }
-        } catch (error) {
-          GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
         }
-      }
       });
     }
     if (shouldSave && min['vectorStore']) {
