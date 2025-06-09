@@ -68,6 +68,11 @@ import { DialogKeywords } from './DialogKeywords.js';
 import { GBVMService } from './GBVMService.js';
 import { KeywordsExpressions } from './KeywordsExpressions.js';
 import { WebAutomationServices } from './WebAutomationServices.js';
+import { exec } from 'child_process';
+import util from 'util';
+
+// Promisify the exec function for async/await usage
+const execPromise = util.promisify(exec);
 
 import { md5 } from 'js-md5';
 import { Client } from 'minio';
@@ -361,8 +366,46 @@ export class SystemKeywords {
     );
   }
 
-  public async asPDF({ pid, data }) {
-    let file = await this.renderTable(pid, data, true, false);
+  private async convertWithLibreOffice(pid, inputPath) {
+    const { min } = await DialogKeywords.getProcessInfo(pid);
+    const gbaiName = GBUtil.getGBAIPath(min.botId);
+    const localName = path.join('work', gbaiName, 'cache', `img${GBAdminService.getRndReadableIdentifier()}.pdf`);
+
+    try {
+      // LibreOffice command for conversion using localName as output
+      const command = `libreoffice --headless --convert-to pdf --outdir "${path.dirname(localName)}" "${inputPath}"`;
+
+      GBLogEx.info(min, `Executing: ${command}`);
+      const { stdout, stderr } = await execPromise(command);
+
+      if (stderr) {
+        GBLogEx.error(min, `LibreOffice stderr: ${stderr}`);
+      }
+
+      GBLogEx.info(min, `LibreOffice stdout: ${stdout}`);
+
+      const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
+
+      return { localName, url};
+
+    } catch (error) {
+      GBLogEx.error(min, `Error converting file to PDF: ${error}`);
+      throw new Error('PDF conversion failed');
+    }
+  }
+
+
+  public async asPdf({ pid, data }) {
+
+    let file;
+
+    if (data.url) {
+      file = await this.convertWithLibreOffice(pid, data.localName);
+    }
+    else {
+      file = await this.renderTable(pid, data, true, false);
+    }
+
     return file;
   }
 
@@ -390,7 +433,7 @@ export class SystemKeywords {
         return new Promise((resolve, reject) => {
           stream.on('data', chunk => chunks.push(chunk));
           stream.on('error', reject);
-          stream.on('end', () => resolve(Buffer.concat(chunks)));
+          stream.on('end', () => resolve(Buffer.concat(chunks.map(chunk => new Uint8Array(chunk)))));
         });
       };
 
@@ -2113,35 +2156,99 @@ export class SystemKeywords {
    *
    * Fills a .docx or .pptx with template data.
    *
-   * doc = FILL "templates/template.docx", data
+   * doc = FILL "templates/template.docx" WITH data
    *
    */
-  public async fill({ pid, templateName, data }) {
-    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+  private async getTemplateBuffer(min: any, gbaiName: string, templateName: string): Promise<Buffer> {
     const botId = min.instance.botId;
-    const gbaiName = GBUtil.getGBAIPath(botId, 'gbdata');
-    let localName;
 
-    // Downloads template from .gbdrive.
+    if (GBConfigService.get('GB_MODE') === 'legacy') {
+      // Legacy mode - using Microsoft Graph API
+      const { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+      const packagePath = '/' + urlJoin(gbaiName, `${botId}.gbdrive`);
+      const template = await this.internalGetDocument(client, baseUrl, packagePath, templateName);
+      const url = template['@microsoft.graph.downloadUrl'];
+      const res = await fetch(url);
+      return Buffer.from(await res.arrayBuffer());
+    }
+    else if (GBConfigService.get('GB_MODE') === 'gbcluster') {
+      // GBCluster mode - using MinIO
+      const minioClient = this.createMinioClient();
+      const bucketName = (process.env.DRIVE_ORG_PREFIX + botId + '.gbai').toLowerCase();
+      const filePath = urlJoin(gbaiName, `${botId}.gbdrive`, templateName);
 
-    let { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-    let packagePath = '/' + urlJoin(gbaiName, `${botId}.gbdrive`);
-    let template = await this.internalGetDocument(client, baseUrl, packagePath, templateName);
-    let url = template['@microsoft.graph.downloadUrl'];
-    const res = await fetch(url);
-    let buf: any = Buffer.from(await res.arrayBuffer());
-    localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
-    await fs.writeFile(localName, new Uint8Array(buf), { encoding: null });
+      return new Promise((resolve, reject) => {
+        const chunks: Uint8Array[] = [];
+        minioClient.getObject(bucketName, filePath).then(stream => {
+          stream.on('data', chunk => chunks.push(new Uint8Array(chunk)));
+          stream.on('end', () => resolve(Buffer.concat(chunks)));
+          stream.on('error', reject);
+        }).catch(reject);
+      });
+    }
+    else {
+      // Default mode - direct filesystem access
+      const gbdriveName = GBUtil.getGBAIPath(botId, 'gbdrive');
+      const templatePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbdriveName, templateName);
+      return fs.readFile(templatePath);
+    }
+  }
 
-    // Replace image path on all elements of data.
+  private async getImageBuffer(min: any, gbaiName: string, imagePath: string): Promise<Buffer> {
+    const botId = min.instance.botId;
 
+    if (GBConfigService.get('GB_MODE') === 'legacy') {
+      const { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
+      let packagePath = urlJoin(gbaiName, `${botId}.gbdrive`);
+      if (imagePath.indexOf('/') !== -1) {
+        packagePath = '/' + urlJoin(packagePath, path.dirname(imagePath));
+        imagePath = path.basename(imagePath);
+      }
+      const ref = await this.internalGetDocument(client, baseUrl, packagePath, imagePath);
+      const url = ref['@microsoft.graph.downloadUrl'];
+      const response = await fetch(url);
+      return Buffer.from(await response.arrayBuffer());
+    }
+    else if (GBConfigService.get('GB_MODE') === 'gbcluster') {
+      const minioClient = this.createMinioClient();
+      const bucketName = (process.env.DRIVE_ORG_PREFIX + botId + '.gbai').toLowerCase();
+      const filePath = urlJoin(gbaiName, `${botId}.gbdrive`, imagePath);
+
+      return new Promise(async (resolve, reject) => {
+        const chunks: Buffer[] = [];
+        try {
+          const stream = await minioClient.getObject(bucketName, filePath);
+          stream.on('data', chunk => chunks.push(chunk));
+          stream.on('end', () => resolve(Buffer.concat(chunks)));
+          stream.on('error', reject);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+    else {
+      const gbdriveName = GBUtil.getGBAIPath(botId, 'gbdrive');
+      const fullPath = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbdriveName, imagePath);
+      return fs.readFile(fullPath);
+    }
+  }
+
+  private createMinioClient(): Client {
+    return new Client({
+      endPoint: process.env.DRIVE_SERVER || 'localhost',
+      port: parseInt(process.env.DRIVE_PORT || '9000', 10),
+      useSSL: process.env.DRIVE_USE_SSL === 'true',
+      accessKey: process.env.DRIVE_ACCESSKEY,
+      secretKey: process.env.DRIVE_SECRET,
+    });
+  }
+
+  private async processImagesInData(min: any, gbaiName: string, data: any): Promise<any[]> {
     const images = [];
     let index = 0;
-    packagePath = path.join(gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
-    url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
-    const traverseDataToInjectImageUrl = async o => {
-      for (var i in o) {
+    const traverseDataToInjectImageUrl = async (o: any) => {
+      for (const i in o) {
         let value = o[i];
 
         if (value && value.gbarray) {
@@ -2150,111 +2257,86 @@ export class SystemKeywords {
         }
 
         for (const kind of ['png', 'jpg', 'jpeg']) {
-          if (value.endsWith && value.endsWith(`.${kind}`)) {
-            const { baseUrl, client } = await GBDeployer.internalGetDriveClient(min);
-
-            packagePath = urlJoin(gbaiName, `${botId}.gbdrive`);
-            if (value.indexOf('/') !== -1) {
-              packagePath = '/' + urlJoin(packagePath, path.dirname(value));
-              value = path.basename(value);
-            }
-
-            const ref = await this.internalGetDocument(client, baseUrl, packagePath, value);
-            let url = ref['@microsoft.graph.downloadUrl'];
+          if (value?.endsWith?.(`.${kind}`)) {
+            const imageBuffer = await this.getImageBuffer(min, gbaiName, value);
             const imageName = path.join(
               'work',
               gbaiName,
               'cache',
-              `tmp${GBAdminService.getRndReadableIdentifier()}-${value}.png`
+              `tmp${GBAdminService.getRndReadableIdentifier()}-${path.basename(value)}.png`
             );
-            const response = await fetch(url);
-            const buf = Buffer.from(await response.arrayBuffer());
-            await fs.writeFile(imageName, new Uint8Array(buf), { encoding: null });
+            await fs.writeFile(imageName, new Uint8Array(imageBuffer), { encoding: null });
 
-            const getNormalSize = ({ width, height, orientation }) => {
+            const getNormalSize = ({ width, height, orientation }: any) => {
               return (orientation || 0) >= 5 ? [height, width] : [width, height];
             };
 
-            // TODO: sharp. const metadata = await sharp(buf).metadata();
             const size = getNormalSize({
               width: 400,
               height: 400,
               orientation: '0'
             });
-            url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(imageName));
-            images[index++] = { url: url, size: size, buf: buf };
+            const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(imageName));
+            images[index++] = { url, size, buf: imageBuffer };
           }
         }
-        if (o[i] !== null && typeof o[i] == 'object') {
+
+        if (o[i] !== null && typeof o[i] === 'object') {
           await traverseDataToInjectImageUrl(o[i]);
         }
       }
     };
 
+    await traverseDataToInjectImageUrl(data);
+    return images;
+  }
+
+  public async fill({ pid, templateName, data }) {
+    const { min, user } = await DialogKeywords.getProcessInfo(pid);
+    const botId = min.instance.botId;
+    const gbaiName = GBUtil.getGBAIPath(botId);
+
+    // Get template buffer based on GB_MODE
+    const templateBuffer = await this.getTemplateBuffer(min, gbaiName, templateName);
+
+    // Process images in data
+    const images = await this.processImagesInData(min, gbaiName, data);
+
+    // Prepare local file
+    const localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.docx`);
+    const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
+
+    // Prepare docxtemplater options
     let indexImage = 0;
-    var opts = {
+    const opts = {
       fileType: 'docx',
       centered: false,
-      getImage: (tagValue, tagName) => {
-        return images[indexImage].buf;
-      },
-      getSize: (img, tagValue, tagName) => {
-        return images[indexImage++].size;
-      }
+      getImage: () => images[indexImage].buf,
+      getSize: () => images[indexImage++].size
     };
 
-    // Loads the file as binary content.
-
-    let zip = new PizZip(buf);
-    let doc = new Docxtemplater();
+    // Process the template
+    const zip = new PizZip(templateBuffer);
+    const doc = new Docxtemplater();
     doc.setOptions({ paragraphLoop: true, linebreaks: true });
     doc.loadZip(zip);
+
     if (localName.endsWith('.pptx')) {
       doc.attachModule(pptxTemplaterModule);
     }
+
     doc.attachModule(new ImageModule(opts));
+    doc.render(data);
 
-    await traverseDataToInjectImageUrl(data);
-    doc.setData(data).render();
+    const outputBuffer = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
+    await fs.writeFile(localName, new Uint8Array(outputBuffer), { encoding: null });
 
-    buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
-    await fs.writeFile(localName, new Uint8Array(buf), { encoding: null });
-
-    return { localName: localName, url: url, data: buf };
+    return { localName, url, data: outputBuffer };
   }
 
+
   public screenCapture(pid) {
-    // scrcpy Disabled
-    // function captureImage({ x, y, w, h }) {
-    //   const pic = robot.screen.capture(x, y, w, h)
-    //   const width = pic.byteWidth / pic.bytesPerPixel // pic.width is sometimes wrong!
-    //   const height = pic.height
-    //   const image = new Jimp(width, height)
-    //   let red, green, blue
-    //   pic.image.forEach((byte, i) => {
-    //     switch (i % 4) {
-    //       case 0: return blue = byte
-    //       case 1: return green = byte
-    //       case 2: return red = byte
-    //       case 3:
-    //         image.bitmap.data[i - 3] = red
-    //         image.bitmap.data[i - 2] = green
-    //         image.bitmap.data[i - 1] = blue
-    //         image.bitmap.data[i] = 255
-    //     }
-    //   })
-    //   return image
-    // }
-    // let file = 'out.png';
-    // captureImage({ x: 60, y: 263, w: 250, h: 83 }).write(file)
-    // const config = {
-    //   lang: "eng",
-    //   oem: 1,
-    //   psm: 3,
-    // }
-    // tesseract.recognize(file, config).then(value => {
-    //   console.log(value);
-    // });
+
   }
 
   private numberToLetters(num) {
@@ -2617,7 +2699,7 @@ export class SystemKeywords {
   }
 
 
-  
+
   /**
    * HEAR description
    * text = REWRITE description

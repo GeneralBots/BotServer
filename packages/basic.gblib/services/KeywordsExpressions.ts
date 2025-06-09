@@ -1304,7 +1304,7 @@ export class KeywordsExpressions {
     keywords[i++] = [
       /^\s*((?:[a-z]+.?)(?:(?:\w+).)(?:\w+)*)\s*=\s*(.*)\s*as\s*pdf/gim,
       ($0, $1, $2) => {
-        return `${$1} = await sys.asPdf({pid: pid, data: ${$2})`;
+        return `${$1} = await sys.asPdf({pid: pid, data: ${$2}})`;
       }
     ];
 

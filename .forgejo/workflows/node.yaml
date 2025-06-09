@@ -17,33 +17,33 @@ jobs:
 
     - uses: actions/checkout@v4
 
-    # - name: Setup Node.js
-    #   uses: actions/setup-node@v4
-    #   with:
-    #     node-version: '20' 
-    #     cache: 'npm'       
+    - name: Setup Node.js
+       uses: actions/setup-node@v4
+       with:
+         node-version: '20' 
+         cache: 'npm'       
     
     - name: Copy files to deployment location
       run: |
         echo "[General Bots Deployer] Copying files to deploy location..."
-        sudo rm -rf /opt/gbo/bin/BotServer/dist
-        sudo cp -r ./* /opt/gbo/bin/BotServer
+        sudo rm -rf /opt/gbo/bin/bot/botserver/dist
+        sudo cp -r ./* /opt/gbo/bin/bot/botserver
         
 
     - name: Install production dependencies in deployment location
       run: |
         echo "[General Bots Deployer] Building BotServer..."
-        # rm -rf /opt/gbo/bin/BotServer/node_modules
-        cd /opt/gbo/bin/BotServer
-        #sudo npm ci --production
+        # rm -rf /opt/gbo/bin/bot/botserver/node_modules
+        cd /opt/gbo/bin/bot/botserver
+        sudo npm ci --production
         npm run build-server
-        # npm run build-gbui
+        npm run build-gbui
         
 
     - name: Restart Bots Deployer
       run: |
         echo "[General Bots Deployer] Restarting..."
-        sudo systemctl stop botserver
+        sudo systemctl stop bot
         echo "[General Bots Deployer] Stopped."
-        sudo systemctl start botserver
+        sudo systemctl start bot
         echo "[General Bots Deployer] Started."

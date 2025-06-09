@@ -42,7 +42,7 @@ import mime from 'mime-types';
 import tesseract from 'node-tesseract-ocr';
 import path from 'path';
 import { CollectionUtil } from 'pragmatismo-io-framework';
-import puppeteer from 'puppeteer';
+import puppeteer, { executablePath } from 'puppeteer';
 import qrcode from 'qrcode';
 import urlJoin from 'url-join';
 import pkg from 'whatsapp-web.js';
@@ -94,7 +94,11 @@ export class DialogKeywords {
 
     // Launch Puppeteer to render the chart
 
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless: true,
+      executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath(),
+    }
+    );
     const page = await browser.newPage();
 
     // Load Billboard.js styles and scripts

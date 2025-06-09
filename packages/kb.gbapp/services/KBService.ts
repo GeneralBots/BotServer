@@ -52,7 +52,7 @@ import isICO from 'icojs';
 import getColors from 'get-image-colors';
 import { Document } from 'langchain/document';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import puppeteer, { Page } from 'puppeteer';
+import puppeteer, { executablePath, Page } from 'puppeteer';
 import { Jimp } from 'jimp';
 import {
   GBDialogStep,
@@ -1087,7 +1087,10 @@ export class KBService implements IGBKBService {
         '--no-default-browser-check'
       ];
 
-      let browser = await puppeteer.launch({ headless: false, args });
+      let browser = await puppeteer.launch({ headless: true, 
+        executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath(),
+        
+        args });
       const page = await this.getFreshPage(browser, website);
 
       let logo = await this.getLogoByPage(min, page);
