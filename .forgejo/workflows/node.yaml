@@ -17,11 +17,11 @@ jobs:
 
     - uses: actions/checkout@v4
 
-    - name: Setup Node.js
-       uses: actions/setup-node@v4
-       with:
-         node-version: '20' 
-         cache: 'npm'       
+    # - name: Setup Node.js
+    #    uses: actions/setup-node@v4
+    #    with:
+    #      node-version: '20' 
+    #      cache: 'npm'       
     
     - name: Copy files to deployment location
       run: |
