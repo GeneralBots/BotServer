@@ -1345,8 +1345,7 @@ private async sendButtonList(to: string, buttons: string[]) {
       GBLog.error(`Error on Whatsapp callback: ${GBUtil.toYAML(error)}`);
     }
   }
-
-  public async uploadLargeFile(min, filePath) {
+public async uploadLargeFile(min, filePath) {
     const CHUNK_SIZE = 4 * 1024 * 1024; // 4MB chunks
     let uploadSessionId;
     const fileSize = (await fs.stat(filePath)).size;
@@ -1380,17 +1379,26 @@ private async sendButtonList(to: string, buttons: string[]) {
 
       while (startOffset < fileSize) {
         const endOffset = Math.min(startOffset + CHUNK_SIZE, fileSize);
-        const fileStream = createReadStream(filePath, { start: startOffset, end: endOffset - 1 });
         const chunkSize = endOffset - startOffset;
+        
+        // Read the chunk into a buffer to get accurate size
+        const buffer = new Uint8Array(chunkSize);
+        const fd = await fs.open(filePath, 'r');
+        const { bytesRead } = await fd.read(buffer, 0, chunkSize, startOffset);
+        await fd.close();
+        
+        // Trim buffer to actual bytes read
+        const chunk = buffer.subarray(0, bytesRead);
 
         const uploadResponse = await fetch(`https://graph.facebook.com/v20.0/upload:${uploadSessionId}`, {
           method: 'POST',
           headers: {
-            Authorization: `OAuth ${userAccessToken}`,
-            file_offset: startOffset.toString(),
-            'Content-Length': chunkSize.toString()
+            'Authorization': `OAuth ${userAccessToken}`,
+            'file_offset': startOffset.toString(),
+            'Content-Type': 'application/octet-stream',
+            'Content-Length': bytesRead.toString()
           },
-          body: fileStream
+          body: chunk
         });
 
         const uploadData = await uploadResponse.json();
@@ -1398,7 +1406,7 @@ private async sendButtonList(to: string, buttons: string[]) {
           h = uploadData.h;
         }
         if (!uploadResponse.ok) {
-          throw new Error(uploadData.error.message);
+          throw new Error(`Upload failed: ${uploadData.error?.message || 'Unknown error'}`);
         }
 
         startOffset = endOffset;
@@ -1408,21 +1416,22 @@ private async sendButtonList(to: string, buttons: string[]) {
       const finalizeResponse = await fetch(`https://graph.facebook.com/v20.0/upload:${uploadSessionId}`, {
         method: 'GET',
         headers: {
-          Authorization: `OAuth ${userAccessToken}`
+          'Authorization': `OAuth ${userAccessToken}`
         }
       });
 
       const finalizeData = await finalizeResponse.json();
       if (!finalizeResponse.ok) {
-        throw new Error(finalizeData.error.message);
+        throw new Error(`Finalize failed: ${finalizeData.error?.message || 'Unknown error'}`);
       }
 
       console.log('Upload completed successfully with file handle:', finalizeData.h);
-      return h;
+      return finalizeData.h; // Return the final handle from the response
     } catch (error) {
       console.error('Error during file upload:', error);
+      throw error; // Re-throw to allow caller to handle
     }
-  }
+}
 
   public async downloadImage(mediaId, outputPath) {
     const userAccessToken = this.whatsappServiceKey;
