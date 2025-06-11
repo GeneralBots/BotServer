@@ -665,18 +665,18 @@ export class GBConversationalService {
 
     let data: any = {
       name: template,
-      components: [
-        {
-          type: 'header',
-          parameters: [
-            {
-              type: mediaType
-            }
-          ]
-        }
+       components: [
+      //   {
+      //     type: 'header',
+      //     parameters: [
+      //       {
+      //         type: mediaType
+      //       }
+      //     ]
+      //   }
       ]
     };
-    data['components'][0]['parameters'][0][mediaType] = { link: urlMedia };
+    //data['components'][0]['parameters'][0][mediaType] = { link: urlMedia };
 
     await this.sendToMobile(min, mobile, data, null);
     GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlMedia}`);

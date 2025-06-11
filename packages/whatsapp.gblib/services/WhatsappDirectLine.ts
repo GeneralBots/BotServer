@@ -856,16 +856,16 @@ export class WhatsappDirectLine extends GBService {
     text = text.replace(/\n/g, '\\n');
 
     // Upload the media file based on media type
-    const handleMedia = await min.whatsAppDirectLine.uploadLargeFile(min, packagePath);
+    //const handleMedia = await min.whatsAppDirectLine.uploadLargeFile(min, packagePath);
 
     let data: any = {
       name: template,
       components: [
-        {
-          type: 'HEADER',
-          format: mediaType.toUpperCase(), // Use IMAGE or VIDEO format
-          example: { header_handle: [handleMedia] }
-        },
+        // {
+        //   type: 'HEADER',
+        //   format: mediaType.toUpperCase(), // Use IMAGE or VIDEO format
+        //   example: { header_handle: [handleMedia] }
+        // },
         {
           type: 'BODY',
           text: text
