@@ -646,10 +646,14 @@ export class GBConversationalService {
       text.toLowerCase().endsWith('.png') ||
       text.toLowerCase().endsWith('.mp4') ||
       text.toLowerCase().endsWith('.mov');
-    let mediaFile = !isMedia ? /(.*)\n/gim.exec(text)[0].trim() : text;
+      
+    let text1= /(.*)\n/gim.exec(text);
+
+    let mediaFile = !isMedia ? (text1? text1[0].trim() : text):text;
     let mediaType = mediaFile.toLowerCase().endsWith('.mp4') || text.toLowerCase().endsWith('.mov') ? 'video' : 'image';
 
-    // Set folder based on media type
+    // Set folder based on media type.
+
     const folder = mediaType === 'video' ? 'videos' : 'images';
     const gbaiName = GBUtil.getGBAIPath(min.botId);
     const fileUrl = urlJoin(process.env.BOT_URL, 'kb', gbaiName, `${min.botId}.gbkb`, folder, mediaFile);
