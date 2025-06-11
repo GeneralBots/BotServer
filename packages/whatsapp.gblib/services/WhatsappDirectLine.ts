@@ -1345,92 +1345,72 @@ private async sendButtonList(to: string, buttons: string[]) {
       GBLog.error(`Error on Whatsapp callback: ${GBUtil.toYAML(error)}`);
     }
   }
+
 public async uploadLargeFile(min, filePath) {
-    const CHUNK_SIZE = 4 * 1024 * 1024; // 4MB chunks
-    let uploadSessionId;
-    const fileSize = (await fs.stat(filePath)).size;
-    const fileName = filePath.split('/').pop();
-    const fileType = mime.lookup(filePath);
-    const appId = this.whatsappFBAppId;
-    const userAccessToken = this.whatsappServiceKey;
-    let h;
-
     try {
-      if (!fileType) {
-        throw new Error('Unsupported file type');
-      }
+        // 1. Save file locally (cache)
+        const gbaiName = GBUtil.getGBAIPath(min.botId);
+        const localName = path.join(
+            'work',
+            gbaiName,
+            'cache',
+            `tmp${GBAdminService.getRndReadableIdentifier()}${path.extname(filePath)}`
+        );
+        await fs.copyFile(filePath, localName);
 
-      // Step 1: Start an upload session
-      const startResponse = await fetch(
-        `https://graph.facebook.com/v20.0/${appId}/uploads?file_name=${fileName}&file_length=${fileSize}&file_type=${fileType}&access_token=${userAccessToken}`,
-        {
-          method: 'POST'
-        }
-      );
+        // 2. Generate a public URL to the cached file
+        const publicUrl = urlJoin(
+            GBServer.globals.publicAddress,
+            min.botId,
+            'cache',
+            path.basename(localName)
+        );
 
-      const startData = await startResponse.json();
-      if (!startResponse.ok) {
-        throw new Error(startData.error.message);
-      }
-      uploadSessionId = startData.id.split(':')[1];
-
-      // Step 2: Upload the file in chunks
-      let startOffset = 0;
-
-      while (startOffset < fileSize) {
-        const endOffset = Math.min(startOffset + CHUNK_SIZE, fileSize);
-        const chunkSize = endOffset - startOffset;
+        // 3. Register the public URL with Meta's API to get media_id
+        const mediaId = await this.registerWithMeta(publicUrl, path.extname(filePath));
         
-        // Read the chunk into a buffer to get accurate size
-        const buffer = new Uint8Array(chunkSize);
-        const fd = await fs.open(filePath, 'r');
-        const { bytesRead } = await fd.read(buffer, 0, chunkSize, startOffset);
-        await fd.close();
-        
-        // Trim buffer to actual bytes read
-        const chunk = buffer.subarray(0, bytesRead);
-
-        const uploadResponse = await fetch(`https://graph.facebook.com/v20.0/upload:${uploadSessionId}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `OAuth ${userAccessToken}`,
-            'file_offset': startOffset.toString(),
-            'Content-Type': 'application/octet-stream',
-            'Content-Length': bytesRead.toString()
-          },
-          body: chunk
-        });
-
-        const uploadData = await uploadResponse.json();
-        if (!h) {
-          h = uploadData.h;
-        }
-        if (!uploadResponse.ok) {
-          throw new Error(`Upload failed: ${uploadData.error?.message || 'Unknown error'}`);
-        }
-
-        startOffset = endOffset;
-      }
-
-      // Step 3: Get the file handle
-      const finalizeResponse = await fetch(`https://graph.facebook.com/v20.0/upload:${uploadSessionId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `OAuth ${userAccessToken}`
-        }
-      });
-
-      const finalizeData = await finalizeResponse.json();
-      if (!finalizeResponse.ok) {
-        throw new Error(`Finalize failed: ${finalizeData.error?.message || 'Unknown error'}`);
-      }
-
-      console.log('Upload completed successfully with file handle:', finalizeData.h);
-      return finalizeData.h; // Return the final handle from the response
+        return mediaId; // Return Meta's media_id (as original function expected)
     } catch (error) {
-      console.error('Error during file upload:', error);
-      throw error; // Re-throw to allow caller to handle
+        console.error('Error in uploadLargeFile:', error);
+        throw error;
     }
+}
+
+// Helper: Register a public URL with Meta's /media endpoint
+private async registerWithMeta(fileUrl, fileExtension) {
+    const fileType = this.getWhatsAppFileType(fileExtension); // e.g., 'image', 'document'
+    const response = await fetch(
+      `https://graph.facebook.com/v20.0/${this.whatsappFBAppId}/media`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.whatsappServiceKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url: fileUrl,
+          type: fileType,
+          messaging_product: 'whatsapp'
+        })
+      }
+    );
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(`Failed to register media: ${data.error?.message}`);
+    }
+    return response['data'].id; // Meta's media_id
+}
+
+// Helper: Map file extension to WhatsApp file type
+private getWhatsAppFileType(ext) {
+    const types = {
+        '.jpg': 'image',
+        '.png': 'image',
+        '.pdf': 'document',
+        '.mp4': 'video',
+        // Add others as needed
+    };
+    return types[ext.toLowerCase()] || 'document';
 }
 
   public async downloadImage(mediaId, outputPath) {
