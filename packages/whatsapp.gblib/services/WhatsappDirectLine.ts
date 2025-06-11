@@ -869,7 +869,8 @@ export class WhatsappDirectLine extends GBService {
             header_text: [
               "General Bots"
             ]
-          },
+          }
+        },
         {
           type: 'BODY',
           text: text
