@@ -864,10 +864,10 @@ export class WhatsappDirectLine extends GBService {
         {
           type: 'HEADER',
           format: 'TEXT',
-          text: 'General Bots',
+          text: 'Uma novidade para você',
           example: {
             header_text: [
-              "General Bots"
+              "Uma novidade para você"
             ]
           }
         },
