@@ -834,8 +834,10 @@ export class WhatsappDirectLine extends GBService {
   // Function to create or update a template using WhatsApp Business API
 
   public async createOrUpdateTemplate(min: GBMinInstance, template, text) {
+    template = template.replace('.docx', '');
     template = template.replace(/\-/gi, '_');
     template = template.replace(/\./gi, '_');
+
 
     // Determine if media is image or video
     let isMedia =
