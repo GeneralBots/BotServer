@@ -259,21 +259,21 @@ export class WhatsappDirectLine extends GBService {
 
       default:
 
-        if (this.whatsappServiceUrl){
+        if (this.whatsappServiceUrl) {
 
-        GBLog.verbose(`GBWhatsapp: Checking server...`);
-        let url = urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`;
-        const options = {
-          url: url,
-          method: 'GET'
-        };
+          GBLog.verbose(`GBWhatsapp: Checking server...`);
+          let url = urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`;
+          const options = {
+            url: url,
+            method: 'GET'
+          };
 
-        const res = await fetch(url, options);
-        const json = await res.json();
-        return json['accountStatus'] === 'authenticated';
-      }
-      
-      return true;
+          const res = await fetch(url, options);
+          const json = await res.json();
+          return json['accountStatus'] === 'authenticated';
+        }
+
+        return true;
     }
   }
 
@@ -734,17 +734,17 @@ export class WhatsappDirectLine extends GBService {
           await this.sendImageViewOnce(to, url, caption);
         }
         else {
-          
-            const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
-            const fileExtension = path.extname(url).toLowerCase();
 
-            if (['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.ods', '.csv'].includes(fileExtension)) {
+          const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
+          const fileExtension = path.extname(url).toLowerCase();
+
+          if (['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.ods', '.csv'].includes(fileExtension)) {
             await driver.sendDocument(to, url, { caption: caption });
-            } else if (['.mp3', '.wav', '.ogg', '.aac', '.m4a'].includes(fileExtension)) {
+          } else if (['.mp3', '.wav', '.ogg', '.aac', '.m4a'].includes(fileExtension)) {
             await driver.sendAudio(to, url);
-            } else {
+          } else {
             await driver.sendImage(to, url, { caption: caption });
-            }
+          }
         }
         break;
 
@@ -763,7 +763,7 @@ export class WhatsappDirectLine extends GBService {
         break;
     }
     GBLogEx.info(this.min, `File ${url} sent to ${to}.`);
-    
+
   }
 
   public async sendAudioToDevice(to, url) {
@@ -864,8 +864,12 @@ export class WhatsappDirectLine extends GBService {
         {
           type: 'HEADER',
           format: 'TEXT',
-          text: 'General Bots'
-        },
+          text: 'General Bots',
+          example: {
+            header_text: [
+              "General Bots"
+            ]
+          },
         {
           type: 'BODY',
           text: text
@@ -931,51 +935,51 @@ export class WhatsappDirectLine extends GBService {
   }
 
   // New method to send button list
-private async sendButtonList(to: string, buttons: string[]) {
-  const baseUrl = 'https://graph.facebook.com/v20.0';
-  const accessToken = this.whatsappServiceKey;
-  const sendMessageEndpoint = `${baseUrl}/${this.whatsappServiceNumber}/messages`;
+  private async sendButtonList(to: string, buttons: string[]) {
+    const baseUrl = 'https://graph.facebook.com/v20.0';
+    const accessToken = this.whatsappServiceKey;
+    const sendMessageEndpoint = `${baseUrl}/${this.whatsappServiceNumber}/messages`;
 
-  const messageData = {
-    messaging_product: 'whatsapp',
-    recipient_type: 'individual',
-    to: to,
-    type: 'interactive',
-    interactive: {
-      type: 'button',
-      body: {
-        text: 'Please select an option:'
-      },
-      action: {
-        buttons: buttons.map((button, index) => ({
-          type: 'reply',
-          reply: {
-            id: `button_${index + 1}`,
-            title: button
-          }
-        }))
+    const messageData = {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to: to,
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        body: {
+          text: 'Please select an option:'
+        },
+        action: {
+          buttons: buttons.map((button, index) => ({
+            type: 'reply',
+            reply: {
+              id: `button_${index + 1}`,
+              title: button
+            }
+          }))
+        }
       }
+    };
+
+    const response = await fetch(sendMessageEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(messageData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Failed to send button list: ${JSON.stringify(errorData)}`);
     }
-  };
 
-  const response = await fetch(sendMessageEndpoint, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(messageData)
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Failed to send button list: ${JSON.stringify(errorData)}`);
+    const result = await response.json();
+    GBLogEx.info(this.min, 'Button list sent successfully:' + JSON.stringify(result));
+    return result;
   }
-
-  const result = await response.json();
-  GBLogEx.info(this.min, 'Button list sent successfully:' + JSON.stringify(result));
-  return result;
-}
 
 
   public async sendToDevice(to: any, msg: string, conversationId, isViewOnce = false) {
@@ -1173,20 +1177,20 @@ private async sendButtonList(to: string, buttons: string[]) {
 
 
       if (process.env.AUDIO_DISABLED !== 'true') {
-      if (provider ==='meta'){
-              
-        const buf = await this.downloadAudio(req, min);
+        if (provider === 'meta') {
 
-        text = await GBConversationalService.getTextFromAudioBuffer(
-          this.min.instance.speechKey,
-          this.min.instance.cloudLocation,
-          buf,
-          user.locale
-        );
+          const buf = await this.downloadAudio(req, min);
+
+          text = await GBConversationalService.getTextFromAudioBuffer(
+            this.min.instance.speechKey,
+            this.min.instance.cloudLocation,
+            buf,
+            user.locale
+          );
 
 
-      }else if (req.type === 'ptt') {
-          
+        } else if (req.type === 'ptt') {
+
           const media = await req.downloadMedia();
           const buf = Buffer.from(media.data, 'base64');
 
@@ -1200,9 +1204,9 @@ private async sendButtonList(to: string, buttons: string[]) {
           req.body = text;
 
         }
-      
+
       }
-      
+
       let activeMin;
 
       // Processes group behaviour.
@@ -1346,72 +1350,93 @@ private async sendButtonList(to: string, buttons: string[]) {
     }
   }
 
-public async uploadLargeFile(min, filePath) {
+  public async uploadLargeFile(min, filePath) {
+    const CHUNK_SIZE = 4 * 1024 * 1024; // 4MB chunks
+    let uploadSessionId;
+    const fileSize = (await fs.stat(filePath)).size;
+    const fileName = filePath.split('/').pop();
+    const fileType = mime.lookup(filePath);
+    const appId = this.whatsappFBAppId;
+    const userAccessToken = this.whatsappServiceKey;
+    let h;
+
     try {
-        // 1. Save file locally (cache)
-        const gbaiName = GBUtil.getGBAIPath(min.botId);
-        const localName = path.join(
-            'work',
-            gbaiName,
-            'cache',
-            `tmp${GBAdminService.getRndReadableIdentifier()}${path.extname(filePath)}`
-        );
-        await fs.copyFile(filePath, localName);
-
-        // 2. Generate a public URL to the cached file
-        const publicUrl = urlJoin(
-            GBServer.globals.publicAddress,
-            min.botId,
-            'cache',
-            path.basename(localName)
-        );
-
-        // 3. Register the public URL with Meta's API to get media_id
-        const mediaId = await this.registerWithMeta(publicUrl, path.extname(filePath));
-        
-        return mediaId; // Return Meta's media_id (as original function expected)
-    } catch (error) {
-        console.error('Error in uploadLargeFile:', error);
-        throw error;
-    }
-}
-
-// Helper: Register a public URL with Meta's /media endpoint
-private async registerWithMeta(fileUrl, fileExtension) {
-    const fileType = this.getWhatsAppFileType(fileExtension); // e.g., 'image', 'document'
-    const response = await fetch(
-      `https://graph.facebook.com/v20.0/${this.whatsappFBAppId}/media`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.whatsappServiceKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          url: fileUrl,
-          type: fileType,
-          messaging_product: 'whatsapp'
-        })
+      if (!fileType) {
+        throw new Error('Unsupported file type');
       }
-    );
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(`Failed to register media: ${data.error?.message}`);
-    }
-    return response['data'].id; // Meta's media_id
-}
 
-// Helper: Map file extension to WhatsApp file type
-private getWhatsAppFileType(ext) {
-    const types = {
-        '.jpg': 'image',
-        '.png': 'image',
-        '.pdf': 'document',
-        '.mp4': 'video',
-        // Add others as needed
-    };
-    return types[ext.toLowerCase()] || 'document';
-}
+      // Step 1: Start an upload session
+      const startResponse = await fetch(
+        `https://graph.facebook.com/v20.0/${appId}/uploads?file_name=${fileName}&file_length=${fileSize}&file_type=${fileType}&access_token=${userAccessToken}`,
+        {
+          method: 'POST'
+        }
+      );
+
+      const startData = await startResponse.json();
+      if (!startResponse.ok) {
+        throw new Error(startData.error.message);
+      }
+      uploadSessionId = startData.id.split(':')[1];
+
+      // Step 2: Upload the file in chunks
+      let startOffset = 0;
+
+      while (startOffset < fileSize) {
+        const endOffset = Math.min(startOffset + CHUNK_SIZE, fileSize);
+        const chunkSize = endOffset - startOffset;
+
+        // Read the chunk into a buffer to get accurate size
+        const buffer = new Uint8Array(chunkSize);
+        const fd = await fs.open(filePath, 'r');
+        const { bytesRead } = await fd.read(buffer, 0, chunkSize, startOffset);
+        await fd.close();
+
+        // Trim buffer to actual bytes read
+        const chunk = buffer.subarray(0, bytesRead);
+
+        const uploadResponse = await fetch(`https://graph.facebook.com/v20.0/upload:${uploadSessionId}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `OAuth ${userAccessToken}`,
+            'file_offset': startOffset.toString(),
+            'Content-Type': 'application/octet-stream',
+            'Content-Length': bytesRead.toString()
+          },
+          body: chunk
+        });
+
+        const uploadData = await uploadResponse.json();
+        if (!h) {
+          h = uploadData.h;
+        }
+        if (!uploadResponse.ok) {
+          throw new Error(`Upload failed: ${uploadData.error?.message || 'Unknown error'}`);
+        }
+
+        startOffset = endOffset;
+      }
+
+      // Step 3: Get the file handle
+      const finalizeResponse = await fetch(`https://graph.facebook.com/v20.0/upload:${uploadSessionId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `OAuth ${userAccessToken}`
+        }
+      });
+
+      const finalizeData = await finalizeResponse.json();
+      if (!finalizeResponse.ok) {
+        throw new Error(`Finalize failed: ${finalizeData.error?.message || 'Unknown error'}`);
+      }
+
+      console.log('Upload completed successfully with file handle:', finalizeData.h);
+      return finalizeData.h; // Return the final handle from the response
+    } catch (error) {
+      console.error('Error during file upload:', error);
+      throw error; // Re-throw to allow caller to handle
+    }
+  }
 
   public async downloadImage(mediaId, outputPath) {
     const userAccessToken = this.whatsappServiceKey;
@@ -1490,44 +1515,44 @@ private getWhatsAppFileType(ext) {
   }
 
   public async downloadAudio(req, min) {
-      // Extract the audio ID from the request body
-      const audioId = req.body.entry[0].changes[0].value.messages[0].audio.id;
-      
-      // User access token from min.whatsappServiceKey
-      const userAccessToken = GBServer.globals.minBoot.instance.whatsappServiceKey;
-  
-      // Meta WhatsApp Business API endpoint for downloading media
-      const metaApiUrl =         `https://graph.facebook.com/v20.0/${audioId}`;
-      // Fetch the media URL using the audio ID
-      const mediaUrlResponse = await fetch(metaApiUrl, {
-        headers: {
-          Authorization: `Bearer ${userAccessToken}`,
-        },
-      });
-  
-      if (!mediaUrlResponse.ok) {
-        throw new Error(`Failed to fetch media URL: ${mediaUrlResponse.statusText}`);
-      }
-  
-      const mediaUrlData = await mediaUrlResponse.json();
-      const mediaUrl = mediaUrlData.url;
-  
-      if (!mediaUrl) {
-        throw new Error('Media URL not found in the response');
-      }
-  
-      // Download the audio file
-      const res = await fetch(mediaUrl, {
-        headers: {
-          Authorization: `Bearer ${userAccessToken}`,
-        },
-      });
-  
-      if (!res.ok) {
-        throw new Error(`Failed to download audio: ${res.statusText}`);
-      }
-      let buf: any = Buffer.from(await res.arrayBuffer());
-      return buf;
+    // Extract the audio ID from the request body
+    const audioId = req.body.entry[0].changes[0].value.messages[0].audio.id;
+
+    // User access token from min.whatsappServiceKey
+    const userAccessToken = GBServer.globals.minBoot.instance.whatsappServiceKey;
+
+    // Meta WhatsApp Business API endpoint for downloading media
+    const metaApiUrl = `https://graph.facebook.com/v20.0/${audioId}`;
+    // Fetch the media URL using the audio ID
+    const mediaUrlResponse = await fetch(metaApiUrl, {
+      headers: {
+        Authorization: `Bearer ${userAccessToken}`,
+      },
+    });
+
+    if (!mediaUrlResponse.ok) {
+      throw new Error(`Failed to fetch media URL: ${mediaUrlResponse.statusText}`);
+    }
+
+    const mediaUrlData = await mediaUrlResponse.json();
+    const mediaUrl = mediaUrlData.url;
+
+    if (!mediaUrl) {
+      throw new Error('Media URL not found in the response');
+    }
+
+    // Download the audio file
+    const res = await fetch(mediaUrl, {
+      headers: {
+        Authorization: `Bearer ${userAccessToken}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to download audio: ${res.statusText}`);
+    }
+    let buf: any = Buffer.from(await res.arrayBuffer());
+    return buf;
   }
 
   public async getLatestCampaignReport() {
@@ -1535,92 +1560,92 @@ private getWhatsAppFileType(ext) {
     const userAccessToken = this.whatsappServiceKey;
 
     if (!(businessAccountId && userAccessToken)) {
-        return 'No statistics available for marketing templates.';
+      return 'No statistics available for marketing templates.';
     }
 
     try {
-        // Step 1: Fetch templates with edit time ordering
-        const statsResponse = await fetch(
-            `https://graph.facebook.com/v21.0/${businessAccountId}?` +
-            `fields=message_templates{id,name,category,language,status,created_time,last_edited_time}&` +
-            `access_token=${userAccessToken}`
-        );
+      // Step 1: Fetch templates with edit time ordering
+      const statsResponse = await fetch(
+        `https://graph.facebook.com/v21.0/${businessAccountId}?` +
+        `fields=message_templates{id,name,category,language,status,created_time,last_edited_time}&` +
+        `access_token=${userAccessToken}`
+      );
 
-        let data = await statsResponse.json();
-        if (!statsResponse.ok) {
-            throw new Error(data.error?.message || 'Failed to fetch templates');
-        }
-        console.log(GBUtil.toYAML(data));
+      let data = await statsResponse.json();
+      if (!statsResponse.ok) {
+        throw new Error(data.error?.message || 'Failed to fetch templates');
+      }
+      console.log(GBUtil.toYAML(data));
 
-        data = data.message_templates?.data || [];
+      data = data.message_templates?.data || [];
 
-        // Check if message_templates is an array
-        if (!Array.isArray(data)) {
-            console.error('Expected message_templates to be an array, but got:', data.message_templates);
-            return 'Invalid response format for message templates.';
-        }
+      // Check if message_templates is an array
+      if (!Array.isArray(data)) {
+        console.error('Expected message_templates to be an array, but got:', data.message_templates);
+        return 'Invalid response format for message templates.';
+      }
 
-        if (data.length === 0) {
-            throw new Error('No template statistics found');
-        }
+      if (data.length === 0) {
+        throw new Error('No template statistics found');
+      }
 
-        // Filter for marketing templates and get the latest edited one
-        const marketingTemplates = data
-            .filter(template => template.category?.toUpperCase() === 'MARKETING')
-            .sort((a, b) => new Date(b.last_edited_time).getTime() - new Date(a.last_edited_time).getTime());
+      // Filter for marketing templates and get the latest edited one
+      const marketingTemplates = data
+        .filter(template => template.category?.toUpperCase() === 'MARKETING')
+        .sort((a, b) => new Date(b.last_edited_time).getTime() - new Date(a.last_edited_time).getTime());
 
-        if (marketingTemplates.length === 0) {
-            return 'No marketing templates found.';
-        }
+      if (marketingTemplates.length === 0) {
+        return 'No marketing templates found.';
+      }
 
-        const latestTemplate = marketingTemplates[0];
-        const templateId = latestTemplate.id;
+      const latestTemplate = marketingTemplates[0];
+      const templateId = latestTemplate.id;
 
-        // Step 2: Fetch template analytics for the last 7 days
-        const startTime = Math.floor(Date.now() / 1000) - 86400 * 7; // Last 7 days
-        const endTime = Math.floor(Date.now() / 1000);
+      // Step 2: Fetch template analytics for the last 7 days
+      const startTime = Math.floor(Date.now() / 1000) - 86400 * 7; // Last 7 days
+      const endTime = Math.floor(Date.now() / 1000);
 
-        const analyticsResponse = await fetch(
-            `https://graph.facebook.com/v21.0/${businessAccountId}?` +
-            `fields=template_analytics.start(${startTime}).end(${endTime}).granularity(DAILY).metric_types(sent,delivered,read,clicked).template_ids([${templateId}])&` +
-            `access_token=${userAccessToken}`
-        );
+      const analyticsResponse = await fetch(
+        `https://graph.facebook.com/v21.0/${businessAccountId}?` +
+        `fields=template_analytics.start(${startTime}).end(${endTime}).granularity(DAILY).metric_types(sent,delivered,read,clicked).template_ids([${templateId}])&` +
+        `access_token=${userAccessToken}`
+      );
 
-        const analyticsData = await analyticsResponse.json();
-        console.log(GBUtil.toYAML(analyticsData));
+      const analyticsData = await analyticsResponse.json();
+      console.log(GBUtil.toYAML(analyticsData));
 
-        if (!analyticsResponse.ok) {
-            throw new Error(analyticsData.error?.message || 'Failed to fetch analytics');
-        }
+      if (!analyticsResponse.ok) {
+        throw new Error(analyticsData.error?.message || 'Failed to fetch analytics');
+      }
 
-        const dataPoints = analyticsData.template_analytics?.data[0]?.data_points || [];
-        if (dataPoints.length === 0) {
-            return 'No analytics data available for the specified template.';
-        }
+      const dataPoints = analyticsData.template_analytics?.data[0]?.data_points || [];
+      if (dataPoints.length === 0) {
+        return 'No analytics data available for the specified template.';
+      }
 
-        // Aggregate the data points for the latest template and the last 7 days
-        const aggregatedData = dataPoints.reduce((acc, dataPoint) => {
-            acc.sent += dataPoint.sent || 0;
-            acc.delivered += dataPoint.delivered || 0;
-            acc.read += dataPoint.read || 0;
-            acc.clicked += (dataPoint.clicked?.reduce((sum, item) => sum + item.count, 0)) || 0;
-            return acc;
-        }, { sent: 0, delivered: 0, read: 0, clicked: 0 });
+      // Aggregate the data points for the latest template and the last 7 days
+      const aggregatedData = dataPoints.reduce((acc, dataPoint) => {
+        acc.sent += dataPoint.sent || 0;
+        acc.delivered += dataPoint.delivered || 0;
+        acc.read += dataPoint.read || 0;
+        acc.clicked += (dataPoint.clicked?.reduce((sum, item) => sum + item.count, 0)) || 0;
+        return acc;
+      }, { sent: 0, delivered: 0, read: 0, clicked: 0 });
 
-        // Calculate read rate and click rate
-        const readRate = aggregatedData.delivered > 0 ? ((aggregatedData.read / aggregatedData.delivered) * 100).toFixed(2) : 0;
-        const clickRate = aggregatedData.delivered > 0 ? ((aggregatedData.clicked / aggregatedData.delivered) * 100).toFixed(2) : 0;
+      // Calculate read rate and click rate
+      const readRate = aggregatedData.delivered > 0 ? ((aggregatedData.read / aggregatedData.delivered) * 100).toFixed(2) : 0;
+      const clickRate = aggregatedData.delivered > 0 ? ((aggregatedData.clicked / aggregatedData.delivered) * 100).toFixed(2) : 0;
 
-        // Format the date
-        const lastEditedDate = latestTemplate.last_edited_time
-            ? new Date(latestTemplate.last_edited_time).toLocaleDateString('en-US', {
-                month: 'short',
-                day: '2-digit',
-                year: 'numeric'
-              })
-            : 'Not available';
+      // Format the date
+      const lastEditedDate = latestTemplate.last_edited_time
+        ? new Date(latestTemplate.last_edited_time).toLocaleDateString('en-US', {
+          month: 'short',
+          day: '2-digit',
+          year: 'numeric'
+        })
+        : 'Not available';
 
-        return `Template Name: *${latestTemplate.name}*
+      return `Template Name: *${latestTemplate.name}*
 Category: *${latestTemplate.category?.toUpperCase()}*
 Language: *${latestTemplate.language?.replace('-', '_').toUpperCase() || 'pt_BR'}*
 Status: *${latestTemplate.status?.toUpperCase()}*
@@ -1632,10 +1657,10 @@ Top Block Reason: *${latestTemplate.rejection_reason || '––'}*
 Last Edited: *${lastEditedDate}*`;
 
     } catch (error) {
-        console.error('Error fetching WhatsApp template statistics:', error.message);
-        return `Error fetching statistics: ${error.message}`;
+      console.error('Error fetching WhatsApp template statistics:', error.message);
+      return `Error fetching statistics: ${error.message}`;
     }
-}
+  }
 
 
 }
