@@ -666,14 +666,14 @@ export class GBConversationalService {
     let data: any = {
       name: template,
        components: [
-      //   {
-      //     type: 'header',
-      //     parameters: [
-      //       {
-      //         type: mediaType
-      //       }
-      //     ]
-      //   }
+        {
+          type: 'header',
+          parameters: [
+            {
+              type: 'TEXT'
+            }
+          ]
+        }
       ]
     };
     //data['components'][0]['parameters'][0][mediaType] = { link: urlMedia };

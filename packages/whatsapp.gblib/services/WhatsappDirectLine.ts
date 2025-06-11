@@ -861,11 +861,11 @@ export class WhatsappDirectLine extends GBService {
     let data: any = {
       name: template,
       components: [
-        // {
-        //   type: 'HEADER',
-        //   format: mediaType.toUpperCase(), // Use IMAGE or VIDEO format
-        //   example: { header_handle: [handleMedia] }
-        // },
+        {
+          type: 'HEADER',
+          format: 'TEXT',
+          text: 'General Bots'
+        },
         {
           type: 'BODY',
           text: text
