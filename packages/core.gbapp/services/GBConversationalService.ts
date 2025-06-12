@@ -646,14 +646,10 @@ export class GBConversationalService {
       text.toLowerCase().endsWith('.png') ||
       text.toLowerCase().endsWith('.mp4') ||
       text.toLowerCase().endsWith('.mov');
-      
-    let text1= /(.*)\n/gim.exec(text);
-
-    let mediaFile = !isMedia ? (text1? text1[0].trim() : text):text;
+    let mediaFile = !isMedia ? /(.*)\n/gim.exec(text)[0].trim() : text;
     let mediaType = mediaFile.toLowerCase().endsWith('.mp4') || text.toLowerCase().endsWith('.mov') ? 'video' : 'image';
 
-    // Set folder based on media type.
-
+    // Set folder based on media type
     const folder = mediaType === 'video' ? 'videos' : 'images';
     const gbaiName = GBUtil.getGBAIPath(min.botId);
     const fileUrl = urlJoin(process.env.BOT_URL, 'kb', gbaiName, `${min.botId}.gbkb`, folder, mediaFile);
@@ -669,9 +665,18 @@ export class GBConversationalService {
 
     let data: any = {
       name: template,
-      components: [ ]
+      components: [
+        {
+          type: 'header',
+          parameters: [
+            {
+              type: mediaType
+            }
+          ]
+        }
+      ]
     };
-    //data['components'][0]['parameters'][0][mediaType] = { link: urlMedia };
+    data['components'][0]['parameters'][0][mediaType] = { link: urlMedia };
 
     await this.sendToMobile(min, mobile, data, null);
     GBLogEx.info(min, `Sending answer file to mobile: ${mobile}. Header: ${urlMedia}`);
